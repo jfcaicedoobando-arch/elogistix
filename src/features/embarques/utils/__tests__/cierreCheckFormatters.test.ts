@@ -1,0 +1,86 @@
+import { describe, it, expect } from "vitest";
+import { 
+  pick, 
+  fmtCxc, 
+  fmtCxp, 
+  fmtDocs, 
+  fmtMargen, 
+  fmtVentaPendientes, 
+  fmtSinFactura, 
+  fmtContenedores, 
+  fmtContenedoresFechas, 
+  fmtRepPendientes 
+} from "../cierreCheckFormatters";
+
+describe("cierreCheckFormatters", () => {
+  it("pick: extrae valores de objetos de forma segura", () => {
+    expect(pick({ a: 1 }, "a")).toBe(1);
+    expect(pick(null, "a")).toBeUndefined();
+    expect(pick("not an object", "a")).toBeUndefined();
+  });
+
+  it("fmtCxc: formatea saldos y facturas pendientes", () => {
+    const res = fmtCxc({ total: 100, pagado: 40, facturas_pendientes: 2 });
+    expect(res).toContain("2 factura(s) por cobrar");
+    expect(res).toContain("60.00");
+    
+    expect(fmtCxc({ total: 100, pagado: 100, facturas_pendientes: 0 })).toBeNull();
+    expect(fmtCxc({ total: 50, pagado: 49.995, facturas_pendientes: 0 })).toBeNull(); // Saldo < 0.01
+  });
+
+  it("fmtCxp: formatea saldos y facturas de proveedor", () => {
+    const res = fmtCxp({ total: 100, pagado: 40, facturas_pendientes: 1 });
+    expect(res).toContain("1 factura(s) de proveedor por pagar");
+    expect(res).toContain("60.00");
+    
+    expect(fmtCxp({ total: 100, pagado: 100, facturas_pendientes: 0 })).toBeNull();
+  });
+
+  it("fmtDocs: maneja arrays y números de documentos faltantes", () => {
+    expect(fmtDocs({ faltantes: ["D1", "D2"] })).toBe("2 documento(s) faltante(s): D1, D2");
+    expect(fmtDocs({ docs_faltantes: ["D1", "D2", "D3", "D4"] })).toBe("4 documento(s) faltante(s): D1, D2, D3…");
+    expect(fmtDocs({ pendientes: 5 })).toBe("5 documento(s) faltante(s)");
+    expect(fmtDocs({})).toBeNull();
+  });
+
+  it("fmtMargen: muestra utilidad y mínimo si ambos existen", () => {
+    const res = fmtMargen({ utilidad: 1000, minimo: 500 });
+    expect(res).toContain("1,000.00");
+    expect(res).toContain("500.00");
+    
+    expect(fmtMargen({ utilidad: 1000 })).toBeNull();
+  });
+
+  it("fmtVentaPendientes: muestra conceptos y proformas", () => {
+    expect(fmtVentaPendientes({ pendientes: 2, en_proforma: 1 })).toBe("2 concepto(s) pendiente(s) · 1 en proforma sin facturar");
+    expect(fmtVentaPendientes({ pendientes: 3 })).toBe("3 concepto(s) pendiente(s)");
+    expect(fmtVentaPendientes({ en_proforma: 2 })).toBe("2 en proforma sin facturar");
+    expect(fmtVentaPendientes({})).toBeNull();
+  });
+
+  it("fmtSinFactura: muestra conceptos sin factura de proveedor", () => {
+    expect(fmtSinFactura({ sin_factura: 3 })).toBe("3 concepto(s) sin factura de proveedor");
+    expect(fmtSinFactura({ pendientes: 2 })).toBe("2 concepto(s) sin factura de proveedor");
+    expect(fmtSinFactura({})).toBeNull();
+  });
+
+  it("fmtContenedores: muestra sin peso/volumen", () => {
+    expect(fmtContenedores({ contenedores_incompletos: 2 })).toBe("2 contenedor(es) sin peso/volumen");
+    expect(fmtContenedores({ sin_datos: 1 })).toBe("1 contenedor(es) sin peso/volumen");
+    expect(fmtContenedores({})).toBeNull();
+  });
+
+  it("fmtContenedoresFechas: muestra sin fechas", () => {
+    expect(fmtContenedoresFechas({ contenedores_sin_fechas: 3 })).toBe("3 contenedor(es) sin fecha de descarga o devolución");
+    expect(fmtContenedoresFechas({})).toBeNull();
+  });
+
+  it("fmtRepPendientes: muestra PPD sin REP", () => {
+    expect(fmtRepPendientes({ pendientes: 4 })).toBe("4 pago(s) PPD sin REP timbrado");
+    expect(fmtRepPendientes({})).toBeNull();
+  });
+
+  it("fmtMoney edge cases", () => {
+     expect(fmtMargen({ utilidad: "NaN", minimo: 500 })).toContain("NaN");
+  });
+});

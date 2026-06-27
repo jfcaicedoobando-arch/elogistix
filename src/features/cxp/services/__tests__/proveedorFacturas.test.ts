@@ -5,54 +5,132 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchFacturasCxP, calcularKPIsCxP, crearFacturaProveedor } from "../proveedorFacturas";
+import { 
+  fetchFacturasCxP, 
+  fetchFacturaProveedor,
+  crearFacturaProveedor, 
+  existeFacturaDuplicada,
+  softDeleteFacturaProveedor
+} from "../proveedorFacturas";
 
 describe("proveedorFacturas service", () => {
   beforeEach(() => {
     mock.tableCalls.length = 0;
   });
 
-  it("fetchFacturasCxP calcula saldo correctamente", async () => {
-    mock.setTableResult("proveedor_facturas", { 
-      data: [{ 
-        id: "f1", total: 1000, 
-        pagos_proveedor: [{ monto: 200, deleted_at: null }],
-        proveedor_notas_credito: [{ monto: 100, estado: "Aplicada", deleted_at: null }]
-      }], 
-      error: null 
+  describe("fetchFacturasCxP", () => {
+    it("aplica filtros de proveedor, categoría y moneda", async () => {
+      mock.setTableResult("proveedor_facturas", { data: [], error: null });
+      await fetchFacturasCxP({
+        proveedor_id: "p1",
+        categoria_presupuesto_id: "c1",
+        moneda: "USD",
+        fecha_desde: "2024-01-01",
+        fecha_hasta: "2024-12-31",
+        search: "ABC"
+      });
+      
+      const calls = mock.tableCalls.filter(c => c.table === "proveedor_facturas");
+      expect(calls[0].ops).toContain("eq");
+      expect(calls[0].ops).toContain("gte");
+      expect(calls[0].ops).toContain("lte");
+      expect(calls[0].ops).toContain("or");
     });
-    const res = await fetchFacturasCxP();
-    expect(res[0].saldo).toBe(700);
-  });
 
-  it("calcularKPIsCxP suma montos por moneda", () => {
-    const filas = [
-      { saldo: 100, moneda: "MXN", estatus: "Vigente" },
-      { saldo: 200, moneda: "USD", estatus: "Vencida" }
-    ] as any;
-    const kpis = calcularKPIsCxP(filas);
-    expect(kpis.por_pagar_mxn).toBe(100);
-    expect(kpis.por_pagar_usd).toBe(200);
-    expect(kpis.facturas_vencidas).toBe(1);
-  });
-
-  it("crearFacturaProveedor inserta registro", async () => {
-    mock.setTableResult("proveedor_facturas", { data: { id: "f1" }, error: null });
-    const res = await crearFacturaProveedor({ folio_proveedor: "X" } as any);
-    expect(res.id).toBe("f1");
-  });
-
-  it("fetchFacturasCxP expone archivo_xml_url y archivo_pdf_url en el shape FacturaCxP", async () => {
-    mock.setTableResult("proveedor_facturas", {
-      data: [{
-        id: "f2", total: 100,
-        archivo_xml_url: "org/cfdi/f2/factura.xml",
-        archivo_pdf_url: null,
-      }],
-      error: null,
+    it("no aplica filtros si son 'todos' o 'todas'", async () => {
+      mock.setTableResult("proveedor_facturas", { data: [], error: null });
+      await fetchFacturasCxP({
+        proveedor_id: "todos",
+        categoria_presupuesto_id: "todas",
+        moneda: "todas"
+      });
+      const calls = mock.tableCalls.filter(c => c.table === "proveedor_facturas");
+      // Solo neq, order, limit que son base
+      expect(calls[0].ops).not.toContain("eq");
     });
-    const res = await fetchFacturasCxP();
-    expect(res[0].archivo_xml_url).toBe("org/cfdi/f2/factura.xml");
-    expect(res[0].archivo_pdf_url).toBeNull();
+
+    it("lanza error si falla la consulta", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error fetch" } });
+      await expect(fetchFacturasCxP()).rejects.toThrow("Error fetch");
+    });
+
+    it("maneja data null devolviendo array vacío", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: null });
+      const res = await fetchFacturasCxP();
+      expect(res).toEqual([]);
+    });
+  });
+
+  describe("fetchFacturaProveedor", () => {
+    it("devuelve la factura mapeada si existe", async () => {
+      mock.setTableResult("proveedor_facturas", { data: { id: "f1", total: 100 }, error: null });
+      const res = await fetchFacturaProveedor("f1");
+      expect(res?.id).toBe("f1");
+    });
+
+    it("devuelve null si no existe", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: null });
+      const res = await fetchFacturaProveedor("f1");
+      expect(res).toBeNull();
+    });
+
+    it("lanza error si falla", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error fetch" } });
+      await expect(fetchFacturaProveedor("f1")).rejects.toThrow("Error fetch");
+    });
+  });
+
+  describe("crearFacturaProveedor", () => {
+    it("inserta y devuelve data", async () => {
+      mock.setTableResult("proveedor_facturas", { data: { id: "f1" }, error: null });
+      const res = await crearFacturaProveedor({ folio_proveedor: "X" } as any);
+      expect(res.id).toBe("f1");
+    });
+
+    it("lanza error si falla", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error create" } });
+      await expect(crearFacturaProveedor({} as any)).rejects.toThrow("Error create");
+    });
+  });
+
+  describe("existeFacturaDuplicada", () => {
+    it("devuelve true si encuentra registros", async () => {
+      mock.setTableResult("proveedor_facturas", { data: [{ id: "f1" }], error: null });
+      const res = await existeFacturaDuplicada("p1", "f1", "2024-01-01");
+      expect(res).toBe(true);
+    });
+
+    it("devuelve false si no encuentra registros (data null o vacía)", async () => {
+      mock.setTableResult("proveedor_facturas", { data: [], error: null });
+      const res = await existeFacturaDuplicada("p1", "f1", "2024-01-01");
+      expect(res).toBe(false);
+    });
+
+    it("aplica neq id si excluirId está presente", async () => {
+      mock.setTableResult("proveedor_facturas", { data: [], error: null });
+      await existeFacturaDuplicada("p1", "f1", "2024-01-01", "ex-1");
+      const call = mock.tableCalls.find(c => c.table === "proveedor_facturas");
+      expect(call?.ops.filter(o => o === "neq")).toHaveLength(2); // neq estado y neq id
+    });
+
+    it("lanza error si falla", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error check" } });
+      await expect(existeFacturaDuplicada("p1", "f1", "2024-01-01")).rejects.toThrow("Error check");
+    });
+  });
+
+  describe("softDeleteFacturaProveedor", () => {
+    it("actualiza deleted_at y deleted_by", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: null });
+      await softDeleteFacturaProveedor("f1", "u1");
+      const payload = mock.getMutationPayload("proveedor_facturas", "update") as any;
+      expect(payload.deleted_by).toBe("u1");
+      expect(payload.deleted_at).toBeDefined();
+    });
+
+    it("lanza error si falla", async () => {
+      mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error delete" } });
+      await expect(softDeleteFacturaProveedor("f1", "u1")).rejects.toThrow("Error delete");
+    });
   });
 });

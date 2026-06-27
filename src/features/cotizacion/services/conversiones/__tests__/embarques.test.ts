@@ -103,3 +103,48 @@ describe("crearEmbarqueBorradorDesdeCotizacion", () => {
     await expect(crearEmbarqueBorradorDesdeCotizacion("cot-1")).rejects.toThrow();
   });
 });
+
+describe("conversiones/embarques.ts - extra coverage", () => {
+  it("insertarCostosEmbarque retorna temprano si no hay costos o hijos", async () => {
+    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setRpcResult("generar_expediente", { data: "EXP-1", error: null });
+    mock.setTableResult("embarques", { data: { id: "emb-1" }, error: null });
+    mock.setTableResult("embarque_contenedores", { data: [], error: null });
+    mock.setTableResult("cotizaciones", { data: null, error: null });
+
+    await convertirCotizacionAEmbarques(makeCot({ num_contenedores: 0 }));
+    expect(mock.tableCalls.some(c => c.table === "conceptos_costo")).toBe(false);
+  });
+
+  it("lanza error si falla la inserción de costos", async () => {
+    mock.setTableResult("cotizacion_costos", { data: [{ id: "c1", concepto: "X", unidad_medida: "BL" }], error: null });
+    mock.setRpcResult("generar_expediente", { data: "EXP-1", error: null });
+    mock.setTableResult("embarques", { data: { id: "emb-1" }, error: null });
+    mock.setTableResult("embarque_contenedores", { data: [{ id: "h1" }], error: null });
+    mock.setTableResult("conceptos_costo", { data: null, error: new Error("cost-fail") });
+
+    await expect(convertirCotizacionAEmbarques(makeCot())).rejects.toThrow("cost-fail");
+  });
+
+  it("lanza error si falla la inserción de ventas", async () => {
+    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setRpcResult("generar_expediente", { data: "EXP-1", error: null });
+    mock.setTableResult("embarques", { data: { id: "emb-1" }, error: null });
+    mock.setTableResult("embarque_contenedores", { data: [{ id: "h1" }], error: null });
+    mock.setTableResult("conceptos_venta", { data: null, error: new Error("venta-fail") });
+
+    await expect(convertirCotizacionAEmbarques(makeCot({ 
+        conceptos_venta: [{ descripcion: "V1", cantidad: 1, precio_unitario: 100, moneda: "USD" }] as any 
+    }))).rejects.toThrow("venta-fail");
+  });
+
+  it("convertirCotizacionAEmbarques lanza error si falla el update final", async () => {
+    mock.setTableResult("cotizacion_costos", { data: [], error: null });
+    mock.setRpcResult("generar_expediente", { data: "EXP-1", error: null });
+    mock.setTableResult("embarques", { data: { id: "emb-1" }, error: null });
+    mock.setTableResult("embarque_contenedores", { data: [{ id: "h1" }], error: null });
+    mock.setTableResult("cotizaciones", { data: null, error: new Error("update-fail") });
+
+    await expect(convertirCotizacionAEmbarques(makeCot())).rejects.toThrow("update-fail");
+  });
+});

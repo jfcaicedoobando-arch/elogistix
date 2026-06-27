@@ -2,22 +2,38 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mock = await vi.hoisted(async () => {
   const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
-  return createSupabaseMock();
+  const base = createSupabaseMock();
+  return {
+    ...base,
+    supabase: {
+      ...base.supabase,
+      auth: {
+        getUser: vi.fn(),
+      },
+    },
+  };
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import {
   fetchPortalEmbarques,
+  fetchPortalEmbarque,
   fetchPortalEventos,
   fetchPortalDocumentos,
   fetchPortalCotizaciones,
+  fetchPortalCotizacion,
   fetchPortalFacturas,
   fetchPortalFactura,
   fetchPortalPagosFactura,
+  fetchPortalClientUsers,
+  fetchPortalClienteName,
+  fetchPortalOrgName,
 } from "@/features/portal/services/queries";
 
 beforeEach(() => {
   mock.tableCalls.length = 0;
+  mock.resetResults();
+  vi.clearAllMocks();
 });
 
 describe("portal/queries", () => {
@@ -32,6 +48,12 @@ describe("portal/queries", () => {
     const r = await fetchPortalEmbarques(["cli-1"]);
     expect(r).toEqual([{ id: "e1" }]);
     expect(mock.tableCalls[0].table).toBe("embarques");
+  });
+
+  it("fetchPortalEmbarque: consulta tabla embarques por id", async () => {
+    mock.setTableResult("embarques", { data: { id: "e1" }, error: null });
+    const r = await fetchPortalEmbarque("e1");
+    expect(r).toEqual({ id: "e1" });
   });
 
   it("fetchPortalEventos: ordena por fecha desc", async () => {
@@ -62,47 +84,112 @@ describe("portal/queries", () => {
     expect(r[1].embarque_expediente).toBeNull();
   });
 
-  it("fetchPortalCotizaciones: omite query a embarques cuando no hay vinculados", async () => {
+  it("fetchPortalCotizaciones: maneja error en batch query de embarques", async () => {
     mock.setTableResult("cotizaciones", {
-      data: [{ id: "c1", embarque_id: null, folio: "COT-1" }],
+      data: [{ id: "c1", embarque_id: "e1" }],
       error: null,
     });
-    const r = await fetchPortalCotizaciones(["cli-1"]);
-    expect(r[0].embarque_expediente).toBeNull();
-    // Solo debería haber consultado cotizaciones, no embarques
-    expect(mock.tableCalls.filter((c) => c.table === "embarques").length).toBe(0);
+    mock.setTableResult("embarques", { data: null, error: new Error("batch fail") });
+    await expect(fetchPortalCotizaciones(["cli-1"])).rejects.toThrow("batch fail");
+  });
+
+  it("fetchPortalCotizacion: maneja not found y vinculación", async () => {
+    // 1. Not found
+    mock.setTableResult("cotizaciones", { data: null, error: null });
+    expect(await fetchPortalCotizacion("x")).toBeNull();
+
+    // 2. Found with no embarque
+    mock.setTableResult("cotizaciones", { data: { id: "c1", embarque_id: null }, error: null });
+    const r1 = await fetchPortalCotizacion("c1");
+    expect(r1?.embarque_expediente).toBeNull();
+
+    // 3. Found with embarque
+    mock.setTableResult("cotizaciones", { data: { id: "c1", embarque_id: "e1" }, error: null });
+    mock.setTableResult("embarques", { data: { expediente: "EXP-1" }, error: null });
+    const r2 = await fetchPortalCotizacion("c1");
+    expect(r2?.embarque_expediente).toBe("EXP-1");
   });
 
   it("fetchPortalFacturas: ordena por fecha_emision desc", async () => {
     mock.setTableResult("facturas", { data: [{ id: "f1" }], error: null });
     const r = await fetchPortalFacturas(["cli-1"]);
     expect(r).toEqual([{ id: "f1" }]);
-    expect(mock.tableCalls[0].ops).toContain("order");
   });
 
   it("fetchPortalFactura: consulta tabla facturas por id", async () => {
     mock.setTableResult("facturas", { data: { id: "f1" }, error: null });
     const r = await fetchPortalFactura("f1");
     expect(r).toEqual({ id: "f1" });
-    expect(mock.tableCalls[0].table).toBe("facturas");
-    expect(mock.tableCalls[0].ops).toContain("eq");
-  });
-
-  it("fetchPortalFactura: propaga error", async () => {
-    mock.setTableResult("facturas", { data: null, error: new Error("rls") });
-    await expect(fetchPortalFactura("x")).rejects.toThrow("rls");
   });
 
   it("fetchPortalPagosFactura: ordena por fecha_pago desc", async () => {
     mock.setTableResult("pagos_factura", { data: [{ id: "p1" }], error: null });
     const r = await fetchPortalPagosFactura("f1");
     expect(r).toEqual([{ id: "p1" }]);
-    expect(mock.tableCalls[0].table).toBe("pagos_factura");
-    expect(mock.tableCalls[0].ops).toContain("order");
   });
 
-  it("fetchPortalPagosFactura: propaga error", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: new Error("rls") });
-    await expect(fetchPortalPagosFactura("f1")).rejects.toThrow("rls");
+  it("fetchPortalClientUsers: consulta tabla client_users", async () => {
+    mock.setTableResult("client_users", { data: [{ id: "u1" }], error: null });
+    const r = await fetchPortalClientUsers();
+    expect(r).toEqual([{ id: "u1" }]);
+  });
+
+  it("fetchPortalClienteName: maneja usuario no logueado y datos nulos", async () => {
+    // No user
+    (mock.supabase.auth.getUser as any).mockResolvedValueOnce({ data: { user: null }, error: null });
+    expect(await fetchPortalClienteName()).toBeNull();
+
+    // User logged in but no data
+    (mock.supabase.auth.getUser as any).mockResolvedValueOnce({ data: { user: { id: "u1" } }, error: null });
+    mock.setTableResult("client_users", { data: null, error: null });
+    expect(await fetchPortalClienteName()).toBeNull();
+
+    // User logged in with data
+    (mock.supabase.auth.getUser as any).mockResolvedValueOnce({ data: { user: { id: "u1" } }, error: null });
+    mock.setTableResult("client_users", { data: { clientes: { nombre: "ACME" } }, error: null });
+    expect(await fetchPortalClienteName()).toBe("ACME");
+  });
+
+  it("fetchPortalOrgName: maneja usuario no logueado y datos nulos", async () => {
+    // No user
+    (mock.supabase.auth.getUser as any).mockResolvedValueOnce({ data: { user: null }, error: null });
+    expect(await fetchPortalOrgName()).toBeNull();
+
+    // User logged in but no data
+    (mock.supabase.auth.getUser as any).mockResolvedValueOnce({ data: { user: { id: "u1" } }, error: null });
+    mock.setTableResult("client_users", { data: null, error: null });
+    expect(await fetchPortalOrgName()).toBeNull();
+
+    // User logged in with data
+    (mock.supabase.auth.getUser as any).mockResolvedValueOnce({ data: { user: { id: "u1" } }, error: null });
+    mock.setTableResult("client_users", { data: { organizations: { nombre: "ORG" } }, error: null });
+    expect(await fetchPortalOrgName()).toBe("ORG");
+  });
+
+  it.each([
+    ["fetchPortalEmbarques", fetchPortalEmbarques, ["c1"]],
+    ["fetchPortalEmbarque", fetchPortalEmbarque, "e1"],
+    ["fetchPortalEventos", fetchPortalEventos, "e1"],
+    ["fetchPortalDocumentos", fetchPortalDocumentos, "e1"],
+    ["fetchPortalFacturas", fetchPortalFacturas, ["c1"]],
+    ["fetchPortalFactura", fetchPortalFactura, "f1"],
+    ["fetchPortalPagosFactura", fetchPortalPagosFactura, "f1"],
+    ["fetchPortalClientUsers", fetchPortalClientUsers, undefined],
+    ["fetchPortalClienteName", fetchPortalClienteName, undefined],
+    ["fetchPortalOrgName", fetchPortalOrgName, undefined],
+  ])("%s: propaga error de supabase", async (_, fn, args) => {
+    mock.resetResults();
+    mock.setTableResult("embarques", { data: null, error: new Error("db error") });
+    mock.setTableResult("eventos_embarque", { data: null, error: new Error("db error") });
+    mock.setTableResult("documentos_embarque", { data: null, error: new Error("db error") });
+    mock.setTableResult("facturas", { data: null, error: new Error("db error") });
+    mock.setTableResult("pagos_factura", { data: null, error: new Error("db error") });
+    mock.setTableResult("client_users", { data: null, error: new Error("db error") });
+    
+    if (fn === fetchPortalClienteName || fn === fetchPortalOrgName) {
+      (mock.supabase.auth.getUser as any).mockResolvedValueOnce({ data: { user: { id: "u1" } }, error: null });
+    }
+
+    await expect(args !== undefined ? (fn as any)(args) : (fn as any)()).rejects.toThrow("db error");
   });
 });

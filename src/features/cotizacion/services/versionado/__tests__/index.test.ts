@@ -82,3 +82,39 @@ describe("obtenerCostosCotizacionVersion", () => {
     expect(out).toEqual([]);
   });
 });
+
+describe("versionado/index.ts - extra coverage", () => {
+  it("aceptarCotizacionVersion lanza error genérico si no es 22023", async () => {
+    mock.setRpcResult("aceptar_cotizacion_version", {
+      data: null,
+      error: { message: "error fatal", code: "P0001" },
+    });
+    await expect(aceptarCotizacionVersion("c1")).rejects.toThrow("error fatal");
+  });
+
+  it("obtenerCostosCotizacionVersion lanza error si falla la RPC", async () => {
+    mock.setRpcResult("obtener_costos_cotizacion_version", { data: null, error: { message: "fail" } });
+    await expect(obtenerCostosCotizacionVersion("c1")).rejects.toThrow("fail");
+  });
+
+  it("parseCosto cubre todas las ramas de nullish coalescing", async () => {
+    mock.setRpcResult("obtener_costos_cotizacion_version", {
+      data: [{}], // objeto vacío para forzar defaults
+      error: null,
+    });
+    const out = await obtenerCostosCotizacionVersion("c1");
+    expect(out[0].moneda).toBe("USD");
+    expect(out[0].cantidad).toBe(0);
+    expect(out[0].costo_total).toBe(0);
+    expect(out[0].precio_total).toBe(0);
+  });
+
+  it("parseCosto usa version null si no viene", async () => {
+    mock.setRpcResult("obtener_costos_cotizacion_version", {
+      data: [{ version: null }],
+      error: null,
+    });
+    const out = await obtenerCostosCotizacionVersion("c1");
+    expect(out[0].version).toBeNull();
+  });
+});
