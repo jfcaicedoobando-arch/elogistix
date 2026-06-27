@@ -18,15 +18,29 @@ test.describe("Flujo 11 — Cotización → embarque", () => {
 
   let nuevoEmbarqueId: string | null = null;
 
-  test.afterEach(async ({ page }) => {
+  test.afterEach(async ({ page }, testInfo) => {
     if (!nuevoEmbarqueId) return;
-    await bestEffortCleanup("borrar embarque borrador E2E", async () => {
-      await supabaseRest(page).delete("embarques", { id: nuevoEmbarqueId! });
+    const id = nuevoEmbarqueId;
+    // Borrar en orden FK-safe: hijos primero, luego el embarque.
+    await bestEffortCleanup(testInfo, "borrar tracking_eventos", async () => {
+      await supabaseRest(page).delete("eventos_embarque", { embarque_id: id });
+    });
+    await bestEffortCleanup(testInfo, "borrar embarque_contenedores", async () => {
+      await supabaseRest(page).delete("embarque_contenedores", { embarque_id: id });
+    });
+    await bestEffortCleanup(testInfo, "borrar conceptos_costo", async () => {
+      await supabaseRest(page).delete("conceptos_costo", { embarque_id: id });
+    });
+    await bestEffortCleanup(testInfo, "borrar conceptos_venta", async () => {
+      await supabaseRest(page).delete("conceptos_venta", { embarque_id: id });
+    });
+    await bestEffortCleanup(testInfo, "borrar embarque borrador E2E", async () => {
+      await supabaseRest(page).delete("embarques", { id });
     });
     nuevoEmbarqueId = null;
   });
 
-  test("convierte cotización aceptada en embarque borrador", async ({ page }) => {
+  test("convierte cotización aceptada en embarque borrador", async ({ page }, testInfo) => {
     await loginAs(page, internalCreds());
     await page.goto(`/cotizaciones/${COTIZACION_ID}`);
 
@@ -62,6 +76,18 @@ test.describe("Flujo 11 — Cotización → embarque", () => {
     const urlId = page.url().match(/\/embarques\/([0-9a-f-]{36})/i)?.[1] ?? null;
     nuevoEmbarqueId = nuevoEmbarqueId ?? urlId;
     expect(nuevoEmbarqueId, "no se pudo capturar id del nuevo embarque").toBeTruthy();
+
+    // Marcar el embarque con tag E2E_TEST para localizarlo en reportes de basura
+    // si el cleanup falla. Best-effort: no rompemos el test si la columna está bloqueada.
+    if (nuevoEmbarqueId) {
+      await bestEffortCleanup(testInfo, "tag E2E_TEST en notas_internas", async () => {
+        await supabaseRest(page).patch(
+          "embarques",
+          { id: nuevoEmbarqueId! },
+          { notas_internas: "E2E_TEST — cotización→embarque" },
+        );
+      });
+    }
 
     // Heading con expediente real.
     await expect(
