@@ -5,7 +5,7 @@ import {
   FunctionsFetchError,
 } from "@supabase/supabase-js";
 
-const invokeMock = vi.fn();
+const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { functions: { invoke: invokeMock } },
 }));
