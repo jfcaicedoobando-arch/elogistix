@@ -43,7 +43,7 @@ describe("pdf/render/descargarPdf", () => {
   });
 
   it("propaga el error si toBlob falla", async () => {
-    const pdfSpy = vi.spyOn(ReactPDF, "pdf").mockReturnValueOnce({
+    vi.spyOn(ReactPDF, "pdf").mockReturnValueOnce({
       toBlob: () => Promise.reject(new Error("render fail")),
       toBuffer: () => Promise.resolve(new Uint8Array()),
       toString: () => Promise.resolve(""),

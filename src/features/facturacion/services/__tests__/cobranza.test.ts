@@ -113,5 +113,6 @@ describe("calcularKPIs (cobranza — consistencia con agruparSaldosPorMoneda)", 
     expect(k.vencido_mxn).toBe(0);
     expect(k.vencido_usd).toBe(0);
     expect(k.facturas_vencidas).toBe(0);
+    expect(warn).toHaveBeenCalled();
   });
 });
