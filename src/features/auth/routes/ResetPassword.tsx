@@ -68,7 +68,7 @@ export default function ResetPassword() {
         description="Define una nueva contraseña para tu cuenta de Libre Carga, la plataforma de agentes de carga en México. Acceso seguro a embarques, cotizaciones y clientes."
         canonical="https://librecarga.com/reset-password"
       />
-      <Card className="w-full max-w-sm shadow-lg">
+      <Card className="w-full max-w-sm shadow-raised">
         <CardHeader className="text-center space-y-4 pb-4">
           <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
           <h1 className="sr-only">Restablecer contraseña</h1>

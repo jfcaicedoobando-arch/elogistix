@@ -62,7 +62,7 @@ export function Row({ onClick, badge, badgeClass, title, subtitle }: RowProps) {
       className="flex items-center gap-3 rounded-lg border p-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
     >
       <div
-        className={`shrink-0 min-w-[2.25rem] h-8 px-2 rounded-md flex items-center justify-center text-[11px] font-bold text-white ${badgeClass}`}
+        className={`shrink-0 min-w-[2.25rem] h-8 px-2 rounded-md flex items-center justify-center text-xs font-bold text-primary-foreground ${badgeClass}`}
       >
         {badge}
       </div>

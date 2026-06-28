@@ -99,7 +99,7 @@ export function TabCategorias() {
                     <tr key={c.id} className={`border-t ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
                       <td className="px-3 py-2 font-medium">{c.nombre}</td>
                       <td className="px-3 py-2">
-                        <span className={`inline-block text-[11px] px-2 py-0.5 rounded ${esGastoFijo ? "bg-amber-100 text-amber-900" : "bg-slate-100 text-slate-700"}`}>
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded ${esGastoFijo ? "bg-warning/10 text-warning-foreground" : "bg-muted text-muted-foreground"}`}>
                           {tipoLabel}
                         </span>
                       </td>

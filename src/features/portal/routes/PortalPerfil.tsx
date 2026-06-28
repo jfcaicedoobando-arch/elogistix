@@ -42,10 +42,7 @@ export default function PortalPerfil() {
 
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Mi Perfil</h1>
-        <p className="text-sm text-muted-foreground">Datos de tu cuenta y empresa.</p>
-      </div>
+      <PageHeader title="Mi Perfil" description="Datos de tu cuenta y empresa." />
 
 
       <Card>

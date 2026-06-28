@@ -29,7 +29,7 @@ export function ClienteDetalleHeader({ cliente, canEdit, onBack, onEdit }: Props
         <ArrowLeft className="h-5 w-5" />
       </Button>
       <div className="flex-1">
-        <h1 className="text-2xl font-bold">{cliente.nombre}</h1>
+        <h1 className="text-display font-bold tracking-tight">{cliente.nombre}</h1>
         <p className="text-sm text-muted-foreground">{cliente.rfc}</p>
       </div>
       <Button

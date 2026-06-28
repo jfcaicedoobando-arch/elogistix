@@ -66,7 +66,7 @@ export function ResumenConceptosVentaTotales({
         total={totales.pendiente}
         cardClass="bg-background"
         badgeClass="bg-secondary text-secondary-foreground"
-        icon={<Clock className="h-4 w-4 text-gray-600" />}
+        icon={<Clock className="h-4 w-4 text-muted-foreground" />}
         emptyText="Sin conceptos pendientes"
       />
       <ColumnaTotal

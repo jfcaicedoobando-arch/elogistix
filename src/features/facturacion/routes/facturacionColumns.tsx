@@ -118,11 +118,11 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
                 <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagar
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={() => onVerPagos(f)} title="Ver pagos">
+            <Button variant="ghost" size="icon" onClick={() => onVerPagos(f)} title="Ver pagos" aria-label="Ver pagos">
               <Eye className="h-4 w-4" />
             </Button>
             {cancelable && (
-              <Button variant="ghost" size="icon" onClick={() => onCancelar!(f)} title="Cancelar CFDI" className="text-destructive">
+              <Button variant="ghost" size="icon" onClick={() => onCancelar!(f)} title="Cancelar CFDI" aria-label="Cancelar CFDI" className="text-destructive">
                 <Ban className="h-4 w-4" />
               </Button>
             )}

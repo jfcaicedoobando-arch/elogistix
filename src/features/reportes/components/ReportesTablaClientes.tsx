@@ -48,7 +48,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
   ]);
 
   return (
-    <Card className="rounded-2xl shadow-sm border-0 bg-card">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">Desglose por Cliente</CardTitle>
       </CardHeader>

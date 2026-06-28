@@ -44,7 +44,7 @@ export function KpiCard({
     : "text-lg";
 
   return (
-    <Card className="rounded-2xl shadow-sm border-0 bg-card">
+    <Card>
       <CardContent className="p-3 sm:p-5 flex items-center gap-2 sm:gap-4">
         <div
           aria-hidden="true"

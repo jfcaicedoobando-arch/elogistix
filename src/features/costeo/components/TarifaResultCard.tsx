@@ -48,8 +48,8 @@ export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", 
         className={cn(
           "p-4 space-y-3 flex flex-col relative transition-shadow",
           esGanador
-            ? "border-2 border-success bg-success/5 shadow-md ring-1 ring-success/20"
-            : "border-border hover:shadow-sm",
+            ? "border-success bg-success/5 shadow-raised ring-1 ring-success/20"
+            : "hover:shadow-raised",
         )}
       >
         {esGanador && <WinnerBadge />}
