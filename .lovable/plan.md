@@ -1,39 +1,49 @@
-# Continuación: Lotes B y C de la 2ª auditoría visual
+## 3ª pasada de auditoría visual (1920×1080)
 
-Lote A ya quedó (v13.139.16). Sigo con los hallazgos medios y bajos.
+Capturar screenshots frescos en Full HD de las rutas clave **después** de los lotes A y B, y reportar únicamente hallazgos nuevos o residuales. Sin cambios de código en esta fase — primero ver, luego decidir.
 
-## Lote B — Medio (v13.139.17)
+### Alcance
 
-5. **Bandejas (`/bandejas/facturacion-por-emitir`, `/bandejas/cartera`) — ¿tabs faltantes?**
-   - Revisar los componentes de ruta. Si son bandejas mono-estado (todo lo que aparece es "pendiente de acción"), cerrar como falso positivo y documentarlo en CHANGELOG. No agregar tabs decorativos.
+12 rutas, todas a 1920×1080:
 
-6. **`Badge` — variante `warning`**
-   - `src/components/ui/badge.tsx`: confirmar que existe `warning` (ya verificado en lote A). Si los tokens `--warning` y `--warning-foreground` no están en `src/index.css`, agregarlos en la paleta semántica existente (amber-500 / foreground oscuro) sin tocar otros tokens.
-   - No reemplazar usos existentes; sólo dejar la variante disponible.
+1. `/` (Inicio)
+2. `/embarques` (lista, validar altura tras pageSize=50)
+3. `/embarques/:id` (detalle, tabs reordenados)
+4. `/cotizaciones` (validar altura tras pageSize=50)
+5. `/clientes` (validar `max-w-sm` del buscador)
+6. `/facturacion` (validar tabs underline + `space-y-6`)
+7. `/cxp` (comparación con Facturación)
+8. `/bandejas/facturacion-por-emitir`
+9. `/bandejas/cartera`
+10. `/auditoria`
+11. `/usuarios`
+12. `/configuracion`
 
-7. **Embarques — altura 4725px (paginación)**
-   - `src/features/embarques/routes/Embarques.tsx` + `useEmbarquesPageState`: validar que `pageSize` default sea 25/50 y que el selector de densidad/tamaño esté visible en la tabla. La tabla ya es server-side (`fetchEmbarquesPaginados`), así que probablemente sólo falta verificar que el default no haya quedado en 200+. Sin cambios de lógica.
+### Proceso
 
-8. **Cotizaciones — altura 3515px**
-   - Mismo patrón que #7 sobre la ruta de cotizaciones.
+1. **Subagente A — Captura**: Playwright headless, viewport 1280×1800 (lo más cercano a 1920×1080 que permite la herramienta sin full_page). Login con sesión inyectada, navegar a cada ruta, esperar red ociosa, screenshot completo del viewport. Guardar en `/tmp/browser/audit3/screenshots/`.
 
-## Lote C — Bajo + cierre (v13.139.18)
+2. **Subagente B — Análisis**: Revisar las 12 imágenes con criterio de Auditor Senior UI/UX. Reportar sólo hallazgos **nuevos** (no repetidos de las pasadas 1 y 2). Clasificar por severidad (Crítico / Alto / Medio / Bajo) con: ruta, descripción, evidencia visual (coordenadas), causa probable, fix sugerido.
 
-9. **Inicio — altura 2747px**
-   - Revisar `src/features/dashboard` (o equivalente): confirmar `gap-6` entre secciones y que las Cards usen `p-6 shadow-sm`. Ajuste cosmético menor si hay aire muerto.
+3. **Reporte consolidado**: Te entrego la lista en chat. Tú decides qué corregir y en qué orden antes de pasar a build mode.
 
-10. **Facturación — padding/margin (+98px vs estándar)**
-    - Ya se ajustó el wrapper a `space-y-6` en lote A. Verificar visualmente con screenshot fresco y, si sigue desalineado, igualar exactamente al wrapper de `Embarques.tsx`.
+### Criterios de evaluación
 
-## Validación
+- Jerarquía visual y consistencia de headers
+- Alineación, spacing y ritmo vertical (`space-y-6`)
+- Densidad de información y uso de scroll
+- Estados de tabs/buttons/badges
+- Contraste WCAG AA
+- Comportamiento de tablas (anchos de columna, paginación visible)
+- Tokens semánticos (sin colores hardcodeados visibles)
 
-Después de cada lote:
-- `bun run lint` sin warnings nuevos.
-- Sub-agente Playwright re-captura las rutas tocadas a 1280×1800 y compara contra la baseline del lote anterior.
-- Bump `APP_VERSION` y entrada en `CHANGELOG.md` con formato `## [X.Y.Z] - 2026-06-28`.
+### Fuera de alcance
 
-## Fuera de alcance
+- Cambios de código (esto es sólo descubrimiento).
+- A11y (focus rings, teclado, aria) — eso sería una auditoría separada.
+- Mobile.
+- Lógica de negocio.
 
-- Sin cambios de lógica de negocio, queries ni RLS.
-- Sin migración de más rutas a `PageHeader`.
-- Sin rediseños de componentes; sólo alineación a tokens y patrones existentes.
+### Entregable
+
+Lista priorizada de hallazgos nuevos con propuesta de remediación, lista para aprobar el siguiente lote de fixes.
