@@ -1,56 +1,53 @@
-## Lote C — Fixes navegación + UI crítica (Auditoría 3ª pasada)
+## Lote D — Cierre de la 3ª pasada de auditoría visual
 
-Corregir los 5 hallazgos que rompen navegación o muestran datos crudos. Sin tocar lógica de negocio.
+Atacar los 5 hallazgos pendientes (Medio y Bajo). Sin tocar lógica de negocio.
 
-### F-01 / F-02 — Rutas "Por emitir" y "Cobranza" dan 404
+### F-05 — UUID crudo en columna "Contenedor" (Alto, residual)
 
-**Causa**: `sidebarItems.ts` apunta a `/facturacion/por-emitir` y `/cartera`, pero el sidebar dinámico (vía `useAppSidebarSections`) o algún builder de rol está reescribiendo a `/bandejas/facturacion-por-emitir` y `/bandejas/cartera` (rutas que no existen en `appRoutes.tsx`).
+**Causa**: La columna muestra `embarque.tipo_contenedor` directo. Cuando ya es UUID del catálogo nuevo, se ve como `a1b2c3d4-…` en vez de "40HC".
 
-**Fix**: Auditar `src/hooks/layout/sidebarRoleBuilders.ts` + `appRoutes.tsx`. Alinear URLs del sidebar con las rutas reales registradas. Validar con `rg "facturacion-por-emitir|bandejas/cartera"`.
+**Fix**: En las columnas del DataTable de `/embarques` (`src/features/embarques/components/...` — localizar archivo de columnas), usar el helper existente `resolveTipoContenedorNombre(value, catalogo)` pasando el catálogo de tipos de contenedor (hook `useTiposContenedor` o equivalente). Si la lista de embarques aún no tiene el catálogo cargado, agregar el query y memoizar.
 
-### F-03 — "Buenos días □" (emoji corrupto)
+### F-07 — Botón "Sin Cambios" en Configuración (Medio)
 
-**Causa**: En el saludo del Dashboard hay un emoji (probablemente 👋 o ☀️) que no renderiza por fuente o por codificación.
+**Causa**: En `/configuracion`, cuando no hay cambios pendientes, el botón de submit cambia su label a "Sin Cambios" en estado disabled.
 
-**Fix**: Localizar el string en `src/features/dashboard/routes/Dashboard.tsx` (o componente de saludo). Reemplazar emoji por icono Lucide (`Sun`, `Hand`) o eliminar el carácter.
+**Fix**: Mantener el label "Guardar" siempre. El estado `disabled` ya comunica visualmente que no hay nada que guardar. Localizar el botón en `src/features/configuracion/...` y quitar el ternario de label.
 
-### F-04 — 11 tabs en detalle de embarque desbordan a 2ª línea
+### F-08 — Tarjeta "Tiempo medio de resolución" sin valor (Medio)
 
-**Causa**: `TabsList` con `grid-cols-N` fijo o flex sin scroll horizontal en `EmbarqueDetalle.tsx`.
+**Causa**: En `/auditoria`, el KPI card de "Tiempo medio de resolución" muestra vacío cuando no hay hallazgos resueltos en la ventana.
 
-**Fix**: Convertir `TabsList` a scroll horizontal (`overflow-x-auto`, `flex-nowrap`, `whitespace-nowrap`) o agrupar tabs secundarias bajo un dropdown "Más". Preferir scroll horizontal por ser menos disruptivo.
+**Fix**: Renderizar fallback `"Sin datos"` (o `"—"`) cuando el valor sea `null`/`undefined`/`NaN`. Localizar el componente del card en `src/features/auditoria/components/...`.
 
-### F-05 — UUID crudo en columna "Contenedor" *(incluido por relación con F-04 — opcional)*
+### F-09 — pageSize default 100 en Clientes (Bajo)
 
-**Causa**: La columna muestra `embarque.tipo_contenedor` directamente cuando es UUID nuevo.
+**Causa**: `/clientes` quedó en 100 cuando ya bajamos Embarques y Cotizaciones a 50 en Lote B (v13.139.17).
 
-**Fix**: Usar `resolveTipoContenedorNombre()` (ya existe en `src/features/cotizacion/utils/`) en la columna del DataTable de embarques.
+**Fix**: Bajar default a 50 en la página de Clientes (`src/features/cliente/routes/Clientes.tsx` o equivalente), alineado con las otras listas largas. El selector seguirá ofreciendo 100/200/500.
 
-> **Nota**: F-05 sólo si ya está en alcance del lote; si quieres dejarlo fuera, lo movemos al siguiente.
+### F-10 — Topbar muestra "auditoria" en minúsculas (Bajo)
 
-### F-06 — Embarques y CXP: columnas finales truncadas sin scroll horizontal
+**Causa**: El breadcrumb / topbar deriva el título del slug de la ruta (`/auditoria`) sin capitalizar ni acentuar, mientras el H1 dice "Auditoría operativa".
 
-**Causa**: Tabla envuelta en contenedor sin `overflow-x-auto`, o `min-w` insuficiente en la `<table>`.
-
-**Fix**: En los wrappers de DataTable de `/embarques` y `/cxp`, agregar `overflow-x-auto` al contenedor y `min-w-max` a la tabla. Verificar que el sticky header (si existe) sigue funcionando.
+**Fix**: Dos opciones — preferir la primera:
+1. Mapear slugs conocidos a labels presentables en el componente de topbar (ya existe un mapping similar en `Breadcrumbs.tsx` o en el header). Agregar entrada `auditoria → "Auditoría"`.
+2. Si no hay mapping, capitalizar la primera letra como fallback genérico.
 
 ### Verificación
 
-Tras los fixes, re-capturar con Playwright las 4 rutas afectadas (`/`, `/embarques`, `/embarques/:id`, `/cxp`) y los 2 enlaces de sidebar corregidos. Confirmar visualmente que:
-- Los enlaces ya no dan 404.
-- El saludo se ve limpio.
-- Los tabs caben o hacen scroll horizontal suave.
-- Las tablas muestran todas las columnas (con scroll si es necesario).
+- Re-screenshot con Playwright (1920×1080 simulado) de `/embarques`, `/configuracion`, `/auditoria`, `/clientes` y la topbar en `/auditoria`.
+- Confirmar:
+  - Columna "Contenedor" muestra "40HC" etc., no UUID.
+  - Botón en Configuración dice "Guardar" (disabled cuando no hay cambios).
+  - Card de tiempo medio muestra valor o "Sin datos".
+  - Clientes default = 50 filas.
+  - Topbar muestra "Auditoría" capitalizado.
 
 ### Changelog + versión
 
-Bump `APP_VERSION` (patch) + entrada en `CHANGELOG.md` con los 5 (o 6 con F-05) fixes.
+Bump `APP_VERSION` (patch, p.ej. `13.139.19`) + entrada en `CHANGELOG.md` con los 5 fixes y la nota de cierre de la 3ª pasada de auditoría visual.
 
-### Fuera de alcance de este lote
+### Resumen para programador principiante
 
-- F-07 (botón "Sin Cambios" en Configuración) — Medio
-- F-08 (tarjeta "Tiempo medio resolución" sin valor) — Medio
-- F-09 (pageSize 100 en Clientes) — Bajo
-- F-10 (breadcrumb minúscula) — Bajo
-
-Se atacan en Lote D después de validar este.
+Es como pasarle un trapo final a 5 esquinas que quedaron polvosas tras la limpieza grande: ninguna rompe nada, pero todas se notan cuando las ves de cerca. Cuando termine este lote, la 3ª pasada queda 100% cerrada.
