@@ -4,8 +4,12 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { DetailRow } from "../DetailRow";
 import { FechaConOriginal } from "./FechaConOriginal";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
+import { useTiposContenedor } from "@/features/catalogos/hooks/useTiposContenedor";
+import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
 function RutaMaritimo({ e }: { e: EmbarqueRow }) {
+  const { data: tipos = [] } = useTiposContenedor();
+  const tipoNombre = resolveTipoContenedorNombre(e.tipo_contenedor, tipos, '-');
   return (
     <>
       <DetailRow label="Puerto Origen" value={e.puerto_origen || '-'} />
@@ -14,7 +18,7 @@ function RutaMaritimo({ e }: { e: EmbarqueRow }) {
       <DetailRow label="BL Master" value={e.bl_master || '-'} />
       <DetailRow label="BL House" value={e.bl_house || '-'} />
       <DetailRow label="Servicio" value={e.tipo_servicio || '-'} />
-      <DetailRow label="Contenedor" value={`${e.contenedor || '-'} (${e.tipo_contenedor || '-'})`} />
+      <DetailRow label="Contenedor" value={`${e.contenedor || '-'} (${tipoNombre})`} />
     </>
   );
 }
