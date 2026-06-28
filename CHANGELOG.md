@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.2] - 2026-06-28
+- **fix(ci) — notificar-respuesta-cotizacion**. Resueltos dos fallos de CI introducidos en v13.141.0: (1) el handler superaba la complejidad ciclomática máxima (26 vs 16) → extraídos `parseInput`, `sendToRecipients`, `authOrError`, `readBody` a `helpers.ts`; (2) el test `sentry-edge-coverage` exigía declarar la nueva función → añadida a `WRAPPED_COVERAGE` y a `CRITICAL` de `sentry-edge-wrapping`.
+
 ## [13.141.1] - 2026-06-28
 - **fix(ci) — arch baseline 200 líneas**. `embarqueColumns.tsx` (203 líneas) rompía los tests `architecture-baseline` y `audit-report`. Extraído `ContenedorCell` a `src/features/embarques/components/ContenedorCell.tsx` (componente puro de presentación). El archivo padre queda en 166 líneas y reexporta `ContenedorInfo` para no romper imports.
 
