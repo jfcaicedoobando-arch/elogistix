@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.4] - 2026-06-28
+- **docs(coverage) — plan de ratchet post-v4**. Tras la recalibración del piso en v13.141.3 (functions 30 / branches 34 por el cambio AST-aware de `@vitest/coverage-v8` v4), se documenta el roadmap acordado para volver a niveles saludables: meta Q3 2026 = functions 45 / branches 50; meta Q1 2027 = functions 55 / branches 60. Cada PR en CXP, facturación, embarques y cotización debe agregar tests dirigidos. Actualizado comentario en `vitest.config.ts` y `mem://principles/coverage-threshold`. Sin cambios en código de prod ni en tests.
+
 ## [13.141.3] - 2026-06-28
 - **fix(ci) — recalibración de coverage thresholds por bump de vitest/coverage-v8 v4**. Tras subir a `vitest@4.1.9` + `@vitest/coverage-v8@4.1.9` (v13.138.1), la métrica v8 v4 cuenta callbacks/arrow-fns y branches implícitas distinto a v2/v3. Sin que prod ni tests cambiaran, los reales cayeron: Functions 56% → 32%, Branches 73% → 37%, mientras Lines SUBIÓ 40% → 43%. Recalibrados los pisos a (real − 2 pts) en `vitest.config.ts`: `functions: 52→30`, `branches: 72→34`. Lines/statements se mantienen en 38. Documentado el motivo (cambio de herramienta, no degradación de tests) y actualizada `mem://principles/coverage-threshold`.
 
