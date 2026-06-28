@@ -6,10 +6,18 @@
  * exportamos un `toast()` con la MISMA firma legacy `{ title, description,
  * variant }` que internamente delega en `sonner`.
  *
- * Para código nuevo, prefiere los helpers `notifyError / notifySuccess /
- * notifyWarning` de `@/components/shared/utils/appFeedback` o `import { toast } from "sonner"`
- * directamente.
+ * v13.140.x — Política canónica de toasts:
+ *  - Mensajes generales de feature → `useToast()` + helpers de
+ *    `@/components/shared/utils/appFeedback` (`notifyError`, `notifySuccess`,
+ *    `notifyWarning`).
+ *  - Toasts minimalistas/silenciados del CRM → `crmToast` en
+ *    `@/features/crm/lib/crmToast`.
+ *  - **No** importes `toast` directamente desde `sonner` en features. La
+ *    única razón válida para importar `sonner` es dentro de los shims
+ *    anteriores. Esto garantiza estilos uniformes, manejo único de
+ *    debug/`ErrorDetailsDialog` y traducciones consistentes.
  */
+
 import { toast as sonnerToast } from "sonner";
 import type { ReactNode } from "react";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";

@@ -63,7 +63,7 @@ export default function TesoreriaConciliacion() {
       />
 
       <Card>
-        <CardContent className="p-4 flex flex-wrap gap-3 items-center">
+        <CardContent density="compact" className="flex flex-wrap gap-3 items-center">
           <Select value={cuentaId} onValueChange={setCuentaId}>
             <SelectTrigger className="w-[260px]"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
             <SelectContent>
@@ -96,7 +96,7 @@ export default function TesoreriaConciliacion() {
       </Card>
 
       {!cuentaId ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">
+        <Card><CardContent density="compact" className="p-8 text-center text-muted-foreground">
           <FileSpreadsheet className="h-12 w-12 mx-auto mb-2 opacity-30" />
           Selecciona una cuenta para empezar a conciliar.
         </CardContent></Card>
@@ -106,7 +106,7 @@ export default function TesoreriaConciliacion() {
             <div className="text-xs text-muted-foreground px-1 flex justify-between">
               <span>{movs.length} movimientos · {cuentaActual?.alias}</span>
             </div>
-            <Card><CardContent className="p-0">
+            <Card><CardContent density="flush">
               {isLoading ? (
                 <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
               ) : movs.length === 0 ? (

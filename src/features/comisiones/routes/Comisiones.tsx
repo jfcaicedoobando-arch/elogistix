@@ -18,7 +18,7 @@ import type { EstadoComision } from "@/features/comisiones/services";
 function KPICard({ label, value }: { label: string; value: string }) {
   return (
     <Card>
-      <CardContent className="p-3">
+      <CardContent density="tight">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-lg font-semibold tabular-nums">{value}</p>
       </CardContent>
@@ -66,7 +66,7 @@ export default function Comisiones() {
           </div>
 
           <Card>
-            <CardContent className="p-4 flex flex-wrap gap-3">
+            <CardContent density="compact" className="flex flex-wrap gap-3">
               <Select value={vendedora} onValueChange={setVendedora}>
                 <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -93,7 +93,7 @@ export default function Comisiones() {
           </Card>
 
           <Card>
-            <CardContent className="p-0">
+            <CardContent density="flush">
               <DataTable
                 columns={columns}
                 data={comisiones}

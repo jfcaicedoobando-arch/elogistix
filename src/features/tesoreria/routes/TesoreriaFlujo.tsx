@@ -18,7 +18,7 @@ function Kpi({ label, value, tone = "default" }: { label: string; value: string;
   const tt = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : tone === "warn" ? "text-warning" : "text-foreground";
   return (
     <Card>
-      <CardContent className="p-3">
+      <CardContent density="tight">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className={`text-lg font-semibold tabular-nums ${tt}`}>{value}</p>
       </CardContent>
@@ -60,7 +60,7 @@ export default function TesoreriaFlujo() {
 
           {data.alertas_negativas > 0 && (
             <Card className="border-destructive/40 bg-destructive/5">
-              <CardContent className="p-3 flex items-center gap-2 text-sm">
+              <CardContent density="tight" className="flex items-center gap-2 text-sm">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 <span>
                   <strong>{data.alertas_negativas}</strong> semana{data.alertas_negativas === 1 ? "" : "s"} con saldo proyectado negativo.
@@ -71,7 +71,7 @@ export default function TesoreriaFlujo() {
           )}
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent density="compact">
               <h3 className="text-sm font-semibold mb-3">Flujo semanal (MXN)</h3>
               <Suspense fallback={<Skeleton className="h-72 w-full" />}>
                 <GraficoFlujoProyectado semanas={data.semanas} />
