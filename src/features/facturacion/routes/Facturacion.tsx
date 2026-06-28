@@ -126,7 +126,7 @@ export default function Facturacion() {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
           {canEmitirFactura && (
