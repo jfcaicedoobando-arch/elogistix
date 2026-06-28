@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.1] - 2026-06-28
+- **fix(ci) — arch baseline 200 líneas**. `embarqueColumns.tsx` (203 líneas) rompía los tests `architecture-baseline` y `audit-report`. Extraído `ContenedorCell` a `src/features/embarques/components/ContenedorCell.tsx` (componente puro de presentación). El archivo padre queda en 166 líneas y reexporta `ContenedorInfo` para no romper imports.
+
 ## [13.141.0] - 2026-06-28
 - **feat(portal-cotizaciones) — AUDIT-17.1: email a operaciones cuando un cliente responde**. Cuando un cliente acepta o rechaza una cotización desde el portal, los operadores y admins de la organización reciben un email con folio, cliente, estado, comentario y enlace.
   - Nueva RPC `public.get_operadores_para_cotizacion(uuid)` (SECURITY DEFINER) que valida ownership del cliente y resuelve destinatarios server-side. El portal NUNCA elige a quién se le envía.
