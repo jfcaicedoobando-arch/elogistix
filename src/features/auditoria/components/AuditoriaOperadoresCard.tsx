@@ -21,8 +21,8 @@ interface Props {
   rankingRevisores?: OperadorRanking[];
 }
 
-function formatMttr(horas: number | null): string {
-  if (horas === null) return "—";
+function formatMttr(horas: number | null | undefined): string {
+  if (horas == null || !Number.isFinite(horas) || horas <= 0) return "Sin datos";
   if (horas < 24) return `${horas} h`;
   const dias = Math.round(horas / 24);
   return `${dias} d`;

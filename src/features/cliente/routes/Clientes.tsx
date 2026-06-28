@@ -38,7 +38,7 @@ export default function Clientes() {
   const { toast } = useToast();
   const registrarActividad = useRegistrarActividad();
 
-  const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({});
+  const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({}, 50);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
