@@ -1,3 +1,28 @@
+/**
+ * Card primitives — wrappers semánticos sobre `<div>` que aplican los tokens
+ * de superficie del design system (`bg-card`, `text-card-foreground`,
+ * `shadow-card`, `rounded-lg`, `border`).
+ *
+ * ## Reglas (v13.140.x)
+ *
+ * 1. **Nunca** sobre-escribas `shadow-*`, `border-*` ni `rounded-*` en
+ *    instancias de `<Card>`. Si necesitas elevación adicional usa
+ *    `shadow-raised` (existe como token). Cualquier otro override rompe
+ *    cohesión visual y será marcado en auditoría.
+ *
+ * 2. **Densidad de `<CardContent>`**: en lugar de pasar
+ *    `className="p-3"` o `className="p-4"` ad-hoc, usa la prop `density`:
+ *    - `density="default"` → `p-6 pt-0` (el de siempre, recomendado).
+ *    - `density="compact"` → `p-4` (tarjetas medianas tipo CxP toolbar).
+ *    - `density="tight"`   → `p-3` (KPI compactos, tesorería/comisiones).
+ *    - `density="flush"`   → `p-0` (cuando el hijo es una tabla full-bleed
+ *      que ya gestiona su propio padding — patrón aprobado en facturación,
+ *      embarques, cxp y conciliación).
+ *
+ *    `pt-0` se omite en compact/tight/flush porque allí el header suele
+ *    estar ausente. Si combinas `<CardHeader>` + `<CardContent
+ *    density="compact">` y necesitas `pt-0`, pásalo explícito.
+ */
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -32,8 +57,24 @@ const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttribu
 );
 CardDescription.displayName = "CardDescription";
 
-const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />,
+type CardContentDensity = "default" | "compact" | "tight" | "flush";
+
+interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Ver JSDoc del archivo. Reemplaza overrides ad-hoc de `p-3/p-4/p-0`. */
+  density?: CardContentDensity;
+}
+
+const DENSITY_CLASS: Record<CardContentDensity, string> = {
+  default: "p-6 pt-0",
+  compact: "p-4",
+  tight: "p-3",
+  flush: "p-0",
+};
+
+const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
+  ({ className, density = "default", ...props }, ref) => (
+    <div ref={ref} className={cn(DENSITY_CLASS[density], className)} {...props} />
+  ),
 );
 CardContent.displayName = "CardContent";
 
@@ -45,3 +86,4 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 CardFooter.displayName = "CardFooter";
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+export type { CardContentDensity, CardContentProps };
