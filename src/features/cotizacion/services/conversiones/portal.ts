@@ -1,5 +1,12 @@
 /**
  * Cotizaciones — Conversión: Portal — respuesta del cliente vía RPC.
+ *
+ * Tras registrar la respuesta, dispara la notificación por email a
+ * operadores/admins de la organización (edge function `notificar-respuesta-cotizacion`
+ * resuelve destinatarios server-side; el portal nunca elige a quién se le envía).
+ *
+ * La notificación es best-effort: un fallo de email NO debe revertir la
+ * respuesta del cliente — solo se loggea.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,21 +22,17 @@ export async function portalResponderCotizacion(
   });
   if (error) throw error;
 
-  // AUDIT(hallazgo-17) Fase 2.1 — Email a operaciones (inactivo hasta configurar dominio de email).
-  // Cuando se complete `setup_email_infra` + `scaffold_transactional_email` y el
-  // template `cotizacion-respuesta` esté registrado en registry.ts, descomentar:
-  //
-  // await supabase.functions.invoke("send-transactional-email", {
-  //   body: {
-  //     templateName: "cotizacion-respuesta",
-  //     // recipientEmail: <email de operador/admin resuelto en backend>,
-  //     idempotencyKey: `cotizacion-respuesta-${cotizacionId}-${respuesta}`,
-  //     templateData: { /* folio, cliente, estado, comentario, enlace */ },
-  //   },
-  // });
-  //
-  // Nota: el envío real probablemente se mueva a un trigger/edge function que
-  // resuelva destinatarios en backend, ya que el cliente del portal NO debe
-  // poder elegir a quién se le envía el email.
+  try {
+    await supabase.functions.invoke("notificar-respuesta-cotizacion", {
+      body: {
+        cotizacion_id: cotizacionId,
+        estado: respuesta,
+        comentario,
+      },
+    });
+  } catch (notifyErr) {
+    // Best-effort: no romper el flujo del portal si el email falla.
+    console.warn("notificar-respuesta-cotizacion falló (best-effort)", notifyErr);
+  }
 }
 
