@@ -38,6 +38,8 @@ const CRITICAL = [
   // 13.137.7 — Notas de crédito (CFDI tipo E)
   "supabase/functions/facturapi-emitir-nota-credito/index.ts",
   "supabase/functions/facturapi-cancelar-nota-credito/index.ts",
+  // 13.141.0 — AUDIT-17.1 notificación de respuesta de cotización desde portal
+  "supabase/functions/notificar-respuesta-cotizacion/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
