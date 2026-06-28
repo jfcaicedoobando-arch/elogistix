@@ -5,6 +5,7 @@ import { Loader2, Pencil, KeyRound, User as UserIcon, Building2 } from "lucide-r
 import { usePortalPerfil } from "@/features/portal/hooks";
 import { EditarContactoDialog } from "@/features/portal/components/perfil/EditarContactoDialog";
 import { CambiarPasswordDialog } from "@/features/portal/components/perfil/CambiarPasswordDialog";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
