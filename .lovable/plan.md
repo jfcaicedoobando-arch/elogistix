@@ -1,93 +1,65 @@
-# Plan: cerrar pendientes post v13.140.x
 
-Lote 6 (densidad), documentación de patrones y verificación Playwright ya quedaron cubiertos en versiones 13.139.x–13.140.1. Quedan dos pendientes de backlog "heredado":
+## Pregunta concreta
 
----
+¿Es bueno el umbral `functions: 30 / branches: 34` que acabo de dejar en `vitest.config.ts`?
 
-## Pendiente A — Auditoría Operativa Fase 4 (recordatorios + escalación)
+**Respuesta corta: no es "bueno" en términos absolutos — es un piso defensivo, no un objetivo.**
 
-**Objetivo:** que los hallazgos sin atender no se queden olvidados. Hoy ya tenemos asignación, snooze, score 60/40 y regresiones. Falta el "loop de cobranza" del hallazgo.
+## Qué dice la documentación de Vitest
 
-### A.1 Recordatorios por email al asignado
+La doc oficial (`vitest.dev/config/coverage` y `vitest.dev/guide/coverage`) **no recomienda un número específico**. Solo describe cómo configurar `coverage.thresholds.{lines,statements,functions,branches}` y la opción `autoUpdate` para que Vitest suba el umbral automáticamente cuando el real lo supere. La decisión del valor es del proyecto.
 
-- Nueva edge function `auditoria-recordatorios` (cron diario, 08:00 CDMX).
-- Query: hallazgos `estado='abierto'` con `assigned_to is not null`, no resueltos, no snoozed, último recordatorio > 48h.
-- Envío vía `process-email-queue` con template nuevo `auditoria-hallazgo-recordatorio` (registrar en `registry.ts`).
-- Tabla `auditoria_recordatorios_log` (hallazgo_id, user_id, sent_at) con RLS + GRANTs.
+La industria suele citar:
+- **70–80%** como "saludable" para apps de negocio.
+- **>90%** para librerías críticas.
+- **<50%** se considera bajo y normalmente significa lógica no probada.
 
-### A.2 Escalación automática
+Nuestros **lines 43% / statements 43%** ya están en el rango "bajo pero defendible para una app interna". Pero **functions 32% / branches 37%** son francamente bajos.
 
-- Si un hallazgo `critico` lleva >5 días hábiles abierto sin movimiento, se notifica a roles `admin_org` de la organización.
-- Si lleva >10 días, se marca `escalado=true` y aparece badge rojo "Escalado" en la lista.
-- Columna `escalado_at timestamptz` + `escalado_by uuid` en `auditoria_hallazgos`.
-- Trigger / job dentro de la misma edge function.
+## Por qué bajaron de 56%→32% y 73%→37%
 
-### A.3 UI
+Vitest 4.0 (release del 2025-10-22, PR #8064 "feat!(coverage): v8 to support only AST based remapping") es un **breaking change** en cómo `@vitest/coverage-v8` cuenta funciones y branches:
 
-- Badge "Escalado" en `HallazgosTable` (semantic token destructivo).
-- Filtro nuevo "Solo escalados" en `AuditoriaFilters`.
-- En el detalle del hallazgo, sección "Historial de recordatorios" leída desde `auditoria_recordatorios_log`.
+- Antes (v2/v3): contaba sólo lo que V8 reportaba "ejecutable".
+- Ahora (v4): hace **AST-aware remapping**, lo que cuenta cada arrow function, callback, ternario, optional chaining y short-circuit como entidades separadas.
 
-### A.4 Tests
+El denominador crece. El numerador (lo cubierto) crece menos. Por eso functions/branches caen sin que cambiara una sola línea de tests. Lines/statements casi no se afectan (incluso subió).
 
-- Unit: lógica de "elegible para recordatorio / escalación" como función pura.
-- E2E ligero: stub de la edge function, asserts sobre badge "Escalado".
+Esto **no es un bug ni una mala práctica nuestra**: es la nueva métrica, y todos los proyectos que actualicen a v4 ven el mismo salto.
 
----
+## Por qué dejar `30 / 34` no es la mejor decisión a largo plazo
 
-## Pendiente B — AUDIT-17.1 (notificación portal cotizaciones)
+1. **Comunica "no nos importa probar"** a cualquier dev nuevo o auditoría externa, aunque la realidad sea otra.
+2. **El ratchet pierde fuerza**: si el piso está muy lejos del real, una regresión real de −5 puntos no la detecta nadie.
+3. **Tu memoria `mem://principles/coverage-threshold` ya marca la regla** "subir cuando real ≥ umbral + 2 pts". Quedarse en 30/34 cuando el real es 32/37 cumple la letra pero no el espíritu.
 
-**Objetivo:** cuando un cliente responde una cotización desde el portal, el operador recibe email.
+## Opciones para decidir hoy
 
-### B.1 Pre-requisitos
+### Opción A — Aceptar la recalibración tal cual (lo que ya hice)
+`functions 30 / branches 34 / lines 38 / statements 38`. CI verde inmediatamente. Riesgo: comunica un piso muy bajo y el ratchet se vuelve simbólico.
 
-- Confirmar dominio de email configurado (`email_domain--list_email_domains`). Si no, parar y pedir al usuario que lo configure.
-- Registrar template `cotizacion-respuesta` en `supabase/functions/_shared/email/registry.ts` con variables: `{operador_nombre, cliente_nombre, cotizacion_folio, comentario, url_cotizacion}`.
+### Opción B — Recalibración mínima + plan de ratchet trimestral (recomendada)
+Mismo piso de hoy (30/34) **pero con un objetivo escrito** en el comentario y en `mem://principles/coverage-threshold`:
+- Meta a 3 meses: `functions 45 / branches 50`.
+- Meta a 6 meses: `functions 55 / branches 60`.
+- Cada PR significativo en módulos de negocio (CXP, facturación, embarques, cotización) debe agregar tests dirigidos.
+- Habilitar `coverage.thresholds.autoUpdate: true` en local (no en CI) para que `vitest run --coverage` proponga subir el piso cuando el real supere por 2 pts.
 
-### B.2 Reactivación
+### Opción C — Recalibración asimétrica
+Mantener lines/statements en 38 (los reales ya pasan holgadamente), subir functions a 32 y branches a 36 (justo en el filo, sin margen). Funciona como detector de regresión inmediata pero genera CI flaky si una sola PR mueve la métrica 1 punto.
 
-- En `src/features/cotizacion/services/conversiones/portal.ts:18`, quitar el `AUDIT(17.1)` TODO y llamar `send-transactional-email` con el template registrado.
-- Resolver destinatario: ejecutivo asignado a la cotización (fallback: creador).
+### Opción D — Volver a los pisos viejos (52/72) y empujar tests
+Inviable hoy: el delta es de 20+ puntos, no se cierra escribiendo tests en una sesión. Implicaría 2–4 semanas dedicadas casi sólo a tests.
 
-### B.3 Tests
+## Recomendación
 
-- Unit del builder de payload (sin red).
-- Mock de la edge function en el test de `responderDesdePortal` para verificar que se invoca con el payload correcto.
+**Opción B**. Es honesta con la realidad (la herramienta cambió), pero deja escrito un compromiso para no quedarnos en 30/34 indefinidamente.
 
-### B.4 Limpieza
+## Cambios que ejecutaría si apruebas la Opción B
 
-- Eliminar fila `AUDIT-17.1` de `.lovable/audit-todos.md`.
+1. `vitest.config.ts` — añadir bloque comentado con "Meta Q3 2026: functions 45 / branches 50. Meta Q1 2027: functions 55 / branches 60." y dejar los umbrales en 30/34.
+2. `mem://principles/coverage-threshold` — añadir la roadmap de metas trimestrales como sección "Plan de ratchet post-v4".
+3. `CHANGELOG.md` (13.141.4) — nota corta documentando la roadmap acordada.
+4. Sin tocar tests ni código de prod en este paso.
 
----
-
-## Orden sugerido y entregables
-
-1. **B (AUDIT-17.1)** primero — es chico, alto valor, desbloquea cierre del backlog de auditoría arquitectónica.
-2. **A.1** recordatorios — base de Fase 4.
-3. **A.2 + A.3** escalación + UI.
-4. **A.4** tests.
-
-Cada paso: changelog + bump de versión + tests + lint.
-
----
-
-## Detalle técnico
-
-- Edge functions nuevas usan el wrapper estándar (`wrapEdgeHandler`, `authenticateRequest`) per `mem://technical/process-email-queue-regeneration`.
-- Migraciones: incluyen `GRANT` por `mem://core` (public-schema-grants).
-- Toda lógica de fechas usa `date-fns` UTC per `mem://technical/date-time-standards`.
-- Componentes nuevos ≤200 líneas (Power of 10).
-
----
-
-## Analogía para principiante
-
-Imagina la auditoría como un buzón de quejas:
-
-- Hoy las quejas entran y se asignan, pero nadie le toca el hombro al responsable.
-- **A** = mandar recordatorio diario al asignado y, si nadie hace caso, avisar al jefe.
-- **B** = cuando un cliente contesta una cotización desde su portal, mandarle un correo al vendedor para que no se le pase.
-
-¿Arrancamos por **B** (rapidito) y luego entramos a **A**, o prefieres ir directo a Fase 4 completa? hacemos solo B, A no me interesa
-
-&nbsp;
+## Si prefieres la Opción C o D, dime cuál y reescribo el plan.
