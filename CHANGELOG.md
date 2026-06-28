@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.139.17] - 2026-06-28
+- **ui(density) — Lote B auditoría visual 1920×1080**. (1) `Embarques` y `Cotizaciones`: `pageSize` default baja de 100 → 50 filas para reducir páginas de ~4700px / ~3500px en monitores Full HD a alturas razonables sin scroll infinito; el selector permite subir a 100/200/500 si el usuario lo prefiere. (2) Hallazgos verificados como falsos positivos: variante `warning` del `Badge` y tokens `--warning` (light+dark) ya existen en `src/index.css`; bandejas `/bandejas/facturacion-por-emitir` y `/bandejas/cartera` son vistas mono-estado (todo lo listado es accionable) y no requieren tabs decorativos.
+
 ## [13.139.16] - 2026-06-28
 - **ui(cohesion) — 2ª pasada auditoría visual 1920×1080**. (1) `Clientes`: input de búsqueda con `max-w-sm` para no estirarse al ancho completo y alinear con Embarques/CXP. (2) `Facturación`: pestañas migradas al patrón underline estándar (`px-3 py-2 border-b-2`), igualando altura visual con `ComprasTabStrip` (~38px) y eliminando el desfase de ~54px. Wrapper de página pasa a `space-y-6` para emparejar el ritmo vertical con Embarques. (3) Topbar `GlobalSearch`: borde explícito `border-border` y texto `text-muted-foreground/90` con hover a `text-foreground` para cumplir contraste WCAG AA. Hallazgos descartados tras revisión de código: variante `warning` de `Badge` ya existe; `CxpFiltros` ya alinea acciones por flex-wrap sin `ml-auto`; bandejas (`/bandejas/*`) son vistas de tabla única sin necesidad de tabs.
 
