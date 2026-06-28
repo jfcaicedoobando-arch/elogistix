@@ -44,7 +44,10 @@ type TabDef = { value: string; label: string; hint: string; badge?: number; tone
 function TabTriggerInfo({ tab }: { tab: TabDef }) {
   const badgeCls = tab.tone === "warn" ? "text-warning font-semibold" : "text-muted-foreground";
   return (
-    <TabsTrigger value={tab.value}>
+    <TabsTrigger
+      value={tab.value}
+      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none -mb-px"
+    >
       <span className="flex items-center gap-1.5">
         {tab.label}
         {typeof tab.badge === "number" && tab.badge > 0 && (
