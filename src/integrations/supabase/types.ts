@@ -6674,6 +6674,13 @@ export type Database = {
         Args: { p_ambiente: string; p_org_id: string }
         Returns: string
       }
+      get_operadores_para_cotizacion: {
+        Args: { p_cotizacion_id: string }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       get_top_tarifas: {
         Args: {
           p_fecha?: string

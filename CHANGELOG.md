@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.0] - 2026-06-28
+- **feat(portal-cotizaciones) — AUDIT-17.1: email a operaciones cuando un cliente responde**. Cuando un cliente acepta o rechaza una cotización desde el portal, los operadores y admins de la organización reciben un email con folio, cliente, estado, comentario y enlace.
+  - Nueva RPC `public.get_operadores_para_cotizacion(uuid)` (SECURITY DEFINER) que valida ownership del cliente y resuelve destinatarios server-side. El portal NUNCA elige a quién se le envía.
+  - Nueva edge function `notificar-respuesta-cotizacion` que valida JWT del portal, llama la RPC, carga `folio/cliente_nombre` y dispara `send-transactional-email` con el template ya existente `cotizacion-respuesta`. Idempotency-key por destinatario + estado.
+  - `portalResponderCotizacion` (`src/features/cotizacion/services/conversiones/portal.ts`) invoca la nueva función como best-effort tras la RPC `portal_responder_cotizacion`: un fallo de email NO revierte la respuesta del cliente.
+  - Eliminada fila `AUDIT-17.1` de `.lovable/audit-todos.md` (backlog de auditoría arquitectónica queda en 0 pendientes).
+
 ## [13.140.1] - 2026-06-28
 - **ui(cohesion) — Lote 6 cohesión visual: densidad canónica en `<CardContent>`**. Cerramos el último pendiente del UI Kit (v13.140.0).
   - `<CardContent>` gana prop `density: "default" | "compact" | "tight" | "flush"` que mapea a `p-6 pt-0` / `p-4` / `p-3` / `p-0`. Reemplaza overrides ad-hoc de `className="p-3"`, `"p-4"`, `"p-0"` que vivían sueltos por la app.
