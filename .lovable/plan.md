@@ -1,53 +1,93 @@
-## Lote D — Cierre de la 3ª pasada de auditoría visual
+# Plan: Cohesión visual exhaustiva del UI Kit
 
-Atacar los 5 hallazgos pendientes (Medio y Bajo). Sin tocar lógica de negocio.
+**Alcance**: Exhaustivo — todos los hallazgos del audit + refactor de hot spots a componentes canónicos (`PageHeader`, `FormDialogShell`, `Button`, `Card` sin overrides). Sin tocar lógica de negocio.
 
-### F-05 — UUID crudo en columna "Contenedor" (Alto, residual)
+**Patrones canónicos (referencia)**:
+- Modales con formulario → `<FormDialogShell>` + `dialogSize.*`
+- AlertDialog → solo confirmaciones (nunca forms)
+- Cards → `<Card>` sin override de `shadow-*`, `border-*`, `rounded-*`; `shadow-card` ya viene en el token
+- Botones → `<Button variant size>` (sin `<button>` crudo); icon-only requiere `aria-label`
+- Colores → tokens semánticos (`text-primary-foreground`, `text-muted-foreground`, `bg-warning/10`, etc.), nunca `text-white`, `text-gray-*`, `bg-amber-*`
+- Tipografía → `<PageHeader>` para títulos de página; `text-kpi` para KPIs vía `<KpiStrip>`
+- Toasts → `useToast` (shim canónico) en features
 
-**Causa**: La columna muestra `embarque.tipo_contenedor` directo. Cuando ya es UUID del catálogo nuevo, se ve como `a1b2c3d4-…` en vez de "40HC".
+---
 
-**Fix**: En las columnas del DataTable de `/embarques` (`src/features/embarques/components/...` — localizar archivo de columnas), usar el helper existente `resolveTipoContenedorNombre(value, catalogo)` pasando el catálogo de tipos de contenedor (hook `useTiposContenedor` o equivalente). Si la lista de embarques aún no tiene el catálogo cargado, agregar el query y memoizar.
+## Lote 1 — Modales (Alta prioridad)
 
-### F-07 — Botón "Sin Cambios" en Configuración (Medio)
+Migrar a `<FormDialogShell>` (mantiene props existentes, sólo cambia shell):
+1. `DialogCancelarFactura.tsx` (F-01)
+2. `PanelConciliacionMovimiento.tsx` motivo dialog (F-02)
+3. `DialogMarcarFacturada.tsx` (F-04)
+4. `FilaContenedor.tsx` (F-03): convertir `AlertDialog` → `Dialog` + `FormDialogShell` (era un form disfrazado de confirmación)
 
-**Causa**: En `/configuracion`, cuando no hay cambios pendientes, el botón de submit cambia su label a "Sin Cambios" en estado disabled.
+---
 
-**Fix**: Mantener el label "Guardar" siempre. El estado `disabled` ya comunica visualmente que no hay nada que guardar. Localizar el botón en `src/features/configuracion/...` y quitar el ternario de label.
+## Lote 2 — Cards (overrides de shadow/border/rounded)
 
-### F-08 — Tarjeta "Tiempo medio de resolución" sin valor (Medio)
+Quitar `shadow-sm border-0 rounded-2xl` y dejar `<Card>` limpio:
+1. `operaciones/routes/Operaciones.tsx` (F-05)
+2. `operaciones/components/KpiCard.tsx` (F-06)
+3. `reportes/components/ReportesTopChart.tsx` + `ReportesTablaClientes.tsx` (F-07)
+4. `auth/routes/Login.tsx` + `ResetPassword.tsx`: `shadow-lg` → `shadow-raised` (F-08)
+5. `costeo/components/TarifaResultCard.tsx`: estado seleccionado usa `shadow-raised` + `ring-success/40` en lugar de `shadow-md border-2` (F-09)
 
-**Causa**: En `/auditoria`, el KPI card de "Tiempo medio de resolución" muestra vacío cuando no hay hallazgos resueltos en la ventana.
+**Decisión sobre Q1 (rounded-2xl en tiles)**: usar `rounded-lg` (token estándar). No introducir variante `tile`.
 
-**Fix**: Renderizar fallback `"Sin datos"` (o `"—"`) cuando el valor sea `null`/`undefined`/`NaN`. Localizar el componente del card en `src/features/auditoria/components/...`.
+---
 
-### F-09 — pageSize default 100 en Clientes (Bajo)
+## Lote 3 — Colores hardcoded
 
-**Causa**: `/clientes` quedó en 100 cuando ya bajamos Embarques y Cotizaciones a 50 en Lote B (v13.139.17).
+1. `Operaciones.tsx` líneas 106–107: `text-white` → `text-primary-foreground` (F-10)
+2. `MiOperacionWidgets.tsx`: `text-white text-[11px]` → `text-primary-foreground text-xs` (F-11)
+3. `ResumenConceptosVenta.tsx`: badge `bg-white/20 text-white` → `variant="outline"` con tokens (F-12)
+4. `ResumenConceptosVentaTotales.tsx`: `text-gray-600` → `text-muted-foreground` (F-13)
+5. `TabCategorias.tsx`: `bg-amber-100/text-amber-900` → `bg-warning/10 text-warning-foreground`; `bg-slate-100` → `bg-muted text-muted-foreground` (F-14)
 
-**Fix**: Bajar default a 50 en la página de Clientes (`src/features/cliente/routes/Clientes.tsx` o equivalente), alineado con las otras listas largas. El selector seguirá ofreciendo 100/200/500.
+---
 
-### F-10 — Topbar muestra "auditoria" en minúsculas (Bajo)
+## Lote 4 — Tipografía (PageHeader)
 
-**Causa**: El breadcrumb / topbar deriva el título del slug de la ruta (`/auditoria`) sin capitalizar ni acentuar, mientras el H1 dice "Auditoría operativa".
+Reemplazar `<h1 className="text-2xl font-bold">` por `<PageHeader>`:
+1. `proveedor/routes/ProveedorDetalle.tsx` (F-15)
+2. `cliente/components/detalle/ClienteDetalleHeader.tsx` (F-16)
+3. `portal/routes/PortalPerfil.tsx` (F-18)
+4. `crm/routes/Analitica.tsx` + `CrmDashboard.tsx`: KPIs sueltos → reusar `<KpiStrip>` (F-17)
 
-**Fix**: Dos opciones — preferir la primera:
-1. Mapear slugs conocidos a labels presentables en el componente de topbar (ya existe un mapping similar en `Breadcrumbs.tsx` o en el header). Agregar entrada `auditoria → "Auditoría"`.
-2. Si no hay mapping, capitalizar la primera letra como fallback genérico.
+---
 
-### Verificación
+## Lote 5 — Botones y a11y
 
-- Re-screenshot con Playwright (1920×1080 simulado) de `/embarques`, `/configuracion`, `/auditoria`, `/clientes` y la topbar en `/auditoria`.
-- Confirmar:
-  - Columna "Contenedor" muestra "40HC" etc., no UUID.
-  - Botón en Configuración dice "Guardar" (disabled cuando no hay cambios).
-  - Card de tiempo medio muestra valor o "Sin datos".
-  - Clientes default = 50 filas.
-  - Topbar muestra "Auditoría" capitalizado.
+1. `LoginForm.tsx`: `<button>` crudo → `<Button variant="link" size="sm">` (F-19)
+2. Agregar `aria-label` a todos los `<Button size="icon">` listados en F-20:
+   - `facturacionColumns.tsx`, `ThemeToggle.tsx`, `NotificacionesPopover.tsx`, `TabProyeccion.tsx`, `HallazgosTabla.tsx`, `ContactActions.tsx`, `ProveedorDatosBancariosCard.tsx`
 
-### Changelog + versión
+---
 
-Bump `APP_VERSION` (patch, p.ej. `13.139.19`) + entrada en `CHANGELOG.md` con los 5 fixes y la nota de cierre de la 3ª pasada de auditoría visual.
+## Lote 6 — Paddings de Tesorería + decisión sobre toasts
 
-### Resumen para programador principiante
+1. **Tesorería/Comisiones**: extraer wrapper `<DenseCard>` (o variante `density="dense"` en `Card`) que aplique `CardContent` con `p-3/p-4` legítimamente, y migrar `Tesoreria.tsx`, `TesoreriaFlujo.tsx`, `TesoreriaConciliacion.tsx`, `Comisiones.tsx`.
+2. **Q3 (toasts)**: consolidar guidance en `useToast` (shim). Actualizar JSDoc del shim para deprecar el "prefer sonner directo". No requiere migrar archivos (no hay imports directos de sonner en features hoy).
+3. `p-0` en CardContent con tablas full-bleed: documentar en `Card` JSDoc como patrón aprobado (Q2).
 
-Es como pasarle un trapo final a 5 esquinas que quedaron polvosas tras la limpieza grande: ninguna rompe nada, pero todas se notan cuando las ves de cerca. Cuando termine este lote, la 3ª pasada queda 100% cerrada.
+---
+
+## Verificación
+
+Por lote:
+- `bun run lint -- --max-warnings 0`
+- `bun run test` (asegura que tests existentes pasen)
+- Screenshots Playwright 1920×1080 de: `/embarques`, `/facturacion`, `/operaciones`, `/reportes`, `/tesoreria`, `/clientes/{id}`, `/proveedores/{id}`, `/login`
+
+Al cierre:
+- Bump `APP_VERSION` (minor, p.ej. `13.140.0`) — cambio amplio de UI kit
+- Entrada en `CHANGELOG.md` listando los 6 lotes
+- Actualizar `mem://style/form-dialog-shell` y crear `mem://style/card-tokens` si formalizamos `DenseCard`
+
+---
+
+## Resumen para programador principiante
+
+Imagínate que la app es un edificio donde algunas habitaciones se construyeron con ladrillos distintos al resto. Este plan reemplaza esos ladrillos sueltos con los oficiales del sistema, sin mover paredes ni cambiar muebles (la lógica). Al final, todas las habitaciones se sienten parte del mismo edificio.
+
+**Riesgos**: bajos — son cambios visuales y de wrappers. El único riesgo medio es F-03 (AlertDialog→Dialog) por cambio de focus trap; se valida manualmente.

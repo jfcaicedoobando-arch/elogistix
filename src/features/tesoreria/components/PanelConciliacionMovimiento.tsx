@@ -1,19 +1,16 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDesconciliar } from "@/features/tesoreria/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
-import { cn } from "@/lib/utils";
-import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
 interface Props {
@@ -128,17 +125,25 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
         )}
       </CardContent>
 
-      <Dialog open={openIgnorar} onOpenChange={setOpenIgnorar}>
-        <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
-          <DialogHeader><DialogTitle>Ignorar movimiento</DialogTitle><DialogDescription>Confirma que el movimiento será ignorado en la conciliación.</DialogDescription></DialogHeader>
-          <Label>Motivo</Label>
-          <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Comisión bancaria, traspaso interno..." />
-          <DialogFooter>
+      <FormDialogShell
+        open={openIgnorar}
+        onOpenChange={setOpenIgnorar}
+        icon={EyeOff}
+        title="Ignorar movimiento"
+        description="Confirma que el movimiento será ignorado en la conciliación."
+        size="md"
+        footer={
+          <>
             <Button variant="outline" onClick={() => setOpenIgnorar(false)}>Cancelar</Button>
             <Button onClick={onIgnorar}>Ignorar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          <Label>Motivo</Label>
+          <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Comisión bancaria, traspaso interno..." />
+        </div>
+      </FormDialogShell>
     </Card>
   );
 }

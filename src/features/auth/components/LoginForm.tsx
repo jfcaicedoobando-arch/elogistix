@@ -65,9 +65,9 @@ export function LoginForm({ onForgotPassword, onEmailChange }: Props) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Contraseña</Label>
-          <button type="button" onClick={onForgotPassword} className="text-xs text-accent hover:underline">
+          <Button type="button" variant="link" size="sm" onClick={onForgotPassword} className="h-auto p-0 text-xs">
             ¿Olvidaste tu contraseña?
-          </button>
+          </Button>
         </div>
         <div className="relative">
           <Input

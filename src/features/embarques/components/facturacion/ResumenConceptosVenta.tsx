@@ -99,7 +99,7 @@ export function ResumenConceptosVenta({
         {canEdit && conceptosPendientes.length > 0 && (
           <Button size="sm" onClick={onGenerarProforma}>
             <FileText className="h-4 w-4 mr-1" /> Generar Proforma
-            <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-0">
+            <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-primary-foreground border-0">
               {conceptosPendientes.length}
             </Badge>
           </Button>

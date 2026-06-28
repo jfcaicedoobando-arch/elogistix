@@ -76,7 +76,7 @@ export default function Operaciones() {
 
       <DesempenoOperadores operadores={operadores} isLoading={isLoading} />
 
-      <Card className="rounded-2xl shadow-sm border-0 bg-card">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -103,8 +103,8 @@ export default function Operaciones() {
               <p className="text-xl font-bold text-kpi-success">{llegadasEsteMes}</p>
             </div>
             <div className="rounded-xl bg-kpi-accent p-3 text-center">
-              <p className="text-xs text-white/80 font-medium">Activas hoy</p>
-              <p className="text-xl font-bold text-white">{global.activasHoy}</p>
+              <p className="text-xs text-primary-foreground/80 font-medium">Activas hoy</p>
+              <p className="text-xl font-bold text-primary-foreground">{global.activasHoy}</p>
             </div>
           </div>
 
