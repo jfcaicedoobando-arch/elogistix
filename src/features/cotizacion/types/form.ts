@@ -23,7 +23,7 @@ export interface CotizacionFormValues {
   tipoCarga: string;
   sectorEconomico: string;
   descripcionAdicional: string;
-  tipoEmbarque: "FCL" | "LCL";
+  tipoEmbarque: "FCL" | "LCL" | "";
   tipoContenedor: string;
   tipoPeso: string;
   dimensionesLCL: DimensionLCL[];
@@ -68,17 +68,17 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   prospectoContacto: "",
   prospectoEmail: "",
   prospectoTelefono: "",
-  modo: "Marítimo",
-  tipo: "Importación",
-  incoterm: "FOB",
-  tipoCarga: "Carga General",
+  modo: "",
+  tipo: "",
+  incoterm: "",
+  tipoCarga: "",
   sectorEconomico: "",
   descripcionAdicional: "",
-  tipoEmbarque: "FCL",
+  tipoEmbarque: "",
   tipoContenedor: "",
-  tipoPeso: "Peso Normal",
-  dimensionesLCL: [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }],
-  dimensionesAereas: [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 }],
+  tipoPeso: "",
+  dimensionesLCL: [],
+  dimensionesAereas: [],
   pesoKg: 0,
   volumenM3: 0,
   piezas: 0,
@@ -96,7 +96,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   diasAlmacenaje: 0,
   cartaGarantia: false,
   notas: "",
-  numContenedores: 1,
+  numContenedores: 0,
   modalidadEquipo: "",
   puntoIntermedio: "",
   tarifaId: null,
