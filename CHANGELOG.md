@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.5] - 2026-06-28
+- **ux(cotizaciones) — Nueva Cotización abre en blanco**. `COTIZACION_FORM_DEFAULTS` ya no precarga Modo (`Marítimo`), Tipo (`Importación`), Incoterm (`FOB`), Tipo de carga (`Carga General`), Tipo de embarque (`FCL`), Tipo de peso (`Peso Normal`), `numContenedores=1`, ni filas iniciales en `dimensionesLCL`/`dimensionesAereas`. Tipo `tipoEmbarque` ampliado a `"FCL" | "LCL" | ""`. El flujo de edición no se afecta (los fallbacks en `buildCotizacionDefaultValues` se mantienen para cotizaciones existentes).
+
 ## [13.141.4] - 2026-06-28
 - **docs(coverage) — plan de ratchet post-v4**. Tras la recalibración del piso en v13.141.3 (functions 30 / branches 34 por el cambio AST-aware de `@vitest/coverage-v8` v4), se documenta el roadmap acordado para volver a niveles saludables: meta Q3 2026 = functions 45 / branches 50; meta Q1 2027 = functions 55 / branches 60. Cada PR en CXP, facturación, embarques y cotización debe agregar tests dirigidos. Actualizado comentario en `vitest.config.ts` y `mem://principles/coverage-threshold`. Sin cambios en código de prod ni en tests.
 
