@@ -16,6 +16,21 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
+        // v13.139.18 (F-03 auditoría 3): stack defensivo para emoji.
+        // Antes `font-emoji` se aplicaba en FinanceHeader/Dashboard sin estar
+        // declarado en Tailwind, así que el emoji 👋 caía al sans default y
+        // se renderizaba como cuadro vacío (`Buenos días □`) en entornos
+        // sin Apple Color Emoji. Ahora forzamos las fuentes de emoji nativas
+        // de cada sistema operativo.
+        emoji: [
+          "Apple Color Emoji",
+          "Segoe UI Emoji",
+          "Segoe UI Symbol",
+          "Noto Color Emoji",
+          "EmojiOne Color",
+          "Android Emoji",
+          "sans-serif",
+        ],
       },
       fontSize: {
         // Tipografía fluida (Fase 6) — clamp(min, preferida, max).
