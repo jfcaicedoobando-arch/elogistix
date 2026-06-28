@@ -5,7 +5,7 @@ arquitectónica (bloques 13.56.1 → 13.56.7). Sólo entries con valor real.
 
 | ID | Archivo | Descripción | Bloqueo |
 |---|---|---|---|
-| AUDIT-17.1 | `src/features/cotizacion/services/conversiones/portal.ts:18` | Reactivar `send-transactional-email` con template `cotizacion-respuesta` para notificar al operador cuando un cliente responde desde el portal. | Configurar dominio de email + registrar template en `registry.ts`. |
+| _(sin pendientes)_ | — | AUDIT-17.1 cerrado en v13.141.0 (notificación por email a operadores cuando un cliente responde una cotización desde el portal). | — |
 
 ## Convención
 
