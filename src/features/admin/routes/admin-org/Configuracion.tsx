@@ -12,9 +12,9 @@ import TabOperaciones from "@/features/configuracion/components/TabOperaciones";
 import TabExportar from "@/features/admin/components/TabExportar";
 import { PageHeader } from "@/components/shared/PageHeader";
 
-function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
+function getSaveButtonLabel(isSaving: boolean, _isDirty: boolean): string {
   if (isSaving) return "Guardando...";
-  return isDirty ? "Guardar Cambios" : "Sin Cambios";
+  return "Guardar Cambios";
 }
 
 // Sólo los tabs con campos editables vinculados al state global muestran "Guardar".
