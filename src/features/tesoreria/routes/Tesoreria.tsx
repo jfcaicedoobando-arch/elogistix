@@ -13,7 +13,7 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
   return (
     <Card>
-      <CardContent className="p-3">
+      <CardContent density="tight">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className={`text-lg font-semibold tabular-nums ${t}`}>{value}</p>
       </CardContent>
@@ -68,10 +68,10 @@ export default function Tesoreria() {
             <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Saldos en bancos</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {data.cuentas.length === 0 ? (
-                <Card><CardContent className="p-4 text-sm text-muted-foreground">Sin cuentas. <Link to="/tesoreria/cuentas" className="text-accent underline">Da de alta una</Link>.</CardContent></Card>
+                <Card><CardContent density="compact" className="text-sm text-muted-foreground">Sin cuentas. <Link to="/tesoreria/cuentas" className="text-accent underline">Da de alta una</Link>.</CardContent></Card>
               ) : data.cuentas.map((c) => (
                 <Card key={c.id}>
-                  <CardContent className="p-3">
+                  <CardContent density="tight">
                     <p className="text-xs text-muted-foreground">{c.banco} · {c.alias}</p>
                     <p className="text-lg font-semibold tabular-nums">{formatCurrency(c.saldo, c.moneda)}</p>
                   </CardContent>
@@ -94,7 +94,7 @@ export default function Tesoreria() {
 
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
-              <CardContent className="p-4">
+              <CardContent density="compact">
                 <h3 className="text-sm font-semibold mb-3">Top 5 deudores (vencidos)</h3>
                 {data.top_deudores.length === 0
                   ? <p className="text-sm text-muted-foreground">Sin facturas vencidas 🎉</p>
@@ -112,7 +112,7 @@ export default function Tesoreria() {
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4">
+              <CardContent density="compact">
                 <h3 className="text-sm font-semibold mb-3">Top 5 proveedores por pagar</h3>
                 {data.top_acreedores.length === 0
                   ? <p className="text-sm text-muted-foreground">Sin facturas próximas a vencer.</p>
