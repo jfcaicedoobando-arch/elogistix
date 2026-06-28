@@ -88,19 +88,24 @@ export function EmbarqueDetalleTabs({
           Cierre:    Cierre
           Bitácora:  Notas y Actividad
       */}
-      <TabsList className="gap-1 flex-wrap h-auto">
-        <TabsTrigger value="resumen">Resumen</TabsTrigger>
-        <TabsTrigger value="tracking">Tracking</TabsTrigger>
-        <TabsTrigger value="documentos">Documentos</TabsTrigger>
-        <TabsTrigger value="costos">Costos</TabsTrigger>
-        <TabsTrigger value="garantias">Demoras y Garantías</TabsTrigger>
-        <TabsTrigger value="seguros">Seguros</TabsTrigger>
-        <TabsTrigger value="facturacion">Facturación</TabsTrigger>
-        <TabsTrigger value="conciliacion">Conciliación</TabsTrigger>
-        <TabsTrigger value="pnl">P&amp;L</TabsTrigger>
-        <TabsTrigger value="cierre">Cierre</TabsTrigger>
-        <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
-      </TabsList>
+      {/* v13.139.18 (F-04 auditoría 3): 11 tabs desbordaban a 2ª línea con
+          flex-wrap. Cambiamos a scroll horizontal nativo con scrollbar fino
+          para mantener todas las tabs en una sola fila sin partir el header. */}
+      <div className="w-full overflow-x-auto [scrollbar-width:thin]">
+        <TabsList className="gap-1 inline-flex w-max flex-nowrap">
+          <TabsTrigger value="resumen" className="whitespace-nowrap">Resumen</TabsTrigger>
+          <TabsTrigger value="tracking" className="whitespace-nowrap">Tracking</TabsTrigger>
+          <TabsTrigger value="documentos" className="whitespace-nowrap">Documentos</TabsTrigger>
+          <TabsTrigger value="costos" className="whitespace-nowrap">Costos</TabsTrigger>
+          <TabsTrigger value="garantias" className="whitespace-nowrap">Demoras y Garantías</TabsTrigger>
+          <TabsTrigger value="seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
+          <TabsTrigger value="facturacion" className="whitespace-nowrap">Facturación</TabsTrigger>
+          <TabsTrigger value="conciliacion" className="whitespace-nowrap">Conciliación</TabsTrigger>
+          <TabsTrigger value="pnl" className="whitespace-nowrap">P&amp;L</TabsTrigger>
+          <TabsTrigger value="cierre" className="whitespace-nowrap">Cierre</TabsTrigger>
+          <TabsTrigger value="notas" className="whitespace-nowrap">Notas y Actividad</TabsTrigger>
+        </TabsList>
+      </div>
 
       {estadoVisual === "Borrador" && (
         <Alert variant="warning">

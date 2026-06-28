@@ -43,7 +43,12 @@ function OperationalDashboard() {
   return (
     <div className="space-y-4 sm:space-y-6">
       <PageHeader
-        title={`${saludo} 👋`}
+        title={
+          <>
+            {saludo}{" "}
+            <span role="img" aria-label="saludo" className="font-emoji">👋</span>
+          </>
+        }
         description={hoyStr}
         actions={
           <Badge variant="secondary" className="text-xs w-fit">
