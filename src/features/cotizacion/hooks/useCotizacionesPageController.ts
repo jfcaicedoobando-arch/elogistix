@@ -102,7 +102,10 @@ export function useCotizacionesPageController() {
   const {
     search, filters, page, pageSize,
     setSearch, setFilter, setPage, setPageSize, paginate,
-  } = useListPageState({ estado: "todos", cliente: "todos", sinCostos: "no", incluirInactivas: "no" });
+  } = useListPageState(
+    { estado: "todos", cliente: "todos", sinCostos: "no", incluirInactivas: "no" },
+    50, // v13.139.17 — default reducido de 100 → 50 para acortar la página en Full HD.
+  );
 
   const filterEstado = filters.estado;
   const filterCliente = filters.cliente;

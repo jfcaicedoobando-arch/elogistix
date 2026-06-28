@@ -10,7 +10,10 @@ import {
   parseAsStringLiteral,
 } from "nuqs";
 import { useDebounce } from "@/hooks/shared";
-import { DEFAULT_PAGE_SIZE } from "@/hooks/shared";
+
+// v13.139.17 — default reducido de 100 → 50 para evitar páginas de 4700px+
+// en monitores Full HD. El usuario puede subir hasta 500 desde el selector.
+const DEFAULT_PAGE_SIZE = 50;
 
 
 const SORT_DIR_PARSER = parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc");
