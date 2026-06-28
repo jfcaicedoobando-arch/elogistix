@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.140.1] - 2026-06-28
+- **ui(cohesion) — Lote 6 cohesión visual: densidad canónica en `<CardContent>`**. Cerramos el último pendiente del UI Kit (v13.140.0).
+  - `<CardContent>` gana prop `density: "default" | "compact" | "tight" | "flush"` que mapea a `p-6 pt-0` / `p-4` / `p-3` / `p-0`. Reemplaza overrides ad-hoc de `className="p-3"`, `"p-4"`, `"p-0"` que vivían sueltos por la app.
+  - **Migrados**: `Tesoreria`, `TesoreriaFlujo`, `TesoreriaConciliacion`, `Comisiones` (12 instancias) — antes mezclaban paddings con clases utilitarias adicionales, ahora declaran la densidad explícita y dejan `className` sólo para layout (flex/gap/text).
+  - **Documentación en código**: JSDoc de `Card` formaliza la regla "nunca sobre-escribas `shadow-*`/`border-*`/`rounded-*`" y enumera cuándo aplicar cada densidad (incluyendo `flush` para tablas full-bleed en facturación, embarques, cxp, conciliación).
+  - **Política canónica de toasts**: JSDoc de `useToast` actualizado para deprecar el "prefer sonner directo" — la ruta única es `useToast` + helpers de `appFeedback` para features, y `crmToast` para CRM. No requirió migrar archivos (auditoría confirmó que no hay imports directos de `sonner` en features).
+
 ## [13.140.0] - 2026-06-28
 - **ui(cohesion) — Refactor exhaustivo del UI Kit (cohesión visual total)**. Estandarización masiva de primitivas para que toda la app se sienta construida por un mismo sistema de diseño.
   - **Modales**: `DialogCancelarFactura`, `DialogMarcarFacturada` y el modal "Ignorar movimiento" en `PanelConciliacionMovimiento` migrados a `FormDialogShell` (icon-tile header + footer sticky + scroll consistente). `FilaContenedor` se mantiene en `AlertDialog` (sí es confirmación pura; inputs viven fuera del modal).
