@@ -1,70 +1,63 @@
-# Plan: Desglose accionable de alertas en /embarques
+## Auditoría visual `/costeo/tarifas?aprob=pendientes`
 
-## Problema
+Capturé la pantalla en el viewport del usuario (928×635) y en escritorio. Los hallazgos son:
 
-El badge del sidebar "Embarques · 21" suma tres conteos que hoy no se ven en ningún lado de la lista:
+### Qué está roto
+
+1. **Vista Agrupada (`TarifaFila.tsx`) — botones rápidos invisibles e inutilizables.**
+   El grid de la fila termina en una columna de solo **56 px** para acciones. Sin embargo, los botones inline "Aprobar" y "Duplicar" se renderizan ahí dentro con `opacity-0 group-hover:opacity-100`. Esto significa:
+   - Sin mouse (touch, teclado) son invisibles.
+   - Aun con hover, los botones miden ~180 px y no caben en 56 px → se cortan o se montan sobre la columna del precio.
+
+2. **Vista Tabla (`CosteoTarifasTable.tsx`) — Aprobar/Rechazar escondidos en el kebab.**
+   La única forma de aprobar es abrir el `…` en cada fila. Para 5 pendientes son mínimo 10 clicks. No hay botones inline.
+
+3. **Viewport ≤ 980 px — scroll horizontal y menú que tapa filas.**
+   En la Tabla la columna "Ruta" queda fuera; al abrir el `…`, el menú se monta sobre la siguiente fila (ver captura adjunta).
+
+4. **KPI "5 pendientes aprobación" no es interactivo.**
+   El usuario ve el conteo pero tiene que cambiar manualmente el filtro `Aprob:` para llegar a la lista.
+
+5. **No hay acciones masivas.**
+   No se puede aprobar/rechazar varias tarifas seleccionadas en un solo paso (mismo problema que ya resolvimos en Auditoría con `HallazgosBulkBar`).
+
+### Plan de remediación (3 fases)
+
+**Fase A — Acciones inline siempre visibles (corrige el bug principal).**
+- `TarifaFila.tsx`: cambiar `FILA_GRID` para que la última columna sea `auto` (~ 220 px) y mostrar **Aprobar** (verde) + **Rechazar** (rojo) como botones reales cuando `estado_aprobacion === "borrador"`. Quitar el patrón `opacity-0 group-hover:`. Mantener el kebab solo para Editar/Duplicar/Eliminar/Reactivar.
+- `CosteoTarifasTable.tsx`: ampliar la columna Acciones y agregar los mismos dos botones icon-only con tooltip ("Aprobar", "Rechazar") al lado del kebab para filas pendientes.
+- En estados distintos a "borrador" solo se muestra el kebab (sin desbalanceo).
+
+**Fase B — KPI clickable + filtro persistente.**
+- Convertir la card "Pendientes aprobación" en un botón que aplica `aprob=pendientes` (y resalta como filtro activo).
+- Las otras 3 cards (vigentes hoy, por vencer, rutas cubiertas) también pasan a ser atajos.
+
+**Fase C — Responsive < 1024 px.**
+- En la Tabla, ocultar las columnas **Flete** y **Recargos** (el Total ya las consolida). Mantener Ruta · Agente · Total · Vigencia · Estado · Acciones siempre visibles.
+- En el `DropdownMenuContent` agregar `sideOffset` y `collisionPadding={8}` para que el menú no se monte sobre filas adyacentes en viewports angostos.
+
+### Detalle técnico
 
 ```
-embarquesAlertas = embarquesDemora      // contenedores con demora real o por ETA
-                 + garantiasAtoradas    // garantías de contenedor sin liberar
-                 + adminPendientes      // embarques Entregado/EIR con cierre admin pendiente
+src/features/costeo/components/
+  ├── TarifaFila.tsx          ← Fase A: grid + botones inline
+  ├── CosteoTarifasTable.tsx  ← Fase A + C: columna acciones + hidden md:table-cell
+  ├── TarifaRowActions.tsx    ← solo Editar/Duplicar/Eliminar (mover Aprobar/Rechazar fuera)
+  └── (nuevo) TarifaQuickApprovalButtons.tsx  ← componente compartido
+src/features/costeo/routes/
+  └── CosteoTarifas.tsx       ← Fase B: KPIs clickables
 ```
 
-Cuando Héctor (Admin Org) entra a `/embarques`, sólo ve la tabla paginada general. No hay forma de saber qué embarques están detrás de ese 21 ni qué acción tomar.
+Componente compartido `TarifaQuickApprovalButtons` con dos variants:
+- `variant="row-grouped"` → botones con texto.
+- `variant="row-table"` → solo iconos con tooltip (para no romper la tabla).
 
-## Objetivo
+Fuera de scope: la barra flotante de selección masiva queda anotada como sugerencia (Fase D opcional) — si la quieres también, la sumo.
 
-Que al entrar a `/embarques` el usuario vea: cuántas alertas hay, de qué tipo, y pueda filtrar la tabla con un clic para atenderlas.
+### Qué NO toco
 
-## Cambios
+- Lógica de `useAprobacionTarifa` (queda intacta).
+- Diálogo `DialogRechazarTarifa` (queda igual).
+- Permisos / RLS.
 
-### 1. Nuevo panel "Alertas activas" arriba de la tabla
-
-Una tarjeta colapsable (abierta por defecto si `totalAlertas > 0`) con 3 chips/KPIs:
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│  Alertas activas · 21                            [Ocultar ▲] │
-├──────────────────────────────────────────────────────────────┤
-│  🟠 Demoras           12   ▶ Ver embarques con demora        │
-│  🟡 Garantías         4    ▶ Ver garantías atoradas          │
-│  🔴 Cierre admin      5    ▶ Ver pendientes administrativos  │
-└──────────────────────────────────────────────────────────────┘
-```
-
-Cada chip es un botón que aplica un filtro predefinido a la tabla y hace scroll a ella.
-
-### 2. Filtros nuevos en la URL/estado de `/embarques`
-
-Agregar parámetro `alerta` (`demora` | `garantia` | `admin_pendiente`) que el listado consume para filtrar resultados. Se respeta junto con los filtros actuales (cliente, modo, rango de fechas).
-
-- `alerta=demora` → embarques con contenedores marcados en demora.
-- `alerta=garantia` → embarques con garantías de contenedor sin liberar.
-- `alerta=admin_pendiente` → embarques en estado `Entregado` o `EIR` con pendientes (la lógica ya existe en `fetchEmbarquesPendientesAdmin` y `embarque_admin_pendientes_resumen`).
-
-### 3. Columna/badge "Alerta" en la tabla
-
-Cuando hay un filtro de alerta activo, aparece una columna que dice por qué entró ese embarque al filtro (reutilizando `EmbarqueBadgeAdmin` y un badge nuevo para demora/garantía). Tooltip con el detalle (días en demora, contenedor afectado, etc.).
-
-### 4. Chips activos
-
-Si `alerta` está aplicado, aparece un chip removible en `EmbarquesFiltrosChips` ("Alerta: Demoras ×") para que el usuario sepa qué está filtrando.
-
-## Detalles técnicos
-
-- **Servicio**: extender `fetchEmbarquesPaginados` para aceptar `filterAlerta` y traducirlo a las condiciones SQL existentes (joins ya disponibles vía `embarques_listado` RPC o filtros sobre `estado` + `embarque_admin_pendientes_resumen`).
-- **Hook nuevo** `useEmbarquesAlertasResumen` que reúne los 3 conteos (puede simplemente reusar `useSidebarAlerts` para no duplicar queries).
-- **Componente nuevo** `src/features/embarques/components/EmbarquesAlertasPanel.tsx` (<200 líneas, Power of 10).
-- **Estado de la página**: añadir `filterAlerta` al `useListPageState` existente de `/embarques` y sincronizar con query param `?alerta=`.
-- Sin cambios de schema; toda la data ya existe (`embarque_admin_pendientes_resumen`, `garantiasAtoradas`, `embarquesDemora`).
-- Tests: snapshot del panel, test de filtro `?alerta=demora` aplica el predicado correcto, test de chip removible.
-
-## Fuera de alcance
-
-- Bandeja dedicada `/embarques/alertas` separada (se puede hacer después si crece).
-- Notificaciones por email/escalamiento.
-- Cambiar la lógica de qué cuenta como alerta (se respetan las reglas actuales).
-
-## Bump de versión
-
-`13.142.3` + entrada en `CHANGELOG.md`.
+Avísame si quieres incluir la **Fase D (selección masiva)** o sólo A+B+C.
