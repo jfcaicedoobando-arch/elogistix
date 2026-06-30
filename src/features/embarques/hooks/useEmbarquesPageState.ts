@@ -122,12 +122,12 @@ export function useEmbarquesPageState() {
   );
 
   const sortedAll = useMemo(() => {
-    if (!estadoFilterActivo) return dedupedAll;
+    if (!fullSetActivo) return dedupedAll;
     return [...dedupedAll].sort((a, b) => compareBy(a, b, sortKey, sortDir));
-  }, [estadoFilterActivo, dedupedAll, sortKey, sortDir]);
+  }, [fullSetActivo, dedupedAll, sortKey, sortDir]);
 
   const counts = computeCounts({
-    estadoFilterActivo,
+    estadoFilterActivo: fullSetActivo,
     dedupedAll,
     containersForView,
     sortedAll,
@@ -137,14 +137,14 @@ export function useEmbarquesPageState() {
   const { expedientesCount, contenedoresCount, totalPages, totalCountServer } = counts;
 
   const filtered = useMemo(() => {
-    if (!estadoFilterActivo) return dedupedAll;
+    if (!fullSetActivo) return dedupedAll;
     const from = page * pageSize;
     return sortedAll.slice(from, from + pageSize);
-  }, [estadoFilterActivo, dedupedAll, sortedAll, page, pageSize]);
+  }, [fullSetActivo, dedupedAll, sortedAll, page, pageSize]);
 
   const embarques: EmbarqueRow[] = useMemo(
-    () => (estadoFilterActivo ? filtered : (resultadoServer?.data ?? [])),
-    [estadoFilterActivo, filtered, resultadoServer?.data],
+    () => (fullSetActivo ? filtered : (resultadoServer?.data ?? [])),
+    [fullSetActivo, filtered, resultadoServer?.data],
   );
 
   // ---------- Extras (liquidación + docs) ----------
@@ -152,10 +152,10 @@ export function useEmbarquesPageState() {
   const { data: extrasBranchB } = useQuery({
     queryKey: queryKeys.embarques.extrasBranchB(visibleIds),
     queryFn: () => fetchEmbarquesListExtras(visibleIds),
-    enabled: estadoFilterActivo && visibleIds.length > 0,
+    enabled: fullSetActivo && visibleIds.length > 0,
     staleTime: 30_000,
   });
-  const extras = resolveExtras(estadoFilterActivo, extrasBranchB, resultadoServer?.extras);
+  const extras = resolveExtras(fullSetActivo, extrasBranchB, resultadoServer?.extras);
 
   const displayCount = expedientesCount;
 
