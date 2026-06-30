@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.7] - 2026-06-30
+- **fix(bitácora) — 6 RPCs insertaban con columnas inexistentes** (Sentry `useSetFacturapiApiKey` / DB_ERROR 42703 `column "user_id" of relation "bitacora_actividad" does not exist`). El esquema real es `usuario_id / usuario_email / accion / modulo / entidad_id / entidad_nombre / detalles`, pero estas funciones aún usaban `user_id / entidad_tipo / entidad / metadata / detalle / tipo`. Corregidas: `set_facturapi_api_key`, `clear_facturapi_api_key`, `aceptar_cotizacion_version`, `recotizar_cotizacion`, `convertir_proformas_a_factura`, `duplicar_factura_para_sustitucion`. Sin cambios de negocio: sólo el `INSERT` final de cada función. `usuario_email` se resuelve vía `auth.users` y la información antes en `entidad_tipo/metadata` se mueve a `modulo` y `detalles` (jsonb).
+
 ## [13.141.6] - 2026-06-30
 - **fix(auditoría) — `auditoria_capturar_snapshot` ahora recibe `p_organization_id`** (Sentry JAVASCRIPT-REACT-1M, 45 eventos / 5 usuarios). El cliente llamaba el RPC sin argumentos y PostgREST devolvía PGRST202. `capturarSnapshotAuditoria(organizationId)` y `useCapturarSnapshotAuditoria` ahora leen `organizationId` del `OrganizationContext` y lo pasan al RPC. Tests actualizados.
 - **fix(facturación) — rol `contador` autorizado para mutaciones contables** (Sentry JAVASCRIPT-REACT-1R, 42501). `_assert_writer` y `_assert_internal_reader` ahora incluyen `contador` además de `admin`/`operador`/`super_admin`. Antes una contadora recibía "Permisos insuficientes" al registrar pagos o generar proformas.
