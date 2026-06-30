@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.1] - 2026-06-30
+- **fix(cotización) — CIF ya no exige tarifa marítima.** El validador del Paso 1 (`validateMaritimo` en `handlePaso1Crm.ts`) seguía bloqueando con "Vincula o crea una tarifa marítima antes de continuar" en cotizaciones marítimas con incoterms tipo C/D (CIF, CFR, CIP, CPT, DAP, DDP, DAT), aunque la UI ya ocultaba el campo de tarifa para esos casos. Ahora el validador consulta `esIncotermSinFleteVenta(v.incoterm, v.modo)` y, si aplica, deja avanzar sin tarifa (y sin registrar bloqueo en bitácora). Tests nuevos en `validatePaso1.tarifaFirst.test.ts`.
+
 ## [13.142.0] - 2026-06-30
 - **feat(cotización) — flujo CIF marítimo (y demás incoterms tipo C/D).** El wizard ahora detecta cuando el incoterm transfiere el flete internacional al shipper en origen (`CIF`, `CFR`, `CIP`, `CPT`, `DAP`, `DDP`, `DAT` en marítimo) y oculta los bloques de **Tarifa marítima** y **Condiciones comerciales** (no aplican: el cliente no paga flete a Libre Carga). En su lugar aparece un banner `AvisoIncotermCIF` explicando que sólo se cotizan gastos locales destino. `usePaso1SectionStatus` deja de exigir tarifa/condiciones bajo estos incoterms para no bloquear el paso. Helper centralizado `esIncotermSinFleteVenta(incoterm, modo)` en `src/features/cotizacion/utils/incotermRules.ts` con tests por matriz. En el detalle del embarque (`ResumenCards`) el campo Incoterm muestra un badge sutil "Flete en origen" / "Flete + seguro en origen". El PDF de cotización agrega una nota legal Incoterms® 2020 cuando aplica.
 
