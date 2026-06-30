@@ -69,6 +69,13 @@ export default function Embarques() {
         <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
       ) : (
         <>
+          {alertasResumen ? (
+            <EmbarquesAlertasPanel
+              resumen={alertasResumen}
+              activeAlerta={filterAlerta}
+              onSelect={(a) => { setFilterAlerta(a); setPage(0); }}
+            />
+          ) : null}
           <Card>
             <CardContent className="p-4">
               <EmbarquesFiltros
