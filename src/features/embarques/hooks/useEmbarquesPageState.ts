@@ -20,6 +20,8 @@ import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/features/e
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { useEmbarquesFilters } from "@/features/embarques/hooks/useEmbarquesFilters";
+import { useEmbarquesAlertasResumen } from "@/features/embarques/hooks/useEmbarquesAlertasResumen";
+import type { EmbarqueAlertaFiltro } from "@/features/embarques/hooks/useEmbarquesFilters";
 import {
   compareBy,
   computeCounts,
