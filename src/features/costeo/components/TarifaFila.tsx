@@ -138,12 +138,12 @@ export function TarifaFila({
 
 export function TarifaColumnHeader() {
   return (
-    <div className={`${FILA_GRID} py-2 text-[11px] uppercase tracking-wide text-muted-foreground bg-muted/10 border-b`}>
+    <div className={`${FILA_GRID} py-2 text-[11px] uppercase tracking-wide text-muted-foreground bg-muted/20 border-y`}>
       <div>Agente · Naviera</div>
       <div>Vigencia</div>
-      <div className="text-right">Estado</div>
+      <div className="text-left">Estado</div>
       <div className="text-right">Total USD</div>
-      <div className="text-right">Acciones</div>
+      <div aria-hidden />
     </div>
   );
 }
