@@ -66,12 +66,12 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
             <TableHead>Ruta</TableHead>
             <TableHead>Agente / Naviera</TableHead>
             <TableHead>Contenedor</TableHead>
-            <TableHead className="text-right">Flete</TableHead>
-            <TableHead className="text-right">Recargos</TableHead>
+            <TableHead className="text-right hidden lg:table-cell">Flete</TableHead>
+            <TableHead className="text-right hidden lg:table-cell">Recargos</TableHead>
             <TableHead className="text-right">Total USD</TableHead>
             <TableHead>Vigencia</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead className="w-12 text-right">Acciones</TableHead>
+            <TableHead className="text-right w-[160px]">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
