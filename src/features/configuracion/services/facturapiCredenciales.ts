@@ -115,7 +115,13 @@ export async function probarFacturapiConexion(
     "facturapi-test-conexion",
     { body: { organization_id: orgId, ambiente } },
   );
-  if (error) throw new Error(error.message);
+  if (error) {
+    const raw = error.message ?? "";
+    const friendly = /failed to send a request/i.test(raw)
+      ? "No fue posible contactar al servidor de FacturApi (timeout o red). Intenta nuevamente en unos segundos."
+      : raw || "Error desconocido al probar la conexión con FacturApi.";
+    throw new Error(friendly);
+  }
   return data ?? { ok: false, error: "empty_response" };
 }
 

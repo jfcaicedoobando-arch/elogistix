@@ -1,103 +1,44 @@
-## Objetivo
+## Resumen de hallazgos
 
-Cuando llega un error a Sentry (como el de `useSetFacturapiApiKey`), hoy vemos: `method`, `feature`, mensaje, stack. Pero **no siempre** vemos:
 
-- `organization_id` del usuario activo (sólo si `syncSentryUser` ya corrió y la org estaba cargada).
-- **Qué clase de error es** (Postgres, validación, red, auth, edge function).
-- **Qué se estaba mandando** (args del RPC / payload de la mutation).
-- **Códigos Postgres** (`code`, `hint`, `details`) cuando aplica.
+| Issue                 | Mensaje                                                                   | Diagnóstico                                                                                                                                                                                                                                                                                                              | Acción                                            |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `JAVASCRIPT-REACT-1R` | `column "user_id" of relation "bitacora_actividad" does not exist`        | Ya resuelto en BD por el parche `13.141.7`. Las 2 funciones que la búsqueda destacó (`portal_responder_cotizacion`, `solicitar_reaprobacion_tarifa`) usan los nombres correctos — sólo tienen la palabra "entidad_tipo" en un literal. El evento de hace 15 min vino de un tab en caché con la versión vieja `13.141.5`. | Marcar **resolved** en Sentry y dejar comentario. |
+| `JAVASCRIPT-REACT-1S` | `Failed to send a request to the Edge Function` (test conexión FacturApi) | La edge function `facturapi-test-conexion` se quedó colgada (logs sólo muestran `booted`). Sospechoso: cold-start del SDK `npm:facturapi@5` corriendo en Deno + llamada `client.organizations.retrieve()` sin timeout.                                                                                                   | Fix en código + verificar.                        |
 
-Este plan enriquece **todos** los eventos automáticamente, sin tener que tocar 340 call sites de `notifyError`.
 
 ## Cambios
 
-### 1. `errorContextStore` (módulo nuevo)
+### 1. `supabase/functions/facturapi-test-conexion/index.ts`
 
-`src/lib/observability/errorContextStore.ts` — store en memoria que cualquier código puede actualizar y `reportCaughtError` lee siempre:
+Reemplazar la llamada al SDK por un `fetch` directo (sólo en esta función, las demás siguen usando el SDK porque ahí el cold-start ya está amortizado):
 
-```ts
-{ organizationId, organizationName, effectiveRole, userId, userEmail, route, appVersion }
-```
+- Importar sólo `resolveFacturapiKey` (sin `getFacturapiClient`, que carga el SDK).
+- Construir `Authorization: Basic base64(apiKey + ":")`.
+- Hacer `fetch("https://www.facturapi.io/v2/organizations/" + facturapiOrgId)` con `signal: AbortSignal.timeout(12000)`. Si no hay `facturapiOrgId` previo, usar `fetch("https://www.facturapi.io/v2/organizations")` y tomar `data[0]`.
+- Loggear con `console.log` los pasos (`auth-ok`, `key-resolved`, `fetch-start`, `fetch-status:<n>`) para que si vuelve a fallar sepamos dónde se quedó.
+- Mapear errores: `AbortError` → `{ ok:false, status:504, detail:"facturapi_timeout" }`; HTTP no-2xx → `{ ok:false, status, detail }`.
 
-Se hidrata desde un nuevo hook `useSyncSentryErrorContext()` que se monta una sola vez en `App.tsx` y escucha `AuthContext` + `OrganizationContext` + `useLocation`. Ventaja: no agregamos prop drilling y siempre tenemos los valores frescos.
+### 2. `src/features/configuracion/services/facturapiCredenciales.ts`
 
-### 2. `classifyError(err)` (clasificación automática)
+En `probarFacturapiConexion`: si `supabase.functions.invoke` devuelve `error`, traducir el mensaje a español ("Tiempo de espera agotado al contactar FacturApi" / "No fue posible conectar con la función. Intenta nuevamente.") en vez del crudo `Failed to send a request to the Edge Function`.
 
-`src/lib/observability/classifyError.ts` — toma el error y devuelve uno de:
+### 3. Sentry
 
-```text
-db_error       (PostgrestError: tiene code/hint/details)
-edge_function  (FunctionsHttpError / FunctionsRelayError)
-auth           (AuthError / 401 / 403)
-validation     (ZodError, mensaje de validación de RHF)
-network        (TypeError "Failed to fetch", AbortError)
-unknown
-```
+- Marcar `JAVASCRIPT-REACT-1R` como **resolved** con razón: "Schema mismatch arreglado en migration 20260630172919; eventos posteriores provienen de tabs cacheados con release 13.141.5."
+- `JAVASCRIPT-REACT-1S` quedará auto-resuelto por el commit (`Fixes JAVASCRIPT-REACT-1S`).
 
-Para `db_error` además extrae `pg_code`, `pg_hint`, `pg_details` como tags individuales (búsquedas más rápidas en Sentry: `tag:pg_code:42703`).
+### 4. CHANGELOG.md + APP_VERSION
 
-### 3. `sanitizePayload(input)` (payload seguro)
+- Bump patch (`13.141.5` → `13.141.6` o el siguiente disponible) con entrada: "Fix: probar conexión FacturApi usa `fetch` directo con timeout para evitar cold-start del SDK npm."
 
-`src/lib/observability/sanitizePayload.ts` — serializa cualquier objeto con:
+## Validación
 
-- Recorte a 8KB (suficiente para args de RPC, no infla la cuota Sentry).
-- Redacción de claves sensibles: `api_key`, `password`, `token`, `secret`, `authorization`, `rfc`, `curp`, `email`, `telefono` → `"[REDACTED]"`. Reutiliza el set ya definido en `piiScrub.ts`.
-- Manejo defensivo: circular refs, BigInt, Date.
+1. Tras el deploy automático, llamar `supabase--curl_edge_functions` a `/facturapi-test-conexion` con sandbox y live; debe responder < 3 s con `{ ok: true, nombre, facturapi_org_id }`.
+2. Revisar `supabase--edge_function_logs facturapi-test-conexion` y ver el rastro `auth-ok → key-resolved → fetch-start → fetch-status:200`.
 
-### 4. `reportCaughtError` enriquecido
+## Fuera de alcance
 
-`src/lib/observability/reportCaughtError.ts` — el helper que ya usan 60+ call sites suma automáticamente:
+- No toco `_shared/facturapiClient.ts` ni las funciones que timbran/cancelan/emiten REP; ahí el SDK ya funciona y un cambio masivo arriesgaría regresiones fiscales.
 
-- Tags: `organization_id`, `effective_role`, `route`, `app_version`, `error_kind`, y `pg_code` cuando aplica.
-- Extra (contexts en Sentry): `payload` (sanitizado) si el caller lo pasó vía nueva opción `payload`, más `pg_hint`, `pg_details`, `request_id`, `organization_name`.
-
-Firma extendida (retrocompatible):
-
-```ts
-reportCaughtError(err, { feature, op }, { payload?, requestId?, ...extra });
-```
-
-### 5. `notifyError` propaga `payload`
-
-`src/components/shared/utils/appFeedback.ts` — añade `payload` a `ErrorNotifyOptions` y lo pasa a `reportCaughtError`. Los call sites críticos (mutations de FacturApi, embarques, facturación) reciben `payload: { args, rpc }`.
-
-### 6. Pequeño helper `reportRpcError`
-
-Para mutations de Supabase RPC más usadas (CXP, CXC, FacturApi, conversión proforma→factura), un wrapper:
-
-```ts
-reportRpcError("set_facturapi_api_key", { p_org_id, p_ambiente }, error);
-```
-
-agrega tags `rpc=set_facturapi_api_key`, payload sanitizado y clasifica. Documentado en `CONTRIBUTING.md` como patrón opcional — no obligatorio.
-
-## Archivos nuevos
-
-```text
-src/lib/observability/errorContextStore.ts
-src/lib/observability/classifyError.ts
-src/lib/observability/sanitizePayload.ts
-src/lib/observability/hooks/useSyncSentryErrorContext.ts
-src/lib/observability/__tests__/classifyError.test.ts
-src/lib/observability/__tests__/sanitizePayload.test.ts
-src/lib/observability/__tests__/errorContextStore.test.ts
-```
-
-## Archivos editados
-
-```text
-src/lib/observability/reportCaughtError.ts        (enriquecer)
-src/lib/observability/__tests__/reportCaughtError.test.ts
-src/components/shared/utils/appFeedback.ts        (aceptar payload)
-src/App.tsx                                       (montar useSyncSentryErrorContext una vez)
-CHANGELOG.md + src/constants/appVersion.ts        (bump 13.141.8)
-```
-
-## Verificación
-
-- Forzar el error que ya tienes (`useSetFacturapiApiKey`) en preview tras el bump: el nuevo evento Sentry debe traer `tag:pg_code=42703`, `tag:error_kind=db_error`, `tag:organization_id=...`, `tag:route=/configuracion` y un context `payload` con `{ ambiente: "sandbox", last4: "[REDACTED]" }`.
-- Tests unitarios de los 3 módulos nuevos cubren los kinds, la sanitización y el store.
-
-## Pregunta
-
-Una sola: cuando dices **"tipo de auditoría"**, ¿te refieres a la **clasificación general del error** (`db_error / validation / auth / ...`, que es lo que propone este plan con `error_kind`) o a algo específico del módulo `/auditoria` (p. ej. tipo de hallazgo: `docs_faltantes / proforma_pendiente / ...`)? Si es lo segundo, agrego un tag adicional `audit_finding_type` que sólo se setea desde las pantallas de auditoría operativa. Lo que sea la mejor práctica que tú recomiendes. 
+No quiero dejar de usar el SDK, existe otro fix? Que dice la documentacion de facturapi?

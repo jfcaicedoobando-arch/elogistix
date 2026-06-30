@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.9] - 2026-06-30
+- **fix(facturapi) — cold-start del SDK colgaba "Probar conexión"** (Sentry JAVASCRIPT-REACT-1S, `Failed to send a request to the Edge Function` en `useProbarFacturapiConexion`). En `_shared/facturapiClient.ts` el `await import("npm:facturapi@5")` corría dentro del handler (lazy), así que el primer request a un worker frío pagaba 10–30s de descarga npm y el cliente Supabase abortaba. Movido a un `import()` eager a nivel de módulo: el SDK se carga durante el `boot` del worker, no en el hot path. Adicionalmente: `facturapi-test-conexion` envuelve la llamada SDK con `withTimeout(15s)` para devolver `{ ok:false, status:504, detail:"Tiempo de espera agotado…" }` en vez de colgar, agrega `console.log` por paso (`auth-ok`, `key-resolved`, `sdk-call-start/ok/error`) y `probarFacturapiConexion` traduce el error de red genérico a un mensaje en español. Resuelve JAVASCRIPT-REACT-1S.
+- **chore(sentry) — JAVASCRIPT-REACT-1R** marcado como resuelto manualmente: el bug de esquema en `bitacora_actividad` fue arreglado en `13.141.7`; los 2 eventos posteriores provinieron de tabs en caché con la versión vieja `13.141.5`.
+
 ## [13.141.8] - 2026-06-30
 - **feat(observability) — Sentry: contexto enriquecido automáticamente en todo evento.** Nuevos módulos `errorContextStore`, `classifyError`, `sanitizePayload` + hook `useSyncSentryErrorContext` montado una sola vez en `<App />`. `reportCaughtError` ahora agrega siempre tags `organization_id`, `effective_role`, `route`, `app_version`, `error_kind` (db_error / edge_function / auth / validation / network / unknown) y `pg_code` cuando aplica; extras `pg_hint`, `pg_details`, `organization_name`, `request_id`, y `payload` sanitizado (redacta `api_key`, `password`, `token`, `rfc`, `email`, … y trunca a 8 KB). `notifyError` propaga `payload` y `requestId` desde los call sites. Retrocompatible con los 60+ call sites existentes.
 

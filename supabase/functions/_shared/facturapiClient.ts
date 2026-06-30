@@ -20,23 +20,25 @@ export type FacturapiClient = object;
 type FacturapiCtorType = new (apiKey: string) => FacturapiClient;
 
 const clientCache = new Map<string, FacturapiClient>();
-let FacturapiCtor: FacturapiCtorType | null = null;
+
+// Carga eager del SDK a nivel de módulo: la descarga/parseo de
+// `npm:facturapi@5` ocurre durante el `boot` del worker de Deno (antes de
+// que la función empiece a aceptar requests), NO en el hot path del primer
+// request. Esto evita timeouts cliente del tipo
+// "Failed to send a request to the Edge Function" cuando el primer request
+// a un worker frío pagaba 10-30s de descarga npm.
+const sdkSpec = "npm:facturapi@5";
+const sdkModulePromise = import(sdkSpec) as Promise<{
+  default?: FacturapiCtorType | { default?: FacturapiCtorType };
+}>;
 
 async function loadFacturapiCtor(): Promise<FacturapiCtorType> {
-  if (FacturapiCtor) return FacturapiCtor;
-  // Indirección por variable para que el typecheck de Deno no intente
-  // resolver `npm:facturapi@5` en tiempo de compilación (sólo se carga en
-  // tiempo de ejecución dentro de la edge function).
-  const sdkSpec = "npm:facturapi@5";
-  const mod = (await import(sdkSpec)) as {
-    default?: FacturapiCtorType | { default?: FacturapiCtorType };
-  };
+  const mod = await sdkModulePromise;
   const def = mod.default;
   const ctor = (def && typeof def === "object" && "default" in def
     ? def.default
     : def) as FacturapiCtorType | undefined;
-  FacturapiCtor = ctor ?? (mod as unknown as FacturapiCtorType);
-  return FacturapiCtor;
+  return ctor ?? (mod as unknown as FacturapiCtorType);
 }
 
 export interface FacturapiClientResolved {
@@ -99,5 +101,4 @@ export function describeFacturapiError(err: unknown): { status: number; detail: 
 /** Sólo para tests: limpia la caché entre escenarios. */
 export function __resetFacturapiClientCacheForTests(): void {
   clientCache.clear();
-  FacturapiCtor = null;
 }
