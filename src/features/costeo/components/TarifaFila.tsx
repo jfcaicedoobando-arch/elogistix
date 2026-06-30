@@ -39,7 +39,7 @@ interface Props {
   pending: boolean;
 }
 
-export const FILA_GRID = "grid grid-cols-[1fr_140px_160px_150px_auto] gap-4 items-center px-4";
+export const FILA_GRID = "grid grid-cols-[minmax(220px,1.4fr)_150px_130px_minmax(200px,1fr)_56px] gap-4 items-center px-4";
 
 const SIETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000;
 
