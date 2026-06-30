@@ -78,4 +78,20 @@ describe("validatePaso1 — política tarifa-first (Marítimo)", () => {
       ),
     ).toBeNull();
   });
+
+  it("PERMITE avanzar en Marítimo sin tarifa cuando el incoterm transfiere el flete al shipper (CIF/CFR/CIP/CPT/DAP/DDP/DAT)", () => {
+    for (const inco of ["CIF", "CFR", "CIP", "CPT", "DAP", "DDP", "DAT"]) {
+      expect(
+        validatePaso1(base({ tarifaId: "", incoterm: inco } as never)),
+      ).toBeNull();
+    }
+  });
+
+  it("SIGUE bloqueando en Marítimo + FOB/EXW/FCA sin tarifa", () => {
+    for (const inco of ["FOB", "EXW", "FCA"]) {
+      expect(
+        validatePaso1(base({ tarifaId: "", incoterm: inco } as never)),
+      ).toMatch(/tarifa marítima/i);
+    }
+  });
 });

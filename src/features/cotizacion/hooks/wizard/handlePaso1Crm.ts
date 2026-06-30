@@ -14,6 +14,7 @@ import {
 import { vincularOCrearOportunidadParaCotizacion } from "@/features/crm/services/vincularCotizacion";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
 interface ToastFn {
@@ -50,6 +51,7 @@ export function validateTerrestre(v: CotizacionFormValues): string | null {
 
 export function validateMaritimo(v: CotizacionFormValues): string | null {
   if (v.modo !== "Marítimo" || v.tarifaId) return null;
+  if (esIncotermSinFleteVenta(v.incoterm, v.modo)) return null;
   void registrarBloqueoSinTarifa({
     entidadNombre: v.esProspecto ? v.prospectoEmpresa : (v.clienteId ?? ""),
     origen: v.origen ?? null,
