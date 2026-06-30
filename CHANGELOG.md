@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.16] - 2026-06-30
+- **fix(costeo) — vista agrupada de tarifas mal formateada.** En `/costeo/tarifas` (Agrupada) las columnas se repetían por cada ruta, el badge de Estado quedaba flotando lejos de su header, y el subtítulo "Flete · Recargos" partía en dos líneas. Se consolidó la cabecera de columnas en una sola fila sticky arriba de la lista, se rebalanceó `FILA_GRID` (`minmax(220px,1.4fr) 150px 130px minmax(200px,1fr) 56px`), se alineó Estado a la izquierda de su celda, se suavizó el contraste del header de grupo y se mejoró `VigenciaBar` (track con borde dashed cuando la vigencia aún no inicia, altura `h-1.5`).
+
 ## [13.141.15] - 2026-06-30
 - **fix(costeo) — tarifas del portal del agente quedaban invisibles para operaciones.** Las tarifas subidas desde `/agente/tarifas` se estaban guardando en la organización donde el usuario agente era miembro (`organization_members`), no en la organización dueña del agente (`costeo_agentes.organization_id`). Resultado: el operador correcto no las veía en `/costeo/tarifas`. Se agregó un trigger `BEFORE INSERT OR UPDATE` (`costeo_tarifas_match_agente_org_trg`) que fuerza `costeo_tarifas.organization_id` a coincidir con el del agente referenciado, y se reasignaron las 5 tarifas existentes que estaban mal asignadas.
 
