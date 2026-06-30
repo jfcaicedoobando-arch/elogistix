@@ -1,9 +1,15 @@
 /**
- * F4 (audit Sentry 13.65.0): valida el helper centralizado `reportCaughtError`
- * — usa dynamic import del SDK para respetar el guardrail ESLint
- * `no-restricted-imports` y mantener `@sentry/react` fuera del bundle inicial.
+ * F4 (audit Sentry 13.65.0) + 13.141.8 (contexto enriquecido):
+ * valida que `reportCaughtError`:
+ *  - llama a `captureException` con dynamic import (no acopla el SDK).
+ *  - enriquece tags con organization_id, route, error_kind, pg_code.
+ *  - sanitiza `payload` (redacta claves sensibles).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  setErrorContext,
+  __resetErrorContextForTests,
+} from "../errorContextStore";
 
 const mocks = vi.hoisted(() => ({ captureException: vi.fn() }));
 vi.mock("@sentry/react", () => mocks);
@@ -15,41 +21,68 @@ async function flush() {
   await new Promise((r) => setTimeout(r, 0));
 }
 
-beforeEach(() => mocks.captureException.mockClear());
+beforeEach(() => {
+  mocks.captureException.mockClear();
+  __resetErrorContextForTests();
+});
 afterEach(() => vi.clearAllMocks());
 
 describe("reportCaughtError", () => {
-  it("reenvía el error a Sentry con tags { feature, op } y extra", async () => {
-    const err = new Error("boom");
-    reportCaughtError(err, { feature: "facturacion", op: "generar_zip_masivo" }, { total: 5 });
+  it("incluye tags ambientales (organization_id, route, app_version, error_kind)", async () => {
+    setErrorContext({
+      organizationId: "org-42",
+      effectiveRole: "admin_org",
+      route: "/configuracion",
+    });
+    reportCaughtError(new Error("boom"), { feature: "facturacion", op: "x" });
     await flush();
-    expect(mocks.captureException).toHaveBeenCalledWith(
-      err,
-      expect.objectContaining({
-        tags: { feature: "facturacion", op: "generar_zip_masivo" },
-        extra: { total: 5 },
-      }),
-    );
+    const call = mocks.captureException.mock.calls[0];
+    expect(call[1].tags).toMatchObject({
+      feature: "facturacion",
+      op: "x",
+      organization_id: "org-42",
+      effective_role: "admin_org",
+      route: "/configuracion",
+      error_kind: "unknown",
+    });
+    expect(call[1].tags.app_version).toBeTruthy();
   });
 
-  it("acepta sólo `feature` (op opcional) y sin extra", async () => {
-    const err = new Error("only-feature");
-    reportCaughtError(err, { feature: "tesoreria" });
+  it("clasifica db_error y agrega pg_code/pg_hint", async () => {
+    const pgError = {
+      code: "42703",
+      message: 'column "user_id" does not exist',
+      hint: "use usuario_id",
+      details: "in bitacora_actividad",
+    };
+    reportCaughtError(pgError, { feature: "facturapi", op: "set_key" });
     await flush();
-    expect(mocks.captureException).toHaveBeenCalledWith(
-      err,
-      expect.objectContaining({ tags: { feature: "tesoreria" }, extra: undefined }),
-    );
+    const call = mocks.captureException.mock.calls[0];
+    expect(call[1].tags.error_kind).toBe("db_error");
+    expect(call[1].tags.pg_code).toBe("42703");
+    expect(call[1].extra.pg_hint).toBe("use usuario_id");
+    expect(call[1].extra.pg_details).toBe("in bitacora_actividad");
   });
 
-  it("no lanza si el import dinámico falla — best effort", async () => {
-    // Forzar el mock a tirar — el helper debe tragarse el error sin propagar.
+  it("sanitiza el payload (redacta claves sensibles)", async () => {
+    reportCaughtError(
+      new Error("x"),
+      { feature: "facturapi", op: "set_key" },
+      { payload: { ambiente: "sandbox", api_key: "sk_live_secret" } },
+    );
+    await flush();
+    const call = mocks.captureException.mock.calls[0];
+    expect(call[1].extra.payload).toEqual({
+      ambiente: "sandbox",
+      api_key: "[REDACTED]",
+    });
+  });
+
+  it("no lanza si el SDK falla — best effort", async () => {
     mocks.captureException.mockImplementationOnce(() => {
       throw new Error("sdk-init-failed");
     });
-    expect(() =>
-      reportCaughtError(new Error("x"), { feature: "pnl" }),
-    ).not.toThrow();
+    expect(() => reportCaughtError(new Error("x"), { feature: "pnl" })).not.toThrow();
     await flush();
   });
 });

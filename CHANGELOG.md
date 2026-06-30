@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.8] - 2026-06-30
+- **feat(observability) — Sentry: contexto enriquecido automáticamente en todo evento.** Nuevos módulos `errorContextStore`, `classifyError`, `sanitizePayload` + hook `useSyncSentryErrorContext` montado una sola vez en `<App />`. `reportCaughtError` ahora agrega siempre tags `organization_id`, `effective_role`, `route`, `app_version`, `error_kind` (db_error / edge_function / auth / validation / network / unknown) y `pg_code` cuando aplica; extras `pg_hint`, `pg_details`, `organization_name`, `request_id`, y `payload` sanitizado (redacta `api_key`, `password`, `token`, `rfc`, `email`, … y trunca a 8 KB). `notifyError` propaga `payload` y `requestId` desde los call sites. Retrocompatible con los 60+ call sites existentes.
+
 ## [13.141.7] - 2026-06-30
 - **fix(bitácora) — 6 RPCs insertaban con columnas inexistentes** (Sentry `useSetFacturapiApiKey` / DB_ERROR 42703 `column "user_id" of relation "bitacora_actividad" does not exist`). El esquema real es `usuario_id / usuario_email / accion / modulo / entidad_id / entidad_nombre / detalles`, pero estas funciones aún usaban `user_id / entidad_tipo / entidad / metadata / detalle / tipo`. Corregidas: `set_facturapi_api_key`, `clear_facturapi_api_key`, `aceptar_cotizacion_version`, `recotizar_cotizacion`, `convertir_proformas_a_factura`, `duplicar_factura_para_sustitucion`. Sin cambios de negocio: sólo el `INSERT` final de cada función. `usuario_email` se resuelve vía `auth.users` y la información antes en `entidad_tipo/metadata` se mueve a `modulo` y `detalles` (jsonb).
 
