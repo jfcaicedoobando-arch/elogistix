@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.15] - 2026-06-30
+- **fix(costeo) — tarifas del portal del agente quedaban invisibles para operaciones.** Las tarifas subidas desde `/agente/tarifas` se estaban guardando en la organización donde el usuario agente era miembro (`organization_members`), no en la organización dueña del agente (`costeo_agentes.organization_id`). Resultado: el operador correcto no las veía en `/costeo/tarifas`. Se agregó un trigger `BEFORE INSERT OR UPDATE` (`costeo_tarifas_match_agente_org_trg`) que fuerza `costeo_tarifas.organization_id` a coincidir con el del agente referenciado, y se reasignaron las 5 tarifas existentes que estaban mal asignadas.
+
 ## [13.141.14] - 2026-06-30
 - **feat(roles) — contador con acceso viewer a Embarques.** Se añadió `/embarques` al sidebar del rol `contador` bajo la sección "Operaciones". Las mutaciones siguen bloqueadas porque `contador` no pertenece a `OPERATIONS` en `usePermissions` (sin botones de editar/cerrar/eliminar).
 
