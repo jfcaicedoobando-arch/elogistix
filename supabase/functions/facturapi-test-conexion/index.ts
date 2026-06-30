@@ -7,7 +7,7 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+import { basicAuthHeader, FACTURAPI_BASE, resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 
 interface Body {
   organization_id: string;
@@ -40,6 +40,17 @@ interface CredRow {
   facturapi_org_id: string | null;
 }
 
+interface FacturapiOrg {
+  id?: string;
+  legal_name?: string;
+  name?: string;
+}
+
+interface FacturapiHttpError extends Error {
+  status?: number;
+  detail?: unknown;
+}
+
 function buildSupabaseLike(sbAdmin: ReturnType<typeof createClient>, cred: CredRow, ambiente: "sandbox" | "live") {
   const fakeRow = { ambiente, ...cred };
   return {
@@ -69,12 +80,39 @@ async function authorizeRequest(req: Request, url: string, anon: string, organiz
   return { ok: true as const };
 }
 
-async function callFacturapi(resolved: { data: { client: unknown; facturapiOrgId: string | null } }) {
-  const client = resolved.data.client as {
-    organizations: { retrieve: (id: string) => Promise<{ id: string; legal_name?: string; name?: string }> };
-  };
-  const orgId = resolved.data.facturapiOrgId ?? "me";
-  return await client.organizations.retrieve(orgId);
+async function readFacturapiDetail(res: Response): Promise<unknown> {
+  const text = await res.text();
+  if (!text) return { message: res.statusText };
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return { message: text };
+  }
+}
+
+function toFacturapiError(res: Response, detail: unknown): FacturapiHttpError {
+  const err = new Error("facturapi_http_error") as FacturapiHttpError;
+  err.status = res.status;
+  err.detail = detail;
+  return err;
+}
+
+async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null): Promise<FacturapiOrg> {
+  const orgId = facturapiOrgId ?? "me";
+  const res = await fetch(`${FACTURAPI_BASE}/organizations/${encodeURIComponent(orgId)}`, {
+    headers: { Authorization: basicAuthHeader(apiKey), Accept: "application/json" },
+  });
+
+  if (!res.ok) {
+    const detail = await readFacturapiDetail(res);
+    if (res.status === 404 && facturapiOrgId) {
+      console.warn("[facturapi-test-conexion] saved-org-id-not-found; retrying-me");
+      return fetchFacturapiOrg(apiKey, null);
+    }
+    throw toFacturapiError(res, detail);
+  }
+
+  return await res.json() as FacturapiOrg;
 }
 
 /**
@@ -124,13 +162,17 @@ async function persistOrgId(
 }
 
 function errorResponse(err: unknown) {
-  const { status, detail } = describeFacturapiError(err);
+  const e = (err ?? {}) as FacturapiHttpError;
+  const status = e.status ?? 502;
+  const detail = e.detail ?? { message: e.message ?? String(err) };
   const isTimeout = (err as Error)?.message === "facturapi_timeout";
-  console.error("[facturapi-test-conexion] sdk-call-error", { status, isTimeout });
+  console.error("[facturapi-test-conexion] facturapi-call-error", { status, isTimeout });
+  const isAuthError = status === 401 || status === 403;
   return json({
     ok: false,
     status: isTimeout ? 504 : status,
     detail: isTimeout ? { message: "Tiempo de espera agotado al contactar FacturApi (15s)." } : detail,
+    message: isAuthError ? "La API key de FacturApi no es válida para este ambiente." : undefined,
   }, 200);
 }
 
@@ -139,14 +181,17 @@ async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
   if (!cred) return json({ error: "org_facturapi_not_configured", message: "Aún no has cargado credenciales." }, 412);
 
   const sbForHelper = buildSupabaseLike(sbAdmin, cred, body.ambiente);
-  const resolved = await getFacturapiClient(sbForHelper, body.organization_id);
+  const resolved = await resolveFacturapiKey(sbForHelper, body.organization_id);
   if (!resolved.ok) return json(resolved.data, resolved.data.status);
   console.log("[facturapi-test-conexion] key-resolved");
 
   try {
-    console.log("[facturapi-test-conexion] sdk-call-start");
-    const me = await withTimeout(callFacturapi(resolved), 15_000);
-    console.log("[facturapi-test-conexion] sdk-call-ok", { id: me?.id });
+    console.log("[facturapi-test-conexion] facturapi-call-start");
+    const me = await withTimeout(
+      fetchFacturapiOrg(resolved.data.apiKey, resolved.data.facturapiOrgId),
+      15_000,
+    );
+    console.log("[facturapi-test-conexion] facturapi-call-ok", { id: me?.id });
     await persistOrgId(sbAdmin, body.organization_id, me?.id, resolved.data.facturapiOrgId);
     return json({
       ok: true,

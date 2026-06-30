@@ -1,8 +1,8 @@
 /**
- * facturapiClient — Devuelve una instancia del SDK oficial `facturapi-node`
- * (v5+) ya configurada para la organización dada.
+ * facturapiClient — Devuelve una instancia del SDK oficial `facturapi`
+ * (v4.18.0) ya configurada para la organización dada.
  *
- * Carga el SDK vía `npm:facturapi@5` (Deno) y cachea el cliente por API key
+ * Carga el SDK vía `npm:facturapi@4.18.0` (Deno) y cachea el cliente por API key
  * para evitar reinstanciar en invocaciones encadenadas dentro de la misma
  * instancia del runtime.
  *
@@ -14,7 +14,7 @@
  */
 import { resolveFacturapiKey, type FacturapiResolveResult, type SupabaseLike } from "./facturapiAuth.ts";
 
-// El SDK `facturapi-node` no exporta tipos accesibles desde el typecheck de
+// El SDK `facturapi` no exporta tipos accesibles desde el typecheck de
 // Deno (lo cargamos dinámicamente). Lo modelamos como un objeto opaco.
 export type FacturapiClient = object;
 type FacturapiCtorType = new (apiKey: string) => FacturapiClient;
@@ -25,7 +25,7 @@ const clientCache = new Map<string, FacturapiClient>();
 // `facturapi` ocurre durante el `boot` del worker de Deno (antes de que la
 // función empiece a aceptar requests), NO en el hot path del primer request.
 //
-// IMPORTANTE: pineado a `^4.18.0` porque la última versión publicada del
+// IMPORTANTE: pineado a `4.18.0` porque la última versión publicada del
 // paquete `facturapi` en npm es 4.x. Antes apuntábamos a `npm:facturapi@5`
 // (no existe) y Deno crasheaba el event loop del worker en boot con
 // `Could not find constraint 'facturapi@5' in the list of packages.`, lo que
@@ -36,7 +36,7 @@ const clientCache = new Map<string, FacturapiClient>();
 // carga no tire el worker entero. El error se rethrowea cuando
 // `loadFacturapiCtor()` se invoca, así otras edge functions que importen
 // este shared module no se rompen en boot.
-const sdkSpec = "npm:[email protected]";
+const sdkSpec = "npm:facturapi@4.18.0";
 
 interface SdkModule {
   default?: FacturapiCtorType | { default?: FacturapiCtorType };

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.13] - 2026-06-30
+- **fix(facturapi) — prueba de conexión sin dependencia del SDK.** `facturapi-test-conexion` ahora valida la API key con `fetch` directo a `/organizations/me`, evitando que la carga npm del SDK convierta “Probar conexión” en un timeout genérico. También se corrigió el specifier compartido a `npm:facturapi@4.18.0` y se agregaron errores claros para API key inválida.
+
 ## [13.141.12] - 2026-06-30
 - **chore(lint) — complejidad de `facturapi-test-conexion` 20 → bajo umbral.** El handler de `Deno.serve` se partió en `loadCredentials`, `persistOrgId`, `errorResponse` y `runTest`. Mismo comportamiento; desbloquea `bun run lint -- --max-warnings 0`.
 
