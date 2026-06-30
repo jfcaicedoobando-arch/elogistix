@@ -1,12 +1,12 @@
 /**
  * Fila de tarifa dentro de un grupo.
- * v13.135.54 (Fase D): acciones rápidas en hover + badge "Nueva" (≤7 días).
+ * v13.142.4: botones Aprobar/Rechazar siempre visibles en "borrador" (antes ocultos en hover y cortados).
  */
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Check, Copy, Sparkles, Trophy } from "lucide-react";
+import { Sparkles, Trophy } from "lucide-react";
 import { TarifaEstadoUnificado } from "./TarifaEstadoUnificado";
 import { TarifaRowActions } from "./TarifaRowActions";
+import { TarifaQuickApprovalButtons } from "./TarifaQuickApprovalButtons";
 import { VigenciaBar } from "./VigenciaBar";
 import { usd } from "../routes/CosteoTarifas.helpers";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
