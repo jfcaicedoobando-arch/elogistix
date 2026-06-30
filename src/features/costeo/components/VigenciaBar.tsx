@@ -33,14 +33,17 @@ export function VigenciaBar({ desde, hasta }: Props) {
   const textColor = hint.tone === "danger"
     ? "text-destructive"
     : hint.tone === "warn" ? "text-warning" : "text-muted-foreground";
+  const noIniciada = progress === 0;
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="space-y-1 cursor-default">
             <div className="text-xs tabular-nums">{formatVigencia(desde, hasta)}</div>
-            <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
-              <div className={`h-full ${barColor}`} style={{ width: `${progress}%` }} />
+            <div className={`h-1.5 w-full rounded-full overflow-hidden ${noIniciada ? "bg-muted/40 border border-dashed border-muted-foreground/30" : "bg-muted"}`}>
+              {!noIniciada && (
+                <div className={`h-full ${barColor}`} style={{ width: `${progress}%` }} />
+              )}
             </div>
           </div>
         </TooltipTrigger>

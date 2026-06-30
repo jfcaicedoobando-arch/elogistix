@@ -94,6 +94,9 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
 
   return (
     <div className="space-y-3">
+      <div className="sticky top-0 z-10 bg-background rounded-md border overflow-hidden">
+        <TarifaColumnHeader />
+      </div>
       {grupos.map((g) => {
         const isCollapsed = collapsed.has(g.key);
         return (
@@ -101,7 +104,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
             <button
               type="button"
               onClick={() => toggle(g.key)}
-              className="w-full flex items-center gap-3 px-4 py-2.5 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2 bg-muted/15 hover:bg-muted/30 transition-colors text-left"
             >
               {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
               <div className="flex-1 min-w-0">
@@ -126,25 +129,22 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
               )}
             </button>
             {!isCollapsed && (
-              <div>
-                <TarifaColumnHeader />
-                <div className="divide-y divide-border/60">
-                  {g.rows.map((t) => (
-                    <TarifaFila
-                      key={t.id}
-                      t={t}
-                      esMejor={g.mejor?.id === t.id}
-                      mejorTotal={g.mejor?.total_comparable ?? null}
-                      onEditar={() => onEditar(t.id)}
-                      onDuplicar={() => onDuplicar(t.id)}
-                      onEliminar={() => onEliminar(t.id)}
-                      onAprobar={() => aprobar.mutate(t.id)}
-                      onRechazar={() => setRechazandoId(t.id)}
-                      onReactivar={() => reactivar.mutate(t.id)}
-                      pending={pending}
-                    />
-                  ))}
-                </div>
+              <div className="divide-y divide-border/60">
+                {g.rows.map((t) => (
+                  <TarifaFila
+                    key={t.id}
+                    t={t}
+                    esMejor={g.mejor?.id === t.id}
+                    mejorTotal={g.mejor?.total_comparable ?? null}
+                    onEditar={() => onEditar(t.id)}
+                    onDuplicar={() => onDuplicar(t.id)}
+                    onEliminar={() => onEliminar(t.id)}
+                    onAprobar={() => aprobar.mutate(t.id)}
+                    onRechazar={() => setRechazandoId(t.id)}
+                    onReactivar={() => reactivar.mutate(t.id)}
+                    pending={pending}
+                  />
+                ))}
               </div>
             )}
           </Card>
