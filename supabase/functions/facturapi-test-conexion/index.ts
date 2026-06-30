@@ -101,6 +101,64 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+async function loadCredentials(sbAdmin: ReturnType<typeof createClient>, organizationId: string) {
+  const { data } = await sbAdmin
+    .from("facturapi_credenciales")
+    .select("api_key_sandbox_vault_id, api_key_live_vault_id, api_key_sandbox_secret_name, api_key_live_secret_name, facturapi_org_id")
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  return data as CredRow | null;
+}
+
+async function persistOrgId(
+  sbAdmin: ReturnType<typeof createClient>,
+  organizationId: string,
+  meId: string | undefined,
+  currentOrgId: string | null,
+) {
+  if (!meId || currentOrgId) return;
+  await sbAdmin
+    .from("facturapi_credenciales")
+    .update({ facturapi_org_id: meId })
+    .eq("organization_id", organizationId);
+}
+
+function errorResponse(err: unknown) {
+  const { status, detail } = describeFacturapiError(err);
+  const isTimeout = (err as Error)?.message === "facturapi_timeout";
+  console.error("[facturapi-test-conexion] sdk-call-error", { status, isTimeout });
+  return json({
+    ok: false,
+    status: isTimeout ? 504 : status,
+    detail: isTimeout ? { message: "Tiempo de espera agotado al contactar FacturApi (15s)." } : detail,
+  }, 200);
+}
+
+async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
+  const cred = await loadCredentials(sbAdmin, body.organization_id);
+  if (!cred) return json({ error: "org_facturapi_not_configured", message: "Aún no has cargado credenciales." }, 412);
+
+  const sbForHelper = buildSupabaseLike(sbAdmin, cred, body.ambiente);
+  const resolved = await getFacturapiClient(sbForHelper, body.organization_id);
+  if (!resolved.ok) return json(resolved.data, resolved.data.status);
+  console.log("[facturapi-test-conexion] key-resolved");
+
+  try {
+    console.log("[facturapi-test-conexion] sdk-call-start");
+    const me = await withTimeout(callFacturapi(resolved), 15_000);
+    console.log("[facturapi-test-conexion] sdk-call-ok", { id: me?.id });
+    await persistOrgId(sbAdmin, body.organization_id, me?.id, resolved.data.facturapiOrgId);
+    return json({
+      ok: true,
+      ambiente: body.ambiente,
+      facturapi_org_id: me?.id ?? null,
+      nombre: me?.legal_name ?? me?.name ?? null,
+    });
+  } catch (err) {
+    return errorResponse(err);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -118,44 +176,6 @@ Deno.serve(async (req) => {
   console.log("[facturapi-test-conexion] auth-ok");
 
   const sbAdmin = createClient(url, service);
-  const { data: cred } = await sbAdmin
-    .from("facturapi_credenciales")
-    .select("api_key_sandbox_vault_id, api_key_live_vault_id, api_key_sandbox_secret_name, api_key_live_secret_name, facturapi_org_id")
-    .eq("organization_id", body.organization_id)
-    .maybeSingle();
-
-  if (!cred) return json({ error: "org_facturapi_not_configured", message: "Aún no has cargado credenciales." }, 412);
-
-  const sbForHelper = buildSupabaseLike(sbAdmin, cred as CredRow, body.ambiente);
-  const resolved = await getFacturapiClient(sbForHelper, body.organization_id);
-  if (!resolved.ok) return json(resolved.data, resolved.data.status);
-  console.log("[facturapi-test-conexion] key-resolved");
-
-  try {
-    console.log("[facturapi-test-conexion] sdk-call-start");
-    const me = await withTimeout(callFacturapi(resolved), 15_000);
-    console.log("[facturapi-test-conexion] sdk-call-ok", { id: me?.id });
-    if (me?.id && !resolved.data.facturapiOrgId) {
-      await sbAdmin
-        .from("facturapi_credenciales")
-        .update({ facturapi_org_id: me.id })
-        .eq("organization_id", body.organization_id);
-    }
-    return json({
-      ok: true,
-      ambiente: body.ambiente,
-      facturapi_org_id: me?.id ?? null,
-      nombre: me?.legal_name ?? me?.name ?? null,
-    });
-  } catch (err) {
-    const { status, detail } = describeFacturapiError(err);
-    const isTimeout = (err as Error)?.message === "facturapi_timeout";
-    console.error("[facturapi-test-conexion] sdk-call-error", { status, isTimeout });
-    return json({
-      ok: false,
-      status: isTimeout ? 504 : status,
-      detail: isTimeout ? { message: "Tiempo de espera agotado al contactar FacturApi (15s)." } : detail,
-    }, 200);
-  }
+  return await runTest(body, sbAdmin);
 });
 
