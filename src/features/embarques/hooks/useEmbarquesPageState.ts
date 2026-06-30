@@ -169,7 +169,7 @@ export function useEmbarquesPageState() {
 
   return {
     search,
-    filterModo, filterEstado, filterCliente, filterOperador,
+    filterModo, filterEstado, filterCliente, filterOperador, filterAlerta,
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
     setSearch,
@@ -177,6 +177,7 @@ export function useEmbarquesPageState() {
     setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
     setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
     setFilterOperador: (v: string) => setFilter("operador", v, "todos"),
+    setFilterAlerta: setAlerta,
     setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
     setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
     setPage: (p: number) => setPageRaw(p === 0 ? null : p),
@@ -193,5 +194,6 @@ export function useEmbarquesPageState() {
     expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
     extras,
+    alertasResumen,
   };
 }
