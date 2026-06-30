@@ -162,6 +162,7 @@ export function useEmbarquesPageState() {
   const sinFiltros =
     !debouncedSearch &&
     [filterModo, filterEstado, filterCliente, filterOperador].every((v) => v === "todos") &&
+    filterAlerta === "todos" &&
     !fechaDesde &&
     !fechaHasta;
   const isEmptyState = !isLoading && containersForView.length === 0 && sinFiltros;
