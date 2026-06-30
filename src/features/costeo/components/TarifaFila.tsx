@@ -83,7 +83,7 @@ export function TarifaFila({
         <div className="text-xs text-muted-foreground truncate">{t.naviera_nombre}</div>
       </div>
       <VigenciaBar desde={t.vigente_desde} hasta={t.vigente_hasta} />
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <TarifaEstadoUnificado estado={t.estado} estadoAprobacion={ap} vigenteHasta={t.vigente_hasta} motivo={t.motivo_rechazo} />
       </div>
       <div className="text-right tabular-nums">
