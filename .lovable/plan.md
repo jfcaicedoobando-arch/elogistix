@@ -1,43 +1,73 @@
-## Plan: corregir prueba de conexión FacturApi
+# Por qué no aparecen las tarifas del agente en /costeo/tarifas
 
-### Problema
-El evento de Sentry en `13.141.12` muestra un error visible como timeout/red, pero los logs del backend indican la causa real:
+**Diagnóstico (verificado en BD):**
 
-- `facturapi-test-conexion` intenta cargar el SDK con un specifier inválido: `npm:[email protected]`.
-- Deno responde: `Could not find constraint '[email protected]' in the list of packages.`
-- Al fallar el arranque/carga del SDK, el frontend sólo recibe un error genérico: “No fue posible contactar al servidor de FacturApi”.
+Existen 5 tarifas en estado `borrador` que el usuario subió desde `/agente/tarifas`, pero quedaron guardadas con `organization_id = a1ddadc4…` (la organización **"Mi organización"**), cuando el agente "Chino El Agente" pertenece a **"Chino Cochino"** (`organization_id = beff6600…`).
 
-Analogía: no es que FacturApi necesariamente esté caído; es como marcarle a un proveedor usando un número guardado con caracteres raros. La llamada falla antes de salir correctamente.
+Resultado: los operadores de "Chino Cochino" entran a `/costeo/tarifas` y no las ven porque las políticas de RLS filtran por su `organization_id`. Para ellos no existen.
 
-### Cambios propuestos
+**Analogía:** es como si el agente metiera sus tarifas en el buzón de la oficina equivocada. Llegan, sí, pero a una sucursal donde nadie las espera.
 
-1. **Quitar dependencia del SDK en la prueba de conexión**
-   - En `supabase/functions/facturapi-test-conexion/index.ts`, dejar de importar `getFacturapiClient` desde `_shared/facturapiClient.ts`.
-   - Para este endpoint sólo necesitamos validar la API key y leer `organizations/me`; eso se puede hacer con `fetch` directo a FacturApi usando `FACTURAPI_BASE` + `basicAuthHeader`.
-   - Esto reduce el riesgo de cold-start, errores de npm/Deno y timeouts causados por carga del paquete.
+**Causa raíz:** En `AgenteTarifaForm.tsx`, el envío usa `useCosteoTarifaMutations`, que toma `organizationId` de `useOrganization()` (el contexto general del usuario). Para el usuario agente, ese contexto resuelve a una organización donde es miembro por `organization_members`, no a la organización del operador dueño del agente (que vive en `agente_users.organization_id` / `current_agente_org()`). La RPC `get_current_agente_context()` ya devuelve el `organizationId` correcto, pero el formulario no lo está usando al insertar.
 
-2. **Mantener el SDK para operaciones reales de timbrado**
-   - No tocar `facturapi-emitir-nota-credito` ni otras funciones que sí usan el SDK para crear CFDIs.
-   - Sólo aislar la prueba de conexión, que debe ser ligera y confiable.
+---
 
-3. **Corregir el specifier del SDK compartido**
-   - En `supabase/functions/_shared/facturapiClient.ts`, corregir el specifier a una forma válida y exacta: `npm:facturapi@4.18.0`.
-   - Actualizar comentarios que todavía dicen `facturapi-node` / `v5+` para que reflejen la realidad: paquete `facturapi`, versión `4.18.0`.
-   - Mantener el `.catch()` defensivo para que, si el SDK falla en el futuro, no tire el worker completo.
+## Cambios propuestos
 
-4. **Mejorar el error que vuelve al frontend**
-   - Si FacturApi responde 401/403, devolver mensaje claro: API key inválida o ambiente incorrecto.
-   - Si responde 404 al usar un `facturapi_org_id` guardado, reintentar con `me` o devolver mensaje accionable.
-   - Si hay timeout real, conservar el mensaje en español pero con detalle técnico útil en logs.
+### 1. Reparar los 5 registros existentes (migración `INSERT/UPDATE`)
 
-5. **Actualizar versión y changelog**
-   - Bump a `13.141.13`.
-   - Agregar entrada en `CHANGELOG.md` explicando que la prueba de conexión ya no depende del SDK y que se corrigió el specifier inválido.
+Actualizar las tarifas mal asignadas para que su `organization_id` coincida con el de su `agente`:
 
-6. **Validación**
-   - Verificar lint sobre los archivos tocados.
-   - Probar la edge function: debe responder con JSON controlado, no con fallo de red/worker.
-   - Revisar logs: debe desaparecer `Could not find constraint '[email protected]'`.
+```sql
+UPDATE public.costeo_tarifas t
+   SET organization_id = a.organization_id
+  FROM public.costeo_agentes a
+ WHERE a.id = t.agente_id
+   AND t.organization_id <> a.organization_id;
+```
 
-### Resultado esperado
-El botón “Probar conexión” en `/configuracion` debe dejar de fallar por arranque del SDK. Si la key está mal, el usuario verá un error claro; si la key está bien, verá conexión exitosa.
+Esto las hará visibles para "Chino Cochino" en `/costeo/tarifas` (filtro "Pendientes").
+
+### 2. Forzar el `organization_id` correcto desde el portal
+
+Refactor mínimo:
+
+- Añadir un parámetro opcional `organizationIdOverride` a `useCosteoTarifaMutations` (en `src/features/costeo/hooks/useCosteoTarifas.ts`).
+- Cuando se pasa, `crear` / `crearMultiples` / `actualizar` lo usan en lugar de `useOrganization().organizationId`.
+- `AgenteTarifaForm.tsx` lee `ctx.organizationId` de `useAgenteContext()` y lo inyecta como override en el `TarifaForm`.
+- `TarifaForm` recibe un prop opcional `organizationIdOverride` que pasa al hook de mutaciones.
+
+Operaciones internas no se ven afectadas: si no se pasa override, el comportamiento actual se mantiene.
+
+### 3. Defensa en profundidad (migración SQL)
+
+Trigger `BEFORE INSERT OR UPDATE` en `public.costeo_tarifas` que, si `organization_id` no coincide con el del `costeo_agentes` referenciado, lo corrige automáticamente (o lanza error). Esto blinda futuras inserciones aunque alguien olvide pasar el override.
+
+```text
+trigger: costeo_tarifas_match_agente_org
+  BEFORE INSERT OR UPDATE
+  → NEW.organization_id := (SELECT organization_id FROM costeo_agentes WHERE id = NEW.agente_id)
+```
+
+### 4. Verificación
+
+- Recargar `/costeo/tarifas` logueado como operador de "Chino Cochino": deben aparecer las 5 tarifas en el filtro **Pendientes** con badge "Borrador".
+- Probar subir una nueva tarifa desde `/agente/tarifas`: debe quedar con `organization_id = beff6600…` (el del agente), no con la del usuario agente.
+- Aprobar una con el botón ✓: pasa a `vigente` y se hace visible en cotizaciones.
+
+---
+
+## Archivos a tocar
+
+- **Migración SQL #1**: corrige los 5 registros existentes.
+- **Migración SQL #2**: agrega trigger `costeo_tarifas_match_agente_org`.
+- `src/features/costeo/hooks/useCosteoTarifas.ts`: aceptar `organizationIdOverride` opcional.
+- `src/features/costeo/components/TarifaForm.tsx`: prop opcional + propagación al hook.
+- `src/features/costeo/components/TarifaFormUbicaciones.tsx` / wrappers: ningún cambio funcional.
+- `src/features/portal-agente/components/AgenteTarifaForm.tsx`: pasar `organizationIdOverride={ctx.organizationId}`.
+- `CHANGELOG.md` + `src/constants/appVersion.ts`: bump de versión.
+
+## Out of scope (lo dejo para después si lo quieres)
+
+- Email al agente cuando aprueban/rechazan (hoy sólo notificación in-app).
+- Bandeja dedicada de aprobaciones con comentarios y diff.
