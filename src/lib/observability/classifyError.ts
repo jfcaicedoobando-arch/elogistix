@@ -38,15 +38,8 @@ function asString(v: unknown): string | undefined {
   return typeof v === "string" && v.length > 0 ? v : undefined;
 }
 
-export function classifyError(err: unknown): ClassifiedError {
-  if (err === null || err === undefined) return { kind: "unknown" };
-
-  const e = err as MaybePgError;
-  const name = asString(e.name) ?? "";
-  const message = asString(e.message) ?? "";
+function detectPgError(e: MaybePgError): ClassifiedError | null {
   const code = asString(e.code);
-
-  // Postgres / PostgREST: trae code SQLSTATE (5 chars alfanuméricos).
   if (code && /^[0-9A-Z]{5}$/i.test(code)) {
     return {
       kind: "db_error",
@@ -55,29 +48,41 @@ export function classifyError(err: unknown): ClassifiedError {
       pgDetails: asString(e.details),
     };
   }
+  return null;
+}
 
-  // Supabase Edge Functions
-  if (/FunctionsHttpError|FunctionsRelayError|FunctionsFetchError/.test(name)) {
-    return { kind: "edge_function" };
-  }
+function detectEdgeFunction(name: string): boolean {
+  return /FunctionsHttpError|FunctionsRelayError|FunctionsFetchError/.test(name);
+}
 
-  // Supabase Auth
-  if (e.__isAuthError === true || /AuthApiError|AuthError/.test(name)) {
-    return { kind: "auth" };
-  }
+function detectAuth(e: MaybePgError, name: string, status: number | undefined): boolean {
+  if (e.__isAuthError === true) return true;
+  if (/AuthApiError|AuthError/.test(name)) return true;
+  return status === 401 || status === 403;
+}
+
+function detectValidation(e: MaybePgError, name: string): boolean {
+  return name === "ZodError" || Array.isArray(e.issues);
+}
+
+function detectNetwork(name: string, message: string): boolean {
+  if (name === "AbortError") return true;
+  return name === "TypeError" && /fetch|network/i.test(message);
+}
+
+export function classifyError(err: unknown): ClassifiedError {
+  if (err === null || err === undefined) return { kind: "unknown" };
+
+  const e = err as MaybePgError;
+  const name = asString(e.name) ?? "";
+  const message = asString(e.message) ?? "";
   const status = typeof e.status === "number" ? e.status : undefined;
-  if (status === 401 || status === 403) return { kind: "auth" };
 
-  // Zod / validación
-  if (name === "ZodError" || Array.isArray(e.issues)) {
-    return { kind: "validation" };
-  }
-
-  // Network
-  if (name === "AbortError") return { kind: "network" };
-  if (name === "TypeError" && /fetch|network/i.test(message)) {
-    return { kind: "network" };
-  }
-
+  const pg = detectPgError(e);
+  if (pg) return pg;
+  if (detectEdgeFunction(name)) return { kind: "edge_function" };
+  if (detectAuth(e, name, status)) return { kind: "auth" };
+  if (detectValidation(e, name)) return { kind: "validation" };
+  if (detectNetwork(name, message)) return { kind: "network" };
   return { kind: "unknown" };
 }
