@@ -37,13 +37,17 @@ export interface ErrorNotifyOptions {
   context?: Record<string, unknown>;
   errorCode?: string;
   method?: string;
+  /** Payload original de la operación; se sanitiza antes de Sentry. */
+  payload?: unknown;
+  /** Correlation ID si el backend lo devolvió. */
+  requestId?: string;
 }
 
 /** Emite un toast bloqueante (error) con payload de debug copiable. */
 export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOptions) {
   const {
     step, phase, errors, message, description: descOpt, title, error, context,
-    errorCode, method,
+    errorCode, method, payload, requestId,
   } = opts;
   const description = descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined);
 
@@ -91,7 +95,15 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
         feature: phase ?? "ui_notify",
         op: method ?? (typeof step === "number" ? `step_${step}` : "unknown"),
       },
-      { ...(context ?? {}), step, errorCode, title: computedTitle, description },
+      {
+        ...(context ?? {}),
+        step,
+        errorCode,
+        title: computedTitle,
+        description,
+        payload,
+        requestId,
+      },
     );
   }
 }
