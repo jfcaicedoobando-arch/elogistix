@@ -1,45 +1,43 @@
-# Fix Sentry JAVASCRIPT-REACT-1S (regresión)
+## Plan: corregir prueba de conexión FacturApi
 
-## Diagnóstico
+### Problema
+El evento de Sentry en `13.141.12` muestra un error visible como timeout/red, pero los logs del backend indican la causa real:
 
-El error en Sentry `Failed to send a request to the Edge Function` en `/configuracion` (versión `13.141.8`) **NO** es un timeout — es porque la edge function **nunca arranca correctamente**.
+- `facturapi-test-conexion` intenta cargar el SDK con un specifier inválido: `npm:[email protected]`.
+- Deno responde: `Could not find constraint '[email protected]' in the list of packages.`
+- Al fallar el arranque/carga del SDK, el frontend sólo recibe un error genérico: “No fue posible contactar al servidor de FacturApi”.
 
-Edge function logs muestran:
-```
-event loop error: Uncaught (in promise) TypeError:
-Could not find constraint 'facturapi@5' in the list of packages.
-booted (time: 30ms)
-```
+Analogía: no es que FacturApi necesariamente esté caído; es como marcarle a un proveedor usando un número guardado con caracteres raros. La llamada falla antes de salir correctamente.
 
-**Causa:** En `13.141.9` movimos el `import("npm:facturapi@5")` a top-level del módulo `_shared/facturapiClient.ts` para pre-pagar el cold-start. Pero Deno edge-runtime no resuelve el specifier `npm:facturapi@5` (constraint con caret implícito). La promesa de import queda rechazada sin handler, el event loop revienta y el worker muere al primer request → el cliente recibe "Failed to send a request".
+### Cambios propuestos
 
-**Analogía:** El cocinero salió a comprar ingredientes con una receta mal escrita ("cebollas-talla-5"). El proveedor no entiende la talla, no le da nada, y el cocinero se desmaya antes de que llegue el primer cliente. Antes (con import dinámico) el cocinero al menos abría la cocina y fallaba sólo en el plato; ahora no abre la cocina.
+1. **Quitar dependencia del SDK en la prueba de conexión**
+   - En `supabase/functions/facturapi-test-conexion/index.ts`, dejar de importar `getFacturapiClient` desde `_shared/facturapiClient.ts`.
+   - Para este endpoint sólo necesitamos validar la API key y leer `organizations/me`; eso se puede hacer con `fetch` directo a FacturApi usando `FACTURAPI_BASE` + `basicAuthHeader`.
+   - Esto reduce el riesgo de cold-start, errores de npm/Deno y timeouts causados por carga del paquete.
 
-## Cambios
+2. **Mantener el SDK para operaciones reales de timbrado**
+   - No tocar `facturapi-emitir-nota-credito` ni otras funciones que sí usan el SDK para crear CFDIs.
+   - Sólo aislar la prueba de conexión, que debe ser ligera y confiable.
 
-### 1. `supabase/functions/_shared/facturapiClient.ts`
-- Pinear el specifier a versión exacta: `npm:[email protected]` (última estable conocida; equivalente al constraint que pedíamos pero resoluble por Deno).
-- Envolver el `import(sdkSpec)` top-level en una función con `.catch` que **no** propague la rejection no manejada: guardar el error y rethrow sólo cuando `loadFacturapiCtor()` se invoque. Así, aunque el SDK falle al cargar, el worker arranca y puede contestar otros requests (p. ej. cancelar-rep, webhook) con un error semántico en lugar de matar todo.
-- Exportar `loadFacturapiCtor` con el manejo de error mejorado.
+3. **Corregir el specifier del SDK compartido**
+   - En `supabase/functions/_shared/facturapiClient.ts`, corregir el specifier a una forma válida y exacta: `npm:facturapi@4.18.0`.
+   - Actualizar comentarios que todavía dicen `facturapi-node` / `v5+` para que reflejen la realidad: paquete `facturapi`, versión `4.18.0`.
+   - Mantener el `.catch()` defensivo para que, si el SDK falla en el futuro, no tire el worker completo.
 
-### 2. `supabase/functions/facturapi-test-conexion/index.ts`
-- Mantener el `withTimeout(15s)` y los `console.log` por stage agregados en `13.141.9`.
-- Si `loadFacturapiCtor` falla, responder `{ ok: false, error: "facturapi_sdk_unavailable" }` con status 503 en vez de colgar.
+4. **Mejorar el error que vuelve al frontend**
+   - Si FacturApi responde 401/403, devolver mensaje claro: API key inválida o ambiente incorrecto.
+   - Si responde 404 al usar un `facturapi_org_id` guardado, reintentar con `me` o devolver mensaje accionable.
+   - Si hay timeout real, conservar el mensaje en español pero con detalle técnico útil en logs.
 
-### 3. `src/features/configuracion/services/facturapiCredenciales.ts`
-- Agregar traducción del nuevo error `facturapi_sdk_unavailable` → "El servicio de facturación no está disponible temporalmente. Intenta de nuevo en unos minutos."
+5. **Actualizar versión y changelog**
+   - Bump a `13.141.13`.
+   - Agregar entrada en `CHANGELOG.md` explicando que la prueba de conexión ya no depende del SDK y que se corrigió el specifier inválido.
 
-### 4. CHANGELOG.md + `src/constants/appVersion.ts`
-- Bump a `13.141.11`.
-- Entrada: "Fix: boot crash de `facturapi-test-conexion` por specifier npm no resoluble. Pinea SDK a versión exacta y agrega resiliencia a fallos de carga."
+6. **Validación**
+   - Verificar lint sobre los archivos tocados.
+   - Probar la edge function: debe responder con JSON controlado, no con fallo de red/worker.
+   - Revisar logs: debe desaparecer `Could not find constraint '[email protected]'`.
 
-### 5. Marcar `JAVASCRIPT-REACT-1S` como resuelto en Sentry tras el deploy.
-
-## Verificación post-deploy
-- `supabase--edge_function_logs` de `facturapi-test-conexion`: ya no debe aparecer "Could not find constraint".
-- Probar conexión desde `/configuracion`: debe responder en < 5s con resultado real (sandbox o live).
-- Sentry: el issue no debe regresar en 1h.
-
-## Notas
-- Mantengo el SDK oficial (preferencia explícita previa del usuario, `mem://`).
-- No toco `package.json` del frontend ni otras edge functions de FacturApi (ya cargan el SDK dinámicamente sólo cuando se invocan).
+### Resultado esperado
+El botón “Probar conexión” en `/configuracion` debe dejar de fallar por arranque del SDK. Si la key está mal, el usuario verá un error claro; si la key está bien, verá conexión exitosa.
