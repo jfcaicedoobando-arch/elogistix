@@ -17,6 +17,14 @@ const DEFAULT_PAGE_SIZE = 50;
 
 
 const SORT_DIR_PARSER = parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc");
+const ALERTA_PARSER = parseAsStringLiteral([
+  "todos",
+  "demora",
+  "garantia",
+  "admin_pendiente",
+] as const).withDefault("todos");
+
+export type EmbarqueAlertaFiltro = "todos" | "demora" | "garantia" | "admin_pendiente";
 
 export function useEmbarquesFilters() {
   const [search, setSearchRaw] = useQueryState("q", parseAsString.withDefault(""));
@@ -25,10 +33,11 @@ export function useEmbarquesFilters() {
     estado: parseAsString.withDefault("todos"),
     cliente: parseAsString.withDefault("todos"),
     operador: parseAsString.withDefault("todos"),
-    
+
     fechaDesde: parseAsString.withDefault(""),
     fechaHasta: parseAsString.withDefault(""),
   });
+  const [alerta, setAlertaRaw] = useQueryState("alerta", ALERTA_PARSER);
   const [page, setPageRaw] = useQueryState("page", parseAsInteger.withDefault(0));
   const [pageSize, setPageSizeRaw] = useQueryState(
     "ps",
