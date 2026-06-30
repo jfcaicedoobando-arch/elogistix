@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.2] - 2026-06-30
+- **chore(arquitectura) — split de `PasoDatosGenerales.tsx`.** Tras agregar `AvisoIncotermCIF` en `13.142.0`, el archivo quedó en 201 líneas y rompió la guarda Power of 10 (CI shards 1 y 8, Lint/build, Coverage, aggregator). Se extrajo el bloque "Cierre" (acordeón de Número de embarques + Notas adicionales) a `src/features/cotizacion/components/wizard/SeccionCierreCotizacion.tsx`. Sin cambios de UI ni lógica.
+
 ## [13.142.1] - 2026-06-30
 - **fix(cotización) — CIF ya no exige tarifa marítima.** El validador del Paso 1 (`validateMaritimo` en `handlePaso1Crm.ts`) seguía bloqueando con "Vincula o crea una tarifa marítima antes de continuar" en cotizaciones marítimas con incoterms tipo C/D (CIF, CFR, CIP, CPT, DAP, DDP, DAT), aunque la UI ya ocultaba el campo de tarifa para esos casos. Ahora el validador consulta `esIncotermSinFleteVenta(v.incoterm, v.modo)` y, si aplica, deja avanzar sin tarifa (y sin registrar bloqueo en bitácora). Tests nuevos en `validatePaso1.tarifaFirst.test.ts`.
 
