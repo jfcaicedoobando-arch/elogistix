@@ -34,6 +34,7 @@ const App = () => {
         <BrowserRouter>
           <NuqsAdapter>
             <BreadcrumbProvider>
+              <SentryErrorContextSync />
               <DemoModeBanner />
               <Suspense fallback={<RouteLoadingFallback />}>
                 <AppRoutes />
