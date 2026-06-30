@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.0] - 2026-06-30
+- **feat(cotización) — flujo CIF marítimo (y demás incoterms tipo C/D).** El wizard ahora detecta cuando el incoterm transfiere el flete internacional al shipper en origen (`CIF`, `CFR`, `CIP`, `CPT`, `DAP`, `DDP`, `DAT` en marítimo) y oculta los bloques de **Tarifa marítima** y **Condiciones comerciales** (no aplican: el cliente no paga flete a Libre Carga). En su lugar aparece un banner `AvisoIncotermCIF` explicando que sólo se cotizan gastos locales destino. `usePaso1SectionStatus` deja de exigir tarifa/condiciones bajo estos incoterms para no bloquear el paso. Helper centralizado `esIncotermSinFleteVenta(incoterm, modo)` en `src/features/cotizacion/utils/incotermRules.ts` con tests por matriz. En el detalle del embarque (`ResumenCards`) el campo Incoterm muestra un badge sutil "Flete en origen" / "Flete + seguro en origen". El PDF de cotización agrega una nota legal Incoterms® 2020 cuando aplica.
+
 ## [13.141.16] - 2026-06-30
 - **fix(costeo) — vista agrupada de tarifas mal formateada.** En `/costeo/tarifas` (Agrupada) las columnas se repetían por cada ruta, el badge de Estado quedaba flotando lejos de su header, y el subtítulo "Flete · Recargos" partía en dos líneas. Se consolidó la cabecera de columnas en una sola fila sticky arriba de la lista, se rebalanceó `FILA_GRID` (`minmax(220px,1.4fr) 150px 130px minmax(200px,1fr) 56px`), se alineó Estado a la izquierda de su celda, se suavizó el contraste del header de grupo y se mejoró `VigenciaBar` (track con borde dashed cuando la vigencia aún no inicia, altura `h-1.5`).
 

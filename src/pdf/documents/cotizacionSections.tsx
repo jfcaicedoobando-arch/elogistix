@@ -38,10 +38,19 @@ export function SeccionResumenRuta({ c }: Props) {
   if (c.modo) partes.push(c.modo);
   if (c.incoterm) partes.push(c.incoterm);
   if (c.tiempo_transito_dias != null) partes.push(`Tránsito ${c.tiempo_transito_dias} días`);
-  if (partes.length === 0) return null;
+  const esMaritimo = (c.modo || "").toLowerCase().startsWith("mar");
+  const sinFleteVenta = esMaritimo && ["CIF", "CFR", "CIP", "CPT", "DAP", "DDP", "DAT"].includes(c.incoterm || "");
+  if (partes.length === 0 && !sinFleteVenta) return null;
   return (
     <View style={{ marginTop: 4, marginBottom: 4 }} wrap={false}>
       <Text style={{ ...styles.paragraph, fontSize: 10 }}>{partes.join("  ·  ")}</Text>
+      {sinFleteVenta && (
+        <Text style={{ ...styles.paragraph, fontSize: 9, fontStyle: "italic", marginTop: 2 }}>
+          Términos {c.incoterm} (Incoterms® 2020): el vendedor en origen cubre el flete
+          {(c.incoterm === "CIF" || c.incoterm === "CIP") ? " y el seguro" : ""} hasta el lugar de destino.
+          Los conceptos cotizados corresponden únicamente a servicios locales en destino.
+        </Text>
+      )}
     </View>
   );
 }
