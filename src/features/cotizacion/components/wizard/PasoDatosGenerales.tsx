@@ -1,12 +1,8 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Package, StickyNote, Check } from "lucide-react";
 import { WizardSection } from "@/components/shared/WizardSection";
+import SeccionCierreCotizacion from "@/features/cotizacion/components/wizard/SeccionCierreCotizacion";
 import SeccionDestinatario from "@/features/cotizacion/components/SeccionDestinatario";
 import SeccionDatosGeneralesCotizacion from "@/features/cotizacion/components/SeccionDatosGeneralesCotizacion";
 import SeccionRutaCotizacion from "@/features/cotizacion/components/SeccionRutaCotizacion";
