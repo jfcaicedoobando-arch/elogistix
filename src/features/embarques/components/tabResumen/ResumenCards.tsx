@@ -53,7 +53,34 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
       <CardContent className="space-y-2 text-sm">
         <DetailRow label="Modo" value={<><ModoIcon modo={embarque.modo} size={14} /> {embarque.modo}</>} />
         <DetailRow label="Tipo" value={embarque.tipo} />
-        <DetailRow label="Incoterm" value={embarque.incoterm} />
+        <DetailRow
+          label="Incoterm"
+          value={
+            <span className="inline-flex items-center gap-2">
+              {embarque.incoterm}
+              {(embarque.incoterm === "CIF" || embarque.incoterm === "CIP") && (
+                <span
+                  className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                  title="Flete y seguro pagados por el shipper en origen"
+                >
+                  Flete + seguro en origen
+                </span>
+              )}
+              {(embarque.incoterm === "CFR" ||
+                embarque.incoterm === "CPT" ||
+                embarque.incoterm === "DAP" ||
+                embarque.incoterm === "DDP" ||
+                embarque.incoterm === "DAT") && (
+                <span
+                  className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                  title="Flete pagado por el shipper en origen"
+                >
+                  Flete en origen
+                </span>
+              )}
+            </span>
+          }
+        />
         <DetailRow label="Mercancía" value={toTitleCase(embarque.descripcion_mercancia)} />
         <DetailRow label="Peso" value={formatNumber(Number(embarque.peso_kg), { suffix: "kg" })} />
         <DetailRow label="Volumen" value={formatNumber(Number(embarque.volumen_m3), { decimals: 2, suffix: "m³" })} />
