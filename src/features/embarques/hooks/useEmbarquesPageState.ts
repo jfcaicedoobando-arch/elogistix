@@ -37,10 +37,12 @@ export type { SortDir };
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
   const {
-    search, debouncedSearch, filters, page, pageSize, sortKey, sortDir,
-    DEFAULT_PAGE_SIZE, setSearch, setFilter,
+    search, debouncedSearch, filters, alerta: filterAlerta, page, pageSize, sortKey, sortDir,
+    DEFAULT_PAGE_SIZE, setSearch, setFilter, setAlerta,
     setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
   } = useEmbarquesFilters();
+
+  const { data: alertasResumen } = useEmbarquesAlertasResumen();
 
   const {
     modo: filterModo,
@@ -52,6 +54,10 @@ export function useEmbarquesPageState() {
   } = filters;
 
   const estadoFilterActivo = filterEstado !== "todos";
+  const alertaFilterActivo = filterAlerta !== "todos";
+  // Cuando hay filtro por estado o por alerta necesitamos el set completo
+  // (la pertenencia a una alerta se decide client-side contra IDs).
+  const fullSetActivo = estadoFilterActivo || alertaFilterActivo;
   const sortBy: SortableEmbarqueColumn | undefined = sortKey
     ? SORT_KEY_TO_COLUMN[sortKey]
     : undefined;
