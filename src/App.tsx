@@ -12,6 +12,12 @@ import { AppRoutes } from "./routes";
 import { DemoModeBanner } from "@/features/marketing/components/DemoModeBanner";
 import { useRadixPointerEventsRescue } from "@/hooks/shared";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { useSyncSentryErrorContext } from "@/lib/observability/hooks/useSyncSentryErrorContext";
+
+const SentryErrorContextSync = () => {
+  useSyncSentryErrorContext();
+  return null;
+};
 
 const App = () => {
   useRadixPointerEventsRescue();
