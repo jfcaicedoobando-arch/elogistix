@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.4] - 2026-06-30
+- **fix(costeo/tarifas) — botones de aprobar/rechazar visibles e usables.** En la vista agrupada la columna de acciones medía 56 px y los botones rápidos se renderizaban con `opacity-0 group-hover:opacity-100`, así que en touch eran invisibles y aun con mouse se montaban sobre el precio. En la vista tabla la única forma de aprobar era el menú `…` (mínimo 2 clicks por fila). Ahora: (1) nuevo componente compartido `TarifaQuickApprovalButtons` con variantes `grouped` (texto) y `table` (icon-only); (2) en `TarifaFila.tsx` la última columna del grid pasa a `minmax(180px,auto)` y los botones se muestran siempre cuando `estado_aprobacion === "borrador"`; (3) en `CosteoTarifasTable.tsx` se agregan los íconos Aprobar/Rechazar inline al lado del kebab y se ocultan las columnas **Flete** y **Recargos** por debajo de `lg` (el Total sigue visible) para evitar scroll horizontal en viewports angostos.
+
 ## [13.142.3] - 2026-06-30
 - **feat(embarques) — panel de alertas activas.** Antes el badge "Embarques · N" del sidebar agregaba demoras, garantías atoradas y cierres administrativos pendientes, pero al entrar a `/embarques` no había forma de ver qué embarques componían ese número. Ahora la página muestra un panel desplegable arriba de la tabla con tres tarjetas (Demoras / Garantías atoradas / Cierre administrativo) que indican el conteo y, al hacer clic, aplican un filtro `?alerta=` que reduce la lista a los embarques de esa categoría. Implementado en `EmbarquesAlertasPanel.tsx` + integración en `useEmbarquesPageState.ts` (rama "fullSet" reusada del filtro de estado) y `routes/Embarques.tsx`.
 

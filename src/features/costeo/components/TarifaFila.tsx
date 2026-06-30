@@ -1,12 +1,12 @@
 /**
  * Fila de tarifa dentro de un grupo.
- * v13.135.54 (Fase D): acciones rápidas en hover + badge "Nueva" (≤7 días).
+ * v13.142.4: botones Aprobar/Rechazar siempre visibles en "borrador" (antes ocultos en hover y cortados).
  */
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Check, Copy, Sparkles, Trophy } from "lucide-react";
+import { Sparkles, Trophy } from "lucide-react";
 import { TarifaEstadoUnificado } from "./TarifaEstadoUnificado";
 import { TarifaRowActions } from "./TarifaRowActions";
+import { TarifaQuickApprovalButtons } from "./TarifaQuickApprovalButtons";
 import { VigenciaBar } from "./VigenciaBar";
 import { usd } from "../routes/CosteoTarifas.helpers";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
@@ -39,7 +39,7 @@ interface Props {
   pending: boolean;
 }
 
-export const FILA_GRID = "grid grid-cols-[minmax(220px,1.4fr)_150px_130px_minmax(200px,1fr)_56px] gap-4 items-center px-4";
+export const FILA_GRID = "grid grid-cols-[minmax(200px,1.3fr)_140px_120px_minmax(180px,1fr)_minmax(180px,auto)] gap-4 items-center px-4";
 
 const SIETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -64,7 +64,7 @@ export function TarifaFila({
 
   return (
     <div
-      className={`group ${FILA_GRID} py-2.5 text-sm transition-colors hover:bg-muted/40 ${esMejor ? "bg-success/5" : ""} ${atenuar ? "opacity-60" : ""}`}
+      className={`${FILA_GRID} py-2.5 text-sm transition-colors hover:bg-muted/40 ${esMejor ? "bg-success/5" : ""} ${atenuar ? "opacity-60" : ""}`}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
@@ -97,30 +97,15 @@ export function TarifaFila({
           <div className="text-[11px] text-muted-foreground">+{usd(delta)} vs mejor</div>
         )}
       </div>
-      <div className="flex items-center justify-end gap-1">
-        <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-          {puedeAprobar && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-success hover:text-success hover:bg-success/10"
-              onClick={onAprobar}
-              disabled={pending}
-              title="Aprobar tarifa"
-            >
-              <Check className="size-3.5 mr-1" />Aprobar
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2"
-            onClick={onDuplicar}
-            title="Duplicar tarifa"
-          >
-            <Copy className="size-3.5 mr-1" />Duplicar
-          </Button>
-        </div>
+      <div className="flex items-center justify-end gap-1.5">
+        {puedeAprobar && (
+          <TarifaQuickApprovalButtons
+            variant="grouped"
+            onAprobar={onAprobar}
+            onRechazar={onRechazar}
+            disabled={pending}
+          />
+        )}
         <TarifaRowActions
           estadoAprobacion={ap}
           onEditar={onEditar}
@@ -143,7 +128,7 @@ export function TarifaColumnHeader() {
       <div>Vigencia</div>
       <div className="text-left">Estado</div>
       <div className="text-right">Total USD</div>
-      <div aria-hidden />
+      <div className="text-right">Acciones</div>
     </div>
   );
 }
