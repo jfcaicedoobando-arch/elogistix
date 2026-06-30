@@ -94,8 +94,8 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
                   <div className="text-xs text-muted-foreground">{t.naviera_nombre}</div>
                 </TableCell>
                 <TableCell>{t.tipo_contenedor_nombre}</TableCell>
-                <TableCell className="text-right tabular-nums">{usd(Number(t.flete_base))}</TableCell>
-                <TableCell className="text-right tabular-nums">{usd(t.recargos_total)}</TableCell>
+                <TableCell className="text-right tabular-nums hidden lg:table-cell">{usd(Number(t.flete_base))}</TableCell>
+                <TableCell className="text-right tabular-nums hidden lg:table-cell">{usd(t.recargos_total)}</TableCell>
                 <TableCell className="text-right tabular-nums">
                   <div className={`font-semibold ${esMejor ? "text-success" : ""}`}>{usd(t.total_comparable)}</div>
                   {delta > 0 && (
@@ -115,16 +115,26 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <TarifaRowActions
-                    estadoAprobacion={ap}
-                    onEditar={() => onEditar(t.id)}
-                    onDuplicar={() => onDuplicar(t.id)}
-                    onEliminar={() => onEliminar(t.id)}
-                    onAprobar={() => aprobar.mutate(t.id)}
-                    onRechazar={() => setRechazandoId(t.id)}
-                    onReactivar={() => reactivar.mutate(t.id)}
-                    disabled={aprobar.isPending || reactivar.isPending}
-                  />
+                  <div className="flex items-center justify-end gap-1">
+                    {ap === "borrador" && (
+                      <TarifaQuickApprovalButtons
+                        variant="table"
+                        onAprobar={() => aprobar.mutate(t.id)}
+                        onRechazar={() => setRechazandoId(t.id)}
+                        disabled={aprobar.isPending || reactivar.isPending}
+                      />
+                    )}
+                    <TarifaRowActions
+                      estadoAprobacion={ap}
+                      onEditar={() => onEditar(t.id)}
+                      onDuplicar={() => onDuplicar(t.id)}
+                      onEliminar={() => onEliminar(t.id)}
+                      onAprobar={() => aprobar.mutate(t.id)}
+                      onRechazar={() => setRechazandoId(t.id)}
+                      onReactivar={() => reactivar.mutate(t.id)}
+                      disabled={aprobar.isPending || reactivar.isPending}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             );
