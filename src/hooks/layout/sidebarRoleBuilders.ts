@@ -68,6 +68,9 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
 
 const buildContador: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  // v13.141.14 — contador con acceso de viewer al módulo de embarques
+  // (mutaciones siguen bloqueadas por usePermissions: contador ∉ OPERATIONS).
+  { label: "Operaciones", items: filterGestion(["/embarques"]) },
   { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
   { label: "Facturación", items: [...filterBandejas(["/facturacion/por-emitir"]), ...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"])] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.14] - 2026-06-30
+- **feat(roles) — contador con acceso viewer a Embarques.** Se añadió `/embarques` al sidebar del rol `contador` bajo la sección "Operaciones". Las mutaciones siguen bloqueadas porque `contador` no pertenece a `OPERATIONS` en `usePermissions` (sin botones de editar/cerrar/eliminar).
+
 ## [13.141.13] - 2026-06-30
 - **fix(facturapi) — prueba de conexión sin dependencia del SDK.** `facturapi-test-conexion` ahora valida la API key con `fetch` directo a `/organizations/me`, evitando que la carga npm del SDK convierta “Probar conexión” en un timeout genérico. También se corrigió el specifier compartido a `npm:facturapi@4.18.0`, se agregaron errores claros para API key inválida y se usa el CORS compartido que permite headers de Sentry (`sentry-trace`/`baggage`) en `librecarga.com`.
 
