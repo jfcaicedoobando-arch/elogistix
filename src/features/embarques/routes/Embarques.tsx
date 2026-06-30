@@ -34,12 +34,12 @@ export default function Embarques() {
 
 
   const {
-    search, filterModo, filterEstado, filterCliente, filterOperador,
+    search, filterModo, filterEstado, filterCliente, filterOperador, filterAlerta,
     fechaDesde, fechaHasta, page, pageSize,
     sortKey, sortDir, handleSortChange,
-    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador,
+    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
-    filtered, expedientesCount, contenedoresCount, totalPages,
+    filtered, expedientesCount, contenedoresCount, totalPages, alertasResumen,
   } = state;
 
 
