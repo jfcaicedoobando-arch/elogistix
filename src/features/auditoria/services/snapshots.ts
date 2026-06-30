@@ -33,7 +33,17 @@ export async function fetchAuditoriaSnapshots(
   return (data ?? []) as AuditoriaSnapshot[];
 }
 
-export async function capturarSnapshotAuditoria(): Promise<void> {
-  const { error } = await supabase.rpc("auditoria_capturar_snapshot");
+/**
+ * Captura snapshot del día para la organización dada.
+ * 13.141.6: la firma del RPC en BD es `auditoria_capturar_snapshot(p_organization_id uuid)`.
+ * Antes el cliente llamaba sin args y PostgREST devolvía PGRST202.
+ */
+export async function capturarSnapshotAuditoria(organizationId: string): Promise<void> {
+  if (!organizationId) {
+    throw new Error("organizationId requerido para capturar snapshot de auditoría");
+  }
+  const { error } = await supabase.rpc("auditoria_capturar_snapshot", {
+    p_organization_id: organizationId,
+  });
   if (error) throw error;
 }
