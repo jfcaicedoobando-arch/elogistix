@@ -28,8 +28,14 @@ export function useAuditoriaSnapshots(dias = 30) {
 // Toast molestaría al usuario porque la captura es background al abrir el tab.
 export function useCapturarSnapshotAuditoria() {
   const queryClient = useQueryClient();
+  const { organizationId } = useOrganization();
   return useMutation({
-    mutationFn: capturarSnapshotAuditoria,
+    mutationFn: () => {
+      if (!organizationId) {
+        return Promise.reject(new Error("Sin organización activa para capturar snapshot"));
+      }
+      return capturarSnapshotAuditoria(organizationId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.snapshotsAll });
     },
