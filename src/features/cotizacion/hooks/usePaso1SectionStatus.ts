@@ -1,5 +1,6 @@
 import { useFormContext, useWatch } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
+import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 
 export interface Paso1SectionStatus {
   cliente: boolean;
@@ -53,14 +54,17 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
   ];
 
   const esMaritimo = (modo || "").toLowerCase().startsWith("mar");
+  // CIF/CFR/CIP/DAP/DDP marítimo: no se vincula tarifa ni hay condiciones
+  // comerciales propias (las pone el shipper origen). No bloquear el paso.
+  const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
 
   return {
     cliente: clienteOk(esProspecto, prospectoEmpresa, clienteId),
     operacion: !!modo && !!tipo && !!incoterm,
     ruta: !!origen?.trim() && !!destino?.trim(),
     mercancia: mercanciaOk(tipoCarga, pesoKg, piezas),
-    tarifa: esMaritimo ? !!tarifaId : true,
-    condiciones: condicionesOk(esMaritimo, rutaTexto, validezPropuesta),
+    tarifa: esMaritimo && !sinFleteVenta ? !!tarifaId : true,
+    condiciones: sinFleteVenta ? true : condicionesOk(esMaritimo, rutaTexto, validezPropuesta),
     cierre: (numContenedores ?? 0) >= 1,
   };
 }

@@ -1,53 +1,76 @@
-## Diagnóstico visual (vista Agrupada `/costeo/tarifas`)
 
-Verifiqué en el preview a 1920×1080 con sesión de `admin@chino.com` filtro **Pendientes (5)**. Encontré 4 problemas en la tabla donde se autorizan tarifas:
+# Plan: Soporte para Embarques Marítimos CIF
 
-1. **Cabecera de columnas repetida** en cada Card de ruta (5 veces para 5 rutas). Genera ruido visual y rompe la lectura como tabla.
-2. **Anchos de columna desalineados** — `grid-cols-[1fr_140px_160px_150px_auto]`:
-   - "ESTADO" header está `text-right` pero el badge "Pendiente" usa `flex justify-end` dentro de 160px → queda flotando lejos del total.
-   - "TOTAL USD" en 150px obliga al subtítulo `Flete USD 5,000.00 · Recargos USD 110.00` a partirse en dos líneas, inflando el alto de fila.
-   - Columna "ACCIONES" header existe pero en estado normal sólo se ve un `⋯` (los botones rápidos están en `opacity-0 group-hover`), dejando hueco perceptivo grande.
-3. **Mini-barra de vigencia** (`VigenciaBar`) se ve como una línea suelta debajo de la fecha; con periodos en el futuro (`progress=0`) sólo queda el track gris, dando impresión de "subrayado roto".
-4. **Header del grupo** (azul/gris) compite con el header de columnas inmediato debajo: dos barras grises seguidas con tipografía similar.
+## Contexto
 
-## Cambios propuestos (sólo presentación)
+Hoy el wizard de cotización trata FOB y CIF igual: pide tarifa marítima, auto-carga el flete como costo, y los conceptos de venta se capturan manualmente. En CIF, el proveedor en origen ya incluye flete + seguro hasta puerto destino, por lo que Libre Carga **sólo** cotiza gastos locales en destino. Necesitamos que el wizard, el detalle del embarque y la facturación/P&L reflejen esto sin romper el flujo FOB existente.
 
-### A. Consolidar cabecera de columnas
-- Mover `<TarifaColumnHeader />` fuera del loop de grupos en `TarifasGroupedView.tsx`: una sola cabecera arriba de la lista de Cards, sticky (`sticky top-0 z-10 bg-background`).
-- Quitar el render por-Card.
+## Reglas de negocio (acordadas)
 
-### B. Rebalancear grid
-- En `TarifaFila.tsx`, cambiar `FILA_GRID` a:
-  `grid grid-cols-[minmax(220px,1.4fr)_150px_130px_minmax(200px,1fr)_56px] gap-4 items-center px-4`
-- Alinear `TarifaColumnHeader` al mismo grid (ya lo comparte por `FILA_GRID`).
-- Estado: cambiar `<div className="flex justify-end">` a `flex justify-start` para que el badge quede pegado al inicio de su celda, coincidiendo con el header (que también pasará a `text-left`).
-- Total USD: ancho `minmax(200px,1fr)` permite que el subtítulo no haga wrap en 1080p.
-- Acciones: fijar `56px` (sólo el `⋯`) y ocultar el header "Acciones" (cabecera vacía); los botones de hover migran a aparecer dentro del menú de acciones cuando es necesario, sin reservar columna visible.
+1. CIF marítimo: el flete internacional y el seguro **no** se cotizan al cliente; ya vienen incluidos por el proveedor origen.
+2. Libre Carga **sí** cotiza: THC destino, despacho aduanal, maniobras destino, flete terrestre destino, almacenaje, demoras destino, honorarios, etc.
+3. La responsabilidad/riesgo termina en puerto destino — afecta lo que se ve en seguros y timeline.
+4. El cambio aplica a Wizard de cotización + detalle de embarque + P&L/Facturación.
 
-### C. Suavizar header de grupo
-- Reducir contraste: `bg-muted/15` en vez de `bg-muted/30`, y bajar padding vertical a `py-2`.
-- Quitar el `min-w-[150px]` del Badge "Mejor" cuando no aplica (ya está condicional, mantener).
+## Cambios por capa
 
-### D. Vigencia más legible
-- En `VigenciaBar`: si `progress === 0` (no ha empezado), pintar la barra en `bg-muted-foreground/20` con un dash sutil en lugar de barra vacía, para no parecer un underline roto.
-- Subir grosor a `h-1.5` y usar `rounded-full` (ya está).
-- Mantener tooltip.
+### A. Wizard de cotización (Paso 1 — Datos Generales)
 
-### E. Encabezados sticky dentro del scroll
-- El nuevo encabezado único se queda `sticky top-0` dentro del contenedor de la lista para que siga visible al hacer scroll.
+- `SeccionDatosGeneralesCotizacion.tsx`: cuando `modo === "maritimo"` y `incoterm === "CIF"`, mostrar un banner informativo: *"Embarque CIF: el flete y seguro internacional los provee el shipper en origen. Sólo se cotizarán gastos locales destino."*
+- `PasoDatosGenerales.tsx`:
+  - Ocultar `TarifaVinculadaPanel` y `SeccionCondicionesComerciales` cuando es CIF marítimo (no aplica vincular tarifa marítima ni capturar seguro Libre Carga).
+  - Reemplazar por un bloque ligero `SeccionInformacionShipperCIF` que capture: nombre del shipper/exportador, naviera (informativo), Master BL si lo tienen, valor de la mercancía declarada y póliza de seguro origen (texto libre).
+- `usePaso1SectionStatus.ts`: ajustar la sección "tarifa" para que en CIF no sea requerida; en su lugar requerir el bloque shipper.
 
-## Archivos a tocar
+### B. Paso 2 — Costos internos / P&L
 
-- `src/features/costeo/components/TarifasGroupedView.tsx` — sacar `TarifaColumnHeader` arriba, ajustar paddings del header de grupo.
-- `src/features/costeo/components/TarifaFila.tsx` — nuevo `FILA_GRID`, ajustar alineación de Estado, header sin "Acciones".
-- `src/features/costeo/components/VigenciaBar.tsx` — track con dash cuando `progress=0`, altura `h-1.5`.
+- `buildCostosDesdeTarifa.ts`: si CIF, no auto-cargar flete ni recargos marítimos (no hay tarifa vinculada).
+- `CONCEPTOS_COSTO_USD`: filtrar para CIF y ocultar `"Flete Marítimo"` y `"Seguro"` del catálogo seleccionable (siguen existiendo para FOB).
+- Mostrar al inicio del paso un *checklist sugerido* de conceptos típicos CIF destino (THC, despacho, maniobras, flete terrestre, almacenaje, honorarios) que el usuario puede agregar con un clic.
 
-## Validación
+### C. Paso 3 — Conceptos de venta
 
-1. Playwright en 1920×1080 con filtro Pendientes:
-   - Captura `/costeo/tarifas` mostrando 1 cabecera única + 5 grupos sin headers repetidos.
-   - Subtítulo de Total en 1 línea.
-2. Capturar también en 1366×768 para confirmar que `minmax` no rompe.
-3. Bump `APP_VERSION` y `CHANGELOG.md`.
+- Mismo catálogo sugerido CIF destino para conceptos de venta.
+- Validación suave: si CIF y aparece un concepto cuyo nombre contiene "flete marítimo" o "seguro internacional", mostrar warning (no bloqueante) por si fue un error.
 
-Sin cambios de backend, sin cambios de lógica de aprobación.
+### D. Detalle del embarque
+
+- `EmbarqueDetalleTabs.tsx` / `ResumenCards.tsx`: badge visible "CIF — Flete pagado en origen" junto al campo Incoterm.
+- `TabCostos`: separador visual con leyenda *"Sólo gastos locales destino"* cuando es CIF, y ocultar columna/sección de "Flete marítimo" si está vacía.
+- `TabSeguros`: cuando es CIF, mostrar aviso *"Seguro contratado por shipper origen"* y permitir registrar póliza informativa (no obligatoria, no entra al P&L de Libre Carga).
+- Validador de cierre (`validar_cierre_embarque`): en CIF no exigir documento de seguro ni costo de flete marítimo.
+
+### E. Facturación y P&L
+
+- `TabPnl` / `TabPnlContenedor`: el P&L se calcula igual (ingresos − costos), pero al ser CIF el flete no aparece en ninguno de los dos lados, por lo que el margen refleja sólo gastos destino. Agregar tooltip *"P&L CIF: excluye flete y seguro internacional"*.
+- Facturación: sin cambios estructurales (los conceptos de venta capturados son los que se facturan). Sólo se valida que el PDF de la factura/proforma muestre el incoterm CIF en el bloque de condiciones.
+
+### F. PDF de cotización
+
+- `cotizacionSections.tsx`: en CIF, ocultar la línea "Flete marítimo incluido" y agregar nota legal: *"Términos CIF (Incoterms® 2020): el vendedor en origen cubre flete y seguro hasta puerto destino. Los conceptos cotizados corresponden únicamente a servicios locales en destino."*
+
+### G. Base de datos
+
+- Sin nuevas tablas. Sólo:
+  - Migración para flexibilizar `validar_cierre_embarque` (no exigir flete marítimo cuando `incoterm = 'CIF'`).
+  - Trigger informativo: si insertan un `conceptos_costo` con concepto "Flete Marítimo" en embarque CIF, agregar `nota` automática (no bloquea).
+
+## Detalles técnicos
+
+- Crear helper `esIncotermSinFleteVenta(incoterm, modo)` en `src/features/cotizacion/utils/incotermRules.ts` que devuelva `true` para CIF/CFR/CIP/CPT/DAP/DDP marítimo. Esto permite extender después a otros incoterms "C/D" sin tocar componentes.
+- Mantener tipos: `Incoterm` ya existe en el enum de Supabase; no cambia.
+- Tests:
+  - Unit: `incotermRules.test.ts` (matriz por incoterm).
+  - Unit: `buildCostosDesdeTarifa.test.ts` debe retornar `[]` en CIF.
+  - RTL: paso 1 en CIF oculta tarifa y muestra bloque shipper.
+  - Migración: prueba RPC `validar_cierre_embarque` con embarque CIF sin flete pasa.
+
+## Fuera de alcance
+
+- Otros incoterms "C/D" (CFR, CIP, DAP, DDP) — el helper los contempla pero el rollout visual/UX sólo se valida con CIF en esta entrega.
+- Importación masiva o migración de cotizaciones FOB históricas a CIF.
+- Cambios en el portal de clientes (lo verá igual, sólo con menos conceptos).
+
+## Versionado
+
+Bump menor (`13.142.0`) por feature visible al usuario. Entrada en `CHANGELOG.md` describiendo el flujo CIF.
