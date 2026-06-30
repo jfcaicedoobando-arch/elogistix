@@ -101,5 +101,4 @@ export function describeFacturapiError(err: unknown): { status: number; detail: 
 /** Sólo para tests: limpia la caché entre escenarios. */
 export function __resetFacturapiClientCacheForTests(): void {
   clientCache.clear();
-  FacturapiCtor = null;
 }
