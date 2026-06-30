@@ -16,8 +16,10 @@ import SeccionMercanciaGeneral from "@/features/cotizacion/components/SeccionMer
 import SeccionMercanciaAerea from "@/features/cotizacion/components/SeccionMercanciaAerea";
 import TarifaVinculadaPanel from "@/features/cotizacion/components/TarifaVinculadaPanel";
 import SeccionCondicionesComerciales from "@/features/cotizacion/components/SeccionCondicionesComerciales";
+import AvisoIncotermCIF from "@/features/cotizacion/components/wizard/AvisoIncotermCIF";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
+import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
 
 import type { useCotizacionWizardForm } from "@/features/cotizacion/hooks";
@@ -43,9 +45,16 @@ interface Props {
 export default function PasoDatosGenerales({ w, clientes }: Props) {
   const { form } = w;
   const tipoEmbarque = form.watch("tipoEmbarque");
+  const incoterm = form.watch("incoterm");
+  const modo = form.watch("modo");
   const numContenedores = form.watch("numContenedores") ?? 1;
   const status = usePaso1SectionStatus();
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
+
+  // Bajo incoterms tipo C/D marítimos (CIF, CFR, CIP, DAP, DDP, ...) el
+  // shipper en origen ya paga flete (y a veces seguro). Libre Carga sólo
+  // cotiza gastos locales destino: ocultamos tarifa y condiciones.
+  const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
 
   const handleAutocargaCostos = (filas: FilaCostoLocal[]): void => {
     w.setCostosInternos((prev) => {
@@ -92,7 +101,7 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
     </div>
   );
 
-  const tarifaBlock = w.esMaritimo ? (
+  const tarifaBlock = w.esMaritimo && !sinFleteVenta ? (
     <div id="seccion-tarifa" className="scroll-mt-4">
       <TarifaVinculadaPanel
         complete={status.tarifa}
@@ -103,10 +112,14 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
     </div>
   ) : null;
 
-  const condicionesBlock = w.esMaritimo ? (
+  const condicionesBlock = w.esMaritimo && !sinFleteVenta ? (
     <div id="seccion-condiciones" className="scroll-mt-4">
       <SeccionCondicionesComerciales complete={status.condiciones} />
     </div>
+  ) : null;
+
+  const avisoIncotermCBlock = w.esMaritimo && sinFleteVenta ? (
+    <AvisoIncotermCIF incoterm={incoterm} />
   ) : null;
 
   return (
@@ -131,6 +144,7 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
       {mercanciaBlock}
       {tarifaBlock}
       {condicionesBlock}
+      {avisoIncotermCBlock}
 
       {/* Cierre */}
       <div id="seccion-cierre" className="scroll-mt-4">
