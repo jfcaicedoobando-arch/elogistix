@@ -7,4 +7,5 @@ export * from "./documentos";
 export * from "./contenedor";
 export * from "./contenedores";
 export * from "./bitacoraEmbarque";
+export * from "./alertas";
 
