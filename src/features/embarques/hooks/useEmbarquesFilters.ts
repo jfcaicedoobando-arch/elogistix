@@ -57,6 +57,7 @@ export function useEmbarquesFilters() {
     search,
     debouncedSearch,
     filters,
+    alerta: alerta as EmbarqueAlertaFiltro,
     page,
     pageSize,
     sortKey,
@@ -64,6 +65,10 @@ export function useEmbarquesFilters() {
     DEFAULT_PAGE_SIZE,
     setSearch: (v: string) => { setSearchRaw(v || null); setPageRaw(null); },
     setFilter,
+    setAlerta: (v: EmbarqueAlertaFiltro) => {
+      setAlertaRaw(v === "todos" ? null : v);
+      setPageRaw(null);
+    },
     setPageRaw,
     setPageSizeRaw,
     setSortKeyRaw,
