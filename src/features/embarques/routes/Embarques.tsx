@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
 import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
+import { EmbarquesAlertasPanel } from "@/features/embarques/components/EmbarquesAlertasPanel";
 import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
@@ -33,12 +34,12 @@ export default function Embarques() {
 
 
   const {
-    search, filterModo, filterEstado, filterCliente, filterOperador,
+    search, filterModo, filterEstado, filterCliente, filterOperador, filterAlerta,
     fechaDesde, fechaHasta, page, pageSize,
     sortKey, sortDir, handleSortChange,
-    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador,
+    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterAlerta,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
-    filtered, expedientesCount, contenedoresCount, totalPages,
+    filtered, expedientesCount, contenedoresCount, totalPages, alertasResumen,
   } = state;
 
 
@@ -68,6 +69,13 @@ export default function Embarques() {
         <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
       ) : (
         <>
+          {alertasResumen ? (
+            <EmbarquesAlertasPanel
+              resumen={alertasResumen}
+              activeAlerta={filterAlerta}
+              onSelect={(a) => { setFilterAlerta(a); setPage(0); }}
+            />
+          ) : null}
           <Card>
             <CardContent className="p-4">
               <EmbarquesFiltros

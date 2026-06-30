@@ -6512,6 +6512,13 @@ export type Database = {
         Returns: Json
       }
       embarques_admin_pendientes_count: { Args: never; Returns: number }
+      embarques_alertas_ids: {
+        Args: never
+        Returns: {
+          embarque_id: string
+          tipo: string
+        }[]
+      }
       embarques_list_extras: {
         Args: { p_ids: string[] }
         Returns: {

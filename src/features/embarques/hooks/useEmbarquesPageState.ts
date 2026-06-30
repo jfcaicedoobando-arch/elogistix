@@ -20,6 +20,7 @@ import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/features/e
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { useEmbarquesFilters } from "@/features/embarques/hooks/useEmbarquesFilters";
+import { useEmbarquesAlertasResumen } from "@/features/embarques/hooks/useEmbarquesAlertasResumen";
 import {
   compareBy,
   computeCounts,
@@ -35,10 +36,12 @@ export type { SortDir };
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
   const {
-    search, debouncedSearch, filters, page, pageSize, sortKey, sortDir,
-    DEFAULT_PAGE_SIZE, setSearch, setFilter,
+    search, debouncedSearch, filters, alerta: filterAlerta, page, pageSize, sortKey, sortDir,
+    DEFAULT_PAGE_SIZE, setSearch, setFilter, setAlerta,
     setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
   } = useEmbarquesFilters();
+
+  const { data: alertasResumen } = useEmbarquesAlertasResumen();
 
   const {
     modo: filterModo,
@@ -50,6 +53,10 @@ export function useEmbarquesPageState() {
   } = filters;
 
   const estadoFilterActivo = filterEstado !== "todos";
+  const alertaFilterActivo = filterAlerta !== "todos";
+  // Cuando hay filtro por estado o por alerta necesitamos el set completo
+  // (la pertenencia a una alerta se decide client-side contra IDs).
+  const fullSetActivo = estadoFilterActivo || alertaFilterActivo;
   const sortBy: SortableEmbarqueColumn | undefined = sortKey
     ? SORT_KEY_TO_COLUMN[sortKey]
     : undefined;
@@ -79,19 +86,30 @@ export function useEmbarquesPageState() {
   const { data: resultadoFull, isLoading: loadingFull } = useQuery({
     queryKey: queryKeys.embarques.fullForEstadoFilter(fullSetFilters),
     queryFn: () => fetchEmbarquesParaExport(fullSetFilters),
-    enabled: estadoFilterActivo,
+    enabled: fullSetActivo,
     staleTime: 60_000,
   });
 
-  const isLoading = estadoFilterActivo ? loadingFull : loadingServer;
+  const isLoading = fullSetActivo ? loadingFull : loadingServer;
+
+  const alertIdSet = useMemo(() => {
+    if (!alertaFilterActivo || !alertasResumen) return null;
+    return alertasResumen[filterAlerta] ?? new Set<string>();
+  }, [alertaFilterActivo, alertasResumen, filterAlerta]);
 
   const containersForView: EmbarqueRow[] = useMemo(() => {
-    if (!estadoFilterActivo) return resultadoServer?.data ?? [];
-    const all = resultadoFull ?? [];
-    return all.filter(
-      (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === filterEstado,
-    );
-  }, [estadoFilterActivo, resultadoServer, resultadoFull, filterEstado]);
+    if (!fullSetActivo) return resultadoServer?.data ?? [];
+    let all = resultadoFull ?? [];
+    if (estadoFilterActivo) {
+      all = all.filter(
+        (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === filterEstado,
+      );
+    }
+    if (alertaFilterActivo && alertIdSet) {
+      all = all.filter((e) => alertIdSet.has(e.id));
+    }
+    return all;
+  }, [fullSetActivo, estadoFilterActivo, alertaFilterActivo, alertIdSet, resultadoServer, resultadoFull, filterEstado]);
 
   const contenedoresPorExpediente = useMemo(
     () => computeContenedoresPorExpediente(containersForView),
@@ -104,12 +122,12 @@ export function useEmbarquesPageState() {
   );
 
   const sortedAll = useMemo(() => {
-    if (!estadoFilterActivo) return dedupedAll;
+    if (!fullSetActivo) return dedupedAll;
     return [...dedupedAll].sort((a, b) => compareBy(a, b, sortKey, sortDir));
-  }, [estadoFilterActivo, dedupedAll, sortKey, sortDir]);
+  }, [fullSetActivo, dedupedAll, sortKey, sortDir]);
 
   const counts = computeCounts({
-    estadoFilterActivo,
+    estadoFilterActivo: fullSetActivo,
     dedupedAll,
     containersForView,
     sortedAll,
@@ -119,14 +137,14 @@ export function useEmbarquesPageState() {
   const { expedientesCount, contenedoresCount, totalPages, totalCountServer } = counts;
 
   const filtered = useMemo(() => {
-    if (!estadoFilterActivo) return dedupedAll;
+    if (!fullSetActivo) return dedupedAll;
     const from = page * pageSize;
     return sortedAll.slice(from, from + pageSize);
-  }, [estadoFilterActivo, dedupedAll, sortedAll, page, pageSize]);
+  }, [fullSetActivo, dedupedAll, sortedAll, page, pageSize]);
 
   const embarques: EmbarqueRow[] = useMemo(
-    () => (estadoFilterActivo ? filtered : (resultadoServer?.data ?? [])),
-    [estadoFilterActivo, filtered, resultadoServer?.data],
+    () => (fullSetActivo ? filtered : (resultadoServer?.data ?? [])),
+    [fullSetActivo, filtered, resultadoServer?.data],
   );
 
   // ---------- Extras (liquidación + docs) ----------
@@ -134,23 +152,24 @@ export function useEmbarquesPageState() {
   const { data: extrasBranchB } = useQuery({
     queryKey: queryKeys.embarques.extrasBranchB(visibleIds),
     queryFn: () => fetchEmbarquesListExtras(visibleIds),
-    enabled: estadoFilterActivo && visibleIds.length > 0,
+    enabled: fullSetActivo && visibleIds.length > 0,
     staleTime: 30_000,
   });
-  const extras = resolveExtras(estadoFilterActivo, extrasBranchB, resultadoServer?.extras);
+  const extras = resolveExtras(fullSetActivo, extrasBranchB, resultadoServer?.extras);
 
   const displayCount = expedientesCount;
 
   const sinFiltros =
     !debouncedSearch &&
     [filterModo, filterEstado, filterCliente, filterOperador].every((v) => v === "todos") &&
+    filterAlerta === "todos" &&
     !fechaDesde &&
     !fechaHasta;
   const isEmptyState = !isLoading && containersForView.length === 0 && sinFiltros;
 
   return {
     search,
-    filterModo, filterEstado, filterCliente, filterOperador,
+    filterModo, filterEstado, filterCliente, filterOperador, filterAlerta,
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
     setSearch,
@@ -158,6 +177,7 @@ export function useEmbarquesPageState() {
     setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
     setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
     setFilterOperador: (v: string) => setFilter("operador", v, "todos"),
+    setFilterAlerta: setAlerta,
     setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
     setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
     setPage: (p: number) => setPageRaw(p === 0 ? null : p),
@@ -174,5 +194,6 @@ export function useEmbarquesPageState() {
     expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
     extras,
+    alertasResumen,
   };
 }
