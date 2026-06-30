@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
 import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
+import { EmbarquesAlertasPanel } from "@/features/embarques/components/EmbarquesAlertasPanel";
 import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
