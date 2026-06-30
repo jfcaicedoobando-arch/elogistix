@@ -1,27 +1,70 @@
-# Fix CI: `PasoDatosGenerales.tsx` excede el límite de 200 líneas
+# Plan: Desglose accionable de alertas en /embarques
 
-## Causa raíz
+## Problema
 
-Al agregar el banner `AvisoIncotermCIF` en `13.142.0`, el componente `src/features/cotizacion/components/wizard/PasoDatosGenerales.tsx` quedó en 201 líneas (CI cuenta el salto final), justo arriba del límite de Power of 10. Esto rompe dos guardas de arquitectura:
+El badge del sidebar "Embarques · 21" suma tres conteos que hoy no se ven en ningún lado de la lista:
 
-- `src/__tests__/audit-report.test.ts` → "arch baseline: 0 archivos productivos > 200 líneas"
-- `src/lib/__tests__/architecture-baseline.test.ts` → mismo chequeo
+```
+embarquesAlertas = embarquesDemora      // contenedores con demora real o por ETA
+                 + garantiasAtoradas    // garantías de contenedor sin liberar
+                 + adminPendientes      // embarques Entregado/EIR con cierre admin pendiente
+```
 
-Que a su vez tumban shards 1, 8, "Lint/typecheck/build" y "Coverage merge" → aggregator falla.
+Cuando Héctor (Admin Org) entra a `/embarques`, sólo ve la tabla paginada general. No hay forma de saber qué embarques están detrás de ese 21 ni qué acción tomar.
 
-## Cambio
+## Objetivo
 
-Extraer el bloque "Cierre" (acordeón con Número de embarques + Notas adicionales) a un componente propio:
+Que al entrar a `/embarques` el usuario vea: cuántas alertas hay, de qué tipo, y pueda filtrar la tabla con un clic para atenderlas.
 
-- **Nuevo archivo:** `src/features/cotizacion/components/wizard/SeccionCierreCotizacion.tsx`
-  - Recibe `form` (del wizard) y `complete: boolean`.
-  - Contiene el `Accordion` actual (líneas ~150–197 de `PasoDatosGenerales.tsx`).
-- **Editar:** `PasoDatosGenerales.tsx` para importar `SeccionCierreCotizacion` y reemplazar el bloque inline. Queda muy por debajo de 200 líneas.
+## Cambios
 
-No se cambia lógica ni UI: sólo se mueven nodos JSX.
+### 1. Nuevo panel "Alertas activas" arriba de la tabla
 
-## Validación
+Una tarjeta colapsable (abierta por defecto si `totalAlertas > 0`) con 3 chips/KPIs:
 
-- `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture-baseline.test.ts` → ambos verdes.
-- Smoke visual del Paso 1 del wizard (Marítimo FOB y CIF, Aéreo, Terrestre): el acordeón de Cierre se ve y funciona igual.
-- Bump a `13.142.2` + entrada en `CHANGELOG.md`.
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  Alertas activas · 21                            [Ocultar ▲] │
+├──────────────────────────────────────────────────────────────┤
+│  🟠 Demoras           12   ▶ Ver embarques con demora        │
+│  🟡 Garantías         4    ▶ Ver garantías atoradas          │
+│  🔴 Cierre admin      5    ▶ Ver pendientes administrativos  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+Cada chip es un botón que aplica un filtro predefinido a la tabla y hace scroll a ella.
+
+### 2. Filtros nuevos en la URL/estado de `/embarques`
+
+Agregar parámetro `alerta` (`demora` | `garantia` | `admin_pendiente`) que el listado consume para filtrar resultados. Se respeta junto con los filtros actuales (cliente, modo, rango de fechas).
+
+- `alerta=demora` → embarques con contenedores marcados en demora.
+- `alerta=garantia` → embarques con garantías de contenedor sin liberar.
+- `alerta=admin_pendiente` → embarques en estado `Entregado` o `EIR` con pendientes (la lógica ya existe en `fetchEmbarquesPendientesAdmin` y `embarque_admin_pendientes_resumen`).
+
+### 3. Columna/badge "Alerta" en la tabla
+
+Cuando hay un filtro de alerta activo, aparece una columna que dice por qué entró ese embarque al filtro (reutilizando `EmbarqueBadgeAdmin` y un badge nuevo para demora/garantía). Tooltip con el detalle (días en demora, contenedor afectado, etc.).
+
+### 4. Chips activos
+
+Si `alerta` está aplicado, aparece un chip removible en `EmbarquesFiltrosChips` ("Alerta: Demoras ×") para que el usuario sepa qué está filtrando.
+
+## Detalles técnicos
+
+- **Servicio**: extender `fetchEmbarquesPaginados` para aceptar `filterAlerta` y traducirlo a las condiciones SQL existentes (joins ya disponibles vía `embarques_listado` RPC o filtros sobre `estado` + `embarque_admin_pendientes_resumen`).
+- **Hook nuevo** `useEmbarquesAlertasResumen` que reúne los 3 conteos (puede simplemente reusar `useSidebarAlerts` para no duplicar queries).
+- **Componente nuevo** `src/features/embarques/components/EmbarquesAlertasPanel.tsx` (<200 líneas, Power of 10).
+- **Estado de la página**: añadir `filterAlerta` al `useListPageState` existente de `/embarques` y sincronizar con query param `?alerta=`.
+- Sin cambios de schema; toda la data ya existe (`embarque_admin_pendientes_resumen`, `garantiasAtoradas`, `embarquesDemora`).
+- Tests: snapshot del panel, test de filtro `?alerta=demora` aplica el predicado correcto, test de chip removible.
+
+## Fuera de alcance
+
+- Bandeja dedicada `/embarques/alertas` separada (se puede hacer después si crece).
+- Notificaciones por email/escalamiento.
+- Cambiar la lógica de qué cuenta como alerta (se respetan las reglas actuales).
+
+## Bump de versión
+
+`13.142.3` + entrada en `CHANGELOG.md`.
