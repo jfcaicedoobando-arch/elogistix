@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.11] - 2026-06-30
+- **fix(facturapi) — boot crash de edge function `facturapi-test-conexion`** (Sentry JAVASCRIPT-REACT-1S regresión en `13.141.9`). El specifier `npm:facturapi@5` no existe en npm (la última versión publicada del paquete `facturapi` es `4.18.0`); el `import()` top-level era rechazado y Deno mataba el event loop del worker con `Could not find constraint 'facturapi@5'`, así que TODO request respondía "Failed to send a request to the Edge Function" en `/configuracion`. Pineado a `npm:facturapi@^4.18.0` y agregado `.catch` defensivo al import top-level para que un fallo de carga del SDK no tire el worker (el error se rethrowea cuando se invoca `loadFacturapiCtor`).
+
 ## [13.141.10] - 2026-06-30
 - **chore(lint) — `classifyError` complejidad ciclomática 18 → 6.** Extraídos 5 helpers (`detectPgError`, `detectEdgeFunction`, `detectAuth`, `detectValidation`, `detectNetwork`) en `src/lib/observability/classifyError.ts`. Mismo comportamiento; desbloquea `bun run lint -- --max-warnings 0`.
 

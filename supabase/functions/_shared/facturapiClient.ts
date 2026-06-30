@@ -21,19 +21,44 @@ type FacturapiCtorType = new (apiKey: string) => FacturapiClient;
 
 const clientCache = new Map<string, FacturapiClient>();
 
-// Carga eager del SDK a nivel de módulo: la descarga/parseo de
-// `npm:facturapi@5` ocurre durante el `boot` del worker de Deno (antes de
-// que la función empiece a aceptar requests), NO en el hot path del primer
-// request. Esto evita timeouts cliente del tipo
-// "Failed to send a request to the Edge Function" cuando el primer request
-// a un worker frío pagaba 10-30s de descarga npm.
-const sdkSpec = "npm:facturapi@5";
-const sdkModulePromise = import(sdkSpec) as Promise<{
+// Carga eager del SDK a nivel de módulo: la descarga/parseo del paquete
+// `facturapi` ocurre durante el `boot` del worker de Deno (antes de que la
+// función empiece a aceptar requests), NO en el hot path del primer request.
+//
+// IMPORTANTE: pineado a `^4.18.0` porque la última versión publicada del
+// paquete `facturapi` en npm es 4.x. Antes apuntábamos a `npm:facturapi@5`
+// (no existe) y Deno crasheaba el event loop del worker en boot con
+// `Could not find constraint 'facturapi@5' in the list of packages.`, lo que
+// hacía que TODO request a la función fallara con "Failed to send a request
+// to the Edge Function" (Sentry JAVASCRIPT-REACT-1S).
+//
+// Además: capturamos la rejection del import top-level para que un fallo de
+// carga no tire el worker entero. El error se rethrowea cuando
+// `loadFacturapiCtor()` se invoca, así otras edge functions que importen
+// este shared module no se rompen en boot.
+const sdkSpec = "npm:[email protected]";
+
+interface SdkModule {
   default?: FacturapiCtorType | { default?: FacturapiCtorType };
-}>;
+}
+
+let sdkLoadError: unknown = null;
+const sdkModulePromise: Promise<SdkModule | null> = (
+  import(sdkSpec) as Promise<SdkModule>
+).then(
+  (mod) => mod,
+  (err) => {
+    console.error("[facturapiClient] SDK import failed", err);
+    sdkLoadError = err;
+    return null;
+  },
+);
 
 async function loadFacturapiCtor(): Promise<FacturapiCtorType> {
   const mod = await sdkModulePromise;
+  if (!mod) {
+    throw sdkLoadError ?? new Error("facturapi_sdk_unavailable");
+  }
   const def = mod.default;
   const ctor = (def && typeof def === "object" && "default" in def
     ? def.default
