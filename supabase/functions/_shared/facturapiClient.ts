@@ -36,18 +36,29 @@ const clientCache = new Map<string, FacturapiClient>();
 // carga no tire el worker entero. El error se rethrowea cuando
 // `loadFacturapiCtor()` se invoca, así otras edge functions que importen
 // este shared module no se rompen en boot.
-const sdkSpec = "npm:facturapi@^4.18.0";
-const sdkModulePromise: Promise<{
+const sdkSpec = "npm:[email protected]";
+
+interface SdkModule {
   default?: FacturapiCtorType | { default?: FacturapiCtorType };
-}> = (import(sdkSpec) as Promise<{
-  default?: FacturapiCtorType | { default?: FacturapiCtorType };
-}>).catch((err) => {
-  console.error("[facturapiClient] SDK import failed", err);
-  throw err;
-});
+}
+
+let sdkLoadError: unknown = null;
+const sdkModulePromise: Promise<SdkModule | null> = (
+  import(sdkSpec) as Promise<SdkModule>
+).then(
+  (mod) => mod,
+  (err) => {
+    console.error("[facturapiClient] SDK import failed", err);
+    sdkLoadError = err;
+    return null;
+  },
+);
 
 async function loadFacturapiCtor(): Promise<FacturapiCtorType> {
   const mod = await sdkModulePromise;
+  if (!mod) {
+    throw sdkLoadError ?? new Error("facturapi_sdk_unavailable");
+  }
   const def = mod.default;
   const ctor = (def && typeof def === "object" && "default" in def
     ? def.default
