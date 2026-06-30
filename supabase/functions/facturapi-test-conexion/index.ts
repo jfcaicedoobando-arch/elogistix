@@ -1,6 +1,6 @@
 /**
  * facturapi-test-conexion — Verifica que la API key de FacturApi (sandbox o live)
- * para la org actual es válida llamando a `organizations/me` vía SDK oficial.
+ * para la org actual es válida llamando a `organizations/me` vía REST directo.
  *
  * Multi-tenant: la key se resuelve por `_shared/facturapiAuth.ts` (vault o env).
  * No expone la key al cliente; sólo devuelve `{ ok, ambiente, facturapi_org_id, nombre }`.
@@ -116,7 +116,7 @@ async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null):
 }
 
 /**
- * Envuelve la llamada SDK con un timeout duro. Si FacturApi tarda más de
+  * Envuelve la llamada HTTP con un timeout duro. Si FacturApi tarda más de
  * `ms`, rechazamos con un error semántico (`facturapi_timeout`) en vez de
  * dejar que el cliente Supabase corte ciegamente.
  */
