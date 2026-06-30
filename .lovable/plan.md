@@ -1,27 +1,27 @@
-# Fix: error "Vincula o crea una tarifa marítima" en cotizaciones CIF
+# Fix CI: `PasoDatosGenerales.tsx` excede el límite de 200 líneas
 
 ## Causa raíz
 
-En `13.142.0` se ocultaron los campos de tarifa marítima y condiciones comerciales en el Paso 1 cuando el incoterm es del grupo C/D (CIF, CFR, CIP, CPT, DAP, DDP, DAT), porque en esos casos el flete internacional ya lo paga el shipper en origen y Libre Carga solo cobra gastos locales destino.
+Al agregar el banner `AvisoIncotermCIF` en `13.142.0`, el componente `src/features/cotizacion/components/wizard/PasoDatosGenerales.tsx` quedó en 201 líneas (CI cuenta el salto final), justo arriba del límite de Power of 10. Esto rompe dos guardas de arquitectura:
 
-Sin embargo, el validador del Paso 1 (`validateMaritimo` en `src/features/cotizacion/hooks/wizard/handlePaso1Crm.ts`) todavía exige `tarifaId` para cualquier cotización marítima sin tomar en cuenta el incoterm. Resultado: el usuario llena el formulario CIF correctamente, no ve dónde vincular tarifa (está oculta) y al avanzar recibe el toast bloqueante.
+- `src/__tests__/audit-report.test.ts` → "arch baseline: 0 archivos productivos > 200 líneas"
+- `src/lib/__tests__/architecture-baseline.test.ts` → mismo chequeo
+
+Que a su vez tumban shards 1, 8, "Lint/typecheck/build" y "Coverage merge" → aggregator falla.
 
 ## Cambio
 
-Archivo único: `src/features/cotizacion/hooks/wizard/handlePaso1Crm.ts`
+Extraer el bloque "Cierre" (acordeón con Número de embarques + Notas adicionales) a un componente propio:
 
-En `validateMaritimo`, antes de exigir `tarifaId`, consultar `esIncotermSinFleteVenta(v.incoterm, v.modo)` desde `@/features/cotizacion/utils/incotermRules`. Si devuelve `true`, retornar `null` (sin error y sin registrar bloqueo en bitácora, porque no es un bloqueo real).
+- **Nuevo archivo:** `src/features/cotizacion/components/wizard/SeccionCierreCotizacion.tsx`
+  - Recibe `form` (del wizard) y `complete: boolean`.
+  - Contiene el `Accordion` actual (líneas ~150–197 de `PasoDatosGenerales.tsx`).
+- **Editar:** `PasoDatosGenerales.tsx` para importar `SeccionCierreCotizacion` y reemplazar el bloque inline. Queda muy por debajo de 200 líneas.
 
-Comportamiento resultante:
-- Marítimo + FOB/EXW/FCA → sigue exigiendo tarifa vinculada (igual que hoy).
-- Marítimo + CIF/CFR/CIP/CPT/DAP/DDP/DAT → avanza sin tarifa, consistente con la UI que ya oculta el campo.
-- Terrestre / Aéreo → sin cambios.
+No se cambia lógica ni UI: sólo se mueven nodos JSX.
 
 ## Validación
 
-- Tests unitarios nuevos en `src/features/cotizacion/hooks/wizard/__tests__/handlePaso1Crm.test.ts` (o el existente si lo hay) cubriendo: CIF marítimo sin tarifa → `null`; FOB marítimo sin tarifa → mensaje de error; CIF terrestre → sin cambios.
-- Bump de versión a `13.142.1` + entrada en `CHANGELOG.md`.
-
-## Fuera de alcance
-
-No se toca la UI del wizard ni `usePaso1SectionStatus` (ya están correctos). No se cambia el comportamiento para FOB.
+- `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture-baseline.test.ts` → ambos verdes.
+- Smoke visual del Paso 1 del wizard (Marítimo FOB y CIF, Aéreo, Terrestre): el acordeón de Cierre se ve y funciona igual.
+- Bump a `13.142.2` + entrada en `CHANGELOG.md`.
