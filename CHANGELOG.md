@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.3] - 2026-06-30
+- **feat(embarques) — panel de alertas activas.** Antes el badge "Embarques · N" del sidebar agregaba demoras, garantías atoradas y cierres administrativos pendientes, pero al entrar a `/embarques` no había forma de ver qué embarques componían ese número. Ahora la página muestra un panel desplegable arriba de la tabla con tres tarjetas (Demoras / Garantías atoradas / Cierre administrativo) que indican el conteo y, al hacer clic, aplican un filtro `?alerta=` que reduce la lista a los embarques de esa categoría. Implementado en `EmbarquesAlertasPanel.tsx` + integración en `useEmbarquesPageState.ts` (rama "fullSet" reusada del filtro de estado) y `routes/Embarques.tsx`.
+
 ## [13.142.2] - 2026-06-30
 - **chore(arquitectura) — split de `PasoDatosGenerales.tsx`.** Tras agregar `AvisoIncotermCIF` en `13.142.0`, el archivo quedó en 201 líneas y rompió la guarda Power of 10 (CI shards 1 y 8, Lint/build, Coverage, aggregator). Se extrajo el bloque "Cierre" (acordeón de Número de embarques + Notas adicionales) a `src/features/cotizacion/components/wizard/SeccionCierreCotizacion.tsx`. Sin cambios de UI ni lógica.
 
