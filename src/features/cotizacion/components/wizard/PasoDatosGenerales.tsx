@@ -143,54 +143,7 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
       {avisoIncotermCBlock}
 
       {/* Cierre */}
-      <div id="seccion-cierre" className="scroll-mt-4">
-        <Accordion type="multiple" defaultValue={["num-embarques", "notas"]} className="w-full">
-          <AccordionItem value="num-embarques">
-            <AccordionTrigger className="text-base font-semibold hover:no-underline">
-              <span className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" />
-                Número de Embarques
-                {status.cierre && (
-                  <span
-                    className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success"
-                    aria-label="Sección completa"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                  </span>
-                )}
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="pt-2">
-              <Label htmlFor="cot-num-contenedores">Número de contenedores</Label>
-              <Input
-                id="cot-num-contenedores"
-                type="number" min={1}
-                value={form.watch("numContenedores")}
-                onChange={(e) => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-32 mt-1"
-              />
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="notas">
-            <AccordionTrigger className="text-base font-semibold hover:no-underline">
-              <span className="flex items-center gap-2">
-                <StickyNote className="h-5 w-5 text-primary" />
-                Notas Adicionales
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="pt-2">
-              <Label htmlFor="cot-notas">Notas</Label>
-              <Textarea
-                id="cot-notas"
-                value={form.watch("notas")}
-                onChange={(e) => form.setValue("notas", e.target.value)}
-                placeholder="Observaciones o condiciones..."
-                rows={3}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+      <SeccionCierreCotizacion form={form as never} complete={status.cierre} />
     </>
   );
 }
