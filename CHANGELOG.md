@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.141.6] - 2026-06-30
+- **fix(auditoría) — `auditoria_capturar_snapshot` ahora recibe `p_organization_id`** (Sentry JAVASCRIPT-REACT-1M, 45 eventos / 5 usuarios). El cliente llamaba el RPC sin argumentos y PostgREST devolvía PGRST202. `capturarSnapshotAuditoria(organizationId)` y `useCapturarSnapshotAuditoria` ahora leen `organizationId` del `OrganizationContext` y lo pasan al RPC. Tests actualizados.
+- **fix(facturación) — rol `contador` autorizado para mutaciones contables** (Sentry JAVASCRIPT-REACT-1R, 42501). `_assert_writer` y `_assert_internal_reader` ahora incluyen `contador` además de `admin`/`operador`/`super_admin`. Antes una contadora recibía "Permisos insuficientes" al registrar pagos o generar proformas.
+- **chore(sentry)** — JAVASCRIPT-REACT-1K (`Invalid login credentials`) marcado como resuelto: error de usuario, no es bug.
+
 ## [13.141.5] - 2026-06-28
 - **ux(cotizaciones) — Nueva Cotización abre en blanco**. `COTIZACION_FORM_DEFAULTS` ya no precarga Modo (`Marítimo`), Tipo (`Importación`), Incoterm (`FOB`), Tipo de carga (`Carga General`), Tipo de embarque (`FCL`), Tipo de peso (`Peso Normal`), `numContenedores=1`, ni filas iniciales en `dimensionesLCL`/`dimensionesAereas`. Tipo `tipoEmbarque` ampliado a `"FCL" | "LCL" | ""`. El flujo de edición no se afecta (los fallbacks en `buildCotizacionDefaultValues` se mantienen para cotizaciones existentes).
 

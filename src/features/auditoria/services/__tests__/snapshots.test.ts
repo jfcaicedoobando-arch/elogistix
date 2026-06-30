@@ -39,14 +39,21 @@ describe('auditoria/snapshots', () => {
     await expect(fetchAuditoriaSnapshots(7)).rejects.toMatchObject({ message: 'rls' });
   });
 
-  it('capturarSnapshotAuditoria invoca el RPC sin argumentos', async () => {
+  it('capturarSnapshotAuditoria invoca el RPC con p_organization_id', async () => {
     mockSupabase.current = withRpc();
-    await capturarSnapshotAuditoria();
-    expect(mockSupabase.current.rpc).toHaveBeenCalledWith('auditoria_capturar_snapshot');
+    await capturarSnapshotAuditoria('org-1');
+    expect(mockSupabase.current.rpc).toHaveBeenCalledWith('auditoria_capturar_snapshot', {
+      p_organization_id: 'org-1',
+    });
   });
 
   it('capturarSnapshotAuditoria propaga errores del RPC', async () => {
     mockSupabase.current = withRpc([], null, vi.fn().mockResolvedValue({ error: { message: 'fail' } }));
-    await expect(capturarSnapshotAuditoria()).rejects.toMatchObject({ message: 'fail' });
+    await expect(capturarSnapshotAuditoria('org-1')).rejects.toMatchObject({ message: 'fail' });
+  });
+
+  it('capturarSnapshotAuditoria rechaza si no hay organizationId', async () => {
+    mockSupabase.current = withRpc();
+    await expect(capturarSnapshotAuditoria('')).rejects.toThrow(/organizationId/);
   });
 });
