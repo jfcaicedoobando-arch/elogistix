@@ -87,19 +87,30 @@ export function useEmbarquesPageState() {
   const { data: resultadoFull, isLoading: loadingFull } = useQuery({
     queryKey: queryKeys.embarques.fullForEstadoFilter(fullSetFilters),
     queryFn: () => fetchEmbarquesParaExport(fullSetFilters),
-    enabled: estadoFilterActivo,
+    enabled: fullSetActivo,
     staleTime: 60_000,
   });
 
-  const isLoading = estadoFilterActivo ? loadingFull : loadingServer;
+  const isLoading = fullSetActivo ? loadingFull : loadingServer;
+
+  const alertIdSet = useMemo(() => {
+    if (!alertaFilterActivo || !alertasResumen) return null;
+    return alertasResumen[filterAlerta] ?? new Set<string>();
+  }, [alertaFilterActivo, alertasResumen, filterAlerta]);
 
   const containersForView: EmbarqueRow[] = useMemo(() => {
-    if (!estadoFilterActivo) return resultadoServer?.data ?? [];
-    const all = resultadoFull ?? [];
-    return all.filter(
-      (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === filterEstado,
-    );
-  }, [estadoFilterActivo, resultadoServer, resultadoFull, filterEstado]);
+    if (!fullSetActivo) return resultadoServer?.data ?? [];
+    let all = resultadoFull ?? [];
+    if (estadoFilterActivo) {
+      all = all.filter(
+        (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === filterEstado,
+      );
+    }
+    if (alertaFilterActivo && alertIdSet) {
+      all = all.filter((e) => alertIdSet.has(e.id));
+    }
+    return all;
+  }, [fullSetActivo, estadoFilterActivo, alertaFilterActivo, alertIdSet, resultadoServer, resultadoFull, filterEstado]);
 
   const contenedoresPorExpediente = useMemo(
     () => computeContenedoresPorExpediente(containersForView),
