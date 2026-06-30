@@ -1,6 +1,6 @@
 /**
  * Tabla de tarifas marítimas (cuerpo de CosteoTarifas).
- * v13.135.49: badge unificado + dropdown de acciones.
+ * v13.142.4: Aprobar/Rechazar inline (icon-only) para borradores + columnas Flete/Recargos ocultas <lg.
  */
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { TarifaEstadoUnificado } from "./TarifaEstadoUnificado";
 import { TarifaRowActions } from "./TarifaRowActions";
+import { TarifaQuickApprovalButtons } from "./TarifaQuickApprovalButtons";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
 import { usd, formatVigencia, vigenciaHint } from "../routes/CosteoTarifas.helpers";
