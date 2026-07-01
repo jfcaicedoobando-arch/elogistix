@@ -59,9 +59,11 @@ export function EmbarqueDetalleHeaderActions({
       )}
 
 
-      <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
-        <Share2 className="h-4 w-4 mr-1" /> Compartir
-      </Button>
+      {canEdit && (
+        <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
+          <Share2 className="h-4 w-4 mr-1" /> Compartir
+        </Button>
+      )}
 
       {canEdit && (
         <Button variant="outline" size="sm" onClick={onAbrirDuplicar}>
