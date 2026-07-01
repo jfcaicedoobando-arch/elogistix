@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.8] - 2026-07-01
+- **fix(cotización) — normalizar `cantidad ≥ 1` al auto-cargar costos desde tarifa marítima.** El check constraint `cotizacion_costos_cantidad_pos` (BD exige `cantidad > 0`) rompía la inserción cuando el wizard aún no tenía número de contenedores capturado y llegaba `0`. Ahora `buildCostosDesdeTarifa` y `aplicarTarifa` normalizan a mínimo 1, y `SeccionCostosInternosPLLocal` aplica la misma defensa al invocarlos. Test de regresión agregado. Resuelve **JAVASCRIPT-REACT-1M** (46 eventos, 6 usuarios). Además se filtra `Invalid login credentials` en `Sentry.init` (`ignoreErrors`) — es UX esperada de Supabase Auth, no bug (limpia **JAVASCRIPT-REACT-1K**).
+
 ## [13.142.7] - 2026-07-01
 - **fix(facturación) — tooltips explicativos en botones de aprobación de proformas.** Los botones "Consolidar y aprobar" y "Aprobar individual" del tab **Por timbrar** carecían de contexto suficiente (el primero solo tenía un `title` nativo y el segundo nada). Ahora ambos usan el componente `Tooltip` de Radix con contenido enriquecido: título descriptivo, explicación de la acción y un ejemplo concreto. Además, "Consolidar y aprobar" muestra un aviso dinámico cuando el usuario selecciona proformas de embarques distintos. Cambios en `TabProformasPendientes.tsx`.
 
