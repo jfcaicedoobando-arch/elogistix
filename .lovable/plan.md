@@ -1,50 +1,42 @@
+# Plan: Origen de costos — mostrar etiquetas legibles en lugar de UUIDs
+
 ## Problema
+En `Embarques → Detalle → Tab Resumen → Card "Origen de costos"`, los campos **Tarifa cotizada** y **Tarifa aplicada** muestran el UUID crudo (ej. `fda4ff14-709b-...`). Para el usuario esto no significa nada.
 
-En `AvanzarEstadoButton.tsx`, cuando faltan documentos para avanzar el estado, el botón se deshabilita y la razón se muestra vía `Tooltip` (hover). En móvil no hay hover, así que el usuario no descubre por qué está bloqueado.
+## Objetivo
+Mostrar información entendible de cada tarifa: **naviera · puerto origen → puerto destino · tipo contenedor · vigencia**, con el UUID disponible sólo como tooltip para soporte técnico.
 
-Además, el `<span tabIndex={0}>` envolviendo el botón deshabilitado no dispara el tooltip con tap en Radix móvil de forma confiable.
+## Cambios
 
-## Solución
+### 1. Nuevo servicio: `fetchTarifasResumen(ids)`
+`src/features/costeo/services/tarifas.ts`
+- Consulta `costeo_tarifas` por `id in (...)` con las columnas mínimas para armar la etiqueta (naviera_nombre / puertos / tipo_contenedor / vigencia_desde-hasta).
+- Devuelve `Record<uuid, TarifaResumen>` para acceso O(1).
 
-Reemplazar la estrategia "botón deshabilitado + tooltip" por **botón habilitado que abre un AlertDialog explicativo** cuando faltan documentos. Así funciona igual en desktop y móvil, y el usuario ve claramente qué falta y puede navegar a Documentos.
+### 2. Nuevo hook: `useTarifasResumen(ids)`
+`src/features/costeo/hooks/useTarifasResumen.ts`
+- `useQuery` con `queryKey = ['tarifas','resumen', sortedIds]`, `staleTime: 5min`.
+- Deduplica ids nulos/repetidos.
 
-### Cambios
+### 3. Refactor `OrigenCostosSection.tsx`
+- Consumir el hook con `[tarifaIdOriginal, tarifaIdAplicada]`.
+- Nuevo subcomponente `TarifaChip` que renderiza:
+  - Línea 1 (bold): `NAVIERA · ORIGEN → DESTINO`
+  - Línea 2 (muted, xs): `Contenedor 40'HC · Vigencia 01/06/26 – 30/09/26`
+  - `title={uuid}` para que soporte vea el ID al hacer hover.
+- Si la tarifa ya no existe (borrada), fallback: `Tarifa no encontrada` + últimos 8 chars del UUID.
+- Mantener la marca `(misma)` cuando `tarifaIdOriginal === tarifaIdAplicada`.
 
-**1. `src/features/embarques/components/header/AvanzarEstadoButton.tsx`**
-- Cuando `bloqueadoPorDocs = true`:
-  - El botón deja de estar `disabled`; en su lugar, al hacer click abre un `AlertDialog` (reutilizando el estilo del `blockDocsOpen` existente).
-  - El diálogo muestra: estado destino, lista de documentos faltantes, botón "Ir a Documentos" y "Cerrar".
-  - Se mantiene el `Tooltip` como refuerzo en desktop (hover), pero ya no es la única vía.
-- Cuando `cierreBloqueadoPorChecklist = true`: mantener comportamiento actual (ya navega a Cierre al tap) pero asegurar que en móvil el click en el botón dispara `onIrACierre` directamente en vez de depender del `<span>` wrapper.
-- Aceptar nueva prop `onIrADocumentos: () => void` para el CTA del nuevo diálogo.
-
-**2. `src/features/embarques/components/EmbarqueDetalleHeaderActions.tsx`**
-- Pasar `onIrADocumentos` (ya existe la función en el hook orquestador, la usa `EmbarqueHeaderDialogs`) hacia `AvanzarEstadoButton`.
-
-**3. `src/features/embarques/components/EmbarqueHeaderDialogs.tsx`**
-- El diálogo `blockDocsOpen` se vuelve redundante para este caso (el botón ya abre su propio diálogo). Se puede dejar como está (sigue sirviendo si se abre programáticamente desde el hook) o consolidarlo. **Decisión:** dejar `EmbarqueHeaderDialogs` sin cambios y que el nuevo diálogo del botón sea local — evita tocar el hook `useEmbarqueEstadoActions`.
-
-**4. Versionado**
-- Bump a `13.142.5` en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md`: "Fix móvil: botón Avanzar estado ahora abre diálogo con documentos faltantes en vez de depender de tooltip."
+### 4. Changelog + versión
+- `CHANGELOG.md`: entrada `[13.142.6]` — "Origen de costos: reemplaza UUIDs por naviera/ruta/vigencia".
+- `src/constants/appVersion.ts` → `13.142.6`.
 
 ## Detalles técnicos
 
-- No cambia lógica de negocio ni RPCs. Es solo UI/UX del header.
-- No modifica `_docs_requeridos_por_estado` ni `embarque_docs_faltantes` (fuente única intacta).
-- Respeta memoria `mem://features/candado-docs-avance-estado`: hard block sigue existiendo a nivel RPC.
-- Componente sigue bajo 200 líneas.
+Columnas a leer (ya usadas por `TopTarifaRow`): `id, naviera_nombre, puerto_origen_codigo, puerto_destino_codigo, tipo_contenedor_nombre, vigencia_desde, vigencia_hasta`. Ver si existen en la tabla `costeo_tarifas` directa o si hay que usar la vista `v_costeo_tarifas_top` (ajustar en implementación).
 
-## Diagrama de flujo
+No hay cambios en RLS ni migraciones: es solo un `SELECT` filtrado por `organization_id` (ya cubierto por policies existentes).
 
-```text
-[Botón "Avanzar a EIR"]
-        │
-        ▼
- ¿bloqueadoPorDocs?
-   ├── sí → abre AlertDialog local
-   │         ├── Lista de docs faltantes
-   │         ├── [Ir a Documentos] → onIrADocumentos()
-   │         └── [Cerrar]
-   └── no → flujo normal (confirmar avance)
-```
+## Fuera de alcance
+- No se modifica el card en otros lados; sólo `OrigenCostosSection`.
+- No se agrega link a `/costeo/tarifas/:id` en este PR (se puede añadir después si se pide).
