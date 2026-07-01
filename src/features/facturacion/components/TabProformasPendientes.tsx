@@ -159,25 +159,51 @@ export function TabProformasPendientes({ isInRange }: { isInRange?: (fecha: stri
               <span className="font-medium">{formatCurrency(c.totalesSeleccion.mxn, 'MXN')}</span>
             )}
           </div>
-          <Button
-            variant="default"
-            disabled={!c.puedeConsolidar || c.isConsolidarPending}
-            onClick={c.handleConsolidar}
-            title={
-              c.embarquesEnSeleccion > 1
-                ? 'Solo puedes consolidar proformas del mismo embarque'
-                : 'Consolidar las proformas seleccionadas en una sola y aprobar'
-            }
-          >
-            <Layers className="h-4 w-4 mr-2" /> Consolidar y aprobar
-          </Button>
-          <Button
-            variant="outline"
-            disabled={!c.puedeAprobar || c.isAprobarPending}
-            onClick={c.handleAprobar}
-          >
-            <CheckCircle2 className="h-4 w-4 mr-2" /> Aprobar individual
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="default"
+                disabled={!c.puedeConsolidar || c.isConsolidarPending}
+                onClick={c.handleConsolidar}
+              >
+                <Layers className="h-4 w-4 mr-2" /> Consolidar y aprobar
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <p className="font-semibold mb-1">Fusiona proformas del mismo embarque</p>
+              <p className="text-muted-foreground">
+                Une todas las proformas seleccionadas de un solo embarque en una sola proforma consolidada y la aprueba.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                <strong>Ejemplo:</strong> seleccionas 3 proformas del embarque EXP-00125 (3 contenedores distintos). El sistema las une en una sola proforma con importe acumulado y la aprueba.
+              </p>
+              {c.embarquesEnSeleccion > 1 && (
+                <p className="mt-2 text-xs text-destructive">
+                  Solo puedes consolidar proformas del mismo embarque.
+                </p>
+              )}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                disabled={!c.puedeAprobar || c.isAprobarPending}
+                onClick={c.handleAprobar}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" /> Aprobar individual
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <p className="font-semibold mb-1">Aprueba cada proforma por separado</p>
+              <p className="text-muted-foreground">
+                Cada proforma seleccionada se aprueba de forma independiente, sin fusionar. Útil cuando las proformas pertenecen a embarques distintos o el cliente requiere una factura por contenedor.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                <strong>Ejemplo:</strong> seleccionas 2 proformas del embarque EXP-00125 y 1 del EXP-00098. Cada una se aprueba por separado y genera su propia factura al timbrar.
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </CardContent>
       </Card>
 
