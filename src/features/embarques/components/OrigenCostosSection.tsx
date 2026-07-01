@@ -116,21 +116,58 @@ export function OrigenCostosSection({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="p-2 rounded border bg-muted/30">
-            <p className="text-[11px] uppercase text-muted-foreground">Tarifa cotizada</p>
-            <p className="font-mono text-xs break-all">{tarifaIdOriginal ?? "—"}</p>
-          </div>
-          <div className="p-2 rounded border bg-muted/30">
-            <p className="text-[11px] uppercase text-muted-foreground">Tarifa aplicada</p>
-            <p className="font-mono text-xs break-all">
-              {tarifaIdAplicada ?? "—"}
-              {mismaTarifa && <span className="ml-2 text-[11px] text-muted-foreground">(misma)</span>}
-            </p>
-          </div>
+          <TarifaChip label="Tarifa cotizada" id={tarifaIdOriginal ?? null} />
+          <TarifaChip
+            label="Tarifa aplicada"
+            id={tarifaIdAplicada ?? null}
+            suffix={mismaTarifa ? "(misma)" : undefined}
+          />
         </div>
 
         {cambios.length > 0 && <DeltaTable cambios={cambios} />}
       </CardContent>
     </Card>
+  );
+}
+
+function TarifaChip({
+  label,
+  id,
+  suffix,
+}: {
+  label: string;
+  id: string | null;
+  suffix?: string;
+}) {
+  const { data: resumenes } = useTarifasResumen([id]);
+  const resumen: TarifaResumen | undefined = id ? resumenes?.[id] : undefined;
+
+  return (
+    <div className="p-2 rounded border bg-muted/30" title={id ?? undefined}>
+      <p className="text-[11px] uppercase text-muted-foreground">{label}</p>
+      {!id ? (
+        <p className="text-xs text-muted-foreground">—</p>
+      ) : resumen ? (
+        <>
+          <p className="text-sm font-medium">
+            {resumen.naviera_nombre} · {resumen.puerto_origen_nombre} → {resumen.puerto_destino_nombre}
+            {suffix && <span className="ml-2 text-[11px] font-normal text-muted-foreground">{suffix}</span>}
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            {resumen.tipo_contenedor_nombre}
+            {resumen.vigente_desde && resumen.vigente_hasta && (
+              <>
+                {" · Vigencia "}
+                {formatDate(resumen.vigente_desde, "dd/MM/yy")} – {formatDate(resumen.vigente_hasta, "dd/MM/yy")}
+              </>
+            )}
+          </p>
+        </>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Tarifa no encontrada <span className="font-mono">…{id.slice(-8)}</span>
+        </p>
+      )}
+    </div>
   );
 }
