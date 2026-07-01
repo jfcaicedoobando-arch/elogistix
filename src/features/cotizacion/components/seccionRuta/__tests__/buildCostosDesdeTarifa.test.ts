@@ -51,4 +51,13 @@ describe("buildCostosDesdeTarifa", () => {
     });
     expect(filas).toHaveLength(0);
   });
+
+  it("normaliza cantidad a mínimo 1 cuando llega 0 o negativa (regresión JAVASCRIPT-REACT-1M)", () => {
+    const filasCero = buildCostosDesdeTarifa({ tarifa, recargos, markup: 0, cantidad: 0 });
+    expect(filasCero.length).toBeGreaterThan(0);
+    for (const f of filasCero) expect(f.cantidad).toBe(1);
+
+    const filasNeg = buildCostosDesdeTarifa({ tarifa, recargos, markup: 0, cantidad: -3 });
+    for (const f of filasNeg) expect(f.cantidad).toBe(1);
+  });
 });
