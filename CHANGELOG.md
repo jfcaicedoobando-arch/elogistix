@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.9] - 2026-07-01
+- **fix(embarques) — ocultar "Compartir" a roles sin permiso + filtrar RLS denied en Sentry.** El rol `contador` (read-only) veía el botón "Compartir" en el header del detalle de embarque; al usarlo la BD rechazaba el INSERT en `tracking_links` con `42501` (RLS) y Sentry lo capturaba como error. Ahora el botón queda gated por `canEdit` (mismo patrón que Editar/Duplicar/Eliminar). Además, `shouldDropSentryEvent` descarta errores Postgres `code === '42501'` (permiso denegado por RLS): son denegaciones esperadas, no bugs. Resuelve **JAVASCRIPT-REACT-1V**.
+
 ## [13.142.8] - 2026-07-01
 - **fix(cotización) — normalizar `cantidad ≥ 1` al auto-cargar costos desde tarifa marítima.** El check constraint `cotizacion_costos_cantidad_pos` (BD exige `cantidad > 0`) rompía la inserción cuando el wizard aún no tenía número de contenedores capturado y llegaba `0`. Ahora `buildCostosDesdeTarifa` y `aplicarTarifa` normalizan a mínimo 1, y `SeccionCostosInternosPLLocal` aplica la misma defensa al invocarlos. Test de regresión agregado. Resuelve **JAVASCRIPT-REACT-1M** (46 eventos, 6 usuarios). Además se filtra `Invalid login credentials` en `Sentry.init` (`ignoreErrors`) — es UX esperada de Supabase Auth, no bug (limpia **JAVASCRIPT-REACT-1K**).
 

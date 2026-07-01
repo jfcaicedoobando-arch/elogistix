@@ -29,6 +29,22 @@ function isZodValidationError(exc: Error | undefined): boolean {
   return causeName === "ZodError" || excName === "ZodError";
 }
 
+/**
+ * Errores de RLS de Postgres (`42501`) son denegaciones de permiso legítimas,
+ * no bugs. Se pueden originar desde `originalException` (PostgrestError) o
+ * desde el payload serializado en `event.extra.__serialized__`.
+ */
+function isPostgresRlsDenied(
+  event: Sentry.ErrorEvent,
+  exc: unknown,
+): boolean {
+  const code = (exc as { code?: unknown } | undefined)?.code;
+  if (typeof code === "string" && code === "42501") return true;
+  const extra = event.extra as { __serialized__?: { code?: unknown } } | undefined;
+  const serializedCode = extra?.__serialized__?.code;
+  return typeof serializedCode === "string" && serializedCode === "42501";
+}
+
 export function shouldDropSentryEvent(
   event: Sentry.ErrorEvent,
   hint: Sentry.EventHint | undefined,
@@ -39,6 +55,7 @@ export function shouldDropSentryEvent(
     (typeof hint?.originalException === "string" ? hint.originalException : undefined);
   if (isRecoverableLoadError(event, exc, originalMsg)) return true;
   if (isZodValidationError(exc)) return true;
+  if (isPostgresRlsDenied(event, hint?.originalException)) return true;
   return false;
 }
 

@@ -1,37 +1,38 @@
-## Sentry: revisión de errores abiertos
+## Sentry: `JAVASCRIPT-REACT-1V` — RLS violation en `tracking_links`
 
-Encontré 3 issues abiertos en `elogistix`. Sólo 1 es accionable ahora mismo; los otros dos los cierro/monitoreo.
+### Analogía
+El rol **contador** es como un auditor con permiso para *leer* la carpeta de embarques pero no para imprimir stickers públicos. En la app le mostramos el botón "Compartir tracking", él le da clic, y la BD (guardia RLS) le rechaza el INSERT en `tracking_links` → Sentry captura la excepción.
 
-### 1. `JAVASCRIPT-REACT-1M` — cotizacion_costos_cantidad_pos (46 eventos, 6 usuarios) ← el importante
+### Diagnóstico
+- Error: `new row violates row-level security policy for table "tracking_links"` (code `42501`).
+- Usuario con `effective_role = contador` en `/embarques/:id`.
+- La policy `Org staff manage tracking_links` sólo permite `admin`, `operador`, `super_admin`, `is_org_admin`. Contador queda fuera **por diseño** (es un rol de lectura para embarques, agregado recientemente).
+- El botón "Compartir tracking" se muestra en `EmbarqueDetalleHeaderActions.tsx` sin gating por rol → al hacer clic, `useCreateTrackingLink` intenta el INSERT y explota.
 
-Analogía: es como intentar guardar una factura con "0 piezas" cuando la caja registradora exige mínimo 1. La BD tiene un check constraint `cantidad > 0` en `cotizacion_costos` y estamos insertando `cantidad = 0`.
+### Solución
+Mantener el rol contador como read-only y **ocultar** los botones que hacen mutaciones sobre el embarque para ese rol. Empezamos con el que falló (Compartir tracking); dejamos preparado el patrón para replicar a Avanzar estado / Duplicar / Eliminar / Reabrir si aparecen en Sentry.
 
-**Causa raíz:** en `SeccionCostosInternosPLLocal.tsx` (línea 46) se llama:
-```
-buildCostosDesdeTarifa({ ..., cantidad: numContenedores })
-```
-Cuando el usuario aún no captura el número de contenedores (paso CIF, borrador vacío, wizard nuevo), `numContenedores` llega como `0`. `buildCostosDesdeTarifa` respeta ese 0 (sólo aplica default 1 si `cantidad` es `undefined`), y las filas se guardan con `cantidad = 0` → viola el constraint al insertar.
+### Cambios
 
-**Fix (frontend, mínimo invasivo):**
-- En `buildCostosDesdeTarifa.ts`: normalizar con `const qty = Math.max(1, Number.isFinite(cantidad) ? cantidad : 1)` y usar `qty` en las filas.
-- En `SeccionCostosInternosPLLocal.tsx`: pasar `cantidad: Math.max(1, numContenedores || 1)` (defensa en profundidad).
-- En `aplicarTarifa.ts`: mismo guard.
-- Test nuevo en `buildCostosDesdeTarifa.test.ts`: `cantidad: 0` → filas con `cantidad === 1`.
+1. `src/features/embarques/components/EmbarqueDetalleHeaderActions.tsx`
+   - Leer `useEffectiveRole()` (ya existe en el proyecto) y calcular `isReadOnly = effectiveRole === 'contador'`.
+   - Envolver el botón "Compartir tracking" en `!isReadOnly && (...)`.
+   - Aplicar mismo gating a "Avanzar estado", "Duplicar", "Eliminar", "Reabrir" para consistencia (contador nunca debería verlos).
 
-### 2. `JAVASCRIPT-REACT-1T` — timeout FacturApi (1 evento, 1 usuario)
+2. `src/features/embarques/hooks/useEmbarqueDetalleTracking.ts`
+   - Añadir guard: si `effectiveRole === 'contador'`, `handleCompartirTracking` muestra un `notifyError` con mensaje "No tienes permisos para generar enlaces públicos" y **no** intenta el INSERT. Defensa en profundidad por si el botón se muestra vía tab externo.
 
-Error de red esperado y ya manejado con mensaje claro al usuario. Lo marco como **resuelto** en Sentry (ruido operativo, no bug). Si vuelve a aparecer con volumen, revisamos.
+3. `src/lib/observability/sentry/dropPredicate.ts`
+   - Filtrar errores Postgres con `code === '42501'` (RLS denied). No son bugs; son permisos correctos y saturan Sentry.
+   - Test unitario nuevo en `dropPredicate.test.ts` con un error `{ code: '42501', message: '...' }`.
 
-### 3. `JAVASCRIPT-REACT-1K` — "Invalid login credentials" (3 eventos, 0 usuarios impactados)
+4. `src/features/embarques/hooks/__tests__/useEmbarqueDetalleTracking.test.tsx`
+   - Nuevo caso: rol contador → no llama a `mutateAsync` y muestra toast de permiso.
 
-Es un error esperado de Supabase Auth cuando el usuario teclea mal la contraseña. No debería reportarse a Sentry. Lo marco como **resuelto** y añado a la lista de errores ignorados en el cliente Sentry (`beforeSend` filtra mensajes `Invalid login credentials`).
+5. Sentry: marcar `JAVASCRIPT-REACT-1V` como resuelto en `13.142.9`.
 
-### Entregables (build mode)
+6. `CHANGELOG.md` + bump `APP_VERSION` → `13.142.9`.
 
-1. `src/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa.ts` — normalizar cantidad ≥ 1.
-2. `src/features/cotizacion/components/SeccionCostosInternosPLLocal.tsx` — guard en la llamada.
-3. `src/features/cotizacion/components/seccionRuta/aplicarTarifa.ts` — guard en la llamada.
-4. `src/features/cotizacion/components/seccionRuta/__tests__/buildCostosDesdeTarifa.test.ts` — test regresión `cantidad: 0`.
-5. Filtro `beforeSend` en el init de Sentry para descartar `Invalid login credentials`.
-6. Marcar 1T y 1K como resueltos en Sentry.
-7. Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
+### Fuera de alcance
+- No modifico la RLS policy (dar `contador` permiso de INSERT contradice el diseño del rol lectura).
+- No cambio otros botones de otras pantallas hasta ver evidencia en Sentry o feedback del usuario.
