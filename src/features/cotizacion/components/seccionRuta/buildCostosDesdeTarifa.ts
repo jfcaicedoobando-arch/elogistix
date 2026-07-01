@@ -69,7 +69,7 @@ export function buildCostosDesdeTarifa({
       concepto: `${r.concepto}${ladoTxt}`,
       moneda: "USD",
       proveedor,
-      cantidad,
+      cantidad: qty,
       costo_unitario: monto,
       precio_venta: aplicarMarkup(monto, markup),
       unidad_medida: unidad,
