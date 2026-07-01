@@ -127,6 +127,7 @@ export function EmbarqueDetalleHeader({
         cierrePuedeAvanzar={cierrePuedeAvanzar}
         cierreMotivoBloqueo={cierreMotivoBloqueo}
         onIrACierre={onIrACierre}
+        onIrADocumentos={onIrADocumentos}
       />
 
       <EmbarqueHeaderDialogs

@@ -1,63 +1,50 @@
-## Auditoría visual `/costeo/tarifas?aprob=pendientes`
+## Problema
 
-Capturé la pantalla en el viewport del usuario (928×635) y en escritorio. Los hallazgos son:
+En `AvanzarEstadoButton.tsx`, cuando faltan documentos para avanzar el estado, el botón se deshabilita y la razón se muestra vía `Tooltip` (hover). En móvil no hay hover, así que el usuario no descubre por qué está bloqueado.
 
-### Qué está roto
+Además, el `<span tabIndex={0}>` envolviendo el botón deshabilitado no dispara el tooltip con tap en Radix móvil de forma confiable.
 
-1. **Vista Agrupada (`TarifaFila.tsx`) — botones rápidos invisibles e inutilizables.**
-   El grid de la fila termina en una columna de solo **56 px** para acciones. Sin embargo, los botones inline "Aprobar" y "Duplicar" se renderizan ahí dentro con `opacity-0 group-hover:opacity-100`. Esto significa:
-   - Sin mouse (touch, teclado) son invisibles.
-   - Aun con hover, los botones miden ~180 px y no caben en 56 px → se cortan o se montan sobre la columna del precio.
+## Solución
 
-2. **Vista Tabla (`CosteoTarifasTable.tsx`) — Aprobar/Rechazar escondidos en el kebab.**
-   La única forma de aprobar es abrir el `…` en cada fila. Para 5 pendientes son mínimo 10 clicks. No hay botones inline.
+Reemplazar la estrategia "botón deshabilitado + tooltip" por **botón habilitado que abre un AlertDialog explicativo** cuando faltan documentos. Así funciona igual en desktop y móvil, y el usuario ve claramente qué falta y puede navegar a Documentos.
 
-3. **Viewport ≤ 980 px — scroll horizontal y menú que tapa filas.**
-   En la Tabla la columna "Ruta" queda fuera; al abrir el `…`, el menú se monta sobre la siguiente fila (ver captura adjunta).
+### Cambios
 
-4. **KPI "5 pendientes aprobación" no es interactivo.**
-   El usuario ve el conteo pero tiene que cambiar manualmente el filtro `Aprob:` para llegar a la lista.
+**1. `src/features/embarques/components/header/AvanzarEstadoButton.tsx`**
+- Cuando `bloqueadoPorDocs = true`:
+  - El botón deja de estar `disabled`; en su lugar, al hacer click abre un `AlertDialog` (reutilizando el estilo del `blockDocsOpen` existente).
+  - El diálogo muestra: estado destino, lista de documentos faltantes, botón "Ir a Documentos" y "Cerrar".
+  - Se mantiene el `Tooltip` como refuerzo en desktop (hover), pero ya no es la única vía.
+- Cuando `cierreBloqueadoPorChecklist = true`: mantener comportamiento actual (ya navega a Cierre al tap) pero asegurar que en móvil el click en el botón dispara `onIrACierre` directamente en vez de depender del `<span>` wrapper.
+- Aceptar nueva prop `onIrADocumentos: () => void` para el CTA del nuevo diálogo.
 
-5. **No hay acciones masivas.**
-   No se puede aprobar/rechazar varias tarifas seleccionadas en un solo paso (mismo problema que ya resolvimos en Auditoría con `HallazgosBulkBar`).
+**2. `src/features/embarques/components/EmbarqueDetalleHeaderActions.tsx`**
+- Pasar `onIrADocumentos` (ya existe la función en el hook orquestador, la usa `EmbarqueHeaderDialogs`) hacia `AvanzarEstadoButton`.
 
-### Plan de remediación (3 fases)
+**3. `src/features/embarques/components/EmbarqueHeaderDialogs.tsx`**
+- El diálogo `blockDocsOpen` se vuelve redundante para este caso (el botón ya abre su propio diálogo). Se puede dejar como está (sigue sirviendo si se abre programáticamente desde el hook) o consolidarlo. **Decisión:** dejar `EmbarqueHeaderDialogs` sin cambios y que el nuevo diálogo del botón sea local — evita tocar el hook `useEmbarqueEstadoActions`.
 
-**Fase A — Acciones inline siempre visibles (corrige el bug principal).**
-- `TarifaFila.tsx`: cambiar `FILA_GRID` para que la última columna sea `auto` (~ 220 px) y mostrar **Aprobar** (verde) + **Rechazar** (rojo) como botones reales cuando `estado_aprobacion === "borrador"`. Quitar el patrón `opacity-0 group-hover:`. Mantener el kebab solo para Editar/Duplicar/Eliminar/Reactivar.
-- `CosteoTarifasTable.tsx`: ampliar la columna Acciones y agregar los mismos dos botones icon-only con tooltip ("Aprobar", "Rechazar") al lado del kebab para filas pendientes.
-- En estados distintos a "borrador" solo se muestra el kebab (sin desbalanceo).
+**4. Versionado**
+- Bump a `13.142.5` en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md`: "Fix móvil: botón Avanzar estado ahora abre diálogo con documentos faltantes en vez de depender de tooltip."
 
-**Fase B — KPI clickable + filtro persistente.**
-- Convertir la card "Pendientes aprobación" en un botón que aplica `aprob=pendientes` (y resalta como filtro activo).
-- Las otras 3 cards (vigentes hoy, por vencer, rutas cubiertas) también pasan a ser atajos.
+## Detalles técnicos
 
-**Fase C — Responsive < 1024 px.**
-- En la Tabla, ocultar las columnas **Flete** y **Recargos** (el Total ya las consolida). Mantener Ruta · Agente · Total · Vigencia · Estado · Acciones siempre visibles.
-- En el `DropdownMenuContent` agregar `sideOffset` y `collisionPadding={8}` para que el menú no se monte sobre filas adyacentes en viewports angostos.
+- No cambia lógica de negocio ni RPCs. Es solo UI/UX del header.
+- No modifica `_docs_requeridos_por_estado` ni `embarque_docs_faltantes` (fuente única intacta).
+- Respeta memoria `mem://features/candado-docs-avance-estado`: hard block sigue existiendo a nivel RPC.
+- Componente sigue bajo 200 líneas.
 
-### Detalle técnico
+## Diagrama de flujo
 
+```text
+[Botón "Avanzar a EIR"]
+        │
+        ▼
+ ¿bloqueadoPorDocs?
+   ├── sí → abre AlertDialog local
+   │         ├── Lista de docs faltantes
+   │         ├── [Ir a Documentos] → onIrADocumentos()
+   │         └── [Cerrar]
+   └── no → flujo normal (confirmar avance)
 ```
-src/features/costeo/components/
-  ├── TarifaFila.tsx          ← Fase A: grid + botones inline
-  ├── CosteoTarifasTable.tsx  ← Fase A + C: columna acciones + hidden md:table-cell
-  ├── TarifaRowActions.tsx    ← solo Editar/Duplicar/Eliminar (mover Aprobar/Rechazar fuera)
-  └── (nuevo) TarifaQuickApprovalButtons.tsx  ← componente compartido
-src/features/costeo/routes/
-  └── CosteoTarifas.tsx       ← Fase B: KPIs clickables
-```
-
-Componente compartido `TarifaQuickApprovalButtons` con dos variants:
-- `variant="row-grouped"` → botones con texto.
-- `variant="row-table"` → solo iconos con tooltip (para no romper la tabla).
-
-Fuera de scope: la barra flotante de selección masiva queda anotada como sugerencia (Fase D opcional) — si la quieres también, la sumo.
-
-### Qué NO toco
-
-- Lógica de `useAprobacionTarifa` (queda intacta).
-- Diálogo `DialogRechazarTarifa` (queda igual).
-- Permisos / RLS.
-
-Avísame si quieres incluir la **Fase D (selección masiva)** o sólo A+B+C.

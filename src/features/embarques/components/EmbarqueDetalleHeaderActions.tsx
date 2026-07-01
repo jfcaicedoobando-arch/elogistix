@@ -27,13 +27,14 @@ interface Props {
   cierrePuedeAvanzar: boolean;
   cierreMotivoBloqueo: "rol" | "checklist" | null;
   onIrACierre: () => void;
+  onIrADocumentos: () => void;
 }
 
 export function EmbarqueDetalleHeaderActions({
   expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
   embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
   onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar, onReabrir,
-  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
+  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre, onIrADocumentos,
 }: Props) {
   const navigate = useNavigate();
   const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
@@ -45,7 +46,7 @@ export function EmbarqueDetalleHeaderActions({
   const accionPrincipal = renderAccionPrincipal({
     canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado,
     bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
-    onAvanzarEstado, onIrACierre, goEditar,
+    onAvanzarEstado, onIrACierre, onIrADocumentos, goEditar,
   });
 
   return (
@@ -102,6 +103,7 @@ interface AccionPrincipalArgs {
   cierreBloqueadoPorChecklist: boolean;
   onAvanzarEstado: () => void;
   onIrACierre: () => void;
+  onIrADocumentos: () => void;
   goEditar: () => void;
 }
 
@@ -118,6 +120,7 @@ function renderAccionPrincipal(a: AccionPrincipalArgs) {
         cierreBloqueadoPorChecklist={a.cierreBloqueadoPorChecklist}
         onAvanzarEstado={a.onAvanzarEstado}
         onIrACierre={a.onIrACierre}
+        onIrADocumentos={a.onIrADocumentos}
       />
     );
   }

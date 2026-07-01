@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.5] - 2026-07-01
+- **fix(embarques) — botón "Avanzar estado" ahora explica el bloqueo en móvil.** Cuando faltaban documentos el botón se deshabilitaba y la razón sólo se veía por tooltip (invisible en touch). Ahora, si `bloqueadoPorDocs`, el botón queda habilitado y al tocarlo abre un `AlertDialog` con la lista de documentos faltantes y un CTA "Ir a Documentos". El tooltip se conserva como refuerzo en desktop. Cambios en `AvanzarEstadoButton.tsx` + prop `onIrADocumentos` propagada por `EmbarqueDetalleHeaderActions.tsx` y `EmbarqueDetalleHeader.tsx`.
+
 ## [13.142.4] - 2026-06-30
 - **fix(costeo/tarifas) — botones de aprobar/rechazar visibles e usables.** En la vista agrupada la columna de acciones medía 56 px y los botones rápidos se renderizaban con `opacity-0 group-hover:opacity-100`, así que en touch eran invisibles y aun con mouse se montaban sobre el precio. En la vista tabla la única forma de aprobar era el menú `…` (mínimo 2 clicks por fila). Ahora: (1) nuevo componente compartido `TarifaQuickApprovalButtons` con variantes `grouped` (texto) y `table` (icon-only); (2) en `TarifaFila.tsx` la última columna del grid pasa a `minmax(180px,auto)` y los botones se muestran siempre cuando `estado_aprobacion === "borrador"`; (3) en `CosteoTarifasTable.tsx` se agregan los íconos Aprobar/Rechazar inline al lado del kebab y se ocultan las columnas **Flete** y **Recargos** por debajo de `lg` (el Total sigue visible) para evitar scroll horizontal en viewports angostos.
 
