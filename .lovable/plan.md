@@ -1,42 +1,31 @@
-# Plan: Origen de costos — mostrar etiquetas legibles en lugar de UUIDs
-
-## Problema
-En `Embarques → Detalle → Tab Resumen → Card "Origen de costos"`, los campos **Tarifa cotizada** y **Tarifa aplicada** muestran el UUID crudo (ej. `fda4ff14-709b-...`). Para el usuario esto no significa nada.
-
 ## Objetivo
-Mostrar información entendible de cada tarifa: **naviera · puerto origen → puerto destino · tipo contenedor · vigencia**, con el UUID disponible sólo como tooltip para soporte técnico.
+Reemplazar los tooltips básicos (o la ausencia de ellos) de los botones **Consolidar y aprobar** y **Aprobar individual** en el tab **Por timbrar** por tooltips ricos con explicación clara y ejemplos concretos.
 
-## Cambios
+## Alcance
+- Archivo afectado: `src/features/facturacion/components/TabProformasPendientes.tsx`.
+- Se usará el componente `Tooltip` (`src/components/ui/tooltip.tsx`) ya existente en el proyecto (Radix/shadcn).
 
-### 1. Nuevo servicio: `fetchTarifasResumen(ids)`
-`src/features/costeo/services/tarifas.ts`
-- Consulta `costeo_tarifas` por `id in (...)` con las columnas mínimas para armar la etiqueta (naviera_nombre / puertos / tipo_contenedor / vigencia_desde-hasta).
-- Devuelve `Record<uuid, TarifaResumen>` para acceso O(1).
+## Cambios propuestos
 
-### 2. Nuevo hook: `useTarifasResumen(ids)`
-`src/features/costeo/hooks/useTarifasResumen.ts`
-- `useQuery` con `queryKey = ['tarifas','resumen', sortedIds]`, `staleTime: 5min`.
-- Deduplica ids nulos/repetidos.
+### 1. Botón "Consolidar y aprobar"
+- Reemplazar el atributo nativo `title` por un `Tooltip` de Radix.
+- Contenido del tooltip:
+  - **Qué hace:** Fusiona las proformas seleccionadas del **mismo embarque** en una sola proforma consolidada y la aprueba.
+  - **Ejemplo:** *"Ejemplo: seleccionas 3 proformas del embarque EXP-00125 (3 contenedores distintos). El sistema las une en una sola proforma con un importe acumulado y la manda a la bandeja de por timbrar."
+  - **Cuándo está deshabilitado:** Si seleccionas proformas de embarques diferentes o solo hay 1 seleccionada.
 
-### 3. Refactor `OrigenCostosSection.tsx`
-- Consumir el hook con `[tarifaIdOriginal, tarifaIdAplicada]`.
-- Nuevo subcomponente `TarifaChip` que renderiza:
-  - Línea 1 (bold): `NAVIERA · ORIGEN → DESTINO`
-  - Línea 2 (muted, xs): `Contenedor 40'HC · Vigencia 01/06/26 – 30/09/26`
-  - `title={uuid}` para que soporte vea el ID al hacer hover.
-- Si la tarifa ya no existe (borrada), fallback: `Tarifa no encontrada` + últimos 8 chars del UUID.
-- Mantener la marca `(misma)` cuando `tarifaIdOriginal === tarifaIdAplicada`.
+### 2. Botón "Aprobar individual"
+- Agregar `Tooltip` (actualmente no tiene ninguno).
+- Contenido del tooltip:
+  - **Qué hace:** Aprueba cada proforma seleccionada de forma independiente, sin fusionar.
+  - **Ejemplo:** *"Ejemplo: seleccionas 2 proformas del embarque EXP-00125 y 1 del EXP-00098. Cada una se aprima por separado y genera su propia factura al timbrar."
+  - **Cuándo está deshabilitado:** Si no hay ninguna proforma seleccionada.
 
-### 4. Changelog + versión
-- `CHANGELOG.md`: entrada `[13.142.6]` — "Origen de costos: reemplaza UUIDs por naviera/ruta/vigencia".
-- `src/constants/appVersion.ts` → `13.142.6`.
+### 3. Estilo
+- Mantener el estilo por defecto del `TooltipContent` del proyecto (`bg-popover`, `text-popover-foreground`, `text-sm`).
+- El contenido puede incluir títulos en negrita (`<strong>`) y saltos de línea (`<br />` o `<p>`) para legibilidad.
 
-## Detalles técnicos
-
-Columnas a leer (ya usadas por `TopTarifaRow`): `id, naviera_nombre, puerto_origen_codigo, puerto_destino_codigo, tipo_contenedor_nombre, vigencia_desde, vigencia_hasta`. Ver si existen en la tabla `costeo_tarifas` directa o si hay que usar la vista `v_costeo_tarifas_top` (ajustar en implementación).
-
-No hay cambios en RLS ni migraciones: es solo un `SELECT` filtrado por `organization_id` (ya cubierto por policies existentes).
-
-## Fuera de alcance
-- No se modifica el card en otros lados; sólo `OrigenCostosSection`.
-- No se agrega link a `/costeo/tarifas/:id` en este PR (se puede añadir después si se pide).
+## Criterio de aceptación
+- [ ] Hacer hover/clic largo en móvil sobre cada botón muestra un tooltip con explicación + ejemplo.
+- [ ] No hay regresión visual ni funcional en la selección/consolidación/aprobación.
+- [ ] Los textos están en español mexicano y siguen la voz/tomo del resto de la app.

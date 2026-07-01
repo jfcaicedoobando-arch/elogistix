@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.7] - 2026-07-01
+- **fix(facturación) — tooltips explicativos en botones de aprobación de proformas.** Los botones "Consolidar y aprobar" y "Aprobar individual" del tab **Por timbrar** carecían de contexto suficiente (el primero solo tenía un `title` nativo y el segundo nada). Ahora ambos usan el componente `Tooltip` de Radix con contenido enriquecido: título descriptivo, explicación de la acción y un ejemplo concreto. Además, "Consolidar y aprobar" muestra un aviso dinámico cuando el usuario selecciona proformas de embarques distintos. Cambios en `TabProformasPendientes.tsx`.
+
 ## [13.142.6] - 2026-07-01
 - **fix(embarques) — "Origen de costos" muestra etiqueta legible en lugar de UUID.** En el tab Resumen del detalle de embarque los campos **Tarifa cotizada** y **Tarifa aplicada** mostraban el UUID crudo (ej. `fda4ff14-709b-…`), inútil para el usuario. Ahora resuelven contra `costeo_tarifas` y muestran `NAVIERA · ORIGEN → DESTINO` en la primera línea y `Contenedor · Vigencia dd/MM/yy – dd/MM/yy` en la segunda; el UUID queda disponible como `title` para soporte. Si la tarifa fue borrada se muestra "Tarifa no encontrada · …últimos8". Cambios: nuevo `fetchTarifasResumen` en `services/tarifas.ts`, hook `useTarifasResumen`, y refactor de `OrigenCostosSection.tsx`.
 
