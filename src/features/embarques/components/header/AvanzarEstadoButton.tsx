@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FileWarning } from "lucide-react";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,31 +16,53 @@ interface Props {
   cierreBloqueadoPorChecklist: boolean;
   onAvanzarEstado: () => void;
   onIrACierre: () => void;
+  onIrADocumentos: () => void;
 }
 
 export function AvanzarEstadoButton({
   estadoVisual, siguienteEstado, avanzandoEstado,
   bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
-  onAvanzarEstado, onIrACierre,
+  onAvanzarEstado, onIrACierre, onIrADocumentos,
 }: Props) {
-  const disabled = avanzandoEstado || bloqueadoPorDocs || cierreBloqueadoPorChecklist;
-
-  const btn = (
-    <Button size="sm" disabled={disabled}>
-      <ChevronRight className="h-4 w-4 mr-1" />
-      Avanzar a {siguienteEstado}
-    </Button>
-  );
-
+  // v13.142.5 — Cuando faltan docs, el botón NO se deshabilita: abre un
+  // AlertDialog explicativo. Esto reemplaza el tooltip (invisible en móvil).
   if (bloqueadoPorDocs) {
+    const trigger = (
+      <Button size="sm" disabled={avanzandoEstado}>
+        <ChevronRight className="h-4 w-4 mr-1" />
+        Avanzar a {siguienteEstado}
+      </Button>
+    );
     return (
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger asChild><span tabIndex={0}>{btn}</span></TooltipTrigger>
-          <TooltipContent>
-            <p className="text-xs">Faltan documentos para pasar a {siguienteEstado}:</p>
-            <p className="text-xs font-medium">{docsFaltantes.join(", ")}</p>
-          </TooltipContent>
+          <AlertDialog>
+            <TooltipTrigger asChild>
+              <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Faltan documentos para pasar a {siguienteEstado}</p>
+            </TooltipContent>
+            <AlertDialogContent className={dialogSize.sm}>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <FileWarning className="h-5 w-5 text-destructive" /> No se puede avanzar
+                </AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="space-y-2">
+                    <p>Para pasar a <strong>{siguienteEstado}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
+                    <ul className="list-disc list-inside text-sm">
+                      {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
+                    </ul>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cerrar</AlertDialogCancel>
+                <AlertDialogAction onClick={onIrADocumentos}>Ir a Documentos</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </Tooltip>
       </TooltipProvider>
     );
@@ -51,11 +73,14 @@ export function AvanzarEstadoButton({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span tabIndex={0} onClick={onIrACierre} className="cursor-pointer">{btn}</span>
+            <Button size="sm" onClick={onIrACierre} disabled={avanzandoEstado}>
+              <ChevronRight className="h-4 w-4 mr-1" />
+              Avanzar a {siguienteEstado}
+            </Button>
           </TooltipTrigger>
           <TooltipContent>
             <p className="text-xs">Hay pendientes administrativos.</p>
-            <p className="text-xs font-medium">Click para ver el Tab Cierre.</p>
+            <p className="text-xs font-medium">Ir al tab Cierre.</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -64,7 +89,12 @@ export function AvanzarEstadoButton({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>{btn}</AlertDialogTrigger>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" disabled={avanzandoEstado}>
+          <ChevronRight className="h-4 w-4 mr-1" />
+          Avanzar a {siguienteEstado}
+        </Button>
+      </AlertDialogTrigger>
       <AlertDialogContent className={dialogSize.sm}>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmar cambio de estado</AlertDialogTitle>
