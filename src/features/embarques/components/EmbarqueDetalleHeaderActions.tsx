@@ -27,6 +27,7 @@ interface Props {
   cierrePuedeAvanzar: boolean;
   cierreMotivoBloqueo: "rol" | "checklist" | null;
   onIrACierre: () => void;
+  onIrADocumentos: () => void;
 }
 
 export function EmbarqueDetalleHeaderActions({
