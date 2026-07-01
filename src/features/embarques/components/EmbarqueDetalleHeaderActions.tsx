@@ -103,6 +103,7 @@ interface AccionPrincipalArgs {
   cierreBloqueadoPorChecklist: boolean;
   onAvanzarEstado: () => void;
   onIrACierre: () => void;
+  onIrADocumentos: () => void;
   goEditar: () => void;
 }
 
@@ -119,6 +120,7 @@ function renderAccionPrincipal(a: AccionPrincipalArgs) {
         cierreBloqueadoPorChecklist={a.cierreBloqueadoPorChecklist}
         onAvanzarEstado={a.onAvanzarEstado}
         onIrACierre={a.onIrACierre}
+        onIrADocumentos={a.onIrADocumentos}
       />
     );
   }
