@@ -34,7 +34,7 @@ export function EmbarqueDetalleHeaderActions({
   expediente, estadoVisual, siguienteEstado, canEdit, avanzandoEstado, trackingPending,
   embarqueId, puedeReabrir, reabriendoEstado, docsFaltantes, bloqueadoPorDocs,
   onAvanzarEstado, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar, onReabrir,
-  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
+  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre, onIrADocumentos,
 }: Props) {
   const navigate = useNavigate();
   const goEditar = () => navigate(`/embarques/${embarqueId}/editar`);
@@ -46,7 +46,7 @@ export function EmbarqueDetalleHeaderActions({
   const accionPrincipal = renderAccionPrincipal({
     canEdit, siguienteEstado, ocultarAvance, estadoVisual, avanzandoEstado,
     bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
-    onAvanzarEstado, onIrACierre, goEditar,
+    onAvanzarEstado, onIrACierre, onIrADocumentos, goEditar,
   });
 
   return (
