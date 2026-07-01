@@ -43,7 +43,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
       if (cancelado || !row) return;
       const recargos = await fetchRecargosDeTarifa(row.id);
       if (cancelado) return;
-      const nuevas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad: numContenedores });
+      const nuevas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad: Math.max(1, numContenedores || 1) });
       setFilas(prev => (prev.length > 0 ? prev : nuevas));
       precargadaRef.current = tarifaId;
     })();

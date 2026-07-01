@@ -41,13 +41,18 @@ export function buildCostosDesdeTarifa({
   const proveedor = tarifa.naviera_nombre ?? "";
   const unidad = "contenedor";
 
+  // 13.142.8: la BD tiene un check `cotizacion_costos_cantidad_pos` que exige
+  // `cantidad > 0`. Cuando el wizard aún no captura contenedores llega 0 y la
+  // inserción explota. Normalizamos siempre a mínimo 1.
+  const qty = Number.isFinite(cantidad) && cantidad >= 1 ? cantidad : 1;
+
   const fleteBase = Number(tarifa.flete_base ?? 0);
   if (fleteBase > 0) {
     filas.push({
       concepto: `Flete marítimo (${tarifa.tipo_contenedor_nombre ?? ""})`.trim(),
       moneda: "USD",
       proveedor,
-      cantidad,
+      cantidad: qty,
       costo_unitario: fleteBase,
       precio_venta: aplicarMarkup(fleteBase, markup),
       unidad_medida: unidad,
@@ -64,7 +69,7 @@ export function buildCostosDesdeTarifa({
       concepto: `${r.concepto}${ladoTxt}`,
       moneda: "USD",
       proveedor,
-      cantidad,
+      cantidad: qty,
       costo_unitario: monto,
       precio_venta: aplicarMarkup(monto, markup),
       unidad_medida: unidad,

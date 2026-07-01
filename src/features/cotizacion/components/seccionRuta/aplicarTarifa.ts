@@ -88,7 +88,8 @@ function autoCargarCostos(row: TopTarifaRow, options: AplicarTarifaOptions): voi
   if (!options.onAutocargaCostos) return;
   const cb = options.onAutocargaCostos;
   const markup = options.markup ?? 0.15;
-  const cantidad = options.cantidad ?? 1;
+  const rawCantidad = options.cantidad ?? 1;
+  const cantidad = Number.isFinite(rawCantidad) && rawCantidad >= 1 ? rawCantidad : 1;
   void fetchRecargosDeTarifa(row.id)
     .then((recargos) => {
       const filas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad });
