@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.6] - 2026-07-01
+- **fix(embarques) — "Origen de costos" muestra etiqueta legible en lugar de UUID.** En el tab Resumen del detalle de embarque los campos **Tarifa cotizada** y **Tarifa aplicada** mostraban el UUID crudo (ej. `fda4ff14-709b-…`), inútil para el usuario. Ahora resuelven contra `costeo_tarifas` y muestran `NAVIERA · ORIGEN → DESTINO` en la primera línea y `Contenedor · Vigencia dd/MM/yy – dd/MM/yy` en la segunda; el UUID queda disponible como `title` para soporte. Si la tarifa fue borrada se muestra "Tarifa no encontrada · …últimos8". Cambios: nuevo `fetchTarifasResumen` en `services/tarifas.ts`, hook `useTarifasResumen`, y refactor de `OrigenCostosSection.tsx`.
+
 ## [13.142.5] - 2026-07-01
 - **fix(embarques) — botón "Avanzar estado" ahora explica el bloqueo en móvil.** Cuando faltaban documentos el botón se deshabilitaba y la razón sólo se veía por tooltip (invisible en touch). Ahora, si `bloqueadoPorDocs`, el botón queda habilitado y al tocarlo abre un `AlertDialog` con la lista de documentos faltantes y un CTA "Ir a Documentos". El tooltip se conserva como refuerzo en desktop. Cambios en `AvanzarEstadoButton.tsx` + prop `onIrADocumentos` propagada por `EmbarqueDetalleHeaderActions.tsx` y `EmbarqueDetalleHeader.tsx`.
 
