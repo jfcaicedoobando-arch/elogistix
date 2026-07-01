@@ -94,6 +94,8 @@ export function initSentry(): void {
       // Web Locks API del cliente Supabase entre pestañas — ruido conocido.
       /AbortError: Lock broken by another request/i,
       /Lock broken by another request with the 'steal' option/i,
+      // 13.142.8: credenciales incorrectas en login — es UX esperada, no bug.
+      /Invalid login credentials/i,
     ],
     beforeSend(event, hint) {
       if (shouldDropSentryEvent(event, hint)) return null;
