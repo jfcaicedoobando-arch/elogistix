@@ -73,6 +73,64 @@ export async function fetchCosteoTarifas(
   return ((data ?? []) as unknown as RawRow[]).map(mapRow);
 }
 
+// ─── Resumen ligero por IDs (para "Origen de costos" del embarque) ─────────
+export interface TarifaResumen {
+  id: string;
+  naviera_nombre: string;
+  puerto_origen_nombre: string;
+  puerto_destino_nombre: string;
+  tipo_contenedor_nombre: string;
+  vigente_desde: string | null;
+  vigente_hasta: string | null;
+}
+
+interface RawResumenRow {
+  id: string;
+  vigente_desde: string | null;
+  vigente_hasta: string | null;
+  navieras?: { name: string } | null;
+  tipos_contenedor?: { name: string } | null;
+  costeo_rutas?: {
+    puerto_origen?: { name: string } | null;
+    puerto_destino?: { name: string } | null;
+  } | null;
+}
+
+export async function fetchTarifasResumen(
+  ids: string[],
+): Promise<Record<string, TarifaResumen>> {
+  const unicos = Array.from(new Set(ids.filter((x): x is string => !!x)));
+  if (unicos.length === 0) return {};
+  const { data, error } = await supabase
+    .from("costeo_tarifas")
+    .select(`
+      id, vigente_desde, vigente_hasta,
+      navieras:naviera_id(name),
+      tipos_contenedor:tipo_contenedor_id(name),
+      costeo_rutas:ruta_id(
+        puerto_origen:puertos!costeo_rutas_puerto_origen_id_fkey(name),
+        puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name)
+      )
+    `)
+    .in("id", unicos);
+  if (error) throw error;
+  // SAFE-CAST: joins anidados fuerzan `never` en el cliente generado.
+  const rows = (data ?? []) as unknown as RawResumenRow[];
+  const map: Record<string, TarifaResumen> = {};
+  for (const r of rows) {
+    map[r.id] = {
+      id: r.id,
+      naviera_nombre: r.navieras?.name ?? "—",
+      tipo_contenedor_nombre: r.tipos_contenedor?.name ?? "—",
+      puerto_origen_nombre: r.costeo_rutas?.puerto_origen?.name ?? "—",
+      puerto_destino_nombre: r.costeo_rutas?.puerto_destino?.name ?? "—",
+      vigente_desde: r.vigente_desde,
+      vigente_hasta: r.vigente_hasta,
+    };
+  }
+  return map;
+}
+
 export interface TarifaRecargoInput {
   concepto: string;
   lado?: "origen" | "destino";
