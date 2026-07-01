@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip, TooltipTrigger, TooltipContent,
+} from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
