@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { GitBranch } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
+import { useTarifasResumen } from "@/features/costeo/hooks/useTarifasResumen";
+import type { TarifaResumen } from "@/features/costeo/services/tarifas";
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
