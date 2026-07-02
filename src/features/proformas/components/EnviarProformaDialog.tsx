@@ -6,7 +6,7 @@
  * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
  */
 import { useEffect, useState } from "react";
-import { Loader2, Mail, Copy, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
 import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
 import { DestinatariosRecientesChips } from "./DestinatariosRecientesChips";
+import { EnvioProformaExitoso } from "./EnvioProformaExitoso";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -184,25 +185,9 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
         )}
 
         {enviado && (
-          <div className="space-y-3 py-2">
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="font-semibold">Correo {enviado.estado}</span>
-            </div>
-            <div>
-              <Label className="text-xs uppercase text-muted-foreground">Enlace del portal</Label>
-              <div className="flex gap-2 mt-1">
-                <Input readOnly value={enviado.enlace_portal} className="text-xs" />
-                <Button variant="outline" size="icon" onClick={() => copiar(enviado.enlace_portal)} aria-label="Copiar enlace">
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Puedes compartir este enlace por WhatsApp u otro canal si el cliente no recibe el correo.
-              </p>
-            </div>
-          </div>
+          <EnvioProformaExitoso estado={enviado.estado} enlacePortal={enviado.enlace_portal} onCopiar={copiar} />
         )}
+
 
         <DialogFooter>
           {!enviado ? (
