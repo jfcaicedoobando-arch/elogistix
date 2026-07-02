@@ -8,7 +8,11 @@
  * También expone el `ultimo` envío para prefill inicial de "Para" y "CC".
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchEnviosDestinatariosPorCliente,
+  fetchContactosEmailPorCliente,
+} from "@/features/proformas/services";
+
 
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
