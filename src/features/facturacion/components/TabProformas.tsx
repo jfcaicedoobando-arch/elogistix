@@ -18,16 +18,13 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
 
   const columns = useMemo(
     () => buildProformasColumns({
-      descargar: c.descargar,
-      downloadingId: c.downloadingId,
-      onMarcarFacturada: c.setProformaAFacturar,
       selection: {
         selectedIds: c.selectedIds,
         toggle: c.toggleSelected,
         isSelectable: c.isConvertible,
       },
     }),
-    [c.descargar, c.downloadingId, c.setProformaAFacturar, c.selectedIds, c.toggleSelected, c.isConvertible],
+    [c.selectedIds, c.toggleSelected, c.isConvertible],
   );
 
   const seleccionados = c.selectedProformas.length;
