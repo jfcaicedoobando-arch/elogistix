@@ -109,7 +109,7 @@ export default function ProformaDetalle() {
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold font-mono tabular-nums">{proforma.numero}</h1>
-            <EstadoBadges estadoRev={estadoRev} facturada={facturada} estadoCliente={estadoCliente} />
+            <EstadoBadges estadoRev={estadoRev} estadoCliente={estadoCliente} tieneFactura={!!factura} />
           </div>
           <p className="text-sm text-muted-foreground mt-1 truncate" title={proforma.cliente_nombre ?? ''}>
             {proforma.cliente_nombre} • Exp: <span className="font-mono">{proforma.expediente}</span>
