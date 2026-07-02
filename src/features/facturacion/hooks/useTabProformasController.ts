@@ -14,7 +14,10 @@ import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProform
 export type { FiltroEstadoProforma };
 
 function isConvertible(p: ProformaConFactura): boolean {
-  return (p.estado_proforma ?? "pendiente") !== "facturada";
+  if ((p.estado_proforma ?? "pendiente") === "facturada") return false;
+  // SAFE-CAST: `estado_cliente` es columna nueva, aún no está en los tipos generados.
+  const estadoCliente = (p as unknown as { estado_cliente?: string }).estado_cliente;
+  return estadoCliente === "aceptada";
 }
 
 export function useTabProformasController(opts?: {

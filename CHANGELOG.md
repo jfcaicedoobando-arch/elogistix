@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.145.7] - 2026-07-02
+- **feat(proformas) — flujo directo aceptada → factura.** Se elimina el gate `estado_revision = 'aprobada'` del botón "Convertir a factura" en `AccionesProforma.tsx`. Ahora basta con que el cliente haya aceptado la proforma (portal público o aceptación manual desde el sistema) para que el usuario con `canEmitirFactura` pueda pasar directo al borrador de factura. El hint "Para facturar, el cliente debe aceptar la proforma" se conserva cuando `estado_cliente ≠ aceptada`. La fusión masiva en `TabProformas` (`useTabProformasController.isConvertible`) exige ahora `estado_cliente = 'aceptada'` además de no facturada. La RPC sigue validando permisos por rol.
+
 ## [13.145.6] - 2026-07-02
 - **fix(sentry) — ruido de "Convertir a factura" por permisos.** El issue Sentry `JAVASCRIPT-REACT-1M` (48 eventos, 6 usuarios) era un `P0001: No tienes permiso para convertir proformas a factura` disparado por usuarios con rol `coordinador_logistico` que veían el botón. Ahora `AccionesProforma.tsx` y `TabProformas.tsx` gatean el botón por `usePermissions().canEmitirFactura` (admin_org, super_admin, contador). Además, `src/lib/query/queryClient.ts` deja los errores `P0001` como breadcrumb en lugar de `captureException` — son validaciones de negocio esperadas, no bugs. La RPC sigue como defensa en profundidad.
 
