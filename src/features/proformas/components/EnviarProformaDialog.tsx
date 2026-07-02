@@ -58,6 +58,9 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState<EnvioOk | null>(null);
   const { data: memoria } = useDestinatariosSugeridos(proforma.cliente_id);
+  const { ocultos, isOculto, ocultar, restaurar, restaurarVarios } = useEmailsOcultos(proforma.cliente_id);
+
+  const sugerenciasVisibles = (memoria?.sugerencias ?? []).filter((e) => !isOculto(e));
 
   useEffect(() => {
     if (open) {
