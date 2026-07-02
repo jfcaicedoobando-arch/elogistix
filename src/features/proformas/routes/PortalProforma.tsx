@@ -19,7 +19,7 @@ function fechaMx(iso: string | null | undefined): string {
   } catch { return "—"; }
 }
 
-type ProformaData = NonNullable<ReturnType<typeof usePortalProforma>["data"]>["proforma"];
+type ProformaData = NonNullable<NonNullable<ReturnType<typeof usePortalProforma>["data"]>["proforma"]>;
 
 function AlertaRespondida({ proforma }: { proforma: ProformaData }) {
   const aceptada = proforma.estado_cliente === "aceptada";
