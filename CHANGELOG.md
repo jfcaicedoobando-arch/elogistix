@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.144.7] - 2026-07-02
+- **fix(ui) — badge de estado en tabla de proformas reflejaba solo el ciclo de facturación.** La columna "Estado" mostraba "Pendiente" para toda proforma no facturada, aunque el cliente ya la hubiera aceptado (visible al hacer drill-down). Ahora el badge combina `estado_proforma` y `estado_cliente` con prioridad: Facturada (verde) > Rechazada (rojo) > Aceptada (azul) > Pendiente cliente (ámbar). El orden de la columna usa un rank por criticidad. Filtros y counts (Todas/Pendiente/Facturada) no cambian.
+
 ## [13.144.6] - 2026-07-02
 - **fix(ci) — arreglos post-proformas que dejaron rojos los tests de arquitectura.** Tres correcciones sin cambios funcionales: (1) los dos `as unknown as` en `src/features/proformas/services/portalPublico.ts` (RPCs públicas `portal_obtener_proforma_por_token` y `portal_responder_por_token`, no reflejadas en los tipos generados) ahora llevan marcador `// SAFE-CAST:` con razón — desbloquea `architecture.test.ts`, `safe-casts-services.test.ts` y `audit-report.test.ts`. (2) `EnviarProformaDialog` y `RespuestaClienteManualDialog` reemplazan `toast({ variant: "destructive" })` por `notifyError(...)` con `method` codes únicos, cumpliendo la regla `error-toasts-use-notifyError`. (3) Se agrega `supabase/functions/enviar-proforma-email/index.ts` a la lista `CRITICAL` de `sentry-edge-wrapping.test.ts` (la función ya se envuelve con `wrapEdgeHandler`, faltaba el registro), desbloqueando `sentry-edge-coverage.test.ts`.
 
