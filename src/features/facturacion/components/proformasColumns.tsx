@@ -99,15 +99,19 @@ export function buildProformasColumns({
     {
       id: "estado",
       header: "Estado",
-      accessorFn: (p) => p.estado_proforma ?? "pendiente",
+      // Prioridad: facturada > rechazada > aceptada > pendiente cliente.
+      // Se ordena por un rank numérico para que agrupe por criticidad.
+      accessorFn: (p) => estadoRank(p),
       enableSorting: true,
-      sortingFn: sortByString<ProformaConFactura>((p) => p.estado_proforma ?? "pendiente"),
-      meta: { width: "w-[110px]" },
+      sortingFn: (a, b) => estadoRank(a.original) - estadoRank(b.original),
+      meta: { width: "w-[140px]" },
       cell: ({ row }) => {
-        const estado = row.original.estado_proforma ?? "pendiente";
-        return estado === "facturada"
-          ? <Badge variant="success">Facturada</Badge>
-          : <Badge variant="warning">Pendiente</Badge>;
+        const p = row.original;
+        if (p.estado_proforma === "facturada") return <Badge variant="success">Facturada</Badge>;
+        const ec = (p as { estado_cliente?: string }).estado_cliente ?? "pendiente";
+        if (ec === "rechazada") return <Badge variant="destructive">Rechazada</Badge>;
+        if (ec === "aceptada") return <Badge variant="info">Aceptada</Badge>;
+        return <Badge variant="warning">Pendiente cliente</Badge>;
       },
     },
   );
