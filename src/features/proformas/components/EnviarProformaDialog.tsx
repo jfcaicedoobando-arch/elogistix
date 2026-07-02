@@ -1,15 +1,12 @@
 /**
  * Dialog para enviar la proforma al cliente por email.
  *
- * Fase 1 (MVP): registra el envío en `proforma_envios`, actualiza `enviada_at`
- * y abre `mailto:` con asunto/cuerpo prellenados. El usuario adjunta el PDF
- * desde su cliente de correo (previamente descargado con "Descargar PDF").
- *
- * Fase 2 (pendiente): sustituir mailto por edge function con Resend + adjuntar
- * PDF + botones en el correo con enlace al portal del cliente.
+ * Fase 2: invoca la edge function `enviar-proforma-email`, que genera un
+ * token público, encola el correo con plantilla y registra el envío en
+ * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
  */
 import { useEffect, useState } from "react";
-import { Loader2, Mail, Info } from "lucide-react";
+import { Loader2, Mail, Copy, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,10 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { registrarEnvioProforma } from "@/features/proformas/services/registrarEnvio";
+import { supabase } from "@/integrations/supabase/client";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -34,21 +30,19 @@ interface Props {
   proforma: ProformaDetalleFull;
 }
 
-function defaultAsunto(p: ProformaDetalleFull): string {
-  return `Proforma ${p.numero ?? ""} — ${p.cliente_nombre ?? ""}`.trim();
-}
-
 function defaultMensaje(p: ProformaDetalleFull): string {
   return [
     `Estimado(a) ${p.cliente_nombre ?? "cliente"},`,
     "",
-    `Adjunto encontrará la proforma ${p.numero ?? ""} correspondiente al embarque ${p.expediente ?? ""}.`,
+    `Compartimos la proforma ${p.numero ?? ""} correspondiente al embarque ${p.expediente ?? ""} para su revisión.`,
     "",
-    "Por favor responda a este correo confirmando aceptación o indicando ajustes requeridos.",
+    "Desde el botón en el correo podrás aceptarla o rechazarla directamente.",
     "",
     "Saludos cordiales,",
   ].join("\n");
 }
+
+interface EnvioOk { enlace_portal: string; estado: string }
 
 export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const { toast } = useToast();
@@ -58,16 +52,20 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const [asunto, setAsunto] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
+  const [enviado, setEnviado] = useState<EnvioOk | null>(null);
 
   useEffect(() => {
     if (open) {
-      setAsunto(defaultAsunto(proforma));
+      setAsunto(`Proforma ${proforma.numero ?? ""} para su aprobación`.trim());
       setMensaje(defaultMensaje(proforma));
+      setEnviado(null);
+      setDestinatarios("");
+      setCc("");
     }
   }, [open, proforma]);
 
   async function handleEnviar() {
-    const to = destinatarios.split(/[,;\s]+/).filter(Boolean);
+    const to = destinatarios.split(/[,;\s]+/).filter(Boolean).map((email) => ({ email }));
     const ccList = cc.split(/[,;\s]+/).filter(Boolean);
     if (to.length === 0) {
       toast({ title: "Ingresa al menos un destinatario", variant: "destructive" });
@@ -75,28 +73,32 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     }
     setLoading(true);
     try {
-      const res = await registrarEnvioProforma({
-        proformaId: proforma.id,
-        organizationId: proforma.organization_id,
-        destinatarios: to,
-        cc: ccList,
-        asunto,
-        mensaje,
-      });
-      toast({ title: "Envío registrado", description: "Abriendo tu cliente de correo…" });
-      window.location.href = res.mailtoUrl;
+      const { data, error } = await supabase.functions.invoke<{ success: boolean; enlace_portal: string; estado: string; error?: string }>(
+        "enviar-proforma-email",
+        { body: { proforma_id: proforma.id, destinatarios: to, cc: ccList, asunto, mensaje } },
+      );
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error ?? "El envío no se completó.");
+      setEnviado({ enlace_portal: data.enlace_portal, estado: data.estado });
+      toast({ title: "Correo enviado", description: `Estado: ${data.estado}` });
       await qc.invalidateQueries({ queryKey: ["proformas"] });
-      onOpenChange(false);
-      setDestinatarios("");
-      setCc("");
     } catch (e) {
       toast({
-        title: "No se pudo registrar el envío",
+        title: "No se pudo enviar",
         description: (e as Error).message,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function copiar(link: string) {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast({ title: "Enlace copiado" });
+    } catch {
+      /* noop */
     }
   }
 
@@ -109,55 +111,76 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
             Enviar proforma al cliente
           </DialogTitle>
           <DialogDescription>
-            Se registrará el envío en el historial y se abrirá tu cliente de correo con el
-            mensaje prellenado. Adjunta el PDF que descargaste desde el botón "Descargar PDF".
+            El cliente recibirá un correo con un enlace seguro para aceptar o rechazar la proforma.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="dest">Para *</Label>
-            <Input
-              id="dest"
-              value={destinatarios}
-              onChange={(e) => setDestinatarios(e.target.value)}
-              placeholder="cliente@empresa.com, otro@empresa.com"
-            />
+        {!enviado && (
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="dest">Para *</Label>
+              <Input
+                id="dest"
+                value={destinatarios}
+                onChange={(e) => setDestinatarios(e.target.value)}
+                placeholder="cliente@empresa.com, otro@empresa.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="cc">CC (opcional)</Label>
+              <Input
+                id="cc"
+                value={cc}
+                onChange={(e) => setCc(e.target.value)}
+                placeholder="contabilidad@empresa.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="asunto">Asunto</Label>
+              <Input id="asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="msg">Mensaje</Label>
+              <Textarea id="msg" value={mensaje} onChange={(e) => setMensaje(e.target.value)} rows={6} />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="cc">CC (opcional)</Label>
-            <Input
-              id="cc"
-              value={cc}
-              onChange={(e) => setCc(e.target.value)}
-              placeholder="contabilidad@empresa.com"
-            />
+        )}
+
+        {enviado && (
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="font-semibold">Correo {enviado.estado}</span>
+            </div>
+            <div>
+              <Label className="text-xs uppercase text-muted-foreground">Enlace del portal</Label>
+              <div className="flex gap-2 mt-1">
+                <Input readOnly value={enviado.enlace_portal} className="text-xs" />
+                <Button variant="outline" size="icon" onClick={() => copiar(enviado.enlace_portal)} aria-label="Copiar enlace">
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Puedes compartir este enlace por WhatsApp u otro canal si el cliente no recibe el correo.
+              </p>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="asunto">Asunto</Label>
-            <Input id="asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="msg">Mensaje</Label>
-            <Textarea id="msg" value={mensaje} onChange={(e) => setMensaje(e.target.value)} rows={7} />
-          </div>
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              Recuerda adjuntar el PDF descargado antes de enviar. En una próxima iteración
-              haremos el envío automático con PDF adjunto y enlace al portal del cliente.
-            </AlertDescription>
-          </Alert>
-        </div>
+        )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button onClick={handleEnviar} disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
-            Registrar y abrir correo
-          </Button>
+          {!enviado ? (
+            <>
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+                Cancelar
+              </Button>
+              <Button onClick={handleEnviar} disabled={loading}>
+                {loading && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Enviar correo
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => onOpenChange(false)}>Cerrar</Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
