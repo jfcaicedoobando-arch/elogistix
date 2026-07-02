@@ -110,35 +110,6 @@ export function buildProformasColumns({
           : <Badge variant="warning">Pendiente</Badge>;
       },
     },
-    {
-      id: "acciones",
-      header: "Acciones",
-      meta: { width: "w-[200px]" },
-      cell: ({ row }) => {
-        const p = row.original;
-        const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
-        const permitirMarcarManual = puedeMarcarManualmente(p.created_at);
-        return (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline" size="sm" disabled={downloadingId === p.id}
-              onClick={(e) => { e.stopPropagation(); descargar(p); }}
-            >
-              <Download className="h-3.5 w-3.5 mr-1" /> PDF
-            </Button>
-            {!facturada && permitirMarcarManual && (
-              <Button
-                variant="default" size="sm"
-                onClick={(e) => { e.stopPropagation(); onMarcarFacturada(p); }}
-                title="Flujo manual histórico (deprecado para proformas nuevas)"
-              >
-                <FileCheck2 className="h-3.5 w-3.5 mr-1" /> Facturada
-              </Button>
-            )}
-          </div>
-        );
-      },
-    },
   );
 
   return defineColumns<ProformaConFactura>(cols);
