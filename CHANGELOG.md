@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.12] - 2026-07-02
+- **fix(RLS/facturación) — `admin_org` no podía aprobar/consolidar proformas ni tocar facturas.** Diagnóstico de PRO-2026-0949: la fila seguía `estado_revision=pendiente` con `updated_at == created_at` aunque el usuario clickeó "Aprobar individual". Causa raíz: las policies `Tenant CRUD` de `proformas`, `proforma_conceptos_consolidados`, `conceptos_venta` y `facturas` solo listaban `admin`/`operador`/`super_admin` (y algunas `contador`), omitiendo `admin_org`. PostgREST filtra silenciosamente (0 filas ≠ error), así que el toast decía "aprobada" mientras la BD ignoraba el UPDATE. Se amplían las 4 policies para incluir `admin_org` + `contador` de forma uniforme. Además, `aprobarProformas` ahora usa `.select("id")` y valida que el nº de filas actualizadas coincida con lo solicitado; si RLS vuelve a filtrar, se lanza error visible en lugar de un falso éxito. Tests de regresión agregados.
+
 ## [13.142.11] - 2026-07-02
 - **fix(facturación) — listado `/proformas` ahora incluye pendientes.** El listado usaba `fetchProformasAprobadas` y ocultaba las proformas en estado `pendiente` (ej. PRO-2026-0949 del embarque ELIMP00285 no aparecía). Se agrega `fetchProformasTodas(organizationId)` que trae todas las proformas de la org sin filtrar por `estado_revision`; `useProformas()` ahora la consume para que el filtro UI "Todas / Pendientes / Facturadas" funcione con datos reales. La aprobación/consolidación sigue viviendo en **Facturación → Por Timbrar**.
 

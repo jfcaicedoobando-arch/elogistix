@@ -87,9 +87,21 @@ export async function eliminarProforma(params: EliminarProformaParams): Promise<
 
 export async function aprobarProformas(proformaIds: string[]): Promise<void> {
   if (proformaIds.length === 0) throw new Error("Selecciona al menos una proforma");
-  const { error } = await supabase
+  // `.select("id")` es intencional: si RLS filtra silenciosamente, Supabase
+  // devuelve `data: []` sin `error`. Verificamos que se hayan actualizado
+  // exactamente las filas solicitadas para no dar falsos positivos en la UI.
+  const { data, error } = await supabase
     .from("proformas")
     .update({ estado_revision: "aprobada" })
-    .in("id", proformaIds);
+    .in("id", proformaIds)
+    .select("id");
   if (error) throw error;
+  const updated = data?.length ?? 0;
+  if (updated !== proformaIds.length) {
+    throw new Error(
+      `No se pudo aprobar ${proformaIds.length - updated} de ${proformaIds.length} proforma(s). ` +
+        "Verifica que tengas permisos suficientes (rol Admin / Admin Org / Contador / Operador).",
+    );
+  }
 }
+
