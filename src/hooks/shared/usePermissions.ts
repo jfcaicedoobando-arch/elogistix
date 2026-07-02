@@ -162,6 +162,7 @@ export function usePermissions() {
   const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
   const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
   const canHandoffCotizacion = has(HANDOFF_COTIZACION, roleStr);
+  const canResponderProformaManual = has(RESPONDER_PROFORMA_MANUAL, roleStr);
 
   const canEdit = canEditOperations || canEditFinance;
   const isAdmin = canAdminTenant;
