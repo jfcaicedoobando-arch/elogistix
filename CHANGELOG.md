@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.144.2] - 2026-07-02
+- **refactor(proformas) — badges de estado más claros en el detalle.** Se elimina el badge "Pago pendiente" del header de la proforma: una proforma aún no genera obligación de cobro (eso vive en la factura). El estado de facturación ya se ve en la tarjeta "Factura asociada" cuando existe. Además, "Cliente sin responder" se renombra a "Esperando al cliente" y solo se muestra cuando la proforma está aprobada y aún no tiene factura, para reducir ruido visual.
+
 ## [13.144.1] - 2026-07-02
 - **refactor(proformas) — elimina columna de acciones del listado.** La tabla de proformas ahora solo muestra información y estado. La descarga de PDF y el flujo manual "Marcar como facturada" quedan accesibles únicamente desde el detalle de la proforma (`/proformas/:id`), al que se llega haciendo clic en la fila. Reduce ruido visual y centraliza las acciones en el contexto del detalle.
 
