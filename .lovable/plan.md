@@ -1,25 +1,39 @@
-## Problema
+## Objetivo
 
-La columna **Estado** de la tabla de proformas muestra solo `estado_proforma` (que solo tiene dos valores: `pendiente` → aún no facturada, `facturada` → ya se generó factura). Por eso PRO-093 aparece como "Pendiente" aunque el cliente ya la aceptó: la aceptación del cliente vive en otro campo (`estado_cliente`: `pendiente` / `aceptada` / `rechazada`) que sí se lee en el detalle.
+Marcar como **aceptadas** todas las proformas de la organización **Elogistix** que actualmente están "pendiente de cliente" y cuya fecha sea anterior al **1 de julio de 2026**. Son datos históricos migrados de una versión previa donde no existía el flujo de aprobación.
 
-## Solución (solo UI)
+## Pasos
 
-Enriquecer el badge de la columna Estado en `src/features/facturacion/components/proformasColumns.tsx` con lógica por prioridad:
+1. **Diagnóstico (SELECT)** — Contar cuántas proformas cumplen el criterio antes de tocar nada:
+   - `organization_id` = el de Elogistix (lookup por nombre).
+   - `estado_cliente = 'pendiente'`.
+   - `fecha < 2026-07-01`.
+   - `deleted_at IS NULL`.
+   
+   Esto sirve para que confirmes el número antes de ejecutar el UPDATE.
 
-1. `estado_proforma === "facturada"` → **Facturada** (verde)
-2. `estado_cliente === "rechazada"` → **Rechazada** (rojo)
-3. `estado_cliente === "aceptada"` → **Aceptada** (azul/success suave)
-4. resto → **Pendiente cliente** (ámbar)
+2. **Actualización masiva (UPDATE vía tool `insert`)** — Sobre las filas que cumplen el filtro anterior:
+   - `estado_cliente = 'aceptada'`.
+   - `fecha_respuesta_cliente = fecha` de la proforma (para mantener consistencia histórica).
+   - `respondido_por = 'migración histórica pre-julio 2026'` en el campo de nota/comentario correspondiente (si existe columna de nota; si no, solo la fecha).
 
-Así el badge refleja el estado real que el usuario ve al entrar al detalle.
+3. **Verificación (SELECT)** — Reconteo post-update: debe quedar 0 pendientes con fecha < 2026-07-01 en Elogistix.
 
-### Detalles
+4. **Bitácora + versión** — Registro en `CHANGELOG.md` y bump de `APP_VERSION` (patch) documentando la corrección de datos históricos.
 
-- Solo se toca el `cell` y el `accessorFn`/`sortingFn` de la columna `estado` para que ordene por la nueva prioridad.
-- **No** se cambian los tabs de filtro superiores (Todas / Pendiente / Facturada) ni los `counts` — siguen refiriendo al ciclo de facturación, que es lo que usa el equipo contable. Solo cambia el badge visible por fila.
-- Bump de versión + entrada en `CHANGELOG.md`.
+## Alcance / Restricciones
 
-### Fuera de alcance
+- **Solo Elogistix.** No toca otras organizaciones.
+- **Solo `estado_cliente = 'pendiente'`.** Proformas ya rechazadas o aceptadas se dejan intactas.
+- **Solo fecha < 2026-07-01.** Las proformas de julio en adelante siguen su flujo normal de aprobación.
+- **No se envían emails ni se generan facturas automáticamente** — solo se cambia el estado de aprobación de cliente.
+- No se altera el trigger de conversión a factura; queda a discreción del equipo convertir cada una cuando corresponda.
 
-- No se modifica la lógica de negocio, RPCs, ni el estado en BD.
-- No se agregan nuevos filtros por `estado_cliente` (se puede hacer en un follow-up si lo pides).
+## Detalles técnicos
+
+- Tabla afectada: `public.proformas`.
+- Se usará la tool `supabase--insert` (permite UPDATE de datos existentes).
+- El `organization_id` se resolverá con un subquery: `(SELECT id FROM organizations WHERE nombre ILIKE 'elogistix' LIMIT 1)`.
+- Antes del UPDATE ejecutaré un `SELECT COUNT(*)` con los mismos filtros usando `supabase--read_query` para reportarte el número exacto de filas afectadas.
+
+¿Procedo?

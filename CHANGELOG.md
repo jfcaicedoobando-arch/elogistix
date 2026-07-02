@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.144.8] - 2026-07-02
+- **data(proformas) — migración histórica Elogistix.** 319 proformas de la organización Elogistix con `fecha_emision < 2026-07-01` que quedaron en `estado_cliente = 'pendiente'` (datos generados antes de que existiera el flujo de aprobación de cliente) se marcaron como `aceptada`, con `aceptada_at = fecha_emision` y `aceptada_por = 'migración histórica pre-julio 2026'`. No se enviaron emails ni se generaron facturas; solo se corrige el estado de aprobación. Otras organizaciones y proformas posteriores a julio no fueron tocadas.
+
 ## [13.144.7] - 2026-07-02
 - **fix(ui) — badge de estado en tabla de proformas reflejaba solo el ciclo de facturación.** La columna "Estado" mostraba "Pendiente" para toda proforma no facturada, aunque el cliente ya la hubiera aceptado (visible al hacer drill-down). Ahora el badge combina `estado_proforma` y `estado_cliente` con prioridad: Facturada (verde) > Rechazada (rojo) > Aceptada (azul) > Pendiente cliente (ámbar). El orden de la columna usa un rank por criticidad. Filtros y counts (Todas/Pendiente/Facturada) no cambian.
 
