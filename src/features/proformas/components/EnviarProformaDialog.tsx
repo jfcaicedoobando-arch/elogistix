@@ -97,6 +97,8 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error ?? "El envío no se completó.");
       setEnviado({ enlace_portal: data.enlace_portal, estado: data.estado });
+      // Reactivar sugerencias para los correos que el usuario acabó usando.
+      restaurarVarios([...to.map((t) => t.email), ...ccList]);
       toast({ title: "Correo enviado", description: `Estado: ${data.estado}` });
       await qc.invalidateQueries({ queryKey: ["proformas"] });
     } catch (e) {
