@@ -12,12 +12,13 @@ vi.mock("@/hooks/shared", async () => {
 });
 
 const aprobadas = [{ id: "p1", numero: "P-001", estado_proforma: "aprobada" }];
-const fetchProformasAprobadas = vi.fn().mockResolvedValue(aprobadas);
+const fetchProformasTodas = vi.fn().mockResolvedValue(aprobadas);
 const crearProforma = vi.fn().mockResolvedValue({ id: "prof-1", numero: "P-1", embarque_id: "e-1" });
 
 vi.mock("@/features/proformas/services", () => ({
   fetchProformasEmbarque: vi.fn().mockResolvedValue([]),
-  fetchProformasAprobadas: (...args: unknown[]) => fetchProformasAprobadas(...args),
+  fetchProformasAprobadas: vi.fn().mockResolvedValue([]),
+  fetchProformasTodas: (...args: unknown[]) => fetchProformasTodas(...args),
   fetchProformasPendientes: vi.fn().mockResolvedValue([]),
   crearProforma: (...args: unknown[]) => crearProforma(...args),
   aprobarProformas: vi.fn().mockResolvedValue(undefined),
