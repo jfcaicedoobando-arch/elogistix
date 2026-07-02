@@ -35,7 +35,6 @@ export function useTabProformasState(
   const counts = useMemo(
     () => ({
       todas: proformas.length,
-      pendiente: proformas.filter((p) => (p.estado_proforma ?? "pendiente") === "pendiente").length,
       facturada: proformas.filter((p) => p.estado_proforma === "facturada").length,
     }),
     [proformas],
