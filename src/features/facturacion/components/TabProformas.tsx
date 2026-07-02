@@ -10,6 +10,7 @@ import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
 import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
+import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
