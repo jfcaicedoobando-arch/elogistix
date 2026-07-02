@@ -111,6 +111,8 @@ export default function FacturaDetalle() {
         onTimbrar={() => setTimbrarOpen(true)}
         onEnviarEmail={() => setEnviarOpen(true)}
         onDownload={handleDownload}
+        onEliminarBorrador={puedeEliminarBorrador ? () => setEliminarOpen(true) : undefined}
+        eliminando={eliminando}
       />
 
       {canEdit && !sinTimbrar && factura.estado === "Emitida" && (
