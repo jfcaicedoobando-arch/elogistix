@@ -17,6 +17,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
   const navigate = useNavigate();
   const c = useTabProformasController({ isInRange });
   const { canEmitirFactura } = usePermissions();
+  const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
 
   const columns = useMemo(
     () => buildProformasColumns({
