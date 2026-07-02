@@ -161,9 +161,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
   const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
 
+  // v13.146.0 — el `numero` interno se asigna aquí, no al crear el borrador.
+  // FacturAPI es source of truth para folio y serie. El formato mantiene
+  // `<serie><folio>` para compatibilidad con reportes/búsquedas existentes.
+  const numeroFinal = `${serieTimbrada}${folio}`;
   const { error: updErr } = await supabase
     .from("facturas")
     .update({
+      numero: numeroFinal,
       facturapi_id: facturapiId,
       uuid_fiscal: uuid,
       folio_fiscal: folio,

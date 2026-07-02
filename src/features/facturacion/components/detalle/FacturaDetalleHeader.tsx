@@ -20,11 +20,16 @@ interface Props {
 export function FacturaDetalleHeader(props: Props) {
   const { numero, estado, sinTimbrar, clienteNombre, expediente, total, moneda } = props;
   const vencida = estado === "Vencida";
+  const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
   return (
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-2xl font-bold font-mono tabular-nums">{numero}</h1>
+          <h1 className="text-2xl font-bold font-mono tabular-nums">
+            {esBorradorSinFolio
+              ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
+              : numero}
+          </h1>
           <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
           {sinTimbrar && <Badge variant="outline" className="text-xs">Sin timbrar</Badge>}
           {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}

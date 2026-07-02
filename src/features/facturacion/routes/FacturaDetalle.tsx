@@ -25,6 +25,8 @@ import { FacturaDetalleActions } from "@/features/facturacion/components/detalle
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 
 
 
@@ -42,9 +44,13 @@ export default function FacturaDetalle() {
   const [timbrarOpen, setTimbrarOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [sustituirOpen, setSustituirOpen] = useState(false);
+  const [eliminarOpen, setEliminarOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
+  const puedeEliminarBorrador =
+    !!factura && factura.estado === "Borrador" && !factura.facturapi_id && canEdit;
   const handleDownload = useDescargarCfdi(factura?.id);
+  const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
 
   // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
   // proforma (`?accion=timbrar`). Sólo si la factura todavía no está timbrada.
@@ -105,6 +111,8 @@ export default function FacturaDetalle() {
         onTimbrar={() => setTimbrarOpen(true)}
         onEnviarEmail={() => setEnviarOpen(true)}
         onDownload={handleDownload}
+        onEliminarBorrador={puedeEliminarBorrador ? () => setEliminarOpen(true) : undefined}
+        eliminando={eliminando}
       />
 
       {canEdit && !sinTimbrar && factura.estado === "Emitida" && (
@@ -144,7 +152,15 @@ export default function FacturaDetalle() {
         sustituirOpen={sustituirOpen} setSustituirOpen={setSustituirOpen}
       />
 
-
+      <DoubleConfirmDeleteDialog
+        open={eliminarOpen}
+        onOpenChange={setEliminarOpen}
+        entityName={`borrador ${factura.numero}`}
+        description="Se eliminará el borrador de factura y la proforma volverá a estar disponible para convertir. Sólo se pueden eliminar borradores sin timbrar."
+        finalDescription="Esta acción es irreversible: se borran conceptos, la factura borrador y se revierte la proforma."
+        isPending={eliminando}
+        onConfirm={() => eliminar(factura.id)}
+      />
     </div>
   );
 }
