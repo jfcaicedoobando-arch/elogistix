@@ -6,7 +6,8 @@
  * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
  */
 import { useEffect, useState } from "react";
-import { Loader2, Mail, Copy, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Copy, CheckCircle2, X } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 import {
   Dialog,
   DialogContent,
