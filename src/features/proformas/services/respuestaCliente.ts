@@ -22,23 +22,6 @@ interface RespuestaResult {
   at?: string;
 }
 
-export async function portalResponderProforma(
-  proformaId: string,
-  respuesta: Exclude<RespuestaCliente, "pendiente">,
-  motivo = "",
-): Promise<RespuestaResult> {
-  // SAFE-CAST: RPC firma via migración; tipos supabase-gen aún no la reflejan.
-  const { data, error } = await (supabase.rpc as never as (
-    fn: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ data: RespuestaResult | null; error: { message: string } | null }>)(
-    "portal_responder_proforma",
-    { p_proforma_id: proformaId, p_respuesta: respuesta, p_motivo: motivo },
-  );
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Respuesta vacía del servidor");
-  return data;
-}
 
 export async function actualizarEstadoClienteProforma(
   proformaId: string,
