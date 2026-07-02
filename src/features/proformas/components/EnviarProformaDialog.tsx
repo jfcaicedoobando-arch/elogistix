@@ -25,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
+import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
