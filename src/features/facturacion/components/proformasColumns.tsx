@@ -23,9 +23,6 @@ interface BuildArgs {
 }
 
 export function buildProformasColumns({
-  descargar,
-  downloadingId,
-  onMarcarFacturada,
   selection,
 }: BuildArgs): ColumnDef<ProformaConFactura, unknown>[] {
   const cols: ColumnDef<ProformaConFactura, unknown>[] = [];
