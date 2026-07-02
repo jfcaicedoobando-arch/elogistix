@@ -6,16 +6,8 @@
  * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
  */
 import { useEffect, useState } from "react";
-import { Loader2, Mail, Copy, CheckCircle2, X } from "lucide-react";
-import { toast as sonnerToast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Loader2, Mail } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
 import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
+import { DestinatariosRecientesChips } from "./DestinatariosRecientesChips";
+import { EnvioProformaExitoso } from "./EnvioProformaExitoso";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -138,75 +132,24 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
         {!enviado && (
           <div className="space-y-3">
             <datalist id="proforma-emails-sugeridos">
-              {sugerenciasVisibles.map((e) => (
-                <option key={e} value={e} />
-              ))}
+              {sugerenciasVisibles.map((e) => <option key={e} value={e} />)}
             </datalist>
             <div>
               <Label htmlFor="dest">Para *</Label>
-              <Input
-                id="dest"
-                list="proforma-emails-sugeridos"
-                value={destinatarios}
-                onChange={(e) => setDestinatarios(e.target.value)}
-                placeholder="cliente@empresa.com, otro@empresa.com"
+              <Input id="dest" list="proforma-emails-sugeridos" value={destinatarios} onChange={(e) => setDestinatarios(e.target.value)} placeholder="cliente@empresa.com, otro@empresa.com" />
+              <DestinatariosRecientesChips
+                sugerencias={sugerenciasVisibles}
+                ocultos={ocultos}
+                onAgregar={(e) => agregarEmail("to", e)}
+                onOcultar={ocultar}
+                onRestaurar={restaurar}
+                onRestaurarVarios={restaurarVarios}
               />
-              {sugerenciasVisibles.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                  <span>Recientes:</span>
-                  {sugerenciasVisibles.slice(0, 6).map((e) => (
-                    <span
-                      key={e}
-                      className="group inline-flex items-center gap-0.5 rounded border pl-1.5 pr-0.5 py-0.5 hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => agregarEmail("to", e)}
-                        className="outline-none"
-                      >
-                        {e}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          ocultar(e);
-                          sonnerToast("Correo ocultado", {
-                            description: e,
-                            action: {
-                              label: "Deshacer",
-                              onClick: () => restaurar(e),
-                            },
-                          });
-                        }}
-                        aria-label={`Ocultar ${e}`}
-                        className="rounded p-0.5 opacity-60 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              {ocultos.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => restaurarVarios(ocultos)}
-                  className="mt-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
-                >
-                  Restaurar ocultos ({ocultos.length})
-                </button>
-              )}
             </div>
 
             <div>
               <Label htmlFor="cc">CC (opcional)</Label>
-              <Input
-                id="cc"
-                list="proforma-emails-sugeridos"
-                value={cc}
-                onChange={(e) => setCc(e.target.value)}
-                placeholder="contabilidad@empresa.com"
-              />
+              <Input id="cc" list="proforma-emails-sugeridos" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="contabilidad@empresa.com" />
             </div>
 
             <div>
@@ -221,25 +164,9 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
         )}
 
         {enviado && (
-          <div className="space-y-3 py-2">
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="font-semibold">Correo {enviado.estado}</span>
-            </div>
-            <div>
-              <Label className="text-xs uppercase text-muted-foreground">Enlace del portal</Label>
-              <div className="flex gap-2 mt-1">
-                <Input readOnly value={enviado.enlace_portal} className="text-xs" />
-                <Button variant="outline" size="icon" onClick={() => copiar(enviado.enlace_portal)} aria-label="Copiar enlace">
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Puedes compartir este enlace por WhatsApp u otro canal si el cliente no recibe el correo.
-              </p>
-            </div>
-          </div>
+          <EnvioProformaExitoso estado={enviado.estado} enlacePortal={enviado.enlace_portal} onCopiar={copiar} />
         )}
+
 
         <DialogFooter>
           {!enviado ? (

@@ -71,7 +71,10 @@ async function fetchSugerencias(clienteId: string): Promise<DestinatariosSugerid
       .is("deleted_at", null),
   ]);
 
+  // SAFE-CAST: PostgREST devuelve el join anidado `proformas` como objeto;
+  // sólo leemos los campos planos ya seleccionados en el .select().
   const envios = (enviosRes.data ?? []) as unknown as EnvioRow[];
+  // SAFE-CAST: fila plana; el tipo generado incluye columnas no seleccionadas.
   const contactos = (contactosRes.data ?? []) as unknown as ContactoRow[];
 
   const acumulado: string[] = [];
