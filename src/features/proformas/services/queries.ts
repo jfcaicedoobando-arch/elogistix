@@ -56,6 +56,21 @@ export async function fetchProformasAprobadas(organizationId: string): Promise<P
   return fromDb<ProformaConFactura[]>(data ?? []);
 }
 
+/**
+ * Trae TODAS las proformas de la organización (pendientes, aprobadas y
+ * facturadas). Usado por el listado unificado `/proformas` donde el usuario
+ * filtra por estado en la UI. No filtra por `estado_revision`.
+ */
+export async function fetchProformasTodas(organizationId: string): Promise<ProformaConFactura[]> {
+  const { data, error } = await supabase
+    .from("proformas")
+    .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return fromDb<ProformaConFactura[]>(data ?? []);
+}
+
 export async function fetchProformasPendientes(
   organizationId: string,
 ): Promise<ProformaPendienteConEmbarque[]> {
