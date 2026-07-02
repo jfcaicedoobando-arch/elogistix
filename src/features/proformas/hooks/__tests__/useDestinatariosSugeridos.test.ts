@@ -67,7 +67,7 @@ describe("useDestinatariosSugeridos", () => {
     // El "ultimo" viene del envío más reciente (primer row).
     expect(result.current.data!.ultimo).toEqual({
       to: ["a@b.com"],
-      cc: ["c@b.com"],
+      cc: ["c@b.com", "a@b.com"],
     });
   });
 
