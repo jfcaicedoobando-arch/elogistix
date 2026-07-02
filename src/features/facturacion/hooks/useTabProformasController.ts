@@ -25,7 +25,6 @@ export function useTabProformasController(opts?: {
 }) {
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [convertOpen, setConvertOpen] = useState(false);
 
   const { data: proformas = [], isLoading } = useProformas();
   const { descargar, downloadingId } = useDescargarProformaPdf();
@@ -106,7 +105,6 @@ export function useTabProformasController(opts?: {
     // selección múltiple (Fase 3 — fusión)
     selectedIds, toggleSelected, clearSelected, isConvertible,
     selectedProformas, fusionInfo,
-    convertOpen, setConvertOpen,
     // export CSV
     csvColumns, csvRows,
     // dialog facturación (flujo legado)

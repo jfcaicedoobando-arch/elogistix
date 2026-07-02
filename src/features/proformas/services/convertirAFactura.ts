@@ -46,3 +46,24 @@ export async function convertirProformaAFactura(
   if (!row?.id) throw new Error("No se pudo generar la factura");
   return { facturaId: row.id, facturaNumero: row.numero };
 }
+
+/**
+ * Devuelve la primera serie de facturación activa de la organización
+ * (ordenada por `prefijo`). Se usa para el flujo de conversión "de un clic":
+ * el usuario no elige serie; se toma la default y puede cambiarla en el
+ * borrador antes de timbrar.
+ */
+export async function fetchPrimeraSerieActiva(
+  organizationId: string,
+): Promise<{ id: string; prefijo: string } | null> {
+  const { data, error } = await supabase
+    .from("factura_series")
+    .select("id, prefijo")
+    .eq("organization_id", organizationId)
+    .eq("activa", true)
+    .order("prefijo")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}

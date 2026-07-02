@@ -1,4 +1,4 @@
-import { Download, FileText, X } from "lucide-react";
+import { Download, FileText, Loader2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
-import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
+import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 
@@ -17,6 +17,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
   const navigate = useNavigate();
   const c = useTabProformasController({ isInRange });
   const { canEmitirFactura } = usePermissions();
+  const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
 
   const columns = useMemo(
     () => buildProformasColumns({
@@ -81,8 +82,24 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
             <Button variant="ghost" size="sm" onClick={c.clearSelected}>
               <X className="h-4 w-4 mr-1" /> Limpiar
             </Button>
-            <Button size="sm" disabled={!puedeFusionar} onClick={() => c.setConvertOpen(true)}>
-              <FileText className="h-4 w-4 mr-1" />
+            <Button
+              size="sm"
+              disabled={!puedeFusionar || convirtiendo}
+              onClick={() => {
+                if (!c.fusionInfo.organizationId) return;
+                convertir(
+                  {
+                    proformaIds: c.selectedProformas.map((p) => p.id),
+                    organizationId: c.fusionInfo.organizationId,
+                    diasCredito: c.fusionInfo.diasCredito,
+                  },
+                  { onSuccess: () => c.clearSelected() },
+                );
+              }}
+            >
+              {convirtiendo
+                ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                : <FileText className="h-4 w-4 mr-1" />}
               {seleccionados === 1 ? "Convertir a factura" : `Fusionar ${seleccionados} en una factura`}
             </Button>
           </CardContent>
@@ -112,21 +129,6 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
           />
         </CardContent>
       </Card>
-
-
-
-      {c.convertOpen && c.fusionInfo.organizationId && puedeFusionar && (
-        <ConvertirAFacturaDialog
-          open={c.convertOpen}
-          onOpenChange={(o) => {
-            c.setConvertOpen(o);
-            if (!o) c.clearSelected();
-          }}
-          proformaIds={c.selectedProformas.map((p) => p.id)}
-          organizationId={c.fusionInfo.organizationId}
-          diasCreditoDefault={c.fusionInfo.diasCredito}
-        />
-      )}
     </div>
   );
 }

@@ -2,15 +2,15 @@
  * Barra de acciones del detalle de proforma.
  * Extraída de `ProformaDetalleCards.tsx` para mantener ≤200 líneas (Power of 10 #4).
  * Orquesta: Descargar PDF · Enviar al cliente · Aceptar/Rechazar manual ·
- * Ver embarque · Convertir a factura (gated por estado_cliente).
+ * Ver embarque · Convertir a factura (un clic, con defaults SAT).
  */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, Ship, Loader2, FileText, Mail, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
+import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
 
@@ -42,31 +42,6 @@ function BotonesRespuestaManual({ onSelect }: { onSelect: (m: "aceptada" | "rech
   );
 }
 
-function BotonConvertir({
-  proforma,
-  open,
-  setOpen,
-}: {
-  proforma: ProformaDetalleFull;
-  open: boolean;
-  setOpen: (o: boolean) => void;
-}) {
-  return (
-    <>
-      <Button size="sm" onClick={() => setOpen(true)}>
-        <FileText className="h-4 w-4 mr-1.5" /> Convertir a factura
-      </Button>
-      <ConvertirAFacturaDialog
-        open={open}
-        onOpenChange={setOpen}
-        proformaIds={[proforma.id]}
-        organizationId={proforma.organization_id}
-        diasCreditoDefault={proforma.dias_credito ?? 0}
-      />
-    </>
-  );
-}
-
 function computarFlags(
   proforma: ProformaDetalleFull,
   canEmitirFactura: boolean,
@@ -87,16 +62,22 @@ function computarFlags(
 
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {
   const cargando = downloadingId === proforma.id;
-  const [convertirOpen, setConvertirOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState<null | "aceptada" | "rechazada">(null);
   const { canEmitirFactura, canResponderProformaManual } = usePermissions();
+  const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
 
   const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(
     proforma,
     canEmitirFactura,
     canResponderProformaManual,
   );
+
+  const onConvertir = () => convertir({
+    proformaIds: [proforma.id],
+    organizationId: proforma.organization_id,
+    diasCredito: proforma.dias_credito ?? 0,
+  });
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -124,7 +105,12 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
       )}
 
       {puedeConvertir && (
-        <BotonConvertir proforma={proforma} open={convertirOpen} setOpen={setConvertirOpen} />
+        <Button size="sm" onClick={onConvertir} disabled={convirtiendo}>
+          {convirtiendo
+            ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            : <FileText className="h-4 w-4 mr-1.5" />}
+          Convertir a factura
+        </Button>
       )}
 
       {mostrarHint && (
