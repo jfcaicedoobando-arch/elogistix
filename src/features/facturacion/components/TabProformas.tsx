@@ -48,7 +48,6 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
             onValueChange={(v) => v && c.setFiltroEstado(v as typeof c.filtroEstado)}
           >
             <ToggleGroupItem value="todas">Todas ({c.counts.todas})</ToggleGroupItem>
-            <ToggleGroupItem value="pendiente">Pendientes ({c.counts.pendiente})</ToggleGroupItem>
             <ToggleGroupItem value="facturada">Facturadas ({c.counts.facturada})</ToggleGroupItem>
           </ToggleGroup>
           <Button
