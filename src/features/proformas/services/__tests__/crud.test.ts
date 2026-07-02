@@ -93,13 +93,19 @@ describe("services/proforma/crud", () => {
     await expect(aprobarProformas([])).rejects.toThrow(/al menos una proforma/);
   });
 
-  it("aprobarProformas actualiza estado", async () => {
-    mock.setTableResult("proformas", { data: null, error: null });
+  it("aprobarProformas actualiza estado cuando afecta todas las filas", async () => {
+    mock.setTableResult("proformas", { data: [{ id: "pf1" }], error: null });
     await expect(aprobarProformas(["pf1"])).resolves.toBeUndefined();
   });
 
   it("aprobarProformas propaga error", async () => {
     mock.setTableResult("proformas", { data: null, error: { message: "x" } });
     await expect(aprobarProformas(["pf1"])).rejects.toThrow();
+  });
+
+  it("aprobarProformas lanza si RLS filtra silenciosamente (0 filas actualizadas)", async () => {
+    // Simula RLS bloqueando: update sin error pero data vacía.
+    mock.setTableResult("proformas", { data: [], error: null });
+    await expect(aprobarProformas(["pf1", "pf2"])).rejects.toThrow(/No se pudo aprobar 2 de 2/);
   });
 });
