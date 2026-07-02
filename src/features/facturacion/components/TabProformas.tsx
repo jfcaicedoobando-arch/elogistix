@@ -82,8 +82,24 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
             <Button variant="ghost" size="sm" onClick={c.clearSelected}>
               <X className="h-4 w-4 mr-1" /> Limpiar
             </Button>
-            <Button size="sm" disabled={!puedeFusionar} onClick={() => c.setConvertOpen(true)}>
-              <FileText className="h-4 w-4 mr-1" />
+            <Button
+              size="sm"
+              disabled={!puedeFusionar || convirtiendo}
+              onClick={() => {
+                if (!c.fusionInfo.organizationId) return;
+                convertir(
+                  {
+                    proformaIds: c.selectedProformas.map((p) => p.id),
+                    organizationId: c.fusionInfo.organizationId,
+                    diasCredito: c.fusionInfo.diasCredito,
+                  },
+                  { onSuccess: () => c.clearSelected() },
+                );
+              }}
+            >
+              {convirtiendo
+                ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                : <FileText className="h-4 w-4 mr-1" />}
               {seleccionados === 1 ? "Convertir a factura" : `Fusionar ${seleccionados} en una factura`}
             </Button>
           </CardContent>
@@ -113,21 +129,6 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
           />
         </CardContent>
       </Card>
-
-
-
-      {c.convertOpen && c.fusionInfo.organizationId && puedeFusionar && (
-        <ConvertirAFacturaDialog
-          open={c.convertOpen}
-          onOpenChange={(o) => {
-            c.setConvertOpen(o);
-            if (!o) c.clearSelected();
-          }}
-          proformaIds={c.selectedProformas.map((p) => p.id)}
-          organizationId={c.fusionInfo.organizationId}
-          diasCreditoDefault={c.fusionInfo.diasCredito}
-        />
-      )}
     </div>
   );
 }
