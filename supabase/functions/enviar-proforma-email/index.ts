@@ -32,6 +32,61 @@ function formatoMoneda(v: number | null | undefined, moneda: string): string {
   } catch { return `${v} ${moneda}`; }
 }
 
+interface Recipient { email: string; nombre?: string; tipo: 'to' | 'cc' }
+interface EnvioResultado { email: string; tipo: string; ok: boolean; error?: string }
+
+async function asegurarToken(
+  admin: ReturnType<typeof createClient>,
+  proformaId: string,
+  tokenActual: string | null,
+  expiraActual: string | null,
+  diasVigencia: number,
+): Promise<{ token: string; expira: string } | { error: string }> {
+  const ahora = Date.now();
+  const vigente = tokenActual && expiraActual && new Date(expiraActual).getTime() >= ahora;
+  if (vigente) return { token: tokenActual!, expira: expiraActual! };
+  const nuevoToken = crypto.randomUUID();
+  const nuevaExp = new Date(ahora + diasVigencia * 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await admin
+    .from('proformas')
+    .update({ token_publico: nuevoToken, token_expira_at: nuevaExp })
+    .eq('id', proformaId);
+  if (error) {
+    await captureEdgeException(error, { fn: 'enviar-proforma-email', extra: { phase: 'token' } });
+    return { error: error.message };
+  }
+  return { token: nuevoToken, expira: nuevaExp };
+}
+
+async function enviarDestinatario(
+  url: string,
+  service: string,
+  r: Recipient,
+  proformaId: string,
+  timestamp: number,
+  templateData: Record<string, unknown>,
+): Promise<EnvioResultado> {
+  const idem = `proforma-${proformaId}-${timestamp}-${r.email}`;
+  try {
+    const resp = await fetch(`${url}/functions/v1/send-transactional-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${service}` },
+      body: JSON.stringify({
+        templateName: 'proforma-enviada',
+        recipientEmail: r.email,
+        idempotencyKey: idem,
+        templateData: { ...templateData, contacto: r.nombre },
+      }),
+    });
+    const out = await resp.json().catch(() => ({}));
+    const ok = resp.ok && (out?.success !== false || out?.queued === true);
+    return { email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) };
+  } catch (e) {
+    await captureEdgeException(e, { fn: 'enviar-proforma-email', extra: { phase: 'send', recipient_type: r.tipo } });
+    return { email: r.email, tipo: r.tipo, ok: false, error: (e as Error).message };
+  }
+}
+
 Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
@@ -74,7 +129,6 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const mensaje = typeof body.mensaje === 'string' ? body.mensaje : '';
   const diasVigencia = Number.isFinite(body.dias_vigencia) ? Number(body.dias_vigencia) : 30;
 
-  // Cargar proforma
   const { data: prof, error: profErr } = await admin
     .from('proformas')
     .select('id, numero, cliente_nombre, expediente, moneda, total, organization_id, token_publico, token_expira_at')
@@ -82,7 +136,6 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     .maybeSingle();
   if (profErr || !prof) return json(cors, { error: 'Proforma no encontrada' }, 404);
 
-  // Verificar acceso a la org
   const { data: mem } = await admin
     .from('organization_members')
     .select('id')
@@ -91,73 +144,44 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     .maybeSingle();
   if (!mem) return json(cors, { error: 'No tienes acceso a esta proforma' }, 403);
 
-  // Generar token si no existe o si ya expiró
-  let token = prof.token_publico as string | null;
-  let tokenExpira = prof.token_expira_at as string | null;
-  const ahora = Date.now();
-  const necesitaToken = !token || !tokenExpira || new Date(tokenExpira).getTime() < ahora;
-  if (necesitaToken) {
-    const nuevoToken = crypto.randomUUID();
-    const nuevaExp = new Date(ahora + diasVigencia * 24 * 60 * 60 * 1000).toISOString();
-    const { error: tokErr } = await admin
-      .from('proformas')
-      .update({ token_publico: nuevoToken, token_expira_at: nuevaExp })
-      .eq('id', proformaId);
-    if (tokErr) {
-      await captureEdgeException(tokErr, { fn: 'enviar-proforma-email', extra: { phase: 'token' } });
-      return json(cors, { error: 'No se pudo generar token', detail: tokErr.message }, 500);
-    }
-    token = nuevoToken;
-    tokenExpira = nuevaExp;
-  }
+  const tokenResult = await asegurarToken(
+    admin,
+    proformaId,
+    prof.token_publico as string | null,
+    prof.token_expira_at as string | null,
+    diasVigencia,
+  );
+  if ('error' in tokenResult) return json(cors, { error: 'No se pudo generar token', detail: tokenResult.error }, 500);
+  const { token, expira: tokenExpira } = tokenResult;
 
   const enlacePortal = `${APP_URL}/portal/proformas/${token}`;
   const timestamp = Date.now();
 
-  // Enviar por cada destinatario
-  const resultados: { email: string; tipo: string; ok: boolean; error?: string }[] = [];
-  const recipients = [
+  const recipients: Recipient[] = [
     ...validos.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
     ...ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
   ];
 
+  const templateData = {
+    numero: prof.numero,
+    cliente: prof.cliente_nombre,
+    expediente: prof.expediente,
+    moneda: prof.moneda,
+    total: formatoMoneda(prof.total as number | null, (prof.moneda as string) ?? 'MXN'),
+    mensaje,
+    vigencia: formatoFechaMx(tokenExpira),
+    enlacePortal,
+  };
+
+  const resultados: EnvioResultado[] = [];
   for (const r of recipients) {
-    const idem = `proforma-${proformaId}-${timestamp}-${r.email}`;
-    try {
-      const resp = await fetch(`${url}/functions/v1/send-transactional-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${service}` },
-        body: JSON.stringify({
-          templateName: 'proforma-enviada',
-          recipientEmail: r.email,
-          idempotencyKey: idem,
-          templateData: {
-            numero: prof.numero,
-            cliente: prof.cliente_nombre,
-            contacto: r.nombre,
-            expediente: prof.expediente,
-            moneda: prof.moneda,
-            total: formatoMoneda(prof.total as number | null, (prof.moneda as string) ?? 'MXN'),
-            mensaje,
-            vigencia: formatoFechaMx(tokenExpira),
-            enlacePortal,
-          },
-        }),
-      });
-      const out = await resp.json().catch(() => ({}));
-      const ok = resp.ok && (out?.success !== false || out?.queued === true);
-      resultados.push({ email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) });
-    } catch (e) {
-      await captureEdgeException(e, { fn: 'enviar-proforma-email', extra: { phase: 'send', recipient_type: r.tipo } });
-      resultados.push({ email: r.email, tipo: r.tipo, ok: false, error: (e as Error).message });
-    }
+    resultados.push(await enviarDestinatario(url, service, r, proformaId, timestamp, templateData));
   }
 
   const anyOk = resultados.some((r) => r.ok);
   const anyFail = resultados.some((r) => !r.ok);
   const estado = anyOk && anyFail ? 'parcial' : anyOk ? 'enviado' : 'fallido';
 
-  // Persistir envío
   const { data: envio, error: envioErr } = await admin
     .from('proforma_envios')
     .insert({

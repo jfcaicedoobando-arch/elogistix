@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.144.4] - 2026-07-02
+- **chore(lint) — complejidad ciclomática ≤16.** Se refactorizan tres funciones que superaban el umbral del linter: `AccionesProforma` (se extraen `BotonesRespuestaManual` y `BotonConvertir`), `PortalProforma` (se extrae `AlertaRespondida` y se precomputan flags `mostrarInvalido/mostrarExpirado/mostrarProforma`) y el handler de la edge function `enviar-proforma-email` (se extraen helpers `asegurarToken` y `enviarDestinatario`). `bun run lint -- --max-warnings 0` vuelve a pasar limpio.
+
 ## [13.144.3] - 2026-07-02
 - **chore(cleanup) — knip strict pasa limpio.** Se elimina código muerto marcado por `bun run lint:unused:strict`: componente legacy `DialogMarcarFacturada.tsx` y su constante `deprecation.ts` (el flujo manual "Marcar como facturada" ya no se usa; el flujo vigente es Proforma → Factura → Timbrado FacturApi). Se retira el hook `useMarcarProformaFacturada` de `useProformas.ts`, el servicio MVP `registrarEnvioProforma` (sustituido por la edge function `enviar-proforma-email` en 13.144.0), la RPC no usada `portalResponderProforma` (el portal público usa `portal_responder_por_token`) y el tipo `IncotermSinFleteVenta` sin consumidores.
 
