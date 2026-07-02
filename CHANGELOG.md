@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.145.8] - 2026-07-02
+- **feat(proformas) — limpieza de filtro y gate de aceptación manual.** Se elimina la pestaña "Pendientes" del filtro en `/proformas` (con el nuevo flujo aceptada → factura, "pendiente" ya no es un estado accionable: son todas las no facturadas). `FiltroEstadoProforma` pasa a `"todas" | "facturada"` en `useTabProformasState.ts` y `TabProformas.tsx`. Además, los botones **"Aceptar (manual)" / "Rechazar (manual)"** en el detalle de proforma quedan limitados a admins y gerentes (`super_admin`, `admin_org`, `admin`, `gerente_comercial`, `gerente_operaciones`) vía nueva capability `canResponderProformaManual` en `usePermissions.ts`. El resto de roles ya no ve estos botones (evita respuestas manuales por perfiles operativos sin autoridad comercial).
+
 ## [13.145.7] - 2026-07-02
 - **feat(proformas) — flujo directo aceptada → factura.** Se elimina el gate `estado_revision = 'aprobada'` del botón "Convertir a factura" en `AccionesProforma.tsx`. Ahora basta con que el cliente haya aceptado la proforma (portal público o aceptación manual desde el sistema) para que el usuario con `canEmitirFactura` pueda pasar directo al borrador de factura. El hint "Para facturar, el cliente debe aceptar la proforma" se conserva cuando `estado_cliente ≠ aceptada`. La fusión masiva en `TabProformas` (`useTabProformasController.isConvertible`) exige ahora `estado_cliente = 'aceptada'` además de no facturada. La RPC sigue validando permisos por rol.
 
