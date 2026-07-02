@@ -38,13 +38,61 @@ function AlertaRespondida({ proforma }: { proforma: ProformaData }) {
   );
 }
 
+type PortalState = ReturnType<typeof usePortalProforma>;
+
+function ContenidoPortal({ state }: { state: PortalState }) {
+  const { loading, error, data, submitting, responder } = state;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="py-10 flex items-center justify-center gap-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" /> Cargando proforma…
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || data?.estado_link === "token_invalido") {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Enlace inválido</AlertTitle>
+        <AlertDescription>
+          El enlace no es válido o fue revocado. Solicita uno nuevo a tu ejecutivo de cuenta.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (data?.proforma && data.estado_link === "expirado") {
+    return (
+      <Alert>
+        <Clock className="h-4 w-4" />
+        <AlertTitle>Enlace expirado</AlertTitle>
+        <AlertDescription>
+          Este enlace expiró el {fechaMx(data.proforma.token_expira_at)}. Solicita uno nuevo a tu ejecutivo.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!data?.proforma) return null;
+
+  return (
+    <>
+      {data.estado_link === "respondida" && <AlertaRespondida proforma={data.proforma} />}
+      <PortalProformaResumen proforma={data.proforma} conceptos={data.conceptos} />
+      {data.estado_link === "activo" && (
+        <PortalProformaAcciones submitting={submitting} onResponder={responder} error={null} />
+      )}
+    </>
+  );
+}
+
 export default function PortalProforma() {
   const { token } = useParams<{ token: string }>();
-  const { loading, error, data, submitting, responder } = usePortalProforma(token);
-
-  const mostrarInvalido = !loading && (error || data?.estado_link === "token_invalido");
-  const mostrarExpirado = !loading && data?.proforma && data.estado_link === "expirado";
-  const mostrarProforma = !loading && data?.proforma && (data.estado_link === "activo" || data.estado_link === "respondida");
+  const state = usePortalProforma(token);
 
   return (
     <div className="min-h-screen bg-muted/30 py-8 px-4">
@@ -55,43 +103,7 @@ export default function PortalProforma() {
           <h1 className="text-xl font-semibold">Libre Carga · Portal de proformas</h1>
         </div>
 
-        {loading && (
-          <Card>
-            <CardContent className="py-10 flex items-center justify-center gap-2 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" /> Cargando proforma…
-            </CardContent>
-          </Card>
-        )}
-
-        {mostrarInvalido && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Enlace inválido</AlertTitle>
-            <AlertDescription>
-              El enlace no es válido o fue revocado. Solicita uno nuevo a tu ejecutivo de cuenta.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {mostrarExpirado && (
-          <Alert>
-            <Clock className="h-4 w-4" />
-            <AlertTitle>Enlace expirado</AlertTitle>
-            <AlertDescription>
-              Este enlace expiró el {fechaMx(data!.proforma!.token_expira_at)}. Solicita uno nuevo a tu ejecutivo.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {mostrarProforma && data && (
-          <>
-            {data.estado_link === "respondida" && <AlertaRespondida proforma={data.proforma!} />}
-            <PortalProformaResumen proforma={data.proforma!} conceptos={data.conceptos} />
-            {data.estado_link === "activo" && (
-              <PortalProformaAcciones submitting={submitting} onResponder={responder} error={null} />
-            )}
-          </>
-        )}
+        <ContenidoPortal state={state} />
 
         <p className="text-xs text-muted-foreground text-center pt-4">
           © Libre Carga — Este enlace es único para tu proforma y expira por seguridad.
