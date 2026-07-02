@@ -241,59 +241,34 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const entrada = validarEntrada(body);
   if ('error' in entrada) return json(cors, { error: entrada.error }, 400);
 
-  const { data: prof, error: profErr } = await admin
-    .from('proformas')
-    .select('id, numero, cliente_nombre, expediente, moneda, total, organization_id, token_publico, token_expira_at')
-    .eq('id', entrada.proformaId)
-    .maybeSingle();
-  if (profErr || !prof) return json(cors, { error: 'Proforma no encontrada' }, 404);
+  const prof = await cargarProforma(admin, entrada.proformaId);
+  if (!prof) return json(cors, { error: 'Proforma no encontrada' }, 404);
 
-  const { data: mem } = await admin
-    .from('organization_members')
-    .select('id')
-    .eq('organization_id', prof.organization_id)
-    .eq('user_id', user.id)
-    .maybeSingle();
-  if (!mem) return json(cors, { error: 'No tienes acceso a esta proforma' }, 403);
+  if (!(await usuarioTieneAcceso(admin, prof.organization_id, user.id))) {
+    return json(cors, { error: 'No tienes acceso a esta proforma' }, 403);
+  }
 
   const tokenResult = await asegurarToken(
-    admin,
-    entrada.proformaId,
-    prof.token_publico as string | null,
-    prof.token_expira_at as string | null,
-    entrada.diasVigencia,
+    admin, entrada.proformaId, prof.token_publico, prof.token_expira_at, entrada.diasVigencia,
   );
   if ('error' in tokenResult) return json(cors, { error: 'No se pudo generar token', detail: tokenResult.error }, 500);
   const { token, expira: tokenExpira } = tokenResult;
 
   const enlacePortal = `${APP_URL}/portal/proformas/${token}`;
-  const timestamp = Date.now();
-
   const recipients: Recipient[] = [
     ...entrada.validos.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
     ...entrada.ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
   ];
 
   const templateData = {
-    numero: prof.numero,
-    cliente: prof.cliente_nombre,
-    expediente: prof.expediente,
-    moneda: prof.moneda,
-    total: formatoMoneda(prof.total as number | null, (prof.moneda as string) ?? 'MXN'),
-    mensaje: entrada.mensaje,
-    vigencia: formatoFechaMx(tokenExpira),
-    enlacePortal,
+    numero: prof.numero, cliente: prof.cliente_nombre, expediente: prof.expediente, moneda: prof.moneda,
+    total: formatoMoneda(prof.total, prof.moneda ?? 'MXN'),
+    mensaje: entrada.mensaje, vigencia: formatoFechaMx(tokenExpira), enlacePortal,
   };
 
-  const ctx: EnvioContexto = { url: env.url, service: env.service, proformaId: entrada.proformaId, timestamp, templateData };
-  const resultados: EnvioResultado[] = [];
-  for (const r of recipients) {
-    resultados.push(await enviarDestinatario(ctx, r));
-  }
+  const ctx: EnvioContexto = { url: env.url, service: env.service, proformaId: entrada.proformaId, timestamp: Date.now(), templateData };
+  const { resultados, estado, anyOk, anyFail } = await despacharCorreos(ctx, recipients);
 
-  const anyOk = resultados.some((r) => r.ok);
-  const anyFail = resultados.some((r) => !r.ok);
-  const estado = anyOk && anyFail ? 'parcial' : anyOk ? 'enviado' : 'fallido';
 
   const envioId = await registrarEnvio(admin, {
     proformaId: entrada.proformaId, prof, userId: user.id, userEmail: user.email,
