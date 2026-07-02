@@ -12,6 +12,7 @@ import {
   crearProforma as svcCrear,
   eliminarProforma as svcEliminar,
   fetchProformasAprobadas,
+  fetchProformasTodas,
   fetchProformasEmbarque,
   fetchProformasPendientes,
   marcarProformaFacturada as svcMarcarFacturada,
