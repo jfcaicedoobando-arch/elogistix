@@ -37,6 +37,7 @@ export const publicRoutes = (
     <Route path="/recursos/guia-incoterms-2020" element={<GuiaIncoterms2020 />} />
     <Route path="/recursos/guia-puertos-mexico" element={<GuiaPuertosMexico />} />
     <Route path="/onboarding" element={<Onboarding />} />
+    <Route path="/portal/proformas/:token" element={<PortalProforma />} />
     <Route path="*" element={<NotFound />} />
 
   </>
