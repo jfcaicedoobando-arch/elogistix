@@ -3,6 +3,19 @@ import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persist
 import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 
 /**
+ * Errores de negocio esperados que NO deben generar un issue en Sentry:
+ * Postgres `RAISE EXCEPTION` sin código explícito devuelve `P0001`, que usamos
+ * para validaciones de permisos / reglas de negocio a nivel de RPC (p.ej.
+ * "No tienes permiso para convertir proformas a factura"). Estos errores ya
+ * los presenta la UI con `notifyError`; no son bugs de infraestructura.
+ */
+function isExpectedBusinessError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const code = (err as { code?: unknown }).code;
+  return typeof code === "string" && code === "P0001";
+}
+
+/**
  * Reporta a Sentry los errores que React Query rescata en su pipeline
  * (queries fallidas, mutations fallidas) — la mayoría de errores de red en
  * la app pasan por aquí y antes quedaban silenciosos si la UI sólo mostraba
@@ -19,6 +32,21 @@ function reportQueryError(
   // filtrar/agrupar en Sentry (los `extra` no son indexables).
   // 13.137.15: mutationKey[1] se promueve como `mutation_op` para distinguir
   // sub-flujos (ej. ["fiscal","emitir-rep"] vs ["fiscal","cancelar-rep"]).
+  // 13.145.6: los errores de negocio (Postgres P0001) se dejan como
+  // breadcrumb en lugar de crear un issue — no son bugs.
+  if (isExpectedBusinessError(err)) {
+    void import("@sentry/react")
+      .then(({ addBreadcrumb }) =>
+        addBreadcrumb({
+          category: "react_query",
+          level: "info",
+          message: `business_error:${kind}:${rootKey ?? "?"}:${opKey ?? "?"}`,
+          data: meta,
+        }),
+      )
+      .catch(() => undefined);
+    return;
+  }
   const tags: Record<string, string> = { feature: "react_query", kind };
   if (rootKey) tags[kind === "query" ? "query_root" : "mutation_root"] = rootKey.slice(0, 64);
   if (opKey && kind === "mutation") tags.mutation_op = opKey.slice(0, 64);
