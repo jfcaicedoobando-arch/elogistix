@@ -50,6 +50,7 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-emitir-nota-credito/index.ts",
   "supabase/functions/facturapi-cancelar-nota-credito/index.ts",
   "supabase/functions/notificar-respuesta-cotizacion/index.ts",
+  "supabase/functions/enviar-proforma-email/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia

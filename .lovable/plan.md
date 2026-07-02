@@ -1,63 +1,89 @@
-## Contexto
-
-En el header del detalle de proforma (`EstadoBadges` en `ProformaDetalleCards.tsx`) se muestran hasta 3 badges en paralelo, mezclando 3 dimensiones distintas:
-
-1. **Revisión interna** (`estado_revision`): Pendiente / Aprobada / Consolidada
-2. **Respuesta del cliente** (`estado_cliente`): Sin responder / Aceptó / Rechazó
-3. **Facturación** (`estado_proforma`): Pago pendiente / Facturada
-
 ## Diagnóstico
 
-Tienes razón en el badge "Pago pendiente":
+El CI falla por 3 problemas — todos consecuencia del trabajo reciente de proformas (envío por email + portal público + respuesta manual). No hay bugs nuevos, sólo faltan marcadores/patrones exigidos por las reglas del proyecto.
 
-- Una proforma **no cobra**, solo la factura sí. Etiquetarla como "Pago pendiente" es engañoso — sugiere una obligación de pago que aún no existe.
-- Ese badge en realidad refleja `estado_proforma !== "facturada"`, que ya está cubierto por el resto del flujo (Aprobada + Cliente aceptó → botón "Convertir a factura"; una vez convertida, aparece la tarjeta "Factura asociada" con su propio estado).
+### 1. Casts sin marcador `SAFE-CAST` (bloquea 3 tests)
 
-Los otros dos badges sí aportan información distinta y complementaria, pero se pueden pulir para que se lean como una sola línea de estado, no como 3 chips sueltos.
+`src/features/proformas/services/portalPublico.ts`, líneas 45 y 66, tiene `as unknown as` sin el comentario `// SAFE-CAST:` requerido. Esto revienta:
+- `src/lib/__tests__/architecture.test.ts` — regla "no hay `as unknown as` sin SAFE-CAST".
+- `src/__tests__/architecture/safe-casts-services.test.ts` — 0 casts HIGH/CRITICAL en `src/features/**/services/**`.
+- `src/__tests__/audit-report.test.ts` — baseline global 0 HIGH/CRITICAL.
 
-## Propuesta
+Los dos casts corresponden a las respuestas de los RPC públicos `portal_obtener_proforma_por_token` y `portal_responder_por_token` (tipos generados no reflejan el shape real del JSON de retorno). Es exactamente el caso legítimo de SAFE-CAST: RPC returns.
 
-**1. Eliminar el badge "Pago pendiente" / "Facturada" del header de la proforma.**
-El estado de facturación ya se comunica mejor por:
-- La tarjeta **Factura asociada** (aparece solo si existe) con su propio badge de estado fiscal (borrador/timbrada/cancelada).
-- Los botones de acción (`Convertir a factura` desaparece cuando ya está facturada).
+### 2. `toast({ variant: "destructive" })` en vez de `notifyError` (bloquea 1 test)
 
-**2. Unificar los 2 badges restantes en una línea de estado más clara**, con orden lógico (revisión → cliente) y con un badge "final" cuando ya se cerró el ciclo:
+`src/__tests__/architecture/error-toasts-use-notifyError.test.ts` señala 4 usos prohibidos:
 
-```text
-[Pendiente de revisión]                    ← aún no la revisa un operador
-[Aprobada] [Cliente sin responder]         ← lista, esperando al cliente
-[Aprobada] [Cliente aceptó]                ← lista para convertir a factura
-[Aprobada] [Cliente rechazó]               ← ciclo cerrado (rojo)
-[Consolidada]                              ← se unió a otra
+- `src/features/proformas/components/EnviarProformaDialog.tsx:71, 89`
+- `src/features/proformas/components/RespuestaClienteManualDialog.tsx:52, 70`
+
+La política es usar `notifyError(toast, { title, error, method })` desde `@/components/shared/utils/appFeedback`.
+
+### 3. Edge function `enviar-proforma-email` sin cobertura de Sentry (bloquea 1 test)
+
+`src/__tests__/architecture/sentry-edge-coverage.test.ts` exige que toda edge function con `index.ts` esté cubierta por Sentry. La nueva `supabase/functions/enviar-proforma-email/index.ts` no está listada en ninguno de los conjuntos (MANUAL_COVERAGE, CRITICAL wrapped, ni SENTRY_EXEMPT).
+
+La función maneja auth, envía correo y escribe en la BD → merece Sentry real (no proxy exento). El patrón estándar en el repo es `wrapEdgeHandler` con clasificación CRITICAL, o cobertura manual con `logToSentry` + `authenticateRequest`.
+
+## Cambios propuestos
+
+### A. `src/features/proformas/services/portalPublico.ts`
+
+Añadir marcador SAFE-CAST arriba de cada `as unknown as` con la razón. Ejemplo:
+
+```ts
+// SAFE-CAST: RPC portal_obtener_proforma_por_token retorna JSON validado por el
+// backend con shape distinto al inferido por supabase-js.
+return data as unknown as ProformaPortalDTO;
 ```
 
-Además, cuando ya existe factura asociada, ocultar el badge de "Cliente sin responder" (ya es irrelevante) y opcionalmente mostrar un badge sutil `Convertida a factura` que enlace por scroll a la card de la factura.
+Sin cambios funcionales.
 
-**3. Cambios de copy menores** para que suenen consistentes:
+### B. Toasts destructivos → `notifyError`
 
-- "Pendiente de revisión" → se queda igual.
-- "Cliente sin responder" → "Esperando al cliente" (más neutral, no suena a reclamo).
-- "Cliente aceptó" / "Cliente rechazó" → se quedan.
+En los 2 archivos (`EnviarProformaDialog.tsx`, `RespuestaClienteManualDialog.tsx`) reemplazar cada:
 
-## Detalles técnicos
+```ts
+toast({ variant: "destructive", title: "...", description: "..." });
+```
 
-Archivo único a tocar: `src/features/proformas/components/ProformaDetalleCards.tsx`, función `EstadoBadges` (líneas 23–45).
+por:
 
-- Quitar las líneas 40–42 (`facturada ? Facturada : Pago pendiente`).
-- Añadir un ternario que oculte `Cliente sin responder` cuando `estadoRev !== "aprobada"` o cuando ya hay factura asociada (pasar `tieneFactura?: boolean` como prop opcional desde `ProformaDetalle`).
-- Cambiar el texto "Cliente sin responder" por "Esperando al cliente".
-- Actualizar la llamada en `ProformaDetalle` para pasar la nueva prop (buscar dónde se renderiza `<EstadoBadges …/>`).
+```ts
+notifyError(toast, { title: "...", error, method: "PROFORMAS_ENVIAR_1" });
+```
 
-Sin cambios de datos, sin migración, sin cambios en flujos ni permisos. Puramente presentacional.
+siguiendo el patrón ya usado en `DialogCategoria.tsx` (ver contexto). Los `method` codes serán únicos por sitio.
 
-## Bump
+### C. Sentry en `enviar-proforma-email`
 
-- `APP_VERSION` → `13.144.2`
-- Entrada en `CHANGELOG.md` describiendo el ajuste de badges.
+Envolver el handler con `wrapEdgeHandler` (patrón estándar) y agregar `supabase/functions/enviar-proforma-email` a la lista `CRITICAL` en `src/__tests__/architecture/sentry-edge-wrapping.test.ts`.
+
+Esto también deja la función dentro del scope de `authenticateRequest` (auth centralizada), pero como ya autentica manualmente, se puede mantener la lógica interna intacta salvo el wrapping externo.
+
+### D. Bump de versión y changelog
+
+- `APP_VERSION` → `13.144.6`
+- Entrada en `CHANGELOG.md` describiendo "arreglos de CI post-proformas: SAFE-CAST markers, notifyError, Sentry en enviar-proforma-email".
 
 ## Fuera de alcance
 
-- No se toca la tabla de proformas (ya se limpió en 13.144.1).
-- No se toca `AccionesProforma` ni la lógica de conversión a factura.
-- No se toca la card de factura asociada.
+- No se modifica el comportamiento de negocio de proformas.
+- No se tocan los tests de arquitectura ni sus umbrales — sólo el código para que cumplan.
+- No se rehacen los diálogos ni el portal público.
+
+## Verificación
+
+Al terminar, correr localmente (o en CI):
+
+```
+bun run lint -- --max-warnings 0
+bunx vitest run src/lib/__tests__/architecture.test.ts \
+  src/__tests__/architecture/error-toasts-use-notifyError.test.ts \
+  src/__tests__/architecture/safe-casts-services.test.ts \
+  src/__tests__/architecture/sentry-edge-coverage.test.ts \
+  src/__tests__/audit-report.test.ts
+```
+
+Todos deben pasar.

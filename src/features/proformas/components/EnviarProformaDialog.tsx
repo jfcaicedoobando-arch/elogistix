@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -68,7 +69,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     const to = destinatarios.split(/[,;\s]+/).filter(Boolean).map((email) => ({ email }));
     const ccList = cc.split(/[,;\s]+/).filter(Boolean);
     if (to.length === 0) {
-      toast({ title: "Ingresa al menos un destinatario", variant: "destructive" });
+      notifyError(toast, { title: "Ingresa al menos un destinatario", method: "PROFORMAS_ENVIAR_VALIDACION" });
       return;
     }
     setLoading(true);
@@ -83,10 +84,11 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
       toast({ title: "Correo enviado", description: `Estado: ${data.estado}` });
       await qc.invalidateQueries({ queryKey: ["proformas"] });
     } catch (e) {
-      toast({
+      notifyError(toast, {
         title: "No se pudo enviar",
         description: (e as Error).message,
-        variant: "destructive",
+        error: e,
+        method: "PROFORMAS_ENVIAR_EMAIL",
       });
     } finally {
       setLoading(false);

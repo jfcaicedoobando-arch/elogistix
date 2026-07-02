@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   actualizarEstadoClienteProforma,
   type RespuestaCliente,
@@ -49,7 +50,7 @@ export function RespuestaClienteManualDialog({
 
   async function handleConfirmar() {
     if (!esAceptar && !motivo.trim()) {
-      toast({ title: "Indica el motivo de rechazo", variant: "destructive" });
+      notifyError(toast, { title: "Indica el motivo de rechazo", method: "PROFORMAS_RESPUESTA_MANUAL_VALIDACION" });
       return;
     }
     setLoading(true);
@@ -64,10 +65,11 @@ export function RespuestaClienteManualDialog({
       onOpenChange(false);
       setMotivo("");
     } catch (e) {
-      toast({
+      notifyError(toast, {
         title: "Error al actualizar",
         description: (e as Error).message,
-        variant: "destructive",
+        error: e,
+        method: "PROFORMAS_RESPUESTA_MANUAL",
       });
     } finally {
       setLoading(false);
