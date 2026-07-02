@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.144.3] - 2026-07-02
+- **chore(cleanup) — knip strict pasa limpio.** Se elimina código muerto marcado por `bun run lint:unused:strict`: componente legacy `DialogMarcarFacturada.tsx` y su constante `deprecation.ts` (el flujo manual "Marcar como facturada" ya no se usa; el flujo vigente es Proforma → Factura → Timbrado FacturApi). Se retira el hook `useMarcarProformaFacturada` de `useProformas.ts`, el servicio MVP `registrarEnvioProforma` (sustituido por la edge function `enviar-proforma-email` en 13.144.0), la RPC no usada `portalResponderProforma` (el portal público usa `portal_responder_por_token`) y el tipo `IncotermSinFleteVenta` sin consumidores.
+
 ## [13.144.2] - 2026-07-02
 - **refactor(proformas) — badges de estado más claros en el detalle.** Se elimina el badge "Pago pendiente" del header de la proforma: una proforma aún no genera obligación de cobro (eso vive en la factura). El estado de facturación ya se ve en la tarjeta "Factura asociada" cuando existe. Además, "Cliente sin responder" se renombra a "Esperando al cliente" y solo se muestra cuando la proforma está aprobada y aún no tiene factura, para reducir ruido visual.
 

@@ -24,7 +24,6 @@ export const INCOTERMS_SIN_FLETE_VENTA = [
   "DAT",
 ] as const;
 
-export type IncotermSinFleteVenta = (typeof INCOTERMS_SIN_FLETE_VENTA)[number];
 
 /**
  * Indica si, bajo este incoterm + modo, el flete internacional viene
