@@ -19,6 +19,7 @@ const GuiaCartaPorte = lazy(() => import("@/features/marketing/routes/GuiaCartaP
 const GuiaIncoterms2020 = lazy(() => import("@/features/marketing/routes/GuiaIncoterms2020"));
 const GuiaPuertosMexico = lazy(() => import("@/features/marketing/routes/GuiaPuertosMexico"));
 const Onboarding = lazy(() => import("@/features/onboarding/routes/Onboarding"));
+const PortalProforma = lazy(() => import("@/features/proformas/routes/PortalProforma"));
 
 export const publicRoutes = (
   <>
