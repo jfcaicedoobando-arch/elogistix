@@ -1,95 +1,57 @@
-
 ## Objetivo
 
-Cerrar la brecha del flujo de rechazo de proformas: hoy el rechazo solo cambia un estado, pero los conceptos siguen amarrados y el operador nunca se entera dentro del embarque. Después de este cambio, un rechazo (portal o manual) libera los conceptos, actualiza el embarque y muestra un aviso claro para regenerar la proforma.
+En el modal "Enviar proforma al cliente", los campos **Para** y **CC** deben "recordar" los correos ya usados con ese cliente, de forma que:
 
-## Comportamiento nuevo al rechazar
+1. Se **pre-rellenen** con los destinatarios del último envío hecho a ese mismo cliente.
+2. Al escribir, aparezca un **autocompletado** con todos los correos previamente usados (envíos anteriores + contactos guardados del cliente).
 
-Cuando `estado_cliente` pasa a `'rechazada'` (por portal o por dialog manual):
+Sólo cambia UI/frontend del modal `EnviarProformaDialog`. No se altera el envío ni la edge function.
 
-1. **Proforma:** se marca como rechazada con `rechazada_at`, `motivo_rechazo` y `aceptada_por` (origen). Se **congela** para edición pero se **conserva como registro histórico** (visible con badge rojo "Rechazada por cliente" + motivo en el detalle).
-2. **Conceptos:** todos los `conceptos_venta` con `proforma_id = <esta>` se liberan:
-   - `proforma_id → NULL`
-   - `estado_facturacion → 'pendiente'`
-3. **Embarque:** se recalcula `embarques.tiene_proforma` (true solo si queda otra proforma viva).
-4. **Bitácora + notificaciones:** ya existen; se enriquecen con la cuenta de conceptos liberados.
+## Analogía
+
+Piensa en el campo "Para" de Gmail: cuando empiezas a escribir un correo, te sugiere los que ya usaste antes con esa persona. Aquí hacemos lo mismo, pero acotado por cliente.
+
+## Fuentes de la "memoria"
+
+Para el `cliente_id` de la proforma abierta, se combinan (y deduplican, en minúsculas):
+
+- `proforma_envios.destinatarios` y `proforma_envios.cc` de las proformas de ese cliente, ordenados por `created_at desc` (últimos 20 envíos).
+- `contactos_cliente.email` del cliente (contactos guardados).
+
+El **último envío** (el más reciente) se usa además para prefill inicial de "Para" y "CC" cuando se abre el modal, siempre que los campos estén vacíos. El usuario puede borrar/editar libremente.
 
 ## Cambios técnicos
 
-### 1. Base de datos (migración)
+1. **Nuevo hook** `useDestinatariosSugeridos(clienteId)` en `src/features/proformas/hooks/useDestinatariosSugeridos.ts`:
+   - React Query, `staleTime: 60_000`.
+   - Query 1: `proforma_envios` filtrado por `cliente_id` (vía join a `proformas`), `select('destinatarios, cc, created_at')`, `order created_at desc`, `limit 20`.
+   - Query 2: `contactos_cliente` filtrado por `cliente_id` y `deleted_at is null`, `select('email')`.
+   - Devuelve `{ sugerencias: string[], ultimo: { to: string[]; cc: string[] } | null }`.
+   - Normaliza a lowercase y trim para deduplicar.
 
-**Función helper `liberar_conceptos_de_proforma(p_proforma_id uuid)`** (SECURITY DEFINER):
-- Actualiza `conceptos_venta` (`proforma_id=NULL`, `estado_facturacion='pendiente'`) para la proforma dada.
-- Recalcula `embarques.tiene_proforma` para el embarque asociado.
-- Retorna `int` con la cantidad de conceptos liberados.
+2. **`EnviarProformaDialog.tsx`**:
+   - Consumir el hook con `proforma.cliente_id`.
+   - En el `useEffect` de apertura: si `destinatarios` está vacío y hay `ultimo`, prefill "Para" y "CC" con los strings separados por `, `.
+   - Añadir `<datalist id="proforma-emails-sugeridos">` con las `sugerencias` y enlazar los `<Input>` de "Para" y "CC" con `list="proforma-emails-sugeridos"`.
+   - Como los inputs contienen listas separadas por coma, el `datalist` nativo autocompleta la última palabra escrita — comportamiento aceptable y sin dependencias nuevas.
+   - Debajo del campo "Para", mostrar un pequeño hint tipo `Últimos usados: cliente@x.com, contabilidad@x.com` (máx. 3), clicables para agregar al campo si no están ya presentes.
 
-**Extender las 2 RPCs de respuesta** para llamar a la helper cuando la respuesta sea `rechazada`:
-- `actualizar_estado_cliente_proforma` (manual)
-- `portal_responder_por_token` (portal público)
+3. **Sin cambios de BD**: `proforma_envios` ya guarda `destinatarios` y `cc`; RLS ya permite lecturas por `organization_id`.
 
-Ambas escriben la cuenta de conceptos liberados en el JSON de bitácora y en el mensaje de notificación interna.
+## Detalles técnicos
 
-**Trigger anti-rechazo-post-facturación:** el trigger `trg_enforce_proforma_aceptada` ya bloquea facturar sin aceptación; agregar validación adicional en las RPCs para que no se pueda pasar a `rechazada` si `estado_proforma = 'facturada'` (con mensaje claro).
+- Extracción robusta del email desde `destinatarios` (jsonb): soporta tanto `[{ email: "..." }]` (formato actual) como strings sueltos por si hay legacy.
+- Validación de email simple con regex antes de agregar al hint clicable, para no ofrecer basura.
+- El prefill sólo ocurre en la apertura y sólo si los campos están vacíos, para no pisar edición del usuario.
+- Se respeta la regla Power of 10: componente sigue ≤200 líneas — el hook se aísla en su propio archivo.
+- Tipos: `ProformaEnvioDestinatario = { email: string; nombre?: string }`, sin `any`, con `// SAFE-CAST:` sólo si es necesario para castear el `jsonb`.
 
-### 2. Frontend — detalle de proforma
+## Bitácora
 
-`ProformaDetalleCards.tsx`:
-- Cuando `estado_cliente = 'rechazada'`: mostrar tarjeta destacada roja con `motivo_rechazo`, fecha de rechazo, y origen (portal/manual/histórica) — reutilizando la lógica de origen ya existente.
-- La sección de conceptos ya no permitirá "Convertir a factura" (el gate actual ya lo bloquea).
-
-### 3. Frontend — detalle del embarque (tab Facturación)
-
-Nuevo componente `AvisoProformasRechazadas` en `src/features/embarques/components/`:
-- Lee las proformas del embarque con `estado_cliente = 'rechazada'` en las últimas 30 días.
-- Muestra `Alert` variant destructiva con: número de proforma, fecha, motivo, cliente.
-- Botón "Generar nueva proforma" que abre el wizard existente con los conceptos ya liberados pre-seleccionados.
-- Se inserta en la parte superior del tab Facturación, arriba del listado de conceptos.
-
-### 4. Feedback al usuario
-
-En el dialog manual (`RespuestaClienteManualDialog`): al confirmar rechazo, además del toast actual mostrar la cantidad de conceptos liberados: `"Proforma PRO-XXXX rechazada. Se liberaron N conceptos para regenerar."` (usando `sonner` `toast.success`).
-
-### 5. Retrocompatibilidad con proformas rechazadas existentes
-
-Migración one-shot: para proformas ya rechazadas antes de este cambio (`estado_cliente='rechazada'` pero con conceptos aún amarrados), ejecutar `liberar_conceptos_de_proforma` una sola vez. Diagnóstico previo con `SELECT COUNT(*)` antes de correr para reportar el impacto.
-
-### 6. Tests
-
-- Unit test del helper `liberar_conceptos_de_proforma` (migración de fixture).
-- Integration test en `respuestaCliente.test.ts` que verifica que después de rechazar, los conceptos quedan con `proforma_id=null`.
-- Architecture test: verificar que el trigger de `tiene_proforma` refleje el estado correcto.
-
-### 7. Versionado
-
-Bump a `13.145.0` (minor: cambio de comportamiento del flujo de rechazo) + entrada detallada en `CHANGELOG.md`.
+- Bump `APP_VERSION` a `13.145.1`.
+- Entrada en `CHANGELOG.md`: "Modal de envío de proforma recuerda correos previamente usados por cliente (prefill + autocompletado)".
 
 ## Fuera de alcance
 
-- No se elimina ni archiva la proforma rechazada (se conserva como histórico).
-- No se toca el flujo de aceptación (ese sigue igual).
-- No se agrega un botón de "Re-abrir" para pasar de `rechazada` a `pendiente` — si el cliente cambia de opinión, el equipo debe generar una nueva proforma.
-
-## Diagrama del flujo
-
-```text
-Cliente/Admin rechaza
-        │
-        ▼
-RPC (portal_responder_por_token | actualizar_estado_cliente_proforma)
-        │
-        ├─► UPDATE proformas SET estado_cliente='rechazada', motivo_rechazo, rechazada_at
-        │
-        ├─► liberar_conceptos_de_proforma()
-        │     ├─► UPDATE conceptos_venta SET proforma_id=NULL, estado_facturacion='pendiente'
-        │     └─► UPDATE embarques SET tiene_proforma = (queda otra proforma?)
-        │
-        ├─► INSERT bitacora_actividad (con conceptos_liberados)
-        │
-        └─► INSERT notificaciones_internas (admins/operadores/contadores)
-                    │
-                    ▼
-        Embarque muestra <AvisoProformasRechazadas>
-                    │
-                    ▼
-        Operador clic "Generar nueva proforma" → wizard con conceptos ya libres
-```
+- No se crea un editor de contactos ni se marcan contactos como "de facturación".
+- No se agrega un combobox/chips avanzado (queda propuesto como mejora futura si se quiere UX tipo Gmail con tags).

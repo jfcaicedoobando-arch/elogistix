@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -54,16 +55,26 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState<EnvioOk | null>(null);
+  const { data: memoria } = useDestinatariosSugeridos(proforma.cliente_id);
 
   useEffect(() => {
     if (open) {
       setAsunto(`Proforma ${proforma.numero ?? ""} para su aprobación`.trim());
       setMensaje(defaultMensaje(proforma));
       setEnviado(null);
-      setDestinatarios("");
-      setCc("");
+      setDestinatarios(memoria?.ultimo?.to.join(", ") ?? "");
+      setCc(memoria?.ultimo?.cc.join(", ") ?? "");
     }
-  }, [open, proforma]);
+  }, [open, proforma, memoria]);
+
+  function agregarEmail(target: "to" | "cc", email: string) {
+    const setter = target === "to" ? setDestinatarios : setCc;
+    const current = target === "to" ? destinatarios : cc;
+    const partes = current.split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (partes.includes(email.toLowerCase())) return;
+    setter(current ? `${current.replace(/[,;\s]+$/, "")}, ${email}` : email);
+  }
+
 
   async function handleEnviar() {
     const to = destinatarios.split(/[,;\s]+/).filter(Boolean).map((email) => ({ email }));
@@ -119,24 +130,47 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
 
         {!enviado && (
           <div className="space-y-3">
+            <datalist id="proforma-emails-sugeridos">
+              {(memoria?.sugerencias ?? []).map((e) => (
+                <option key={e} value={e} />
+              ))}
+            </datalist>
             <div>
               <Label htmlFor="dest">Para *</Label>
               <Input
                 id="dest"
+                list="proforma-emails-sugeridos"
                 value={destinatarios}
                 onChange={(e) => setDestinatarios(e.target.value)}
                 placeholder="cliente@empresa.com, otro@empresa.com"
               />
+              {memoria?.sugerencias && memoria.sugerencias.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                  <span>Recientes:</span>
+                  {memoria.sugerencias.slice(0, 4).map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => agregarEmail("to", e)}
+                      className="rounded border px-1.5 py-0.5 hover:bg-accent hover:text-accent-foreground"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="cc">CC (opcional)</Label>
               <Input
                 id="cc"
+                list="proforma-emails-sugeridos"
                 value={cc}
                 onChange={(e) => setCc(e.target.value)}
                 placeholder="contabilidad@empresa.com"
               />
             </div>
+
             <div>
               <Label htmlFor="asunto">Asunto</Label>
               <Input id="asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
