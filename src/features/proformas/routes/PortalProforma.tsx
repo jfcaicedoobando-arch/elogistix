@@ -1,0 +1,100 @@
+/**
+ * Portal público de proformas: `/portal/proformas/:token`.
+ * Sin autenticación. Permite al cliente aceptar o rechazar la proforma.
+ */
+import { useParams } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, XCircle, Clock, AlertTriangle, FileText, Loader2 } from "lucide-react";
+import { Seo } from "@/components/shared/Seo";
+import { usePortalProforma } from "@/features/proformas/hooks/usePortalProforma";
+import { PortalProformaResumen } from "@/features/proformas/components/portal/PortalProformaResumen";
+import { PortalProformaAcciones } from "@/features/proformas/components/portal/PortalProformaAcciones";
+
+function fechaMx(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  try {
+    return new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+  } catch { return "—"; }
+}
+
+export default function PortalProforma() {
+  const { token } = useParams<{ token: string }>();
+  const { loading, error, data, submitting, responder } = usePortalProforma(token);
+
+  return (
+    <div className="min-h-screen bg-muted/30 py-8 px-4">
+      <Seo title="Proforma para revisión — Libre Carga" description="Portal de aprobación de proformas" />
+      <div className="max-w-2xl mx-auto space-y-4">
+        <div className="flex items-center gap-2 text-primary">
+          <FileText className="h-5 w-5" />
+          <h1 className="text-xl font-semibold">Libre Carga · Portal de proformas</h1>
+        </div>
+
+        {loading && (
+          <Card>
+            <CardContent className="py-10 flex items-center justify-center gap-2 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" /> Cargando proforma…
+            </CardContent>
+          </Card>
+        )}
+
+        {!loading && (error || data?.estado_link === "token_invalido") && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Enlace inválido</AlertTitle>
+            <AlertDescription>
+              El enlace no es válido o fue revocado. Solicita uno nuevo a tu ejecutivo de cuenta.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!loading && data?.proforma && data.estado_link === "expirado" && (
+          <Alert>
+            <Clock className="h-4 w-4" />
+            <AlertTitle>Enlace expirado</AlertTitle>
+            <AlertDescription>
+              Este enlace expiró el {fechaMx(data.proforma.token_expira_at)}. Solicita uno nuevo a tu ejecutivo.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!loading && data?.proforma && (data.estado_link === "activo" || data.estado_link === "respondida") && (
+          <>
+            {data.estado_link === "respondida" && (
+              <Alert>
+                {data.proforma.estado_cliente === "aceptada" ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-destructive" />
+                )}
+                <AlertTitle className="flex items-center gap-2">
+                  Proforma {data.proforma.estado_cliente}
+                  <Badge variant={data.proforma.estado_cliente === "aceptada" ? "default" : "destructive"}>
+                    {data.proforma.estado_cliente}
+                  </Badge>
+                </AlertTitle>
+                <AlertDescription>
+                  {data.proforma.estado_cliente === "aceptada"
+                    ? `Aceptada el ${fechaMx(data.proforma.aceptada_at)}. Gracias por tu confirmación.`
+                    : `Rechazada el ${fechaMx(data.proforma.rechazada_at)}.${data.proforma.motivo_rechazo ? ` Motivo: ${data.proforma.motivo_rechazo}` : ""}`}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <PortalProformaResumen proforma={data.proforma} conceptos={data.conceptos} />
+
+            {data.estado_link === "activo" && (
+              <PortalProformaAcciones submitting={submitting} onResponder={responder} error={null} />
+            )}
+          </>
+        )}
+
+        <p className="text-xs text-muted-foreground text-center pt-4">
+          © Libre Carga — Este enlace es único para tu proforma y expira por seguridad.
+        </p>
+      </div>
+    </div>
+  );
+}

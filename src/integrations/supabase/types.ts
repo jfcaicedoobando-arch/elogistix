@@ -4840,6 +4840,8 @@ export type Database = {
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
+          token_expira_at: string | null
+          token_publico: string | null
           total_mxn: number
           total_usd: number
           ultimo_envio_email: string | null
@@ -4886,6 +4888,8 @@ export type Database = {
           subtotal_mxn?: number
           subtotal_usd?: number
           tasa_iva_aplicada?: number
+          token_expira_at?: string | null
+          token_publico?: string | null
           total_mxn?: number
           total_usd?: number
           ultimo_envio_email?: string | null
@@ -4932,6 +4936,8 @@ export type Database = {
           subtotal_mxn?: number
           subtotal_usd?: number
           tasa_iva_aplicada?: number
+          token_expira_at?: string | null
+          token_publico?: string | null
           total_mxn?: number
           total_usd?: number
           ultimo_envio_email?: string | null
@@ -6139,6 +6145,8 @@ export type Database = {
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
+          token_expira_at: string | null
+          token_publico: string | null
           total_mxn: number
           total_usd: number
           ultimo_envio_email: string | null
@@ -6331,6 +6339,8 @@ export type Database = {
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
+          token_expira_at: string | null
+          token_publico: string | null
           total_mxn: number
           total_usd: number
           ultimo_envio_email: string | null
@@ -6529,6 +6539,8 @@ export type Database = {
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
+          token_expira_at: string | null
+          token_publico: string | null
           total_mxn: number
           total_usd: number
           ultimo_envio_email: string | null
@@ -6772,6 +6784,10 @@ export type Database = {
         Returns: string
       }
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
+      generar_token_proforma: {
+        Args: { p_dias_vigencia?: number; p_proforma_id: string }
+        Returns: Json
+      }
       get_agente_rutas: {
         Args: never
         Returns: {
@@ -6998,6 +7014,10 @@ export type Database = {
         }[]
       }
       pnl_financiero_embarque: { Args: { _embarque_id: string }; Returns: Json }
+      portal_obtener_proforma_por_token: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       portal_responder_cotizacion:
         | {
             Args: { p_cotizacion_id: string; p_respuesta: string }
@@ -7011,6 +7031,10 @@ export type Database = {
             }
             Returns: Json
           }
+      portal_responder_por_token: {
+        Args: { p_motivo?: string; p_respuesta: string; p_token: string }
+        Returns: Json
+      }
       portal_responder_proforma: {
         Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
         Returns: Json

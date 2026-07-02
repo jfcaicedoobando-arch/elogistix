@@ -19,6 +19,7 @@ const GuiaCartaPorte = lazy(() => import("@/features/marketing/routes/GuiaCartaP
 const GuiaIncoterms2020 = lazy(() => import("@/features/marketing/routes/GuiaIncoterms2020"));
 const GuiaPuertosMexico = lazy(() => import("@/features/marketing/routes/GuiaPuertosMexico"));
 const Onboarding = lazy(() => import("@/features/onboarding/routes/Onboarding"));
+const PortalProforma = lazy(() => import("@/features/proformas/routes/PortalProforma"));
 
 export const publicRoutes = (
   <>
@@ -36,6 +37,7 @@ export const publicRoutes = (
     <Route path="/recursos/guia-incoterms-2020" element={<GuiaIncoterms2020 />} />
     <Route path="/recursos/guia-puertos-mexico" element={<GuiaPuertosMexico />} />
     <Route path="/onboarding" element={<Onboarding />} />
+    <Route path="/portal/proformas/:token" element={<PortalProforma />} />
     <Route path="*" element={<NotFound />} />
 
   </>

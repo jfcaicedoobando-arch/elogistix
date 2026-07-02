@@ -15,8 +15,10 @@ export interface TemplateEntry {
 
 import { template as cotizacionRespuesta } from './cotizacion-respuesta.tsx';
 import { template as cotizacionEnviada } from './cotizacion-enviada.tsx';
+import { template as proformaEnviada } from './proforma-enviada.tsx';
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'cotizacion-respuesta': cotizacionRespuesta,
   'cotizacion-enviada': cotizacionEnviada,
+  'proforma-enviada': proformaEnviada,
 };
