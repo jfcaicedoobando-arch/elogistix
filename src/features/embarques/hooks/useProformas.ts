@@ -11,7 +11,6 @@ import {
   consolidarProformas as svcConsolidar,
   crearProforma as svcCrear,
   eliminarProforma as svcEliminar,
-  fetchProformasAprobadas,
   fetchProformasTodas,
   fetchProformasEmbarque,
   fetchProformasPendientes,
