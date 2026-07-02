@@ -1,83 +1,86 @@
-## Diagnóstico de PRO-2026-0949
+# Plan: Envío, aceptación y rechazo de proformas
 
-Revisé la BD y **la aprobación nunca se aplicó**:
+Reutilizamos el patrón ya probado del módulo Cotizaciones (email branded + portal del cliente + aceptar/rechazar) y lo aplicamos a Proformas, agregando además un fallback manual para el equipo contable dentro de la página de la proforma. Al final, sólo una proforma **aceptada por el cliente** (o marcada manualmente como aceptada) puede convertirse en factura.
 
-| Campo | Valor actual |
-|---|---|
-| `estado_revision` | `pendiente` |
-| `estado_aprobacion` | `borrador` |
-| `updated_at` | igual a `created_at` (17:31:22 UTC) |
-| `bitacora_actividad` | sin registros |
+## 1. Modelo de datos (una migración)
 
-Es decir, la UPDATE nunca modificó la fila. **No fue error del usuario ni de la UI: fue RLS silenciosa.**
+Agregar a `public.proformas`:
 
-### Causa raíz
+- `estado_cliente` text — `pendiente` (default), `aceptada`, `rechazada`.
+- `aceptada_at` / `rechazada_at` timestamptz.
+- `aceptada_por` text (email del contacto o `manual:<user_id>`).
+- `motivo_rechazo` text.
+- `enviada_at` timestamptz, `enviada_por` uuid, `ultimo_envio_email` text.
 
-La política `Tenant CRUD proformas` restringe UPDATE a estos roles: `admin`, `operador`, `super_admin`. **No incluye `admin_org` ni `contador`.**
+Nueva tabla `proforma_envios` (espejo de `cotizacion_envios`): id, proforma_id, destinatarios[], cc[], asunto, mensaje, enviada_at, enviada_por, snapshot_totales jsonb. RLS por `organization_id` + GRANT a `authenticated` y `service_role`.
 
-Hector (y admin@chino.com) tienen rol `admin_org`. Cuando la app llama:
+Regla de negocio: `convertir_proformas_a_factura` valida que **todas** las proformas del array tengan `estado_cliente = 'aceptada'` **y** `estado_revision = 'aprobada'`; si no, aborta con mensaje claro.
 
-```ts
-supabase.from("proformas").update({ estado_revision: "aprobada" }).in("id", [...])
-```
+## 2. Envío por email (modal en la página de la proforma)
 
-PostgREST + RLS filtran la fila, la UPDATE afecta **0 renglones**, pero **Supabase no devuelve error** (comportamiento estándar de PostgREST: 0 rows ≠ error). El hook lanza el toast verde de éxito y el usuario cree que se aprobó.
+Componente `EnviarProformaDialog.tsx` calcado de `EnviarCotizacionDialog`:
 
-Analogía: es como pasar una tarjeta de acceso en un torniquete que no tiene tu permiso — el sensor hace *bip verde* pero la puerta nunca se abre. El torniquete (RLS) filtró silenciosamente.
+- `DestinatariosPicker` con contactos del cliente + emails manuales, CC (usuario actual).
+- Asunto/mensaje editables con plantilla (folio, cliente, totales MXN/USD).
+- Edge Function nueva `enviar-proforma-email` (basada en `enviar-cotizacion-email`): genera PDF con `proformaPdf.tsx`, envía por Lovable Emails, registra fila en `proforma_envios`, marca `enviada_at`/`ultimo_envio_email`. Idempotencia por `proforma_id + destinatarios_hash`.
+- El correo incluye un botón **"Revisar en el portal"** con link firmado al portal del cliente.
 
-El mismo hueco existe en tablas hermanas de facturación:
+## 3. Portal del cliente: aceptar / rechazar
 
-| Tabla | admin_org en RLS CRUD | contador en RLS CRUD |
-|---|---|---|
-| `proformas` | ❌ | ❌ |
-| `proforma_conceptos_consolidados` | ❌ | ❌ |
-| `conceptos_venta` | ❌ | ✅ |
-| `facturas` | ❌ | ✅ |
+Nuevas rutas dentro de `portalRoutes.tsx`:
 
-`admin_org` no puede tocar nada de facturación desde la BD, aunque la UI se lo permita.
+- `/portal/proformas` — lista de proformas visibles del cliente (RLS por `cliente_id` vinculado al usuario portal).
+- `/portal/proformas/:id` — detalle con PDF embebido y dos acciones:
+  - **Aceptar proforma** → confirma en modal, escribe `estado_cliente='aceptada'`, `aceptada_at=now()`, `aceptada_por=<email>`.
+  - **Rechazar proforma** → pide motivo obligatorio, escribe `estado_cliente='rechazada'` + `motivo_rechazo`.
+- RPC `portal_actualizar_estado_proforma(p_id, p_accion, p_motivo)` con `SECURITY DEFINER` que valida que el usuario autenticado esté ligado al `cliente_id` de la proforma (mismo patrón que las RPCs de cotizaciones del portal).
+- Ambas acciones registran en `bitacora_actividad` y disparan `notificar-respuesta-proforma` (Edge Function) que avisa al operador y a contabilidad vía notificación interna + email.
 
-## Plan de arreglo
+## 4. Fallback manual para contabilidad
 
-### 1. Migración RLS — incluir `admin_org` y `contador` en las 4 tablas de facturación
+En `ProformaDetalle.tsx`, dentro de `AccionesProforma`, agregar bloque **"Estado del cliente"** visible sólo para roles `admin_org`, `contador`, `admin`, `super_admin`:
 
-Reemplazar las policies `Tenant CRUD` de `proformas`, `proforma_conceptos_consolidados`, `conceptos_venta` (agregar `admin_org`) y `facturas` (agregar `admin_org`) para que el predicado de rol quede:
+- Badge del `estado_cliente` actual.
+- Botones **"Marcar como aceptada por el cliente"** y **"Marcar como rechazada"** (con motivo obligatorio).
+- Requiere doble confirmación (`AlertDialog`) y deja rastro: `aceptada_por='manual:<user_id>'` + entrada en bitácora con contexto (por qué fue manual, ej. "cliente confirmó por WhatsApp").
+- Sólo disponible cuando `estado_cliente = 'pendiente'`.
+
+## 5. Bloqueo de conversión a factura
+
+- `ConvertirAFacturaDialog` deshabilita el botón "Generar factura borrador" cuando alguna proforma seleccionada tiene `estado_cliente != 'aceptada'`, mostrando `Alert` explicativo.
+- `fetchProformasPorFacturar` (bandeja "Por Timbrar") filtra por `estado_revision='aprobada' AND estado_cliente='aceptada'`. Las que estén aceptadas pero sin aprobación interna siguen apareciendo en el flujo actual de aprobación.
+- El RPC valida server-side (defensa en profundidad).
+
+## 6. Visualización
+
+- `EstadoBadges` en `ProformaDetalleCards.tsx` gana un tercer badge (Cliente: Pendiente/Aceptada/Rechazada) con colores warning/success/destructive.
+- En la lista `/proformas` agregar columna "Cliente" con el mismo badge y filtro rápido.
+- Timeline compacto arriba: Enviada → Aceptada/Rechazada → Aprobada internamente → Facturada.
+
+## 7. Detalles técnicos
+
+- **Roles**: envío lo pueden disparar `operador`, `admin_org`, `contador`, `admin`. Aceptación manual sólo `admin_org`, `contador`, `admin`, `super_admin`.
+- **RLS**: policies nuevas para portal (`cliente_id` = `client_users.cliente_id` del `auth.uid()`). GRANT a `anon` NO — sólo `authenticated`.
+- **Edge Functions**: reutilizar helpers `wrapEdgeHandler` + `authenticateRequest` ya estándar. Deploy explícito de `enviar-proforma-email` y `notificar-respuesta-proforma`.
+- **Tests**: unit tests para RPC (aceptación/rechazo/permiso), test de arquitectura para nuevos componentes ≤200 líneas, test de que `ConvertirAFacturaDialog` bloquea proformas no aceptadas, test del edge de idempotencia.
+- **PDF**: si no existe todavía, generar snapshot del PDF al enviar y guardarlo en Storage (`proformas/<id>/<envio_id>.pdf`) para que el link del portal siga funcionando aunque cambien los conceptos.
+
+## Estructura visual
 
 ```text
-has_role(uid,'admin') OR has_role(uid,'admin_org') OR has_role(uid,'operador')
-  OR has_role(uid,'contador') OR has_role(uid,'super_admin')
+Proforma detalle
+├── Header (folio, badges Revisión + Cliente + Facturada)
+├── Timeline: Enviada → Respuesta cliente → Aprobada → Facturada
+├── Acciones
+│   ├── Descargar PDF
+│   ├── Enviar por email  ◀ nuevo
+│   ├── Marcar aceptada/rechazada manual  ◀ nuevo (solo contab.)
+│   └── Convertir a factura (bloqueado si no aceptada)
+└── Datos + Conceptos + Totales
 ```
 
-Mantengo `organization_id = current_user_org_id()` intacto (aislamiento multi-tenant no cambia).
+## Alcance excluido (para no explotar el PR)
 
-### 2. Endurecer `aprobarProformas` y `consolidarProformas` para detectar "0 filas afectadas"
-
-En `src/features/proformas/services/crud.ts` y `consolidar.ts`, cambiar el patrón:
-
-```ts
-.update({ estado_revision: "aprobada" }).in("id", ids)
-```
-
-por:
-
-```ts
-.update({ ... }).in("id", ids).select("id")
-```
-
-y si `data.length !== ids.length` → `throw new Error("No se pudo aprobar…")`. Así, si RLS vuelve a filtrar en el futuro, el toast será rojo y no verde.
-
-### 3. Backfill de la proforma actual
-
-Una vez migrada la RLS, el usuario reintenta el clic **Aprobar individual** sobre PRO-2026-0949. No aplico UPDATE manual desde el plan: prefiero que quede registrada por el mismo flujo (bitácora + `updated_at` correcto).
-
-### 4. Changelog + bump de versión
-
-`13.142.11` → `13.142.12` con nota:
-
-> fix(facturación) — `admin_org` no podía aprobar/consolidar proformas ni tocar `proforma_conceptos_consolidados`/`facturas`; la RLS filtraba silenciosamente y la UI mostraba toast verde falso. Se amplían las policies `Tenant CRUD` e insertamos `.select()` post-update en `aprobarProformas`/`consolidarProformas` para que cualquier futura fuga RLS lance error visible.
-
-## Fuera de alcance (solo aviso)
-
-- No toco la política del rol `cliente` ni la de portal de agentes.
-- No revalido a fondo `pagos_factura`, `factura_notas_credito`, `factura_recordatorios` — puedo hacerlo en un pase aparte si quieres una auditoría completa de RLS del módulo fiscal.
-
-¿Procedo con la migración?
+- Firma electrónica del cliente (sólo click "Aceptar").
+- Recordatorios automáticos (se puede dejar para siguiente iteración).
+- Aceptación parcial de conceptos: se acepta la proforma completa o se rechaza.
