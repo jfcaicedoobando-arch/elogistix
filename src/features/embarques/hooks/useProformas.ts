@@ -97,21 +97,6 @@ export function useCrearProforma() {
   });
 }
 
-export function useMarcarProformaFacturada() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (params: MarcarFacturadaParams & { embarqueId: string }) =>
-      svcMarcarFacturada(params).then(() => params),
-    onSuccess: (params) => {
-      notifySuccess(toast, { title: "Proforma facturada y registro de factura creado" });
-      invalidateProformaCaches(queryClient, params.embarqueId);
-      queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
-    },
-    onError: (error: Error) => {
-      notifyError(toast, { title: `Error: ${error.message}`, error, method: "MARK_PROFORMA_FACTURADA" });
-    },
-  });
-}
 
 export function useEliminarProforma() {
   const queryClient = useQueryClient();
