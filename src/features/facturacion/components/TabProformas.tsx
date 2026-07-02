@@ -16,6 +16,7 @@ import { useMemo } from "react";
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
   const navigate = useNavigate();
   const c = useTabProformasController({ isInRange });
+  const { canEmitirFactura } = usePermissions();
 
   const columns = useMemo(
     () => buildProformasColumns({
@@ -29,7 +30,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
   );
 
   const seleccionados = c.selectedProformas.length;
-  const puedeFusionar = seleccionados > 0 && c.fusionInfo.sameCliente;
+  const puedeFusionar = seleccionados > 0 && c.fusionInfo.sameCliente && canEmitirFactura;
 
   return (
     <div className="space-y-4">
