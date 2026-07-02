@@ -25,6 +25,7 @@ import { calcularEstadosConceptos } from "./facturacion/estadoConceptoBadge";
 import { FlujoFacturacionStepper } from "./facturacion/FlujoFacturacionStepper";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
+import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
 import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
@@ -126,6 +127,9 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
           onEliminarBorrador={() => setProformaAEliminar({ id: borradorVacio.id, numero: borradorVacio.numero })}
         />
       )}
+
+      <AvisoProformasRechazadas proformas={proformas} />
+
 
       <HistorialProformas
         proformas={proformas}
