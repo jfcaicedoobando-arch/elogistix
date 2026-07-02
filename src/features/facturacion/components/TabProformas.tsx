@@ -112,11 +112,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
         </CardContent>
       </Card>
 
-      <DialogMarcarFacturada
-        open={!!c.proformaAFacturar}
-        onOpenChange={(o) => !o && c.setProformaAFacturar(null)}
-        proforma={c.proformaAFacturar}
-      />
+
 
       {c.convertOpen && c.fusionInfo.organizationId && puedeFusionar && (
         <ConvertirAFacturaDialog
