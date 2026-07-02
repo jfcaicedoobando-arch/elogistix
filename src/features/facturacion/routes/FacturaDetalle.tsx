@@ -152,7 +152,15 @@ export default function FacturaDetalle() {
         sustituirOpen={sustituirOpen} setSustituirOpen={setSustituirOpen}
       />
 
-
+      <DoubleConfirmDeleteDialog
+        open={eliminarOpen}
+        onOpenChange={setEliminarOpen}
+        entityName={`borrador ${factura.numero}`}
+        description="Se eliminará el borrador de factura y la proforma volverá a estar disponible para convertir. Sólo se pueden eliminar borradores sin timbrar."
+        finalDescription="Esta acción es irreversible: se borran conceptos, la factura borrador y se revierte la proforma."
+        isPending={eliminando}
+        onConfirm={() => eliminar(factura.id)}
+      />
     </div>
   );
 }
