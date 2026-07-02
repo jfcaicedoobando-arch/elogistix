@@ -130,24 +130,47 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
 
         {!enviado && (
           <div className="space-y-3">
+            <datalist id="proforma-emails-sugeridos">
+              {(memoria?.sugerencias ?? []).map((e) => (
+                <option key={e} value={e} />
+              ))}
+            </datalist>
             <div>
               <Label htmlFor="dest">Para *</Label>
               <Input
                 id="dest"
+                list="proforma-emails-sugeridos"
                 value={destinatarios}
                 onChange={(e) => setDestinatarios(e.target.value)}
                 placeholder="cliente@empresa.com, otro@empresa.com"
               />
+              {memoria?.sugerencias && memoria.sugerencias.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                  <span>Recientes:</span>
+                  {memoria.sugerencias.slice(0, 4).map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => agregarEmail("to", e)}
+                      className="rounded border px-1.5 py-0.5 hover:bg-accent hover:text-accent-foreground"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="cc">CC (opcional)</Label>
               <Input
                 id="cc"
+                list="proforma-emails-sugeridos"
                 value={cc}
                 onChange={(e) => setCc(e.target.value)}
                 placeholder="contabilidad@empresa.com"
               />
             </div>
+
             <div>
               <Label htmlFor="asunto">Asunto</Label>
               <Input id="asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
