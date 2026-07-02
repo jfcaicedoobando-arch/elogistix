@@ -43,12 +43,16 @@ export function useProformasEmbarque(embarqueId?: string) {
   });
 }
 
+/**
+ * Listado completo de proformas de la organización (pendientes, aprobadas y
+ * facturadas). Los filtros por estado se aplican en la UI (`useTabProformasState`).
+ */
 export function useProformas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: queryKeys.proformas.aprobadas(organizationId),
     enabled: !!organizationId,
-    queryFn: () => fetchProformasAprobadas(organizationId!),
+    queryFn: () => fetchProformasTodas(organizationId!),
     staleTime: 30_000,
   });
 }
