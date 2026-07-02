@@ -8,3 +8,5 @@ export * from "./crud";
 export * from "./facturar";
 export * from "./consolidar";
 export { asignarConceptosAProforma } from "./asignarConceptos";
+export * from "./respuestaCliente";
+export * from "./registrarEnvio";
