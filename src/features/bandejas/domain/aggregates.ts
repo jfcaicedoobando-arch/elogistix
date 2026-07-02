@@ -6,7 +6,6 @@ import type {
   CarteraPendienteRow,
   CxpPorCapturarRow,
   CxpPorPagarRow,
-  FacturacionPorEmitirRow,
 } from "../services/bandejas";
 
 const num = (v: number | string | null | undefined): number => Number(v ?? 0) || 0;
@@ -99,23 +98,3 @@ export function resumirCxpPorCapturar(rows: CxpPorCapturarRow[]): CxpCapturarSum
   return { total: rows.length, totalPresupuestado, facturasCapturadas };
 }
 
-// ===== Facturación por emitir =====
-export const DIAS_ATRASO_FACTURACION = 7;
-
-export interface FacturacionEmitirSummary {
-  total: number;
-  totalPorFacturar: number;
-  atrasadas: number;
-}
-
-export function resumirFacturacionPorEmitir(
-  rows: FacturacionPorEmitirRow[],
-): FacturacionEmitirSummary {
-  let totalPorFacturar = 0;
-  let atrasadas = 0;
-  for (const r of rows) {
-    totalPorFacturar += num(r.total);
-    if (r.dias_desde_emision > DIAS_ATRASO_FACTURACION) atrasadas += 1;
-  }
-  return { total: rows.length, totalPorFacturar, atrasadas };
-}

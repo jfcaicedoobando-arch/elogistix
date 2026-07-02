@@ -85,7 +85,7 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/embarques/:id", "/embarques/:id/editar",
     "/facturacion", "/facturacion/:id", "/proformas/:id",
     "/cxp", "/cxp/por-capturar", "/cxp/por-pagar", "/compras", "/compras/aging",
-    "/facturacion/por-emitir", "/cartera",
+    "/cartera",
     "/tesoreria", "/tesoreria/cuentas", "/tesoreria/conciliacion", "/tesoreria/flujo",
     "/comisiones",
     "/costeo", "/costeo/tarifas", "/costeo/buscar", "/costeo/rutas",
@@ -119,7 +119,7 @@ describe("routes/appRoutes — gates de rol (post helper guarded())", () => {
     ["/compras/aging", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"]],
     ["/cxp/por-capturar", ["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero", "gerente_operaciones", "gerente_visor"]],
     ["/cxp/por-pagar", ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"]],
-    ["/facturacion/por-emitir", ["admin", "super_admin", "admin_org", "contador", "gerente_operaciones", "gerente_visor"]],
+    
     ["/cartera", ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"]],
     ["/tesoreria", TESORERIA_READ_ROLES],
     ["/tesoreria/cuentas", TESORERIA_READ_ROLES],
@@ -158,6 +158,7 @@ describe("routes/appRoutes — redirecciones Navigate", () => {
     ["/profit", "/profit/dashboard"],
     ["/reportes", "/reportes/rentabilidad"],
     ["/rentabilidad", "/reportes/rentabilidad"],
+    ["/facturacion/por-emitir", "/proformas?estado=aceptada"],
   ])("%s redirige a %s con replace", (from, to) => {
     const rec = records.find((r) => r.path === from);
     expect(rec?.element).toBeTruthy();
