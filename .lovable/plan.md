@@ -1,39 +1,52 @@
+
 ## Objetivo
 
-Marcar como **aceptadas** todas las proformas de la organización **Elogistix** que actualmente están "pendiente de cliente" y cuya fecha sea anterior al **1 de julio de 2026**. Son datos históricos migrados de una versión previa donde no existía el flujo de aprobación.
+Reemplazar el badge confuso `estado_revision` ("Pendiente de revisión") por **dos badges claros e independientes** en el detalle de la proforma:
 
-## Pasos
+1. **Badge de estado del ciclo** (qué está pasando con la proforma)
+2. **Badge de origen de aceptación** (quién la aceptó) — solo visible cuando está aceptada
 
-1. **Diagnóstico (SELECT)** — Contar cuántas proformas cumplen el criterio antes de tocar nada:
-   - `organization_id` = el de Elogistix (lookup por nombre).
-   - `estado_cliente = 'pendiente'`.
-   - `fecha < 2026-07-01`.
-   - `deleted_at IS NULL`.
-   
-   Esto sirve para que confirmes el número antes de ejecutar el UPDATE.
+## Diseño de los badges
 
-2. **Actualización masiva (UPDATE vía tool `insert`)** — Sobre las filas que cumplen el filtro anterior:
-   - `estado_cliente = 'aceptada'`.
-   - `fecha_respuesta_cliente = fecha` de la proforma (para mantener consistencia histórica).
-   - `respondido_por = 'migración histórica pre-julio 2026'` en el campo de nota/comentario correspondiente (si existe columna de nota; si no, solo la fecha).
+### Badge 1 — Estado del ciclo
+| Condición | Texto | Color |
+|---|---|---|
+| `estado_proforma = 'facturada'` | Facturada | verde (success) |
+| `estado_cliente = 'rechazada'` | Rechazada por cliente | rojo (destructive) |
+| `estado_cliente = 'aceptada'` | Aceptada | azul (info) |
+| `estado_cliente = 'pendiente'` | Pendiente cliente | ámbar (warning) |
 
-3. **Verificación (SELECT)** — Reconteo post-update: debe quedar 0 pendientes con fecha < 2026-07-01 en Elogistix.
+### Badge 2 — Origen de aceptación (solo si `estado_cliente = 'aceptada'`)
+| Origen | Texto | Ícono |
+|---|---|---|
+| Portal público (token) | Cliente aceptó por portal | `Globe` |
+| Dialog manual del equipo | Aceptación manual | `UserCheck` |
+| Migración histórica | Aceptación histórica | `Archive` |
 
-4. **Bitácora + versión** — Registro en `CHANGELOG.md` y bump de `APP_VERSION` (patch) documentando la corrección de datos históricos.
+## Cambios técnicos
 
-## Alcance / Restricciones
+### 1. Base de datos
+Agregar columna `aceptacion_origen` a `public.proformas`:
+- Tipo: `text` con `CHECK IN ('portal','manual','migracion')`, nullable.
+- Migración de datos existentes:
+  - `aceptada_por = 'migración histórica pre-julio 2026'` → `'migracion'`
+  - Resto de aceptadas actuales → `'manual'` (todas las anteriores se marcaron desde el dialog).
 
-- **Solo Elogistix.** No toca otras organizaciones.
-- **Solo `estado_cliente = 'pendiente'`.** Proformas ya rechazadas o aceptadas se dejan intactas.
-- **Solo fecha < 2026-07-01.** Las proformas de julio en adelante siguen su flujo normal de aprobación.
-- **No se envían emails ni se generan facturas automáticamente** — solo se cambia el estado de aprobación de cliente.
-- No se altera el trigger de conversión a factura; queda a discreción del equipo convertir cada una cuando corresponda.
+### 2. RPCs
+- `actualizar_estado_cliente_proforma` (manual) → escribe `aceptacion_origen = 'manual'`.
+- `portal_responder_por_token` (portal público) → escribe `aceptacion_origen = 'portal'`.
 
-## Detalles técnicos
+### 3. Frontend
+- `src/features/proformas/components/ProformaDetalleCards.tsx` (`EstadoBadges`): eliminar el badge de `estado_revision`; renderizar los dos badges nuevos con tooltips explicando cada uno.
+- `src/features/proformas/services/portalPublico.ts` y `respuestaCliente.ts`: reflejar el nuevo campo en los tipos de retorno (con `// SAFE-CAST:` mientras se regeneran los tipos).
+- Tabla de proformas (`proformasColumns.tsx`): sin cambios (ya muestra el estado del ciclo correctamente desde el fix anterior).
 
-- Tabla afectada: `public.proformas`.
-- Se usará la tool `supabase--insert` (permite UPDATE de datos existentes).
-- El `organization_id` se resolverá con un subquery: `(SELECT id FROM organizations WHERE nombre ILIKE 'elogistix' LIMIT 1)`.
-- Antes del UPDATE ejecutaré un `SELECT COUNT(*)` con los mismos filtros usando `supabase--read_query` para reportarte el número exacto de filas afectadas.
+### 4. Revisión interna
+El campo `estado_revision` **sigue existiendo en la BD** y sigue bloqueando "Convertir a factura", pero **ya no se muestra como badge en el header** para no confundir. Si más adelante quieres verlo, lo movemos a la tarjeta de "Detalles internos" con etiqueta clara.
 
-¿Procedo?
+### 5. Versionado
+Bump a `13.144.9` + entrada en `CHANGELOG.md`.
+
+## Fuera de alcance
+- No se toca la lógica de facturación (sigue requiriendo revisión interna aprobada + cliente aceptó).
+- No se cambia el flujo del portal ni del dialog manual, solo se etiqueta el origen.

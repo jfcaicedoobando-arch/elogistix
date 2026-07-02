@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.144.9] - 2026-07-02
+- **ui(proformas) — badges del detalle rediseñados en 2 ejes independientes.** El header de la proforma mostraba "Pendiente de revisión" (auditoría interna) junto a "Cliente aceptó" (respuesta externa), lo que causaba confusión sobre el estado real. Ahora se muestran dos badges: (1) **Estado del ciclo** — Pendiente cliente / Aceptada / Rechazada por cliente / Facturada; (2) **Origen de aceptación** (solo cuando `estado_cliente = 'aceptada'`) — Cliente aceptó por portal / Aceptación manual / Aceptación histórica, derivado del prefijo de `proformas.aceptada_por` (`cliente_portal_token`, `manual:<email>`, o string de la migración histórica). Cada badge incluye tooltip explicativo. El campo `estado_revision` sigue existiendo en BD y sigue bloqueando "Convertir a factura", pero ya no se renderiza como badge para evitar confusión visual. No se requirió migración de BD.
+
 ## [13.144.8] - 2026-07-02
 - **data(proformas) — migración histórica Elogistix.** 319 proformas de la organización Elogistix con `fecha_emision < 2026-07-01` que quedaron en `estado_cliente = 'pendiente'` (datos generados antes de que existiera el flujo de aprobación de cliente) se marcaron como `aceptada`, con `aceptada_at = fecha_emision` y `aceptada_por = 'migración histórica pre-julio 2026'`. No se enviaron emails ni se generaron facturas; solo se corrige el estado de aprobación. Otras organizaciones y proformas posteriores a julio no fueron tocadas.
 

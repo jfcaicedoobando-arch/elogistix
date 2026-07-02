@@ -90,13 +90,14 @@ export default function ProformaDetalle() {
 
   const { proforma, conceptos } = data;
   
-  const estadoRev = proforma.estado_revision ?? "aprobada";
-  // SAFE-CAST: columna nueva; tipos generados aún no la incluyen.
-  const rawEstadoCliente = (proforma as unknown as { estado_cliente?: string }).estado_cliente;
+  // SAFE-CAST: columnas nuevas; tipos generados aún no las incluyen.
+  const rawProforma = proforma as unknown as { estado_cliente?: string; aceptada_por?: string | null };
+  const rawEstadoCliente = rawProforma.estado_cliente;
   const estadoCliente: "pendiente" | "aceptada" | "rechazada" =
     rawEstadoCliente === "aceptada" || rawEstadoCliente === "rechazada"
       ? rawEstadoCliente
       : "pendiente";
+  const aceptadaPor = rawProforma.aceptada_por ?? null;
   const factura = proforma.facturas_full;
 
   return (
@@ -109,7 +110,7 @@ export default function ProformaDetalle() {
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold font-mono tabular-nums">{proforma.numero}</h1>
-            <EstadoBadges estadoRev={estadoRev} estadoCliente={estadoCliente} tieneFactura={!!factura} />
+            <EstadoBadges estadoProforma={proforma.estado_proforma} estadoCliente={estadoCliente} aceptadaPor={aceptadaPor} />
           </div>
           <p className="text-sm text-muted-foreground mt-1 truncate" title={proforma.cliente_nombre ?? ''}>
             {proforma.cliente_nombre} • Exp: <span className="font-mono">{proforma.expediente}</span>
