@@ -63,7 +63,8 @@ export async function registrarEnvioProforma(
       asunto: input.asunto,
       mensaje: input.mensaje,
       estado: "registrado",
-      snapshot_totales: input.snapshotTotales ?? null,
+      // SAFE-CAST: jsonb libre, tipo Json auto-generado es demasiado estricto.
+      snapshot_totales: (input.snapshotTotales ?? null) as never,
     })
     .select("id")
     .single();
