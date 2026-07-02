@@ -44,9 +44,13 @@ export default function FacturaDetalle() {
   const [timbrarOpen, setTimbrarOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [sustituirOpen, setSustituirOpen] = useState(false);
+  const [eliminarOpen, setEliminarOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
+  const puedeEliminarBorrador =
+    !!factura && factura.estado === "Borrador" && !factura.facturapi_id && canEdit;
   const handleDownload = useDescargarCfdi(factura?.id);
+  const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
 
   // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
   // proforma (`?accion=timbrar`). Sólo si la factura todavía no está timbrada.
