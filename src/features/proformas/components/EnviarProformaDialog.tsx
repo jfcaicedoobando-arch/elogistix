@@ -6,8 +6,7 @@
  * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
  */
 import { useEffect, useState } from "react";
-import { Loader2, Mail, Copy, CheckCircle2, X } from "lucide-react";
-import { toast as sonnerToast } from "sonner";
+import { Loader2, Mail, Copy, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
 import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
+import { DestinatariosRecientesChips } from "./DestinatariosRecientesChips";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -151,51 +151,14 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
                 onChange={(e) => setDestinatarios(e.target.value)}
                 placeholder="cliente@empresa.com, otro@empresa.com"
               />
-              {sugerenciasVisibles.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                  <span>Recientes:</span>
-                  {sugerenciasVisibles.slice(0, 6).map((e) => (
-                    <span
-                      key={e}
-                      className="group inline-flex items-center gap-0.5 rounded border pl-1.5 pr-0.5 py-0.5 hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => agregarEmail("to", e)}
-                        className="outline-none"
-                      >
-                        {e}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          ocultar(e);
-                          sonnerToast("Correo ocultado", {
-                            description: e,
-                            action: {
-                              label: "Deshacer",
-                              onClick: () => restaurar(e),
-                            },
-                          });
-                        }}
-                        aria-label={`Ocultar ${e}`}
-                        className="rounded p-0.5 opacity-60 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              {ocultos.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => restaurarVarios(ocultos)}
-                  className="mt-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
-                >
-                  Restaurar ocultos ({ocultos.length})
-                </button>
-              )}
+              <DestinatariosRecientesChips
+                sugerencias={sugerenciasVisibles}
+                ocultos={ocultos}
+                onAgregar={(e) => agregarEmail("to", e)}
+                onOcultar={ocultar}
+                onRestaurar={restaurar}
+                onRestaurarVarios={restaurarVarios}
+              />
             </div>
 
             <div>
