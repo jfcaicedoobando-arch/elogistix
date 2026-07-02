@@ -1,4 +1,4 @@
-import { Download, FileText, X } from "lucide-react";
+import { Download, FileText, Loader2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
-import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
+import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
 
