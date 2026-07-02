@@ -30,12 +30,12 @@ vi.mock("@/features/proformas/services", () => ({
 import { useProformas, useCrearProforma } from "../useProformas";
 
 describe("useProformas", () => {
-  it("ejecuta el query y devuelve la lista de proformas aprobadas para la org", async () => {
+  it("ejecuta el query y devuelve la lista completa de proformas de la org", async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useProformas(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(fetchProformasAprobadas).toHaveBeenCalledWith("org-1");
+    expect(fetchProformasTodas).toHaveBeenCalledWith("org-1");
     expect(result.current.data).toEqual(aprobadas);
   });
 
