@@ -105,7 +105,6 @@ export function useTabProformasController(opts?: {
     // selección múltiple (Fase 3 — fusión)
     selectedIds, toggleSelected, clearSelected, isConvertible,
     selectedProformas, fusionInfo,
-    convertOpen, setConvertOpen,
     // export CSV
     csvColumns, csvRows,
     // dialog facturación (flujo legado)
