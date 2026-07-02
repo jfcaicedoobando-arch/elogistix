@@ -7,20 +7,14 @@
  * Fase 3 (Proforma → Factura): añadida columna de selección (`_select`) que
  * permite escoger varias proformas para fusionarlas en una sola factura.
  */
-import { Download, FileCheck2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
-import type { ProformaConFactura, ProformaRow } from "@/features/embarques/hooks";
+import type { ProformaConFactura } from "@/features/embarques/hooks";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { puedeMarcarManualmente } from "@/features/facturacion/constants/deprecation";
 
 interface BuildArgs {
-  descargar: (p: ProformaConFactura) => void;
-  downloadingId: string | null;
-  onMarcarFacturada: (p: ProformaRow) => void;
   selection?: {
     selectedIds: Set<string>;
     toggle: (id: string) => void;
