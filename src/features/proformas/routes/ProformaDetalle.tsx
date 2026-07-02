@@ -89,7 +89,7 @@ export default function ProformaDetalle() {
   }
 
   const { proforma, conceptos } = data;
-  const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
+  
   const estadoRev = proforma.estado_revision ?? "aprobada";
   // SAFE-CAST: columna nueva; tipos generados aún no la incluyen.
   const rawEstadoCliente = (proforma as unknown as { estado_cliente?: string }).estado_cliente;
