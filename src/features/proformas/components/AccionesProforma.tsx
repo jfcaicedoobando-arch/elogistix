@@ -69,15 +69,14 @@ function BotonConvertir({
 
 function computarFlags(proforma: ProformaDetalleFull, canEmitirFactura: boolean) {
   const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
-  const aprobada = (proforma.estado_revision ?? "") === "aprobada";
   const estadoCliente = readEstadoCliente(proforma);
   const clienteAcepto = estadoCliente === "aceptada";
   return {
     facturada,
     puedeConvertir:
-      aprobada && clienteAcepto && !facturada && !proforma.factura_id && canEmitirFactura,
+      clienteAcepto && !facturada && !proforma.factura_id && canEmitirFactura,
     puedeResponder: !facturada && estadoCliente === "pendiente",
-    mostrarHint: aprobada && !clienteAcepto && !facturada,
+    mostrarHint: !clienteAcepto && !facturada,
   };
 }
 
