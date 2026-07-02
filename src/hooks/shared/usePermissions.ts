@@ -191,5 +191,6 @@ export function usePermissions() {
     canRegistrarCobro,
     canCerrarEmbarque,
     canHandoffCotizacion,
+    canResponderProformaManual,
   };
 }
