@@ -19,9 +19,32 @@ function fechaMx(iso: string | null | undefined): string {
   } catch { return "—"; }
 }
 
+type ProformaData = NonNullable<ReturnType<typeof usePortalProforma>["data"]>["proforma"];
+
+function AlertaRespondida({ proforma }: { proforma: ProformaData }) {
+  const aceptada = proforma.estado_cliente === "aceptada";
+  const descripcion = aceptada
+    ? `Aceptada el ${fechaMx(proforma.aceptada_at)}. Gracias por tu confirmación.`
+    : `Rechazada el ${fechaMx(proforma.rechazada_at)}.${proforma.motivo_rechazo ? ` Motivo: ${proforma.motivo_rechazo}` : ""}`;
+  return (
+    <Alert>
+      {aceptada ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
+      <AlertTitle className="flex items-center gap-2">
+        Proforma {proforma.estado_cliente}
+        <Badge variant={aceptada ? "default" : "destructive"}>{proforma.estado_cliente}</Badge>
+      </AlertTitle>
+      <AlertDescription>{descripcion}</AlertDescription>
+    </Alert>
+  );
+}
+
 export default function PortalProforma() {
   const { token } = useParams<{ token: string }>();
   const { loading, error, data, submitting, responder } = usePortalProforma(token);
+
+  const mostrarInvalido = !loading && (error || data?.estado_link === "token_invalido");
+  const mostrarExpirado = !loading && data?.proforma && data.estado_link === "expirado";
+  const mostrarProforma = !loading && data?.proforma && (data.estado_link === "activo" || data.estado_link === "respondida");
 
   return (
     <div className="min-h-screen bg-muted/30 py-8 px-4">
@@ -40,7 +63,7 @@ export default function PortalProforma() {
           </Card>
         )}
 
-        {!loading && (error || data?.estado_link === "token_invalido") && (
+        {mostrarInvalido && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Enlace inválido</AlertTitle>
@@ -50,41 +73,20 @@ export default function PortalProforma() {
           </Alert>
         )}
 
-        {!loading && data?.proforma && data.estado_link === "expirado" && (
+        {mostrarExpirado && (
           <Alert>
             <Clock className="h-4 w-4" />
             <AlertTitle>Enlace expirado</AlertTitle>
             <AlertDescription>
-              Este enlace expiró el {fechaMx(data.proforma.token_expira_at)}. Solicita uno nuevo a tu ejecutivo.
+              Este enlace expiró el {fechaMx(data!.proforma!.token_expira_at)}. Solicita uno nuevo a tu ejecutivo.
             </AlertDescription>
           </Alert>
         )}
 
-        {!loading && data?.proforma && (data.estado_link === "activo" || data.estado_link === "respondida") && (
+        {mostrarProforma && data && (
           <>
-            {data.estado_link === "respondida" && (
-              <Alert>
-                {data.proforma.estado_cliente === "aceptada" ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-destructive" />
-                )}
-                <AlertTitle className="flex items-center gap-2">
-                  Proforma {data.proforma.estado_cliente}
-                  <Badge variant={data.proforma.estado_cliente === "aceptada" ? "default" : "destructive"}>
-                    {data.proforma.estado_cliente}
-                  </Badge>
-                </AlertTitle>
-                <AlertDescription>
-                  {data.proforma.estado_cliente === "aceptada"
-                    ? `Aceptada el ${fechaMx(data.proforma.aceptada_at)}. Gracias por tu confirmación.`
-                    : `Rechazada el ${fechaMx(data.proforma.rechazada_at)}.${data.proforma.motivo_rechazo ? ` Motivo: ${data.proforma.motivo_rechazo}` : ""}`}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <PortalProformaResumen proforma={data.proforma} conceptos={data.conceptos} />
-
+            {data.estado_link === "respondida" && <AlertaRespondida proforma={data.proforma!} />}
+            <PortalProformaResumen proforma={data.proforma!} conceptos={data.conceptos} />
             {data.estado_link === "activo" && (
               <PortalProformaAcciones submitting={submitting} onResponder={responder} error={null} />
             )}
