@@ -2,7 +2,7 @@
 // Envía una proforma al cliente por email con enlace al portal público.
 // Genera un token si no existe, encola el email vía send-transactional-email
 // y registra el envío en `proforma_envios`.
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { wrapEdgeHandler, captureEdgeException } from '../_shared/sentry.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 
