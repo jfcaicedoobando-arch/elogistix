@@ -22,13 +22,16 @@ type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
 export function EstadoBadges({
   estadoRev,
-  facturada,
   estadoCliente,
+  tieneFactura = false,
 }: {
   estadoRev: string;
-  facturada: boolean;
   estadoCliente?: EstadoCliente;
+  /** Si ya existe factura asociada, ocultamos el badge de "Esperando al cliente". */
+  tieneFactura?: boolean;
 }) {
+  const mostrarEsperando =
+    estadoCliente === "pendiente" && estadoRev === "aprobada" && !tieneFactura;
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       {estadoRev === "pendiente" && <Badge variant="warning">Pendiente de revisión</Badge>}
@@ -36,10 +39,7 @@ export function EstadoBadges({
       {estadoRev === "consolidada" && <Badge variant="info">Consolidada</Badge>}
       {estadoCliente === "aceptada" && <Badge variant="success">Cliente aceptó</Badge>}
       {estadoCliente === "rechazada" && <Badge variant="destructive">Cliente rechazó</Badge>}
-      {estadoCliente === "pendiente" && <Badge variant="outline">Cliente sin responder</Badge>}
-      {facturada
-        ? <Badge variant="success">Facturada</Badge>
-        : <Badge variant="warning">Pago pendiente</Badge>}
+      {mostrarEsperando && <Badge variant="outline">Esperando al cliente</Badge>}
     </div>
   );
 }
