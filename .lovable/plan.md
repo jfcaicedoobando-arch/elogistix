@@ -1,56 +1,40 @@
-## Contexto
+## Problema (Sentry JAVASCRIPT-REACT-1M · 48 eventos / 6 usuarios)
 
-El CI de la versión `13.145.3` falla en dos tests de arquitectura (shard 1 y shard 8). Son dos problemas pequeños, no hay que bajar umbrales:
+Un usuario con rol `coordinador_logistico` pulsó **"Convertir a factura"** en una proforma. La RPC de la base de datos responde con `P0001: No tienes permiso para convertir proformas a factura`. La UI muestra el `notifyError`, pero el error también viaja a Sentry desde el `mutationCache.onError` global de React Query. Resultado: alertas ruidosas por lo que en realidad es una validación de negocio esperada.
 
-1. **`arch baseline`** — dos archivos productivos rebasaron 200 líneas:
-   - `src/features/proformas/components/EnviarProformaDialog.tsx` → 263
-   - `src/features/proformas/components/ProformaDetalleCards.tsx` → 217
-2. **`casts baseline`** — dos casts nuevos aparecen como HIGH en `useDestinatariosSugeridos.ts` (líneas 74 y 75: `as unknown as EnvioRow[]` / `as unknown as ContactoRow[]`).
+**Analogía:** es como si cada vez que alguien mete una tarjeta sin permiso en la cerradura, sonara la alarma antirrobo. La cerradura ya hizo su trabajo; no necesitamos avisar al servicio de emergencia.
 
-Analogía: la casa de proformas se pasó 63 cm de la barda permitida en dos cuartos y hay dos cables sin etiquetar en la instalación eléctrica. Nada estructural, hay que recortar los cuartos y ponerle una etiqueta a los cables.
+## Causa raíz
 
-## Cambios
+1. El botón **Convertir a factura** se muestra a cualquier rol; sólo depende del estado de la proforma. La RPC restringe a `admin_org`, `super_admin`, `contador`.
+2. El reportero global de React Query (`src/lib/query/queryClient.ts`) reporta a Sentry TODO error de mutación, incluidos los errores de negocio con `code = P0001` (permisos, validaciones de reglas).
 
-### 1. Recortar `EnviarProformaDialog.tsx` (263 → ~185)
+## Cambios (frontend / presentación)
 
-Extraer el bloque de chips "Recientes" (líneas 154-198) a un subcomponente nuevo:
+1. **`src/features/proformas/components/AccionesProforma.tsx`**
+   - Usar `usePermissions().canEmitirFactura` (ya existe con el set correcto de roles).
+   - En `computarFlags`, añadir `canEmitirFactura` al cálculo de `puedeConvertir`.
+   - Si el usuario no puede emitir factura pero la proforma está lista, no mostrar el botón (el `mostrarHint` sigue vigente sólo cuando falta la aceptación del cliente).
 
-- **Nuevo archivo** `src/features/proformas/components/DestinatariosRecientesChips.tsx` (~55 líneas):
-  - Props: `sugerencias: string[]`, `ocultos: string[]`, `onAgregar(email)`, `onOcultar(email)`, `onRestaurar(email)`, `onRestaurarVarios(emails)`.
-  - Contiene la fila de chips con `<X>` + el botón "Restaurar ocultos (N)".
-  - El `sonnerToast(..., { action: "Deshacer" })` se dispara aquí para conservar el mismo comportamiento y no romper los tests existentes.
-- **Editar** `EnviarProformaDialog.tsx`:
-  - Reemplazar el bloque por `<DestinatariosRecientesChips ... />`.
-  - Mantener el `<datalist>` y el `<Input>` de "Para" tal cual.
-  - Se conservan los `aria-label={\`Ocultar ${e}\`}` y los textos, por lo que `EnviarProformaDialog.test.tsx` seguirá pasando sin cambios.
+2. **`src/features/facturacion/components/TabProformas.tsx`**
+   - Aplicar el mismo gate `canEmitirFactura` al botón/acción masiva "Fusionar en factura".
 
-### 2. Recortar `ProformaDetalleCards.tsx` (217 → ~140)
+3. **`src/lib/query/queryClient.ts`** (reportero Sentry)
+   - Antes de `captureException`, descartar errores cuyo `code` sea de la familia `P0001` (Postgres `RAISE EXCEPTION`) — son validaciones de negocio esperadas, no bugs.
+   - Mantener el reporte para el resto (fallos reales de red, RLS `42501`, etc.).
+   - Añadir breadcrumb en su lugar para conservar rastro sin generar issue.
 
-Extraer los badges de estado (líneas 22-99) a su propio archivo:
+4. **Versionado**
+   - Bump a `13.145.6` en `src/constants/appVersion.ts`.
+   - Entrada en `CHANGELOG.md`: "Gate UI del botón Convertir a factura por rol + filtrar P0001 de Sentry".
 
-- **Nuevo archivo** `src/features/proformas/components/ProformaEstadoBadges.tsx` (~85 líneas):
-  - Mueve `derivarOrigenAceptacion`, `BadgeOrigenAceptacion`, `BadgeCiclo`, `EstadoBadges` y los tipos `EstadoCliente`, `OrigenAceptacion`.
-- **Editar** `ProformaDetalleCards.tsx`:
-  - Reemplazar el bloque por `export { EstadoBadges } from "./ProformaEstadoBadges"`.
-  - Deja `TotalDestacado`, `DatosGeneralesCard`, `FacturaAsociadaCard`, `TotalesCard` sin tocar → API pública intacta para `ProformaDetalle.tsx`.
+## Detalles técnicos
 
-### 3. Marcar los casts en `useDestinatariosSugeridos.ts`
-
-Agregar un comentario `// SAFE-CAST:` justo arriba de las líneas 74 y 75 explicando por qué el `as unknown as` es necesario (PostgREST devuelve la relación anidada `proformas` como objeto, pero para nuestro flujo solo leemos los campos planos ya seleccionados). Además, se puede eliminar el doble cast usando el tipo `PostgrestSingleResponse` implícito, pero el marker es suficiente para que el auditor lo baje de HIGH a LOW.
-
-### 4. Version + Changelog
-
-- `src/constants/appVersion.ts` → `13.145.4`.
-- `CHANGELOG.md` (root) → entrada `[13.145.4] - 2026-07-02`: "fix(ci) — arquitectura: split de `EnviarProformaDialog` y `ProformaDetalleCards` por regla Power-of-10 #4 (≤200 líneas), y marker `// SAFE-CAST:` en los reads anidados de PostgREST en `useDestinatariosSugeridos`."
+- No se toca la RPC ni las políticas RLS; la restricción de servidor se mantiene como defensa en profundidad.
+- El filtro en `queryClient` mira `err.code === 'P0001'` (via un type guard estrecho) para no cambiar el comportamiento de errores de infraestructura.
+- No requiere tests nuevos: `usePermissions` ya está cubierto, y el cambio en `AccionesProforma` es puramente condicional.
 
 ## Verificación
 
-Correr localmente:
-
-- `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture-baseline.test.ts` → deben pasar los 4 casos.
-- `bunx vitest run src/features/proformas` → confirma que los tests de la fase anterior siguen verdes (los mocks y aria-labels no cambian).
-
-## Fuera de alcance
-
-- No tocar `OVERSIZED_BASELINE` ni los umbrales de coverage.
-- No cambiar lógica de envío, ni el hook de emails ocultos, ni los tests recién agregados.
+- Build/tsgo y tests de arquitectura (`architecture-baseline`, `audit-report`).
+- Manualmente: entrar como `coordinador_logistico`, ver proforma aceptada → el botón ya no aparece. Entrar como `contador`/`admin_org` → botón visible y flujo intacto.
