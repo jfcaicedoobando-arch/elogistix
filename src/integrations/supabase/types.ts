@@ -6917,6 +6917,10 @@ export type Database = {
       }
       is_sales: { Args: { _user_id: string }; Returns: boolean }
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
+      liberar_conceptos_de_proforma: {
+        Args: { p_proforma_id: string }
+        Returns: number
+      }
       list_idempotency_log: {
         Args: { _limit?: number; _offset?: number }
         Returns: {
