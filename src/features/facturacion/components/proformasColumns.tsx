@@ -7,20 +7,14 @@
  * Fase 3 (Proforma → Factura): añadida columna de selección (`_select`) que
  * permite escoger varias proformas para fusionarlas en una sola factura.
  */
-import { Download, FileCheck2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
-import type { ProformaConFactura, ProformaRow } from "@/features/embarques/hooks";
+import type { ProformaConFactura } from "@/features/embarques/hooks";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { puedeMarcarManualmente } from "@/features/facturacion/constants/deprecation";
 
 interface BuildArgs {
-  descargar: (p: ProformaConFactura) => void;
-  downloadingId: string | null;
-  onMarcarFacturada: (p: ProformaRow) => void;
   selection?: {
     selectedIds: Set<string>;
     toggle: (id: string) => void;
@@ -29,9 +23,6 @@ interface BuildArgs {
 }
 
 export function buildProformasColumns({
-  descargar,
-  downloadingId,
-  onMarcarFacturada,
   selection,
 }: BuildArgs): ColumnDef<ProformaConFactura, unknown>[] {
   const cols: ColumnDef<ProformaConFactura, unknown>[] = [];
@@ -117,35 +108,6 @@ export function buildProformasColumns({
         return estado === "facturada"
           ? <Badge variant="success">Facturada</Badge>
           : <Badge variant="warning">Pendiente</Badge>;
-      },
-    },
-    {
-      id: "acciones",
-      header: "Acciones",
-      meta: { width: "w-[200px]" },
-      cell: ({ row }) => {
-        const p = row.original;
-        const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
-        const permitirMarcarManual = puedeMarcarManualmente(p.created_at);
-        return (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline" size="sm" disabled={downloadingId === p.id}
-              onClick={(e) => { e.stopPropagation(); descargar(p); }}
-            >
-              <Download className="h-3.5 w-3.5 mr-1" /> PDF
-            </Button>
-            {!facturada && permitirMarcarManual && (
-              <Button
-                variant="default" size="sm"
-                onClick={(e) => { e.stopPropagation(); onMarcarFacturada(p); }}
-                title="Flujo manual histórico (deprecado para proformas nuevas)"
-              >
-                <FileCheck2 className="h-3.5 w-3.5 mr-1" /> Facturada
-              </Button>
-            )}
-          </div>
-        );
       },
     },
   );

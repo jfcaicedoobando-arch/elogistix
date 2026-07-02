@@ -9,7 +9,6 @@ import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
-import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
 import { useMemo } from "react";
 
@@ -19,16 +18,13 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
 
   const columns = useMemo(
     () => buildProformasColumns({
-      descargar: c.descargar,
-      downloadingId: c.downloadingId,
-      onMarcarFacturada: c.setProformaAFacturar,
       selection: {
         selectedIds: c.selectedIds,
         toggle: c.toggleSelected,
         isSelectable: c.isConvertible,
       },
     }),
-    [c.descargar, c.downloadingId, c.setProformaAFacturar, c.selectedIds, c.toggleSelected, c.isConvertible],
+    [c.selectedIds, c.toggleSelected, c.isConvertible],
   );
 
   const seleccionados = c.selectedProformas.length;
@@ -116,11 +112,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
         </CardContent>
       </Card>
 
-      <DialogMarcarFacturada
-        open={!!c.proformaAFacturar}
-        onOpenChange={(o) => !o && c.setProformaAFacturar(null)}
-        proforma={c.proformaAFacturar}
-      />
+
 
       {c.convertOpen && c.fusionInfo.organizationId && puedeFusionar && (
         <ConvertirAFacturaDialog
