@@ -6,7 +6,8 @@
  * `proforma_envios`. Al terminar muestra el enlace del portal copiable.
  */
 import { useEffect, useState } from "react";
-import { Loader2, Mail, Copy, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Copy, CheckCircle2, X } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
+import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
 interface Props {
@@ -56,6 +58,9 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState<EnvioOk | null>(null);
   const { data: memoria } = useDestinatariosSugeridos(proforma.cliente_id);
+  const { ocultos, isOculto, ocultar, restaurar, restaurarVarios } = useEmailsOcultos(proforma.cliente_id);
+
+  const sugerenciasVisibles = (memoria?.sugerencias ?? []).filter((e) => !isOculto(e));
 
   useEffect(() => {
     if (open) {
@@ -92,6 +97,8 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
       if (error) throw new Error(error.message);
       if (!data?.success) throw new Error(data?.error ?? "El envío no se completó.");
       setEnviado({ enlace_portal: data.enlace_portal, estado: data.estado });
+      // Reactivar sugerencias para los correos que el usuario acabó usando.
+      restaurarVarios([...to.map((t) => t.email), ...ccList]);
       toast({ title: "Correo enviado", description: `Estado: ${data.estado}` });
       await qc.invalidateQueries({ queryKey: ["proformas"] });
     } catch (e) {
@@ -131,7 +138,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
         {!enviado && (
           <div className="space-y-3">
             <datalist id="proforma-emails-sugeridos">
-              {(memoria?.sugerencias ?? []).map((e) => (
+              {sugerenciasVisibles.map((e) => (
                 <option key={e} value={e} />
               ))}
             </datalist>
@@ -144,22 +151,53 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
                 onChange={(e) => setDestinatarios(e.target.value)}
                 placeholder="cliente@empresa.com, otro@empresa.com"
               />
-              {memoria?.sugerencias && memoria.sugerencias.length > 0 && (
+              {sugerenciasVisibles.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                   <span>Recientes:</span>
-                  {memoria.sugerencias.slice(0, 4).map((e) => (
-                    <button
+                  {sugerenciasVisibles.slice(0, 6).map((e) => (
+                    <span
                       key={e}
-                      type="button"
-                      onClick={() => agregarEmail("to", e)}
-                      className="rounded border px-1.5 py-0.5 hover:bg-accent hover:text-accent-foreground"
+                      className="group inline-flex items-center gap-0.5 rounded border pl-1.5 pr-0.5 py-0.5 hover:bg-accent hover:text-accent-foreground"
                     >
-                      {e}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => agregarEmail("to", e)}
+                        className="outline-none"
+                      >
+                        {e}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          ocultar(e);
+                          sonnerToast("Correo ocultado", {
+                            description: e,
+                            action: {
+                              label: "Deshacer",
+                              onClick: () => restaurar(e),
+                            },
+                          });
+                        }}
+                        aria-label={`Ocultar ${e}`}
+                        className="rounded p-0.5 opacity-60 hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
                   ))}
                 </div>
               )}
+              {ocultos.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => restaurarVarios(ocultos)}
+                  className="mt-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
+                >
+                  Restaurar ocultos ({ocultos.length})
+                </button>
+              )}
             </div>
+
             <div>
               <Label htmlFor="cc">CC (opcional)</Label>
               <Input
