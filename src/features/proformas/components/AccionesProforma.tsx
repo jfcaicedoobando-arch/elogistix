@@ -66,19 +66,26 @@ function BotonConvertir({
   );
 }
 
+function computarFlags(proforma: ProformaDetalleFull) {
+  const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
+  const aprobada = (proforma.estado_revision ?? "") === "aprobada";
+  const estadoCliente = readEstadoCliente(proforma);
+  const clienteAcepto = estadoCliente === "aceptada";
+  return {
+    facturada,
+    puedeConvertir: aprobada && clienteAcepto && !facturada && !proforma.factura_id,
+    puedeResponder: !facturada && estadoCliente === "pendiente",
+    mostrarHint: aprobada && !clienteAcepto && !facturada,
+  };
+}
+
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {
   const cargando = downloadingId === proforma.id;
   const [convertirOpen, setConvertirOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState<null | "aceptada" | "rechazada">(null);
 
-  const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
-  const aprobada = (proforma.estado_revision ?? "") === "aprobada";
-  const estadoCliente = readEstadoCliente(proforma);
-  const clienteAcepto = estadoCliente === "aceptada";
-  const puedeConvertir = aprobada && clienteAcepto && !facturada && !proforma.factura_id;
-  const puedeResponder = !facturada && estadoCliente === "pendiente";
-  const mostrarHint = aprobada && !clienteAcepto && !facturada;
+  const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(proforma);
 
   return (
     <div className="flex flex-wrap gap-2">
