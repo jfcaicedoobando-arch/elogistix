@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.145.3] - 2026-07-02
+- **test(proformas) — cobertura para memoria + ocultado de destinatarios.** Se agregaron 17 tests para restaurar los umbrales globales de cobertura en CI tras la feature de correos ocultos: `useEmailsOcultos.test.ts` (8 casos: normalización, dedup, restaurar, cambio de clienteId, JSON inválido, storage no-array), `useDestinatariosSugeridos.test.ts` (4 casos: enabled=false, dedup case-insensitive, `ultimo=null`, tolerancia a formatos no-array) y `EnviarProformaDialog.test.tsx` (5 casos: render de chips, ocultar con toast/Deshacer, "Restaurar ocultos (N)", agregar al input, reactivación tras envío). De paso se corrigió un bug de closure en `useEmailsOcultos` al llamar `ocultar` varias veces en un mismo tick — ahora usa updater functions en `setState`. Sin cambios de umbrales en `vitest.config.ts`.
+
 ## [13.145.2] - 2026-07-02
 - **ui(proformas) — permitir ocultar correos "Recientes" del modal de envío.** Cada chip de "Recientes" en `EnviarProformaDialog` ahora tiene una ✕ para descartar correos que ya no se usan. El ocultado persiste por cliente y por navegador vía `browserStorage` (clave `lc:proformas:emails-ocultos:{clienteId}`), y filtra tanto los chips como el `<datalist>` de autocompletado. Toast "Correo ocultado" con acción **Deshacer** y enlace "Restaurar ocultos (N)" para revertir todos. Al enviar la proforma, los correos incluidos en `to`/`cc` se reactivan automáticamente. Nuevo hook `useEmailsOcultos(clienteId)`. Sin cambios de BD ni de edge function.
 
