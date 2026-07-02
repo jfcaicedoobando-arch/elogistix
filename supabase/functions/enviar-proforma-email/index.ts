@@ -134,13 +134,20 @@ function validarEntrada(body: Record<string, unknown>): EntradaValidada | { erro
   };
 }
 
-// deno-lint-ignore no-explicit-any
-async function registrarEnvio(admin: any, params: {
-  proformaId: string; prof: any; userId: string; userEmail: string;
+interface ProformaRow {
+  id: string; numero: string | null; cliente_nombre: string | null; expediente: string | null;
+  moneda: string | null; total: number | null; organization_id: string;
+  token_publico: string | null; token_expira_at: string | null;
+}
+
+interface RegistrarEnvioParams {
+  proformaId: string; prof: ProformaRow; userId: string; userEmail: string;
   validos: Destinatario[]; ccEmails: string[]; asunto: string; mensaje: string;
   enlacePortal: string; estado: string; anyOk: boolean; anyFail: boolean;
   resultados: EnvioResultado[];
-}) {
+}
+
+async function registrarEnvio(admin: SupabaseClient, params: RegistrarEnvioParams) {
   const { data: envio, error: envioErr } = await admin
     .from('proforma_envios')
     .insert({
@@ -174,6 +181,39 @@ async function registrarEnvio(admin: any, params: {
   }).then(() => null, () => null);
 
   return envio?.id ?? null;
+}
+
+async function cargarProforma(admin: SupabaseClient, proformaId: string): Promise<ProformaRow | null> {
+  const { data, error } = await admin
+    .from('proformas')
+    .select('id, numero, cliente_nombre, expediente, moneda, total, organization_id, token_publico, token_expira_at')
+    .eq('id', proformaId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as unknown as ProformaRow;
+}
+
+async function usuarioTieneAcceso(admin: SupabaseClient, orgId: string, userId: string): Promise<boolean> {
+  const { data } = await admin
+    .from('organization_members')
+    .select('id')
+    .eq('organization_id', orgId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  return !!data;
+}
+
+async function despacharCorreos(
+  ctx: EnvioContexto, recipients: Recipient[],
+): Promise<{ resultados: EnvioResultado[]; estado: string; anyOk: boolean; anyFail: boolean }> {
+  const resultados: EnvioResultado[] = [];
+  for (const r of recipients) {
+    resultados.push(await enviarDestinatario(ctx, r));
+  }
+  const anyOk = resultados.some((r) => r.ok);
+  const anyFail = resultados.some((r) => !r.ok);
+  const estado = anyOk && anyFail ? 'parcial' : anyOk ? 'enviado' : 'fallido';
+  return { resultados, estado, anyOk, anyFail };
 }
 
 Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
