@@ -9,7 +9,6 @@ import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
-import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
 import { useMemo } from "react";
 
