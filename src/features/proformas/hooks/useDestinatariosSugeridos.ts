@@ -8,7 +8,11 @@
  * También expone el `ultimo` envío para prefill inicial de "Para" y "CC".
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchEnviosDestinatariosPorCliente,
+  fetchContactosEmailPorCliente,
+} from "@/features/proformas/services";
+
 
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -48,34 +52,13 @@ export interface DestinatariosSugeridos {
   ultimo: { to: string[]; cc: string[] } | null;
 }
 
-interface EnvioRow {
-  destinatarios: unknown;
-  cc: unknown;
-  created_at: string;
-}
-interface ContactoRow { email: string | null }
-
 async function fetchSugerencias(clienteId: string): Promise<DestinatariosSugeridos> {
-  const [enviosRes, contactosRes] = await Promise.all([
-    // SAFE-CAST: join implícito por proformas.cliente_id; PostgREST soporta la sintaxis.
-    supabase
-      .from("proforma_envios")
-      .select("destinatarios, cc, created_at, proformas!inner(cliente_id)")
-      .eq("proformas.cliente_id", clienteId)
-      .order("created_at", { ascending: false })
-      .limit(20),
-    supabase
-      .from("contactos_cliente")
-      .select("email")
-      .eq("cliente_id", clienteId)
-      .is("deleted_at", null),
+  const [envios, contactos] = await Promise.all([
+    fetchEnviosDestinatariosPorCliente(clienteId),
+    fetchContactosEmailPorCliente(clienteId),
   ]);
 
-  // SAFE-CAST: PostgREST devuelve el join anidado `proformas` como objeto;
-  // sólo leemos los campos planos ya seleccionados en el .select().
-  const envios = (enviosRes.data ?? []) as unknown as EnvioRow[];
-  // SAFE-CAST: fila plana; el tipo generado incluye columnas no seleccionadas.
-  const contactos = (contactosRes.data ?? []) as unknown as ContactoRow[];
+
 
   const acumulado: string[] = [];
   for (const env of envios) {

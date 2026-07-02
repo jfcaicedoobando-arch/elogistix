@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.145.5] - 2026-07-02
+- **fix(ci) — capa de servicios en `useDestinatariosSugeridos`.** El hook llamaba directamente a `supabase.from(...)`, lo que rompía la regla arquitectónica "hooks/contexts no importan `@/integrations/supabase/client`". Se movieron las dos queries (`proforma_envios` con join a `proformas` + `contactos_cliente`) a un nuevo servicio `src/features/proformas/services/destinatarios.ts` con `fetchEnviosDestinatariosPorCliente` y `fetchContactosEmailPorCliente`, exportado desde el barrel del dominio. El hook ahora sólo compone/normaliza. Los `// SAFE-CAST:` de PostgREST viven ahora en la capa de servicios, donde corresponde.
+
 ## [13.145.4] - 2026-07-02
+
 - **fix(ci) — arquitectura de proformas.** Se dividieron dos archivos que rebasaron el límite de 200 líneas (Power-of-10 #4): `EnviarProformaDialog.tsx` (263→189) extrayendo `DestinatariosRecientesChips.tsx` y `EnvioProformaExitoso.tsx`; `ProformaDetalleCards.tsx` (217→139) extrayendo `ProformaEstadoBadges.tsx`. También se anotaron los dos `as unknown as` de PostgREST en `useDestinatariosSugeridos.ts` con `// SAFE-CAST:` para explicar por qué el join anidado exige el doble cast. Sin cambios de umbrales ni de baselines.
 
 ## [13.145.3] - 2026-07-02
