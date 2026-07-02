@@ -140,7 +140,6 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
               <DestinatariosRecientesChips
                 sugerencias={sugerenciasVisibles}
                 ocultos={ocultos}
-                ocultos={ocultos}
                 onAgregar={(e) => agregarEmail("to", e)}
                 onOcultar={ocultar}
                 onRestaurar={restaurar}
