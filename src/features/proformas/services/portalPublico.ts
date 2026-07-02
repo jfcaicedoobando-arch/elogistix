@@ -42,6 +42,9 @@ export interface PortalProformaResponse {
 type RpcFn = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 
 export async function fetchPortalProforma(token: string): Promise<PortalProformaResponse> {
+  // SAFE-CAST: RPC público `portal_obtener_proforma_por_token` no está en los
+  // tipos generados (se llama con anon key desde portal sin sesión); casteamos
+  // `supabase.rpc` a una firma laxa validada por el shape que retorna el JSON.
   const { data, error } = await (supabase.rpc as unknown as RpcFn)(
     "portal_obtener_proforma_por_token",
     { p_token: token },
@@ -63,6 +66,9 @@ export async function responderPortalProforma(
   respuesta: "aceptada" | "rechazada",
   motivo = "",
 ): Promise<{ id: string; estado_cliente: string; respondida_at: string }> {
+  // SAFE-CAST: RPC público `portal_responder_por_token` no está en los tipos
+  // generados; el shape de retorno { id, estado_cliente, respondida_at } se
+  // valida por contrato con la migración.
   const { data, error } = await (supabase.rpc as unknown as RpcFn)(
     "portal_responder_por_token",
     { p_token: token, p_respuesta: respuesta, p_motivo: motivo },

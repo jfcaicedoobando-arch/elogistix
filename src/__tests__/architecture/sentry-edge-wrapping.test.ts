@@ -40,6 +40,8 @@ const CRITICAL = [
   "supabase/functions/facturapi-cancelar-nota-credito/index.ts",
   // 13.141.0 — AUDIT-17.1 notificación de respuesta de cotización desde portal
   "supabase/functions/notificar-respuesta-cotizacion/index.ts",
+  // 13.144.6 — Envío de proforma al cliente por email (portal público)
+  "supabase/functions/enviar-proforma-email/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
