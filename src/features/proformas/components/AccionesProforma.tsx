@@ -12,6 +12,7 @@ import { ConvertirAFacturaDialog } from "@/features/proformas/components/Convert
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
+import { usePermissions } from "@/hooks/shared";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
@@ -66,14 +67,15 @@ function BotonConvertir({
   );
 }
 
-function computarFlags(proforma: ProformaDetalleFull) {
+function computarFlags(proforma: ProformaDetalleFull, canEmitirFactura: boolean) {
   const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
   const aprobada = (proforma.estado_revision ?? "") === "aprobada";
   const estadoCliente = readEstadoCliente(proforma);
   const clienteAcepto = estadoCliente === "aceptada";
   return {
     facturada,
-    puedeConvertir: aprobada && clienteAcepto && !facturada && !proforma.factura_id,
+    puedeConvertir:
+      aprobada && clienteAcepto && !facturada && !proforma.factura_id && canEmitirFactura,
     puedeResponder: !facturada && estadoCliente === "pendiente",
     mostrarHint: aprobada && !clienteAcepto && !facturada,
   };
@@ -84,8 +86,12 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   const [convertirOpen, setConvertirOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState<null | "aceptada" | "rechazada">(null);
+  const { canEmitirFactura } = usePermissions();
 
-  const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(proforma);
+  const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(
+    proforma,
+    canEmitirFactura,
+  );
 
   return (
     <div className="flex flex-wrap gap-2">
