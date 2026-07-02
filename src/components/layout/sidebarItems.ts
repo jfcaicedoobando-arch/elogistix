@@ -100,7 +100,6 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
 export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
   { title: "Por capturar", url: "/cxp/por-capturar", icon: Receipt },
   { title: "Por pagar", url: "/cxp/por-pagar", icon: Landmark },
-  { title: "Por emitir (Facturación)", url: "/facturacion/por-emitir", icon: FileText },
   { title: "Cartera", url: "/cartera", icon: PiggyBank },
 ];
 

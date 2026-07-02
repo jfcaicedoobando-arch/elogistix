@@ -6,7 +6,7 @@ import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/featur
 import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared";
-import { useProformasPendientes } from "@/features/embarques/hooks/useProformas";
+
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
@@ -34,7 +34,7 @@ export function useFacturacionPageController(opts?: {
 
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas({ enabled: facturasEnabled });
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
-  const { data: proformasPendientes = [] } = useProformasPendientes();
+  
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
   const { toast } = useToast();
@@ -128,7 +128,7 @@ export function useFacturacionPageController(opts?: {
     paginatedFacturas,
     totalPages,
     gastosPendientes: gastosFiltrados,
-    proformasPendientes,
+    
     loadingFacturas,
     loadingGastos,
     // permisos / mutaciones

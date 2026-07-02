@@ -3,9 +3,7 @@ import {
   resumirCartera,
   resumirCxpPorPagar,
   resumirCxpPorCapturar,
-  resumirFacturacionPorEmitir,
   variantDiasParaVencer,
-  DIAS_ATRASO_FACTURACION,
 } from "../aggregates";
 
 describe("bandejas/domain/aggregates", () => {
@@ -54,15 +52,5 @@ describe("bandejas/domain/aggregates", () => {
       { costos_presupuestados: "500", facturas_capturadas: 0 },
     ]);
     expect(r).toEqual({ total: 2, totalPresupuestado: 1500, facturasCapturadas: 2 });
-  });
-
-  it("resumirFacturacionPorEmitir usa umbral DIAS_ATRASO_FACTURACION", () => {
-    const r = resumirFacturacionPorEmitir([
-      // @ts-expect-error fixture parcial
-      { total: 100, dias_desde_emision: 3 },
-      // @ts-expect-error fixture parcial
-      { total: 200, dias_desde_emision: DIAS_ATRASO_FACTURACION + 1 },
-    ]);
-    expect(r).toEqual({ total: 2, totalPorFacturar: 300, atrasadas: 1 });
   });
 });

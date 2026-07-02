@@ -28,16 +28,6 @@ export interface CxpPorPagarRow {
   tipo_cambio_usd: number | null;
 }
 
-export interface FacturacionPorEmitirRow {
-  proforma_id: string;
-  numero_proforma: string | null;
-  cliente_id: string | null;
-  cliente_nombre: string | null;
-  embarque_id: string | null;
-  expediente: string | null;
-  total: number;
-  dias_desde_emision: number;
-}
 
 export interface CarteraPendienteRow {
   factura_id: string;
@@ -69,11 +59,13 @@ export async function fetchCxpPorPagar(): Promise<CxpPorPagarRow[]> {
   return (data ?? []) as CxpPorPagarRow[];
 }
 
-export async function fetchFacturacionPorEmitir(): Promise<FacturacionPorEmitirRow[]> {
-  const { data, error } = await supabase.rpc("facturacion_por_emitir");
-  if (error) throw error;
-  return (data ?? []) as FacturacionPorEmitirRow[];
+export async function fetchFacturacionPorEmitir(): Promise<never[]> {
+  // v13.145.10 — Eliminado. Se conserva la firma con arreglo vacío para
+  // compatibilidad transitoria con consumidores externos; el RPC ya no se
+  // invoca. Reemplazado por HuecoFacturacionCard + /proformas.
+  return [];
 }
+
 
 export async function fetchCarteraPendiente(): Promise<CarteraPendienteRow[]> {
   const { data, error } = await supabase.rpc("cartera_pendiente");
