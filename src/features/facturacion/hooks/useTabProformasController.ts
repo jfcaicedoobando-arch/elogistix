@@ -25,7 +25,6 @@ export function useTabProformasController(opts?: {
 }) {
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [convertOpen, setConvertOpen] = useState(false);
 
   const { data: proformas = [], isLoading } = useProformas();
   const { descargar, downloadingId } = useDescargarProformaPdf();
