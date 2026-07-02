@@ -4732,8 +4732,76 @@ export type Database = {
           },
         ]
       }
+      proforma_envios: {
+        Row: {
+          asunto: string | null
+          cc: Json
+          created_at: string
+          destinatarios: Json
+          enviado_por: string | null
+          error: string | null
+          estado: string
+          id: string
+          mensaje: string | null
+          organization_id: string
+          pdf_link_publico: string | null
+          pdf_storage_path: string | null
+          proforma_id: string
+          snapshot_totales: Json | null
+        }
+        Insert: {
+          asunto?: string | null
+          cc?: Json
+          created_at?: string
+          destinatarios?: Json
+          enviado_por?: string | null
+          error?: string | null
+          estado?: string
+          id?: string
+          mensaje?: string | null
+          organization_id: string
+          pdf_link_publico?: string | null
+          pdf_storage_path?: string | null
+          proforma_id: string
+          snapshot_totales?: Json | null
+        }
+        Update: {
+          asunto?: string | null
+          cc?: Json
+          created_at?: string
+          destinatarios?: Json
+          enviado_por?: string | null
+          error?: string | null
+          estado?: string
+          id?: string
+          mensaje?: string | null
+          organization_id?: string
+          pdf_link_publico?: string | null
+          pdf_storage_path?: string | null
+          proforma_id?: string
+          snapshot_totales?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proforma_envios_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "proformas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proforma_envios_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "v_proforma_factura_link"
+            referencedColumns: ["proforma_id"]
+          },
+        ]
+      }
       proformas: {
         Row: {
+          aceptada_at: string | null
+          aceptada_por: string | null
           bl_master: string | null
           cliente_id: string
           cliente_nombre: string
@@ -4745,8 +4813,11 @@ export type Database = {
           dias_credito: number | null
           embarque_id: string | null
           embarques_ids: string[] | null
+          enviada_at: string | null
+          enviada_por: string | null
           es_consolidada: boolean
           estado_aprobacion: string
+          estado_cliente: string
           estado_proforma: string
           estado_revision: string
           expediente: string
@@ -4758,20 +4829,25 @@ export type Database = {
           id: string
           iva_mxn: number
           iva_usd: number
+          motivo_rechazo: string | null
           notas: string | null
           numero: string
           operador: string | null
           organization_id: string
           proformas_origen: string[] | null
+          rechazada_at: string | null
           snapshot_emision: Json | null
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
           total_mxn: number
           total_usd: number
+          ultimo_envio_email: string | null
           updated_at: string
         }
         Insert: {
+          aceptada_at?: string | null
+          aceptada_por?: string | null
           bl_master?: string | null
           cliente_id: string
           cliente_nombre: string
@@ -4783,8 +4859,11 @@ export type Database = {
           dias_credito?: number | null
           embarque_id?: string | null
           embarques_ids?: string[] | null
+          enviada_at?: string | null
+          enviada_por?: string | null
           es_consolidada?: boolean
           estado_aprobacion?: string
+          estado_cliente?: string
           estado_proforma?: string
           estado_revision?: string
           expediente: string
@@ -4796,20 +4875,25 @@ export type Database = {
           id?: string
           iva_mxn?: number
           iva_usd?: number
+          motivo_rechazo?: string | null
           notas?: string | null
           numero: string
           operador?: string | null
           organization_id?: string
           proformas_origen?: string[] | null
+          rechazada_at?: string | null
           snapshot_emision?: Json | null
           subtotal_mxn?: number
           subtotal_usd?: number
           tasa_iva_aplicada?: number
           total_mxn?: number
           total_usd?: number
+          ultimo_envio_email?: string | null
           updated_at?: string
         }
         Update: {
+          aceptada_at?: string | null
+          aceptada_por?: string | null
           bl_master?: string | null
           cliente_id?: string
           cliente_nombre?: string
@@ -4821,8 +4905,11 @@ export type Database = {
           dias_credito?: number | null
           embarque_id?: string | null
           embarques_ids?: string[] | null
+          enviada_at?: string | null
+          enviada_por?: string | null
           es_consolidada?: boolean
           estado_aprobacion?: string
+          estado_cliente?: string
           estado_proforma?: string
           estado_revision?: string
           expediente?: string
@@ -4834,17 +4921,20 @@ export type Database = {
           id?: string
           iva_mxn?: number
           iva_usd?: number
+          motivo_rechazo?: string | null
           notas?: string | null
           numero?: string
           operador?: string | null
           organization_id?: string
           proformas_origen?: string[] | null
+          rechazada_at?: string | null
           snapshot_emision?: Json | null
           subtotal_mxn?: number
           subtotal_usd?: number
           tasa_iva_aplicada?: number
           total_mxn?: number
           total_usd?: number
+          ultimo_envio_email?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -5921,6 +6011,10 @@ export type Database = {
         }
         Returns: Json
       }
+      actualizar_estado_cliente_proforma: {
+        Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
+        Returns: Json
+      }
       agente_aprobar_tarifa:
         | { Args: { _estado: string; _tarifa_id: string }; Returns: undefined }
         | {
@@ -6005,6 +6099,8 @@ export type Database = {
       asignar_conceptos_a_proforma: {
         Args: { p_concepto_ids: string[]; p_proforma_id: string }
         Returns: {
+          aceptada_at: string | null
+          aceptada_por: string | null
           bl_master: string | null
           cliente_id: string
           cliente_nombre: string
@@ -6016,8 +6112,11 @@ export type Database = {
           dias_credito: number | null
           embarque_id: string | null
           embarques_ids: string[] | null
+          enviada_at: string | null
+          enviada_por: string | null
           es_consolidada: boolean
           estado_aprobacion: string
+          estado_cliente: string
           estado_proforma: string
           estado_revision: string
           expediente: string
@@ -6029,17 +6128,20 @@ export type Database = {
           id: string
           iva_mxn: number
           iva_usd: number
+          motivo_rechazo: string | null
           notas: string | null
           numero: string
           operador: string | null
           organization_id: string
           proformas_origen: string[] | null
+          rechazada_at: string | null
           snapshot_emision: Json | null
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
           total_mxn: number
           total_usd: number
+          ultimo_envio_email: string | null
           updated_at: string
         }
         SetofOptions: {
@@ -6189,6 +6291,8 @@ export type Database = {
           p_tasa_iva?: number
         }
         Returns: {
+          aceptada_at: string | null
+          aceptada_por: string | null
           bl_master: string | null
           cliente_id: string
           cliente_nombre: string
@@ -6200,8 +6304,11 @@ export type Database = {
           dias_credito: number | null
           embarque_id: string | null
           embarques_ids: string[] | null
+          enviada_at: string | null
+          enviada_por: string | null
           es_consolidada: boolean
           estado_aprobacion: string
+          estado_cliente: string
           estado_proforma: string
           estado_revision: string
           expediente: string
@@ -6213,17 +6320,20 @@ export type Database = {
           id: string
           iva_mxn: number
           iva_usd: number
+          motivo_rechazo: string | null
           notas: string | null
           numero: string
           operador: string | null
           organization_id: string
           proformas_origen: string[] | null
+          rechazada_at: string | null
           snapshot_emision: Json | null
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
           total_mxn: number
           total_usd: number
+          ultimo_envio_email: string | null
           updated_at: string
         }
         SetofOptions: {
@@ -6379,6 +6489,8 @@ export type Database = {
           p_total_usd: number
         }
         Returns: {
+          aceptada_at: string | null
+          aceptada_por: string | null
           bl_master: string | null
           cliente_id: string
           cliente_nombre: string
@@ -6390,8 +6502,11 @@ export type Database = {
           dias_credito: number | null
           embarque_id: string | null
           embarques_ids: string[] | null
+          enviada_at: string | null
+          enviada_por: string | null
           es_consolidada: boolean
           estado_aprobacion: string
+          estado_cliente: string
           estado_proforma: string
           estado_revision: string
           expediente: string
@@ -6403,17 +6518,20 @@ export type Database = {
           id: string
           iva_mxn: number
           iva_usd: number
+          motivo_rechazo: string | null
           notas: string | null
           numero: string
           operador: string | null
           organization_id: string
           proformas_origen: string[] | null
+          rechazada_at: string | null
           snapshot_emision: Json | null
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
           total_mxn: number
           total_usd: number
+          ultimo_envio_email: string | null
           updated_at: string
         }
         SetofOptions: {
@@ -6893,6 +7011,10 @@ export type Database = {
             }
             Returns: Json
           }
+      portal_responder_proforma: {
+        Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
+        Returns: Json
+      }
       portal_update_contacto: {
         Args: { _nombre: string; _telefono: string }
         Returns: undefined
