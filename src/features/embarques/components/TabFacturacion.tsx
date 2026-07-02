@@ -128,6 +128,9 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         />
       )}
 
+      <AvisoProformasRechazadas proformas={proformas} />
+
+
       <HistorialProformas
         proformas={proformas}
         canEdit={canEdit}
