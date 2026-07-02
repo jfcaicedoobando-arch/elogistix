@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.145.2] - 2026-07-02
+- **ui(proformas) — permitir ocultar correos "Recientes" del modal de envío.** Cada chip de "Recientes" en `EnviarProformaDialog` ahora tiene una ✕ para descartar correos que ya no se usan. El ocultado persiste por cliente y por navegador vía `browserStorage` (clave `lc:proformas:emails-ocultos:{clienteId}`), y filtra tanto los chips como el `<datalist>` de autocompletado. Toast "Correo ocultado" con acción **Deshacer** y enlace "Restaurar ocultos (N)" para revertir todos. Al enviar la proforma, los correos incluidos en `to`/`cc` se reactivan automáticamente. Nuevo hook `useEmailsOcultos(clienteId)`. Sin cambios de BD ni de edge function.
+
 ## [13.145.1] - 2026-07-02
 - **feat(proformas) — memoria de destinatarios en el modal de envío.** Los campos "Para" y "CC" del modal `EnviarProformaDialog` ahora recuerdan los correos previamente usados con el cliente: (1) prefill inicial con los destinatarios del último envío hecho a ese `cliente_id`; (2) autocompletado vía `<datalist>` con la unión (dedup case-insensitive) de los últimos 20 envíos (`proforma_envios.destinatarios` + `.cc`) y los `contactos_cliente.email` no borrados; (3) chips "Recientes" clicables debajo del campo "Para" (máx. 4) para agregar rápido sin escribir. Nuevo hook `useDestinatariosSugeridos(clienteId)` con React Query (staleTime 60s). Sin cambios de BD ni de edge function.
 
