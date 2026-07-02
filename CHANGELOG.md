@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.144.5] - 2026-07-02
+- **chore(lint) — segunda pasada de complejidad.** Los refactors previos dejaron 4 warnings residuales: se extrae `computarFlags` en `AccionesProforma`, se aísla el árbol condicional de `PortalProforma` en un subcomponente `ContenidoPortal` con early returns, y en la edge function `enviar-proforma-email` se agrupan los 6 parámetros de `enviarDestinatario` en un `EnvioContexto` (5 params) y se extraen `leerEntorno`, `autenticarUsuario`, `validarEntrada` y `registrarEnvio` del handler principal. `bun run lint -- --max-warnings 0` pasa limpio.
+
 ## [13.144.4] - 2026-07-02
 - **chore(lint) — complejidad ciclomática ≤16.** Se refactorizan tres funciones que superaban el umbral del linter: `AccionesProforma` (se extraen `BotonesRespuestaManual` y `BotonConvertir`), `PortalProforma` (se extrae `AlertaRespondida` y se precomputan flags `mostrarInvalido/mostrarExpirado/mostrarProforma`) y el handler de la edge function `enviar-proforma-email` (se extraen helpers `asegurarToken` y `enviarDestinatario`). `bun run lint -- --max-warnings 0` vuelve a pasar limpio.
 
