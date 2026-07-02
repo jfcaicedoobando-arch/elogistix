@@ -5,7 +5,7 @@
 import { useState, useMemo } from "react";
 import type { ProformaConFactura } from "@/features/embarques/hooks/useProformas";
 import { DEFAULT_PAGE_SIZE } from "@/hooks/shared";
-export type FiltroEstadoProforma = "todas" | "pendiente" | "facturada";
+export type FiltroEstadoProforma = "todas" | "facturada";
 
 export function useTabProformasState(
   proformas: ProformaConFactura[],
@@ -35,7 +35,6 @@ export function useTabProformasState(
   const counts = useMemo(
     () => ({
       todas: proformas.length,
-      pendiente: proformas.filter((p) => (p.estado_proforma ?? "pendiente") === "pendiente").length,
       facturada: proformas.filter((p) => p.estado_proforma === "facturada").length,
     }),
     [proformas],

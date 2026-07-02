@@ -67,7 +67,11 @@ function BotonConvertir({
   );
 }
 
-function computarFlags(proforma: ProformaDetalleFull, canEmitirFactura: boolean) {
+function computarFlags(
+  proforma: ProformaDetalleFull,
+  canEmitirFactura: boolean,
+  canResponderProformaManual: boolean,
+) {
   const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
   const estadoCliente = readEstadoCliente(proforma);
   const clienteAcepto = estadoCliente === "aceptada";
@@ -75,7 +79,8 @@ function computarFlags(proforma: ProformaDetalleFull, canEmitirFactura: boolean)
     facturada,
     puedeConvertir:
       clienteAcepto && !facturada && !proforma.factura_id && canEmitirFactura,
-    puedeResponder: !facturada && estadoCliente === "pendiente",
+    puedeResponder:
+      !facturada && estadoCliente === "pendiente" && canResponderProformaManual,
     mostrarHint: !clienteAcepto && !facturada,
   };
 }
@@ -85,11 +90,12 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   const [convertirOpen, setConvertirOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState<null | "aceptada" | "rechazada">(null);
-  const { canEmitirFactura } = usePermissions();
+  const { canEmitirFactura, canResponderProformaManual } = usePermissions();
 
   const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(
     proforma,
     canEmitirFactura,
+    canResponderProformaManual,
   );
 
   return (

@@ -129,6 +129,16 @@ const HANDOFF_COTIZACION: readonly AppRole[] = [
   "vendedor",
 ];
 
+// v13.145.8 — Aceptar/Rechazar proforma manualmente (cuando el cliente
+// confirma por WhatsApp/llamada/email) queda limitado a admins y gerentes.
+const RESPONDER_PROFORMA_MANUAL: readonly AppRole[] = [
+  "super_admin",
+  "admin_org",
+  "admin",
+  "gerente_comercial",
+  "gerente_operaciones",
+];
+
 const has = (list: readonly AppRole[], role: AppRole | null | undefined) =>
   !!role && list.includes(role);
 
@@ -152,6 +162,7 @@ export function usePermissions() {
   const canRegistrarCobro = has(REGISTRAR_COBRO, roleStr);
   const canCerrarEmbarque = has(CERRAR_EMBARQUE, roleStr);
   const canHandoffCotizacion = has(HANDOFF_COTIZACION, roleStr);
+  const canResponderProformaManual = has(RESPONDER_PROFORMA_MANUAL, roleStr);
 
   const canEdit = canEditOperations || canEditFinance;
   const isAdmin = canAdminTenant;
@@ -180,5 +191,6 @@ export function usePermissions() {
     canRegistrarCobro,
     canCerrarEmbarque,
     canHandoffCotizacion,
+    canResponderProformaManual,
   };
 }

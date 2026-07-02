@@ -27,7 +27,7 @@ describe("useTabProformasState", () => {
       p({ id: "p2", numero: "P-002", expediente: "EXP-002", estado_proforma: "facturada" }),
     ];
     const { result } = renderHook(() => useTabProformasState(proformas));
-    expect(result.current.counts.pendiente).toBe(1);
+    expect(result.current.counts.todas).toBe(2);
     expect(result.current.counts.facturada).toBe(1);
     act(() => { result.current.setFiltroEstado("facturada"); });
     expect(result.current.filtered).toHaveLength(1);

@@ -50,7 +50,6 @@ describe("useTabProformasController", () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.proformas).toHaveLength(1);
     expect(result.current.counts.todas).toBe(1);
-    expect(result.current.counts.pendiente).toBe(1);
     expect(result.current.counts.facturada).toBe(0);
     expect(result.current.csvColumns.length).toBeGreaterThan(0);
   });
