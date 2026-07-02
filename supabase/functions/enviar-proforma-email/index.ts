@@ -58,24 +58,25 @@ async function asegurarToken(
   return { token: nuevoToken, expira: nuevaExp };
 }
 
-async function enviarDestinatario(
-  url: string,
-  service: string,
-  r: Recipient,
-  proformaId: string,
-  timestamp: number,
-  templateData: Record<string, unknown>,
-): Promise<EnvioResultado> {
-  const idem = `proforma-${proformaId}-${timestamp}-${r.email}`;
+interface EnvioContexto {
+  url: string;
+  service: string;
+  proformaId: string;
+  timestamp: number;
+  templateData: Record<string, unknown>;
+}
+
+async function enviarDestinatario(ctx: EnvioContexto, r: Recipient): Promise<EnvioResultado> {
+  const idem = `proforma-${ctx.proformaId}-${ctx.timestamp}-${r.email}`;
   try {
-    const resp = await fetch(`${url}/functions/v1/send-transactional-email`, {
+    const resp = await fetch(`${ctx.url}/functions/v1/send-transactional-email`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${service}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ctx.service}` },
       body: JSON.stringify({
         templateName: 'proforma-enviada',
         recipientEmail: r.email,
         idempotencyKey: idem,
-        templateData: { ...templateData, contacto: r.nombre },
+        templateData: { ...ctx.templateData, contacto: r.nombre },
       }),
     });
     const out = await resp.json().catch(() => ({}));
@@ -87,6 +88,94 @@ async function enviarDestinatario(
   }
 }
 
+interface EntornoEdge { url: string; anon: string; service: string }
+
+function leerEntorno(): EntornoEdge | null {
+  const url = Deno.env.get('SUPABASE_URL');
+  const anon = Deno.env.get('SUPABASE_ANON_KEY');
+  const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !anon || !service) return null;
+  return { url, anon, service };
+}
+
+async function autenticarUsuario(env: EntornoEdge, authHeader: string) {
+  const userClient = createClient(env.url, env.anon, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
+  });
+  const { data, error } = await userClient.auth.getUser();
+  if (error || !data?.user) return null;
+  return { id: data.user.id, email: data.user.email ?? '' };
+}
+
+interface EntradaValidada {
+  proformaId: string;
+  validos: Destinatario[];
+  ccEmails: string[];
+  asunto: string;
+  mensaje: string;
+  diasVigencia: number;
+}
+
+function validarEntrada(body: Record<string, unknown>): EntradaValidada | { error: string } {
+  const proformaId = String(body.proforma_id ?? '');
+  if (!proformaId) return { error: 'proforma_id requerido' };
+  const destinatarios = Array.isArray(body.destinatarios) ? (body.destinatarios as Destinatario[]) : [];
+  const validos = destinatarios.filter((d) => d && isEmail(d.email));
+  if (validos.length === 0) return { error: 'Al menos un destinatario válido es requerido' };
+  const ccEmails = Array.isArray(body.cc) ? (body.cc as string[]).filter(isEmail) : [];
+  return {
+    proformaId,
+    validos,
+    ccEmails,
+    asunto: typeof body.asunto === 'string' ? body.asunto : '',
+    mensaje: typeof body.mensaje === 'string' ? body.mensaje : '',
+    diasVigencia: Number.isFinite(body.dias_vigencia) ? Number(body.dias_vigencia) : 30,
+  };
+}
+
+// deno-lint-ignore no-explicit-any
+async function registrarEnvio(admin: any, params: {
+  proformaId: string; prof: any; userId: string; userEmail: string;
+  validos: Destinatario[]; ccEmails: string[]; asunto: string; mensaje: string;
+  enlacePortal: string; estado: string; anyOk: boolean; anyFail: boolean;
+  resultados: EnvioResultado[];
+}) {
+  const { data: envio, error: envioErr } = await admin
+    .from('proforma_envios')
+    .insert({
+      proforma_id: params.proformaId,
+      organization_id: params.prof.organization_id,
+      enviado_por: params.userId,
+      destinatarios: params.validos,
+      cc: params.ccEmails,
+      asunto: params.asunto,
+      mensaje: params.mensaje,
+      pdf_link_publico: params.enlacePortal,
+      estado: params.estado,
+      error: params.anyFail ? JSON.stringify(params.resultados.filter((r) => !r.ok)) : null,
+    })
+    .select('id')
+    .single();
+  if (envioErr) console.error('proforma_envios insert failed', envioErr);
+
+  if (params.anyOk) {
+    await admin.from('proformas')
+      .update({ enviada_at: new Date().toISOString(), enviada_por: params.userId, ultimo_envio_email: params.validos[0]?.email ?? null })
+      .eq('id', params.proformaId);
+  }
+
+  await admin.from('bitacora_actividad').insert({
+    organization_id: params.prof.organization_id, usuario_id: params.userId, usuario_email: params.userEmail,
+    modulo: 'proformas',
+    accion: params.anyOk ? 'proforma_enviada_email' : 'proforma_envio_email_fallido',
+    entidad_id: params.proformaId, entidad_nombre: params.prof.numero ?? '',
+    detalles: { envio_id: envio?.id ?? null, destinatarios: params.validos.map((d) => d.email), cc: params.ccEmails, resultados: params.resultados, enlace_portal: params.enlacePortal },
+  }).then(() => null, () => null);
+
+  return envio?.id ?? null;
+}
+
 Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
@@ -94,45 +183,28 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const cors = buildCors(req);
   if (req.method !== 'POST') return json(cors, { error: 'Method not allowed' }, 405);
 
-  const url = Deno.env.get('SUPABASE_URL');
-  const anon = Deno.env.get('SUPABASE_ANON_KEY');
-  const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !anon || !service) return json(cors, { error: 'Server configuration error' }, 500);
+  const env = leerEntorno();
+  if (!env) return json(cors, { error: 'Server configuration error' }, 500);
 
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.toLowerCase().startsWith('bearer ')) {
     return json(cors, { error: 'Missing authorization' }, 401);
   }
-  const userClient = createClient(url, anon, {
-    global: { headers: { Authorization: authHeader } },
-    auth: { persistSession: false },
-  });
-  const { data: userData, error: userErr } = await userClient.auth.getUser();
-  if (userErr || !userData?.user) return json(cors, { error: 'Unauthorized' }, 401);
-  const userId = userData.user.id;
-  const userEmail = userData.user.email ?? '';
+  const user = await autenticarUsuario(env, authHeader);
+  if (!user) return json(cors, { error: 'Unauthorized' }, 401);
 
-  const admin = createClient(url, service, { auth: { persistSession: false } });
+  const admin = createClient(env.url, env.service, { auth: { persistSession: false } });
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json(cors, { error: 'Invalid JSON' }, 400); }
 
-  const proformaId = String(body.proforma_id ?? '');
-  if (!proformaId) return json(cors, { error: 'proforma_id requerido' }, 400);
-
-  const destinatarios = Array.isArray(body.destinatarios) ? (body.destinatarios as Destinatario[]) : [];
-  const validos = destinatarios.filter((d) => d && isEmail(d.email));
-  const ccEmails = Array.isArray(body.cc) ? (body.cc as string[]).filter(isEmail) : [];
-  if (validos.length === 0) return json(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
-
-  const asunto = typeof body.asunto === 'string' ? body.asunto : '';
-  const mensaje = typeof body.mensaje === 'string' ? body.mensaje : '';
-  const diasVigencia = Number.isFinite(body.dias_vigencia) ? Number(body.dias_vigencia) : 30;
+  const entrada = validarEntrada(body);
+  if ('error' in entrada) return json(cors, { error: entrada.error }, 400);
 
   const { data: prof, error: profErr } = await admin
     .from('proformas')
     .select('id, numero, cliente_nombre, expediente, moneda, total, organization_id, token_publico, token_expira_at')
-    .eq('id', proformaId)
+    .eq('id', entrada.proformaId)
     .maybeSingle();
   if (profErr || !prof) return json(cors, { error: 'Proforma no encontrada' }, 404);
 
@@ -140,16 +212,16 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     .from('organization_members')
     .select('id')
     .eq('organization_id', prof.organization_id)
-    .eq('user_id', userId)
+    .eq('user_id', user.id)
     .maybeSingle();
   if (!mem) return json(cors, { error: 'No tienes acceso a esta proforma' }, 403);
 
   const tokenResult = await asegurarToken(
     admin,
-    proformaId,
+    entrada.proformaId,
     prof.token_publico as string | null,
     prof.token_expira_at as string | null,
-    diasVigencia,
+    entrada.diasVigencia,
   );
   if ('error' in tokenResult) return json(cors, { error: 'No se pudo generar token', detail: tokenResult.error }, 500);
   const { token, expira: tokenExpira } = tokenResult;
@@ -158,8 +230,8 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const timestamp = Date.now();
 
   const recipients: Recipient[] = [
-    ...validos.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
-    ...ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
+    ...entrada.validos.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
+    ...entrada.ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
   ];
 
   const templateData = {
@@ -168,56 +240,31 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     expediente: prof.expediente,
     moneda: prof.moneda,
     total: formatoMoneda(prof.total as number | null, (prof.moneda as string) ?? 'MXN'),
-    mensaje,
+    mensaje: entrada.mensaje,
     vigencia: formatoFechaMx(tokenExpira),
     enlacePortal,
   };
 
+  const ctx: EnvioContexto = { url: env.url, service: env.service, proformaId: entrada.proformaId, timestamp, templateData };
   const resultados: EnvioResultado[] = [];
   for (const r of recipients) {
-    resultados.push(await enviarDestinatario(url, service, r, proformaId, timestamp, templateData));
+    resultados.push(await enviarDestinatario(ctx, r));
   }
 
   const anyOk = resultados.some((r) => r.ok);
   const anyFail = resultados.some((r) => !r.ok);
   const estado = anyOk && anyFail ? 'parcial' : anyOk ? 'enviado' : 'fallido';
 
-  const { data: envio, error: envioErr } = await admin
-    .from('proforma_envios')
-    .insert({
-      proforma_id: proformaId,
-      organization_id: prof.organization_id,
-      enviado_por: userId,
-      destinatarios: validos,
-      cc: ccEmails,
-      asunto,
-      mensaje,
-      pdf_link_publico: enlacePortal,
-      estado,
-      error: anyFail ? JSON.stringify(resultados.filter((r) => !r.ok)) : null,
-    })
-    .select('id')
-    .single();
-  if (envioErr) console.error('proforma_envios insert failed', envioErr);
-
-  if (anyOk) {
-    await admin.from('proformas')
-      .update({ enviada_at: new Date().toISOString(), enviada_por: userId, ultimo_envio_email: validos[0]?.email ?? null })
-      .eq('id', proformaId);
-  }
-
-  await admin.from('bitacora_actividad').insert({
-    organization_id: prof.organization_id, usuario_id: userId, usuario_email: userEmail,
-    modulo: 'proformas',
-    accion: anyOk ? 'proforma_enviada_email' : 'proforma_envio_email_fallido',
-    entidad_id: proformaId, entidad_nombre: prof.numero ?? '',
-    detalles: { envio_id: envio?.id ?? null, destinatarios: validos.map((d) => d.email), cc: ccEmails, resultados, enlace_portal: enlacePortal },
-  }).then(() => null, () => null);
+  const envioId = await registrarEnvio(admin, {
+    proformaId: entrada.proformaId, prof, userId: user.id, userEmail: user.email,
+    validos: entrada.validos, ccEmails: entrada.ccEmails, asunto: entrada.asunto, mensaje: entrada.mensaje,
+    enlacePortal, estado, anyOk, anyFail, resultados,
+  });
 
   return json(cors, {
     success: anyOk,
     estado,
-    envio_id: envio?.id ?? null,
+    envio_id: envioId,
     enlace_portal: enlacePortal,
     token_expira_at: tokenExpira,
     resultados,
