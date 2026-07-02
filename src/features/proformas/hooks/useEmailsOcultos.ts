@@ -55,9 +55,14 @@ export function useEmailsOcultos(clienteId: string | null | undefined): UseEmail
   }, [clienteId]);
 
   const persist = useCallback(
-    (next: string[]) => {
-      setOcultos(next);
-      if (clienteId) write(clienteId, next);
+    (updater: (prev: string[]) => string[]) => {
+      setOcultos((prev) => {
+        const next = Array.from(
+          new Set(updater(prev).map((v) => v.trim().toLowerCase()).filter(Boolean)),
+        );
+        if (clienteId) write(clienteId, next);
+        return next;
+      });
     },
     [clienteId],
   );
@@ -65,30 +70,30 @@ export function useEmailsOcultos(clienteId: string | null | undefined): UseEmail
   const ocultar = useCallback(
     (email: string) => {
       const e = email.trim().toLowerCase();
-      if (!e) return;
-      persist(Array.from(new Set([...ocultos, e])));
+      if (!e || !clienteId) return;
+      persist((prev) => [...prev, e]);
     },
-    [ocultos, persist],
+    [clienteId, persist],
   );
 
   const restaurar = useCallback(
     (email: string) => {
       const e = email.trim().toLowerCase();
-      persist(ocultos.filter((x) => x !== e));
+      persist((prev) => prev.filter((x) => x !== e));
     },
-    [ocultos, persist],
+    [persist],
   );
 
   const restaurarVarios = useCallback(
     (emails: string[]) => {
       const set = new Set(emails.map((v) => v.trim().toLowerCase()));
-      persist(ocultos.filter((x) => !set.has(x)));
+      persist((prev) => prev.filter((x) => !set.has(x)));
     },
-    [ocultos, persist],
+    [persist],
   );
 
   const restaurarTodos = useCallback(() => {
-    persist([]);
+    persist(() => []);
   }, [persist]);
 
   const isOculto = useCallback(
