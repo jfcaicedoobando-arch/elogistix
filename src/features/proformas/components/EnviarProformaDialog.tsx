@@ -55,16 +55,26 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState<EnvioOk | null>(null);
+  const { data: memoria } = useDestinatariosSugeridos(proforma.cliente_id);
 
   useEffect(() => {
     if (open) {
       setAsunto(`Proforma ${proforma.numero ?? ""} para su aprobación`.trim());
       setMensaje(defaultMensaje(proforma));
       setEnviado(null);
-      setDestinatarios("");
-      setCc("");
+      setDestinatarios(memoria?.ultimo?.to.join(", ") ?? "");
+      setCc(memoria?.ultimo?.cc.join(", ") ?? "");
     }
-  }, [open, proforma]);
+  }, [open, proforma, memoria]);
+
+  function agregarEmail(target: "to" | "cc", email: string) {
+    const setter = target === "to" ? setDestinatarios : setCc;
+    const current = target === "to" ? destinatarios : cc;
+    const partes = current.split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (partes.includes(email.toLowerCase())) return;
+    setter(current ? `${current.replace(/[,;\s]+$/, "")}, ${email}` : email);
+  }
+
 
   async function handleEnviar() {
     const to = destinatarios.split(/[,;\s]+/).filter(Boolean).map((email) => ({ email }));
