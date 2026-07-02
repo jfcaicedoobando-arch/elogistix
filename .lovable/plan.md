@@ -1,38 +1,32 @@
-## Sentry: `JAVASCRIPT-REACT-1V` — RLS violation en `tracking_links`
+## Analogía
+El CI actúa como un inspector de códigos de construcción: cualquier archivo productivo > 200 líneas es una violación. Dos archivos nuevos rebasaron el límite y todos los shards que corren el test de arquitectura fallan. Solución: subdividir cada archivo en piezas más chicas — como cortar una viga larga en dos vigas soportadas.
 
-### Analogía
-El rol **contador** es como un auditor con permiso para *leer* la carpeta de embarques pero no para imprimir stickers públicos. En la app le mostramos el botón "Compartir tracking", él le da clic, y la BD (guardia RLS) le rechaza el INSERT en `tracking_links` → Sentry captura la excepción.
+## Archivos infractores
+- `src/features/costeo/services/tarifas.ts` — 237 líneas
+- `src/features/facturacion/components/TabProformasPendientes.tsx` — 214 líneas
 
-### Diagnóstico
-- Error: `new row violates row-level security policy for table "tracking_links"` (code `42501`).
-- Usuario con `effective_role = contador` en `/embarques/:id`.
-- La policy `Org staff manage tracking_links` sólo permite `admin`, `operador`, `super_admin`, `is_org_admin`. Contador queda fuera **por diseño** (es un rol de lectura para embarques, agregado recientemente).
-- El botón "Compartir tracking" se muestra en `EmbarqueDetalleHeaderActions.tsx` sin gating por rol → al hacer clic, `useCreateTrackingLink` intenta el INSERT y explota.
+## Cambios
 
-### Solución
-Mantener el rol contador como read-only y **ocultar** los botones que hacen mutaciones sobre el embarque para ese rol. Empezamos con el que falló (Compartir tracking); dejamos preparado el patrón para replicar a Avanzar estado / Duplicar / Eliminar / Reabrir si aparecen en Sentry.
+### 1. `src/features/costeo/services/tarifas.ts` → dividir por responsabilidad
+Crear submódulos y dejar `tarifas.ts` como fachada (re-exports) para no romper imports existentes:
 
-### Cambios
+- `src/features/costeo/services/tarifas/queries.ts` → `fetchCosteoTarifas`, `fetchTarifasResumen`, tipos `FetchTarifasFilters`, `TarifaResumen`, mapeadores internos (`mapRow`, `SELECT`).
+- `src/features/costeo/services/tarifas/mutations.ts` → `insertTarifaConRecargos`, `updateTarifaConRecargos`, `marcarTarifaReemplazada`, `deleteTarifa`, tipos `TarifaInput`, `TarifaRecargoInput`.
+- `src/features/costeo/services/tarifas.ts` → sólo `export * from "./tarifas/queries"; export * from "./tarifas/mutations";`
 
-1. `src/features/embarques/components/EmbarqueDetalleHeaderActions.tsx`
-   - Leer `useEffectiveRole()` (ya existe en el proyecto) y calcular `isReadOnly = effectiveRole === 'contador'`.
-   - Envolver el botón "Compartir tracking" en `!isReadOnly && (...)`.
-   - Aplicar mismo gating a "Avanzar estado", "Duplicar", "Eliminar", "Reabrir" para consistencia (contador nunca debería verlos).
+Todos los consumidores actuales (`import ... from "@/features/costeo/services/tarifas"`) siguen funcionando.
 
-2. `src/features/embarques/hooks/useEmbarqueDetalleTracking.ts`
-   - Añadir guard: si `effectiveRole === 'contador'`, `handleCompartirTracking` muestra un `notifyError` con mensaje "No tienes permisos para generar enlaces públicos" y **no** intenta el INSERT. Defensa en profundidad por si el botón se muestra vía tab externo.
+### 2. `src/features/facturacion/components/TabProformasPendientes.tsx` → extraer subcomponentes
+- `src/features/facturacion/components/TabProformasPendientesToolbar.tsx` → toolbar (search + filtros + botones con tooltips).
+- `src/features/facturacion/components/TabProformasPendientesGrupos.tsx` → render de `renderGrupos()` (lista agrupada por expediente/contenedor).
+- `TabProformasPendientes.tsx` queda como orquestador chico (< 60 líneas): llama al hook `useTabProformasPendientesController` y compone `<Toolbar />` + `<Grupos />`.
 
-3. `src/lib/observability/sentry/dropPredicate.ts`
-   - Filtrar errores Postgres con `code === '42501'` (RLS denied). No son bugs; son permisos correctos y saturan Sentry.
-   - Test unitario nuevo en `dropPredicate.test.ts` con un error `{ code: '42501', message: '...' }`.
+Sin cambios de comportamiento, mismos props, mismos tooltips.
 
-4. `src/features/embarques/hooks/__tests__/useEmbarqueDetalleTracking.test.tsx`
-   - Nuevo caso: rol contador → no llama a `mutateAsync` y muestra toast de permiso.
+### 3. Versionado + changelog
+- Bump `APP_VERSION` → `13.142.10`.
+- Nueva entrada en `CHANGELOG.md`: "Refactor interno: divididos `tarifas.ts` y `TabProformasPendientes.tsx` para cumplir Power of 10 (≤200 líneas). Sin cambios funcionales."
 
-5. Sentry: marcar `JAVASCRIPT-REACT-1V` como resuelto en `13.142.9`.
-
-6. `CHANGELOG.md` + bump `APP_VERSION` → `13.142.9`.
-
-### Fuera de alcance
-- No modifico la RLS policy (dar `contador` permiso de INSERT contradice el diseño del rol lectura).
-- No cambio otros botones de otras pantallas hasta ver evidencia en Sentry o feedback del usuario.
+## Fuera de alcance
+- No tocar lógica de tarifas ni de proformas.
+- No tocar `architecture-baseline` allowlist (queremos que estos archivos queden bajo el umbral, no whitelisteados).
