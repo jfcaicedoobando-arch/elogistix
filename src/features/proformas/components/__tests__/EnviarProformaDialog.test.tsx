@@ -7,17 +7,20 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
-const invokeMock = vi.fn();
+const { invokeMock, useDestinatariosSugeridosMock, sonnerToastMock } = vi.hoisted(() => ({
+  invokeMock: vi.fn(),
+  useDestinatariosSugeridosMock: vi.fn(),
+  sonnerToastMock: vi.fn(),
+}));
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { functions: { invoke: invokeMock } },
 }));
 
-const useDestinatariosSugeridosMock = vi.fn();
 vi.mock("@/features/proformas/hooks/useDestinatariosSugeridos", () => ({
   useDestinatariosSugeridos: (...args: unknown[]) => useDestinatariosSugeridosMock(...args),
 }));
 
-const sonnerToastMock = vi.fn();
 vi.mock("sonner", () => ({
   toast: Object.assign(sonnerToastMock, {
     success: vi.fn(),
