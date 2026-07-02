@@ -28,6 +28,44 @@ interface Props {
   onDescargar: () => void;
 }
 
+function BotonesRespuestaManual({ onSelect }: { onSelect: (m: "aceptada" | "rechazada") => void }) {
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => onSelect("aceptada")}>
+        <CheckCircle2 className="h-4 w-4 mr-1.5 text-emerald-600" /> Aceptar (manual)
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => onSelect("rechazada")}>
+        <XCircle className="h-4 w-4 mr-1.5 text-red-600" /> Rechazar (manual)
+      </Button>
+    </>
+  );
+}
+
+function BotonConvertir({
+  proforma,
+  open,
+  setOpen,
+}: {
+  proforma: ProformaDetalleFull;
+  open: boolean;
+  setOpen: (o: boolean) => void;
+}) {
+  return (
+    <>
+      <Button size="sm" onClick={() => setOpen(true)}>
+        <FileText className="h-4 w-4 mr-1.5" /> Convertir a factura
+      </Button>
+      <ConvertirAFacturaDialog
+        open={open}
+        onOpenChange={setOpen}
+        proformaIds={[proforma.id]}
+        organizationId={proforma.organization_id}
+        diasCreditoDefault={proforma.dias_credito ?? 0}
+      />
+    </>
+  );
+}
+
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {
   const cargando = downloadingId === proforma.id;
   const [convertirOpen, setConvertirOpen] = useState(false);
@@ -40,6 +78,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   const clienteAcepto = estadoCliente === "aceptada";
   const puedeConvertir = aprobada && clienteAcepto && !facturada && !proforma.factura_id;
   const puedeResponder = !facturada && estadoCliente === "pendiente";
+  const mostrarHint = aprobada && !clienteAcepto && !facturada;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -56,16 +95,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
         </Button>
       )}
 
-      {puedeResponder && (
-        <>
-          <Button variant="outline" size="sm" onClick={() => setManualOpen("aceptada")}>
-            <CheckCircle2 className="h-4 w-4 mr-1.5 text-emerald-600" /> Aceptar (manual)
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setManualOpen("rechazada")}>
-            <XCircle className="h-4 w-4 mr-1.5 text-red-600" /> Rechazar (manual)
-          </Button>
-        </>
-      )}
+      {puedeResponder && <BotonesRespuestaManual onSelect={setManualOpen} />}
 
       {proforma.embarque_id && (
         <Button variant="outline" size="sm" asChild>
@@ -76,21 +106,10 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
       )}
 
       {puedeConvertir && (
-        <>
-          <Button size="sm" onClick={() => setConvertirOpen(true)}>
-            <FileText className="h-4 w-4 mr-1.5" /> Convertir a factura
-          </Button>
-          <ConvertirAFacturaDialog
-            open={convertirOpen}
-            onOpenChange={setConvertirOpen}
-            proformaIds={[proforma.id]}
-            organizationId={proforma.organization_id}
-            diasCreditoDefault={proforma.dias_credito ?? 0}
-          />
-        </>
+        <BotonConvertir proforma={proforma} open={convertirOpen} setOpen={setConvertirOpen} />
       )}
 
-      {aprobada && !clienteAcepto && !facturada && (
+      {mostrarHint && (
         <span className="text-xs text-muted-foreground self-center ml-1">
           Para facturar, el cliente debe aceptar la proforma.
         </span>
