@@ -1,86 +1,71 @@
-# Plan: Envío, aceptación y rechazo de proformas
+# Fase 2: Portal cliente + envío automático de proformas
 
-Reutilizamos el patrón ya probado del módulo Cotizaciones (email branded + portal del cliente + aceptar/rechazar) y lo aplicamos a Proformas, agregando además un fallback manual para el equipo contable dentro de la página de la proforma. Al final, sólo una proforma **aceptada por el cliente** (o marcada manualmente como aceptada) puede convertirse en factura.
+Completar lo pendiente del sistema de aprobación de proformas.
 
-## 1. Modelo de datos (una migración)
+## Contexto
 
-Agregar a `public.proformas`:
+En la Fase 1 (v13.143.0) quedó implementado:
+- Estados `estado_cliente` (pendiente/aceptada/rechazada) en `proformas`
+- Tabla `proforma_envios` con historial
+- RPCs `portal_responder_proforma` y `actualizar_estado_cliente_proforma`
+- Trigger que bloquea convertir a factura sin aceptación
+- UI: badges de estado, modal manual, modal MVP de envío (`mailto:`)
 
-- `estado_cliente` text — `pendiente` (default), `aceptada`, `rechazada`.
-- `aceptada_at` / `rechazada_at` timestamptz.
-- `aceptada_por` text (email del contacto o `manual:<user_id>`).
-- `motivo_rechazo` text.
-- `enviada_at` timestamptz, `enviada_por` uuid, `ultimo_envio_email` text.
+Falta: envío real por email + página pública donde el cliente acepta/rechaza.
 
-Nueva tabla `proforma_envios` (espejo de `cotizacion_envios`): id, proforma_id, destinatarios[], cc[], asunto, mensaje, enviada_at, enviada_por, snapshot_totales jsonb. RLS por `organization_id` + GRANT a `authenticated` y `service_role`.
+## Alcance de esta fase
 
-Regla de negocio: `convertir_proformas_a_factura` valida que **todas** las proformas del array tengan `estado_cliente = 'aceptada'` **y** `estado_revision = 'aprobada'`; si no, aborta con mensaje claro.
+### 1. Ruta pública del portal cliente
+- Nueva ruta `/portal/proforma/:token` (sin auth)
+- Componente `PortalProformaView.tsx`:
+  - Muestra resumen: número, cliente, embarque, conceptos, totales, PDF
+  - Botones "Aceptar" y "Rechazar" (con campo opcional de comentario)
+  - Estados finales: muestra badge de aceptada/rechazada + fecha
+  - Manejo de token inválido / expirado / ya respondido
+- Usa RPC pública `portal_obtener_proforma(p_token)` (nueva, SECURITY DEFINER, solo lectura sanitizada)
+- Al responder llama `portal_responder_proforma`
 
-## 2. Envío por email (modal en la página de la proforma)
+### 2. Token seguro de envío
+- Campo `token_publico uuid` + `token_expira_at timestamptz` en `proformas`
+- Se genera al enviar (no antes) → cada envío puede rotar token opcionalmente
+- Expiración configurable (default 30 días)
+- Migración con RLS: token no se expone en `SELECT` normal, solo vía RPC pública
 
-Componente `EnviarProformaDialog.tsx` calcado de `EnviarCotizacionDialog`:
+### 3. Edge Function `enviar-proforma-email`
+- Recibe `{ proformaId, destinatarios[], cc[], mensajePersonalizado, adjuntarPdf }`
+- Valida permisos (usuario autenticado con acceso a la proforma)
+- Genera token si no existe, arma URL `${APP_URL}/portal/proforma/${token}`
+- Renderiza template React Email `proforma-envio-cliente.tsx` (usa infraestructura de app emails ya instalada)
+- Encola vía `enqueue_email` con purpose `transactional` e idempotency key `proforma-envio-${envioId}`
+- Registra fila en `proforma_envios` con `estado='enviado'`
+- Devuelve `{ envioId, tokenUrl }` para mostrar en UI
 
-- `DestinatariosPicker` con contactos del cliente + emails manuales, CC (usuario actual).
-- Asunto/mensaje editables con plantilla (folio, cliente, totales MXN/USD).
-- Edge Function nueva `enviar-proforma-email` (basada en `enviar-cotizacion-email`): genera PDF con `proformaPdf.tsx`, envía por Lovable Emails, registra fila en `proforma_envios`, marca `enviada_at`/`ultimo_envio_email`. Idempotencia por `proforma_id + destinatarios_hash`.
-- El correo incluye un botón **"Revisar en el portal"** con link firmado al portal del cliente.
+### 4. Reemplazar modal MVP
+- `EnviarProformaDialog.tsx` deja de usar `mailto:` y llama a la Edge Function
+- Muestra progreso, éxito con link copiable, y errores traducidos
+- Historial de envíos en el detalle de proforma (lista simple con estado, fecha, destinatario)
 
-## 3. Portal del cliente: aceptar / rechazar
+### 5. Notificaciones al equipo
+- Cuando el cliente responde vía portal, crear notificación interna al ejecutivo asignado (`notificaciones_internas`)
+- Toast/badge en Bandejas cuando hay respuestas nuevas
 
-Nuevas rutas dentro de `portalRoutes.tsx`:
+## Detalles técnicos
 
-- `/portal/proformas` — lista de proformas visibles del cliente (RLS por `cliente_id` vinculado al usuario portal).
-- `/portal/proformas/:id` — detalle con PDF embebido y dos acciones:
-  - **Aceptar proforma** → confirma en modal, escribe `estado_cliente='aceptada'`, `aceptada_at=now()`, `aceptada_por=<email>`.
-  - **Rechazar proforma** → pide motivo obligatorio, escribe `estado_cliente='rechazada'` + `motivo_rechazo`.
-- RPC `portal_actualizar_estado_proforma(p_id, p_accion, p_motivo)` con `SECURITY DEFINER` que valida que el usuario autenticado esté ligado al `cliente_id` de la proforma (mismo patrón que las RPCs de cotizaciones del portal).
-- Ambas acciones registran en `bitacora_actividad` y disparan `notificar-respuesta-proforma` (Edge Function) que avisa al operador y a contabilidad vía notificación interna + email.
+- **Ruta pública**: registrar en `App.tsx` fuera de `<ProtectedRoute>`, sin sidebar, con branding Libre Carga
+- **PDF**: reusar generador existente; servir vía signed URL de Storage (bucket `proformas-publicas` nuevo, RLS por token)
+- **Seguridad**: token UUID v4, un uso lógico (aceptada/rechazada bloquea nuevas respuestas), rate-limit en la Edge Function
+- **Email template**: hereda estilos de `_shared/transactional-email-templates/`, botón CTA con URL del portal, resumen breve
+- **Archivos nuevos**:
+  - `supabase/functions/enviar-proforma-email/index.ts`
+  - `supabase/functions/_shared/transactional-email-templates/proforma-envio-cliente.tsx`
+  - `src/pages/portal/PortalProformaView.tsx` + subcomponentes ≤200 líneas
+  - `src/hooks/portal/usePortalProforma.ts`
+  - Migración: token fields + RPC `portal_obtener_proforma` + trigger de notificación
+- **Tests**: unit del hook, E2E Playwright del flujo aceptar/rechazar, tests de la Edge Function
+- **CHANGELOG + bump** a `13.144.0`
 
-## 4. Fallback manual para contabilidad
+## Fuera de alcance
 
-En `ProformaDetalle.tsx`, dentro de `AccionesProforma`, agregar bloque **"Estado del cliente"** visible sólo para roles `admin_org`, `contador`, `admin`, `super_admin`:
-
-- Badge del `estado_cliente` actual.
-- Botones **"Marcar como aceptada por el cliente"** y **"Marcar como rechazada"** (con motivo obligatorio).
-- Requiere doble confirmación (`AlertDialog`) y deja rastro: `aceptada_por='manual:<user_id>'` + entrada en bitácora con contexto (por qué fue manual, ej. "cliente confirmó por WhatsApp").
-- Sólo disponible cuando `estado_cliente = 'pendiente'`.
-
-## 5. Bloqueo de conversión a factura
-
-- `ConvertirAFacturaDialog` deshabilita el botón "Generar factura borrador" cuando alguna proforma seleccionada tiene `estado_cliente != 'aceptada'`, mostrando `Alert` explicativo.
-- `fetchProformasPorFacturar` (bandeja "Por Timbrar") filtra por `estado_revision='aprobada' AND estado_cliente='aceptada'`. Las que estén aceptadas pero sin aprobación interna siguen apareciendo en el flujo actual de aprobación.
-- El RPC valida server-side (defensa en profundidad).
-
-## 6. Visualización
-
-- `EstadoBadges` en `ProformaDetalleCards.tsx` gana un tercer badge (Cliente: Pendiente/Aceptada/Rechazada) con colores warning/success/destructive.
-- En la lista `/proformas` agregar columna "Cliente" con el mismo badge y filtro rápido.
-- Timeline compacto arriba: Enviada → Aceptada/Rechazada → Aprobada internamente → Facturada.
-
-## 7. Detalles técnicos
-
-- **Roles**: envío lo pueden disparar `operador`, `admin_org`, `contador`, `admin`. Aceptación manual sólo `admin_org`, `contador`, `admin`, `super_admin`.
-- **RLS**: policies nuevas para portal (`cliente_id` = `client_users.cliente_id` del `auth.uid()`). GRANT a `anon` NO — sólo `authenticated`.
-- **Edge Functions**: reutilizar helpers `wrapEdgeHandler` + `authenticateRequest` ya estándar. Deploy explícito de `enviar-proforma-email` y `notificar-respuesta-proforma`.
-- **Tests**: unit tests para RPC (aceptación/rechazo/permiso), test de arquitectura para nuevos componentes ≤200 líneas, test de que `ConvertirAFacturaDialog` bloquea proformas no aceptadas, test del edge de idempotencia.
-- **PDF**: si no existe todavía, generar snapshot del PDF al enviar y guardarlo en Storage (`proformas/<id>/<envio_id>.pdf`) para que el link del portal siga funcionando aunque cambien los conceptos.
-
-## Estructura visual
-
-```text
-Proforma detalle
-├── Header (folio, badges Revisión + Cliente + Facturada)
-├── Timeline: Enviada → Respuesta cliente → Aprobada → Facturada
-├── Acciones
-│   ├── Descargar PDF
-│   ├── Enviar por email  ◀ nuevo
-│   ├── Marcar aceptada/rechazada manual  ◀ nuevo (solo contab.)
-│   └── Convertir a factura (bloqueado si no aceptada)
-└── Datos + Conceptos + Totales
-```
-
-## Alcance excluido (para no explotar el PR)
-
-- Firma electrónica del cliente (sólo click "Aceptar").
-- Recordatorios automáticos (se puede dejar para siguiente iteración).
-- Aceptación parcial de conceptos: se acepta la proforma completa o se rechaza.
+- Firma electrónica del cliente
+- Recordatorios automáticos si no responde (se puede agregar después con pg_cron)
+- Portal multi-proforma o login del cliente
