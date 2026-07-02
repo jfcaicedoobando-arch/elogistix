@@ -29,16 +29,22 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       id: "numero", header: "# Factura",
       accessorFn: (f) => f.numero, enableSorting: true,
       sortingFn: sortByString<Factura>((f) => f.numero),
-      meta: { width: "w-[110px]", className: "font-medium whitespace-nowrap", sticky: true },
-      cell: ({ row }) => (
-        <Link
-          to={`/facturacion/${row.original.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="text-accent hover:underline"
-        >
-          {row.original.numero}
-        </Link>
-      ),
+      meta: { width: "w-[140px]", className: "font-medium whitespace-nowrap", sticky: true },
+      cell: ({ row }) => {
+        const numero = row.original.numero ?? "";
+        const esBorradorSinFolio = numero.startsWith("BORRADOR-");
+        return (
+          <Link
+            to={`/facturacion/${row.original.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-accent hover:underline"
+          >
+            {esBorradorSinFolio
+              ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
+              : numero}
+          </Link>
+        );
+      },
     },
     { id: "expediente", header: "Expediente", meta: { width: "w-[110px]", className: "whitespace-nowrap" }, cell: ({ row }) => row.original.expediente },
     {
