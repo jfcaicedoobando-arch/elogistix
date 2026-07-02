@@ -7,14 +7,7 @@
  */
 import { useEffect, useState } from "react";
 import { Loader2, Mail } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -139,21 +132,14 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
         {!enviado && (
           <div className="space-y-3">
             <datalist id="proforma-emails-sugeridos">
-              {sugerenciasVisibles.map((e) => (
-                <option key={e} value={e} />
-              ))}
+              {sugerenciasVisibles.map((e) => <option key={e} value={e} />)}
             </datalist>
             <div>
               <Label htmlFor="dest">Para *</Label>
-              <Input
-                id="dest"
-                list="proforma-emails-sugeridos"
-                value={destinatarios}
-                onChange={(e) => setDestinatarios(e.target.value)}
-                placeholder="cliente@empresa.com, otro@empresa.com"
-              />
+              <Input id="dest" list="proforma-emails-sugeridos" value={destinatarios} onChange={(e) => setDestinatarios(e.target.value)} placeholder="cliente@empresa.com, otro@empresa.com" />
               <DestinatariosRecientesChips
                 sugerencias={sugerenciasVisibles}
+                ocultos={ocultos}
                 ocultos={ocultos}
                 onAgregar={(e) => agregarEmail("to", e)}
                 onOcultar={ocultar}
@@ -164,13 +150,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
 
             <div>
               <Label htmlFor="cc">CC (opcional)</Label>
-              <Input
-                id="cc"
-                list="proforma-emails-sugeridos"
-                value={cc}
-                onChange={(e) => setCc(e.target.value)}
-                placeholder="contabilidad@empresa.com"
-              />
+              <Input id="cc" list="proforma-emails-sugeridos" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="contabilidad@empresa.com" />
             </div>
 
             <div>
