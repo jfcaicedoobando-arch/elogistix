@@ -50,8 +50,8 @@ export function useConvertirProformaDirecto() {
     },
     onSuccess: (res) => {
       toast({
-        title: "Factura generada",
-        description: `Borrador ${res.facturaNumero} listo. Revisa datos fiscales antes de timbrar.`,
+        title: "Borrador de factura generado",
+        description: `Borrador ${res.facturaNumero.startsWith("BORRADOR-") ? "sin folio" : res.facturaNumero} listo. El folio interno se asignará al timbrar.`,
       });
       qc.invalidateQueries({ queryKey: ["proformas"] });
       qc.invalidateQueries({ queryKey: ["proforma-detalle"] });
