@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.142.10] - 2026-07-02
+- **chore(arch) — split de archivos > 200 líneas para desbloquear CI.** El baseline de Power of 10 marcaba dos infractores: `src/features/costeo/services/tarifas.ts` (237) y `src/features/facturacion/components/TabProformasPendientes.tsx` (214). Se dividieron sin cambios funcionales: `tarifas.ts` queda como fachada re-exportando `tarifas/queries.ts` y `tarifas/mutations.ts`; el tab de proformas pendientes se separó en `TabProformasPendientesToolbar.tsx` + `TabProformasPendientesGrupos.tsx` orquestados por el componente original. Sin cambios de API pública ni de UI.
+
 ## [13.142.9] - 2026-07-01
 - **fix(embarques) — ocultar "Compartir" a roles sin permiso + filtrar RLS denied en Sentry.** El rol `contador` (read-only) veía el botón "Compartir" en el header del detalle de embarque; al usarlo la BD rechazaba el INSERT en `tracking_links` con `42501` (RLS) y Sentry lo capturaba como error. Ahora el botón queda gated por `canEdit` (mismo patrón que Editar/Duplicar/Eliminar). Además, `shouldDropSentryEvent` descarta errores Postgres `code === '42501'` (permiso denegado por RLS): son denegaciones esperadas, no bugs. Resuelve **JAVASCRIPT-REACT-1V**.
 
