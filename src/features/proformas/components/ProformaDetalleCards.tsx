@@ -3,28 +3,40 @@
  * Extraídos para mantener la página ≤200 líneas (Power-of-10 #4) y reducir
  * la complejidad ciclomática del componente página.
  */
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, Ship, Loader2, ExternalLink, FileText } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate, formatDiasCredito, nombreDesdeEmail } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
-import { ConvertirAFacturaDialog } from "@/features/proformas/components/ConvertirAFacturaDialog";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 
+export { AccionesProforma } from "./AccionesProforma";
+
 type Totales = ReturnType<typeof calcularTotalesProforma>;
 type FacturaAsociada = NonNullable<ProformaDetalleFull["facturas_full"]>;
+type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
-export function EstadoBadges({ estadoRev, facturada }: { estadoRev: string; facturada: boolean }) {
+export function EstadoBadges({
+  estadoRev,
+  facturada,
+  estadoCliente,
+}: {
+  estadoRev: string;
+  facturada: boolean;
+  estadoCliente?: EstadoCliente;
+}) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       {estadoRev === "pendiente" && <Badge variant="warning">Pendiente de revisión</Badge>}
       {estadoRev === "aprobada" && <Badge variant="success">Aprobada</Badge>}
       {estadoRev === "consolidada" && <Badge variant="info">Consolidada</Badge>}
+      {estadoCliente === "aceptada" && <Badge variant="success">Cliente aceptó</Badge>}
+      {estadoCliente === "rechazada" && <Badge variant="destructive">Cliente rechazó</Badge>}
+      {estadoCliente === "pendiente" && <Badge variant="outline">Cliente sin responder</Badge>}
       {facturada
         ? <Badge variant="success">Facturada</Badge>
         : <Badge variant="warning">Pago pendiente</Badge>}
@@ -45,50 +57,6 @@ export function TotalDestacado({ totales }: { totales: Totales }) {
   );
 }
 
-interface AccionesProps {
-  proforma: ProformaDetalleFull;
-  downloadingId: string | null;
-  onDescargar: () => void;
-}
-
-export function AccionesProforma({ proforma, downloadingId, onDescargar }: AccionesProps) {
-  const cargando = downloadingId === proforma.id;
-  const [convertirOpen, setConvertirOpen] = useState(false);
-  const facturada = (proforma.estado_proforma ?? "pendiente") === "facturada";
-  const aprobada = (proforma.estado_revision ?? "") === "aprobada";
-  const puedeConvertir = aprobada && !facturada && !proforma.factura_id;
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="outline" size="sm" disabled={cargando} onClick={onDescargar}>
-        {cargando
-          ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-          : <Download className="h-4 w-4 mr-1.5" />}
-        Descargar PDF
-      </Button>
-      {proforma.embarque_id && (
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/embarques/${proforma.embarque_id}?tab=facturacion`}>
-            <Ship className="h-4 w-4 mr-1.5" /> Ver embarque
-          </Link>
-        </Button>
-      )}
-      {puedeConvertir && (
-        <>
-          <Button size="sm" onClick={() => setConvertirOpen(true)}>
-            <FileText className="h-4 w-4 mr-1.5" /> Convertir a factura
-          </Button>
-          <ConvertirAFacturaDialog
-            open={convertirOpen}
-            onOpenChange={setConvertirOpen}
-            proformaIds={[proforma.id]}
-            organizationId={proforma.organization_id}
-            diasCreditoDefault={proforma.dias_credito ?? 0}
-          />
-        </>
-      )}
-    </div>
-  );
-}
 
 
 export function DatosGeneralesCard({ proforma }: { proforma: ProformaDetalleFull }) {
