@@ -1,32 +1,35 @@
-## Analogía
-El CI actúa como un inspector de códigos de construcción: cualquier archivo productivo > 200 líneas es una violación. Dos archivos nuevos rebasaron el límite y todos los shards que corren el test de arquitectura fallan. Solución: subdividir cada archivo en piezas más chicas — como cortar una viga larga en dos vigas soportadas.
+# Proformas pendientes no aparecen en `/proformas`
 
-## Archivos infractores
-- `src/features/costeo/services/tarifas.ts` — 237 líneas
-- `src/features/facturacion/components/TabProformasPendientes.tsx` — 214 líneas
+## Diagnóstico
 
-## Cambios
+La proforma **PRO-2026-0949** (embarque ELIMP00285) existe pero está en estado `pendiente` (aún no aprobada por contabilidad). La página `/proformas` usa `useProformas()` que llama a `fetchProformasAprobadas` — sólo trae aprobadas + facturadas, nunca pendientes. El filtro "Todas / Pendiente / Facturada" del tab está allí pero nunca recibe filas pendientes del backend, por eso el usuario cree que la proforma "desapareció".
 
-### 1. `src/features/costeo/services/tarifas.ts` → dividir por responsabilidad
-Crear submódulos y dejar `tarifas.ts` como fachada (re-exports) para no romper imports existentes:
+**Analogía:** Es como un buzón que dice "Todos / Sin abrir / Leídos" pero el cartero sólo entrega los ya abiertos — los "sin abrir" nunca llegan a esa bandeja.
 
-- `src/features/costeo/services/tarifas/queries.ts` → `fetchCosteoTarifas`, `fetchTarifasResumen`, tipos `FetchTarifasFilters`, `TarifaResumen`, mapeadores internos (`mapRow`, `SELECT`).
-- `src/features/costeo/services/tarifas/mutations.ts` → `insertTarifaConRecargos`, `updateTarifaConRecargos`, `marcarTarifaReemplazada`, `deleteTarifa`, tipos `TarifaInput`, `TarifaRecargoInput`.
-- `src/features/costeo/services/tarifas.ts` → sólo `export * from "./tarifas/queries"; export * from "./tarifas/mutations";`
+Dónde vive hoy la proforma pendiente:
+- Módulo **Facturación → tab "Por Timbrar"** (usa `useProformasPendientes`), donde se aprueba/consolida.
 
-Todos los consumidores actuales (`import ... from "@/features/costeo/services/tarifas"`) siguen funcionando.
+## Cambio propuesto
 
-### 2. `src/features/facturacion/components/TabProformasPendientes.tsx` → extraer subcomponentes
-- `src/features/facturacion/components/TabProformasPendientesToolbar.tsx` → toolbar (search + filtros + botones con tooltips).
-- `src/features/facturacion/components/TabProformasPendientesGrupos.tsx` → render de `renderGrupos()` (lista agrupada por expediente/contenedor).
-- `TabProformasPendientes.tsx` queda como orquestador chico (< 60 líneas): llama al hook `useTabProformasPendientesController` y compone `<Toolbar />` + `<Grupos />`.
+Unificar el listado de `/proformas` para que muestre **las tres etapas** (pendiente, aprobada, facturada) con el filtro que ya existe funcionando de verdad.
 
-Sin cambios de comportamiento, mismos props, mismos tooltips.
+### 1. `src/features/embarques/hooks/useProformas.ts`
+Agregar un hook `useProformasTodas()` que combine `fetchProformasPendientes` + `fetchProformasAprobadas` en un solo array normalizado al shape `ProformaConFactura` (las pendientes carecen de `folio_factura_externa` / `fecha_facturacion`, se rellenan con `null`).
 
-### 3. Versionado + changelog
-- Bump `APP_VERSION` → `13.142.10`.
-- Nueva entrada en `CHANGELOG.md`: "Refactor interno: divididos `tarifas.ts` y `TabProformasPendientes.tsx` para cumplir Power of 10 (≤200 líneas). Sin cambios funcionales."
+### 2. `src/features/facturacion/hooks/useTabProformasController.ts`
+Cambiar `useProformas()` → `useProformasTodas()` cuando el tab se monta desde la ruta `/proformas`. Para no romper el uso interno dentro de Facturación (donde ese tab quizás sí quiera sólo aprobadas), añadir un flag opcional `incluirPendientes?: boolean` al controller y pasarlo desde `ProformasListado.tsx`.
+
+### 3. `src/features/facturacion/hooks/useTabProformasState.ts`
+El `counts` ya calcula `pendiente / facturada / todas`; sólo hay que confirmar que el default de filtro sea `"todas"` (ya lo es) para que 0949 aparezca al abrir la página.
+
+### 4. Columna de estado
+`proformasColumns.tsx` ya renderiza `estado_proforma`. Verificar que el badge `"pendiente"` tenga estilo (amarillo/naranja) y que la acción "Marcar facturada" quede deshabilitada en filas pendientes (no aprobadas todavía) — mostrar tooltip: *"Primero apruébala en Facturación → Por Timbrar"*.
+
+### 5. Versionado
+- Bump `APP_VERSION` a `13.142.11`.
+- Entrada en `CHANGELOG.md`: "Listado `/proformas` ahora incluye proformas pendientes con badge de estado."
 
 ## Fuera de alcance
-- No tocar lógica de tarifas ni de proformas.
-- No tocar `architecture-baseline` allowlist (queremos que estos archivos queden bajo el umbral, no whitelisteados).
+- No se toca la lógica de aprobación/consolidación (sigue en Facturación → Por Timbrar).
+- No se cambia RLS ni RPCs.
+- No se agregan tests nuevos (el controller ya tiene cobertura; sólo se pasa un flag).
