@@ -12,6 +12,7 @@ import { ConvertirAFacturaDialog } from "@/features/proformas/components/Convert
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
+import { usePermissions } from "@/hooks/shared";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
