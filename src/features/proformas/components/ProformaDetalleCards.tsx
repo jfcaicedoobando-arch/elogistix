@@ -4,10 +4,11 @@
  * la complejidad ciclomática del componente página.
  */
 import { Link } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Globe, UserCheck, Archive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency, formatDate, formatDiasCredito, nombreDesdeEmail } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
@@ -19,27 +20,80 @@ export { AccionesProforma } from "./AccionesProforma";
 type Totales = ReturnType<typeof calcularTotalesProforma>;
 type FacturaAsociada = NonNullable<ProformaDetalleFull["facturas_full"]>;
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
+type OrigenAceptacion = "portal" | "manual" | "migracion" | "desconocido";
+
+/**
+ * Deriva el origen de la aceptación a partir del campo `aceptada_por` que
+ * escriben las RPCs (`manual:<email>`, `cliente_portal_token`, o el string
+ * histórico de la migración de julio 2026).
+ */
+function derivarOrigenAceptacion(aceptadaPor: string | null | undefined): OrigenAceptacion {
+  if (!aceptadaPor) return "desconocido";
+  if (aceptadaPor === "cliente_portal_token") return "portal";
+  if (aceptadaPor.startsWith("manual:")) return "manual";
+  if (aceptadaPor.toLowerCase().includes("migración") || aceptadaPor.toLowerCase().includes("migracion")) return "migracion";
+  return "desconocido";
+}
+
+function BadgeOrigenAceptacion({ origen }: { origen: OrigenAceptacion }) {
+  const config = {
+    portal: { icon: Globe, label: "Cliente aceptó por portal", tip: "El cliente aceptó la proforma desde el enlace del portal público." },
+    manual: { icon: UserCheck, label: "Aceptación manual", tip: "Un miembro del equipo marcó la aceptación en nombre del cliente (llamada, WhatsApp, email fuera del sistema)." },
+    migracion: { icon: Archive, label: "Aceptación histórica", tip: "Aceptación registrada durante la migración de datos anteriores a julio 2026." },
+    desconocido: { icon: UserCheck, label: "Aceptada", tip: "Origen de la aceptación no registrado." },
+  }[origen];
+  const Icon = config.icon;
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline" className="gap-1">
+            <Icon className="h-3 w-3" />
+            {config.label}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">{config.tip}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function BadgeCiclo({
+  estadoProforma,
+  estadoCliente,
+}: {
+  estadoProforma: string | null | undefined;
+  estadoCliente: EstadoCliente;
+}) {
+  if (estadoProforma === "facturada") {
+    return <Badge variant="success">Facturada</Badge>;
+  }
+  if (estadoCliente === "rechazada") {
+    return <Badge variant="destructive">Rechazada por cliente</Badge>;
+  }
+  if (estadoCliente === "aceptada") {
+    return <Badge variant="info">Aceptada</Badge>;
+  }
+  return <Badge variant="warning">Pendiente cliente</Badge>;
+}
 
 export function EstadoBadges({
-  estadoRev,
+  estadoProforma,
   estadoCliente,
-  tieneFactura = false,
+  aceptadaPor,
 }: {
-  estadoRev: string;
+  estadoProforma?: string | null;
   estadoCliente?: EstadoCliente;
-  /** Si ya existe factura asociada, ocultamos el badge de "Esperando al cliente". */
-  tieneFactura?: boolean;
+  /** Valor crudo de `proformas.aceptada_por`, se usa para derivar el origen. */
+  aceptadaPor?: string | null;
 }) {
-  const mostrarEsperando =
-    estadoCliente === "pendiente" && estadoRev === "aprobada" && !tieneFactura;
+  const ec = estadoCliente ?? "pendiente";
+  const mostrarOrigen = ec === "aceptada";
+  const origen = derivarOrigenAceptacion(aceptadaPor);
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      {estadoRev === "pendiente" && <Badge variant="warning">Pendiente de revisión</Badge>}
-      {estadoRev === "aprobada" && <Badge variant="success">Aprobada</Badge>}
-      {estadoRev === "consolidada" && <Badge variant="info">Consolidada</Badge>}
-      {estadoCliente === "aceptada" && <Badge variant="success">Cliente aceptó</Badge>}
-      {estadoCliente === "rechazada" && <Badge variant="destructive">Cliente rechazó</Badge>}
-      {mostrarEsperando && <Badge variant="outline">Esperando al cliente</Badge>}
+      <BadgeCiclo estadoProforma={estadoProforma} estadoCliente={ec} />
+      {mostrarOrigen && <BadgeOrigenAceptacion origen={origen} />}
     </div>
   );
 }
