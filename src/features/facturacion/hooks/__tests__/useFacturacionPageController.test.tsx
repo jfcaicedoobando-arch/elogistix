@@ -8,14 +8,13 @@ import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
 const {
-  useFacturasMock, useGastosPendientesMock, useProformasPendientesMock,
+  useFacturasMock, useGastosPendientesMock,
   marcarPagadoMutate, registrarActividadMutate, toastFn,
   exportToCsvMock, exportarLayoutContableMock,
   notifyErrorMock, notifySuccessMock,
 } = vi.hoisted(() => ({
   useFacturasMock: vi.fn(),
   useGastosPendientesMock: vi.fn(),
-  useProformasPendientesMock: vi.fn(),
   marcarPagadoMutate: vi.fn(),
   registrarActividadMutate: vi.fn(),
   toastFn: vi.fn(),
@@ -29,9 +28,6 @@ vi.mock("@/features/facturacion/hooks/useFacturas", () => ({
   useFacturas: () => useFacturasMock(),
   useGastosPendientes: () => useGastosPendientesMock(),
   useMarcarCostoPagado: () => ({ mutate: marcarPagadoMutate, isPending: false }),
-}));
-vi.mock("@/features/embarques/hooks/useProformas", () => ({
-  useProformasPendientes: () => useProformasPendientesMock(),
 }));
 vi.mock("@/hooks/shared", () => ({
   useListPageState: () => {
@@ -65,7 +61,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   useFacturasMock.mockReturnValue({ data: [f(), f({ id: "f2", numero: "FAC-002", cliente_nombre: "Beta" })], isLoading: false });
   useGastosPendientesMock.mockReturnValue({ data: [], isLoading: false });
-  useProformasPendientesMock.mockReturnValue({ data: [] });
 });
 
 describe("useFacturacionPageController", () => {
