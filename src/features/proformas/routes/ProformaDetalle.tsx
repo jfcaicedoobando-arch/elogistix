@@ -6,7 +6,9 @@ import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingState } from "@/components/shared/states/LoadingState";
+import { ErrorState } from "@/components/shared/states/ErrorState";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
@@ -71,20 +73,22 @@ export default function ProformaDetalle() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4 md:p-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
+      <PageContainer>
+        <LoadingState message="Cargando proforma…" />
+      </PageContainer>
     );
   }
 
   if (!data) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Proforma no encontrada o sin acceso.</p>
-        <Button variant="link" onClick={() => navigate(-1)}>Volver</Button>
-      </div>
+      <PageContainer>
+        <ErrorState
+          title="Proforma no encontrada"
+          message="La proforma no existe o no tienes acceso."
+          onRetry={() => navigate(-1)}
+          retryLabel="Volver"
+        />
+      </PageContainer>
     );
   }
 
