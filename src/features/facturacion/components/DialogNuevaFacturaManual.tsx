@@ -44,7 +44,7 @@ const INITIAL_FISCAL: DatosFiscalesValue = {
 };
 
 const INITIAL_CONCEPTOS: ConceptoManualInput[] = [
-  { descripcion: "", cantidad: 1, precio_unitario: 0, clave_sat: "78101800" },
+  { descripcion: "", cantidad: 1, precio_unitario: 0, clave_sat: "78101800", tipo_iva: "gravado_16" },
 ];
 
 export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
