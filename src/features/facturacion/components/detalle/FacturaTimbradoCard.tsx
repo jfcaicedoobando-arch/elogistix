@@ -22,7 +22,7 @@ export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmisi
     try {
       await navigator.clipboard.writeText(uuidFiscal);
       toast.success("UUID copiado");
-    } catch {
+    } catch (err) {
       notifyError(toast, { title: "No se pudo copiar", error: err, method: "FACTURA_UUID_COPY" });
     }
   };
