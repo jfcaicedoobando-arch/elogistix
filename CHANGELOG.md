@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.163.1] - 2026-07-04
+- **feat(proformas)**: la vista de detalle `/proformas/:id` ahora muestra las notas capturadas al crear la proforma (nueva `NotasCard` bajo Datos generales; respeta saltos de línea). Antes sólo aparecían en el PDF.
+
 ## [13.163.0] - 2026-07-04
 - **chore(ci)**: auditoría de GitHub Actions — Fase 2 y arranque de Fase 3.
   - **Migración**: policies de `tracking_externo` (Tenant CRUD, Tenant viewer, Cliente read own) formalizadas en `supabase/migrations/20260703185259_*.sql`. Antes vivían sólo en prod (creadas a mano) y en `supabase/tests/rls/_ci_post_migrate.sql`, generando drift entre ambientes.
