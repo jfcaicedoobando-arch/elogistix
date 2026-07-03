@@ -59,12 +59,6 @@ export async function fetchCxpPorPagar(): Promise<CxpPorPagarRow[]> {
   return (data ?? []) as CxpPorPagarRow[];
 }
 
-export async function fetchFacturacionPorEmitir(): Promise<never[]> {
-  // v13.145.10 — Eliminado. Se conserva la firma con arreglo vacío para
-  // compatibilidad transitoria con consumidores externos; el RPC ya no se
-  // invoca. Reemplazado por HuecoFacturacionCard + /proformas.
-  return [];
-}
 
 
 export async function fetchCarteraPendiente(): Promise<CarteraPendienteRow[]> {
