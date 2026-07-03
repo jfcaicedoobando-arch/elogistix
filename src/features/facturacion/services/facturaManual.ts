@@ -4,15 +4,20 @@
  * Crea una `factura` con `origen='manual'`, embarque_id/proforma_id en NULL,
  * y los renglones en `conceptos_factura`. La emisión vía Facturapi se hace
  * después con el flujo estándar (`emitirFacturapi`).
+ *
+ * Cada renglón puede llevar su propio régimen de IVA
+ * (`gravado_16` | `tasa_0` | `exento`).
  */
 import { supabase } from "@/integrations/supabase/client";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
+import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 
 export interface ConceptoManualInput {
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
   clave_sat?: string;
+  tipo_iva?: TipoIvaConcepto;
 }
 
 export interface CrearFacturaManualInput {
@@ -39,18 +44,30 @@ function addDays(yyyyMmDd: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+function tasaAplicada(tipo: TipoIvaConcepto | undefined, tasaGlobal: number): number | null {
+  const t = tipo ?? "gravado_16";
+  if (t === "gravado_16") return tasaGlobal;
+  if (t === "tasa_0") return 0;
+  return null; // exento
+}
+
 export async function crearFacturaManual(input: CrearFacturaManualInput): Promise<string> {
   if (input.conceptos.length === 0) {
     throw new Error("Debe haber al menos un concepto");
   }
 
   const tasa = input.tasaIva ?? TASA_IVA;
-  const subtotal = input.conceptos.reduce(
-    (acc, c) => acc + Number(c.cantidad) * Number(c.precio_unitario),
-    0,
-  );
-  const iva = Math.round(subtotal * tasa * 100) / 100;
-  const total = Math.round((subtotal + iva) * 100) / 100;
+  let subtotal = 0;
+  let iva = 0;
+  for (const c of input.conceptos) {
+    const importe = Number(c.cantidad) * Number(c.precio_unitario);
+    subtotal += importe;
+    const t = tasaAplicada(c.tipo_iva, tasa);
+    if (t != null) iva += importe * t;
+  }
+  const subtotalR = Math.round(subtotal * 100) / 100;
+  const ivaR = Math.round(iva * 100) / 100;
+  const total = Math.round((subtotalR + ivaR) * 100) / 100;
 
   // Número provisional. La serie/folio real se asignan al timbrar en Facturapi.
   const numeroProvisional = `MAN-${Date.now().toString().slice(-8)}`;
@@ -65,8 +82,8 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
       cliente_id: input.clienteId,
       cliente_nombre: input.clienteNombre,
       rfc_cliente: input.rfcCliente,
-      subtotal,
-      iva,
+      subtotal: subtotalR,
+      iva: ivaR,
       total,
       moneda: input.moneda,
       tipo_cambio: input.tipoCambio,
@@ -87,16 +104,23 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
   if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
   const facturaId = factura.id as string;
 
-  const conceptosRows = input.conceptos.map((c) => ({
-    factura_id: facturaId,
-    descripcion: c.descripcion,
-    cantidad: Math.max(1, Math.round(Number(c.cantidad))),
-    precio_unitario: Number(c.precio_unitario),
-    total: Number(c.cantidad) * Number(c.precio_unitario),
-    moneda: input.moneda,
-    clave_sat: c.clave_sat?.trim() || "81141601",
-    organization_id: input.organizationId,
-  }));
+  const conceptosRows = input.conceptos.map((c) => {
+    const cantidad = Math.max(1, Math.round(Number(c.cantidad)));
+    const precio = Number(c.precio_unitario);
+    const tipo_iva: TipoIvaConcepto = c.tipo_iva ?? "gravado_16";
+    return {
+      factura_id: facturaId,
+      descripcion: c.descripcion,
+      cantidad,
+      precio_unitario: precio,
+      total: Math.round(cantidad * precio * 100) / 100,
+      moneda: input.moneda,
+      clave_sat: c.clave_sat?.trim() || "81141601",
+      organization_id: input.organizationId,
+      tipo_iva,
+      tasa_iva_aplicada: tasaAplicada(tipo_iva, tasa),
+    };
+  });
 
   const { error: errConc } = await supabase
     .from("conceptos_factura")

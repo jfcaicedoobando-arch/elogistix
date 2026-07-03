@@ -1042,6 +1042,8 @@ export type Database = {
           moneda: Database["public"]["Enums"]["moneda"]
           organization_id: string
           precio_unitario: number
+          tasa_iva_aplicada: number | null
+          tipo_iva: string
           total: number
         }
         Insert: {
@@ -1056,6 +1058,8 @@ export type Database = {
           moneda?: Database["public"]["Enums"]["moneda"]
           organization_id?: string
           precio_unitario?: number
+          tasa_iva_aplicada?: number | null
+          tipo_iva?: string
           total?: number
         }
         Update: {
@@ -1070,6 +1074,8 @@ export type Database = {
           moneda?: Database["public"]["Enums"]["moneda"]
           organization_id?: string
           precio_unitario?: number
+          tasa_iva_aplicada?: number | null
+          tipo_iva?: string
           total?: number
         }
         Relationships: [
