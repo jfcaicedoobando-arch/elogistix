@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.5] - 2026-07-04
+- **fix(facturación/IVA borradores)**: el RPC `convertir_proformas_a_factura` ahora guarda `tipo_iva` y `tasa_iva_aplicada` en cada renglón (heredando del origen `conceptos_venta` / `proforma_conceptos_consolidados`) y recalcula `subtotal`, `iva`, `total` del encabezado sumando los renglones reales — aplica tanto a MXN como a USD (antes USD forzaba IVA=0). Se agrega backfill de borradores no timbrados existentes con `tasa_iva_aplicada` en NULL y se recomputan sus totales. Adicionalmente, `recalcularTotalesFactura` en el cliente ahora resuelve la tasa desde `tipo_iva` si la columna viene NULL (fallback defensivo). Facturas timbradas (con `uuid_fiscal`) no se tocan.
+
 ## [13.170.4] - 2026-07-04
 - **feat(roles)**: el rol `contador` ahora tiene acceso a `Configuración` **restringido a la pestaña Facturación** (Facturapi + Catálogo de productos y servicios). Se agrega `contador` al guard de la ruta `/configuracion` y `Configuracion.tsx` oculta las pestañas Empresa, Catálogos de puertos, Operaciones y Herramientas cuando el rol efectivo es `contador`. También se oculta el botón "Guardar Cambios" para ese rol (el catálogo tiene su propio flujo por producto). Admins y super_admin siguen viendo las 5 pestañas sin cambios.
 
