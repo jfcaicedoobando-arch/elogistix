@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.149.2] - 2026-07-04
+- **test(coverage)**: agrega tests de render para `DestinatariosPicker` (contactos cliente/proveedor, estado loading/vacío, validación de email manual, quitar chips) y `EnviarDocumentoDialog` (título, envío con payload, cancelar, reenviar, toggle "marcar como enviada") en `src/components/shared/emails/__tests__/`, cerrando el 0% de cobertura del nuevo módulo shared/emails detectado en CI (functions 29.59% → umbral 30%, branches 33.56% → umbral 34%).
+
 ## [13.149.1] - 2026-07-04
 - **test(sentry)**: registra `enviar-factura-email` en los guardrails `WRAPPED_COVERAGE` (`sentry-edge-coverage.test.ts`) y `CRITICAL` (`sentry-edge-wrapping.test.ts`) para blindar el manejo Sentry de la nueva edge function; añade `index_test.ts` con checks estructurales (CORS/preflight, Authorization Bearer, validación de `factura_id`+destinatarios, SERVICE_ROLE sin persistir sesión, `wrapEdgeHandler`+`captureEdgeException`, registro en `factura_envios`).
 - **test(facturacion)**: cobertura del nuevo flujo de envío branded de facturas — `enviarFacturaPorEmail` (sesión ausente, Authorization Bearer, parseo, error HTTP, offline), `useEnviarFacturaEmail` (ramas `enviado`/`parcial`/error), y `useEnvioDocumentoForm` (preselección del contacto principal, alta/baja de emails manuales, CC automático del usuario logueado).
