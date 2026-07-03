@@ -59,10 +59,42 @@ function TextField({
 
 export default function DialogEditarCliente({ open, onOpenChange, cliente, onSave, isSaving }: Props) {
   const [form, setForm] = useState<ClienteData>(cliente);
+  const [csfFileName, setCsfFileName] = useState<string | null>(null);
+  const [parsingCsf, setParsingCsf] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(cliente);
+    if (open) {
+      setForm(cliente);
+      setCsfFileName(null);
+      setParsingCsf(false);
+    }
   }, [open, cliente]);
+
+  const handleCsfFile = async (file: File | null) => {
+    if (!file) return;
+    setParsingCsf(true);
+    setCsfFileName(file.name);
+    try {
+      const data = await parseCsf(file);
+      setForm((prev) => ({
+        ...prev,
+        nombre: data.nombre?.trim() || prev.nombre,
+        rfc: data.rfc?.trim() || prev.rfc,
+        cp: data.cp?.trim() || prev.cp,
+        direccion: data.direccion?.trim() || prev.direccion,
+        ciudad: data.ciudad?.trim() || prev.ciudad,
+        estado: data.estado?.trim() || prev.estado,
+        regimen_fiscal: data.regimen_fiscal?.trim() || prev.regimen_fiscal,
+      }));
+      toast.success("CSF procesada. Verifica los datos actualizados antes de guardar.");
+    } catch (err) {
+      setCsfFileName(null);
+      const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
+      notifyError(toast, { title: mensaje, error: err, method: "DIALOG_EDITAR_CLIENTE_CSF" });
+    } finally {
+      setParsingCsf(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.nombre.trim() || !form.regimen_fiscal.trim()) return;
