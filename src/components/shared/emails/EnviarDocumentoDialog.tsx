@@ -39,7 +39,7 @@ interface Props {
   buildAsuntoInicial: () => string;
   /** Toggle "marcar como enviada" — sólo aplica cuando el doc está en borrador. */
   mostrarMarcarEnviada?: boolean;
-  labelMarcarEnviada?: string;
+  labelMarcarEnviada?: React.ReactNode;
   labelBotonEnviar?: string;
   labelBotonReenviar?: string;
   esReenvio?: boolean;
