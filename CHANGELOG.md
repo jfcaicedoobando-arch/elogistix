@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.164.4] - 2026-07-04
+- **chore(facturación)**: cambia la clave SAT precargada para conceptos de factura de `78101800` a `81141601` (Servicios de transitarios / freight forwarding). Aplica al default de la columna `conceptos_factura.clave_sat` y a los fallbacks del cliente (`facturaManual`, `conceptosFacturaCrud`). Conceptos ya guardados no se modifican.
+
 ## [13.164.3] - 2026-07-04
 - **refactor(facturación)**: rediseño de la vista `/facturacion/:id` para timbrar con menos ruido.
   - **Elimina duplicados**: Total, Moneda, Cliente y Expediente ya no aparecen dos veces (solo en el header). Notas se muestran una sola vez y el checklist fiscal deja de estar triplicado.
