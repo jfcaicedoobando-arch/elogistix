@@ -15,7 +15,7 @@ import {
   actualizarDatosTimbradoFactura,
   type DatosTimbradoPatch,
 } from "@/features/facturacion/services";
-import type { DatosFiscalesFormState } from "@/features/facturacion/domain/datosFiscalesForm";
+import type { DatosFiscalesEstado } from "@/features/facturacion/domain/datosFiscalesForm";
 import { buildDatosTimbradoPatch } from "@/features/facturacion/domain/datosFiscalesForm";
 
 export type AutoSaveEstado = "idle" | "saving" | "saved" | "error";
