@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { PageContainer } from "@/components/shared/PageContainer";
 import {
   ArrowLeft, Truck, Pencil, Trash2, PackageX, MoreHorizontal,
 } from "lucide-react";

@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
 import { usePermissions, useTabsParam } from "@/hooks/shared";
