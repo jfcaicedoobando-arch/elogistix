@@ -15,6 +15,9 @@
  *   const { apiKey, baseUrl } = resolved.data;
  */
 
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+
 
 export const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
@@ -96,14 +99,39 @@ function legacyFallback(): FacturapiResolveResult {
   };
 }
 
+let adminSingleton: SupabaseLike | null = null;
+/**
+ * Cliente admin (service_role) para llamar RPCs privilegiadas como
+ * `get_facturapi_api_key_internal`, que están REVOKE FROM authenticated.
+ * En producción SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY siempre existen.
+ * En tests (Deno.test aislado) no están seteados → devolvemos null y
+ * `tryVaultKey` usa el cliente mock inyectado por el caller.
+ */
+function getAdminClient(): SupabaseLike | null {
+  if (adminSingleton) return adminSingleton;
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+  adminSingleton = createClient(url, key, {
+    auth: { persistSession: false },
+  }) as unknown as SupabaseLike;
+  return adminSingleton;
+}
+
 async function tryVaultKey(
   supabase: SupabaseLike,
   organizationId: string,
   ambiente: FacturapiAmbiente,
   vaultId: string | null,
 ): Promise<string | null> {
-  if (!vaultId || !supabase.rpc) return null;
-  const { data, error } = await supabase.rpc("get_facturapi_api_key_internal", {
+  if (!vaultId) return null;
+  // La RPC está GRANTed sólo a service_role; el cliente user-scoped
+  // (Authorization: Bearer <user_jwt>) recibe permission denied. Usamos
+  // un cliente admin dedicado; fallback al mock del caller en tests.
+  const client = getAdminClient() ?? supabase;
+  if (!client.rpc) return null;
+  const { data, error } = await client.rpc("get_facturapi_api_key_internal", {
+
     p_org_id: organizationId,
     p_ambiente: ambiente,
   });
