@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { AlertCircle, Loader2, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,9 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
 import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
+import { CsfDropZone } from "@/features/cliente/components/NuevoClienteFormPieces";
+import { parseCsf } from "@/features/cliente/services/csf";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 interface ClienteData {
   nombre: string;
