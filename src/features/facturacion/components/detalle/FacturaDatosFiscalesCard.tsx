@@ -66,23 +66,22 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
 
   const obtenerTC = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("banxico-tipo-cambio", {
-        method: "GET" as never,
-        // supabase-js v2 no soporta query en invoke; usamos body → la function lee moneda.
+      // Usamos fetch directo porque `supabase.functions.invoke` no soporta
+      // query params ni method GET; la function espera `?moneda=USD|EUR`.
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/banxico-tipo-cambio?moneda=${factura.moneda}`;
+      const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${session?.access_token ?? anon}`,
+          "apikey": anon,
+        },
       });
-      // Fallback: si invoke ignora method GET, hacemos fetch directo con query.
-      if (!data || error) {
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/banxico-tipo-cambio?moneda=${factura.moneda}`;
-        const res = await fetch(url, {
-          headers: {
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-        });
-        if (!res.ok) throw new Error(`Banxico HTTP ${res.status}`);
-        return (await res.json()) as { tipoCambio: number; fecha: string };
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? `Banxico HTTP ${res.status}`);
       }
-      return data as { tipoCambio: number; fecha: string };
+      return (await res.json()) as { tipoCambio: number; fecha: string; serie: string };
     },
     onSuccess: (d) => {
       setTipoCambio(d.tipoCambio);
