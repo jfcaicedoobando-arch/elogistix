@@ -36,6 +36,10 @@ export default {
         // Tipografía fluida (Fase 6) — clamp(min, preferida, max).
         display: ["clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem)", { lineHeight: "1.15", fontWeight: "700" }],
         kpi: ["clamp(1.125rem, 0.95rem + 0.8vw, 1.5rem)", { lineHeight: "1.2", fontWeight: "600" }],
+        // Ola 7 · Lote A — escalones extra-pequeños para chips, badges y footnotes.
+        // Reemplazan los ~25 usos de `text-[10px]` y aislados `text-[9px]` en `src/features/**`.
+        "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
+        "3xs": ["0.5625rem", { lineHeight: "0.75rem" }],
       },
 
       colors: {
@@ -102,11 +106,18 @@ export default {
           secondary: { DEFAULT: "hsl(var(--kpi-secondary))", soft: "hsl(var(--kpi-secondary-soft))" },
           danger:    { DEFAULT: "hsl(var(--kpi-danger))",    soft: "hsl(var(--kpi-danger-soft))" },
         },
+        // Ola 7 · Lote A — expuestos como color Tailwind para poder escribir `bg-state-llegada/10`
+        // sin caer en `bg-[hsl(var(--state-llegada))]`.
+        state: {
+          llegada: "hsl(var(--state-llegada))",
+          "en-proceso": "hsl(var(--state-en-proceso))",
+          cerrado: "hsl(var(--state-cerrado))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "var(--radius-sm)",
         xl: "var(--radius-lg)",
       },
       boxShadow: {

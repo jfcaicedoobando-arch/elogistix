@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.157.0] - 2026-07-04
+- **refactor(design-language)**: Ola 7 · Lote A — foundational tokens y variantes de shadcn.
+  - `tailwind.config.ts`: nueva escala `text-2xs` (10px) y `text-3xs` (9px); paleta `state.llegada / state.en-proceso / state.cerrado` mapeada a los tokens `--state-*` para permitir `bg-state-llegada/10` sin `bg-[hsl(...)]`; `borderRadius.sm` ahora usa `var(--radius-sm)`.
+  - `Badge`: nuevo prop `size` con variantes `default | xs | sm` — reemplaza los ~12 sitios que hacían `variant="outline" className="bg-X/10 text-X border-X/30 text-[10px] h-4"`.
+  - `Button`: nueva variante `accent` — reemplaza los 2 usos con clases inline.
+  - Sin cambios de comportamiento; sienta la base para los Lotes B–D de la ola.
+
 ## [13.156.0] - 2026-07-04
 - **refactor(design-language)**: Oleada 6 — cierre de la homologación de layout. Envolví en `PageContainer` las rutas legacy restantes para unificar padding, `max-w-screen-2xl` y ritmo vertical:
   - Admin: `AdminDashboard`, `AdminOrganizaciones`, `AdminOrgDetalle`, `AdminAuditoriaPlataforma`, `AdminConfiguracion`, `Diagnostico`, `SentryDiagnostico`, `Idempotencia`, `Papelera`, `admin-org/Configuracion`, `admin-org/Usuarios`.
