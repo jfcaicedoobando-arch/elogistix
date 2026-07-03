@@ -132,7 +132,7 @@ export function useFacturacionPageController(opts?: {
   return {
     // estado
     search, setSearch,
-    filterEstado, setFilter,
+    filterEstado, filterCliente, setFilter,
     page, setPage,
     pageSize, setPageSize,
     // datos
@@ -141,7 +141,8 @@ export function useFacturacionPageController(opts?: {
     paginatedFacturas,
     totalPages,
     gastosPendientes: gastosFiltrados,
-    
+    clientesDisponibles,
+
     loadingFacturas,
     loadingGastos,
     // permisos / mutaciones
