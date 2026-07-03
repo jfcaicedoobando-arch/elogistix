@@ -1,76 +1,78 @@
 ## Problema
 
-Al guardar la API key de FacturApi en `/configuracion`, la usuaria `isela.martinez@elogistixshipping.com` (rol efectivo **contador** en Elogistix) recibe:
-
-```
-No se pudo guardar la API key — forbidden (42501)
-```
+En el wizard "Conectar FacturApi" (paso 2 → 3), el rol **contador** ya puede guardar la API key (fix v13.170.15), pero el botón **Siguiente** sigue deshabilitado. No se puede avanzar al paso 3 (probar conexión).
 
 ## Causa raíz
 
-El RPC `set_facturapi_api_key` (y sus hermanos `clear_facturapi_api_key`, `get_facturapi_api_key`) llama a `public._assert_facturapi_admin(p_org_id)`, que solo permite:
+El wizard habilita "Siguiente" cuando `keyActivaCargada` es `true`, y eso depende del `last4` que llega desde `useFacturapiCredenciales(orgId)` — un `SELECT` a `public.facturapi_credenciales`.
 
-- `super_admin` (rol global), **o**
-- membresía en `organization_members` con `role IN ('admin_org','admin')`.
+Las policies RLS actuales de esa tabla son solo dos, ambas restringidas a admin de la org:
 
-Cualquier otro rol —incluido **contador**— recibe `RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501'`. En el resto del sistema, la facturación electrónica está gobernada por el rol **contador** (RLS de `facturas`, `pagos_factura`, `conceptos_factura`, etc.), así que restringir esto a admin es incoherente y bloquea al usuario natural del módulo.
+```
+admin_org puede gestionar credenciales facturapi de su org  (ALL)
+admin_org puede leer credenciales facturapi de su org       (SELECT)
+  USING: is_org_admin(uid, org) OR has_role(uid, 'super_admin')
+```
 
-**Analogía:** es como si la llave de la caja de facturas la tuviera solo el dueño de la empresa, cuando quien la usa todos los días es la contadora.
+Entonces el contador:
+
+1. Llama al RPC `set_facturapi_api_key` → ✅ funciona (SECURITY DEFINER, ya lo permitimos).
+2. La query `SELECT ... FROM facturapi_credenciales` que el wizard hace para leer `api_key_sandbox_last4` devuelve **0 filas** (RLS lo bloquea).
+3. `data` queda `undefined` → `keyActivaCargada = false` → botón deshabilitado.
+
+**Analogía:** la contadora tiene permiso de meter la llave a la caja fuerte, pero no de asomarse a ver si quedó bien puesta.
 
 ## Cambio propuesto
 
-Ampliar `_assert_facturapi_admin` para aceptar también el rol `contador` (global, vía `has_role`). Mantener `super_admin`, `admin_org` y `admin` como antes. `tesorero` queda fuera intencionalmente: su alcance en el resto del sistema es *pagos* (cobranza / conciliación bancaria), no configuración de emisor.
+Ampliar las dos policies para que también acepten al rol `contador` (global, vía `has_role`). Igual criterio que el helper `_assert_facturapi_admin` corregido en v13.170.15 — mantenemos coherencia.
 
 ### Migración SQL
 
 ```sql
-CREATE OR REPLACE FUNCTION public._assert_facturapi_admin(p_org_id uuid)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_uid uuid := auth.uid();
-BEGIN
-  IF v_uid IS NULL THEN
-    RAISE EXCEPTION 'no_auth' USING ERRCODE = '28000';
-  END IF;
+DROP POLICY IF EXISTS "admin_org puede leer credenciales facturapi de su org"
+  ON public.facturapi_credenciales;
+DROP POLICY IF EXISTS "admin_org puede gestionar credenciales facturapi de su org"
+  ON public.facturapi_credenciales;
 
-  -- super_admin o contador (roles globales) siempre pueden
-  IF public.has_role(v_uid, 'super_admin'::public.app_role)
-     OR public.has_role(v_uid, 'contador'::public.app_role) THEN
-    RETURN;
-  END IF;
+CREATE POLICY "leer credenciales facturapi de su org"
+  ON public.facturapi_credenciales
+  FOR SELECT
+  TO authenticated
+  USING (
+    public.is_org_admin(auth.uid(), organization_id)
+    OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
+    OR public.has_role(auth.uid(), 'contador'::public.app_role)
+  );
 
-  -- admin_org / admin dentro de la org también
-  IF NOT EXISTS (
-    SELECT 1 FROM public.organization_members om
-     WHERE om.user_id = v_uid
-       AND om.organization_id = p_org_id
-       AND om.role IN ('admin_org','admin')
-  ) THEN
-    RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
-  END IF;
-END;
-$$;
+CREATE POLICY "gestionar credenciales facturapi de su org"
+  ON public.facturapi_credenciales
+  FOR ALL
+  TO authenticated
+  USING (
+    public.is_org_admin(auth.uid(), organization_id)
+    OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
+    OR public.has_role(auth.uid(), 'contador'::public.app_role)
+  )
+  WITH CHECK (
+    public.is_org_admin(auth.uid(), organization_id)
+    OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
+    OR public.has_role(auth.uid(), 'contador'::public.app_role)
+  );
 ```
 
-No se tocan las 3 RPCs (`set_/clear_/get_facturapi_api_key`) ni los grants: siguen exponiendo `EXECUTE` a `authenticated` y delegando la autorización a este helper. Tampoco cambia RLS de `facturapi_credenciales`.
+Los `GRANT` sobre la tabla ya existen para `authenticated` (SELECT/INSERT/UPDATE/DELETE). No cambian.
 
-## Frontend / UX
+## Frontend
 
-Ninguno. El mismo formulario `FacturapiCredencialesForm` ahora funcionará para contadores. El toast de error genérico ya quedó arreglado en v13.170.13 (leyendo `context.json()` de `FunctionsHttpError`), así que si en el futuro alguien sin permiso lo intenta verá `forbidden` legible.
+Ninguno. En cuanto RLS deje leer la fila, el hook `useFacturapiCredenciales` verá `api_key_sandbox_last4`, `keyActivaCargada` pasa a `true` y "Siguiente" se habilita automáticamente. El propio `useSetFacturapiApiKey` ya invalida el query key `["facturapi_credenciales", orgId]` en `onSuccess`, así que después de guardar la key el wizard refresca solo.
 
-## Detalles técnicos
+## Bump de versión y bitácora
 
-- Archivo nuevo: `supabase/migrations/<timestamp>_facturapi_admin_include_contador.sql` (solo el `CREATE OR REPLACE FUNCTION` de arriba).
-- `CHANGELOG.md`: entrada `[13.170.15] - 2026-07-04` describiendo el fix y referenciando el Sentry `useSetFacturapiApiKey`.
-- `src/constants/appVersion.ts` → `13.170.15`.
-- Sin cambios en TS ni tests (la RPC ya está mockeada como `never` en el service; los tests de `facturapiCredenciales` no dependen del asertor).
+- `src/constants/appVersion.ts` → `13.170.16`.
+- `CHANGELOG.md`: entrada `[13.170.16] - 2026-07-04` explicando que el contador ya puede leer `facturapi_credenciales` y por tanto avanzar en el wizard.
 
 ## Fuera de alcance
 
-- No se agregan más roles (tesorero, gerente_operaciones): si el usuario lo pide después, se hace en otra iteración.
-- No se refactoriza el sistema de permisos general.
-- No se cambian las otras RPCs de facturación que ya permiten `contador` por RLS.
+- No se cambian otras policies ni se agregan roles adicionales.
+- No se toca la UI del wizard ni el flujo del paso 3 (probar conexión).
+- No se cambian los RPC `set_/clear_/get_facturapi_api_key` (ya arreglados en v13.170.15).
