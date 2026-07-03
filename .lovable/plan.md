@@ -1,42 +1,56 @@
-# Fix ESLint react-refresh warnings — separar constantes de componente
+# Acceso contable al Catálogo de productos — Solo pestaña Facturación
 
 ## Diagnóstico
 
-ESLint marca 5 warnings en `CatalogoClavesSATCard.parts.tsx` con la regla `react-refresh/only-export-components`. El motivo: el archivo `.tsx` exporta a la vez el componente `EditRow` **y** constantes/tipos/helpers (`EMPTY_DRAFT`, `UNIDADES_SAT`, `TIPO_IVA_LABEL`, `TIPO_IVA_VARIANT`, `tasaFromTipo`). Fast Refresh de Vite requiere que un archivo `.tsx` exporte **solo componentes** para poder hacer hot-reload.
+En `src/routes/appRoutes.tsx:121`, la ruta `/configuracion` está protegida así:
+
+```ts
+guarded(["admin", "admin_org", "super_admin"], <Configuracion />)
+```
+
+El rol `contador` no está en la lista, así que el guard lo redirige y jamás llega a `Configuración → Facturación → Catálogo de productos`.
 
 ## Analogía
 
-Es como tener el interruptor de luz junto con el manual de la lámpara en la misma caja: cuando reemplazas el interruptor (edición del componente), Vite se marea porque no sabe si también cambió el manual. La solución es separar: un archivo para el interruptor (componente), otro para el manual (constantes).
+Le vamos a dar al contador la llave del cuarto de configuración, pero con una repisa forrada: sólo puede acercarse al estante de Facturación. Los demás estantes (Empresa, Catálogos de puertos, Operaciones, Herramientas) siguen tapados para él.
 
 ## Cambios
 
-### 1. Nuevo archivo `CatalogoClavesSATCard.constants.ts`
+### 1. `src/routes/appRoutes.tsx`
 
-Mover ahí (desde `.parts.tsx`):
-- Tipo `TipoIva`.
-- Interfaces `Row` y `Draft`.
-- Constantes `EMPTY_DRAFT`, `UNIDADES_SAT`, `TIPO_IVA_LABEL`, `TIPO_IVA_VARIANT`.
-- Helper `tasaFromTipo`.
+Agregar `contador` al guard de `/configuracion`:
 
-### 2. `CatalogoClavesSATCard.parts.tsx` queda sólo con `EditRow`
+```ts
+<Route path="/configuracion" element={guarded(["admin", "admin_org", "contador", "super_admin"], <Configuracion />)} />
+```
 
-- Elimina todas las constantes/tipos.
-- Importa `Draft`, `TipoIva`, `UNIDADES_SAT` desde `./CatalogoClavesSATCard.constants`.
-- Único export: `EditRow`.
+### 2. `src/features/admin/routes/admin-org/Configuracion.tsx`
 
-### 3. `CatalogoClavesSATCard.tsx`
+- Importar `useAuth` (o el hook de rol activo que ya use el proyecto — verificaré cuál) para leer el rol efectivo.
+- Calcular `esContador = rolEfectivo === "contador"` (y NO tiene además `admin`/`admin_org`/`super_admin`).
+- Si `esContador`:
+  - Renderizar sólo el `<TabsTrigger value="facturacion">` en la lista de tabs.
+  - Renderizar sólo el `<TabsContent value="facturacion">`.
+  - Forzar el estado inicial `tab = "facturacion"` (en lugar de `"empresa"`).
+  - Ocultar el botón "Guardar Cambios" del header cuando esté en Facturación (esa pestaña no lo necesita — el catálogo tiene su propio flujo de guardado por producto).
+- Los admins siguen viendo las 5 pestañas y el botón de guardar como hasta ahora.
 
-- Ajustar imports: `Row`, `Draft`, `EMPTY_DRAFT`, `TIPO_IVA_LABEL`, `TIPO_IVA_VARIANT`, `tasaFromTipo` vienen de `.constants`; `EditRow` sigue viniendo de `.parts`.
+### 3. Verificación
+
+- Login como contador → navegar a `/configuracion` → ve solo la pestaña "Facturación" con el catálogo.
+- Login como admin_org → ve las 5 pestañas normales.
+- Typecheck con `tsc --noEmit`.
 
 ### 4. Versión y changelog
 
-- `APP_VERSION` → `13.170.3`.
+- `APP_VERSION` → `13.170.4`.
 - Entrada breve en `CHANGELOG.md`.
+
+## Riesgos
+
+Bajo. El único punto de cuidado es asegurar que el guard use el rol efectivo (respetando impersonación de super_admin, si aplica). Ya existen patrones en el proyecto para eso; los reutilizo.
 
 ## Fuera de alcance
 
-Sin cambios de comportamiento, sin BD, sin tests nuevos.
-
-## Riesgo
-
-Nulo. Es solo re-organización de imports para respetar la regla de Fast Refresh.
+- No se toca la lógica del sidebar (los enlaces al menú Configuración; si el contador ya lo veía oculto, en un segundo paso ajustamos la visibilidad ahí también — lo confirmo tras revisar el sidebar).
+- No se cambian permisos de BD (RLS de `catalogo_claves_sat` ya permite lectura/escritura al contador según la matriz de roles vigente; si al probar aparece error de RLS, se levanta un plan aparte).
