@@ -21,7 +21,7 @@ export function ClienteBillToCard({ cliente, clienteNombreFallback }: Props) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Facturar a</CardTitle>
+        <CardTitle className="text-lg">Facturar a</CardTitle>
       </CardHeader>
       <CardContent className="text-sm space-y-2">
         <p className="font-medium break-words" title={nombre}>{nombre}</p>

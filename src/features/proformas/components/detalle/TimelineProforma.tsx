@@ -1,24 +1,18 @@
 /**
  * Timeline horizontal de estados de la proforma: emitida → enviada →
  * aceptada/rechazada → facturada. Los estados sin fecha se muestran apagados.
+ * Recibe los campos ya normalizados por `resolveProformaTimelineFields`
+ * para mantener este componente sin casts.
  */
 import { Check, Send, FileCheck2, X, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
-import type { ProformaDetalleFull } from "@/features/proformas/services";
-
-// SAFE-CAST: columnas nuevas aún no presentes en el tipo generado.
-type ExtraFields = {
-  enviada_at?: string | null;
-  enviada_por?: string | null;
-  aceptada_at?: string | null;
-  aceptada_por?: string | null;
-  rechazada_at?: string | null;
-  fecha_facturacion?: string | null;
-};
+import type { ProformaTimelineFields } from "@/features/proformas/domain/proformaClienteEstado";
 
 interface Props {
-  proforma: ProformaDetalleFull;
+  fechaEmision: string;
+  operador: string | null | undefined;
+  timeline: ProformaTimelineFields;
 }
 
 interface Hito {
@@ -30,72 +24,42 @@ interface Hito {
   tone: "default" | "success" | "danger";
 }
 
-export function TimelineProforma({ proforma }: Props) {
-  const extra = proforma as unknown as ExtraFields;
-  const rechazada = !!extra.rechazada_at;
-
-  const hitos: Hito[] = [
-    {
-      key: "emitida",
-      label: "Emitida",
-      icon: FileText,
-      fecha: proforma.fecha_emision,
-      actor: proforma.operador,
-      tone: "default",
-    },
-    {
-      key: "enviada",
-      label: "Enviada",
-      icon: Send,
-      fecha: extra.enviada_at ?? null,
-      actor: extra.enviada_por,
-      tone: "default",
-    },
-    rechazada
-      ? {
-          key: "rechazada",
-          label: "Rechazada",
-          icon: X,
-          fecha: extra.rechazada_at ?? null,
-          tone: "danger",
-        }
-      : {
-          key: "aceptada",
-          label: "Aceptada",
-          icon: Check,
-          fecha: extra.aceptada_at ?? null,
-          actor: extra.aceptada_por,
-          tone: "success",
-        },
-    {
-      key: "facturada",
-      label: "Facturada",
-      icon: FileCheck2,
-      fecha: extra.fecha_facturacion ?? null,
-      tone: "success",
-    },
+function buildHitos(fechaEmision: string, operador: string | null | undefined, t: ProformaTimelineFields): Hito[] {
+  const rechazada = !!t.rechazadaAt;
+  const hitoFinal: Hito = rechazada
+    ? { key: "rechazada", label: "Rechazada", icon: X, fecha: t.rechazadaAt, tone: "danger" }
+    : { key: "aceptada", label: "Aceptada", icon: Check, fecha: t.aceptadaAt, actor: t.aceptadaPor, tone: "success" };
+  return [
+    { key: "emitida", label: "Emitida", icon: FileText, fecha: fechaEmision, actor: operador, tone: "default" },
+    { key: "enviada", label: "Enviada", icon: Send, fecha: t.enviadaAt, actor: t.enviadaPor, tone: "default" },
+    hitoFinal,
+    { key: "facturada", label: "Facturada", icon: FileCheck2, fecha: t.fechaFacturacion, tone: "success" },
   ];
+}
 
+function toneClass(done: boolean, tone: Hito["tone"]): string {
+  if (!done) return "bg-muted text-muted-foreground";
+  if (tone === "success") return "bg-accent/15 text-accent";
+  if (tone === "danger") return "bg-destructive/15 text-destructive";
+  return "bg-primary/15 text-primary";
+}
+
+export function TimelineProforma({ fechaEmision, operador, timeline }: Props) {
+  const hitos = buildHitos(fechaEmision, operador, timeline);
   const activos = hitos.filter((h) => h.fecha).length;
   if (activos === 0) return null;
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Historial</CardTitle>
+        <CardTitle className="text-lg">Historial</CardTitle>
       </CardHeader>
       <CardContent>
         <ol className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {hitos.map((h) => {
             const done = !!h.fecha;
             const Icon = h.icon;
-            const bg = !done
-              ? "bg-muted text-muted-foreground"
-              : h.tone === "success"
-                ? "bg-accent/15 text-accent"
-                : h.tone === "danger"
-                  ? "bg-destructive/15 text-destructive"
-                  : "bg-primary/15 text-primary";
+            const bg = toneClass(done, h.tone);
             return (
               <li key={h.key} className="flex items-start gap-3">
                 <span className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${bg}`}>

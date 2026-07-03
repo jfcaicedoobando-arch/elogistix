@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.164.1] - 2026-07-04
+- **fix(proformas)**: la vista `/proformas/:id` elimina duplicaciones (fecha emisión, vigencia y BL House ya no aparecen dos veces). Todo queda unificado en la nueva card **Datos generales** (fecha, vigencia, ejecutivo, BL Master, días crédito, método de pago, folio).
+- **style(proformas)**: alineado con el design language del resto del detalle — usa `PageContainer`, header suelto (sin `Card` wrapper) y `CardTitle text-lg` en todas las tarjetas (Facturar a, Datos del embarque, Historial, Conceptos, Totales, Notas, Factura asociada).
+- **refactor(proformas)**: `ProformaDetalle.tsx` baja de 210 → ≤200 líneas (Power of 10 #4) extrayendo `conceptoColumns`, `ProformaDetalleHeader` y helpers `resolveProformaTimelineFields`/`resolveEstadoCliente`. `TimelineProforma` deja de castear inline; consume props normalizadas (arregla `as unknown as` sin marcador SAFE-CAST).
+- **refactor(facturacion)**: reduce complejidad ciclomática — `FacturaDetalle` (17→≤16) extrae `deriveFacturaFlags`, y `FacturaDatosFiscalesCard` (18→≤16) extrae `inicialesDatosFiscales` + `buildDatosTimbradoPatch`.
+- **test(proformas,facturacion)**: nuevos tests puros para `proformaDetalleHelpers`, `proformaClienteEstado` y `deriveFacturaFlags` — cubren el código nuevo y suben los umbrales globales de coverage sin bajarlos en `vitest.config.ts`.
+
 ## [13.164.0] - 2026-07-04
 - **feat(proformas)**: vista de detalle enriquecida — ahora muestra toda la información que sólo salía en el PDF:
   - Card "Facturar a" con RFC y dirección completa del cliente.
