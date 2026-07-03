@@ -1,61 +1,39 @@
-## Bimoneda: Proforma USD+MXN → 2 borradores de factura
+# Fix: PATCH /embarque_contenedores devuelve 500
 
-**Contexto**: PRO-2026-0951 tiene 5 conceptos (4 USD, 1 MXN). Hoy la RPC:
-- Mezcla ambas monedas en una sola factura calculando un tipo de cambio (viola regla SAT).
-- Lee conceptos de `proforma_conceptos_consolidados`, que sólo se llena para proformas consolidadas — para proformas normales queda vacío y la factura sale sin conceptos.
+## Diagnóstico (analogía)
 
-**Analogía**: Es como pedir un recibo en la tiendita que mezcla pesos con dólares. Vamos a partir el ticket en dos: uno de pesos y uno de dólares, y a leer los productos directo del carrito (conceptos_venta), no del papelito consolidado.
+Los dos errores nuevos de Sentry son en realidad **el mismo bug**:
 
-### Cambios
+- `JAVASCRIPT-REACT-1W`: HTTP 500 al hacer `PATCH` a `embarque_contenedores`.
+- `JAVASCRIPT-REACT-1V`: el mismo 500 re-emitido por React Query (`record "v_cond" is not assigned yet`, código Postgres `55000`).
 
-#### 1. Migración: `convertir_proformas_a_factura` v2
+**Analogía**: es como preguntar "¿de qué color es el coche?" cuando todavía no compraste ningún coche. En la función SQL `calcular_demoras_embarque` (que se dispara por trigger cada vez que se edita un contenedor) hay una variable `v_cond record` que solo se llena si el embarque tiene una naviera con condiciones configuradas. Si no las tiene, más abajo se hace `IF v_cond.id IS NOT NULL` — pero como `v_cond` nunca se "compró", Postgres lanza el error 55000 y aborta la actualización.
 
-- Cambia el retorno de `RETURNS facturas` a `RETURNS SETOF facturas` (0..2 filas).
-- Elimina el cálculo de `tipo_cambio` mixto y el `RAISE` cuando no cuadra una sola moneda.
-- Nuevo flujo por cada moneda con total > 0 (USD y/o MXN):
-  1. `INSERT INTO facturas (...)` con esa moneda y sus totales/IVA.
-  2. Inserta conceptos_factura con la fuente correcta:
-     - Si `v_first.es_consolidada` = true → `proforma_conceptos_consolidados WHERE moneda = <curr>`.
-     - Si no → `conceptos_venta WHERE proforma_id = ANY(...) AND moneda = <curr> AND deleted_at IS NULL`.
-  3. Registra entrada en `bitacora_actividad` por cada borrador.
-- Persiste en `proformas`:
-  - `factura_id` = MXN (si existe) o USD; `factura_secundaria_id` = la otra si existen ambas.
-  - `estado_proforma = 'facturada'`, `fecha_facturacion = CURRENT_DATE`.
-- Idempotencia: `idempotency_store` guarda `jsonb_build_object('facturas', jsonb_agg(...))`; al reclamar cache, devuelve las filas de `facturas` correspondientes.
-- Todas las validaciones existentes (roles, cliente único, org única, no ya facturada) se conservan.
+Este bug afecta a cualquier embarque cuya naviera no esté en `costeo_navieras_condiciones` (o cuando `v_naviera_id` no matchea), por eso truena al editar fechas/dias libres del contenedor.
 
-#### 2. Servicio TS `src/features/proformas/services/convertirAFactura.ts`
+## Cambio propuesto
 
-- `ConvertirProformaResult` pasa a `Array<{ facturaId: string; facturaNumero: string; moneda: "MXN" | "USD" }>`.
-- Ajusta parsing del `data` (ahora array) y valida `length >= 1`.
+Nueva migración que reemplaza `public.calcular_demoras_embarque(uuid)`:
 
-#### 3. Hook `useConvertirProformaDirecto`
+1. Añadir bandera `v_cond_found boolean := false` y un `v_cond_id uuid`.
+2. Al entrar al bloque de condiciones naviera, si `FOUND`, marcar `v_cond_found := true` y guardar `v_cond_id := v_cond.id`.
+3. Cambiar `IF v_cond.id IS NOT NULL AND v_tipo_cont_id IS NOT NULL` por `IF v_cond_found AND v_tipo_cont_id IS NOT NULL`, y usar `v_cond_id` en el `WHERE naviera_condicion_id = v_cond_id`.
+4. Mantener firma, permisos (`REVOKE ... FROM PUBLIC, anon; GRANT EXECUTE TO authenticated, service_role;`) y comportamiento actual cuando sí hay condiciones.
 
-- `onSuccess` recibe array. Cambia el toast:
-  - 1 borrador: mensaje actual con moneda.
-  - 2 borradores: "Se generaron 2 borradores (MXN y USD). Revísalos en Facturación."
-- **Ya no navega a `/facturacion/:id`**. Se queda en la proforma (decisión del usuario). Invalida `["proformas"]`, `["proforma-detalle"]`, `["facturas"]`.
+Con esto, cuando no haya condiciones naviera, el cálculo de venta por tabulador propio sigue funcionando y no se toca la parte de costo (queda en 0) — que es el comportamiento esperado.
 
-#### 4. Tests
+## Verificación
 
-- Actualiza `convertirAFactura.test.ts` para el nuevo shape de retorno (array).
-- Agrega test unitario: cuando data devuelve dos filas, retorna array de longitud 2 con las monedas correctas.
+- Reproducir localmente: `UPDATE embarque_contenedores SET fecha_descarga = ... WHERE id = ...` sobre un embarque sin `costeo_navieras_condiciones` no debe fallar.
+- E2E: editar fechas del contenedor en `/embarques/:id` desde la UI (ruta donde ocurrió el crash) — el PATCH debe responder 204.
+- Correr `bunx vitest run` para los tests existentes de embarques.
 
-#### 5. Version + changelog
+## Fuera de alcance
 
-- Bump `APP_VERSION` a `13.160.0` (feature).
-- Entrada en `CHANGELOG.md` describiendo split bimoneda y fix de fuente de conceptos.
+- No se cambia lógica de cálculo ni tabuladores.
+- No se toca el frontend; el toast rojo del PATCH desaparece cuando el trigger deja de tirar.
 
-### Verificación
+## Changelog / versión
 
-Después de la migración, reintentar conversión de PRO-2026-0951:
-- Deben aparecer 2 filas en `facturas` (una MXN 47,560 y una USD 1,603.40) enlazadas por `proforma_id` = 419c… y por `proformas.factura_id` / `factura_secundaria_id`.
-- Cada factura con sus conceptos correspondientes (4 USD, 1 MXN).
-- Proforma en estado `facturada`.
-- Toast en `/proformas/419c…` sin navegación.
-
-### Fuera de alcance
-
-- No se toca el flujo consolidado (`consolidar_proformas`) ni `marcarProformaFacturada` legacy.
-- No se cambia el modelo de datos (no migración de estructura).
-- Timbrado FacturAPI queda pendiente por factura (flujo actual, cada borrador se timbra por separado).
+- Bump `APP_VERSION` a `13.160.1` (patch).
+- Entrada en `CHANGELOG.md`.
