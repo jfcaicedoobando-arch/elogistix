@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { parseTarifasInformativas } from "@/features/cotizacion/services";
@@ -46,7 +47,7 @@ export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Pro
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <PageContainer>
       <PageHeader
         title={`Tarifario ${cotizacion.folio}`}
         description={`Cliente: ${cotizacion.cliente_nombre}`}
