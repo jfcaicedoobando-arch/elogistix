@@ -7,21 +7,17 @@ import { toast } from "@/hooks/shared";
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
-  aprobarProformas as svcAprobar,
-  consolidarProformas as svcConsolidar,
   crearProforma as svcCrear,
   eliminarProforma as svcEliminar,
   fetchProformasTodas,
   fetchProformasEmbarque,
   fetchProformasPendientes,
-  type ConsolidarProformasParams,
   type CrearProformaParams,
   type EliminarProformaParams,
   type ProformaConFactura,
   type ProformaPendienteConEmbarque,
   type ProformaRow,
 } from "@/features/proformas/services";
-import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
@@ -113,53 +109,3 @@ export function useEliminarProforma() {
   });
 }
 
-export function useAprobarProformas() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (params: { proformaIds: string[] }) =>
-      svcAprobar(params.proformaIds).then(() => params),
-    onSuccess: (params) => {
-      notifySuccess(toast, {
-        title: params.proformaIds.length === 1
-          ? "Proforma aprobada"
-          : `${params.proformaIds.length} proformas aprobadas`});
-      invalidateProformaCaches(queryClient);
-    },
-    onError: (error: Error) => {
-      notifyError(toast, { title: `Error al aprobar: ${error.message}`, error, method: "APPROVE_PROFORMAS" });
-    },
-  });
-}
-
-export function useConsolidarProformas() {
-  const queryClient = useQueryClient();
-  const { organizationId } = useOrgFilter();
-  return useMutation({
-    mutationFn: (params: Omit<ConsolidarProformasParams, "organizationId">) => {
-      if (!organizationId) throw new Error("Organización no disponible");
-      return svcConsolidar({
-        ...params,
-        organizationId,
-        requestId: params.requestId ?? newRequestId(),
-      });
-    },
-    onSuccess: (nueva) => {
-      notifySuccess(toast, { title: `Proformas consolidadas en ${nueva.numero}` });
-      invalidateProformaCaches(queryClient, nueva.embarque_id);
-    },
-    onError: (error: Error) => {
-      // Mensajes claros para los errores de validación cross-embarque/cross-cliente
-      // que arroja la RPC `consolidar_proformas`.
-      const raw = error.message || "";
-      let title = `Error al consolidar: ${raw}`;
-      if (/different.*embarque|distinto.*embarque|mismo embarque/i.test(raw)) {
-        title = "Solo puedes consolidar proformas del mismo embarque";
-      } else if (/different.*cliente|distinto.*cliente|mismo cliente/i.test(raw)) {
-        title = "Solo puedes consolidar proformas del mismo cliente";
-      } else if (/already.*aprobada|ya.*aprobada|status.*aprobada/i.test(raw)) {
-        title = "Una o más proformas ya están aprobadas y no se pueden consolidar";
-      }
-      notifyError(toast, { title, error, method: "CONSOLIDATE_PROFORMAS" });
-    },
-  });
-}
