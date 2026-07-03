@@ -39,7 +39,7 @@ export function NotasCard({ notas }: { notas: string | null | undefined }) {
   if (!texto) return null;
   return (
     <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Notas</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-lg">Notas</CardTitle></CardHeader>
       <CardContent>
         <p className="text-sm whitespace-pre-line break-words">{texto}</p>
       </CardContent>
@@ -55,7 +55,7 @@ export function FacturaAsociadaCard({ factura }: { factura: FacturaAsociada }) {
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-sm flex items-center gap-2">
+        <CardTitle className="text-lg flex items-center gap-2">
           Factura asociada
           <span className="font-mono">{factura.numero}</span>
           <StatusBadge domain="factura" status={factura.estado} />
@@ -98,7 +98,7 @@ export function TotalesCard({ totales }: { totales: Totales }) {
   if (!hasUsd && !hasMxn) return null;
   return (
     <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Totales</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-lg">Totales</CardTitle></CardHeader>
       <CardContent className="grid grid-cols-2 gap-6 text-sm">
         {hasUsd && (
           <div className="space-y-1">
