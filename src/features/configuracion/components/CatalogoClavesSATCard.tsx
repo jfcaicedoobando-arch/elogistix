@@ -35,8 +35,7 @@ export function CatalogoClavesSATCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("catalogo_claves_sat")
-        .select("id, organization_id, patron, clave_sat, prioridad, activo, notas, tipo_iva, clave_unidad_sat, nombre_unidad")
-        .order("prioridad", { ascending: true })
+        .select("id, organization_id, patron, clave_sat, activo, tipo_iva, clave_unidad_sat, nombre_unidad")
         .order("patron", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Row[];
@@ -54,9 +53,7 @@ export function CatalogoClavesSATCard() {
   const buildPayload = (d: Draft) => ({
     patron: d.patron.trim(),
     clave_sat: d.clave_sat.trim(),
-    prioridad: d.prioridad,
     activo: d.activo,
-    notas: d.notas.trim() || null,
     tipo_iva: d.tipo_iva,
     tasa_iva_default: tasaFromTipo(d.tipo_iva),
     clave_unidad_sat: d.clave_unidad_sat,
@@ -101,8 +98,8 @@ export function CatalogoClavesSATCard() {
   const startEdit = (r: Row) => {
     setEditingId(r.id);
     setDraft({
-      patron: r.patron, clave_sat: r.clave_sat, prioridad: r.prioridad,
-      activo: r.activo, notas: r.notas ?? "",
+      patron: r.patron, clave_sat: r.clave_sat,
+      activo: r.activo,
       tipo_iva: r.tipo_iva, clave_unidad_sat: r.clave_unidad_sat,
     });
   };
@@ -132,22 +129,20 @@ export function CatalogoClavesSATCard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[22%]">Nombre</TableHead>
-                <TableHead className="w-[12%]">Clave SAT</TableHead>
-                <TableHead className="w-[12%]">Tipo IVA</TableHead>
-                <TableHead className="w-[12%]">Unidad SAT</TableHead>
-                <TableHead className="w-[8%]">Prioridad</TableHead>
-                <TableHead className="w-[8%]">Activo</TableHead>
-                <TableHead>Notas</TableHead>
-                <TableHead className="w-[10%] text-right">Acciones</TableHead>
+                <TableHead className="w-[28%]">Nombre</TableHead>
+                <TableHead className="w-[14%]">Clave SAT</TableHead>
+                <TableHead className="w-[14%]">Tipo IVA</TableHead>
+                <TableHead className="w-[14%]">Unidad SAT</TableHead>
+                <TableHead className="w-[10%]">Activo</TableHead>
+                <TableHead className="w-[12%] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
-                <TableRow><TableCell colSpan={8} className="text-muted-foreground text-center py-4">Cargando…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-muted-foreground text-center py-4">Cargando…</TableCell></TableRow>
               )}
               {!isLoading && rows.length === 0 && !showNew && (
-                <TableRow><TableCell colSpan={8} className="text-muted-foreground text-center py-4">
+                <TableRow><TableCell colSpan={6} className="text-muted-foreground text-center py-4">
                   Aún no hay productos. Da de alta al menos uno para poder capturar cotizaciones.
                 </TableCell></TableRow>
               )}
@@ -161,9 +156,7 @@ export function CatalogoClavesSATCard() {
                   <TableCell className="font-mono text-xs">{r.clave_sat}</TableCell>
                   <TableCell><Badge variant={TIPO_IVA_VARIANT[r.tipo_iva]}>{TIPO_IVA_LABEL[r.tipo_iva]}</Badge></TableCell>
                   <TableCell className="font-mono text-xs">{r.clave_unidad_sat}</TableCell>
-                  <TableCell>{r.prioridad}</TableCell>
                   <TableCell>{r.activo ? "Sí" : "No"}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{r.notas ?? "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => startEdit(r)} disabled={busy}><Pencil className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => deleteMut.mutate(r.id)} disabled={busy}><Trash2 className="h-4 w-4" /></Button>

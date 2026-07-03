@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.2] - 2026-07-04
+- **refactor(catálogo productos)**: se ocultan los campos **Prioridad** y **Notas** de la tarjeta `Catálogo de productos y servicios` en Configuración → Facturación. La tabla queda con 6 columnas (Nombre, Clave SAT, Tipo IVA, Unidad SAT, Activo, Acciones) ordenada alfabéticamente por nombre. Las columnas `prioridad` y `notas` se conservan en BD porque el resolver legacy `resolver_clave_sat` (fallback ILIKE para proformas antiguas) todavía usa `prioridad` para desempatar; los inserts nuevos toman el default 100.
+
 ## [13.170.1] - 2026-07-04
 - **chore(ci)**: se divide `CatalogoClavesSATCard.tsx` (293 líneas) en dos archivos para respetar el límite de 200 líneas por archivo (Power of 10). Constantes, tipos, helpers y el sub-componente `EditRow` se mueven a `CatalogoClavesSATCard.parts.tsx`. Se elimina el `export default` duplicado que knip marcaba como export redundante. Sin cambios de comportamiento.
 
