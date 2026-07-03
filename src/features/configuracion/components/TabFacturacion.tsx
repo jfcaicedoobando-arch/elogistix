@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import FacturapiCredencialesCard from "@/features/configuracion/components/FacturapiCredencialesCard";
+import { CatalogoClavesSATCard } from "@/features/configuracion/components/CatalogoClavesSATCard";
 
 interface Props {
   tasaIva: string; setTasaIva: (v: string) => void;
@@ -36,6 +37,8 @@ export default function TabFacturacion({ tasaIva, setTasaIva }: Props) {
       </Card>
 
       <FacturapiCredencialesCard />
+
+      <CatalogoClavesSATCard />
     </div>
   );
 }
