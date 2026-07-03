@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.159.0] - 2026-07-04
+- **chore(visual-audit)**: verificación de consistencia visual (design language).
+  - `scripts/visual-audit/capture.py` + `capture.mjs` (mismo comportamiento) + `README.md`: recorre 23 rutas principales autenticadas y guarda una captura 1440×900 por ruta (`NN-slug.png`), más `report.json` y `REPORT.md`.
+  - Login parametrizado con `AUDIT_EMAIL` / `AUDIT_PASSWORD` (default: usuario de pruebas `mem://reference/audit-login`).
+  - Reporte de consola por ruta para detectar regresiones no visuales.
+  - Baseline generado en `/mnt/documents/visual-snapshots-2026-07-03/` (23 rutas, 0 errores de consola).
+
 ## [13.158.0] - 2026-07-04
 - **feat(design-language)**: Ola 7 · Lote B — nuevas primitivas compartidas.
   - `DetailHeader` (`src/components/shared/`): back-button + icono + título + badge + acciones. Para páginas de detalle (Factura, Proforma, Cliente, Proveedor, portal).
