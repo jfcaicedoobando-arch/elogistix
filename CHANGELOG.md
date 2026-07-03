@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.10] - 2026-07-04
+- **fix(seguridad BD)**: se activa `security_invoker=on` en las vistas `public.v_pagos_rep_pendientes` y `public.v_proforma_factura_link` para que respeten la RLS del usuario que consulta en lugar de correr con permisos del owner. Cierra los 2 ERROR `Security Definer View` del linter de Supabase (228 → 226 hallazgos; el resto son WARN/INFO de endurecimiento que quedan fuera de alcance).
+
 ## [13.170.9] - 2026-07-04
 - **fix(RPC convertir_proformas_a_factura)**: la versión 13.170.8 introdujo una llamada a `public.idempotency_commit(uuid, text, jsonb)` que no existe en la BD (error `42883: function public.idempotency_commit(uuid, unknown, jsonb) does not exist`). Se restaura la llamada correcta a `public.idempotency_store(p_request_id, jsonb_build_object('factura_ids', ...))`, que sí es la función real (par con `idempotency_claim`). El resto del cuerpo — corrección de `estado_proforma`/`fecha_facturacion` — queda intacto.
 
