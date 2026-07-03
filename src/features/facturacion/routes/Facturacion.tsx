@@ -148,20 +148,26 @@ export default function Facturacion() {
             <TabsList className="bg-transparent border-0 p-0 h-auto">
               {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
             </TabsList>
-            <div className="pb-1">
-              <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
-            </div>
           </div>
 
           <TabsContent value="facturas" className="space-y-4">
             <TabFacturasEmitidas
               search={search} setSearch={setSearch}
-              filterEstado={filterEstado} setFilter={setFilter}
+              filterEstado={filterEstado}
+              filterCliente={filterCliente}
+              setFilter={setFilter}
+              fechaDesde={desdeIso ?? ""}
+              setFechaDesde={setFechaDesde}
+              fechaHasta={hastaIso ?? ""}
+              setFechaHasta={setFechaHasta}
+              clientes={clientesDisponibles}
+              onClearFiltros={clearFiltros}
               exportarFacturasCsv={exportarFacturasCsv}
               exportarLayoutContable={exportarLayoutContable}
               columns={facturaColumns}
               data={paginatedFacturas}
               facturasFiltradas={facturasFiltradas}
+              totalFacturas={facturas.length}
               isLoading={loadingFacturas}
               page={page} totalPages={totalPages} setPage={setPage}
               pageSize={pageSize} setPageSize={setPageSize}
