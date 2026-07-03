@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.150.2] - 2026-07-04
+- **fix(tests)**: divide `src/components/shared/dataTable/columnBuilders.tsx` (202 líneas → bajo 200) extrayendo `actionsColumn` a `actionsColumn.tsx` con re-export. Corrige fallos de shards 1 y 8 (`architecture-baseline` y `audit-report`: Power of 10 > 200 líneas).
+
 ## [13.150.1] - 2026-07-04
 - **chore(knip)**: agrega las 4 primitivas de la Oleada 1 aún sin consumidores (`columnBuilders.tsx`, `DeleteConfirmDialog.tsx`, `DocumentPreviewDialog.tsx`, `UnifiedFiltersBar.tsx`) a `knip.json > ignore` para que `bun run lint:unused` y `lint:unused:strict` pasen mientras se migran las páginas en la Oleada 2. Al consumirlas se retiran del ignore.
 
