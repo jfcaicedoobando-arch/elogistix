@@ -50,6 +50,11 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? "03");
   const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? "PUE");
   const [enviarEmail, setEnviarEmail] = useState(true);
+  // Modo inteligente: si todo está listo mostramos confirmación compacta;
+  // "Editar datos fiscales" abre el modo completo (analogía: firmar contrato
+  // ante notario — si el borrador está limpio sólo confirmas; si falta un
+  // dato, se abre el pliego completo).
+  const [modoExpandido, setModoExpandido] = useState(false);
 
   if (!facturaId || !factura) return null;
 
