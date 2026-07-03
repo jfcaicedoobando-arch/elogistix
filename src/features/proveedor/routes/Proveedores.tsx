@@ -15,6 +15,7 @@ import {
 import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCrear";
 import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function Proveedores() {
   const [search, setSearch] = useState("");
@@ -33,7 +34,7 @@ export default function Proveedores() {
 
   return (
     // pb-24 md:pb-0: evita que el FAB tape la última fila en mobile.
-    <div className="space-y-6 pb-24 md:pb-0">
+    <PageContainer className="pb-24 md:pb-6">
 
       <PageHeader
         icon={<Truck className="h-6 w-6 text-accent" />}
@@ -83,6 +84,6 @@ export default function Proveedores() {
           label="Nuevo proveedor"
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -5,15 +5,16 @@
  */
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProyeccion } from "@/features/facturacion/components/TabProyeccion";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function CierreMensual() {
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         title="Cierre mensual"
         description="Proyección de facturación del mes en curso con base en ETA de embarques"
       />
       <TabProyeccion />
-    </div>
+    </PageContainer>
   );
 }

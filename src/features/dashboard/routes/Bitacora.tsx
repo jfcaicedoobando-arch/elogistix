@@ -11,6 +11,7 @@ import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
 import { useBitacora } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 const MODULOS = [
   { valor: "todos", etiqueta: "Todos los módulos" },
@@ -104,7 +105,7 @@ export default function Bitacora() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<History className="h-6 w-6" />}
         title="Bitácora de Actividad"
@@ -190,6 +191,6 @@ export default function Bitacora() {
         onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); }}
         pageSizeOptions={[...OPCIONES_PAGINA]}
       />
-    </div>
+    </PageContainer>
   );
 }

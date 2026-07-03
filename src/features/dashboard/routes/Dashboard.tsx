@@ -15,6 +15,7 @@ import { useDashboardController, type DashboardScope } from "@/features/dashboar
 import { useMisCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { FinanceDashboard } from "@/features/dashboard/finance/FinanceDashboard";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 const ROLES_FINANCIEROS = new Set([
   "contador",
@@ -41,7 +42,7 @@ function OperationalDashboard() {
 
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <PageHeader
         title={
           <>
@@ -117,6 +118,6 @@ function OperationalDashboard() {
         isLoading={isLoading}
         hideFinancials={hideFinancials}
       />
-    </div>
+    </PageContainer>
   );
 }

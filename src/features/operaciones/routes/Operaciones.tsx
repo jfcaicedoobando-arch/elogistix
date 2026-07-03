@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/features/operaciones/components/DesempenoOperadores";
 import { useOperacionesPageController } from "@/features/operaciones/hooks";
 import { useCotizacionesPendientesReaprobacion } from "@/features/cotizacion/hooks/usePendientesReaprobacion";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI.
 const OperacionesTendenciaChart = lazy(
@@ -41,7 +42,7 @@ export default function Operaciones() {
 
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         title="Dashboard de Operaciones"
         description={hoyStr}
@@ -118,6 +119,6 @@ export default function Operaciones() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

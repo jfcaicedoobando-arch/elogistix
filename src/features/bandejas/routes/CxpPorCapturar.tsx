@@ -16,6 +16,7 @@ import { buildCxpPorCapturarColumns } from "@/features/bandejas/components/cxpPo
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 function KPICard({
   label, value, icon, count,
@@ -79,7 +80,7 @@ export default function CxpPorCapturar() {
   };
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         icon={<Package className="h-6 w-6 text-accent" />}
         title="CxP — Por capturar"
@@ -157,6 +158,6 @@ export default function CxpPorCapturar() {
         onOpenChange={(o) => { if (!o) setPicked(null); }}
         initialEmbarqueAdHoc={picked}
       />
-    </div>
+    </PageContainer>
   );
 }

@@ -12,6 +12,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { formatCurrency } from "@/lib/formatters";
 import {
+import { PageContainer } from "@/components/shared/PageContainer";
   useTesoreriaCuentasController,
   type Moneda,
 } from "@/features/tesoreria/hooks/useTesoreriaCuentasController";
@@ -23,7 +24,7 @@ export default function TesoreriaCuentas() {
   } = useTesoreriaCuentasController();
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Cuentas bancarias"
         description="Alta y administración de cuentas para conciliación"
@@ -123,6 +124,6 @@ export default function TesoreriaCuentas() {
         pending={eliminando}
         onConfirm={confirmarEliminar}
       />
-    </div>
+    </PageContainer>
   );
 }
