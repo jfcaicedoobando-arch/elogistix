@@ -10,7 +10,7 @@
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Replace } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFactura } from "@/features/facturacion/hooks";
@@ -19,8 +19,6 @@ import { usePermissions } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
-import { FacturaConceptosEditor } from "@/features/facturacion/components/detalle/FacturaConceptosEditor";
-import { FacturaDatosFiscalesCard } from "@/features/facturacion/components/detalle/FacturaDatosFiscalesCard";
 import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
@@ -28,9 +26,9 @@ import { FacturaDetalleActions } from "@/features/facturacion/components/detalle
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
+import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
-import { FacturaFiscalCheckAlert } from "@/features/facturacion/components/detalle/FacturaFiscalCheckAlert";
 import { PageContainer } from "@/components/shared/PageContainer";
 
 function canDeleteBorrador(
