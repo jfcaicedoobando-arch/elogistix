@@ -28,7 +28,6 @@ import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFac
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { FacturacionKpisFiscales } from "@/features/facturacion/components/FacturacionKpisFiscales";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
-import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { buildFacturaColumns, type Factura } from "./facturacionColumns";
@@ -74,18 +73,34 @@ export default function Facturacion() {
   const { canEmitirFactura } = usePermissions();
   const [openFacturaManual, setOpenFacturaManual] = useState(false);
 
-  const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
+  const { setRango, limpiar, isInRange, desdeIso, hastaIso } = useFacturacionDateRange();
   const [activeTab, setActiveTab] = useState<string>("facturas");
+
+  const parseIso = (iso: string): Date | null => {
+    if (!iso) return null;
+    const d = new Date(`${iso}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const setFechaDesde = (v: string) => setRango({ desde: v ? parseIso(v) : null });
+  const setFechaHasta = (v: string) => setRango({ hasta: v ? parseIso(v) : null });
 
   const {
     search, setSearch,
-    filterEstado, setFilter,
+    filterEstado, filterCliente, setFilter,
     page, setPage, pageSize, setPageSize,
     paginatedFacturas, facturasFiltradas, totalPages,
+    facturas,
     loadingFacturas,
-    canEdit,
+    canEdit, clientesDisponibles,
     exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController({ isInRange, activeTab });
+
+  const clearFiltros = () => {
+    setSearch("");
+    setFilter("estado", "todos");
+    setFilter("cliente", "todos");
+    limpiar();
+  };
 
   const [pagoFactura, setPagoFactura] = useState<Factura | null>(null);
   const [historialFactura, setHistorialFactura] = useState<Factura | null>(null);
@@ -133,20 +148,26 @@ export default function Facturacion() {
             <TabsList className="bg-transparent border-0 p-0 h-auto">
               {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
             </TabsList>
-            <div className="pb-1">
-              <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
-            </div>
           </div>
 
           <TabsContent value="facturas" className="space-y-4">
             <TabFacturasEmitidas
               search={search} setSearch={setSearch}
-              filterEstado={filterEstado} setFilter={setFilter}
+              filterEstado={filterEstado}
+              filterCliente={filterCliente}
+              setFilter={setFilter}
+              fechaDesde={desdeIso ?? ""}
+              setFechaDesde={setFechaDesde}
+              fechaHasta={hastaIso ?? ""}
+              setFechaHasta={setFechaHasta}
+              clientes={clientesDisponibles}
+              onClearFiltros={clearFiltros}
               exportarFacturasCsv={exportarFacturasCsv}
               exportarLayoutContable={exportarLayoutContable}
               columns={facturaColumns}
               data={paginatedFacturas}
               facturasFiltradas={facturasFiltradas}
+              totalFacturas={facturas.length}
               isLoading={loadingFacturas}
               page={page} totalPages={totalPages} setPage={setPage}
               pageSize={pageSize} setPageSize={setPageSize}

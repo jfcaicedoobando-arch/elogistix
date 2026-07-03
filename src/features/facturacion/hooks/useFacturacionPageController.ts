@@ -24,8 +24,9 @@ export function useFacturacionPageController(opts?: {
   const {
     search, filters, page, pageSize,
     setSearch, setFilter, setPage, setPageSize, paginate,
-  } = useListPageState({ estado: "todos" });
+  } = useListPageState({ estado: "todos", cliente: "todos" });
   const filterEstado = filters.estado;
+  const filterCliente = filters.cliente;
 
   // Lazy fetching por tab activo (J de la auditoría). Sólo se aplica al listado
   // pesado de facturas; el resto se mantiene siempre activo para alimentar
@@ -34,11 +35,22 @@ export function useFacturacionPageController(opts?: {
 
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas({ enabled: facturasEnabled });
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
-  
+
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
   const { toast } = useToast();
   const registrarActividad = useRegistrarActividad();
+
+  // Lista de clientes derivada de las facturas cargadas (evita fetch extra).
+  const clientesDisponibles = useMemo(() => {
+    const set = new Map<string, string>();
+    for (const f of facturas) {
+      if (f.cliente_nombre) set.set(f.cliente_nombre, f.cliente_nombre);
+    }
+    return Array.from(set.values())
+      .sort((a, b) => a.localeCompare(b, "es"))
+      .map((n) => ({ id: n, nombre: n }));
+  }, [facturas]);
 
   const filtered = useMemo(() => {
     return facturas.filter(factura => {
@@ -47,10 +59,11 @@ export function useFacturacionPageController(opts?: {
         || factura.numero.toLowerCase().includes(s)
         || factura.cliente_nombre.toLowerCase().includes(s);
       const matchEstado = filterEstado === "todos" || factura.estado === filterEstado;
+      const matchCliente = filterCliente === "todos" || factura.cliente_nombre === filterCliente;
       const matchFecha = isInRange(factura.fecha_emision);
-      return matchSearch && matchEstado && matchFecha;
+      return matchSearch && matchEstado && matchCliente && matchFecha;
     });
-  }, [search, filterEstado, facturas, isInRange]);
+  }, [search, filterEstado, filterCliente, facturas, isInRange]);
 
   const gastosFiltrados = useMemo(
     () => gastosPendientes.filter((g) => isInRange(g.fecha_vencimiento)),
@@ -119,7 +132,7 @@ export function useFacturacionPageController(opts?: {
   return {
     // estado
     search, setSearch,
-    filterEstado, setFilter,
+    filterEstado, filterCliente, setFilter,
     page, setPage,
     pageSize, setPageSize,
     // datos
@@ -128,7 +141,8 @@ export function useFacturacionPageController(opts?: {
     paginatedFacturas,
     totalPages,
     gastosPendientes: gastosFiltrados,
-    
+    clientesDisponibles,
+
     loadingFacturas,
     loadingGastos,
     // permisos / mutaciones
