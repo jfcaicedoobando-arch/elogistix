@@ -2,69 +2,43 @@
  * facturapiClient — Devuelve una instancia del SDK oficial `facturapi`
  * (v4.18.0) ya configurada para la organización dada.
  *
- * Carga el SDK vía `npm:facturapi@4.18.0` (Deno) y cachea el cliente por API key
- * para evitar reinstanciar en invocaciones encadenadas dentro de la misma
- * instancia del runtime.
+ * Carga el SDK vía import ESTÁTICO `npm:facturapi@4.18.0` y cachea el cliente
+ * por API key para evitar reinstanciar en invocaciones encadenadas dentro de
+ * la misma instancia del runtime.
  *
  * El ambiente (sandbox/live) se decide implícitamente por la API key que
  * `resolveFacturapiKey` entrega (cada secret apunta a su ambiente).
  *
  * Sólo este módulo puede importar `npm:facturapi`. Las edge functions deben
  * usar `getFacturapiClient(supabase, organizationId)`.
+ *
+ * NOTA: antes usábamos `import()` dinámico con la spec en variable
+ * (`const sdkSpec = "npm:facturapi@4.18.0"; import(sdkSpec)`). Deno Edge
+ * Runtime construye el grafo de paquetes npm SOLO a partir de imports
+ * estáticos: al ser dinámico, el paquete no quedaba registrado y el boot
+ * fallaba con `Could not find constraint 'facturapi@4.18.0' in the list of
+ * packages.`, tirando todo request con "Edge Function returned a non-2xx".
  */
+// @ts-ignore -- el paquete `facturapi` no publica typings compatibles con Deno.
+import FacturapiDefault from "npm:facturapi@4.18.0";
 import { resolveFacturapiKey, type FacturapiResolveResult, type SupabaseLike } from "./facturapiAuth.ts";
 
 // El SDK `facturapi` no exporta tipos accesibles desde el typecheck de
-// Deno (lo cargamos dinámicamente). Lo modelamos como un objeto opaco.
+// Deno. Lo modelamos como un objeto opaco.
 export type FacturapiClient = object;
 type FacturapiCtorType = new (apiKey: string) => FacturapiClient;
 
+// Algunos empaquetados exponen el ctor como `default.default` (CJS/ESM interop).
+// Normalizamos aquí para tener una sola forma de instanciarlo.
+const RawDefault = FacturapiDefault as unknown as
+  | FacturapiCtorType
+  | { default?: FacturapiCtorType };
+const FacturapiCtor: FacturapiCtorType =
+  (typeof RawDefault === "function"
+    ? RawDefault
+    : (RawDefault?.default ?? (RawDefault as unknown as FacturapiCtorType)));
+
 const clientCache = new Map<string, FacturapiClient>();
-
-// Carga eager del SDK a nivel de módulo: la descarga/parseo del paquete
-// `facturapi` ocurre durante el `boot` del worker de Deno (antes de que la
-// función empiece a aceptar requests), NO en el hot path del primer request.
-//
-// IMPORTANTE: pineado a `4.18.0` porque la última versión publicada del
-// paquete `facturapi` en npm es 4.x. Antes apuntábamos a `npm:facturapi@5`
-// (no existe) y Deno crasheaba el event loop del worker en boot con
-// `Could not find constraint 'facturapi@5' in the list of packages.`, lo que
-// hacía que TODO request a la función fallara con "Failed to send a request
-// to the Edge Function" (Sentry JAVASCRIPT-REACT-1S).
-//
-// Además: capturamos la rejection del import top-level para que un fallo de
-// carga no tire el worker entero. El error se rethrowea cuando
-// `loadFacturapiCtor()` se invoca, así otras edge functions que importen
-// este shared module no se rompen en boot.
-const sdkSpec = "npm:facturapi@4.18.0";
-
-interface SdkModule {
-  default?: FacturapiCtorType | { default?: FacturapiCtorType };
-}
-
-let sdkLoadError: unknown = null;
-const sdkModulePromise: Promise<SdkModule | null> = (
-  import(sdkSpec) as Promise<SdkModule>
-).then(
-  (mod) => mod,
-  (err) => {
-    console.error("[facturapiClient] SDK import failed", err);
-    sdkLoadError = err;
-    return null;
-  },
-);
-
-async function loadFacturapiCtor(): Promise<FacturapiCtorType> {
-  const mod = await sdkModulePromise;
-  if (!mod) {
-    throw sdkLoadError ?? new Error("facturapi_sdk_unavailable");
-  }
-  const def = mod.default;
-  const ctor = (def && typeof def === "object" && "default" in def
-    ? def.default
-    : def) as FacturapiCtorType | undefined;
-  return ctor ?? (mod as unknown as FacturapiCtorType);
-}
 
 export interface FacturapiClientResolved {
   client: FacturapiClient;
@@ -92,8 +66,7 @@ export async function getFacturapiClient(
 
   let client = clientCache.get(apiKey);
   if (!client) {
-    const Ctor = await loadFacturapiCtor();
-    client = new Ctor(apiKey);
+    client = new FacturapiCtor(apiKey);
     clientCache.set(apiKey, client);
   }
 

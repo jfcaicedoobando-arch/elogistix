@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.11] - 2026-07-04
+- **fix(facturación/timbrado)**: la edge function `facturapi-emitir` (y las demás que reutilizan `_shared/facturapiClient.ts`: `facturapi-cancelar`, `facturapi-emitir-rep`, `facturapi-emitir-nota-credito`, etc.) fallaba en boot con `TypeError: Could not find constraint 'facturapi@4.18.0' in the list of packages` porque el SDK se cargaba con `import()` **dinámico**. El runtime de Deno construye el grafo de paquetes npm sólo con imports estáticos, así que el paquete no quedaba registrado y todo request devolvía `Edge Function returned a non-2xx status code` al timbrar (Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1`). Se cambia a `import FacturapiDefault from "npm:facturapi@4.18.0"` (estático top-level) y se normaliza el `default.default` de la interop CJS/ESM. Verificado con `curl` a la función tras redeploy: ya responde 400 `factura_id_required` en vez de crashear en boot.
+
 ## [13.170.10] - 2026-07-04
 - **fix(seguridad BD)**: se activa `security_invoker=on` en las vistas `public.v_pagos_rep_pendientes` y `public.v_proforma_factura_link` para que respeten la RLS del usuario que consulta en lugar de correr con permisos del owner. Cierra los 2 ERROR `Security Definer View` del linter de Supabase (228 → 226 hallazgos; el resto son WARN/INFO de endurecimiento que quedan fuera de alcance).
 
