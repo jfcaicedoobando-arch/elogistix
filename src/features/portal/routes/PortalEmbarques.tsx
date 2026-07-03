@@ -1,8 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
@@ -10,8 +8,9 @@ import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/features/portal/components/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
 import { PortalEmbarquesMobileFilters } from "@/features/portal/components/PortalEmbarquesMobileFilters";
-import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
+import { Ship, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/features/portal/hooks";
 import { useIsMobile } from "@/hooks/shared";
 
@@ -49,38 +48,29 @@ export default function PortalEmbarques() {
         actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
       />
 
-      {/* Filtros: en desktop fila completa, en mobile search + sheet con filtros */}
-      <div className="hidden sm:flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por expediente, ruta..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-          <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filtrar por estado" title="Estado">
-            <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los estados</SelectItem>
-            {estados.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filtroModo} onValueChange={setFiltroModo}>
-          <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filtrar por modo" title="Modo">
-            <Ship className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="Modo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los modos</SelectItem>
-            {modos.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      <PortalFiltersBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar por expediente, ruta..."
+        selects={[
+          {
+            value: filtroEstado,
+            onChange: setFiltroEstado,
+            options: estados,
+            placeholder: "Estado",
+            allLabel: "Todos los estados",
+          },
+          {
+            value: filtroModo,
+            onChange: setFiltroModo,
+            options: modos,
+            placeholder: "Modo",
+            allLabel: "Todos los modos",
+            icon: <Ship className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />,
+            width: "sm:w-[180px]",
+          },
+        ]}
+      />
 
       <PortalEmbarquesMobileFilters
         search={search}
