@@ -7,7 +7,7 @@ import { Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { TASAS_IVA_MX, resolverTasaConcepto } from "@/lib/financial/financialUtils";
-import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
+
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
 
@@ -20,9 +20,9 @@ export interface ConceptoRowProps {
 }
 
 export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, eliminar }: ConceptoRowProps) {
-  const puedeIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.descripcion);
   const tasaFila = resolverTasaConcepto(c, 0);
   const aplicaIva = tasaFila > 0;
+  const puedeIva = !!c.descripcion; // el catálogo determina si es gravado; usuario puede overridear
   return (
     <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${aplicaIva ? 'bg-warning/5' : ''}`}>
       <div className="col-span-3">

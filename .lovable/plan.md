@@ -1,65 +1,82 @@
-## Objetivo
+# Catálogo de productos/servicios para cotizaciones
 
-En el detalle de una factura, cada renglón podrá marcarse como **Gravado 16%**, **Tasa 0%** o **Exento**. El indicador aparece en la tabla de conceptos (borrador y timbrada) y el total de IVA se recalcula por renglón. El PDF queda igual (fuera de alcance).
+Sí, tu razonamiento tiene todo el sentido. Hoy `catalogo_claves_sat` es solo un mapeo texto→clave SAT que actúa como resolver al facturar. La idea es evolucionarlo a un **catálogo maestro de productos/servicios** que además controle qué se puede vender.
+
+## Analogía rápida
+
+Piensa en el catálogo como el **menú de un restaurante**: el mesero (vendedor) sólo puede capturar platillos que están en el menú. Cada platillo trae precargado su categoría fiscal (clave SAT), si lleva IVA y qué unidad usa. Los tickets viejos (cotizaciones históricas) siguen intactos, pero cualquier ticket nuevo tiene que elegir del menú.
+
+## Alcance confirmado
+
+- **Extender** `catalogo_claves_sat` (no crear tabla nueva).
+- **Estricto**: en cotizaciones nuevas sólo se elige de la lista, sin texto libre.
+- **Campos**: nombre visible, clave SAT, tipo IVA (16%/0%/exento), unidad SAT.
+- **Históricos**: no se tocan.
 
 ## Cambios de base de datos
 
-Migración sobre `public.conceptos_factura`:
+Migración única sobre `catalogo_claves_sat`:
 
-- Nueva columna `tipo_iva text NOT NULL DEFAULT 'gravado_16'` con `CHECK (tipo_iva IN ('gravado_16','tasa_0','exento'))`.
-- Nueva columna `tasa_iva_aplicada numeric(6,4)` (nullable). Se llena al insertar/editar usando la tasa vigente cuando `tipo_iva='gravado_16'`; `0` para `tasa_0`; `null` para `exento`.
-- Backfill: filas existentes → `tipo_iva='gravado_16'`, `tasa_iva_aplicada = TASA_IVA` global (16%).
-- Sin cambios de RLS ni de grants (la tabla ya los tiene).
+1. Renombrar semánticamente sin romper: mantener columna `patron` como **`nombre`** (alias lógico, seguirá llamándose `patron` en BD para no romper el resolver; la UI lo mostrará como "Producto/Servicio"). El unique index por org ya garantiza no duplicados.
+2. Agregar columnas:
+   - `tipo_iva text NOT NULL DEFAULT 'gravado_16'` con CHECK (`'gravado_16' | 'tasa_0' | 'exento'`).
+   - `tasa_iva_default numeric` (0.16, 0.00 o NULL para exento; derivada del tipo).
+   - `clave_unidad_sat text NOT NULL DEFAULT 'E48'` (E48 = Unidad de Servicio, default).
+   - `nombre_unidad text` (para mostrar, opcional).
+3. Backfill: todas las filas actuales quedan `gravado_16` / `E48`.
+4. Nuevo RPC `resolver_producto_sat(p_org, p_nombre_exacto)` que devuelve la fila completa (clave SAT, tipo IVA, tasa, unidad) — usado al insertar en cotización.
+5. El resolver actual `resolver_clave_sat` (por ILIKE) se conserva sólo como fallback para facturas desde proformas viejas.
 
-## Cambios de servicio (`conceptosFacturaCrud.ts`)
+**No se agrega columna a `conceptos_venta`.** Al insertar concepto de cotización, el frontend selecciona un producto del catálogo y guarda los campos derivados (descripción = nombre del producto, tipo_iva, tasa_iva_aplicada). Esto respeta históricos.
 
-- `ConceptoFacturaInput` gana `tipo_iva: 'gravado_16'|'tasa_0'|'exento'` (default `gravado_16`).
-- `normalizarLinea` incluye `tipo_iva` y calcula `tasa_iva_aplicada` (0.16 / 0 / null).
-- `recalcularTotalesFactura`:
-  - Lee `cantidad, precio_unitario, tipo_iva, tasa_iva_aplicada`.
-  - `subtotal` = suma de todos los importes.
-  - `iva` = suma por renglón de `importe * (tasa_iva_aplicada ?? 0)` (exento no aporta).
-  - `total` = subtotal + iva.
-- `fetchConceptosFactura` selecciona las dos columnas nuevas.
+## Cambios en la UI
 
-## Cambios de UI (sólo vista web)
+### Módulo Configuración → tarjeta actual `CatalogoClavesSATCard`
 
-`FacturaConceptosEditorRows.tsx` (renglón editable):
-- Nueva columna estrecha con un `Select` de 3 opciones: **16% · 0% · Exento**.
-- Se reajustan `col-span` (descripción 4, SAT 2, cant 1, p.u. 2, **IVA 1**, acciones 2).
+Se renombra a **"Catálogo de productos y servicios"** y se le agregan columnas al formulario/tabla:
+- Nombre (antes "Patrón").
+- Clave SAT.
+- Tipo IVA (select: 16% / 0% / Exento).
+- Clave unidad SAT (select con las más comunes: E48 Servicio, XPP Paquete, KGM Kilogramo, TNE Tonelada, H87 Pieza).
+- Activo, prioridad, notas.
 
-`FacturaConceptosTable.tsx` (vista sólo-lectura):
-- Añadir columna **IVA** con badge de color:
-  - `gravado_16` → badge por defecto `16%`
-  - `tasa_0` → badge secundario `0%`
-  - `exento` → badge outline `Exento`
-- Para facturas ya timbradas, leer el campo del snapshot de Facturapi (`taxes[].rate` / `withholding`), mapear a esos 3 valores; si el snapshot no lo trae, mostrar `—`.
-- Vista mobile: agregar la etiqueta bajo la descripción.
+Validación: nombre único por org (case-insensitive, ya está el index).
 
-`FacturaManualConceptosTable.tsx` (alta manual):
-- Mismo selector por renglón; el cálculo de subtotal/IVA/total del pie usa la nueva regla.
+### Wizard/editor de cotizaciones
 
-## Envío a Facturapi (timbrado)
+Reemplazar el `Input` de texto libre para descripción del concepto por un **`ProductoServicioSelect`** (Command/Combobox con búsqueda) que:
+- Lista productos activos del catálogo de la org.
+- Al elegir uno: autocompleta descripción (=nombre), guarda `tipo_iva` y `tasa_iva_aplicada` derivados. Cantidad, precio unitario y moneda siguen siendo capturados manualmente.
+- No permite guardar el renglón si no hay producto seleccionado (modo estricto).
+- Si el catálogo está vacío, muestra un aviso con link a Configuración y bloquea agregar renglones.
 
-`DialogTimbrarFactura` y el builder de payload ya toman los conceptos vigentes; adaptar el mapper para que cada concepto exporte su `product.taxes` según `tipo_iva`:
-- `gravado_16` → `{ type: 'IVA', rate: 0.16 }`
-- `tasa_0` → `{ type: 'IVA', rate: 0, factor: 'Tasa' }`
-- `exento` → `{ type: 'IVA', factor: 'Exento' }`
+### Editor de facturas
 
-Esto es necesario para que el CFDI refleje lo que el usuario ve; si no lo tocamos, el timbrado seguiría enviando todo como 16%.
+No cambia el flujo actual — sigue usándose el resolver por patrón para conversiones de proformas viejas. Facturas manuales nuevas también pueden usar el nuevo select (opcional, ver "Fuera de alcance").
 
-## Tests
+## Cambios en servicios/RPC
 
-- `conceptosFacturaCrud.test.ts`: agrega casos para los 3 tipos y verifica que `recalcularTotalesFactura` produce el total correcto (mezcla gravado + exento + 0%).
-- Test de UI ligero: al cambiar el select en un renglón, el pie de totales del editor se actualiza.
+- `crearConceptoVenta` (o equivalente al insertar en `conceptos_venta`): recibe `producto_id` en vez de `descripcion` cruda; hace un fetch al catálogo y guarda los campos derivados.
+- `convertir_proformas_a_factura`: sin cambios (sigue usando `resolver_clave_sat` como fallback para históricos).
+- Cotizaciones existentes con conceptos texto libre: se muestran tal cual en modo lectura; si el usuario intenta **agregar** un renglón nuevo a una cotización vieja, aplica la regla estricta.
 
-## Housekeeping
+## Detalles técnicos
 
-- Bump `APP_VERSION` (`13.167.0`) y entrada en `CHANGELOG.md`.
-- No requiere cambios en PDF, ni en tests de arquitectura, ni en Frankfurter/Banxico.
+- Componente nuevo: `src/features/cotizaciones/components/ProductoServicioSelect.tsx` (usando `Command` de shadcn, filtrando por `nombre ILIKE`).
+- Hook: `useProductosCatalogo(organizationId)` con react-query, cache 5min.
+- Migración: `supabase/migrations/*_catalogo_productos_extend.sql`.
+- Tipo TypeScript: extender `Row` en `CatalogoClavesSATCard.tsx` y agregar tipo `ProductoCatalogo` en `src/features/configuracion/types.ts`.
+- Actualizar el select del wizard donde hoy se captura descripción del concepto (típicamente en el paso "Conceptos" del wizard de cotización).
+- Bump `APP_VERSION` a **13.169.0** y entrada en `CHANGELOG.md`.
 
-## Fuera de alcance
+## Fuera de alcance (para confirmar en otro turno si lo quieres)
 
-- Retenciones (ISR/IVA retenido) por concepto.
-- Cambios en el PDF de factura/proforma.
-- Migrar `conceptos_venta` (proformas) — ya tiene su propio `aplica_iva`.
+- Precios sugeridos por producto (dijiste sólo nombre/clave/IVA/unidad).
+- Categorías / agrupación.
+- Aplicar la restricción estricta también a facturas manuales.
+- Backfill que mapee conceptos históricos a productos.
+
+## Riesgos
+
+- Cotizaciones viejas mostrarán descripciones que no existen en el catálogo — se despliegan sin problema (lectura), pero al editar un renglón viejo el usuario deberá elegir un producto del catálogo. Aviso claro en el editor.
+- Si dos organizaciones tienen productos con el mismo nombre, no hay colisión: el unique index es por `(organization_id, lower(patron))`.

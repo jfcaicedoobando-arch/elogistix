@@ -638,34 +638,46 @@ export type Database = {
         Row: {
           activo: boolean
           clave_sat: string
+          clave_unidad_sat: string
           created_at: string
           id: string
+          nombre_unidad: string | null
           notas: string | null
           organization_id: string
           patron: string
           prioridad: number
+          tasa_iva_default: number | null
+          tipo_iva: string
           updated_at: string
         }
         Insert: {
           activo?: boolean
           clave_sat: string
+          clave_unidad_sat?: string
           created_at?: string
           id?: string
+          nombre_unidad?: string | null
           notas?: string | null
           organization_id: string
           patron: string
           prioridad?: number
+          tasa_iva_default?: number | null
+          tipo_iva?: string
           updated_at?: string
         }
         Update: {
           activo?: boolean
           clave_sat?: string
+          clave_unidad_sat?: string
           created_at?: string
           id?: string
+          nombre_unidad?: string | null
           notas?: string | null
           organization_id?: string
           patron?: string
           prioridad?: number
+          tasa_iva_default?: number | null
+          tipo_iva?: string
           updated_at?: string
         }
         Relationships: [
@@ -7276,6 +7288,18 @@ export type Database = {
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
+      }
+      resolver_producto_sat: {
+        Args: { p_nombre: string; p_org: string }
+        Returns: {
+          clave_sat: string
+          clave_unidad_sat: string
+          id: string
+          nombre: string
+          nombre_unidad: string
+          tasa_iva_default: number
+          tipo_iva: string
+        }[]
       }
       resolver_reaprobacion_tarifa: {
         Args: { p_cotizacion_id: string; p_decision: string }

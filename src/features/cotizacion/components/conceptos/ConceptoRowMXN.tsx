@@ -6,16 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA, resolverTasaConcepto, TASAS_IVA_MX } from "@/lib/financial/financialUtils";
-import { CONCEPTOS_COSTO_MXN } from "@/constants/cotizacionConstants";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
+import { ProductoServicioSelect } from "./ProductoServicioSelect";
+import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import type { ConceptoRowProps } from "./ConceptoRowUSD";
-
-/** Resuelve el value del Select de concepto: catálogo, vacío o "Otro". */
-function getConceptoSelectValue(descripcion: string, catalogo: readonly string[]): string {
-  if (catalogo.includes(descripcion)) return descripcion;
-  if (descripcion === "") return "";
-  return "Otro";
-}
 
 export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, eliminar, tasaIva }: ConceptoRowProps & { tasaIva: number }) {
   const subtotal = c.cantidad * c.precio_unitario;
@@ -25,32 +19,16 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
     <div className="grid grid-cols-12 gap-2 items-end">
       <div className="col-span-2">
         {i === 0 && <Label className="text-xs">Concepto</Label>}
-        {c.descripcion !== '' && !(CONCEPTOS_COSTO_MXN as readonly string[]).includes(c.descripcion) && c.descripcion !== 'Otro' ? (
-          <Input
-            value={c.descripcion}
-            onChange={e => actualizar(i, 'descripcion', e.target.value)}
-            placeholder="Descripción libre"
-          />
-        ) : (
-          <Select
-            value={getConceptoSelectValue(c.descripcion, CONCEPTOS_COSTO_MXN as readonly string[])}
-            onValueChange={val => {
-              if (val === 'Otro') {
-                actualizar(i, 'descripcion', '');
-                setTimeout(() => actualizar(i, '_esOtro', true), 0);
-              } else {
-                actualizar(i, 'descripcion', val);
-              }
-            }}
-          >
-            <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
-            <SelectContent>
-              {[...CONCEPTOS_COSTO_MXN].map(opt => (
-                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <ProductoServicioSelect
+          value={c.descripcion}
+          onSelect={(p) => {
+            const tasa = tasaDesdeTipoIva(p.tipo_iva);
+            actualizar(i, 'descripcion', p.nombre);
+            actualizar(i, 'aplica_iva', p.tipo_iva === 'gravado_16');
+            actualizar(i, 'tasa_iva_aplicada', tasa);
+            if (p.clave_unidad_sat) actualizar(i, 'unidad_medida', p.clave_unidad_sat);
+          }}
+        />
       </div>
       <div className="col-span-1">
         {i === 0 && <Label className="text-xs">Unidad</Label>}
