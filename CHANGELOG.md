@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.153.0] - 2026-07-04
+- **test(design-language)**: cierra Oleada 3 — cobertura de `WizardShell` con 6 tests (header/pasos, back, footer default primer/último paso, `isBusy`, footer custom).
+- **docs**: `.lovable/plan.md` anota que `FacturapiOnboardingWizard` y `CrearProveedorDesdeCfdiDialog` quedan fuera de la migración a `WizardShell` (uno es wizard modal ya sobre `FormDialogShell + stepper`, el otro es un form de un solo paso).
+
 ## [13.152.2] - 2026-07-04
 - **feat(design-language)**: Ola 3 — Lote B. Nuevo `WizardShell` (`src/components/shared/WizardShell.tsx`) centraliza header + `StepIndicator` + Enter→siguiente + footer sticky para wizards de página completa. `EmbarqueWizardLayout` queda como wrapper delgado sobre `WizardShell`; `CotizacionWizardLayout` migra al mismo shell manteniendo su footer custom con "Cotizar sin desglose". `CotizacionWizardFooter` se limpia (sin wrapper duplicado).
 

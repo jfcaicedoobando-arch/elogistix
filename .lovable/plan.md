@@ -113,21 +113,19 @@ Crear `WizardShell` en `src/components/shared/wizard/` que envuelva `FormDialogS
 - Footer inteligente: Atrás / Cancelar / Siguiente / Finalizar según posición.
 - Reutiliza `FormDialogStepper` existente.
 
-Migrar a `WizardShell`:
+Migrados a `WizardShell` (v13.152.2):
 
-- `FacturapiOnboardingWizard` (ya usa FormDialogShell — sólo extraer lógica de pasos).
-- Wizard de Cotización (`src/features/cotizacion/components/wizard/*`).
-- Wizard de Embarque (`src/features/embarques/components/wizard/*`).
-- `CrearProveedorDesdeCfdiDialog` (2 pasos: subir XML + confirmar).
+- Wizard de Cotización (`CotizacionWizardLayout`) — footer custom con "Cotizar sin desglose".
+- Wizard de Embarque (`EmbarqueWizardLayout`) — footer default.
 
-## Guardrails y tests
+**Excluidos** (no migran a `WizardShell`):
 
-- Mismos guardrails de Ola 2: sin tocar RPCs, ≤200 líneas por archivo, tokens semánticos.
-- Cada dialog migrado conserva sus tests si existen; se agregan tests para `WizardShell` con cobertura de navegación entre pasos.
-- Al cerrar Lote A: bump menor; al cerrar Lote B (WizardShell): bump minor.
+- `FacturapiOnboardingWizard` — es un wizard **modal**, no de página completa. Ya usa `FormDialogShell` con `step/totalSteps/stepLabels`, que es el patrón de wizard modal del design system.
+- `CrearProveedorDesdeCfdiDialog` — es un form de un solo paso (2 campos), no un wizard. El flujo de "2 pasos" (subir XML + confirmar) lo orquesta el parent `DialogNuevaFacturaProveedor`.
 
-## Bump
+## Cierre Oleada 3 (v13.153.0)
 
-Lote A: `13.152.x` incremental por batch.
-Lote B: `13.153.0` al aterrizar `WizardShell`.
+- Lote A: 3 dialogs a `FormDialogShell` + 1 a `ConfirmActionDialog`; el resto ya reusaba shells compartidos.
+- Lote B: `WizardShell` creado y consumido por los 2 wizards de página; 6 tests de cobertura (header, back, footer default primer/último paso, `isBusy`, footer custom).
+- Siguiente: Oleada 4 (módulos legacy — CRM, Costeo, CxP, Auditoría, Admin).
 
