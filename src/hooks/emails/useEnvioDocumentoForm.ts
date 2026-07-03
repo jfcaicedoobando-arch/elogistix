@@ -23,6 +23,8 @@ import {
 
 export type Contacto = ContactoClienteEmail;
 
+const EMPTY_CONTACTOS: readonly Contacto[] = Object.freeze([]);
+
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface EnvioFormState {
@@ -55,11 +57,12 @@ export function useEnvioDocumentoForm(
 ): EnvioFormState {
   const { user } = useAuth();
 
-  const { data: contactos = [], isLoading: loadingContactos } = useQuery({
+  const { data, isLoading: loadingContactos } = useQuery({
     queryKey: ["contactos-cliente", clienteId],
     enabled: !!clienteId && open,
     queryFn: () => fetchContactosClienteConEmail(clienteId!),
   });
+  const contactos = (data ?? EMPTY_CONTACTOS) as Contacto[];
 
   const [seleccionados, setSeleccionados] = useState<Record<string, boolean>>({});
   const [emailManual, setEmailManual] = useState("");
