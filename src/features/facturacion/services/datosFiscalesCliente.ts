@@ -27,6 +27,10 @@ export interface DatosTimbradoPatch {
   uso_cfdi: string;
   forma_pago: string;
   metodo_pago: string;
+  dias_credito?: number;
+  notas?: string | null;
+  tipo_cambio?: number;
+  fecha_emision?: string;
 }
 
 export async function actualizarDatosTimbradoFactura(

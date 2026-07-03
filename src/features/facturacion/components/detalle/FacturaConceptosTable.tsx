@@ -1,7 +1,9 @@
 /**
- * FacturaConceptosTable — renderiza `snapshot_emision.conceptos` (jsonb).
- * Tabla en desktop, cards en mobile. Empty state si la factura no tiene
- * snapshot (facturas antiguas anteriores a la captura del desglose).
+ * FacturaConceptosTable — muestra los conceptos de una factura en modo
+ * sólo-lectura. Prioridad:
+ *   1. Prop `conceptos` (borradores: se leen en vivo de `conceptos_factura`).
+ *   2. `snapshot_emision.conceptos` (facturas ya timbradas).
+ *   3. Empty state.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,6 +23,13 @@ interface ConceptoSnapshot {
 interface Props {
   snapshot: unknown;
   moneda: string;
+  /** Conceptos vivos (borrador). Si viene, tiene prioridad sobre el snapshot. */
+  conceptos?: Array<{
+    descripcion: string;
+    cantidad: number;
+    precio_unitario: number;
+    total: number;
+  }>;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -34,8 +43,15 @@ function parseConceptos(snapshot: unknown): ConceptoSnapshot[] {
   return list.filter(isRecord) as ConceptoSnapshot[];
 }
 
-export function FacturaConceptosTable({ snapshot, moneda }: Props) {
-  const conceptos = parseConceptos(snapshot);
+export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConceptos }: Props) {
+  const conceptos: ConceptoSnapshot[] = propConceptos && propConceptos.length > 0
+    ? propConceptos.map((c) => ({
+        descripcion: c.descripcion,
+        cantidad: c.cantidad,
+        precio_unitario: c.precio_unitario,
+        importe: c.total,
+      }))
+    : parseConceptos(snapshot);
 
   if (conceptos.length === 0) {
     return (

@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.161.0] - 2026-07-04
+- **feat(facturacion)**: pantalla de detalle de factura fortalecida para captura previa al timbrado.
+  - **Conceptos visibles en el borrador**: `FacturaConceptosTable` ahora recibe los conceptos vivos de `conceptos_factura` (vía `useConceptosFactura`) y sólo cae a `snapshot_emision` en facturas ya timbradas. Antes los borradores se mostraban sin desglose porque el snapshot aún no existía.
+  - **Editor CRUD de conceptos** (`FacturaConceptosEditor`): agregar, editar o eliminar renglones en un borrador, con recálculo automático de `subtotal`/`iva`/`total` en la factura padre. Sólo visible en estado `Borrador` con permiso de edición.
+  - **Tarjeta de datos fiscales editables** (`FacturaDatosFiscalesCard`): Serie, Uso CFDI, Forma/Método de pago, días de crédito, tipo de cambio y notas se pueden ajustar directo desde el detalle (sin abrir el diálogo de timbrar). Muestra checks fiscales del cliente en línea (RFC / CP / Régimen).
+  - `services/conceptosFacturaCrud.ts`: nuevo módulo con `agregar/actualizar/eliminar` + `recalcularTotalesFactura` + `fetchConceptosFactura`.
+  - `datosFiscalesCliente.ts`: `DatosTimbradoPatch` acepta `dias_credito`, `notas`, `tipo_cambio`, `fecha_emision`.
+  - Sin migraciones SQL. Se reutilizan las políticas RLS existentes de `conceptos_factura`.
+
 ## [13.160.1] - 2026-07-04
 - **fix(embarques)**: PATCH a `embarque_contenedores` devolvía HTTP 500 (`record "v_cond" is not assigned yet`, Postgres 55000) al editar fechas/días libres de un contenedor cuando la naviera del embarque no tenía condiciones configuradas en `costeo_navieras_condiciones`. Reportado por Sentry `JAVASCRIPT-REACT-1W` / `JAVASCRIPT-REACT-1V`.
   - `calcular_demoras_embarque`: se añadieron banderas `v_cond_found` / `v_cond_id` para no referenciar campos de un `record` sin asignar. Cuando no hay condiciones naviera, el cálculo de venta por tabulador propio sigue funcionando y el costo queda en 0 (comportamiento esperado).

@@ -19,6 +19,9 @@ import { usePermissions } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
+import { FacturaConceptosEditor } from "@/features/facturacion/components/detalle/FacturaConceptosEditor";
+import { FacturaDatosFiscalesCard } from "@/features/facturacion/components/detalle/FacturaDatosFiscalesCard";
+import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
 import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
@@ -53,9 +56,12 @@ export default function FacturaDetalle() {
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
+  const esBorrador = factura?.estado === "Borrador" && !factura?.facturapi_id;
+  const puedeEditarBorrador = !!esBorrador && canEdit;
   const puedeEliminarBorrador = canDeleteBorrador(factura, canEdit);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
+  const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
 
 
   // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
@@ -133,7 +139,22 @@ export default function FacturaDetalle() {
 
       <FacturaResumenCard factura={factura} />
 
-      <FacturaConceptosTable snapshot={factura.snapshot_emision} moneda={factura.moneda} />
+      {puedeEditarBorrador && <FacturaDatosFiscalesCard factura={factura} />}
+
+      <FacturaConceptosTable
+        snapshot={factura.snapshot_emision}
+        moneda={factura.moneda}
+        conceptos={conceptosVivos}
+      />
+
+      {puedeEditarBorrador && (
+        <FacturaConceptosEditor
+          facturaId={factura.id}
+          organizationId={factura.organization_id}
+          moneda={factura.moneda}
+          conceptos={conceptosVivos}
+        />
+      )}
       <FacturaPagosSection
         facturaId={factura.id}
         facturaNumero={factura.numero}
