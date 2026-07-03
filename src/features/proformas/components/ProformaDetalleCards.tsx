@@ -5,11 +5,10 @@
  */
 import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate, formatDiasCredito, nombreDesdeEmail } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
@@ -75,7 +74,7 @@ export function FacturaAsociadaCard({ factura }: { factura: FacturaAsociada }) {
         <CardTitle className="text-sm flex items-center gap-2">
           Factura asociada
           <span className="font-mono">{factura.numero}</span>
-          <Badge className={`${getEstadoColor(factura.estado)} text-xs`}>{factura.estado}</Badge>
+          <StatusBadge domain="factura" status={factura.estado} />
         </CardTitle>
         <Button size="sm" asChild>
           <Link to={`/facturacion/${factura.id}`}>
