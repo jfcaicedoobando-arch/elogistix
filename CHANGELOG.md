@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.148.0] - 2026-07-04
+- **feat(facturación) — homologación de la tabla de Facturas Emitidas al design language.** `/facturacion` (tab "Emitidas") ahora usa la misma barra unificada que `/embarques` y `/proformas`: search + Estado + Cliente inline + botón "Filtros (N)" que abre un Sheet con rango de emisión (Desde/Hasta). Se agregan chips de filtros activos con X individual y "Limpiar todo", y contador `Mostrando X de Y facturas`. Se retiró el `DateRangeFilter` del encabezado de tabs (el periodo vive ahora dentro del Sheet). Los dos exportadores (CSV y Layout contable) se agrupan en un único dropdown "Exportar ▾". Nuevos componentes: `FacturasFiltros.tsx`, `FacturasFiltrosCampos.tsx`, `FacturasFiltrosChips.tsx`. El controller (`useFacturacionPageController`) agrega el filtro `cliente` y deriva `clientesDisponibles` de las facturas ya cargadas (sin fetch extra).
+
 ## [13.147.2] - 2026-07-03
 - **fix(facturación) — cast al enum `moneda` en conversión Proforma → Borrador.** Tras v13.147.1 el RPC declaraba `v_moneda text` y lo insertaba directo en `facturas.moneda` (enum `{MXN, USD, EUR}`), lo que provocaba `42804: column "moneda" is of type moneda but expression is of type text`. Ahora el `INSERT` castea explícitamente `v_moneda::public.moneda`; la conversión de proformas USD/MXN vuelve a completarse sin error.
 
