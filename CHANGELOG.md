@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.7] - 2026-07-04
+- **fix(tests CI)**: tres tests rojos corregidos. (1) `recalcularTotalesFactura`: el fallback de IVA sólo aplica cuando `tipo_iva` viene definido; si tanto `tasa_iva_aplicada` como `tipo_iva` son NULL, la tasa es 0 (exento) — antes se asumía 16% y duplicaba IVA en renglones exentos. (2) `appRoutes.smoke.test.tsx`: el caso `/configuracion` ahora espera `["admin","admin_org","contador","super_admin"]` para reflejar el acceso de contadores (v13.170.4). (3) `useProductosCatalogo`: se extrajo el acceso a Supabase a `services/productosCatalogoService.ts` para cumplir la regla arquitectónica "hooks/contexts no importan `@/integrations/supabase/client` directamente".
+
 ## [13.170.6] - 2026-07-04
 - **fix(sidebar/contador)**: el rol `contador` ahora ve el ítem **Configuración** dentro de la sección **Facturación** del sidebar (antes vivía sólo en el grupo Administración, oculto para contador). Al entrar se muestra únicamente la pestaña Facturación con el Catálogo de productos y servicios, tal como en 13.170.4.
 
