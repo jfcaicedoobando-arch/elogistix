@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.154.0] - 2026-07-04
+- **refactor(design-language)**: Oleada 4 — migración de módulos legacy a primitivas de la Ola 1 (`PageContainer`, `PageHeader`, `LoadingState`/`ErrorState`/`ListSkeleton`, `StatusBadge`).
+  - CRM: CrmDashboard, Leads, Oportunidades, Actividades, Analitica, MiDia, Configuracion, LeadDetalle, OportunidadDetalle.
+  - Costeo: CosteoTarifas, CosteoBuscar, CosteoAgentes, CosteoRutas, CosteoNavieras, CosteoDemorasVenta.
+  - CxP: Cxp, Compras, CxpAging.
+  - Auditoría: AuditoriaPage (tabs vía slot `PageHeader.tabs`).
+  - Admin: AdminLayout, AdminDashboard, Diagnostico, SentryDiagnostico, admin-org/Configuracion.
+  - Sin cambios de RPCs, hooks, RLS ni props públicos. Lint limpio · 827 tests en verde.
+
 ## [13.153.1] - 2026-07-04
 - **test(design-language)**: cobertura extendida a primitivas de las Olas 1–3. Nuevos suites: `PageHeader` (4 tests), `FormDialogShell` (4), `UnifiedFiltersBar` (5), `DocumentPreviewDialog` (5), `DeleteConfirmDialog` (2 pasos + ELIMINAR case-insensitive), `columnBuilders` (`statusColumn`/`clientColumn`/`moneyColumn`/`dateColumn`/`actionsColumn`, 6 tests). 26 tests nuevos, todos en verde.
 
