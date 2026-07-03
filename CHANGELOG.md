@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.156.0] - 2026-07-04
+- **refactor(design-language)**: Oleada 6 — cierre de la homologación de layout. Envolví en `PageContainer` las rutas legacy restantes para unificar padding, `max-w-screen-2xl` y ritmo vertical:
+  - Admin: `AdminDashboard`, `AdminOrganizaciones`, `AdminOrgDetalle`, `AdminAuditoriaPlataforma`, `AdminConfiguracion`, `Diagnostico`, `SentryDiagnostico`, `Idempotencia`, `Papelera`, `admin-org/Configuracion`, `admin-org/Usuarios`.
+  - Detalles: `ClienteDetalle`, `CotizacionDetalle`, `CotizacionInformativaDetalle`, `EmbarqueDetalle`, `FacturaDetalle`, `ProveedorDetalle`, `Comisiones`.
+  - Fuera de alcance (documentado en el plan): wizards (`NuevoEmbarque`, `EditarEmbarque`, `NuevaCotizacion`, `EditarCotizacion` — ya usan `WizardShell`), auth/marketing/legal (layouts públicos intencionalmente distintos) y portales cliente/agente (mantienen `max-w-7xl` de su layout dedicado).
+- Con esta oleada se cierra el plan de homologación de design language iniciado en la Ola 1.
+
 ## [13.155.0] - 2026-07-04
 - **refactor(design-language)**: Oleada 5 — envolver rutas de dashboards ejecutivos, catálogos y bandejas en `PageContainer` para homologar padding/max-width con el resto de la app.
   - Dashboard: `Dashboard`, `Bitacora`, `Ayuda`.
