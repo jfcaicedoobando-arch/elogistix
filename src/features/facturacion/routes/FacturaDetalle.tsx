@@ -27,6 +27,7 @@ import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
+import { FacturaFiscalCheckAlert } from "@/features/facturacion/components/detalle/FacturaFiscalCheckAlert";
 
 
 
