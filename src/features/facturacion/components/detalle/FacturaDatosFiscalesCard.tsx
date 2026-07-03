@@ -64,6 +64,36 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
       notifyError(toast, { title: "No se pudo guardar", error: err, method: "FACTURA_DATOS_FISCALES" }),
   });
 
+  const obtenerTC = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("banxico-tipo-cambio", {
+        method: "GET" as never,
+        // supabase-js v2 no soporta query en invoke; usamos body → la function lee moneda.
+      });
+      // Fallback: si invoke ignora method GET, hacemos fetch directo con query.
+      if (!data || error) {
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/banxico-tipo-cambio?moneda=${factura.moneda}`;
+        const res = await fetch(url, {
+          headers: {
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        });
+        if (!res.ok) throw new Error(`Banxico HTTP ${res.status}`);
+        return (await res.json()) as { tipoCambio: number; fecha: string };
+      }
+      return data as { tipoCambio: number; fecha: string };
+    },
+    onSuccess: (d) => {
+      setTipoCambio(d.tipoCambio);
+      toast.success(`TC DOF ${factura.moneda}: ${d.tipoCambio} (${d.fecha})`, {
+        description: "Recuerda presionar Guardar cambios para aplicarlo al CFDI.",
+      });
+    },
+    onError: (err) =>
+      notifyError(toast, { title: "No se pudo obtener TC DOF", error: err, method: "BANXICO_TC" }),
+  });
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     guardar.mutate(
