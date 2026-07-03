@@ -73,18 +73,34 @@ export default function Facturacion() {
   const { canEmitirFactura } = usePermissions();
   const [openFacturaManual, setOpenFacturaManual] = useState(false);
 
-  const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
+  const { setRango, limpiar, isInRange, desdeIso, hastaIso } = useFacturacionDateRange();
   const [activeTab, setActiveTab] = useState<string>("facturas");
+
+  const parseIso = (iso: string): Date | null => {
+    if (!iso) return null;
+    const d = new Date(`${iso}T00:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const setFechaDesde = (v: string) => setRango({ desde: v ? parseIso(v) : null });
+  const setFechaHasta = (v: string) => setRango({ hasta: v ? parseIso(v) : null });
 
   const {
     search, setSearch,
-    filterEstado, setFilter,
+    filterEstado, filterCliente, setFilter,
     page, setPage, pageSize, setPageSize,
     paginatedFacturas, facturasFiltradas, totalPages,
+    facturas,
     loadingFacturas,
-    canEdit,
+    canEdit, clientesDisponibles,
     exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController({ isInRange, activeTab });
+
+  const clearFiltros = () => {
+    setSearch("");
+    setFilter("estado", "todos");
+    setFilter("cliente", "todos");
+    limpiar();
+  };
 
   const [pagoFactura, setPagoFactura] = useState<Factura | null>(null);
   const [historialFactura, setHistorialFactura] = useState<Factura | null>(null);
