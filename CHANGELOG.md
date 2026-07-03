@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.163.3] - 2026-07-04
+- **fix(ci)**: correcciones al PR 13.163.0 detectadas por CI:
+  - `FacturaConceptosEditor.tsx` (214 LOC) dividido: los renglones se movieron a `FacturaConceptosEditorRows.tsx` (Power-of-10 #4 ≤200 líneas).
+  - `FacturaConceptosEditor` y `FacturaDatosFiscalesCard` ya no usan `toast({variant:'destructive'})`; ahora usan `notifyError` (regla arch `error-toasts-use-notifyError`).
+  - Complejidad ciclomática reducida en `FacturaDatosFiscalesCard` (19→<16) extrayendo `DatosFiscalesForm`, y en `FacturaDetalle` (23→<16) extrayendo `FacturaDetalleEditableSections`.
+  - Removidos dos `// eslint-disable-next-line no-console` huérfanos en `scripts/visual-audit/capture.mjs`.
+
 ## [13.163.2] - 2026-07-04
 - **feat(clientes)**: el diálogo *Editar Cliente* ahora incluye una zona para subir la Constancia de Situación Fiscal (PDF). Reutiliza `parseCsf` para extraer nombre, RFC, CP, dirección, ciudad, estado y régimen fiscal, y los prellena en el formulario (sólo sobrescribe si el CSF trae valor). El usuario puede ajustar antes de guardar. Antes esta opción sólo existía al dar de alta el cliente.
 

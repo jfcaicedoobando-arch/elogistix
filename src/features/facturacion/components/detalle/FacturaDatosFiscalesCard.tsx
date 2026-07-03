@@ -5,18 +5,13 @@
  * si falta RFC/CP/Régimen antes de intentar timbrar.
  */
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
-import { getErrorMessage } from "@/lib/errors/index";
 import { queryKeys } from "@/lib/query";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
   fetchClienteFiscal,
   actualizarDatosTimbradoFactura,
@@ -25,6 +20,7 @@ import {
 } from "@/features/facturacion/services";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
+import { DatosFiscalesForm } from "./DatosFiscalesForm";
 
 interface Props {
   factura: FacturaDetalle;
@@ -32,7 +28,6 @@ interface Props {
 
 export function FacturaDatosFiscalesCard({ factura }: Props) {
   const qc = useQueryClient();
-  const { toast } = useToast();
 
   const { data: cliente } = useQuery<ClienteFiscalRow | null>({
     queryKey: ["cliente_fiscal", factura.cliente_id],
@@ -68,10 +63,10 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
     mutationFn: (patch: DatosTimbradoPatch) => actualizarDatosTimbradoFactura(factura.id, patch),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(factura.id) });
-      toast({ title: "Datos fiscales actualizados" });
+      toast.success("Datos fiscales actualizados");
     },
     onError: (err) =>
-      toast({ title: "No se pudo guardar", description: getErrorMessage(err), variant: "destructive" }),
+      notifyError(toast, { title: "No se pudo guardar", error: err, method: "FACTURA_DATOS_FISCALES" }),
   });
 
   const onSubmit = (e: React.FormEvent) => {
@@ -107,57 +102,16 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
             </p>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div>
-              <Label>Serie</Label>
-              <Input value={serie} onChange={(e) => setSerie(e.target.value.toUpperCase().slice(0, 5))} maxLength={5} />
-            </div>
-            <div>
-              <Label>Uso CFDI</Label>
-              <Select value={usoCfdi} onValueChange={setUsoCfdi}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Método de pago</Label>
-              <Select value={metodoPago} onValueChange={setMetodoPago}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {METODOS_PAGO_SAT.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Forma de pago</Label>
-              <Select value={formaPago} onValueChange={setFormaPago}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Días de crédito</Label>
-              <Input type="number" min={0} value={diasCredito}
-                     onChange={(e) => setDiasCredito(Number(e.target.value) || 0)} />
-            </div>
-            {factura.moneda !== "MXN" && (
-              <div>
-                <Label>Tipo de cambio</Label>
-                <Input type="number" step="0.0001" min={0} value={tipoCambio}
-                       onChange={(e) => setTipoCambio(Number(e.target.value) || 1)} />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <Label>Notas</Label>
-            <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2}
-                      placeholder="Notas internas para el CFDI (opcional)" />
-          </div>
+          <DatosFiscalesForm
+            serie={serie} setSerie={setSerie}
+            usoCfdi={usoCfdi} setUsoCfdi={setUsoCfdi}
+            formaPago={formaPago} setFormaPago={setFormaPago}
+            metodoPago={metodoPago} setMetodoPago={setMetodoPago}
+            diasCredito={diasCredito} setDiasCredito={setDiasCredito}
+            tipoCambio={tipoCambio} setTipoCambio={setTipoCambio}
+            notas={notas} setNotas={setNotas}
+            mostrarTipoCambio={factura.moneda !== "MXN"}
+          />
 
           <div className="flex justify-end">
             <Button type="submit" disabled={guardar.isPending}>

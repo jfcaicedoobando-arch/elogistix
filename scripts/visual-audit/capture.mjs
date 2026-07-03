@@ -116,7 +116,6 @@ async function main() {
   try {
     await login(page);
     for (const r of ROUTES) {
-      // eslint-disable-next-line no-console
       console.log(`→ ${r.path}`);
       results.push(await capture(page, r));
     }
@@ -143,7 +142,6 @@ async function main() {
   ].join("\n");
   writeFileSync(path.join(OUT, "REPORT.md"), md);
 
-  // eslint-disable-next-line no-console
   console.log(`\n✅ ${results.length} capturas en ${OUT}`);
 }
 

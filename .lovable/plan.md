@@ -1,41 +1,43 @@
 ## Objetivo
 
-Agregar el botón/zona para subir la Constancia de Situación Fiscal (CSF en PDF) dentro del diálogo **Editar Cliente**, para que al actualizar el expediente se puedan volver a extraer y sobreescribir los datos fiscales automáticamente (igual que en el alta).
+Arreglar los 3 fallos de CI causados por los archivos creados en 13.163.0 del módulo de facturación:
 
-## Contexto
+1. **Arch baseline (Power-of-10 #4)**: `FacturaConceptosEditor.tsx` tiene 214 líneas (límite 200).
+2. **Arch: `error-toasts-use-notifyError`**: dos `onError` en facturación usan `toast({ variant: 'destructive' })` en vez de `notifyError`.
+3. **Lint `--max-warnings 0`**:
+   - Complejidad ciclomática en `FacturaDatosFiscalesCard` (19>16) y `FacturaDetalle` (23>16).
+   - Dos `// eslint-disable-next-line no-console` no utilizados en `scripts/visual-audit/capture.mjs`.
 
-Hoy la subida de CSF sólo existe en el wizard de "Nuevo Cliente" (`NuevoClienteFormPieces.tsx` + `useNuevoClienteController.ts`). El diálogo `DialogEditarCliente.tsx` sólo tiene campos manuales, por eso el usuario no ve la opción al editar.
+## Cambios
 
-El servicio `parseCsf` (`src/features/cliente/services/csf/index.ts`) ya es reutilizable: recibe un `File` y devuelve `{ nombre, rfc, cp, direccion, ciudad, estado, regimen_fiscal }`.
+### 1. Dividir `FacturaConceptosEditor.tsx`
+Crear `src/features/facturacion/components/detalle/FacturaConceptosEditorRows.tsx` con:
+- `ConceptoRow` (visualización de renglón)
+- `FormRow` (formulario de edición/alta)
+- `NuevoRow` (wrapper trivial de `FormRow`)
+- Tipos `RowProps` y `FormProps` movidos aquí.
 
-## Cambios propuestos (solo UI + reuso de servicio)
+`FacturaConceptosEditor.tsx` queda sólo con el contenedor y las mutaciones (~130 líneas).
 
-1. **`src/features/cliente/components/DialogEditarCliente.tsx`**
-   - Añadir un `FormDialogSection` nuevo al inicio, arriba de "Datos fiscales", titulado "Actualizar desde CSF (opcional)".
-   - Dentro incluir una drop-zone compacta (mismo componente visual que en alta) con:
-     - Input file oculto (`accept="application/pdf"`) + botón "Subir CSF".
-     - Estado local `isParsing` con `Loader2` mientras se procesa.
-     - Al recibir un PDF: llamar `parseCsf(file)` y, con el resultado, hacer merge sobre `form` respetando lo ya capturado sólo si el campo viene vacío del PDF (`patch.rfc ?? prev.rfc`, etc.), igual que `mergeCsfPatch` de proveedor.
-     - Toast de éxito ("CSF procesada. Verifica los datos actualizados.") y de error usando `notifyError`.
-   - Nota informativa: "Los campos se rellenarán con los datos extraídos; podrás ajustarlos antes de guardar."
-   - No auto-guarda: el usuario sigue viendo los cambios y presiona "Guardar cambios".
+### 2. Reemplazar `toast({variant:'destructive'})` por `notifyError`
+- `FacturaConceptosEditor.tsx` línea 56-57: `onError` → `notifyError(toast, { title, error: err, method: "FACTURA_CONCEPTOS_EDITOR" })`.
+- `FacturaDatosFiscalesCard.tsx` línea 73-74: idem con `method: "FACTURA_DATOS_FISCALES"`.
+- Importar `toast` de `sonner` y `notifyError` de `@/components/shared/utils/appFeedback`. Mantener `useToast` sólo si queda el `toast({title})` de éxito (o migrar a `toast.success` de sonner para consistencia).
 
-2. **Reutilización**
-   - Extraer la drop-zone actual de `NuevoClienteFormPieces.tsx` a un componente compartido `CsfDropzone` en `src/features/cliente/components/CsfDropzone.tsx` (props: `onFile(file)`, `isParsing`, `variant?: "compact"`), y consumirlo tanto en Nuevo Cliente como en Editar Cliente para evitar duplicar UI.
-   - `NuevoClienteFormPieces.tsx` pasa a importar `CsfDropzone` sin cambio de comportamiento.
+### 3. Bajar complejidad ciclomática
+- `FacturaDatosFiscalesCard`: extraer los `<Select>` de Uso CFDI / Forma / Método a un sub-componente `SelectCatalogoSat` (o dividir el `<form>` en un componente `DatosFiscalesForm` que reciba los setters). Reduce ramas por render.
+- `FacturaDetalle`: extraer el bloque header/acciones y el bloque de "editar borrador" a componentes: mover el botón "Sustituir CFDI" y el `<FacturaFiscalCheckAlert>` a `FacturaDetalleTop` (subcomponente ya existente `FacturaDetalleHeader/Actions` — sólo agregar wrapper). Alternativa concreta: extraer las condicionales `puedeEditarBorrador && <FacturaDatosFiscalesCard/>`, `<FacturaConceptosEditor/>`, y el bloque Sustituir CFDI a un componente `FacturaDetalleEditableSections` que reciba `factura`, `puedeEditarBorrador`, `sinTimbrar`, `conceptosVivos`, `canEdit`, `onSustituir`.
 
-3. **Housekeeping**
-   - Bump `APP_VERSION` en `src/constants/appVersion.ts` a `13.163.2`.
-   - Entrada en `CHANGELOG.md` bajo `[13.163.2]`: "Editar Cliente ahora permite subir CSF para actualizar datos fiscales."
+Objetivo: dejar cada función ≤16 de complejidad. No cambia comportamiento visible.
+
+### 4. Limpiar `scripts/visual-audit/capture.mjs`
+Eliminar las dos líneas `// eslint-disable-next-line no-console` (líneas 119 y 146). Los `console.log` siguen; el proyecto ya permite `console` en `scripts/`.
+
+### 5. Housekeeping
+- Bump `APP_VERSION` a `13.163.3`.
+- Entrada en `CHANGELOG.md` bajo `[13.163.3]`: "fix(ci): correcciones al PR 13.163.0 — split de FacturaConceptosEditor, notifyError en facturación, complejidad reducida en FacturaDetalle / DatosFiscalesCard, limpieza de eslint-disable en visual-audit".
 
 ## Fuera de alcance
 
-- No se toca el servicio `parseCsf` ni ninguna RPC.
-- No se agrega persistencia del PDF (igual que hoy en alta, sólo se extraen datos).
-- No se cambia la validación ni el guardado del cliente.
-
-## Detalles técnicos
-
-- `parseCsf` requiere sesión Supabase (ya la tiene el usuario autenticado que edita).
-- El merge se aplica sobre `form` via `setForm(prev => ({...prev, ...patch}))` con fallback al valor previo cuando el campo del CSF venga vacío.
-- Manejo de errores: `try/catch` con `notifyError(toast, { title, error, method: "DIALOG_EDITAR_CLIENTE_CSF" })`.
+- No se toca lógica de mutaciones, servicios, ni UI observable.
+- No se cambian tests; el arreglo del `>200 líneas` y `notifyError` los pone en verde automáticamente.
