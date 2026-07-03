@@ -1,53 +1,39 @@
-# Borrar "Parámetros de Facturación" (tasa IVA global)
+# Fix CI failures — CatalogoClavesSATCard
+
+## Diagnóstico
+
+Dos jobs fallaron por el mismo archivo `src/features/configuracion/components/CatalogoClavesSATCard.tsx`:
+
+1. **Knip (lint:unused)**: el archivo exporta `CatalogoClavesSATCard` como nombrado **y** como `default` → knip lo marca como export duplicado.
+2. **Power of 10 (arch baseline)**: 217 líneas. La regla core prohíbe archivos productivos > 200 líneas fuera de allowlist.
 
 ## Analogía
 
-Es como quitar el letrero de "IVA general: 16%" del menú del restaurante ahora que cada platillo trae su propio IVA impreso en el menú (el catálogo de productos). El default queda hardcodeado a 16% porque en México lleva 30 años sin moverse — si algún día cambia, es un cambio de constante, no de UI.
-
-## Alcance
-
-- **UI**: eliminar la tarjeta "Parámetros de Facturación" de `Configuración → Facturación`.
-- **Hook `useTasaIVA()`**: se conserva como **función pura** que retorna la constante `TASA_IVA` (0.16), sin leer de la BD. Todos los ~15 consumidores siguen funcionando sin cambios en su firma.
-- **Estado de Configuración**: quitar el campo `tasaIva` de `ConfigState` y del handler `handleSave`.
-- **BD**: dejar la fila `configuracion.categoria='facturacion', clave='tasa_iva'` como legacy (no se borra por seguridad; sin lectores). Nota en changelog.
+El archivo se me infló porque le metí catálogos, constantes de UI, un sub-componente y el componente principal en un solo lugar — como llenar una sola caja con herramientas, tornillos y planos. La solución es partir la caja: constantes en su repisa, sub-componente en la suya, y el componente principal solo.
 
 ## Cambios
 
-### 1. `src/features/configuracion/components/TabFacturacion.tsx`
-Quitar la `Card` de "Parámetros de Facturación" y sus props (`tasaIva`, `setTasaIva`). El componente queda como wrapper de `FacturapiCredencialesCard` + `CatalogoClavesSATCard`.
+### 1. Extraer constantes + `EditRow` a `CatalogoClavesSATCard.parts.tsx`
 
-### 2. `src/features/configuracion/hooks/useConfiguracionState.ts`
-- Quitar `tasaIva` de `ConfigState`.
-- Quitar la línea `tasaIva: String(...)` de `buildStateFromConfig`.
-- Quitar la entrada `{ categoria: 'facturacion', clave: 'tasa_iva', ... }` de `handleSave`.
+Sacar del archivo principal:
+- Tipos `TipoIva`, `Row`, `Draft`.
+- Constantes `EMPTY`, `UNIDADES_SAT`, `TIPO_IVA_LABEL`, `TIPO_IVA_VARIANT`.
+- Helper `tasaFromTipo`.
+- Sub-componente `EditRow`.
 
-### 3. `src/features/catalogos/hooks/useTasaIVA.ts`
-Reemplazar por versión pura:
-```ts
-import { TASA_IVA } from "@/lib/financial/financialUtils";
-export function useTasaIVA(): number {
-  return TASA_IVA; // 0.16 — IVA general de México
-}
-```
-Con esto los ~15 consumidores (cotización, proformas, PDFs) siguen usando `useTasaIVA()` sin ningún cambio. Si algún día cambia la tasa, se toca una sola constante.
+Nuevo archivo: `src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx` (~110 líneas).
 
-### 4. Llamador de `TabFacturacion` en la página de configuración
-Buscar dónde se renderiza (probablemente `RouteConfiguracion.tsx` o similar) y quitar las props que ya no existen.
+### 2. Simplificar `CatalogoClavesSATCard.tsx`
 
-### 5. Tests
-- Actualizar `useTasaIVA.test.tsx` para verificar que retorna 0.16 constante.
-- Revisar tests de `useConfiguracionState` si tocan `tasaIva`.
+- Importar todo lo anterior desde `.parts`.
+- Eliminar `export default CatalogoClavesSATCard` (solo queda el export nombrado, que es el que usa `TabFacturacion.tsx`).
+- Queda ~120 líneas (bajo el límite de 200).
 
-### 6. Version + changelog
-- Bump `APP_VERSION` a **13.170.0**.
-- Entrada en `CHANGELOG.md` explicando la eliminación.
+### 3. Verificación
 
-## Riesgos
+- `bunx tsgo --noEmit` para typecheck.
+- Confirmar que `TabFacturacion.tsx` sigue funcionando (usa el import nombrado).
 
-- **Bajo**. La tasa siempre ha estado en 16 en producción. Si algún tenant llegó a poner otro valor (ej. 8% frontera), lo perderán y usarán 16. Podemos verificar antes de aplicar con un `SELECT` a la tabla `configuracion` — si algún tenant tiene un valor distinto a 16, revisamos.
-- La fila en `configuracion` queda huérfana pero no rompe nada; se limpiará en migración de higiene futura.
+## Riesgo
 
-## Fuera de alcance
-
-- No se toca la BD ni se borran filas.
-- No se cambia el catálogo de productos ni la lógica de IVA por concepto.
+Nulo. Es refactor puro — sin cambios de comportamiento, sólo separación de archivos y limpieza del default export.
