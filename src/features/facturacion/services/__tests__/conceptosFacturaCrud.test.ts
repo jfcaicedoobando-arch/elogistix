@@ -21,7 +21,7 @@ describe("conceptosFacturaCrud", () => {
   });
 
   it("fetchConceptosFactura filtra por factura y descarta soft-deletes", async () => {
-    const rows = [{ id: "c1", factura_id: "f1", descripcion: "X", cantidad: 1, precio_unitario: 100, total: 100, clave_sat: "78101800", moneda: "MXN" }];
+    const rows = [{ id: "c1", factura_id: "f1", descripcion: "X", cantidad: 1, precio_unitario: 100, total: 100, clave_sat: "81141601", moneda: "MXN" }];
     mock.setTableResult("conceptos_factura", { data: rows, error: null });
     const out = await fetchConceptosFactura("f1");
     expect(out).toEqual(rows);

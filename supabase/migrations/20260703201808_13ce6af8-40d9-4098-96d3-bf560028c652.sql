@@ -1,0 +1,1 @@
+ALTER TABLE public.conceptos_factura ALTER COLUMN clave_sat SET DEFAULT '81141601';

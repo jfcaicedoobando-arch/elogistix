@@ -94,7 +94,7 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
     precio_unitario: Number(c.precio_unitario),
     total: Number(c.cantidad) * Number(c.precio_unitario),
     moneda: input.moneda,
-    clave_sat: c.clave_sat?.trim() || "78101800",
+    clave_sat: c.clave_sat?.trim() || "81141601",
     organization_id: input.organizationId,
   }));
 
