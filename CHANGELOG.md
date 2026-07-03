@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.15] - 2026-07-04
+- **fix(facturación/permisos)**: el rol `contador` ahora puede guardar/borrar/consultar la API key de FacturApi en Configuración → Facturación Electrónica. Antes el helper `_assert_facturapi_admin` sólo aceptaba `super_admin`, `admin_org` y `admin`, así que cualquier contador recibía `forbidden (42501)`. Reportado por Sentry `useSetFacturapiApiKey` (Elogistix / isela.martinez). Cambio mínimo: se agrega `has_role(uid,'contador')` como camino permitido en la función SECURITY DEFINER; el resto de la matriz de permisos y RLS de `facturapi_credenciales` no cambia.
+
 ## [13.170.14] - 2026-07-04
 - **chore(facturación/timbrado)**: `DialogTimbrarFactura.tsx` bajó de 211 a 152 líneas extrayendo las sub-vistas compacta y completa a `DialogTimbrarFactura.parts.tsx` (114 líneas). Fix del CI que fallaba en `audit-report.test.ts` y `architecture-baseline.test.ts` (regla Power of 10: ≤200 líneas por archivo productivo).
 
