@@ -1,6 +1,5 @@
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { DetailHeader } from "@/components/shared/DetailHeader";
 
@@ -31,14 +30,14 @@ describe("<DetailHeader />", () => {
   it("botón Volver navega a backTo (número)", async () => {
     navigateMock.mockClear();
     renderInRouter(<DetailHeader title="X" backTo={-1} />);
-    await userEvent.click(screen.getByRole("button", { name: /volver/i }));
+    fireEvent.click(screen.getByRole("button", { name: /volver/i }));
     expect(navigateMock).toHaveBeenCalledWith(-1);
   });
 
   it("botón Volver navega a backTo (ruta)", async () => {
     navigateMock.mockClear();
     renderInRouter(<DetailHeader title="X" backTo="/facturacion" />);
-    await userEvent.click(screen.getByRole("button", { name: /volver/i }));
+    fireEvent.click(screen.getByRole("button", { name: /volver/i }));
     expect(navigateMock).toHaveBeenCalledWith("/facturacion");
   });
 

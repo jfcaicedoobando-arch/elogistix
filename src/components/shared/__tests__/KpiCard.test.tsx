@@ -1,6 +1,5 @@
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { TrendingUp } from "lucide-react";
 import { KpiCard } from "@/components/shared/KpiCard";
 
@@ -20,7 +19,7 @@ describe("<KpiCard />", () => {
   it("es clickeable cuando se pasa onClick", async () => {
     const onClick = vi.fn();
     render(<KpiCard label="X" value="1" onClick={onClick} icon={TrendingUp} />);
-    await userEvent.click(screen.getByRole("button"));
+    fireEvent.click(screen.getByRole("button"));
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
