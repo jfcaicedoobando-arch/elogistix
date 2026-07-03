@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.165.0] - 2026-07-04
+- **feat(facturación)**: integración con la API SIE de Banxico para obtener el tipo de cambio DOF oficial (Art. 20 CFF).
+  - Nueva edge function `banxico-tipo-cambio` que consulta las series `SF43718` (USD/MXN FIX) y `SF46410` (EUR/MXN) usando el secret `BANXICO_SIE_TOKEN`.
+  - En la card "Configuración de timbrado" aparece un botón **"Obtener TC DOF de hoy (USD/EUR)"** cuando la moneda de la factura no es MXN. Precarga el TC en el input pero no lo persiste — el usuario sigue debiendo presionar *Guardar cambios* para aplicarlo al CFDI (política sin auto-save).
+  - Frankfurter.app se mantiene solo para el widget general de tipos de cambio; para CFDI se usa exclusivamente Banxico.
+
 ## [13.164.4] - 2026-07-04
 - **chore(facturación)**: cambia la clave SAT precargada para conceptos de factura de `78101800` a `81141601` (Servicios de transitarios / freight forwarding). Aplica al default de la columna `conceptos_factura.clave_sat` y a los fallbacks del cliente (`facturaManual`, `conceptosFacturaCrud`). Conceptos ya guardados no se modifican.
 
