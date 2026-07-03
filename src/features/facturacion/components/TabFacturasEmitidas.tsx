@@ -73,7 +73,7 @@ export function TabFacturasEmitidas(p: Props) {
     if (p.fechaDesde) c.push({ key: "desde", label: `Desde: ${p.fechaDesde}`, onRemove: () => p.setFechaDesde("") });
     if (p.fechaHasta) c.push({ key: "hasta", label: `Hasta: ${p.fechaHasta}`, onRemove: () => p.setFechaHasta("") });
     return c;
-  }, [p.filterEstado, p.filterCliente, p.fechaDesde, p.fechaHasta, p.clientes, p.setFilter, p.setFechaDesde, p.setFechaHasta]);
+  }, [p]);
 
   const primarySlot = (
     <>

@@ -76,6 +76,3 @@ export function buildClientesColumns({
     }),
   ];
 }
-
-/** Alias estático para compatibilidad con código que importaba `clientesColumns` */
-export const clientesColumns = buildClientesColumns({ onNavigate: () => undefined });
