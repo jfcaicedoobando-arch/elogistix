@@ -634,6 +634,50 @@ export type Database = {
           },
         ]
       }
+      catalogo_claves_sat: {
+        Row: {
+          activo: boolean
+          clave_sat: string
+          created_at: string
+          id: string
+          notas: string | null
+          organization_id: string
+          patron: string
+          prioridad: number
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          clave_sat: string
+          created_at?: string
+          id?: string
+          notas?: string | null
+          organization_id: string
+          patron: string
+          prioridad?: number
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          clave_sat?: string
+          created_at?: string
+          id?: string
+          notas?: string | null
+          organization_id?: string
+          patron?: string
+          prioridad?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_claves_sat_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cierre_embarque_log: {
         Row: {
           accion: string
@@ -7224,6 +7268,10 @@ export type Database = {
           folio: number
           numero: string
         }[]
+      }
+      resolver_clave_sat: {
+        Args: { p_descripcion: string; p_org: string }
+        Returns: string
       }
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
