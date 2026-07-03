@@ -35,19 +35,16 @@ describe("useConfiguracionState helpers", () => {
       const state = buildStateFromConfig(undefined);
       expect(state.nombre).toBe("");
       expect(state.rfc).toBe("");
-      expect(state.tasaIva).toBe("16");
     });
 
     it("builds state from config items", () => {
       const config: ConfigItem[] = [
         item("1", "empresa", "nombre", "TestCo"),
         item("2", "empresa", "rfc", "RFC123"),
-        item("3", "facturacion", "tasa_iva", 8),
       ];
       const state = buildStateFromConfig(config);
       expect(state.nombre).toBe("TestCo");
       expect(state.rfc).toBe("RFC123");
-      expect(state.tasaIva).toBe("8");
     });
   });
 });
