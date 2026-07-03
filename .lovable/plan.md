@@ -1,52 +1,28 @@
-## Propuesta
+## Problema
 
-Reemplazar el `ToggleGroup` "Todas / Facturadas" por una **barra de filtros homologada al patrón de `/embarques`**, que ya es el design language de la app: buscador + selects primarios en línea + botón "Filtros" (sheet) con secundarios + chips de filtros activos debajo.
+Al convertir la proforma PRO-2026-0949 (INDIMEX TRADING) a factura borrador, Postgres rechaza el insert con `check constraint "facturas_tipo_cambio_pos"` (23514). `facturas.tipo_cambio` debe ser `> 0`.
 
-### Cómo se verá (desktop)
+**Causa**: el RPC `convertir_proformas_a_factura` siempre inserta la factura en MXN y calcula `tipo_cambio = subtotal_mxn / subtotal_usd`. Esta proforma es **100% USD**: `subtotal_usd = 7,200`, `subtotal_mxn = 0`. Entonces `tipo_cambio = 0 / 7200 = 0` → viola la restricción. Además la factura quedaría con `subtotal = 0`, que tampoco tiene sentido.
 
-```text
-[🔎 Buscar…                     ] [Estado ▾] [Cliente ▾] [ Filtros (N) ]
-[chip: Aceptadas ✕] [chip: 01/06 – 31/07 ✕] [Limpiar todo]
-```
+Analogía: es como intentar convertir dólares a pesos usando "cero pesos por dólar" — el sistema por defecto asume MXN cuando en realidad la proforma se cotizó en dólares.
 
-En móvil se colapsa a `[🔎 Buscar] [Filtros (N)]` y todo se abre en el sheet — mismo patrón que embarques.
+## Solución
 
-### Filtros propuestos
+Actualizar el RPC `convertir_proformas_a_factura` para detectar la moneda de la proforma y usar montos coherentes.
 
-Primarios (siempre visibles en desktop, como selects):
-1. **Estado** — un solo select con todos los estados reales de la proforma, unificando `estado_proforma` + `estado_cliente`:
-   - Todas
-   - Pendiente cliente (esperando respuesta)
-   - Aceptada por cliente
-   - Rechazada
-   - Facturada
-2. **Cliente** — select con los clientes que tienen proformas (mismo patrón que embarques).
-
-Secundarios (en el sheet "Filtros"):
-3. **Operador** — quien generó la proforma.
-4. **Rango de fecha de emisión** — `Desde` / `Hasta` usando `DatePickerMx` (formato mexicano, ya estándar). Con presets rápidos: **Hoy · Últimos 7 días · Mes actual · Mes anterior · Personalizado**.
-5. **Origen de aceptación** (opcional, sólo si es útil): Portal cliente / Respuesta manual.
-
-Chips debajo con X individual + botón "Limpiar todo", exactamente como embarques.
-
-### Por qué esto es lo mejor para el usuario
-
-- **Un solo lugar para el estado**: hoy hay un toggle que sólo distingue Todas/Facturadas, pero las badges de la tabla muestran 4 estados (Pendiente cliente / Aceptada / Rechazada / Facturada). El usuario ve estados en la tabla que no puede filtrar — el filtro Estado unificado cierra esa brecha.
-- **Fecha con presets** cubre el 90% de los casos ("cierre del mes", "últimos 7 días") sin obligar a abrir dos date pickers.
-- **Chips activos** dan feedback visual inmediato de qué está filtrado y permiten quitar filtros uno por uno — un patrón que el usuario ya conoce de `/embarques`.
-- **Homologación**: el usuario aprende el patrón una vez y lo reusa en toda la app.
+### Regla de moneda del borrador
+- Si `subtotal_mxn > 0` y `subtotal_usd = 0` → factura en **MXN**, `tipo_cambio = 1`.
+- Si `subtotal_usd > 0` y `subtotal_mxn = 0` → factura en **USD**, `tipo_cambio = 1` (placeholder; FacturApi asigna el tipo de cambio DOF real al timbrar).
+- Si **ambos > 0** (proforma mixta) → factura en **MXN** con `tipo_cambio = ROUND(subtotal_mxn / subtotal_usd, 4)` (comportamiento previo).
+- Si ambos = 0 → error explícito ("La proforma no tiene importes").
 
 ### Cambios técnicos
+1. **Nueva migración** que reemplaza la función `public.convertir_proformas_a_factura` con la lógica anterior + selector de moneda descrito. El resto del RPC (validaciones, inserción de conceptos, marca de proformas como facturadas, `numero = BORRADOR-…`) se conserva.
+2. `CHANGELOG.md` con entrada breve del fix.
+3. Bump `APP_VERSION` a `13.147.1` en `src/constants/appVersion.ts`.
 
-1. Extender `useTabProformasState.ts`: agregar `filtroCliente`, `filtroOperador`, `fechaDesde`, `fechaHasta`, y ampliar `FiltroEstadoProforma` a `"todas" | "pendiente" | "aceptada" | "rechazada" | "facturada"`. El derivador `filtered` cruza `estado_proforma` + `estado_cliente` con la misma lógica de prioridad que ya usa `estadoRank()` en `proformasColumns.tsx` (single source of truth: extraer a un helper `getEstadoUnificado(p)`).
-2. Nuevo componente `ProformasFiltros.tsx` en `src/features/facturacion/components/`, gemelo estructural de `EmbarquesFiltros.tsx`, con sub-componentes `ProformasFiltrosCampos.tsx` y `ProformasFiltrosChips.tsx` (reusa `mobileFilterSheet`, `SearchInput`, `DatePickerMx`).
-3. Actualizar `TabProformas.tsx`: quitar el `ToggleGroup` + `SearchInput` sueltos, sustituir por `<ProformasFiltros … />`.
-4. Actualizar `useTabProformasController.ts` para exponer los nuevos setters y las listas derivadas (`clientes`, `operadores`).
-5. Tests: actualizar `useTabProformasState.test.tsx` con los nuevos filtros; test nuevo para el helper `getEstadoUnificado`.
-6. Bump `APP_VERSION` a `13.147.0` (feature nueva de UI) + entrada en `CHANGELOG.md`.
+### Verificación
+- Reintentar la conversión de PRO-2026-0949 (USD) desde el detalle de proforma → debe generar borrador con moneda USD, `tipo_cambio = 1`, subtotal 7,200 USD.
+- Probar también una proforma en MXN existente para asegurar que el flujo previo sigue funcionando.
 
-### Fuera de alcance
-
-- No se toca la lógica de conversión a factura ni la selección múltiple.
-- No se cambian columnas ni badges de la tabla.
-- No se agrega export/persistencia de filtros en URL (posible follow-up).
+Sin cambios de UI ni de reglas de permisos.
