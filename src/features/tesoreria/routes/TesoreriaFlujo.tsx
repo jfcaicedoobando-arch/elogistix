@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { useFlujoProyectado } from "@/features/tesoreria/hooks";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 const GraficoFlujoProyectado = lazy(() => import("@/features/tesoreria/components/GraficoFlujoProyectado"));
 const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/TablaFlujoSemanal"));
@@ -30,7 +31,7 @@ export default function TesoreriaFlujo() {
   const { data, isLoading } = useFlujoProyectado(90);
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Flujo de caja proyectado · 90 días"
         description="Proyección semanal de entradas (CxC) y salidas (CxP + comisiones) sobre vencimientos."
@@ -84,6 +85,6 @@ export default function TesoreriaFlujo() {
           </Suspense>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

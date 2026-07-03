@@ -17,6 +17,7 @@ import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/Pan
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { PageContainer } from "@/components/shared/PageContainer";
 const ESTADO_COLOR: Record<string, string> = {
   Pendiente: "bg-warning/10 text-warning border-warning/20",
   Conciliado: "bg-success/10 text-success border-success/20",
@@ -56,7 +57,7 @@ export default function TesoreriaConciliacion() {
   const cuentaActual = cuentas.find((c) => c.id === cuentaId);
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Conciliación bancaria"
         description="Importa el estado de cuenta y empareja con CxC/CxP"
@@ -146,6 +147,6 @@ export default function TesoreriaConciliacion() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

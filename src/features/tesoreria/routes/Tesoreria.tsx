@@ -8,6 +8,7 @@ import { useResumenTesoreria } from "@/features/tesoreria/hooks";
 import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocument";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
@@ -36,7 +37,7 @@ export default function Tesoreria() {
   };
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Tesorería"
         description="Saldo bancario, cartera y flujo esperado a 30 días"
@@ -132,6 +133,6 @@ export default function Tesoreria() {
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

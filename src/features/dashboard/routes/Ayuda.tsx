@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { GLOSARIO, MODULOS } from "./ayudaContent";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 /**
  * Página /ayuda — onboarding y referencia rápida para el usuario final.
@@ -41,7 +42,7 @@ export default function Ayuda() {
   }, [search]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+    <PageContainer><div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
       <PageHeader
         title="Centro de ayuda"
         description="Glosario, preguntas frecuentes y guías rápidas para usar el ERP en operación diaria."
@@ -177,6 +178,6 @@ export default function Ayuda() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </div></PageContainer>
   );
 }

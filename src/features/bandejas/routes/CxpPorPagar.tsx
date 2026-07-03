@@ -8,6 +8,7 @@ import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/d
 import { Inbox } from "lucide-react";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function CxpPorPagar() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function CxpPorPagar() {
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
 
   return (
-    <div className="p-6 space-y-4">
+    <PageContainer>
       <PageHeader
         title="CxP — Por pagar"
         description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
@@ -108,6 +109,6 @@ export default function CxpPorPagar() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

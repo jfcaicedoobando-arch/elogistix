@@ -156,4 +156,17 @@ Migrados: AdminLayout, AdminDashboard, Diagnostico, SentryDiagnostico, admin-org
 - `bunx vitest run` sobre CRM/Costeo/CxP/Auditoría/Admin: 119 files / 827 tests en verde.
 
 ## Siguiente
-Oleada 5 (dashboards ejecutivos, portales cliente/agente, catálogos) y Oleada 6 (limpieza de helpers deprecated y knip).
+Oleada 6 (limpieza de helpers deprecated y knip).
+
+---
+
+# Oleada 5 — Dashboards ejecutivos, bandejas y catálogos (v13.155.0)
+
+Envolver rutas legacy en `PageContainer` para uniformar padding/max-width. Sin cambios de negocio.
+
+Migrados: `Dashboard`, `Bitacora`, `Ayuda`, `Proveedores`, `Reportes`, `CierreMensual`, los 4 de Profit, los 4 de Tesorería, `Cartera`, `CxpPorCapturar`, `CxpPorPagar`, `Operaciones`.
+
+Fuera de scope: portales cliente/agente (mantienen su propio shell `max-w-7xl` en el layout).
+
+Verificación: `bun run lint` limpio, tsgo verde, 310 tests del bloque afectados en verde.
+

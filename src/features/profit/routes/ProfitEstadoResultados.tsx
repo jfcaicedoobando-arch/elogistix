@@ -16,6 +16,7 @@ import {
 import { exportToCsv } from "@/generators/exportCsv";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -41,7 +42,7 @@ export default function ProfitEstadoResultados() {
   const sinDatos = !c.isLoading && data && data.ingresos.length === 0 && data.costos.length === 0;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <PageHeader
         title="Estado de Resultados"
         description="P&G mensual por modo de transporte basado en ETA del embarque"
@@ -111,6 +112,6 @@ export default function ProfitEstadoResultados() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

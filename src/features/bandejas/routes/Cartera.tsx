@@ -7,13 +7,14 @@ import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCartera } from "@/features/bandejas/domain/aggregates";
 import { Inbox } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
   const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
 
   return (
-    <div className="p-6 space-y-4">
+    <PageContainer>
       <PageHeader
         title="Cartera"
         description="Facturas emitidas con saldo pendiente. Da seguimiento a cobranza, registra promesas y cobros."
@@ -142,6 +143,6 @@ export default function Cartera() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

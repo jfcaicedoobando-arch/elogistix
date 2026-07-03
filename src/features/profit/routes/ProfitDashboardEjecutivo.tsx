@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { descargarBlob } from "@/lib/downloadBlob";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { PageContainer } from "@/components/shared/PageContainer";
 function periodoInicial(): string {
   const guardado = safeSessionStorage.getItem(STORAGE_KEYS.dashboardEjecutivoPeriodo);
   if (guardado && /^\d{4}-\d{2}$/.test(guardado)) return guardado;
@@ -52,7 +53,7 @@ export default function ProfitDashboardEjecutivo() {
   }, [data]);
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Dashboard Ejecutivo"
         description="Vista consolidada de la situación financiera."
@@ -98,6 +99,6 @@ export default function ProfitDashboardEjecutivo() {
           <MiniFlujoCard flujo={data.flujo} />
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -14,6 +14,7 @@ import ReportesFiltros from "@/features/reportes/components/ReportesFiltros";
 import ReportesKpiCards from "@/features/reportes/components/ReportesKpiCards";
 import ReportesTablaClientes from "@/features/reportes/components/ReportesTablaClientes";
 import { useReportesPageController } from "@/features/reportes/hooks/useReportesPageController";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 // Lazy: difiere recharts (~95 KB gzip) fuera del TTI de la página.
 const ReportesTopChart = lazy(() => import("@/features/reportes/components/ReportesTopChart"));
@@ -39,7 +40,7 @@ export default function Reportes() {
   } = useReportesPageController();
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <PageHeader
         title="Rentabilidad por Cliente"
         description="P&L agrupado por cuenta con filtros de periodo y modo"
@@ -98,6 +99,6 @@ export default function Reportes() {
         sortDir={sortDir}
         onSort={handleSort}
       />
-    </div>
+    </PageContainer>
   );
 }
