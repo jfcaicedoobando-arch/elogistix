@@ -102,6 +102,10 @@ export default function FacturaDetalle() {
         moneda={factura.moneda}
       />
 
+      {factura.cliente_id && (
+        <FacturaFiscalCheckAlert clienteId={factura.cliente_id} estado={factura.estado} />
+      )}
+
 
       <FacturaDetalleActions
         canEdit={canEdit}
