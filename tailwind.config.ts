@@ -36,6 +36,10 @@ export default {
         // Tipografía fluida (Fase 6) — clamp(min, preferida, max).
         display: ["clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem)", { lineHeight: "1.15", fontWeight: "700" }],
         kpi: ["clamp(1.125rem, 0.95rem + 0.8vw, 1.5rem)", { lineHeight: "1.2", fontWeight: "600" }],
+        // Ola 7 · Lote A — escalones extra-pequeños para chips, badges y footnotes.
+        // Reemplazan los ~25 usos de `text-[10px]` y aislados `text-[9px]` en `src/features/**`.
+        "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
+        "3xs": ["0.5625rem", { lineHeight: "0.75rem" }],
       },
 
       colors: {
