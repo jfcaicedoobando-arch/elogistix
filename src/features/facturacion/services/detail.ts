@@ -38,6 +38,7 @@ export type FacturaDetalle = Pick<
   | "folio_fiscal"
   | "serie"
   | "facturapi_id"
+  | "dias_credito"
 > & {
   proformas: { numero: string } | null;
 };
