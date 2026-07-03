@@ -1,78 +1,90 @@
 ## Problema
 
-En el wizard "Conectar FacturApi" (paso 2 → 3), el rol **contador** ya puede guardar la API key (fix v13.170.15), pero el botón **Siguiente** sigue deshabilitado. No se puede avanzar al paso 3 (probar conexión).
+Isela (rol **contador**) ahora completa el wizard, guarda su API key sandbox, **prueba conexión ok** en el paso 3, pero al intentar **timbrar** una factura la edge function responde:
+
+```
+412 – Falta la API key (sandbox) de FacturApi para esta organización.
+```
 
 ## Causa raíz
 
-El wizard habilita "Siguiente" cuando `keyActivaCargada` es `true`, y eso depende del `last4` que llega desde `useFacturapiCredenciales(orgId)` — un `SELECT` a `public.facturapi_credenciales`.
+El helper `_shared/facturapiAuth.ts::resolveFacturapiKey` resuelve la key en 3 pasos:
 
-Las policies RLS actuales de esa tabla son solo dos, ambas restringidas a admin de la org:
+1. `SELECT ... FROM facturapi_credenciales` (necesita RLS). ✅
+2. `rpc("get_facturapi_api_key_internal", …)` → **desencripta el secret desde `vault.decrypted_secrets`**. Esta RPC está:
 
+   ```
+   REVOKE ALL ... FROM public, anon, authenticated;
+   GRANT EXECUTE ... TO service_role;
+   ```
+
+3. Fallback a `Deno.env.get(<secret_name>)` — legado; hoy nadie usa esa ruta.
+
+Cada edge function crea el cliente de Supabase así:
+
+```ts
+createClient(SUPABASE_URL, SERVICE_KEY, {
+  global: { headers: { Authorization: authHeader } }, // JWT del usuario
+});
 ```
-admin_org puede gestionar credenciales facturapi de su org  (ALL)
-admin_org puede leer credenciales facturapi de su org       (SELECT)
-  USING: is_org_admin(uid, org) OR has_role(uid, 'super_admin')
-```
 
-Entonces el contador:
+Cuando `Authorization: Bearer <JWT>` viaja en cada request, **PostgREST usa ese JWT** y las llamadas se ejecutan bajo el rol `authenticated`, no `service_role`. Por eso el `rpc("get_facturapi_api_key_internal")` devuelve permission denied → `tryVaultKey` devuelve `null` → cae al fallback de `secret_name` que también es `null` (nadie configuró secrets de proyecto) → `412 Falta la API key`.
 
-1. Llama al RPC `set_facturapi_api_key` → ✅ funciona (SECURITY DEFINER, ya lo permitimos).
-2. La query `SELECT ... FROM facturapi_credenciales` que el wizard hace para leer `api_key_sandbox_last4` devuelve **0 filas** (RLS lo bloquea).
-3. `data` queda `undefined` → `keyActivaCargada = false` → botón deshabilitado.
-
-**Analogía:** la contadora tiene permiso de meter la llave a la caja fuerte, pero no de asomarse a ver si quedó bien puesta.
+**Analogía:** la contadora ya tiene su llave en la caja fuerte, pero cuando el mostrador va a abrirla lo hace con el gafete de "cliente" en vez del gafete de "gerente". La caja no reconoce el gafete y le dice "no tengo llave para ti".
 
 ## Cambio propuesto
 
-Ampliar las dos policies para que también acepten al rol `contador` (global, vía `has_role`). Igual criterio que el helper `_assert_facturapi_admin` corregido en v13.170.15 — mantenemos coherencia.
+Un solo archivo: `supabase/functions/_shared/facturapiAuth.ts`.
 
-### Migración SQL
+Cuando estén disponibles `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en el runtime (siempre lo están en producción), `tryVaultKey` construirá **su propio cliente admin** con service role sin `Authorization` header y llamará el RPC con ese cliente. El `SELECT` inicial sigue con el cliente pasado por el caller (el RLS ya está bien).
 
-```sql
-DROP POLICY IF EXISTS "admin_org puede leer credenciales facturapi de su org"
-  ON public.facturapi_credenciales;
-DROP POLICY IF EXISTS "admin_org puede gestionar credenciales facturapi de su org"
-  ON public.facturapi_credenciales;
+Bosquejo (dentro del mismo helper):
 
-CREATE POLICY "leer credenciales facturapi de su org"
-  ON public.facturapi_credenciales
-  FOR SELECT
-  TO authenticated
-  USING (
-    public.is_org_admin(auth.uid(), organization_id)
-    OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'contador'::public.app_role)
-  );
+```ts
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-CREATE POLICY "gestionar credenciales facturapi de su org"
-  ON public.facturapi_credenciales
-  FOR ALL
-  TO authenticated
-  USING (
-    public.is_org_admin(auth.uid(), organization_id)
-    OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'contador'::public.app_role)
-  )
-  WITH CHECK (
-    public.is_org_admin(auth.uid(), organization_id)
-    OR public.has_role(auth.uid(), 'super_admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'contador'::public.app_role)
-  );
+let adminSingleton: SupabaseLike | null = null;
+function getAdmin(): SupabaseLike | null {
+  if (adminSingleton) return adminSingleton;
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null; // tests: no admin, se ignora
+  adminSingleton = createClient(url, key, { auth: { persistSession: false } }) as unknown as SupabaseLike;
+  return adminSingleton;
+}
+
+async function tryVaultKey(userClient, orgId, ambiente, vaultId) {
+  if (!vaultId) return null;
+  const admin = getAdmin() ?? userClient; // fallback para tests
+  if (!admin.rpc) return null;
+  const { data, error } = await admin.rpc("get_facturapi_api_key_internal", {
+    p_org_id: orgId, p_ambiente: ambiente,
+  });
+  if (error) return null;
+  return typeof data === "string" && data.length > 0 ? data : null;
+}
 ```
 
-Los `GRANT` sobre la tabla ya existen para `authenticated` (SELECT/INSERT/UPDATE/DELETE). No cambian.
+Ventajas:
+- **Un solo archivo tocado.** Las 9 edge functions que ya llaman `getFacturapiClient(userClient, orgId)` no cambian.
+- **Tests no rompen:** cuando no hay env vars (entorno Deno.test aislado), cae al mock inyectado por el caller.
+- **No amplía privilegios en la BD.** Sigue siendo únicamente el helper server-side el que llega al vault.
 
-## Frontend
+## Verificación
 
-Ninguno. En cuanto RLS deje leer la fila, el hook `useFacturapiCredenciales` verá `api_key_sandbox_last4`, `keyActivaCargada` pasa a `true` y "Siguiente" se habilita automáticamente. El propio `useSetFacturapiApiKey` ya invalida el query key `["facturapi_credenciales", orgId]` en `onSuccess`, así que después de guardar la key el wizard refresca solo.
+Tras deploy:
+1. Isela vuelve a Configuración → wizard → "Probar" (ya funciona) para confirmar que sí lee la key.
+2. Isela abre una factura y presiona **Timbrar**. Debe emitirse sin `412`.
+3. Edge function logs de `facturapi-emitir` deben mostrar 200.
 
 ## Bump de versión y bitácora
 
-- `src/constants/appVersion.ts` → `13.170.16`.
-- `CHANGELOG.md`: entrada `[13.170.16] - 2026-07-04` explicando que el contador ya puede leer `facturapi_credenciales` y por tanto avanzar en el wizard.
+- `src/constants/appVersion.ts` → `13.170.17`.
+- `CHANGELOG.md`: entrada `[13.170.17] - 2026-07-04` explicando por qué la RPC del vault se llama con service role.
 
 ## Fuera de alcance
 
-- No se cambian otras policies ni se agregan roles adicionales.
-- No se toca la UI del wizard ni el flujo del paso 3 (probar conexión).
-- No se cambian los RPC `set_/clear_/get_facturapi_api_key` (ya arreglados en v13.170.15).
+- No se tocan las 9 edge functions que consumen `getFacturapiClient` (misma firma).
+- No se cambian policies ni GRANTS.
+- No se toca el flujo de UI ni el hook `useTimbrarFactura`.
+- Refactor de tests de `facturapiAuth_test.ts` sólo si el flujo `tryVaultKey` requiere ajustes (no debería, porque el mock se sigue usando cuando no hay env vars).
