@@ -142,7 +142,6 @@ async function main() {
   ].join("\n");
   writeFileSync(path.join(OUT, "REPORT.md"), md);
 
-  // eslint-disable-next-line no-console
   console.log(`\n✅ ${results.length} capturas en ${OUT}`);
 }
 
