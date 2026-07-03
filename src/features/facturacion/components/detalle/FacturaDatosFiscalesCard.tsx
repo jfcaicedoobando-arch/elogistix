@@ -91,6 +91,21 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
             mostrarTipoCambio={factura.moneda !== "MXN"}
           />
 
+          {factura.moneda !== "MXN" && (
+            <div className="flex justify-start">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={obtenerTC.isPending}
+                onClick={() => obtenerTC.mutate()}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 mr-1 ${obtenerTC.isPending ? "animate-spin" : ""}`} />
+                {obtenerTC.isPending ? "Consultando Banxico…" : `Obtener TC DOF de hoy (${factura.moneda})`}
+              </Button>
+            </div>
+          )}
+
           <div className="flex justify-end">
             <Button type="submit" disabled={guardar.isPending}>
               <Save className="h-4 w-4 mr-1" />
