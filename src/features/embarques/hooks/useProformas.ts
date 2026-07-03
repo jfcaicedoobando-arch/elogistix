@@ -7,21 +7,17 @@ import { toast } from "@/hooks/shared";
 import { useOrgFilter } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
-  aprobarProformas as svcAprobar,
-  consolidarProformas as svcConsolidar,
   crearProforma as svcCrear,
   eliminarProforma as svcEliminar,
   fetchProformasTodas,
   fetchProformasEmbarque,
   fetchProformasPendientes,
-  type ConsolidarProformasParams,
   type CrearProformaParams,
   type EliminarProformaParams,
   type ProformaConFactura,
   type ProformaPendienteConEmbarque,
   type ProformaRow,
 } from "@/features/proformas/services";
-import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
