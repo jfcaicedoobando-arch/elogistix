@@ -37,19 +37,19 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 describe("enviarFacturaPorEmail", () => {
   beforeEach(() => {
-    getSessionMock.mockReset();
-    fetchConReintentoMock.mockReset();
+    mocks.getSession.mockReset();
+    mocks.fetchConReintento.mockReset();
   });
   afterEach(() => vi.clearAllMocks());
 
   it("lanza si no hay sesión (access_token ausente)", async () => {
-    getSessionMock.mockResolvedValue({ data: { session: null } });
+    mocks.getSession.mockResolvedValue({ data: { session: null } });
     await expect(enviarFacturaPorEmail(input)).rejects.toThrow(/sesión/i);
-    expect(fetchConReintentoMock).not.toHaveBeenCalled();
+    expect(mocks.fetchConReintento).not.toHaveBeenCalled();
   });
 
   it("envía Authorization Bearer y devuelve el resultado parseado", async () => {
-    getSessionMock.mockResolvedValue({
+    mocks.getSession.mockResolvedValue({
       data: { session: { access_token: "tok-abc" } },
     });
     const ok = {
@@ -60,12 +60,12 @@ describe("enviarFacturaPorEmail", () => {
       pdf_link: "https://p",
       xml_link: "https://x",
     };
-    fetchConReintentoMock.mockResolvedValue(jsonResponse(ok));
+    mocks.fetchConReintento.mockResolvedValue(jsonResponse(ok));
 
     const res = await enviarFacturaPorEmail(input);
 
-    expect(fetchConReintentoMock).toHaveBeenCalledTimes(1);
-    const [, init] = fetchConReintentoMock.mock.calls[0];
+    expect(mocks.fetchConReintento).toHaveBeenCalledTimes(1);
+    const [, init] = mocks.fetchConReintento.mock.calls[0];
     expect((init as RequestInit).method).toBe("POST");
     const headers = (init as RequestInit).headers as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer tok-abc");
@@ -77,20 +77,20 @@ describe("enviarFacturaPorEmail", () => {
   });
 
   it("lanza con status cuando la respuesta no es ok", async () => {
-    getSessionMock.mockResolvedValue({
+    mocks.getSession.mockResolvedValue({
       data: { session: { access_token: "t" } },
     });
-    fetchConReintentoMock.mockResolvedValue(
+    mocks.fetchConReintento.mockResolvedValue(
       jsonResponse({ error: "boom" }, 500),
     );
     await expect(enviarFacturaPorEmail(input)).rejects.toThrow(/500.*boom/);
   });
 
   it("envuelve fallos de red con mensaje amistoso", async () => {
-    getSessionMock.mockResolvedValue({
+    mocks.getSession.mockResolvedValue({
       data: { session: { access_token: "t" } },
     });
-    fetchConReintentoMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    mocks.fetchConReintento.mockRejectedValue(new TypeError("Failed to fetch"));
     await expect(enviarFacturaPorEmail(input)).rejects.toThrow(
       /No se pudo contactar/,
     );
