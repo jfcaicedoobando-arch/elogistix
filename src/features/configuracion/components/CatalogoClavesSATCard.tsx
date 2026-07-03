@@ -17,10 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
-  EMPTY_DRAFT, EditRow, TIPO_IVA_LABEL, TIPO_IVA_VARIANT, tasaFromTipo,
+  EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_VARIANT, tasaFromTipo,
   type Draft, type Row,
-} from "./CatalogoClavesSATCard.parts";
+} from "./CatalogoClavesSATCard.constants";
 
 export function CatalogoClavesSATCard() {
   const { organizationId } = useAuth();

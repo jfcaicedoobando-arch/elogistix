@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.3] - 2026-07-04
+- **chore(ci)**: se separan las constantes y tipos del catálogo de productos a `CatalogoClavesSATCard.constants.ts` para eliminar 5 warnings de `react-refresh/only-export-components`. El `.parts.tsx` queda con un único export (`EditRow`), como exige Fast Refresh de Vite.
+
 ## [13.170.2] - 2026-07-04
 - **refactor(catálogo productos)**: se ocultan los campos **Prioridad** y **Notas** de la tarjeta `Catálogo de productos y servicios` en Configuración → Facturación. La tabla queda con 6 columnas (Nombre, Clave SAT, Tipo IVA, Unidad SAT, Activo, Acciones) ordenada alfabéticamente por nombre. Las columnas `prioridad` y `notas` se conservan en BD porque el resolver legacy `resolver_clave_sat` (fallback ILIKE para proformas antiguas) todavía usa `prioridad` para desempatar; los inserts nuevos toman el default 100.
 
