@@ -1,0 +1,257 @@
+/**
+ * Helpers para `enviar-factura-email`. Extraído del handler principal para
+ * respetar el límite `max-lines` del linter y facilitar tests unitarios.
+ */
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { captureEdgeException } from "../_shared/sentry.ts";
+import { FACTURAPI_BASE, basicAuthHeader } from '../_shared/facturapiAuth.ts';
+
+export const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function json(cors: Record<string, string>, data: Record<string, unknown>, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...cors, 'Content-Type': 'application/json' },
+  });
+}
+
+export interface Destinatario { email: string; nombre?: string }
+
+export interface FacturaCtx {
+  id: string;
+  numero: string;
+  organization_id: string;
+  cliente_id: string | null;
+  cliente_nombre: string | null;
+  total: number | null;
+  moneda: string | null;
+  uuid_fiscal: string | null;
+  folio_fiscal: string | null;
+  serie: string | null;
+  metodo_pago: string | null;
+  forma_pago: string | null;
+  fecha_emision: string | null;
+  facturapi_id: string | null;
+}
+
+export interface SendParsed {
+  destinatarios: Destinatario[];
+  validRecipients: Destinatario[];
+  ccEmails: string[];
+  mensaje: string;
+  asunto: string;
+  totalFormateado?: string;
+  ejecutivo: { nombre?: string; email?: string; telefono?: string };
+}
+
+export async function loadFactura(admin: ReturnType<typeof createClient>, id: string, userId: string) {
+  const { data, error } = await admin
+    .from('facturas')
+    .select('id, numero, organization_id, cliente_id, cliente_nombre, total, moneda, uuid_fiscal, folio_fiscal, serie, metodo_pago, forma_pago, fecha_emision, facturapi_id')
+    .eq('id', id)
+    .maybeSingle();
+  if (error || !data) return { err: 'Factura no encontrada', status: 404 };
+  if (!data.facturapi_id || !data.uuid_fiscal) {
+    return { err: 'La factura no está timbrada aún', status: 400 };
+  }
+  const { data: membership } = await admin
+    .from('organization_members')
+    .select('id')
+    .eq('organization_id', data.organization_id)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (!membership) return { err: 'No tienes acceso a esta factura', status: 403 };
+  return { factura: data as FacturaCtx };
+}
+
+export async function fetchFacturapiFile(apiKey: string, facturapiId: string, tipo: 'pdf' | 'xml'): Promise<Uint8Array> {
+  const url = `${FACTURAPI_BASE}/invoices/${facturapiId}/${tipo}`;
+  const res = await fetch(url, { headers: { Authorization: basicAuthHeader(apiKey) } });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`FacturApi ${tipo} ${res.status}: ${detail.slice(0, 200)}`);
+  }
+  const ab = await res.arrayBuffer();
+  return new Uint8Array(ab);
+}
+
+export async function uploadToBucket(
+  admin: ReturnType<typeof createClient>,
+  path: string,
+  bytes: Uint8Array,
+  contentType: string,
+): Promise<void> {
+  const { error } = await admin.storage.from('facturas-pdf').upload(path, bytes, {
+    contentType,
+    upsert: true,
+  });
+  if (error) throw new Error(`Storage upload ${path}: ${error.message}`);
+}
+
+export async function signUrl(admin: ReturnType<typeof createClient>, path: string): Promise<string> {
+  const { data, error } = await admin.storage.from('facturas-pdf').createSignedUrl(path, SIGNED_URL_TTL);
+  if (error || !data) throw new Error(`Signed URL ${path}: ${error?.message}`);
+  return data.signedUrl;
+}
+
+export function parseBody(body: Record<string, unknown>): SendParsed {
+  const destinatarios = Array.isArray(body.destinatarios) ? (body.destinatarios as Destinatario[]) : [];
+  const ccEmails = Array.isArray(body.cc) ? (body.cc as string[]).filter((e) => EMAIL_RE.test(e)) : [];
+  return {
+    destinatarios,
+    validRecipients: destinatarios.filter((d) => d?.email && EMAIL_RE.test(d.email)),
+    ccEmails,
+    mensaje: typeof body.mensaje === 'string' ? body.mensaje : '',
+    asunto: typeof body.asunto === 'string' ? body.asunto : '',
+    totalFormateado: typeof body.total_formateado === 'string' ? body.total_formateado : undefined,
+    ejecutivo: (body.ejecutivo ?? {}) as { nombre?: string; email?: string; telefono?: string },
+  };
+}
+
+export async function sendToRecipients(params: {
+  supabaseUrl: string;
+  supabaseServiceKey: string;
+  recipients: { email: string; nombre?: string; tipo: 'to' | 'cc' }[];
+  templateData: Record<string, unknown>;
+  facturaId: string;
+  timestamp: number;
+}): Promise<{ email: string; tipo: string; ok: boolean; error?: string }[]> {
+  const { supabaseUrl, supabaseServiceKey, recipients, templateData, facturaId, timestamp } = params;
+  const resultados: { email: string; tipo: string; ok: boolean; error?: string }[] = [];
+  for (const r of recipients) {
+    const idem = `fac-${facturaId}-${timestamp}-${r.email}`;
+    try {
+      const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabaseServiceKey}` },
+        body: JSON.stringify({
+          templateName: 'factura-enviada',
+          recipientEmail: r.email,
+          idempotencyKey: idem,
+          templateData: { ...templateData, contacto: r.nombre },
+        }),
+      });
+      const out = await resp.json().catch(() => ({}));
+      const ok = resp.ok && (out?.success !== false || out?.queued === true);
+      resultados.push({ email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) });
+    } catch (e) {
+      await captureEdgeException(e, {
+        fn: 'enviar-factura-email',
+        extra: { phase: 'send_recipient', recipient_index: resultados.length, recipient_type: r.tipo, factura_id: facturaId },
+      });
+      resultados.push({ email: r.email, tipo: r.tipo, ok: false, error: (e as Error).message });
+    }
+  }
+  return resultados;
+}
+
+export interface AuthedCtx {
+  userId: string;
+  userEmail: string;
+  admin: ReturnType<typeof createClient>;
+  supabaseUrl: string;
+  supabaseServiceKey: string;
+}
+
+export async function authenticateRequest(req: Request, cors: Record<string, string>): Promise<AuthedCtx | Response> {
+  const url = Deno.env.get('SUPABASE_URL');
+  const anon = Deno.env.get('SUPABASE_ANON_KEY');
+  const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !anon || !service) return json(cors, { error: 'Server configuration error' }, 500);
+  const authHeader = req.headers.get('Authorization') ?? '';
+  if (!authHeader.toLowerCase().startsWith('bearer ')) return json(cors, { error: 'Missing authorization' }, 401);
+  const userClient = createClient(url, anon, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
+  });
+  const { data: userData, error: authErr } = await userClient.auth.getUser();
+  if (authErr || !userData?.user) return json(cors, { error: 'Unauthorized' }, 401);
+  return {
+    userId: userData.user.id,
+    userEmail: userData.user.email ?? '',
+    admin: createClient(url, service, { auth: { persistSession: false } }),
+    supabaseUrl: url,
+    supabaseServiceKey: service,
+  };
+}
+
+export async function prepareAttachments(
+  admin: ReturnType<typeof createClient>,
+  factura: FacturaCtx,
+  apiKey: string,
+  ts: number,
+): Promise<{ pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string }> {
+  const basePath = `${factura.organization_id}/${factura.id}/${factura.numero}-${ts}`;
+  const pdfPath = `${basePath}.pdf`;
+  const xmlPath = `${basePath}.xml`;
+  const [pdfBytes, xmlBytes] = await Promise.all([
+    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'pdf'),
+    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'xml'),
+  ]);
+  await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
+  await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
+  const [pdfLink, xmlLink] = await Promise.all([signUrl(admin, pdfPath), signUrl(admin, xmlPath)]);
+  return { pdfPath, xmlPath, pdfLink, xmlLink };
+}
+
+export function buildTemplateData(factura: FacturaCtx, parsed: SendParsed, pdfLink: string, xmlLink: string) {
+  const fechaEmision = factura.fecha_emision
+    ? new Date(factura.fecha_emision).toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    : undefined;
+  return {
+    numero: factura.numero,
+    cliente: factura.cliente_nombre ?? '',
+    total: parsed.totalFormateado,
+    moneda: factura.moneda ?? undefined,
+    uuid: factura.uuid_fiscal ?? undefined,
+    fechaEmision,
+    metodoPago: factura.metodo_pago ?? undefined,
+    formaPago: factura.forma_pago ?? undefined,
+    mensaje: parsed.mensaje,
+    enlacePdf: pdfLink,
+    enlaceXml: xmlLink,
+    ejecutivoNombre: parsed.ejecutivo.nombre,
+    ejecutivoEmail: parsed.ejecutivo.email,
+    ejecutivoTelefono: parsed.ejecutivo.telefono,
+  };
+}
+
+export async function persistEnvio(params: {
+  ctx: AuthedCtx;
+  factura: FacturaCtx;
+  parsed: SendParsed;
+  paths: { pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string };
+  resultados: { email: string; tipo: string; ok: boolean; error?: string }[];
+  estado: string;
+  anyOk: boolean;
+}): Promise<string | null> {
+  const { ctx, factura, parsed, paths, resultados, estado, anyOk } = params;
+  const anyFail = resultados.some((r) => !r.ok);
+  const { data: envio } = await ctx.admin.from('factura_envios').insert({
+    factura_id: factura.id,
+    organization_id: factura.organization_id,
+    enviado_por: ctx.userId,
+    destinatarios: parsed.validRecipients,
+    cc: parsed.ccEmails,
+    asunto: parsed.asunto,
+    mensaje: parsed.mensaje,
+    pdf_storage_path: paths.pdfPath,
+    xml_storage_path: paths.xmlPath,
+    pdf_link_publico: paths.pdfLink,
+    xml_link_publico: paths.xmlLink,
+    estado,
+    error: anyFail ? JSON.stringify(resultados.filter((r) => !r.ok)) : null,
+  }).select('id').single();
+  await ctx.admin.from('bitacora_actividad').insert({
+    organization_id: factura.organization_id,
+    usuario_id: ctx.userId,
+    usuario_email: ctx.userEmail,
+    modulo: 'facturacion',
+    accion: anyOk ? 'factura_enviada_email' : 'factura_envio_email_fallido',
+    entidad_id: factura.id,
+    entidad_nombre: factura.numero,
+    detalles: { envio_id: envio?.id ?? null, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
+  }).then(() => null, () => null);
+  return envio?.id ?? null;
+}
