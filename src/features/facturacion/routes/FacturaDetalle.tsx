@@ -29,8 +29,12 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 import { FacturaFiscalCheckAlert } from "@/features/facturacion/components/detalle/FacturaFiscalCheckAlert";
 
-
-
+function canDeleteBorrador(
+  factura: { estado?: string | null; facturapi_id?: string | null } | null | undefined,
+  canEdit: boolean,
+): boolean {
+  return !!factura && factura.estado === "Borrador" && !factura.facturapi_id && canEdit;
+}
 
 
 export default function FacturaDetalle() {
@@ -48,10 +52,10 @@ export default function FacturaDetalle() {
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
-  const puedeEliminarBorrador =
-    !!factura && factura.estado === "Borrador" && !factura.facturapi_id && canEdit;
+  const puedeEliminarBorrador = canDeleteBorrador(factura, canEdit);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
+
 
   // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
   // proforma (`?accion=timbrar`). Sólo si la factura todavía no está timbrada.
