@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.155.0] - 2026-07-04
+- **refactor(design-language)**: Oleada 5 — envolver rutas de dashboards ejecutivos, catálogos y bandejas en `PageContainer` para homologar padding/max-width con el resto de la app.
+  - Dashboard: `Dashboard`, `Bitacora`, `Ayuda`.
+  - Proveedores: `Proveedores`.
+  - Reportes: `Reportes`, `CierreMensual`.
+  - Profit: `ProfitDashboardEjecutivo`, `ProfitEstadoResultados`, `ProfitPresupuesto`, `ProfitProyeccion`.
+  - Tesorería: `Tesoreria`, `TesoreriaConciliacion`, `TesoreriaCuentas`, `TesoreriaFlujo`.
+  - Bandejas: `Cartera`, `CxpPorCapturar`, `CxpPorPagar`.
+  - Operaciones: `Operaciones`.
+  - Portales (cliente/agente) mantienen su propio shell con `max-w-7xl` y quedan fuera de scope.
+
 ## [13.154.1] - 2026-07-04
 - **fix(power-of-10)**: dividir `CosteoDemorasVenta.tsx` (extrae `NuevaTarifaDemoraDialog`) y `Cxp.tsx` (extrae `EliminarFacturaCxpDialog`) para volver por debajo del límite de 200 líneas y arreglar CI de arquitectura.
 
