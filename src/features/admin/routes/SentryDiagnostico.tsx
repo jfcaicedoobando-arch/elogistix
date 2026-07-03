@@ -1,7 +1,5 @@
 /**
  * /sentry — Pantalla de diagnóstico del SDK de Sentry.
- * Muestra estado del cliente, release, environment, usuario y organización.
- * Permite disparar un error de prueba para verificar el pipeline de reportes.
  */
 import * as Sentry from "@sentry/react";
 import { Bug, CheckCircle2, XCircle, Send } from "lucide-react";
@@ -25,20 +23,8 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function StatusTitle({ active }: { active: boolean }) {
-  if (active) {
-    return (
-      <>
-        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-        Sentry está activo
-      </>
-    );
-  }
-  return (
-    <>
-      <XCircle className="h-4 w-4 text-destructive" />
-      Sentry NO está inicializado
-    </>
-  );
+  if (active) return <><CheckCircle2 className="h-4 w-4 text-primary" />Sentry está activo</>;
+  return <><XCircle className="h-4 w-4 text-destructive" />Sentry NO está inicializado</>;
 }
 
 function handleTestError() {
@@ -46,25 +32,18 @@ function handleTestError() {
     new Error(`Error de prueba — Sentry Diagnóstico (${new Date().toISOString()})`),
     { tags: { source: "sentry-diagnostico-ui" } },
   );
-  toast({
-    title: "Error de prueba enviado",
-    description: `Sentry event ID: ${id}. Verifica en el dashboard de Sentry en unos segundos.`,
-  });
+  toast({ title: "Error de prueba enviado", description: `Sentry event ID: ${id}.` });
 }
 
 function handleTestMessage() {
   const id = Sentry.captureMessage("Mensaje de prueba — Sentry Diagnóstico", "info");
-  toast({
-    title: "Mensaje de prueba enviado",
-    description: `Sentry event ID: ${id}.`,
-  });
+  toast({ title: "Mensaje de prueba enviado", description: `Sentry event ID: ${id}.` });
 }
 
 function RuntimeCard({ sentryInfo }: { sentryInfo: ReturnType<typeof useSentryInfo> }) {
   const release = sentryInfo.release ?? `libre-carga@${APP_VERSION}`;
   const environment = sentryInfo.environment ?? import.meta.env.MODE;
-  const tracesRate =
-    sentryInfo.tracesSampleRate !== undefined ? String(sentryInfo.tracesSampleRate) : "—";
+  const tracesRate = sentryInfo.tracesSampleRate !== undefined ? String(sentryInfo.tracesSampleRate) : "—";
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -73,14 +52,7 @@ function RuntimeCard({ sentryInfo }: { sentryInfo: ReturnType<typeof useSentryIn
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Row
-          label="Estado"
-          value={
-            <Badge variant={sentryInfo.active ? "default" : "destructive"}>
-              {sentryInfo.active ? "Activo" : "Inactivo"}
-            </Badge>
-          }
-        />
+        <Row label="Estado" value={<Badge variant={sentryInfo.active ? "default" : "destructive"}>{sentryInfo.active ? "Activo" : "Inactivo"}</Badge>} />
         <Row label="Release" value={release} />
         <Row label="APP_VERSION" value={APP_VERSION} />
         <Row label="Environment" value={environment} />
@@ -95,9 +67,7 @@ function UsuarioCard() {
   const { user, effectiveRole } = useAuth();
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Usuario actual</CardTitle>
-      </CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Usuario actual</CardTitle></CardHeader>
       <CardContent>
         <Row label="Email" value={user?.email ?? "—"} />
         <Row label="User ID" value={user?.id ?? "—"} />
@@ -111,9 +81,7 @@ function OrganizacionCard() {
   const { organization, organizationId } = useOrganization();
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Organización activa</CardTitle>
-      </CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Organización activa</CardTitle></CardHeader>
       <CardContent>
         <Row label="Nombre" value={organization?.nombre ?? "—"} />
         <Row label="Org ID" value={organizationId ?? "—"} />
@@ -126,17 +94,13 @@ function OrganizacionCard() {
 function PipelineCard({ active }: { active: boolean }) {
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Probar el pipeline</CardTitle>
-      </CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Probar el pipeline</CardTitle></CardHeader>
       <CardContent className="flex flex-col sm:flex-row gap-2">
         <Button onClick={handleTestError} variant="destructive" disabled={!active}>
-          <Send className="h-4 w-4 mr-2" />
-          Enviar error de prueba
+          <Send className="h-4 w-4 mr-2" />Enviar error de prueba
         </Button>
         <Button onClick={handleTestMessage} variant="outline" disabled={!active}>
-          <Send className="h-4 w-4 mr-2" />
-          Enviar mensaje de prueba
+          <Send className="h-4 w-4 mr-2" />Enviar mensaje de prueba
         </Button>
       </CardContent>
     </Card>
@@ -146,7 +110,7 @@ function PipelineCard({ active }: { active: boolean }) {
 export default function SentryDiagnostico() {
   const sentryInfo = useSentryInfo();
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6 max-w-4xl">
       <PageHeader
         icon={<Bug className="h-6 w-6 text-primary" />}
         title="Diagnóstico de Sentry"
@@ -161,4 +125,3 @@ export default function SentryDiagnostico() {
     </div>
   );
 }
-
