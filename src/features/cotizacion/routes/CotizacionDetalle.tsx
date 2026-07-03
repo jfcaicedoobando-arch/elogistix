@@ -158,7 +158,7 @@ export default function CotizacionDetalle() {
         envioPrevio={envios[0]}
       />
 
-    </div>
+    </PageContainer>
   );
 }
 

@@ -25,17 +25,17 @@ export default function Configuracion() {
 
   if (isLoading) {
     return (
-    <PageContainer>
+      <PageContainer>
         <PageHeader title="Configuración" description="Parámetros generales del sistema" />
         <ListSkeleton rows={4} />
-      </div>
+      </PageContainer>
     );
   }
 
   const mostrarGuardar = TABS_CON_GUARDAR.has(tab);
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         title="Configuración"
         description="Parámetros generales del sistema"
