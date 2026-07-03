@@ -132,6 +132,8 @@ export default function ProformaDetalle() {
       />
 
       <DatosGeneralesCard proforma={proforma} />
+      <NotasCard notas={proforma.notas} />
+
 
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Conceptos</CardTitle></CardHeader>
