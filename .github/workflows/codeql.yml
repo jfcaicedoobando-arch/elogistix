@@ -51,6 +51,16 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
+          # 13.162.0 — Excluir tests, e2e y SQL helpers de RLS para reducir
+          # findings ruidosos que no aplican a código de producción.
+          config: |
+            paths-ignore:
+              - '**/__tests__/**'
+              - '**/*.test.ts'
+              - '**/*.test.tsx'
+              - 'e2e/**'
+              - 'supabase/tests/**'
+              - 'scripts/**'
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5

@@ -43,7 +43,9 @@ jobs:
         run: bun run lint:unused
 
       - name: Strict unused exports & types
-        if: always()
+        # 13.162.0 — Se quitó `if: always()`. Antes se corría aunque `lint:unused`
+        # hubiera fallado, ocultando el error real. Si el modo relajado falla,
+        # este step ya no se ejecuta.
         run: bun run lint:unused:strict
 
       - name: Test hygiene (no skip/only/todo, no duplicate titles)
@@ -175,6 +177,13 @@ jobs:
       - name: Prepare blob output directory (reset)
         run: rm -rf .vitest-reports && mkdir -p .vitest-reports
 
+      # 13.162.0 — Diseño intencional del gate de coverage:
+      #   - Los shards corren con thresholds a 0 (ver `test:coverage:shard` en
+      #     package.json). Un shard aislado NO tiene datos suficientes para
+      #     validar un piso global.
+      #   - El gate real se aplica en el job `coverage` (`test:coverage:merge`)
+      #     tras mergear los 20 blobs. Los thresholds efectivos viven en
+      #     `vitest.config.ts` (lines/statements 38, functions 30, branches 34).
       - name: Tests + coverage (shard ${{ matrix.shard }}/${{ matrix.total }})
         run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
 
