@@ -34,6 +34,19 @@ export function TotalDestacado({ totales }: { totales: Totales }) {
 }
 
 
+export function NotasCard({ notas }: { notas: string | null | undefined }) {
+  const texto = (notas ?? "").trim();
+  if (!texto) return null;
+  return (
+    <Card>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">Notas</CardTitle></CardHeader>
+      <CardContent>
+        <p className="text-sm whitespace-pre-line break-words">{texto}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export function DatosGeneralesCard({ proforma }: { proforma: ProformaDetalleFull }) {
   return (
