@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-const fetchContactosMock = vi.fn();
+const mocks = vi.hoisted(() => ({
+  fetchContactos: vi.fn(),
+}));
 
 vi.mock("@/features/cotizacion/services/envios", () => ({
-  fetchContactosClienteConEmail: (id: string) => fetchContactosMock(id),
+  fetchContactosClienteConEmail: (id: string) => mocks.fetchContactos(id),
   esContactoPrioridadCliente: (c: { tipo?: string }) =>
     c?.tipo === "principal" || c?.tipo === "facturacion",
   CLIENTE_PRINCIPAL_ID: "__cliente_principal__",
