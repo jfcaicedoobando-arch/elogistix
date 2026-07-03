@@ -25,7 +25,7 @@ const DEBOUNCE_MS = 500;
 export function useAutoSaveDatosFiscales(
   facturaId: string,
   moneda: string,
-  values: DatosFiscalesFormState,
+  values: DatosFiscalesEstado,
 ) {
   const qc = useQueryClient();
   const [estado, setEstado] = useState<AutoSaveEstado>("idle");
