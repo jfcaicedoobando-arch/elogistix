@@ -13,15 +13,12 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/features/embarques/hooks";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import {
+  getEstadoUnificado,
+  rankEstadoUnificado,
+  LABEL_ESTADO_UNIFICADO,
+} from "@/features/proformas/lib/estadoUnificado";
 
-// Rank de estado para ordenar la columna por criticidad visual (menor = más urgente arriba).
-function estadoRank(p: ProformaConFactura): number {
-  if (p.estado_proforma === "facturada") return 3;
-  const ec = (p as { estado_cliente?: string }).estado_cliente ?? "pendiente";
-  if (ec === "rechazada") return 0;
-  if (ec === "aceptada") return 2;
-  return 1; // pendiente cliente
-}
 
 
 interface BuildArgs {
