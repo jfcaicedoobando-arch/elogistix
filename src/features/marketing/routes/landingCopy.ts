@@ -15,7 +15,7 @@ export const HERO = {
 export const PROOF_TITLE = "Compatible con los actores con los que ya trabajas";
 export const PROOF_LOGOS = [
   "Maersk", "MSC", "Hapag-Lloyd", "CMA CGM", "APM Terminals",
-  "SAT · CFDI 4.0", "UN/LOCODE", "Frankfurter FX",
+  "SAT · CFDI 4.0", "UN/LOCODE", "Banxico DOF",
 ] as const;
 
 export const KPIS = [
