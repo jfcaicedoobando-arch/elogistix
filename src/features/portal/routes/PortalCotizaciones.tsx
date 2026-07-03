@@ -2,14 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { Search, FileText, Filter, Ship } from "lucide-react";
+import { FileText, Ship } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
 import { useState, useMemo } from "react";
 
 export default function PortalCotizaciones() {
@@ -51,27 +50,21 @@ export default function PortalCotizaciones() {
         actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>}
       />
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por folio, ruta..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-          <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filtrar por estado" title="Estado">
-            <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los estados</SelectItem>
-            {estados.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      <PortalFiltersBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Buscar por folio, ruta..."
+        hideOnMobile={false}
+        selects={[
+          {
+            value: filtroEstado,
+            onChange: setFiltroEstado,
+            options: estados,
+            placeholder: "Estado",
+            allLabel: "Todos los estados",
+          },
+        ]}
+      />
 
       {filtered.length === 0 ? (
         <EmptyState
