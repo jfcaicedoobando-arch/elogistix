@@ -5,18 +5,11 @@
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { Plus, Trash2, Timer } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useDemorasVenta, useDemorasVentaMutations } from "@/features/costeo/hooks/useDemorasVenta";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -25,6 +18,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
+import { NuevaTarifaDemoraDialog } from "@/features/costeo/components/NuevaTarifaDemoraDialog";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const EMPTY: DemoraVentaTarifaInput = {
