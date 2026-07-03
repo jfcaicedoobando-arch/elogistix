@@ -45,9 +45,9 @@ describe("<FormDialogShell />", () => {
         <div />
       </FormDialogShell>,
     );
-    expect(screen.getByText("Uno")).toBeInTheDocument();
-    expect(screen.getByText("Dos")).toBeInTheDocument();
-    expect(screen.getByText("Tres")).toBeInTheDocument();
+    // El stepper etiqueta el paso activo y expone el conteo via aria-label.
+    expect(screen.getByLabelText("Paso 2 de 3")).toBeInTheDocument();
+    expect(screen.getByText(/Dos/)).toBeInTheDocument();
   });
 
   it("no renderiza el diálogo cuando open=false", () => {
