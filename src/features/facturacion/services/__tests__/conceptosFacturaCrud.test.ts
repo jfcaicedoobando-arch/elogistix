@@ -21,7 +21,7 @@ describe("conceptosFacturaCrud", () => {
   });
 
   it("fetchConceptosFactura filtra por factura y descarta soft-deletes", async () => {
-    const rows = [{ id: "c1", factura_id: "f1", descripcion: "X", cantidad: 1, precio_unitario: 100, total: 100, clave_sat: "81141601", moneda: "MXN" }];
+    const rows = [{ id: "c1", factura_id: "f1", descripcion: "X", cantidad: 1, precio_unitario: 100, total: 100, clave_sat: "81141601", moneda: "MXN", tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 }];
     mock.setTableResult("conceptos_factura", { data: rows, error: null });
     const out = await fetchConceptosFactura("f1");
     expect(out).toEqual(rows);
@@ -32,7 +32,7 @@ describe("conceptosFacturaCrud", () => {
   });
 
   it("agregarConceptoFactura inserta y recalcula totales", async () => {
-    mock.setTableResult("conceptos_factura", { data: [{ cantidad: 2, precio_unitario: 50 }], error: null });
+    mock.setTableResult("conceptos_factura", { data: [{ cantidad: 2, precio_unitario: 50, tasa_iva_aplicada: 0.16 }], error: null });
     mock.setTableResult("facturas", { data: null, error: null });
     await agregarConceptoFactura({
       facturaId: "f1",
@@ -49,6 +49,24 @@ describe("conceptosFacturaCrud", () => {
     expect(payload.subtotal).toBe(100);
     expect(payload.iva).toBe(16);
     expect(payload.total).toBe(116);
+  });
+
+  it("recalcularTotalesFactura suma IVA por renglón mezclando 16%, 0% y exento", async () => {
+    mock.setTableResult("conceptos_factura", {
+      data: [
+        { cantidad: 1, precio_unitario: 100, tasa_iva_aplicada: 0.16 }, // 16
+        { cantidad: 1, precio_unitario: 100, tasa_iva_aplicada: 0 },    // 0
+        { cantidad: 1, precio_unitario: 100, tasa_iva_aplicada: null }, // exento
+      ],
+      error: null,
+    });
+    mock.setTableResult("facturas", { data: null, error: null });
+    await recalcularTotalesFactura("f1");
+    const updates = mock.tableCalls.filter((c) => c.table === "facturas" && c.ops.includes("update"));
+    const payload = updates[0].opArgs[updates[0].ops.indexOf("update")][0] as { subtotal: number; iva: number; total: number };
+    expect(payload.subtotal).toBe(300);
+    expect(payload.iva).toBe(16);
+    expect(payload.total).toBe(316);
   });
 
   it("agregarConceptoFactura rechaza descripción vacía", async () => {
