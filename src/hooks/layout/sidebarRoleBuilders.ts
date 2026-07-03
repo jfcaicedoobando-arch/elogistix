@@ -9,6 +9,7 @@ import {
   SIDEBAR_COSTEO_ITEMS,
   SIDEBAR_BANDEJAS_ITEMS,
   SIDEBAR_COMPRAS_HUB,
+  SIDEBAR_ADMIN_ITEMS,
 } from "@/components/layout/sidebarItems";
 
 export interface SidebarSection {
