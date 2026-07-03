@@ -83,7 +83,7 @@ describe("crearFacturaManual", () => {
   it("usa clave SAT por default cuando no se especifica", async () => {
     await crearFacturaManual(baseInput);
     const rows = conceptosPayload as Array<{ clave_sat: string; cantidad: number }>;
-    expect(rows[0].clave_sat).toBe("78101800");
+    expect(rows[0].clave_sat).toBe("81141601");
     expect(rows[0].cantidad).toBe(2);
   });
 
