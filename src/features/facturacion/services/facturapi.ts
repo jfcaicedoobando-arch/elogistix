@@ -11,15 +11,55 @@ export interface TimbradoResult {
 
 export interface ValidationIssue { field: string; message: string }
 
+interface EdgeErrorBody {
+  error?: string;
+  message?: string;
+  issues?: ValidationIssue[];
+}
+
+/**
+ * `supabase.functions.invoke()` levanta `FunctionsHttpError` en cualquier
+ * status ≠ 2xx y NO expone el JSON del body en `data` — sólo deja
+ * `error.message = "Edge Function returned a non-2xx status code"` y el
+ * cuerpo real en `error.context` (una `Response`). Esta función lo lee para
+ * que el usuario vea el mensaje amable del backend (ej. "Esta organización
+ * no tiene FacturApi configurado…") en lugar de la cadena genérica.
+ */
+export async function parseFunctionError(error: unknown): Promise<EdgeErrorBody> {
+  const ctx = (error as { context?: unknown } | null)?.context;
+  if (ctx && typeof (ctx as Response).clone === "function") {
+    try {
+      const body = await (ctx as Response).clone().json();
+      if (body && typeof body === "object") return body as EdgeErrorBody;
+    } catch {
+      // Body no era JSON parseable; caemos al fallback.
+    }
+  }
+  return {};
+}
+
+function toReadableError(error: unknown, body: EdgeErrorBody, fallback: string): Error {
+  const issues = body.issues?.length
+    ? `: ${body.issues.map((i) => i.message).join("; ")}`
+    : "";
+  const message = body.message
+    ?? body.error
+    ?? (error as { message?: string } | null)?.message
+    ?? fallback;
+  return new Error(message + issues);
+}
+
 export async function emitirFacturapi(facturaId: string): Promise<TimbradoResult> {
-  const { data, error } = await supabase.functions.invoke<TimbradoResult & { error?: string; issues?: ValidationIssue[]; message?: string }>(
+  const { data, error } = await supabase.functions.invoke<TimbradoResult & EdgeErrorBody>(
     "facturapi-emitir",
     { body: { factura_id: facturaId } },
   );
-  if (error) throw new Error(error.message);
+  if (error) {
+    const body = await parseFunctionError(error);
+    throw toReadableError(error, body, "No se pudo timbrar la factura.");
+  }
   if (data?.error) {
-    const issues = data.issues ? `: ${data.issues.map((i) => i.message).join("; ")}` : "";
-    throw new Error((data.message ?? data.error) + issues);
+    throw toReadableError(null, data, data.error);
   }
   return data as TimbradoResult;
 }
@@ -32,7 +72,7 @@ export async function cancelarFacturapi(
   sustituyeUuid?: string,
   sustituidaPorFacturaId?: string,
 ): Promise<{ sustituida: boolean }> {
-  const { data, error } = await supabase.functions.invoke<{ ok?: boolean; sustituida?: boolean; error?: string; message?: string }>(
+  const { data, error } = await supabase.functions.invoke<{ ok?: boolean; sustituida?: boolean } & EdgeErrorBody>(
     "facturapi-cancelar",
     {
       body: {
@@ -43,8 +83,13 @@ export async function cancelarFacturapi(
       },
     },
   );
-  if (error) throw new Error(error.message);
-  if (data?.error) throw new Error(data.message ?? data.error);
+  if (error) {
+    const body = await parseFunctionError(error);
+    throw toReadableError(error, body, "No se pudo cancelar la factura.");
+  }
+  if (data?.error) {
+    throw toReadableError(null, data, data.error);
+  }
   return { sustituida: !!data?.sustituida };
 }
 
