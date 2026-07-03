@@ -13,6 +13,7 @@ export interface ConceptoInterno {
   clave_unidad?: string | null;
   unidad?: string | null;
   tasa_iva?: number | null; // 0.16, 0, etc.
+  tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
 }
 
 export interface FacturaContext {
