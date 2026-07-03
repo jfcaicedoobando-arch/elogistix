@@ -9,8 +9,8 @@
  *  - Registro del envío en `factura_envios`.
  */
 import { assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
-
-const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url))
+  + "\n" + await Deno.readTextFile(new URL("./helpers.ts", import.meta.url));
 
 Deno.test("enviar-factura-email: preflight y CORS", () => {
   assertStringIncludes(indexSource, "handlePreflightStrict");
