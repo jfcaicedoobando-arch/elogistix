@@ -42,6 +42,8 @@ const CRITICAL = [
   "supabase/functions/notificar-respuesta-cotizacion/index.ts",
   // 13.144.6 — Envío de proforma al cliente por email (portal público)
   "supabase/functions/enviar-proforma-email/index.ts",
+  // 13.149.1 — Envío branded de facturas (PDF+XML) al cliente
+  "supabase/functions/enviar-factura-email/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
