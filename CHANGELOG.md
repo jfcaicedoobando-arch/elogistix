@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.162.0] - 2026-07-04
+- **chore(ci)**: auditoría de GitHub Actions — Fase 1 de remediaciones.
+  - `ci.yml`: quitado `if: always()` de `lint:unused:strict` para no ocultar fallas del step relajado previo.
+  - `ci.yml`: documentado en línea el diseño del gate de coverage (shards a 0, merge con umbrales reales en `vitest.config.ts`).
+  - `codeql.yml`: `paths-ignore` para `__tests__`, `*.test.ts(x)`, `e2e/`, `supabase/tests/` y `scripts/`, reduciendo findings ruidosos fuera de código de producción.
+  - `post-deploy-smoke.yml`: enmascarar también `DEMO_USER_EMAIL` con `::add-mask::` (antes sólo se enmascaraba el password).
+  - Auditoría completa en `.lovable/plan.md` (fases 2 y 3 pendientes: subir umbrales de coverage, migrar policies manuales a migraciones, imagen `supabase/postgres` en RLS CI, deno typecheck semanal).
+
 ## [13.161.0] - 2026-07-04
 - **feat(facturacion)**: pantalla de detalle de factura fortalecida para captura previa al timbrado.
   - **Conceptos visibles en el borrador**: `FacturaConceptosTable` ahora recibe los conceptos vivos de `conceptos_factura` (vía `useConceptosFactura`) y sólo cae a `snapshot_emision` en facturas ya timbradas. Antes los borradores se mostraban sin desglose porque el snapshot aún no existía.
