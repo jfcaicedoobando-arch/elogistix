@@ -23,8 +23,10 @@ import {
   AccionesProforma,
   DatosGeneralesCard,
   FacturaAsociadaCard,
+  NotasCard,
   TotalesCard,
 } from "@/features/proformas/components/ProformaDetalleCards";
+
 import type { ConceptoVentaRow } from "@/features/proformas/services";
 
 const conceptoColumns: ColumnDef<ConceptoVentaRow, unknown>[] = defineColumns<ConceptoVentaRow>([
