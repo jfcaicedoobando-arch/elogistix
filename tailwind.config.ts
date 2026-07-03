@@ -106,11 +106,18 @@ export default {
           secondary: { DEFAULT: "hsl(var(--kpi-secondary))", soft: "hsl(var(--kpi-secondary-soft))" },
           danger:    { DEFAULT: "hsl(var(--kpi-danger))",    soft: "hsl(var(--kpi-danger-soft))" },
         },
+        // Ola 7 · Lote A — expuestos como color Tailwind para poder escribir `bg-state-llegada/10`
+        // sin caer en `bg-[hsl(var(--state-llegada))]`.
+        state: {
+          llegada: "hsl(var(--state-llegada))",
+          "en-proceso": "hsl(var(--state-en-proceso))",
+          cerrado: "hsl(var(--state-cerrado))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "var(--radius-sm)",
         xl: "var(--radius-lg)",
       },
       boxShadow: {
