@@ -2,24 +2,27 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
-const enviarMock = vi.fn();
-vi.mock("@/features/facturacion/services/mutations/enviarFacturaEmail", () => ({
-  enviarFacturaPorEmail: (i: unknown) => enviarMock(i),
+const mocks = vi.hoisted(() => ({
+  enviar: vi.fn(),
+  success: vi.fn(),
+  warning: vi.fn(),
+  notifyError: vi.fn(),
 }));
 
-const successMock = vi.fn();
-const warningMock = vi.fn();
+vi.mock("@/features/facturacion/services/mutations/enviarFacturaEmail", () => ({
+  enviarFacturaPorEmail: (i: unknown) => mocks.enviar(i),
+}));
+
 vi.mock("sonner", () => ({
   toast: {
-    success: (...a: unknown[]) => successMock(...a),
-    warning: (...a: unknown[]) => warningMock(...a),
+    success: (...a: unknown[]) => mocks.success(...a),
+    warning: (...a: unknown[]) => mocks.warning(...a),
     error: vi.fn(),
   },
 }));
 
-const notifyErrorMock = vi.fn();
 vi.mock("@/components/shared/utils/appFeedback", () => ({
-  notifyError: (...a: unknown[]) => notifyErrorMock(...a),
+  notifyError: (...a: unknown[]) => mocks.notifyError(...a),
 }));
 
 import { useEnviarFacturaEmail } from "../useEnviarFacturaEmail";
