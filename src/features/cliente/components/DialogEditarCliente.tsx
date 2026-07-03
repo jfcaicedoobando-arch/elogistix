@@ -130,7 +130,17 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
         </Alert>
       )}
 
+      <FormDialogSection
+        title="Actualizar desde CSF (opcional)"
+        description="Sube el PDF de la Constancia de Situación Fiscal para rellenar automáticamente los campos. Podrás ajustarlos antes de guardar."
+      >
+        <div className="md:col-span-2">
+          <CsfDropZone parsingCsf={parsingCsf} fileName={csfFileName} onFile={handleCsfFile} />
+        </div>
+      </FormDialogSection>
+
       <FormDialogSection title="Datos fiscales" description="Información requerida para facturación SAT.">
+
         <TextField label="RFC" field="rfc" form={form} setForm={setForm} />
         <TextField label="Código Postal" field="cp" form={form} setForm={setForm} />
         <div>
