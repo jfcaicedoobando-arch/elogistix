@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.14] - 2026-07-04
+- **chore(facturación/timbrado)**: `DialogTimbrarFactura.tsx` bajó de 211 a 152 líneas extrayendo las sub-vistas compacta y completa a `DialogTimbrarFactura.parts.tsx` (114 líneas). Fix del CI que fallaba en `audit-report.test.ts` y `architecture-baseline.test.ts` (regla Power of 10: ≤200 líneas por archivo productivo).
+
 ## [13.170.13] - 2026-07-04
 - **fix(facturación/errores)**: al timbrar o cancelar una factura, si la edge function respondía non-2xx (por ejemplo `412 org_facturapi_not_configured` cuando la org no tiene FacturApi configurado), el toast mostraba la cadena genérica `"Edge Function returned a non-2xx status code"` en vez del mensaje real. Causa: `@supabase/supabase-js@2.108` levanta `FunctionsHttpError` con `message` genérico y deja el body real en `error.context` (`Response`), que nadie leía. `emitirFacturapi`/`cancelarFacturapi` en `services/facturapi.ts` ahora hacen `context.clone().json()` para extraer `{message, error, issues}` y mostrar el mensaje humano del backend (ej. *"Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica."*). Detectado en Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1` de la org Elogistix — la causa raíz allí es de configuración, no de código, pero ahora el mensaje llega claro al usuario.
 

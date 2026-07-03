@@ -5,11 +5,6 @@
 import { useState } from "react";
 import { Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useTimbrarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useFactura } from "@/features/facturacion/hooks/useFactura";
@@ -24,8 +19,8 @@ import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors/index";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
+import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
 
 interface Props {
   facturaId: string | null;
@@ -131,79 +126,26 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       footer={footer}
     >
       {mostrarCompacto ? (
-        <>
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Uso CFDI:</span> {usoCfdi}
-            {" · "}
-            <span className="font-medium text-foreground">Forma:</span> {formaPago}
-            {" · "}
-            <span className="font-medium text-foreground">Método:</span> {metodoPago}
-          </div>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <Checkbox
-              checked={enviarEmail}
-              onCheckedChange={(c) => setEnviarEmail(c === true)}
-            />
-            <span>Enviar el CFDI por email al cliente tras timbrar</span>
-          </label>
-        </>
+        <TimbrarCompacto
+          usoCfdi={usoCfdi}
+          formaPago={formaPago}
+          metodoPago={metodoPago}
+          enviarEmail={enviarEmail}
+          setEnviarEmail={setEnviarEmail}
+        />
       ) : (
-        <>
-          <ul className="text-sm space-y-1">
-            {checks.map((c, i) => (
-              <li key={i} className={c.ok ? "text-success" : "text-destructive"}>
-                {c.ok ? "✓" : "✗"} {c.label}
-              </li>
-            ))}
-          </ul>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Uso CFDI</Label>
-              <Select value={usoCfdi} onValueChange={setUsoCfdi}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Forma de pago</Label>
-              <Select value={formaPago} onValueChange={setFormaPago}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Método de pago</Label>
-              <Select value={metodoPago} onValueChange={setMetodoPago}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {METODOS_PAGO_SAT.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <Checkbox
-              checked={enviarEmail}
-              onCheckedChange={(c) => setEnviarEmail(c === true)}
-            />
-            <span>Enviar el CFDI por email al cliente tras timbrar</span>
-          </label>
-
-          {!puedeTimbrar && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                Completa los datos fiscales del cliente antes de timbrar.
-                Puedes hacerlo en el detalle del cliente.
-              </AlertDescription>
-            </Alert>
-          )}
-        </>
+        <TimbrarCompleto
+          checks={checks}
+          usoCfdi={usoCfdi}
+          setUsoCfdi={setUsoCfdi}
+          formaPago={formaPago}
+          setFormaPago={setFormaPago}
+          metodoPago={metodoPago}
+          setMetodoPago={setMetodoPago}
+          enviarEmail={enviarEmail}
+          setEnviarEmail={setEnviarEmail}
+          puedeTimbrar={puedeTimbrar}
+        />
       )}
     </FormDialogShell>
   );
