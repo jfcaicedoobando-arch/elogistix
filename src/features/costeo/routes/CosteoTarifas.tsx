@@ -1,6 +1,7 @@
 /**
  * Página: matriz de tarifas marítimas (alta + lista filtrable).
  * v13.135.49: vista agrupada por ruta + toggle agrupada/tabla.
+ * Oleada 4: migrado a PageContainer + PageHeader compartidos.
  */
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,8 +17,13 @@ import { TarifasKpis } from "@/features/costeo/components/TarifasKpis";
 import { TarifasFilterChips } from "@/features/costeo/components/TarifasFilterChips";
 import { TarifasEmptyState } from "@/features/costeo/components/TarifasEmptyState";
 import { TarifasGroupedView } from "@/features/costeo/components/TarifasGroupedView";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useCosteoTarifasPageState, DEFAULT_ESTADO, type ViewMode } from "./useCosteoTarifasPageState";
+import {
+  useCosteoTarifasPageState,
+  DEFAULT_ESTADO,
+  type ViewMode,
+} from "./useCosteoTarifasPageState";
 
 export default function CosteoTarifas() {
   const s = useCosteoTarifasPageState();
@@ -28,7 +34,7 @@ export default function CosteoTarifas() {
   const showEmpty = !s.isLoading && s.tarifasFiltradas.length === 0;
 
   return (
-    <div className="p-6 space-y-4">
+    <PageContainer>
       <PageHeader
         title="Tarifas marítimas"
         description="Matriz CN → MX por agente, naviera, ruta y contenedor. Moneda base: USD."
@@ -63,6 +69,7 @@ export default function CosteoTarifas() {
         </div>
       )}
 
+      {/* CosteoTarifasFiltros conservado: interfaz compleja de 5 dimensiones */}
       <CosteoTarifasFiltros
         estado={s.estado}
         onEstadoChange={s.setEstado}
@@ -100,7 +107,8 @@ export default function CosteoTarifas() {
       {showList && (
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground tabular-nums">
-            {s.tarifasFiltradas.length} {s.tarifasFiltradas.length === 1 ? "tarifa" : "tarifas"}
+            {s.tarifasFiltradas.length}{" "}
+            {s.tarifasFiltradas.length === 1 ? "tarifa" : "tarifas"}
           </span>
           <ToggleGroup
             type="single"
@@ -108,10 +116,18 @@ export default function CosteoTarifas() {
             onValueChange={(v) => v && s.changeView(v as ViewMode)}
             aria-label="Modo de vista"
           >
-            <ToggleGroupItem value="agrupada" aria-label="Vista agrupada por ruta" className="h-8 px-3 text-xs">
+            <ToggleGroupItem
+              value="agrupada"
+              aria-label="Vista agrupada por ruta"
+              className="h-8 px-3 text-xs"
+            >
               <Rows3 className="size-4 mr-1" />Agrupada
             </ToggleGroupItem>
-            <ToggleGroupItem value="tabla" aria-label="Vista tabla plana" className="h-8 px-3 text-xs">
+            <ToggleGroupItem
+              value="tabla"
+              aria-label="Vista tabla plana"
+              className="h-8 px-3 text-xs"
+            >
               <LayoutList className="size-4 mr-1" />Tabla
             </ToggleGroupItem>
           </ToggleGroup>
@@ -143,7 +159,12 @@ export default function CosteoTarifas() {
         />
       )}
 
-      <TarifaForm open={s.open} onOpenChange={s.setOpen} initial={s.initial} tarifaId={s.editId} />
+      <TarifaForm
+        open={s.open}
+        onOpenChange={s.setOpen}
+        initial={s.initial}
+        tarifaId={s.editId}
+      />
 
       <ConfirmDeleteAlert
         open={!!s.aEliminar}
@@ -157,6 +178,6 @@ export default function CosteoTarifas() {
           }
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

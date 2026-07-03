@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
   Accordion,
   AccordionContent,
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function AuditoriaPorReglaTab({ c }: Props) {
-  if (c.isLoading) return <Skeleton className="h-64" />;
+  if (c.isLoading) return <ListSkeleton rows={6} />;
   return (
     <Accordion type="multiple" defaultValue={REGLAS_ORDEN} className="space-y-2">
       {REGLAS_ORDEN.map((regla) => {

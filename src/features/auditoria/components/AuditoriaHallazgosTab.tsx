@@ -1,6 +1,6 @@
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
   Select,
   SelectContent,
@@ -25,12 +25,8 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
   if (c.isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-        </div>
-        <Skeleton className="h-64" />
+        <ListSkeleton rows={3} variant="card" className="grid-cols-3" />
+        <ListSkeleton rows={6} />
       </div>
     );
   }
@@ -50,7 +46,8 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
           <span className="text-muted-foreground">
             {c.mostrarRevisados ? (
               <>
-                Mostrando también <span className="font-semibold text-foreground">{c.revisadosCount}</span> hallazgo
+                Mostrando también{" "}
+                <span className="font-semibold text-foreground">{c.revisadosCount}</span> hallazgo
                 {pluralS(c.revisadosCount)} ya revisado{pluralS(c.revisadosCount)}.
               </>
             ) : (
@@ -117,7 +114,8 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
           </Select>
         </div>
         <div className="ml-auto text-xs text-muted-foreground tabular-nums">
-          Mostrando <span className="font-semibold text-foreground">{c.hallazgosFiltrados.length}</span> de{" "}
+          Mostrando{" "}
+          <span className="font-semibold text-foreground">{c.hallazgosFiltrados.length}</span> de{" "}
           {c.hallazgosVisibles.length} hallazgos
           {!c.mostrarRevisados && c.revisadosCount > 0 && (
             <span className="text-muted-foreground/70"> · {c.data.total_hallazgos} totales</span>
@@ -126,12 +124,10 @@ export function AuditoriaHallazgosTab({ c, drillFilters, tablaKey }: Props) {
       </div>
 
       {/*
-        Bloque 2 (auditoría 13.21.23): se pasa `hallazgosFiltrados` (subset ya
-        filtrado por severidad/modo del tab) a la tabla, y el `key` incluye el
-        toggle `mostrarRevisados` para que el filtro interno `defaultRevision`
-        de `useHallazgosTablaState` se recalcule cuando el usuario alterna
-        "Ver/Ocultar revisados". Sin esto, los KPIs y la tabla mostraban
-        conteos inconsistentes (el toggle no llegaba a la tabla).
+        Se pasa `hallazgosFiltrados` (subset ya filtrado por severidad/modo)
+        a la tabla. El `key` incluye `mostrarRevisados` para que el filtro
+        interno `defaultRevision` de `useHallazgosTablaState` se recalcule
+        al alternar "Ver/Ocultar revisados".
       */}
       <HallazgosTablaPaginada
         key={`${tablaKey}-${c.mostrarRevisados ? "r" : "p"}`}

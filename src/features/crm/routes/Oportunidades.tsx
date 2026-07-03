@@ -9,9 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Collapsible, CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
@@ -19,6 +17,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { useDebounce, useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";
 import OportunidadesFiltersBar from "@/features/crm/components/OportunidadesFiltersBar";
 import { FILTROS_DEFAULT, type OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
@@ -26,6 +25,7 @@ import { useOportunidades, useMoverEtapaConAutomatizacion, useEtapasPipeline, ty
 import { useUsuarios } from "@/features/admin/hooks/usuario";
 import { oportunidadesColumns, activosFiltros } from "./oportunidadesTable";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function Oportunidades() {
   const navigate = useNavigate();
@@ -87,7 +87,7 @@ export default function Oportunidades() {
   const totalPipeline = ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0);
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
+    <PageContainer>
       <PageHeader
         title="Oportunidades"
         description="Pipeline de ventas por etapa con vista Kanban y tabla"
@@ -151,7 +151,7 @@ export default function Oportunidades() {
         </TabsList>
         <TabsContent value="kanban" className="mt-4">
           {isLoading ? (
-            <div className="text-sm text-muted-foreground py-8 text-center">Cargando…</div>
+            <LoadingState label="Cargando oportunidades…" />
           ) : (
             <OportunidadKanban
               etapas={etapas as CrmEtapaRow[]}
@@ -177,6 +177,6 @@ export default function Oportunidades() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

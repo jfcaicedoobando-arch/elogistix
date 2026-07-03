@@ -7,6 +7,7 @@ import { LayoutList, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { buildCxpAgingColumns } from "@/features/cxp/components/cxpAgingColumns";
@@ -53,7 +54,7 @@ export default function CxpAging() {
   const columns = useMemo(() => buildCxpAgingColumns(), []);
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         icon={<LayoutList className="h-6 w-6 text-accent" />}
         title="Antigüedad de Saldos"
@@ -90,6 +91,6 @@ export default function CxpAging() {
           />
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -10,6 +10,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
 import { useFacturasCxP } from "@/features/cxp/hooks";
@@ -95,7 +96,7 @@ export default function Compras() {
   const vencidoTotal = kpis.vencido_mxn + kpis.vencido_usd;
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         icon={<ShoppingCart className="h-6 w-6 text-accent" />}
         title="Compras"
@@ -192,6 +193,6 @@ export default function Compras() {
       </div>
 
       <DialogNuevaFacturaProveedor open={openNueva} onOpenChange={setOpenNueva} />
-    </div>
+    </PageContainer>
   );
 }

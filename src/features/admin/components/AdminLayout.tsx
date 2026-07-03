@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { BreadcrumbProvider } from "@/lib/contexts/BreadcrumbContext";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export function AdminLayout() {
   return (
@@ -23,11 +24,11 @@ export function AdminLayout() {
               </div>
             </header>
             <main className="flex-1 overflow-auto">
-              <div className="mx-auto w-full max-w-screen-2xl p-6">
+              <PageContainer noSpacing>
                 <ErrorBoundary>
                   <Outlet />
                 </ErrorBoundary>
-              </div>
+              </PageContainer>
             </main>
           </div>
         </div>

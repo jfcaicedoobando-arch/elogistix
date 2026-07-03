@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
@@ -23,7 +24,8 @@ import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
-
+// NOTE: CxpFiltros retiene su API propia (9 props + hooks de proveedores/categorías).
+// UnifiedFiltersBar no cabe limpio sin refactorizar el estado de página — pendiente Oleada 5.
 
 export default function Cxp() {
   const { canEdit } = usePermissions();
@@ -84,7 +86,7 @@ export default function Cxp() {
   const columns = useMemo(() => buildCxPColumns(), []);
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Cuentas por Pagar"
         description="Facturas recibidas de proveedores y su saldo pendiente"
@@ -193,6 +195,6 @@ export default function Cxp() {
           f.setAEliminar(null);
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

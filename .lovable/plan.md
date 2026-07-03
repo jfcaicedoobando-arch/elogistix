@@ -129,3 +129,31 @@ Migrados a `WizardShell` (v13.152.2):
 - Lote B: `WizardShell` creado y consumido por los 2 wizards de página; 6 tests de cobertura (header, back, footer default primer/último paso, `isBusy`, footer custom).
 - Siguiente: Oleada 4 (módulos legacy — CRM, Costeo, CxP, Auditoría, Admin).
 
+
+---
+
+# Oleada 4 — Módulos legacy (v13.154.0)
+
+Migración de routes legacy a las primitivas de la Oleada 1 (`PageContainer`, `PageHeader`, `LoadingState`/`ErrorState`/`ListSkeleton`, `StatusBadge`). Guardrails: sin cambios de RPCs, hooks, RLS ni props públicos. Cero `text-white`/`bg-[#..]`/`style` estático.
+
+## CRM (`src/features/crm/routes/`)
+Migrados: CrmDashboard, Leads, Oportunidades, Actividades, Analitica, MiDia, Configuracion, LeadDetalle, OportunidadDetalle. `CrmLayout` conserva su subheader propio.
+
+## Costeo (`src/features/costeo/routes/`)
+Migrados: CosteoTarifas, CosteoBuscar, CosteoAgentes, CosteoRutas, CosteoNavieras, CosteoDemorasVenta. `CosteoTarifasFiltros` queda fuera de `UnifiedFiltersBar` (barra compleja con presets propios).
+
+## CxP (`src/features/cxp/routes/`)
+Migrados: Cxp, Compras, CxpAging. `CxpFiltros` conserva su bar custom (multi-tab).
+
+## Auditoría (`src/features/auditoria/routes/`)
+Migrado: AuditoriaPage (tabs vía slot `PageHeader.tabs`). `HallazgosFiltros` conserva su bar custom.
+
+## Admin (`src/features/admin/routes/`)
+Migrados: AdminLayout, AdminDashboard, Diagnostico, SentryDiagnostico, admin-org/Configuracion. Resto ya alineado con primitivas.
+
+## Verificación
+- `bun run lint` limpio.
+- `bunx vitest run` sobre CRM/Costeo/CxP/Auditoría/Admin: 119 files / 827 tests en verde.
+
+## Siguiente
+Oleada 5 (dashboards ejecutivos, portales cliente/agente, catálogos) y Oleada 6 (limpieza de helpers deprecated y knip).

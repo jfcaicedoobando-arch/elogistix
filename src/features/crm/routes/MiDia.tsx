@@ -10,13 +10,14 @@ import { CerrandoSemanaCard, LeadsSinContactarCard } from "@/features/crm/compon
 import { NextBestActionsCard } from "@/features/crm/components/crmDashboard/NextBestActionsCard";
 import { CotizacionesSinRespuestaCard } from "@/features/crm/components/crmDashboard/CotizacionesSinRespuestaCard";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function MiDia() {
   const vm = useCrmInicioVM();
   const hoy = new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
+    <PageContainer>
       <PageHeader
         title="Mi día"
         description="Actividades y seguimientos pendientes para hoy"
@@ -37,6 +38,6 @@ export default function MiDia() {
           <LeadsSinContactarCard items={vm.leadsSinContactar} />
         </div>
       </section>
-    </div>
+    </PageContainer>
   );
 }

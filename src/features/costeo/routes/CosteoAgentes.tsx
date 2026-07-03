@@ -1,6 +1,7 @@
 /**
  * Página: Agentes de costeo (forwarders chinos vinculados a Proveedores).
  * Vínculo obligatorio a un proveedor tipo "Agente de Carga".
+ * Oleada 4: migrado a PageContainer + ListSkeleton compartidos.
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Plus } from "lucide-react";
 import { useCosteoAgentes, useCosteoAgenteMutations } from "@/features/costeo/hooks/useCosteoAgentes";
 import { useProveedoresAgente } from "@/features/costeo/hooks/useNavieraCondiciones";
 import type { CosteoAgenteInput } from "@/features/costeo/services/agentes";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { CosteoAgentesTable, type AgenteRow } from "@/features/costeo/components/CosteoAgentesTable";
@@ -75,7 +77,7 @@ export default function CosteoAgentes() {
   };
 
   return (
-    <div className="p-6 space-y-4">
+    <PageContainer>
       <PageHeader
         title="Agentes de costeo"
         description="Forwarders chinos vinculados al directorio de Proveedores. Los días de crédito se usan como criterio principal de desempate."
@@ -124,6 +126,6 @@ export default function CosteoAgentes() {
         agente={invitarAgente}
         onOpenChange={(o: boolean) => !o && setInvitarAgente(null)}
       />
-    </div>
+    </PageContainer>
   );
 }

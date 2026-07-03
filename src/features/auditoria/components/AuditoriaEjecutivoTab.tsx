@@ -7,8 +7,8 @@
  * tradicional para los operadores.
  */
 import { lazy, Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import type { AuditoriaEjecutivoData } from "@/features/auditoria/hooks";
 import { useAutoCapturarSnapshot } from "@/features/auditoria/hooks";
 import { AuditoriaOperadoresCard } from "./AuditoriaOperadoresCard";
@@ -23,7 +23,6 @@ import { EjecutivoPorReglaGrid } from "./ejecutivo/EjecutivoPorReglaGrid";
 const AuditoriaTendenciaChart = lazy(() =>
   import("./AuditoriaTendenciaChart").then((m) => ({ default: m.AuditoriaTendenciaChart })),
 );
-
 
 interface Props {
   data: AuditoriaEjecutivoData;
@@ -44,10 +43,10 @@ export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Skeleton className="h-40 md:col-span-2" />
-          <Skeleton className="h-40" />
+          <ListSkeleton rows={3} variant="card" className="md:col-span-2" />
+          <ListSkeleton rows={2} variant="card" />
         </div>
-        <Skeleton className="h-64" />
+        <ListSkeleton rows={5} />
       </div>
     );
   }

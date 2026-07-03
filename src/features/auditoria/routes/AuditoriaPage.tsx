@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ShieldAlert, RefreshCw, Download } from "lucide-react";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,43 +42,53 @@ export default function Auditoria() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        icon={<ShieldAlert className="h-6 w-6" />}
-        title="Auditoría operativa"
-        description="Salud operativa, hallazgos y acciones pendientes detectadas en los embarques de tu organización."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => exportHallazgosCsv(c.hallazgosFiltrados)}
-              disabled={c.isLoading || c.hallazgosFiltrados.length === 0}
-              title="Exportar la lista filtrada a CSV"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Exportar CSV
-            </Button>
-            <Button variant="outline" size="sm" onClick={c.handleRecalcular} disabled={c.isFetching}>
-              <RefreshCw className={`mr-2 h-4 w-4 ${c.isFetching ? "animate-spin" : ""}`} />
-              Recalcular
-            </Button>
-          </div>
-        }
-      />
-
-      {c.generadoEn && (
-        <div className="text-xs text-muted-foreground">
-          Reporte generado: <span className="tabular-nums">{c.generadoEn}</span>
-        </div>
-      )}
-
-      <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="ejecutivo">Resumen ejecutivo</TabsTrigger>
-          <TabsTrigger value="tabla">Hallazgos</TabsTrigger>
-          <TabsTrigger value="por_regla">Por regla</TabsTrigger>
-        </TabsList>
+    <PageContainer>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)}>
+        <PageHeader
+          icon={<ShieldAlert className="h-6 w-6" />}
+          title="Auditoría operativa"
+          description="Salud operativa, hallazgos y acciones pendientes detectadas en los embarques de tu organización."
+          subHeader={
+            c.generadoEn ? (
+              <p className="text-xs text-muted-foreground">
+                Reporte generado:{" "}
+                <span className="tabular-nums">{c.generadoEn}</span>
+              </p>
+            ) : null
+          }
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportHallazgosCsv(c.hallazgosFiltrados)}
+                disabled={c.isLoading || c.hallazgosFiltrados.length === 0}
+                title="Exportar la lista filtrada a CSV"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Exportar CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={c.handleRecalcular}
+                disabled={c.isFetching}
+              >
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${c.isFetching ? "animate-spin" : ""}`}
+                />
+                Recalcular
+              </Button>
+            </div>
+          }
+          tabs={
+            <TabsList>
+              <TabsTrigger value="ejecutivo">Resumen ejecutivo</TabsTrigger>
+              <TabsTrigger value="tabla">Hallazgos</TabsTrigger>
+              <TabsTrigger value="por_regla">Por regla</TabsTrigger>
+            </TabsList>
+          }
+        />
 
         <TabsContent value="ejecutivo" className="mt-0">
           <AuditoriaEjecutivoTab data={ejecutivo} onDrillDown={handleDrillDown} />
@@ -91,6 +102,6 @@ export default function Auditoria() {
           <AuditoriaPorReglaTab c={c} />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
