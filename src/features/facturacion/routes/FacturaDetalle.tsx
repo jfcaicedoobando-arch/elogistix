@@ -111,11 +111,6 @@ export default function FacturaDetalle() {
         moneda={factura.moneda}
       />
 
-      {factura.cliente_id && (
-        <FacturaFiscalCheckAlert clienteId={factura.cliente_id} estado={factura.estado} />
-      )}
-
-
       <FacturaDetalleActions
         canEdit={canEdit}
         sinTimbrar={sinTimbrar}
@@ -129,15 +124,16 @@ export default function FacturaDetalle() {
         eliminando={eliminando}
       />
 
-      {canEdit && !sinTimbrar && factura.estado === "Emitida" && (
-        <Button variant="outline" size="sm" onClick={() => setSustituirOpen(true)} className="gap-1">
-          <Replace className="h-4 w-4" /> Sustituir CFDI (motivo 01)
-        </Button>
-      )}
+      <FacturaDetalleEditableSections
+        factura={factura}
+        canEdit={canEdit}
+        sinTimbrar={sinTimbrar}
+        puedeEditarBorrador={puedeEditarBorrador}
+        conceptosVivos={conceptosVivos}
+        onSustituir={() => setSustituirOpen(true)}
+      />
 
       <FacturaResumenCard factura={factura} />
-
-      {puedeEditarBorrador && <FacturaDatosFiscalesCard factura={factura} />}
 
       <FacturaConceptosTable
         snapshot={factura.snapshot_emision}
@@ -145,14 +141,6 @@ export default function FacturaDetalle() {
         conceptos={conceptosVivos}
       />
 
-      {puedeEditarBorrador && (
-        <FacturaConceptosEditor
-          facturaId={factura.id}
-          organizationId={factura.organization_id}
-          moneda={factura.moneda}
-          conceptos={conceptosVivos}
-        />
-      )}
       <FacturaPagosSection
         facturaId={factura.id}
         facturaNumero={factura.numero}
