@@ -1,12 +1,7 @@
 /**
- * FacturaDetalle — vista admin de una factura individual.
- * Reusa los diálogos modales existentes para registrar pagos y se apoya en
- * los hooks `useFactura` / `usePagosFactura`. Sólo lectura para roles
- * no-admin (sin botones de acción).
- *
- * Fase 4 (Proforma → Factura): si la URL trae `?accion=timbrar` (por ejemplo
- * tras convertir una proforma) se abre automáticamente `DialogTimbrarFactura`
- * para invitar al usuario a continuar el flujo.
+ * FacturaDetalle — vista admin de una factura individual. Si la URL trae
+ * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
+ * de timbrado automáticamente.
  */
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
