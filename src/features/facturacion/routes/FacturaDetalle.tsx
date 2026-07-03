@@ -30,11 +30,11 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
+import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { canEdit, isAdmin } = usePermissions();
   const { data: factura, isLoading } = useFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
@@ -50,15 +50,8 @@ export default function FacturaDetalle() {
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
 
-  // Auto-abrir `DialogTimbrarFactura` al llegar desde conversión de proforma.
-  useEffect(() => {
-    if (searchParams.get("accion") === "timbrar" && sinTimbrar && canEdit) {
-      setTimbrarOpen(true);
-      const next = new URLSearchParams(searchParams);
-      next.delete("accion");
-      setSearchParams(next, { replace: true });
-    }
-  }, [searchParams, sinTimbrar, canEdit, setSearchParams]);
+  useAutoAbrirTimbrar(sinTimbrar, canEdit, () => setTimbrarOpen(true));
+
 
 
 
