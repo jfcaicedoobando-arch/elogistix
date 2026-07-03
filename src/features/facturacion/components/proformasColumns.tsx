@@ -106,21 +106,22 @@ export function buildProformasColumns({
     {
       id: "estado",
       header: "Estado",
-      // Prioridad: facturada > rechazada > aceptada > pendiente cliente.
+      // Prioridad: rechazada > pendiente > aceptada > facturada (menor rank arriba).
       // Se ordena por un rank numérico para que agrupe por criticidad.
-      accessorFn: (p) => estadoRank(p),
+      accessorFn: (p) => rankEstadoUnificado(p),
       enableSorting: true,
-      sortingFn: (a, b) => estadoRank(a.original) - estadoRank(b.original),
+      sortingFn: (a, b) => rankEstadoUnificado(a.original) - rankEstadoUnificado(b.original),
       meta: { width: "w-[140px]" },
       cell: ({ row }) => {
-        const p = row.original;
-        if (p.estado_proforma === "facturada") return <Badge variant="success">Facturada</Badge>;
-        const ec = (p as { estado_cliente?: string }).estado_cliente ?? "pendiente";
-        if (ec === "rechazada") return <Badge variant="destructive">Rechazada</Badge>;
-        if (ec === "aceptada") return <Badge variant="info">Aceptada</Badge>;
-        return <Badge variant="warning">Pendiente cliente</Badge>;
+        const estado = getEstadoUnificado(row.original);
+        const label = LABEL_ESTADO_UNIFICADO[estado];
+        if (estado === "facturada") return <Badge variant="success">{label}</Badge>;
+        if (estado === "rechazada") return <Badge variant="destructive">{label}</Badge>;
+        if (estado === "aceptada") return <Badge variant="info">{label}</Badge>;
+        return <Badge variant="warning">{label}</Badge>;
       },
     },
+
   );
 
   return defineColumns<ProformaConFactura>(cols);
