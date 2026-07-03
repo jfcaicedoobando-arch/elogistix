@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { EliminarFacturaCxpDialog } from "@/features/cxp/components/EliminarFacturaCxpDialog";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
