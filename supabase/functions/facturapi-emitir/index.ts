@@ -92,7 +92,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, unidad, tasa_iva")
+    .select("descripcion, cantidad, precio_unitario, clave_sat, tipo_iva, tasa_iva_aplicada")
     .eq("factura_id", body.factura_id);
   if (conErr) return json({ error: "conceptos_query_failed", detail: conErr.message }, 500);
 
@@ -122,9 +122,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       cantidad: Number(c.cantidad),
       precio_unitario: Number(c.precio_unitario),
       clave_sat: c.clave_sat,
-      clave_unidad: c.clave_unidad,
-      unidad: c.unidad,
-      tasa_iva: c.tasa_iva != null ? Number(c.tasa_iva) : 0.16,
+      clave_unidad: "E48",
+      unidad: "Unidad de servicio",
+      tipo_iva: (c.tipo_iva as "gravado_16" | "tasa_0" | "exento" | null) ?? "gravado_16",
+      tasa_iva: c.tasa_iva_aplicada != null ? Number(c.tasa_iva_aplicada) : 0.16,
     })),
     sustituye_uuid: sustituyeUuid,
   };
