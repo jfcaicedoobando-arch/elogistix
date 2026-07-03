@@ -9,6 +9,7 @@ import {
   SIDEBAR_COSTEO_ITEMS,
   SIDEBAR_BANDEJAS_ITEMS,
   SIDEBAR_COMPRAS_HUB,
+  SIDEBAR_ADMIN_ITEMS,
 } from "@/components/layout/sidebarItems";
 
 export interface SidebarSection {
@@ -72,7 +73,7 @@ const buildContador: Builder = ({ sistemaItems }) => [
   // (mutaciones siguen bloqueadas por usePermissions: contador ∉ OPERATIONS).
   { label: "Operaciones", items: filterGestion(["/embarques"]) },
   { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
-  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]) },
+  { label: "Facturación", items: [...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]), ...SIDEBAR_ADMIN_ITEMS.filter((it) => it.url === "/configuracion")] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
