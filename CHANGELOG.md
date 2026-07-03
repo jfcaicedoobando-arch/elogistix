@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.159.3] - 2026-07-04
+- **feat(facturacion)**: drilldown de filas en la tabla de Facturas emitidas.
+  - `TabFacturasEmitidas.tsx`: `onRowClick` navega a `/facturacion/:id`.
+  - `facturacionColumns.tsx`: columna "Archivos" ahora envuelve los botones de descarga con `stopPropagation` para no disparar el drilldown al descargar PDF/XML. Columnas de "# Factura" y "Acciones" ya lo tenían.
+
 ## [13.159.2] - 2026-07-04
 - **fix(facturacion)**: Convertir proforma a factura fallaba con `42883 function public.idempotency_store(uuid, unknown, jsonb) does not exist`.
   - `convertir_proformas_a_factura` invocaba `idempotency_store(uuid, text, jsonb)` pero la firma real es `idempotency_store(_key uuid, _response jsonb)`.

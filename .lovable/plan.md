@@ -1,46 +1,19 @@
-## Bug: Convertir proforma a factura falla con `DB_ERROR`
+## Drilldown en tabla de facturación
 
-**Analogía**: Es como llamar a una función `guardar(clave, respuesta)` pasándole tres cosas en vez de dos — Postgres no encuentra una versión con esa firma y aborta.
+**Analogía**: hoy hay que apuntar al número azul de factura para entrar; queremos que toda la fila sea "clickeable" — como un cajón de archivero donde jalar cualquier parte del cajón lo abre.
 
-### Causa raíz
+### Cambios
 
-La RPC `public.convertir_proformas_a_factura` invoca al final:
+1. `src/features/facturacion/components/TabFacturasEmitidas.tsx`
+   - Importar `useNavigate` de `react-router-dom`.
+   - Pasar `onRowClick={(f) => navigate(`/facturacion/${f.id}`)}` al `<DataTable>`.
+   - `DataTable` ya soporta `onRowClick` y añade `cursor-pointer` en el `<tr>` (verificado).
 
-```sql
-PERFORM public.idempotency_store(
-  p_request_id,
-  'convertir_proformas_a_factura',   -- ← argumento de más
-  jsonb_build_object('id', v_factura.id, 'numero', v_factura.numero)
-);
-```
+2. Botones de acción existentes (`Registrar pago`, `Ver pagos`, `Timbrar`, `Cancelar`, `Descargar`, link `# Factura`) — según la memoria "Event Propagation Standards" ya usan `e.stopPropagation()` en sus handlers. Se verifica y, si algún botón no lo tiene, se agrega para no dispararse el drilldown al hacer click en ellos.
 
-Pero la función real tiene firma `idempotency_store(_key uuid, _response jsonb)` (2 args). El nombre de la función (`fn`) ya se registró antes en `idempotency_claim(p_request_id, 'convertir_proformas_a_factura')`, así que el segundo argumento es redundante.
-
-Resultado: Postgres lanza `42883 — function public.idempotency_store(uuid, unknown, jsonb) does not exist`.
-
-### Solución
-
-Migración que reemplaza `convertir_proformas_a_factura` con una versión idéntica salvo por la llamada corregida:
-
-```sql
-PERFORM public.idempotency_store(
-  p_request_id,
-  jsonb_build_object('id', v_factura.id, 'numero', v_factura.numero)
-);
-```
-
-Pasos:
-
-1. Recuperar el cuerpo actual de `convertir_proformas_a_factura` con `pg_get_functiondef` (ya verificado).
-2. Crear migración `CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(...)` con la línea corregida (mantener resto del cuerpo, security definer, search_path, permisos existentes).
-3. Bump `APP_VERSION` a `13.159.2` y entrada en `CHANGELOG.md` describiendo el fix.
-
-### Verificación
-
-- Reintentar el flujo Proforma → Factura desde `/proformas/:id` (misma proforma del reporte) y confirmar que genera borrador sin error.
-- Confirmar que reintento con el mismo `p_request_id` sigue devolviendo cached response (idempotencia intacta).
+3. Bump `APP_VERSION` → `13.159.3` y entrada breve en `CHANGELOG.md`.
 
 ### Fuera de alcance
 
-- No se modifica la firma de `idempotency_store` (otros callers dependen de la versión de 2 args).
-- No se toca código frontend (`convertirAFactura.ts` sigue igual).
+- Tab "Notas de crédito" no se toca (ya tiene su propio flujo). Se puede añadir en un siguiente paso si lo pides.
+- No se toca DataTable ni FacturaDetalle.

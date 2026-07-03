@@ -101,7 +101,7 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
           return <span className="text-muted-foreground text-xs">—</span>;
         }
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
             <FacturaDownloadButton stored={f.factura_pdf_url ?? null} kind="pdf" facturaId={f.id} />
             <FacturaDownloadButton stored={f.factura_xml_url ?? null} kind="xml" facturaId={f.id} />
           </div>

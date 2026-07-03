@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Download, ChevronDown } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -54,6 +55,7 @@ interface Props {
 }
 
 export function TabFacturasEmitidas(p: Props) {
+  const navigate = useNavigate();
   const selection = useRowSelection();
   const pageIds = useMemo(() => p.data.map((f) => f.id), [p.data]);
   const columnsConSeleccion = useMemo(
@@ -163,6 +165,7 @@ export function TabFacturasEmitidas(p: Props) {
             emptyMessage="No se encontraron facturas"
             rowKey={(f) => f.id}
             density="comfortable"
+            onRowClick={(f) => navigate(`/facturacion/${f.id}`)}
             pagination={{
               page: p.page,
               totalPages: p.totalPages,
