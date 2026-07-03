@@ -11,6 +11,7 @@
  */
 import { ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BackfillLegacyCard } from "@/features/admin/components/BackfillLegacyCard";
 
@@ -24,7 +25,7 @@ const KPIS_PREVISTOS = [
 
 export default function AdminAuditoriaPlataforma() {
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<ShieldCheck className="h-6 w-6" />}
         title="Auditoría de plataforma"
@@ -52,6 +53,6 @@ export default function AdminAuditoriaPlataforma() {
       </Card>
 
       <BackfillLegacyCard />
-    </div>
+    </PageContainer>
   );
 }

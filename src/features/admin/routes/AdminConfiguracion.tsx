@@ -7,10 +7,11 @@ import TabCatalogosGlobales from "@/features/admin/components/TabCatalogosGlobal
 import ConfigOrganizacion from "@/features/admin/components/ConfigOrganizacion";
 
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function AdminConfiguracion() {
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<Settings className="h-6 w-6 text-primary" />}
         title="Configuración Global"
@@ -57,6 +58,6 @@ export default function AdminConfiguracion() {
       <Separator />
 
       <ConfigOrganizacion />
-    </div>
+    </PageContainer>
   );
 }

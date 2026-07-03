@@ -4,6 +4,7 @@ import { ShieldCheck, UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NuevoUsuarioDialog from "@/features/admin/components/usuario/NuevoUsuarioDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import {
   useUsuarios,
   useUsuariosPortalCliente,
@@ -23,7 +24,7 @@ export default function Usuarios() {
   const { data: portalAgente = [] } = useUsuariosPortalAgente();
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<ShieldCheck className="h-6 w-6 text-primary" />}
         title="Gestión de Usuarios"
@@ -73,6 +74,6 @@ export default function Usuarios() {
           <PortalUsuariosTab tipo="agente" />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

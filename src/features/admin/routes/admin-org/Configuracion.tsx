@@ -10,6 +10,7 @@ import TabPuertos from "@/features/configuracion/components/TabPuertos";
 import TabOperaciones from "@/features/configuracion/components/TabOperaciones";
 import TabExportar from "@/features/admin/components/TabExportar";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
 function getSaveButtonLabel(isSaving: boolean): string {
@@ -24,7 +25,7 @@ export default function Configuracion() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+    <PageContainer>
         <PageHeader title="Configuración" description="Parámetros generales del sistema" />
         <ListSkeleton rows={4} />
       </div>
@@ -73,6 +74,6 @@ export default function Configuracion() {
         <TabsContent value="operaciones"><TabOperaciones /></TabsContent>
         <TabsContent value="herramientas"><TabExportar /></TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

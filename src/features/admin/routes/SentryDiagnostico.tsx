@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { APP_VERSION } from "@/constants/appVersion";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
@@ -110,7 +111,7 @@ function PipelineCard({ active }: { active: boolean }) {
 export default function SentryDiagnostico() {
   const sentryInfo = useSentryInfo();
   return (
-    <div className="space-y-6 max-w-4xl">
+    <PageContainer>
       <PageHeader
         icon={<Bug className="h-6 w-6 text-primary" />}
         title="Diagnóstico de Sentry"
@@ -122,6 +123,6 @@ export default function SentryDiagnostico() {
         <OrganizacionCard />
       </div>
       <PipelineCard active={sentryInfo.active} />
-    </div>
+    </PageContainer>
   );
 }
