@@ -4,14 +4,14 @@
  */
 import { DialogRegistrarPago } from "@/features/facturacion/components/DialogRegistrarPago";
 import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
-import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
+import { DialogEnviarFacturaBranded } from "@/features/facturacion/components/DialogEnviarFacturaBranded";
 import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Factura = Tables<"facturas">;
 
 interface Props {
-  factura: Pick<Factura, "id" | "numero" | "total" | "moneda" | "metodo_pago" | "uuid_fiscal">;
+  factura: Pick<Factura, "id" | "numero" | "total" | "moneda" | "metodo_pago" | "uuid_fiscal" | "cliente_id">;
   pagoOpen: boolean;
   setPagoOpen: (v: boolean) => void;
   timbrarOpen: boolean;
@@ -44,11 +44,16 @@ export function FacturaDetalleModales(props: Props) {
         open={timbrarOpen}
         onOpenChange={setTimbrarOpen}
       />
-      <DialogEnviarCfdi
+      <DialogEnviarFacturaBranded
         open={enviarOpen}
         onOpenChange={setEnviarOpen}
-        facturaId={factura.id}
-        titulo={`Enviar CFDI ${factura.numero}`}
+        factura={{
+          id: factura.id,
+          numero: factura.numero,
+          cliente_id: factura.cliente_id ?? null,
+          total: factura.total,
+          moneda: factura.moneda,
+        }}
       />
       <DialogSustituirFactura
         facturaId={sustituirOpen ? factura.id : null}
