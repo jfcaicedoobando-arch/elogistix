@@ -2,9 +2,12 @@
  * CRUD de conceptos de una factura (tabla `conceptos_factura`) + recálculo
  * de totales de la factura padre. Se usa desde el editor de borrador.
  *
- * Nota: la tabla `conceptos_factura` sólo tiene columnas base
- * (descripcion, cantidad, precio_unitario, clave_sat, total, moneda).
- * El IVA se calcula al recalcular con la tasa global `TASA_IVA`.
+ * Cada renglón lleva su propio régimen de IVA (`tipo_iva`):
+ *   - `gravado_16` → tasa vigente (TASA_IVA global)
+ *   - `tasa_0`    → 0%
+ *   - `exento`    → no aporta IVA (base gravable 0)
+ *
+ * El total de IVA de la factura se recalcula sumando renglón por renglón.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -12,11 +15,14 @@ import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
+export type TipoIvaConcepto = "gravado_16" | "tasa_0" | "exento";
+
 export interface ConceptoFacturaInput {
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
   clave_sat?: string | null;
+  tipo_iva?: TipoIvaConcepto;
 }
 
 export interface ConceptoFacturaRow {
@@ -28,17 +34,28 @@ export interface ConceptoFacturaRow {
   clave_sat: string;
   total: number;
   moneda: Moneda;
+  tipo_iva: TipoIvaConcepto;
+  tasa_iva_aplicada: number | null;
+}
+
+function resolverTasa(tipo: TipoIvaConcepto): number | null {
+  if (tipo === "gravado_16") return TASA_IVA;
+  if (tipo === "tasa_0") return 0;
+  return null; // exento
 }
 
 function normalizarLinea(input: ConceptoFacturaInput) {
   const cantidad = Math.max(1, Math.round(Number(input.cantidad) || 0));
   const precio = Number(input.precio_unitario) || 0;
+  const tipo_iva: TipoIvaConcepto = input.tipo_iva ?? "gravado_16";
   return {
     descripcion: input.descripcion.trim(),
     cantidad,
     precio_unitario: precio,
     total: Math.round(cantidad * precio * 100) / 100,
     clave_sat: input.clave_sat?.trim() || "81141601",
+    tipo_iva,
+    tasa_iva_aplicada: resolverTasa(tipo_iva),
   };
 }
 
@@ -89,22 +106,26 @@ export async function eliminarConceptoFactura(params: {
 
 /**
  * Suma renglones vigentes y actualiza `subtotal`, `iva`, `total` en `facturas`.
- * Idempotente: siempre lee el estado actual de la tabla y reemplaza los totales.
+ * IVA se acumula por renglón según `tasa_iva_aplicada` (null = exento → 0).
  */
 export async function recalcularTotalesFactura(facturaId: string): Promise<void> {
   const { data, error } = await supabase
     .from("conceptos_factura")
-    .select("cantidad, precio_unitario")
+    .select("cantidad, precio_unitario, tasa_iva_aplicada")
     .eq("factura_id", facturaId)
     .is("deleted_at", null);
   if (error) throw error;
 
   let subtotal = 0;
+  let iva = 0;
   for (const c of data ?? []) {
-    subtotal += Number(c.cantidad) * Number(c.precio_unitario);
+    const importe = Number(c.cantidad) * Number(c.precio_unitario);
+    subtotal += importe;
+    const tasa = c.tasa_iva_aplicada != null ? Number(c.tasa_iva_aplicada) : 0;
+    iva += importe * tasa;
   }
   const subtotalR = Math.round(subtotal * 100) / 100;
-  const ivaR = Math.round(subtotalR * TASA_IVA * 100) / 100;
+  const ivaR = Math.round(iva * 100) / 100;
   const totalR = Math.round((subtotalR + ivaR) * 100) / 100;
 
   const { error: uErr } = await supabase
@@ -117,7 +138,7 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
 export async function fetchConceptosFactura(facturaId: string): Promise<ConceptoFacturaRow[]> {
   const { data, error } = await supabase
     .from("conceptos_factura")
-    .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda")
+    .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda, tipo_iva, tasa_iva_aplicada")
     .eq("factura_id", facturaId)
     .is("deleted_at", null)
     .order("created_at", { ascending: true });
