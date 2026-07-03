@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Copy, FileCheck2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { formatDate } from "@/lib/formatters";
 
 interface Props {
