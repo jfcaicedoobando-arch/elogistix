@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Mock supabase client
-const getSessionMock = vi.fn();
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { auth: { getSession: getSessionMock } },
+const mocks = vi.hoisted(() => ({
+  getSession: vi.fn(),
+  fetchConReintento: vi.fn(),
 }));
 
-// Mock fetchConReintento to control network responses
-const fetchConReintentoMock = vi.fn();
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { auth: { getSession: mocks.getSession } },
+}));
+
 vi.mock("@/features/cotizacion/services/mutations/enviarPorEmail", () => ({
-  fetchConReintento: fetchConReintentoMock,
+  fetchConReintento: mocks.fetchConReintento,
   OFFLINE_MSG: "Sin conexión",
 }));
 
