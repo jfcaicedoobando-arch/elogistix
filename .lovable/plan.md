@@ -1,172 +1,95 @@
-# Oleada 2 — Migración de módulos maduros a primitivas
 
-Consumir las 9 primitivas creadas en la Oleada 1 en los módulos que ya tienen buen "design language" pero duplican patrones. Sin cambios de negocio ni de UX visible salvo consistencia.
+# Ola 6 — Cierre de homologación de layout
 
-## Módulos en scope (maduros, mismo patrón: lista + filtros + tabla + detalle)
+Objetivo: dejar **todas** las rutas de nivel superior con el mismo contenedor (`PageContainer` = `mx-auto max-w-screen-2xl p-4 sm:p-6 space-y-6`) para que el padding, el ancho máximo y el ritmo vertical sean idénticos en toda la app. Con esto se cierra el plan de homologación arrancado en la Ola 1.
 
-1. **Facturación** (`src/pages/Facturacion.tsx` + `src/features/facturacion/`)
-2. **Proformas** (`src/pages/Proformas.tsx` + `src/features/proformas/`)
-3. **Cotizaciones** (`src/pages/Cotizaciones.tsx` + `src/features/cotizacion/`)
-4. **Embarques** (`src/pages/Embarques.tsx` + `src/features/embarques/`)
-5. **Clientes** (`src/pages/Clientes.tsx` + `src/features/cliente/`)
+## Alcance
 
-CRM, Costeo, CxP, Auditoría y Admin quedan para la Oleada 4 (legacy con estructura distinta).
+Solo layout de páginas (contenedor + `PageHeader` cuando falte). No se toca lógica de negocio, tablas, formularios ni estilos internos de tarjetas. Rutas de wizards multi-paso (`NuevoEmbarque`, `NuevaCotizacion`, `EditarCotizacion`, `EditarEmbarque`) quedan **fuera** — ya usan `WizardShell` con su propio contenedor.
 
-## Cambios por página (patrón repetido)
+### Lote A — Admin (7 rutas, alta prioridad)
+Todas tienen `PageHeader` pero envuelven en `<div className="p-6 space-y-6">` custom.
+- `admin/routes/AdminAuditoriaPlataforma.tsx`
+- `admin/routes/AdminConfiguracion.tsx`
+- `admin/routes/AdminDashboard.tsx`
+- `admin/routes/AdminOrganizaciones.tsx`
+- `admin/routes/AdminOrgDetalle.tsx` (falta `PageHeader` — agregarlo)
+- `admin/routes/Diagnostico.tsx`
+- `admin/routes/Idempotencia.tsx`
+- `admin/routes/Papelera.tsx`
+- `admin/routes/SentryDiagnostico.tsx`
+- `admin/routes/admin-org/Configuracion.tsx`
+- `admin/routes/admin-org/Usuarios.tsx`
 
-Para cada uno de los 5 módulos:
+### Lote B — Portal Cliente y Portal Agente (9 rutas)
+Usan `max-w-7xl`/paddings propios. Se estandarizan a `PageContainer` conservando la card de branding del portal.
+- `portal/routes/PortalDashboard.tsx`
+- `portal/routes/PortalCotizaciones.tsx`
+- `portal/routes/PortalCotizacionDetalle.tsx`
+- `portal/routes/PortalEmbarques.tsx`
+- `portal/routes/PortalEmbarqueDetalle.tsx`
+- `portal/routes/PortalFacturas.tsx`
+- `portal/routes/PortalFacturaDetalle.tsx`
+- `portal/routes/PortalPerfil.tsx`
+- `portal-agente/routes/AgenteInicio.tsx`
+- `portal-agente/routes/AgenteTarifas.tsx`
+- `portal-agente/routes/AgenteGarantias.tsx`
+- `portal-agente/routes/AgenteEmbarques.tsx`
+- `portal-agente/routes/AgentePerfil.tsx`
 
-### A. Contenedor y header
-- Envolver el contenido en `<PageContainer>` (quita padding/max-width local duplicado).
-- Reemplazar el header manual por `<PageHeader title description icon actions>`. Si tiene tabs internos, moverlos al slot `tabs`.
+### Lote C — Detalles (7 rutas)
+Páginas de detalle con paddings inconsistentes.
+- `cliente/routes/ClienteDetalle.tsx`
+- `cotizacion/routes/CotizacionDetalle.tsx`
+- `cotizacion/routes/CotizacionInformativaDetalle.tsx`
+- `cotizacion/routes/NuevaCotizacionInformativa.tsx`
+- `embarques/routes/EmbarqueDetalle.tsx`
+- `facturacion/routes/FacturaDetalle.tsx`
+- `proveedor/routes/ProveedorDetalle.tsx`
+- `crm/routes/OportunidadDetalle.tsx`
 
-### B. Estados de carga/error/vacío
-- Reemplazar spinners locales por `<LoadingState>`.
-- Reemplazar tarjetas de error por `<ErrorState onRetry>`.
-- Reemplazar skeletons ad-hoc por `<ListSkeleton variant="table">`.
+### Lote D — CRM y varios (3 rutas)
+- `crm/routes/CrmLayout.tsx` (outlet layout — solo alinear padding)
+- `comisiones/routes/Comisiones.tsx`
+- `onboarding/routes/Onboarding.tsx`
 
-### C. Badges de estado
-- Reemplazar `getEstadoColor`, `BadgeCiclo`, `EmbarqueBadgeAdmin`, `renderEstadoVigencia` en las columnas por `<StatusBadge domain={...}>`.
-- Los helpers viejos quedan marcados `@deprecated` (no se borran hasta la Oleada 6).
+### Fuera de alcance (documentado, no se toca)
+- **Wizards**: `NuevoEmbarque`, `EditarEmbarque`, `NuevaCotizacion`, `EditarCotizacion` — usan `WizardShell`.
+- **Auth/Marketing/Legal**: `Login`, `ResetPassword`, `NotFound`, `TrackingPublico`, `Unsubscribe`, `Landing`, `HomeRoute`, `Guia*`, `LogoPreview`, `Privacidad`, `Terminos`, `Seguridad` — tienen layouts propios (hero, público) intencionalmente distintos.
+- **Sub-componentes** listados por el grep (`*Columns.tsx`, `*Cells.tsx`, `*Toolbar.tsx`, `CrmSubheader`, `FinanceHeader`, `OportunidadDetalleContent`) — no son rutas, no aplican.
 
-### D. Filtros
-- Reemplazar la barra de filtros custom por `<UnifiedFiltersBar>` alimentado por `useTableFilters`.
-- Mantener filtros secundarios de cada dominio en el slot `secondary`.
-- Chips activos derivados automáticamente.
+## Cambios técnicos por archivo
 
-### E. Columnas de tabla
-- Migrar columnas repetidas a los builders:
-  - Estado → `statusColumn({ domain, accessor })`
-  - Cliente → `clientColumn({ accessor })`
-  - Monto → `moneyColumn({ accessor, currencyAccessor })`
-  - Fecha (folio/emisión/etc.) → `dateColumn({ accessor })`
-  - Menú de acciones → `actionsColumn({ items })`
-- Columnas específicas del dominio (folio, estatus operativo, etc.) quedan tal cual.
+Patrón único de migración:
 
-### F. Diálogos de confirmación
-- Reemplazar los `AlertDialog` inline de "¿Estás seguro?" por `<ConfirmActionDialog>`.
-- Los de eliminación destructiva (typable ELIMINAR) usan `<DeleteConfirmDialog>`.
-- Preview PDF (proforma, factura, cotización) unifica al `<DocumentPreviewDialog>`.
+```tsx
+// antes
+return (
+  <div className="p-6 space-y-6">
+    <PageHeader ... />
+    ...
+  </div>
+);
 
-## Guardrails y no-cambios
+// después
+return (
+  <PageContainer>
+    <PageHeader ... />
+    ...
+  </PageContainer>
+);
+```
 
-- Sin tocar RPCs, RLS, edge functions ni forma de datos.
-- Sin renombrar rutas ni props públicos de hooks/servicios.
-- Cada archivo tocado sigue Power of 10 (≤ 200 líneas). Si al migrar un `.tsx` de página crece, se extraen sub-componentes.
-- Tokens semánticos: cero `text-white` / `bg-[#..]`.
-- Retirar del `knip.json > ignore` cada primitiva conforme sus consumidores queden mergeados (`columnBuilders`, `DeleteConfirmDialog`, `DocumentPreviewDialog`, `UnifiedFiltersBar`).
+Casos especiales:
+- Portales con card de bienvenida ancho completo: mantener la card fuera; envolver el resto en `PageContainer`.
+- `AdminOrgDetalle.tsx`: introducir `PageHeader` con nombre de organización + tabs slot.
+- `CrmLayout.tsx` (layout outlet): solo cambiar wrapper externo; los hijos ya migrados en Ola 4.
 
-## Tests
+## Validación
+- `bun run lint` y `tsgo` en verde.
+- Test de arquitectura nuevo: `page-container-usage.test.ts` — verifica que toda ruta `src/features/**/routes/*.tsx` que renderiza `PageHeader` importe `PageContainer` (con lista blanca para Auth/Marketing/Legal/Wizards).
+- Screenshot rápido con Playwright de 3 rutas representativas (admin dashboard, portal cliente, cliente detalle) a 1280×1800 para confirmar padding uniforme.
+- Bump versión a `13.156.0` + entrada en `CHANGELOG.md`.
 
-- Antes de mergear cada módulo: correr sus tests actuales + los tests de primitivas de la Oleada 1.
-- Agregar `useXxxPageController.test.tsx` cobertura para el cableado de `useTableFilters` si no existe.
-- No bajar thresholds; si algo baja, escribir tests del nuevo cableado.
-
-## Estrategia de entrega
-
-Ejecuto los 5 módulos en **subtareas paralelas** (subagentes), en 2 lotes para evitar conflictos:
-
-- **Lote A**: Facturación + Proformas + Cotizaciones (comparten `EnviarDocumentoDialog` y helpers financieros).
-- **Lote B**: Embarques + Clientes.
-
-Cada lote:
-1. Migración de archivos.
-2. Correr `bun run lint` y los tests del módulo.
-3. Retirar entradas de `knip.json` cuando corresponda.
-
-## Bump y changelog
-
-Un único bump `13.151.0` al cerrar la Oleada 2, con changelog listando los 5 módulos migrados y los helpers marcados como deprecated.
-
-## Cierre Oleada 2
-
-Al terminar la Oleada 2 quedamos listos para la Oleada 3. **No** borrar `plan.md` todavía — eso es el último paso del último wave.
-
----
-
-# Oleada 3 — Formularios y wizards
-
-Homologar los modales tipo formulario que aún renderizan `Dialog` crudo, y unificar los wizards multi-paso bajo un único shell.
-
-## Lote A — Modales tipo formulario → `FormDialogShell`
-
-Migración uno-a-uno (sin cambios de negocio) para los ~9 dialogs de formulario que aún usan `Dialog` + `DialogHeader/Footer` manuales:
-
-- `MarcarRevisadoDialog` (auditoría) ✅ v13.152.0
-- `EmbarquesEstadoDialog` (operaciones) ✅ v13.152.0
-- `RespuestaClienteManualDialog` (proformas) ✅ v13.152.0
-- `EnviarProformaDialog` → reusar `EnviarDocumentoDialog` (compartido).
-- `EnviarCotizacionDialog` → reusar `EnviarDocumentoDialog`.
-- `HuecoFacturacionDetalleDialog` (revisar si es detalle o form).
-- `TrackingConfirmFechaLlegadaDialog` → migrar a `ConfirmActionDialog` (no es form).
-- `PortalCambiarPasswordDialog` → dedupe con `shared/dialogs/CambiarPasswordDialog`.
-- `ProveedoresImportDialog` → reusar `BulkImportDialog`.
-
-**Excluidos**: `ErrorDetailsDialog`, `DocumentPreviewDialog`, `DeleteConfirmDialog`, `ConfirmActionDialog`, `DoubleConfirmDeleteDialog`, `PortalCotizacionConfirmDialog`, `DesvincularCotizacionDialog`, `RoleChangeAlertDialog`, `ConfirmSinDesgloseDialog` (son confirm/preview/alert — usan primitivas dedicadas).
-
-## Lote B — WizardShell unificado
-
-Crear `WizardShell` en `src/components/shared/wizard/` que envuelva `FormDialogShell` con:
-
-- Contexto `useWizard()` (step actual, avanzar/retroceder, validación por paso).
-- Slot `pasos: WizardStep[]` con `{ id, label, canProceed, render }`.
-- Footer inteligente: Atrás / Cancelar / Siguiente / Finalizar según posición.
-- Reutiliza `FormDialogStepper` existente.
-
-Migrados a `WizardShell` (v13.152.2):
-
-- Wizard de Cotización (`CotizacionWizardLayout`) — footer custom con "Cotizar sin desglose".
-- Wizard de Embarque (`EmbarqueWizardLayout`) — footer default.
-
-**Excluidos** (no migran a `WizardShell`):
-
-- `FacturapiOnboardingWizard` — es un wizard **modal**, no de página completa. Ya usa `FormDialogShell` con `step/totalSteps/stepLabels`, que es el patrón de wizard modal del design system.
-- `CrearProveedorDesdeCfdiDialog` — es un form de un solo paso (2 campos), no un wizard. El flujo de "2 pasos" (subir XML + confirmar) lo orquesta el parent `DialogNuevaFacturaProveedor`.
-
-## Cierre Oleada 3 (v13.153.0)
-
-- Lote A: 3 dialogs a `FormDialogShell` + 1 a `ConfirmActionDialog`; el resto ya reusaba shells compartidos.
-- Lote B: `WizardShell` creado y consumido por los 2 wizards de página; 6 tests de cobertura (header, back, footer default primer/último paso, `isBusy`, footer custom).
-- Siguiente: Oleada 4 (módulos legacy — CRM, Costeo, CxP, Auditoría, Admin).
-
-
----
-
-# Oleada 4 — Módulos legacy (v13.154.0)
-
-Migración de routes legacy a las primitivas de la Oleada 1 (`PageContainer`, `PageHeader`, `LoadingState`/`ErrorState`/`ListSkeleton`, `StatusBadge`). Guardrails: sin cambios de RPCs, hooks, RLS ni props públicos. Cero `text-white`/`bg-[#..]`/`style` estático.
-
-## CRM (`src/features/crm/routes/`)
-Migrados: CrmDashboard, Leads, Oportunidades, Actividades, Analitica, MiDia, Configuracion, LeadDetalle, OportunidadDetalle. `CrmLayout` conserva su subheader propio.
-
-## Costeo (`src/features/costeo/routes/`)
-Migrados: CosteoTarifas, CosteoBuscar, CosteoAgentes, CosteoRutas, CosteoNavieras, CosteoDemorasVenta. `CosteoTarifasFiltros` queda fuera de `UnifiedFiltersBar` (barra compleja con presets propios).
-
-## CxP (`src/features/cxp/routes/`)
-Migrados: Cxp, Compras, CxpAging. `CxpFiltros` conserva su bar custom (multi-tab).
-
-## Auditoría (`src/features/auditoria/routes/`)
-Migrado: AuditoriaPage (tabs vía slot `PageHeader.tabs`). `HallazgosFiltros` conserva su bar custom.
-
-## Admin (`src/features/admin/routes/`)
-Migrados: AdminLayout, AdminDashboard, Diagnostico, SentryDiagnostico, admin-org/Configuracion. Resto ya alineado con primitivas.
-
-## Verificación
-- `bun run lint` limpio.
-- `bunx vitest run` sobre CRM/Costeo/CxP/Auditoría/Admin: 119 files / 827 tests en verde.
-
-## Siguiente
-Oleada 6 (limpieza de helpers deprecated y knip).
-
----
-
-# Oleada 5 — Dashboards ejecutivos, bandejas y catálogos (v13.155.0)
-
-Envolver rutas legacy en `PageContainer` para uniformar padding/max-width. Sin cambios de negocio.
-
-Migrados: `Dashboard`, `Bitacora`, `Ayuda`, `Proveedores`, `Reportes`, `CierreMensual`, los 4 de Profit, los 4 de Tesorería, `Cartera`, `CxpPorCapturar`, `CxpPorPagar`, `Operaciones`.
-
-Fuera de scope: portales cliente/agente (mantienen su propio shell `max-w-7xl` en el layout).
-
-Verificación: `bun run lint` limpio, tsgo verde, 310 tests del bloque afectados en verde.
-
+## Entregable
+~30 archivos tocados (imports + wrapper), 1 test de arquitectura, 1 entrada de changelog, 1 bump de versión. Con esto queda cerrado el plan de homologación de design language.
