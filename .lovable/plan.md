@@ -1,31 +1,32 @@
 ## Diagnóstico
 
-La última migración de `convertir_proformas_a_factura` (20260703230529) llama a `public.idempotency_commit(uuid, text, jsonb)`, pero esa función no existe. Las únicas funciones disponibles son:
+El linter reporta 2 vistas en `public` sin `security_invoker=on`, por lo que Postgres las trata como `SECURITY DEFINER` (corren con permisos del owner `postgres` en vez de los del usuario que consulta, saltándose RLS):
 
-- `idempotency_claim(_key uuid, _fn text)`
-- `idempotency_store(_key uuid, _response jsonb)`
+- `public.v_pagos_rep_pendientes` — join `pagos_factura ⋈ facturas`
+- `public.v_proforma_factura_link` — join `proformas ⋈ facturas`
 
-Es el mismo error que se corrigió en 13.170.5 y regresó al recrear la RPC en 13.170.8.
+Las otras 2 vistas del proyecto (`costeo_tarifas_vigentes_v`, `v_proveedor_facturas_saldo`) ya tienen `security_invoker` activado, por eso no aparecen en el linter.
 
-**Analogía:** es como si al reescribir una receta cambiaste el nombre de un ingrediente por uno inexistente en la despensa; la despensa sigue teniendo `idempotency_store`, no `idempotency_commit`.
+**Analogía:** una vista `SECURITY DEFINER` es como un vale firmado por el dueño de la tienda: quien lo presenta se lleva el producto sin importar su propio permiso. Al cambiar a `INVOKER` el vale se valida contra la credencial de quien pregunta y la RLS vuelve a aplicar.
 
 ## Cambios
 
-1. **Nueva migración** que hace `CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura` reemplazando el bloque final:
-
+1. **Migración** que ejecuta:
    ```sql
-   PERFORM public.idempotency_store(
-     p_request_id,
-     jsonb_build_object('factura_ids', to_jsonb(v_factura_ids))
-   );
+   ALTER VIEW public.v_pagos_rep_pendientes SET (security_invoker = on);
+   ALTER VIEW public.v_proforma_factura_link SET (security_invoker = on);
    ```
+   `ALTER VIEW ... SET (security_invoker)` no toca la definición ni los permisos, sólo el modo de evaluación de RLS.
 
-   El resto del cuerpo queda igual (incluye la corrección previa de `estado_proforma`/`fecha_facturacion`).
+2. **`src/constants/appVersion.ts`** → `13.170.10`.
 
-2. **`src/constants/appVersion.ts`** → `13.170.9`.
-
-3. **`CHANGELOG.md`** → entrada `[13.170.9] - 2026-07-03`: fix DB `42883 idempotency_commit does not exist`, se restaura la llamada a `idempotency_store(uuid, jsonb)`.
+3. **`CHANGELOG.md`** → entrada `[13.170.10]` explicando que se activa `security_invoker` en las 2 vistas para cerrar los 2 ERROR del linter de BD.
 
 ## Verificación
 
-- Confirmar en el preview que Karol/Isela puedan convertir la proforma `894e5e0a…` sin error 42883.
+- Volver a correr el linter de Supabase: los 2 ERROR de `Security Definer View` deben desaparecer (los ~226 WARN/INFO restantes quedan como estaban, según lo acordado).
+- Revisar en preview que las pantallas que consumen esas vistas (Pagos → REP pendientes, y el mapeo Proforma ↔ Factura) sigan mostrando datos para usuarios no admin — la RLS de `pagos_factura`, `facturas` y `proformas` ya está bien configurada, así que no debe haber regresión.
+
+## Fuera de alcance
+
+Los ~225 WARN (`Function Search Path Mutable`, `Public Can Execute SECURITY DEFINER Function`, `Extension in Public`) y el INFO de `RLS Enabled No Policy` no se tocan en este cambio, tal como pediste.
