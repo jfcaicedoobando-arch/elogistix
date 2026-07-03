@@ -38,36 +38,36 @@ const input = {
 
 describe("useEnviarFacturaEmail", () => {
   beforeEach(() => {
-    enviarMock.mockReset();
-    successMock.mockReset();
-    warningMock.mockReset();
-    notifyErrorMock.mockReset();
+    mocks.enviar.mockReset();
+    mocks.success.mockReset();
+    mocks.warning.mockReset();
+    mocks.notifyError.mockReset();
   });
 
   it("onSuccess (enviado) llama toast.success", async () => {
-    enviarMock.mockResolvedValue({ estado: "enviado", resultados: [] });
+    mocks.enviar.mockResolvedValue({ estado: "enviado", resultados: [] });
     const { result } = renderHook(() => useEnviarFacturaEmail("f1"), {
       wrapper: createWrapper(),
     });
     await act(async () => {
       await result.current.mutateAsync(input);
     });
-    await waitFor(() => expect(successMock).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.success).toHaveBeenCalled());
   });
 
   it("onSuccess (parcial) llama toast.warning", async () => {
-    enviarMock.mockResolvedValue({ estado: "parcial", resultados: [] });
+    mocks.enviar.mockResolvedValue({ estado: "parcial", resultados: [] });
     const { result } = renderHook(() => useEnviarFacturaEmail("f1"), {
       wrapper: createWrapper(),
     });
     await act(async () => {
       await result.current.mutateAsync(input);
     });
-    await waitFor(() => expect(warningMock).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.warning).toHaveBeenCalled());
   });
 
   it("onError llama notifyError con el mensaje", async () => {
-    enviarMock.mockRejectedValue(new Error("kapow"));
+    mocks.enviar.mockRejectedValue(new Error("kapow"));
     const { result } = renderHook(() => useEnviarFacturaEmail("f1"), {
       wrapper: createWrapper(),
     });
@@ -76,8 +76,8 @@ describe("useEnviarFacturaEmail", () => {
         .mutateAsync(input)
         .catch(() => undefined);
     });
-    await waitFor(() => expect(notifyErrorMock).toHaveBeenCalled());
-    const [, opts] = notifyErrorMock.mock.calls.at(-1) as [unknown, { title: string }];
+    await waitFor(() => expect(mocks.notifyError).toHaveBeenCalled());
+    const [, opts] = mocks.notifyError.mock.calls.at(-1) as [unknown, { title: string }];
     expect(opts.title).toBe("kapow");
   });
 });
