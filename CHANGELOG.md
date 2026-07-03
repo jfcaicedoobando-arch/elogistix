@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.148.2] - 2026-07-04
+- **fix(facturación) — sin filtro de fechas precargado al entrar.** `useFacturacionDateRange` ya no inicializa `desde/hasta` con el mes en curso; el rango arranca vacío (rango abierto) y la tabla muestra todas las facturas hasta que el usuario aplique un rango manualmente desde el Sheet de filtros. Se simplificó `limpiar()` (ya no requiere marcador de strings vacías para distinguirse del default).
+
 ## [13.148.1] - 2026-07-04
 - **refactor(facturación) — Hueco de facturación degradado a chip inline.** La tira roja de ancho completo (`HuecoFacturacionCard`) se reemplazó por un chip compacto (`HuecoFacturacionChip`) que vive junto a la barra de tabs en `/facturacion`. Sigue abriendo el mismo dialog de detalle y usa el mismo hook/servicios; sólo cambia la presentación. Cuando no hay hueco, el chip no renderiza (silencio = todo bien) en lugar de mostrar un estado "ok" que competía visualmente con los KPIs. Se eliminó `HuecoFacturacionCard.tsx`.
 

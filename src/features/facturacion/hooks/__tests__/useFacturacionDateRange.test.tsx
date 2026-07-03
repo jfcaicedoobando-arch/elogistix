@@ -11,13 +11,14 @@ function makeWrapper(initialEntries: string[] = ["/"]) {
 }
 
 describe("useFacturacionDateRange", () => {
-  it("sin QP devuelve rango del mes en curso y activo=true", () => {
+  it("sin QP devuelve rango vacío y activo=false", () => {
     const { result } = renderHook(() => useFacturacionDateRange(), {
       wrapper: makeWrapper(),
     });
-    expect(result.current.range.desde).toBeInstanceOf(Date);
-    expect(result.current.range.hasta).toBeInstanceOf(Date);
-    expect(result.current.activo).toBe(true);
+    expect(result.current.range.desde).toBeNull();
+    expect(result.current.range.hasta).toBeNull();
+    expect(result.current.activo).toBe(false);
+    expect(result.current.isInRange("2024-01-15")).toBe(true);
   });
 
   it("isInRange filtra correctamente con QP explícitos", () => {

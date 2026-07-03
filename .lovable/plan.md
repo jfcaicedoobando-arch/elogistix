@@ -1,52 +1,28 @@
-## Contexto
+## Problema
 
-Revisando el código encontré un detalle importante: el **tab "Proyección" ya no existe dentro de `/facturacion`** — fue removido y ahora `?tab=proyeccion` redirige a `/reportes/cierre-mensual` (los archivos `TabProyeccion.tsx`, `TabProyeccion` folder y `proyeccionColumns.tsx` quedaron huérfanos).
+Al entrar a `/facturacion`, el rango de fechas viene **precargado con el mes en curso** (día 1 → hoy). Se ve en `useFacturacionDateRange.ts` línea 49:
 
-Entonces no hay un "tab Proyección" al que fusionar. Ajusto la propuesta: en lugar de fusionar con un tab, **degrado la tira roja a un chip compacto** que vive junto a los tabs y sigue abriendo el mismo dialog de detalle. Mantenemos toda la lógica (hook, servicios, dialog, CSV) — solo cambia la presentación de la tarjeta superior.
+```ts
+if (!hasQp) return { desde: startOfMonth(), hasta: new Date() };
+```
 
-## Cambios
+Los otros filtros (Estado, Cliente, search) ya arrancan en "todos"/vacío — no tocan nada.
 
-### 1. Nueva presentación: chip inline
+## Cambio
 
-Crear `HuecoFacturacionChip.tsx` (reemplaza a `HuecoFacturacionCard.tsx`):
+Sólo un archivo: `src/features/facturacion/hooks/useFacturacionDateRange.ts`.
 
-- **Estado con hueco:** botón/badge rojo compacto `⚠ Hueco: N · $X USD · $Y MXN` que al hacer click abre el `HuecoFacturacionDetalleDialog` existente.
-- **Estado sin hueco:** no renderiza nada (silencioso) o muestra un check muy tenue — la ausencia del chip ya es la señal de "todo bien".
-- Usa el mismo hook `useHuecoFacturacion` y el mismo dialog — cero cambios de lógica.
+1. **Sin URL params → rango vacío** (`{ desde: null, hasta: null }`) en lugar de mes en curso.
+2. **Simplificar `limpiar()`**: al ya no existir el default "mes en curso", ya no hace falta el marcador de strings vacías (`params.set("desde", "")`). Basta con `params.delete("desde"); params.delete("hasta")`.
+3. Actualizar el comentario del encabezado del hook: "Por defecto: sin filtro (rango abierto)."
+4. Ajustar el test `useFacturacionDateRange.test.tsx` si asume el default de mes en curso.
 
-### 2. Ubicación
+## Efecto en la UI
 
-Moverlo a la **derecha de la barra de tabs** (misma línea que "Emitidas" / "Notas de crédito"), dentro del `<div className="flex ... justify-between border-b">` que ya existe en `Facturacion.tsx`. Queda a la vista sin gritar.
+- Al abrir `/facturacion`: tabla muestra **todas** las facturas (sin recorte por fecha), no aparecen chips de fecha activos, el badge "Filtros (N)" arranca en 0.
+- El usuario puede seguir aplicando rangos manualmente desde el Sheet de filtros; nada más cambia.
 
-### 3. Limpieza en `Facturacion.tsx`
+## Versión
 
-- Quitar `<HuecoFacturacionCard />` (línea 144) y su import (línea 27).
-- Actualizar el comentario del encabezado (líneas 10-12) para reflejar que el hueco vive ahora como chip inline.
-- Insertar `<HuecoFacturacionChip />` dentro del contenedor de tabs.
-
-### 4. Eliminar `HuecoFacturacionCard.tsx`
-
-Ya no lo usa nadie después del cambio.
-
-### 5. (Opcional, si quieres) limpieza de huérfanos
-
-Fuera de scope estricto, pero puedo aprovechar y borrar `TabProyeccion.tsx`, `proyeccionColumns.tsx` y `components/proyeccion/` si confirmas que no se usan en otro lado. Lo dejo para una segunda pasada.
-
-### 6. Versión y changelog
-
-- Bump a `13.148.1` en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md`: "Hueco de facturación degradado a chip inline junto a los tabs; tira superior eliminada."
-
-## Detalles técnicos
-
-**Archivos tocados**
-- `src/features/facturacion/components/HuecoFacturacionChip.tsx` (nuevo, ~40 líneas)
-- `src/features/facturacion/routes/Facturacion.tsx` (mover import + JSX, actualizar comentario)
-- `src/features/facturacion/components/HuecoFacturacionCard.tsx` (eliminar con `rm`)
-- `src/constants/appVersion.ts`
-- `CHANGELOG.md`
-
-**Sin cambios**
-- `useHuecoFacturacion.ts`, servicios, `HuecoFacturacionDetalleDialog.tsx`, CSV, tests — se reutilizan tal cual.
-
-**Analogía:** era un letrero de neón en la entrada; queda como una lucecita discreta en el tablero — sigue prendiendo cuando hay problema, pero no roba protagonismo.
+- Bump `APP_VERSION` a `13.148.2`.
+- Entrada en `CHANGELOG.md`: "Facturación entra sin filtro de fechas precargado (antes: mes en curso)."

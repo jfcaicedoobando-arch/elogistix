@@ -2,7 +2,9 @@
  * Hook para sincronizar el rango de fechas (Desde / Hasta) del módulo de
  * Facturación con la URL (?desde=YYYY-MM-DD&hasta=YYYY-MM-DD).
  *
- * Por defecto: mes en curso (día 1 → hoy).
+ * Por defecto: sin filtro (rango abierto). Antes se precargaba el mes en
+ * curso; ahora `/facturacion` entra mostrando todas las facturas y el
+ * usuario aplica rango manualmente desde el Sheet de filtros.
  *
  * Devuelve helpers para mutar el rango y para probar pertenencia de una
  * fecha en formato `YYYY-MM-DD` (o `null`/`undefined`) dentro del rango
@@ -32,24 +34,16 @@ function toIsoDate(d: Date | null | undefined): string | null {
   return `${y}-${m}-${day}`;
 }
 
-function startOfMonth(): Date {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-
 export function useFacturacionDateRange() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const desdeQp = searchParams.get("desde");
   const hastaQp = searchParams.get("hasta");
-  const hasQp = desdeQp !== null || hastaQp !== null;
 
-  const range = useMemo<FacturacionDateRange>(() => {
-    if (!hasQp) {
-      return { desde: startOfMonth(), hasta: new Date() };
-    }
-    return { desde: parseIsoDate(desdeQp), hasta: parseIsoDate(hastaQp) };
-  }, [desdeQp, hastaQp, hasQp]);
+  const range = useMemo<FacturacionDateRange>(
+    () => ({ desde: parseIsoDate(desdeQp), hasta: parseIsoDate(hastaQp) }),
+    [desdeQp, hastaQp],
+  );
 
   const setRango = useCallback(
     (next: Partial<FacturacionDateRange>) => {
@@ -71,9 +65,6 @@ export function useFacturacionDateRange() {
     const params = new URLSearchParams(searchParams);
     params.delete("desde");
     params.delete("hasta");
-    // Marcador para distinguir "limpio explícito" del default (mes actual).
-    params.set("desde", "");
-    params.set("hasta", "");
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
 
