@@ -39,6 +39,23 @@ describe("facturapi service", () => {
     await expect(emitirFacturapi("f1")).rejects.toThrow("BOOM");
   });
 
+  it("emitirFacturapi extrae el mensaje humano del body cuando la edge function responde non-2xx", async () => {
+    // Simula el FunctionsHttpError real de @supabase/supabase-js v2: el body va
+    // en `error.context` como una `Response`; `error.message` es genérico.
+    const context = new Response(
+      JSON.stringify({
+        error: "org_facturapi_not_configured",
+        message: "Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica.",
+      }),
+      { status: 412 },
+    );
+    const httpError = Object.assign(new Error("Edge Function returned a non-2xx status code"), { context });
+    invoke.mockResolvedValueOnce({ data: null, error: httpError });
+    await expect(emitirFacturapi("f1")).rejects.toThrow(
+      "Esta organización no tiene FacturApi configurado. Ve a Configuración → Facturación electrónica.",
+    );
+  });
+
   it("cancelarFacturapi pasa motivo y sustituye_uuid en el body", async () => {
     invoke.mockResolvedValueOnce({ data: { ok: true, sustituida: true }, error: null });
     const res = await cancelarFacturapi("f1", "01", "UUID-1", "f2");
