@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.167.0] - 2026-07-04
+- **feat(facturación)**: IVA por concepto en facturas. Cada renglón de una factura ahora tiene su propio régimen de IVA (**Gravado 16% / Tasa 0% / Exento**), editable desde el editor de borrador y desde el wizard de factura manual. La tabla de conceptos muestra un badge con el tipo de IVA (incluye borradores y facturas ya timbradas — infiere el régimen del snapshot Facturapi). El subtotal, IVA y total se recalculan sumando renglón por renglón. En el timbrado (edge `facturapi-emitir`) se envía `factor: "Exento"` o `factor: "Tasa"` con `rate` correspondiente.
+- Migración: nuevas columnas `tipo_iva` (`gravado_16 | tasa_0 | exento`, default `gravado_16`) y `tasa_iva_aplicada` en `conceptos_factura`. Backfill: filas existentes → 16%.
+
 ## [13.166.0] - 2026-07-04
 - **feat(facturación)**: auto-guardado en la card "Configuración de timbrado" del detalle de factura. Se eliminó el botón "Guardar cambios": ahora los cambios en Uso CFDI, Forma/Método de pago, Días de crédito, TC y Notas se persisten solos con un debounce de 500 ms. Un indicador tipo Google Docs muestra "Guardando…" / "Guardado hace Xs" en el header. El botón "Obtener TC DOF" también auto-guarda al aplicar.
 - **refactor(TC global)**: unificación de todos los tipos de cambio del sistema en Banxico DOF.
