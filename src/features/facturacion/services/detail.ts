@@ -73,6 +73,7 @@ const COLUMNS = [
   "folio_fiscal",
   "serie",
   "facturapi_id",
+  "dias_credito",
   "proformas:proformas!facturas_proforma_id_fkey(numero)",
 ].join(", ");
 
