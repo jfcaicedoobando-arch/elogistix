@@ -7,7 +7,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Save, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +19,7 @@ import {
   type ClienteFiscalRow,
 } from "@/features/facturacion/services";
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
+import { useBanxicoTipoCambio } from "@/features/facturacion/hooks/useBanxicoTipoCambio";
 import {
   inicialesDatosFiscales,
   buildDatosTimbradoPatch,
