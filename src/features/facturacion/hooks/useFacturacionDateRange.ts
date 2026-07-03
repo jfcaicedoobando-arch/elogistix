@@ -65,9 +65,6 @@ export function useFacturacionDateRange() {
     const params = new URLSearchParams(searchParams);
     params.delete("desde");
     params.delete("hasta");
-    // Marcador para distinguir "limpio explícito" del default (mes actual).
-    params.set("desde", "");
-    params.set("hasta", "");
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
 
