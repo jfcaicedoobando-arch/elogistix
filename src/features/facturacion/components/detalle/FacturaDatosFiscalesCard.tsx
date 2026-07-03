@@ -6,7 +6,8 @@
  */
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,6 +64,35 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
       notifyError(toast, { title: "No se pudo guardar", error: err, method: "FACTURA_DATOS_FISCALES" }),
   });
 
+  const obtenerTC = useMutation({
+    mutationFn: async () => {
+      // Usamos fetch directo porque `supabase.functions.invoke` no soporta
+      // query params ni method GET; la function espera `?moneda=USD|EUR`.
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/banxico-tipo-cambio?moneda=${factura.moneda}`;
+      const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${session?.access_token ?? anon}`,
+          "apikey": anon,
+        },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? `Banxico HTTP ${res.status}`);
+      }
+      return (await res.json()) as { tipoCambio: number; fecha: string; serie: string };
+    },
+    onSuccess: (d) => {
+      setTipoCambio(d.tipoCambio);
+      toast.success(`TC DOF ${factura.moneda}: ${d.tipoCambio} (${d.fecha})`, {
+        description: "Recuerda presionar Guardar cambios para aplicarlo al CFDI.",
+      });
+    },
+    onError: (err) =>
+      notifyError(toast, { title: "No se pudo obtener TC DOF", error: err, method: "BANXICO_TC" }),
+  });
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     guardar.mutate(
@@ -89,6 +119,21 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
             notas={notas} setNotas={setNotas}
             mostrarTipoCambio={factura.moneda !== "MXN"}
           />
+
+          {factura.moneda !== "MXN" && (
+            <div className="flex justify-start">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={obtenerTC.isPending}
+                onClick={() => obtenerTC.mutate()}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 mr-1 ${obtenerTC.isPending ? "animate-spin" : ""}`} />
+                {obtenerTC.isPending ? "Consultando Banxico…" : `Obtener TC DOF de hoy (${factura.moneda})`}
+              </Button>
+            </div>
+          )}
 
           <div className="flex justify-end">
             <Button type="submit" disabled={guardar.isPending}>
