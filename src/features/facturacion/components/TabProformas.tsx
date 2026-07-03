@@ -2,16 +2,16 @@ import { Download, FileText, Loader2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import SearchInput from "@/components/shared/SearchInput";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
+import ProformasFiltros from "./ProformasFiltros";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
+
 
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
   const navigate = useNavigate();
@@ -36,34 +36,45 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="p-4 flex flex-wrap gap-3 items-center">
-          <SearchInput
-            value={c.search}
-            onChange={c.setSearch}
-            placeholder="Buscar por número, expediente, cliente o folio..."
-            className="flex-1 min-w-[240px]"
-          />
-          <ToggleGroup
-            type="single"
-            value={c.filtroEstado}
-            onValueChange={(v) => v && c.setFiltroEstado(v as typeof c.filtroEstado)}
-          >
-            <ToggleGroupItem value="todas">Todas ({c.counts.todas})</ToggleGroupItem>
-            <ToggleGroupItem value="facturada">Facturadas ({c.counts.facturada})</ToggleGroupItem>
-          </ToggleGroup>
-          <Button
-            variant="outline"
-            disabled={c.filtered.length === 0}
-            onClick={() => exportToCsv(
-              `proformas_${new Date().toISOString().slice(0, 10)}.csv`,
-              c.csvColumns,
-              c.csvRows(),
-            )}
-          >
-            <Download className="h-4 w-4 mr-2" /> Exportar CSV
-          </Button>
+        <CardContent className="p-4 space-y-0">
+          <div className="flex flex-wrap gap-3 items-start">
+            <div className="flex-1 min-w-[240px]">
+              <ProformasFiltros
+                search={c.search}
+                onSearchChange={c.setSearch}
+                filtroEstado={c.filtroEstado}
+                onFiltroEstadoChange={(v) => c.setFiltroEstado(v as typeof c.filtroEstado)}
+                filtroCliente={c.filtroCliente}
+                onFiltroClienteChange={c.setFiltroCliente}
+                filtroOperador={c.filtroOperador}
+                onFiltroOperadorChange={c.setFiltroOperador}
+                fechaDesde={c.fechaDesde}
+                onFechaDesdeChange={c.setFechaDesde}
+                fechaHasta={c.fechaHasta}
+                onFechaHastaChange={c.setFechaHasta}
+                clientes={c.clientesDisponibles}
+                operadores={c.operadoresDisponibles}
+                onClearAll={c.clearFiltros}
+              />
+            </div>
+            <Button
+              variant="outline"
+              disabled={c.filtered.length === 0}
+              onClick={() => exportToCsv(
+                `proformas_${new Date().toISOString().slice(0, 10)}.csv`,
+                c.csvColumns,
+                c.csvRows(),
+              )}
+            >
+              <Download className="h-4 w-4 mr-2" /> Exportar CSV
+            </Button>
+          </div>
+          <div className="mt-3 text-xs text-muted-foreground">
+            Mostrando <strong className="text-foreground">{c.filtered.length}</strong> de {c.counts.todas} proformas
+          </div>
         </CardContent>
       </Card>
+
 
       {seleccionados > 0 && (
         <Card className="border-primary/30 bg-primary/5">

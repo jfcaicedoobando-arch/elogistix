@@ -30,7 +30,12 @@ export function useTabProformasController(opts?: {
   const { descargar, downloadingId } = useDescargarProformaPdf();
 
   const state = useTabProformasState(proformas, opts?.isInRange);
-  const { filtered, paginated, counts, totalPages, search, filtroEstado, page, pageSize } = state;
+  const {
+    filtered, paginated, counts, totalPages,
+    search, filtroEstado, filtroCliente, filtroOperador, fechaDesde, fechaHasta,
+    page, pageSize, clientesDisponibles, operadoresDisponibles,
+  } = state;
+
 
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -92,13 +97,22 @@ export function useTabProformasController(opts?: {
   }));
 
   return {
-    // estado UI
-    search, filtroEstado, page, pageSize,
+    // estado UI — filtros
+    search, filtroEstado, filtroCliente, filtroOperador, fechaDesde, fechaHasta,
+    page, pageSize,
     setSearch: state.setSearch,
     setFiltroEstado: state.setFiltroEstado,
+    setFiltroCliente: state.setFiltroCliente,
+    setFiltroOperador: state.setFiltroOperador,
+    setFechaDesde: state.setFechaDesde,
+    setFechaHasta: state.setFechaHasta,
+    clearFiltros: state.clearAll,
     setPage: state.setPage,
     setPageSize: state.setPageSize,
+    // opciones de filtros derivadas del dataset
+    clientesDisponibles, operadoresDisponibles,
     // datos
+
     isLoading, proformas, filtered, paginated, counts, totalPages,
     // handlers para columnas (compuestas en el componente)
     descargar, downloadingId,
