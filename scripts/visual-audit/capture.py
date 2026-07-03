@@ -59,8 +59,8 @@ VIEWPORT = {"width": 1440, "height": 900}
 
 async def login(page, base: str, email: str, password: str) -> None:
     await page.goto(f"{base}/login", wait_until="domcontentloaded")
-    await page.get_by_label("Email").fill(email)
-    await page.get_by_label("Contraseña").fill(password)
+    await page.locator("#email").fill(email)
+    await page.locator("#password").fill(password)
     await page.get_by_role("button", name="Iniciar sesión").click()
     await page.wait_for_url(lambda url: "/login" not in url, timeout=25_000)
 
