@@ -30,13 +30,7 @@ import { FacturaDetalleEditableSections } from "@/features/facturacion/component
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 import { PageContainer } from "@/components/shared/PageContainer";
-
-function canDeleteBorrador(
-  factura: { estado?: string | null; facturapi_id?: string | null } | null | undefined,
-  canEdit: boolean,
-): boolean {
-  return !!factura && factura.estado === "Borrador" && !factura.facturapi_id && canEdit;
-}
+import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 
 
 export default function FacturaDetalle() {
@@ -53,10 +47,7 @@ export default function FacturaDetalle() {
   const [sustituirOpen, setSustituirOpen] = useState(false);
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
-  const sinTimbrar = !!factura && !factura.uuid_fiscal;
-  const esBorrador = factura?.estado === "Borrador" && !factura?.facturapi_id;
-  const puedeEditarBorrador = !!esBorrador && canEdit;
-  const puedeEliminarBorrador = canDeleteBorrador(factura, canEdit);
+  const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador } = deriveFacturaFlags(factura, canEdit);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
