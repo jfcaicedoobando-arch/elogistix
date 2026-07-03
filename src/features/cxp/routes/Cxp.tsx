@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { EliminarFacturaCxpDialog } from "@/features/cxp/components/EliminarFacturaCxpDialog";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
@@ -175,18 +175,12 @@ export default function Cxp() {
         onEliminar={(fact) => { f.setDetalle(null); onEliminar(fact); }}
       />
 
-      <DoubleConfirmDeleteDialog
-        open={!!f.aEliminar}
+      <EliminarFacturaCxpDialog
+        factura={f.aEliminar}
         onOpenChange={(o) => !o && f.setAEliminar(null)}
-        entityName={f.aEliminar ? `la factura ${f.aEliminar.folio_proveedor}` : "la factura"}
-        description={f.aEliminar
-          ? `La factura ${f.aEliminar.folio_proveedor} de ${f.aEliminar.proveedor_nombre} será enviada a la papelera.`
-          : undefined}
-        finalDescription="Puedes restaurarla desde la papelera si fue un error."
         isPending={eliminar.isPending}
         onConfirm={async () => {
           if (!f.aEliminar) return;
-          // 13.85.10 — Toasts viven en `useEliminarFacturaProveedor`. No duplicar aquí.
           try {
             await eliminar.mutateAsync(f.aEliminar.id);
           } catch {

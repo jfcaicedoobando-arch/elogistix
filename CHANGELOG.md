@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.154.1] - 2026-07-04
+- **fix(power-of-10)**: dividir `CosteoDemorasVenta.tsx` (extrae `NuevaTarifaDemoraDialog`) y `Cxp.tsx` (extrae `EliminarFacturaCxpDialog`) para volver por debajo del límite de 200 líneas y arreglar CI de arquitectura.
+
 ## [13.154.0] - 2026-07-04
 - **refactor(design-language)**: Oleada 4 — migración de módulos legacy a primitivas de la Ola 1 (`PageContainer`, `PageHeader`, `LoadingState`/`ErrorState`/`ListSkeleton`, `StatusBadge`).
   - CRM: CrmDashboard, Leads, Oportunidades, Actividades, Analitica, MiDia, Configuracion, LeadDetalle, OportunidadDetalle.
