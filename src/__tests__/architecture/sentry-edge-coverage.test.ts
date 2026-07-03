@@ -48,6 +48,8 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-descargar/index.ts",
   "supabase/functions/facturapi-enviar-email/index.ts",
   "supabase/functions/facturapi-emitir-nota-credito/index.ts",
+  // 13.149.1 — Envío branded de facturas (PDF+XML) al cliente
+  "supabase/functions/enviar-factura-email/index.ts",
   "supabase/functions/facturapi-cancelar-nota-credito/index.ts",
   "supabase/functions/notificar-respuesta-cotizacion/index.ts",
   "supabase/functions/enviar-proforma-email/index.ts",
