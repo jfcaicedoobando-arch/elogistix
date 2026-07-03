@@ -171,6 +171,6 @@ export default function FacturaDetalle() {
         isPending={eliminando}
         onConfirm={() => eliminar(factura.id)}
       />
-    </div>
+    </PageContainer>
   );
 }

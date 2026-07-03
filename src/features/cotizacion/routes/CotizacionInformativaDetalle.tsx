@@ -124,6 +124,6 @@ export default function CotizacionInformativaDetalle({ cotizacion, onBack }: Pro
           <CardContent><p className="text-sm whitespace-pre-wrap">{cotizacion.notas}</p></CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }
