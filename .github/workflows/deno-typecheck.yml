@@ -1,0 +1,93 @@
+name: deno-typecheck
+
+# 13.162.0 — Canario semanal de typecheck de edge functions con `deno test --check`.
+# En el CI principal (ci.yml) los tests Deno corren con `--no-check` para evitar
+# el ruido de TS2578 del ecosistema Deno+esm.sh. Este workflow ejecuta el check
+# completo una vez por semana y abre un issue si aparecen errores nuevos, así
+# no queda enterrada la señal.
+#
+# NO bloquea PRs — es informativo.
+
+on:
+  schedule:
+    # Lunes 07:30 UTC
+    - cron: "30 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: deno-typecheck-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
+        with:
+          deno-version: v1.46.x
+
+      - name: Cache Deno deps
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-check-${{ hashFiles('supabase/functions/**/*.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-check-
+
+      - name: Run deno check (all edge functions)
+        id: check
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          readarray -t tests < <(find supabase/functions -name '*_test.ts' ! -name 'smoke_test.ts')
+          deno test \
+            --allow-env \
+            --allow-net \
+            --allow-read \
+            "${tests[@]}" 2>&1 | tee /tmp/deno-check.log
+
+      - name: Open issue on failure
+        if: steps.check.outcome == 'failure'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('/tmp/deno-check.log', 'utf8').slice(-6000);
+            const title = `deno-typecheck: errores nuevos (${new Date().toISOString().slice(0,10)})`;
+            const body = [
+              'El canario semanal `deno test --check` detectó errores de tipo en edge functions.',
+              '',
+              'Log (últimas 6k chars):',
+              '```',
+              log,
+              '```',
+              '',
+              `Workflow run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            ].join('\n');
+            // Evitar duplicados: buscar issue abierto con el mismo prefijo.
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-canary',
+            });
+            if (existing.some(i => i.title.startsWith('deno-typecheck:'))) {
+              console.log('Issue ya existe, no se abre uno nuevo.');
+              return;
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['ci-canary', 'edge-functions'],
+            });
