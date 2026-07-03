@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Eye, Stamp, Ban } from "lucide-react";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { formatDate } from "@/lib/formatters";
+import {
+  statusColumn,
+  clientColumn,
+  moneyColumn,
+  dateColumn,
+} from "@/components/shared/dataTable/columnBuilders";
 import type { useFacturas } from "@/features/facturacion/hooks";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
@@ -46,7 +50,11 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
         );
       },
     },
-    { id: "expediente", header: "Expediente", meta: { width: "w-[110px]", className: "whitespace-nowrap" }, cell: ({ row }) => row.original.expediente },
+    {
+      id: "expediente", header: "Expediente",
+      meta: { width: "w-[110px]", className: "whitespace-nowrap" },
+      cell: ({ row }) => row.original.expediente,
+    },
     {
       id: "proforma", header: "Proforma",
       meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap" },
@@ -54,25 +62,22 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
         ? <span className="font-mono">{row.original.proformas.numero}</span>
         : <span className="text-muted-foreground">—</span>,
     },
-    {
-      id: "cliente", header: "Cliente",
-      meta: { width: "min-w-[160px]", className: "max-w-[200px] truncate" },
-      cell: ({ row }) => <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>,
-    },
-    {
-      id: "monto", header: "Monto",
-      accessorFn: (f) => f.total, enableSorting: true,
-      sortingFn: sortByNumber<Factura>((f) => f.total),
-      meta: { width: "w-[130px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums" },
-      cell: ({ row }) => formatCurrency(row.original.total, row.original.moneda),
-    },
-    {
-      id: "emision", header: "Emisión",
-      accessorFn: (f) => f.fecha_emision, enableSorting: true,
-      sortingFn: sortByDate<Factura>((f) => f.fecha_emision),
-      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
-      cell: ({ row }) => formatDate(row.original.fecha_emision),
-    },
+    clientColumn<Factura>({
+      id: "cliente",
+      header: "Cliente",
+      accessor: (f) => f.cliente_nombre,
+    }),
+    moneyColumn<Factura>({
+      id: "monto",
+      header: "Monto",
+      accessor: (f) => f.total,
+      currencyAccessor: (f) => f.moneda,
+    }),
+    dateColumn<Factura>({
+      id: "emision",
+      header: "Emisión",
+      accessor: (f) => f.fecha_emision,
+    }),
     {
       id: "vencimiento", header: "Vencimiento",
       accessorFn: (f) => f.fecha_vencimiento, enableSorting: true,
@@ -80,13 +85,12 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
       cell: ({ row }) => formatDate(row.original.fecha_vencimiento),
     },
-    {
-      id: "estado", header: "Estado",
-      accessorFn: (f) => f.estado, enableSorting: true,
-      sortingFn: sortByString<Factura>((f) => f.estado),
-      meta: { width: "w-[120px]" },
-      cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado)}>{row.original.estado}</Badge>,
-    },
+    statusColumn<Factura>({
+      id: "estado",
+      header: "Estado",
+      domain: "factura",
+      accessor: (f) => f.estado,
+    }),
     {
       id: "archivos", header: "Archivos",
       meta: { width: "w-[110px]" },
@@ -138,4 +142,3 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
     },
   ]);
 }
-

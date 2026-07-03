@@ -1,4 +1,13 @@
-import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+/**
+ * clientesTableConfig — columnas de la tabla de clientes.
+ * Usa los column builders de Oleada 1.
+ */
+import type { ColumnDef } from "@tanstack/react-table";
+import { Eye } from "lucide-react";
+import {
+  clientColumn,
+  actionsColumn,
+} from "@/components/shared/dataTable/columnBuilders";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 
@@ -12,49 +21,61 @@ export type ClienteRow = {
   telefono: string;
 };
 
-export const clientesColumns: ColumnDef<ClienteRow, unknown>[] = defineColumns<ClienteRow>([
-  {
-    id: "nombre",
-    header: "Nombre",
-    accessorFn: (c) => c.nombre,
-    enableSorting: true,
-    sortingFn: sortByString<ClienteRow>((c) => c.nombre),
-    meta: { width: "min-w-[180px]", className: "font-medium max-w-[200px] truncate" },
-    cell: ({ row }) => {
-      const nombre = toTitleCase(row.original.nombre);
-      return <span title={nombre}>{nombre}</span>;
-    },
-  },
-  {
-    id: "rfc",
-    header: "RFC",
-    accessorFn: (c) => c.rfc,
-    enableSorting: true,
-    sortingFn: sortByString<ClienteRow>((c) => c.rfc),
-    meta: { width: "w-[130px]", className: "text-xs font-mono" },
-    cell: ({ row }) => (row.original.rfc || "").toUpperCase(),
-  },
-  {
-    id: "ciudad",
-    header: "Ciudad",
-    accessorFn: (c) => c.ciudad,
-    enableSorting: true,
-    sortingFn: sortByString<ClienteRow>((c) => c.ciudad),
-    meta: { width: "w-[150px]", className: "text-xs" },
-    cell: ({ row }) =>
-      `${correctSpanishPlace(row.original.ciudad)}, ${correctSpanishPlace(row.original.estado)}`,
-  },
-  {
-    id: "contacto",
-    header: "Contacto",
-    meta: { width: "w-[140px]", className: "text-xs" },
-    cell: ({ row }) => toTitleCase(row.original.contacto),
-  },
-  {
-    id: "telefono",
-    header: "Teléfono",
-    meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap" },
-    cell: ({ row }) => formatPhoneMx(row.original.telefono),
-  },
-]);
+interface BuildClientesColumnsOpts {
+  onNavigate: (id: string) => void;
+}
 
+export function buildClientesColumns({
+  onNavigate,
+}: BuildClientesColumnsOpts): ColumnDef<ClienteRow, unknown>[] {
+  return [
+    {
+      ...clientColumn<ClienteRow>({ id: "nombre", header: "Nombre", accessor: (c) => c.nombre }),
+      sortingFn: sortByString<ClienteRow>((c) => c.nombre),
+      meta: { width: "min-w-[180px]", className: "max-w-[200px]" },
+    } as ColumnDef<ClienteRow, unknown>,
+    {
+      id: "rfc",
+      header: "RFC",
+      accessorFn: (c) => c.rfc,
+      enableSorting: true,
+      sortingFn: sortByString<ClienteRow>((c) => c.rfc),
+      meta: { width: "w-[130px]", className: "text-xs font-mono" },
+      cell: ({ row }) => (row.original.rfc || "").toUpperCase(),
+    },
+    {
+      id: "ciudad",
+      header: "Ciudad",
+      accessorFn: (c) => c.ciudad,
+      enableSorting: true,
+      sortingFn: sortByString<ClienteRow>((c) => c.ciudad),
+      meta: { width: "w-[150px]", className: "text-xs" },
+      cell: ({ row }) =>
+        `${correctSpanishPlace(row.original.ciudad)}, ${correctSpanishPlace(row.original.estado)}`,
+    },
+    {
+      id: "contacto",
+      header: "Contacto",
+      meta: { width: "w-[140px]", className: "text-xs" },
+      cell: ({ row }) => toTitleCase(row.original.contacto),
+    },
+    {
+      id: "telefono",
+      header: "Teléfono",
+      meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap" },
+      cell: ({ row }) => formatPhoneMx(row.original.telefono),
+    },
+    actionsColumn<ClienteRow>({
+      items: (row) => [
+        {
+          label: "Ver detalle",
+          icon: <Eye className="h-4 w-4" />,
+          onSelect: (r) => onNavigate(r.id),
+        },
+      ],
+    }),
+  ];
+}
+
+/** Alias estático para compatibilidad con código que importaba `clientesColumns` */
+export const clientesColumns = buildClientesColumns({ onNavigate: () => undefined });

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useListPageState } from "@/hooks/shared/useListPageState";
+import { useTableFilters } from "@/hooks/shared/useTableFilters";
 import { useCotizaciones } from "@/features/cotizacion/hooks/useCotizaciones";
 import { useClientesForSelect } from "@/features/cliente/hooks/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -18,7 +18,6 @@ export const ESTADOS_COTIZACION = [
 
 // re-export for backward-compat with prior single-file controller.
 export { useCotizacionActions };
-
 
 export type CotizacionListItem = NonNullable<ReturnType<typeof useCotizaciones>["data"]>[number];
 
@@ -86,12 +85,20 @@ export function useCotizacionKpis(cotizaciones: CotizacionListItem[]) {
 
 // ── Hook composer ───────────────────────────────────────────────────────────
 
+const DEFAULT_FILTERS = {
+  estado: "todos",
+  cliente: "todos",
+  sinCostos: "no",
+  incluirInactivas: "no",
+} as const;
+
+type CotizacionFilters = Record<keyof typeof DEFAULT_FILTERS, string>;
+
 /**
  * Controller de la página de listado de Cotizaciones.
  * Ensambla queries + filtros/paginación + KPIs derivados + acciones de fila.
  *
- * v13.56.4: dividido en sub-hooks `useCotizacionActions` y `useCotizacionKpis`
- * (auditoría — paso 12). Las firmas públicas se conservan.
+ * v14: migrado a `useTableFilters` + `UnifiedFiltersBar`.
  */
 export function useCotizacionesPageController() {
   const { canEdit } = usePermissions();
@@ -99,29 +106,38 @@ export function useCotizacionesPageController() {
   const { data: clientes = [] } = useClientesForSelect();
   const actions = useCotizacionActions();
 
-  const {
-    search, filters, page, pageSize,
-    setSearch, setFilter, setPage, setPageSize, paginate,
-  } = useListPageState(
-    { estado: "todos", cliente: "todos", sinCostos: "no", incluirInactivas: "no" },
-    50, // v13.139.17 — default reducido de 100 → 50 para acortar la página en Full HD.
+  const tf = useTableFilters<CotizacionFilters>({
+    defaultFilters: { ...DEFAULT_FILTERS },
+    defaultPageSize: 50,
+    filterLabels: {
+      estado: "Estado",
+      cliente: "Cliente",
+      sinCostos: "Sin costos",
+      incluirInactivas: "Incl. inactivas",
+    },
+  });
+
+  const filterEstado = tf.filters.estado;
+  const filterCliente = tf.filters.cliente;
+  const filterSinCostos = tf.filters.sinCostos === "si";
+  const incluirInactivas = tf.filters.incluirInactivas === "si";
+
+  const filtered = useMemo(
+    () =>
+      cotizaciones.filter((c) =>
+        matchesCotizacionFilter(c, {
+          search: tf.search,
+          filterEstado,
+          filterCliente,
+          filterSinCostos,
+          incluirInactivas,
+        }),
+      ),
+    [cotizaciones, tf.search, filterEstado, filterCliente, filterSinCostos, incluirInactivas],
   );
 
-  const filterEstado = filters.estado;
-  const filterCliente = filters.cliente;
-  const filterSinCostos = filters.sinCostos === "si";
-  const incluirInactivas = filters.incluirInactivas === "si";
-
-  const filtered = useMemo(() => {
-    return cotizaciones.filter((c) =>
-      matchesCotizacionFilter(c, { search, filterEstado, filterCliente, filterSinCostos, incluirInactivas }),
-    );
-  }, [cotizaciones, search, filterEstado, filterCliente, filterSinCostos, incluirInactivas]);
-
-  const { items: paginated, totalPages } = paginate(filtered);
+  const { items: paginated, totalPages } = tf.paginate(filtered);
   const kpis = useCotizacionKpis(cotizaciones);
-
-  const exportar = () => actions.exportar(filtered);
 
   return {
     // datos
@@ -131,16 +147,29 @@ export function useCotizacionesPageController() {
     filtered,
     kpis,
     canEdit,
-    // estado de listado
-    search, filterEstado, filterCliente, filterSinCostos, incluirInactivas,
-    page, pageSize, totalPages,
-    setSearch, setFilter, setPage, setPageSize,
+    // filtros (compatibilidad)
+    search: tf.search,
+    filterEstado,
+    filterCliente,
+    filterSinCostos,
+    incluirInactivas,
+    page: tf.page,
+    pageSize: tf.pageSize,
+    totalPages,
+    setSearch: tf.setSearch,
+    setFilter: tf.setFilter,
+    setPage: tf.setPage,
+    setPageSize: tf.setPageSize,
+    // UnifiedFiltersBar
+    activeChips: tf.activeChips,
+    activeCount: tf.activeCount,
+    resetAll: tf.resetAll,
     // acciones (delegadas a useCotizacionActions)
     cotizacionAEliminar: actions.cotizacionAEliminar,
     setCotizacionAEliminar: actions.setCotizacionAEliminar,
     confirmarEliminar: actions.confirmarEliminar,
     isDeleting: actions.isDeleting,
-    exportar,
+    exportar: () => actions.exportar(filtered),
     irANueva: actions.irANueva,
     irAEditar: actions.irAEditar,
     irADetalle: actions.irADetalle,
