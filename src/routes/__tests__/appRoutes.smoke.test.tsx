@@ -131,7 +131,7 @@ describe("routes/appRoutes — gates de rol (post helper guarded())", () => {
     ["/idempotencia", ["admin", "super_admin"]],
     ["/auditoria", ["admin", "admin_org", "viewer", "customer_service"]],
     ["/usuarios", ["admin", "admin_org", "super_admin"]],
-    ["/configuracion", ["admin", "admin_org", "super_admin"]],
+    ["/configuracion", ["admin", "admin_org", "contador", "super_admin"]],
   ];
 
   it.each(CASES)("%s conserva allowedRoles exacto", (path, expected) => {

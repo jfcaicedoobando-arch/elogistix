@@ -121,15 +121,14 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
   for (const c of data ?? []) {
     const importe = Number(c.cantidad) * Number(c.precio_unitario);
     subtotal += importe;
-    // Fallback defensivo: si tasa_iva_aplicada viene NULL pero hay tipo_iva,
-    // resolver la tasa desde el tipo (evita IVA en cero cuando el renglón
-    // fue insertado por un camino que no pobló la columna).
+    // Fallback defensivo: si tasa_iva_aplicada viene NULL pero hay tipo_iva
+    // definido, resolver la tasa desde el tipo. Si ambos son null → 0 (exento).
     let tasa: number;
     if (c.tasa_iva_aplicada != null) {
       tasa = Number(c.tasa_iva_aplicada);
     } else {
       const tipo = c.tipo_iva as TipoIvaConcepto | null | undefined;
-      tasa = resolverTasa(tipo ?? "gravado_16") ?? 0;
+      tasa = tipo ? (resolverTasa(tipo) ?? 0) : 0;
     }
     iva += importe * tasa;
   }
