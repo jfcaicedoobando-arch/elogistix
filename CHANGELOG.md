@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.4] - 2026-07-04
+- **feat(roles)**: el rol `contador` ahora tiene acceso a `Configuración` **restringido a la pestaña Facturación** (Facturapi + Catálogo de productos y servicios). Se agrega `contador` al guard de la ruta `/configuracion` y `Configuracion.tsx` oculta las pestañas Empresa, Catálogos de puertos, Operaciones y Herramientas cuando el rol efectivo es `contador`. También se oculta el botón "Guardar Cambios" para ese rol (el catálogo tiene su propio flujo por producto). Admins y super_admin siguen viendo las 5 pestañas sin cambios.
+
 ## [13.170.3] - 2026-07-04
 - **chore(ci)**: se separan las constantes y tipos del catálogo de productos a `CatalogoClavesSATCard.constants.ts` para eliminar 5 warnings de `react-refresh/only-export-components`. El `.parts.tsx` queda con un único export (`EditRow`), como exige Fast Refresh de Vite.
 
