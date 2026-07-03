@@ -33,7 +33,7 @@ export function EmbarqueDatosCard({ embarque }: Props) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Datos del embarque</CardTitle>
+        <CardTitle className="text-lg">Datos del embarque</CardTitle>
       </CardHeader>
       <CardContent className="text-sm space-y-3">
         <div className="grid grid-cols-3 gap-3">
