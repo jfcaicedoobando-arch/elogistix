@@ -17,6 +17,30 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
   return fromDb<ProformaConFactura[]>(data ?? []);
 }
 
+export type ProformaClienteFull = {
+  nombre: string | null;
+  rfc: string | null;
+  direccion: string | null;
+  ciudad: string | null;
+  estado: string | null;
+  cp: string | null;
+};
+
+export type ProformaEmbarqueFull = {
+  modo: string | null;
+  tipo: string | null;
+  incoterm: string | null;
+  bl_house: string | null;
+  puerto_origen: string | null;
+  puerto_destino: string | null;
+  aeropuerto_origen: string | null;
+  aeropuerto_destino: string | null;
+  ciudad_origen: string | null;
+  ciudad_destino: string | null;
+  descripcion_mercancia: string | null;
+  contenedores: Array<{ numero_contenedor: string; tipo_contenedor: string | null }> | null;
+};
+
 export type ProformaDetalleFull = ProformaConFactura & {
   facturas_full: {
     id: string;
@@ -29,13 +53,21 @@ export type ProformaDetalleFull = ProformaConFactura & {
     factura_pdf_url: string | null;
     factura_xml_url: string | null;
   } | null;
+  cliente_full: ProformaClienteFull | null;
+  embarque_full: ProformaEmbarqueFull | null;
 };
 
 export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFull | null> {
   const { data, error } = await supabase
     .from("proformas")
     .select(
-      "*, facturas:factura_id(factura_pdf_url, factura_xml_url), facturas_full:factura_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url)",
+      [
+        "*",
+        "facturas:factura_id(factura_pdf_url, factura_xml_url)",
+        "facturas_full:factura_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url)",
+        "cliente_full:cliente_id(nombre, rfc, direccion, ciudad, estado, cp)",
+        "embarque_full:embarque_id(modo, tipo, incoterm, bl_house, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, descripcion_mercancia, contenedores:embarque_contenedores(numero_contenedor, tipo_contenedor))",
+      ].join(", "),
     )
     .eq("id", id)
     .maybeSingle();
@@ -43,6 +75,7 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
   if (!data) return null;
   return fromDb<ProformaDetalleFull>(data);
 }
+
 
 
 export async function fetchProformasAprobadas(organizationId: string): Promise<ProformaConFactura[]> {

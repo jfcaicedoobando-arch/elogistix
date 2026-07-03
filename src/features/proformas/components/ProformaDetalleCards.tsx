@@ -8,7 +8,7 @@ import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { formatCurrency, formatDate, formatDiasCredito, nombreDesdeEmail } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
@@ -48,35 +48,6 @@ export function NotasCard({ notas }: { notas: string | null | undefined }) {
 }
 
 
-export function DatosGeneralesCard({ proforma }: { proforma: ProformaDetalleFull }) {
-  return (
-    <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Datos generales</CardTitle></CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Fecha emisión</p>
-          <p>{formatDate(proforma.fecha_emision)}</p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Operador</p>
-          <p className="truncate" title={proforma.operador ?? ''}>
-            {proforma.operador ? nombreDesdeEmail(proforma.operador) : '—'}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Días crédito</p>
-          <p>{formatDiasCredito(proforma.dias_credito)}</p>
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Folio factura</p>
-          <p className="font-mono truncate" title={proforma.folio_factura_externa ?? ''}>
-            {proforma.folio_factura_externa || "—"}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function FacturaAsociadaCard({ factura }: { factura: FacturaAsociada }) {
   const timbrada = !!factura.uuid_fiscal;

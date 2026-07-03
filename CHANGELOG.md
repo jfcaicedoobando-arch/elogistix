@@ -6,8 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.164.0] - 2026-07-04
+- **feat(proformas)**: vista de detalle enriquecida — ahora muestra toda la información que sólo salía en el PDF:
+  - Card "Facturar a" con RFC y dirección completa del cliente.
+  - Card "Datos del embarque" con modo, tipo, incoterm, ruta (Puerto > Aeropuerto > Ciudad), BL House, contenedores y descripción de la mercancía.
+  - Card "Términos de pago" con vigencia (emisión + 30d), método de pago, días crédito y folio factura.
+  - Timeline horizontal con hitos: Emitida → Enviada → Aceptada/Rechazada → Facturada.
+  - Header rediseñado con BL Master, BL House y Vigencia visibles de un vistazo; layout ampliado a 2 columnas en desktop (`max-w-6xl`).
+- **refactor(pdf)**: `vigenciaPlus30` y `resumirContenedores` extraídos a `features/proformas/domain/proformaDetalleHelpers.ts` para reutilizar entre PDF y vista web sin duplicar reglas.
+
 ## [13.163.3] - 2026-07-04
-- **fix(ci)**: correcciones al PR 13.163.0 detectadas por CI:
   - `FacturaConceptosEditor.tsx` (214 LOC) dividido: los renglones se movieron a `FacturaConceptosEditorRows.tsx` (Power-of-10 #4 ≤200 líneas).
   - `FacturaConceptosEditor` y `FacturaDatosFiscalesCard` ya no usan `toast({variant:'destructive'})`; ahora usan `notifyError` (regla arch `error-toasts-use-notifyError`).
   - Complejidad ciclomática reducida en `FacturaDatosFiscalesCard` (19→<16) extrayendo `DatosFiscalesForm`, y en `FacturaDetalle` (23→<16) extrayendo `FacturaDetalleEditableSections`.
