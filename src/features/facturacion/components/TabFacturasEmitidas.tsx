@@ -1,21 +1,29 @@
 import { useMemo } from "react";
 import { Download, ChevronDown } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/DataTable";
 import { useRowSelection } from "@/components/shared/dataTable/useRowSelection";
 import { buildSelectionColumn } from "@/components/shared/dataTable/buildSelectionColumn";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { FacturasMasivasToolbar } from "@/features/facturacion/components/FacturasMasivasToolbar";
-import FacturasFiltros from "@/features/facturacion/components/FacturasFiltros";
-import type { ColumnDef } from "@/components/shared/DataTable";
 import { FacturasEmitidasFooter } from "@/features/facturacion/components/FacturasEmitidasFooter";
+import type { ColumnDef } from "@/components/shared/DataTable";
 import type { Factura } from "@/features/facturacion/routes/facturacionColumns";
+import type { ChipItem } from "@/hooks/shared/useTableFilters";
+import type { Database } from "@/types/db";
+
+type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
+const ESTADOS_FACTURA: EstadoFactura[] = [
+  "Borrador", "Por timbrar", "Emitida", "Parcialmente pagada", "Pagada", "Vencida", "Cancelada",
+];
 
 interface ClienteOption { id: string; nombre: string }
 
@@ -53,24 +61,72 @@ export function TabFacturasEmitidas(p: Props) {
     [selection, pageIds, p.columns],
   );
 
+  const chips = useMemo<ChipItem[]>(() => {
+    const c: ChipItem[] = [];
+    if (p.filterEstado && p.filterEstado !== "todos") {
+      c.push({ key: "estado", label: `Estado: ${p.filterEstado}`, onRemove: () => p.setFilter("estado", "todos") });
+    }
+    if (p.filterCliente && p.filterCliente !== "todos") {
+      const cl = p.clientes.find((x) => x.id === p.filterCliente);
+      c.push({ key: "cliente", label: `Cliente: ${cl?.nombre ?? p.filterCliente}`, onRemove: () => p.setFilter("cliente", "todos") });
+    }
+    if (p.fechaDesde) c.push({ key: "desde", label: `Desde: ${p.fechaDesde}`, onRemove: () => p.setFechaDesde("") });
+    if (p.fechaHasta) c.push({ key: "hasta", label: `Hasta: ${p.fechaHasta}`, onRemove: () => p.setFechaHasta("") });
+    return c;
+  }, [p.filterEstado, p.filterCliente, p.fechaDesde, p.fechaHasta, p.clientes, p.setFilter, p.setFechaDesde, p.setFechaHasta]);
+
+  const primarySlot = (
+    <>
+      <Select value={p.filterEstado} onValueChange={(v) => p.setFilter("estado", v)}>
+        <SelectTrigger className="w-[180px]" aria-label="Estado de la factura">
+          <SelectValue placeholder="Estado" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos los estados</SelectItem>
+          {ESTADOS_FACTURA.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={p.filterCliente} onValueChange={(v) => p.setFilter("cliente", v)}>
+        <SelectTrigger className="w-[210px]" aria-label="Cliente">
+          <SelectValue placeholder="Cliente" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos los clientes</SelectItem>
+          {p.clientes.map((c) => (
+            <SelectItem key={c.id} value={c.id}>{c.nombre.split(" ").slice(0, 3).join(" ")}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
+  const secondarySlot = (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground">Emitida desde</label>
+        <DatePickerMx value={p.fechaDesde} onChange={p.setFechaDesde} className="w-full" placeholder="Desde" />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground">Emitida hasta</label>
+        <DatePickerMx value={p.fechaHasta} onChange={p.setFechaHasta} className="w-full" placeholder="Hasta" />
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Card>
-        <CardContent className="p-4 space-y-0">
+        <CardContent className="p-4 space-y-3">
           <div className="flex flex-wrap gap-3 items-start">
             <div className="flex-1 min-w-[240px]">
-              <FacturasFiltros
+              <UnifiedFiltersBar
                 search={p.search}
                 onSearchChange={p.setSearch}
-                filtroEstado={p.filterEstado}
-                onFiltroEstadoChange={(v) => p.setFilter("estado", v)}
-                filtroCliente={p.filterCliente}
-                onFiltroClienteChange={(v) => p.setFilter("cliente", v)}
-                fechaDesde={p.fechaDesde}
-                onFechaDesdeChange={p.setFechaDesde}
-                fechaHasta={p.fechaHasta}
-                onFechaHastaChange={p.setFechaHasta}
-                clientes={p.clientes}
+                searchPlaceholder="Buscar factura o cliente..."
+                primary={primarySlot}
+                secondary={secondarySlot}
+                chips={chips}
+                activeCount={chips.length}
                 onClearAll={p.onClearFiltros}
               />
             </div>
@@ -84,16 +140,13 @@ export function TabFacturasEmitidas(p: Props) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={p.exportarFacturasCsv}>CSV de facturas</DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={p.exportarLayoutContable}
-                  title="Layout contable con RFC, subtotal, IVA y total — para el contador"
-                >
+                <DropdownMenuItem onClick={p.exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total">
                   Layout contable
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <div className="mt-3 text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             Mostrando <strong className="text-foreground">{p.facturasFiltradas.length}</strong> de {p.totalFacturas} facturas
           </div>
         </CardContent>

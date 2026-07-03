@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.151.0] - 2026-07-04
+- **feat(design-language)**: Oleada 2 — migración de módulos a primitivas compartidas.
+  - **Clientes**: `PageContainer`, columnas con `actionsColumn`.
+  - **Cotizaciones**: `PageContainer`, `UnifiedFiltersBar` + `useTableFilters`, `StatusBadge domain="cotizacion"`, `DeleteConfirmDialog`, `clientColumn`/`moneyColumn`/`dateColumn`/`actionsColumn` compartidos. 397 tests en verde.
+  - **Embarques**: columnas con `statusColumn`/`clientColumn`/`dateColumn`, `UnifiedFiltersBar` en `EmbarquesFiltros`, `PageContainer` en la ruta.
+  - **Facturación**: `PageContainer` en la ruta, `facturacionColumns` con `statusColumn`/`clientColumn`/`moneyColumn`/`dateColumn`, `UnifiedFiltersBar` en `TabFacturasEmitidas`.
+  - **Proformas**: `PageContainer` en listado y detalle, `LoadingState`/`ErrorState` compartidos en `ProformaDetalle`.
+- **chore(knip)**: retira `DeleteConfirmDialog.tsx` de `ignore` (ya consumido por Cotizaciones).
+
 ## [13.150.2] - 2026-07-04
 - **fix(tests)**: divide `src/components/shared/dataTable/columnBuilders.tsx` (202 líneas → bajo 200) extrayendo `actionsColumn` a `actionsColumn.tsx` con re-export. Corrige fallos de shards 1 y 8 (`architecture-baseline` y `audit-report`: Power of 10 > 200 líneas).
 

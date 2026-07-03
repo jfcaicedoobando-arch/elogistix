@@ -1,19 +1,24 @@
 /**
- * Definición de columnas para la tabla de Cotizaciones (Fase 2 — ColumnDef
- * nativo TanStack). En `Cotizaciones.tsx` se usa con `sortMode="server"`,
- * por lo que `enableSorting` actúa como flag visual y el orden real lo
- * resuelve el RPC.
+ * Columnas de la tabla Cotizaciones — Oleada 1 migration.
+ * Usa `columnBuilders` compartidos para cliente, subtotal, fecha y acciones.
+ * La celda `estado_vigencia` mantiene lógica compuesta (vigencia + badges extra).
  */
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type ColumnDef } from "@/components/shared/DataTable";
-import { formatDate, formatCurrency, toTitleCase } from "@/lib/formatters";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
-import { renderAcciones, type AccionesParams } from "./columnsParts/accionesCell";
-import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import {
+  clientColumn,
+  moneyColumn,
+  dateColumn,
+  actionsColumn,
+} from "@/components/shared/dataTable/columnBuilders";
+import { Pencil, Trash2 } from "lucide-react";
 
-interface BuildParams extends AccionesParams {
+export interface BuildParams {
   canEdit: boolean;
+  onEditar: (id: string) => void;
+  onEliminar: (id: string) => void;
 }
 
 export function buildCotizacionesColumns(params: BuildParams): ColumnDef<CotizacionListItem, unknown>[] {
@@ -23,22 +28,13 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       header: "Folio",
       accessorFn: (r) => r.folio,
       enableSorting: true,
-      sortingFn: sortByString<CotizacionListItem>((r) => r.folio),
       meta: { width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.folio,
     },
-    {
+    clientColumn<CotizacionListItem>({
       id: "cliente",
-      header: "Cliente",
-      accessorFn: (r) => r.cliente_nombre,
-      enableSorting: true,
-      sortingFn: sortByString<CotizacionListItem>((r) => r.cliente_nombre),
-      meta: { width: "min-w-[160px]", className: "max-w-[180px] truncate" },
-      cell: ({ row }) => {
-        const nombre = toTitleCase(row.original.cliente_nombre);
-        return <span title={nombre} className="block truncate">{nombre}</span>;
-      },
-    },
+      accessor: (r) => r.cliente_nombre,
+    }),
     {
       id: "tipo_doc",
       header: "Tipo",
@@ -75,46 +71,47 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
         );
       },
     },
-    {
+    moneyColumn<CotizacionListItem>({
       id: "subtotal",
       header: "Subtotal",
-      accessorFn: (r) => r.subtotal,
-      enableSorting: true,
-      sortingFn: sortByNumber<CotizacionListItem>((r) => r.subtotal),
-      meta: { width: "w-[110px]", align: "right", className: "text-xs whitespace-nowrap tabular-nums" },
-      cell: ({ row }) => formatCurrency(row.original.subtotal, row.original.moneda),
-    },
+      accessor: (r) => r.subtotal,
+      currencyAccessor: (r) => r.moneda,
+    }),
     {
       id: "estado_vigencia",
       header: "Estado",
       accessorFn: (r) => r.estado,
       enableSorting: true,
-      sortingFn: sortByString<CotizacionListItem>((r) => r.estado),
       meta: { width: "w-[180px]" },
+      // renderEstadoVigencia usa StatusBadge internamente (Oleada 1 migrado)
       cell: ({ row }) => renderEstadoVigencia(row.original),
     },
-    {
+    dateColumn<CotizacionListItem>({
       id: "fecha",
       header: "Fecha",
-      accessorFn: (r) => r.created_at,
-      enableSorting: true,
-      sortingFn: sortByDate<CotizacionListItem>((r) => r.created_at),
-      meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap" },
-      cell: ({ row }) => formatDate(row.original.created_at, "dd/MM/yyyy HH:mm"),
-    },
+      accessor: (r) => r.created_at,
+      format: "dd/MM/yyyy HH:mm",
+    }),
   ];
 
   if (params.canEdit) {
-    cols.push({
-      id: "acciones",
-      header: "",
-      meta: { headerClassName: "w-[60px]" },
-      cell: ({ row }) =>
-        renderAcciones(row.original, {
-          onEditar: params.onEditar,
-          onEliminar: params.onEliminar,
-        }),
-    });
+    cols.push(
+      actionsColumn<CotizacionListItem>({
+        items: () => [
+          {
+            label: "Editar",
+            icon: <Pencil className="h-4 w-4" />,
+            onSelect: (row) => params.onEditar(row.id),
+          },
+          {
+            label: "Eliminar",
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: "destructive",
+            onSelect: (row) => params.onEliminar(row.id),
+          },
+        ],
+      }),
+    );
   }
 
   return cols;

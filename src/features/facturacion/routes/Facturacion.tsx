@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
@@ -127,8 +128,8 @@ export default function Facturacion() {
   if (redirectTo) return <Navigate to={redirectTo} replace />;
 
   return (
-    <TooltipProvider delayDuration={150}>
-      <div className="space-y-6">
+    <PageContainer>
+      <TooltipProvider delayDuration={150}>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
           {canEmitirFactura && (
@@ -137,6 +138,7 @@ export default function Facturacion() {
             </Button>
           )}
         </div>
+
         {/* Dashboard de KPIs (siempre visible) — primer golpe de vista */}
         <DashboardEjecutivoFacturacion />
         <FacturacionKpisFiscales />
@@ -187,7 +189,7 @@ export default function Facturacion() {
           openFacturaManual={openFacturaManual} setOpenFacturaManual={setOpenFacturaManual}
           canEdit={canEdit}
         />
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </PageContainer>
   );
 }

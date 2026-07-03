@@ -1,16 +1,16 @@
- 
 import { AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip, TooltipContent, TooltipTrigger, TooltipProvider,
 } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import {
+  statusColumn, clientColumn, dateColumn,
+} from "@/components/shared/dataTable/columnBuilders";
 import { calcularEstadoEmbarque } from "@/features/embarques/hooks";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
-import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { getOrigen, getDestino, shortName } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import { sortByString, sortByDate, sortByNumber } from "@/components/shared/dataTable/sortingFns";
+import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
 import { ContenedorCell, type ContenedorInfo } from "./ContenedorCell";
 
@@ -28,13 +28,15 @@ export interface BuildColumnsParams {
   contenedoresInfoMap?: Record<string, ContenedorInfo>;
 }
 
-
-
 /**
  * Columnas nativas TanStack (`ColumnDef<EmbarqueRow>`) usadas por
  * `Embarques.tsx` con `sortMode="server"`: `enableSorting` actúa sólo como
  * flag visual (cursor + icono); el orden real lo resuelve el RPC
  * `embarques_listado` vía `controlledSort`/`onSortChange`.
+ *
+ * Columnas de estado, cliente, etd y eta usan los builders de Oleada 1.
+ * Las columnas de dominio específico (BL Master, contenedor, modo,
+ * origen/destino) permanecen como columnas nativas.
  */
 export function buildEmbarqueColumns({
   docsMap, contenedoresPorExpediente = {}, contenedoresInfoMap = {},
@@ -45,7 +47,6 @@ export function buildEmbarqueColumns({
       header: "Expediente",
       accessorFn: (e) => e.expediente,
       enableSorting: true,
-      // Ordena por consecutivo numérico ignorando el prefijo (ELNAC, ELIMP, DEMO-…).
       sortingFn: sortByNumber<EmbarqueRow>((e) => expedienteConsecutivo(e.expediente)),
       meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => {
@@ -89,25 +90,19 @@ export function buildEmbarqueColumns({
         />
       ),
     },
-    {
-      id: "cliente",
-      header: "Cliente",
-      accessorFn: (e) => e.cliente_nombre,
-      enableSorting: true,
-      sortingFn: sortByString<EmbarqueRow>((e) => e.cliente_nombre),
-      meta: { width: "min-w-[200px]", className: "max-w-[240px] truncate" },
-      cell: ({ row }) => {
-        const nombre = toTitleCase(row.original.cliente_nombre);
-        return <span title={nombre} className="block truncate">{nombre}</span>;
-      },
-    },
+    // — Builder: clientColumn —
+    clientColumn<EmbarqueRow>({
+      accessor: (e) => e.cliente_nombre,
+      ...(({ meta: { width: "min-w-[200px]", className: "max-w-[240px] truncate" } }) as object),
+    }),
     {
       id: "modo",
       header: "Modo",
       meta: { width: "w-[90px]" },
       cell: ({ row }) => (
         <span className="flex items-center gap-1.5">
-          <ModoIcon modo={row.original.modo} size={14} /> <span className="text-xs">{row.original.modo}</span>
+          <ModoIcon modo={row.original.modo} size={14} />
+          <span className="text-xs">{row.original.modo}</span>
         </span>
       ),
     },
@@ -129,38 +124,22 @@ export function buildEmbarqueColumns({
         return <span title={v} className="block truncate">{v}</span>;
       },
     },
-    {
+    // — Builder: dateColumn ETD —
+    dateColumn<EmbarqueRow>({
       id: "etd",
       header: "ETD",
-      accessorFn: (e) => e.etd ?? "",
-      enableSorting: true,
-      sortingFn: sortByDate<EmbarqueRow>((e) => e.etd),
-      meta: { width: "w-[90px]", className: "text-xs" },
-      cell: ({ row }) => formatDate(row.original.etd || ""),
-    },
-    {
+      accessor: (e) => e.etd ?? null,
+    }),
+    // — Builder: dateColumn ETA —
+    dateColumn<EmbarqueRow>({
       id: "eta",
       header: "ETA",
-      accessorFn: (e) => e.eta ?? "",
-      enableSorting: true,
-      sortingFn: sortByDate<EmbarqueRow>((e) => e.eta),
-      meta: { width: "w-[90px]", className: "text-xs" },
-      cell: ({ row }) => formatDate(row.original.eta || ""),
-    },
-    {
-      id: "estado",
-      header: "Estado",
-      accessorFn: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-      enableSorting: true,
-      sortingFn: sortByString<EmbarqueRow>((e) =>
-        calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-      ),
-      meta: { width: "w-[110px]" },
-      cell: ({ row }) => {
-        const e = row.original;
-        const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-        return <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>;
-      },
-    },
+      accessor: (e) => e.eta ?? null,
+    }),
+    // — Builder: statusColumn (Oleada 1) —
+    statusColumn<EmbarqueRow>({
+      domain: "embarque",
+      accessor: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
+    }),
   ]);
 }

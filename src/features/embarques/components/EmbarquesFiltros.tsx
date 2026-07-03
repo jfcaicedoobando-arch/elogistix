@@ -1,33 +1,21 @@
 /**
- * Filtros de Embarques — barra compacta con chips de activos.
+ * Filtros de Embarques — migrado a `<UnifiedFiltersBar>` (Oleada 1).
  *
- * Desktop (md+):
- *   [ Search ][ Estado ][ Cliente ][ Filtros (N) ]   ← N cuenta secundarios
- *   El botón "Filtros" abre un Sheet con Modo, Operador, ETD desde, ETA hasta.
- *
- * Mobile (<md):
- *   [ Search ][ Filtros (N) ]                        ← N cuenta TODOS
- *   El sheet incluye también Estado y Cliente.
- *
- * Debajo: chips de filtros activos con X individual y "Limpiar todo".
+ * Primary (siempre visible): Estado + Cliente.
+ * Secondary (Sheet): Modo, Operador, ETD desde, ETA hasta.
+ * Chips activos generados de los valores actuales del filtro.
  */
-import { useState } from "react";
-import { Filter, X } from "lucide-react";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import SearchInput from "@/components/shared/SearchInput";
-import { EmbarquesFiltrosCampos } from "./EmbarquesFiltrosCampos";
-import { EmbarquesFiltrosChips } from "./EmbarquesFiltrosChips";
-import { countActiveEmbarqueFilters } from "./embarquesFiltrosUtils";
-import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import type { ChipItem } from "@/hooks/shared/useTableFilters";
+import { ModoIcon } from "@/components/shared/ModoIcon";
+import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/features/embarques/constants/embarqueConstants";
+import { formatDate } from "@/lib/formatters";
 
-interface ClienteOption {
-  id: string;
-  nombre: string;
-}
+interface ClienteOption { id: string; nombre: string }
 
 interface Props {
   search: string;
@@ -49,114 +37,127 @@ interface Props {
 }
 
 export default function EmbarquesFiltros(props: Props) {
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const {
+    search, onSearchChange,
+    filterModo, filterEstado, filterCliente, filterOperador,
+    fechaDesde, fechaHasta,
+    onFilterModoChange, onFilterEstadoChange, onFilterClienteChange,
+    onFilterOperadorChange, onFechaDesdeChange, onFechaHastaChange,
+    clientes, operadores,
+  } = props;
 
-  const totalActive = countActiveEmbarqueFilters({
-    filterModo: props.filterModo,
-    filterEstado: props.filterEstado,
-    filterCliente: props.filterCliente,
-    filterOperador: props.filterOperador,
-    fechaDesde: props.fechaDesde,
-    fechaHasta: props.fechaHasta,
-  });
+  // Chips activos (UnifiedFiltersBar maneja search aparte)
+  const chips: ChipItem[] = [];
+  if (filterEstado !== "todos") {
+    chips.push({ key: "estado", label: `Estado: ${filterEstado}`, onRemove: () => onFilterEstadoChange("todos") });
+  }
+  if (filterCliente !== "todos") {
+    const nombre = clientes.find((c) => c.id === filterCliente)?.nombre ?? filterCliente;
+    chips.push({ key: "cliente", label: `Cliente: ${nombre}`, onRemove: () => onFilterClienteChange("todos") });
+  }
+  if (filterModo !== "todos") {
+    chips.push({ key: "modo", label: `Modo: ${filterModo}`, onRemove: () => onFilterModoChange("todos") });
+  }
+  if (filterOperador !== "todos") {
+    chips.push({ key: "operador", label: `Operador: ${filterOperador}`, onRemove: () => onFilterOperadorChange("todos") });
+  }
+  if (fechaDesde) {
+    chips.push({ key: "desde", label: `ETD desde: ${formatDate(fechaDesde)}`, onRemove: () => onFechaDesdeChange("") });
+  }
+  if (fechaHasta) {
+    chips.push({ key: "hasta", label: `ETA hasta: ${formatDate(fechaHasta)}`, onRemove: () => onFechaHastaChange("") });
+  }
 
-  // En desktop el sheet solo expone los secundarios (Modo, Operador, fechas).
-  const secondaryActive = countActiveEmbarqueFilters({
-    filterModo: props.filterModo,
-    filterEstado: "todos",
-    filterCliente: "todos",
-    filterOperador: props.filterOperador,
-    fechaDesde: props.fechaDesde,
-    fechaHasta: props.fechaHasta,
-  });
+  const secondaryCount = [filterModo !== "todos", filterOperador !== "todos", !!fechaDesde, !!fechaHasta]
+    .filter(Boolean).length;
 
   const clearAll = () => {
-    props.onFilterModoChange("todos");
-    props.onFilterEstadoChange("todos");
-    props.onFilterClienteChange("todos");
-    props.onFilterOperadorChange("todos");
-    props.onFechaDesdeChange("");
-    props.onFechaHastaChange("");
+    onFilterModoChange("todos"); onFilterEstadoChange("todos");
+    onFilterClienteChange("todos"); onFilterOperadorChange("todos");
+    onFechaDesdeChange(""); onFechaHastaChange("");
   };
 
-  const FilterButton = ({ count, className }: { count: number; className?: string }) => (
-    <SheetTrigger asChild>
-      <Button variant="outline" size="default" className={`shrink-0 gap-2 ${className ?? ""}`}>
-        <Filter className="h-4 w-4" />
-        <span>Filtros</span>
-        {count > 0 && (
-          <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[11px]">
-            {count}
-          </Badge>
-        )}
-      </Button>
-    </SheetTrigger>
-  );
-
   return (
-    <div className="space-y-0">
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        {/* Mobile: search + Filtros (todos) */}
-        <div className="flex gap-2 md:hidden">
-          <SearchInput
-            value={props.search}
-            onChange={props.onSearchChange}
-            placeholder="Buscar embarques..."
-            className="flex-1 min-w-0"
-          />
-          <FilterButton count={totalActive} />
+    <UnifiedFiltersBar
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="Buscar por expediente, cliente o mercancía..."
+      chips={chips}
+      activeCount={secondaryCount}
+      onClearAll={clearAll}
+      primary={
+        <>
+          <Select value={filterEstado} onValueChange={onFilterEstadoChange}>
+            <SelectTrigger className="w-[170px]" aria-label="Estado del embarque">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los estados</SelectItem>
+              {ESTADOS_EMBARQUE.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterCliente} onValueChange={onFilterClienteChange}>
+            <SelectTrigger className="w-[210px]" aria-label="Cliente">
+              <SelectValue placeholder="Cliente" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los clientes</SelectItem>
+              {clientes.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nombre.split(" ").slice(0, 3).join(" ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </>
+      }
+      secondary={
+        <div className="space-y-4">
+          <FieldGroup label="Modo de transporte">
+            <Select value={filterModo} onValueChange={onFilterModoChange}>
+              <SelectTrigger className="w-full" aria-label="Modo de transporte">
+                <SelectValue placeholder="Modo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los modos</SelectItem>
+                {MODOS_TRANSPORTE.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    <span className="inline-flex items-center gap-2">
+                      <ModoIcon modo={m} size={14} /> {m}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FieldGroup>
+          <FieldGroup label="Operador">
+            <Select value={filterOperador} onValueChange={onFilterOperadorChange}>
+              <SelectTrigger className="w-full" aria-label="Operador">
+                <SelectValue placeholder="Operador" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los operadores</SelectItem>
+                {operadores.map((op) => <SelectItem key={op} value={op}>{op}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </FieldGroup>
+          <FieldGroup label="ETD desde">
+            <DatePickerMx value={fechaDesde} onChange={onFechaDesdeChange} className="w-full" placeholder="Desde (ETD)" />
+          </FieldGroup>
+          <FieldGroup label="ETA hasta">
+            <DatePickerMx value={fechaHasta} onChange={onFechaHastaChange} className="w-full" placeholder="Hasta (ETA)" />
+          </FieldGroup>
         </div>
+      }
+    />
+  );
+}
 
-        {/* Desktop: search + Estado + Cliente + Filtros (secundarios) */}
-        <div className="hidden md:flex md:items-center md:gap-2">
-          <EmbarquesFiltrosCampos {...props} layout="inline" />
-          <FilterButton count={secondaryActive} />
-        </div>
-
-        <SheetContent side="right" className={mobileFilterSheet}>
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle>Filtros de embarques</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto p-4">
-            {/* En móvil mostramos todos; en desktop solo los secundarios */}
-            <div className="md:hidden">
-              <EmbarquesFiltrosCampos {...props} layout="stacked-all" />
-            </div>
-            <div className="hidden md:block">
-              <EmbarquesFiltrosCampos {...props} layout="stacked-secondary" />
-            </div>
-          </div>
-          <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between">
-            <Button
-              variant="ghost"
-              onClick={clearAll}
-              disabled={totalActive === 0}
-              className="gap-2"
-            >
-              <X className="h-4 w-4" /> Limpiar
-            </Button>
-            <Button onClick={() => setSheetOpen(false)}>Aplicar</Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
-      {/* Chips de filtros activos */}
-      <EmbarquesFiltrosChips
-        filterModo={props.filterModo}
-        onFilterModoChange={props.onFilterModoChange}
-        filterEstado={props.filterEstado}
-        onFilterEstadoChange={props.onFilterEstadoChange}
-        filterCliente={props.filterCliente}
-        onFilterClienteChange={props.onFilterClienteChange}
-        filterOperador={props.filterOperador}
-        onFilterOperadorChange={props.onFilterOperadorChange}
-        fechaDesde={props.fechaDesde}
-        onFechaDesdeChange={props.onFechaDesdeChange}
-        fechaHasta={props.fechaHasta}
-        onFechaHastaChange={props.onFechaHastaChange}
-        clientes={props.clientes}
-        onClearAll={clearAll}
-      />
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      {children}
     </div>
   );
 }

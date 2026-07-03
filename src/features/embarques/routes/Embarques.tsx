@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
@@ -48,7 +49,8 @@ export default function Embarques() {
 
   return (
     // pb-24 md:pb-0: evita que el FAB tape la última fila en mobile.
-    <div className="space-y-6 pb-24 md:pb-0">
+    <PageContainer className="pb-24 md:pb-0">
+
 
       <PageHeader
         title="Embarques"
@@ -164,6 +166,6 @@ export default function Embarques() {
           onClick={goNuevo}
         />
       ) : null}
-    </div>
+    </PageContainer>
   );
 }
