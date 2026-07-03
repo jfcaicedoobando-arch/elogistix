@@ -1,4 +1,4 @@
-# Auditoría de Design Language — Plan de homologación
+# Plan de homologación de Design Language
 
 Objetivo: unificar la experiencia visual y reducir código duplicado creando **primitivas compartidas** y migrando módulos legacy en oleadas priorizadas por impacto visible.
 
@@ -137,3 +137,9 @@ En orden de tráfico:
 Cada oleada es un incremento independiente con su propio bump de versión y entrada en `CHANGELOG.md`. Se pueden pausar entre oleadas para validar visualmente antes de continuar.
 
 **¿Empezamos con la Oleada 1 (primitivas) o prefieres que arranque por un submódulo puntual (ej. sólo StatusBadge, o sólo migrar Cotizaciones)?  Solo haz un plan detallado y guárdalo. Lo vamos a usar más adelante.**
+
+---
+
+## Cierre del plan
+
+Una vez completada la Oleada 6 (guardrails), el último paso es eliminar este archivo del plan (`.lovable/plan.md`) para indicar que la auditoría de design language quedó cerrada.
