@@ -27,9 +27,8 @@ const CRITICAL = [
   "supabase/functions/handle-email-suppression/index.ts",
   "supabase/functions/handle-email-unsubscribe/index.ts",
   "supabase/functions/preview-transactional-email/index.ts",
+  // 13.166.0 — exchange-rates ahora consulta Banxico (SF43718 + SF46410)
   "supabase/functions/exchange-rates/index.ts",
-  // 13.165.0 — TC DOF Banxico (SIE) para CFDI USD/EUR
-  "supabase/functions/banxico-tipo-cambio/index.ts",
   // 13.114.5 — CFDI upload (visibilidad server-side de "Failed to fetch")
   "supabase/functions/parse-cfdi-xml/index.ts",
   // 13.136.3 — Webhook de FacturApi (sync de estado factura)

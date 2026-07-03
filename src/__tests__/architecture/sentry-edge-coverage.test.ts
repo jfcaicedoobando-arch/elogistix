@@ -43,7 +43,6 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/handle-email-unsubscribe/index.ts",
   "supabase/functions/preview-transactional-email/index.ts",
   "supabase/functions/exchange-rates/index.ts",
-  "supabase/functions/banxico-tipo-cambio/index.ts",
   "supabase/functions/parse-cfdi-xml/index.ts",
   "supabase/functions/facturapi-webhook/index.ts",
   "supabase/functions/facturapi-descargar/index.ts",

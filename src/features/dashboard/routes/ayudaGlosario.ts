@@ -58,7 +58,7 @@ export const GLOSARIO: GlossaryTerm[] = [
   { termino: "Factura", definicion: "Comprobante fiscal con valor legal (en México requiere timbrado SAT con CFDI 4.0). Aquí se genera, timbra y conserva en PDF/XML." },
   { termino: "Liquidación", definicion: "Pago a proveedores (navieras, aduanas, fletes locales). En el ERP se marca cada costo directo como Pagado/Pendiente." },
   { termino: "Tasa IVA", definicion: "Configurable globalmente (default 16%). Se aplica a conceptos marcados con 'aplica IVA' al generar la factura." },
-  { termino: "Tipo de cambio", definicion: "Conversión USD→MXN o EUR→MXN. Se obtiene en vivo de Frankfurter.app con caché de 1 hora; se puede sobrescribir manualmente." },
+  { termino: "Tipo de cambio", definicion: "Conversión USD→MXN o EUR→MXN. Se obtiene del DOF vía API SIE de Banxico (series SF43718 y SF46410) con caché de 12 h; es la fuente legal para CFDI (Art. 20 CFF) y se puede sobrescribir manualmente." },
 
   // Plataforma
   { termino: "Tenant / Organización", definicion: "Cada empresa que usa el ERP. Los datos están aislados entre organizaciones por RLS." },

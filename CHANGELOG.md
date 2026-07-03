@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.166.0] - 2026-07-04
+- **feat(facturación)**: auto-guardado en la card "Configuración de timbrado" del detalle de factura. Se eliminó el botón "Guardar cambios": ahora los cambios en Uso CFDI, Forma/Método de pago, Días de crédito, TC y Notas se persisten solos con un debounce de 500 ms. Un indicador tipo Google Docs muestra "Guardando…" / "Guardado hace Xs" en el header. El botón "Obtener TC DOF" también auto-guarda al aplicar.
+- **refactor(TC global)**: unificación de todos los tipos de cambio del sistema en Banxico DOF.
+  - `exchange-rates` edge function ahora consulta en paralelo `SF43718` (USD/MXN FIX) y `SF46410` (EUR/MXN) usando `BANXICO_SIE_TOKEN`, con caché in-memory de 12 h y fallback conservador. Se retiró la dependencia de Frankfurter.app.
+  - Los consumidores (dashboard ejecutivo, `useEmbarqueForm`, `DialogRegistrarPago`, `FacturasEmitidasFooter`) no cambian de contrato: siguen recibiendo `{ usdMxn, eurMxn }`.
+  - Eliminada la edge function `banxico-tipo-cambio` (su lógica queda absorbida en `exchange-rates`). `useBanxicoTipoCambio` ahora reusa el mismo endpoint.
+  - Copy del landing y glosario actualizados: "Frankfurter FX" → "Banxico DOF (Art. 20 CFF)".
+
 ## [13.165.0] - 2026-07-04
 - **feat(facturación)**: integración con la API SIE de Banxico para obtener el tipo de cambio DOF oficial (Art. 20 CFF).
   - Nueva edge function `banxico-tipo-cambio` que consulta las series `SF43718` (USD/MXN FIX) y `SF46410` (EUR/MXN) usando el secret `BANXICO_SIE_TOKEN`.

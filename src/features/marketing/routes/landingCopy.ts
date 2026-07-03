@@ -15,7 +15,7 @@ export const HERO = {
 export const PROOF_TITLE = "Compatible con los actores con los que ya trabajas";
 export const PROOF_LOGOS = [
   "Maersk", "MSC", "Hapag-Lloyd", "CMA CGM", "APM Terminals",
-  "SAT · CFDI 4.0", "UN/LOCODE", "Frankfurter FX",
+  "SAT · CFDI 4.0", "UN/LOCODE", "Banxico DOF",
 ] as const;
 
 export const KPIS = [
@@ -77,7 +77,7 @@ export const PASOS = [
 
 export const MEXICO = [
   { icon: "Percent", title: "IVA dinámico", desc: "Tasa configurable por organización, nunca hardcoded. Tu contador lo amará." },
-  { icon: "TrendingUp", title: "Tipo de cambio diario", desc: "MXN ↔ USD ↔ EUR actualizado todos los días desde Frankfurter.app." },
+  { icon: "TrendingUp", title: "Tipo de cambio DOF", desc: "USD/MXN (SF43718) y EUR/MXN (SF46410) publicados por Banxico. La fuente legal para CFDI (Art. 20 CFF)." },
   { icon: "Anchor", title: "Puertos UN/LOCODE", desc: "Catálogo con prioridad a puertos mexicanos: MZLO, VRACR, ATM, MEX, etc." },
   { icon: "Calendar", title: "Fechas DD/MM/YYYY", desc: "Formato mexicano en toda la app. Sin sorpresas para tu equipo." },
   { icon: "Lock", title: "Multi-tenant seguro", desc: "Cada agencia es un tenant aislado por organización. Tus datos nunca se mezclan." },
