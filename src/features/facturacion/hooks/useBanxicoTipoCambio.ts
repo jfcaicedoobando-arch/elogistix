@@ -1,42 +1,42 @@
 /**
  * useBanxicoTipoCambio — obtiene el TC DOF publicado por Banxico para USD/EUR
- * consultando la edge function `banxico-tipo-cambio` (serie SF43718 / SF46410).
- * Devuelve una `useMutation` lista para conectar a un botón "Obtener TC DOF".
+ * llamando a la edge function unificada `exchange-rates` (que consulta las
+ * series SF43718 y SF46410 con caché de 12 h).
+ *
+ * v13.166.0: antes existía una function separada `banxico-tipo-cambio`; se
+ * absorbió en `exchange-rates` para tener un único punto de verdad para el
+ * TC DOF en todo el sistema.
  */
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchExchangeRates } from "@/features/catalogos/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
 export interface BanxicoTcResult {
   tipoCambio: number;
-  fecha: string;
-  serie: string;
   moneda: string;
 }
 
+/**
+ * Devuelve una mutación que consulta el TC DOF de Banxico y ejecuta `onTC`
+ * con el valor. Auto-guarda a través del callback (no requiere botón manual).
+ */
 export function useBanxicoTipoCambio(moneda: string, onTC: (tc: number) => void) {
   return useMutation({
     mutationFn: async (): Promise<BanxicoTcResult> => {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/banxico-tipo-cambio?moneda=${moneda}`;
-      const anon = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(url, {
-        headers: {
-          "Authorization": `Bearer ${session?.access_token ?? anon}`,
-          "apikey": anon,
-        },
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error ?? `Banxico HTTP ${res.status}`);
+      const rates = await fetchExchangeRates();
+      const tipoCambio =
+        moneda === "USD" ? rates.usdMxn :
+        moneda === "EUR" ? rates.eurMxn : 1;
+      if (!tipoCambio || tipoCambio <= 0) {
+        throw new Error(`Banxico no devolvió TC para ${moneda}`);
       }
-      return (await res.json()) as BanxicoTcResult;
+      return { tipoCambio, moneda };
     },
     onSuccess: (d) => {
       onTC(d.tipoCambio);
-      toast.success(`TC DOF ${d.moneda}: ${d.tipoCambio} (${d.fecha})`, {
-        description: "Recuerda presionar Guardar cambios para aplicarlo al CFDI.",
+      toast.success(`TC DOF ${d.moneda}: ${d.tipoCambio}`, {
+        description: "Guardado automáticamente en la factura.",
       });
     },
     onError: (err) =>
