@@ -17,6 +17,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   Editados: `src/components/shared/PageHeader.tsx` (nuevos slots `subHeader`/`tabs`, API retrocompatible) y `src/components/layout/Layout.tsx` (usa `PageContainer` en lugar del `<div>` inline). Tests añadidos bajo `src/components/shared/__tests__/` y `src/hooks/shared/__tests__/` cubriendo dominios, fallbacks, chips y rango de fechas. Los helpers legacy (`getEstadoColor`, `BadgeCiclo`, etc.) siguen vivos; se deprecarán en la Oleada 2.
 
 
+## [13.149.3] - 2026-07-04
 - **chore(lint)**: arregla `bun run lint` (error `preserve-caught-error` en `enviarFacturaEmail.ts` — ahora re-lanza con `{ cause: e }`) y warnings de `enviar-factura-email/index.ts` (complejidad 34 y max-lines 252) extrayendo helpers a `supabase/functions/enviar-factura-email/helpers.ts` (auth, adjuntos, template, envío, persistencia). El test estructural `index_test.ts` ahora lee ambos archivos concatenados.
 - **chore(knip)**: elimina código muerto detectado por `lint:unused:strict` — borra `src/features/cotizacion/components/detalle/DestinatariosPicker.tsx`, `src/features/cotizacion/hooks/useEnvioCotizacionForm.ts` y `src/features/facturacion/components/DateRangeFilter.tsx` (reemplazados por los shells compartidos), y quita los exports sin uso `fetchFacturacionPorEmitir`, `useAprobarProformas` y `useConsolidarProformas`.
 
