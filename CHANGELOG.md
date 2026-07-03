@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.157.1] - 2026-07-04
+- **refactor(design-language)**: Ola 7 · barrido de estilos hardcodeados.
+  - Reemplazo masivo en 123 archivos: `text-[10px]` → `text-2xs`; paleta `emerald-*` → tokens `success` (bg/text/border con opacidades semánticas); paleta `amber-*` → tokens `warning`.
+  - Excluye `features/marketing/*` (paleta de landing intencional) y mapeos internos de `lib/ui/*` que ya devuelven clases semánticas.
+  - Sin cambios de comportamiento; unifica el design language con los tokens definidos en `index.css`.
+
 ## [13.157.0] - 2026-07-04
 - **refactor(design-language)**: Ola 7 · Lote A — foundational tokens y variantes de shadcn.
   - `tailwind.config.ts`: nueva escala `text-2xs` (10px) y `text-3xs` (9px); paleta `state.llegada / state.en-proceso / state.cerrado` mapeada a los tokens `--state-*` para permitir `bg-state-llegada/10` sin `bg-[hsl(...)]`; `borderRadius.sm` ahora usa `var(--radius-sm)`.
