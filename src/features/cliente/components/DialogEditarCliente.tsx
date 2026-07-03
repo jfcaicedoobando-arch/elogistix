@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { AlertCircle, Loader2, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,9 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
 import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
+import { CsfDropZone } from "@/features/cliente/components/NuevoClienteFormPieces";
+import { parseCsf } from "@/features/cliente/services/csf";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 interface ClienteData {
   nombre: string;
@@ -55,10 +59,42 @@ function TextField({
 
 export default function DialogEditarCliente({ open, onOpenChange, cliente, onSave, isSaving }: Props) {
   const [form, setForm] = useState<ClienteData>(cliente);
+  const [csfFileName, setCsfFileName] = useState<string | null>(null);
+  const [parsingCsf, setParsingCsf] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(cliente);
+    if (open) {
+      setForm(cliente);
+      setCsfFileName(null);
+      setParsingCsf(false);
+    }
   }, [open, cliente]);
+
+  const handleCsfFile = async (file: File | null) => {
+    if (!file) return;
+    setParsingCsf(true);
+    setCsfFileName(file.name);
+    try {
+      const data = await parseCsf(file);
+      setForm((prev) => ({
+        ...prev,
+        nombre: data.nombre?.trim() || prev.nombre,
+        rfc: data.rfc?.trim() || prev.rfc,
+        cp: data.cp?.trim() || prev.cp,
+        direccion: data.direccion?.trim() || prev.direccion,
+        ciudad: data.ciudad?.trim() || prev.ciudad,
+        estado: data.estado?.trim() || prev.estado,
+        regimen_fiscal: data.regimen_fiscal?.trim() || prev.regimen_fiscal,
+      }));
+      toast.success("CSF procesada. Verifica los datos actualizados antes de guardar.");
+    } catch (err) {
+      setCsfFileName(null);
+      const mensaje = err instanceof Error ? err.message : "No se pudo procesar la CSF";
+      notifyError(toast, { title: mensaje, error: err, method: "DIALOG_EDITAR_CLIENTE_CSF" });
+    } finally {
+      setParsingCsf(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!form.nombre.trim() || !form.regimen_fiscal.trim()) return;
@@ -94,7 +130,17 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
         </Alert>
       )}
 
+      <FormDialogSection
+        title="Actualizar desde CSF (opcional)"
+        description="Sube el PDF de la Constancia de Situación Fiscal para rellenar automáticamente los campos. Podrás ajustarlos antes de guardar."
+      >
+        <div className="md:col-span-2">
+          <CsfDropZone parsingCsf={parsingCsf} fileName={csfFileName} onFile={handleCsfFile} />
+        </div>
+      </FormDialogSection>
+
       <FormDialogSection title="Datos fiscales" description="Información requerida para facturación SAT.">
+
         <TextField label="RFC" field="rfc" form={form} setForm={setForm} />
         <TextField label="Código Postal" field="cp" form={form} setForm={setForm} />
         <div>
