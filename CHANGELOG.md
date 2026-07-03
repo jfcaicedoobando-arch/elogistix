@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.163.0] - 2026-07-04
+- **chore(ci)**: auditoría de GitHub Actions — Fase 2 y arranque de Fase 3.
+  - **Migración**: policies de `tracking_externo` (Tenant CRUD, Tenant viewer, Cliente read own) formalizadas en `supabase/migrations/20260703185259_*.sql`. Antes vivían sólo en prod (creadas a mano) y en `supabase/tests/rls/_ci_post_migrate.sql`, generando drift entre ambientes.
+  - `_ci_post_migrate.sql`: eliminado el bloque de re-creación de policies; ahora sólo dropea el stub deny-all instalado por `_ci_drift.sql`.
+  - `dependency-review.yml`: `fail-on-severity` bajado de `high` → `moderate` con placeholder para allowlist documentada. Proyecto multi-tenant + fiscal + payments amerita el endurecimiento.
+  - **Nuevo workflow** `deno-typecheck.yml`: canario semanal (lunes 07:30 UTC) que corre `deno test` **sin** `--no-check` sobre todas las edge functions. Abre issue automático con label `ci-canary` si aparecen errores de tipo nuevos.
+  - **Nuevo workflow** `install-canary.yml`: canario semanal (lunes 08:00 UTC) que corre `bun install` **sin** `--ignore-scripts` + smoke build. Detecta drift si una dep agrega postinstall imprescindible que el CI principal estaría ocultando.
+
 ## [13.162.0] - 2026-07-04
 - **chore(ci)**: auditoría de GitHub Actions — Fase 1 de remediaciones.
   - `ci.yml`: quitado `if: always()` de `lint:unused:strict` para no ocultar fallas del step relajado previo.

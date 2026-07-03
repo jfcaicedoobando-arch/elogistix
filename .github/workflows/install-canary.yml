@@ -1,0 +1,91 @@
+name: install-canary
+
+# 13.162.0 — Canario semanal que corre `bun install` SIN `--ignore-scripts`.
+# El CI principal usa `--ignore-scripts` como protección de supply chain (ver
+# .github/actions/setup-bun/action.yml), así que si una dep introduce un
+# postinstall imprescindible, CI seguirá verde pero prod puede romper.
+# Este workflow detecta ese caso una vez por semana.
+#
+# NO bloquea PRs — es informativo.
+
+on:
+  schedule:
+    # Lunes 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: install-canary-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.x"
+
+      - name: bun install (con scripts habilitados)
+        id: install
+        continue-on-error: true
+        # Diferencia clave vs. `.github/actions/setup-bun`: SIN --ignore-scripts.
+        # Si alguna dep transitiva agrega postinstall malicioso, este step lo
+        # ejecutará y podría fallar. Ese es el punto: detectarlo temprano.
+        run: bun install --frozen-lockfile 2>&1 | tee /tmp/install.log
+
+      - name: Smoke build
+        if: steps.install.outcome == 'success'
+        id: build
+        continue-on-error: true
+        run: bun run build 2>&1 | tee /tmp/build.log
+
+      - name: Open issue on drift
+        if: steps.install.outcome == 'failure' || steps.build.outcome == 'failure'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const which = ${{ steps.install.outcome == 'failure' && 'true' || 'false' }};
+            const logPath = which ? '/tmp/install.log' : '/tmp/build.log';
+            const stage = which ? 'bun install (con scripts)' : 'build tras install con scripts';
+            const log = fs.readFileSync(logPath, 'utf8').slice(-6000);
+            const title = `install-canary: drift detectado (${new Date().toISOString().slice(0,10)})`;
+            const body = [
+              `El canario semanal falló en la etapa: **${stage}**.`,
+              '',
+              'Esto indica que una dependencia agregó un `postinstall` que rompe',
+              'con el flag `--ignore-scripts` que usa CI. Revisar `package.json`',
+              'y las últimas actualizaciones de dependencias.',
+              '',
+              'Log (últimas 6k chars):',
+              '```',
+              log,
+              '```',
+              '',
+              `Workflow run: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            ].join('\n');
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-canary',
+            });
+            if (existing.some(i => i.title.startsWith('install-canary:'))) {
+              console.log('Issue ya existe, no se abre uno nuevo.');
+              return;
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['ci-canary', 'dependencies'],
+            });
