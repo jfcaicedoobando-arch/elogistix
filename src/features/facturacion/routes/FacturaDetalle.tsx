@@ -139,7 +139,22 @@ export default function FacturaDetalle() {
 
       <FacturaResumenCard factura={factura} />
 
-      <FacturaConceptosTable snapshot={factura.snapshot_emision} moneda={factura.moneda} />
+      {puedeEditarBorrador && <FacturaDatosFiscalesCard factura={factura} />}
+
+      <FacturaConceptosTable
+        snapshot={factura.snapshot_emision}
+        moneda={factura.moneda}
+        conceptos={conceptosVivos}
+      />
+
+      {puedeEditarBorrador && (
+        <FacturaConceptosEditor
+          facturaId={factura.id}
+          organizationId={factura.organization_id}
+          moneda={factura.moneda}
+          conceptos={conceptosVivos}
+        />
+      )}
       <FacturaPagosSection
         facturaId={factura.id}
         facturaNumero={factura.numero}
