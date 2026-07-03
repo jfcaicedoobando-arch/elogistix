@@ -41,11 +41,11 @@ export interface WizardStep {
 }
 
 export interface WizardDefaultFooterProps {
+  /** Se llama al presionar el botón izquierdo (Anterior/Cancelar). */
   onPrev: () => void;
   onNext: () => void;
   onSave?: () => void;
   saveLabel: string;
-  isLastStep: boolean;
   /** Etiqueta del botón izquierdo cuando `currentStep === 1`. Default: "Cancelar". */
   cancelLabel?: string;
 }
