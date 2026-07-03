@@ -133,14 +133,16 @@ export function WizardShell({
       </div>
 
       <div className="flex-none border-t bg-background p-4">
-        <div className={cn(widthClass, "mx-auto flex justify-between gap-2")}>
+        <div className={cn(widthClass, "mx-auto")}>
           {footer ?? (defaultFooter ? (
-            <DefaultFooter
-              {...defaultFooter}
-              isBusy={isBusy}
-              isFirstStep={currentStep === 1}
-              isLastStep={currentStep === steps.length}
-            />
+            <div className="flex justify-between gap-2">
+              <DefaultFooter
+                {...defaultFooter}
+                isBusy={isBusy}
+                isFirstStep={currentStep === 1}
+                isLastStep={currentStep === steps.length}
+              />
+            </div>
           ) : null)}
         </div>
       </div>
