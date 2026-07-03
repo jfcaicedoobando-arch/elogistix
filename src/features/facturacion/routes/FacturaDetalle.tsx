@@ -31,7 +31,6 @@ import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useElim
 import { PageContainer } from "@/components/shared/PageContainer";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 
-
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -51,9 +50,7 @@ export default function FacturaDetalle() {
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
 
-
-  // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
-  // proforma (`?accion=timbrar`). Sólo si la factura todavía no está timbrada.
+  // Auto-abrir `DialogTimbrarFactura` al llegar desde conversión de proforma.
   useEffect(() => {
     if (searchParams.get("accion") === "timbrar" && sinTimbrar && canEdit) {
       setTimbrarOpen(true);
@@ -62,6 +59,7 @@ export default function FacturaDetalle() {
       setSearchParams(next, { replace: true });
     }
   }, [searchParams, sinTimbrar, canEdit, setSearchParams]);
+
 
 
   if (isLoading) {
