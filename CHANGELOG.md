@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.147.1] - 2026-07-03
+- **fix(facturación) — conversión Proforma → Borrador soporta proformas 100% USD.** Antes, el RPC `convertir_proformas_a_factura` siempre insertaba la factura en MXN con `tipo_cambio = subtotal_mxn / subtotal_usd`. Para proformas 100% USD (`subtotal_mxn = 0`) el resultado era `tipo_cambio = 0`, que viola el check `facturas_tipo_cambio_pos` (`23514`). Ahora el borrador hereda la moneda real de la proforma: MXN si sólo hay importes MXN, USD si sólo hay USD (con `tipo_cambio = 1` como placeholder — FacturAPI asigna el tipo de cambio DOF real al timbrar), o mixto → MXN con `tipo_cambio` calculado. Se registra la moneda en `bitacora_actividad`.
+
 ## [13.146.2] - 2026-07-03
 - **fix(facturación) — enum `origen_factura` acepta `conversion_proforma`.** Al convertir una proforma a borrador de factura, el RPC `convertir_proformas_a_factura` intentaba etiquetar la factura con `origen_factura = 'conversion_proforma'`, pero ese valor nunca se agregó al enum (`{proforma, manual}`), así que Postgres rechazaba el insert con `22P02: invalid input value for enum`. Migración aditiva `ALTER TYPE origen_factura ADD VALUE IF NOT EXISTS 'conversion_proforma'`; las filas existentes conservan sus valores previos.
 
