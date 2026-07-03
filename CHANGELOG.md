@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.17] - 2026-07-04
+- **fix(facturación/timbrado)**: al presionar **Timbrar** con rol `contador` (o cualquier rol no-admin de la org) la edge function `facturapi-emitir` devolvía `412 Falta la API key (sandbox)`. Causa: el helper `_shared/facturapiAuth.ts::tryVaultKey` llamaba la RPC `get_facturapi_api_key_internal` con el cliente Supabase de la function, que lleva `Authorization: Bearer <user_jwt>` en cada request; PostgREST corría el RPC bajo el rol `authenticated` y como la función está `REVOKE FROM authenticated` (`GRANT` sólo a `service_role`), el desencriptado del vault fallaba silenciosamente. Ahora `tryVaultKey` construye internamente un cliente admin con `SUPABASE_SERVICE_ROLE_KEY` (sin Authorization de usuario) para llamar esa RPC. No cambia RLS ni GRANTs; las 9 edge functions que usan `getFacturapiClient` mantienen su firma. Reportado por Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1` (Elogistix / isela.martinez).
+
 ## [13.170.16] - 2026-07-04
 - **fix(facturación/permisos)**: en el wizard "Conectar FacturApi" el rol `contador` ya podía guardar la API key (v13.170.15) pero el botón **Siguiente** del paso 2 seguía deshabilitado. Causa: RLS de `facturapi_credenciales` sólo permitía `SELECT` a `admin_org`/`super_admin`, así que el hook `useFacturapiCredenciales` no leía el `last4` recién guardado y `keyActivaCargada` quedaba `false`. Se amplían ambas policies (SELECT y ALL) para aceptar también `has_role(uid,'contador')`, en línea con el helper `_assert_facturapi_admin`.
 
