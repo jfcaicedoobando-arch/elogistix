@@ -1,82 +1,53 @@
-# Catálogo de productos/servicios para cotizaciones
+# Borrar "Parámetros de Facturación" (tasa IVA global)
 
-Sí, tu razonamiento tiene todo el sentido. Hoy `catalogo_claves_sat` es solo un mapeo texto→clave SAT que actúa como resolver al facturar. La idea es evolucionarlo a un **catálogo maestro de productos/servicios** que además controle qué se puede vender.
+## Analogía
 
-## Analogía rápida
+Es como quitar el letrero de "IVA general: 16%" del menú del restaurante ahora que cada platillo trae su propio IVA impreso en el menú (el catálogo de productos). El default queda hardcodeado a 16% porque en México lleva 30 años sin moverse — si algún día cambia, es un cambio de constante, no de UI.
 
-Piensa en el catálogo como el **menú de un restaurante**: el mesero (vendedor) sólo puede capturar platillos que están en el menú. Cada platillo trae precargado su categoría fiscal (clave SAT), si lleva IVA y qué unidad usa. Los tickets viejos (cotizaciones históricas) siguen intactos, pero cualquier ticket nuevo tiene que elegir del menú.
+## Alcance
 
-## Alcance confirmado
+- **UI**: eliminar la tarjeta "Parámetros de Facturación" de `Configuración → Facturación`.
+- **Hook `useTasaIVA()`**: se conserva como **función pura** que retorna la constante `TASA_IVA` (0.16), sin leer de la BD. Todos los ~15 consumidores siguen funcionando sin cambios en su firma.
+- **Estado de Configuración**: quitar el campo `tasaIva` de `ConfigState` y del handler `handleSave`.
+- **BD**: dejar la fila `configuracion.categoria='facturacion', clave='tasa_iva'` como legacy (no se borra por seguridad; sin lectores). Nota en changelog.
 
-- **Extender** `catalogo_claves_sat` (no crear tabla nueva).
-- **Estricto**: en cotizaciones nuevas sólo se elige de la lista, sin texto libre.
-- **Campos**: nombre visible, clave SAT, tipo IVA (16%/0%/exento), unidad SAT.
-- **Históricos**: no se tocan.
+## Cambios
 
-## Cambios de base de datos
+### 1. `src/features/configuracion/components/TabFacturacion.tsx`
+Quitar la `Card` de "Parámetros de Facturación" y sus props (`tasaIva`, `setTasaIva`). El componente queda como wrapper de `FacturapiCredencialesCard` + `CatalogoClavesSATCard`.
 
-Migración única sobre `catalogo_claves_sat`:
+### 2. `src/features/configuracion/hooks/useConfiguracionState.ts`
+- Quitar `tasaIva` de `ConfigState`.
+- Quitar la línea `tasaIva: String(...)` de `buildStateFromConfig`.
+- Quitar la entrada `{ categoria: 'facturacion', clave: 'tasa_iva', ... }` de `handleSave`.
 
-1. Renombrar semánticamente sin romper: mantener columna `patron` como **`nombre`** (alias lógico, seguirá llamándose `patron` en BD para no romper el resolver; la UI lo mostrará como "Producto/Servicio"). El unique index por org ya garantiza no duplicados.
-2. Agregar columnas:
-   - `tipo_iva text NOT NULL DEFAULT 'gravado_16'` con CHECK (`'gravado_16' | 'tasa_0' | 'exento'`).
-   - `tasa_iva_default numeric` (0.16, 0.00 o NULL para exento; derivada del tipo).
-   - `clave_unidad_sat text NOT NULL DEFAULT 'E48'` (E48 = Unidad de Servicio, default).
-   - `nombre_unidad text` (para mostrar, opcional).
-3. Backfill: todas las filas actuales quedan `gravado_16` / `E48`.
-4. Nuevo RPC `resolver_producto_sat(p_org, p_nombre_exacto)` que devuelve la fila completa (clave SAT, tipo IVA, tasa, unidad) — usado al insertar en cotización.
-5. El resolver actual `resolver_clave_sat` (por ILIKE) se conserva sólo como fallback para facturas desde proformas viejas.
+### 3. `src/features/catalogos/hooks/useTasaIVA.ts`
+Reemplazar por versión pura:
+```ts
+import { TASA_IVA } from "@/lib/financial/financialUtils";
+export function useTasaIVA(): number {
+  return TASA_IVA; // 0.16 — IVA general de México
+}
+```
+Con esto los ~15 consumidores (cotización, proformas, PDFs) siguen usando `useTasaIVA()` sin ningún cambio. Si algún día cambia la tasa, se toca una sola constante.
 
-**No se agrega columna a `conceptos_venta`.** Al insertar concepto de cotización, el frontend selecciona un producto del catálogo y guarda los campos derivados (descripción = nombre del producto, tipo_iva, tasa_iva_aplicada). Esto respeta históricos.
+### 4. Llamador de `TabFacturacion` en la página de configuración
+Buscar dónde se renderiza (probablemente `RouteConfiguracion.tsx` o similar) y quitar las props que ya no existen.
 
-## Cambios en la UI
+### 5. Tests
+- Actualizar `useTasaIVA.test.tsx` para verificar que retorna 0.16 constante.
+- Revisar tests de `useConfiguracionState` si tocan `tasaIva`.
 
-### Módulo Configuración → tarjeta actual `CatalogoClavesSATCard`
-
-Se renombra a **"Catálogo de productos y servicios"** y se le agregan columnas al formulario/tabla:
-- Nombre (antes "Patrón").
-- Clave SAT.
-- Tipo IVA (select: 16% / 0% / Exento).
-- Clave unidad SAT (select con las más comunes: E48 Servicio, XPP Paquete, KGM Kilogramo, TNE Tonelada, H87 Pieza).
-- Activo, prioridad, notas.
-
-Validación: nombre único por org (case-insensitive, ya está el index).
-
-### Wizard/editor de cotizaciones
-
-Reemplazar el `Input` de texto libre para descripción del concepto por un **`ProductoServicioSelect`** (Command/Combobox con búsqueda) que:
-- Lista productos activos del catálogo de la org.
-- Al elegir uno: autocompleta descripción (=nombre), guarda `tipo_iva` y `tasa_iva_aplicada` derivados. Cantidad, precio unitario y moneda siguen siendo capturados manualmente.
-- No permite guardar el renglón si no hay producto seleccionado (modo estricto).
-- Si el catálogo está vacío, muestra un aviso con link a Configuración y bloquea agregar renglones.
-
-### Editor de facturas
-
-No cambia el flujo actual — sigue usándose el resolver por patrón para conversiones de proformas viejas. Facturas manuales nuevas también pueden usar el nuevo select (opcional, ver "Fuera de alcance").
-
-## Cambios en servicios/RPC
-
-- `crearConceptoVenta` (o equivalente al insertar en `conceptos_venta`): recibe `producto_id` en vez de `descripcion` cruda; hace un fetch al catálogo y guarda los campos derivados.
-- `convertir_proformas_a_factura`: sin cambios (sigue usando `resolver_clave_sat` como fallback para históricos).
-- Cotizaciones existentes con conceptos texto libre: se muestran tal cual en modo lectura; si el usuario intenta **agregar** un renglón nuevo a una cotización vieja, aplica la regla estricta.
-
-## Detalles técnicos
-
-- Componente nuevo: `src/features/cotizaciones/components/ProductoServicioSelect.tsx` (usando `Command` de shadcn, filtrando por `nombre ILIKE`).
-- Hook: `useProductosCatalogo(organizationId)` con react-query, cache 5min.
-- Migración: `supabase/migrations/*_catalogo_productos_extend.sql`.
-- Tipo TypeScript: extender `Row` en `CatalogoClavesSATCard.tsx` y agregar tipo `ProductoCatalogo` en `src/features/configuracion/types.ts`.
-- Actualizar el select del wizard donde hoy se captura descripción del concepto (típicamente en el paso "Conceptos" del wizard de cotización).
-- Bump `APP_VERSION` a **13.169.0** y entrada en `CHANGELOG.md`.
-
-## Fuera de alcance (para confirmar en otro turno si lo quieres)
-
-- Precios sugeridos por producto (dijiste sólo nombre/clave/IVA/unidad).
-- Categorías / agrupación.
-- Aplicar la restricción estricta también a facturas manuales.
-- Backfill que mapee conceptos históricos a productos.
+### 6. Version + changelog
+- Bump `APP_VERSION` a **13.170.0**.
+- Entrada en `CHANGELOG.md` explicando la eliminación.
 
 ## Riesgos
 
-- Cotizaciones viejas mostrarán descripciones que no existen en el catálogo — se despliegan sin problema (lectura), pero al editar un renglón viejo el usuario deberá elegir un producto del catálogo. Aviso claro en el editor.
-- Si dos organizaciones tienen productos con el mismo nombre, no hay colisión: el unique index es por `(organization_id, lower(patron))`.
+- **Bajo**. La tasa siempre ha estado en 16 en producción. Si algún tenant llegó a poner otro valor (ej. 8% frontera), lo perderán y usarán 16. Podemos verificar antes de aplicar con un `SELECT` a la tabla `configuracion` — si algún tenant tiene un valor distinto a 16, revisamos.
+- La fila en `configuracion` queda huérfana pero no rompe nada; se limpiará en migración de higiene futura.
+
+## Fuera de alcance
+
+- No se toca la BD ni se borran filas.
+- No se cambia el catálogo de productos ni la lógica de IVA por concepto.
