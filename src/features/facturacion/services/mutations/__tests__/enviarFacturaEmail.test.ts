@@ -15,7 +15,9 @@ vi.mock("@/features/cotizacion/services/mutations/enviarPorEmail", () => ({
 
 import { enviarFacturaPorEmail } from "../enviarFacturaEmail";
 
-const input = {
+import type { EnviarFacturaEmailInput } from "../enviarFacturaEmail";
+
+const input: EnviarFacturaEmailInput = {
   facturaId: "fac-1",
   destinatarios: [{ email: "cli@x.com", nombre: "Cli" }],
   cc: ["me@x.com"],
@@ -23,7 +25,7 @@ const input = {
   mensaje: "Hola",
   totalFormateado: "$1,000.00",
   ejecutivo: { nombre: "Ana" },
-} as const;
+};
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
