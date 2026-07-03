@@ -3,7 +3,10 @@
  * Llama al RPC `convertir_proformas_a_factura` (Fase 1/2 del flujo lineal
  * Proforma → Factura → Timbrado → Pago → REP).
  *
- * Soporta fusión N:1 (varias proformas del mismo cliente en una sola factura).
+ * Soporta:
+ * - Fusión N:1 (varias proformas del mismo cliente en una sola factura).
+ * - Split por moneda: si la proforma tiene importes en USD y MXN, se generan
+ *   dos borradores (uno por moneda) porque el SAT no permite CFDI multi-moneda.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,10 +21,13 @@ export interface ConvertirProformaParams {
   requestId?: string;  // idempotencia
 }
 
-export interface ConvertirProformaResult {
+export interface FacturaBorrador {
   facturaId: string;
   facturaNumero: string;
+  moneda: "MXN" | "USD" | "EUR";
 }
+
+export type ConvertirProformaResult = FacturaBorrador[];
 
 export async function convertirProformaAFactura(
   params: ConvertirProformaParams,
@@ -40,11 +46,14 @@ export async function convertirProformaAFactura(
     p_request_id: params.requestId ?? undefined,
   });
   if (error) throw error;
-  // SAFE-CAST: el RPC devuelve la fila completa de `facturas`; sólo extraemos
-  // id y numero para el caller.
-  const row = data as { id: string; numero: string } | null;
-  if (!row?.id) throw new Error("No se pudo generar la factura");
-  return { facturaId: row.id, facturaNumero: row.numero };
+  // SAFE-CAST: el RPC devuelve SETOF facturas; extraemos id, numero y moneda.
+  const rows = (data ?? []) as unknown as Array<{ id: string; numero: string; moneda: "MXN" | "USD" | "EUR" }>;
+  if (!rows.length) throw new Error("No se pudo generar la factura");
+  return rows.map((r) => ({
+    facturaId: r.id,
+    facturaNumero: r.numero,
+    moneda: r.moneda,
+  }));
 }
 
 /**
