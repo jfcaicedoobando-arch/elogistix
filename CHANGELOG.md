@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.152.1] - 2026-07-04
+- **feat(design-language)**: Ola 3 — Lote A batch 2. Migrados `EnviarProformaDialog` y `HuecoFacturacionDetalleDialog` a `FormDialogShell`, y `TrackingConfirmFechaLlegadaDialog` a `ConfirmActionDialog`. `EnviarCotizacionDialog`, `PortalCambiarPasswordDialog` y `ProveedoresImportDialog` ya reutilizaban los shells compartidos (no requerían cambios). Se conservan validación y toasts existentes.
+
 ## [13.152.0] - 2026-07-04
 - **feat(design-language)**: arranca Oleada 3 — Lote A batch 1. Migrados 3 modales a `FormDialogShell`: `MarcarRevisadoDialog`, `EmbarquesEstadoDialog`, `RespuestaClienteManualDialog`. Retirados los inline styles con `ESTADO_COLOR` del header de EmbarquesEstado (icono usa `text-primary` del shell).
 - **docs**: Ola 3 documentada en `.lovable/plan.md` (Lote A: dialogs restantes; Lote B: `WizardShell`).

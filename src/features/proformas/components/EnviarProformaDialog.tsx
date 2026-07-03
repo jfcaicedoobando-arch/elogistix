@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from "react";
 import { Loader2, Mail } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,74 +116,67 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     }
   }
 
+  const footer = !enviado ? (
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+        Cancelar
+      </Button>
+      <Button onClick={handleEnviar} disabled={loading}>
+        {loading && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+        Enviar correo
+      </Button>
+    </>
+  ) : (
+    <Button onClick={() => onOpenChange(false)}>Cerrar</Button>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Enviar proforma al cliente
-          </DialogTitle>
-          <DialogDescription>
-            El cliente recibirá un correo con un enlace seguro para aceptar o rechazar la proforma.
-          </DialogDescription>
-        </DialogHeader>
-
-        {!enviado && (
-          <div className="space-y-3">
-            <datalist id="proforma-emails-sugeridos">
-              {sugerenciasVisibles.map((e) => <option key={e} value={e} />)}
-            </datalist>
-            <div>
-              <Label htmlFor="dest">Para *</Label>
-              <Input id="dest" list="proforma-emails-sugeridos" value={destinatarios} onChange={(e) => setDestinatarios(e.target.value)} placeholder="cliente@empresa.com, otro@empresa.com" />
-              <DestinatariosRecientesChips
-                sugerencias={sugerenciasVisibles}
-                ocultos={ocultos}
-                onAgregar={(e) => agregarEmail("to", e)}
-                onOcultar={ocultar}
-                onRestaurar={restaurar}
-                onRestaurarVarios={restaurarVarios}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="cc">CC (opcional)</Label>
-              <Input id="cc" list="proforma-emails-sugeridos" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="contabilidad@empresa.com" />
-            </div>
-
-            <div>
-              <Label htmlFor="asunto">Asunto</Label>
-              <Input id="asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="msg">Mensaje</Label>
-              <Textarea id="msg" value={mensaje} onChange={(e) => setMensaje(e.target.value)} rows={6} />
-            </div>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={Mail}
+      title="Enviar proforma al cliente"
+      description="El cliente recibirá un correo con un enlace seguro para aceptar o rechazar la proforma."
+      size="lg"
+      footer={footer}
+    >
+      {!enviado && (
+        <div className="space-y-3">
+          <datalist id="proforma-emails-sugeridos">
+            {sugerenciasVisibles.map((e) => <option key={e} value={e} />)}
+          </datalist>
+          <div>
+            <Label htmlFor="dest">Para *</Label>
+            <Input id="dest" list="proforma-emails-sugeridos" value={destinatarios} onChange={(e) => setDestinatarios(e.target.value)} placeholder="cliente@empresa.com, otro@empresa.com" />
+            <DestinatariosRecientesChips
+              sugerencias={sugerenciasVisibles}
+              ocultos={ocultos}
+              onAgregar={(e) => agregarEmail("to", e)}
+              onOcultar={ocultar}
+              onRestaurar={restaurar}
+              onRestaurarVarios={restaurarVarios}
+            />
           </div>
-        )}
 
-        {enviado && (
-          <EnvioProformaExitoso estado={enviado.estado} enlacePortal={enviado.enlace_portal} onCopiar={copiar} />
-        )}
+          <div>
+            <Label htmlFor="cc">CC (opcional)</Label>
+            <Input id="cc" list="proforma-emails-sugeridos" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="contabilidad@empresa.com" />
+          </div>
 
+          <div>
+            <Label htmlFor="asunto">Asunto</Label>
+            <Input id="asunto" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="msg">Mensaje</Label>
+            <Textarea id="msg" value={mensaje} onChange={(e) => setMensaje(e.target.value)} rows={6} />
+          </div>
+        </div>
+      )}
 
-        <DialogFooter>
-          {!enviado ? (
-            <>
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                Cancelar
-              </Button>
-              <Button onClick={handleEnviar} disabled={loading}>
-                {loading && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
-                Enviar correo
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => onOpenChange(false)}>Cerrar</Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {enviado && (
+        <EnvioProformaExitoso estado={enviado.estado} enlacePortal={enviado.enlace_portal} onCopiar={copiar} />
+      )}
+    </FormDialogShell>
   );
 }
