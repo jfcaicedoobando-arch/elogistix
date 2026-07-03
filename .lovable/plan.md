@@ -1,56 +1,77 @@
-# Acceso contable al Catálogo de productos — Solo pestaña Facturación
+# Corregir cálculo de IVA en borradores de factura
 
-## Diagnóstico
+## Diagnóstico (verificado con datos reales)
 
-En `src/routes/appRoutes.tsx:121`, la ruta `/configuracion` está protegida así:
+Factura `df7a8276...` USD, estado Borrador:
+- Subtotal 3,481.00 · IVA guardado 55.36 · Total 3,536.36 · IVA "real" al 16% debería ser 556.96.
+- 4 renglones con `tipo_iva = 'gravado_16'` pero `tasa_iva_aplicada = NULL`.
 
-```ts
-guarded(["admin", "admin_org", "super_admin"], <Configuracion />)
-```
-
-El rol `contador` no está en la lista, así que el guard lo redirige y jamás llega a `Configuración → Facturación → Catálogo de productos`.
+Causa: el RPC `convertir_proformas_a_factura` (proforma → factura Borrador) inserta renglones en `conceptos_factura` sin poblar `tasa_iva_aplicada`. El recálculo de totales lee esa columna, y NULL cuenta como 0. Además, el mismo RPC hardcodea `v_iva_usd := 0`.
 
 ## Analogía
 
-Le vamos a dar al contador la llave del cuarto de configuración, pero con una repisa forrada: sólo puede acercarse al estante de Facturación. Los demás estantes (Empresa, Catálogos de puertos, Operaciones, Herramientas) siguen tapados para él.
+Cada renglón tiene un letrero "IVA 16%" (badge) pero el motor que suma el IVA no lee el letrero: lee un tornillo interno (`tasa_iva_aplicada`) que quedó suelto (NULL) al fabricar el borrador. Vamos a apretar el tornillo en 3 sitios: al fabricar (RPC), al recalcular en el cliente (defensivo) y en los borradores ya rotos (backfill).
 
 ## Cambios
 
-### 1. `src/routes/appRoutes.tsx`
+### 1. Migración SQL (schema-level, `supabase--migration`)
 
-Agregar `contador` al guard de `/configuracion`:
+Actualizar `public.convertir_proformas_a_factura` para que:
 
-```ts
-<Route path="/configuracion" element={guarded(["admin", "admin_org", "contador", "super_admin"], <Configuracion />)} />
+- Al insertar en `conceptos_factura` (los 4 caminos: MXN consolidada, MXN detalle, USD consolidada, USD detalle) también incluya:
+  - `tipo_iva = COALESCE(<origen>.tipo_iva, 'gravado_16')` — si el origen ya trae tipo, respetarlo; si no, gravado_16.
+  - `tasa_iva_aplicada = CASE tipo_iva WHEN 'gravado_16' THEN 0.16 WHEN 'tasa_0' THEN 0 ELSE NULL END`.
+- Reemplazar el cálculo del header por suma real de renglones:
+  - Después de insertar los conceptos, obtener `SUM(cantidad*precio_unitario)` como subtotal y `SUM(cantidad*precio_unitario * COALESCE(tasa_iva_aplicada, 0))` como IVA desde `conceptos_factura` de la factura recién creada.
+  - Escribir `subtotal`, `iva`, `total` en `facturas` a partir de esa suma.
+  - Aplica igual a MXN y USD → elimina la asimetría `v_iva_usd := 0`.
+
+### 2. Backfill de borradores existentes
+
+Migración corta que corrige sólo lo pendiente y sin tocar históricos:
+
+```sql
+UPDATE public.conceptos_factura cf
+SET tasa_iva_aplicada = CASE cf.tipo_iva
+  WHEN 'gravado_16' THEN 0.16
+  WHEN 'tasa_0'     THEN 0
+  ELSE NULL
+END
+FROM public.facturas f
+WHERE cf.factura_id = f.id
+  AND cf.deleted_at IS NULL
+  AND cf.tasa_iva_aplicada IS NULL
+  AND f.estado = 'Borrador'
+  AND f.uuid_fiscal IS NULL;
 ```
 
-### 2. `src/features/admin/routes/admin-org/Configuracion.tsx`
+Luego, recomputar el header de esos borradores desde los renglones ya corregidos (mismo SUM/SUM que en el RPC).
 
-- Importar `useAuth` (o el hook de rol activo que ya use el proyecto — verificaré cuál) para leer el rol efectivo.
-- Calcular `esContador = rolEfectivo === "contador"` (y NO tiene además `admin`/`admin_org`/`super_admin`).
-- Si `esContador`:
-  - Renderizar sólo el `<TabsTrigger value="facturacion">` en la lista de tabs.
-  - Renderizar sólo el `<TabsContent value="facturacion">`.
-  - Forzar el estado inicial `tab = "facturacion"` (en lugar de `"empresa"`).
-  - Ocultar el botón "Guardar Cambios" del header cuando esté en Facturación (esa pestaña no lo necesita — el catálogo tiene su propio flujo de guardado por producto).
-- Los admins siguen viendo las 5 pestañas y el botón de guardar como hasta ahora.
+### 3. Fallback defensivo en frontend
 
-### 3. Verificación
+`src/features/facturacion/services/conceptosFacturaCrud.ts` → `recalcularTotalesFactura`:
 
-- Login como contador → navegar a `/configuracion` → ve solo la pestaña "Facturación" con el catálogo.
-- Login como admin_org → ve las 5 pestañas normales.
+- Al leer los renglones, si `tasa_iva_aplicada` es NULL usar `resolverTasa(tipo_iva)` como respaldo. Así, aunque un renglón futuro llegue sin la tasa, el recalculador la resuelve desde `tipo_iva`.
+
+Sin cambios en la UI (`FacturaTotalesCard` y `FacturaConceptosTable` ya muestran lo correcto una vez que los totales están bien).
+
+### 4. Verificación post-implementación
+
+- Consulta a la factura `df7a8276...` después del backfill: subtotal 3,481.00 · IVA 556.96 · Total 4,037.96.
+- Crear una factura Borrador nueva convirtiendo una proforma: los 3 valores del card "Totales" deben coincidir con la suma de `precio_unitario × cantidad × (1 + tasa)` de los renglones.
 - Typecheck con `tsc --noEmit`.
 
-### 4. Versión y changelog
+### 5. Versión y changelog
 
-- `APP_VERSION` → `13.170.4`.
-- Entrada breve en `CHANGELOG.md`.
-
-## Riesgos
-
-Bajo. El único punto de cuidado es asegurar que el guard use el rol efectivo (respetando impersonación de super_admin, si aplica). Ya existen patrones en el proyecto para eso; los reutilizo.
+- `APP_VERSION` → `13.170.5`.
+- Entrada en `CHANGELOG.md` describiendo la corrección del IVA en Borradores.
 
 ## Fuera de alcance
 
-- No se toca la lógica del sidebar (los enlaces al menú Configuración; si el contador ya lo veía oculto, en un segundo paso ajustamos la visibilidad ahí también — lo confirmo tras revisar el sidebar).
-- No se cambian permisos de BD (RLS de `catalogo_claves_sat` ya permite lectura/escritura al contador según la matriz de roles vigente; si al probar aparece error de RLS, se levanta un plan aparte).
+- **Facturas timbradas** (con `uuid_fiscal`): NO se tocan — sus totales son los que el SAT tiene. Cualquier discrepancia histórica queda como estaba.
+- No se cambian tasas por producto ni la lógica del catálogo.
+- No se toca la generación del PDF (usa los mismos campos `factura.subtotal/iva/total`, así que al corregirlos el PDF también sale bien).
+
+## Riesgos
+
+Bajos. El backfill limita el WHERE a `Borrador` + `uuid_fiscal IS NULL`. El RPC nuevo cambia el header USD (antes 0, ahora 16% real cuando aplica) — es exactamente lo que el usuario está pidiendo.

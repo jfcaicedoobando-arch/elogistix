@@ -111,7 +111,7 @@ export async function eliminarConceptoFactura(params: {
 export async function recalcularTotalesFactura(facturaId: string): Promise<void> {
   const { data, error } = await supabase
     .from("conceptos_factura")
-    .select("cantidad, precio_unitario, tasa_iva_aplicada")
+    .select("cantidad, precio_unitario, tasa_iva_aplicada, tipo_iva")
     .eq("factura_id", facturaId)
     .is("deleted_at", null);
   if (error) throw error;
@@ -121,7 +121,16 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
   for (const c of data ?? []) {
     const importe = Number(c.cantidad) * Number(c.precio_unitario);
     subtotal += importe;
-    const tasa = c.tasa_iva_aplicada != null ? Number(c.tasa_iva_aplicada) : 0;
+    // Fallback defensivo: si tasa_iva_aplicada viene NULL pero hay tipo_iva,
+    // resolver la tasa desde el tipo (evita IVA en cero cuando el renglón
+    // fue insertado por un camino que no pobló la columna).
+    let tasa: number;
+    if (c.tasa_iva_aplicada != null) {
+      tasa = Number(c.tasa_iva_aplicada);
+    } else {
+      const tipo = c.tipo_iva as TipoIvaConcepto | null | undefined;
+      tasa = resolverTasa(tipo ?? "gravado_16") ?? 0;
+    }
     iva += importe * tasa;
   }
   const subtotalR = Math.round(subtotal * 100) / 100;
