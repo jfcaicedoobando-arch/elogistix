@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.147.2] - 2026-07-03
+- **fix(facturación) — cast al enum `moneda` en conversión Proforma → Borrador.** Tras v13.147.1 el RPC declaraba `v_moneda text` y lo insertaba directo en `facturas.moneda` (enum `{MXN, USD, EUR}`), lo que provocaba `42804: column "moneda" is of type moneda but expression is of type text`. Ahora el `INSERT` castea explícitamente `v_moneda::public.moneda`; la conversión de proformas USD/MXN vuelve a completarse sin error.
+
 ## [13.147.1] - 2026-07-03
 - **fix(facturación) — conversión Proforma → Borrador soporta proformas 100% USD.** Antes, el RPC `convertir_proformas_a_factura` siempre insertaba la factura en MXN con `tipo_cambio = subtotal_mxn / subtotal_usd`. Para proformas 100% USD (`subtotal_mxn = 0`) el resultado era `tipo_cambio = 0`, que viola el check `facturas_tipo_cambio_pos` (`23514`). Ahora el borrador hereda la moneda real de la proforma: MXN si sólo hay importes MXN, USD si sólo hay USD (con `tipo_cambio = 1` como placeholder — FacturAPI asigna el tipo de cambio DOF real al timbrar), o mixto → MXN con `tipo_cambio` calculado. Se registra la moneda en `bitacora_actividad`.
 
