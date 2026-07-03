@@ -15,6 +15,9 @@
  *   const { apiKey, baseUrl } = resolved.data;
  */
 
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+
 
 export const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
