@@ -28,6 +28,7 @@ import { FacturaDetalleModales } from "@/features/facturacion/components/detalle
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 import { FacturaFiscalCheckAlert } from "@/features/facturacion/components/detalle/FacturaFiscalCheckAlert";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 function canDeleteBorrador(
   factura: { estado?: string | null; facturapi_id?: string | null } | null | undefined,
@@ -71,11 +72,11 @@ export default function FacturaDetalle() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4 md:p-6">
+      <PageContainer>
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-64 w-full" />
-      </div>
+      </PageContainer>
     );
   }
 
@@ -91,7 +92,7 @@ export default function FacturaDetalle() {
   }
 
   return (
-    <div className="space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
+    <PageContainer>
       <Button variant="ghost" size="sm" onClick={() => navigate("/facturacion")} className="-ml-2">
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver
       </Button>
@@ -170,6 +171,6 @@ export default function FacturaDetalle() {
         isPending={eliminando}
         onConfirm={() => eliminar(factura.id)}
       />
-    </div>
+    </PageContainer>
   );
 }

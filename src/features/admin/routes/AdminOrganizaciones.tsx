@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, Plus } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { useAdminOrganizacionesController } from "@/features/admin/hooks";
 import { AdminOrganizacionesFilters } from "@/features/admin/components/AdminOrganizacionesFilters";
 import { NuevaOrganizacionDialog } from "@/features/admin/components/NuevaOrganizacionDialog";
@@ -15,7 +16,7 @@ export default function AdminOrganizaciones() {
   const columns = useMemo(() => buildAdminOrganizacionesColumns(), []);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<Building2 className="h-6 w-6 text-primary" />}
         title="Organizaciones"
@@ -60,6 +61,6 @@ export default function AdminOrganizaciones() {
         onCreate={createOrg.mutate}
         isPending={createOrg.isPending}
       />
-    </div>
+    </PageContainer>
   );
 }

@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { useState } from "react";
 
 import { usePermissions, useTabsParam } from "@/hooks/shared";
@@ -75,7 +76,7 @@ export default function EmbarqueDetalle() {
   const togglingNoAplicaDocId = setNoAplica.isPending ? (setNoAplica.variables?.docId ?? null) : null;
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <EmbarqueDetalleHeader
         embarque={embarque}
         estadoVisual={estadoVisual}
@@ -137,6 +138,6 @@ export default function EmbarqueDetalle() {
           onToggleNoAplica: handleToggleNoAplica,
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

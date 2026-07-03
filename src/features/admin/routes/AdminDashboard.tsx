@@ -4,6 +4,7 @@ import { Building2, Users, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
   useAdminDashboardStats,
@@ -28,7 +29,7 @@ export default function AdminDashboard() {
   ] as const;
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         title="Dashboard Super Admin"
         description="Resumen global de toda la plataforma."
@@ -112,6 +113,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

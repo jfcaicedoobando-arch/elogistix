@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -45,7 +46,7 @@ export default function Comisiones() {
   const columns = useMemo(() => buildComisionesColumns(), []);
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Comisiones"
         description="Comisiones devengadas al cobrar facturas y liquidaciones a vendedoras"
@@ -114,6 +115,6 @@ export default function Comisiones() {
           <TabVendedorasConfig vendedoras={vendedoras} />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

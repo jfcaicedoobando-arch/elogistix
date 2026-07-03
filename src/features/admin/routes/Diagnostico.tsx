@@ -4,6 +4,7 @@
 import { useState, useMemo } from "react";
 import { Activity } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { ErrorState } from "@/components/shared/states/ErrorState";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,7 +53,7 @@ export default function Diagnostico() {
   }, [total, page, totalPages, isLoading, isFetching]);
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<Activity className="h-6 w-6 text-primary" />}
         title="Diagnóstico"
@@ -112,6 +113,6 @@ export default function Diagnostico() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
