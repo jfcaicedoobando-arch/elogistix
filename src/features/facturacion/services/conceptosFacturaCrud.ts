@@ -38,7 +38,7 @@ function normalizarLinea(input: ConceptoFacturaInput) {
     cantidad,
     precio_unitario: precio,
     total: Math.round(cantidad * precio * 100) / 100,
-    clave_sat: input.clave_sat?.trim() || "78101800",
+    clave_sat: input.clave_sat?.trim() || "81141601",
   };
 }
 
