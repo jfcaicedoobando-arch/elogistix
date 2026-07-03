@@ -1,30 +1,46 @@
-# Auditoría final — estilos hardcodeados restantes
+## Bug: Convertir proforma a factura falla con `DB_ERROR`
 
-## Resultado del barrido (`rg` en `src/`)
+**Analogía**: Es como llamar a una función `guardar(clave, respuesta)` pasándole tres cosas en vez de dos — Postgres no encuentra una versión con esa firma y aborta.
 
-Excluidos (aceptados como intencionales): `src/features/marketing/**` (landing) y `src/components/ui/badge.tsx` (comentarios).
+### Causa raíz
 
-### Hallazgos fuera de exclusiones (3 archivos, 8 ocurrencias)
+La RPC `public.convertir_proformas_a_factura` invoca al final:
 
-**`src/lib/ui/estadoConfig.ts`** — estado "Entregado" y borde "Arribo":
-- L68: `borderLeft: "border-l-amber-500"` → `border-l-warning`
-- L97: `badge: "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30"` → tokens `success`
-- L98: `borderLeft: "border-l-emerald-500"` → `border-l-success`
-- L99: `bar: "bg-emerald-500"` → `bg-success`
-- L101: `gradient: "from-emerald-500 to-emerald-500/80"` → `from-success to-success/80`
-- L102: `border: "border-emerald-500"` → `border-success`
-- L103: `text: "text-emerald-600"` → `text-success`
+```sql
+PERFORM public.idempotency_store(
+  p_request_id,
+  'convertir_proformas_a_factura',   -- ← argumento de más
+  jsonb_build_object('id', v_factura.id, 'numero', v_factura.numero)
+);
+```
 
-**`src/lib/ui/uiMappings.ts`** — modo Terrestre:
-- L38: `"bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"` → equivalente con tokens `warning` (`bg-warning/15 text-warning dark:bg-warning/20`).
+Pero la función real tiene firma `idempotency_store(_key uuid, _response jsonb)` (2 args). El nombre de la función (`fn`) ya se registró antes en `idempotency_claim(p_request_id, 'convertir_proformas_a_factura')`, así que el segundo argumento es redundante.
 
-**`src/lib/ui/__tests__/uiMappings.test.ts`** — no aparece en grep, pero contiene aserciones sobre estas clases; puede requerir ajuste tras el fix (revisar tras cambio).
+Resultado: Postgres lanza `42883 — function public.idempotency_store(uuid, unknown, jsonb) does not exist`.
 
-### Ocurrencias intencionalmente excluidas
-- `src/features/marketing/routes/LogoPreview.tsx` (1) y `LandingHero.tsx` (4): `text-[10px]` en piezas de marketing/hero.
+### Solución
 
-## Entregable
-1. Generar `/mnt/documents/audit-styles-2026-07-03.md` con el listado anterior (archivo + línea + fix propuesto).
-2. **Opcional (si lo apruebas):** aplicar los fixes en `estadoConfig.ts` y `uiMappings.ts`, actualizar `uiMappings.test.ts` si rompe, bump versión `13.159.1` y CHANGELOG.
+Migración que reemplaza `convertir_proformas_a_factura` con una versión idéntica salvo por la llamada corregida:
 
-Confirma si además del reporte quieres que aplique los fixes.
+```sql
+PERFORM public.idempotency_store(
+  p_request_id,
+  jsonb_build_object('id', v_factura.id, 'numero', v_factura.numero)
+);
+```
+
+Pasos:
+
+1. Recuperar el cuerpo actual de `convertir_proformas_a_factura` con `pg_get_functiondef` (ya verificado).
+2. Crear migración `CREATE OR REPLACE FUNCTION public.convertir_proformas_a_factura(...)` con la línea corregida (mantener resto del cuerpo, security definer, search_path, permisos existentes).
+3. Bump `APP_VERSION` a `13.159.2` y entrada en `CHANGELOG.md` describiendo el fix.
+
+### Verificación
+
+- Reintentar el flujo Proforma → Factura desde `/proformas/:id` (misma proforma del reporte) y confirmar que genera borrador sin error.
+- Confirmar que reintento con el mismo `p_request_id` sigue devolviendo cached response (idempotencia intacta).
+
+### Fuera de alcance
+
+- No se modifica la firma de `idempotency_store` (otros callers dependen de la versión de 2 args).
+- No se toca código frontend (`convertirAFactura.ts` sigue igual).
