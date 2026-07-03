@@ -1,20 +1,13 @@
 /**
  * Diálogo "Atender hallazgo": shell delgado que orquesta tabs y footer.
  * Lógica en `useMarcarRevisadoController`; UI dividida en marcarRevisado/*.
+ * Migrado a FormDialogShell (v13.152.0 — Oleada 3).
  */
 import { CalendarOff, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useMarcarRevisadoController } from "@/features/auditoria/hooks";
 import { HallazgoSummary } from "@/features/auditoria/components/marcarRevisado/HallazgoSummary";
 import { AccionTab, AccionButton } from "@/features/auditoria/components/marcarRevisado/AccionTab";
@@ -39,67 +32,66 @@ export function MarcarRevisadoDialog({ hallazgo, revisionExistente, open, onOpen
 
   if (!hallazgo) return null;
 
+  const footer = (
+    <>
+      {ctrl.yaRevisado && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={ctrl.handleEliminar}
+          disabled={ctrl.cargando}
+          className="mr-auto text-destructive hover:text-destructive"
+        >
+          {ctrl.desmarcando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Quitar marca"}
+        </Button>
+      )}
+      <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={ctrl.cargando}>
+        Cerrar
+      </Button>
+      <AccionButton ctrl={ctrl} />
+    </>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogSize.xl}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-primary" />
-            {ctrl.yaRevisado ? "Hallazgo revisado" : "Atender hallazgo"}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            Marcar el hallazgo como revisado, posponerlo o documentar la acción tomada.
-          </DialogDescription>
-          <HallazgoSummary
-            hallazgo={hallazgo}
-            revisionExistente={revisionExistente}
-            snoozeActivo={ctrl.snoozeActivo}
-          />
-        </DialogHeader>
+    <FormDialogShell
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={CheckCircle2}
+      title={ctrl.yaRevisado ? "Hallazgo revisado" : "Atender hallazgo"}
+      description="Marcar el hallazgo como revisado, posponerlo o documentar la acción tomada."
+      size="xl"
+      footer={footer}
+    >
+      <HallazgoSummary
+        hallazgo={hallazgo}
+        revisionExistente={revisionExistente}
+        snoozeActivo={ctrl.snoozeActivo}
+      />
 
-        <Tabs defaultValue="accion" className="space-y-3">
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="accion" className="text-xs">
-              Acción
-            </TabsTrigger>
-            <TabsTrigger value="comentarios" className="text-xs" disabled={!revisionExistente}>
-              <MessageSquare className="h-3 w-3 mr-1" />
-              Comentarios
-              {ctrl.comentarios && ctrl.comentarios.length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
-                  {ctrl.comentarios.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="snooze" className="text-xs">
-              <CalendarOff className="h-3 w-3 mr-1" />
-              Snooze
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="accion" className="space-y-3">
+        <TabsList className="grid grid-cols-3">
+          <TabsTrigger value="accion" className="text-xs">
+            Acción
+          </TabsTrigger>
+          <TabsTrigger value="comentarios" className="text-xs" disabled={!revisionExistente}>
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Comentarios
+            {ctrl.comentarios && ctrl.comentarios.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+                {ctrl.comentarios.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="snooze" className="text-xs">
+            <CalendarOff className="h-3 w-3 mr-1" />
+            Snooze
+          </TabsTrigger>
+        </TabsList>
 
-          <AccionTab ctrl={ctrl} revisionExistente={revisionExistente} />
-          <ComentariosTab ctrl={ctrl} revisionExistente={revisionExistente} />
-          <SnoozeTab ctrl={ctrl} />
-        </Tabs>
-
-        <DialogFooter className="gap-2 sm:gap-2">
-          {ctrl.yaRevisado && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={ctrl.handleEliminar}
-              disabled={ctrl.cargando}
-              className="mr-auto text-destructive hover:text-destructive"
-            >
-              {ctrl.desmarcando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Quitar marca"}
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={ctrl.cargando}>
-            Cerrar
-          </Button>
-          <AccionButton ctrl={ctrl} />
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <AccionTab ctrl={ctrl} revisionExistente={revisionExistente} />
+        <ComentariosTab ctrl={ctrl} revisionExistente={revisionExistente} />
+        <SnoozeTab ctrl={ctrl} />
+      </Tabs>
+    </FormDialogShell>
   );
 }

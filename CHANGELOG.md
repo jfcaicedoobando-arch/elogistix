@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.152.0] - 2026-07-04
+- **feat(design-language)**: arranca Oleada 3 — Lote A batch 1. Migrados 3 modales a `FormDialogShell`: `MarcarRevisadoDialog`, `EmbarquesEstadoDialog`, `RespuestaClienteManualDialog`. Retirados los inline styles con `ESTADO_COLOR` del header de EmbarquesEstado (icono usa `text-primary` del shell).
+- **docs**: Ola 3 documentada en `.lovable/plan.md` (Lote A: dialogs restantes; Lote B: `WizardShell`).
+
 ## [13.151.2] - 2026-07-04
 - **feat(design-language)**: cierra Oleada 2 — `ProformaDetalleCards.FacturaAsociadaCard` usa `<StatusBadge domain="factura">` en lugar de `Badge + getEstadoColor`.
 

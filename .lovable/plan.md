@@ -78,6 +78,56 @@ Cada lote:
 
 Un único bump `13.151.0` al cerrar la Oleada 2, con changelog listando los 5 módulos migrados y los helpers marcados como deprecated.
 
-## Cierre
+## Cierre Oleada 2
 
-Al terminar la Oleada 2 quedamos listos para la Oleada 3 (formularios/wizards) según el plan original. **No** borrar `plan.md` todavía — eso es el último paso del último wave.
+Al terminar la Oleada 2 quedamos listos para la Oleada 3. **No** borrar `plan.md` todavía — eso es el último paso del último wave.
+
+---
+
+# Oleada 3 — Formularios y wizards
+
+Homologar los modales tipo formulario que aún renderizan `Dialog` crudo, y unificar los wizards multi-paso bajo un único shell.
+
+## Lote A — Modales tipo formulario → `FormDialogShell`
+
+Migración uno-a-uno (sin cambios de negocio) para los ~9 dialogs de formulario que aún usan `Dialog` + `DialogHeader/Footer` manuales:
+
+- `MarcarRevisadoDialog` (auditoría) ✅ v13.152.0
+- `EmbarquesEstadoDialog` (operaciones) ✅ v13.152.0
+- `RespuestaClienteManualDialog` (proformas) ✅ v13.152.0
+- `EnviarProformaDialog` → reusar `EnviarDocumentoDialog` (compartido).
+- `EnviarCotizacionDialog` → reusar `EnviarDocumentoDialog`.
+- `HuecoFacturacionDetalleDialog` (revisar si es detalle o form).
+- `TrackingConfirmFechaLlegadaDialog` → migrar a `ConfirmActionDialog` (no es form).
+- `PortalCambiarPasswordDialog` → dedupe con `shared/dialogs/CambiarPasswordDialog`.
+- `ProveedoresImportDialog` → reusar `BulkImportDialog`.
+
+**Excluidos**: `ErrorDetailsDialog`, `DocumentPreviewDialog`, `DeleteConfirmDialog`, `ConfirmActionDialog`, `DoubleConfirmDeleteDialog`, `PortalCotizacionConfirmDialog`, `DesvincularCotizacionDialog`, `RoleChangeAlertDialog`, `ConfirmSinDesgloseDialog` (son confirm/preview/alert — usan primitivas dedicadas).
+
+## Lote B — WizardShell unificado
+
+Crear `WizardShell` en `src/components/shared/wizard/` que envuelva `FormDialogShell` con:
+
+- Contexto `useWizard()` (step actual, avanzar/retroceder, validación por paso).
+- Slot `pasos: WizardStep[]` con `{ id, label, canProceed, render }`.
+- Footer inteligente: Atrás / Cancelar / Siguiente / Finalizar según posición.
+- Reutiliza `FormDialogStepper` existente.
+
+Migrar a `WizardShell`:
+
+- `FacturapiOnboardingWizard` (ya usa FormDialogShell — sólo extraer lógica de pasos).
+- Wizard de Cotización (`src/features/cotizacion/components/wizard/*`).
+- Wizard de Embarque (`src/features/embarques/components/wizard/*`).
+- `CrearProveedorDesdeCfdiDialog` (2 pasos: subir XML + confirmar).
+
+## Guardrails y tests
+
+- Mismos guardrails de Ola 2: sin tocar RPCs, ≤200 líneas por archivo, tokens semánticos.
+- Cada dialog migrado conserva sus tests si existen; se agregan tests para `WizardShell` con cobertura de navegación entre pasos.
+- Al cerrar Lote A: bump menor; al cerrar Lote B (WizardShell): bump minor.
+
+## Bump
+
+Lote A: `13.152.x` incremental por batch.
+Lote B: `13.153.0` al aterrizar `WizardShell`.
+
