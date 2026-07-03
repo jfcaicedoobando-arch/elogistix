@@ -114,18 +114,24 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       tax_system: ctx.receptor.tax_system,
       address: { zip: ctx.receptor.address.zip.trim() },
     },
-    items: ctx.conceptos.map((c) => ({
-      quantity: c.cantidad,
-      product: {
-        description: c.descripcion,
-        product_key: c.clave_sat ?? "",
-        price: c.precio_unitario,
-        unit_key: c.clave_unidad ?? "E48",
-        unit_name: c.unidad ?? "Unidad de servicio",
-        tax_included: false,
-        taxes: [{ type: "IVA", rate: c.tasa_iva ?? 0.16, factor: "Tasa" }],
-      },
-    })),
+    items: ctx.conceptos.map((c) => {
+      const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
+      const taxes = tipo === "exento"
+        ? [{ type: "IVA" as const, factor: "Exento" as const }]
+        : [{ type: "IVA" as const, rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16), factor: "Tasa" as const }];
+      return {
+        quantity: c.cantidad,
+        product: {
+          description: c.descripcion,
+          product_key: c.clave_sat ?? "",
+          price: c.precio_unitario,
+          unit_key: c.clave_unidad ?? "E48",
+          unit_name: c.unidad ?? "Unidad de servicio",
+          tax_included: false,
+          taxes,
+        },
+      };
+    }),
   };
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
