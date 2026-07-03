@@ -30,7 +30,12 @@ export function useTabProformasController(opts?: {
   const { descargar, downloadingId } = useDescargarProformaPdf();
 
   const state = useTabProformasState(proformas, opts?.isInRange);
-  const { filtered, paginated, counts, totalPages, search, filtroEstado, page, pageSize } = state;
+  const {
+    filtered, paginated, counts, totalPages,
+    search, filtroEstado, filtroCliente, filtroOperador, fechaDesde, fechaHasta,
+    page, pageSize, clientesDisponibles, operadoresDisponibles,
+  } = state;
+
 
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds((prev) => {
