@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Copy, FileCheck2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { formatDate } from "@/lib/formatters";
 
 interface Props {
@@ -21,8 +22,8 @@ export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmisi
     try {
       await navigator.clipboard.writeText(uuidFiscal);
       toast.success("UUID copiado");
-    } catch {
-      toast.error("No se pudo copiar");
+    } catch (err) {
+      notifyError(toast, { title: "No se pudo copiar", error: err, method: "FACTURA_UUID_COPY" });
     }
   };
 

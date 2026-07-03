@@ -34,14 +34,7 @@ export default function ProformaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading } = useProformaDetalle(id);
-  const { descargar, downloadingId } = useDescargarProformaPdf();
-  const tasaIva = useTasaIVA();
   useRegisterBreadcrumbLabel(id, data?.proforma.numero);
-
-  const totales = useMemo(
-    () => (data ? calcularTotalesProforma(data.conceptos, tasaIva) : null),
-    [data, tasaIva],
-  );
 
   if (isLoading) {
     return (
@@ -64,6 +57,22 @@ export default function ProformaDetalle() {
     );
   }
 
+  return <ProformaDetalleContent data={data} onVolver={() => navigate(-1)} />;
+}
+
+interface ContentProps {
+  data: NonNullable<ReturnType<typeof useProformaDetalle>["data"]>;
+  onVolver: () => void;
+}
+
+function ProformaDetalleContent({ data, onVolver }: ContentProps) {
+  const { descargar, downloadingId } = useDescargarProformaPdf();
+  const tasaIva = useTasaIVA();
+  const totales = useMemo(
+    () => calcularTotalesProforma(data.conceptos, tasaIva),
+    [data, tasaIva],
+  );
+
   const { proforma, conceptos } = data;
   const timeline = resolveProformaTimelineFields(proforma);
   const factura = proforma.facturas_full;
@@ -77,7 +86,7 @@ export default function ProformaDetalle() {
 
   return (
     <PageContainer>
-      <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="-ml-2">
+      <Button variant="ghost" size="sm" onClick={onVolver} className="-ml-2">
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver
       </Button>
 

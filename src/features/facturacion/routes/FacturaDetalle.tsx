@@ -1,15 +1,10 @@
 /**
- * FacturaDetalle — vista admin de una factura individual.
- * Reusa los diálogos modales existentes para registrar pagos y se apoya en
- * los hooks `useFactura` / `usePagosFactura`. Sólo lectura para roles
- * no-admin (sin botones de acción).
- *
- * Fase 4 (Proforma → Factura): si la URL trae `?accion=timbrar` (por ejemplo
- * tras convertir una proforma) se abre automáticamente `DialogTimbrarFactura`
- * para invitar al usuario a continuar el flujo.
+ * FacturaDetalle — vista admin de una factura individual. Si la URL trae
+ * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
+ * de timbrado automáticamente.
  */
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,12 +30,11 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
-
+import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { canEdit, isAdmin } = usePermissions();
   const { data: factura, isLoading } = useFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
@@ -56,17 +50,9 @@ export default function FacturaDetalle() {
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
 
+  useAutoAbrirTimbrar(sinTimbrar, canEdit, () => setTimbrarOpen(true));
 
-  // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
-  // proforma (`?accion=timbrar`). Sólo si la factura todavía no está timbrada.
-  useEffect(() => {
-    if (searchParams.get("accion") === "timbrar" && sinTimbrar && canEdit) {
-      setTimbrarOpen(true);
-      const next = new URLSearchParams(searchParams);
-      next.delete("accion");
-      setSearchParams(next, { replace: true });
-    }
-  }, [searchParams, sinTimbrar, canEdit, setSearchParams]);
+
 
 
   if (isLoading) {
