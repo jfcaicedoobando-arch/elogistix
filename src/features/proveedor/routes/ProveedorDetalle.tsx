@@ -189,6 +189,6 @@ export default function ProveedorDetalle() {
         onConfirm={handleDelete}
         isPending={isDeleting}
       />
-    </div>
+    </PageContainer>
   );
 }

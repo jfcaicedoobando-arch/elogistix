@@ -114,6 +114,6 @@ export default function Comisiones() {
           <TabVendedorasConfig vendedoras={vendedoras} />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

@@ -137,6 +137,6 @@ export default function EmbarqueDetalle() {
           onToggleNoAplica: handleToggleNoAplica,
         }}
       />
-    </div>
+    </PageContainer>
   );
 }

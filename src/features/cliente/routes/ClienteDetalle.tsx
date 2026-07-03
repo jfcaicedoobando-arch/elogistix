@@ -179,6 +179,6 @@ export default function ClienteDetalle() {
         confirmDelete={confirmDelete}
         isContactDeleting={isContactDeleting}
       />
-    </div>
+    </PageContainer>
   );
 }
