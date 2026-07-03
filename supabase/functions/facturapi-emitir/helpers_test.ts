@@ -50,6 +50,26 @@ Deno.test("buildFacturapiPayload incluye exchange con USD", () => {
   assertEquals(p.currency, "USD");
 });
 
+Deno.test("buildFacturapiPayload usa factor Exento cuando tipo_iva=exento", () => {
+  const ctx: FacturaContext = {
+    ...baseCtx,
+    conceptos: [{ ...baseCtx.conceptos[0], tipo_iva: "exento", tasa_iva: null }],
+  };
+  const p = buildFacturapiPayload(ctx);
+  assertEquals(p.items[0].product.taxes[0].factor, "Exento");
+  assertEquals(p.items[0].product.taxes[0].rate, undefined);
+});
+
+Deno.test("buildFacturapiPayload usa Tasa rate 0 cuando tipo_iva=tasa_0", () => {
+  const ctx: FacturaContext = {
+    ...baseCtx,
+    conceptos: [{ ...baseCtx.conceptos[0], tipo_iva: "tasa_0", tasa_iva: 0 }],
+  };
+  const p = buildFacturapiPayload(ctx);
+  assertEquals(p.items[0].product.taxes[0].factor, "Tasa");
+  assertEquals(p.items[0].product.taxes[0].rate, 0);
+});
+
 Deno.test("basicAuthHeader genera Basic con password vacío", () => {
   const h = basicAuthHeader("sk_test_123");
   assertEquals(h, `Basic ${btoa("sk_test_123:")}`);
