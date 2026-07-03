@@ -1,9 +1,7 @@
-import { useCallback, useRef, useState, KeyboardEvent } from "react";
+import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { StepIndicator } from "@/features/embarques/components/StepIndicator";
+import { WizardShell } from "@/components/shared/WizardShell";
 import { CotizacionWizardFooter } from "@/features/cotizacion/components/wizard/CotizacionWizardFooter";
 import { CotizacionWizardSteps } from "@/features/cotizacion/components/wizard/CotizacionWizardSteps";
 import { ConfirmSinDesgloseDialog } from "@/features/cotizacion/components/ConfirmSinDesgloseDialog";
