@@ -53,6 +53,9 @@ jobs:
             cat /tmp/demo.json
             exit 1
           fi
+          # 13.162.0 — Enmascarar también el email. Aunque es una cuenta demo,
+          # evita que aparezca en logs públicos de Actions.
+          echo "::add-mask::$EMAIL"
           echo "DEMO_USER_EMAIL=$EMAIL" >> "$GITHUB_ENV"
           echo "::add-mask::$PASSWORD"
           echo "DEMO_USER_PASSWORD=$PASSWORD" >> "$GITHUB_ENV"
