@@ -74,7 +74,7 @@ export default function ProformaDetalle() {
   if (isLoading) {
     return (
       <PageContainer>
-        <LoadingState message="Cargando proforma…" />
+        <LoadingState label="Cargando proforma…" />
       </PageContainer>
     );
   }
@@ -84,7 +84,7 @@ export default function ProformaDetalle() {
       <PageContainer>
         <ErrorState
           title="Proforma no encontrada"
-          message="La proforma no existe o no tienes acceso."
+          description="La proforma no existe o no tienes acceso."
           onRetry={() => navigate(-1)}
           retryLabel="Volver"
         />
