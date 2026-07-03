@@ -1,105 +1,83 @@
-# Oleada 1 — Primitivas compartidas
+# Oleada 2 — Migración de módulos maduros a primitivas
 
-Objetivo: crear las 9 primitivas base que consumirán las oleadas 2-5. En esta oleada **no** se migran páginas: sólo se crean/extienden primitivas + tests. El único cambio visible al usuario es que el padding de página deja de duplicarse en las páginas CRM que hoy lo aplican dos veces.
+Consumir las 9 primitivas creadas en la Oleada 1 en los módulos que ya tienen buen "design language" pero duplican patrones. Sin cambios de negocio ni de UX visible salvo consistencia.
 
-## Alcance
+## Módulos en scope (maduros, mismo patrón: lista + filtros + tabla + detalle)
 
-### 1. `PageContainer` (nuevo)
-- `src/components/shared/PageContainer.tsx` — encapsula `mx-auto w-full max-w-screen-2xl p-4 sm:p-6` + `space-y-6` por defecto.
-- `src/components/layout/Layout.tsx` línea 61: reemplaza el `<div>` por `<PageContainer>`.
-- Nada más se migra en esta oleada; los CRM se limpiarán en la oleada 4 cuando eliminen su padding local.
+1. **Facturación** (`src/pages/Facturacion.tsx` + `src/features/facturacion/`)
+2. **Proformas** (`src/pages/Proformas.tsx` + `src/features/proformas/`)
+3. **Cotizaciones** (`src/pages/Cotizaciones.tsx` + `src/features/cotizacion/`)
+4. **Embarques** (`src/pages/Embarques.tsx` + `src/features/embarques/`)
+5. **Clientes** (`src/pages/Clientes.tsx` + `src/features/cliente/`)
 
-### 2. `PageHeader` extendido
-- Agregar props opcionales: `tabs`, `subHeader`, y consolidar `actions` con `gap-2`.
-- Mantener API actual retrocompatible (`title`, `description`, `icon`, `actions`, `className`).
-- No migrar consumidores; sólo publicar los nuevos slots.
+CRM, Costeo, CxP, Auditoría y Admin quedan para la Oleada 4 (legacy con estructura distinta).
 
-### 3. `StatusBadge` + `statusRegistry`
-- `src/lib/status/statusRegistry.ts` — mapa `domain → status → { label, variant, icon? }` para los 5 dominios: `factura`, `proforma`, `embarque`, `cotizacion`, `lead`.
-- Se poblará copiando los valores exactos de los 4 helpers existentes (`getEstadoColor`, `BadgeCiclo`, `EmbarqueBadgeAdmin`, `renderEstadoVigencia`) para no cambiar UX.
-- `src/components/shared/StatusBadge.tsx` — `<StatusBadge domain="factura" status={s} />` sobre `Badge` de shadcn.
-- Los helpers viejos se **conservan** y se marcarán deprecated en oleada 2.
+## Cambios por página (patrón repetido)
 
-### 4. `LoadingState` y `ErrorState`
-- `src/components/shared/states/LoadingState.tsx` — `Loader2` centrado + texto opcional.
-- `src/components/shared/states/ErrorState.tsx` — icono + mensaje + botón "Reintentar" (`onRetry?`).
+Para cada uno de los 5 módulos:
 
-### 5. `ListSkeleton`
-- `src/components/shared/states/ListSkeleton.tsx` — props `rows` (default 5), `variant` ('table' | 'card').
-- Basado en `Skeleton` de shadcn.
+### A. Contenedor y header
+- Envolver el contenido en `<PageContainer>` (quita padding/max-width local duplicado).
+- Reemplazar el header manual por `<PageHeader title description icon actions>`. Si tiene tabs internos, moverlos al slot `tabs`.
 
-### 6. Wrappers de Dialog
-- `src/components/shared/dialogs/ConfirmActionDialog.tsx` — confirmación simple (`variant: 'default' | 'destructive'`).
-- `src/components/shared/dialogs/DeleteConfirmDialog.tsx` — reusa/consolida `DoubleConfirmDeleteDialog` (typable ELIMINAR). Si ya cubre el caso, sólo re-exportar con nombre nuevo.
-- `src/components/shared/dialogs/DocumentPreviewDialog.tsx` — viewer PDF (iframe/pdf.js) sobre `Dialog` base.
+### B. Estados de carga/error/vacío
+- Reemplazar spinners locales por `<LoadingState>`.
+- Reemplazar tarjetas de error por `<ErrorState onRetry>`.
+- Reemplazar skeletons ad-hoc por `<ListSkeleton variant="table">`.
 
-### 7. `columnBuilders`
-- `src/components/shared/dataTable/columnBuilders.tsx` — helpers tipados para `DataTable`:
-  - `statusColumn({ accessor, domain })` — usa `StatusBadge`.
-  - `clientColumn({ accessor })` — `toTitleCase` + truncate.
-  - `moneyColumn({ accessor, currencyAccessor })` — `formatCurrency` + `tabular-nums`.
-  - `dateColumn({ accessor, format })` — respeta locale es-MX / DD/MM/YYYY.
-  - `actionsColumn({ items })` — DropdownMenu estándar con `e.stopPropagation()`.
+### C. Badges de estado
+- Reemplazar `getEstadoColor`, `BadgeCiclo`, `EmbarqueBadgeAdmin`, `renderEstadoVigencia` en las columnas por `<StatusBadge domain={...}>`.
+- Los helpers viejos quedan marcados `@deprecated` (no se borran hasta la Oleada 6).
 
-### 8. `useTableFilters<T>`
-- `src/hooks/shared/useTableFilters.ts` — extiende `useListPageState` con:
-  - Rango de fechas (`dateFrom`, `dateTo`, `isInRange`).
-  - Filtros secundarios tipados (`secondary`).
-  - Chips activos derivados (para `UnifiedFiltersBar`).
-- Devuelve superconjunto compatible con `useListPageState` para migración incremental.
+### D. Filtros
+- Reemplazar la barra de filtros custom por `<UnifiedFiltersBar>` alimentado por `useTableFilters`.
+- Mantener filtros secundarios de cada dominio en el slot `secondary`.
+- Chips activos derivados automáticamente.
 
-### 9. `UnifiedFiltersBar`
-- `src/components/shared/filters/UnifiedFiltersBar.tsx` — consume `useTableFilters`:
-  - Search + estado + chips activos + botón Sheet ("Más filtros") con `MobileFiltersSheet`.
-  - Slots `primary`, `secondary` para inputs personalizados.
+### E. Columnas de tabla
+- Migrar columnas repetidas a los builders:
+  - Estado → `statusColumn({ domain, accessor })`
+  - Cliente → `clientColumn({ accessor })`
+  - Monto → `moneyColumn({ accessor, currencyAccessor })`
+  - Fecha (folio/emisión/etc.) → `dateColumn({ accessor })`
+  - Menú de acciones → `actionsColumn({ items })`
+- Columnas específicas del dominio (folio, estatus operativo, etc.) quedan tal cual.
+
+### F. Diálogos de confirmación
+- Reemplazar los `AlertDialog` inline de "¿Estás seguro?" por `<ConfirmActionDialog>`.
+- Los de eliminación destructiva (typable ELIMINAR) usan `<DeleteConfirmDialog>`.
+- Preview PDF (proforma, factura, cotización) unifica al `<DocumentPreviewDialog>`.
+
+## Guardrails y no-cambios
+
+- Sin tocar RPCs, RLS, edge functions ni forma de datos.
+- Sin renombrar rutas ni props públicos de hooks/servicios.
+- Cada archivo tocado sigue Power of 10 (≤ 200 líneas). Si al migrar un `.tsx` de página crece, se extraen sub-componentes.
+- Tokens semánticos: cero `text-white` / `bg-[#..]`.
+- Retirar del `knip.json > ignore` cada primitiva conforme sus consumidores queden mergeados (`columnBuilders`, `DeleteConfirmDialog`, `DocumentPreviewDialog`, `UnifiedFiltersBar`).
 
 ## Tests
-- Un archivo por primitiva bajo `__tests__/`:
-  - `StatusBadge.test.tsx` — snapshot por dominio × estado.
-  - `LoadingState.test.tsx`, `ErrorState.test.tsx` — render + botón reintentar.
-  - `ListSkeleton.test.tsx` — cantidad de filas y variantes.
-  - `ConfirmActionDialog.test.tsx` — confirma/cancela; `DeleteConfirmDialog` typable.
-  - `columnBuilders.test.tsx` — render de cada builder con `DataTable`.
-  - `useTableFilters.test.ts` — search, chips, rango fechas, sync URL.
-  - `UnifiedFiltersBar.test.tsx` — chips + apertura sheet.
-- Meta de cobertura: cada archivo nuevo > 80 % líneas.
 
-## Detalles técnicos
+- Antes de mergear cada módulo: correr sus tests actuales + los tests de primitivas de la Oleada 1.
+- Agregar `useXxxPageController.test.tsx` cobertura para el cableado de `useTableFilters` si no existe.
+- No bajar thresholds; si algo baja, escribir tests del nuevo cableado.
 
-**Archivos nuevos** (11):
-```
-src/components/shared/PageContainer.tsx
-src/components/shared/StatusBadge.tsx
-src/components/shared/states/LoadingState.tsx
-src/components/shared/states/ErrorState.tsx
-src/components/shared/states/ListSkeleton.tsx
-src/components/shared/dialogs/ConfirmActionDialog.tsx
-src/components/shared/dialogs/DeleteConfirmDialog.tsx
-src/components/shared/dialogs/DocumentPreviewDialog.tsx
-src/components/shared/dataTable/columnBuilders.tsx
-src/components/shared/filters/UnifiedFiltersBar.tsx
-src/hooks/shared/useTableFilters.ts
-src/lib/status/statusRegistry.ts
-```
+## Estrategia de entrega
 
-**Archivos editados** (2):
-```
-src/components/shared/PageHeader.tsx  (agregar slots)
-src/components/layout/Layout.tsx      (usar PageContainer)
-```
+Ejecuto los 5 módulos en **subtareas paralelas** (subagentes), en 2 lotes para evitar conflictos:
 
-**Guardrails**:
-- Sólo tokens semánticos (`bg-card`, `text-muted-foreground`, `bg-warning/15`, etc.), nunca `text-white`/`bg-[#..]`.
-- `StatusBadge` centraliza colores en `statusRegistry`; los componentes no importan variantes directamente.
-- `Power of 10`: cada archivo ≤ 200 líneas; sin `any`; cleanup en effects; paginación N/A aquí.
-- `FormDialogShell` como base para `ConfirmActionDialog`/`DeleteConfirmDialog` cuando aplique (mem://style/form-dialog-shell).
+- **Lote A**: Facturación + Proformas + Cotizaciones (comparten `EnviarDocumentoDialog` y helpers financieros).
+- **Lote B**: Embarques + Clientes.
 
-**Alcance excluido**:
-- Migrar páginas o helpers existentes a las primitivas (eso es Oleada 2+).
-- Tocar tokens PDF, edge functions, RLS, negocio.
+Cada lote:
+1. Migración de archivos.
+2. Correr `bun run lint` y los tests del módulo.
+3. Retirar entradas de `knip.json` cuando corresponda.
 
-## Entrega
+## Bump y changelog
 
-- Un solo bump de versión (`APP_VERSION` + `CHANGELOG.md`) al cerrar la oleada.
-- Verificación: `bun run lint`, `bun run test`, y screenshot rápido de `/inicio` para confirmar que no hay regresión visual (Layout).
-- Al terminar, quedamos listos para la Oleada 2 (migración de módulos maduros).
+Un único bump `13.151.0` al cerrar la Oleada 2, con changelog listando los 5 módulos migrados y los helpers marcados como deprecated.
+
+## Cierre
+
+Al terminar la Oleada 2 quedamos listos para la Oleada 3 (formularios/wizards) según el plan original. **No** borrar `plan.md` todavía — eso es el último paso del último wave.
