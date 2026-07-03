@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
-import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
+
 import { calcularIVA, calcularTotalConIVA, resolverTasaConcepto, sumarSubtotales, sumarMontos } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 
@@ -33,10 +33,9 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
     setter(prev => {
       const copia = [...prev];
       copia[index] = { ...copia[index], [campo]: valor };
-      if (moneda === "USD" && campo === "descripcion" && typeof valor === "string" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
-        copia[index].aplica_iva = false;
-        copia[index].tasa_iva_aplicada = 0;
-      }
+      // El tipo de IVA lo determina el producto seleccionado del catálogo,
+      // que setea `aplica_iva` y `tasa_iva_aplicada` explícitamente después
+      // de la descripción. No hay reset por descripción libre.
       // Mantener consistencia entre tasa y flag booleano.
       if (campo === "tasa_iva_aplicada" && typeof valor === "number") {
         copia[index].aplica_iva = valor > 0;
