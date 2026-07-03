@@ -50,6 +50,11 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? "03");
   const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? "PUE");
   const [enviarEmail, setEnviarEmail] = useState(true);
+  // Modo inteligente: si todo está listo mostramos confirmación compacta;
+  // "Editar datos fiscales" abre el modo completo (analogía: firmar contrato
+  // ante notario — si el borrador está limpio sólo confirmas; si falta un
+  // dato, se abre el pliego completo).
+  const [modoExpandido, setModoExpandido] = useState(false);
 
   if (!facturaId || !factura) return null;
 
@@ -88,8 +93,22 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     });
   };
 
+  const esFastPath =
+    puedeTimbrar &&
+    Boolean(factura.uso_cfdi && factura.forma_pago && factura.metodo_pago);
+  const mostrarCompacto = esFastPath && !modoExpandido;
+
   const footer = (
     <>
+      {mostrarCompacto && (
+        <Button
+          variant="ghost"
+          onClick={() => setModoExpandido(true)}
+          className="mr-auto"
+        >
+          Editar datos fiscales
+        </Button>
+      )}
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
       <Button onClick={onConfirm} disabled={!puedeTimbrar || timbrar.isPending}>
         {timbrar.isPending ? "Timbrando…" : "Timbrar ahora"}
@@ -103,64 +122,88 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       onOpenChange={onOpenChange}
       icon={Stamp}
       title={`Timbrar factura ${factura.numero}`}
-      description="Revisa los datos fiscales antes de emitir el CFDI 4.0 a través de Facturapi."
-      size="lg"
+      description={
+        mostrarCompacto
+          ? "Todo listo para emitir el CFDI 4.0 vía Facturapi."
+          : "Revisa los datos fiscales antes de emitir el CFDI 4.0 a través de Facturapi."
+      }
+      size={mostrarCompacto ? "md" : "lg"}
       footer={footer}
     >
-      <ul className="text-sm space-y-1">
-        {checks.map((c, i) => (
-          <li key={i} className={c.ok ? "text-success" : "text-destructive"}>
-            {c.ok ? "✓" : "✗"} {c.label}
-          </li>
-        ))}
-      </ul>
+      {mostrarCompacto ? (
+        <>
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">Uso CFDI:</span> {usoCfdi}
+            {" · "}
+            <span className="font-medium text-foreground">Forma:</span> {formaPago}
+            {" · "}
+            <span className="font-medium text-foreground">Método:</span> {metodoPago}
+          </div>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <Checkbox
+              checked={enviarEmail}
+              onCheckedChange={(c) => setEnviarEmail(c === true)}
+            />
+            <span>Enviar el CFDI por email al cliente tras timbrar</span>
+          </label>
+        </>
+      ) : (
+        <>
+          <ul className="text-sm space-y-1">
+            {checks.map((c, i) => (
+              <li key={i} className={c.ok ? "text-success" : "text-destructive"}>
+                {c.ok ? "✓" : "✗"} {c.label}
+              </li>
+            ))}
+          </ul>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label>Uso CFDI</Label>
-          <Select value={usoCfdi} onValueChange={setUsoCfdi}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Forma de pago</Label>
-          <Select value={formaPago} onValueChange={setFormaPago}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Método de pago</Label>
-          <Select value={metodoPago} onValueChange={setMetodoPago}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {METODOS_PAGO_SAT.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Uso CFDI</Label>
+              <Select value={usoCfdi} onValueChange={setUsoCfdi}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {USOS_CFDI_SAT.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Forma de pago</Label>
+              <Select value={formaPago} onValueChange={setFormaPago}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Método de pago</Label>
+              <Select value={metodoPago} onValueChange={setMetodoPago}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {METODOS_PAGO_SAT.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-      <label className="flex items-center gap-2 text-sm cursor-pointer">
-        <Checkbox
-          checked={enviarEmail}
-          onCheckedChange={(c) => setEnviarEmail(c === true)}
-        />
-        <span>Enviar el CFDI por email al cliente tras timbrar</span>
-      </label>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <Checkbox
+              checked={enviarEmail}
+              onCheckedChange={(c) => setEnviarEmail(c === true)}
+            />
+            <span>Enviar el CFDI por email al cliente tras timbrar</span>
+          </label>
 
-
-      {!puedeTimbrar && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            Completa los datos fiscales del cliente antes de timbrar.
-            Puedes hacerlo en el detalle del cliente.
-          </AlertDescription>
-        </Alert>
+          {!puedeTimbrar && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                Completa los datos fiscales del cliente antes de timbrar.
+                Puedes hacerlo en el detalle del cliente.
+              </AlertDescription>
+            </Alert>
+          )}
+        </>
       )}
     </FormDialogShell>
   );

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.12] - 2026-07-04
+- **feat(facturación/timbrado)**: `DialogTimbrarFactura` ahora usa **modo inteligente**. Cuando los preflight checks pasan y la factura ya tiene `uso_cfdi`, `forma_pago` y `metodo_pago` definidos, el modal se compacta a una confirmación de un solo click (resumen de una línea + checkbox de envío por email + botón "Timbrar ahora"). Si falta cualquier dato o hay checks en rojo, se conserva el modal completo actual con checklist y selects editables. Un link "Editar datos fiscales" permite expandir manualmente al modo completo desde el compacto. Alineado con la práctica de Contpaq i, Aspel SAE/Facture, Odoo l10n_mx y Bind ERP: el paso preflight se mantiene (evita gastar timbres y trámites de cancelación SAT), pero se reduce fricción cuando no hay decisión que tomar.
+
 ## [13.170.11] - 2026-07-04
 - **fix(facturación/timbrado)**: la edge function `facturapi-emitir` (y las demás que reutilizan `_shared/facturapiClient.ts`: `facturapi-cancelar`, `facturapi-emitir-rep`, `facturapi-emitir-nota-credito`, etc.) fallaba en boot con `TypeError: Could not find constraint 'facturapi@4.18.0' in the list of packages` porque el SDK se cargaba con `import()` **dinámico**. El runtime de Deno construye el grafo de paquetes npm sólo con imports estáticos, así que el paquete no quedaba registrado y todo request devolvía `Edge Function returned a non-2xx status code` al timbrar (Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1`). Se cambia a `import FacturapiDefault from "npm:facturapi@4.18.0"` (estático top-level) y se normaliza el `default.default` de la interop CJS/ESM. Verificado con `curl` a la función tras redeploy: ya responde 400 `factura_id_required` en vez de crashear en boot.
 
