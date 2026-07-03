@@ -1,0 +1,51 @@
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { DetailHeader } from "@/components/shared/DetailHeader";
+
+const navigateMock = vi.fn();
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  return { ...actual, useNavigate: () => navigateMock };
+});
+
+function renderInRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
+
+describe("<DetailHeader />", () => {
+  it("renderiza title, subtitle y badge", () => {
+    renderInRouter(
+      <DetailHeader
+        title="Factura A-001"
+        subtitle="Cliente: ACME"
+        badge={<span data-testid="badge">Timbrada</span>}
+      />,
+    );
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Factura A-001");
+    expect(screen.getByText("Cliente: ACME")).toBeInTheDocument();
+    expect(screen.getByTestId("badge")).toBeInTheDocument();
+  });
+
+  it("botón Volver navega a backTo (número)", async () => {
+    navigateMock.mockClear();
+    renderInRouter(<DetailHeader title="X" backTo={-1} />);
+    await userEvent.click(screen.getByRole("button", { name: /volver/i }));
+    expect(navigateMock).toHaveBeenCalledWith(-1);
+  });
+
+  it("botón Volver navega a backTo (ruta)", async () => {
+    navigateMock.mockClear();
+    renderInRouter(<DetailHeader title="X" backTo="/facturacion" />);
+    await userEvent.click(screen.getByRole("button", { name: /volver/i }));
+    expect(navigateMock).toHaveBeenCalledWith("/facturacion");
+  });
+
+  it("renderiza acciones trailing", () => {
+    renderInRouter(
+      <DetailHeader title="X" trailing={<button type="button">Editar</button>} />,
+    );
+    expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+  });
+});
