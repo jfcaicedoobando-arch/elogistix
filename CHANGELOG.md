@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.163.2] - 2026-07-04
+- **feat(clientes)**: el diálogo *Editar Cliente* ahora incluye una zona para subir la Constancia de Situación Fiscal (PDF). Reutiliza `parseCsf` para extraer nombre, RFC, CP, dirección, ciudad, estado y régimen fiscal, y los prellena en el formulario (sólo sobrescribe si el CSF trae valor). El usuario puede ajustar antes de guardar. Antes esta opción sólo existía al dar de alta el cliente.
+
 ## [13.163.1] - 2026-07-04
 - **feat(proformas)**: la vista de detalle `/proformas/:id` ahora muestra las notas capturadas al crear la proforma (nueva `NotasCard` bajo Datos generales; respeta saltos de línea). Antes sólo aparecían en el PDF.
 
