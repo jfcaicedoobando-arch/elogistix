@@ -37,6 +37,8 @@ export default function TabFacturacion({ tasaIva, setTasaIva }: Props) {
       </Card>
 
       <FacturapiCredencialesCard />
+
+      <CatalogoClavesSATCard />
     </div>
   );
 }
