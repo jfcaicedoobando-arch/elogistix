@@ -154,17 +154,19 @@ async function sendToRecipients(params: {
   return resultados;
 }
 
-Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
-  const preflight = handlePreflightStrict(req);
-  if (preflight) return preflight;
-  const cors = buildCors(req);
-  if (req.method !== 'POST') return json(cors, { error: 'Method not allowed' }, 405);
+interface AuthedCtx {
+  userId: string;
+  userEmail: string;
+  admin: ReturnType<typeof createClient>;
+  supabaseUrl: string;
+  supabaseServiceKey: string;
+}
 
+async function authenticateRequest(req: Request, cors: Record<string, string>): Promise<AuthedCtx | Response> {
   const url = Deno.env.get('SUPABASE_URL');
   const anon = Deno.env.get('SUPABASE_ANON_KEY');
   const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !anon || !service) return json(cors, { error: 'Server configuration error' }, 500);
-
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.toLowerCase().startsWith('bearer ')) return json(cors, { error: 'Missing authorization' }, 401);
   const userClient = createClient(url, anon, {
@@ -173,55 +175,39 @@ Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
   });
   const { data: userData, error: authErr } = await userClient.auth.getUser();
   if (authErr || !userData?.user) return json(cors, { error: 'Unauthorized' }, 401);
-  const userId = userData.user.id;
-  const userEmail = userData.user.email ?? '';
+  return {
+    userId: userData.user.id,
+    userEmail: userData.user.email ?? '',
+    admin: createClient(url, service, { auth: { persistSession: false } }),
+    supabaseUrl: url,
+    supabaseServiceKey: service,
+  };
+}
 
-  let body: Record<string, unknown>;
-  try { body = await req.json(); } catch { return json(cors, { error: 'Invalid JSON' }, 400); }
-
-  const facturaId = String(body.factura_id ?? '');
-  if (!facturaId) return json(cors, { error: 'factura_id requerido' }, 400);
-
-  const admin = createClient(url, service, { auth: { persistSession: false } });
-
-  const loaded = await loadFactura(admin, facturaId, userId);
-  if ('err' in loaded) return json(cors, { error: loaded.err }, loaded.status);
-  const factura = loaded.factura;
-
-  const parsed = parseBody(body);
-  if (parsed.validRecipients.length === 0) {
-    return json(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
-  }
-
-  // Descargar PDF y XML desde FacturApi
-  const keyRes = await resolveFacturapiKey(admin, factura.organization_id);
-  if (!keyRes.ok) return json(cors, { error: keyRes.data.error, message: keyRes.data.message }, keyRes.data.status);
-
-  const ts = Date.now();
+async function prepareAttachments(
+  admin: ReturnType<typeof createClient>,
+  factura: FacturaCtx,
+  apiKey: string,
+  ts: number,
+): Promise<{ pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string }> {
   const basePath = `${factura.organization_id}/${factura.id}/${factura.numero}-${ts}`;
   const pdfPath = `${basePath}.pdf`;
   const xmlPath = `${basePath}.xml`;
+  const [pdfBytes, xmlBytes] = await Promise.all([
+    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'pdf'),
+    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'xml'),
+  ]);
+  await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
+  await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
+  const [pdfLink, xmlLink] = await Promise.all([signUrl(admin, pdfPath), signUrl(admin, xmlPath)]);
+  return { pdfPath, xmlPath, pdfLink, xmlLink };
+}
 
-  let pdfLink: string;
-  let xmlLink: string;
-  try {
-    const [pdfBytes, xmlBytes] = await Promise.all([
-      fetchFacturapiFile(keyRes.data.apiKey, factura.facturapi_id!, 'pdf'),
-      fetchFacturapiFile(keyRes.data.apiKey, factura.facturapi_id!, 'xml'),
-    ]);
-    await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
-    await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
-    [pdfLink, xmlLink] = await Promise.all([signUrl(admin, pdfPath), signUrl(admin, xmlPath)]);
-  } catch (e) {
-    await captureEdgeException(e, { fn: 'enviar-factura-email', extra: { phase: 'fetch_upload_sign', factura_id: factura.id } });
-    return json(cors, { error: 'No se pudo preparar los adjuntos', detail: (e as Error).message }, 500);
-  }
-
+function buildTemplateData(factura: FacturaCtx, parsed: SendParsed, pdfLink: string, xmlLink: string) {
   const fechaEmision = factura.fecha_emision
     ? new Date(factura.fecha_emision).toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' })
     : undefined;
-
-  const templateData = {
+  return {
     numero: factura.numero,
     cliente: factura.cliente_nombre ?? '',
     total: parsed.totalFormateado,
@@ -237,15 +223,92 @@ Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
     ejecutivoEmail: parsed.ejecutivo.email,
     ejecutivoTelefono: parsed.ejecutivo.telefono,
   };
+}
 
+async function persistEnvio(params: {
+  ctx: AuthedCtx;
+  factura: FacturaCtx;
+  parsed: SendParsed;
+  paths: { pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string };
+  resultados: { email: string; tipo: string; ok: boolean; error?: string }[];
+  estado: string;
+  anyOk: boolean;
+}): Promise<string | null> {
+  const { ctx, factura, parsed, paths, resultados, estado, anyOk } = params;
+  const anyFail = resultados.some((r) => !r.ok);
+  const { data: envio } = await ctx.admin.from('factura_envios').insert({
+    factura_id: factura.id,
+    organization_id: factura.organization_id,
+    enviado_por: ctx.userId,
+    destinatarios: parsed.validRecipients,
+    cc: parsed.ccEmails,
+    asunto: parsed.asunto,
+    mensaje: parsed.mensaje,
+    pdf_storage_path: paths.pdfPath,
+    xml_storage_path: paths.xmlPath,
+    pdf_link_publico: paths.pdfLink,
+    xml_link_publico: paths.xmlLink,
+    estado,
+    error: anyFail ? JSON.stringify(resultados.filter((r) => !r.ok)) : null,
+  }).select('id').single();
+  await ctx.admin.from('bitacora_actividad').insert({
+    organization_id: factura.organization_id,
+    usuario_id: ctx.userId,
+    usuario_email: ctx.userEmail,
+    modulo: 'facturacion',
+    accion: anyOk ? 'factura_enviada_email' : 'factura_envio_email_fallido',
+    entidad_id: factura.id,
+    entidad_nombre: factura.numero,
+    detalles: { envio_id: envio?.id ?? null, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
+  }).then(() => null, () => null);
+  return envio?.id ?? null;
+}
+
+Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const cors = buildCors(req);
+  if (req.method !== 'POST') return json(cors, { error: 'Method not allowed' }, 405);
+
+  const authed = await authenticateRequest(req, cors);
+  if (authed instanceof Response) return authed;
+
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return json(cors, { error: 'Invalid JSON' }, 400); }
+
+  const facturaId = String(body.factura_id ?? '');
+  if (!facturaId) return json(cors, { error: 'factura_id requerido' }, 400);
+
+  const loaded = await loadFactura(authed.admin, facturaId, authed.userId);
+  if ('err' in loaded) return json(cors, { error: loaded.err }, loaded.status);
+  const factura = loaded.factura;
+
+  const parsed = parseBody(body);
+  if (parsed.validRecipients.length === 0) {
+    return json(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
+  }
+
+  const keyRes = await resolveFacturapiKey(authed.admin, factura.organization_id);
+  if (!keyRes.ok) return json(cors, { error: keyRes.data.error, message: keyRes.data.message }, keyRes.data.status);
+
+  const ts = Date.now();
+  let paths: { pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string };
+  try {
+    paths = await prepareAttachments(authed.admin, factura, keyRes.data.apiKey, ts);
+  } catch (e) {
+    await captureEdgeException(e, { fn: 'enviar-factura-email', extra: { phase: 'fetch_upload_sign', factura_id: factura.id } });
+    return json(cors, { error: 'No se pudo preparar los adjuntos', detail: (e as Error).message }, 500);
+  }
+
+  const templateData = buildTemplateData(factura, parsed, paths.pdfLink, paths.xmlLink);
   const recipients = [
     ...parsed.validRecipients.map((d) => ({ email: d.email, nombre: d.nombre, tipo: 'to' as const })),
     ...parsed.ccEmails.map((e) => ({ email: e, tipo: 'cc' as const })),
   ];
 
   const resultados = await sendToRecipients({
-    supabaseUrl: url,
-    supabaseServiceKey: service,
+    supabaseUrl: authed.supabaseUrl,
+    supabaseServiceKey: authed.supabaseServiceKey,
     recipients,
     templateData,
     facturaId: factura.id,
@@ -256,39 +319,14 @@ Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
   const anyFail = resultados.some((r) => !r.ok);
   const estado = anyOk && anyFail ? 'parcial' : anyOk ? 'enviado' : 'fallido';
 
-  const { data: envio } = await admin.from('factura_envios').insert({
-    factura_id: factura.id,
-    organization_id: factura.organization_id,
-    enviado_por: userId,
-    destinatarios: parsed.validRecipients,
-    cc: parsed.ccEmails,
-    asunto: parsed.asunto,
-    mensaje: parsed.mensaje,
-    pdf_storage_path: pdfPath,
-    xml_storage_path: xmlPath,
-    pdf_link_publico: pdfLink,
-    xml_link_publico: xmlLink,
-    estado,
-    error: anyFail ? JSON.stringify(resultados.filter((r) => !r.ok)) : null,
-  }).select('id').single();
-
-  await admin.from('bitacora_actividad').insert({
-    organization_id: factura.organization_id,
-    usuario_id: userId,
-    usuario_email: userEmail,
-    modulo: 'facturacion',
-    accion: anyOk ? 'factura_enviada_email' : 'factura_envio_email_fallido',
-    entidad_id: factura.id,
-    entidad_nombre: factura.numero,
-    detalles: { envio_id: envio?.id ?? null, destinatarios: parsed.validRecipients.map((d) => d.email), cc: parsed.ccEmails, resultados },
-  }).then(() => null, () => null);
+  const envioId = await persistEnvio({ ctx: authed, factura, parsed, paths, resultados, estado, anyOk });
 
   return json(cors, {
     success: anyOk,
     estado,
-    envio_id: envio?.id ?? null,
+    envio_id: envioId,
     resultados,
-    pdf_link: pdfLink,
-    xml_link: xmlLink,
+    pdf_link: paths.pdfLink,
+    xml_link: paths.xmlLink,
   });
 }));
