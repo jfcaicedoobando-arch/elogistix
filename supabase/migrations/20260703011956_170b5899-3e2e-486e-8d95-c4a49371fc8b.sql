@@ -1,0 +1,1 @@
+ALTER TYPE origen_factura ADD VALUE IF NOT EXISTS 'conversion_proforma';

@@ -7368,7 +7368,7 @@ export type Database = {
         | "ErrorFacturacion"
         | "Cancelacion"
         | "Otro"
-      origen_factura: "proforma" | "manual"
+      origen_factura: "proforma" | "manual" | "conversion_proforma"
       origen_proveedor: "Nacional" | "Extranjero"
       subtipo_gasto_operativo:
         | "Renta"
@@ -7670,7 +7670,7 @@ export const Constants = {
         "Cancelacion",
         "Otro",
       ],
-      origen_factura: ["proforma", "manual"],
+      origen_factura: ["proforma", "manual", "conversion_proforma"],
       origen_proveedor: ["Nacional", "Extranjero"],
       subtipo_gasto_operativo: [
         "Renta",
