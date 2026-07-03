@@ -11,12 +11,14 @@ import { DestinatariosPicker } from "../DestinatariosPicker";
 
 const contactoCliente = {
   id: "c1",
+  nombre: "Juan",
   contacto: "Juan",
   email: "juan@cliente.com",
   tipo: "principal",
 };
 const contactoProveedor = {
   id: "p1",
+  nombre: "Prov",
   contacto: "Prov",
   email: "prov@x.com",
   tipo: "proveedor",
