@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.158.0] - 2026-07-04
+- **feat(design-language)**: Ola 7 · Lote B — nuevas primitivas compartidas.
+  - `DetailHeader` (`src/components/shared/`): back-button + icono + título + badge + acciones. Para páginas de detalle (Factura, Proforma, Cliente, Proveedor, portal).
+  - `KpiCard` canónico en `src/components/shared/`: props `variant: default | success | warning | info | destructive`, `delta`, `sublabel`, `onClick`. `dashboardEjecutivo/components/KpiCard` ahora re-exporta el shared.
+  - `DescriptionList`: renderiza pares `label / valor` (grid 1 o 2 cols, `mono`, `hideEmpty`, placeholder). Reemplaza los `<p><span>label:</span> …</p>` duplicados.
+  - `PortalFiltersBar`: search + hasta 3 selects para los portales; migrados `PortalEmbarques`, `PortalFacturas`, `PortalCotizaciones`.
+  - Tests: 16 casos nuevos (`DetailHeader`, `KpiCard`, `DescriptionList`, `PortalFiltersBar`).
+
 ## [13.157.1] - 2026-07-04
 - **refactor(design-language)**: Ola 7 · barrido de estilos hardcodeados.
   - Reemplazo masivo en 123 archivos: `text-[10px]` → `text-2xs`; paleta `emerald-*` → tokens `success` (bg/text/border con opacidades semánticas); paleta `amber-*` → tokens `warning`.
