@@ -1,55 +1,44 @@
 /**
- * FacturaResumenCard — datos generales de la factura para la vista admin.
- * Incluye links a cliente, embarque y proforma origen cuando existen.
+ * FacturaResumenCard — "Datos generales" del CFDI.
+ * v13.164.3: se removieron duplicados con el header (Cliente, Expediente,
+ * Moneda, Total) y el bloque de totales pasó a `FacturaTotalesCard`.
+ * Ahora muestra fechas, referencias fiscales legibles (uso CFDI, forma y
+ * método de pago), días de crédito, tipo de cambio, referencia BL,
+ * proforma origen y notas.
  */
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
+import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
 
 interface Props {
   factura: FacturaDetalle;
 }
 
+function labelDe(options: readonly { value: string; label: string }[], clave: string | null | undefined) {
+  if (!clave) return "—";
+  const o = options.find((x) => x.value === clave);
+  return o ? o.label : clave;
+}
+
 export function FacturaResumenCard({ factura }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Datos de la factura</CardTitle>
+        <CardTitle className="text-lg">Datos generales</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          <Field
-            label="Cliente"
-            value={
-              factura.cliente_id ? (
-                <Link to={`/clientes/${factura.cliente_id}`} className="text-accent hover:underline">
-                  {toTitleCase(factura.cliente_nombre)}
-                </Link>
-              ) : (
-                toTitleCase(factura.cliente_nombre)
-              )
-            }
-          />
-          <Field
-            label="Expediente"
-            mono
-            value={
-              factura.embarque_id ? (
-                <Link to={`/embarques/${factura.embarque_id}`} className="text-accent hover:underline">
-                  {factura.expediente}
-                </Link>
-              ) : (
-                factura.expediente
-              )
-            }
-          />
-          <Field label="Moneda" value={factura.moneda} />
           <Field label="Emisión" value={factura.fecha_emision ? formatDate(factura.fecha_emision) : "—"} />
           <Field
             label="Vencimiento"
             value={factura.fecha_vencimiento ? formatDate(factura.fecha_vencimiento) : "—"}
           />
+          <Field label="Días de crédito" value={String(factura.dias_credito ?? 0)} />
+          <Field label="Uso CFDI" value={labelDe(USOS_CFDI_SAT, factura.uso_cfdi)} />
+          <Field label="Forma de pago" value={labelDe(FORMAS_PAGO_SAT, factura.forma_pago)} />
+          <Field label="Método de pago" value={labelDe(METODOS_PAGO_SAT, factura.metodo_pago)} />
           {factura.moneda !== "MXN" && (
             <Field label="Tipo de cambio" value={`$${Number(factura.tipo_cambio).toFixed(4)}`} />
           )}
@@ -71,12 +60,6 @@ export function FacturaResumenCard({ factura }: Props) {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-3 border-t pt-4">
-          <Total label="Subtotal" value={formatCurrency(Number(factura.subtotal), factura.moneda)} />
-          <Total label="IVA" value={formatCurrency(Number(factura.iva), factura.moneda)} />
-          <Total label="Total" value={formatCurrency(Number(factura.total), factura.moneda)} highlight />
-        </div>
-
         {factura.notas && (
           <div className="border-t pt-4">
             <p className="text-xs text-muted-foreground mb-1">Notas</p>
@@ -93,15 +76,6 @@ function Field({ label, value, mono }: { label: string; value: React.ReactNode; 
     <div className="min-w-0">
       <p className="text-xs text-muted-foreground">{label}</p>
       <div className={`font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
-    </div>
-  );
-}
-
-function Total({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className={`rounded-lg border px-3 py-2 ${highlight ? "bg-accent/5 border-accent/20" : ""}`}>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`font-bold tabular-nums ${highlight ? "text-base text-accent" : "text-sm"}`}>{value}</p>
     </div>
   );
 }

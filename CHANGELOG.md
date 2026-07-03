@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.164.3] - 2026-07-04
+- **refactor(facturación)**: rediseño de la vista `/facturacion/:id` para timbrar con menos ruido.
+  - **Elimina duplicados**: Total, Moneda, Cliente y Expediente ya no aparecen dos veces (solo en el header). Notas se muestran una sola vez y el checklist fiscal deja de estar triplicado.
+  - **Nueva card "Emisor"** (readonly): razón social, RFC, dirección y contacto del tenant que va a timbrar — clave en multi-tenant.
+  - **Nueva card "Receptor"**: consolida el checklist fiscal del cliente (RFC/CP/Régimen/Uso CFDI) con validación inline ✓/✗ por campo y CTA a "Completar datos" cuando algo falta. Reemplaza al banner `FacturaFiscalCheckAlert` en la vista de detalle.
+  - **Nueva card "Totales"**: bloque destacado con Subtotal / IVA / Total.
+  - **Nueva card "Timbrado fiscal"** (post-timbrado): UUID (copiable), folio, serie asignada, fecha de emisión.
+  - **"Datos generales"** ahora muestra Uso CFDI / Forma de pago / Método de pago en formato legible (ej. "G03 – Gastos en general") en lugar de solo códigos, más días de crédito y tipo de cambio.
+- **fix(facturación)**: se elimina el input "Serie" del editor de borrador y del diálogo de timbrado. FacturAPI es la fuente de verdad para serie y folio (`serieTimbrada = fapiJson.series`), así que teclearla manualmente solo introducía riesgo de mismatch. `DatosTimbradoPatch.serie` pasa a ser opcional (backend compatible).
+
 ## [13.164.2] - 2026-07-04
 - **fix(clientes/facturación)**: el timbrado ya no marca "falta código postal" cuando el cliente sí lo tiene. La tabla `clientes` tenía dos columnas para el mismo dato (`cp` y `codigo_postal`): el formulario guardaba en `cp` pero la validación fiscal/FacturAPI leía `codigo_postal`. Se agrega un trigger de BD (`clientes_sync_cp`) que mantiene ambas columnas sincronizadas en INSERT/UPDATE y una migración de backfill que rellena `codigo_postal` desde `cp` para los clientes existentes (incluye a QUIMCELT POWDER COATINGS).
 

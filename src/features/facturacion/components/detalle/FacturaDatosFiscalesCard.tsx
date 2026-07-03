@@ -1,8 +1,8 @@
 /**
- * FacturaDatosFiscalesCard — formulario para editar los datos fiscales
- * del borrador (Serie, Uso CFDI, Forma/Método de pago, días crédito, notas,
- * tipo de cambio). Muestra checks fiscales del cliente en línea para saber
- * si falta RFC/CP/Régimen antes de intentar timbrar.
+ * FacturaDatosFiscalesCard — "Configuración de timbrado" del borrador.
+ * v13.164.3: se removió Serie (FacturAPI la asigna) y el checklist fiscal
+ * (ahora vive en `FacturaReceptorCard`). Solo edita los campos que sí puede
+ * elegir el usuario: Uso CFDI, Forma/Método de pago, Días crédito, TC, Notas.
  */
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +18,6 @@ import {
   type DatosTimbradoPatch,
   type ClienteFiscalRow,
 } from "@/features/facturacion/services";
-import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
 import {
   inicialesDatosFiscales,
@@ -40,7 +39,6 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
   });
 
   const iniciales = inicialesDatosFiscales(factura);
-  const [serie, setSerie] = useState(iniciales.serie);
   const [usoCfdi, setUsoCfdi] = useState(iniciales.usoCfdi);
   const [formaPago, setFormaPago] = useState(iniciales.formaPago);
   const [metodoPago, setMetodoPago] = useState(iniciales.metodoPago);
@@ -54,15 +52,6 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
       setUsoCfdi(cliente.uso_cfdi_default);
     }
   }, [cliente?.uso_cfdi_default, factura.uso_cfdi]);
-
-  const { checks, puedeTimbrar } = buildChecksTimbrado({
-    rfc: cliente?.rfc ?? factura.rfc_cliente ?? "",
-    cp: cliente?.codigo_postal ?? "",
-    regimen: cliente?.regimen_fiscal ?? "",
-    usoCfdi,
-    formaPago,
-    metodoPago,
-  });
 
   const guardar = useMutation({
     mutationFn: (patch: DatosTimbradoPatch) => actualizarDatosTimbradoFactura(factura.id, patch),
@@ -78,7 +67,7 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
     e.preventDefault();
     guardar.mutate(
       buildDatosTimbradoPatch(
-        { serie, usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas },
+        { usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas },
         factura.moneda,
       ),
     );
@@ -87,25 +76,11 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Datos fiscales del borrador</CardTitle>
+        <CardTitle className="text-lg">Configuración de timbrado</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
-          <ul className="text-xs space-y-0.5">
-            {checks.map((c, i) => (
-              <li key={i} className={c.ok ? "text-success" : "text-destructive"}>
-                {c.ok ? "✓" : "✗"} {c.label}
-              </li>
-            ))}
-          </ul>
-          {!puedeTimbrar && (
-            <p className="text-xs text-muted-foreground">
-              Completa los datos del cliente en su ficha para poder timbrar.
-            </p>
-          )}
-
           <DatosFiscalesForm
-            serie={serie} setSerie={setSerie}
             usoCfdi={usoCfdi} setUsoCfdi={setUsoCfdi}
             formaPago={formaPago} setFormaPago={setFormaPago}
             metodoPago={metodoPago} setMetodoPago={setMetodoPago}

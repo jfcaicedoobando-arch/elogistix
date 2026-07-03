@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,7 +46,6 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   });
 
   const { toast } = useToast();
-  const [serie, setSerie] = useState("A");
   const [usoCfdi, setUsoCfdi] = useState(factura?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
   const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? "03");
   const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? "PUE");
@@ -65,7 +64,6 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
 
   const onConfirm = async () => {
     await actualizarDatosTimbradoFactura(facturaId, {
-      serie,
       uso_cfdi: usoCfdi,
       forma_pago: formaPago,
       metodo_pago: metodoPago,
@@ -118,10 +116,6 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
       </ul>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label>Serie</Label>
-          <Input value={serie} onChange={(e) => setSerie(e.target.value.toUpperCase().slice(0, 5))} maxLength={5} />
-        </div>
         <div>
           <Label>Uso CFDI</Label>
           <Select value={usoCfdi} onValueChange={setUsoCfdi}>

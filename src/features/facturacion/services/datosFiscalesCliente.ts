@@ -23,7 +23,7 @@ export async function fetchClienteFiscal(clienteId: string): Promise<ClienteFisc
 }
 
 export interface DatosTimbradoPatch {
-  serie: string;
+  serie?: string;
   uso_cfdi: string;
   forma_pago: string;
   metodo_pago: string;
