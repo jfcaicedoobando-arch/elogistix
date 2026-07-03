@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.169.0] - 2026-07-04
+- **feat(cotizaciones + facturación)**: el catálogo `catalogo_claves_sat` evoluciona a un **catálogo maestro de productos y servicios** por organización. Cada producto lleva ahora nombre visible, clave SAT, **tipo de IVA** (Gravado 16% / Tasa 0% / Exento) y **clave de unidad SAT** (E48, H87, KGM, XPP, etc.). En el wizard de cotización, los renglones de conceptos (USD y MXN) dejan de ser texto libre: sólo se pueden elegir productos activos del catálogo mediante un combobox con búsqueda. Al elegir un producto, se autocompleta descripción, tasa de IVA y unidad. Renglones legacy (nombres que ya no existen en el catálogo) se marcan con un badge de advertencia y obligan a re-seleccionar. Facturas históricas y proformas existentes no se tocan.
+- Migración: nuevas columnas `tipo_iva`, `tasa_iva_default`, `clave_unidad_sat`, `nombre_unidad` en `catalogo_claves_sat` (backfill: 16% + E48). Nuevo RPC `resolver_producto_sat(org, nombre)` para autoresolver a partir de un nombre exacto. El resolver por patrón (`resolver_clave_sat`) se conserva como fallback para conversiones de proformas viejas.
+- UI: `CatalogoClavesSATCard` renombrado a "Catálogo de productos y servicios" con selects nuevos de tipo IVA y unidad SAT. Nuevo componente `ProductoServicioSelect` reutilizable.
+
 ## [13.168.0] - 2026-07-04
 - **feat(facturación)**: catálogo por-organización de claves SAT por concepto (`catalogo_claves_sat`). Define patrones (ej. "Flete" → 78101800, "Almacenaje" → 80131502) y el sistema asigna la clave correcta a cada renglón al convertir una proforma en factura. Si ningún patrón coincide, cae al default `78101800`. Nueva sección en Configuración → Facturación con CRUD (crear / editar / activar / eliminar reglas, priorizar). Sólo admin/admin_org/contador/super_admin pueden editar. El RPC `convertir_proformas_a_factura` ahora usa el helper `resolver_clave_sat(org, descripcion)` para elegir la clave por renglón.
 
