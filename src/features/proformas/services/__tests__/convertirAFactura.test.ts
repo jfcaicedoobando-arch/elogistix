@@ -21,10 +21,13 @@ describe("convertirProformaAFactura", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("llama al RPC con defaults para opcionales", async () => {
-    rpc.mockResolvedValueOnce({ data: { id: "F-uuid", numero: "F-1" }, error: null });
+  it("llama al RPC con defaults y devuelve arreglo de borradores", async () => {
+    rpc.mockResolvedValueOnce({
+      data: [{ id: "F-uuid", numero: "F-1", moneda: "MXN" }],
+      error: null,
+    });
     const res = await convertirProformaAFactura(baseParams);
-    expect(res).toEqual({ facturaId: "F-uuid", facturaNumero: "F-1" });
+    expect(res).toEqual([{ facturaId: "F-uuid", facturaNumero: "F-1", moneda: "MXN" }]);
     expect(rpc).toHaveBeenCalledWith("convertir_proformas_a_factura", {
       p_proforma_ids: ["p1"],
       p_serie_id: "s1",
@@ -37,8 +40,24 @@ describe("convertirProformaAFactura", () => {
     });
   });
 
+  it("devuelve dos borradores cuando la proforma es bimoneda", async () => {
+    rpc.mockResolvedValueOnce({
+      data: [
+        { id: "F-mxn", numero: "BORRADOR-aaa", moneda: "MXN" },
+        { id: "F-usd", numero: "BORRADOR-bbb", moneda: "USD" },
+      ],
+      error: null,
+    });
+    const res = await convertirProformaAFactura(baseParams);
+    expect(res).toHaveLength(2);
+    expect(res.map((r) => r.moneda)).toEqual(["MXN", "USD"]);
+  });
+
   it("pasa notas, diasCredito y requestId cuando se proveen", async () => {
-    rpc.mockResolvedValueOnce({ data: { id: "X", numero: "F-2" }, error: null });
+    rpc.mockResolvedValueOnce({
+      data: [{ id: "X", numero: "F-2", moneda: "MXN" }],
+      error: null,
+    });
     await convertirProformaAFactura({ ...baseParams, diasCredito: 15, notas: "nota", requestId: "req-1" });
     expect(rpc).toHaveBeenCalledWith("convertir_proformas_a_factura", expect.objectContaining({
       p_dias_credito: 15,
@@ -52,8 +71,8 @@ describe("convertirProformaAFactura", () => {
     await expect(convertirProformaAFactura(baseParams)).rejects.toMatchObject({ message: "DB fail" });
   });
 
-  it("lanza cuando el RPC devuelve null", async () => {
-    rpc.mockResolvedValueOnce({ data: null, error: null });
+  it("lanza cuando el RPC devuelve arreglo vacío", async () => {
+    rpc.mockResolvedValueOnce({ data: [], error: null });
     await expect(convertirProformaAFactura(baseParams)).rejects.toThrow("No se pudo generar la factura");
   });
 });
