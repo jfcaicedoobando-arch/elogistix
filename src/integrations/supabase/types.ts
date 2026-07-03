@@ -6480,12 +6480,12 @@ export type Database = {
           updated_at: string
           uso_cfdi: string | null
           uuid_fiscal: string | null
-        }
+        }[]
         SetofOptions: {
           from: "*"
           to: "facturas"
-          isOneToOne: true
-          isSetofReturn: false
+          isOneToOne: false
+          isSetofReturn: true
         }
       }
       cotizaciones_listado: {
