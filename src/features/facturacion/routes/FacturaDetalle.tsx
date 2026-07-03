@@ -56,9 +56,12 @@ export default function FacturaDetalle() {
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
   const sinTimbrar = !!factura && !factura.uuid_fiscal;
+  const esBorrador = factura?.estado === "Borrador" && !factura?.facturapi_id;
+  const puedeEditarBorrador = !!esBorrador && canEdit;
   const puedeEliminarBorrador = canDeleteBorrador(factura, canEdit);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
+  const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
 
 
   // Auto-abrir el diálogo de timbrado cuando llegamos desde la conversión de
