@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.149.3] - 2026-07-04
+- **chore(lint)**: arregla `bun run lint` (error `preserve-caught-error` en `enviarFacturaEmail.ts` — ahora re-lanza con `{ cause: e }`) y warnings de `enviar-factura-email/index.ts` (complejidad 34 y max-lines 252) extrayendo helpers a `supabase/functions/enviar-factura-email/helpers.ts` (auth, adjuntos, template, envío, persistencia). El test estructural `index_test.ts` ahora lee ambos archivos concatenados.
+- **chore(knip)**: elimina código muerto detectado por `lint:unused:strict` — borra `src/features/cotizacion/components/detalle/DestinatariosPicker.tsx`, `src/features/cotizacion/hooks/useEnvioCotizacionForm.ts` y `src/features/facturacion/components/DateRangeFilter.tsx` (reemplazados por los shells compartidos), y quita los exports sin uso `fetchFacturacionPorEmitir`, `useAprobarProformas` y `useConsolidarProformas`.
+
 ## [13.149.2] - 2026-07-04
 - **test(coverage)**: agrega tests de render para `DestinatariosPicker` (contactos cliente/proveedor, estado loading/vacío, validación de email manual, quitar chips) y `EnviarDocumentoDialog` (título, envío con payload, cancelar, reenviar, toggle "marcar como enviada") en `src/components/shared/emails/__tests__/`, cerrando el 0% de cobertura del nuevo módulo shared/emails detectado en CI (functions 29.59% → umbral 30%, branches 33.56% → umbral 34%).
 
