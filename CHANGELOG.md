@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.16] - 2026-07-04
+- **fix(facturación/permisos)**: en el wizard "Conectar FacturApi" el rol `contador` ya podía guardar la API key (v13.170.15) pero el botón **Siguiente** del paso 2 seguía deshabilitado. Causa: RLS de `facturapi_credenciales` sólo permitía `SELECT` a `admin_org`/`super_admin`, así que el hook `useFacturapiCredenciales` no leía el `last4` recién guardado y `keyActivaCargada` quedaba `false`. Se amplían ambas policies (SELECT y ALL) para aceptar también `has_role(uid,'contador')`, en línea con el helper `_assert_facturapi_admin`.
+
 ## [13.170.15] - 2026-07-04
 - **fix(facturación/permisos)**: el rol `contador` ahora puede guardar/borrar/consultar la API key de FacturApi en Configuración → Facturación Electrónica. Antes el helper `_assert_facturapi_admin` sólo aceptaba `super_admin`, `admin_org` y `admin`, así que cualquier contador recibía `forbidden (42501)`. Reportado por Sentry `useSetFacturapiApiKey` (Elogistix / isela.martinez). Cambio mínimo: se agrega `has_role(uid,'contador')` como camino permitido en la función SECURITY DEFINER; el resto de la matriz de permisos y RLS de `facturapi_credenciales` no cambia.
 
