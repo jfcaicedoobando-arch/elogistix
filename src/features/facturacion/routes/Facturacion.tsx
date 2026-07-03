@@ -28,7 +28,6 @@ import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFac
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { FacturacionKpisFiscales } from "@/features/facturacion/components/FacturacionKpisFiscales";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
-import { DateRangeFilter } from "@/features/facturacion/components/DateRangeFilter";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { buildFacturaColumns, type Factura } from "./facturacionColumns";
