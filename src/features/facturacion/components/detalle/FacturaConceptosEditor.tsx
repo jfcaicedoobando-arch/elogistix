@@ -79,6 +79,7 @@ export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conc
       cantidad: row.cantidad,
       precio_unitario: row.precio_unitario,
       clave_sat: row.clave_sat,
+      tipo_iva: row.tipo_iva,
     });
   };
 
