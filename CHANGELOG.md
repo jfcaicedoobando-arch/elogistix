@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.160.0] - 2026-07-04
+- **feat(facturacion)**: split bimoneda al convertir Proforma → Factura.
+  - RPC `convertir_proformas_a_factura` v2: retorna `SETOF facturas` (0..2 filas). Si la proforma tiene importes en USD y MXN, genera un borrador por cada moneda (el SAT no permite CFDI multi-moneda). Ambos quedan enlazados a la proforma vía `factura_id` (MXN) y `factura_secundaria_id` (USD).
+  - **Fix conceptos**: la fuente ahora depende de si la proforma es consolidada. Consolidada → `proforma_conceptos_consolidados`; normal → `conceptos_venta` filtrado por moneda. Antes las facturas de proformas no consolidadas salían sin conceptos.
+  - Cache de idempotencia guarda `{"factura_ids":[...]}` y en replay retorna las mismas filas.
+- **service** `convertirProformaAFactura`: retorna `Array<{ facturaId, facturaNumero, moneda }>`.
+- **hook** `useConvertirProformaDirecto`: ya no navega a `/facturacion/:id`; se queda en la proforma. Toast diferenciado para 1 vs 2 borradores.
+
 ## [13.159.3] - 2026-07-04
 - **feat(facturacion)**: drilldown de filas en la tabla de Facturas emitidas.
   - `TabFacturasEmitidas.tsx`: `onRowClick` navega a `/facturacion/:id`.
