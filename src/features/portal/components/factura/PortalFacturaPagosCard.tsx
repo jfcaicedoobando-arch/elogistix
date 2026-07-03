@@ -51,7 +51,7 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
                     {formatCurrency(Number(p.monto_aplicado_factura), moneda)}
                   </p>
                   {p.moneda !== moneda && (
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       {formatCurrency(Number(p.monto), p.moneda)}
                     </p>
                   )}

@@ -13,7 +13,7 @@ import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "good" | "warn" | "bad" }) {
-  const toneCls = tone === "good" ? "text-emerald-700" : tone === "warn" ? "text-warning" : tone === "bad" ? "text-destructive" : "text-foreground";
+  const toneCls = tone === "good" ? "text-success" : tone === "warn" ? "text-warning" : tone === "bad" ? "text-destructive" : "text-foreground";
   return (
     <Card>
       <CardContent className="p-4">
@@ -54,8 +54,8 @@ export function ProveedorSaludTab({ proveedorId }: { proveedorId: string }) {
         <h2 className="text-base font-semibold">Salud del proveedor</h2>
         <Badge
           className={cn(
-            tonePct === "good" && "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
-            tonePct === "warn" && "bg-amber-500/15 text-amber-700 border-amber-500/30",
+            tonePct === "good" && "bg-success/15 text-success border-success/30",
+            tonePct === "warn" && "bg-warning/15 text-warning border-warning/30",
             tonePct === "bad" && "bg-destructive/15 text-destructive border-destructive/30",
           )}
         >

@@ -26,7 +26,7 @@ export function AccionTab({ ctrl, revisionExistente }: Props) {
         maxLength={1000}
         className="text-sm"
       />
-      <div className="text-[10px] text-muted-foreground text-right tabular-nums">
+      <div className="text-2xs text-muted-foreground text-right tabular-nums">
         {ctrl.accion.length} / 1000
       </div>
 

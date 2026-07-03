@@ -60,7 +60,7 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
               {embarque.incoterm}
               {(embarque.incoterm === "CIF" || embarque.incoterm === "CIP") && (
                 <span
-                  className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                  className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary"
                   title="Flete y seguro pagados por el shipper en origen"
                 >
                   Flete + seguro en origen
@@ -72,7 +72,7 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
                 embarque.incoterm === "DDP" ||
                 embarque.incoterm === "DAT") && (
                 <span
-                  className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                  className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary"
                   title="Flete pagado por el shipper en origen"
                 >
                   Flete en origen

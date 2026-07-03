@@ -53,7 +53,7 @@ export function CsfDropZone({ parsingCsf, fileName, onFile }: CsfDropZoneProps) 
         <div className="flex items-center justify-center gap-2 text-sm">
           <FileText className="h-4 w-4 text-primary" />
           <span className="font-medium">{fileName}</span>
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          <CheckCircle2 className="h-4 w-4 text-success" />
         </div>
       ) : (
         <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">

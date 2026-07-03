@@ -66,7 +66,7 @@ export default function CrmLayout() {
                   <t.icon className="h-4 w-4" />
                   {t.label}
                   {showBadge && (
-                    <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px] font-bold rounded-full">
+                    <Badge variant="destructive" className="h-5 min-w-5 px-1 text-2xs font-bold rounded-full">
                       {vencidas > 99 ? "99+" : vencidas}
                     </Badge>
                   )}

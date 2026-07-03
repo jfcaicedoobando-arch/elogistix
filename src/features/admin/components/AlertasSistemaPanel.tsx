@@ -62,14 +62,14 @@ export default function AlertasSistemaPanel() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <Badge variant={severityVariant[a.severity] ?? "secondary"} className="uppercase text-[10px]">
+                      <Badge variant={severityVariant[a.severity] ?? "secondary"} className="uppercase text-2xs">
                         {a.severity}
                       </Badge>
                       <span className="text-xs text-muted-foreground">{a.source}</span>
                       <span className="text-xs text-muted-foreground">
                         {format(new Date(a.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
                       </span>
-                      {ack && <Badge variant="secondary" className="text-[10px]">Reconocida</Badge>}
+                      {ack && <Badge variant="secondary" className="text-2xs">Reconocida</Badge>}
                     </div>
                     <p className="text-sm font-medium break-words">{a.message}</p>
                     {a.payload && Object.keys(a.payload).length > 0 && (

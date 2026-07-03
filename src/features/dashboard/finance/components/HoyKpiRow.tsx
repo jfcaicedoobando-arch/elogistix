@@ -52,7 +52,7 @@ export function HoyKpiRow({
         loading={loading}
       />
       <KpiTile
-        icon={<Inbox className="h-4 w-4 text-emerald-600" />}
+        icon={<Inbox className="h-4 w-4 text-success" />}
         label="Por capturar (CxP)"
         value={porCapturar}
         sublabel="Conceptos sin factura"

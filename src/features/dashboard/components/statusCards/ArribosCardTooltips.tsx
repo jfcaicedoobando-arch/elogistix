@@ -29,7 +29,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
     <div className="space-y-3">
       <div>
         <div className="text-sm font-semibold leading-tight">Profit proyectado del mes</div>
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
+        <div className="text-2xs text-muted-foreground uppercase tracking-wide mt-0.5">
           Homologado a MXN
         </div>
       </div>
@@ -45,7 +45,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
         <div className="grid grid-cols-[1fr_auto] gap-x-3 items-baseline">
           <span className="text-xs font-semibold">
             Profit
-            <span className="ml-1.5 text-[10px] font-normal text-muted-foreground tabular-nums">
+            <span className="ml-1.5 text-2xs font-normal text-muted-foreground tabular-nums">
               ({margenPct.toFixed(1)}%)
             </span>
           </span>
@@ -68,13 +68,13 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
 
       {desglose.length > 0 && (
         <div className="border-t pt-2">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+          <div className="text-2xs uppercase tracking-wide text-muted-foreground mb-1">
             Desglose por moneda origen
           </div>
           <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-0.5 text-[11px]">
-            <span className="text-[10px] uppercase text-muted-foreground">Origen</span>
-            <span className="text-[10px] uppercase text-muted-foreground text-right">Venta MXN</span>
-            <span className="text-[10px] uppercase text-muted-foreground text-right">Costo MXN</span>
+            <span className="text-2xs uppercase text-muted-foreground">Origen</span>
+            <span className="text-2xs uppercase text-muted-foreground text-right">Venta MXN</span>
+            <span className="text-2xs uppercase text-muted-foreground text-right">Costo MXN</span>
             {desglose.map((r) => (
               <Fragment key={r.label}>
                 <span className="font-medium">{r.label}</span>
@@ -86,7 +86,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
         </div>
       )}
 
-      <div className="text-[10px] text-muted-foreground italic border-t pt-1.5">
+      <div className="text-2xs text-muted-foreground italic border-t pt-1.5">
         Conversión con TC guardado en cada embarque.
       </div>
     </div>
@@ -131,7 +131,7 @@ export function CoberturaTooltipContent({
           Faltan <span className="font-semibold text-foreground">{formatCurrency(faltante, "MXN")}</span> de profit para cubrir tus gastos fijos.
         </p>
       )}
-      <p className="text-[10px] text-muted-foreground italic">
+      <p className="text-2xs text-muted-foreground italic">
         Gastos fijos = facturas con categoría <strong>Indirecto de operación</strong> o <strong>Administración</strong> + comisiones del mes.
       </p>
     </div>

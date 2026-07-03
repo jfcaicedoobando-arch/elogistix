@@ -22,7 +22,7 @@ export function HallazgoSummary({ hallazgo, revisionExistente, snoozeActivo }: P
       {hallazgo.documentos_faltantes?.length > 0 && (
         <div className="flex flex-wrap gap-1 pt-1">
           {hallazgo.documentos_faltantes.map((d) => (
-            <Badge key={d} variant="secondary" className="text-[10px] font-normal">
+            <Badge key={d} variant="secondary" className="text-2xs font-normal">
               {d}
             </Badge>
           ))}

@@ -42,7 +42,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
 
   const headerAside = prefilled ? (
     <div className="flex flex-col items-end gap-0.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">CSF detectada</span>
+      <span className="text-2xs font-semibold uppercase tracking-wide text-success">CSF detectada</span>
       <span className="text-xs text-muted-foreground truncate max-w-[180px]">{c.csfFile?.name}</span>
     </div>
   ) : undefined;

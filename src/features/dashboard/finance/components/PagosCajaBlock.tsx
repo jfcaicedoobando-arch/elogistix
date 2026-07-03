@@ -48,7 +48,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
             mxn={saldoMxn}
             usd={saldoUsd}
             loading={loading}
-            icon={<Wallet className="h-4 w-4 text-emerald-600" />}
+            icon={<Wallet className="h-4 w-4 text-success" />}
           />
           <FlujoTile
             label="Por cobrar 30 d"
@@ -95,7 +95,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
                       <span className="text-sm tabular-nums font-semibold">
                         {formatCurrency(f.saldo, f.moneda)}
                       </span>
-                      <span className="text-[10px] text-muted-foreground w-20 text-right">
+                      <span className="text-2xs text-muted-foreground w-20 text-right">
                         {f.fecha_vencimiento
                           ? new Date(f.fecha_vencimiento + "T00:00:00").toLocaleDateString("es-MX", {
                               day: "2-digit",
@@ -167,7 +167,7 @@ function FlujoTile({
   positive?: boolean;
 }) {
   const Icon = positive ? TrendingUp : TrendingDown;
-  const color = positive ? "text-emerald-600" : "text-red-600";
+  const color = positive ? "text-success" : "text-red-600";
   return (
     <div className="rounded-md border p-3">
       <div className={`flex items-center gap-2 text-xs text-muted-foreground`}>

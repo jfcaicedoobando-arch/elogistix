@@ -61,7 +61,7 @@ export function ConceptoRow({
           />
         </div>
         {ivaBloqueado && (
-          <span className="text-[10px] text-muted-foreground">Obligatorio MXN</span>
+          <span className="text-2xs text-muted-foreground">Obligatorio MXN</span>
         )}
       </div>
     </div>

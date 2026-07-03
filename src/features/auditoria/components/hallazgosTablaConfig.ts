@@ -55,7 +55,7 @@ export const severidadConfig: Record<
   },
   alto: {
     label: "Alto",
-    className: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
+    className: "bg-warning/15 text-warning dark:text-warning border-warning/30",
   },
   medio: {
     label: "Medio",

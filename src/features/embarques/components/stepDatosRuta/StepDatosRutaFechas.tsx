@@ -81,7 +81,7 @@ function EtaLabelAdornment({
 
   if (autoApplied) {
     return (
-      <Badge variant="secondary" className="gap-1 text-[10px] font-normal">
+      <Badge variant="secondary" className="gap-1 text-2xs font-normal">
         <CheckCircle2 className="h-3 w-3" />
         ETA sugerida aplicada (ETD + {diasTransitoSugerencia} días)
       </Badge>

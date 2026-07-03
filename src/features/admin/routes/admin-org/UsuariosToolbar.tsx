@@ -59,7 +59,7 @@ export function UsuariosToolbar({
             <SelectItem value={TODOS}>Todos los roles</SelectItem>
             {ASSIGNABLE_ROLE_GROUPS.map((group) => (
               <SelectGroup key={group.label}>
-                <SelectLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                <SelectLabel className="text-2xs uppercase tracking-wide text-muted-foreground">
                   {group.label}
                 </SelectLabel>
                 {group.roles.map((r) => (

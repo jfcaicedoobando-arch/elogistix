@@ -64,7 +64,7 @@ export function ExplicarHallazgoButton({ hallazgo }: Props) {
         {!explicar.isPending && data && (
           <div className="prose prose-sm dark:prose-invert max-w-none text-xs leading-relaxed">
             <ReactMarkdown>{data.explicacion}</ReactMarkdown>
-            <p className="mt-3 text-[10px] text-muted-foreground italic border-t pt-2">
+            <p className="mt-3 text-2xs text-muted-foreground italic border-t pt-2">
               Generado por {data.modelo}. Verifica antes de actuar.
             </p>
           </div>

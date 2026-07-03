@@ -134,7 +134,7 @@ export default function TesoreriaConciliacion() {
                         <td className="p-2 max-w-[280px] truncate" title={m.concepto}>{m.concepto}</td>
                         <td className="p-2 text-right tabular-nums text-destructive">{Number(m.cargo) > 0 ? formatCurrency(Number(m.cargo), "MXN") : ""}</td>
                         <td className="p-2 text-right tabular-nums text-success">{Number(m.abono) > 0 ? formatCurrency(Number(m.abono), "MXN") : ""}</td>
-                        <td className="p-2"><Badge variant="outline" className={`text-[10px] ${ESTADO_COLOR[m.estado_conciliacion]}`}>{m.estado_conciliacion}</Badge></td>
+                        <td className="p-2"><Badge variant="outline" className={`text-2xs ${ESTADO_COLOR[m.estado_conciliacion]}`}>{m.estado_conciliacion}</Badge></td>
                       </tr>
                     ))}
                   </tbody>

@@ -63,7 +63,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
           <CalendarClock className="h-4 w-4 text-warning" />
           Próximos Arribos (7 días)
           {arribos.length > 0 && (
-            <Badge className="ml-auto text-[10px] bg-warning/15 text-warning border-warning/30">
+            <Badge className="ml-auto text-2xs bg-warning/15 text-warning border-warning/30">
               {arribos.length}
             </Badge>
           )}

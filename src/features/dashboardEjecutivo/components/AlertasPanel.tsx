@@ -39,7 +39,7 @@ export function AlertasPanel({ alertas }: Props) {
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-sm">{a.titulo}</span>
-                      <Badge variant={VARIANT[a.severidad]} className="text-[10px]">
+                      <Badge variant={VARIANT[a.severidad]} className="text-2xs">
                         {a.severidad}
                       </Badge>
                     </div>

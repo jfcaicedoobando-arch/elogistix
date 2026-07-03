@@ -46,7 +46,7 @@ export function TrackingFasesTimeline({ embarque, cotizacionCreatedAt }: Props) 
                 </div>
                 <div className="text-center mt-2 px-1">
                   <p className={cn("text-xs", getLabelClass(fase.estado))}>{fase.label}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                  <p className="text-2xs text-muted-foreground mt-0.5">
                     {fase.fecha ? formatDate(fase.fecha, "dd MMM yyyy") : "—"}
                   </p>
                 </div>

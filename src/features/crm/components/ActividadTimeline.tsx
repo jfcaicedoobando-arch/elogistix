@@ -78,19 +78,19 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
             {items.map((a) => (
               <li key={a.id} className="border-l-2 border-primary/40 pl-3 py-1">
                 <div className="flex items-center gap-2 text-sm">
-                  <Badge variant="outline" className="text-[10px]">{a.tipo}</Badge>
+                  <Badge variant="outline" className="text-2xs">{a.tipo}</Badge>
                   <span className="font-medium">{a.asunto}</span>
-                  {a.fecha_completada && <Badge variant="secondary" className="text-[10px]">Completada</Badge>}
+                  {a.fecha_completada && <Badge variant="secondary" className="text-2xs">Completada</Badge>}
                 </div>
                 {a.descripcion && <div className="text-xs text-muted-foreground mt-1">{a.descripcion}</div>}
-                <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-2">
+                <div className="text-2xs text-muted-foreground mt-1 flex items-center gap-2">
                   <span>{new Date(a.created_at).toLocaleString("es-MX")}</span>
                   <span>· {a.responsable_email}</span>
                   {!a.fecha_completada && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-2 text-[10px]"
+                      className="h-6 px-2 text-2xs"
                       onClick={() => completar.mutateAsync({ id: a.id })}
                     >
                       <Check className="h-3 w-3 mr-1" /> Marcar completada

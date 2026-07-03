@@ -44,7 +44,7 @@ export function CierreCheckItem({ regla, ok, detalle, embarqueId, informativo = 
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-medium">{meta.label}</p>
-            <Badge variant="outline" className="text-[10px] font-normal">
+            <Badge variant="outline" className="text-2xs font-normal">
               {meta.responsable}
             </Badge>
           </div>

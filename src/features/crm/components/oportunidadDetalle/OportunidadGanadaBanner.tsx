@@ -9,10 +9,10 @@ interface Props {
 export function OportunidadGanadaBanner({ cotizacionGanadoraId, embarqueGanadorId }: Props) {
   if (!cotizacionGanadoraId && !embarqueGanadorId) return null;
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm">
-      <Trophy className="h-5 w-5 text-emerald-600 shrink-0" />
+    <div className="flex items-center gap-3 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
+      <Trophy className="h-5 w-5 text-success shrink-0" />
       <div className="flex-1">
-        <p className="font-medium text-emerald-700 dark:text-emerald-400">
+        <p className="font-medium text-success dark:text-success">
           Oportunidad ganada
         </p>
         <p className="text-xs text-muted-foreground">

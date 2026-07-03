@@ -126,7 +126,7 @@ export default function Oportunidades() {
                 <Button variant="outline" size="sm" className="gap-1">
                   {filtersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   Filtros
-                  {activos > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{activos}</Badge>}
+                  {activos > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-2xs">{activos}</Badge>}
                 </Button>
               </CollapsibleTrigger>
             </Collapsible>

@@ -40,7 +40,7 @@ export function CierreHistorialCard({ log }: { log: CierreLogEntry[] }) {
                       {entry.accion === "cerrar" ? "Cerrado" : "Reabierto"}
                     </Badge>
                     {entry.origen === "bitacora" && (
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="secondary" className="text-2xs">
                         Registro legacy
                       </Badge>
                     )}

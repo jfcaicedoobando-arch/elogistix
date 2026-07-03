@@ -10,7 +10,7 @@ function EstadoBadge({ estado, atenuado = false }: { estado: string; atenuado?: 
   const visual = getEstadoVisual(estado);
   return (
     <span
-      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${visual.badge} ${atenuado ? "opacity-60" : ""}`}
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-medium ${visual.badge} ${atenuado ? "opacity-60" : ""}`}
     >
       {estado}
     </span>

@@ -54,7 +54,7 @@ function KeyRow({ orgId, ambiente, last4, label, prefijo, activo }: KeyRowProps)
       <div className="flex items-center justify-between gap-2">
         <Label className="text-sm flex items-center gap-2 flex-wrap">
           {label}
-          {activo && <Badge variant="default" className="text-[10px]">ambiente activo</Badge>}
+          {activo && <Badge variant="default" className="text-2xs">ambiente activo</Badge>}
           {cargada ? (
             <Badge variant="secondary" className="gap-1">
               <CheckCircle2 className="h-3 w-3" /> {prefijo}••••{last4}

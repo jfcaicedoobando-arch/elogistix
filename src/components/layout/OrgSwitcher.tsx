@@ -43,7 +43,7 @@ function OrgSwitcherBase({ collapsed }: { collapsed?: boolean }) {
         className="w-full text-left px-1 py-0.5 rounded-sm hover:bg-sidebar-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         aria-label="Cambiar de organización"
       >
-        <div className="text-[10px] font-medium uppercase tracking-wider text-sidebar-foreground/50">
+        <div className="text-2xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
           Organización
         </div>
         <div className="flex items-center gap-1.5 text-sm font-semibold text-sidebar-foreground/90">

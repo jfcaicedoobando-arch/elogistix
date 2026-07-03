@@ -73,7 +73,7 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                     {e.eta && (
-                      <span className="text-[10px] text-muted-foreground hidden sm:block">
+                      <span className="text-2xs text-muted-foreground hidden sm:block">
                         ETA {formatDate(e.eta, "dd/MM")}
                       </span>
                     )}

@@ -37,7 +37,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="text-[10px] shrink-0">
+        <Badge variant="outline" className="text-2xs shrink-0">
           {operador.clientes.length} {operador.clientes.length === 1 ? "cliente" : "clientes"}
         </Badge>
       </div>
@@ -91,7 +91,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
 
       {/* Clientes */}
       <div className="pt-2 border-t border-border">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+        <p className="text-2xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
           Clientes
         </p>
         {operador.clientesDesglose.length === 0 ? (
@@ -104,7 +104,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
               ))}
             </ul>
             {clientesRestantes > 0 && (
-              <p className="text-[10px] text-muted-foreground mt-1.5 pl-4">
+              <p className="text-2xs text-muted-foreground mt-1.5 pl-4">
                 +{clientesRestantes} {clientesRestantes === 1 ? "cliente más" : "clientes más"}
               </p>
             )}

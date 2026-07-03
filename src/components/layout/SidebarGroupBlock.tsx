@@ -89,7 +89,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname }: Props) {
                             <Badge
                               variant="destructive"
                               aria-label={`${badge} alertas`}
-                              className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full shrink-0"
+                              className="ml-auto h-5 min-w-5 px-1 text-2xs font-bold rounded-full shrink-0"
                             >
                               {badge > 99 ? "99+" : badge}
                             </Badge>

@@ -113,7 +113,7 @@ export default function PortalFacturas() {
                       <p className="text-xs text-muted-foreground truncate">
                         Exp: <span className="font-mono">{f.expediente}</span> • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-2xs text-muted-foreground mt-0.5">
                         Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
                       </p>
                     </div>

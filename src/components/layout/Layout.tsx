@@ -43,7 +43,7 @@ export function Layout() {
                   <SidebarTrigger className="shrink-0" />
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
-                  Colapsar / expandir menú · <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono">⌘B</kbd>
+                  Colapsar / expandir menú · <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-2xs font-mono">⌘B</kbd>
                 </TooltipContent>
               </Tooltip>
             )}

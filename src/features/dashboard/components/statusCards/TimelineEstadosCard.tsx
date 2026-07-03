@@ -17,7 +17,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
       <CardContent className="p-4 sm:p-6">
         <div className="overflow-x-auto -mx-1 px-1">
           <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
-            <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-info via-warning to-emerald-500 opacity-30" />
+            <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-info via-warning to-success opacity-30" />
 
             {ESTADOS_FILTRO.map((estado, idx) => {
               const cfg = ESTADO_CONFIG[estado];
@@ -53,7 +53,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     )}
                   </div>
 
-                  <span className="text-[10px] sm:text-[11px] font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1">
+                  <span className="text-2xs sm:text-[11px] font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1">
                     {estado}
                   </span>
 

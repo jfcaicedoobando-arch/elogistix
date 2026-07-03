@@ -80,7 +80,7 @@ export function GlobalSearch() {
       >
         <Search className="h-4 w-4" />
         <span className="hidden sm:inline">Buscar...</span>
-        <kbd className="hidden sm:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+        <kbd className="hidden sm:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-2xs font-medium text-muted-foreground">
           ⌘K
         </kbd>
       </button>

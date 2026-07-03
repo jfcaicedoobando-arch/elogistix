@@ -22,7 +22,7 @@ interface Props {
 }
 
 const AGING_LABELS: Array<{ key: keyof AgingBuckets; label: string; tone: string }> = [
-  { key: "b0_15", label: "0-15 d", tone: "bg-amber-100 text-amber-800" },
+  { key: "b0_15", label: "0-15 d", tone: "bg-warning/10 text-warning" },
   { key: "b16_30", label: "16-30 d", tone: "bg-orange-100 text-orange-800" },
   { key: "b31_60", label: "31-60 d", tone: "bg-red-100 text-red-800" },
   { key: "b61_90", label: "61-90 d", tone: "bg-red-200 text-red-900" },
@@ -64,7 +64,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
                       style={{ height: `${Math.max(pct, value > 0 ? 8 : 0)}%` }}
                     />
                   </div>
-                  <p className="text-[10px] text-muted-foreground text-center">{label}</p>
+                  <p className="text-2xs text-muted-foreground text-center">{label}</p>
                   <p className="text-xs font-semibold text-center tabular-nums truncate">
                     {formatCurrency(value, "MXN")}
                   </p>
@@ -102,7 +102,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
                     <span className="text-sm tabular-nums font-semibold">
                       {formatCurrency(f.saldo, f.moneda)}
                     </span>
-                    <Badge variant="outline" className="text-[10px] border-red-300 text-red-700">
+                    <Badge variant="outline" className="text-2xs border-red-300 text-red-700">
                       {f.dias_vencido} d
                     </Badge>
                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />

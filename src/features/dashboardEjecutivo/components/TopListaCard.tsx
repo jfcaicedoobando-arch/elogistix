@@ -31,7 +31,7 @@ export function TopListaCard({ title, items, emptyText = "Sin registros." }: Pro
                 <div className="min-w-0">
                   <p className="truncate font-medium">{it.nombre}</p>
                   {typeof it.dias === "number" && it.dias !== 0 && (
-                    <Badge variant={severidad(it.dias)} className="mt-0.5 text-[10px]">
+                    <Badge variant={severidad(it.dias)} className="mt-0.5 text-2xs">
                       {it.dias > 0 ? `${it.dias} d vencido` : `${Math.abs(it.dias)} d por vencer`}
                     </Badge>
                   )}

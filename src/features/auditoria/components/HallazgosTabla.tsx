@@ -58,7 +58,7 @@ export function HallazgosTabla(props: Props) {
     { id: "sev", header: "Severidad", meta: { width: "w-[100px]" },
       cell: ({ row }) => {
         const sev = severidadConfig[row.original.severidad];
-        return <Badge variant="outline" className={cn("text-[10px]", sev.className)}>{sev.label}</Badge>;
+        return <Badge variant="outline" className={cn("text-2xs", sev.className)}>{sev.label}</Badge>;
       } },
     { id: "exp", header: "Expediente", meta: { width: "w-[130px]", className: "font-medium tabular-nums text-xs" },
       cell: ({ row }) => {
@@ -88,7 +88,7 @@ export function HallazgosTabla(props: Props) {
             {h.documentos_faltantes && h.documentos_faltantes.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {h.documentos_faltantes.map((doc) => (
-                  <Badge key={doc} variant="secondary" className="text-[10px] font-normal">{doc}</Badge>
+                  <Badge key={doc} variant="secondary" className="text-2xs font-normal">{doc}</Badge>
                 ))}
               </div>
             )}
@@ -136,7 +136,7 @@ export function HallazgosTabla(props: Props) {
         if (revision?.estado_revision === "revisado") {
           return (
             <Button size="sm" variant="ghost"
-              className="h-7 text-[11px] gap-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+              className="h-7 text-[11px] gap-1 text-success hover:text-success dark:text-success"
               onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}
               title={`Por: ${revision.revisado_por_email ?? "—"}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada ?? ""}`}
             >

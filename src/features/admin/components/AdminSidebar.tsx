@@ -130,7 +130,7 @@ export function AdminSidebar() {
                     <div className="text-xs font-medium text-sidebar-foreground truncate">
                       {user?.email}
                     </div>
-                    <div className="text-[10px] text-sidebar-foreground/60">Super Admin</div>
+                    <div className="text-2xs text-sidebar-foreground/60">Super Admin</div>
                   </div>
                   <ChevronUp className="h-3.5 w-3.5 text-sidebar-foreground/60" />
                 </>

@@ -62,7 +62,7 @@ export function ProveedorTable({ tipo, search, origen, onSelect, onTotalChange }
                 <div className="text-[11px] text-muted-foreground truncate mt-0.5">{p.contacto ? toTitleCase(p.contacto) : ""}</div>
               </div>
               {p.origen_proveedor && (
-                <Badge variant="outline" className="text-[10px] whitespace-nowrap">{p.origen_proveedor}</Badge>
+                <Badge variant="outline" className="text-2xs whitespace-nowrap">{p.origen_proveedor}</Badge>
               )}
             </div>
           )}

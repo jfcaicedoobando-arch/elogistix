@@ -100,7 +100,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
                     <li key={`${c.tipo}-${c.pago_id}`} className="border rounded p-2 text-xs space-y-1">
                       <div className="flex justify-between">
                         <span className="font-medium">{c.contraparte}</span>
-                        <Badge variant="outline" className="text-[10px]">{c.tipo.toUpperCase()}</Badge>
+                        <Badge variant="outline" className="text-2xs">{c.tipo.toUpperCase()}</Badge>
                       </div>
                       <div className="text-muted-foreground">{formatDate(c.fecha)} · Ref {c.referencia || "—"}</div>
                       <div className="flex justify-between items-center">
@@ -109,7 +109,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
                           Conciliar
                         </Button>
                       </div>
-                      <div className="text-[10px] text-muted-foreground">
+                      <div className="text-2xs text-muted-foreground">
                         Δ monto {c.delta_monto.toFixed(2)} · Δ días {c.delta_dias}
                       </div>
                     </li>

@@ -44,7 +44,7 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
     header: "Nivel",
     meta: { width: "90px" },
     cell: ({ row }) => (
-      <Badge variant={levelVariant[row.original.level] ?? "secondary"} className="text-[10px]">
+      <Badge variant={levelVariant[row.original.level] ?? "secondary"} className="text-2xs">
         {levelLabel[row.original.level] ?? row.original.level}
       </Badge>
     ),
@@ -85,10 +85,10 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
           <p className="text-sm">{r.msg}</p>
           {r.payload != null && (
             <details className="mt-1">
-              <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">
+              <summary className="text-2xs text-muted-foreground cursor-pointer hover:text-foreground">
                 payload
               </summary>
-              <pre className="mt-1 text-[10px] bg-muted rounded p-2 overflow-x-auto max-h-40">
+              <pre className="mt-1 text-2xs bg-muted rounded p-2 overflow-x-auto max-h-40">
                 {JSON.stringify(r.payload, null, 2)}
               </pre>
             </details>
@@ -102,7 +102,7 @@ export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns
     header: "Request",
     meta: { width: "120px" },
     cell: ({ row }) => (
-      <span className="font-mono text-[10px] text-muted-foreground">
+      <span className="font-mono text-2xs text-muted-foreground">
         {row.original.request_id ? row.original.request_id.slice(0, 8) : "—"}
       </span>
     ),

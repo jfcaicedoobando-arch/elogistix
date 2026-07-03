@@ -48,7 +48,7 @@ export function FinanceHeader({
       ? {
           icon: <Banknote className="h-3.5 w-3.5" />,
           label: `${formatCurrencyCompact(porPagarMxn, "MXN")} por pagar`,
-          className: "border-amber-300/50 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300",
+          className: "border-warning/50 bg-warning/10 text-warning dark:bg-warning/30 dark:text-warning",
         }
       : null,
     porTimbrar > 0

@@ -66,13 +66,13 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={() => setQuick("lead")}>
-              <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-[10px] text-muted-foreground">L</span>
+              <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-2xs text-muted-foreground">L</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setQuick("oportunidad")}>
-              <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-[10px] text-muted-foreground">O</span>
+              <Target className="h-4 w-4 mr-2" /> Nueva oportunidad <span className="ml-auto text-2xs text-muted-foreground">O</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setQuick("actividad")}>
-              <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-[10px] text-muted-foreground">A</span>
+              <Activity className="h-4 w-4 mr-2" /> Nueva actividad <span className="ml-auto text-2xs text-muted-foreground">A</span>
             </DropdownMenuItem>
             {canEditCrm && (
               <>

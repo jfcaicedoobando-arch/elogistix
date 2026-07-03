@@ -31,7 +31,7 @@ const TILES: readonly TileDef[] = [
     titulo: "Demoras",
     descripcion: "Embarques en puerto con +7 días sin liberación.",
     Icon: Clock,
-    color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30",
+    color: "text-warning bg-warning/10 dark:bg-warning/30",
   },
   {
     key: "garantia",
@@ -53,10 +53,10 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
   if (resumen.total === 0) return null;
 
   return (
-    <Card className="p-4 border-amber-200/70 bg-amber-50/40 dark:bg-amber-950/10">
+    <Card className="p-4 border-warning/70 bg-warning/40 dark:bg-warning/10">
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden />
+          <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
           <h2 className="text-sm font-semibold">Alertas activas</h2>
           <Badge variant="secondary" className="text-[11px]">
             {resumen.total}
