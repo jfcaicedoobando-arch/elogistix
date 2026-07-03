@@ -6,7 +6,7 @@
  */
 import { useState, type ReactNode } from "react";
 import { X } from "lucide-react";
-import { SearchInput } from "@/components/shared/SearchInput";
+import SearchInput from "@/components/shared/SearchInput";
 import { MobileFiltersSheet } from "@/components/shared/MobileFiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
