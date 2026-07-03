@@ -2,16 +2,16 @@ import { Download, FileText, Loader2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import SearchInput from "@/components/shared/SearchInput";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/features/facturacion/hooks";
 import { buildProformasColumns } from "./proformasColumns";
+import ProformasFiltros from "./ProformasFiltros";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
+
 
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
   const navigate = useNavigate();
