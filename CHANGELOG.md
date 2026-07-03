@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.9] - 2026-07-04
+- **fix(RPC convertir_proformas_a_factura)**: la versión 13.170.8 introdujo una llamada a `public.idempotency_commit(uuid, text, jsonb)` que no existe en la BD (error `42883: function public.idempotency_commit(uuid, unknown, jsonb) does not exist`). Se restaura la llamada correcta a `public.idempotency_store(p_request_id, jsonb_build_object('factura_ids', ...))`, que sí es la función real (par con `idempotency_claim`). El resto del cuerpo — corrección de `estado_proforma`/`fecha_facturacion` — queda intacto.
+
 ## [13.170.8] - 2026-07-04
 - **fix(RPC convertir_proformas_a_factura)**: la versión anterior intentaba escribir en `proformas.estado` y `proformas.facturada_at`, columnas que no existen (error `42703: column "estado" of relation "proformas" does not exist` al convertir una proforma en factura). Se corrige para escribir en las columnas reales: `estado_proforma = 'facturada'` (texto) y `fecha_facturacion = CURRENT_DATE`.
 
