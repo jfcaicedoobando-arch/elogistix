@@ -21,11 +21,11 @@ import { useEnvioDocumentoForm } from "../useEnvioDocumentoForm";
 
 describe("useEnvioDocumentoForm", () => {
   beforeEach(() => {
-    fetchContactosMock.mockReset();
+    mocks.fetchContactos.mockReset();
   });
 
   it("preselecciona el contacto principal cuando existe", async () => {
-    fetchContactosMock.mockResolvedValue([
+    mocks.fetchContactos.mockResolvedValue([
       { id: "__cliente_principal__", email: "principal@x.com", contacto: "Principal", tipo: "principal" },
       { id: "c2", email: "otro@x.com", contacto: "Otro", tipo: "operativo" },
     ]);
@@ -43,7 +43,7 @@ describe("useEnvioDocumentoForm", () => {
   });
 
   it("añade y quita emails manuales con validación", async () => {
-    fetchContactosMock.mockResolvedValue([]);
+    mocks.fetchContactos.mockResolvedValue([]);
     const { result } = renderHook(
       () => useEnvioDocumentoForm(true, "cli-1", () => ""),
       { wrapper: createWrapper() },
@@ -71,7 +71,7 @@ describe("useEnvioDocumentoForm", () => {
   });
 
   it("agrega al usuario logueado como CC por defecto", async () => {
-    fetchContactosMock.mockResolvedValue([
+    mocks.fetchContactos.mockResolvedValue([
       { id: "__cliente_principal__", email: "p@x.com", contacto: "P", tipo: "principal" },
     ]);
     const { result } = renderHook(
