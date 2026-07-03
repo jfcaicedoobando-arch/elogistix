@@ -20,6 +20,10 @@ import {
 } from "@/features/facturacion/services";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
+import {
+  inicialesDatosFiscales,
+  buildDatosTimbradoPatch,
+} from "@/features/facturacion/domain/datosFiscalesForm";
 import { DatosFiscalesForm } from "./DatosFiscalesForm";
 
 interface Props {
@@ -35,13 +39,14 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
     queryFn: () => fetchClienteFiscal(factura.cliente_id!),
   });
 
-  const [serie, setSerie] = useState(factura.serie ?? "A");
-  const [usoCfdi, setUsoCfdi] = useState(factura.uso_cfdi ?? "G03");
-  const [formaPago, setFormaPago] = useState(factura.forma_pago ?? "03");
-  const [metodoPago, setMetodoPago] = useState(factura.metodo_pago ?? "PUE");
-  const [diasCredito, setDiasCredito] = useState<number>(factura.dias_credito ?? 0);
-  const [tipoCambio, setTipoCambio] = useState<number>(Number(factura.tipo_cambio ?? 1));
-  const [notas, setNotas] = useState(factura.notas ?? "");
+  const iniciales = inicialesDatosFiscales(factura);
+  const [serie, setSerie] = useState(iniciales.serie);
+  const [usoCfdi, setUsoCfdi] = useState(iniciales.usoCfdi);
+  const [formaPago, setFormaPago] = useState(iniciales.formaPago);
+  const [metodoPago, setMetodoPago] = useState(iniciales.metodoPago);
+  const [diasCredito, setDiasCredito] = useState<number>(iniciales.diasCredito);
+  const [tipoCambio, setTipoCambio] = useState<number>(iniciales.tipoCambio);
+  const [notas, setNotas] = useState(iniciales.notas);
 
   // Sincroniza con el default del cliente al cargar.
   useEffect(() => {
@@ -71,15 +76,12 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    guardar.mutate({
-      serie: serie.toUpperCase().slice(0, 5),
-      uso_cfdi: usoCfdi,
-      forma_pago: formaPago,
-      metodo_pago: metodoPago,
-      dias_credito: Math.max(0, Math.round(diasCredito)),
-      notas: notas.trim() ? notas.trim() : null,
-      tipo_cambio: factura.moneda === "MXN" ? 1 : Math.max(0, Number(tipoCambio) || 1),
-    });
+    guardar.mutate(
+      buildDatosTimbradoPatch(
+        { serie, usoCfdi, formaPago, metodoPago, diasCredito, tipoCambio, notas },
+        factura.moneda,
+      ),
+    );
   };
 
   return (
