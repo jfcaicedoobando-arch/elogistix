@@ -30,11 +30,12 @@ import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useElim
 import { FacturaFiscalCheckAlert } from "@/features/facturacion/components/detalle/FacturaFiscalCheckAlert";
 
 function canDeleteBorrador(
-  factura: { estado?: string | null; facturapi_id?: string | null } | undefined,
+  factura: { estado?: string | null; facturapi_id?: string | null } | null | undefined,
   canEdit: boolean,
 ): boolean {
   return !!factura && factura.estado === "Borrador" && !factura.facturapi_id && canEdit;
 }
+
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
