@@ -1,12 +1,12 @@
 /**
- * Secciones editables del detalle de factura: alerta fiscal, botón de
- * sustitución de CFDI, formulario de datos fiscales y editor de conceptos.
- * Extraído de FacturaDetalle para reducir la complejidad ciclomática del
- * componente contenedor (Power-of-10 #4/#7).
+ * Secciones editables del detalle de factura: botón de sustitución de CFDI,
+ * card de configuración de timbrado y editor de conceptos.
+ * v13.164.3: se removió el banner `FacturaFiscalCheckAlert` — ahora el
+ * checklist fiscal del receptor vive en `FacturaReceptorCard`, con validación
+ * inline por campo.
  */
 import { Replace } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FacturaFiscalCheckAlert } from "./FacturaFiscalCheckAlert";
 import { FacturaDatosFiscalesCard } from "./FacturaDatosFiscalesCard";
 import { FacturaConceptosEditor } from "./FacturaConceptosEditor";
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
@@ -28,10 +28,6 @@ export function FacturaDetalleEditableSections({
 
   return (
     <>
-      {factura.cliente_id && (
-        <FacturaFiscalCheckAlert clienteId={factura.cliente_id} estado={factura.estado} />
-      )}
-
       {mostrarSustituir && (
         <Button variant="outline" size="sm" onClick={onSustituir} className="gap-1">
           <Replace className="h-4 w-4" /> Sustituir CFDI (motivo 01)

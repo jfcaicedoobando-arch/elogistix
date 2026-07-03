@@ -1,0 +1,111 @@
+/**
+ * FacturaReceptorCard — datos fiscales del cliente que se van a timbrar,
+ * con validación inline (✓/✗) por campo. Reemplaza al banner de alerta
+ * `FacturaFiscalCheckAlert` cuando aparece dentro del detalle: consolida el
+ * checklist fiscal en un solo lugar. Si falta algún dato, ofrece un CTA a
+ * la ficha del cliente para completarlo.
+ */
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Check, X, UserCog, User } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  fetchClienteFiscal,
+  type ClienteFiscalRow,
+} from "@/features/facturacion/services";
+import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
+import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
+import { toTitleCase } from "@/lib/formatters";
+
+interface Props {
+  clienteId: string;
+  clienteNombre: string;
+  rfcFactura: string | null;
+}
+
+const CP_REGEX = /^\d{5}$/;
+
+function labelRegimen(clave: string | null | undefined): string {
+  if (!clave) return "";
+  const r = REGIMENES_FISCALES_SAT.find((x) => x.clave === clave);
+  return r ? `${r.clave} — ${r.descripcion}` : clave;
+}
+
+function labelUsoCfdi(clave: string | null | undefined): string {
+  if (!clave) return "";
+  const u = USOS_CFDI_SAT.find((x) => x.value === clave);
+  return u ? u.label : clave;
+}
+
+function Row({ label, ok, value, missingLabel }: { label: string; ok: boolean; value: string; missingLabel: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-xs text-muted-foreground flex items-center gap-1">
+        {ok ? <Check className="h-3 w-3 text-success" /> : <X className="h-3 w-3 text-destructive" />}
+        {label}
+      </p>
+      <p className={`font-medium truncate ${ok ? "" : "text-destructive italic"}`}>
+        {ok ? value : missingLabel}
+      </p>
+    </div>
+  );
+}
+
+export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Props) {
+  const { data: cliente, isLoading } = useQuery<ClienteFiscalRow | null>({
+    queryKey: ["cliente_fiscal", clienteId],
+    queryFn: () => fetchClienteFiscal(clienteId),
+    staleTime: 60 * 1000,
+  });
+
+  const rfc = (cliente?.rfc ?? rfcFactura ?? "").trim();
+  const cp = (cliente?.codigo_postal ?? "").trim();
+  const regimen = (cliente?.regimen_fiscal ?? "").trim();
+  const usoDefault = (cliente?.uso_cfdi_default ?? "").trim();
+
+  const rfcOk = rfc.length >= 12;
+  const cpOk = CP_REGEX.test(cp);
+  const regimenOk = !!regimen;
+  const usoOk = !!usoDefault;
+
+  const todoOk = rfcOk && cpOk && regimenOk && usoOk;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <User className="h-4 w-4" /> Receptor
+        </CardTitle>
+        {!todoOk && (
+          <Button asChild size="sm" variant="outline">
+            <Link to={`/clientes/${clienteId}`}>
+              <UserCog className="h-4 w-4 mr-1" /> Completar datos
+            </Link>
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-24 w-full" />
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div className="min-w-0 md:col-span-2">
+              <p className="text-xs text-muted-foreground">Cliente</p>
+              <p className="font-medium truncate">
+                <Link to={`/clientes/${clienteId}`} className="text-accent hover:underline">
+                  {toTitleCase(clienteNombre)}
+                </Link>
+              </p>
+            </div>
+            <Row label="RFC" ok={rfcOk} value={rfc} missingLabel="Falta RFC" />
+            <Row label="Código postal" ok={cpOk} value={cp} missingLabel="Falta CP" />
+            <Row label="Régimen fiscal" ok={regimenOk} value={labelRegimen(regimen)} missingLabel="Falta régimen" />
+            <Row label="Uso CFDI por defecto" ok={usoOk} value={labelUsoCfdi(usoDefault)} missingLabel="Sin default" />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -1,13 +1,12 @@
 /**
  * Helpers para el formulario de datos fiscales de una factura borrador.
- * Extraídos para reducir la complejidad ciclomática de
- * `FacturaDatosFiscalesCard`.
+ * v13.164.3 — se removió `serie`: FacturAPI es la fuente de verdad para
+ * serie y folio; enviar un hint manual solo introduce riesgo de mismatch.
  */
 import type { FacturaDetalle } from "@/features/facturacion/hooks";
 import type { DatosTimbradoPatch } from "@/features/facturacion/services";
 
 export interface DatosFiscalesEstado {
-  serie: string;
   usoCfdi: string;
   formaPago: string;
   metodoPago: string;
@@ -18,7 +17,6 @@ export interface DatosFiscalesEstado {
 
 export function inicialesDatosFiscales(factura: FacturaDetalle): DatosFiscalesEstado {
   return {
-    serie: factura.serie ?? "A",
     usoCfdi: factura.uso_cfdi ?? "G03",
     formaPago: factura.forma_pago ?? "03",
     metodoPago: factura.metodo_pago ?? "PUE",
@@ -35,7 +33,6 @@ export function buildDatosTimbradoPatch(
   const notasClean = estado.notas.trim();
   const tipoCambioSeguro = Math.max(0, Number(estado.tipoCambio) || 1);
   return {
-    serie: estado.serie.toUpperCase().slice(0, 5),
     uso_cfdi: estado.usoCfdi,
     forma_pago: estado.formaPago,
     metodo_pago: estado.metodoPago,
