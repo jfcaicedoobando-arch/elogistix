@@ -68,7 +68,7 @@ export default function Configuracion() {
           />
         </TabsContent>
         <TabsContent value="facturacion">
-          <TabFacturacion tasaIva={s.tasaIva} setTasaIva={set("tasaIva")} />
+          <TabFacturacion />
         </TabsContent>
         <TabsContent value="catalogos"><TabPuertos /></TabsContent>
         <TabsContent value="operaciones"><TabOperaciones /></TabsContent>

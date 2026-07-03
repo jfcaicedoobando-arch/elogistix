@@ -11,13 +11,10 @@ export function getVal<T>(data: ConfigItem[] | undefined, categoria: string, cla
  * Estado del módulo Configuración. Sólo incluye los campos que actualmente
  * tienen un consumidor real en la app:
  *   - empresa.* → leídos por `fetchEmisorEmpresa` para los encabezados de PDF
- *   - facturacion.tasa_iva → leído por `useTasaIVA` en cotización/proforma/factura
  *
- * Los campos legacy (tipos_cambio, defaults de cotizaciones/embarques, alertas,
- * umbrales de auditoría) se removieron de la UI en 12.51.18 porque ningún
- * consumidor los leía. Las filas históricas en la tabla `configuracion` se
- * mantienen por compatibilidad y se purgarán en una migración separada si
- * se confirma que no se cablearán a futuro.
+ * El campo `facturacion.tasa_iva` se retiró en 13.170.0: el IVA general de
+ * México (16%) está hardcodeado en `TASA_IVA` y cada producto del catálogo
+ * define su propio tipo de IVA (16% / 0% / Exento).
  */
 export interface ConfigState {
   nombre: string;
@@ -26,7 +23,6 @@ export interface ConfigState {
   direccion: string;
   email: string;
   telefono: string;
-  tasaIva: string;
 }
 
 export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigState {
@@ -37,7 +33,6 @@ export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigSt
     direccion: getVal(config, "empresa", "direccion_fiscal", ""),
     email: getVal(config, "empresa", "email", ""),
     telefono: getVal(config, "empresa", "telefono", ""),
-    tasaIva: String(getVal(config, "facturacion", "tasa_iva", 16)),
   };
 }
 
@@ -70,7 +65,6 @@ export function useConfiguracionState() {
       { categoria: "empresa", clave: "direccion_fiscal", valor: s.direccion },
       { categoria: "empresa", clave: "email", valor: s.email },
       { categoria: "empresa", clave: "telefono", valor: s.telefono },
-      { categoria: "facturacion", clave: "tasa_iva", valor: parseInt(s.tasaIva) || 16 },
     ], {
       onSuccess: () => setBaseline(s),
     });
