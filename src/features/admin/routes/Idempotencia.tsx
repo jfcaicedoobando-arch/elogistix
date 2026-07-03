@@ -1,6 +1,7 @@
 import { Repeat2, RefreshCw, Copy } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -110,7 +111,7 @@ export default function Idempotencia() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<Repeat2 className="h-6 w-6" />}
         title="Idempotencia"
@@ -162,6 +163,6 @@ export default function Idempotencia() {
           />
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

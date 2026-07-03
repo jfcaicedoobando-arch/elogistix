@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Trash2, RotateCcw, X } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -96,7 +97,7 @@ export default function Papelera() {
   ]);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <PageHeader
         icon={<Trash2 className="h-6 w-6" />}
         title="Papelera"
@@ -146,6 +147,6 @@ export default function Papelera() {
           setPurgeTarget(null);
         }}
       />
-    </div>
+    </PageContainer>
   );
 }
