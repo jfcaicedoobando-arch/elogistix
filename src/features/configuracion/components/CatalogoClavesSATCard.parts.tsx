@@ -17,9 +17,7 @@ export interface Row {
   organization_id: string;
   patron: string;
   clave_sat: string;
-  prioridad: number;
   activo: boolean;
-  notas: string | null;
   tipo_iva: TipoIva;
   clave_unidad_sat: string;
   nombre_unidad: string | null;
@@ -28,15 +26,13 @@ export interface Row {
 export interface Draft {
   patron: string;
   clave_sat: string;
-  prioridad: number;
   activo: boolean;
-  notas: string;
   tipo_iva: TipoIva;
   clave_unidad_sat: string;
 }
 
 export const EMPTY_DRAFT: Draft = {
-  patron: "", clave_sat: "", prioridad: 100, activo: true, notas: "",
+  patron: "", clave_sat: "", activo: true,
   tipo_iva: "gravado_16", clave_unidad_sat: "E48",
 };
 
@@ -105,9 +101,7 @@ export function EditRow({ draft, setDraft, onCancel, onSave, busy, valid }: Edit
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell><Input type="number" min={1} value={draft.prioridad} onChange={(e) => p({ prioridad: Number(e.target.value) || 100 })} /></TableCell>
       <TableCell><Switch checked={draft.activo} onCheckedChange={(v) => p({ activo: v })} /></TableCell>
-      <TableCell><Input value={draft.notas} onChange={(e) => p({ notas: e.target.value })} placeholder="opcional" /></TableCell>
       <TableCell className="text-right">
         <Button size="icon" variant="ghost" onClick={onCancel} disabled={busy}><X className="h-4 w-4" /></Button>
         <Button size="icon" onClick={onSave} disabled={busy || !valid}><Check className="h-4 w-4" /></Button>
