@@ -32,7 +32,7 @@ vi.mock("@/features/facturacion/hooks/useFacturas", () => ({
 vi.mock("@/hooks/shared", () => ({
   useListPageState: () => {
     return {
-      search: "", filters: { estado: "todos" }, page: 1, pageSize: 25,
+      search: "", filters: { estado: "todos", cliente: "todos" }, page: 1, pageSize: 25,
       setSearch: vi.fn(), setFilter: vi.fn(), setPage: vi.fn(), setPageSize: vi.fn(),
       paginate: <T,>(items: T[]) => ({ items, totalPages: 1 }),
     };
