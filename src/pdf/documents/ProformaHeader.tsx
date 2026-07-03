@@ -5,6 +5,7 @@ import { KeyValueGrid } from "../components/KeyValueGrid";
 import { BrandHeader, type EmisorInfo } from "../components/BrandHeader";
 import { BillToBlock } from "../components/BillToBlock";
 import { PaymentTermsBlock } from "../components/PaymentTermsBlock";
+import { vigenciaPlus30, resumirContenedores } from "@/features/proformas/domain/proformaDetalleHelpers";
 import type { ProformaRow, ClienteLite, EmbarqueLite } from "./proformaShared";
 
 interface Props {
@@ -15,34 +16,7 @@ interface Props {
   emisor?: EmisorInfo;
 }
 
-function vigenciaPlus30(fechaEmision: string): string {
-  try {
-    const d = new Date(fechaEmision);
-    d.setDate(d.getDate() + 30);
-    return formatDate(d.toISOString().substring(0, 10));
-  } catch {
-    return "—";
-  }
-}
 
-function resumirContenedores(contenedores: NonNullable<EmbarqueLite["contenedores"]>): string {
-  if (contenedores.length === 0) return "";
-  if (contenedores.length <= 3) {
-    return contenedores
-      .map((c) => `${c.numero_contenedor}${c.tipo_contenedor ? ` · ${c.tipo_contenedor}` : ""}`)
-      .join(", ");
-  }
-  const tipos = new Map<string, number>();
-  for (const c of contenedores) {
-    const t = c.tipo_contenedor || "—";
-    tipos.set(t, (tipos.get(t) ?? 0) + 1);
-  }
-  const resumen = Array.from(tipos.entries())
-    .map(([t, n]) => `${n} × ${t}`)
-    .join(" + ");
-  const numeros = contenedores.map((c) => c.numero_contenedor).join(", ");
-  return `${resumen} — ${numeros}`;
-}
 
 function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
   const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || "-";
