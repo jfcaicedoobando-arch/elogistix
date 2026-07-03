@@ -15,10 +15,7 @@ describe("proformaClienteEstado", () => {
   });
 
   it("resolveProformaTimelineFields normaliza todos los campos y default a pendiente", () => {
-    const base = {} as ProformaDetalleFull;
-    const t = resolveProformaTimelineFields({
-      ...base,
-      // @ts-expect-error campos legacy no tipados
+    const raw = {
       estado_cliente: "aceptada",
       aceptada_por: "op@x.com",
       enviada_at: "2026-01-01",
@@ -26,7 +23,8 @@ describe("proformaClienteEstado", () => {
       aceptada_at: "2026-01-02",
       rechazada_at: null,
       fecha_facturacion: "2026-01-03",
-    });
+    } as unknown as ProformaDetalleFull;
+    const t = resolveProformaTimelineFields(raw);
     expect(t).toEqual({
       estadoCliente: "aceptada",
       aceptadaPor: "op@x.com",
