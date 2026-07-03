@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.146.2] - 2026-07-03
+- **fix(facturación) — enum `origen_factura` acepta `conversion_proforma`.** Al convertir una proforma a borrador de factura, el RPC `convertir_proformas_a_factura` intentaba etiquetar la factura con `origen_factura = 'conversion_proforma'`, pero ese valor nunca se agregó al enum (`{proforma, manual}`), así que Postgres rechazaba el insert con `22P02: invalid input value for enum`. Migración aditiva `ALTER TYPE origen_factura ADD VALUE IF NOT EXISTS 'conversion_proforma'`; las filas existentes conservan sus valores previos.
+
 ## [13.146.1] - 2026-07-03
+
 - **fix(facturación) — la conversión Proforma → Borrador ya no exige RFC/CP/régimen fiscal.** El RPC `convertir_proformas_a_factura` dejaba a los usuarios atorados con `Cliente sin código postal válido` (P0001) cuando el cliente tenía la ficha fiscal incompleta, aunque el flujo permite completar esos datos antes de timbrar. Consistente con "FacturAPI = source of truth" (v13.146.0), la validación fiscal (`isValidRfc`, `isValidZip`, `tax_system`) sigue viva en la edge function `facturapi-emitir` — el borrador se crea sin fricción y FacturAPI valida al momento del timbrado. Nuevo componente `FacturaFiscalCheckAlert.tsx` en el detalle del borrador: consulta `clientes.rfc/codigo_postal/regimen_fiscal` y, si falta cualquiera, muestra un banner ámbar con la lista de campos y un botón directo a la ficha del cliente para completarlos.
 
 ## [13.146.0] - 2026-07-02
