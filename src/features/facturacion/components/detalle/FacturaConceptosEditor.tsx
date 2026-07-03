@@ -37,6 +37,7 @@ const EMPTY: ConceptoFacturaInput = {
   cantidad: 1,
   precio_unitario: 0,
   clave_sat: "78101800",
+  tipo_iva: "gravado_16",
 };
 
 export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conceptos }: Props) {
