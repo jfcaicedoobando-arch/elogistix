@@ -20,6 +20,7 @@ import { ReaprobacionTarifaBanner } from "@/features/cotizacion/components/reval
 import { SinDesgloseBanner } from "@/features/cotizacion/components/SinDesgloseBanner";
 import { useCotizacionDetalleState } from "@/features/cotizacion/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { PageContainer } from "@/components/shared/PageContainer";
 import CotizacionInformativaDetalle from "./CotizacionInformativaDetalle";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
@@ -60,7 +61,7 @@ export default function CotizacionDetalle() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <PageContainer>
       <CotizacionDetalleHeader
         cotizacion={cotizacion}
         nombreDestinatario={nombreDestinatario}
