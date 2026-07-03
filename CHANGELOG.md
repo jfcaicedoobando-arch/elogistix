@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.159.1] - 2026-07-04
+- **chore(design-language)**: auditoría final de estilos hardcodeados.
+  - `src/lib/ui/estadoConfig.ts`: estado `Entregado` migrado a tokens `success` (badge, borderLeft, bar, gradient, border, text, glow); borde de `En Tránsito` pasa de `border-l-amber-500` a `border-l-warning`.
+  - `src/lib/ui/uiMappings.ts`: modo `Terrestre` usa tokens `warning` en lugar de `amber-*`.
+  - `src/lib/ui/__tests__/uiMappings.test.ts`: aserción de `Entregado` actualizada a `text-success`.
+  - Reporte guardado en `/mnt/documents/audit-styles-2026-07-03.md`. Ocurrencias remanentes de `text-[10px]` viven sólo en `src/features/marketing/**` (excluidas por diseño).
+
 ## [13.159.0] - 2026-07-04
 - **chore(visual-audit)**: verificación de consistencia visual (design language).
   - `scripts/visual-audit/capture.py` + `capture.mjs` (mismo comportamiento) + `README.md`: recorre 23 rutas principales autenticadas y guarda una captura 1440×900 por ruta (`NN-slug.png`), más `report.json` y `REPORT.md`.

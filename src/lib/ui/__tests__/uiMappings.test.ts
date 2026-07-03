@@ -12,7 +12,7 @@ describe("getEstadoColor", () => {
     expect(getEstadoColor("En Tránsito")).toContain("text-warning");
     expect(getEstadoColor("Arribo")).toContain("text-cyan-600");
     expect(getEstadoColor("En Aduana")).toContain("text-violet-600");
-    expect(getEstadoColor("Entregado")).toContain("text-emerald-600");
+    expect(getEstadoColor("Entregado")).toContain("text-success");
     expect(getEstadoColor("EIR")).toContain("text-orange-600");
     expect(getEstadoColor("Cerrado")).toContain("text-muted-foreground");
     expect(getEstadoColor("Pagada")).toContain("text-success");
