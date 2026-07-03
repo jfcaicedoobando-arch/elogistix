@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.160.1] - 2026-07-04
+- **fix(embarques)**: PATCH a `embarque_contenedores` devolvía HTTP 500 (`record "v_cond" is not assigned yet`, Postgres 55000) al editar fechas/días libres de un contenedor cuando la naviera del embarque no tenía condiciones configuradas en `costeo_navieras_condiciones`. Reportado por Sentry `JAVASCRIPT-REACT-1W` / `JAVASCRIPT-REACT-1V`.
+  - `calcular_demoras_embarque`: se añadieron banderas `v_cond_found` / `v_cond_id` para no referenciar campos de un `record` sin asignar. Cuando no hay condiciones naviera, el cálculo de venta por tabulador propio sigue funcionando y el costo queda en 0 (comportamiento esperado).
+
 ## [13.160.0] - 2026-07-04
 - **feat(facturacion)**: split bimoneda al convertir Proforma → Factura.
   - RPC `convertir_proformas_a_factura` v2: retorna `SETOF facturas` (0..2 filas). Si la proforma tiene importes en USD y MXN, genera un borrador por cada moneda (el SAT no permite CFDI multi-moneda). Ambos quedan enlazados a la proforma vía `factura_id` (MXN) y `factura_secundaria_id` (USD).
