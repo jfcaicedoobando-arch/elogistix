@@ -18,6 +18,10 @@ import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi"
 import { usePermissions } from "@/hooks/shared";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
+import { FacturaEmisorCard } from "@/features/facturacion/components/detalle/FacturaEmisorCard";
+import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/FacturaReceptorCard";
+import { FacturaTotalesCard } from "@/features/facturacion/components/detalle/FacturaTotalesCard";
+import { FacturaTimbradoCard } from "@/features/facturacion/components/detalle/FacturaTimbradoCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
 import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
@@ -115,6 +119,28 @@ export default function FacturaDetalle() {
         eliminando={eliminando}
       />
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <FacturaEmisorCard />
+        {factura.cliente_id && (
+          <FacturaReceptorCard
+            clienteId={factura.cliente_id}
+            clienteNombre={factura.cliente_nombre}
+            rfcFactura={factura.rfc_cliente}
+          />
+        )}
+      </div>
+
+      <FacturaResumenCard factura={factura} />
+
+      {factura.uuid_fiscal && (
+        <FacturaTimbradoCard
+          uuidFiscal={factura.uuid_fiscal}
+          folioFiscal={factura.folio_fiscal}
+          serie={factura.serie}
+          fechaEmision={factura.fecha_emision}
+        />
+      )}
+
       <FacturaDetalleEditableSections
         factura={factura}
         canEdit={canEdit}
@@ -124,12 +150,17 @@ export default function FacturaDetalle() {
         onSustituir={() => setSustituirOpen(true)}
       />
 
-      <FacturaResumenCard factura={factura} />
-
       <FacturaConceptosTable
         snapshot={factura.snapshot_emision}
         moneda={factura.moneda}
         conceptos={conceptosVivos}
+      />
+
+      <FacturaTotalesCard
+        subtotal={Number(factura.subtotal)}
+        iva={Number(factura.iva)}
+        total={Number(factura.total)}
+        moneda={factura.moneda}
       />
 
       <FacturaPagosSection
