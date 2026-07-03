@@ -5,11 +5,6 @@
 import { useState } from "react";
 import { Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useTimbrarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useFactura } from "@/features/facturacion/hooks/useFactura";
@@ -24,8 +19,8 @@ import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors/index";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { USOS_CFDI_SAT, FORMAS_PAGO_SAT, METODOS_PAGO_SAT } from "@/constants/catalogosSAT";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
+import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
 
 interface Props {
   facturaId: string | null;
