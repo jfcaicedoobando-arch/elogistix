@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.150.0] - 2026-07-04
+- **feat(shared)**: **Oleada 1 del plan de homologación — primitivas compartidas**. Sin migración de páginas todavía; sólo se publican los cimientos. Archivos nuevos:
+  - `src/components/shared/PageContainer.tsx` (extrae `mx-auto w-full max-w-screen-2xl p-4 sm:p-6` + `space-y-6`).
+  - `src/lib/status/statusRegistry.ts` + `src/components/shared/StatusBadge.tsx` (mapea dominios `factura`/`proforma`/`embarque`/`cotizacion`/`lead` a los estilos de `estadoConfig`, fallback neutral).
+  - `src/components/shared/states/{LoadingState,ErrorState,ListSkeleton}.tsx` (feedback estándar con `role="status"`/`role="alert"`).
+  - `src/components/shared/dialogs/{ConfirmActionDialog,DeleteConfirmDialog,DocumentPreviewDialog}.tsx` (Confirm sobre `AlertDialog`; Delete re-export de `DoubleConfirmDeleteDialog`; Preview con iframe/imagen y slot de descarga).
+  - `src/components/shared/dataTable/columnBuilders.tsx` (helpers tipados `statusColumn`, `clientColumn`, `moneyColumn`, `dateColumn`, `actionsColumn`).
+  - `src/hooks/shared/useTableFilters.ts` + `src/components/shared/filters/UnifiedFiltersBar.tsx` (superset de `useListPageState` con rango de fechas y chips activos derivados; barra estándar Search + primary + Sheet + chips + "Limpiar todo").
+  Editados: `src/components/shared/PageHeader.tsx` (nuevos slots `subHeader`/`tabs`, API retrocompatible) y `src/components/layout/Layout.tsx` (usa `PageContainer` en lugar del `<div>` inline). Tests añadidos bajo `src/components/shared/__tests__/` y `src/hooks/shared/__tests__/` cubriendo dominios, fallbacks, chips y rango de fechas. Los helpers legacy (`getEstadoColor`, `BadgeCiclo`, etc.) siguen vivos; se deprecarán en la Oleada 2.
+
+
 ## [13.149.3] - 2026-07-04
 - **chore(lint)**: arregla `bun run lint` (error `preserve-caught-error` en `enviarFacturaEmail.ts` — ahora re-lanza con `{ cause: e }`) y warnings de `enviar-factura-email/index.ts` (complejidad 34 y max-lines 252) extrayendo helpers a `supabase/functions/enviar-factura-email/helpers.ts` (auth, adjuntos, template, envío, persistencia). El test estructural `index_test.ts` ahora lee ambos archivos concatenados.
 - **chore(knip)**: elimina código muerto detectado por `lint:unused:strict` — borra `src/features/cotizacion/components/detalle/DestinatariosPicker.tsx`, `src/features/cotizacion/hooks/useEnvioCotizacionForm.ts` y `src/features/facturacion/components/DateRangeFilter.tsx` (reemplazados por los shells compartidos), y quita los exports sin uso `fetchFacturacionPorEmitir`, `useAprobarProformas` y `useConsolidarProformas`.
