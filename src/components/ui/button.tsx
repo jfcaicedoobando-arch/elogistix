@@ -15,6 +15,8 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Ola 7 · Lote A — reemplaza usos inline `bg-accent text-accent-foreground hover:bg-accent/90`.
+        accent: "bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 hover:shadow",
       },
       size: {
         // En mobile (<md) los tap targets cumplen 44px (Apple HIG / Material AA);
