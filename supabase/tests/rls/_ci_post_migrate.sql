@@ -53,35 +53,9 @@ DROP TRIGGER IF EXISTS trg_pago_factura_comision ON public.pagos_factura;
 DROP TRIGGER IF EXISTS trg_pago_factura_comision_ins ON public.pagos_factura;
 
 -- ============================================================================
--- Policies reales de tracking_externo (no existen en migraciones; añadidas
--- manualmente en prod). Reemplazan el stub deny-all instalado en _ci_drift.sql
--- para que las suites operaciones/aislamiento puedan validarlas.
+-- Stub deny-all removido: las 3 policies reales de tracking_externo ya viven
+-- en supabase/migrations/20260703185259_*.sql (13.162.0). Sólo limpiamos aquí
+-- el stub deny-all que instala _ci_drift.sql antes de aplicar migraciones.
 -- ============================================================================
 DROP POLICY IF EXISTS "_ci_stub_deny_all" ON public.tracking_externo;
-DROP POLICY IF EXISTS "Tenant CRUD tracking_externo" ON public.tracking_externo;
-DROP POLICY IF EXISTS "Tenant viewer tracking_externo" ON public.tracking_externo;
 
-CREATE POLICY "Tenant CRUD tracking_externo" ON public.tracking_externo
-  FOR ALL TO authenticated
-  USING (
-    ((organization_id = current_user_org_id())
-      OR has_role(auth.uid(), 'super_admin'::app_role))
-    AND (has_role(auth.uid(), 'admin'::app_role)
-      OR has_role(auth.uid(), 'operador'::app_role)
-      OR has_role(auth.uid(), 'super_admin'::app_role))
-  )
-  WITH CHECK (
-    ((organization_id = current_user_org_id())
-      OR has_role(auth.uid(), 'super_admin'::app_role))
-    AND (has_role(auth.uid(), 'admin'::app_role)
-      OR has_role(auth.uid(), 'operador'::app_role)
-      OR has_role(auth.uid(), 'super_admin'::app_role))
-  );
-
-CREATE POLICY "Tenant viewer tracking_externo" ON public.tracking_externo
-  FOR SELECT TO authenticated
-  USING (
-    ((organization_id = current_user_org_id())
-      OR has_role(auth.uid(), 'super_admin'::app_role))
-    AND has_role(auth.uid(), 'viewer'::app_role)
-  );
