@@ -35,7 +35,6 @@ export default function CotizacionWizardLayout({
   saveLabel,
 }: CotizacionWizardLayoutProps) {
   const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, isPending } = w;
-  const contentRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSinDesglose, setShowSinDesglose] = useState(false);
   const isBusy = isProcessing || isPending;
@@ -53,7 +52,6 @@ export default function CotizacionWizardLayout({
   const handleNext = useCallback(() => { void runProcessing(handleSiguiente); }, [runProcessing, handleSiguiente]);
   const handleSave = useCallback(() => { void runProcessing(handleGuardar); }, [runProcessing, handleGuardar]);
   const handleBack = useCallback(() => { if (!isBusy) wHandleBack(); }, [isBusy, wHandleBack]);
-  const handleTopBack = useCallback(() => { if (!isBusy) onBack(); }, [isBusy, onBack]);
   const handleConfirmSinDesglose = useCallback(() => {
     if (!canCotizarSinDesglose) {
       notifyError(toast, { title: "Tu rol no autoriza cotizar sin desglose. Pide a un gerente o admin.", method: "FEATURES_COTIZACION_COMPONENTS_COTIZACIONWIZARDLAYOUT_1" });
@@ -76,66 +74,39 @@ export default function CotizacionWizardLayout({
     if (!isBusy) wHandleBack();
   }, [isBusy, wHandleBack]);
 
-  // IMPORTANTE: NO envolver el contenido en <form>. Radix Select detecta el
-  // form ancestro y monta `SelectBubbleInput`, que entra en conflicto con
-  // React Hook Form (Controller) y produce `removeChild` en el primer mount.
-  // Enter→Siguiente se maneja a nivel de keydown sobre el contenedor.
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== 'Enter') return;
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'TEXTAREA') return;
-    if (target.tagName === 'BUTTON') return;
-    if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'button') return;
-    if (target.getAttribute('aria-expanded') === 'true') return;
-    if (target.tagName !== 'INPUT' && target.tagName !== 'SELECT') return;
-    e.preventDefault();
-    if (!isBusy) handleNext();
-  }, [handleNext, isBusy]);
-
   return (
     <FormProvider {...form}>
-      <div className="flex flex-col h-[calc(100dvh-4rem)] -m-6">
-        <div className="flex-none border-b bg-background p-4 space-y-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={handleTopBack} aria-label="Volver" disabled={isBusy}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">{title}</h1>
-              {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
-            </div>
-          </div>
-          <StepIndicator
-            steps={WIZARD_STEPS}
+      <WizardShell
+        title={title}
+        subtitle={subtitle}
+        steps={WIZARD_STEPS}
+        currentStep={w.currentStep}
+        onStepClick={(s) => w.setCurrentStep(s)}
+        onBack={onBack}
+        isBusy={isBusy}
+        contentMaxWidth="6xl"
+        footer={
+          <CotizacionWizardFooter
             currentStep={w.currentStep}
-            onStepClick={(s) => { if (!isBusy) w.setCurrentStep(s); }}
+            isPending={w.isPending}
+            isProcessing={isProcessing}
+            saveLabel={saveLabel}
+            onBack={handleBack}
+            onNext={handleNext}
+            onSave={handleSave}
+            onCotizarSinDesglose={handleOpenSinDesglose}
+            canSkipCostos={canCotizarSinDesglose}
           />
-        </div>
-
-        <div onKeyDown={handleKeyDown} className="flex-1 overflow-y-auto p-4" ref={contentRef}>
-          <div className="max-w-6xl mx-auto">
-            <CotizacionWizardSteps
-              w={w}
-              clientes={clientes}
-              esMaritimo={esMaritimo}
-              sinDesgloseFlag={sinDesgloseFlag}
-              irACargarCostos={irACargarCostos}
-            />
-          </div>
-        </div>
-
-        <CotizacionWizardFooter
-          currentStep={w.currentStep}
-          isPending={w.isPending}
-          isProcessing={isProcessing}
-          saveLabel={saveLabel}
-          onBack={handleBack}
-          onNext={handleNext}
-          onSave={handleSave}
-          onCotizarSinDesglose={handleOpenSinDesglose}
-          canSkipCostos={canCotizarSinDesglose}
+        }
+      >
+        <CotizacionWizardSteps
+          w={w}
+          clientes={clientes}
+          esMaritimo={esMaritimo}
+          sinDesgloseFlag={sinDesgloseFlag}
+          irACargarCostos={irACargarCostos}
         />
-      </div>
+      </WizardShell>
 
       <ConfirmSinDesgloseDialog
         open={showSinDesglose}
@@ -146,3 +117,4 @@ export default function CotizacionWizardLayout({
     </FormProvider>
   );
 }
+
