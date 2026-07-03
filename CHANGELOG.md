@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.159.2] - 2026-07-04
+- **fix(facturacion)**: Convertir proforma a factura fallaba con `42883 function public.idempotency_store(uuid, unknown, jsonb) does not exist`.
+  - `convertir_proformas_a_factura` invocaba `idempotency_store(uuid, text, jsonb)` pero la firma real es `idempotency_store(_key uuid, _response jsonb)`.
+  - Migración: se recrea la RPC con la llamada corregida (`p_request_id, jsonb_build_object(...)`); resto del cuerpo intacto. Idempotencia sigue vigente vía `idempotency_claim` al inicio.
+
 ## [13.159.1] - 2026-07-04
 - **chore(design-language)**: auditoría final de estilos hardcodeados.
   - `src/lib/ui/estadoConfig.ts`: estado `Entregado` migrado a tokens `success` (badge, borderLeft, bar, gradient, border, text, glow); borde de `En Tránsito` pasa de `border-l-amber-500` a `border-l-warning`.
