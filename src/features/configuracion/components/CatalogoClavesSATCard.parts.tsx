@@ -1,7 +1,7 @@
 /**
- * Piezas auxiliares de `CatalogoClavesSATCard`: tipos, constantes de UI y
- * el sub-componente `EditRow`. Separado del contenedor para respetar el
- * límite de 200 líneas por archivo (Power of 10).
+ * Sub-componente `EditRow` del Catálogo de productos y servicios.
+ * Aislado en su propio `.tsx` (sólo exporta componentes) para cumplir con
+ * la regla `react-refresh/only-export-components`.
  */
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,62 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TableCell, TableRow } from "@/components/ui/table";
-
-export type TipoIva = "gravado_16" | "tasa_0" | "exento";
-
-export interface Row {
-  id: string;
-  organization_id: string;
-  patron: string;
-  clave_sat: string;
-  activo: boolean;
-  tipo_iva: TipoIva;
-  clave_unidad_sat: string;
-  nombre_unidad: string | null;
-}
-
-export interface Draft {
-  patron: string;
-  clave_sat: string;
-  activo: boolean;
-  tipo_iva: TipoIva;
-  clave_unidad_sat: string;
-}
-
-export const EMPTY_DRAFT: Draft = {
-  patron: "", clave_sat: "", activo: true,
-  tipo_iva: "gravado_16", clave_unidad_sat: "E48",
-};
-
-export const UNIDADES_SAT: Array<{ value: string; label: string }> = [
-  { value: "E48", label: "E48 — Unidad de Servicio" },
-  { value: "H87", label: "H87 — Pieza" },
-  { value: "XPP", label: "XPP — Paquete" },
-  { value: "KGM", label: "KGM — Kilogramo" },
-  { value: "TNE", label: "TNE — Tonelada" },
-  { value: "MTR", label: "MTR — Metro" },
-  { value: "MTQ", label: "MTQ — Metro cúbico" },
-  { value: "LTR", label: "LTR — Litro" },
-  { value: "ACT", label: "ACT — Actividad" },
-];
-
-export const TIPO_IVA_LABEL: Record<TipoIva, string> = {
-  gravado_16: "IVA 16%",
-  tasa_0: "IVA 0%",
-  exento: "Exento",
-};
-
-export const TIPO_IVA_VARIANT: Record<TipoIva, "default" | "secondary" | "outline"> = {
-  gravado_16: "default",
-  tasa_0: "secondary",
-  exento: "outline",
-};
-
-export function tasaFromTipo(tipo: TipoIva): number | null {
-  if (tipo === "gravado_16") return 0.16;
-  if (tipo === "tasa_0") return 0;
-  return null;
-}
+import { UNIDADES_SAT, type Draft, type TipoIva } from "./CatalogoClavesSATCard.constants";
 
 interface EditRowProps {
   draft: Draft;
