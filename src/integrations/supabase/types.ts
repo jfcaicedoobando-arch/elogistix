@@ -3524,6 +3524,68 @@ export type Database = {
           },
         ]
       }
+      factura_envios: {
+        Row: {
+          asunto: string | null
+          cc: Json
+          created_at: string
+          destinatarios: Json
+          enviado_por: string | null
+          error: string | null
+          estado: string
+          factura_id: string
+          id: string
+          mensaje: string | null
+          organization_id: string
+          pdf_link_publico: string | null
+          pdf_storage_path: string | null
+          xml_link_publico: string | null
+          xml_storage_path: string | null
+        }
+        Insert: {
+          asunto?: string | null
+          cc?: Json
+          created_at?: string
+          destinatarios?: Json
+          enviado_por?: string | null
+          error?: string | null
+          estado?: string
+          factura_id: string
+          id?: string
+          mensaje?: string | null
+          organization_id: string
+          pdf_link_publico?: string | null
+          pdf_storage_path?: string | null
+          xml_link_publico?: string | null
+          xml_storage_path?: string | null
+        }
+        Update: {
+          asunto?: string | null
+          cc?: Json
+          created_at?: string
+          destinatarios?: Json
+          enviado_por?: string | null
+          error?: string | null
+          estado?: string
+          factura_id?: string
+          id?: string
+          mensaje?: string | null
+          organization_id?: string
+          pdf_link_publico?: string | null
+          pdf_storage_path?: string | null
+          xml_link_publico?: string | null
+          xml_storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factura_envios_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       factura_notas_credito: {
         Row: {
           aprobada_at: string | null
