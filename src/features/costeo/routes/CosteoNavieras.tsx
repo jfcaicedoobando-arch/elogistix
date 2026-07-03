@@ -1,7 +1,6 @@
 /**
  * Página: Condiciones por naviera (carta garantía + tabulador de demoras).
- * Lista todas las navieras del catálogo y permite configurar las condiciones
- * comerciales que negociamos con cada una.
+ * Oleada 4: migrado a PageContainer + ListSkeleton compartidos.
  */
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,9 @@ import { NavieraCondicionForm } from "@/features/costeo/components/NavieraCondic
 import { DemorasTarifaEditor } from "@/features/costeo/components/DemorasTarifaEditor";
 import { CartaGarantiaBadge } from "@/features/costeo/components/CartaGarantiaBadge";
 import type { CosteoNavieraCondicion } from "@/features/costeo/types/navieraCondicion";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
 interface FilaNaviera {
   naviera_id: string;
@@ -44,55 +45,58 @@ export default function CosteoNavieras() {
     }));
   }, [navieras, condiciones]);
 
+  const isLoading = loadingNav || loadingCond;
+
   return (
-    <div className="p-6 space-y-4">
+    <PageContainer>
       <PageHeader
         title="Condiciones por naviera"
         description="Carta garantía, días libres y tabulador escalonado de demoras por tipo de contenedor."
       />
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Naviera</TableHead>
-              <TableHead>SCAC</TableHead>
-              <TableHead>Carta garantía</TableHead>
-              <TableHead className="text-right">Días libres</TableHead>
-              <TableHead>Proveedor vinculado</TableHead>
-              <TableHead className="w-32 text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(loadingNav || loadingCond) && (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Cargando…</TableCell></TableRow>
-            )}
-            {filas.map((f) => (
-              <TableRow key={f.naviera_id}>
-                <TableCell className="font-medium">{f.naviera_nombre}</TableCell>
-                <TableCell className="font-mono text-xs">{f.naviera_code}</TableCell>
-                <TableCell>
-                  <CartaGarantiaBadge
-                    tieneCarta={f.condicion?.tiene_carta_garantia ?? false}
-                    vigenteHasta={f.condicion?.carta_garantia_vigente_hasta ?? null}
-                  />
-                </TableCell>
-                <TableCell className="text-right">
-                  {f.condicion?.dias_libres_demoras_default ?? "—"}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {f.condicion ? "Vinculado" : "Sin configurar"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button size="sm" variant="outline" onClick={() => setSeleccion(f)}>
-                    <Settings2 className="size-4 mr-1" /> Configurar
-                  </Button>
-                </TableCell>
+      {isLoading ? (
+        <ListSkeleton rows={6} variant="table" />
+      ) : (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Naviera</TableHead>
+                <TableHead>SCAC</TableHead>
+                <TableHead>Carta garantía</TableHead>
+                <TableHead className="text-right">Días libres</TableHead>
+                <TableHead>Proveedor vinculado</TableHead>
+                <TableHead className="w-32 text-right">Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {filas.map((f) => (
+                <TableRow key={f.naviera_id}>
+                  <TableCell className="font-medium">{f.naviera_nombre}</TableCell>
+                  <TableCell className="font-mono text-xs">{f.naviera_code}</TableCell>
+                  <TableCell>
+                    <CartaGarantiaBadge
+                      tieneCarta={f.condicion?.tiene_carta_garantia ?? false}
+                      vigenteHasta={f.condicion?.carta_garantia_vigente_hasta ?? null}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {f.condicion?.dias_libres_demoras_default ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {f.condicion ? "Vinculado" : "Sin configurar"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" variant="outline" onClick={() => setSeleccion(f)}>
+                      <Settings2 className="size-4 mr-1" /> Configurar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
 
       <FormDialogShell
         open={!!seleccion}
@@ -110,7 +114,11 @@ export default function CosteoNavieras() {
               <TabsTrigger
                 value="demoras"
                 disabled={!seleccion.condicion}
-                title={!seleccion.condicion ? "Primero guarda las condiciones generales para habilitar el tabulador" : undefined}
+                title={
+                  !seleccion.condicion
+                    ? "Primero guarda las condiciones generales para habilitar el tabulador"
+                    : undefined
+                }
               >
                 Tabulador de demoras
               </TabsTrigger>
@@ -135,6 +143,6 @@ export default function CosteoNavieras() {
           </Tabs>
         )}
       </FormDialogShell>
-    </div>
+    </PageContainer>
   );
 }

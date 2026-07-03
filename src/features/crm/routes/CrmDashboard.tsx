@@ -8,6 +8,7 @@
 import { Activity, Target, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useCrmInicioVM, useForecast, useReportesCRM } from "@/features/crm/hooks";
@@ -125,7 +126,7 @@ export default function CrmDashboard() {
   const f = forecast ?? { totalPipeline: 0, totalPonderado: 0, totalGanado: 0 };
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
+    <PageContainer>
       <PageHeader
         title="Resumen ejecutivo"
         description="Indicadores y gráficas de lectura rápida del CRM"
@@ -150,6 +151,6 @@ export default function CrmDashboard() {
       </div>
 
       <LeaderboardVendedores />
-    </div>
+    </PageContainer>
   );
 }

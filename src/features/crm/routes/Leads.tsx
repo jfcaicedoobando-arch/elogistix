@@ -6,7 +6,6 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
-import { Badge } from "@/components/ui/badge";
 import { toTitleCase } from "@/lib/formatters";
 import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
@@ -18,6 +17,8 @@ import {
 } from "@/features/crm/hooks";
 import { makeLeadsColumns } from "./leadsColumns";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export default function Leads() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function Leads() {
   const columns = useMemo(() => makeLeadsColumns(selected, toggle, toggleAll, leads), [selected, leads]);
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
+    <PageContainer>
       <PageHeader
         title="Leads"
         description="Prospectos y empresas en seguimiento comercial"
@@ -84,7 +85,7 @@ export default function Leads() {
                   <div className="text-xs text-muted-foreground truncate mt-0.5">{toTitleCase(l.contacto ?? "") || l.email || "—"}</div>
                   <div className="text-[11px] text-muted-foreground mt-0.5">{l.fuente}{typeof l.score === "number" ? ` · score ${l.score}` : ""}</div>
                 </div>
-                <Badge variant="secondary" className="text-[10px] whitespace-nowrap">{l.estado}</Badge>
+                <StatusBadge domain="lead" status={l.estado} />
               </div>
             )}
             pagination={{
@@ -99,6 +100,6 @@ export default function Leads() {
           />
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

@@ -1,18 +1,25 @@
 /**
  * Página: buscador Top 3 de tarifas marítimas vigentes (consulta directa).
+ * Oleada 4: migrado a PageContainer + LoadingState compartidos.
  */
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { TarifaResultCard } from "@/features/costeo/components/TarifaResultCard";
 import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { LoadingState } from "@/components/shared/states/LoadingState";
 
 export default function CosteoBuscar() {
   const { data: puertos = [] } = usePuertos();
@@ -29,11 +36,18 @@ export default function CosteoBuscar() {
     fecha,
   });
 
-  const puertosCN = puertos.filter((p) => p.country === "CN" || p.country === "China");
-  const puertosMX = puertos.filter((p) => p.country === "MX" || p.country === "Mexico" || p.country === "México");
+  const puertosCN = puertos.filter(
+    (p) => p.country === "CN" || p.country === "China",
+  );
+  const puertosMX = puertos.filter(
+    (p) =>
+      p.country === "MX" ||
+      p.country === "Mexico" ||
+      p.country === "México",
+  );
 
   return (
-    <div className="p-6 space-y-4">
+    <PageContainer>
       <PageHeader
         title="Buscar tarifa"
         description="Top 3 tarifas vigentes ordenadas por precio total, días de crédito y días libres de demoras."
@@ -44,10 +58,14 @@ export default function CosteoBuscar() {
           <div>
             <Label htmlFor="buscar-origen">Puerto origen (CN)</Label>
             <Select value={origen} onValueChange={setOrigen}>
-              <SelectTrigger id="buscar-origen"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+              <SelectTrigger id="buscar-origen">
+                <SelectValue placeholder="Selecciona" />
+              </SelectTrigger>
               <SelectContent>
                 {(puertosCN.length ? puertosCN : puertos).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}, {p.country}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -55,10 +73,14 @@ export default function CosteoBuscar() {
           <div>
             <Label htmlFor="buscar-destino">Puerto destino (MX)</Label>
             <Select value={destino} onValueChange={setDestino}>
-              <SelectTrigger id="buscar-destino"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+              <SelectTrigger id="buscar-destino">
+                <SelectValue placeholder="Selecciona" />
+              </SelectTrigger>
               <SelectContent>
                 {(puertosMX.length ? puertosMX : puertos).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}, {p.country}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -66,10 +88,14 @@ export default function CosteoBuscar() {
           <div>
             <Label htmlFor="buscar-tipo">Tipo contenedor</Label>
             <Select value={tipo} onValueChange={setTipo}>
-              <SelectTrigger id="buscar-tipo"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+              <SelectTrigger id="buscar-tipo">
+                <SelectValue placeholder="Selecciona" />
+              </SelectTrigger>
               <SelectContent>
                 {tipos.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -86,10 +112,13 @@ export default function CosteoBuscar() {
           Selecciona ruta y tipo de contenedor para ver las tarifas vigentes.
         </Card>
       ) : isFetching ? (
-        <Card className="p-8 text-center text-muted-foreground">Buscando…</Card>
+        <Card>
+          <LoadingState label="Buscando tarifas…" />
+        </Card>
       ) : tarifas.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">
-          No hay tarifas vigentes para esta combinación. Captura una nueva en "Tarifas marítimas".
+          No hay tarifas vigentes para esta combinación. Captura una nueva en
+          "Tarifas marítimas".
         </Card>
       ) : (
         (() => {
@@ -103,6 +132,6 @@ export default function CosteoBuscar() {
           );
         })()
       )}
-    </div>
+    </PageContainer>
   );
 }

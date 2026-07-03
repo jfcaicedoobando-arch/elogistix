@@ -4,10 +4,13 @@
  */
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { LoadingState } from "@/components/shared/states/LoadingState";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -69,26 +72,25 @@ export default function LeadDetalle() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center p-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <LoadingState label="Cargando lead…" />;
   }
 
   if (!lead) {
     return (
-      <div className="p-6 space-y-3">
+      <PageContainer>
         <Button variant="ghost" size="sm" onClick={() => navigate("/crm/leads")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Volver
         </Button>
-        <p className="text-muted-foreground">Lead no encontrado.</p>
-      </div>
+        <ErrorState
+          title="Lead no encontrado"
+          description="El lead que buscas no existe o fue eliminado."
+        />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+    <PageContainer>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={() => navigate("/crm/leads")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Leads
@@ -158,6 +160,6 @@ export default function LeadDetalle() {
         onConfirm={handleDelete}
         isPending={eliminar.isPending}
       />
-    </div>
+    </PageContainer>
   );
 }

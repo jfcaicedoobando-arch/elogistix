@@ -12,6 +12,7 @@ import { useForecast, useReportesCRM } from "@/features/crm/hooks";
 import LeaderboardVendedores from "@/features/crm/components/LeaderboardVendedores";
 import { usePermissions } from "@/hooks/shared";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 
@@ -130,7 +131,7 @@ function EmbudoYPerdidas() {
 export default function Analitica() {
   const { canEdit } = usePermissions();
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+    <PageContainer>
       <PageHeader
         title="Analítica CRM"
         description="Forecast, embudo de conversión y rendimiento por vendedor"
@@ -144,6 +145,6 @@ export default function Analitica() {
           <CardContent><LeaderboardVendedores /></CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }
