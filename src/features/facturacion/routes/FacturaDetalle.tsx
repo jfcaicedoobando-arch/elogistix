@@ -3,8 +3,8 @@
  * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
  * de timbrado automáticamente.
  */
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
