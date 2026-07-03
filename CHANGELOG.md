@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.150.1] - 2026-07-04
+- **chore(knip)**: agrega las 4 primitivas de la Oleada 1 aún sin consumidores (`columnBuilders.tsx`, `DeleteConfirmDialog.tsx`, `DocumentPreviewDialog.tsx`, `UnifiedFiltersBar.tsx`) a `knip.json > ignore` para que `bun run lint:unused` y `lint:unused:strict` pasen mientras se migran las páginas en la Oleada 2. Al consumirlas se retiran del ignore.
+
 ## [13.150.0] - 2026-07-04
 - **feat(shared)**: **Oleada 1 del plan de homologación — primitivas compartidas**. Sin migración de páginas todavía; sólo se publican los cimientos. Archivos nuevos:
   - `src/components/shared/PageContainer.tsx` (extrae `mx-auto w-full max-w-screen-2xl p-4 sm:p-6` + `space-y-6`).

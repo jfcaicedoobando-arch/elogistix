@@ -15,7 +15,11 @@
     "src/components/ui/**",
     "src/test/**",
     "src/features/*/index.ts",
-    "src/features/crm/domain/index.ts"
+    "src/features/crm/domain/index.ts",
+    "src/components/shared/dataTable/columnBuilders.tsx",
+    "src/components/shared/dialogs/DeleteConfirmDialog.tsx",
+    "src/components/shared/dialogs/DocumentPreviewDialog.tsx",
+    "src/components/shared/filters/UnifiedFiltersBar.tsx"
   ],
   "ignoreDependencies": [
     "react-helmet-async"
