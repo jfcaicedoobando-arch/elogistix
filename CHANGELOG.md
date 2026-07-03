@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.151.2] - 2026-07-04
+- **feat(design-language)**: cierra Oleada 2 — `ProformaDetalleCards.FacturaAsociadaCard` usa `<StatusBadge domain="factura">` en lugar de `Badge + getEstadoColor`.
+
 ## [13.151.1] - 2026-07-04
 - **chore(lint)**: arregla `react-hooks/exhaustive-deps` en `TabFacturasEmitidas.tsx` (dep `p`).
 - **chore(cleanup)**: borra 8 archivos huérfanos post-Oleada 2 (`accionesCell`, `CotizacionesMobileFilters`, `EmbarquesFiltros{Campos,Chips,Utils}`, `FacturasFiltros{,Campos,Chips}`) y el alias `clientesColumns` sin consumidores.
