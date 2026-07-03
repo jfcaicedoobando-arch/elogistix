@@ -37,7 +37,7 @@ export default function ConfigOrganizacion() {
               <SelectItem key={org.id} value={org.id}>
                 <div className="flex items-center gap-2">
                   {org.nombre}
-                  <Badge variant="outline" className="text-[10px]">{org.plan}</Badge>
+                  <Badge variant="outline" className="text-2xs">{org.plan}</Badge>
                 </div>
               </SelectItem>
             ))}

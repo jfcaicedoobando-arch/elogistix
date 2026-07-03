@@ -52,7 +52,7 @@ export function FacturaFiscalCheckAlert({ clienteId, estado }: Props) {
   if (faltantes.length === 0) return null;
 
   return (
-    <Alert variant="default" className="border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100 dark:border-amber-800">
+    <Alert variant="default" className="border-warning/30 bg-warning/10 text-warning dark:bg-warning/40 dark:text-warning dark:border-warning">
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Datos fiscales del cliente incompletos</AlertTitle>
       <AlertDescription className="flex flex-wrap items-center justify-between gap-3 mt-1">

@@ -51,7 +51,7 @@ function AdjuntoRow({
         <span className="text-muted-foreground">{icon}</span>
         <span className="text-sm font-medium">{label}</span>
         {adjunto ? (
-          <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-600">Adjunto</Badge>
+          <Badge variant="default" className="bg-success hover:bg-success">Adjunto</Badge>
         ) : (
           <Badge variant="secondary">No adjunto</Badge>
         )}

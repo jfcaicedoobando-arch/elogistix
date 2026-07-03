@@ -65,10 +65,10 @@ export function PasoProbar({ ambiente, resultado, probando, onProbar }: Props) {
       </div>
 
       {resultado?.ok && (
-        <Alert className="border-emerald-500/40 bg-emerald-500/5">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+        <Alert className="border-success/40 bg-success/5">
+          <CheckCircle2 className="h-4 w-4 text-success" />
           <AlertDescription className="text-xs space-y-1">
-            <div className="font-semibold text-emerald-700">¡Conexión exitosa!</div>
+            <div className="font-semibold text-success">¡Conexión exitosa!</div>
             {resultado.nombre && (
               <div>
                 Organización: <strong>{resultado.nombre}</strong>
@@ -77,7 +77,7 @@ export function PasoProbar({ ambiente, resultado, probando, onProbar }: Props) {
             {resultado.facturapi_org_id && (
               <div className="flex items-center gap-1">
                 Org ID:{" "}
-                <Badge variant="secondary" className="font-mono text-[10px]">
+                <Badge variant="secondary" className="font-mono text-2xs">
                   {resultado.facturapi_org_id}
                 </Badge>
               </div>

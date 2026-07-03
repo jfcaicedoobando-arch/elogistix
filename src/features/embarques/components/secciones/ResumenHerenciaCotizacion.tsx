@@ -87,7 +87,7 @@ export function ResumenHerenciaCotizacion() {
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Link2 className="h-4 w-4" />
           Datos heredados de cotización
-          <Badge variant="secondary" className="ml-auto text-[10px]">{cot.folio ?? ""}</Badge>
+          <Badge variant="secondary" className="ml-auto text-2xs">{cot.folio ?? ""}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">

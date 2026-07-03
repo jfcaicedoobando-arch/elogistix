@@ -81,25 +81,25 @@ export default function PortalEmbarqueDetalle() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">Origen</p>
+            <p className="text-2xs text-muted-foreground font-medium">Origen</p>
             <p className="text-xs font-semibold mt-0.5 truncate" title={getOrigen(embarque)}>{getOrigen(embarque)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium">Destino</p>
+            <p className="text-2xs text-muted-foreground font-medium">Destino</p>
             <p className="text-xs font-semibold mt-0.5 truncate" title={getDestino(embarque)}>{getDestino(embarque)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium" title="Fecha estimada de salida">ETD</p>
+            <p className="text-2xs text-muted-foreground font-medium" title="Fecha estimada de salida">ETD</p>
             <p className="text-xs font-semibold mt-0.5">{embarque.etd ? formatDate(embarque.etd) : "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <p className="text-[10px] text-muted-foreground font-medium" title="Fecha estimada de arribo">ETA</p>
+            <p className="text-2xs text-muted-foreground font-medium" title="Fecha estimada de arribo">ETA</p>
             <p className="text-xs font-semibold mt-0.5">{embarque.eta ? formatDate(embarque.eta) : "—"}</p>
           </CardContent>
         </Card>
@@ -111,13 +111,13 @@ export default function PortalEmbarqueDetalle() {
           <TabsTrigger value="tracking" className="relative">
             Tracking
             {eventos.length > 0 && (
-              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-[10px] px-1.5 font-bold">{eventos.length}</span>
+              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-2xs px-1.5 font-bold">{eventos.length}</span>
             )}
           </TabsTrigger>
           <TabsTrigger value="documentos" className="relative">
             Documentos
             {docsTotal > 0 && (
-              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-[10px] px-1.5 font-bold">{docsValidados}/{docsTotal}</span>
+              <span className="ml-1.5 rounded-full bg-accent/10 text-accent text-2xs px-1.5 font-bold">{docsValidados}/{docsTotal}</span>
             )}
           </TabsTrigger>
         </TabsList>

@@ -36,7 +36,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
 
   const origen = c.form.origen_proveedor;
   const headerAside = origen ? (
-    <Badge variant={origen === "Nacional" ? "secondary" : "outline"} className="text-[10px] font-medium">
+    <Badge variant={origen === "Nacional" ? "secondary" : "outline"} className="text-2xs font-medium">
       {origen}
     </Badge>
   ) : undefined;

@@ -44,7 +44,7 @@ export function EntidadesFields({ form, setForm, agentes, navieras, errores, age
               disabled
               className="bg-muted/40"
             />
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-2xs text-muted-foreground mt-1">
               Las tarifas que captures quedan a tu nombre automáticamente.
             </p>
           </>
@@ -110,7 +110,7 @@ export function RutaTipoFields({
         <div className="flex items-center justify-between gap-2">
           <Label htmlFor="tarifa-ruta">{multiple ? "Rutas *" : "Ruta *"}</Label>
           {multiple && (rutaIds?.length ?? 0) > 1 && (
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="text-2xs">
               Se crearán {rutaIds?.length} tarifas
             </Badge>
           )}

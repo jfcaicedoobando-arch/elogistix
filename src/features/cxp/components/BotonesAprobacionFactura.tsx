@@ -20,7 +20,7 @@ interface Props {
 
 export function EstadoAprobacionBadge({ estado }: { estado: EstadoAprobacion }) {
   if (estado === "aprobada") {
-    return <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20">
+    return <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/20">
       <Check className="h-3 w-3 mr-1" /> Aprobada
     </Badge>;
   }

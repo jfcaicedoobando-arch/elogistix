@@ -41,7 +41,7 @@ export function PortalNotificationsBell() {
           {noLeidas > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] tabular-nums rounded-full"
+              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-2xs tabular-nums rounded-full"
             >
               {noLeidas > 99 ? "99+" : noLeidas}
             </Badge>
@@ -89,7 +89,7 @@ export function PortalNotificationsBell() {
                         {n.mensaje && (
                           <p className="text-[11px] text-muted-foreground line-clamp-2">{n.mensaje}</p>
                         )}
-                        <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
+                        <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
                           {formatDateTimeShort(n.created_at)}
                         </p>
                       </div>

@@ -45,7 +45,7 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
               return (
                 <span className="inline-flex items-center gap-2">
                   {r.expediente}
-                  {r.id === embarqueId && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Actual</Badge>}
+                  {r.id === embarqueId && <Badge variant="outline" className="text-2xs px-1.5 py-0">Actual</Badge>}
                 </span>
               );
             } },

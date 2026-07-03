@@ -75,7 +75,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
                   <Badge
                     key={est}
                     variant="outline"
-                    className={`text-[10px] px-1.5 py-0 leading-4 ${getEstadoColor(est)}`}
+                    className={`text-2xs px-1.5 py-0 leading-4 ${getEstadoColor(est)}`}
                   >
                     {count} {est}
                   </Badge>
@@ -117,7 +117,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
         ) : (
           <p className="text-xs">{c.totalVisible} cargas activas</p>
         )}
-        <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">
+        <p className="text-2xs text-muted-foreground mt-1.5 leading-snug">
           Incluye embarques en: {ESTADOS_TEXTO}
         </p>
       </TooltipContent>

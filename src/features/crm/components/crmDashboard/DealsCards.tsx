@@ -45,7 +45,7 @@ export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
                 </Link>
                 <div className="text-right">
                   <div className="text-xs tabular-nums font-semibold">{formatCurrencyCompact(o.monto_estimado, o.moneda)}</div>
-                  <div className="text-[10px] text-muted-foreground">{o.fecha_estimada_cierre} · {o.probabilidad}%</div>
+                  <div className="text-2xs text-muted-foreground">{o.fecha_estimada_cierre} · {o.probabilidad}%</div>
                 </div>
               </li>
             ))}

@@ -64,7 +64,7 @@ function MiniSerie({
   const hayDatos = max > 0;
   return (
     <div className="flex flex-col gap-1 min-w-[100px]">
-      <div className="text-[10px] text-muted-foreground uppercase tracking-wide">{titulo}</div>
+      <div className="text-2xs text-muted-foreground uppercase tracking-wide">{titulo}</div>
       {hayDatos ? (
         <>
           <div className="flex items-end gap-1 h-6">
@@ -91,7 +91,7 @@ function MiniSerie({
           </div>
         </>
       ) : (
-        <div className="h-6 flex items-center text-[10px] italic text-muted-foreground">Sin datos</div>
+        <div className="h-6 flex items-center text-2xs italic text-muted-foreground">Sin datos</div>
       )}
     </div>
   );

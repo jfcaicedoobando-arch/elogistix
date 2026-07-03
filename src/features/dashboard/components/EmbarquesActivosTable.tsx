@@ -93,7 +93,7 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     id: "facturado", header: "Facturado",
     meta: { className: "text-center", headerClassName: "text-center" },
     cell: ({ row }) => (
-      <Badge variant="secondary" className={`text-[10px] ${
+      <Badge variant="secondary" className={`text-2xs ${
         row.original.facturado
           ? "bg-success/15 text-success border-success/30"
           : "bg-muted text-muted-foreground"
@@ -134,7 +134,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
             <Package className="h-4 w-4 text-muted-foreground shrink-0" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-foreground">{resumen.totalEmbarques}</p>
-              <p className="text-[10px] text-muted-foreground">Embarques</p>
+              <p className="text-2xs text-muted-foreground">Embarques</p>
             </div>
           </div>
           {!hideFinancials && (
@@ -143,14 +143,14 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
                 <DollarSign className="h-4 w-4 text-info shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.ventaMXN, "MXN")}</p>
-                  <p className="text-[10px] text-muted-foreground">Venta MXN</p>
+                  <p className="text-2xs text-muted-foreground">Venta MXN</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
                 <DollarSign className="h-4 w-4 text-warning shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.costoMXN, "MXN")}</p>
-                  <p className="text-[10px] text-muted-foreground">Costo MXN</p>
+                  <p className="text-2xs text-muted-foreground">Costo MXN</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
@@ -159,7 +159,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
                   <p className={`text-sm font-bold truncate ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
                     {formatCurrency(resumen.profitMXN, "MXN")}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">Profit MXN</p>
+                  <p className="text-2xs text-muted-foreground">Profit MXN</p>
                 </div>
               </div>
               <div className="col-span-2 md:col-span-3 lg:col-span-1 flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">
@@ -170,9 +170,9 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
                       <p className="text-sm font-bold text-foreground">
                         {resumen.facturados}/{resumen.totalEmbarques}
                       </p>
-                      <span className="text-[10px] text-muted-foreground">{pctFacturados}%</span>
+                      <span className="text-2xs text-muted-foreground">{pctFacturados}%</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Facturados</p>
+                    <p className="text-2xs text-muted-foreground">Facturados</p>
                   </div>
                 </div>
                 <Progress value={pctFacturados} className={`h-1.5 ${colorClass}`} />

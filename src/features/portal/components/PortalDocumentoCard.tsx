@@ -34,7 +34,7 @@ export function PortalDocumentoCard({ doc, downloadingId, onDownload }: Props) {
           <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${info.color}`} />
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm break-words">{doc.nombre}</p>
-            <Badge variant="secondary" className="text-[10px] mt-1">
+            <Badge variant="secondary" className="text-2xs mt-1">
               {doc.estado}
             </Badge>
           </div>

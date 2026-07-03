@@ -52,14 +52,14 @@ export function CargaCfdiSection({ mode, onModeChange, categorias, onParsed, cfd
             mode === "cfdi" ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          Cargar XML CFDI <Badge variant="secondary" className="ml-1 text-[10px]">México</Badge>
+          Cargar XML CFDI <Badge variant="secondary" className="ml-1 text-2xs">México</Badge>
         </button>
       </div>
 
       {mode === "cfdi" && (
         <div className="p-4 space-y-3">
           {cfdiReady && (
-            <div className="flex items-center gap-2 rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm text-emerald-800">
+            <div className="flex items-center gap-2 rounded-md bg-success/10 border border-success/30 px-3 py-2 text-sm text-success">
               <CheckCircle2 className="h-4 w-4" />
               CFDI cargado. Los campos del formulario fueron prellenados — puedes editarlos.
             </div>

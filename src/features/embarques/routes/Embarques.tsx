@@ -140,7 +140,7 @@ export default function Embarques() {
                           {e.eta ? ` · ETA ${formatDate(e.eta)}` : ""}
                         </div>
                       </div>
-                      <Badge variant="secondary" className={`text-[10px] whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>
+                      <Badge variant="secondary" className={`text-2xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>
                     </div>
                   );
                 }}

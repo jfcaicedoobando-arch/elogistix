@@ -51,7 +51,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
               {toTitleCase(row.original.proveedor_nombre)}
             </span>
             {origen && (
-              <Badge variant="outline" className={`${badgeCls} text-[10px] px-1.5 py-0 h-4 w-fit font-normal`}>
+              <Badge variant="outline" className={`${badgeCls} text-2xs px-1.5 py-0 h-4 w-fit font-normal`}>
                 {origen}
               </Badge>
             )}

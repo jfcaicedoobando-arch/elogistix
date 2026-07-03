@@ -26,7 +26,7 @@ export const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { 
             </span>
             <Badge
               variant="secondary"
-              className="text-[10px] h-4 px-1.5 shrink-0 tabular-nums"
+              className="text-2xs h-4 px-1.5 shrink-0 tabular-nums"
             >
               {cliente.cantidad}
             </Badge>
@@ -35,14 +35,14 @@ export const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { 
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           <div className="ml-5 mt-1 mb-1.5 pl-2 border-l border-border space-y-1">
             {estadosConValor.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground italic py-1">Sin desglose</p>
+              <p className="text-2xs text-muted-foreground italic py-1">Sin desglose</p>
             ) : (
               estadosConValor.map((estado) => {
                 const Icon = ESTADO_ICON[estado];
                 return (
                   <div
                     key={estado}
-                    className="flex items-center justify-between text-[10px] gap-2"
+                    className="flex items-center justify-between text-2xs gap-2"
                   >
                     <span className="flex items-center gap-1.5 text-muted-foreground">
                       <Icon className="h-3 w-3" style={{ color: ESTADO_COLOR[estado] }} />

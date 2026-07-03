@@ -39,7 +39,7 @@ export function NotificacionesPopover() {
               {noLeidas > 0 && (
                 <Badge
                   variant="destructive"
-                  className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] font-semibold leading-none flex items-center justify-center rounded-full"
+                  className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-2xs font-semibold leading-none flex items-center justify-center rounded-full"
                 >
                   {noLeidas > 9 ? "9+" : noLeidas}
                 </Badge>
@@ -93,7 +93,7 @@ export function NotificacionesPopover() {
                         <div className="text-xs text-muted-foreground line-clamp-2 whitespace-pre-line">
                           {n.mensaje}
                         </div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                        <div className="text-2xs text-muted-foreground mt-0.5">
                           {formatDate(n.created_at, "dd/MM/yyyy HH:mm")}
                         </div>
                       </div>

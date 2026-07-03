@@ -40,7 +40,7 @@ export function ActividadesHoyCard({ items }: { items: Actividad[] }) {
             {items.map((a) => (
               <li key={a.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
                 <Link to={entidadHref(a.entidad_tipo, a.entidad_id)} className="flex items-center gap-2 hover:underline">
-                  <Badge variant="outline" className="text-[10px]">{a.tipo}</Badge>
+                  <Badge variant="outline" className="text-2xs">{a.tipo}</Badge>
                   <span className="font-medium truncate max-w-[420px]">{a.asunto}</span>
                 </Link>
                 <span className="text-xs text-muted-foreground">{formatHora(a.fecha_programada)}</span>

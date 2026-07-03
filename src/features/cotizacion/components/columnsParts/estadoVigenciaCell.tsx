@@ -50,22 +50,22 @@ export function renderEstadoVigencia(r: CotizacionListItem): ReactNode {
       <div className="flex items-center gap-1.5 flex-wrap">
         <StatusBadge domain="cotizacion" status={estado} />
         {sinCostos && (
-          <Badge variant="warning" className="w-fit text-[10px] whitespace-nowrap">Sin costos</Badge>
+          <Badge variant="warning" className="w-fit text-2xs whitespace-nowrap">Sin costos</Badge>
         )}
         {requiereReaprobacion && (
-          <Badge variant="warning" className="w-fit text-[10px] whitespace-nowrap"
+          <Badge variant="warning" className="w-fit text-2xs whitespace-nowrap"
             title="Tarifa cambió: requiere re-aprobación de ventas">
             ⚠ Re-aprobación pendiente
           </Badge>
         )}
         {tarifaVencida && (
-          <Badge variant="destructive" className="w-fit text-[10px] whitespace-nowrap"
+          <Badge variant="destructive" className="w-fit text-2xs whitespace-nowrap"
             title={`La tarifa vinculada venció el ${formatDate(vigHasta!)}`}>
             ⚠ Tarifa vencida
           </Badge>
         )}
       </div>
-      {vigenciaNode && <span className="text-[10px] whitespace-nowrap">{vigenciaNode}</span>}
+      {vigenciaNode && <span className="text-2xs whitespace-nowrap">{vigenciaNode}</span>}
     </div>
   );
 }

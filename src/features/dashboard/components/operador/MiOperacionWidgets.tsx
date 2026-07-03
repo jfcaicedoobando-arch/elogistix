@@ -34,7 +34,7 @@ export function WidgetCard({
           <Icon className={`h-4 w-4 ${iconClass}`} />
           {title}
           {!isLoading && count > 0 && (
-            <Badge variant="secondary" className="ml-auto text-[10px]">{count}</Badge>
+            <Badge variant="secondary" className="ml-auto text-2xs">{count}</Badge>
           )}
         </CardTitle>
       </CardHeader>

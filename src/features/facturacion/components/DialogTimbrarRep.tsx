@@ -86,7 +86,7 @@ export function DialogTimbrarRep({ pago, factura, open, onOpenChange }: Props) {
     >
       <ul className="text-sm space-y-1">
         {checks.map((c, i) => (
-          <li key={i} className={c.ok ? "text-emerald-700" : "text-destructive"}>
+          <li key={i} className={c.ok ? "text-success" : "text-destructive"}>
             {c.ok ? "✓" : "✗"} {c.label}
           </li>
         ))}

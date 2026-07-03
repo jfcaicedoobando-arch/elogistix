@@ -15,7 +15,7 @@ export type EstadoRep = "NoAplica" | "Pendiente" | "Timbrado" | "Cancelado" | "E
 // eslint-disable-next-line react-refresh/only-export-components
 export function badgeRep(estado: EstadoRep) {
   switch (estado) {
-    case "Timbrado":  return <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Timbrado</Badge>;
+    case "Timbrado":  return <Badge variant="secondary" className="bg-success/10 text-success hover:bg-success/10">Timbrado</Badge>;
     case "Pendiente": return <Badge variant="destructive">Pendiente</Badge>;
     case "Cancelado": return <Badge variant="outline">Cancelado</Badge>;
     case "Error":     return <Badge variant="destructive">Error</Badge>;

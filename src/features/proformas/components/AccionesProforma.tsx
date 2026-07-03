@@ -33,7 +33,7 @@ function BotonesRespuestaManual({ onSelect }: { onSelect: (m: "aceptada" | "rech
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => onSelect("aceptada")}>
-        <CheckCircle2 className="h-4 w-4 mr-1.5 text-emerald-600" /> Aceptar (manual)
+        <CheckCircle2 className="h-4 w-4 mr-1.5 text-success" /> Aceptar (manual)
       </Button>
       <Button variant="outline" size="sm" onClick={() => onSelect("rechazada")}>
         <XCircle className="h-4 w-4 mr-1.5 text-red-600" /> Rechazar (manual)

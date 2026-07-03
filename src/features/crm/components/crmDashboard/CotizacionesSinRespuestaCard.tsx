@@ -41,7 +41,7 @@ export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRe
                     <div className="text-xs tabular-nums font-semibold">
                       {formatCurrencyCompact(c.subtotal, c.moneda)}
                     </div>
-                    <Badge variant="outline" className="text-[10px] mt-0.5">
+                    <Badge variant="outline" className="text-2xs mt-0.5">
                       {c.dias}d
                     </Badge>
                   </div>

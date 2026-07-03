@@ -117,7 +117,7 @@ export function TabNotas({ notas, embarqueId, expediente, creadoPor, creadoEn }:
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant={TIPO_BADGE_VARIANT[it.tipo] ?? "secondary"} className="text-[10px] uppercase">
+                      <Badge variant={TIPO_BADGE_VARIANT[it.tipo] ?? "secondary"} className="text-2xs uppercase">
                         {it.accion}
                       </Badge>
                       <span className="text-xs text-muted-foreground">

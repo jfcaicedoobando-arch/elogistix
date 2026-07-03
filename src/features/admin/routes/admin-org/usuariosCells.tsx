@@ -43,7 +43,7 @@ export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
           {user.email}
         </span>
         {isSelf && (
-          <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
+          <span className="text-2xs uppercase tracking-wide text-primary font-semibold">
             Tú
           </span>
         )}
@@ -76,7 +76,7 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
       <SelectContent>
         {ASSIGNABLE_ROLE_GROUPS.map((group) => (
           <SelectGroup key={group.label}>
-            <SelectLabel className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <SelectLabel className="text-2xs uppercase tracking-wide text-muted-foreground">
               {group.label}
             </SelectLabel>
             {group.roles.map((r) => (

@@ -16,7 +16,7 @@ export function EstadoProgresoCard({ currentStepIndex }: Props) {
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
                   i <= currentStepIndex ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
                 }`}>{i + 1}</div>
-                <span className={`text-[10px] mt-1 text-center ${
+                <span className={`text-2xs mt-1 text-center ${
                   i <= currentStepIndex ? 'text-foreground font-medium' : 'text-muted-foreground'
                 }`}>{estado}</span>
               </div>

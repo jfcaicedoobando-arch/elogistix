@@ -135,7 +135,7 @@ export default function PortalEmbarques() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {Object.entries(statusCounts).map(([estado, count]) => (
-                          <Badge key={estado} variant="outline" className={`${getEstadoColor(estado)} text-[10px] px-1.5 py-0`}>
+                          <Badge key={estado} variant="outline" className={`${getEstadoColor(estado)} text-2xs px-1.5 py-0`}>
                             {count} {estado}
                           </Badge>
                         ))}

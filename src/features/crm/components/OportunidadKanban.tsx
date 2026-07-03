@@ -64,9 +64,9 @@ function OpCard({ op, onClick, proxima }: { op: CrmOportunidadRow; onClick: () =
         ) : null}
         <div className="flex items-center justify-between pt-1">
           <span className="text-xs font-semibold">{fmtMxn(Number(op.monto_estimado ?? 0))}</span>
-          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">{op.probabilidad}%</Badge>
+          <Badge variant="secondary" className="text-2xs h-5 px-1.5">{op.probabilidad}%</Badge>
         </div>
-        <div className={`text-[10px] flex items-center gap-1 truncate pt-1 border-t border-border/40 mt-1 ${vencida ? "text-destructive" : "text-muted-foreground"}`}>
+        <div className={`text-2xs flex items-center gap-1 truncate pt-1 border-t border-border/40 mt-1 ${vencida ? "text-destructive" : "text-muted-foreground"}`}>
           <Calendar className="h-3 w-3 shrink-0" />
           <span className="truncate">{formatProx(proxima)}</span>
         </div>

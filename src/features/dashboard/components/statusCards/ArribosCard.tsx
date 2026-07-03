@@ -182,7 +182,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
                 />
               }
             />
-            <p className="text-[10px] text-muted-foreground text-center">Gastos fijos cubiertos</p>
+            <p className="text-2xs text-muted-foreground text-center">Gastos fijos cubiertos</p>
           </div>
         </div>
       </CardContent>

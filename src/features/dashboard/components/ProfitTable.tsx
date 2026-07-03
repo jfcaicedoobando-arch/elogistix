@@ -61,7 +61,7 @@ const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueC
     cell: ({ row }) => {
       const e = row.original;
       return (
-        <Badge className={`text-[10px] ${
+        <Badge className={`text-2xs ${
           e.margenMXN > 15 ? "bg-success/15 text-success border-success/30"
             : e.margenMXN > 0 ? "bg-warning/15 text-warning border-warning/30"
             : "bg-destructive/15 text-destructive border-destructive/30"

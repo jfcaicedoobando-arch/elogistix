@@ -77,7 +77,7 @@ export function MarcarRevisadoDialog({ hallazgo, revisionExistente, open, onOpen
             <MessageSquare className="h-3 w-3 mr-1" />
             Comentarios
             {ctrl.comentarios && ctrl.comentarios.length > 0 && (
-              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-2xs">
                 {ctrl.comentarios.length}
               </Badge>
             )}

@@ -109,7 +109,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </pre>
               )}
               {this.state.eventId && (
-                <p className="text-[10px] text-muted-foreground font-mono">
+                <p className="text-2xs text-muted-foreground font-mono">
                   ID del evento: {this.state.eventId}
                 </p>
               )}

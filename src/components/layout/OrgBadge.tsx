@@ -31,7 +31,7 @@ function OrgBadgeBase({ collapsed }: { collapsed?: boolean }) {
       className="px-1 select-none"
       aria-label={`Organización activa: ${organization.nombre}`}
     >
-      <div className="text-[10px] font-medium uppercase tracking-wider text-sidebar-foreground/50">
+      <div className="text-2xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
         Organización
       </div>
       <div className="flex items-center gap-1.5 text-sm font-semibold text-sidebar-foreground/90">

@@ -75,7 +75,7 @@ export function FechaVigencia({ vigenteHasta, vencePronto }: { vigenteHasta: str
       <span className="text-muted-foreground">Vigente hasta:</span>
       <span className="font-medium">{formatFechaMx(vigenteHasta)}</span>
       {vencePronto && (
-        <Badge variant="outline" className="bg-destructive/15 text-destructive border-destructive/30 text-[10px] ml-auto">
+        <Badge variant="outline" className="bg-destructive/15 text-destructive border-destructive/30 text-2xs ml-auto">
           Vence pronto
         </Badge>
       )}
@@ -98,7 +98,7 @@ export function EtiquetasList({ etiquetas }: { etiquetas: string[] }) {
   return (
     <div className="flex flex-wrap gap-1">
       {etiquetas.map((e) => (
-        <Badge key={e} variant="secondary" className="text-[10px] uppercase tracking-wide font-semibold">
+        <Badge key={e} variant="secondary" className="text-2xs uppercase tracking-wide font-semibold">
           {e}
         </Badge>
       ))}

@@ -65,7 +65,7 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" />
           Desempeño por Operador
-          <Badge variant="secondary" className="ml-1 text-[10px]">
+          <Badge variant="secondary" className="ml-1 text-2xs">
             {operadores.length} {operadores.length === 1 ? "operador" : "operadores"}
           </Badge>
         </CardTitle>

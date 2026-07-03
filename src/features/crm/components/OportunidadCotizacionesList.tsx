@@ -58,7 +58,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
                       <div className="flex items-center gap-1.5">
                         <Badge variant="outline">{c.estado}</Badge>
                         {c.estado === "Enviada" && diasEnviada > 5 && (
-                          <Badge variant="destructive" className="text-[10px]">
+                          <Badge variant="destructive" className="text-2xs">
                             Sin respuesta · {diasEnviada}d
                           </Badge>
                         )}

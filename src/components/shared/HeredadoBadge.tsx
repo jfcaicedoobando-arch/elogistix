@@ -28,7 +28,7 @@ export function HeredadoBadge({
         <TooltipTrigger asChild>
           <Badge
             variant="secondary"
-            className={`gap-1 text-[10px] font-medium uppercase tracking-wide ${className ?? ""}`}
+            className={`gap-1 text-2xs font-medium uppercase tracking-wide ${className ?? ""}`}
           >
             <Link2 className="h-3 w-3" />
             Heredado

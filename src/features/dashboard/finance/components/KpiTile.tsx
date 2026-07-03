@@ -15,9 +15,9 @@ interface Props {
 
 const TONE_STYLES: Record<NonNullable<Props["tone"]>, string> = {
   default: "border-border",
-  warning: "border-amber-300 bg-amber-50/40",
+  warning: "border-warning/30 bg-warning/40",
   danger: "border-red-300 bg-red-50/40",
-  success: "border-emerald-300 bg-emerald-50/40",
+  success: "border-success/30 bg-success/40",
 };
 
 export function KpiTile({

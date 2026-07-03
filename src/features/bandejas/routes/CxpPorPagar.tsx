@@ -40,7 +40,7 @@ export default function CxpPorPagar() {
               {porMoneda.EUR > 0 && <span>· EUR {formatCurrencyCompact(porMoneda.EUR, "EUR")}</span>}
             </div>
             {faltaTipoCambio > 0 && (
-              <p className="text-[10px] text-warning mt-0.5">
+              <p className="text-2xs text-warning mt-0.5">
                 {faltaTipoCambio} factura{faltaTipoCambio > 1 ? "s" : ""} sin TC capturado — no incluida{faltaTipoCambio > 1 ? "s" : ""} en homologado.
               </p>
             )}

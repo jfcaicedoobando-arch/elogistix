@@ -120,7 +120,7 @@ export function AsignarResponsableDialog({
               {ctrl.asignables.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.email}{" "}
-                  <span className="text-muted-foreground text-[10px] ml-1">({u.role})</span>
+                  <span className="text-muted-foreground text-2xs ml-1">({u.role})</span>
                 </SelectItem>
               ))}
             </SelectContent>

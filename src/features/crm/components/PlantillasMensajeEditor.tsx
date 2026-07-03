@@ -154,7 +154,7 @@ export default function PlantillasMensajeEditor() {
                     if (e.target.value !== p.cuerpo) actualizar.mutate({ id: p.id, patch: { cuerpo: e.target.value } });
                   }}
                 />
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1 text-2xs text-muted-foreground">
                   <Save className="h-3 w-3" /> Los cambios se guardan al salir del campo.
                 </div>
               </li>

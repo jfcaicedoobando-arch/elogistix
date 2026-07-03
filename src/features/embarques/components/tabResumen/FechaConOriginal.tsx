@@ -19,7 +19,7 @@ export function FechaConOriginal({ actual, original }: { actual: string | null; 
       <span>{actualLabel}</span>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className={`text-[10px] font-normal ${tono}`}>
+          <Badge variant="outline" className={`text-2xs font-normal ${tono}`}>
             Original: {formatDate(original)} ({signo})
           </Badge>
         </TooltipTrigger>

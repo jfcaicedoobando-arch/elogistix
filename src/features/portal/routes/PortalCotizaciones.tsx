@@ -109,11 +109,11 @@ export default function PortalCotizaciones() {
                       <p className="text-xs text-muted-foreground truncate">
                         {c.modo} • {c.tipo} • {c.origen || "—"} → {c.destino || "—"}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-2xs text-muted-foreground mt-0.5">
                         Vigencia: {c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "—"}
                       </p>
                       {fechaRespuesta && fechaRespuestaLabel && (
-                        <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
+                        <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
                           {fechaRespuestaLabel} el {formatDate(fechaRespuesta, "dd/MM/yyyy HH:mm")}
                         </p>
                       )}

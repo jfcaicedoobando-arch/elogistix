@@ -32,7 +32,7 @@ export function EmbarqueEstadoListItem({ e, estado, onNavigate }: Props) {
               {toTitleCase(e.clienteNombre || "Sin cliente")}
             </span>
             {subt.length > 0 && (
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5">{subt.join(" · ")}</Badge>
+              <Badge variant="outline" className="text-2xs h-4 px-1.5">{subt.join(" · ")}</Badge>
             )}
           </div>
           <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">

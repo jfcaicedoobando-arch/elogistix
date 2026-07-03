@@ -29,7 +29,7 @@ function KPICard({
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           <span className="text-muted-foreground">{icon}</span>
           <span>{label}</span>
-          {count && <span className="text-[10px] text-muted-foreground/70">· {count}</span>}
+          {count && <span className="text-2xs text-muted-foreground/70">· {count}</span>}
         </p>
         <p className="text-lg font-semibold tabular-nums">{value}</p>
       </CardContent>

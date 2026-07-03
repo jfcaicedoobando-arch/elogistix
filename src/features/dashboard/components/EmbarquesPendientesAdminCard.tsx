@@ -25,7 +25,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <KpiTile
-            icon={<PackageCheck className="h-4 w-4 text-emerald-600" />}
+            icon={<PackageCheck className="h-4 w-4 text-success" />}
             label="Entregados"
             sublabel="Esperan cierre"
             value={entregados}
@@ -74,7 +74,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
                       className={
                         it.estado === "EIR"
                           ? "border-orange-300 text-orange-700"
-                          : "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                          : "bg-success/10 text-success hover:bg-success/10"
                       }
                     >
                       {it.estado}

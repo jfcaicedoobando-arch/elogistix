@@ -59,7 +59,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
           <AlertTriangle className="h-4 w-4 text-destructive" />
           Alertas de Demora
           {alertas.length > 0 && (
-            <Badge variant="destructive" className="ml-auto text-[10px]">
+            <Badge variant="destructive" className="ml-auto text-2xs">
               {alertas.length}
             </Badge>
           )}

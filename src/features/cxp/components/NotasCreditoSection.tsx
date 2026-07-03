@@ -25,7 +25,7 @@ interface Props {
 }
 
 function NcEstadoBadge({ estado }: { estado: string }) {
-  if (estado === "Aplicada") return <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30">Aplicada</Badge>;
+  if (estado === "Aplicada") return <Badge className="bg-success/15 text-success border-success/30">Aplicada</Badge>;
   if (estado === "Cancelada") return <Badge variant="secondary">Cancelada</Badge>;
   if (estado === "Aprobada") return <Badge className="bg-sky-500/15 text-sky-700 border-sky-500/30">Aprobada</Badge>;
   return <Badge variant="outline">Borrador</Badge>;
@@ -77,7 +77,7 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                     {canEdit && n.estado !== "Aplicada" && n.estado !== "Cancelada" && (
                       <Button
                         size="sm" variant="ghost"
-                        className="h-7 text-emerald-700 hover:bg-emerald-500/10"
+                        className="h-7 text-success hover:bg-success/10"
                         onClick={() => aplicar.mutate(n.id)}
                         disabled={aplicar.isPending}
                         title="Aplicar al saldo"

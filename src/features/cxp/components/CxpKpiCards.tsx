@@ -20,7 +20,7 @@ function KPICard({
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           <span>{label}</span>
           {count != null && (
-            <span className="text-[10px] text-muted-foreground/70">
+            <span className="text-2xs text-muted-foreground/70">
               · {count} {count === 1 ? "factura" : "facturas"}
             </span>
           )}

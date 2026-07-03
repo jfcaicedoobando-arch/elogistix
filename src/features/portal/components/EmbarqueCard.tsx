@@ -79,7 +79,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
               <span className="truncate">{origen} → {destino}</span>
             </span>
             {tipoLabel && (
-              <Badge variant="outline" className="hidden sm:flex text-[10px] px-1.5 py-0 flex-shrink-0 font-normal">
+              <Badge variant="outline" className="hidden sm:flex text-2xs px-1.5 py-0 flex-shrink-0 font-normal">
                 {tipoLabel}
               </Badge>
             )}

@@ -28,7 +28,7 @@ function diasRestantes(hasta: string): number {
 function VigenciaBadge({ hasta }: { hasta: string }) {
   const dias = diasRestantes(hasta);
   if (dias < 0) return <Badge variant="destructive">Vencida</Badge>;
-  if (dias <= 7) return <Badge className="bg-amber-100 text-amber-800">Vence en {dias}d</Badge>;
+  if (dias <= 7) return <Badge className="bg-warning/10 text-warning">Vence en {dias}d</Badge>;
   return <Badge variant="secondary">Vigente · {dias}d</Badge>;
 }
 
@@ -101,7 +101,7 @@ export function TabSeguros({ embarqueId, canEdit }: Props) {
           <Shield className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Seguros de carga</h3>
           {venceProntoCount > 0 && (
-            <Badge className="bg-amber-100 text-amber-800 gap-1">
+            <Badge className="bg-warning/10 text-warning gap-1">
               <AlertTriangle className="h-3 w-3" /> {venceProntoCount} por vencer
             </Badge>
           )}

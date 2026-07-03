@@ -31,7 +31,7 @@ export function ComentariosTab({ ctrl, revisionExistente }: Props) {
               <div className="space-y-2">
                 {ctrl.comentarios.map((c) => (
                   <div key={c.id} className="text-xs border-b pb-2 last:border-b-0">
-                    <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                    <div className="flex items-center justify-between gap-2 text-2xs text-muted-foreground">
                       <span className="font-medium text-foreground">{c.autor_email}</span>
                       <span className="tabular-nums">
                         {format(new Date(c.created_at), "dd/MM HH:mm")}

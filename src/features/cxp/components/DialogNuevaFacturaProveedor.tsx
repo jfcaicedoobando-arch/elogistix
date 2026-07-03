@@ -34,7 +34,7 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
 
   const headerAside = (
     <>
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total {moneda}</div>
+      <div className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Total {moneda}</div>
       <div className="text-2xl font-bold tabular-nums leading-tight">
         {formatCurrency(ctl.total, moneda)}
       </div>

@@ -13,7 +13,7 @@ export function Kpi({ label, value, tone = "default" }: {
     : "text-foreground";
   return (
     <div className="rounded-lg border bg-muted/30 p-3">
-      <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground mb-1">
+      <p className="text-2xs font-bold uppercase tracking-tight text-muted-foreground mb-1">
         {label}
       </p>
       <p className={cn("text-lg font-semibold tabular-nums", valueCls)}>{value}</p>

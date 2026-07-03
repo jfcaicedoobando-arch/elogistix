@@ -46,7 +46,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
   const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
     { id: "sev", header: "Severidad", meta: { width: "w-[110px]" },
       cell: ({ row }) => (
-        <Badge variant="outline" className={cn("text-[10px]", severidadConfig[row.original.severidad].className)}>
+        <Badge variant="outline" className={cn("text-2xs", severidadConfig[row.original.severidad].className)}>
           {severidadConfig[row.original.severidad].label}
         </Badge>
       ) },
@@ -64,7 +64,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
             {h.documentos_faltantes && h.documentos_faltantes.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {h.documentos_faltantes.map((doc) => (
-                  <Badge key={doc} variant="secondary" className="text-[10px] font-normal">{doc}</Badge>
+                  <Badge key={doc} variant="secondary" className="text-2xs font-normal">{doc}</Badge>
                 ))}
               </div>
             )}

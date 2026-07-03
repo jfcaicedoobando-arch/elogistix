@@ -27,16 +27,16 @@ export function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCel
         {primero || (mostrarLcl ? "—" : "-")}
       </span>
       {mostrarLcl && (
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title="LCL · sin contenedor asignado">LCL</Badge>
+        <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4" title="LCL · sin contenedor asignado">LCL</Badge>
       )}
       {count > 1 && (
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
+        <Badge variant="secondary" className="text-2xs px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
       )}
       {pendientes && (
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-warning text-warning">Datos pendientes</Badge>
+              <Badge variant="outline" className="text-2xs px-1.5 py-0 h-4 border-warning text-warning">Datos pendientes</Badge>
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">{pendientesTitle}</p>

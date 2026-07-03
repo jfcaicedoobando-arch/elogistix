@@ -115,7 +115,7 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
 
   const headerAside = factura ? (
     <>
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total {tot.moneda}</div>
+      <div className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Total {tot.moneda}</div>
       <div className="text-2xl font-bold tabular-nums leading-tight">{formatCurrency(ctl.total, tot.moneda)}</div>
     </>
   ) : undefined;

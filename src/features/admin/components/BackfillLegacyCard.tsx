@@ -56,8 +56,8 @@ export function BackfillLegacyCard() {
           Ejecutar backfill
         </Button>
         {result && (
-          <div className="rounded-md border bg-emerald-500/5 border-emerald-500/30 p-3 text-xs space-y-1">
-            <div className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
+          <div className="rounded-md border bg-success/5 border-success/30 p-3 text-xs space-y-1">
+            <div className="flex items-center gap-1 font-semibold text-success dark:text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Último resultado ({new Date(result.ejecutado_at).toLocaleString("es-MX")})
             </div>

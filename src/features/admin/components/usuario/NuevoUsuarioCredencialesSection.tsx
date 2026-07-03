@@ -135,7 +135,7 @@ export function NuevoUsuarioCredencialesSection(props: CredencialesProps) {
                 />
               ))}
             </div>
-            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground w-16 text-right">
+            <span className="text-2xs font-medium uppercase tracking-wide text-muted-foreground w-16 text-right">
               {fuerza.label}
             </span>
           </div>

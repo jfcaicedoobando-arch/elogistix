@@ -40,11 +40,11 @@ function iconoTipo(tipo: string) {
     case "creada":
       return { Icon: FilePlus2, color: "text-primary", ring: "ring-primary/30" };
     case "aprobada":
-      return { Icon: Check, color: "text-emerald-600", ring: "ring-emerald-500/30" };
+      return { Icon: Check, color: "text-success", ring: "ring-success/30" };
     case "rechazada":
       return { Icon: X, color: "text-destructive", ring: "ring-destructive/30" };
     case "pago":
-      return { Icon: Banknote, color: "text-emerald-600", ring: "ring-emerald-500/30" };
+      return { Icon: Banknote, color: "text-success", ring: "ring-success/30" };
     case "nota_credito":
       return { Icon: FileMinus2, color: "text-warning", ring: "ring-warning/30" };
     case "eliminada":
@@ -83,7 +83,7 @@ function FilaEvento({ ev }: { ev: EventoHistorialFactura }) {
         {ev.actor_email && (
           <>
             <span>·</span>
-            <Badge variant="outline" className="font-normal text-[10px] py-0 px-1.5 h-4">
+            <Badge variant="outline" className="font-normal text-2xs py-0 px-1.5 h-4">
               {ev.actor_email}
             </Badge>
           </>

@@ -89,7 +89,7 @@ export function PortalEmbarqueStepper({ progressSteps, currentStepIndex, diasPar
                     {step.icon}
                   </div>
                   <span
-                    className={`text-[10px] mt-2 text-center font-medium ${
+                    className={`text-2xs mt-2 text-center font-medium ${
                       isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"
                     }`}
                   >

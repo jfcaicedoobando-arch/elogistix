@@ -59,7 +59,7 @@ export function SidebarUserMenu({
                     {email}
                   </div>
                   {roleLabel && (
-                    <div className="text-[10px] text-sidebar-foreground/65 truncate">
+                    <div className="text-2xs text-sidebar-foreground/65 truncate">
                       {roleLabel}
                     </div>
                   )}
@@ -77,7 +77,7 @@ export function SidebarUserMenu({
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-medium truncate">{email}</span>
-              {roleLabel && <span className="text-[10px] text-muted-foreground">{roleLabel}</span>}
+              {roleLabel && <span className="text-2xs text-muted-foreground">{roleLabel}</span>}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

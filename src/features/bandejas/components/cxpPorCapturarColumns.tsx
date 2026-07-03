@@ -17,8 +17,8 @@ function AvanceBadge({ row }: { row: RowData }) {
   const estatus = estatusDeFila(row);
   if (estatus === "sin") return <Badge variant="secondary">Sin captura</Badge>;
   if (estatus === "parcial")
-    return <Badge className="bg-amber-500/15 text-amber-700 border-amber-500/30 hover:bg-amber-500/20">Parcial</Badge>;
-  return <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20">Completo</Badge>;
+    return <Badge className="bg-warning/15 text-warning border-warning/30 hover:bg-warning/20">Parcial</Badge>;
+  return <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/20">Completo</Badge>;
 }
 
 interface BuildOpts {
@@ -111,7 +111,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
         const r = row.original;
         if (!r.ultima_factura_fecha) return <span className="text-muted-foreground">—</span>;
         const dias = r.dias_desde_ultima_factura ?? 0;
-        const chipClass = dias > 30 ? "text-destructive" : dias > 7 ? "text-amber-600" : "text-muted-foreground";
+        const chipClass = dias > 30 ? "text-destructive" : dias > 7 ? "text-warning" : "text-muted-foreground";
         return (
           <div className="flex flex-col">
             <span>{formatDate(r.ultima_factura_fecha)}</span>
