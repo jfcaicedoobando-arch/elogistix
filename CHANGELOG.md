@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.168.0] - 2026-07-04
+- **feat(facturación)**: catálogo por-organización de claves SAT por concepto (`catalogo_claves_sat`). Define patrones (ej. "Flete" → 78101800, "Almacenaje" → 80131502) y el sistema asigna la clave correcta a cada renglón al convertir una proforma en factura. Si ningún patrón coincide, cae al default `78101800`. Nueva sección en Configuración → Facturación con CRUD (crear / editar / activar / eliminar reglas, priorizar). Sólo admin/admin_org/contador/super_admin pueden editar. El RPC `convertir_proformas_a_factura` ahora usa el helper `resolver_clave_sat(org, descripcion)` para elegir la clave por renglón.
+
 ## [13.167.0] - 2026-07-04
 - **feat(facturación)**: IVA por concepto en facturas. Cada renglón de una factura ahora tiene su propio régimen de IVA (**Gravado 16% / Tasa 0% / Exento**), editable desde el editor de borrador y desde el wizard de factura manual. La tabla de conceptos muestra un badge con el tipo de IVA (incluye borradores y facturas ya timbradas — infiere el régimen del snapshot Facturapi). El subtotal, IVA y total se recalculan sumando renglón por renglón. En el timbrado (edge `facturapi-emitir`) se envía `factor: "Exento"` o `factor: "Tasa"` con `rate` correspondiente.
 - Migración: nuevas columnas `tipo_iva` (`gravado_16 | tasa_0 | exento`, default `gravado_16`) y `tasa_iva_aplicada` en `conceptos_factura`. Backfill: filas existentes → 16%.
