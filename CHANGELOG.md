@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.152.2] - 2026-07-04
+- **feat(design-language)**: Ola 3 — Lote B. Nuevo `WizardShell` (`src/components/shared/WizardShell.tsx`) centraliza header + `StepIndicator` + Enter→siguiente + footer sticky para wizards de página completa. `EmbarqueWizardLayout` queda como wrapper delgado sobre `WizardShell`; `CotizacionWizardLayout` migra al mismo shell manteniendo su footer custom con "Cotizar sin desglose". `CotizacionWizardFooter` se limpia (sin wrapper duplicado).
+
 ## [13.152.1] - 2026-07-04
 - **feat(design-language)**: Ola 3 — Lote A batch 2. Migrados `EnviarProformaDialog` y `HuecoFacturacionDetalleDialog` a `FormDialogShell`, y `TrackingConfirmFechaLlegadaDialog` a `ConfirmActionDialog`. `EnviarCotizacionDialog`, `PortalCambiarPasswordDialog` y `ProveedoresImportDialog` ya reutilizaban los shells compartidos (no requerían cambios). Se conservan validación y toasts existentes.
 
