@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.1] - 2026-07-04
+- **chore(ci)**: se divide `CatalogoClavesSATCard.tsx` (293 líneas) en dos archivos para respetar el límite de 200 líneas por archivo (Power of 10). Constantes, tipos, helpers y el sub-componente `EditRow` se mueven a `CatalogoClavesSATCard.parts.tsx`. Se elimina el `export default` duplicado que knip marcaba como export redundante. Sin cambios de comportamiento.
+
 ## [13.170.0] - 2026-07-04
 - **refactor(configuración)**: se elimina la tarjeta "Parámetros de Facturación" (tasa de IVA global) de `Configuración → Facturación`. El IVA general de México (16%) queda hardcodeado en la constante `TASA_IVA` y cada producto del catálogo define su propio tipo de IVA (16% / 0% / Exento). El hook `useTasaIVA()` conserva su firma y ahora retorna la constante directamente — los ~15 consumidores (cotización, proforma, factura, PDFs) no requieren cambios. La fila legacy `configuracion.categoria='facturacion', clave='tasa_iva'` se conserva en BD sin lectores; se purgará en una migración de higiene futura.
 
