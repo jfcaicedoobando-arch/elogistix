@@ -8,7 +8,8 @@
  *   - GuiaPrefacturacion (explicaba el flujo antiguo).
  *
  * La visibilidad de "qué está por facturarse" queda en dos lugares:
- *   - HuecoFacturacionCard (embarques con ETD > 5 días sin CFDI).
+ *   - HuecoFacturacionChip (chip inline junto a los tabs — embarques con
+ *     ETD > 5 días sin CFDI). Antes era una tira roja de ancho completo.
  *   - /proformas con filtro por estado_cliente.
  *
  * URLs viejas (?tab=cobranza|liquidacion|proyeccion|pendientes) → redirect.
@@ -24,7 +25,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
-import { HuecoFacturacionCard } from "@/features/facturacion/components/HuecoFacturacionCard";
+import { HuecoFacturacionChip } from "@/features/facturacion/components/HuecoFacturacionChip";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { FacturacionKpisFiscales } from "@/features/facturacion/components/FacturacionKpisFiscales";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
@@ -140,14 +141,13 @@ export default function Facturacion() {
         <DashboardEjecutivoFacturacion />
         <FacturacionKpisFiscales />
 
-        {/* Alerta global: Hueco de facturación (única fuente de "por facturar") */}
-        <HuecoFacturacionCard />
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b">
             <TabsList className="bg-transparent border-0 p-0 h-auto">
               {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
             </TabsList>
+            {/* Chip inline: hueco de facturación (sólo renderiza si hay hueco) */}
+            <HuecoFacturacionChip />
           </div>
 
           <TabsContent value="facturas" className="space-y-4">

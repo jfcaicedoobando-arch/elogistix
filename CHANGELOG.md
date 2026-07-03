@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.148.1] - 2026-07-04
+- **refactor(facturación) — Hueco de facturación degradado a chip inline.** La tira roja de ancho completo (`HuecoFacturacionCard`) se reemplazó por un chip compacto (`HuecoFacturacionChip`) que vive junto a la barra de tabs en `/facturacion`. Sigue abriendo el mismo dialog de detalle y usa el mismo hook/servicios; sólo cambia la presentación. Cuando no hay hueco, el chip no renderiza (silencio = todo bien) en lugar de mostrar un estado "ok" que competía visualmente con los KPIs. Se eliminó `HuecoFacturacionCard.tsx`.
+
 ## [13.148.0] - 2026-07-04
 - **feat(facturación) — homologación de la tabla de Facturas Emitidas al design language.** `/facturacion` (tab "Emitidas") ahora usa la misma barra unificada que `/embarques` y `/proformas`: search + Estado + Cliente inline + botón "Filtros (N)" que abre un Sheet con rango de emisión (Desde/Hasta). Se agregan chips de filtros activos con X individual y "Limpiar todo", y contador `Mostrando X de Y facturas`. Se retiró el `DateRangeFilter` del encabezado de tabs (el periodo vive ahora dentro del Sheet). Los dos exportadores (CSV y Layout contable) se agrupan en un único dropdown "Exportar ▾". Nuevos componentes: `FacturasFiltros.tsx`, `FacturasFiltrosCampos.tsx`, `FacturasFiltrosChips.tsx`. El controller (`useFacturacionPageController`) agrega el filtro `cliente` y deriva `clientesDisponibles` de las facturas ya cargadas (sin fetch extra).
 
