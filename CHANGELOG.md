@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.164.2] - 2026-07-04
+- **fix(clientes/facturación)**: el timbrado ya no marca "falta código postal" cuando el cliente sí lo tiene. La tabla `clientes` tenía dos columnas para el mismo dato (`cp` y `codigo_postal`): el formulario guardaba en `cp` pero la validación fiscal/FacturAPI leía `codigo_postal`. Se agrega un trigger de BD (`clientes_sync_cp`) que mantiene ambas columnas sincronizadas en INSERT/UPDATE y una migración de backfill que rellena `codigo_postal` desde `cp` para los clientes existentes (incluye a QUIMCELT POWDER COATINGS).
+
 ## [13.164.1] - 2026-07-04
 - **fix(proformas)**: la vista `/proformas/:id` elimina duplicaciones (fecha emisión, vigencia y BL House ya no aparecen dos veces). Todo queda unificado en la nueva card **Datos generales** (fecha, vigencia, ejecutivo, BL Master, días crédito, método de pago, folio).
 - **style(proformas)**: alineado con el design language del resto del detalle — usa `PageContainer`, header suelto (sin `Card` wrapper) y `CardTitle text-lg` en todas las tarjetas (Facturar a, Datos del embarque, Historial, Conceptos, Totales, Notas, Factura asociada).
