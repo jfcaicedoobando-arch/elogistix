@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.6] - 2026-07-04
+- **fix(sidebar/contador)**: el rol `contador` ahora ve el ítem **Configuración** dentro de la sección **Facturación** del sidebar (antes vivía sólo en el grupo Administración, oculto para contador). Al entrar se muestra únicamente la pestaña Facturación con el Catálogo de productos y servicios, tal como en 13.170.4.
+
 ## [13.170.5] - 2026-07-04
 - **fix(facturación/IVA borradores)**: el RPC `convertir_proformas_a_factura` ahora guarda `tipo_iva` y `tasa_iva_aplicada` en cada renglón (heredando del origen `conceptos_venta` / `proforma_conceptos_consolidados`) y recalcula `subtotal`, `iva`, `total` del encabezado sumando los renglones reales — aplica tanto a MXN como a USD (antes USD forzaba IVA=0). Se agrega backfill de borradores no timbrados existentes con `tasa_iva_aplicada` en NULL y se recomputan sus totales. Adicionalmente, `recalcularTotalesFactura` en el cliente ahora resuelve la tasa desde `tipo_iva` si la columna viene NULL (fallback defensivo). Facturas timbradas (con `uuid_fiscal`) no se tocan.
 
