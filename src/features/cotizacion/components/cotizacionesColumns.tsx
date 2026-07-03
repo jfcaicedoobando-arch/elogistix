@@ -97,7 +97,7 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
   if (params.canEdit) {
     cols.push(
       actionsColumn<CotizacionListItem>({
-        items: (r) => [
+        items: () => [
           {
             label: "Editar",
             icon: <Pencil className="h-4 w-4" />,

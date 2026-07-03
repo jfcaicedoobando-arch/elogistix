@@ -66,7 +66,7 @@ export function buildClientesColumns({
       cell: ({ row }) => formatPhoneMx(row.original.telefono),
     },
     actionsColumn<ClienteRow>({
-      items: (row) => [
+      items: () => [
         {
           label: "Ver detalle",
           icon: <Eye className="h-4 w-4" />,

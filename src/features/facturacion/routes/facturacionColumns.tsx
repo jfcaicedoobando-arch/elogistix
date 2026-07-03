@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, Eye, Stamp, Ban } from "lucide-react";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatDate } from "@/lib/formatters";
 import {
   statusColumn,
