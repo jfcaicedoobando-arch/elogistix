@@ -134,7 +134,14 @@ export function WizardShell({
 
       <div className="flex-none border-t bg-background p-4">
         <div className={cn(widthClass, "mx-auto flex justify-between gap-2")}>
-          {footer ?? (defaultFooter ? <DefaultFooter {...defaultFooter} isBusy={isBusy} /> : null)}
+          {footer ?? (defaultFooter ? (
+            <DefaultFooter
+              {...defaultFooter}
+              isBusy={isBusy}
+              isFirstStep={currentStep === 1}
+              isLastStep={currentStep === steps.length}
+            />
+          ) : null)}
         </div>
       </div>
     </div>
@@ -146,16 +153,15 @@ function DefaultFooter({
   onNext,
   onSave,
   saveLabel,
-  isLastStep,
   cancelLabel = "Cancelar",
   isBusy,
-}: WizardDefaultFooterProps & { isBusy: boolean }) {
+  isFirstStep,
+  isLastStep,
+}: WizardDefaultFooterProps & { isBusy: boolean; isFirstStep: boolean; isLastStep: boolean }) {
   return (
     <>
       <Button variant="outline" onClick={onPrev} disabled={isBusy}>
-        {isLastStep || onPrev.name === "onBack" ? (
-          cancelLabel
-        ) : (
+        {isFirstStep ? cancelLabel : (
           <>
             <ChevronLeft className="h-4 w-4 mr-1" aria-hidden /> Anterior
           </>
@@ -179,3 +185,4 @@ function DefaultFooter({
     </>
   );
 }
+
