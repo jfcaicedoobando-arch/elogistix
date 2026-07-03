@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Outlet } from "react-router-dom";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { PageContainer } from "@/components/shared/PageContainer";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import RouteLoadingFallback from "@/components/layout/RouteLoadingFallback";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -58,13 +59,13 @@ export function Layout() {
             </div>
           </header>
           <main className="flex-1 overflow-auto">
-            <div className="mx-auto w-full max-w-screen-2xl p-4 sm:p-6">
+            <PageContainer noSpacing>
               <ErrorBoundary>
                 <Suspense fallback={<RouteLoadingFallback />}>
                   <Outlet />
                 </Suspense>
               </ErrorBoundary>
-            </div>
+            </PageContainer>
           </main>
 
         </div>
