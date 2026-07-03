@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.153.1] - 2026-07-04
+- **test(design-language)**: cobertura extendida a primitivas de las Olas 1–3. Nuevos suites: `PageHeader` (4 tests), `FormDialogShell` (4), `UnifiedFiltersBar` (5), `DocumentPreviewDialog` (5), `DeleteConfirmDialog` (2 pasos + ELIMINAR case-insensitive), `columnBuilders` (`statusColumn`/`clientColumn`/`moneyColumn`/`dateColumn`/`actionsColumn`, 6 tests). 26 tests nuevos, todos en verde.
+
 ## [13.153.0] - 2026-07-04
 - **test(design-language)**: cierra Oleada 3 — cobertura de `WizardShell` con 6 tests (header/pasos, back, footer default primer/último paso, `isBusy`, footer custom).
 - **docs**: `.lovable/plan.md` anota que `FacturapiOnboardingWizard` y `CrearProveedorDesdeCfdiDialog` quedan fuera de la migración a `WizardShell` (uno es wizard modal ya sobre `FormDialogShell + stepper`, el otro es un form de un solo paso).
