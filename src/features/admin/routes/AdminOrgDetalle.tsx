@@ -7,6 +7,7 @@ import { OrgInfoCard } from "@/features/admin/components/orgDetalle/OrgInfoCard"
 import { OrgMembersCard } from "@/features/admin/components/orgDetalle/OrgMembersCard";
 import { OrgConfigCard } from "@/features/admin/components/orgDetalle/OrgConfigCard";
 import { useAdminOrgDetalle } from "@/features/admin/hooks";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 
@@ -33,7 +34,7 @@ export default function AdminOrgDetalle() {
   const isActive = org.activo !== false;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <PageContainer>
       <OrgHeader
         nombre={org.nombre}
         rfc={org.rfc}
@@ -84,6 +85,6 @@ export default function AdminOrgDetalle() {
           onCreated={invalidateMembers}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

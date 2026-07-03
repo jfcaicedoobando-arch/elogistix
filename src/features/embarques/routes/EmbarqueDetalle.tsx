@@ -75,7 +75,7 @@ export default function EmbarqueDetalle() {
   const togglingNoAplicaDocId = setNoAplica.isPending ? (setNoAplica.variables?.docId ?? null) : null;
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <EmbarqueDetalleHeader
         embarque={embarque}
         estadoVisual={estadoVisual}

@@ -45,7 +45,7 @@ export default function Comisiones() {
   const columns = useMemo(() => buildComisionesColumns(), []);
 
   return (
-    <div className="space-y-4">
+    <PageContainer>
       <PageHeader
         title="Comisiones"
         description="Comisiones devengadas al cobrar facturas y liquidaciones a vendedoras"

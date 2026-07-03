@@ -17,6 +17,7 @@ import {
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
 import { useClienteDetalleController } from "@/features/cliente/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +56,7 @@ export default function ClienteDetalle() {
   if (!cliente) return <ClienteNotFoundState onBack={() => navigate("/clientes")} />;
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <ClienteDetalleHeader
         cliente={{
           id: cliente.id,

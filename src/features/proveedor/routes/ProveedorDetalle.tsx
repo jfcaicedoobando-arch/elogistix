@@ -60,7 +60,7 @@ export default function ProveedorDetalle() {
   const esNacional = proveedor.origen_proveedor === "Nacional";
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/proveedores")} aria-label="Volver a proveedores">
