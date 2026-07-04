@@ -126,6 +126,7 @@ export default function FacturaDetalle() {
           folioFiscal={factura.folio_fiscal}
           serie={factura.serie}
           fechaEmision={factura.fecha_emision}
+          ambiente={factura.ambiente}
         />
       )}
 
