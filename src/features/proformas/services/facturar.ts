@@ -46,19 +46,24 @@ interface BaseFactura {
 
 type FacturaAEmitir = BaseFactura & {
   moneda: "USD" | "MXN"; subtotal: number; iva: number; total: number;
+  tipo_cambio: number | null;
 };
 
-/** Construye la lista de facturas (USD/MXN) a insertar según los totales de la proforma. */
+/**
+ * Construye la lista de facturas (USD/MXN) a insertar según los totales de la proforma.
+ * v13.171.0 — TC explícito: MXN=1, extranjera=null (el usuario debe capturarlo
+ * antes de timbrar; ver `FacturaDatosFiscalesCard`).
+ */
 function construirFacturasAEmitir(
   proforma: { total_usd: number | null; total_mxn: number | null; subtotal_usd: number | null; subtotal_mxn: number | null; iva_usd: number | null; iva_mxn: number | null },
   baseFactura: BaseFactura,
 ): FacturaAEmitir[] {
   const out: FacturaAEmitir[] = [];
   if (Number(proforma.total_usd) > 0) {
-    out.push({ ...baseFactura, moneda: "USD", subtotal: Number(proforma.subtotal_usd), iva: Number(proforma.iva_usd), total: Number(proforma.total_usd) });
+    out.push({ ...baseFactura, moneda: "USD", subtotal: Number(proforma.subtotal_usd), iva: Number(proforma.iva_usd), total: Number(proforma.total_usd), tipo_cambio: null });
   }
   if (Number(proforma.total_mxn) > 0) {
-    out.push({ ...baseFactura, moneda: "MXN", subtotal: Number(proforma.subtotal_mxn), iva: Number(proforma.iva_mxn), total: Number(proforma.total_mxn) });
+    out.push({ ...baseFactura, moneda: "MXN", subtotal: Number(proforma.subtotal_mxn), iva: Number(proforma.iva_mxn), total: Number(proforma.total_mxn), tipo_cambio: 1 });
   }
   return out;
 }
