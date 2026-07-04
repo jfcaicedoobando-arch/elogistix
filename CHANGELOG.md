@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.20] - 2026-07-04
+- **fix(facturación/timbrado)**: el timbrado fallaba con `"items[0].product.taxes[0].rate" is required` cuando la factura tenía conceptos exentos (p. ej. Flete Marítimo, Cargos en Origen). Causa: `buildFacturapiPayload` (`supabase/functions/facturapi-emitir/helpers.ts`) omitía el campo `rate` en la rama Exento, pero FacturApi CFDI 4.0 lo valida como requerido en todos los items. Fix: siempre se envía `rate` (0 para Exento y tasa_0, tasa real para gravados) y se ajusta el tipo `taxes` a `rate: number` (no opcional). Test `buildFacturapiPayload usa factor Exento…` actualizado para verificar `rate: 0`. Reportado por Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1` (Elogistix / karol.hernandez, factura a87af985-293e-467f-94dc-4dc2677ce5b2).
+
 ## [13.170.19] - 2026-07-04
 - **fix(facturación/timbrado)**: el modal **Timbrar factura** ignoraba los datos ya guardados en la tarjeta "Configuración de timbrado" del borrador (Uso CFDI, Forma de pago, Método de pago) y siempre mostraba los fallbacks (`G03`/`03`/`PUE`). Causa: `useState(factura?.uso_cfdi ?? ...)` sólo lee su valor inicial una vez, y el modal se monta antes de que `useFactura` termine de cargar. Se agrega un `useEffect` que re-sincroniza los tres campos (y resetea `modoExpandido`) cuando llegan/cambian los datos de la factura o el `uso_cfdi_default` del cliente. Sin cambios de RLS ni de backend.
 
