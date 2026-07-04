@@ -8,7 +8,7 @@ interface Props {
     fecha_emision: string | null;
     fecha_vencimiento: string | null;
     moneda: string;
-    tipo_cambio: number;
+    tipo_cambio: number | null;
     referencia_bl: string | null;
     notas: string | null;
     subtotal: number;
