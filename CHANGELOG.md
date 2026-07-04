@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.171.1] - 2026-07-04
+- **chore(observabilidad)**: auditoría de cobertura Sentry. Cerrados 3 huecos silenciosos:
+  - `useRegistrarActividad` (bitácora) ahora reporta a Sentry cuando falla el registro (antes solo `logger.warn`); sigue sin mostrar toast (es background).
+  - `useCapturarSnapshotAuditoria` y `useAutoCapturarSnapshot`: mismo tratamiento en las 2 mutaciones.
+  - `proformas/services/crud.ts`: el `catch { /* best-effort */ }` alrededor de `Sentry.metrics.distribution` ahora hace `logger.warn` explícito (reportar a Sentry aquí sería circular).
+  - Test de arquitectura `sentry-fiscal-services.test.ts` extendido a `proformas/services`, `compras/services` y `cotizaciones/services` (24 → 34 archivos vigilados). Un catch silencioso en cualquiera de estos módulos ahora rompe CI.
+
 ## [13.171.0] - 2026-07-04
 - **feat(facturación/timbrado)**: las facturas en moneda extranjera (USD/EUR) ahora nacen **sin tipo de cambio precargado**. El usuario está obligado a capturarlo manualmente o pulsar “Obtener TC DOF de hoy” antes de timbrar. Cambios:
   - DB: `facturas.tipo_cambio` ahora es nullable, sin default, con check `IS NULL OR > 0`. Facturas existentes conservan su valor.
