@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 interface Props {
   canEdit: boolean;
   sinTimbrar: boolean;
+  puedeTimbrarDesdeSistema: boolean;
   pdfUrl: string | null;
   xmlUrl: string | null;
   embarqueId: string | null;
@@ -21,7 +22,7 @@ interface Props {
 }
 
 export function FacturaDetalleActions({
-  canEdit, sinTimbrar, pdfUrl, xmlUrl, embarqueId,
+  canEdit, sinTimbrar, puedeTimbrarDesdeSistema, pdfUrl, xmlUrl, embarqueId,
   onTimbrar, onEnviarEmail, onDownload,
   onEliminarBorrador, eliminando,
 }: Props) {
@@ -29,7 +30,7 @@ export function FacturaDetalleActions({
   const mostrarXml = !!xmlUrl || !sinTimbrar;
   return (
     <div className="flex flex-wrap gap-2">
-      {canEdit && sinTimbrar && (
+      {canEdit && puedeTimbrarDesdeSistema && (
         <Button size="sm" onClick={onTimbrar}>
           <Stamp className="h-4 w-4 mr-1.5" /> Timbrar factura
         </Button>

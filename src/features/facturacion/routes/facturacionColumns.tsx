@@ -12,6 +12,7 @@ import {
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import type { useFacturas } from "@/features/facturacion/hooks";
+import { esCreadaConCapacidadTimbrado } from "@/features/facturacion/domain/facturaFlags";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
@@ -114,7 +115,7 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       cell: ({ row }) => {
         const f = row.original;
         const pagable = canEdit && ESTADOS_PAGABLES.has(f.estado);
-        const timbrable = canEdit && onTimbrar && ESTADOS_TIMBRABLES.has(f.estado);
+        const timbrable = canEdit && onTimbrar && ESTADOS_TIMBRABLES.has(f.estado) && esCreadaConCapacidadTimbrado(f.fecha_emision);
         const cancelable = canEdit && onCancelar && f.estado === "Emitida";
         return (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>

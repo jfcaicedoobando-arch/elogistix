@@ -1,62 +1,55 @@
-# Paso 1 — Limpieza de Facturación y Cobranza (Elogistix)
+# Paso 2 — Deshabilitar timbrado para facturas anteriores al 01/07/2026
 
-**Organización:** Elogistix (`00000000-0000-0000-0000-000000000001`)
-**Criterio:** `created_at < 2026-05-01`
-**Tipo de borrado:** definitivo (hard delete, incluye timbradas)
+**Regla:** ninguna factura con `created_at < 2026-07-01` puede timbrarse desde el sistema (ya se timbró directo en el SAT). Aplica a **todas** las organizaciones (132 facturas afectadas: 124 Elogistix + 7 en otra org + 1 borrador). Solo cambios de frontend, sin migraciones.
 
-## Alcance detectado (preview real de la BD)
+## Cambios de código
 
-| Tabla | Total org | A borrar |
-|---|---:|---:|
-| `facturas` | 141 | **13** |
-| `pagos_factura` (ligados a esas 13) | 3 | **1** |
-| `factura_notas_credito` | 0 | 0 |
-| `factura_envios` | 0 | 0 |
-| `factura_recordatorios` | 0 | 0 |
-| `cobranza_seguimiento` | 0 | 0 |
+### 1. Nueva bandera derivada `puedeTimbrarDesdeSistema`
 
-Las 13 facturas están en USD/MXN, ninguna timbrada (`uuid_fiscal` nulo), estados `Emitida` (12) y `Pagada` (1). Todas ligadas a un embarque + proforma; los embarques/proformas **no** se tocan en este paso.
+Archivo: `src/features/facturacion/domain/facturaFlags.ts`
 
-## Facturas que se eliminarán
+- Añadir constante exportada `FECHA_INICIO_TIMBRADO_SISTEMA = "2026-07-01T00:00:00Z"`.
+- Extender `FacturaFlagsInput` con `created_at?: string | null`.
+- Extender `FacturaFlags` con un booleano `puedeTimbrarDesdeSistema` = `sinTimbrar && created_at >= FECHA_INICIO_TIMBRADO_SISTEMA`.
+- Actualizar test `facturaFlags.test.ts` con casos: sin fecha, antes del corte, después del corte, ya timbrada.
 
-```text
-# 846, 852, 839, 822, 832, 831, 833, 844, 793 (Pagada), 838, 821 (USD), 821 (MXN), 843
-Rango fecha_emision: 2026-03-17 → 2026-04-29
-Rango created_at:   2026-04-24 → 2026-04-30
-```
+### 2. Ocultar botón "Timbrar factura" en el detalle
 
-## Ejecución
+Archivo: `src/features/facturacion/components/detalle/FacturaDetalleActions.tsx`
 
-Una sola migración con `DELETE` en orden inverso de dependencia, envuelta en transacción implícita:
+- Aceptar prop `puedeTimbrarDesdeSistema: boolean`.
+- Sustituir la condición `canEdit && sinTimbrar` del botón por `canEdit && puedeTimbrarDesdeSistema`.
+- `FacturaDetalle.tsx` pasa la nueva prop.
 
-```text
-1. DELETE pagos_factura        WHERE factura_id IN (<13 ids>)
-2. DELETE factura_notas_credito WHERE factura_id IN (<13 ids>)   -- 0 filas
-3. DELETE factura_envios       WHERE factura_id IN (<13 ids>)   -- 0 filas
-4. DELETE factura_recordatorios WHERE factura_id IN (<13 ids>)  -- 0 filas
-5. DELETE cobranza_seguimiento WHERE factura_id IN (<13 ids>)   -- 0 filas
-6. DELETE facturas             WHERE organization_id = <elogistix>
-                                 AND created_at < '2026-05-01'
-```
+### 3. Ocultar botón "Timbrar" en la tabla de facturas
 
-Filtro doble por `organization_id` + `created_at` en el DELETE final para blindar contra borrado accidental de otras orgs.
+Archivo: `src/features/facturacion/routes/facturacionColumns.tsx`
 
-## Validación post-borrado
+- En la línea del `timbrable`, agregar la comprobación de fecha usando el helper (reutilizar `FECHA_INICIO_TIMBRADO_SISTEMA`).
 
-- `SELECT count(*) FROM facturas WHERE organization_id=elogistix` → esperado **128** (141 − 13).
-- `SELECT count(*) FROM pagos_factura WHERE organization_id=elogistix` → esperado **2** (3 − 1).
-- Verificar en UI `/facturacion` que la lista carga sin errores.
+### 4. Bloquear apertura automática vía URL
 
-## Fuera de alcance de este paso
+Archivo: `src/features/facturacion/hooks/useAutoAbrirTimbrar.ts`
 
-- Embarques, proformas, cotizaciones ligados a esas facturas (siguiente paso si lo decides).
-- Series de folios (`factura_series`), credenciales Facturapi, configuración fiscal — se conservan.
-- No hay cancelación ante SAT porque ninguna está timbrada.
-- Bitácora y logs (`app_logs`, `bitacora_actividad`, `email_send_log`) — se conservan como rastro de auditoría.
+- El hook ya recibe `sinTimbrar`; cambiaremos la firma a `puedeTimbrarDesdeSistema` y `FacturaDetalle.tsx` pasará la nueva bandera. Si alguien navega con `?accion=timbrar` en una factura vieja, se limpia el query param sin abrir el diálogo.
+
+### 5. Comportamiento adicional (no visual)
+
+- Nada más. No se cambia `sinTimbrar`, así que el badge "Sin timbrar" del header sigue apareciendo si el usuario lo veía (esto es intencional: el estado real de la BD no ha cambiado). El usuario pidió "sin badge, solo ocultar botón".
+
+## Fuera de alcance
+
+- No se toca la BD (no se marca `uuid_fiscal`, no se cambia `estado`).
+- No se toca el flujo de notas de crédito ni de complementos REP (esos siguen dependiendo de sus propios estados).
+- No se modifica el backend/edge function `facturapi-emitir` (bloqueo puramente en UI, coherente con "app interna, usuarios de confianza").
+
+## Validación
+
+- `bunx vitest run src/features/facturacion/domain/__tests__/facturaFlags.test.ts` verde.
+- Test manual: entrar a `/facturacion/<id-viejo>` — no debe salir el botón "Timbrar factura"; entrar a uno nuevo — sí debe salir.
+- Verificar tabla `/facturacion`: filas antiguas sin botón "Timbrar".
 
 ## Registro
 
-- Bump `APP_VERSION` a `13.171.2` (parche).
-- Entrada en `CHANGELOG.md` describiendo la limpieza puntual de Elogistix.
-
-Al aprobar el plan, emito la migración de `DELETE`.
+- `APP_VERSION` → `13.171.3`.
+- Entrada en `CHANGELOG.md`: "Ocultar acción de timbrar en facturas anteriores al 01/07/2026 (timbradas fuera del sistema)".

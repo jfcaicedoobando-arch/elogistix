@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.171.3] - 2026-07-04
+- **feat(facturación)**: ocultar acción "Timbrar" en facturas emitidas antes del 01/07/2026. El sistema no tenía capacidad de timbrado en esa ventana; esas facturas fueron timbradas directamente en el portal del SAT. Aplica a todas las orgs. Nueva bandera `puedeTimbrarDesdeSistema` en `deriveFacturaFlags` + helper `esCreadaConCapacidadTimbrado` reutilizado por `FacturaDetalleActions`, `facturacionColumns` y `useAutoAbrirTimbrar` (bloquea también apertura por `?accion=timbrar`).
+
 ## [13.171.2] - 2026-07-04
 - **chore(datos)**: limpieza dirigida de facturación de Elogistix. Se eliminaron 13 facturas creadas antes del 01/05/2026 (12 emitidas + 1 pagada, ninguna timbrada ante el SAT) y 1 pago ligado. Blindado con doble filtro `organization_id` + `created_at`; embarques, proformas, series y credenciales fiscales intactos. Conteos verificados: `facturas` 141 → 128, `pagos_factura` 3 → 2.
 
