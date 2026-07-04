@@ -61,6 +61,9 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     setFormaPago(factura.forma_pago ?? "03");
     setMetodoPago(factura.metodo_pago ?? "PUE");
     setModoExpandido(false);
+    // Nos apoyamos en las claves granulares para evitar re-disparos por
+    // cambios de identidad del objeto `factura` (query invalidations).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [factura?.id, factura?.uso_cfdi, factura?.forma_pago, factura?.metodo_pago, cliente?.uso_cfdi_default]);
 
   if (!facturaId || !factura) return null;
