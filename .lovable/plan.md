@@ -1,55 +1,71 @@
-# Paso 2 — Deshabilitar timbrado para facturas anteriores al 01/07/2026
+# Paso 3 — Distinguir facturas timbradas en sandbox vs producción
 
-**Regla:** ninguna factura con `created_at < 2026-07-01` puede timbrarse desde el sistema (ya se timbró directo en el SAT). Aplica a **todas** las organizaciones (132 facturas afectadas: 124 Elogistix + 7 en otra org + 1 borrador). Solo cambios de frontend, sin migraciones.
+Persistir el ambiente (`sandbox` | `live`) en el que se emitió cada CFDI y marcar visualmente con un badge naranja "SANDBOX" únicamente cuando corresponda. Aplica a facturas, notas de crédito y complementos REP.
 
-## Cambios de código
+## 1. Migración de BD
 
-### 1. Nueva bandera derivada `puedeTimbrarDesdeSistema`
+Nueva columna `ambiente ambiente_facturapi` (enum con valores `sandbox`, `live`), nullable, en tres tablas:
 
-Archivo: `src/features/facturacion/domain/facturaFlags.ts`
+```text
+CREATE TYPE public.ambiente_facturapi AS ENUM ('sandbox', 'live');
 
-- Añadir constante exportada `FECHA_INICIO_TIMBRADO_SISTEMA = "2026-07-01T00:00:00Z"`.
-- Extender `FacturaFlagsInput` con `created_at?: string | null`.
-- Extender `FacturaFlags` con un booleano `puedeTimbrarDesdeSistema` = `sinTimbrar && created_at >= FECHA_INICIO_TIMBRADO_SISTEMA`.
-- Actualizar test `facturaFlags.test.ts` con casos: sin fecha, antes del corte, después del corte, ya timbrada.
+ALTER TABLE public.facturas               ADD COLUMN ambiente ambiente_facturapi;
+ALTER TABLE public.factura_notas_credito  ADD COLUMN ambiente ambiente_facturapi;
+ALTER TABLE public.pagos_factura          ADD COLUMN ambiente ambiente_facturapi;
+```
 
-### 2. Ocultar botón "Timbrar factura" en el detalle
+**Backfill (mismo migration):**
+- `UPDATE facturas SET ambiente='sandbox' WHERE facturapi_id IS NOT NULL AND ambiente IS NULL;` (4 filas)
+- `UPDATE factura_notas_credito SET ambiente='sandbox' WHERE facturapi_id IS NOT NULL AND ambiente IS NULL;` (0)
+- `UPDATE pagos_factura SET ambiente='sandbox' WHERE facturapi_rep_id IS NOT NULL AND ambiente IS NULL;` (0)
 
-Archivo: `src/features/facturacion/components/detalle/FacturaDetalleActions.tsx`
+**RPC `facturas_listado`:** re-crearlo para incluir `ambiente` en el RETURNS TABLE (mantiene todas las demás columnas y filtros).
 
-- Aceptar prop `puedeTimbrarDesdeSistema: boolean`.
-- Sustituir la condición `canEdit && sinTimbrar` del botón por `canEdit && puedeTimbrarDesdeSistema`.
-- `FacturaDetalle.tsx` pasa la nueva prop.
+## 2. Edge functions — escribir `ambiente` al timbrar
 
-### 3. Ocultar botón "Timbrar" en la tabla de facturas
+Las 3 funciones ya usan `resolveFacturapiKey` que devuelve `ambiente`. Solo hay que incluirlo en el `.update({...})` posterior al timbrado exitoso.
 
-Archivo: `src/features/facturacion/routes/facturacionColumns.tsx`
+- `supabase/functions/facturapi-emitir/index.ts` (facturas) — agregar `ambiente: resolved.data.ambiente` al update de la línea ~183.
+- `supabase/functions/facturapi-emitir-nota-credito/index.ts` — mismo cambio en su update final.
+- `supabase/functions/facturapi-emitir-rep/index.ts` — mismo cambio en su update final.
 
-- En la línea del `timbrable`, agregar la comprobación de fecha usando el helper (reutilizar `FECHA_INICIO_TIMBRADO_SISTEMA`).
+Sin cambios de contrato ni CORS. Sin nuevos tests obligatorios (la wiring es un solo campo derivado del auth ya cubierto por `facturapiAuth_test.ts`).
 
-### 4. Bloquear apertura automática vía URL
+## 3. Servicio de listado
 
-Archivo: `src/features/facturacion/hooks/useAutoAbrirTimbrar.ts`
+`src/features/facturacion/services/facturasCrud.ts`:
+- Añadir `ambiente: FacturaRow["ambiente"]` a `FacturaListItem`.
+- Mapearlo desde la RPC en `rows.map(...)`.
 
-- El hook ya recibe `sinTimbrar`; cambiaremos la firma a `puedeTimbrarDesdeSistema` y `FacturaDetalle.tsx` pasará la nueva bandera. Si alguien navega con `?accion=timbrar` en una factura vieja, se limpia el query param sin abrir el diálogo.
+## 4. UI — badge "SANDBOX" (solo sandbox)
 
-### 5. Comportamiento adicional (no visual)
+Componente reutilizable nuevo: `src/features/facturacion/components/AmbienteBadge.tsx`
+- Props: `ambiente: 'sandbox' | 'live' | null | undefined`.
+- Si `ambiente !== 'sandbox'` → devuelve `null` (nada visible).
+- Si es `sandbox` → `<Badge>` con clases `bg-orange-100 text-orange-800 border-orange-300` y texto `"SANDBOX"`, tooltip explicando que este CFDI se emitió en modo de pruebas y **no es válido ante el SAT**.
 
-- Nada más. No se cambia `sinTimbrar`, así que el badge "Sin timbrar" del header sigue apareciendo si el usuario lo veía (esto es intencional: el estado real de la BD no ha cambiado). El usuario pidió "sin badge, solo ocultar botón".
+Puntos donde se muestra:
+- `FacturaDetalleHeader.tsx` — al lado del número, junto al badge "Sin timbrar".
+- `facturacionColumns.tsx` — dentro de la columna de "Número" (o inmediatamente después del texto) en cada fila.
+- `FacturaTimbradoCard.tsx` — badge visible junto al UUID cuando la factura está timbrada.
+- Detalle de nota de crédito y sección de pagos REP: mismo badge donde ya se muestra el UUID/folio del complemento.
+
+Sin otros cambios visuales (facturas de producción quedan iguales, como pidió el usuario).
+
+## 5. Registro
+
+- Bump `APP_VERSION` → `13.172.0` (feature).
+- Entrada en `CHANGELOG.md`: "Ambiente de timbrado persistido (sandbox/live) en facturas, notas de crédito y REP. Badge visual `SANDBOX` en detalle, listado y complementos. Backfill histórico marca las 4 facturas existentes como `sandbox`."
+
+## Detalles técnicos
+
+- Enum `ambiente_facturapi` centraliza los valores válidos y evita strings libres.
+- La columna sigue nullable porque futuras filas antes del deploy podrían no traer el campo; el trigger no es necesario porque el update explícito en las 3 edge funcs lo cubre.
+- No se toca `facturapi_credenciales.ambiente` — ese sigue siendo la config activa por org; la columna nueva es el snapshot histórico por documento.
+- No hay cambios de RLS (heredan las políticas existentes de la tabla).
 
 ## Fuera de alcance
 
-- No se toca la BD (no se marca `uuid_fiscal`, no se cambia `estado`).
-- No se toca el flujo de notas de crédito ni de complementos REP (esos siguen dependiendo de sus propios estados).
-- No se modifica el backend/edge function `facturapi-emitir` (bloqueo puramente en UI, coherente con "app interna, usuarios de confianza").
-
-## Validación
-
-- `bunx vitest run src/features/facturacion/domain/__tests__/facturaFlags.test.ts` verde.
-- Test manual: entrar a `/facturacion/<id-viejo>` — no debe salir el botón "Timbrar factura"; entrar a uno nuevo — sí debe salir.
-- Verificar tabla `/facturacion`: filas antiguas sin botón "Timbrar".
-
-## Registro
-
-- `APP_VERSION` → `13.171.3`.
-- Entrada en `CHANGELOG.md`: "Ocultar acción de timbrar en facturas anteriores al 01/07/2026 (timbradas fuera del sistema)".
+- No se cambia el flujo de cancelación (`facturapi-cancelar-*`) porque no crea documentos nuevos; conserva el ambiente ya guardado.
+- No se filtra la lista por ambiente (no fue pedido).
+- No se agrega badge en el portal del cliente (esas facturas ya se timbrarán en producción una vez migren).
