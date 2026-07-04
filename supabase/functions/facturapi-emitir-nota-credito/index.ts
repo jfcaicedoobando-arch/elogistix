@@ -98,6 +98,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
       pdf_url: pdfUrl,
       xml_url: xmlUrl,
       estado: "Timbrada",
+      ambiente: resolved.data.ambiente,
       timbrado_en: new Date().toISOString(),
       timbrado_por: userData.user.id,
     })

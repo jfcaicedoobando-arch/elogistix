@@ -189,6 +189,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       factura_pdf_url: pdfUrl,
       factura_xml_url: xmlUrl,
       estado: "Emitida",
+      ambiente: resolved.data.ambiente,
       timbrado_en: new Date().toISOString(),
       timbrado_por: userData.user.id,
     })
