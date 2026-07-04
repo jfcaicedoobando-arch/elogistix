@@ -11,11 +11,23 @@ const happy = {
 };
 
 describe("buildChecksTimbrado", () => {
-  it("happy path → puedeTimbrar=true y todos los checks ok", () => {
+  it("happy path (MXN) → puedeTimbrar=true y todos los checks ok", () => {
     const r = buildChecksTimbrado(happy);
     expect(r.puedeTimbrar).toBe(true);
     expect(r.checks.every((c) => c.ok)).toBe(true);
-    expect(r.checks).toHaveLength(6);
+    expect(r.checks).toHaveLength(7);
+  });
+
+  it("moneda extranjera con tipo de cambio válido → puedeTimbrar=true", () => {
+    const r = buildChecksTimbrado({ ...happy, moneda: "USD", tipoCambio: 17.5 });
+    expect(r.puedeTimbrar).toBe(true);
+    expect(r.checks[6].ok).toBe(true);
+  });
+
+  it("moneda extranjera SIN tipo de cambio → falla en el check de TC", () => {
+    const r = buildChecksTimbrado({ ...happy, moneda: "USD", tipoCambio: null });
+    expect(r.puedeTimbrar).toBe(false);
+    expect(r.checks[6].ok).toBe(false);
   });
 
   it("RFC corto (<12) → falla", () => {
@@ -35,8 +47,8 @@ describe("buildChecksTimbrado", () => {
     expect(r.checks[1].ok).toBe(false);
   });
 
-  it("todos los campos vacíos → todos los checks fallan", () => {
-    const r = buildChecksTimbrado({ rfc: "", cp: "", regimen: "", usoCfdi: "", formaPago: "", metodoPago: "" });
+  it("todos los campos vacíos (USD, TC nulo) → todos los checks fallan", () => {
+    const r = buildChecksTimbrado({ rfc: "", cp: "", regimen: "", usoCfdi: "", formaPago: "", metodoPago: "", moneda: "USD", tipoCambio: null });
     expect(r.puedeTimbrar).toBe(false);
     expect(r.checks.every((c) => !c.ok)).toBe(true);
     expect(r.checks[0].label).toContain("FALTA");
