@@ -1,53 +1,47 @@
-## Problema
 
-Karol intenta convertir la proforma `7e6dcaca…` a factura y el backend responde:
+## Objetivo
 
-> Embarque cerrado: edición bloqueada (tabla facturas) — código `23514`
+En facturas **USD/EUR**, el tipo de cambio nace y permanece **vacío** hasta que el usuario lo capture manualmente o lo obtenga con el botón "Obtener TC DOF de hoy". El timbrado queda **bloqueado** mientras el TC sea nulo/cero. Facturas en **MXN** no se ven afectadas (TC siempre = 1, invisible).
 
-## Causa raíz (analogía)
+Analogía: es el cinturón de seguridad — el auto no arranca hasta que suena el clic.
 
-Piensa en el embarque cerrado como una carpeta sellada con cinta. Hoy la cinta bloquea **todo** lo que quieras meter en la carpeta: documentos operativos (correcto) **y también** las facturas y pagos (incorrecto — esos justamente ocurren *después* del cierre).
+## Cambios
 
-Técnicamente, el trigger `tg_bloquear_si_embarque_cerrado` está enganchado a 10 tablas. En 6 tiene sentido (conceptos, documentos, contenedores, eventos, seguros). En las 4 fiscales/tesorería **rompe el flujo normal**:
+### 1. Base de datos (migración)
+- En `public.facturas`, cambiar el default de `tipo_cambio` de `1` a `NULL` (la columna ya es nullable o se hará nullable si hace falta).
+- **No** se tocan facturas existentes (ya timbradas o borradores viejos conservan su valor).
+- El trigger/RPC que crea facturas desde proforma (`convertir_proforma_a_factura` o similar) se ajusta: si la moneda ≠ `MXN`, inserta `tipo_cambio = NULL`; si es `MXN`, inserta `1`.
 
-- `facturas` ← bloquea convertir proforma → factura
-- `pagos_factura` ← bloquearía registrar cobros del cliente
-- `proveedor_facturas` ← bloquearía capturar CxP
-- `pagos_proveedor` ← bloquearía pagar al proveedor
+### 2. Formulario de datos fiscales (`FacturaDatosFiscalesCard` + `DatosFiscalesForm`)
+- `inicialesDatosFiscales`: para moneda ≠ MXN, si `factura.tipo_cambio` es null/0, el estado inicial es **vacío** (string `""`), no `1`.
+- El input de TC acepta vacío sin auto-rellenar. El auto-save envía `tipo_cambio: null` cuando está vacío (o simplemente omite la escritura hasta que haya un valor válido > 0).
+- **Banner rojo** dentro de la card cuando `moneda ≠ MXN && (tipo_cambio == null || tipo_cambio <= 0)`:
+  > ⚠ Falta capturar el tipo de cambio del día. Usa "Obtener TC DOF de hoy" o escríbelo manualmente antes de timbrar.
 
-El cierre operativo del embarque no debe impedir la facturación ni la cobranza; esa es la práctica estándar de forwarders (y por eso el conversor de proforma no pone `app.bypass_cierre`).
+### 3. Checklist de timbrado (`DialogTimbrarFactura` + test)
+- Agregar una nueva regla al checklist fiscal: `tipo_cambio_valido` → `ok = moneda === "MXN" || (tipo_cambio && tipo_cambio > 0)`.
+- Etiqueta: "Tipo de cambio del día capturado".
+- Actualizar `DialogTimbrarFactura.checks.test.ts` con el caso extra (válido MXN, válido con TC>0, inválido con TC vacío/0 en USD).
+- `puedeTimbrar` sigue siendo `checks.every(ok)`, así que bloquea el botón automáticamente.
 
-## Cambio propuesto (migración, sin código React)
+### 4. Edge function `facturapi-emitir` (defensa en profundidad)
+- Antes de armar el payload, si `factura.moneda !== "MXN"` y `!factura.tipo_cambio`, devolver error `422 tipo_cambio_requerido` con mensaje claro. Evita que un bug de UI llegue a FacturAPI con TC=1.
 
-Retirar el trigger `trg_bloquear_cierre` únicamente de las 4 tablas fiscales/tesorería, dejándolo intacto en las 6 tablas operativas:
-
-```text
-Quitar en:  facturas · pagos_factura · proveedor_facturas · pagos_proveedor
-Conservar:  conceptos_costo · conceptos_venta · documentos_embarque
-            seguros_embarque · eventos_embarque · embarque_contenedores
-```
-
-SQL (una sola migración):
-
-```sql
-DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.facturas;
-DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.pagos_factura;
-DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.proveedor_facturas;
-DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.pagos_proveedor;
-```
-
-No se toca la función `tg_bloquear_si_embarque_cerrado` (sigue viva para las otras tablas) ni el trigger de `conceptos_venta`/`conceptos_costo`, así que la protección operativa se mantiene.
+### 5. Versionado + Changelog
+- `APP_VERSION` → `13.171.0` (feature menor, cambio de comportamiento visible).
+- Entrada en `CHANGELOG.md`:
+  > Facturas USD/EUR nacen sin tipo de cambio precargado. Se agrega banner y check obligatorio para forzar consulta del TC DOF del día antes de timbrar.
 
 ## Fuera de alcance
-
-- Nada de RLS, ni cambios en el RPC `convertir_proformas_a_factura`, ni cambios en React.
-- No se modifican los triggers de conceptos ni de embarques.
-
-## Cierre
-
-- Bump `APP_VERSION` a `13.170.21` y entrada en `CHANGELOG.md`.
-- Marcar el issue de Sentry como resolved al aplicar el fix.
+- No se modifican facturas ya timbradas ni sus TC históricos.
+- No se toca la lógica de reportes/rentabilidad ni proformas (las proformas conservan su TC informativo).
+- No se cambia el catálogo de FacturAPI ni la lógica de impuestos.
 
 ## Verificación
+1. Crear proforma USD → convertir a factura → abrir detalle: campo TC vacío, banner rojo visible.
+2. Intentar timbrar → checklist muestra ✗ "Tipo de cambio del día capturado", botón deshabilitado.
+3. Click "Obtener TC DOF de hoy" → se llena y auto-guarda → banner desaparece → checklist en verde → timbrado habilitado.
+4. Factura MXN → sin campo TC, sin banner, timbrado sin fricción (regresión).
+5. Facturas viejas con TC=1 ya guardado → siguen funcionando (no se limpian retroactivamente).
 
-Karol reintenta "Convertir a factura" en la proforma `7e6dcaca…`; debe generarse el borrador sin el error 23514. Los intentos de editar conceptos del mismo embarque cerrado deben seguir fallando (regla operativa).
+¿Aplico este plan?
