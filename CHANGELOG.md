@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.170.19] - 2026-07-04
+- **fix(facturación/timbrado)**: el modal **Timbrar factura** ignoraba los datos ya guardados en la tarjeta "Configuración de timbrado" del borrador (Uso CFDI, Forma de pago, Método de pago) y siempre mostraba los fallbacks (`G03`/`03`/`PUE`). Causa: `useState(factura?.uso_cfdi ?? ...)` sólo lee su valor inicial una vez, y el modal se monta antes de que `useFactura` termine de cargar. Se agrega un `useEffect` que re-sincroniza los tres campos (y resetea `modoExpandido`) cuando llegan/cambian los datos de la factura o el `uso_cfdi_default` del cliente. Sin cambios de RLS ni de backend.
+
 ## [13.170.18] - 2026-07-04
 - **fix(facturación/observabilidad)**: al fallar el timbrado el toast mostraba únicamente `facturapi_error` sin motivo real, y los 8 edge functions de FacturApi guardaban el error en `bitacora_actividad` con la llave `detalle` (columna real: `detalles`), por lo que el `insert` fallaba en silencio y no quedaba forensía. Ahora `facturapi-emitir/-rep/-nota-credito`, `facturapi-cancelar/-rep/-nota-credito`, `facturapi-descargar` y `facturapi-enviar-email` (a) devuelven `message` humano extraído del `detail` de FacturApi (o `FacturApi respondió {status}` como fallback) para que `toReadableError` lo muestre en la UI, y (b) insertan bitácora con la columna correcta `detalles`. Sin cambios de RLS, migraciones ni UI. Reportado por Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1` (Elogistix / karol.hernandez).
 

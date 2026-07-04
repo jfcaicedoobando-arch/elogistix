@@ -2,7 +2,7 @@
  * DialogTimbrarFactura — Revisión previa al timbrado CFDI 4.0.
  * Migrado a `FormDialogShell` (v13.120.0).
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -50,6 +50,18 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   // ante notario — si el borrador está limpio sólo confirmas; si falta un
   // dato, se abre el pliego completo).
   const [modoExpandido, setModoExpandido] = useState(false);
+
+  // Re-sincronizar cuando llegan (o cambian) los datos persistidos por
+  // la tarjeta "Configuración de timbrado". `useState` sólo lee su valor
+  // inicial una vez, así que sin este efecto el modal se quedaría con los
+  // fallbacks (G03/03/PUE) cuando se monta antes de que useFactura resuelva.
+  useEffect(() => {
+    if (!factura) return;
+    setUsoCfdi(factura.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
+    setFormaPago(factura.forma_pago ?? "03");
+    setMetodoPago(factura.metodo_pago ?? "PUE");
+    setModoExpandido(false);
+  }, [factura?.id, factura?.uso_cfdi, factura?.forma_pago, factura?.metodo_pago, cliente?.uso_cfdi_default]);
 
   if (!facturaId || !factura) return null;
 
