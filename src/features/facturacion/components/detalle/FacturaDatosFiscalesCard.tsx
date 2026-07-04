@@ -61,6 +61,13 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
         <AutoSaveIndicator estado={estado} ultimoGuardado={ultimoGuardado} />
       </CardHeader>
       <CardContent className="space-y-4">
+        {factura.moneda !== "MXN" && (tipoCambio == null || tipoCambio <= 0) && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            ⚠ Falta capturar el tipo de cambio del día. Pulsa
+            <span className="font-semibold"> “Obtener TC DOF de hoy”</span> o
+            escríbelo manualmente antes de timbrar.
+          </div>
+        )}
         <DatosFiscalesForm
           usoCfdi={usoCfdi} setUsoCfdi={setUsoCfdi}
           formaPago={formaPago} setFormaPago={setFormaPago}
