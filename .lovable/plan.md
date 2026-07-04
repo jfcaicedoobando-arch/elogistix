@@ -1,30 +1,53 @@
 ## Problema
 
-Timbrado falla con `"items[0].product.taxes[0].rate" is required` porque `buildFacturapiPayload` omite el campo `rate` cuando el concepto es Exento. FacturApi valida `rate` como requerido en cada elemento del array `taxes`, incluso cuando `factor: "Exento"`.
+Karol intenta convertir la proforma `7e6dcaca…` a factura y el backend responde:
 
-## Fix
+> Embarque cerrado: edición bloqueada (tabla facturas) — código `23514`
 
-**`supabase/functions/facturapi-emitir/helpers.ts`** — En la construcción del arreglo `taxes` dentro de `buildFacturapiPayload` (líneas 117-121 aprox), incluir siempre `rate` (0 para Exento y tasa_0, o `c.tasa_iva ?? 0.16` para gravado):
+## Causa raíz (analogía)
 
-```ts
-const taxes = tipo === "exento"
-  ? [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }]
-  : [{ type: "IVA" as const, rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16), factor: "Tasa" as const }];
+Piensa en el embarque cerrado como una carpeta sellada con cinta. Hoy la cinta bloquea **todo** lo que quieras meter en la carpeta: documentos operativos (correcto) **y también** las facturas y pagos (incorrecto — esos justamente ocurren *después* del cierre).
+
+Técnicamente, el trigger `tg_bloquear_si_embarque_cerrado` está enganchado a 10 tablas. En 6 tiene sentido (conceptos, documentos, contenedores, eventos, seguros). En las 4 fiscales/tesorería **rompe el flujo normal**:
+
+- `facturas` ← bloquea convertir proforma → factura
+- `pagos_factura` ← bloquearía registrar cobros del cliente
+- `proveedor_facturas` ← bloquearía capturar CxP
+- `pagos_proveedor` ← bloquearía pagar al proveedor
+
+El cierre operativo del embarque no debe impedir la facturación ni la cobranza; esa es la práctica estándar de forwarders (y por eso el conversor de proforma no pone `app.bypass_cierre`).
+
+## Cambio propuesto (migración, sin código React)
+
+Retirar el trigger `trg_bloquear_cierre` únicamente de las 4 tablas fiscales/tesorería, dejándolo intacto en las 6 tablas operativas:
+
+```text
+Quitar en:  facturas · pagos_factura · proveedor_facturas · pagos_proveedor
+Conservar:  conceptos_costo · conceptos_venta · documentos_embarque
+            seguros_embarque · eventos_embarque · embarque_contenedores
 ```
 
-Y ajustar el tipo `taxes` en `FacturapiPayload` (línea 65) para que `rate` sea requerido (`rate: number`), no opcional.
+SQL (una sola migración):
 
-## Test
+```sql
+DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.facturas;
+DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.pagos_factura;
+DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.proveedor_facturas;
+DROP TRIGGER IF EXISTS trg_bloquear_cierre ON public.pagos_proveedor;
+```
 
-Actualizar/agregar caso en tests de `buildFacturapiPayload` (si existen) para asegurar que un concepto Exento genera `rate: 0` explícito. Si no existe test, agregar uno mínimo.
+No se toca la función `tg_bloquear_si_embarque_cerrado` (sigue viva para las otras tablas) ni el trigger de `conceptos_venta`/`conceptos_costo`, así que la protección operativa se mantiene.
 
 ## Fuera de alcance
 
-- No se toca RLS, migraciones, ni el cliente React.
-- No se cambia el resto de la pipeline (validación de contexto, resolución de key, etc.).
+- Nada de RLS, ni cambios en el RPC `convertir_proformas_a_factura`, ni cambios en React.
+- No se modifican los triggers de conceptos ni de embarques.
 
-## Versionado
+## Cierre
 
-- `src/constants/appVersion.ts` → `13.170.20`
-- `CHANGELOG.md` → entrada `[13.170.20]` describiendo el fix con referencia a Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1` (Elogistix / karol.hernandez, factura a87af985).
-- Marcar el issue en Sentry como `resolved` (`update_issue`) referenciando el fix.
+- Bump `APP_VERSION` a `13.170.21` y entrada en `CHANGELOG.md`.
+- Marcar el issue de Sentry como resolved al aplicar el fix.
+
+## Verificación
+
+Karol reintenta "Convertir a factura" en la proforma `7e6dcaca…`; debe generarse el borrador sin el error 23514. Los intentos de editar conceptos del mismo embarque cerrado deben seguir fallando (regla operativa).
