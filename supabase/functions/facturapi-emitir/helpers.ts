@@ -117,7 +117,7 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
     items: ctx.conceptos.map((c) => {
       const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
       const taxes = tipo === "exento"
-        ? [{ type: "IVA" as const, factor: "Exento" as const }]
+        ? [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }]
         : [{ type: "IVA" as const, rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16), factor: "Tasa" as const }];
       return {
         quantity: c.cantidad,
