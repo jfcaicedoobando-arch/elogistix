@@ -66,6 +66,17 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
+  // v13.171.0 — Guard: facturas en moneda extranjera requieren TC capturado
+  // (bloqueo también aplicado en UI vía checklist + banner). Defensa en profundidad.
+  const monedaFactura = factura.moneda ?? "MXN";
+  const tcFactura = factura.tipo_cambio == null ? null : Number(factura.tipo_cambio);
+  if (monedaFactura !== "MXN" && (tcFactura == null || !Number.isFinite(tcFactura) || tcFactura <= 0)) {
+    return json({
+      error: "tipo_cambio_requerido",
+      message: `Captura el tipo de cambio del día (DOF) antes de timbrar la factura en ${monedaFactura}.`,
+    }, 422);
+  }
+
   // Si esta factura sustituye a otra, resolver su UUID para relación SAT 04.
   let sustituyeUuid: string | null = null;
   if (factura.sustituye_a) {
