@@ -115,7 +115,7 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       cell: ({ row }) => {
         const f = row.original;
         const pagable = canEdit && ESTADOS_PAGABLES.has(f.estado);
-        const timbrable = canEdit && onTimbrar && ESTADOS_TIMBRABLES.has(f.estado) && esCreadaConCapacidadTimbrado(f.created_at);
+        const timbrable = canEdit && onTimbrar && ESTADOS_TIMBRABLES.has(f.estado) && esCreadaConCapacidadTimbrado(f.fecha_emision);
         const cancelable = canEdit && onCancelar && f.estado === "Emitida";
         return (
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>

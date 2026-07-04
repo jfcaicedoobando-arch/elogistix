@@ -15,7 +15,7 @@ export interface FacturaFlagsInput {
   estado?: string | null;
   facturapi_id?: string | null;
   uuid_fiscal?: string | null;
-  created_at?: string | null;
+  fecha_emision?: string | null;
 }
 
 export interface FacturaFlags {
@@ -49,7 +49,7 @@ export function deriveFacturaFlags(
   const puedeEditarBorrador = esBorrador && canEdit;
   const puedeEliminarBorrador = esBorrador && canEdit;
   const puedeTimbrarDesdeSistema =
-    sinTimbrar && esCreadaConCapacidadTimbrado(factura.created_at);
+    sinTimbrar && esCreadaConCapacidadTimbrado(factura.fecha_emision);
   return {
     sinTimbrar,
     esBorrador,
@@ -61,12 +61,13 @@ export function deriveFacturaFlags(
 
 /**
  * Helper reutilizable por listas/tablas donde no se necesita el resto de
- * flags: indica si una factura fue creada dentro de la ventana en que el
- * sistema puede timbrar (post 01/07/2026).
+ * flags: indica si una factura fue emitida dentro de la ventana en que el
+ * sistema puede timbrar (post 01/07/2026). Se usa la fecha de emisión
+ * porque es la que el usuario ve y el campo disponible en el listado.
  */
 export function esCreadaConCapacidadTimbrado(
-  createdAt: string | null | undefined,
+  fechaEmision: string | null | undefined,
 ): boolean {
-  if (!createdAt) return false;
-  return createdAt >= FECHA_INICIO_TIMBRADO_SISTEMA;
+  if (!fechaEmision) return false;
+  return fechaEmision >= FECHA_INICIO_TIMBRADO_SISTEMA;
 }
