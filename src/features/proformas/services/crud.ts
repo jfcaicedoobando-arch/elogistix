@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
 import { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
+import { logger } from "@/lib/observability/logger";
 import type { ProformaRow } from "./types";
 
 export interface CrearProformaParams {
