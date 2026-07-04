@@ -45,12 +45,12 @@ export default function FacturaDetalle() {
   const [sustituirOpen, setSustituirOpen] = useState(false);
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
-  const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador } = deriveFacturaFlags(factura, canEdit);
+  const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = deriveFacturaFlags(factura, canEdit);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
 
-  useAutoAbrirTimbrar(sinTimbrar, canEdit, () => setTimbrarOpen(true));
+  useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
 
 
 
@@ -95,6 +95,7 @@ export default function FacturaDetalle() {
       <FacturaDetalleActions
         canEdit={canEdit}
         sinTimbrar={sinTimbrar}
+        puedeTimbrarDesdeSistema={puedeTimbrarDesdeSistema}
         pdfUrl={factura.factura_pdf_url}
         xmlUrl={factura.factura_xml_url}
         embarqueId={factura.embarque_id ?? null}
