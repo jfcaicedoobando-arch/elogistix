@@ -42,6 +42,7 @@ export function useCapturarSnapshotAuditoria() {
     },
     onError: (err: Error) => {
       logger.warn("[useCapturarSnapshotAuditoria] no se pudo capturar:", err);
+      reportCaughtError(err, { feature: "auditoria", op: "capturar_snapshot_background" });
     },
   });
 }
