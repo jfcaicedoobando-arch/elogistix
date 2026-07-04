@@ -87,7 +87,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
       accion: "facturapi_nc_cancelar_failed",
       entidad: "factura_nota_credito",
       entidad_id: body.nota_credito_id,
-      detalle: { status, response: detail },
+      detalles: { status, response: detail },
     });
     return json({ error: "facturapi_error", status, detail }, 502);
   }
@@ -108,7 +108,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
     accion: "facturapi_nc_cancelada",
     entidad: "factura_nota_credito",
     entidad_id: body.nota_credito_id,
-    detalle: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
+    detalles: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
   });
 
   return json({ ok: true, status: cancelResp.status ?? "canceled" });

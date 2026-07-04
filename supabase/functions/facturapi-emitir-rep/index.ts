@@ -171,7 +171,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       accion: "facturapi_rep_emitir_failed",
       entidad: "pago_factura",
       entidad_id: pago.id,
-      detalle: { status, response: detail },
+      detalles: { status, response: detail },
     });
     return json({ error: "facturapi_error", status, detail }, 502);
   }
@@ -207,7 +207,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     accion: "facturapi_rep_emitido",
     entidad: "pago_factura",
     entidad_id: pago.id,
-    detalle: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: factura.id },
+    detalles: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: factura.id },
   });
 
   return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl });

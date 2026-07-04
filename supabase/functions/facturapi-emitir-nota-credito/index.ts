@@ -75,7 +75,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
       accion: "facturapi_nc_emitir_failed",
       entidad: "factura_nota_credito",
       entidad_id: body.nota_credito_id,
-      detalle: { status, response: detail },
+      detalles: { status, response: detail },
     });
     return json({ error: "facturapi_error", status, detail }, 502);
   }
@@ -109,7 +109,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     accion: "facturapi_nc_emitida",
     entidad: "factura_nota_credito",
     entidad_id: body.nota_credito_id,
-    detalle: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: nc.factura_id },
+    detalles: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: nc.factura_id },
   });
 
   return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl });

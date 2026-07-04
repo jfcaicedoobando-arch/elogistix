@@ -170,7 +170,7 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
       accion: "cfdi_envio_failed",
       entidad: target.data.tipo,
       entidad_id: target.data.entidadId,
-      detalle: { email, status: fapiRes.status, detail },
+      detalles: { email, status: fapiRes.status, detail },
     });
     const message = fapiRes.status === 404
       ? "CFDI no encontrado en FacturApi (puede estar cancelado)."
@@ -184,7 +184,7 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     accion: "cfdi_enviado",
     entidad: target.data.tipo,
     entidad_id: target.data.entidadId,
-    detalle: { email },
+    detalles: { email },
   });
 
   return json({ ok: true, enviado_a: email });

@@ -77,7 +77,7 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
       accion: receipt.bitacora_accion,
       entidad: "pago_factura",
       entidad_id: pago.id,
-      detalle: { event_type: event.type, patch: receipt.patch },
+      detalles: { event_type: event.type, patch: receipt.patch },
     });
     return json({ ok: true, target: "pagos_factura" });
   }
@@ -106,7 +106,7 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     accion: mapped.bitacora_accion,
     entidad: "factura",
     entidad_id: factura.id,
-    detalle: { event_type: event.type, patch: mapped.patch },
+    detalles: { event_type: event.type, patch: mapped.patch },
   });
 
   return json({ ok: true });

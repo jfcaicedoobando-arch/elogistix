@@ -86,7 +86,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       accion: "facturapi_cancelar_failed",
       entidad: "factura",
       entidad_id: factura_id,
-      detalle: { status, response: detail },
+      detalles: { status, response: detail },
     });
     return json({ error: "facturapi_error", status, detail }, 502);
   }
@@ -114,7 +114,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     accion: esSustitucion ? "facturapi_sustituida" : "facturapi_cancelada",
     entidad: "factura",
     entidad_id: factura_id,
-    detalle: {
+    detalles: {
       motivo,
       sustituye_uuid: sustituye_uuid ?? null,
       sustituida_por_factura_id: sustituidaPorFacturaId,

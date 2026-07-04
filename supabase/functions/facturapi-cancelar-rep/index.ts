@@ -77,7 +77,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
       accion: "facturapi_rep_cancelar_failed",
       entidad: "pago_factura",
       entidad_id: pago.id,
-      detalle: { status, response: detail },
+      detalles: { status, response: detail },
     });
     return json({ error: "facturapi_error", status, detail }, 502);
   }
@@ -99,7 +99,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     accion: "facturapi_rep_cancelado",
     entidad: "pago_factura",
     entidad_id: pago.id,
-    detalle: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
+    detalles: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
   });
 
   return json({ ok: true, status: fapiJson.status ?? "canceled" });
