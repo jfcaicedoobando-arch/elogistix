@@ -11,7 +11,7 @@ export type FacturaListItem = Pick<
   FacturaRow,
   | "id" | "numero" | "cliente_nombre" | "expediente" | "total" | "moneda"
   | "fecha_emision" | "fecha_vencimiento" | "estado"
-  | "proforma_id" | "factura_pdf_url" | "factura_xml_url"
+  | "proforma_id" | "factura_pdf_url" | "factura_xml_url" | "ambiente"
 > & {
   proformas: { numero: string } | null;
 };
@@ -50,6 +50,7 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
     fecha_vencimiento: string; estado: FacturaRow["estado"];
     proforma_id: string | null; proforma_numero: string | null;
     factura_pdf_url: string | null; factura_xml_url: string | null;
+    ambiente: FacturaRow["ambiente"];
     total_count: number | string;
   }>;
   const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
@@ -66,6 +67,7 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
     proforma_id: r.proforma_id,
     factura_pdf_url: r.factura_pdf_url,
     factura_xml_url: r.factura_xml_url,
+    ambiente: r.ambiente,
     proformas: r.proforma_numero ? { numero: r.proforma_numero } : null,
   }));
   return { data: items, count };
