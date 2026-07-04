@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.1] - 2026-07-04
+- **chore(lint)**: extraído helper compartido `extractFacturapiMessage` en `_shared/facturapiClient.ts`. Reemplaza el ternario denso repetido en `facturapi-emitir-nota-credito`, `facturapi-cancelar-nota-credito` y `facturapi-descargar` que disparaba 3 warnings de complejidad ciclomática (>16). CI vuelve a pasar con `--max-warnings 0`. Sin cambios funcionales ni de contrato.
+
 ## [13.172.0] - 2026-07-04
 - **feat(facturación)**: distinguir CFDIs emitidos en **sandbox** vs **producción**. Nueva columna `ambiente` (enum `ambiente_facturapi`) en `facturas`, `factura_notas_credito` y `pagos_factura`. Las 3 edge functions de timbrado (`facturapi-emitir`, `facturapi-emitir-nota-credito`, `facturapi-emitir-rep`) ahora persisten el ambiente resuelto desde `resolveFacturapiKey`. Nuevo componente `AmbienteBadge` (naranja) visible en el listado de facturas, el header del detalle, la card de timbrado fiscal, la tabla de notas de crédito y las filas de complementos REP. Se ocultan para producción para no meter ruido. RPC `facturas_listado` extendido con la columna. **Backfill**: 4 facturas históricas marcadas como `sandbox`.
 

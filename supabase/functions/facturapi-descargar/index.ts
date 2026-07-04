@@ -18,6 +18,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -139,7 +140,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
 
   if (!fapiRes.ok) {
     const detail = await fapiRes.text().catch(() => "");
-    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${fapiRes.status}`;
+    const message = extractFacturapiMessage(detail, fapiRes.status);
     return json({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
   }
 

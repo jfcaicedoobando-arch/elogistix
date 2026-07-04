@@ -96,6 +96,20 @@ export function describeFacturapiError(err: unknown): { status: number; detail: 
   return { status, detail };
 }
 
+/**
+ * Extrae un `message` humano del `detail` que devuelve FacturApi (o el fallback
+ * genérico). Se comparte entre los handlers de edge functions para no repetir
+ * el ternario denso `detail && typeof === "object" && "message" in ...` que
+ * dispara la complejidad ciclomática de ESLint.
+ */
+export function extractFacturapiMessage(detail: unknown, status: number | string): string {
+  if (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>)) {
+    const m = (detail as Record<string, unknown>).message;
+    if (typeof m === "string" && m.length > 0) return m;
+  }
+  return `FacturApi respondió ${status}`;
+}
+
 /** Sólo para tests: limpia la caché entre escenarios. */
 export function __resetFacturapiClientCacheForTests(): void {
   clientCache.clear();

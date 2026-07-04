@@ -1,71 +1,70 @@
-# Paso 3 — Distinguir facturas timbradas en sandbox vs producción
 
-Persistir el ambiente (`sandbox` | `live`) en el que se emitió cada CFDI y marcar visualmente con un badge naranja "SANDBOX" únicamente cuando corresponda. Aplica a facturas, notas de crédito y complementos REP.
+# Bajar 3 warnings de `complexity` en edge functions de FacturApi
 
-## 1. Migración de BD
+`bun run lint -- --max-warnings 0` falla por 3 warnings (nada roto en runtime, es un umbral estricto de ESLint):
 
-Nueva columna `ambiente ambiente_facturapi` (enum con valores `sandbox`, `live`), nullable, en tres tablas:
+| Archivo | Complexity | Máx |
+|---|---|---|
+| `facturapi-cancelar-nota-credito/index.ts:45` | 18 | 16 |
+| `facturapi-descargar/index.ts:106` | 17 | 16 |
+| `facturapi-emitir-nota-credito/index.ts:33` | 20 | 16 |
 
-```text
-CREATE TYPE public.ambiente_facturapi AS ENUM ('sandbox', 'live');
+## Causa raíz
 
-ALTER TABLE public.facturas               ADD COLUMN ambiente ambiente_facturapi;
-ALTER TABLE public.factura_notas_credito  ADD COLUMN ambiente ambiente_facturapi;
-ALTER TABLE public.pagos_factura          ADD COLUMN ambiente ambiente_facturapi;
+Los tres handlers repiten el mismo ternario denso para sacar el `message` humano de la respuesta de FacturApi:
+
+```ts
+const message =
+  (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>)
+    && typeof (detail as Record<string, unknown>).message === "string")
+      ? (detail as Record<string, string>).message
+      : `FacturApi respondió ${status}`;
 ```
 
-**Backfill (mismo migration):**
-- `UPDATE facturas SET ambiente='sandbox' WHERE facturapi_id IS NOT NULL AND ambiente IS NULL;` (4 filas)
-- `UPDATE factura_notas_credito SET ambiente='sandbox' WHERE facturapi_id IS NOT NULL AND ambiente IS NULL;` (0)
-- `UPDATE pagos_factura SET ambiente='sandbox' WHERE facturapi_rep_id IS NOT NULL AND ambiente IS NULL;` (0)
+Ese one-liner suma 4 ramas booleanas (`&&` + ternario) a cada handler. Sacarlo a un helper resuelve las 3 warnings sin cambiar comportamiento.
 
-**RPC `facturas_listado`:** re-crearlo para incluir `ambiente` en el RETURNS TABLE (mantiene todas las demás columnas y filtros).
+## Cambios
 
-## 2. Edge functions — escribir `ambiente` al timbrar
+### 1. `supabase/functions/_shared/facturapiClient.ts` — nuevo helper
 
-Las 3 funciones ya usan `resolveFacturapiKey` que devuelve `ambiente`. Solo hay que incluirlo en el `.update({...})` posterior al timbrado exitoso.
+Añadir junto a `describeFacturapiError`:
 
-- `supabase/functions/facturapi-emitir/index.ts` (facturas) — agregar `ambiente: resolved.data.ambiente` al update de la línea ~183.
-- `supabase/functions/facturapi-emitir-nota-credito/index.ts` — mismo cambio en su update final.
-- `supabase/functions/facturapi-emitir-rep/index.ts` — mismo cambio en su update final.
+```ts
+export function extractFacturapiMessage(detail: unknown, status: number | string): string {
+  if (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>)) {
+    const m = (detail as Record<string, unknown>).message;
+    if (typeof m === "string" && m.length > 0) return m;
+  }
+  return `FacturApi respondió ${status}`;
+}
+```
 
-Sin cambios de contrato ni CORS. Sin nuevos tests obligatorios (la wiring es un solo campo derivado del auth ya cubierto por `facturapiAuth_test.ts`).
+### 2. Reemplazar el ternario in-line en los 3 archivos
 
-## 3. Servicio de listado
+- `facturapi-emitir-nota-credito/index.ts` (línea ~80)
+- `facturapi-cancelar-nota-credito/index.ts` (línea ~92)
+- `facturapi-descargar/index.ts` (línea ~142)
 
-`src/features/facturacion/services/facturasCrud.ts`:
-- Añadir `ambiente: FacturaRow["ambiente"]` a `FacturaListItem`.
-- Mapearlo desde la RPC en `rows.map(...)`.
+Cada uno pasa a:
 
-## 4. UI — badge "SANDBOX" (solo sandbox)
+```ts
+const message = extractFacturapiMessage(detail, status);
+```
 
-Componente reutilizable nuevo: `src/features/facturacion/components/AmbienteBadge.tsx`
-- Props: `ambiente: 'sandbox' | 'live' | null | undefined`.
-- Si `ambiente !== 'sandbox'` → devuelve `null` (nada visible).
-- Si es `sandbox` → `<Badge>` con clases `bg-orange-100 text-orange-800 border-orange-300` y texto `"SANDBOX"`, tooltip explicando que este CFDI se emitió en modo de pruebas y **no es válido ante el SAT**.
+Con eso baja al menos 3-4 puntos de complejidad ciclomática en cada handler, dejando las 3 funciones ≤16 (lint pasa con `--max-warnings 0`).
 
-Puntos donde se muestra:
-- `FacturaDetalleHeader.tsx` — al lado del número, junto al badge "Sin timbrar".
-- `facturacionColumns.tsx` — dentro de la columna de "Número" (o inmediatamente después del texto) en cada fila.
-- `FacturaTimbradoCard.tsx` — badge visible junto al UUID cuando la factura está timbrada.
-- Detalle de nota de crédito y sección de pagos REP: mismo badge donde ya se muestra el UUID/folio del complemento.
+### 3. Registro
 
-Sin otros cambios visuales (facturas de producción quedan iguales, como pidió el usuario).
-
-## 5. Registro
-
-- Bump `APP_VERSION` → `13.172.0` (feature).
-- Entrada en `CHANGELOG.md`: "Ambiente de timbrado persistido (sandbox/live) en facturas, notas de crédito y REP. Badge visual `SANDBOX` en detalle, listado y complementos. Backfill histórico marca las 4 facturas existentes como `sandbox`."
-
-## Detalles técnicos
-
-- Enum `ambiente_facturapi` centraliza los valores válidos y evita strings libres.
-- La columna sigue nullable porque futuras filas antes del deploy podrían no traer el campo; el trigger no es necesario porque el update explícito en las 3 edge funcs lo cubre.
-- No se toca `facturapi_credenciales.ambiente` — ese sigue siendo la config activa por org; la columna nueva es el snapshot histórico por documento.
-- No hay cambios de RLS (heredan las políticas existentes de la tabla).
+- `APP_VERSION` → `13.172.1` (patch, sin cambios funcionales).
+- `CHANGELOG.md`: entrada breve — "Refactor interno: helper `extractFacturapiMessage` compartido en edge functions FacturApi para cumplir umbral de complejidad ESLint (0 warnings)."
 
 ## Fuera de alcance
 
-- No se cambia el flujo de cancelación (`facturapi-cancelar-*`) porque no crea documentos nuevos; conserva el ambiente ya guardado.
-- No se filtra la lista por ambiente (no fue pedido).
-- No se agrega badge en el portal del cliente (esas facturas ya se timbrarán en producción una vez migren).
+- Nada de UI, nada de BD, nada de contrato de las funciones.
+- No se toca la lógica de timbrado ni el badge `SANDBOX` de v13.172.0.
+- No se despliegan funciones (solo pasa el lint local/CI); si quieres redeploy, lo pido explícito.
+
+## Detalles técnicos
+
+- `extractFacturapiMessage` es puro y typesafe. Devuelve el `message` humano cuando FacturApi envía `{ message: "..." }`, y si no, arma un fallback con el status. Se exporta del mismo módulo (`_shared/facturapiClient.ts`) que ya contiene `describeFacturapiError`, que es donde vive la lógica del SDK.
+- No requiere tests nuevos (comportamiento textual idéntico, la rama ya está cubierta implícitamente por los tests que ejercen el path de error).
