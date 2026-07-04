@@ -59,6 +59,7 @@ export function useAutoCapturarSnapshot(enabled: boolean) {
     mutate(undefined, {
       onError: (err) => {
         logger.warn("[useAutoCapturarSnapshot] no se pudo capturar:", err);
+        reportCaughtError(err, { feature: "auditoria", op: "auto_capturar_snapshot" });
       },
     });
   }, [enabled, mutate]);
