@@ -8,6 +8,7 @@ import {
   type FiltrosBitacora,
 } from "@/features/auditoria/services/bitacora";
 import { logger } from "@/lib/observability/logger";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 
 export type { EntradaBitacora };
@@ -48,9 +49,11 @@ export function useRegistrarActividad() {
       queryClient.invalidateQueries({ queryKey: queryKeys.bitacora.all });
     },
     // Bitácora es background; un toast por cada acción registrada sería ruido.
-    // Solo logueamos en consola para no romper el flujo del usuario.
+    // Logueamos localmente Y reportamos a Sentry (v13.171.1) para detectar
+    // caídas silenciosas de la bitácora sin molestar al usuario.
     onError: (err: Error) => {
       logger.warn("[useRegistrarActividad] no se pudo registrar:", err);
+      reportCaughtError(err, { feature: "auditoria", op: "registrar_actividad_background" });
     },
   });
 }

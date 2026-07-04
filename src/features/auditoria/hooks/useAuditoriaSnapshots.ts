@@ -10,6 +10,7 @@ import {
 } from "@/features/auditoria/services";
 import type { AuditoriaSnapshot } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 
@@ -41,6 +42,7 @@ export function useCapturarSnapshotAuditoria() {
     },
     onError: (err: Error) => {
       logger.warn("[useCapturarSnapshotAuditoria] no se pudo capturar:", err);
+      reportCaughtError(err, { feature: "auditoria", op: "capturar_snapshot_background" });
     },
   });
 }
@@ -57,6 +59,7 @@ export function useAutoCapturarSnapshot(enabled: boolean) {
     mutate(undefined, {
       onError: (err) => {
         logger.warn("[useAutoCapturarSnapshot] no se pudo capturar:", err);
+        reportCaughtError(err, { feature: "auditoria", op: "auto_capturar_snapshot" });
       },
     });
   }, [enabled, mutate]);
