@@ -139,7 +139,8 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
 
   if (!fapiRes.ok) {
     const detail = await fapiRes.text().catch(() => "");
-    return json({ error: "facturapi_error", status: fapiRes.status, detail }, 502);
+    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${fapiRes.status}`;
+    return json({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
   }
 
   const contentType = tipo === "pdf" ? "application/pdf" : "application/xml";

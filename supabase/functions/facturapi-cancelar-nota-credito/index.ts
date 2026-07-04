@@ -89,7 +89,8 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
       entidad_id: body.nota_credito_id,
       detalles: { status, response: detail },
     });
-    return json({ error: "facturapi_error", status, detail }, 502);
+    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
+    return json({ error: "facturapi_error", status, detail, message }, 502);
   }
 
   const { error: updErr } = await supabase
