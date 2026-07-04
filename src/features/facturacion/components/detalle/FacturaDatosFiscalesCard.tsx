@@ -38,7 +38,7 @@ export function FacturaDatosFiscalesCard({ factura }: Props) {
   const [formaPago, setFormaPago] = useState(iniciales.formaPago);
   const [metodoPago, setMetodoPago] = useState(iniciales.metodoPago);
   const [diasCredito, setDiasCredito] = useState<number>(iniciales.diasCredito);
-  const [tipoCambio, setTipoCambio] = useState<number>(iniciales.tipoCambio);
+  const [tipoCambio, setTipoCambio] = useState<number | null>(iniciales.tipoCambio);
   const [notas, setNotas] = useState(iniciales.notas);
 
   // Sincroniza con el default del cliente al cargar.
