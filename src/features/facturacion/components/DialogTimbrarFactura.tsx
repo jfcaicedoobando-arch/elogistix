@@ -2,7 +2,7 @@
  * DialogTimbrarFactura — Revisión previa al timbrado CFDI 4.0.
  * Migrado a `FormDialogShell` (v13.120.0).
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
