@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { DialogEnviarCfdi } from "@/features/facturacion/components/DialogEnviarCfdi";
+import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 
 export type EstadoRep = "NoAplica" | "Pendiente" | "Timbrado" | "Cancelado" | "Error";
 
@@ -37,6 +38,7 @@ export interface PagoRowData {
   rep_pdf_url: string | null;
   rep_xml_url: string | null;
   rep_error: string | null;
+  ambiente: "sandbox" | "live" | null;
 }
 
 interface Props {
@@ -80,6 +82,7 @@ export function PagoFacturaRow({
       <td className="py-2 px-2">
         <div className="flex items-center gap-1">
           {badgeRep(estadoRep)}
+          <AmbienteBadge ambiente={pago.ambiente} />
           {canEdit && estadoRep === "Pendiente" && (
             <Button variant="ghost" size="icon" className="h-7 w-7" title="Timbrar REP"
               onClick={(e) => { e.stopPropagation(); onTimbrarRep(pago.id); }}>

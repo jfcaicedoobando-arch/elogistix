@@ -39,6 +39,7 @@ export type FacturaDetalle = Pick<
   | "serie"
   | "facturapi_id"
   | "dias_credito"
+  | "ambiente"
 > & {
   proformas: { numero: string } | null;
 };
@@ -74,6 +75,7 @@ const COLUMNS = [
   "serie",
   "facturapi_id",
   "dias_credito",
+  "ambiente",
   "proformas:proformas!facturas_proforma_id_fkey(numero)",
 ].join(", ");
 

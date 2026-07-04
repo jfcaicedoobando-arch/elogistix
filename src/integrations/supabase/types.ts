@@ -3650,6 +3650,7 @@ export type Database = {
       }
       factura_notas_credito: {
         Row: {
+          ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           aprobada_at: string | null
           aprobada_por: string | null
           cancelacion_motivo: string | null
@@ -3683,6 +3684,7 @@ export type Database = {
           xml_url: string | null
         }
         Insert: {
+          ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           aprobada_at?: string | null
           aprobada_por?: string | null
           cancelacion_motivo?: string | null
@@ -3716,6 +3718,7 @@ export type Database = {
           xml_url?: string | null
         }
         Update: {
+          ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           aprobada_at?: string | null
           aprobada_por?: string | null
           cancelacion_motivo?: string | null
@@ -3920,6 +3923,7 @@ export type Database = {
       }
       facturas: {
         Row: {
+          ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo: string | null
           cancelado_en: string | null
           cliente_id: string
@@ -3966,6 +3970,7 @@ export type Database = {
           uuid_fiscal: string | null
         }
         Insert: {
+          ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo?: string | null
           cancelado_en?: string | null
           cliente_id: string
@@ -4012,6 +4017,7 @@ export type Database = {
           uuid_fiscal?: string | null
         }
         Update: {
+          ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo?: string | null
           cancelado_en?: string | null
           cliente_id?: string
@@ -4463,6 +4469,7 @@ export type Database = {
       }
       pagos_factura: {
         Row: {
+          ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -4495,6 +4502,7 @@ export type Database = {
           uuid_rep: string | null
         }
         Insert: {
+          ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -4527,6 +4535,7 @@ export type Database = {
           uuid_rep?: string | null
         }
         Update: {
+          ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -6498,6 +6507,7 @@ export type Database = {
           p_uso_cfdi: string
         }
         Returns: {
+          ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo: string | null
           cancelado_en: string | null
           cliente_id: string
@@ -6865,6 +6875,7 @@ export type Database = {
           p_search?: string
         }
         Returns: {
+          ambiente: Database["public"]["Enums"]["ambiente_facturapi"]
           cliente_nombre: string
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
@@ -7393,6 +7404,7 @@ export type Database = {
       }
     }
     Enums: {
+      ambiente_facturapi: "sandbox" | "live"
       app_role:
         | "admin"
         | "operador"
@@ -7683,6 +7695,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ambiente_facturapi: ["sandbox", "live"],
       app_role: [
         "admin",
         "operador",

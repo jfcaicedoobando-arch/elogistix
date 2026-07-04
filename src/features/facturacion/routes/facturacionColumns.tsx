@@ -13,6 +13,7 @@ import {
 } from "@/components/shared/dataTable/columnBuilders";
 import type { useFacturas } from "@/features/facturacion/hooks";
 import { esCreadaConCapacidadTimbrado } from "@/features/facturacion/domain/facturaFlags";
+import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
@@ -39,15 +40,18 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
         const numero = row.original.numero ?? "";
         const esBorradorSinFolio = numero.startsWith("BORRADOR-");
         return (
-          <Link
-            to={`/facturacion/${row.original.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="text-accent hover:underline"
-          >
-            {esBorradorSinFolio
-              ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
-              : numero}
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <Link
+              to={`/facturacion/${row.original.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-accent hover:underline"
+            >
+              {esBorradorSinFolio
+                ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
+                : numero}
+            </Link>
+            <AmbienteBadge ambiente={row.original.ambiente} />
+          </div>
         );
       },
     },

@@ -9,15 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { formatDate } from "@/lib/formatters";
+import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 
 interface Props {
   uuidFiscal: string;
   folioFiscal: number | null;
   serie: string | null;
   fechaEmision: string | null;
+  ambiente?: "sandbox" | "live" | null;
 }
 
-export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmision }: Props) {
+export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmision, ambiente }: Props) {
   const copiarUuid = async () => {
     try {
       await navigator.clipboard.writeText(uuidFiscal);
@@ -32,6 +34,7 @@ export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmisi
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <FileCheck2 className="h-4 w-4 text-success" /> Timbrado fiscal
+          <AmbienteBadge ambiente={ambiente} size="md" />
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -6,6 +6,7 @@ import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 
 interface Props {
   numero: string;
@@ -15,10 +16,11 @@ interface Props {
   expediente: string;
   total: number;
   moneda: string;
+  ambiente?: "sandbox" | "live" | null;
 }
 
 export function FacturaDetalleHeader(props: Props) {
-  const { numero, estado, sinTimbrar, clienteNombre, expediente, total, moneda } = props;
+  const { numero, estado, sinTimbrar, clienteNombre, expediente, total, moneda, ambiente } = props;
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
   return (
@@ -32,6 +34,7 @@ export function FacturaDetalleHeader(props: Props) {
           </h1>
           <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
           {sinTimbrar && <Badge variant="outline" className="text-xs">Sin timbrar</Badge>}
+          <AmbienteBadge ambiente={ambiente} size="md" />
           {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
         </div>
         <p className="text-sm text-muted-foreground mt-1">

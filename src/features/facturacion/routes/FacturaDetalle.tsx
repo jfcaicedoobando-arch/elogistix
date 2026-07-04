@@ -90,6 +90,7 @@ export default function FacturaDetalle() {
         expediente={factura.expediente}
         total={Number(factura.total)}
         moneda={factura.moneda}
+        ambiente={factura.ambiente}
       />
 
       <FacturaDetalleActions
@@ -125,6 +126,7 @@ export default function FacturaDetalle() {
           folioFiscal={factura.folio_fiscal}
           serie={factura.serie}
           fechaEmision={factura.fecha_emision}
+          ambiente={factura.ambiente}
         />
       )}
 

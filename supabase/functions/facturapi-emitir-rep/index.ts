@@ -195,6 +195,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       rep_pdf_url: pdfUrl,
       rep_xml_url: xmlUrl,
       estado_rep: "Timbrado",
+      ambiente: resolved.data.ambiente,
       timbrado_rep_en: new Date().toISOString(),
       timbrado_rep_por: userData.user.id,
       rep_error: null,
