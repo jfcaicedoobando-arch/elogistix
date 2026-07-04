@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.171.0] - 2026-07-04
+- **feat(facturación/timbrado)**: las facturas en moneda extranjera (USD/EUR) ahora nacen **sin tipo de cambio precargado**. El usuario está obligado a capturarlo manualmente o pulsar “Obtener TC DOF de hoy” antes de timbrar. Cambios:
+  - DB: `facturas.tipo_cambio` ahora es nullable, sin default, con check `IS NULL OR > 0`. Facturas existentes conservan su valor.
+  - Al convertir proforma → factura, se inserta `tipo_cambio = 1` para MXN y `NULL` para USD/EUR (antes heredaba el default `1`, lo que producía facturas timbradas con TC incorrecto).
+  - `FacturaDatosFiscalesCard`: banner rojo cuando falta capturar el TC en moneda extranjera. El input de TC acepta vacío sin auto-completar.
+  - `DialogTimbrarFactura`: nuevo check en el checklist (“Tipo de cambio del día capturado”) que bloquea el botón `Timbrar ahora` cuando falta el TC. MXN queda exento del check.
+  - Edge function `facturapi-emitir`: guard defensivo — regresa `422 tipo_cambio_requerido` si intenta timbrarse una factura USD/EUR sin TC (evita llegar a FacturAPI con TC=1).
+  - Tests: `DialogTimbrarFactura.checks.test.ts` actualizado con casos USD sin TC, USD con TC=0 y MXN sin TC (todos gobernados por la misma regla).
+
 ## [13.170.21] - 2026-07-04
 - **fix(facturación/cierre embarque)**: convertir una proforma a factura fallaba con `Embarque cerrado: edición bloqueada (tabla facturas)` (código `23514`) cuando el embarque asociado ya estaba en estado `Cerrado`. Causa: el trigger `trg_bloquear_cierre` (función `tg_bloquear_si_embarque_cerrado`) estaba enganchado a 10 tablas, incluyendo `facturas`, `pagos_factura`, `proveedor_facturas` y `pagos_proveedor`, cuando esos movimientos fiscales/tesorería justamente ocurren después del cierre operativo. Fix: se retira el trigger únicamente de esas 4 tablas fiscales; se mantiene sobre `conceptos_costo`, `conceptos_venta`, `documentos_embarque`, `seguros_embarque`, `eventos_embarque` y `embarque_contenedores`. Reportado por Sentry (proforma 7e6dcaca-eb70-4b06-8fe9-7ac83a327893, Elogistix / karol.hernandez).
 
