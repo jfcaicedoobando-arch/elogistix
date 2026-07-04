@@ -1,90 +1,55 @@
 ## Problema
 
-Isela (rol **contador**) ahora completa el wizard, guarda su API key sandbox, **prueba conexión ok** en el paso 3, pero al intentar **timbrar** una factura la edge function responde:
+Al timbrar, el usuario ve un mensaje genérico: **"No se pudo timbrar: facturapi_error"**. No sabemos qué falló realmente (RFC inválido, CP, moneda, código SAT, key de sandbox vs live, etc.) por dos bugs que se refuerzan:
 
-```
-412 – Falta la API key (sandbox) de FacturApi para esta organización.
-```
+1. **La respuesta 502 de la edge function no incluye `message`**. Devuelve `{ error: "facturapi_error", status, detail }`. El cliente (`toReadableError` en `facturapi.ts`) usa `body.message ?? body.error`, así que sólo ve `"facturapi_error"`.
+2. **El insert a `bitacora_actividad` usa la columna equivocada**: el código pasa `detalle: {...}` pero la tabla se llama `detalles`. Los ocho edge functions de FacturApi tienen el mismo typo, por eso al consultar `bitacora_actividad WHERE accion='facturapi_emitir_failed'` no aparece nada — el insert falla en silencio y perdemos toda la forensía.
 
-## Causa raíz
+## Solución
 
-El helper `_shared/facturapiAuth.ts::resolveFacturapiKey` resuelve la key en 3 pasos:
+### 1. Devolver el mensaje humano en la respuesta 502
 
-1. `SELECT ... FROM facturapi_credenciales` (necesita RLS). ✅
-2. `rpc("get_facturapi_api_key_internal", …)` → **desencripta el secret desde `vault.decrypted_secrets`**. Esta RPC está:
-
-   ```
-   REVOKE ALL ... FROM public, anon, authenticated;
-   GRANT EXECUTE ... TO service_role;
-   ```
-
-3. Fallback a `Deno.env.get(<secret_name>)` — legado; hoy nadie usa esa ruta.
-
-Cada edge function crea el cliente de Supabase así:
+En `supabase/functions/facturapi-emitir/index.ts` (y los 7 hermanos: `facturapi-cancelar`, `facturapi-emitir-rep`, `facturapi-cancelar-rep`, `facturapi-emitir-nota-credito`, `facturapi-cancelar-nota-credito`, `facturapi-descargar`, `facturapi-enviar-email`), extraer un `message` desde `detail` (que suele ser `{ message: "…" }` o `{ error: "…" }` según lo que devuelve FacturApi) y agregarlo al JSON:
 
 ```ts
-createClient(SUPABASE_URL, SERVICE_KEY, {
-  global: { headers: { Authorization: authHeader } }, // JWT del usuario
-});
+const humanMessage =
+  (detail && typeof detail === "object" && "message" in detail && typeof detail.message === "string")
+    ? detail.message
+    : `FacturApi respondió ${status}`;
+return json({ error: "facturapi_error", status, detail, message: humanMessage }, 502);
 ```
 
-Cuando `Authorization: Bearer <JWT>` viaja en cada request, **PostgREST usa ese JWT** y las llamadas se ejecutan bajo el rol `authenticated`, no `service_role`. Por eso el `rpc("get_facturapi_api_key_internal")` devuelve permission denied → `tryVaultKey` devuelve `null` → cae al fallback de `secret_name` que también es `null` (nadie configuró secrets de proyecto) → `412 Falta la API key`.
+Con eso, `toReadableError` del cliente muestra el motivo real ("El RFC del receptor no es válido", "El código postal no coincide con el régimen fiscal", etc.).
 
-**Analogía:** la contadora ya tiene su llave en la caja fuerte, pero cuando el mostrador va a abrirla lo hace con el gafete de "cliente" en vez del gafete de "gerente". La caja no reconoce el gafete y le dice "no tengo llave para ti".
+### 2. Corregir el nombre de columna en los 8 edge functions
 
-## Cambio propuesto
+Renombrar la llave `detalle:` → `detalles:` en todos los `bitacora_actividad.insert({...})` de:
+- `facturapi-emitir/index.ts` (2 ocurrencias)
+- `facturapi-emitir-rep/index.ts` (2)
+- `facturapi-emitir-nota-credito/index.ts` (2)
+- `facturapi-cancelar/index.ts` (2)
+- `facturapi-cancelar-rep/index.ts` (2)
+- `facturapi-cancelar-nota-credito/index.ts` (2)
+- `facturapi-enviar-email/index.ts` (2)
+- `facturapi-webhook/index.ts` (2)
 
-Un solo archivo: `supabase/functions/_shared/facturapiAuth.ts`.
+A partir de ahí, podré consultar `bitacora_actividad` para ver el detalle exacto de cualquier fallo futuro sin depender de logs del runtime.
 
-Cuando estén disponibles `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en el runtime (siempre lo están en producción), `tryVaultKey` construirá **su propio cliente admin** con service role sin `Authorization` header y llamará el RPC con ese cliente. El `SELECT` inicial sigue con el cliente pasado por el caller (el RLS ya está bien).
+### 3. CHANGELOG + versión
 
-Bosquejo (dentro del mismo helper):
-
-```ts
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-let adminSingleton: SupabaseLike | null = null;
-function getAdmin(): SupabaseLike | null {
-  if (adminSingleton) return adminSingleton;
-  const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !key) return null; // tests: no admin, se ignora
-  adminSingleton = createClient(url, key, { auth: { persistSession: false } }) as unknown as SupabaseLike;
-  return adminSingleton;
-}
-
-async function tryVaultKey(userClient, orgId, ambiente, vaultId) {
-  if (!vaultId) return null;
-  const admin = getAdmin() ?? userClient; // fallback para tests
-  if (!admin.rpc) return null;
-  const { data, error } = await admin.rpc("get_facturapi_api_key_internal", {
-    p_org_id: orgId, p_ambiente: ambiente,
-  });
-  if (error) return null;
-  return typeof data === "string" && data.length > 0 ? data : null;
-}
-```
-
-Ventajas:
-- **Un solo archivo tocado.** Las 9 edge functions que ya llaman `getFacturapiClient(userClient, orgId)` no cambian.
-- **Tests no rompen:** cuando no hay env vars (entorno Deno.test aislado), cae al mock inyectado por el caller.
-- **No amplía privilegios en la BD.** Sigue siendo únicamente el helper server-side el que llega al vault.
-
-## Verificación
-
-Tras deploy:
-1. Isela vuelve a Configuración → wizard → "Probar" (ya funciona) para confirmar que sí lee la key.
-2. Isela abre una factura y presiona **Timbrar**. Debe emitirse sin `412`.
-3. Edge function logs de `facturapi-emitir` deben mostrar 200.
-
-## Bump de versión y bitácora
-
-- `src/constants/appVersion.ts` → `13.170.17`.
-- `CHANGELOG.md`: entrada `[13.170.17] - 2026-07-04` explicando por qué la RPC del vault se llama con service role.
+- `src/constants/appVersion.ts` → `13.170.18`
+- Entrada `## [13.170.18] - 2026-07-04` en `CHANGELOG.md` (root) explicando: exponer motivo real de FacturApi + fix de columna `detalles` en bitácora.
 
 ## Fuera de alcance
 
-- No se tocan las 9 edge functions que consumen `getFacturapiClient` (misma firma).
-- No se cambian policies ni GRANTS.
-- No se toca el flujo de UI ni el hook `useTimbrarFactura`.
-- Refactor de tests de `facturapiAuth_test.ts` sólo si el flujo `tryVaultKey` requiere ajustes (no debería, porque el mock se sigue usando cuando no hay env vars).
+- No se tocan RLS ni migraciones.
+- No se cambia UI ni hooks del cliente (`toReadableError` ya sabe usar `message`).
+- No se instala nada nuevo.
+
+## Analogía
+
+Ahorita FacturApi grita el motivo del rechazo pero nosotros sólo repetimos "algo salió mal": vamos a repetir la queja tal cual al usuario. Y al mismo tiempo destapamos la cajita negra (bitácora) que llevaba semanas sin registrar nada porque estábamos guardando en una gaveta con nombre equivocado.
+
+## Siguiente paso tras el deploy
+
+Pedirle a Karol reintentar el timbrado; el toast va a mostrar el motivo real y, si aún falla, la fila en `bitacora_actividad` tendrá el JSON completo de FacturApi para diagnóstico definitivo (probablemente falta configurar el ambiente correcto, RFC, o algún catálogo SAT en la factura).
