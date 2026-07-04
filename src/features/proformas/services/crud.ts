@@ -60,7 +60,11 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
     Sentry.metrics?.distribution?.("proforma.total_mxn", params.totales.total_mxn, {
       unit: "none",
     });
-  } catch { /* best-effort */ }
+  } catch (err) {
+    // Sentry.metrics es best-effort (puede no existir en algunas versiones del SDK).
+    // Reportar a Sentry aquí sería circular; nos limitamos a warning local.
+    logger.warn("[crearProforma] Sentry.metrics falló:", err);
+  }
   return fromDb<ProformaRow>(data);
 }
 
