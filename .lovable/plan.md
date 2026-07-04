@@ -1,47 +1,61 @@
 
-## Objetivo
+## Diagnóstico: cobertura Sentry actual
 
-En facturas **USD/EUR**, el tipo de cambio nace y permanece **vacío** hasta que el usuario lo capture manualmente o lo obtenga con el botón "Obtener TC DOF de hoy". El timbrado queda **bloqueado** mientras el TC sea nulo/cero. Facturas en **MXN** no se ven afectadas (TC siempre = 1, invisible).
+Analogía: el sistema tiene "cámaras de seguridad" (Sentry) en 3 capas — edge functions (backend), servicios frontend, y hooks/UI. Después de auditar, la cobertura está **muy sólida** con 4 tests de arquitectura que la vigilan automáticamente. Detecté 2 huecos menores, ambos intencionales pero que conviene documentar y/o cerrar.
 
-Analogía: es el cinturón de seguridad — el auto no arranca hasta que suena el clic.
+### 1. Edge Functions (backend) — 30 de 32 con Sentry ✅
 
-## Cambios
+| Estado | Cantidad | Cómo |
+|---|---|---|
+| `wrapEdgeHandler` (automático) | 21 | Auto-captura en cualquier throw. Test: `sentry-edge-wrapping.test.ts` |
+| Manual (`initSentryEdge` + `captureEdgeException`) | 9 | Handlers con lógica ad-hoc. Test: `sentry-edge-coverage.test.ts` |
+| Exento intencional | 2 | `sentry-tunnel` (es el proxy que **manda** eventos a Sentry — no puede reportarse a sí mismo) y `facturapi-test-conexion` (prueba de conectividad, no lógica de negocio) |
 
-### 1. Base de datos (migración)
-- En `public.facturas`, cambiar el default de `tipo_cambio` de `1` a `NULL` (la columna ya es nullable o se hará nullable si hace falta).
-- **No** se tocan facturas existentes (ya timbradas o borradores viejos conservan su valor).
-- El trigger/RPC que crea facturas desde proforma (`convertir_proforma_a_factura` o similar) se ajusta: si la moneda ≠ `MXN`, inserta `tipo_cambio = NULL`; si es `MXN`, inserta `1`.
+**Blindaje automático:** el test `sentry-edge-coverage.test.ts` **falla el CI** si alguien añade una edge function nueva y no la registra en `MANUAL_COVERAGE`, `WRAPPED_COVERAGE` o la lista `SENTRY_EXEMPT`.
 
-### 2. Formulario de datos fiscales (`FacturaDatosFiscalesCard` + `DatosFiscalesForm`)
-- `inicialesDatosFiscales`: para moneda ≠ MXN, si `factura.tipo_cambio` es null/0, el estado inicial es **vacío** (string `""`), no `1`.
-- El input de TC acepta vacío sin auto-rellenar. El auto-save envía `tipo_cambio: null` cuando está vacío (o simplemente omite la escritura hasta que haya un valor válido > 0).
-- **Banner rojo** dentro de la card cuando `moneda ≠ MXN && (tipo_cambio == null || tipo_cambio <= 0)`:
-  > ⚠ Falta capturar el tipo de cambio del día. Usa "Obtener TC DOF de hoy" o escríbelo manualmente antes de timbrar.
+### 2. Servicios frontend fiscales — 100% ✅
 
-### 3. Checklist de timbrado (`DialogTimbrarFactura` + test)
-- Agregar una nueva regla al checklist fiscal: `tipo_cambio_valido` → `ok = moneda === "MXN" || (tipo_cambio && tipo_cambio > 0)`.
-- Etiqueta: "Tipo de cambio del día capturado".
-- Actualizar `DialogTimbrarFactura.checks.test.ts` con el caso extra (válido MXN, válido con TC>0, inválido con TC vacío/0 en USD).
-- `puedeTimbrar` sigue siendo `checks.every(ok)`, así que bloquea el botón automáticamente.
+El test `sentry-fiscal-services.test.ts` recorre **todos** los archivos `.ts` de `src/features/facturacion/services/` y exige que ningún `catch` "trague" errores: o se re-lanza (React Query los recoge) o se llama `reportCaughtError` / `captureException`. **24 archivos verificados, 0 huecos.**
 
-### 4. Edge function `facturapi-emitir` (defensa en profundidad)
-- Antes de armar el payload, si `factura.moneda !== "MXN"` y `!factura.tipo_cambio`, devolver error `422 tipo_cambio_requerido` con mensaje claro. Evita que un bug de UI llegue a FacturAPI con TC=1.
+### 3. Hooks/UI (React) — `notifyError` en 227 archivos ✅
 
-### 5. Versionado + Changelog
-- `APP_VERSION` → `13.171.0` (feature menor, cambio de comportamiento visible).
-- Entrada en `CHANGELOG.md`:
-  > Facturas USD/EUR nacen sin tipo de cambio precargado. Se agrega banner y check obligatorio para forzar consulta del TC DOF del día antes de timbrar.
+El wrapper `notifyError` (que reporta a Sentry además de mostrar toast) está usado en 227 archivos. El test de arquitectura `error-toasts-use-notifyError.test.ts` prohíbe `toast.error(...)` directo en features nuevas.
 
-## Fuera de alcance
-- No se modifican facturas ya timbradas ni sus TC históricos.
-- No se toca la lógica de reportes/rentabilidad ni proformas (las proformas conservan su TC informativo).
-- No se cambia el catálogo de FacturAPI ni la lógica de impuestos.
+Además `reportCaughtError` (para errores en effects/handlers no-mutation) se usa en 20 archivos.
 
-## Verificación
-1. Crear proforma USD → convertir a factura → abrir detalle: campo TC vacío, banner rojo visible.
-2. Intentar timbrar → checklist muestra ✗ "Tipo de cambio del día capturado", botón deshabilitado.
-3. Click "Obtener TC DOF de hoy" → se llena y auto-guarda → banner desaparece → checklist en verde → timbrado habilitado.
-4. Factura MXN → sin campo TC, sin banner, timbrado sin fricción (regresión).
-5. Facturas viejas con TC=1 ya guardado → siguen funcionando (no se limpian retroactivamente).
+### 4. Huecos detectados (código nuevo)
+
+**Hueco A · `src/features/auditoria/hooks/useBitacora.ts`** — El `onError` registra el fallo solo con `logger.warn` (línea 52-54), sin `reportCaughtError`. Comentario: "Bitácora es background; un toast por cada acción sería ruido". El razonamiento es correcto (no molestar al usuario), pero *sí* queremos que Sentry lo vea para detectar cuando la bitácora está caída silenciosamente.
+
+**Hueco B · `src/features/auditoria/hooks/useAuditoriaSnapshots.ts`** — mismo patrón en 2 mutaciones (líneas 42 y 58): no importa `notifyError` ni `reportCaughtError`.
+
+**Hueco C · `src/features/proformas/services/crud.ts`** — línea 62: `catch { /* best-effort */ }` completamente silencioso en una operación auxiliar. No lo reporta ningún test porque `sentry-fiscal-services.test.ts` cubre `facturacion/services`, no `proformas/services`. Es un `catch` intencionalmente best-effort, pero al menos debería loguear a Sentry con severidad `warning`.
+
+### 5. Flujos "viejos" (pre-13.100)
+
+Todo el módulo pre-fiscal (embarques, cotizaciones, clientes, portal) ya pasó por auditorías previas (`.lovable/audit-todos.md`) y usa `notifyError` en 227 archivos. **No detecté regresiones** ni `try/catch` silencioso en el barrido.
+
+---
+
+## Plan de acción (mínimo, defensivo)
+
+### Cambios propuestos
+
+1. **`useBitacora.ts`** — reemplazar `logger.warn(...)` por `reportCaughtError(err, { method: "USE_REGISTRAR_ACTIVIDAD", severity: "warning" })`. Mantiene el silencio hacia el usuario, pero Sentry ve las bitácoras caídas.
+2. **`useAuditoriaSnapshots.ts`** — mismo tratamiento en las 2 mutaciones (`severity: "warning"`, sin toast).
+3. **`proformas/services/crud.ts`** línea 62 — cambiar `catch { /* best-effort */ }` por `catch (err) { reportCaughtError(err, { method: "PROFORMA_CRUD_BEST_EFFORT", severity: "warning" }); }`.
+4. **Extender `sentry-fiscal-services.test.ts`** (o crear un test hermano) para cubrir también `src/features/proformas/services/`, `src/features/compras/services/` y `src/features/cotizaciones/services/`. Analogía: "poner cámaras en los cuartos que aún no tenían".
+
+### Fuera de alcance
+- No se toca `sentry-tunnel` ni `facturapi-test-conexion` (exentos justificados).
+- No se cambia comportamiento de UI: los usuarios no verán toasts nuevos; solo Sentry recibe más señales.
+
+### Version bump y changelog
+- `APP_VERSION` → `13.171.1` (patch: solo instrumentación).
+- Entrada en `CHANGELOG.md`: "Cerrados 3 huecos silenciosos de reporte a Sentry (bitácora, snapshots de auditoría, crud auxiliar de proformas). Test de arquitectura extendido a proformas/compras/cotizaciones."
+
+### Verificación
+1. `bunx vitest run src/__tests__/architecture/sentry-*.test.ts` → 56+ tests en verde (ahora incluyen proformas).
+2. Simular un fallo en bitácora → aparece en Sentry como `warning`, sin toast en UI.
 
 ¿Aplico este plan?
