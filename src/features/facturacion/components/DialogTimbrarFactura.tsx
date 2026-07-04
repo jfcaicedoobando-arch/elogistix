@@ -72,6 +72,8 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     usoCfdi,
     formaPago,
     metodoPago,
+    moneda: factura.moneda ?? "MXN",
+    tipoCambio: factura.tipo_cambio == null ? null : Number(factura.tipo_cambio),
   });
 
   const onConfirm = async () => {

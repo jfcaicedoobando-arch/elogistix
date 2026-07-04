@@ -29,7 +29,7 @@ export interface DatosTimbradoPatch {
   metodo_pago: string;
   dias_credito?: number;
   notas?: string | null;
-  tipo_cambio?: number;
+  tipo_cambio?: number | null;
   fecha_emision?: string;
 }
 

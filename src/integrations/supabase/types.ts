@@ -3959,7 +3959,7 @@ export type Database = {
           sustituye_a: string | null
           timbrado_en: string | null
           timbrado_por: string | null
-          tipo_cambio: number
+          tipo_cambio: number | null
           total: number
           updated_at: string
           uso_cfdi: string | null
@@ -4005,7 +4005,7 @@ export type Database = {
           sustituye_a?: string | null
           timbrado_en?: string | null
           timbrado_por?: string | null
-          tipo_cambio?: number
+          tipo_cambio?: number | null
           total?: number
           updated_at?: string
           uso_cfdi?: string | null
@@ -4051,7 +4051,7 @@ export type Database = {
           sustituye_a?: string | null
           timbrado_en?: string | null
           timbrado_por?: string | null
-          tipo_cambio?: number
+          tipo_cambio?: number | null
           total?: number
           updated_at?: string
           uso_cfdi?: string | null
@@ -6537,7 +6537,7 @@ export type Database = {
           sustituye_a: string | null
           timbrado_en: string | null
           timbrado_por: string | null
-          tipo_cambio: number
+          tipo_cambio: number | null
           total: number
           updated_at: string
           uso_cfdi: string | null

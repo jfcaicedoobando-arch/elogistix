@@ -21,7 +21,7 @@ export interface BanxicoTcResult {
  * Devuelve una mutación que consulta el TC DOF de Banxico y ejecuta `onTC`
  * con el valor. Auto-guarda a través del callback (no requiere botón manual).
  */
-export function useBanxicoTipoCambio(moneda: string, onTC: (tc: number) => void) {
+export function useBanxicoTipoCambio(moneda: string, onTC: (tc: number | null) => void) {
   return useMutation({
     mutationFn: async (): Promise<BanxicoTcResult> => {
       const rates = await fetchExchangeRates();

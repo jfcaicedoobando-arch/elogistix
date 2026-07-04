@@ -8,7 +8,7 @@ interface Props {
     fecha_emision: string | null;
     fecha_vencimiento: string | null;
     moneda: string;
-    tipo_cambio: number;
+    tipo_cambio: number | null;
     referencia_bl: string | null;
     notas: string | null;
     subtotal: number;
@@ -31,7 +31,10 @@ export default function PortalFacturaResumenCard({ factura }: Props) {
           <Field label="Fecha de emisión" value={factura.fecha_emision ? formatDate(factura.fecha_emision) : "—"} />
           <Field label="Fecha de vencimiento" value={factura.fecha_vencimiento ? formatDate(factura.fecha_vencimiento) : "—"} />
           {factura.moneda !== "MXN" && (
-            <Field label="Tipo de cambio" value={`$${factura.tipo_cambio.toFixed(4)}`} />
+            <Field
+              label="Tipo de cambio"
+              value={factura.tipo_cambio ? `$${factura.tipo_cambio.toFixed(4)}` : "—"}
+            />
           )}
           {factura.referencia_bl && (
             <Field label="Referencia BL" value={factura.referencia_bl} mono />

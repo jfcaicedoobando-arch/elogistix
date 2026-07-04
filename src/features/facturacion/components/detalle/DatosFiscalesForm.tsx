@@ -34,7 +34,7 @@ export interface DatosFiscalesFormProps {
   formaPago: string; setFormaPago: (v: string) => void;
   metodoPago: string; setMetodoPago: (v: string) => void;
   diasCredito: number; setDiasCredito: (v: number) => void;
-  tipoCambio: number; setTipoCambio: (v: number) => void;
+  tipoCambio: number | null; setTipoCambio: (v: number | null) => void;
   notas: string; setNotas: (v: string) => void;
   mostrarTipoCambio: boolean;
 }
@@ -57,8 +57,15 @@ export function DatosFiscalesForm(p: DatosFiscalesFormProps) {
           <div>
             <Label>Tipo de cambio</Label>
             <Input
-              type="number" step="0.0001" min={0} value={p.tipoCambio}
-              onChange={(e) => p.setTipoCambio(Number(e.target.value) || 1)}
+              type="number" step="0.0001" min={0}
+              value={p.tipoCambio ?? ""}
+              placeholder="Capturar TC del día"
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                if (raw === "") return p.setTipoCambio(null);
+                const n = Number(raw);
+                p.setTipoCambio(Number.isFinite(n) && n > 0 ? n : null);
+              }}
             />
           </div>
         )}
