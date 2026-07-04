@@ -8,6 +8,7 @@ import {
   type FiltrosBitacora,
 } from "@/features/auditoria/services/bitacora";
 import { logger } from "@/lib/observability/logger";
+import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
 
 export type { EntradaBitacora };
