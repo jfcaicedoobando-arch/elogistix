@@ -1,33 +1,30 @@
 ## Problema
 
-En `DialogTimbrarFactura.tsx`, los valores `usoCfdi`, `formaPago`, `metodoPago` se inicializan con `useState(factura?.uso_cfdi ?? ...)`. Como `useState` sólo lee su valor inicial **una vez**, cuando el modal se monta antes de que `useFactura` termine de cargar (o antes de que `fetchClienteFiscal` regrese), el estado queda con los fallbacks (`G03`, `03`, `PUE`) y nunca se actualiza cuando llegan los datos guardados en la tarjeta "Configuración de timbrado".
-
-Analogía: es como sacar copia al carbón antes de escribir el original — la copia sale en blanco aunque después llenes la hoja de arriba.
+Timbrado falla con `"items[0].product.taxes[0].rate" is required` porque `buildFacturapiPayload` omite el campo `rate` cuando el concepto es Exento. FacturApi valida `rate` como requerido en cada elemento del array `taxes`, incluso cuando `factor: "Exento"`.
 
 ## Fix
 
-En `src/features/facturacion/components/DialogTimbrarFactura.tsx`:
+**`supabase/functions/facturapi-emitir/helpers.ts`** — En la construcción del arreglo `taxes` dentro de `buildFacturapiPayload` (líneas 117-121 aprox), incluir siempre `rate` (0 para Exento y tasa_0, o `c.tasa_iva ?? 0.16` para gravado):
 
-1. Agregar un `useEffect` que, cuando `factura` (y `cliente`) cambien mientras el modal esté abierto, re-sincronice los tres estados locales con los valores persistidos:
+```ts
+const taxes = tipo === "exento"
+  ? [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }]
+  : [{ type: "IVA" as const, rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16), factor: "Tasa" as const }];
+```
 
-   ```ts
-   useEffect(() => {
-     if (!factura) return;
-     setUsoCfdi(factura.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
-     setFormaPago(factura.forma_pago ?? "03");
-     setMetodoPago(factura.metodo_pago ?? "PUE");
-   }, [factura?.id, factura?.uso_cfdi, factura?.forma_pago, factura?.metodo_pago, cliente?.uso_cfdi_default]);
-   ```
+Y ajustar el tipo `taxes` en `FacturapiPayload` (línea 65) para que `rate` sea requerido (`rate: number`), no opcional.
 
-2. También resetear `modoExpandido` a `false` cuando cambie la factura, para que el fast-path se re-evalúe con los datos frescos.
+## Test
+
+Actualizar/agregar caso en tests de `buildFacturapiPayload` (si existen) para asegurar que un concepto Exento genera `rate: 0` explícito. Si no existe test, agregar uno mínimo.
 
 ## Fuera de alcance
 
-- No se toca la tarjeta `FacturaDatosFiscalesCard` ni el auto-save (ya funciona).
-- No se cambia el edge function ni la base de datos.
-- No se agregan campos (`tipo_cambio`, `notas`, `dias_credito`) al modal — sólo se corrige la propagación de los tres campos que el modal ya muestra.
+- No se toca RLS, migraciones, ni el cliente React.
+- No se cambia el resto de la pipeline (validación de contexto, resolución de key, etc.).
 
 ## Versionado
 
-- `src/constants/appVersion.ts` → `13.170.19`
-- `CHANGELOG.md` → entrada `[13.170.19]` describiendo el fix.
+- `src/constants/appVersion.ts` → `13.170.20`
+- `CHANGELOG.md` → entrada `[13.170.20]` describiendo el fix con referencia a Sentry `FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1` (Elogistix / karol.hernandez, factura a87af985).
+- Marcar el issue en Sentry como `resolved` (`update_issue`) referenciando el fix.

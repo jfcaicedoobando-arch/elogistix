@@ -57,7 +57,7 @@ Deno.test("buildFacturapiPayload usa factor Exento cuando tipo_iva=exento", () =
   };
   const p = buildFacturapiPayload(ctx);
   assertEquals(p.items[0].product.taxes[0].factor, "Exento");
-  assertEquals(p.items[0].product.taxes[0].rate, undefined);
+  assertEquals(p.items[0].product.taxes[0].rate, 0);
 });
 
 Deno.test("buildFacturapiPayload usa Tasa rate 0 cuando tipo_iva=tasa_0", () => {
