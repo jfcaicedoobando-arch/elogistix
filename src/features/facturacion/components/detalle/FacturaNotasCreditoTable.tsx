@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
+import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import type { EstadoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
@@ -27,6 +28,7 @@ export interface NotaCreditoRow {
   moneda: string;
   pdf_url: string | null;
   xml_url: string | null;
+  ambiente: "sandbox" | "live" | null;
 }
 
 interface Props {
@@ -61,7 +63,12 @@ export function FacturaNotasCreditoTable(props: Props) {
             const puedeTimbrar = n.estado === "Borrador" && !!uuidFacturaOriginal;
             return (
               <tr key={n.id} className="border-b last:border-0 hover:bg-muted/30">
-                <td className="py-2 px-2 font-mono text-xs">{n.folio}</td>
+                <td className="py-2 px-2 font-mono text-xs">
+                  <span className="inline-flex items-center gap-1.5">
+                    {n.folio}
+                    <AmbienteBadge ambiente={n.ambiente} />
+                  </span>
+                </td>
                 <td className="py-2 px-2 text-xs">{formatDate(n.fecha_emision)}</td>
                 <td className="py-2 px-2 text-xs">{n.motivo}</td>
                 <td className="py-2 px-2">
