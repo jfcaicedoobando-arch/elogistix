@@ -62,7 +62,7 @@ export interface FacturapiPayload {
       unit_key: string;
       unit_name: string;
       tax_included: false;
-      taxes: Array<{ type: "IVA"; rate?: number; factor: "Tasa" | "Exento" }>;
+      taxes: Array<{ type: "IVA"; rate: number; factor: "Tasa" | "Exento" }>;
     };
   }>;
 }
