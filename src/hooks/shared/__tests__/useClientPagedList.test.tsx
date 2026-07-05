@@ -1,17 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { NuqsAdapter } from "nuqs/adapters/react";
-import { MemoryRouter } from "react-router-dom";
-import type { PropsWithChildren } from "react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 
-function wrapper({ children }: PropsWithChildren) {
-  return (
-    <MemoryRouter>
-      <NuqsAdapter>{children}</NuqsAdapter>
-    </MemoryRouter>
-  );
-}
+const wrapper = withNuqsTestingAdapter({ hasMemory: true });
 
 interface Row {
   id: string;
