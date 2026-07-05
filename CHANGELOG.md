@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.9] - 2026-07-05
+- **test(e2e/tablet)** — Nuevo spec `e2e/specs/16-alertdialog-critico-responsive.spec.ts` que valida el `AlertDialog` destructivo de eliminación de embarque en tableta (768×1024) y desktop xl+ (1440×900). Abre el detalle del primer embarque, dispara el diálogo desde el botón "Eliminar", y ejecuta dos ciclos de cierre: (a) botón "Cancelar"/"Entendido" y (b) tecla `Escape`. En cada ciclo verifica que el diálogo desaparece, que el foco vuelve al botón "Eliminar" que lo abrió (restauración de foco de Radix), y que no hay overflow en `<main>` ni `console.error`.
+
 ## [13.172.8] - 2026-07-05
 - **test(e2e/tablet)** — Nuevo spec `e2e/specs/15-embarques-responsive.spec.ts` que valida `/embarques` en tableta (768×1024) y desktop xl+ (1440×900): navega lista → abre primer embarque (heading `EL(IMP|EXP|GEN)…`) → regresa a la lista, verificando en cada paso `main.scrollWidth - clientWidth ≤ 1` y ausencia total de `console.error`. Corre bajo el project `chromium-internal` con el `storageState` del `globalSetup`, sin cambios en `playwright.config.ts` ni en el workflow de CI.
 
