@@ -46,14 +46,11 @@ describe("<ComprasPorAprobar />", () => {
     expect(calls.some((c) => c?.aprobacion === "pendiente")).toBe(true);
   });
 
-  it("cambia el filtro al hacer click en el tab de Aprobadas", async () => {
+  it("consulta también los contadores globales (aprobada + rechazada)", () => {
     renderPage();
-    vi.mocked(useFacturasCxP).mockClear();
-    fireEvent.click(screen.getByRole("tab", { name: /Aprobadas/ }));
-    await waitFor(() => {
-      const calls = vi.mocked(useFacturasCxP).mock.calls.map((c) => c[0]);
-      expect(calls.some((c) => c?.aprobacion === "aprobada")).toBe(true);
-    });
+    const calls = vi.mocked(useFacturasCxP).mock.calls.map((c) => c[0]);
+    expect(calls.some((c) => c?.aprobacion === "aprobada")).toBe(true);
+    expect(calls.some((c) => c?.aprobacion === "rechazada")).toBe(true);
   });
 
   it("muestra empty state cuando no hay filas", () => {
