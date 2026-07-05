@@ -18,7 +18,9 @@ const SEGMENT_LABELS: Record<string, string> = {
   proveedores: "Proveedores",
   facturacion: "Facturación",
   proformas: "Proformas",
+  cartera: "Cartera",
   operaciones: "Operaciones",
+
   reportes: "Reportes",
   rentabilidad: "Rentabilidad",
   bitacora: "Bitácora",

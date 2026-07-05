@@ -94,14 +94,15 @@ export default function Cartera() {
             <TableHeader>
               <TableRow>
                 <TableHead>Folio</TableHead>
-                <TableHead>Cliente</TableHead>
+                <TableHead className="min-w-[160px] max-w-[220px]">Cliente</TableHead>
                 <TableHead>Embarque</TableHead>
                 <TableHead>Vencimiento</TableHead>
-                <TableHead className="text-center">Días vencido</TableHead>
+                <TableHead className="text-center whitespace-nowrap">Días vencido</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead>Último contacto</TableHead>
               </TableRow>
+
             </TableHeader>
             <TableBody>
               {isLoading && (
@@ -120,7 +121,12 @@ export default function Cartera() {
                       {row.numero ?? "—"}
                     </Link>
                   </TableCell>
-                  <TableCell>{row.cliente_nombre ?? "—"}</TableCell>
+                  <TableCell className="max-w-[220px]">
+                    <span className="line-clamp-2 leading-tight" title={row.cliente_nombre ?? undefined}>
+                      {row.cliente_nombre ?? "—"}
+                    </span>
+                  </TableCell>
+
                   <TableCell>
                     {row.embarque_id ? (
                       <Link to={`/embarques/${row.embarque_id}`} className="text-primary hover:underline">

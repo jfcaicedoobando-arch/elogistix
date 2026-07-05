@@ -89,8 +89,8 @@ export default function ProformasFiltros(props: Props) {
   return (
     <div className="space-y-0">
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        {/* Mobile: search + Filtros (todos) */}
-        <div className="flex gap-2 md:hidden">
+        {/* Mobile + tableta (<lg): search + Filtros (todos) — evita que los selects se aplasten en 768px */}
+        <div className="flex gap-2 lg:hidden">
           <SearchInput
             value={props.search}
             onChange={props.onSearchChange}
@@ -100,8 +100,8 @@ export default function ProformasFiltros(props: Props) {
           <FilterButton count={totalActive} />
         </div>
 
-        {/* Desktop: search + Estado + Cliente + Filtros (secundarios) */}
-        <div className="hidden md:flex md:items-center md:gap-2">
+        {/* Desktop (lg+): search + Estado + Cliente + Filtros (secundarios) */}
+        <div className="hidden lg:flex lg:items-center lg:gap-2">
           <ProformasFiltrosCampos {...props} layout="inline" />
           <FilterButton count={secondaryActive} />
         </div>
@@ -111,13 +111,14 @@ export default function ProformasFiltros(props: Props) {
             <SheetTitle>Filtros de proformas</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <ProformasFiltrosCampos {...props} layout="stacked-all" />
             </div>
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <ProformasFiltrosCampos {...props} layout="stacked-secondary" />
             </div>
           </div>
+
           <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between">
             <Button
               variant="ghost"
