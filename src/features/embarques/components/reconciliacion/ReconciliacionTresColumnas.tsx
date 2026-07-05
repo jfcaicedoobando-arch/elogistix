@@ -159,7 +159,6 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
           columns={columns}
           data={filas}
           rowKey={(f) => `${f.concepto}-${f.moneda}`}
-          skeletonRows={5}
           emptyMessage="No hay filas con varianza."
         />
 

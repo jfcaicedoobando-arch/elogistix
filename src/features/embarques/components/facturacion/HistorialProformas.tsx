@@ -1,6 +1,6 @@
 import { ChevronRight, MoreHorizontal, Receipt, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,7 +153,8 @@ export function HistorialProformas({
           density="compact"
           onRowClick={(p) => navigate(`/proformas/${p.id}`)}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
-          emptyState={<EmptyStateInline icon={Receipt} message="No hay proformas generadas para este embarque." />}
+          emptyIcon={Receipt}
+          emptyMessage="No hay proformas generadas para este embarque."
         />
       </CardContent>
     </Card>

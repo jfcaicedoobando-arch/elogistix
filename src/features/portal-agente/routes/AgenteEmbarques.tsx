@@ -91,7 +91,6 @@ export default function AgenteEmbarques() {
           data={embarques}
           rowKey={(e) => e.id}
           isLoading={isLoading}
-          skeletonRows={5}
           emptyMessage="Aún no hay embarques asignados a tu agente."
         />
       </Card>

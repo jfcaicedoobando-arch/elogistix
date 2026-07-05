@@ -121,7 +121,6 @@ export default function AgenteGarantias() {
           data={filas}
           rowKey={(f) => f.naviera_id}
           isLoading={loadingNav || loadingCond}
-          skeletonRows={5}
           onRowClick={(f) => setSeleccion(f)}
           rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
           emptyMessage="Sin navieras configuradas."

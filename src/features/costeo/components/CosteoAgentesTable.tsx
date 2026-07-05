@@ -132,7 +132,6 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         data={agentes}
         rowKey={(a) => a.id}
         isLoading={isLoading}
-        skeletonRows={5}
         emptyMessage="Sin agentes registrados."
       />
     </Card>

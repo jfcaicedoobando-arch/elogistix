@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.20] - 2026-07-05
+- **ui(tablas)** — Se homologan los estados vacío/carga/skeleton de todas las tablas migradas a `DataTable`:
+  - El empty state built-in ahora renderiza `EmptyStateInline` internamente → misma tipografía, spacing (`py-10`) e icono (`Inbox` por defecto) que cards y paneles.
+  - `emptyIcon` acepta ahora un `LucideIcon` directamente (`emptyIcon={Receipt}`) además de `ReactNode` custom; el ergonomic path evita boilerplate.
+  - `HistorialProformas`, `HistorialFacturas` y `PortalEmbarqueDocumentos` migran de `emptyState={<EmptyStateInline .../>}` a los props built-in.
+  - Se limpian 7 `skeletonRows={5}` redundantes (default ya era 5) en AgenteTarifas/Garantías/Embarques, CosteoTarifas/Rutas/Agentes y ReconciliacionTresColumnas.
+- Resultado: skeleton (mismo `Skeleton` height/width por columna), empty (mismo `EmptyStateInline` tipográfico) y loading spinner (mismo `Loader2`) son idénticos en toda la app.
+
 ## [13.172.19] - 2026-07-05
 - **guardrail(tablas)** — Regla ESLint dedicada `no-raw-table` que bloquea importar `@/components/ui/table` fuera de una allowlist explícita (form-tables editables, sub-tablas read-only estáticas, catálogos con toggles). Se movió a su propio bloque para no ser anulada por el override que apaga `no-restricted-imports` en `src/features/**`.
 - **test(architecture)** — Nuevo `src/__tests__/architecture/no-raw-table.test.ts` como red de respaldo: enumera archivos con la primitiva y falla si difieren de la allowlist. Detecta además entradas obsoletas.

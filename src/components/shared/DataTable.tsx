@@ -1,5 +1,6 @@
 import React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { LucideIcon } from "lucide-react";
 import { Table, TableFooter } from "@/components/ui/table";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
@@ -26,7 +27,8 @@ interface DataTableProps<T> {
   isLoading?: boolean;
   emptyMessage?: string;
   emptyHint?: string;
-  emptyIcon?: React.ReactNode;
+  /** LucideIcon (recomendado) o ReactNode custom para el empty state built-in. */
+  emptyIcon?: React.ReactNode | LucideIcon;
   emptyState?: React.ReactNode;
   skeletonRows?: number;
   onRowClick?: (item: T) => void;

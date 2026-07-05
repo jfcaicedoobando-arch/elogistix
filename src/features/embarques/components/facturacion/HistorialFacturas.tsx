@@ -1,6 +1,6 @@
 import { ChevronRight, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -93,7 +93,8 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
           density="compact"
           onRowClick={(f) => navigate(`/facturacion/${f.id}`)}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
-          emptyState={<EmptyStateInline icon={Receipt} message="No hay facturas generadas para este embarque." />}
+          emptyIcon={Receipt}
+          emptyMessage="No hay facturas generadas para este embarque."
         />
       </CardContent>
     </Card>

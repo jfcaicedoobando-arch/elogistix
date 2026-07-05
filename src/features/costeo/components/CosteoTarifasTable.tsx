@@ -219,7 +219,6 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
         data={tarifas}
         rowKey={(t) => t.id}
         isLoading={isLoading}
-        skeletonRows={5}
         emptyMessage="Sin tarifas."
       />
 

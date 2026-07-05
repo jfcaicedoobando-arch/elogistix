@@ -5,10 +5,11 @@
  * `useMemo`/`useEffect` ni `.sort()` manual.
  */
 import type React from "react";
-import { Inbox } from "lucide-react";
+import { Inbox, type LucideIcon } from "lucide-react";
 import { flexRender, type Table } from "@tanstack/react-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { cn } from "@/lib/utils";
 import { ALIGN_CLASS, DENSITY_CELL, type ColumnAlign, type TableDensity } from "./types";
 import "./columnMeta";
@@ -23,11 +24,19 @@ interface Props<T> {
   bordered: boolean;
   emptyMessage: string;
   emptyHint?: string;
-  emptyIcon?: React.ReactNode;
+  /** Icono para el empty state: LucideIcon (recomendado) o ReactNode custom. */
+  emptyIcon?: React.ReactNode | LucideIcon;
+  /** Slot completo para empty state grande con CTA (`<EmptyState>` + wrapper).
+   *  Cuando se pasa, sobrescribe `emptyIcon`/`emptyMessage`/`emptyHint`. */
   emptyState?: React.ReactNode;
   rowClassName?: (item: T) => string;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
+}
+
+/** Discrimina entre un LucideIcon (función componente) y un ReactNode ya renderizado. */
+function isLucideIcon(x: unknown): x is LucideIcon {
+  return typeof x === "function";
 }
 
 export function DataTableBody<T>({
@@ -48,7 +57,6 @@ export function DataTableBody<T>({
 }: Props<T>) {
   const cellPad = DENSITY_CELL[density];
   const borderCell = bordered ? "border-r last:border-r-0" : "";
-  const icon = emptyIcon ?? <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />;
   const leafColumns = table.getAllLeafColumns();
 
   if (isLoading) {
@@ -75,18 +83,31 @@ export function DataTableBody<T>({
 
   const rows = table.getRowModel().rows;
   if (rows.length === 0) {
+    // Empty state homologado: `emptyState` slot sólo se usa cuando el caller
+    // quiere un `<EmptyState>` grande con CTA (páginas de bandeja, tabs de
+    // embarque). El default renderiza `EmptyStateInline` — misma fuente
+    // visual que cards/paneles → toda la app se ve idéntica.
+    const iconComponent = isLucideIcon(emptyIcon) ? emptyIcon : undefined;
+    const iconNode = !isLucideIcon(emptyIcon) ? emptyIcon : undefined;
     return (
       <TableBody>
         <TableRow className="hover:bg-transparent even:bg-transparent">
-          <TableCell colSpan={leafColumns.length}>
+          <TableCell colSpan={leafColumns.length} className="p-0">
             {emptyState ?? (
-              <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
-                {icon}
-                <p className="text-sm font-medium">{emptyMessage}</p>
-                {emptyHint && (
-                  <p className="text-xs opacity-75 max-w-md text-center">{emptyHint}</p>
-                )}
-              </div>
+              iconNode ? (
+                <div className="flex flex-col items-center justify-center gap-2 text-center py-10 px-4 text-muted-foreground">
+                  {iconNode}
+                  <p className="text-sm">{emptyMessage}</p>
+                  {emptyHint && <p className="text-xs opacity-75 max-w-xs">{emptyHint}</p>}
+                </div>
+              ) : (
+                <EmptyStateInline
+                  icon={iconComponent ?? Inbox}
+                  message={emptyMessage}
+                  hint={emptyHint}
+                  className="py-10"
+                />
+              )
             )}
           </TableCell>
         </TableRow>
