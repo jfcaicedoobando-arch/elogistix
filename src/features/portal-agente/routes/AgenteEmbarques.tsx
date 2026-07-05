@@ -67,13 +67,10 @@ export default function AgenteEmbarques() {
         meta: { className: "text-xs" },
         cell: ({ row }) => row.original.eta ?? "—",
       },
-      {
-        id: "estado",
-        header: "Estado",
-        accessorFn: (e) => e.estado,
-        enableSorting: true,
-        cell: ({ row }) => <Badge variant="outline">{row.original.estado}</Badge>,
-      },
+      statusColumn<EmbarqueAgente>({
+        domain: "embarque",
+        accessor: (e) => e.estado,
+      }),
     ]),
     [],
   );
