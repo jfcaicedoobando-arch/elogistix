@@ -1,12 +1,20 @@
 /**
  * CxP Por Pagar — facturas de proveedor vigentes con saldo.
- * v13.172.16: migrado a DataTable + columnBuilders para unificar con el resto de la app.
+ *
+ * v13.173.0 (Ola 1 · Filtros globales) — migrada a `useClientPagedList` +
+ * `<UnifiedFiltersBar />` con search, filtro de moneda, filtro de vencidas,
+ * rango de fecha de vencimiento, orden y paginación sincronizados con la URL.
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
@@ -15,15 +23,53 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
-import { sortByNumber, sortByString } from "@/components/shared/dataTable/sortingFns";
-import EmptyState from "@/components/empty/EmptyState";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 
 type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];
+
+interface Filters extends Record<string, string> {
+  moneda: string;
+  vencidas: string;
+}
+const DEFAULTS: Filters = { moneda: "todas", vencidas: "todas" };
 
 export default function CxpPorPagar() {
   const navigate = useNavigate();
   const { data = [], isLoading } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
+
+  const monedas = useMemo(
+    () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
+    [data],
+  );
+
+  const paged = useClientPagedList<CxpRow, Filters>({
+    data,
+    isLoading,
+    defaultFilters: DEFAULTS,
+    filterLabels: { moneda: "Moneda", vencidas: "Vencidas" },
+    defaultSort: { key: "dias", dir: "asc" },
+    searchAccessor: (r) =>
+      `${r.proveedor_nombre ?? ""} ${r.folio_proveedor ?? ""} ${r.expediente ?? ""}`,
+    filterPredicate: (r, ff) => {
+      if (ff.moneda !== "todas" && r.moneda !== ff.moneda) return false;
+      const dias = r.dias_para_vencer ?? 0;
+      if (ff.vencidas === "si" && dias >= 0) return false;
+      if (ff.vencidas === "no" && dias < 0) return false;
+      return true;
+    },
+    dateAccessor: (r) => r.fecha_vencimiento,
+    sorters: {
+      proveedor: (a, b) => (a.proveedor_nombre ?? "").localeCompare(b.proveedor_nombre ?? ""),
+      folio: (a, b) => (a.folio_proveedor ?? "").localeCompare(b.folio_proveedor ?? ""),
+      vencimiento: (a, b) => (a.fecha_vencimiento ?? "").localeCompare(b.fecha_vencimiento ?? ""),
+      dias: (a, b) => (a.dias_para_vencer ?? 0) - (b.dias_para_vencer ?? 0),
+      total: (a, b) => Number(a.total) - Number(b.total),
+      pagado: (a, b) => Number(a.pagado) - Number(b.pagado),
+      saldo: (a, b) => Number(a.saldo) - Number(b.saldo),
+    },
+  });
 
   const columns: ColumnDef<CxpRow, unknown>[] = useMemo(
     () =>
@@ -33,7 +79,6 @@ export default function CxpPorPagar() {
           header: "Proveedor",
           accessorFn: (r) => r.proveedor_nombre ?? "",
           enableSorting: true,
-          sortingFn: sortByString<CxpRow>((r) => r.proveedor_nombre ?? ""),
           meta: { width: "min-w-[180px]", className: "font-medium max-w-[240px] truncate", sticky: true },
           cell: ({ row }) => row.original.proveedor_nombre ?? "—",
         },
@@ -42,13 +87,13 @@ export default function CxpPorPagar() {
           header: "Folio",
           accessorFn: (r) => r.folio_proveedor ?? "",
           enableSorting: true,
-          sortingFn: sortByString<CxpRow>((r) => r.folio_proveedor ?? ""),
           meta: { width: "w-[130px]", className: "font-mono text-xs whitespace-nowrap" },
           cell: ({ row }) => row.original.folio_proveedor ?? "—",
         },
         {
           id: "embarque",
           header: "Embarque",
+          enableSorting: false,
           meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
           cell: ({ row }) =>
             row.original.embarque_id ? (
@@ -77,7 +122,6 @@ export default function CxpPorPagar() {
           header: "Días",
           accessorFn: (r) => r.dias_para_vencer ?? 0,
           enableSorting: true,
-          sortingFn: sortByNumber<CxpRow>((r) => r.dias_para_vencer ?? 0),
           meta: { width: "w-[90px]", align: "center" },
           cell: ({ row }) => {
             const dias = row.original.dias_para_vencer ?? 0;
@@ -156,23 +200,67 @@ export default function CxpPorPagar() {
         </Card>
       </div>
 
+      <UnifiedFiltersBar
+        search={paged.search}
+        onSearchChange={paged.setSearch}
+        searchPlaceholder="Buscar proveedor, folio o expediente…"
+        primary={
+          <>
+            <Select value={paged.filters.vencidas} onValueChange={(v) => paged.setFilter("vencidas", v)}>
+              <SelectTrigger className="w-[160px]" aria-label="Vencidas">
+                <SelectValue placeholder="Vencidas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                <SelectItem value="si">Solo vencidas</SelectItem>
+                <SelectItem value="no">Vigentes</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={paged.filters.moneda} onValueChange={(v) => paged.setFilter("moneda", v)}>
+              <SelectTrigger className="w-[140px]" aria-label="Moneda">
+                <SelectValue placeholder="Moneda" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas monedas</SelectItem>
+                {monedas.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
+        secondary={
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cxp-from">Vencimiento desde</Label>
+              <Input id="cxp-from" type="date" value={paged.dateFrom} onChange={(e) => paged.setDateFrom(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cxp-to">Vencimiento hasta</Label>
+              <Input id="cxp-to" type="date" value={paged.dateTo} onChange={(e) => paged.setDateTo(e.target.value)} />
+            </div>
+          </div>
+        }
+        chips={paged.activeChips}
+        activeCount={paged.activeCount}
+        onClearAll={paged.resetAll}
+      />
+
       <Card>
         <CardContent className="p-0">
           <DataTable<CxpRow>
             columns={columns}
-            data={data}
+            data={paged.rows}
             rowKey={(r) => r.factura_id}
-            isLoading={isLoading}
+            isLoading={paged.isLoading}
+            sortMode="server"
+            controlledSort={paged.controlledSort}
+            onSortChange={paged.setSort}
+            pagination={paged.pagination}
             onRowClick={(r) => navigate(`/cxp?factura=${r.factura_id}`)}
-            emptyState={
-              <div className="p-6">
-                <EmptyState
-                  icon={Inbox}
-                  title="Sin facturas pendientes de pago"
-                  description="Cuando ingreses una factura de proveedor, aparecerá aquí."
-                />
-              </div>
-            }
+            emptyIcon={Inbox}
+            emptyMessage="Sin facturas pendientes de pago"
+            emptyHint="Cuando ingreses una factura de proveedor, aparecerá aquí."
           />
         </CardContent>
       </Card>
