@@ -1,90 +1,129 @@
-# Plan — Auditoría de completitud ERP de Libre Carga
+# Quick wins — TMS/ERP vertical forwarder
 
-## Objetivo
+Enfoque: cerrar brechas visibles frente a CargoWise/Magaya **sin tocar contabilidad general**, aprovechando lo que ya existe (embarques, tracking, costeo tarifa-first, portal cliente, CFDI, auditoría IA).
 
-Responder de forma fundamentada: **¿Es Libre Carga un ERP terminado? ¿Cómo se compara con Odoo/SAP y con CargoWise/Magaya/Descartes?**
+## Criterio de "quick win"
+- Se apalanca en tablas/servicios existentes (embarques, conceptos_costo, proveedor_facturas, tracking_externo).
+- Entregable en ≤ 1-2 sprints cada uno.
+- Mueve la aguja comercial: aparece en demo o en RFP de forwarder.
 
-Entregables:
+---
 
-1. **Resumen ejecutivo en chat** (~1 pantalla): madurez global, veredicto y 5 gaps críticos.
-2. **Documento markdown persistente**: `.lovable/audit-erp-completeness.md` con matrices detalladas, evidencia por módulo (rutas/tablas/hooks) y roadmap sugerido.
+## Ranking propuesto (top 6)
 
-## Método
+### 1. HBL / MBL como entidad de primera clase  ⭐ mayor impacto/esfuerzo
+Hoy `embarques.bl_master` y `bl_house` son strings sueltos.
+- Nueva tabla `bl_documentos` (tipo `HBL|MBL`, numeración por serie tenant, shipper/consignee/notify, marks & numbers, freight terms, cláusulas).
+- Generador PDF (`src/pdf/documents/BLDocument.tsx`) siguiendo patrón de `ProformaDocument`.
+- Serie de folios por org (reutilizar patrón `folio_secuencias` / `factura_series`).
+- Vincular 1 MBL ↔ N HBL ↔ N contenedores (ya existe `embarque_contenedores`).
+- Impresión, envío por email (reutilizar `factura_envios` / `useEnvioDocumentoForm`).
 
-1. **Inventario interno** (ya en curso vía subagente `explore`): recorrer `src/features/*`, `src/routes/*`, `sidebarItems.ts`, `supabase/migrations/*` y clasificar cada módulo como:
-  - `NONE` — no existe
-  - `PARTIAL` — MVP o parcial
-  - `SOLID` — funcional y en uso productivo
-  - `COMPLETE` — cubre casos avanzados y edge cases
-2. **Benchmark generalista**: comparar contra el catálogo estándar Odoo/SAP (Finance, Sales, Purchase, Inventory, MRP, HR, Payroll, Projects, eCommerce, PoS, BI, Website).
-3. **Benchmark vertical**: comparar contra features nucleares de CargoWise/Magaya/Descartes (rate management, quoting, shipment ops, docs BL/HBL/MBL, tracking milestones, customs, EDI, accounting integrado, agent network, container tracking, demurrage).
-4. **Veredicto** por eje: `ERP vertical de forwarder` vs `ERP generalista`.
+### 2. Manifiesto de carga consolidada (LCL / co-loading)
+Ya hay lógica LCL (`shipment-lcl-logic`), falta el **manifiesto**.
+- Vista "consolidado": agrupa N HBL bajo 1 MBL con totales de peso/volumen/piezas.
+- PDF manifiesto + export CSV para agente destino.
+- Nuevo tab en detalle de embarque MBL "Consolidación".
 
-## Estructura del documento `.lovable/audit-erp-completeness.md`
+### 3. Portal de agente/corresponsal (nomination + status)
+Ya existe `agente_users` + `SIDEBAR_COSTEO_ITEMS` con Agentes.
+- Bandeja de "shipments nominados a mí" (RLS por `agente_users`).
+- Update de eventos operativos (ATD, ATA, descarga, entrega) desde el portal → escribe en `eventos_embarque`.
+- Upload de POD / documentos destino → reutiliza `documentos_embarque` + storage.
+- Cierra el loop internacional sin comprar CargoWise eHub.
+
+### 4. Tracking en vivo con 2 navieras reales (MSC + Maersk)
+Ya existe `tracking_externo` + `tracking_intentos` + `tracking_webhook_log`.
+- Edge function `sync-tracking-msc` y `sync-tracking-maersk` (API pública/gratuita o scraping estable).
+- Cron cada 6h vía `pg_cron` sobre embarques activos.
+- Badge "Tracking en vivo" en tarjeta de embarque cuando `tracking_externo.updated_at < 24h`.
+- Vale más como diferencial que 10 navieras a medias.
+
+### 5. Purchase Order + match 2-way contra factura de proveedor
+Ya hay `proveedor_facturas` + `conceptos_costo` (presupuesto) + `proveedor_facturas_conceptos` (vínculo).
+Falta el paso previo:
+- Tabla `ordenes_compra` (proveedor, embarque, conceptos esperados, moneda, folio interno).
+- Generar OC desde tarifa aplicada o desde conceptos de costo pre-embarque.
+- Al capturar factura de proveedor: match automático OC ↔ factura con tolerancia % (ya tienes `siguiente_folio_proveedor`, extender patrón).
+- Cierra el hueco de "control de gasto antes de que llegue la factura" que hoy no existe.
+
+### 6. Reporte builder mínimo + export xlsx firmado
+Ya usas `xlsxwriter` en tests y hay múltiples PDF documents.
+- Página `/reportes/personalizados` con selector de módulo (embarques / facturas / cxp / cartera) + columnas + filtros guardables por usuario.
+- Export xlsx con `bitacora_actividad` de quién lo generó.
+- Evita depender del equipo para cada consulta ad-hoc.
+
+---
+
+## Fuera de este lote (razones)
+- **Aduana / pedimentos** → no es quick win, requiere integración VUCEM y expertise fiscal aduanero. Va a 6 meses.
+- **GL / partida doble** → decisión estratégica: enfoque vertical NO lo necesita si el cliente conserva su contador con Contpaqi/Aspel. Mantener margin-accounting y exportar pólizas a Contpaqi (mini-win futuro).
+- **API REST pública + webhooks** → sí es quick win técnico, pero sin cliente que lo pida hoy. Priorizar cuando el #1 forwarder lo pida.
+- **EDI INTTRA / booking a naviera** → alto valor pero requiere contratos comerciales con carriers, no es solo código.
+
+---
+
+## Detalles técnicos por quick win
+
+### #1 HBL/MBL — Esqueleto
+```text
+bl_documentos
+  id (uuid pk)
+  organization_id (uuid, RLS)
+  embarque_id (uuid fk)
+  tipo ('HBL'|'MBL')
+  numero (unique per org+tipo, folio_secuencias)
+  serie_id (fk factura_series-like)
+  shipper_snapshot jsonb
+  consignee_snapshot jsonb
+  notify_snapshot jsonb
+  marks_numbers text
+  freight_terms ('PREPAID'|'COLLECT')
+  clausulas text
+  emitido_en timestamptz
+  emitido_por uuid
+```
+- GRANT SELECT/INSERT/UPDATE a authenticated + RLS por `organization_id`.
+- Trigger que copia shipper/consignee del embarque al emitir (snapshot inmutable).
+
+### #4 Tracking naviera
+- Secret `MAERSK_API_KEY` y `MSC_API_KEY` vía `secrets--add_secret`.
+- Edge function con `wrapEdgeHandler` (ver `mem://technical/process-email-queue-regeneration`).
+- Guardar cada intento en `tracking_intentos`; si cambia `estado`, escribir evento en `eventos_embarque`.
+- UI: reutilizar `useSidebarAlerts` + card en detalle embarque.
+
+### #5 Ordenes de compra
+```text
+ordenes_compra
+  id, organization_id, embarque_id (nullable, puede ser gasto operativo)
+  proveedor_id, folio_interno (OC-XXXXXX por org)
+  moneda, subtotal, iva, total
+  estado ('Borrador'|'Emitida'|'Recibida'|'Facturada'|'Cerrada')
+  fecha_emision, fecha_esperada
+ordenes_compra_conceptos
+  oc_id, concepto, cantidad, precio_unitario, subtotal
+```
+- Función `match_oc_factura(_oc_id, _factura_id)` con tolerancia default 2%.
+- UI en `/cxp/por-capturar`: si el proveedor tiene OC abiertas, sugerirlas antes que embarques.
+
+---
+
+## Secuencia sugerida (para 1 dev fullstack ~8 semanas)
 
 ```text
-1. TL;DR (3-5 líneas + veredicto)
-2. Matriz Generalista (Libre Carga vs Odoo vs SAP)
-   ├─ Finance & Accounting
-   ├─ Sales / CRM
-   ├─ Purchasing
-   ├─ Inventory / WMS
-   ├─ Manufacturing / MRP
-   ├─ HR / Payroll
-   ├─ Projects / Timesheets
-   ├─ eCommerce / PoS / Website
-   ├─ BI / Reporting
-   └─ Admin / multi-tenant / i18n
-3. Matriz Vertical Forwarder (Libre Carga vs CargoWise vs Magaya vs Descartes)
-   ├─ Cotización & tarifario
-   ├─ Shipment ops (FCL/LCL/aéreo/terrestre)
-   ├─ Tracking & milestones
-   ├─ Documentación (BL/HBL/MBL, docs onboarding)
-   ├─ Contenedores, demoras, garantías
-   ├─ Customs / aduana
-   ├─ CxC / CxP / Tesorería
-   ├─ CFDI 4.0 / facturación fiscal MX
-   ├─ Portal cliente / agente
-   ├─ Auditoría operativa
-   ├─ EDI / integraciones carrier
-   └─ Comisiones vendedores
-4. Fortalezas diferenciales
-5. Gaps críticos por prioridad (P0/P1/P2)
-6. Veredicto final y posicionamiento de mercado
-7. Roadmap sugerido a 3/6/12 meses
+Semana 1-2 : HBL/MBL entidad + PDF (#1)
+Semana 3   : Portal agente básico + eventos (#3 fase 1)
+Semana 4-5 : Tracking MSC + Maersk vivo (#4)
+Semana 6   : Manifiesto consolidado LCL (#2)
+Semana 7-8 : Órdenes de compra + match (#5)
+Backlog    : Reporte builder (#6) según demanda comercial
 ```
 
-## Hipótesis de trabajo (a validar con el inventario)
+## Salidas esperadas
+- Guion de demo forwarder que muestre: emisión HBL → nominación agente destino → tracking en vivo → OC → factura proveedor conciliada → cierre con margen.
+- Actualizar `.lovable/audit-erp-completeness.md` sección "Roadmap 3 meses" con esta lista y checkboxes.
+- `CHANGELOG.md` + bump `APP_VERSION` por cada quick win entregado.
 
-Basado en `mem://index.md`, `README.md` y auditorías previas:
-
-- **Fuerte y diferenciado**: Embarques (7 estados, tracking automático, contenedores), Cotizaciones (tarifa-first, versionado, PDF), CFDI 4.0 / Proformas, Auditoría operativa con IA, Portal cliente, Multi-tenant + roles, Costeo tarifas marítimas con ranking Top 3, Garantías/demoras automáticas.
-- **Sólido pero acotado**: CxC/CxP, Tesorería, Reportes, Dashboard ejecutivo, CRM leads/oportunidades, Comisiones.
-- **Parcial**: Inventario/almacén (no aplica al giro), Contabilidad general (facturación sí, GL no confirmado), Aduana/customs.
-- **Ausente esperado**: MRP, HR/Nómina, PoS, eCommerce, Website builder, Timesheets, Bank reconciliation formal, EDI carriers.
-
-## Veredicto anticipado (a confirmar)
-
-- **Vs Odoo/SAP (generalista)**: Libre Carga **no es** un ERP generalista terminado — le faltan >60% de módulos (MRP, HR, Inventory, PoS, eCommerce). No compite en ese terreno ni pretende hacerlo.
-- **Vs CargoWise/Magaya/Descartes (vertical)**: Libre Carga es un **TMS/forwarder ERP en fase Beta madura** — cubre el flujo core (cotizar → embarcar → facturar → cobrar) mejor localizado a México (CFDI, IVA dinámico, es-MX) que los competidores globales, pero con gaps en EDI, aduana profunda y red de agentes internacional.
-- **Posicionamiento**: nicho México — ERP vertical de forwarder de pequeño/mediano, no un reemplazo de SAP.
-
-## Alcance / Fuera de alcance
-
-- **Incluye**: análisis de código existente, memoria del proyecto, comparación conceptual con competidores usando conocimiento público.
-- **Excluye**: no ejecuto features en el navegador, no cambio código, no hago benchmarks de performance ni pricing detallado.
-
-## Pasos al implementar
-
-1. Esperar resultado del subagente de inventario ya en curso.
-2. Completar tablas con evidencia (`src/features/xxx/`, tablas Supabase, rutas).
-3. Escribir `.lovable/audit-erp-completeness.md` (~600-900 líneas).
-4. Publicar resumen ejecutivo en chat con veredicto + top 5 gaps.
-
-## Detalles técnicos
-
-- El documento vive en `.lovable/` (no productivo, no rompe tests ni bundle).
-- No requiere cambio de `APP_VERSION` ni entrada en `CHANGELOG.md` (es documento de análisis, no código).
-- No requiere migraciones ni cambios de UI.
-
-Tambine  dame el reporte en archivo doc o PDF. 
+## Fuera del alcance de este plan
+- No implemento código en este turno (estamos en plan mode).
+- Cada quick win se abrirá con su propio plan de implementación cuando lo aprueben.
