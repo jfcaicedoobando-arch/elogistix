@@ -128,15 +128,12 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         meta: { className: "text-sm text-muted-foreground" },
         cell: ({ row }) => formatFecha(row.original.ruta.ultima_actualizacion_tarifa),
       },
-      {
+      statusColumn<FilaRuta>({
         id: "estado",
         header: "Estado",
-        accessorFn: (f) => f.meta.label,
-        enableSorting: true,
-        cell: ({ row }) => (
-          <Badge variant={TONE_VARIANT[row.original.meta.tone]}>{row.original.meta.label}</Badge>
-        ),
-      },
+        domain: "ruta_maritima",
+        accessor: (f) => f.meta.label,
+      }),
       {
         id: "acciones",
         header: "Acciones",
