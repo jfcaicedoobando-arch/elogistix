@@ -51,6 +51,6 @@ export const cotizacionColumns: ColumnDef<CotizacionCliente, unknown>[] = define
   { id: "modo", header: "Modo", meta: { width: "w-[80px]", className: "text-xs" }, cell: ({ row }) => row.original.modo },
   { id: "ruta", header: "Origen → Destino", meta: { width: "min-w-[160px]", className: "text-xs" }, cell: ({ row }) => `${row.original.origen || "-"} → ${row.original.destino || "-"}` },
   { id: "subtotal", header: "Subtotal", meta: { width: "w-[110px]", align: "right", className: "text-xs tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.subtotal, row.original.moneda) },
-  { id: "estado", header: "Estado", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estado)}`}>{row.original.estado}</Badge> },
+  { ...statusColumn<CotizacionCliente>({ id: "estado", header: "Estado", domain: "cotizacion", accessor: (c) => c.estado }), meta: { width: "w-[100px]" } },
   { id: "fecha", header: "Fecha", meta: { width: "w-[100px]", className: "text-xs" }, cell: ({ row }) => formatDate(row.original.created_at) },
 ]);
