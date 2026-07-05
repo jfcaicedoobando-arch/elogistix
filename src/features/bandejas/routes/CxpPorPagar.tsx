@@ -1,19 +1,124 @@
+/**
+ * CxP Por Pagar — facturas de proveedor vigentes con saldo.
+ * v13.172.16: migrado a DataTable + columnBuilders para unificar con el resto de la app.
+ */
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
+import { Inbox } from "lucide-react";
 import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
-import { Inbox } from "lucide-react";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
+import { sortByNumber, sortByString } from "@/components/shared/dataTable/sortingFns";
+import EmptyState from "@/components/empty/EmptyState";
+
+type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];
 
 export default function CxpPorPagar() {
   const navigate = useNavigate();
   const { data = [], isLoading } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
+
+  const columns: ColumnDef<CxpRow, unknown>[] = useMemo(
+    () =>
+      defineColumns<CxpRow>([
+        {
+          id: "proveedor",
+          header: "Proveedor",
+          accessorFn: (r) => r.proveedor_nombre ?? "",
+          enableSorting: true,
+          sortingFn: sortByString<CxpRow>((r) => r.proveedor_nombre ?? ""),
+          meta: { width: "min-w-[180px]", className: "font-medium max-w-[240px] truncate", sticky: true },
+          cell: ({ row }) => row.original.proveedor_nombre ?? "—",
+        },
+        {
+          id: "folio",
+          header: "Folio",
+          accessorFn: (r) => r.folio_proveedor ?? "",
+          enableSorting: true,
+          sortingFn: sortByString<CxpRow>((r) => r.folio_proveedor ?? ""),
+          meta: { width: "w-[130px]", className: "font-mono text-xs whitespace-nowrap" },
+          cell: ({ row }) => row.original.folio_proveedor ?? "—",
+        },
+        {
+          id: "embarque",
+          header: "Embarque",
+          meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+          cell: ({ row }) =>
+            row.original.embarque_id ? (
+              <Link
+                to={`/embarques/${row.original.embarque_id}`}
+                className="text-primary hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {row.original.expediente ?? "—"}
+              </Link>
+            ) : (
+              "—"
+            ),
+        },
+        {
+          id: "vencimiento",
+          header: "Vencimiento",
+          accessorFn: (r) => r.fecha_vencimiento ?? "",
+          enableSorting: true,
+          meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" },
+          cell: ({ row }) =>
+            row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
+        },
+        {
+          id: "dias",
+          header: "Días",
+          accessorFn: (r) => r.dias_para_vencer ?? 0,
+          enableSorting: true,
+          sortingFn: sortByNumber<CxpRow>((r) => r.dias_para_vencer ?? 0),
+          meta: { width: "w-[90px]", align: "center" },
+          cell: ({ row }) => {
+            const dias = row.original.dias_para_vencer ?? 0;
+            const variant = variantDiasParaVencer(dias);
+            return (
+              <Badge variant={variant}>
+                {dias < 0 ? `${Math.abs(dias)} venc.` : `${dias}d`}
+              </Badge>
+            );
+          },
+        },
+        {
+          ...moneyColumn<CxpRow>({
+            id: "total",
+            header: "Total",
+            accessor: (r) => Number(r.total),
+            currencyAccessor: (r) => r.moneda,
+          }),
+          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+        },
+        {
+          ...moneyColumn<CxpRow>({
+            id: "pagado",
+            header: "Pagado",
+            accessor: (r) => Number(r.pagado),
+            currencyAccessor: (r) => r.moneda,
+          }),
+          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+        },
+        {
+          ...moneyColumn<CxpRow>({
+            id: "saldo",
+            header: "Saldo",
+            accessor: (r) => Number(r.saldo),
+            currencyAccessor: (r) => r.moneda,
+          }),
+          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+        },
+      ]),
+    [],
+  );
 
   return (
     <PageContainer>
@@ -23,7 +128,6 @@ export default function CxpPorPagar() {
       />
 
       <ComprasTabStrip />
-
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -54,59 +158,22 @@ export default function CxpPorPagar() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Proveedor</TableHead>
-                <TableHead>Folio</TableHead>
-                <TableHead>Embarque</TableHead>
-                <TableHead>Vencimiento</TableHead>
-                <TableHead className="text-center">Días</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Pagado</TableHead>
-                <TableHead className="text-right">Saldo</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Cargando...</TableCell></TableRow>
-              )}
-              {!isLoading && data.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Sin facturas pendientes de pago.
-                </TableCell></TableRow>
-              )}
-              {data.map((row) => {
-                const dias = row.dias_para_vencer ?? 0;
-                const variant = variantDiasParaVencer(dias);
-                return (
-                  <TableRow
-                    key={row.factura_id}
-                    className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => navigate(`/cxp?factura=${row.factura_id}`)}
-                  >
-                    <TableCell>{row.proveedor_nombre ?? "—"}</TableCell>
-                    <TableCell>{row.folio_proveedor ?? "—"}</TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      {row.embarque_id ? (
-                        <Link to={`/embarques/${row.embarque_id}`} className="text-primary hover:underline">
-                          {row.expediente ?? "—"}
-                        </Link>
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell>{row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={variant}>{dias < 0 ? `${Math.abs(dias)} venc.` : `${dias}d`}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatCurrency(Number(row.total), row.moneda)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{formatCurrency(Number(row.pagado), row.moneda)}</TableCell>
-                    <TableCell className="text-right tabular-nums font-semibold">{formatCurrency(Number(row.saldo), row.moneda)}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <DataTable<CxpRow>
+            columns={columns}
+            data={data}
+            rowKey={(r) => r.factura_id}
+            loading={isLoading}
+            onRowClick={(r) => navigate(`/cxp?factura=${r.factura_id}`)}
+            emptyState={
+              <div className="p-6">
+                <EmptyState
+                  icon={Inbox}
+                  title="Sin facturas pendientes de pago"
+                  description="Cuando ingreses una factura de proveedor, aparecerá aquí."
+                />
+              </div>
+            }
+          />
         </CardContent>
       </Card>
     </PageContainer>
