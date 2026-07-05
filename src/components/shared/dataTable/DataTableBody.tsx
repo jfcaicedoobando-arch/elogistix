@@ -122,7 +122,7 @@ export function DataTableBody<T>({
                     ALIGN_CLASS[align],
                     borderCell,
                     meta.className,
-                    meta.sticky && "sticky left-0 z-[5] bg-background",
+                    meta.sticky && "sticky left-0 z-[5] bg-background shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                     meta.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                   )}
                 >

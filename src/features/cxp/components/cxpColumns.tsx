@@ -25,7 +25,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "folio_interno", header: "Folio",
       accessorFn: (f) => f.folio_interno, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_interno),
-      meta: { width: "w-[100px]", className: "font-mono text-xs font-semibold whitespace-nowrap" },
+      meta: { width: "w-[95px]", className: "font-mono text-xs font-semibold whitespace-nowrap", sticky: true },
       cell: ({ row }) => row.original.folio_interno,
     },
     {
@@ -71,7 +71,8 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "vencimiento", header: "Vencimiento",
       accessorFn: (f) => f.fecha_vencimiento ?? "", enableSorting: true,
       sortingFn: sortByDate<FacturaCxP>((f) => f.fecha_vencimiento ?? ""),
-      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+      // En tableta damos algo menos de ancho para hacer espacio a Saldo/Estatus.
+      meta: { width: "w-[95px] xl:w-[110px]", className: "text-xs whitespace-nowrap" },
       cell: ({ row }) => row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
     },
     {
@@ -96,7 +97,8 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "total", header: "Total",
       accessorFn: (f) => f.total, enableSorting: true,
       sortingFn: sortByNumber<FacturaCxP>((f) => f.total),
-      meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap" },
+      // Total oculto en tableta (<xl): mostramos Saldo como monto operativo principal.
+      meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatCurrency(row.original.total, row.original.moneda),
     },
     {
@@ -110,7 +112,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "saldo", header: "Saldo",
       accessorFn: (f) => f.saldo, enableSorting: true,
       sortingFn: sortByNumber<FacturaCxP>((f) => f.saldo),
-      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+      meta: { width: "w-[115px] xl:w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
       cell: ({ row }) => formatCurrency(row.original.saldo, row.original.moneda),
     },
     {

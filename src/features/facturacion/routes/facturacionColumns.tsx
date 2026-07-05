@@ -57,12 +57,14 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
     },
     {
       id: "expediente", header: "Expediente",
-      meta: { width: "w-[110px]", className: "whitespace-nowrap" },
+      // Oculto en tableta (<xl) — visible desde el # Factura sticky y detalle.
+      meta: { width: "w-[110px]", className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.expediente,
     },
     {
       id: "proforma", header: "Proforma",
-      meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap" },
+      // Oculto en tableta (<xl).
+      meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.proformas?.numero
         ? <span className="font-mono">{row.original.proformas.numero}</span>
         : <span className="text-muted-foreground">—</span>,
@@ -78,16 +80,17 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       accessor: (f) => f.total,
       currencyAccessor: (f) => f.moneda,
     }),
-    dateColumn<Factura>({
-      id: "emision",
-      header: "Emisión",
-      accessor: (f) => f.fecha_emision,
-    }),
+    {
+      ...dateColumn<Factura>({ id: "emision", header: "Emisión", accessor: (f) => f.fecha_emision }),
+      // Emisión oculta en tableta (<xl); en tablet basta con Vencimiento.
+      meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+    },
     {
       id: "vencimiento", header: "Vencimiento",
       accessorFn: (f) => f.fecha_vencimiento, enableSorting: true,
       sortingFn: sortByDate<Factura>((f) => f.fecha_vencimiento),
-      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+      // Oculto en tableta (<xl).
+      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_vencimiento),
     },
     statusColumn<Factura>({
@@ -98,7 +101,8 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
     }),
     {
       id: "archivos", header: "Archivos",
-      meta: { width: "w-[110px]" },
+      // Oculto en tableta (<xl) — descargas disponibles en el detalle.
+      meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const f = row.original;
         const timbrada = !!(f as { uuid_fiscal?: string | null }).uuid_fiscal;

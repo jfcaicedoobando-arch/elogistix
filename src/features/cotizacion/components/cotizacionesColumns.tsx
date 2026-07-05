@@ -38,7 +38,8 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
     {
       id: "tipo_doc",
       header: "Tipo",
-      meta: { width: "w-[100px]", className: "text-xs" },
+      // Oculto en tableta (<xl) — información secundaria (Tarifario vs Transaccional).
+      meta: { width: "w-[100px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const esInfo = row.original.tipo_documento === "informativa";
         return (
@@ -51,13 +52,15 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
     {
       id: "modo",
       header: "Modo",
-      meta: { width: "w-[80px]", className: "text-xs whitespace-nowrap" },
+      // Oculto en tableta (<xl).
+      meta: { width: "w-[80px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.modo,
     },
     {
       id: "ruta",
       header: "Origen → Destino",
-      meta: { width: "min-w-[160px]", className: "text-xs max-w-[200px]" },
+      // Oculto en tableta (<xl) — la ruta se ve en el detalle.
+      meta: { width: "min-w-[160px]", className: "text-xs max-w-[200px] hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const r = row.original;
         const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
@@ -86,12 +89,16 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
       // renderEstadoVigencia usa StatusBadge internamente (Oleada 1 migrado)
       cell: ({ row }) => renderEstadoVigencia(row.original),
     },
-    dateColumn<CotizacionListItem>({
-      id: "fecha",
-      header: "Fecha",
-      accessor: (r) => r.created_at,
-      format: "dd/MM/yyyy HH:mm",
-    }),
+    {
+      ...dateColumn<CotizacionListItem>({
+        id: "fecha",
+        header: "Fecha",
+        accessor: (r) => r.created_at,
+        format: "dd/MM/yyyy HH:mm",
+      }),
+      // Fecha oculta en tableta (<xl).
+      meta: { width: "w-[130px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+    },
   ];
 
   if (params.canEdit) {
