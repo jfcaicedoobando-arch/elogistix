@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.12] - 2026-07-05
+- **ui(facturacion)** — Se retira la columna "Acciones" de la lista `/facturacion`. Timbrar CFDI, Registrar pago, Ver pagos y Cancelar CFDI ahora sólo se ejecutan desde el detalle (`/facturacion/:id`), donde el usuario tiene el contexto completo (conceptos, pagos, timbrado, notas de crédito). Se limpiaron los diálogos huérfanos en `FacturacionDialogs` y el estado asociado en la ruta.
+
 ## [13.172.11] - 2026-07-05
 - **test(e2e/tablet · Ola 4)** — Cierre de la auditoría de tableta con 3 specs nuevos que cubren las áreas que quedaron "fuera de alcance" en Olas 1-3:
   - `e2e/specs/18-portal-responsive.spec.ts` — `/portal`, `/portal/embarques` (+ detalle), `/portal/facturas`, `/portal/cotizaciones`. Usa `portalCreds()`; si `E2E_PORTAL_EMAIL/PASSWORD` no están seteadas el spec se salta con `test.skip`.
