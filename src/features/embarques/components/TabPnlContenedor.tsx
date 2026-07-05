@@ -227,7 +227,7 @@ function TablaPorMoneda({ moneda, filas }: TablaProps) {
         <DataTable<FilaPnlContenedor>
           columns={columns}
           data={filas}
-          rowKey={(f, ) => `${f.contenedorId ?? "g"}-${f.subexpediente}`}
+          rowKey={(f) => `${f.contenedorId ?? "g"}-${f.subexpediente}`}
           rowClassName={(f) =>
             f.esTotal ? "font-semibold bg-muted/40" : f.esGenerales ? "bg-warning/5 text-muted-foreground" : ""
           }

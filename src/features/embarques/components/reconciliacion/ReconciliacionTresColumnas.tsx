@@ -158,7 +158,7 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
         <DataTable<FilaReconciliacion3C>
           columns={columns}
           data={filas}
-          rowKey={(f, ) => `${f.concepto}-${f.moneda}`}
+          rowKey={(f) => `${f.concepto}-${f.moneda}`}
           skeletonRows={5}
           emptyMessage="No hay filas con varianza."
         />
