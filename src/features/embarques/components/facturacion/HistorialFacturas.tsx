@@ -93,7 +93,8 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
           density="compact"
           onRowClick={(f) => navigate(`/facturacion/${f.id}`)}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
-          emptyState={<EmptyStateInline icon={Receipt} message="No hay facturas generadas para este embarque." />}
+          emptyIcon={Receipt}
+          emptyMessage="No hay facturas generadas para este embarque."
         />
       </CardContent>
     </Card>
