@@ -187,6 +187,8 @@ export default function FacturaDetalle() {
         timbrarOpen={timbrarOpen} setTimbrarOpen={setTimbrarOpen}
         enviarOpen={enviarOpen} setEnviarOpen={setEnviarOpen}
         sustituirOpen={sustituirOpen} setSustituirOpen={setSustituirOpen}
+        cancelarOpen={cancelarOpen} setCancelarOpen={setCancelarOpen}
+
       />
 
       <DoubleConfirmDeleteDialog
