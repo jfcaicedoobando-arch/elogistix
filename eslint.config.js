@@ -330,4 +330,59 @@ export default tseslint.config(
       }],
     },
   },
+  {
+    // ─────────────────────────────────────────────────────────────────────
+    // Guardrail `no-raw-table` — design system de tablas.
+    //
+    // Prohibido importar `@/components/ui/table` (primitivas shadcn) fuera
+    // de la allowlist. Todas las listas deben usar `<DataTable />` de
+    // `@/components/shared/DataTable` + los builders (`defineColumns`,
+    // `columnBuilders`, `StatusBadge`) para unificar el design language.
+    //
+    // Este bloque va aparte porque el override de `src/features/**` apaga
+    // `no-restricted-imports` completo; scopearlo aquí lo mantiene activo.
+    //
+    // Para pedir excepción: agregar el archivo a `ignores` con un comentario
+    // que explique el motivo (form-table editable, sub-tabla read-only
+    // estática, catálogo con toggles inline, etc.).
+    // ─────────────────────────────────────────────────────────────────────
+    name: "no-raw-table",
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      // Implementación misma del DataTable — consume las primitivas.
+      "src/components/shared/DataTable.tsx",
+      "src/components/shared/dataTable/**",
+      // Form-tables editables con render row complejo (inputs/textareas por celda).
+      "src/features/cotizacion/components/SeccionMercanciaAerea.tsx",
+      "src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx",
+      "src/features/cotizacion/components/TablaConceptosGenerico.tsx",
+      "src/features/cotizacion/components/TablaCostosDetalle.tsx",
+      "src/features/facturacion/components/detalle/FacturaConceptosTable.tsx",
+      "src/features/portal/components/factura/PortalFacturaConceptosTable.tsx",
+      "src/features/costeo/components/DemorasTarifaEditor.tsx",
+      // Sub-tablas read-only estáticas (sin sort/paginación) — no requieren DataTable.
+      "src/features/cotizacion/components/seccionMercancia/DimensionesLCLTable.tsx",
+      "src/features/cotizacion/components/seccionMercancia/DimensionesAereasTable.tsx",
+      "src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx",
+      "src/features/embarques/components/pnl/PnlProveedoresTable.tsx",
+      "src/features/embarques/components/pnl/PnlComparativaTable.tsx",
+      // Catálogos con toggles inline por fila (patrón switch-per-row).
+      "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
+      "src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx",
+      // Tests pueden importar primitivas para renders aislados.
+      "**/__tests__/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", {
+        paths: [
+          {
+            name: "@/components/ui/table",
+            message: "Usa <DataTable /> de '@/components/shared/DataTable' + columnBuilders/defineColumns para estandarizar tablas. Excepciones: agrega el archivo a la allowlist del bloque `no-raw-table` en eslint.config.js con un comentario que explique el motivo.",
+          },
+        ],
+      }],
+    },
+  },
 );
