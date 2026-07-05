@@ -12,8 +12,11 @@ describe("deriveFacturaFlags", () => {
       puedeEditarBorrador: false,
       puedeEliminarBorrador: false,
       puedeTimbrarDesdeSistema: false,
+      puedeCancelarCfdi: false,
+      puedeSustituirCfdi: false,
     });
   });
+
 
   it("Borrador sin facturapi_id + canEdit + fecha post-corte → editable, eliminable y timbrable", () => {
     expect(
@@ -27,8 +30,38 @@ describe("deriveFacturaFlags", () => {
       puedeEditarBorrador: true,
       puedeEliminarBorrador: true,
       puedeTimbrarDesdeSistema: true,
+      puedeCancelarCfdi: false,
+      puedeSustituirCfdi: false,
     });
   });
+
+  it("Timbrada + Emitida + canEdit → puede cancelar y sustituir CFDI", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST },
+      true,
+    );
+    expect(r.puedeCancelarCfdi).toBe(true);
+    expect(r.puedeSustituirCfdi).toBe(true);
+  });
+
+  it("Timbrada + Emitida + !canEdit → no puede cancelar/sustituir", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST },
+      false,
+    );
+    expect(r.puedeCancelarCfdi).toBe(false);
+    expect(r.puedeSustituirCfdi).toBe(false);
+  });
+
+  it("Cancelada → no puede cancelar de nuevo aunque esté timbrada", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Cancelada", uuid_fiscal: "UUID-1", fecha_emision: POST },
+      true,
+    );
+    expect(r.puedeCancelarCfdi).toBe(false);
+    expect(r.puedeSustituirCfdi).toBe(false);
+  });
+
 
   it("Borrador sin canEdit → sólo lectura", () => {
     const r = deriveFacturaFlags({ estado: "Borrador", facturapi_id: null, fecha_emision: POST }, false);

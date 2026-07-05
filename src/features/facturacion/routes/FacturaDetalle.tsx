@@ -43,14 +43,19 @@ export default function FacturaDetalle() {
   const [timbrarOpen, setTimbrarOpen] = useState(false);
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [sustituirOpen, setSustituirOpen] = useState(false);
+  const [cancelarOpen, setCancelarOpen] = useState(false);
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
-  const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = deriveFacturaFlags(factura, canEdit);
+  const {
+    sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema,
+    puedeSustituirCfdi, puedeCancelarCfdi,
+  } = deriveFacturaFlags(factura, canEdit);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
 
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
+
 
 
 
@@ -97,15 +102,20 @@ export default function FacturaDetalle() {
         canEdit={canEdit}
         sinTimbrar={sinTimbrar}
         puedeTimbrarDesdeSistema={puedeTimbrarDesdeSistema}
+        puedeSustituirCfdi={puedeSustituirCfdi}
+        puedeCancelarCfdi={puedeCancelarCfdi}
         pdfUrl={factura.factura_pdf_url}
         xmlUrl={factura.factura_xml_url}
         embarqueId={factura.embarque_id ?? null}
         onTimbrar={() => setTimbrarOpen(true)}
         onEnviarEmail={() => setEnviarOpen(true)}
         onDownload={handleDownload}
+        onSustituir={() => setSustituirOpen(true)}
+        onCancelar={() => setCancelarOpen(true)}
         onEliminarBorrador={puedeEliminarBorrador ? () => setEliminarOpen(true) : undefined}
         eliminando={eliminando}
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <FacturaEmisorCard />
@@ -133,11 +143,10 @@ export default function FacturaDetalle() {
       <FacturaDetalleEditableSections
         factura={factura}
         canEdit={canEdit}
-        sinTimbrar={sinTimbrar}
         puedeEditarBorrador={puedeEditarBorrador}
         conceptosVivos={conceptosVivos}
-        onSustituir={() => setSustituirOpen(true)}
       />
+
 
       <FacturaConceptosTable
         snapshot={factura.snapshot_emision}
@@ -178,6 +187,8 @@ export default function FacturaDetalle() {
         timbrarOpen={timbrarOpen} setTimbrarOpen={setTimbrarOpen}
         enviarOpen={enviarOpen} setEnviarOpen={setEnviarOpen}
         sustituirOpen={sustituirOpen} setSustituirOpen={setSustituirOpen}
+        cancelarOpen={cancelarOpen} setCancelarOpen={setCancelarOpen}
+
       />
 
       <DoubleConfirmDeleteDialog

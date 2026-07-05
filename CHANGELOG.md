@@ -6,7 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.22] - 2026-07-05
+- **facturacion(detalle)** — Homologación de la barra de acciones de `FacturaDetalle`:
+  - Se conecta la acción **Cancelar CFDI** (`DialogCancelarFactura`) que existía pero nunca estaba enlazada — antes sólo era accesible desde la lista, hoy retirada.
+  - **Sustituir CFDI** deja de vivir como botón suelto arriba del card de datos fiscales y se integra en la misma barra que Timbrar / Descargar PDF·XML / Enviar por email / Ver embarque / Eliminar borrador.
+  - `deriveFacturaFlags` gana `puedeCancelarCfdi` y `puedeSustituirCfdi` (ambos = timbrada + estado `Emitida` + `canEdit`), garantizando que el bloqueo sea coherente entre acciones fiscales.
+  - `FacturaDetalleEditableSections` queda enfocado en secciones editables del borrador; el chrome de acciones vive 100 % en `FacturaDetalleActions`.
+- Resultado: un único punto de entrada para Timbrar · Registrar pago · Sustituir · Cancelar, con jerarquía visual consistente (primario para timbrar, outline para lecturas, outline-destructive para acciones peligrosas).
+
 ## [13.172.21] - 2026-07-05
+
 - **ui(tablas)** — Homologación de badges de estado en columnas de tabla usando `statusColumn`/`StatusBadge`:
   - `statusRegistry` gana 8 dominios nuevos: `aprobacion_cxp`, `captura_cxp`, `actividad_crm`, `tarifa_maritima`, `agente`, `garantia_naviera`, `ruta_maritima`, `liquidacion`.
   - Migraciones directas: `AgenteEmbarques`, `EmbarquesActivosTable` (dashboard), `clienteColumns.cotizacion`, `CosteoAgentesTable`, `CosteoRutasTable`, `ProveedorOperacionesTable`, `Actividades`, `AgenteTarifas`, `cxpColumns` (aprobación), `cxpPorCapturarColumns` (avance), `useGarantiasColumns` (badge read-only).

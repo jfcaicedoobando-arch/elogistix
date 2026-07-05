@@ -1,29 +1,40 @@
 /**
- * Barra de acciones de la cabecera de FacturaDetalle.
- * Extraído para reducir complejidad ciclomática del componente padre.
+ * Barra de acciones de la cabecera de FacturaDetalle. Concentra TODAS las
+ * acciones fiscales/operativas del CFDI (Timbrar, Descargas, Enviar por
+ * email, Ver embarque, Sustituir, Cancelar y Eliminar borrador) para que
+ * el usuario tenga un único punto de entrada consistente con la lista de
+ * facturación (v13.172.12: acciones sólo viven en el detalle).
  */
 import { Link } from "react-router-dom";
-import { FileText, FileCode2, Ship, Stamp, Mail, Trash2, Loader2 } from "lucide-react";
+import {
+  FileText, FileCode2, Ship, Stamp, Mail, Trash2, Loader2, Replace, Ban,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Props {
   canEdit: boolean;
   sinTimbrar: boolean;
   puedeTimbrarDesdeSistema: boolean;
+  puedeSustituirCfdi: boolean;
+  puedeCancelarCfdi: boolean;
   pdfUrl: string | null;
   xmlUrl: string | null;
   embarqueId: string | null;
   onTimbrar: () => void;
   onEnviarEmail: () => void;
   onDownload: (stored: string | null, tipo: "pdf" | "xml") => void;
+  onSustituir: () => void;
+  onCancelar: () => void;
   /** Sólo se pasa cuando la factura es borrador y el usuario puede eliminarla. */
   onEliminarBorrador?: () => void;
   eliminando?: boolean;
 }
 
 export function FacturaDetalleActions({
-  canEdit, sinTimbrar, puedeTimbrarDesdeSistema, pdfUrl, xmlUrl, embarqueId,
-  onTimbrar, onEnviarEmail, onDownload,
+  canEdit, sinTimbrar, puedeTimbrarDesdeSistema,
+  puedeSustituirCfdi, puedeCancelarCfdi,
+  pdfUrl, xmlUrl, embarqueId,
+  onTimbrar, onEnviarEmail, onDownload, onSustituir, onCancelar,
   onEliminarBorrador, eliminando,
 }: Props) {
   const mostrarPdf = !!pdfUrl || !sinTimbrar;
@@ -55,6 +66,21 @@ export function FacturaDetalleActions({
           <Link to={`/embarques/${embarqueId}`}>
             <Ship className="h-4 w-4 mr-1.5" /> Ver embarque
           </Link>
+        </Button>
+      )}
+      {puedeSustituirCfdi && (
+        <Button variant="outline" size="sm" onClick={onSustituir}>
+          <Replace className="h-4 w-4 mr-1.5" /> Sustituir CFDI
+        </Button>
+      )}
+      {puedeCancelarCfdi && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onCancelar}
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Ban className="h-4 w-4 mr-1.5" /> Cancelar CFDI
         </Button>
       )}
       {onEliminarBorrador && (
