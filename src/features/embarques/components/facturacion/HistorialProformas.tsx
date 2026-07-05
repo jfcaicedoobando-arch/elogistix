@@ -153,7 +153,8 @@ export function HistorialProformas({
           density="compact"
           onRowClick={(p) => navigate(`/proformas/${p.id}`)}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
-          emptyState={<EmptyStateInline icon={Receipt} message="No hay proformas generadas para este embarque." />}
+          emptyIcon={Receipt}
+          emptyMessage="No hay proformas generadas para este embarque."
         />
       </CardContent>
     </Card>
