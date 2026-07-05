@@ -6,7 +6,7 @@ import { Inbox, Package, Coins, FileStack } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, type SortDir } from "@/components/shared/DataTable";
-import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
+
 
 import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
 import { useCxpPorCapturarFilters, type OrdenarPor } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
@@ -87,7 +87,7 @@ export default function CxpPorCapturar() {
         description="Embarques con costos presupuestados. Captura las facturas de proveedor y concílialas contra el embarque."
       />
 
-      <ComprasTabStrip />
+
 
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">

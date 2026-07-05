@@ -78,7 +78,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
           ) : (
             <ul className="divide-y rounded-md border">
               {cxpPorPagar.map((f) => {
-                const to = f.embarque_id ? `/embarques/${f.embarque_id}` : "/cxp";
+                const to = f.embarque_id ? `/embarques/${f.embarque_id}` : "/compras/facturas";
                 return (
                   <li key={f.id}>
                     <Link

@@ -8,7 +8,7 @@ import {
   SIDEBAR_SISTEMA_ITEMS,
   SIDEBAR_COSTEO_ITEMS,
   SIDEBAR_BANDEJAS_ITEMS,
-  SIDEBAR_COMPRAS_HUB,
+  SIDEBAR_COMPRAS_ITEMS,
   SIDEBAR_ADMIN_ITEMS,
 } from "@/components/layout/sidebarItems";
 
@@ -24,14 +24,24 @@ export interface BuilderDeps {
 
 export type Builder = (deps: BuilderDeps) => SidebarSection[];
 
-const filterBandejas = (urls: string[]) =>
-  SIDEBAR_BANDEJAS_ITEMS.filter((it) => urls.includes(it.url));
 const filterGestion = (urls: string[]) =>
   SIDEBAR_GESTION_ITEMS.filter((it) => urls.includes(it.url));
 const filterSistema = (sistemaItems: typeof SIDEBAR_SISTEMA_ITEMS, urls: string[]) =>
   sistemaItems.filter((it) => urls.includes(it.url));
 const filterDirectorio = (urls: string[]) =>
   SIDEBAR_DIRECTORIO_ITEMS.filter((it) => urls.includes(it.url));
+
+/**
+ * v13.175.0 — Filtra items del módulo Compras por rol. `full()` regresa todo;
+ * en general los roles seleccionan un subconjunto por URL.
+ */
+const filterCompras = (urls: string[]) =>
+  SIDEBAR_COMPRAS_ITEMS.filter((it) => urls.includes(it.url));
+const COMPRAS_FULL = SIDEBAR_COMPRAS_ITEMS.map((it) => it.url);
+const COMPRAS_READ_ONLY = ["/compras", "/compras/facturas", "/compras/proveedores", "/compras/aging"];
+const COMPRAS_CAPTURA = ["/compras", "/compras/por-capturar", "/compras/facturas", "/compras/proveedores"];
+const COMPRAS_CONTADOR = ["/compras", "/compras/por-capturar", "/compras/por-aprobar", "/compras/facturas", "/compras/notas-credito", "/compras/proveedores", "/compras/aging", "/compras/reportes"];
+const COMPRAS_TESORERO = ["/compras", "/compras/por-pagar", "/compras/facturas", "/compras/pagos", "/compras/proveedores", "/compras/aging", "/compras/reportes"];
 
 const buildVendedor: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
@@ -62,7 +72,8 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Gestión", items: filterGestion(["/cotizaciones"]) },
-  { label: "Directorio", items: filterDirectorio(["/proveedores", "/clientes"]) },
+  { label: "Compras", items: filterCompras(["/compras/proveedores"]) },
+  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
@@ -70,9 +81,8 @@ const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
 const buildContador: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   // v13.141.14 — contador con acceso de viewer al módulo de embarques
-  // (mutaciones siguen bloqueadas por usePermissions: contador ∉ OPERATIONS).
   { label: "Operaciones", items: filterGestion(["/embarques"]) },
-  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: filterCompras(COMPRAS_CONTADOR) },
   { label: "Facturación", items: [...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]), ...SIDEBAR_ADMIN_ITEMS.filter((it) => it.url === "/configuracion")] },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
@@ -83,7 +93,7 @@ const buildContador: Builder = ({ sistemaItems }) => [
 
 const buildTesorero: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: filterCompras(COMPRAS_TESORERO) },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Facturación", items: filterGestion(["/cartera", "/comisiones"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
@@ -92,7 +102,7 @@ const buildTesorero: Builder = ({ sistemaItems }) => [
 ];
 
 const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
-  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: filterCompras(COMPRAS_CAPTURA) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
@@ -119,6 +129,8 @@ const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
 const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
+  { label: "Compras", items: filterCompras(COMPRAS_READ_ONLY) },
+  { label: "Bandejas", items: SIDEBAR_BANDEJAS_ITEMS },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "CRM", items: crmItems },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
@@ -130,7 +142,7 @@ export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  { label: "Compras", items: [SIDEBAR_COMPRAS_HUB, ...filterBandejas(["/cxp/por-capturar", "/cxp/por-pagar"]), ...filterGestion(["/cxp"]), ...filterDirectorio(["/proveedores"])] },
+  { label: "Compras", items: filterCompras(COMPRAS_FULL) },
   { label: "Facturación", items: filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones"]) },
   { label: "Tesorería", items: filterGestion(["/tesoreria"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
@@ -161,6 +173,7 @@ export function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
   return [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
     { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
+    { label: "Compras", items: filterCompras(COMPRAS_READ_ONLY) },
     { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
     { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
     { label: "CRM", items: deps.crmItems },

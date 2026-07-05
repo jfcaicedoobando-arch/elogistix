@@ -39,7 +39,7 @@ export function HoyKpiRow({
         sublabel={
           porPagarUsd > 0 ? `+ ${formatCurrency(porPagarUsd, "USD")}` : "Facturas proveedor"
         }
-        to="/cxp/por-pagar"
+        to="/compras/por-pagar"
         loading={loading}
       />
       <KpiTile
@@ -56,7 +56,7 @@ export function HoyKpiRow({
         label="Por capturar (CxP)"
         value={porCapturar}
         sublabel="Conceptos sin factura"
-        to="/cxp/por-capturar"
+        to="/compras/por-capturar"
         tone={porCapturar > 0 ? "warning" : "default"}
         loading={loading}
       />

@@ -61,7 +61,7 @@ export function BandaKPIs({ kpis }: Props) {
         label="CxP próx. 7 días"
         value={formatCurrency(kpis.cxp_7dias_mxn, "MXN")}
         icon={Receipt}
-        onClick={() => nav("/cxp")}
+        onClick={() => nav("/compras/facturas")}
       />
       <KpiCard
         label="Cumplim. presupuesto"

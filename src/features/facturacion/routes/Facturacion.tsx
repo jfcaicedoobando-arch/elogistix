@@ -62,7 +62,7 @@ function TabTriggerInfo({ tab }: { tab: TabDef }) {
 // Redirige URLs viejas a sus módulos correctos.
 const LEGACY_TAB_REDIRECTS: Record<string, string> = {
   cobranza: "/cartera",
-  liquidacion: "/cxp/por-pagar",
+  liquidacion: "/compras/por-pagar",
   proyeccion: "/reportes/cierre-mensual",
   pendientes: "/proformas?estado=aceptada",
 };

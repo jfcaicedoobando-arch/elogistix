@@ -60,7 +60,7 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
       severidad: "warning",
       titulo: `${acreedoresVencidos.length} proveedor(es) con pagos vencidos`,
       descripcion: `Top: ${acreedoresVencidos[0].nombre} (${acreedoresVencidos[0].saldo.toFixed(0)} ${acreedoresVencidos[0].moneda})`,
-      url: "/cxp",
+      url: "/compras/facturas",
     });
   }
 

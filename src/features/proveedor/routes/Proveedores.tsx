@@ -14,7 +14,7 @@ import {
 } from "../components/ProveedoresFiltros";
 import { useProveedoresCrear } from "@/features/proveedor/hooks/useProveedoresCrear";
 import { ProveedoresImportDialog } from "../components/ProveedoresImportDialog";
-import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
+
 import { PageContainer } from "@/components/shared/PageContainer";
 
 export default function Proveedores() {
@@ -54,7 +54,7 @@ export default function Proveedores() {
         }
       />
 
-      <ComprasTabStrip />
+
 
       <ProveedoresFiltros
         search={search}

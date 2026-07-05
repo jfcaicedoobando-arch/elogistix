@@ -45,7 +45,7 @@ export default function ProveedorDetalle() {
           description="El proveedor que buscas no existe o fue eliminado."
           primaryAction={{
             label: "Volver a Proveedores",
-            onClick: () => navigate("/proveedores"),
+            onClick: () => navigate("/compras/proveedores"),
             variant: "outline",
           }}
         />
@@ -64,7 +64,7 @@ export default function ProveedorDetalle() {
     <PageContainer>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/proveedores")} aria-label="Volver a proveedores">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/compras/proveedores")} aria-label="Volver a proveedores">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Truck className="h-6 w-6 text-accent" />
