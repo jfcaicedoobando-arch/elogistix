@@ -65,7 +65,7 @@ export function useProveedorDetalleController() {
         entidad_nombre: proveedor.nombre,
       });
       notifySuccess(toast, { title: "Proveedor eliminado" });
-      navigate("/proveedores");
+      navigate("/compras/proveedores");
     } catch {
       notifyError(toast, { title: "Error al eliminar proveedor", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }

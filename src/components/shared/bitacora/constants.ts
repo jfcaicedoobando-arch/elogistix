@@ -31,7 +31,7 @@ export const COLORES_ACCION: Record<string, string> = {
 export const RUTAS_MODULO: Record<string, string> = {
   embarques: "/embarques",
   clientes: "/clientes",
-  proveedores: "/proveedores",
+  proveedores: "/compras/proveedores",
   facturas: "/facturacion",
   usuarios: "/usuarios",
   cotizaciones: "/cotizaciones",
