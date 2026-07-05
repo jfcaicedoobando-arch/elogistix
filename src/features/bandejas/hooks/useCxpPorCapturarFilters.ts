@@ -1,8 +1,14 @@
 /**
  * Estado local de filtros, búsqueda y orden para la bandeja CxP — Por capturar.
  * Lógica pura testeable; no toca React Query.
+ *
+ * v13.173.2 (Ola 1 · Filtros globales) — el estado se sincroniza con la URL vía
+ * `nuqs` (`?q=`, `?estatus=`, `?antiguedad=`, `?sort=`, `?dir=`) para que los
+ * filtros sean compartibles y sobrevivan al refresh, igual que en Cartera y
+ * las demás bandejas migradas al primitivo unificado.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
 import type { CxpPorCapturarRow } from "@/features/bandejas/services/bandejas";
 
 export type EstatusFiltro = "todos" | "sin" | "parcial" | "completo";
