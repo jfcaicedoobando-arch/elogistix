@@ -22,6 +22,7 @@ const MIGRATED_ROUTES = [
   "src/features/comisiones/routes/Comisiones.tsx",
   // Ola 2 — CRM
   "src/features/crm/routes/Leads.tsx",
+  "src/features/crm/routes/Actividades.tsx",
 ] as const;
 
 describe("Filtros globales — allowlist de rutas migradas", () => {
