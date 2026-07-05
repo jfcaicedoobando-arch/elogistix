@@ -1,13 +1,12 @@
 /**
  * clientesTableConfig — columnas de la tabla de clientes.
- * Usa los column builders de Oleada 1.
+ * Usa los column builders compartidos.
+ *
+ * v13.172.16: se elimina el `actionsColumn` "Ver detalle" porque duplica la
+ * navegación de fila (`onRowClick` en `Clientes.tsx` ya va a `/clientes/:id`).
  */
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye } from "lucide-react";
-import {
-  clientColumn,
-  actionsColumn,
-} from "@/components/shared/dataTable/columnBuilders";
+import { clientColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 
@@ -21,18 +20,12 @@ export type ClienteRow = {
   telefono: string;
 };
 
-interface BuildClientesColumnsOpts {
-  onNavigate: (id: string) => void;
-}
-
-export function buildClientesColumns({
-  onNavigate,
-}: BuildClientesColumnsOpts): ColumnDef<ClienteRow, unknown>[] {
+export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
   return [
     {
       ...clientColumn<ClienteRow>({ id: "nombre", header: "Nombre", accessor: (c) => c.nombre }),
       sortingFn: sortByString<ClienteRow>((c) => c.nombre),
-      meta: { width: "min-w-[180px]", className: "max-w-[200px]" },
+      meta: { width: "min-w-[180px]", className: "max-w-[200px]", sticky: true },
     } as ColumnDef<ClienteRow, unknown>,
     {
       id: "rfc",
@@ -67,14 +60,5 @@ export function buildClientesColumns({
       meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatPhoneMx(row.original.telefono),
     },
-    actionsColumn<ClienteRow>({
-      items: () => [
-        {
-          label: "Ver detalle",
-          icon: <Eye className="h-4 w-4" />,
-          onSelect: (r) => onNavigate(r.id),
-        },
-      ],
-    }),
   ];
 }
