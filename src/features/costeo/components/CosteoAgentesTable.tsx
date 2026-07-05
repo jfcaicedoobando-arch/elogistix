@@ -70,20 +70,12 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         accessorFn: (a) => a.email ?? "",
         cell: ({ row }) => row.original.email ?? "—",
       },
-      {
+      statusColumn<AgenteRow>({
         id: "activo",
         header: "Activo",
-        accessorFn: (a) => a.activo ? "1" : "0",
-        enableSorting: true,
-        cell: ({ row }) => (
-          <Badge
-            variant={row.original.activo ? "default" : "secondary"}
-            className={row.original.activo ? "bg-success/15 text-success border-success/30" : ""}
-          >
-            {row.original.activo ? "Activo" : "Inactivo"}
-          </Badge>
-        ),
-      },
+        domain: "agente",
+        accessor: (a) => (a.activo ? "Activo" : "Inactivo"),
+      }),
       {
         id: "acciones",
         header: "Acciones",
