@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { AlertTriangle, ExternalLink, Trash2 } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import {
   computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER, type RutaEstadoMeta,
