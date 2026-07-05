@@ -1,14 +1,20 @@
 /**
  * Rutas principales de la aplicación (operativos autenticados). Bajo
  * `ProtectedRoute` + `Layout`. Incluye el sub-árbol del CRM anidado bajo /crm.
- * Extraído de `src/routes.tsx` en 11.65.0 (D12). Los `lazy(...)` viven en
- * `./appRoutes.lazy.ts`. En 13.56.8 se introdujo el helper `guarded()` para
- * colapsar las rutas con `allowedRoles` a una sola línea cada una.
+ *
+ * v13.175.0 — Rediseño Compras (Ola A):
+ *   - Módulo unificado bajo `/compras/*`: dashboard, bandejas (por-capturar,
+ *     por-aprobar, por-pagar), facturas, pagos, notas-credito, proveedores,
+ *     aging, reportes.
+ *   - Redirects preservando querystring desde `/cxp`, `/cxp/por-capturar`,
+ *     `/cxp/por-pagar`, `/proveedores`, `/proveedores/:id`.
+ *   - `ComprasTabStrip` eliminado. Navegación 100% por sidebar.
  */
 import type { ReactNode } from "react";
 import { Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
+import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import type { AppRole } from "@/types/appRole";
 import {
   Dashboard, Operaciones, Reportes, CierreMensual, Bitacora, Ayuda,
@@ -19,6 +25,7 @@ import {
   Facturacion, FacturaDetalle, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Compras, CxpAging, CxpPorCapturar, CxpPorPagar, Cartera,
+  ComprasPagos, ComprasNotasCredito, ComprasReportes,
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
   Usuarios, Configuracion,
@@ -32,12 +39,6 @@ const guarded = (roles: AppRole[], element: ReactNode) => (
 
 const TESORERIA_ROLES: AppRole[] = ["admin", "super_admin", "contador", "tesorero"];
 
-/**
- * Lectura financiera (CXP, tesorería, cartera, profit). Refleja `FINANCE_VIEWERS`
- * de `usePermissions`: incluye gerentes (operaciones, visor, comercial) que
- * supervisan sin ejecutar mutaciones. Las acciones de escritura siguen
- * restringidas vía hooks de permisos a nivel componente.
- */
 const FINANCE_READ_ROLES: AppRole[] = [
   "admin", "super_admin", "admin_org",
   "contador", "tesorero", "auxiliar_contable", "ejecutivo_cobranza",
@@ -45,6 +46,12 @@ const FINANCE_READ_ROLES: AppRole[] = [
 ];
 const TESORERIA_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor"];
 const PROFIT_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial"];
+const COMPRAS_READ_ROLES: AppRole[] = [
+  ...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor",
+];
+const COMPRAS_WRITE_ROLES: AppRole[] = [
+  "admin", "super_admin", "admin_org", "contador", "tesorero", "auxiliar_contable",
+];
 
 export const appRoutes = (
   <Route
@@ -65,11 +72,26 @@ export const appRoutes = (
     <Route path="/proformas" element={<ProformasListado />} />
     <Route path="/proformas/:id" element={<ProformaDetalle />} />
 
-    <Route path="/compras" element={guarded([...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"], <Compras />)} />
-    <Route path="/compras/aging" element={guarded([...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"], <CxpAging />)} />
-    <Route path="/cxp" element={guarded(FINANCE_READ_ROLES, <Cxp />)} />
-    <Route path="/cxp/por-capturar" element={guarded(["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorCapturar />)} />
-    <Route path="/cxp/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorPagar />)} />
+    {/* ── Módulo Compras (v13.175.0 — rediseño Ola A) ────────────────── */}
+    <Route path="/compras" element={guarded(COMPRAS_READ_ROLES, <Compras />)} />
+    <Route path="/compras/por-capturar" element={guarded(COMPRAS_WRITE_ROLES.concat(["gerente_operaciones", "gerente_visor"]), <CxpPorCapturar />)} />
+    <Route path="/compras/por-aprobar" element={<Navigate to="/compras/facturas?aprobacion=pendiente" replace />} />
+    <Route path="/compras/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorPagar />)} />
+    <Route path="/compras/facturas" element={guarded(FINANCE_READ_ROLES, <Cxp />)} />
+    <Route path="/compras/pagos" element={guarded(FINANCE_READ_ROLES, <ComprasPagos />)} />
+    <Route path="/compras/notas-credito" element={guarded(FINANCE_READ_ROLES, <ComprasNotasCredito />)} />
+    <Route path="/compras/proveedores" element={<Proveedores />} />
+    <Route path="/compras/proveedores/:id" element={<ProveedorDetalle />} />
+    <Route path="/compras/aging" element={guarded(COMPRAS_READ_ROLES, <CxpAging />)} />
+    <Route path="/compras/reportes" element={guarded(FINANCE_READ_ROLES, <ComprasReportes />)} />
+
+    {/* Redirects legacy — preservan querystring (ej: ?aprobacion=pendiente) */}
+    <Route path="/cxp" element={<RedirectPreserveSearch to="/compras/facturas" />} />
+    <Route path="/cxp/por-capturar" element={<RedirectPreserveSearch to="/compras/por-capturar" />} />
+    <Route path="/cxp/por-pagar" element={<RedirectPreserveSearch to="/compras/por-pagar" />} />
+    <Route path="/proveedores" element={<RedirectPreserveSearch to="/compras/proveedores" />} />
+    <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
+
     {/* v13.145.10 — bandeja eliminada; se redirige a /proformas con filtro Aceptada. */}
     <Route path="/facturacion/por-emitir" element={<Navigate to="/proformas?estado=aceptada" replace />} />
     <Route path="/cartera" element={guarded(["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"], <Cartera />)} />
@@ -94,11 +116,8 @@ export const appRoutes = (
     <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
     <Route path="/profit/presupuesto" element={guarded(PROFIT_READ_ROLES, <ProfitPresupuesto />)} />
 
-
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
-    <Route path="/proveedores" element={<Proveedores />} />
-    <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
     <Route path="/cotizaciones" element={<Cotizaciones />} />
     <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
     <Route path="/cotizaciones/nueva/tarifario" element={<NuevaCotizacionInformativa />} />

@@ -29,6 +29,10 @@ import {
   Search,
   Calendar,
   ShoppingCart,
+  Inbox,
+  ShieldCheck as ShieldApprove,
+  LayoutList,
+  ReceiptText,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -44,13 +48,14 @@ export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
   { title: "Operaciones", url: "/operaciones", icon: Activity },
 ];
 
+// v13.175.0 — Se removieron "Facturas de proveedor" (`/cxp`) — ahora vive
+// exclusivamente en la sección Compras como "Facturas" (`/compras/facturas`).
 export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
   { title: "Proformas", url: "/proformas", icon: FileText },
   { title: "Cobranza", url: "/cartera", icon: PiggyBank },
-  { title: "Facturas de proveedor", url: "/cxp", icon: Receipt },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
 ];
@@ -64,9 +69,9 @@ export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
   { title: "CRM", url: "/crm", icon: Target },
 ];
 
+// v13.175.0 — Proveedores migra al módulo Compras (`/compras/proveedores`).
 export const SIDEBAR_DIRECTORIO_ITEMS: SidebarItem[] = [
   { title: "Clientes", url: "/clientes", icon: UserCheck },
-  { title: "Proveedores", url: "/proveedores", icon: Truck },
 ];
 
 export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
@@ -96,14 +101,31 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
  { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Calculator },
 ];
 
-// v13.54.0 — Bloque Q: bandejas por rol financiero.
+// v13.175.0 — Cartera (CxC) es la única bandeja que no vive bajo /compras.
 export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
-  { title: "Por capturar", url: "/cxp/por-capturar", icon: Receipt },
-  { title: "Por pagar", url: "/cxp/por-pagar", icon: Landmark },
   { title: "Cartera", url: "/cartera", icon: PiggyBank },
 ];
 
-// v13.100.0 — Bloque Compras: hub `/compras` para acceso rápido al módulo.
+// v13.100.0 — Hub Compras. Deprecado como export standalone en v13.175.0.
+// Se mantiene por compatibilidad hacia SIDEBAR_COMPRAS_ITEMS[0].
 export const SIDEBAR_COMPRAS_HUB: SidebarItem = {
-  title: "Resumen Compras", url: "/compras", icon: ShoppingCart,
+  title: "Dashboard", url: "/compras", icon: ShoppingCart,
 };
+
+/**
+ * v13.175.0 — Módulo Compras unificado. Todas las rutas viven bajo `/compras/*`
+ * y esta lista es la única fuente de verdad del sidebar para el módulo.
+ * Cada builder de rol filtra por `url` los items que expone.
+ */
+export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
+  { title: "Dashboard", url: "/compras", icon: ShoppingCart },
+  { title: "Por capturar", url: "/compras/por-capturar", icon: Inbox },
+  { title: "Por aprobar", url: "/compras/por-aprobar", icon: ShieldApprove },
+  { title: "Por pagar", url: "/compras/por-pagar", icon: Landmark },
+  { title: "Facturas", url: "/compras/facturas", icon: Receipt },
+  { title: "Pagos", url: "/compras/pagos", icon: Landmark },
+  { title: "Notas de crédito", url: "/compras/notas-credito", icon: ReceiptText },
+  { title: "Proveedores", url: "/compras/proveedores", icon: Truck },
+  { title: "Antigüedad", url: "/compras/aging", icon: LayoutList },
+  { title: "Reportes", url: "/compras/reportes", icon: BarChart3 },
+];

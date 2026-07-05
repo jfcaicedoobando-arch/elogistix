@@ -1,24 +1,25 @@
 /**
- * Hub del módulo Compras (`/compras`). Landing con KPIs cruzados, accesos rápidos
- * y la tira de pestañas que viaja por todas las páginas del módulo.
+ * Dashboard del módulo Compras (`/compras`). Ola B del rediseño (v13.175.0):
+ * KPIs, aging resumen, top proveedores por saldo, últimas facturas y accesos
+ * rápidos. La navegación entre páginas del módulo vive únicamente en el sidebar
+ * (ComprasTabStrip eliminado en Ola A).
  */
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ShoppingCart, Plus, Truck, Inbox, Receipt, Landmark, ArrowRight, LayoutList, ShieldCheck,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import { usePermissions } from "@/hooks/shared";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 function KpiCard({
@@ -74,7 +75,7 @@ export default function Compras() {
   const { canEdit } = usePermissions();
   const { data: cxp = [], kpis } = useFacturasCxP();
   const { data: porCapturar = [] } = useCxpPorCapturar();
-  const { totales: agingTotales } = useCxpAging();
+  const { data: aging = [], totales: agingTotales } = useCxpAging();
   const { data: pendientesAprob = 0 } = useCxpPendientesAprobacion();
   const [openNueva, setOpenNueva] = useState(false);
 
@@ -92,6 +93,19 @@ export default function Compras() {
     };
   }, [cxp, porCapturar]);
 
+  const topProveedores = useMemo(
+    () => [...aging].sort((a, b) => b.saldo_total - a.saldo_total).slice(0, 5),
+    [aging],
+  );
+
+  const ultimasFacturas = useMemo(
+    () =>
+      [...cxp]
+        .sort((a, b) => (b.fecha_emision ?? "").localeCompare(a.fecha_emision ?? ""))
+        .slice(0, 5),
+    [cxp],
+  );
+
   const vencidoMas30 = agingTotales.d_31_60 + agingTotales.d_61_90 + agingTotales.mas_90;
   const vencidoTotal = kpis.vencido_mxn + kpis.vencido_usd;
 
@@ -100,15 +114,13 @@ export default function Compras() {
       <PageHeader
         icon={<ShoppingCart className="h-6 w-6 text-accent" />}
         title="Compras"
-        description="Gestión de proveedores, facturas recibidas y pagos."
+        description="Dashboard del módulo: proveedores, facturas recibidas, aprobaciones y pagos."
         actions={canEdit ? (
           <Button onClick={() => setOpenNueva(true)}>
             <Plus className="h-4 w-4 mr-2" /> Capturar factura
           </Button>
         ) : null}
       />
-
-      <ComprasTabStrip />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         <KpiCard
@@ -149,7 +161,7 @@ export default function Compras() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <QuickLink
-          to="/cxp?aprobacion=pendiente"
+          to="/compras/por-aprobar"
           icon={<ShieldCheck className="h-5 w-5" />}
           title="Revisar por aprobar"
           description="Facturas a la espera de validación contable."
@@ -163,33 +175,80 @@ export default function Compras() {
           kpi={vencidoMas30 > 0 ? `${formatCurrencyCompact(vencidoMas30, "MXN")} > 30 días` : "Sin vencidos > 30 días"}
         />
         <QuickLink
-          to="/cxp/por-pagar"
+          to="/compras/por-pagar"
           icon={<Landmark className="h-5 w-5" />}
           title="Por pagar"
           description="Programa y registra pagos a proveedores."
           kpi={`${metrics.facturasConSaldo} con saldo`}
         />
         <QuickLink
-          to="/proveedores"
+          to="/compras/proveedores"
           icon={<Truck className="h-5 w-5" />}
           title="Proveedores"
           description="Catálogo de proveedores logísticos y de gastos."
           kpi="Ir al catálogo"
         />
         <QuickLink
-          to="/cxp/por-capturar"
+          to="/compras/por-capturar"
           icon={<Inbox className="h-5 w-5" />}
           title="Por capturar"
           description="Embarques con presupuesto sin factura."
           kpi={`${metrics.embarquesPorCapturar} pendiente${metrics.embarquesPorCapturar === 1 ? "" : "s"}`}
         />
         <QuickLink
-          to="/cxp"
+          to="/compras/facturas"
           icon={<Receipt className="h-5 w-5" />}
           title="Facturas"
           description="Listado y captura de facturas recibidas."
           kpi={`${cxp.length} factura${cxp.length === 1 ? "" : "s"}`}
         />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Top 5 proveedores con saldo</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            {topProveedores.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">Sin saldos pendientes.</p>
+            ) : (
+              <ul className="divide-y">
+                {topProveedores.map((p) => (
+                  <li key={p.proveedor_id} className="flex items-center justify-between gap-3 p-3 text-sm">
+                    <span className="truncate font-medium">{p.proveedor_nombre}</span>
+                    <span className="tabular-nums text-muted-foreground shrink-0">
+                      {formatCurrency(p.saldo_total, "MXN")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Últimas facturas capturadas</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            {ultimasFacturas.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">Aún no hay facturas capturadas.</p>
+            ) : (
+              <ul className="divide-y">
+                {ultimasFacturas.map((f) => (
+                  <li key={f.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{f.proveedor_nombre ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {f.folio_proveedor ?? "s/folio"} · {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
+                      </p>
+                    </div>
+                    <span className="tabular-nums shrink-0">
+                      {formatCurrency(Number(f.total), f.moneda ?? "MXN")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <DialogNuevaFacturaProveedor open={openNueva} onOpenChange={setOpenNueva} />
