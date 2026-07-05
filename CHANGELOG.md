@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.173.0] - 2026-07-05
+
+- **arquitectura(listados)** — Cimientos de la Ola 1 del plan de filtros globales:
+  - Nuevo primitivo `useServerPagedList` (`src/hooks/shared/useServerPagedList.ts`) — combina `useTableFilters` (nuqs) + orden controlado (`sort` / `dir` en URL) + `useQuery` con `{rows, count}`. Contrato listo para paginación real en RPC (`p_from/p_to/p_sort_*`).
+  - Nuevo primitivo compañero `useClientPagedList` (`src/hooks/shared/useClientPagedList.ts`) — mismo contrato de URL y misma prop `pagination`, pero aplica search/filter/sort/paginación en memoria sobre datasets ya cargados. Bridge para páginas cuyo RPC todavía no acepta paginación; migración a `useServerPagedList` sin tocar la UI.
+- **cartera** — Migrada al primitivo unificado (`useClientPagedList`):
+  - Barra `<UnifiedFiltersBar />` con búsqueda por folio/cliente/expediente, filtro **Vencidas** (todas/sí/no), filtro **Moneda** dinámico, rango de fecha de vencimiento en Sheet mobile y chips activos con "Limpiar todo".
+  - Orden por servidor-tagged sobre 6 columnas (Folio, Cliente, Vencimiento, Días, Total, Saldo).
+  - Paginación con selector 10/20/50/100 vía `PaginationControls`.
+  - URL sync completa (`?q=`, `?sort=`, `?dir=`, `?from=`, `?to=`, `?moneda=`, `?vencidas=`, `?page=`, `?ps=`) — filtros compartibles por link y sobreviven al refresh.
+
 ## [13.172.22] - 2026-07-05
 - **facturacion(detalle)** — Homologación de la barra de acciones de `FacturaDetalle`:
   - Se conecta la acción **Cancelar CFDI** (`DialogCancelarFactura`) que existía pero nunca estaba enlazada — antes sólo era accesible desde la lista, hoy retirada.
