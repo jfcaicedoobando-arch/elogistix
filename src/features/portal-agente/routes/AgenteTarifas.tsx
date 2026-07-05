@@ -187,7 +187,6 @@ export default function AgenteTarifas() {
           data={filtradas}
           rowKey={(t) => t.id}
           isLoading={isLoading}
-          skeletonRows={5}
           emptyMessage="No hay tarifas para este filtro."
         />
       </Card>

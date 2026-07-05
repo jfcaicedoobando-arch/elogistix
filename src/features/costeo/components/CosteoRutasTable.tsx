@@ -182,7 +182,6 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         data={rutasOrdenadas}
         rowKey={(f) => f.ruta.id}
         isLoading={isLoading}
-        skeletonRows={5}
         onRowClick={(f) => navigate(`/costeo/tarifas?ruta=${f.ruta.id}`)}
         emptyMessage={totalRutas === 0 ? "Sin rutas registradas." : "Sin rutas para el filtro seleccionado."}
       />
