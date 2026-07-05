@@ -1,10 +1,19 @@
 /**
  * Cartera — facturas emitidas con saldo pendiente.
- * v13.172.16: migrado a DataTable + columnBuilders para unificar con el resto de la app.
+ *
+ * v13.173.0 (Ola 1 · Filtros globales): migrada al primitivo unificado
+ * `useClientPagedList` — search, filtros (moneda / vencidas), rango de fechas
+ * de vencimiento, orden y paginación sincronizados con la URL vía `nuqs`, y
+ * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -14,14 +23,52 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
-import { sortByNumber, sortByString } from "@/components/shared/dataTable/sortingFns";
 import EmptyState from "@/components/empty/EmptyState";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 
 type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["data"]>[number];
+
+interface CarteraFilters extends Record<string, string> {
+  moneda: string;
+  vencidas: string; // "todas" | "si" | "no"
+}
+
+const DEFAULTS: CarteraFilters = { moneda: "todas", vencidas: "todas" };
 
 export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
   const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
+
+  const monedas = useMemo(
+    () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
+    [data],
+  );
+
+  const paged = useClientPagedList<CarteraRow, CarteraFilters>({
+    data,
+    isLoading,
+    defaultFilters: DEFAULTS,
+    filterLabels: { moneda: "Moneda", vencidas: "Vencidas" },
+    defaultSort: { key: "dias", dir: "desc" },
+    searchAccessor: (r) =>
+      `${r.numero ?? ""} ${r.cliente_nombre ?? ""} ${r.expediente ?? ""}`,
+    filterPredicate: (r, ff) => {
+      if (ff.moneda !== "todas" && r.moneda !== ff.moneda) return false;
+      if (ff.vencidas === "si" && r.dias_vencido <= 0) return false;
+      if (ff.vencidas === "no" && r.dias_vencido > 0) return false;
+      return true;
+    },
+    dateAccessor: (r) => r.fecha_vencimiento,
+    sorters: {
+      numero: (a, b) => (a.numero ?? "").localeCompare(b.numero ?? ""),
+      cliente: (a, b) => (a.cliente_nombre ?? "").localeCompare(b.cliente_nombre ?? ""),
+      vencimiento: (a, b) => (a.fecha_vencimiento ?? "").localeCompare(b.fecha_vencimiento ?? ""),
+      dias: (a, b) => a.dias_vencido - b.dias_vencido,
+      total: (a, b) => Number(a.total) - Number(b.total),
+      saldo: (a, b) => Number(a.saldo) - Number(b.saldo),
+    },
+  });
 
   const columns: ColumnDef<CarteraRow, unknown>[] = useMemo(
     () =>
@@ -31,7 +78,6 @@ export default function Cartera() {
           header: "Folio",
           accessorFn: (r) => r.numero ?? "",
           enableSorting: true,
-          sortingFn: sortByString<CarteraRow>((r) => r.numero ?? ""),
           meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
           cell: ({ row }) => (
             <Link
@@ -48,7 +94,6 @@ export default function Cartera() {
           header: "Cliente",
           accessorFn: (r) => r.cliente_nombre ?? "",
           enableSorting: true,
-          sortingFn: sortByString<CarteraRow>((r) => r.cliente_nombre ?? ""),
           meta: { width: "min-w-[180px]", className: "max-w-[240px] truncate" },
           cell: ({ row }) => (
             <span title={row.original.cliente_nombre ?? undefined}>
@@ -59,6 +104,7 @@ export default function Cartera() {
         {
           id: "embarque",
           header: "Embarque",
+          enableSorting: false,
           meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
           cell: ({ row }) =>
             row.original.embarque_id ? (
@@ -86,7 +132,6 @@ export default function Cartera() {
           header: "Días vencido",
           accessorFn: (r) => r.dias_vencido,
           enableSorting: true,
-          sortingFn: sortByNumber<CarteraRow>((r) => r.dias_vencido),
           meta: { width: "w-[110px]", align: "center", className: "whitespace-nowrap" },
           cell: ({ row }) => (
             <Badge variant={row.original.dias_vencido > 0 ? "destructive" : "secondary"}>
@@ -115,6 +160,7 @@ export default function Cartera() {
         {
           id: "ultimo",
           header: "Último contacto",
+          enableSorting: false,
           meta: { width: "w-[130px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
           cell: ({ row }) =>
             row.original.ultimo_contacto ? (
@@ -149,20 +195,76 @@ export default function Cartera() {
         </Card>
       </div>
 
+      <UnifiedFiltersBar
+        search={paged.search}
+        onSearchChange={paged.setSearch}
+        searchPlaceholder="Buscar folio, cliente o expediente…"
+        primary={
+          <>
+            <Select value={paged.filters.vencidas} onValueChange={(v) => paged.setFilter("vencidas", v)}>
+              <SelectTrigger className="w-[160px]" aria-label="Vencidas">
+                <SelectValue placeholder="Vencidas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                <SelectItem value="si">Solo vencidas</SelectItem>
+                <SelectItem value="no">No vencidas</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={paged.filters.moneda} onValueChange={(v) => paged.setFilter("moneda", v)}>
+              <SelectTrigger className="w-[140px]" aria-label="Moneda">
+                <SelectValue placeholder="Moneda" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas monedas</SelectItem>
+                {monedas.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
+        secondary={
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cartera-from">Vencimiento desde</Label>
+              <Input
+                id="cartera-from"
+                type="date"
+                value={paged.dateFrom}
+                onChange={(e) => paged.setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cartera-to">Vencimiento hasta</Label>
+              <Input
+                id="cartera-to"
+                type="date"
+                value={paged.dateTo}
+                onChange={(e) => paged.setDateTo(e.target.value)}
+              />
+            </div>
+          </div>
+        }
+        chips={paged.activeChips}
+        activeCount={paged.activeCount}
+        onClearAll={paged.resetAll}
+      />
+
       {/* Mobile: lista de tarjetas (sm:hidden). Las cifras nunca quedan cortadas. */}
       <Card className="sm:hidden">
         <CardContent className="p-0">
           {isLoading && (
             <div className="py-8 text-center text-muted-foreground">Cargando...</div>
           )}
-          {!isLoading && data.length === 0 && (
+          {!isLoading && paged.rows.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
               <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
               Sin cartera pendiente. ¡Todo cobrado!
             </div>
           )}
           <ul className="divide-y">
-            {data.map((row) => (
+            {paged.rows.map((row) => (
               <li key={row.factura_id} className="p-3 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
                   <Link
@@ -201,23 +303,21 @@ export default function Cartera() {
         </CardContent>
       </Card>
 
-      {/* Desktop / tablet: DataTable unificada. */}
+      {/* Desktop / tablet: DataTable unificada con orden + paginación server-tagged. */}
       <Card className="hidden sm:block">
         <CardContent className="p-0">
           <DataTable<CarteraRow>
             columns={columns}
-            data={data}
+            data={paged.rows}
             rowKey={(r) => r.factura_id}
-            isLoading={isLoading}
-            emptyState={
-              <div className="p-6">
-                <EmptyState
-                  icon={Inbox}
-                  title="Sin cartera pendiente"
-                  description="¡Todo cobrado!"
-                />
-              </div>
-            }
+            isLoading={paged.isLoading}
+            sortMode="server"
+            controlledSort={paged.controlledSort}
+            onSortChange={paged.setSort}
+            pagination={paged.pagination}
+            emptyIcon={Inbox}
+            emptyMessage="Sin cartera pendiente"
+            emptyHint="¡Todo cobrado!"
           />
         </CardContent>
       </Card>
