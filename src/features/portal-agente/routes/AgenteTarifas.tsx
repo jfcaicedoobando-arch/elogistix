@@ -1,6 +1,7 @@
 /**
  * Listado de tarifas del agente. Permite crear, editar (sólo borradores/rechazadas)
  * y duplicar (cualquier estado). La aprobación a 'vigente' la hace operaciones.
+ * v13.172.17: migrado de `<Table>` crudo a `DataTable` (Fase 4 homologación).
  */
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -8,12 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { useAgenteTarifas } from "@/features/portal-agente/hooks";
 import { AgenteTarifaForm } from "@/features/portal-agente/components/AgenteTarifaForm";
 import { Plus, MoreHorizontal } from "lucide-react";
@@ -31,7 +31,7 @@ interface EditorState {
 
 function toInitial(t: AgenteTarifaRow): Partial<TarifaInput> {
   return {
-    agente_id: "", // se rellena con agenteIdFijo en el wrapper
+    agente_id: "",
     naviera_id: t.naviera_id,
     ruta_id: t.ruta_id,
     tipo_contenedor_id: t.tipo_contenedor_id,
@@ -51,6 +51,104 @@ export default function AgenteTarifas() {
   const filtradas = useMemo(
     () => filtro === "todas" ? tarifas : tarifas.filter((t) => t.estado_aprobacion === filtro),
     [tarifas, filtro],
+  );
+
+  const columns = useMemo<ColumnDef<AgenteTarifaRow, unknown>[]>(
+    () => defineColumns<AgenteTarifaRow>([
+      {
+        id: "ruta",
+        header: "Ruta",
+        accessorFn: (t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
+        sortingFn: sortByString((t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`),
+        enableSorting: true,
+        meta: { sticky: true, className: "text-sm" },
+        cell: ({ row }) => (
+          <div>
+            <div>{row.original.puerto_origen_nombre} → {row.original.puerto_destino_nombre}</div>
+            {row.original.estado_aprobacion === "rechazada" && row.original.motivo_rechazo && (
+              <p className="text-xs text-destructive mt-1">
+                <strong>Motivo:</strong> {row.original.motivo_rechazo}
+              </p>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: "naviera",
+        header: "Naviera",
+        accessorFn: (t) => t.naviera_nombre,
+        sortingFn: sortByString((t) => t.naviera_nombre),
+        enableSorting: true,
+        cell: ({ row }) => row.original.naviera_nombre,
+      },
+      {
+        id: "contenedor",
+        header: "Contenedor",
+        accessorFn: (t) => t.tipo_contenedor_nombre,
+        enableSorting: true,
+        cell: ({ row }) => row.original.tipo_contenedor_nombre,
+      },
+      {
+        id: "flete",
+        header: "Flete base",
+        accessorFn: (t) => Number(t.flete_base),
+        sortingFn: sortByNumber((t) => Number(t.flete_base)),
+        enableSorting: true,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) =>
+          `${row.original.moneda} ${Number(row.original.flete_base).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`,
+      },
+      {
+        id: "vigencia",
+        header: "Vigencia",
+        accessorFn: (t) => t.vigente_desde,
+        sortingFn: sortByDate((t) => t.vigente_desde),
+        enableSorting: true,
+        meta: { className: "text-xs text-muted-foreground" },
+        cell: ({ row }) => `${row.original.vigente_desde} → ${row.original.vigente_hasta}`,
+      },
+      {
+        id: "estado",
+        header: "Estado",
+        accessorFn: (t) => t.estado_aprobacion,
+        enableSorting: true,
+        cell: ({ row }) => <EstadoBadge estado={row.original.estado_aprobacion} />,
+      },
+      {
+        id: "acciones",
+        header: "",
+        meta: { width: "w-12", align: "right" },
+        cell: ({ row }) => {
+          const t = row.original;
+          const editable = t.estado_aprobacion === "borrador" || t.estado_aprobacion === "rechazada";
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    disabled={!editable}
+                    onClick={() => setEditor({ open: true, modo: "editar", tarifaId: t.id, initial: toInitial(t) })}
+                  >
+                    {t.estado_aprobacion === "rechazada" ? "Corregir y reenviar" : "Editar"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setEditor({ open: true, modo: "duplicar", initial: toInitial(t) })}
+                  >
+                    Duplicar como nueva
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      },
+    ]),
+    [],
   );
 
   return (
@@ -84,77 +182,14 @@ export default function AgenteTarifas() {
       </Tabs>
 
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Ruta</TableHead>
-              <TableHead>Naviera</TableHead>
-              <TableHead>Contenedor</TableHead>
-              <TableHead className="text-right">Flete base</TableHead>
-              <TableHead>Vigencia</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Cargando…</TableCell></TableRow>
-            )}
-            {!isLoading && filtradas.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-6">
-                No hay tarifas para este filtro.
-              </TableCell></TableRow>
-            )}
-            {filtradas.map((t) => {
-              const editable = t.estado_aprobacion === "borrador" || t.estado_aprobacion === "rechazada";
-              return (
-                <TableRow key={t.id}>
-                  <TableCell className="text-sm">
-                    {t.puerto_origen_nombre} → {t.puerto_destino_nombre}
-                    {t.estado_aprobacion === "rechazada" && t.motivo_rechazo && (
-                      <p className="text-xs text-destructive mt-1">
-                        <strong>Motivo:</strong> {t.motivo_rechazo}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell>{t.naviera_nombre}</TableCell>
-                  <TableCell>{t.tipo_contenedor_nombre}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {t.moneda} {Number(t.flete_base).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {t.vigente_desde} → {t.vigente_hasta}
-                  </TableCell>
-                  <TableCell>
-                    <EstadoBadge estado={t.estado_aprobacion} />
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          disabled={!editable}
-                          onClick={() => setEditor({ open: true, modo: "editar", tarifaId: t.id, initial: toInitial(t) })}
-                        >
-                          {t.estado_aprobacion === "rechazada" ? "Corregir y reenviar" : "Editar"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setEditor({ open: true, modo: "duplicar", initial: toInitial(t) })}
-                        >
-                          Duplicar como nueva
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <DataTable<AgenteTarifaRow>
+          columns={columns}
+          data={filtradas}
+          rowKey={(t) => t.id}
+          isLoading={isLoading}
+          skeletonRows={5}
+          emptyMessage="No hay tarifas para este filtro."
+        />
       </Card>
 
       <AgenteTarifaForm
