@@ -1,30 +1,28 @@
-# Quitar columna "Acciones" de la tabla de Facturación
+# Homologar columna "# Factura" con el resto de tablas
 
-## Qué cambia
+## Problema
 
-En la lista `/facturacion` la última columna "Acciones" contiene 4 botones (Timbrar, Pagar, Ver pagos, Cancelar). Se elimina por completo. Todas esas operaciones ya existen en el detalle de la factura (`/facturacion/:id`), al que se llega haciendo clic en el # de folio o en la fila.
+En `/facturacion` la primera columna renderiza el folio como `<Link>` con `text-accent hover:underline`, lo que en México se lee como "hazme clic". Confunde: la fila entera ya es clickeable (`onRowClick` navega al detalle en `TabFacturasEmitidas.tsx:168`), y ninguna otra tabla del sistema (Cotizaciones, Clientes, CxP, Proveedores, Embarques Activos, Oportunidades, Leads) usa Link azul en su primera columna — todas confían en el click de fila.
 
-## Archivos a tocar
+## Cambio
 
-### 1. `src/features/facturacion/routes/facturacionColumns.tsx`
-- Borrar el objeto de columna `id: "acciones"` (líneas 120-151).
-- Quitar del `FacturaColumnsOptions` los campos `canEdit`, `onRegistrarPago`, `onVerPagos`, `onTimbrar`, `onCancelar` (ya no se usan en columnas).
-- Quitar imports muertos: `Button`, `DollarSign`, `Eye`, `Stamp`, `Ban`, `esCreadaConCapacidadTimbrado`, y las constantes `ESTADOS_PAGABLES` / `ESTADOS_TIMBRABLES`.
+`src/features/facturacion/routes/facturacionColumns.tsx`, cell de la columna `numero`:
 
-### 2. `src/features/facturacion/routes/Facturacion.tsx`
-- Quitar del `buildFacturaColumns({...})` los handlers `onRegistrarPago`, `onVerPagos`, `onTimbrar`, `onCancelar` y el flag `canEdit`.
-- Revisar y eliminar el estado/diálogos huérfanos que sólo servían para la lista: `pagoFactura`, `historialFactura`, `timbrarFactura`, `cancelarFactura` y sus dialogs correspondientes, siempre que no se disparen desde otro lugar de la lista (barra superior, menú masivo, etc.). Si alguno se usa además desde una acción masiva o botón del header, se conserva sólo ese uso.
+- Reemplazar el `<Link to={`/facturacion/${row.original.id}`} className="text-accent hover:underline">` por un simple `<span>` con la tipografía normal de la tabla (heredada de `font-medium whitespace-nowrap` que ya define el `meta` de la columna).
+- Conservar el `AmbienteBadge` a la derecha.
+- Conservar el placeholder "Sin folio (borrador)" en itálicas muted cuando el número empieza por `BORRADOR-`.
+- Eliminar el import de `Link` (queda huérfano).
 
-### 3. Tests
-- `src/features/facturacion/routes/__tests__/*` (si existe test para `facturacionColumns`): actualizar snapshot / asserts para reflejar que ya no hay columna "Acciones".
+Resultado: el folio se ve como texto normal, la fila entera navega al detalle, y el módulo queda consistente con el resto de la app.
 
 ## Fuera de alcance
 
-- No se toca el detalle de factura (`FacturaDetalle.tsx`) — ahí siguen viviendo Timbrar, Registrar pago, Ver pagos, Cancelar.
-- No se cambia la columna "Archivos" (descarga PDF/XML), que sigue siendo consulta rápida, no acción de estado.
-- No se cambia el badge de ambiente ni la navegación al detalle.
+- No se toca `onRowClick`; la navegación por fila sigue igual.
+- No se cambian otras columnas ni el badge de ambiente.
+- No se altera el detalle de factura ni sus enlaces internos.
+- No se homologan otras tablas ajenas a esta lista (no hay evidencia de que las tengan mal).
 
 ## Changelog
 
-Bump `APP_VERSION` + `CHANGELOG.md`:
-> UI Facturación: se retira la columna "Acciones" de la tabla. Timbrar, Registrar pago, Ver pagos y Cancelar CFDI se realizan desde el detalle de la factura para evitar operaciones desde una vista de listado con poco contexto.
+Bump `APP_VERSION` a `13.172.13` + entrada en `CHANGELOG.md`:
+> UI Facturación: el folio de la primera columna deja de renderizarse como enlace azul. La fila entera ya navega al detalle (`onRowClick`), homologando la tabla con Cotizaciones, Clientes, CxP y Proveedores.
