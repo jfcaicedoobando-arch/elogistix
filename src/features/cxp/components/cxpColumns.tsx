@@ -127,19 +127,18 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
     },
     {
       id: "aprobacion", header: "Aprobación",
-      accessorFn: (f) => f.estado_aprobacion, enableSorting: true,
+      accessorFn: (f) => APROB_STATUS[f.estado_aprobacion as EstadoAprob],
+      enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.estado_aprobacion),
       meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
-        const ap = row.original.estado_aprobacion;
+        const ap = row.original.estado_aprobacion as EstadoAprob;
         return (
-          <Badge
-            variant="outline"
-            className={APROB_COLOR[ap]}
-            title={ap === "rechazada" && row.original.motivo_rechazo ? row.original.motivo_rechazo : undefined}
-          >
-            {APROB_LABEL[ap]}
-          </Badge>
+          <StatusBadge
+            domain="aprobacion_cxp"
+            status={APROB_STATUS[ap]}
+            className={ap === "rechazada" && row.original.motivo_rechazo ? "cursor-help" : undefined}
+          />
         );
       },
     },
