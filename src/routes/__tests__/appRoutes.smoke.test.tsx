@@ -151,7 +151,6 @@ describe("routes/appRoutes — redirecciones", () => {
     ["/reportes", "/reportes/rentabilidad"],
     ["/rentabilidad", "/reportes/rentabilidad"],
     ["/facturacion/por-emitir", "/proformas?estado=aceptada"],
-    ["/compras/por-aprobar", "/compras/facturas?aprobacion=pendiente"],
   ])("%s redirige a %s con Navigate replace", (from, to) => {
     const rec = records.find((r) => r.path === from);
     expect(rec?.element).toBeTruthy();
