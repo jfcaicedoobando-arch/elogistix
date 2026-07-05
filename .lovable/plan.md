@@ -1,56 +1,87 @@
-# Fase 4 y 5 — Migrar las tablas restantes al `DataTable`
+## Objetivo
 
-Auditamos con subagente el resto de la app (excluyendo lo ya migrado en `13.172.16`). Encontramos **8 tablas de datos** que aún usan el primitivo `<Table>` de shadcn y **9 casos legítimos** que no deben migrarse (forms editables inline y sub-tablas de display de pocas filas fijas).
+Impedir que se vuelva a importar `@/components/ui/table` fuera de la allowlist, obligando a usar `<DataTable />` y los builders (`columnBuilders`, `defineColumns`, `StatusBadge`).
 
-Analogía: es como reemplazar las últimas máquinas de escribir en la oficina por computadoras del mismo modelo que ya usa todo el equipo. Los formularios en papel (form-tables) se quedan como están porque cumplen otra función.
+## Diagnóstico
 
-## Fase 4 — Alta prioridad (listados principales)
+- `eslint.config.js` **ya** tiene un `no-restricted-imports` sobre `@/components/ui/table` (líneas 71-77), **pero queda anulado** por el override de la línea 168-172 que apaga `no-restricted-imports` completo para `src/hooks/**`, `src/services/**` y **`src/features/**`** — donde vive el 95% de las tablas.
+- La allowlist explícita (línea 260-288) apunta a rutas viejas (`src/components/cotizacion/...`, `src/pages/bandejas/...`) que ya no existen tras las Fases 1-5. Los archivos legítimos hoy viven en `src/features/…`.
+- Resultado: la regla nunca dispara. Correr `eslint` sobre `TablaCostosDetalle.tsx` no reporta nada.
 
-Son listados largos, con acciones, que se benefician directamente del skeleton, sort y empty state estándar del `DataTable`. Bump `13.172.17`.
+## Cambios
 
-1. **`/agente/tarifas`** — `portal-agente/routes/AgenteTarifas.tsx`
-   - Preservar: tabs de filtro por estado, kebab (crear/editar/duplicar), badge best-price.
-2. **`/agente/embarques`** — `portal-agente/routes/AgenteEmbarques.tsx`
-   - Solo lectura. Agregar sort por ETD/ETA con `sortByDate`.
-3. **`/costeo/tarifas`** — `costeo/components/CosteoTarifasTable.tsx`
-   - Preservar: botones inline de aprobar/rechazar (como `actionsColumn` custom), best-price badge, columnas responsive (`hidden lg:table-cell` para Flete/Recargos).
-4. **`/costeo/rutas`** — `costeo/components/CosteoRutasTable.tsx`
-   - Preservar: `onRowClick` navega a `/costeo/tarifas`, delete inline, `computeRutaEstado` como `statusColumn` (dominio `ruta_maritima` — validar en `statusRegistry`, agregar si falta).
-5. **`/costeo/agentes`** — `costeo/components/CosteoAgentesTable.tsx`
-   - Preservar: 3 acciones (editar / eliminar / invitar portal) como `actionsColumn`. Badge activo → `StatusBadge`.
+### 1. `eslint.config.js` — regla dedicada `no-raw-table`
 
-## Fase 5 — Prioridad media (sub-tablas con lógica)
+Extraer la restricción de `@/components/ui/table` a un **bloque propio** al final del archivo, con su propio `files: ["**/*.{ts,tsx}"]` y su propio `ignores` (allowlist). Así queda inmune al override que apaga `no-restricted-imports` en `features/**`.
 
-Bump `13.172.18`. Migran preservando comportamiento no trivial.
+```text
+{
+  name: "no-raw-table",
+  files: ["src/**/*.{ts,tsx}"],
+  ignores: [ …allowlist actualizada… ],
+  rules: {
+    "no-restricted-imports": ["error", { paths: [{
+      name: "@/components/ui/table",
+      message: "Usa <DataTable /> de '@/components/shared/DataTable' + columnBuilders. Excepciones: agrega el archivo a la allowlist en eslint.config.js y documenta el motivo."
+    }]}]
+  }
+}
+```
 
-6. **`/agente/garantias`** — `portal-agente/routes/AgenteGarantias.tsx`
-   - Tabla actúa como selector: `onRowClick` selecciona fila y abre panel lateral con `DemorasTarifaEditor`. Pasar `onRowClick` + resaltar `selectedRowId`.
-7. **`/embarques/:id` tab Reconciliación** — `embarques/components/reconciliacion/ReconciliacionTresColumnas.tsx`
-   - Preservar: Switch "solo varianza", colorización por clasificación con `cellClassName` en `columnDef`.
-8. **`/embarques/:id` tab P&L Contenedor** — `embarques/components/TabPnlContenedor.tsx`
-   - Migración simple: filas fijas por contenedor, columnas por moneda. Sin sort necesario.
+Quitar el `paths:` del bloque global (líneas 71-77) para evitar duplicación.
 
-## Fuera de alcance (confirmado)
+### 2. Allowlist actualizada (rutas reales post Fase 5)
 
-No se tocan — son form-tables de captura o sub-tablas de display de pocas filas fijas:
+```text
+src/components/shared/DataTable.tsx
+src/components/shared/dataTable/**
+src/features/cotizacion/components/SeccionMercanciaAerea.tsx
+src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx
+src/features/cotizacion/components/TablaConceptosGenerico.tsx
+src/features/cotizacion/components/TablaCostosDetalle.tsx
+src/features/cotizacion/components/seccionMercancia/DimensionesLCLTable.tsx
+src/features/cotizacion/components/seccionMercancia/DimensionesAereasTable.tsx
+src/features/facturacion/components/detalle/FacturaConceptosTable.tsx
+src/features/portal/components/factura/PortalFacturaConceptosTable.tsx
+src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx
+src/features/embarques/components/pnl/PnlProveedoresTable.tsx
+src/features/embarques/components/pnl/PnlComparativaTable.tsx
+src/features/costeo/components/DemorasTarifaEditor.tsx
+src/features/configuracion/components/CatalogoClavesSATCard.tsx
+src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx
+```
 
-- **Catálogos editables inline:** `CatalogoClavesSATCard` (+ `.parts.tsx`), y por analogía `TabPuertos`/`TabNavieras`/`TabTiposContenedor` si aplican.
-- **Editor de tramos:** `DemorasTarifaEditor.tsx`.
-- **Conceptos de factura/cotización (display):** `FacturaConceptosTable`, `PortalFacturaConceptosTable`, `TablaConceptosGenerico`.
-- **Conceptos editables:** `TablaCostosDetalle`.
-- **Dimensiones de mercancía en wizard:** `SeccionMercanciaMaritimaLCL`, `SeccionMercanciaAerea`, `DimensionesLCLTable`, `DimensionesAereasTable`.
-- **Ya correcto:** `EmbarquesRelacionadosCard` (usa `DataTable` con `customRowRender`).
+Cada entrada lleva un comentario `//` explicando por qué no migra (form-table editable, sub-tabla read-only estática, catálogo con toggles, etc.).
 
-## Detalles técnicos
+### 3. Test de arquitectura de respaldo
 
-- Reutilizar `columnBuilders` (`statusColumn`, `moneyColumn`, `dateColumn`, `actionsColumn`), helpers de sort (`sortByString`, `sortByDate`), y `StatusBadge`.
-- Antes de Fase 4, verificar/agregar dominios en `src/lib/status/statusRegistry.ts`: `ruta_maritima`, `tarifa_maritima` (Borrador/Vigente/Rechazada/Por vencer), `garantia_naviera`, `agente` (activo/inactivo).
-- Cada tabla migrada: `skeletonRows={5}`, sticky en 1ª columna, responsive `hidden xl:table-cell` en columnas secundarias donde ya lo tenían.
-- Verificación: `bun run test` + recorrido manual de cada ruta migrada, confirmando que las acciones y navegación funcionan igual.
+Nuevo archivo `src/__tests__/architecture/no-raw-table.test.ts`:
 
-## Changelog
+- Walkea `src/` con `scripts/lib/walk.ts`.
+- Colecta todos los archivos que hacen `from "@/components/ui/table"`.
+- Falla si el set difiere de una allowlist constante en el propio test (misma lista que ESLint).
 
-- `13.172.17` — Fase 4 (5 listados principales).
-- `13.172.18` — Fase 5 (3 sub-tablas con lógica interactiva).
+Sirve como red de respaldo si alguien edita `eslint.config.js` para relajar la regla sin actualizar la lista.
 
-Cada entrada listará los archivos migrados y las precauciones tomadas (acciones inline preservadas, `onRowClick` mantenido, columnas responsive respetadas).
+### 4. Documentación
+
+- `CONTRIBUTING.md`: sección corta "Tablas — regla del design system" apuntando a `DataTable` + `columnBuilders` y explicando cómo pedir excepción.
+- `mem://principles/no-raw-table` (nueva memoria tipo `constraint`): "Prohibido importar `@/components/ui/table` fuera de la allowlist. Usar `DataTable` + `defineColumns` + builders. **Why:** unificar design language."
+- Actualizar `mem://index.md` (sección Core, one-liner).
+
+### 5. Verificación
+
+1. `bunx eslint src/features/cotizacion/routes/Cotizaciones.tsx` (no debe fallar — no usa Table crudo).
+2. Simular violación: `bunx eslint` sobre un archivo temporal con `import { Table } from "@/components/ui/table"` fuera de la allowlist → debe fallar con el mensaje.
+3. `bunx vitest run src/__tests__/architecture/no-raw-table.test.ts` → pasa.
+4. `bun run lint` completo sin warnings.
+
+### 6. Changelog + versión
+
+- `src/constants/appVersion.ts` → `13.172.19`.
+- `CHANGELOG.md` → entrada `## [13.172.19] - 2026-07-05` con bullet "Guardrail ESLint + test de arquitectura para prohibir `@/components/ui/table` fuera de la allowlist del design system."
+
+## Fuera de alcance
+
+- No se migra ninguna tabla adicional. La allowlist congela el estado actual; cualquier migración futura se hace en otro plan.
+- No se toca el override de `features/**` en el bloque genérico de `no-restricted-imports` (afecta barrels de hooks/services, distinto propósito).

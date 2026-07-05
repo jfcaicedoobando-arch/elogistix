@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.19] - 2026-07-05
+- **guardrail(tablas)** — Regla ESLint dedicada `no-raw-table` que bloquea importar `@/components/ui/table` fuera de una allowlist explícita (form-tables editables, sub-tablas read-only estáticas, catálogos con toggles). Se movió a su propio bloque para no ser anulada por el override que apaga `no-restricted-imports` en `src/features/**`.
+- **test(architecture)** — Nuevo `src/__tests__/architecture/no-raw-table.test.ts` como red de respaldo: enumera archivos con la primitiva y falla si difieren de la allowlist. Detecta además entradas obsoletas.
+- **housekeeping** — La allowlist previa apuntaba a rutas viejas (`src/components/cotizacion/…`, `src/pages/bandejas/…`); se refresca con las rutas actuales post Fase 1-5.
+
 ## [13.172.18] - 2026-07-05
 - **ui(tablas · Fase 5)** — Se migran a `DataTable` las 3 sub-tablas interactivas restantes:
   - `AgenteGarantias` (`/agente/garantias`) — `onRowClick` abre el panel lateral con `NavieraCondicionForm` + `DemorasTarifaEditor`; la fila seleccionada resalta con `rowClassName`.
