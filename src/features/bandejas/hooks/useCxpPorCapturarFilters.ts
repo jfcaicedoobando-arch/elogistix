@@ -140,7 +140,8 @@ export function useCxpPorCapturarFilters(rows: CxpPorCapturarRow[]) {
   );
 
   const toggleDireccion = useCallback(() => {
-    setUrlState({ dir: urlState.dir === "asc" ? "desc" : null });
+    // desc es el default → "asc" se serializa; volver a "desc" borra el param.
+    setUrlState({ dir: urlState.dir === "asc" ? null : "asc" });
   }, [setUrlState, urlState.dir]);
 
   const reset = useCallback(() => {
