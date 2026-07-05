@@ -21,12 +21,17 @@ export const LEAD_FUENTES: CrmLeadFuente[] = [
   "Otro",
 ];
 
+export type LeadSortKey = "created_at" | "empresa" | "estado" | "fuente" | "score";
+export const LEAD_SORTABLE_KEYS = ["created_at", "empresa", "estado", "fuente", "score"] as const;
+
 export interface LeadFiltros {
   search?: string;
   estado?: CrmLeadEstado | "todos";
   fuente?: CrmLeadFuente | "todos";
   page?: number;
   pageSize?: number;
+  sortKey?: LeadSortKey;
+  sortDir?: "asc" | "desc";
 }
 
 export interface LeadsResultado {
