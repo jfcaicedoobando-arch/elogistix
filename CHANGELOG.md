@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.173.3] - 2026-07-05
+
+- **arquitectura(listados) — Guardrail Ola 1** — Nuevo test `pagedListsAllowlist.test.ts` (8 casos) que ancla las rutas ya migradas al primitivo unificado y falla si alguien las revierte a filtros locales. Cubre Cartera, CxP Por Pagar, CxP Aging y Comisiones, verificando que (a) importan `useServerPagedList`/`useClientPagedList` y (b) pasan la prop `pagination` al DataTable. La allowlist se extiende explícitamente ola por ola, forzando a que cada nueva migración toque este archivo (auditoría trazable).
+- **Estado del plan `filtros globales`**: Ola 1 cerrada con guardrail. Olas 2-6 (CRM, Portales, Admin/Auditoría, Costeo/Config, tablas de detalle) pendientes — cada una implica ~5-10 rutas más un ajuste de RPC/hook por ruta, por eso se avanzan en turnos independientes.
+
 ## [13.173.2] - 2026-07-05
 
 - **arquitectura(listados)** — Cierre de la Ola 1 del plan de filtros globales:
