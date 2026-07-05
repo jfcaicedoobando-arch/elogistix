@@ -2,25 +2,18 @@
  * Carta garantía y tabulador de demoras del agente.
  *
  * Reutiliza el flujo de `CosteoNavieras` (NavieraCondicionForm + DemorasTarifaEditor).
- * El agente sólo verá/podrá modificar las condiciones cuyo proveedor coincide con su
- * `costeo_agente.proveedor_id` (lo aplica la RLS `Agente CRUD own naviera condiciones`).
- *
- * Nota: el form de condiciones obliga a elegir un "Proveedor vinculado". El agente
- * sólo verá su propio proveedor en la lista porque la query `fetchProveedoresPorTipo`
- * pasa por RLS de `proveedores` (org-scoped) y, en su org, sólo está su proveedor activo
- * del tipo Naviera. Si la naviera aún no está vinculada al agente, RLS rechazará el
- * insert con un mensaje claro.
+ * v13.172.18: migrado a `DataTable` (Fase 5 homologación); onRowClick selecciona la fila
+ * y abre el panel lateral con las condiciones.
  */
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings2, FileSignature, Info } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import {
   useCondicionesNaviera,
   useNavierasCatalogo,
@@ -52,6 +45,59 @@ export default function AgenteGarantias() {
     }));
   }, [navieras, condiciones]);
 
+  const columns = useMemo<ColumnDef<FilaNaviera, unknown>[]>(
+    () => defineColumns<FilaNaviera>([
+      {
+        id: "naviera",
+        header: "Naviera",
+        accessorFn: (f) => f.naviera_nombre,
+        sortingFn: sortByString((f) => f.naviera_nombre),
+        enableSorting: true,
+        meta: { sticky: true, className: "font-medium" },
+        cell: ({ row }) => row.original.naviera_nombre,
+      },
+      {
+        id: "scac",
+        header: "SCAC",
+        accessorFn: (f) => f.naviera_code,
+        meta: { className: "font-mono text-xs", width: "w-[100px]" },
+        cell: ({ row }) => row.original.naviera_code,
+      },
+      {
+        id: "carta",
+        header: "Carta garantía",
+        cell: ({ row }) => (
+          <CartaGarantiaBadge
+            tieneCarta={row.original.condicion?.tiene_carta_garantia ?? false}
+            vigenteHasta={row.original.condicion?.carta_garantia_vigente_hasta ?? null}
+          />
+        ),
+      },
+      {
+        id: "diaslibres",
+        header: "Días libres",
+        accessorFn: (f) => f.condicion?.dias_libres_demoras_default ?? null,
+        sortingFn: sortByNumber((f) => f.condicion?.dias_libres_demoras_default ?? null),
+        enableSorting: true,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => row.original.condicion?.dias_libres_demoras_default ?? "—",
+      },
+      {
+        id: "acciones",
+        header: "Acciones",
+        meta: { width: "w-32", align: "right" },
+        cell: ({ row }) => (
+          <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+            <Button size="sm" variant="outline" onClick={() => setSeleccion(row.original)}>
+              <Settings2 className="size-4 mr-1" /> Configurar
+            </Button>
+          </div>
+        ),
+      },
+    ]),
+    [],
+  );
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -70,42 +116,16 @@ export default function AgenteGarantias() {
       </Card>
 
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Naviera</TableHead>
-              <TableHead>SCAC</TableHead>
-              <TableHead>Carta garantía</TableHead>
-              <TableHead className="text-right">Días libres</TableHead>
-              <TableHead className="w-32 text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(loadingNav || loadingCond) && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Cargando…</TableCell></TableRow>
-            )}
-            {filas.map((f) => (
-              <TableRow key={f.naviera_id}>
-                <TableCell className="font-medium">{f.naviera_nombre}</TableCell>
-                <TableCell className="font-mono text-xs">{f.naviera_code}</TableCell>
-                <TableCell>
-                  <CartaGarantiaBadge
-                    tieneCarta={f.condicion?.tiene_carta_garantia ?? false}
-                    vigenteHasta={f.condicion?.carta_garantia_vigente_hasta ?? null}
-                  />
-                </TableCell>
-                <TableCell className="text-right">
-                  {f.condicion?.dias_libres_demoras_default ?? "—"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button size="sm" variant="outline" onClick={() => setSeleccion(f)}>
-                    <Settings2 className="size-4 mr-1" /> Configurar
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable<FilaNaviera>
+          columns={columns}
+          data={filas}
+          rowKey={(f) => f.naviera_id}
+          isLoading={loadingNav || loadingCond}
+          skeletonRows={5}
+          onRowClick={(f) => setSeleccion(f)}
+          rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
+          emptyMessage="Sin navieras configuradas."
+        />
       </Card>
 
       <FormDialogShell

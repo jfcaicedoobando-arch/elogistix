@@ -1,15 +1,8 @@
 /**
  * Tabla de reconciliación a 3 columnas: cotizado / refrescado / real (Fase 2).
+ * v13.172.18: migrado a `DataTable` (Fase 5 homologación); preserva Switch de "sólo varianza".
  */
 import { useState, useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -19,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useReconciliacion3Columnas } from "@/features/embarques/hooks/useReconciliacion3Columnas";
 import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbralesReconciliacion";
 import type { FilaReconciliacion3C } from "@/features/cotizacion/domain/versionadoCotizacion";
@@ -40,6 +34,64 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
       ? data.filas.filter((f) => f.clasificacion !== "dentro_rango")
       : data.filas;
   }, [data, soloVarianza]);
+
+  const columns = useMemo<ColumnDef<FilaReconciliacion3C, unknown>[]>(
+    () => defineColumns<FilaReconciliacion3C>([
+      {
+        id: "concepto",
+        header: "Concepto",
+        accessorFn: (f) => f.concepto,
+        meta: { sticky: true },
+        cell: ({ row }) => row.original.concepto,
+      },
+      {
+        id: "cotizado",
+        header: "Cotizado",
+        accessorFn: (f) => f.cotizado,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.cotizado, row.original.moneda),
+      },
+      {
+        id: "refrescado",
+        header: "Refrescado",
+        accessorFn: (f) => f.refrescado,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.refrescado, row.original.moneda),
+      },
+      {
+        id: "real",
+        header: "Real",
+        accessorFn: (f) => f.real,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.real, row.original.moneda),
+      },
+      {
+        id: "delta_cot",
+        header: "Δ vs Cot.",
+        accessorFn: (f) => f.delta_cot_vs_real.pct,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => pct(row.original.delta_cot_vs_real.pct),
+      },
+      {
+        id: "delta_refr",
+        header: "Δ vs Refr.",
+        accessorFn: (f) => f.delta_refr_vs_real.pct,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => pct(row.original.delta_refr_vs_real.pct),
+      },
+      {
+        id: "estado",
+        header: "Estado",
+        accessorFn: (f) => f.clasificacion,
+        cell: ({ row }) => (
+          <Badge className={colorPorClasificacion(row.original.clasificacion)}>
+            {row.original.clasificacion}
+          </Badge>
+        ),
+      },
+    ]),
+    [],
+  );
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Cargando reconciliación…</p>;
@@ -87,6 +139,12 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
               onCheckedChange={setSoloVarianza}
             />
             <Label htmlFor="solo-varianza">Sólo con varianza</Label>
+            <Tooltip>
+              <TooltipTrigger className="text-xs text-muted-foreground ml-2">¿qué significan las columnas?</TooltipTrigger>
+              <TooltipContent>
+                Cotizado: versión aceptada. Refrescado: al crear el embarque. Real: costos registrados.
+              </TooltipContent>
+            </Tooltip>
           </div>
           <button
             type="button"
@@ -97,60 +155,13 @@ export function ReconciliacionTresColumnas({ embarqueId }: Props) {
           </button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Concepto</TableHead>
-              <TableHead className="text-right">
-                <Tooltip>
-                  <TooltipTrigger>Cotizado</TooltipTrigger>
-                  <TooltipContent>Monto en la versión aceptada por el cliente.</TooltipContent>
-                </Tooltip>
-              </TableHead>
-              <TableHead className="text-right">
-                <Tooltip>
-                  <TooltipTrigger>Refrescado</TooltipTrigger>
-                  <TooltipContent>
-                    Monto al crear el embarque, con la tarifa vigente (Fase 1).
-                  </TooltipContent>
-                </Tooltip>
-              </TableHead>
-              <TableHead className="text-right">
-                <Tooltip>
-                  <TooltipTrigger>Real</TooltipTrigger>
-                  <TooltipContent>Monto registrado en los costos del embarque.</TooltipContent>
-                </Tooltip>
-              </TableHead>
-              <TableHead className="text-right">Δ vs Cot.</TableHead>
-              <TableHead className="text-right">Δ vs Refr.</TableHead>
-              <TableHead>Estado</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filas.map((f, i) => (
-              <TableRow key={`${f.concepto}-${f.moneda}-${i}`}>
-                <TableCell>{f.concepto}</TableCell>
-                <TableCell className="text-right">{fmt(f.cotizado, f.moneda)}</TableCell>
-                <TableCell className="text-right">{fmt(f.refrescado, f.moneda)}</TableCell>
-                <TableCell className="text-right">{fmt(f.real, f.moneda)}</TableCell>
-                <TableCell className="text-right">{pct(f.delta_cot_vs_real.pct)}</TableCell>
-                <TableCell className="text-right">{pct(f.delta_refr_vs_real.pct)}</TableCell>
-                <TableCell>
-                  <Badge className={colorPorClasificacion(f.clasificacion)}>
-                    {f.clasificacion}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filas.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  No hay filas con varianza.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <DataTable<FilaReconciliacion3C>
+          columns={columns}
+          data={filas}
+          rowKey={(f) => `${f.concepto}-${f.moneda}`}
+          skeletonRows={5}
+          emptyMessage="No hay filas con varianza."
+        />
 
         <ResumenReconciliacion resumen={data.resumen} versionAceptada={data.version_aceptada} />
       </div>

@@ -2,21 +2,13 @@
  * Pestaña "P&L por Contenedor" (v13.66.14) — modelo CargoWise.
  *
  * Muestra una vista de utilidad por contenedor dentro del mismo embarque.
- * El "sub-expediente" (ELIMP00272-01) es sólo etiqueta de display.
- * Los conceptos con `contenedor_id = NULL` se prorratean flat (÷N).
+ * v13.172.18: migrado a `DataTable` (Fase 5 homologación).
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import { useEmbarqueDetalleData } from "@/features/embarques/hooks/useEmbarqueDetalleData";
@@ -116,6 +108,96 @@ function TablaPorMoneda({ moneda, filas }: TablaProps) {
   const fmt = (n: number) => formatCurrency(n, moneda);
   const pct = (n: number) => `${n.toFixed(1)}%`;
 
+  const columns = useMemo<ColumnDef<FilaPnlContenedor, unknown>[]>(
+    () => defineColumns<FilaPnlContenedor>([
+      {
+        id: "sub",
+        header: "Sub-expediente",
+        accessorFn: (f) => f.subexpediente,
+        meta: { sticky: true, className: "font-mono text-xs" },
+        cell: ({ row }) => {
+          const f = row.original;
+          if (f.esTotal || f.esGenerales) return f.subexpediente;
+          return <Badge variant="outline" className="font-mono">{f.subexpediente}</Badge>;
+        },
+      },
+      {
+        id: "numero",
+        header: "# Contenedor",
+        accessorFn: (f) => f.numeroContenedor,
+        cell: ({ row }) => row.original.numeroContenedor,
+      },
+      {
+        id: "tipo",
+        header: "Tipo",
+        accessorFn: (f) => f.tipoContenedor,
+        cell: ({ row }) => row.original.tipoContenedor,
+      },
+      {
+        id: "vd",
+        header: "Venta directa",
+        accessorFn: (f) => f.ventaDirecta,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.ventaDirecta),
+      },
+      {
+        id: "vp",
+        header: "Venta prorrateada",
+        accessorFn: (f) => f.ventaProrrateada,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.ventaProrrateada),
+      },
+      {
+        id: "vt",
+        header: "Venta total",
+        accessorFn: (f) => f.ventaTotal,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.ventaTotal),
+      },
+      {
+        id: "cd",
+        header: "Costo directo",
+        accessorFn: (f) => f.costoDirecto,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.costoDirecto),
+      },
+      {
+        id: "cp",
+        header: "Costo prorrateado",
+        accessorFn: (f) => f.costoProrrateado,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.costoProrrateado),
+      },
+      {
+        id: "ct",
+        header: "Costo total",
+        accessorFn: (f) => f.costoTotal,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => fmt(row.original.costoTotal),
+      },
+      {
+        id: "u",
+        header: "Utilidad",
+        accessorFn: (f) => f.utilidad,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => (
+          <span className={row.original.utilidad < 0 ? "text-destructive" : ""}>
+            {fmt(row.original.utilidad)}
+          </span>
+        ),
+      },
+      {
+        id: "m",
+        header: "Margen %",
+        accessorFn: (f) => f.margenPct,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => pct(row.original.margenPct),
+      },
+    ]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [moneda],
+  );
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -142,69 +224,16 @@ function TablaPorMoneda({ moneda, filas }: TablaProps) {
           />
         </div>
 
-        <div className="overflow-x-auto rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Sub-expediente</TableHead>
-                <TableHead># Contenedor</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Venta directa</TableHead>
-                <TableHead className="text-right">Venta prorrateada</TableHead>
-                <TableHead className="text-right">Venta total</TableHead>
-                <TableHead className="text-right">Costo directo</TableHead>
-                <TableHead className="text-right">Costo prorrateado</TableHead>
-                <TableHead className="text-right">Costo total</TableHead>
-                <TableHead className="text-right">Utilidad</TableHead>
-                <TableHead className="text-right">Margen %</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filas.map((f, idx) => {
-                const isTotal = !!f.esTotal;
-                const isGen = !!f.esGenerales;
-                return (
-                  <TableRow
-                    key={`${f.contenedorId ?? "g"}-${idx}`}
-                    className={
-                      isTotal
-                        ? "font-semibold bg-muted/40"
-                        : isGen
-                          ? "bg-warning/5 text-muted-foreground"
-                          : idx % 2 === 0
-                            ? "bg-muted/20"
-                            : ""
-                    }
-                  >
-                    <TableCell className="font-mono text-xs">
-                      {isTotal || isGen ? (
-                        f.subexpediente
-                      ) : (
-                        <Badge variant="outline" className="font-mono">
-                          {f.subexpediente}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{f.numeroContenedor}</TableCell>
-                    <TableCell>{f.tipoContenedor}</TableCell>
-                    <TableCell className="text-right">{fmt(f.ventaDirecta)}</TableCell>
-                    <TableCell className="text-right">{fmt(f.ventaProrrateada)}</TableCell>
-                    <TableCell className="text-right">{fmt(f.ventaTotal)}</TableCell>
-                    <TableCell className="text-right">{fmt(f.costoDirecto)}</TableCell>
-                    <TableCell className="text-right">{fmt(f.costoProrrateado)}</TableCell>
-                    <TableCell className="text-right">{fmt(f.costoTotal)}</TableCell>
-                    <TableCell
-                      className={`text-right ${f.utilidad < 0 ? "text-destructive" : ""}`}
-                    >
-                      {fmt(f.utilidad)}
-                    </TableCell>
-                    <TableCell className="text-right">{pct(f.margenPct)}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable<FilaPnlContenedor>
+          columns={columns}
+          data={filas}
+          rowKey={(f) => `${f.contenedorId ?? "g"}-${f.subexpediente}`}
+          rowClassName={(f) =>
+            f.esTotal ? "font-semibold bg-muted/40" : f.esGenerales ? "bg-warning/5 text-muted-foreground" : ""
+          }
+          skeletonRows={3}
+          emptyMessage="Sin filas."
+        />
       </CardContent>
     </Card>
   );

@@ -1,15 +1,83 @@
 /**
  * Embarques donde el agente autenticado figura como agente de carga.
  * Sólo lectura, sin datos comerciales (RLS lo restringe a esta vista mínima).
+ * v13.172.17: migrado a `DataTable` (Fase 4 homologación).
  */
+import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
+
+type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
 
 export default function AgenteEmbarques() {
   const { data: embarques = [], isLoading } = useAgenteEmbarques();
+
+  const columns = useMemo<ColumnDef<EmbarqueAgente, unknown>[]>(
+    () => defineColumns<EmbarqueAgente>([
+      {
+        id: "expediente",
+        header: "Expediente",
+        accessorFn: (e) => e.expediente,
+        sortingFn: sortByString((e) => e.expediente),
+        enableSorting: true,
+        meta: { sticky: true, className: "font-medium" },
+        cell: ({ row }) => row.original.expediente,
+      },
+      {
+        id: "modo",
+        header: "Modo",
+        accessorFn: (e) => e.modo,
+        enableSorting: true,
+        meta: { className: "text-xs" },
+        cell: ({ row }) => row.original.modo,
+      },
+      {
+        id: "ruta",
+        header: "Ruta",
+        accessorFn: (e) => `${e.puerto_origen ?? "—"} → ${e.puerto_destino ?? "—"}`,
+        meta: { className: "text-xs" },
+        cell: ({ row }) => `${row.original.puerto_origen ?? "—"} → ${row.original.puerto_destino ?? "—"}`,
+      },
+      {
+        id: "bl_master",
+        header: "BL Master",
+        accessorFn: (e) => e.bl_master ?? "",
+        meta: { className: "text-xs font-mono" },
+        cell: ({ row }) => row.original.bl_master ?? "—",
+      },
+      {
+        id: "etd",
+        header: "ETD",
+        accessorFn: (e) => e.etd,
+        sortingFn: sortByDate((e) => e.etd),
+        enableSorting: true,
+        meta: { className: "text-xs" },
+        cell: ({ row }) => row.original.etd ?? "—",
+      },
+      {
+        id: "eta",
+        header: "ETA",
+        accessorFn: (e) => e.eta,
+        sortingFn: sortByDate((e) => e.eta),
+        enableSorting: true,
+        meta: { className: "text-xs" },
+        cell: ({ row }) => row.original.eta ?? "—",
+      },
+      {
+        id: "estado",
+        header: "Estado",
+        accessorFn: (e) => e.estado,
+        enableSorting: true,
+        cell: ({ row }) => <Badge variant="outline">{row.original.estado}</Badge>,
+      },
+    ]),
+    [],
+  );
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -18,44 +86,14 @@ export default function AgenteEmbarques() {
       />
 
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Expediente</TableHead>
-              <TableHead>Modo</TableHead>
-              <TableHead>Ruta</TableHead>
-              <TableHead>BL Master</TableHead>
-              <TableHead>ETD</TableHead>
-              <TableHead>ETA</TableHead>
-              <TableHead>Estado</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Cargando…</TableCell></TableRow>
-            )}
-            {!isLoading && embarques.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
-                  Aún no hay embarques asignados a tu agente.
-                </TableCell>
-              </TableRow>
-            )}
-            {embarques.map((e) => (
-              <TableRow key={e.id}>
-                <TableCell className="font-medium">{e.expediente}</TableCell>
-                <TableCell className="text-xs">{e.modo}</TableCell>
-                <TableCell className="text-xs">
-                  {(e.puerto_origen ?? "—")} → {(e.puerto_destino ?? "—")}
-                </TableCell>
-                <TableCell className="text-xs font-mono">{e.bl_master ?? "—"}</TableCell>
-                <TableCell className="text-xs">{e.etd ?? "—"}</TableCell>
-                <TableCell className="text-xs">{e.eta ?? "—"}</TableCell>
-                <TableCell><Badge variant="outline">{e.estado}</Badge></TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable<EmbarqueAgente>
+          columns={columns}
+          data={embarques}
+          rowKey={(e) => e.id}
+          isLoading={isLoading}
+          skeletonRows={5}
+          emptyMessage="Aún no hay embarques asignados a tu agente."
+        />
       </Card>
     </div>
   );

@@ -1,12 +1,13 @@
 /**
- * Tabla de Agentes de costeo — extraída de CosteoAgentes.tsx para respetar Power of 10 (≤200 líneas).
+ * Tabla de Agentes de costeo — extraída de CosteoAgentes.tsx.
+ * v13.172.17: migrado a `DataTable` (Fase 4 homologación).
  */
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { Trash2, Pencil, UserPlus } from "lucide-react";
 
 export interface AgenteRow {
@@ -29,79 +30,111 @@ interface Props {
 }
 
 export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, onInvitarPortal }: Props) {
+  const columns = useMemo<ColumnDef<AgenteRow, unknown>[]>(
+    () => defineColumns<AgenteRow>([
+      {
+        id: "nombre",
+        header: "Nombre",
+        accessorFn: (a) => a.nombre,
+        sortingFn: sortByString((a) => a.nombre),
+        enableSorting: true,
+        meta: { sticky: true, className: "font-medium" },
+        cell: ({ row }) => row.original.nombre,
+      },
+      {
+        id: "pais",
+        header: "País",
+        accessorFn: (a) => a.pais ?? "",
+        sortingFn: sortByString((a) => a.pais),
+        enableSorting: true,
+        cell: ({ row }) => row.original.pais ?? "—",
+      },
+      {
+        id: "dias_credito",
+        header: "Días crédito",
+        accessorFn: (a) => a.dias_credito ?? 0,
+        sortingFn: sortByNumber((a) => a.dias_credito),
+        enableSorting: true,
+        meta: { align: "right", className: "tabular-nums" },
+        cell: ({ row }) => row.original.dias_credito ?? "—",
+      },
+      {
+        id: "contacto",
+        header: "Contacto",
+        accessorFn: (a) => a.contacto_tarifario ?? "",
+        cell: ({ row }) => row.original.contacto_tarifario ?? "—",
+      },
+      {
+        id: "email",
+        header: "Email",
+        accessorFn: (a) => a.email ?? "",
+        cell: ({ row }) => row.original.email ?? "—",
+      },
+      {
+        id: "activo",
+        header: "Activo",
+        accessorFn: (a) => a.activo ? "1" : "0",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <Badge
+            variant={row.original.activo ? "default" : "secondary"}
+            className={row.original.activo ? "bg-success/15 text-success border-success/30" : ""}
+          >
+            {row.original.activo ? "Activo" : "Inactivo"}
+          </Badge>
+        ),
+      },
+      {
+        id: "acciones",
+        header: "Acciones",
+        meta: { width: "w-24", align: "right" },
+        cell: ({ row }) => {
+          const a = row.original;
+          return (
+            <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => onInvitarPortal(a)}
+                aria-label={`Invitar al portal del agente ${a.nombre}`}
+                title="Invitar al portal del agente"
+              >
+                <UserPlus className="size-4 text-accent" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => onEditar(a)}
+                aria-label={`Editar agente ${a.nombre}`}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => onEliminar({ id: a.id, nombre: a.nombre })}
+                aria-label={`Eliminar agente ${a.nombre}`}
+              >
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            </div>
+          );
+        },
+      },
+    ]),
+    [onEditar, onEliminar, onInvitarPortal],
+  );
+
   return (
     <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>País</TableHead>
-            <TableHead className="text-right">Días crédito</TableHead>
-            <TableHead>Contacto</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Activo</TableHead>
-            <TableHead className="w-24 text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading && (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">Cargando…</TableCell>
-            </TableRow>
-          )}
-          {!isLoading && agentes.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">Sin agentes registrados.</TableCell>
-            </TableRow>
-          )}
-          {agentes.map((a) => (
-            <TableRow key={a.id}>
-              <TableCell className="font-medium">{a.nombre}</TableCell>
-              <TableCell>{a.pais}</TableCell>
-              <TableCell className="text-right">{a.dias_credito}</TableCell>
-              <TableCell>{a.contacto_tarifario ?? "—"}</TableCell>
-              <TableCell>{a.email ?? "—"}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={a.activo ? "default" : "secondary"}
-                  className={a.activo ? "bg-success/15 text-success border-success/30" : ""}
-                >
-                  {a.activo ? "Activo" : "Inactivo"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onInvitarPortal(a)}
-                    aria-label={`Invitar al portal del agente ${a.nombre}`}
-                    title="Invitar al portal del agente"
-                  >
-                    <UserPlus className="size-4 text-accent" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onEditar(a)}
-                    aria-label={`Editar agente ${a.nombre}`}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => onEliminar({ id: a.id, nombre: a.nombre })}
-                    aria-label={`Eliminar agente ${a.nombre}`}
-                  >
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable<AgenteRow>
+        columns={columns}
+        data={agentes}
+        rowKey={(a) => a.id}
+        isLoading={isLoading}
+        skeletonRows={5}
+        emptyMessage="Sin agentes registrados."
+      />
     </Card>
   );
 }
