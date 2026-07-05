@@ -1,8 +1,14 @@
 /**
  * Estado local de filtros, búsqueda y orden para la bandeja CxP — Por capturar.
  * Lógica pura testeable; no toca React Query.
+ *
+ * v13.173.2 (Ola 1 · Filtros globales) — el estado se sincroniza con la URL vía
+ * `nuqs` (`?q=`, `?estatus=`, `?antiguedad=`, `?sort=`, `?dir=`) para que los
+ * filtros sean compartibles y sobrevivan al refresh, igual que en Cartera y
+ * las demás bandejas migradas al primitivo unificado.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
 import type { CxpPorCapturarRow } from "@/features/bandejas/services/bandejas";
 
 export type EstatusFiltro = "todos" | "sin" | "parcial" | "completo";
@@ -18,7 +24,8 @@ export interface FiltersState {
   direccion: DireccionOrden;
 }
 
-const initial: FiltersState = {
+/** Defaults exportados para reset y tests. */
+export const INITIAL_CXP_CAPTURAR_FILTERS: FiltersState = {
   query: "",
   estatus: "todos",
   antiguedad: "todos",
@@ -84,16 +91,62 @@ export function aplicarFiltros(
   });
 }
 
+const ESTATUS_VALUES = ["todos", "sin", "parcial", "completo"] as const;
+const ANTIGUEDAD_VALUES = ["todos", "sin_captura", "gt7", "gt30"] as const;
+const ORDEN_VALUES = ["expediente", "antiguedad", "monto", "facturas"] as const;
+const DIR_VALUES = ["asc", "desc"] as const;
+
 export function useCxpPorCapturarFilters(rows: CxpPorCapturarRow[]) {
-  const [state, setState] = useState<FiltersState>(initial);
+  const [urlState, setUrlState] = useQueryStates({
+    q: parseAsString.withDefault(""),
+    estatus: parseAsStringLiteral(ESTATUS_VALUES).withDefault("todos"),
+    antiguedad: parseAsStringLiteral(ANTIGUEDAD_VALUES).withDefault("todos"),
+    sort: parseAsStringLiteral(ORDEN_VALUES).withDefault("antiguedad"),
+    dir: parseAsStringLiteral(DIR_VALUES).withDefault("desc"),
+  });
 
-  const set = <K extends keyof FiltersState>(k: K, v: FiltersState[K]) =>
-    setState((s) => ({ ...s, [k]: v }));
+  const state: FiltersState = useMemo(
+    () => ({
+      query: urlState.q,
+      estatus: urlState.estatus,
+      antiguedad: urlState.antiguedad,
+      ordenarPor: urlState.sort,
+      direccion: urlState.dir,
+    }),
+    [urlState.q, urlState.estatus, urlState.antiguedad, urlState.sort, urlState.dir],
+  );
 
-  const toggleDireccion = () =>
-    setState((s) => ({ ...s, direccion: s.direccion === "asc" ? "desc" : "asc" }));
+  const set = useCallback(
+    <K extends keyof FiltersState>(k: K, v: FiltersState[K]) => {
+      const keyMap: Record<keyof FiltersState, "q" | "estatus" | "antiguedad" | "sort" | "dir"> = {
+        query: "q",
+        estatus: "estatus",
+        antiguedad: "antiguedad",
+        ordenarPor: "sort",
+        direccion: "dir",
+      };
+      const urlKey = keyMap[k];
+      const defaults: Record<string, string> = {
+        q: "",
+        estatus: "todos",
+        antiguedad: "todos",
+        sort: "antiguedad",
+        dir: "desc",
+      };
+      // null cuando es default → URL limpia.
+      setUrlState({ [urlKey]: v === defaults[urlKey] ? null : (v as string) });
+    },
+    [setUrlState],
+  );
 
-  const reset = () => setState(initial);
+  const toggleDireccion = useCallback(() => {
+    // desc es el default → "asc" se serializa; volver a "desc" borra el param.
+    setUrlState({ dir: urlState.dir === "asc" ? null : "asc" });
+  }, [setUrlState, urlState.dir]);
+
+  const reset = useCallback(() => {
+    setUrlState({ q: null, estatus: null, antiguedad: null, sort: null, dir: null });
+  }, [setUrlState]);
 
   const filtradas = useMemo(() => aplicarFiltros(rows, state), [rows, state]);
   const isFiltered =

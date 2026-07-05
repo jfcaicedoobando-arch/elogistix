@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.173.2] - 2026-07-05
+
+- **arquitectura(listados)** — Cierre de la Ola 1 del plan de filtros globales:
+  - **Comisiones** (`/comisiones` · pestaña Devengadas) migrada a `useClientPagedList` + `<UnifiedFiltersBar />`. Los tres filtros server (vendedora / estado / periodo) se sincronizan con la URL (`?v=&estado=&m=`) y se propagan al RPC; encima se añade búsqueda por factura/cliente/expediente, orden por 7 columnas y paginación 10/20/50/100. El botón "Limpiar todo" resetea tanto los filtros cliente como los server.
+  - **CxP · Por capturar** (`/compras/por-capturar`) — su hook interno `useCxpPorCapturarFilters` gana URL sync vía `nuqs` (`?q=&estatus=&antiguedad=&sort=&dir=`) sin romper su toolbar especializada. Los filtros ahora son compartibles por link y sobreviven al refresh, igual que el resto de bandejas.
+  - **Tests nuevos**:
+    - `useServerPagedList.test.tsx` (4 casos) — invoca el fetcher con el estado correcto, refetch en cambios de search/filtros/sort, y `pagination.onPageChange` mueve el `range` en el fetcher.
+    - `useCxpPorCapturarFilters.urlsync.test.tsx` (5 casos) — inicial defaults, `set` de query/estatus, `toggleDireccion` alterna asc/desc, y `reset` limpia todo. **Detectó y corrigió un bug real en la implementación inicial de `toggleDireccion` que impedía alternar la dirección.**
+  - Total de tests del sistema unificado: **21/21 verdes** (`useClientPagedList` × 8, `useServerPagedList` × 4, `useCxpPorCapturarFilters` puro × 4 + URL sync × 5).
+
 ## [13.173.1] - 2026-07-05
 
 - **arquitectura(listados)** — Ola 1 continúa (bandejas financieras + tests del primitivo):

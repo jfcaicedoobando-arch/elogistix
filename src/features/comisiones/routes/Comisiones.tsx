@@ -1,10 +1,20 @@
-import { useMemo, useState } from "react";
+/**
+ * Comisiones — devengadas + liquidaciones + config.
+ *
+ * v13.173.2 (Ola 1 · Filtros globales): la pestaña "Devengadas" se migra al
+ * primitivo `useClientPagedList` + `<UnifiedFiltersBar />`. Los tres filtros
+ * server (vendedora, estado, periodo) se leen/escriben en la URL vía `nuqs`
+ * y se propagan al RPC; encima, se añade búsqueda por factura/cliente, orden
+ * por columna y paginación 10/20/50/100.
+ */
+import { useMemo } from "react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { MonthPickerMx } from "@/components/ui/month-picker-mx";
@@ -14,7 +24,9 @@ import { useVendedorasEmailWarning } from "@/features/comisiones/hooks/useVended
 import { buildComisionesColumns } from "@/features/comisiones/components/comisionesColumns";
 import { TabLiquidaciones } from "@/features/comisiones/components/TabLiquidaciones";
 import { TabVendedorasConfig } from "@/features/comisiones/components/TabVendedorasConfig";
-import type { EstadoComision } from "@/features/comisiones/services";
+import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/services";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 
 function KPICard({ label, value }: { label: string; value: string }) {
   return (
@@ -27,23 +39,58 @@ function KPICard({ label, value }: { label: string; value: string }) {
   );
 }
 
-const ESTADOS: Array<EstadoComision | "todos"> = ["todos", "Devengada", "Liquidada", "Cancelada"];
+const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada"] as const;
+type EstadoUrl = typeof ESTADO_VALUES[number];
+
+interface ClientFilters extends Record<string, string> {
+  // No hay filtros cliente-locales; el sort/search/pagination del primitivo
+  // se combinan con los filtros server que viven en URL aparte (v, estado, m).
+  _unused: string;
+}
+const CLIENT_DEFAULTS: ClientFilters = { _unused: "" };
 
 export default function Comisiones() {
-  const [vendedora, setVendedora] = useState<string>("todas");
-  const [estado, setEstado] = useState<EstadoComision | "todos">("todos");
-  const [periodo, setPeriodo] = useState<string>("");
+  // Filtros que van al servidor — sincronizados con la URL igual que el resto.
+  const [server, setServer] = useQueryStates({
+    v: parseAsString.withDefault("todas"),
+    estado: parseAsStringLiteral(ESTADO_VALUES).withDefault("todos"),
+    m: parseAsString.withDefault(""),
+  });
+
+  const setVendedora = (value: string) =>
+    setServer({ v: value === "todas" ? null : value });
+  const setEstado = (value: EstadoUrl) =>
+    setServer({ estado: value === "todos" ? null : value });
+  const setPeriodo = (value: string) => setServer({ m: value || null });
 
   const { data: vendedoras = [] } = useUsuariosVendedores();
   const { data: comisiones = [], isLoading, kpis } = useComisionesDevengadas({
-    vendedora_id: vendedora as string | "todas",
-    estado,
-    periodo: periodo || undefined,
+    vendedora_id: server.v as string | "todas",
+    estado: server.estado as EstadoComision | "todos",
+    periodo: server.m || undefined,
   });
 
   useVendedorasEmailWarning(vendedoras);
 
   const columns = useMemo(() => buildComisionesColumns(), []);
+
+  const paged = useClientPagedList<ComisionDevengada, ClientFilters>({
+    data: comisiones,
+    isLoading,
+    defaultFilters: CLIENT_DEFAULTS,
+    defaultSort: { key: "fecha", dir: "desc" },
+    searchAccessor: (r) =>
+      `${r.factura_numero ?? ""} ${r.cliente_nombre ?? ""} ${r.expediente ?? ""}`,
+    sorters: {
+      factura: (a, b) => (a.factura_numero ?? "").localeCompare(b.factura_numero ?? ""),
+      cliente: (a, b) => (a.cliente_nombre ?? "").localeCompare(b.cliente_nombre ?? ""),
+      cobrado: (a, b) => a.monto_cobrado_mxn - b.monto_cobrado_mxn,
+      utilidad: (a, b) => a.utilidad_prorrateada_mxn - b.utilidad_prorrateada_mxn,
+      porcentaje: (a, b) => a.porcentaje_aplicado - b.porcentaje_aplicado,
+      comision: (a, b) => a.comision_mxn - b.comision_mxn,
+      fecha: (a, b) => (a.created_at ?? "").localeCompare(b.created_at ?? ""),
+    },
+  });
 
   return (
     <PageContainer>
@@ -66,41 +113,67 @@ export default function Comisiones() {
             <KPICard label="Liquidado del mes" value={formatCurrency(kpis.liquidado_mes_mxn, "MXN")} />
           </div>
 
-          <Card>
-            <CardContent density="compact" className="flex flex-wrap gap-3">
-              <Select value={vendedora} onValueChange={setVendedora}>
-                <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas las vendedoras</SelectItem>
-                  {vendedoras.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>{v.nombre}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={estado} onValueChange={(v) => setEstado(v as EstadoComision | "todos")}>
-                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ESTADOS.map((e) => (
-                    <SelectItem key={e} value={e}>{e === "todos" ? "Todos los estados" : e}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <MonthPickerMx
-                value={periodo}
-                onChange={setPeriodo}
-                className="w-[180px] h-9"
-              />
-            </CardContent>
-          </Card>
+          <UnifiedFiltersBar
+            search={paged.search}
+            onSearchChange={paged.setSearch}
+            searchPlaceholder="Buscar factura, cliente o expediente…"
+            primary={
+              <>
+                <Select value={server.v} onValueChange={setVendedora}>
+                  <SelectTrigger className="w-[200px]" aria-label="Vendedora">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas las vendedoras</SelectItem>
+                    {vendedoras.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>{v.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={server.estado} onValueChange={(v) => setEstado(v as EstadoUrl)}>
+                  <SelectTrigger className="w-[160px]" aria-label="Estado">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ESTADO_VALUES.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {e === "todos" ? "Todos los estados" : e}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <MonthPickerMx
+                  value={server.m}
+                  onChange={setPeriodo}
+                  className="w-[180px] h-9"
+                />
+              </>
+            }
+            chips={paged.activeChips}
+            activeCount={
+              paged.activeCount +
+              (server.v !== "todas" ? 1 : 0) +
+              (server.estado !== "todos" ? 1 : 0) +
+              (server.m ? 1 : 0)
+            }
+            onClearAll={() => {
+              paged.resetAll();
+              setServer({ v: null, estado: null, m: null });
+            }}
+          />
 
           <Card>
             <CardContent density="flush">
-              <DataTable
+              <DataTable<ComisionDevengada>
                 columns={columns}
-                data={comisiones}
-                isLoading={isLoading}
+                data={paged.rows}
+                isLoading={paged.isLoading}
                 emptyMessage="No hay comisiones devengadas"
                 rowKey={(c) => c.id}
+                sortMode="server"
+                controlledSort={paged.controlledSort}
+                onSortChange={paged.setSort}
+                pagination={paged.pagination}
                 density="comfortable"
               />
             </CardContent>
