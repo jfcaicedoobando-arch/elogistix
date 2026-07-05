@@ -12,8 +12,11 @@ describe("deriveFacturaFlags", () => {
       puedeEditarBorrador: false,
       puedeEliminarBorrador: false,
       puedeTimbrarDesdeSistema: false,
+      puedeCancelarCfdi: false,
+      puedeSustituirCfdi: false,
     });
   });
+
 
   it("Borrador sin facturapi_id + canEdit + fecha post-corte → editable, eliminable y timbrable", () => {
     expect(
