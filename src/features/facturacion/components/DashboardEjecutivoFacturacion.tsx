@@ -127,7 +127,12 @@ export function DashboardEjecutivoFacturacion() {
     <TooltipProvider delayDuration={150}>
       <Card>
         <CardContent className="p-3">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:divide-x divide-border gap-2 lg:gap-0">
+          {/*
+            Tablet (md, 768+): 3 columnas · 2 filas para 5 KPIs (+ tendencia debajo).
+            Desktop (xl, 1280+): 6 columnas en una sola fila con divisores verticales.
+            Móvil: 2 columnas apretadas para que las cifras no se apilen en 5 renglones.
+          */}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
             <Kpi
               label="Por timbrar"
               value={porTimbrar.toString()}
@@ -150,7 +155,7 @@ export function DashboardEjecutivoFacturacion() {
 
 
             {tendencia.length > 0 && (
-              <div className="px-3 py-2 lg:border-l border-border">
+              <div className="col-span-2 md:col-span-3 xl:col-span-1 px-3 py-2 xl:border-l border-border border-t xl:border-t-0 mt-1 xl:mt-0 pt-2 xl:pt-2">
                 <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
                   Últimos 6 meses · MXN
                 </p>
@@ -176,3 +181,4 @@ export function DashboardEjecutivoFacturacion() {
     </TooltipProvider>
   );
 }
+
