@@ -27,7 +27,8 @@ interface DataTableProps<T> {
   isLoading?: boolean;
   emptyMessage?: string;
   emptyHint?: string;
-  emptyIcon?: React.ReactNode;
+  /** LucideIcon (recomendado) o ReactNode custom para el empty state built-in. */
+  emptyIcon?: React.ReactNode | LucideIcon;
   emptyState?: React.ReactNode;
   skeletonRows?: number;
   onRowClick?: (item: T) => void;
