@@ -14,6 +14,7 @@ import {
 import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { useDebounce } from "@/hooks/shared";
 import {
   useActividades, ACTIVIDAD_TIPOS,
