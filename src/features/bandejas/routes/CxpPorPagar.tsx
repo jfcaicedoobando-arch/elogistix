@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
-import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
+
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -171,7 +171,7 @@ export default function CxpPorPagar() {
         description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
       />
 
-      <ComprasTabStrip />
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

@@ -17,7 +17,7 @@ import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRe
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
 import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
-import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
+
 import { useCobranza } from "@/features/facturacion/hooks";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
@@ -104,7 +104,7 @@ export default function Cxp() {
         }
       />
 
-      <ComprasTabStrip />
+
 
       <CxpKpiCards kpis={kpis} data={data} />
 

@@ -16,7 +16,7 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
-import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
+
 import { buildCxpAgingColumns } from "@/features/cxp/components/cxpAgingColumns";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
@@ -108,7 +108,7 @@ export default function CxpAging() {
         }
       />
 
-      <ComprasTabStrip />
+
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         <KpiBucket label="Vigente" value={totales.vigente} />
