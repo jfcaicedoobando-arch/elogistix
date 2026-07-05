@@ -40,7 +40,7 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
     if (f.estatus === "Por vencer") porVencer7d++;
   }
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
       <KPICard label="Por pagar MXN" value={formatCurrency(kpis.por_pagar_mxn, "MXN")} count={porPagarMxn} />
       <KPICard label="Por pagar USD" value={formatCurrency(kpis.por_pagar_usd, "USD")} count={porPagarUsd} />
       <KPICard

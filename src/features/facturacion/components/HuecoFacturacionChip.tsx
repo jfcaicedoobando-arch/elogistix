@@ -30,7 +30,7 @@ export function HuecoFacturacionChip() {
         <span className="text-xs font-semibold">
           Hueco: <span className="tabular-nums">{totalEmbarques}</span>
         </span>
-        <span className="hidden md:inline text-xs text-destructive/80 tabular-nums">
+        <span className="hidden lg:inline text-xs text-destructive/80 tabular-nums">
           · {formatCurrency(totalUsd, "USD")} · {formatCurrency(totalMxn, "MXN")}
         </span>
       </Button>

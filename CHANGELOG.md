@@ -6,7 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.4] - 2026-07-05
+- **fix(ui/tablet)**: auditoría integral 768×1024 (iPad vertical) sobre 14 rutas operativas y financieras. Fixes transversales:
+  - `PageHeader.tsx`: el header apila título + acciones hasta `lg` (antes en `md` competían y truncaban títulos como `T…`, `Dashboard Eje…`, `Cotizaciones` con "63 cotizaciones…"). Ahora en tableta el título usa el ancho completo y las acciones caen debajo con `flex-wrap`. Impacta las ~25 páginas que usan `PageHeader`.
+  - `HuecoFacturacionChip.tsx`: los montos "· USD… · MXN…" se ocultan hasta `lg` (antes en `md` rompían la fila de tabs Emitidas/Notas de crédito). El conteo "Hueco: 42" sigue visible siempre.
+  - `Cotizaciones.tsx`: KPIs pasan de `md:grid-cols-4` a `xl:grid-cols-4` (2 columnas en tableta) para evitar "Total…/Acep…/Rech…/Tasa …" truncados.
+  - `CxpKpiCards.tsx`: mismo patrón `xl:grid-cols-4`, así "Por pagar MXN · 2 facturas" queda legible en tableta.
+
 ## [13.172.3] - 2026-07-05
+
 - **fix(ui/tablet)**: auditoría visual en tableta (768px) de Proformas, Facturación y Cartera:
   - `Breadcrumbs.tsx`: agregada etiqueta `cartera → "Cartera"` (antes se mostraba en minúsculas en la topbar).
   - `DashboardEjecutivoFacturacion.tsx`: los 5 KPIs + tendencia dejan de apilarse verticalmente; ahora usan `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6` con la tendencia ocupando el ancho completo en tablet. Menos scroll y jerarquía más clara.

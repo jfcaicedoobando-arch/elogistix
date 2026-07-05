@@ -42,7 +42,9 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+      {/* En tableta (<lg) el header apila: título full-width evita truncado con
+          acciones (Tesorería, Cotizaciones, Profit) — activar flex-row sólo en lg+. */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <h1 className="flex items-center gap-2 text-display font-bold tracking-tight">
             {icon}
@@ -54,9 +56,9 @@ export function PageHeader({
           {subHeader ? <div className="mt-2">{subHeader}</div> : null}
         </div>
         {actions ? (
-          // En mobile: justify-end para que botones icon-only (`...`) no se estiren
-          // a 100% del ancho ni queden centrados. En md+: layout original.
-          <div className="flex flex-wrap items-center justify-end gap-2 w-full md:w-auto md:flex-nowrap md:justify-end">
+          // Mobile/tableta: acciones envueltas alineadas a la derecha bajo el título.
+          // lg+: fila horizontal sin envolver.
+          <div className="flex flex-wrap items-center justify-end gap-2 w-full lg:w-auto lg:flex-nowrap lg:justify-end">
             {actions}
           </div>
         ) : null}
