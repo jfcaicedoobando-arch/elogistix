@@ -1,74 +1,56 @@
-# Unificar el "design language" de todas las tablas
+# Fase 4 y 5 — Migrar las tablas restantes al `DataTable`
 
-Auditamos las ~22 tablas de la app. La referencia es lo que quedó hoy en Facturación: fila entera clickeable, folio en texto plano, columnas construidas con `columnBuilders` compartidos (`statusColumn`, `moneyColumn`, `dateColumn`, `clientColumn`), sticky en la 1ª columna, responsive `hidden xl:table-cell`. Analogía: hoy cada tabla es un músico tocando en su tono; queremos que toda la orquesta afine con la misma partitura.
+Auditamos con subagente el resto de la app (excluyendo lo ya migrado en `13.172.16`). Encontramos **8 tablas de datos** que aún usan el primitivo `<Table>` de shadcn y **9 casos legítimos** que no deben migrarse (forms editables inline y sub-tablas de display de pocas filas fijas).
 
-## Fase 1 — Homologación visual pura (sin cambiar acciones)
+Analogía: es como reemplazar las últimas máquinas de escribir en la oficina por computadoras del mismo modelo que ya usa todo el equipo. Los formularios en papel (form-tables) se quedan como están porque cumplen otra función.
 
-Cambios de estilo/columnas. No tocan navegación ni operaciones destructivas → riesgo bajo.
+## Fase 4 — Alta prioridad (listados principales)
 
-1. **CxP (`cxp/components/cxpColumns.tsx`)**
-  - Estado: reemplazar `ESTATUS_COLOR` + `Badge` manual por `statusColumn` (dominio `factura_cxp`; crear en `statusRegistry` si no existe).
-  - Montos Total/Pagado/Saldo: `moneyColumn` con `currencyAccessor`.
-  - Fecha emisión / vencimiento: `dateColumn`.
-2. **Comisiones (`comisiones/components/comisionesColumns.tsx`)**
-  - Estado con `statusColumn` (dominio `comision`).
-  - Cobrado / Comisión con `moneyColumn`.
-  - Fecha con `dateColumn`.
-  - Añadir `sticky: true` en la 1ª columna.
-3. **CRM Oportunidades (`crm/routes/oportunidadesTable.ts`)**
-  - `moneyColumn` para monto, `dateColumn` para fecha estimada.
-  - Declarar `width` en todos los `meta`.
-  - `hidden xl:table-cell` en vendedor / probabilidad.
-4. **CRM Leads (`crm/routes/leadsColumns.tsx`)**
-  - Declarar `width` en todos los `meta`.
-  - `sticky: true` en la columna "empresa".
-  - Estado usando `StatusBadge` unificado.
-5. **Admin Organizaciones (`admin/components/AdminOrganizacionesColumns.tsx`)**
-  - `sticky: true` en "nombre".
-  - Reemplazar el Badge activo/inactivo por `StatusBadge`.
-6. **Cliente Detalle — tabla embarques (`cliente/components/clienteColumns.tsx`)**
-  - Cambiar `getEstadoColor` legacy + `Badge` por `statusColumn({ domain: "embarque" })`.
-7. **Estandarizar color de `<Link>` dentro de celdas**
-  - Unificar en `text-primary hover:underline` (interactivo) en `cxpAgingColumns.tsx`, `cxpPorCapturarColumns.tsx`, `ProveedorOperacionesTable.tsx`. Eliminar variantes con `text-accent` en links de celda.
+Son listados largos, con acciones, que se benefician directamente del skeleton, sort y empty state estándar del `DataTable`. Bump `13.172.17`.
 
-## Fase 2 — Migración de tablas `<Table>` crudas a `DataTable`
+1. **`/agente/tarifas`** — `portal-agente/routes/AgenteTarifas.tsx`
+   - Preservar: tabs de filtro por estado, kebab (crear/editar/duplicar), badge best-price.
+2. **`/agente/embarques`** — `portal-agente/routes/AgenteEmbarques.tsx`
+   - Solo lectura. Agregar sort por ETD/ETA con `sortByDate`.
+3. **`/costeo/tarifas`** — `costeo/components/CosteoTarifasTable.tsx`
+   - Preservar: botones inline de aprobar/rechazar (como `actionsColumn` custom), best-price badge, columnas responsive (`hidden lg:table-cell` para Flete/Recargos).
+4. **`/costeo/rutas`** — `costeo/components/CosteoRutasTable.tsx`
+   - Preservar: `onRowClick` navega a `/costeo/tarifas`, delete inline, `computeRutaEstado` como `statusColumn` (dominio `ruta_maritima` — validar en `statusRegistry`, agregar si falta).
+5. **`/costeo/agentes`** — `costeo/components/CosteoAgentesTable.tsx`
+   - Preservar: 3 acciones (editar / eliminar / invitar portal) como `actionsColumn`. Badge activo → `StatusBadge`.
 
-Ahora usan `<Table>` de shadcn directamente → sin skeleton tipado, sin empty state, sin sort. Migrar preservando comportamiento:
+## Fase 5 — Prioridad media (sub-tablas con lógica)
 
-8. `**bandejas/routes/Cartera.tsx**` → DataTable + `columnBuilders`. Links azules se mantienen (no hay `onRowClick`).
-9. `**bandejas/routes/CxpPorPagar.tsx**` → ídem.
-10. `**costeo/routes/CosteoNavieras.tsx**` y `**CosteoDemorasVenta.tsx**` → DataTable. Las acciones CRUD inline (editar/borrar en fila) se mantienen como celdas de acción; no se colapsan a kebab para no cambiar el flujo.
+Bump `13.172.18`. Migran preservando comportamiento no trivial.
 
-## Fase 3 — Decisiones de UX que tocan acciones (requieren tu OK)
+6. **`/agente/garantias`** — `portal-agente/routes/AgenteGarantias.tsx`
+   - Tabla actúa como selector: `onRowClick` selecciona fila y abre panel lateral con `DemorasTarifaEditor`. Pasar `onRowClick` + resaltar `selectedRowId`.
+7. **`/embarques/:id` tab Reconciliación** — `embarques/components/reconciliacion/ReconciliacionTresColumnas.tsx`
+   - Preservar: Switch "solo varianza", colorización por clasificación con `cellClassName` en `columnDef`.
+8. **`/embarques/:id` tab P&L Contenedor** — `embarques/components/TabPnlContenedor.tsx`
+   - Migración simple: filas fijas por contenedor, columnas por moneda. Sin sort necesario.
 
-Estos SÍ cambian comportamiento. Preguntas explícitas para ti antes de tocar:
+## Fuera de alcance (confirmado)
 
-- **Clientes (`clientesTableConfig.tsx`)**: el `actionsColumn` sólo tiene "Ver detalle", que duplica el click de fila. ¿Lo eliminamos por completo, o lo aprovechamos para acciones secundarias reales (Editar RFC, Desactivar)? Lo borramos. 
-- **Cotizaciones (`cotizacionesColumns.tsx`)**: `actionsColumn` con Editar + Eliminar. "Eliminar" se queda (destructiva). ¿"Editar" abre modal in-list o va a la ruta de detalle? Si es ruta, lo quitamos porque el click de fila ya lleva ahí. Va a la ruta. 
+No se tocan — son form-tables de captura o sub-tablas de display de pocas filas fijas:
 
-Si me confirmas la política aquí, la aplico como Fase 3 en un segundo bump. Si prefieres que las deje intactas por ahora, cerramos con Fases 1+2.
+- **Catálogos editables inline:** `CatalogoClavesSATCard` (+ `.parts.tsx`), y por analogía `TabPuertos`/`TabNavieras`/`TabTiposContenedor` si aplican.
+- **Editor de tramos:** `DemorasTarifaEditor.tsx`.
+- **Conceptos de factura/cotización (display):** `FacturaConceptosTable`, `PortalFacturaConceptosTable`, `TablaConceptosGenerico`.
+- **Conceptos editables:** `TablaCostosDetalle`.
+- **Dimensiones de mercancía en wizard:** `SeccionMercanciaMaritimaLCL`, `SeccionMercanciaAerea`, `DimensionesLCLTable`, `DimensionesAereasTable`.
+- **Ya correcto:** `EmbarquesRelacionadosCard` (usa `DataTable` con `customRowRender`).
 
 ## Detalles técnicos
 
-- `**statusRegistry**`: antes de aplicar Fase 1, verificar que existan dominios `factura_cxp`, `comision`, `lead`, `oportunidad`, `org`. Si falta alguno, agregarlo a `src/lib/status/statusRegistry.ts` con sus variantes/colores. Cambio contenido, no debería afectar otros usos.
-- `**ResponsiveDataTable**` (usado sólo en `reportes/ReportesTablaClientes.tsx`): fuera de alcance de esta unificación; evaluar después si conviene generalizarlo.
-- `**configuracion/TabTiposContenedor` / `TabPuertos` / `TabNavieras**`: los switches inline + Trash2 son válidos para CRUD de catálogos; no se tocan.
-- **Features de `DataTable` a NO cambiar**: `density`, `striped`, `initialSort` — dejamos los defaults actuales. Solo se ajusta `skeletonRows` cuando la tabla tiene menos de 5 filas típicas (Configuración, Bandejas cortas).
-- **Verificación**: `bun run test` sobre los archivos tocados; snapshots de columnas si existen. Recorrido manual de `/facturacion`, `/cxp`, `/comisiones`, `/crm/*`, `/admin/organizaciones`, `/bandejas/*`, `/costeo/*`, `/clientes` para confirmar que la fila entera sigue clickeable donde ya lo era y que no se rompen anchos.
+- Reutilizar `columnBuilders` (`statusColumn`, `moneyColumn`, `dateColumn`, `actionsColumn`), helpers de sort (`sortByString`, `sortByDate`), y `StatusBadge`.
+- Antes de Fase 4, verificar/agregar dominios en `src/lib/status/statusRegistry.ts`: `ruta_maritima`, `tarifa_maritima` (Borrador/Vigente/Rechazada/Por vencer), `garantia_naviera`, `agente` (activo/inactivo).
+- Cada tabla migrada: `skeletonRows={5}`, sticky en 1ª columna, responsive `hidden xl:table-cell` en columnas secundarias donde ya lo tenían.
+- Verificación: `bun run test` + recorrido manual de cada ruta migrada, confirmando que las acciones y navegación funcionan igual.
 
 ## Changelog
 
-Un bump por fase para que los diffs sean revisables:
+- `13.172.17` — Fase 4 (5 listados principales).
+- `13.172.18` — Fase 5 (3 sub-tablas con lógica interactiva).
 
-- `13.172.14` — Fase 1 (visual puro).
-- `13.172.15` — Fase 2 (migración de tablas crudas).
-- `13.172.16` — Fase 3 (sólo si confirmas política de `actionsColumn`).
-
-Cada entrada listará los archivos tocados y la regla homologada.
-
-## Fuera de alcance
-
-- No se rediseñan encabezados, no se cambia paleta ni tipografía.
-- No se toca el detalle de ninguna entidad.
-- No se agrega paginación server-side donde no exista.
-- No se cambian permisos/RLS ni queries de Supabase.
+Cada entrada listará los archivos migrados y las precauciones tomadas (acciones inline preservadas, `onRowClick` mantenido, columnas responsive respetadas).
