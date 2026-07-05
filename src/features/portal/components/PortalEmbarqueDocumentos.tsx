@@ -91,7 +91,8 @@ export function PortalEmbarqueDocumentos({ documentos }: Props) {
           columns={columns}
           data={documentos}
           rowKey={(d) => d.id}
-          emptyState={<EmptyStateInline icon={FileCheck} message="No hay documentos disponibles." className="py-12" />}
+          emptyIcon={FileCheck}
+          emptyMessage="No hay documentos disponibles."
         />
       </CardContent>
     </Card>
