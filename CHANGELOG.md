@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.6] - 2026-07-05
+- **test(e2e/responsive)** — Nuevos specs Playwright que validan cero overflow horizontal y ausencia de errores de consola en dos viewports (tableta 768×1024 y desktop xl+ 1440×900):
+  - `13-dashboard-responsive.spec.ts`: cubre el Dashboard principal (`/inicio`) verificando que el saludo horario ("Buenas tardes…") y los widgets carguen sin desbordar `<main>`.
+  - `14-creacion-a-facturacion-responsive.spec.ts`: recorre el pipeline comercial-a-fiscal `/cotizaciones → /proformas → /facturacion` y comprueba que los tabs actuales (Emitidas + Notas de crédito) sigan accesibles en ambos viewports.
+  - Ambos specs corren automáticamente dentro del project `chromium-internal` de `playwright.config.ts` y usan el `storageState` de `globalSetup`, por lo que no requieren cambios en el workflow `.github/workflows/e2e.yml`.
+
 ## [13.172.5] - 2026-07-05
 - **fix(ui/tablet)** — Ola 2 de la auditoría 768×1024: ocultamiento de columnas secundarias con `hidden xl:table-cell` para eliminar el scroll horizontal en tableta sin sacrificar información en desktop (`xl+` recupera todas las columnas). Cambios por archivo:
   - `embarqueColumns.tsx`: ocultas `Modo`, `Origen`, `Destino` en `<xl`. Se mantienen visibles `Expediente`, `BL Master`, `Contenedores`, `Cliente`, `ETD`, `ETA`, `Estado`.
