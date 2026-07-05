@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.16] - 2026-07-05
+- **ui(tablas)** — Unificación del "design language" de las tablas de datos. Se aplican tres fases sobre 12 tablas:
+  - **Fase 1 — homologación visual con `columnBuilders`:** CxP, Comisiones, CRM Oportunidades, CRM Leads, Admin Organizaciones y Cliente-detalle ahora usan `statusColumn`/`moneyColumn`/`dateColumn` y `StatusBadge` en lugar de badges/formatters ad-hoc. Se añade `sticky: true` a la primera columna de cada listado y responsive `hidden xl:table-cell` donde faltaba.
+  - **Fase 2 — migración de `<Table>` crudo → `DataTable`:** `Cartera.tsx`, `CxpPorPagar.tsx`, `CosteoNavieras.tsx` y `CosteoDemorasVenta.tsx` migradas al componente compartido; ganan skeleton de carga tipado, empty state consistente y sort declarativo.
+  - **Fase 3 — políticas de `actionsColumn`:** se elimina "Ver detalle" del kebab de Clientes (duplicaba `onRowClick`) y "Editar" del kebab de Cotizaciones (la ruta de edición se abre desde el detalle). Solo permanece "Eliminar" en Cotizaciones como acción destructiva.
+- **feat(status)** — Se registran nuevos dominios en `statusRegistry`: `factura_cxp` (Vigente/Por vencer/Vencida/Pagada/Sin saldo), `comision` (Devengada/Liquidada/Cancelada), `org` (Activa/Inactiva), y se amplía `lead` con Descalificado/Convertido. Todos con `badgeClass` semántico.
+
 ## [13.172.13] - 2026-07-05
 - **ui(facturacion)** — El folio de la primera columna (`# Factura`) deja de renderizarse como enlace azul (`text-accent hover:underline`). La fila entera ya navega al detalle vía `onRowClick`, homologando la tabla con Cotizaciones, Clientes, CxP, Proveedores y Embarques Activos. Se elimina el import huérfano de `Link` en `facturacionColumns.tsx`.
 
