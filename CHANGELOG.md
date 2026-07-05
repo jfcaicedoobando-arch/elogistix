@@ -6,6 +6,22 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.18] - 2026-07-05
+- **ui(tablas · Fase 5)** — Se migran a `DataTable` las 3 sub-tablas interactivas restantes:
+  - `AgenteGarantias` (`/agente/garantias`) — `onRowClick` abre el panel lateral con `NavieraCondicionForm` + `DemorasTarifaEditor`; la fila seleccionada resalta con `rowClassName`.
+  - `ReconciliacionTresColumnas` (tab Reconciliación en `/embarques/:id`) — se preserva el `Switch` "sólo con varianza", la colorización por clasificación (`colorPorClasificacion`) y el botón "Exportar CSV".
+  - `TabPnlContenedor` (tab P&L por Contenedor) — cada moneda ahora renderiza su propio `DataTable` con `rowClassName` para Total/Generales.
+- Todas ganan skeleton, empty state y sort declarativo consistentes con el resto de la app.
+
+## [13.172.17] - 2026-07-05
+- **ui(tablas · Fase 4)** — Se migran a `DataTable` los 5 listados principales que aún usaban el `<Table>` crudo de shadcn:
+  - `AgenteTarifas` (`/agente/tarifas`) — se preservan los tabs de filtro por estado, el kebab de acciones (crear/editar/duplicar) y el `EstadoBadge` local.
+  - `AgenteEmbarques` (`/agente/embarques`) — solo lectura; ahora ordenable por ETD/ETA con `sortByDate`.
+  - `CosteoTarifasTable` (`/costeo/tarifas`) — se preservan los botones inline de aprobar/rechazar (`TarifaQuickApprovalButtons`), el highlight de mejor precio, `TarifaRowActions` y las columnas Flete/Recargos con `hidden lg:table-cell`.
+  - `CosteoRutasTable` (`/costeo/rutas`) — `onRowClick` sigue navegando a `/costeo/tarifas?ruta=…`, `computeRutaEstado` alimenta la columna Estado, y se preservan los tooltips de acciones.
+  - `CosteoAgentesTable` (`/costeo/agentes`) — se preservan las 3 acciones (invitar portal/editar/eliminar) y el badge activo/inactivo.
+- Cada tabla usa `defineColumns` + `sortByString`/`sortByNumber`/`sortByDate`, `sticky` en la primera columna, `skeletonRows={5}` y empty state homologado.
+
 ## [13.172.16] - 2026-07-05
 - **ui(tablas)** — Unificación del "design language" de las tablas de datos. Se aplican tres fases sobre 12 tablas:
   - **Fase 1 — homologación visual con `columnBuilders`:** CxP, Comisiones, CRM Oportunidades, CRM Leads, Admin Organizaciones y Cliente-detalle ahora usan `statusColumn`/`moneyColumn`/`dateColumn` y `StatusBadge` en lugar de badges/formatters ad-hoc. Se añade `sticky: true` a la primera columna de cada listado y responsive `hidden xl:table-cell` donde faltaba.
