@@ -42,7 +42,7 @@ export function DataTableHeaderRow<T>({ table, striped, bordered }: Props<T>) {
                   borderCell,
                   meta.headerClassName,
                   canSort && "cursor-pointer select-none hover:text-foreground transition-colors",
-                  meta.sticky && "sticky left-0 z-20 bg-background",
+                  meta.sticky && "sticky left-0 z-20 bg-background shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                   meta.stickyRight && "sticky right-0 z-20 bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                 )}
                 onClick={canSort ? toggle : undefined}

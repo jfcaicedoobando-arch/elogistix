@@ -75,7 +75,8 @@ export function buildEmbarqueColumns({
     {
       id: "bl",
       header: "BL Master",
-      meta: { width: "w-[120px]", className: "text-xs" },
+      // Oculto en tableta (<xl) — el detalle del embarque muestra el BL.
+      meta: { width: "w-[120px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.bl_master || "-",
     },
     {
@@ -125,12 +126,11 @@ export function buildEmbarqueColumns({
         return <span title={v} className="block truncate">{v}</span>;
       },
     },
-    // — Builder: dateColumn ETD —
-    dateColumn<EmbarqueRow>({
-      id: "etd",
-      header: "ETD",
-      accessor: (e) => e.etd ?? null,
-    }),
+    // — Builder: dateColumn ETD (oculto en <xl, mantenemos ETA como referencia principal) —
+    {
+      ...dateColumn<EmbarqueRow>({ id: "etd", header: "ETD", accessor: (e) => e.etd ?? null }),
+      meta: { width: "w-[100px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+    },
     // — Builder: dateColumn ETA —
     dateColumn<EmbarqueRow>({
       id: "eta",

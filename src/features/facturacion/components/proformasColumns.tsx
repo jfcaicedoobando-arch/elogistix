@@ -78,7 +78,8 @@ export function buildProformasColumns({
       accessorFn: (p) => p.expediente,
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.expediente),
-      meta: { width: "w-[120px]", className: "whitespace-nowrap" },
+      // Oculto en tableta (<xl) — visible desde el # Proforma sticky y detalle.
+      meta: { width: "w-[120px]", className: "whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.expediente,
     },
     {
