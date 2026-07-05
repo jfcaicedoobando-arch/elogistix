@@ -17,7 +17,6 @@ import { Trash2 } from "lucide-react";
 
 export interface BuildParams {
   canEdit: boolean;
-  onEditar: (id: string) => void;
   onEliminar: (id: string) => void;
 }
 
