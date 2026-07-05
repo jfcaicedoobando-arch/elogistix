@@ -1,38 +1,69 @@
 /**
- * /crm/leads — Listado de leads con búsqueda, filtros y selección múltiple.
+ * /crm/leads — Listado de leads con URL sync (Ola 2 · filtros globales).
+ *
+ * Migrado a `useServerPagedList`:
+ *  - Búsqueda, estado, fuente, orden y paginación viven en la URL vía nuqs
+ *    (`?q=&estado=&fuente=&sort=&dir=&page=&ps=`).
+ *  - Fetcher server-side vía `listLeads` con `count: 'exact'` y `.range()`.
+ *
  * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { toTitleCase } from "@/lib/formatters";
-import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
+import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
+import { usePermissions } from "@/hooks/shared";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import LeadsBulkBar from "@/features/crm/components/LeadsBulkBar";
-import { LeadsFiltersBar } from "@/features/crm/components/LeadsFiltersBar";
+import { listLeads } from "@/features/crm/services/leads";
 import {
-  useLeads,
-  type CrmLeadEstado, type CrmLeadFuente, type CrmLeadRow,
-} from "@/features/crm/hooks";
+  LEAD_ESTADOS, LEAD_FUENTES, LEAD_SORTABLE_KEYS,
+  type CrmLeadRow, type CrmLeadEstado, type CrmLeadFuente, type LeadSortKey,
+} from "@/features/crm/domain/leads/constants";
 import { makeLeadsColumns } from "./leadsColumns";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
+interface LeadsFilters extends Record<string, string> {
+  estado: string;
+  fuente: string;
+}
+const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
+
 export default function Leads() {
   const navigate = useNavigate();
   const { canEditCrm } = usePermissions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({});
-  const debounced = useDebounce(search, 300);
-  const [estado, setEstado] = useState<CrmLeadEstado | "todos">("todos");
-  const [fuente, setFuente] = useState<CrmLeadFuente | "todos">("todos");
 
-  const { data, isLoading } = useLeads({ search: debounced, estado, fuente, page, pageSize });
-  const leads = useMemo(() => data?.data ?? [], [data]);
-  const totalCount = data?.count ?? 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const list = useServerPagedList<CrmLeadRow, LeadsFilters>({
+    queryKey: ["crm", "leads", "paged"],
+    defaultFilters: DEFAULTS,
+    filterLabels: { estado: "Estado", fuente: "Fuente" },
+    defaultPageSize: 50,
+    defaultSort: { key: "created_at", dir: "desc" },
+    sortableKeys: LEAD_SORTABLE_KEYS,
+    fetcher: async ({ search, filters, sortKey, sortDir, page, pageSize }) => {
+      const { data, count } = await listLeads({
+        search,
+        estado: (filters.estado as CrmLeadEstado | "todos") ?? "todos",
+        fuente: (filters.fuente as CrmLeadFuente | "todos") ?? "todos",
+        page,
+        pageSize,
+        sortKey: (sortKey ?? "created_at") as LeadSortKey,
+        sortDir: sortDir ?? "desc",
+      });
+      return { rows: data, count };
+    },
+  });
+
+  const leads = list.rows;
 
   const toggle = (id: string) => setSelected((s) => {
     const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
@@ -45,7 +76,10 @@ export default function Leads() {
     return n;
   });
   const clearSel = () => setSelected(new Set());
-  const columns = useMemo(() => makeLeadsColumns(selected, toggle, toggleAll, leads), [selected, leads]);
+  const columns = useMemo(
+    () => makeLeadsColumns(selected, toggle, toggleAll, leads),
+    [selected, leads],
+  );
 
   return (
     <PageContainer>
@@ -53,19 +87,43 @@ export default function Leads() {
         title="Leads"
         description="Prospectos y empresas en seguimiento comercial"
       />
-      <CrmSubheader context={`${totalCount} leads en cartera`} />
+      <CrmSubheader context={`${list.count} leads en cartera`} />
 
       {canEditCrm && selected.size > 0 && (
         <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
       )}
 
-      <LeadsFiltersBar
-        search={search}
-        onSearchChange={setSearch}
-        estado={estado}
-        onEstadoChange={(v) => { setEstado(v); setPage(0); }}
-        fuente={fuente}
-        onFuenteChange={(v) => { setFuente(v); setPage(0); }}
+      <UnifiedFiltersBar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="Buscar por empresa, contacto o email…"
+        chips={list.activeChips}
+        activeCount={list.activeCount}
+        onClearAll={list.resetAll}
+        primary={
+          <>
+            <Select
+              value={list.filters.estado}
+              onValueChange={(v) => list.setFilter("estado", v)}
+            >
+              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los estados</SelectItem>
+                {LEAD_ESTADOS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select
+              value={list.filters.fuente}
+              onValueChange={(v) => list.setFilter("fuente", v)}
+            >
+              <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas las fuentes</SelectItem>
+                {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </>
+        }
       />
 
       <Card>
@@ -73,11 +131,14 @@ export default function Leads() {
           <ResponsiveDataTable
             columns={columns}
             data={leads}
-            isLoading={isLoading}
-            emptyMessage={debounced ? "No se encontraron leads" : "No hay leads registrados"}
+            isLoading={list.isLoading}
+            emptyMessage={list.search ? "No se encontraron leads" : "No hay leads registrados"}
             onRowClick={(l) => navigate(`/crm/leads/${l.id}`)}
             rowKey={(l) => l.id}
             density="comfortable"
+            sortMode="server"
+            controlledSort={list.controlledSort}
+            onSortChange={(key, dir) => list.setSort(key, dir)}
             mobileCard={(l) => (
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
@@ -89,11 +150,7 @@ export default function Leads() {
               </div>
             )}
             pagination={{
-              page,
-              totalPages,
-              onPageChange: setPage,
-              pageSize,
-              onPageSizeChange: (s: number) => { setPageSize(s); setPage(0); },
+              ...list.pagination,
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
             }}
