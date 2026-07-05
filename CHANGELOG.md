@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.7] - 2026-07-05
+- **fix(ui/tablet)** — Ola 3 (columnas sticky + scroll horizontal residual). Se pulió el DataTable base y se recortaron columnas adicionales en tableta sin sacrificar lectura en desktop:
+  - `DataTableHeaderRow.tsx` y `DataTableBody.tsx`: la columna con `meta.sticky` ahora dibuja una sombra sutil al borde derecho (`shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]`), simétrica a la ya existente en `stickyRight`. Da affordance visual del pin cuando el usuario hace scroll horizontal dentro del contenedor de tabla.
+  - `embarqueColumns.tsx`: `BL Master` y `ETD` ocultos en `<xl`. Ancho scroll interno tableta: **350 px → 0 px**.
+  - `proformasColumns.tsx`: `Expediente` oculto en `<xl` (ya se ve desde el `# Proforma` sticky).
+  - `cotizacionesColumns.tsx`: `Tipo`, `Modo`, `Ruta`, `Fecha` ocultos en `<xl`. Ancho scroll interno: **649 px → 115 px** (-82 %).
+  - `facturacionColumns.tsx`: `Expediente`, `Proforma`, `Emisión`, `Vencimiento`, `Archivos` ocultos en `<xl`. Quedan visibles `# Factura` (sticky), `Cliente`, `Monto`, `Estado`, `Acciones`. Ancho scroll interno: **821 px → sólo columnas visibles en viewport**.
+  - `cxpColumns.tsx`: `Folio` marcado como `sticky: true`; `Total` ocultado en `<xl` (Saldo cumple como monto operativo principal); anchos de `Vencimiento` y `Saldo` reducidos en tableta con `xl:w-[…]` para expandirse en desktop. Ancho scroll interno: **808 px → 0 px**.
+- **verificación** — Re-medición Playwright en 768×1024 tras los cambios: `/embarques`, `/cxp`, `/clientes` → **0 px** de scroll residual; `/proveedores` → 24 px (borde del contenedor, no visible). Desktop 1440×900: 100 % de columnas restauradas (10 en embarques, 12 en CxP), 0 truncados, 0 overflow.
+
 ## [13.172.6] - 2026-07-05
 - **test(e2e/responsive)** — Nuevos specs Playwright que validan cero overflow horizontal y ausencia de errores de consola en dos viewports (tableta 768×1024 y desktop xl+ 1440×900):
   - `13-dashboard-responsive.spec.ts`: cubre el Dashboard principal (`/inicio`) verificando que el saludo horario ("Buenas tardes…") y los widgets carguen sin desbordar `<main>`.
