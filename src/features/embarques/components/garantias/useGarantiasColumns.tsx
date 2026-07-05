@@ -117,7 +117,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
         </SelectContent>
       </Select>
     ) : (
-      <Badge className={ESTADO_GARANTIA_COLOR[row.original.estado]}>{ESTADO_GARANTIA_LABEL[row.original.estado]}</Badge>
+      <StatusBadge domain="garantia_naviera" status={ESTADO_GARANTIA_LABEL[row.original.estado]} />
     )},
     { id: 'fDep', header: 'F. Depósito', cell: ({ row }) => row.original.fecha_deposito ? formatDate(row.original.fecha_deposito) : '—' },
     { id: 'vence', header: 'Vence', cell: ({ row }) => row.original.estado === 'liberado'
