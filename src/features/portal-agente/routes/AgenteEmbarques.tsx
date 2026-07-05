@@ -5,9 +5,9 @@
  */
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
 
