@@ -102,15 +102,20 @@ export default function FacturaDetalle() {
         canEdit={canEdit}
         sinTimbrar={sinTimbrar}
         puedeTimbrarDesdeSistema={puedeTimbrarDesdeSistema}
+        puedeSustituirCfdi={puedeSustituirCfdi}
+        puedeCancelarCfdi={puedeCancelarCfdi}
         pdfUrl={factura.factura_pdf_url}
         xmlUrl={factura.factura_xml_url}
         embarqueId={factura.embarque_id ?? null}
         onTimbrar={() => setTimbrarOpen(true)}
         onEnviarEmail={() => setEnviarOpen(true)}
         onDownload={handleDownload}
+        onSustituir={() => setSustituirOpen(true)}
+        onCancelar={() => setCancelarOpen(true)}
         onEliminarBorrador={puedeEliminarBorrador ? () => setEliminarOpen(true) : undefined}
         eliminando={eliminando}
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <FacturaEmisorCard />
