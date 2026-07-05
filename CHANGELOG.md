@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.3] - 2026-07-05
+- **fix(ui/tablet)**: auditoría visual en tableta (768px) de Proformas, Facturación y Cartera:
+  - `Breadcrumbs.tsx`: agregada etiqueta `cartera → "Cartera"` (antes se mostraba en minúsculas en la topbar).
+  - `DashboardEjecutivoFacturacion.tsx`: los 5 KPIs + tendencia dejan de apilarse verticalmente; ahora usan `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6` con la tendencia ocupando el ancho completo en tablet. Menos scroll y jerarquía más clara.
+  - `Cartera.tsx`: columna Cliente con `line-clamp-2` + tooltip para nombres largos (`ENTERA SALUD ANIMAL Y NUTRICION S.A. DE C.V`), encabezado `Días vencido` con `whitespace-nowrap`, ancho contenido `min-w-[160px] max-w-[220px]`.
+  - `ProformasFiltros.tsx`: elevado el breakpoint de la barra inline de `md` a `lg`. En tableta (768-1023px) ahora se muestra `[search][Filtros]` con drawer, evitando que los selects Estado/Cliente aparecieran como "Todos..." truncados.
+
 ## [13.172.2] - 2026-07-05
 - **fix(ux/proformas)**: en la tabla de proformas, las filas no fusionables (facturadas/rechazadas) ya no muestran un checkbox deshabilitado con cursor `not-allowed` (🚫 al hover). Ahora la celda queda vacía y el checkbox sólo aparece en filas seleccionables, con tooltip "Seleccionar para fusionar en una factura". Sin cambios de lógica (`isConvertible` intacto).
 
