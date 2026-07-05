@@ -121,7 +121,12 @@ export default function Cartera() {
                       {row.numero ?? "—"}
                     </Link>
                   </TableCell>
-                  <TableCell>{row.cliente_nombre ?? "—"}</TableCell>
+                  <TableCell className="max-w-[220px]">
+                    <span className="line-clamp-2 leading-tight" title={row.cliente_nombre ?? undefined}>
+                      {row.cliente_nombre ?? "—"}
+                    </span>
+                  </TableCell>
+
                   <TableCell>
                     {row.embarque_id ? (
                       <Link to={`/embarques/${row.embarque_id}`} className="text-primary hover:underline">
