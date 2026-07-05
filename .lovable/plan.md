@@ -1,87 +1,90 @@
-## Objetivo
+# Plan: Filtros globales server-side + URL sync para todas las tablas
 
-Impedir que se vuelva a importar `@/components/ui/table` fuera de la allowlist, obligando a usar `<DataTable />` y los builders (`columnBuilders`, `defineColumns`, `StatusBadge`).
+## Estado actual
 
-## Diagnóstico
+Ya existen las piezas base (no hay que inventarlas):
 
-- `eslint.config.js` **ya** tiene un `no-restricted-imports` sobre `@/components/ui/table` (líneas 71-77), **pero queda anulado** por el override de la línea 168-172 que apaga `no-restricted-imports` completo para `src/hooks/**`, `src/services/**` y **`src/features/**`** — donde vive el 95% de las tablas.
-- La allowlist explícita (línea 260-288) apunta a rutas viejas (`src/components/cotizacion/...`, `src/pages/bandejas/...`) que ya no existen tras las Fases 1-5. Los archivos legítimos hoy viven en `src/features/…`.
-- Resultado: la regla nunca dispara. Correr `eslint` sobre `TablaCostosDetalle.tsx` no reporta nada.
+- **`useListPageState`** / **`useTableFilters`** — hooks con `nuqs` que sincronizan `q`, `page`, `ps`, filtros y rango de fechas con la URL.
+- **`<UnifiedFiltersBar />`** — barra estándar con search + slots primarios + Sheet mobile + chips activos + "Limpiar todo".
+- **`<DataTable>`** — soporta `sortMode="server"` con `controlledSort` + `onSortChange` y `pagination` (page, pageSize, totalPages).
+- **`PaginationControls`** — control unificado con selector de tamaño de página.
 
-## Cambios
+Ya usan el patrón completo:
+Facturación (`useFacturacionPageController`), Embarques (`useEmbarquesPageState`), Cotizaciones (`useCotizacionesPageController`), Clientes, Proveedores, CxP.
 
-### 1. `eslint.config.js` — regla dedicada `no-raw-table`
+Faltan por unificar (server-side + nuqs + `UnifiedFiltersBar`): **~35 tablas** en Cartera, bandejas CxP, Comisiones, CRM, Portal cliente/agente, Admin, Configuración, Costeo, Auditoría.
 
-Extraer la restricción de `@/components/ui/table` a un **bloque propio** al final del archivo, con su propio `files: ["**/*.{ts,tsx}"]` y su propio `ignores` (allowlist). Así queda inmune al override que apaga `no-restricted-imports` en `features/**`.
+## Por qué se propone en fases
 
-```text
-{
-  name: "no-raw-table",
-  files: ["src/**/*.{ts,tsx}"],
-  ignores: [ …allowlist actualizada… ],
-  rules: {
-    "no-restricted-imports": ["error", { paths: [{
-      name: "@/components/ui/table",
-      message: "Usa <DataTable /> de '@/components/shared/DataTable' + columnBuilders. Excepciones: agrega el archivo a la allowlist en eslint.config.js y documenta el motivo."
-    }]}]
-  }
-}
-```
+Migrar 35 tablas a server-side en un solo turno es inviable: cada tabla requiere (1) nuevo query `.range()` o RPC en Supabase, (2) hook paginado tipado, (3) columnas con `sortingFn` retiradas y `controlledSort`, (4) barra de filtros, (5) tests. Un pase monolítico rompería cosas y no cabría en una respuesta. Se propone entregar por olas verificables.
 
-Quitar el `paths:` del bloque global (líneas 71-77) para evitar duplicación.
+## Arquitectura común (una sola vez, aplica a todas las olas)
 
-### 2. Allowlist actualizada (rutas reales post Fase 5)
+Antes de la primera ola creamos los cimientos reutilizables:
 
-```text
-src/components/shared/DataTable.tsx
-src/components/shared/dataTable/**
-src/features/cotizacion/components/SeccionMercanciaAerea.tsx
-src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx
-src/features/cotizacion/components/TablaConceptosGenerico.tsx
-src/features/cotizacion/components/TablaCostosDetalle.tsx
-src/features/cotizacion/components/seccionMercancia/DimensionesLCLTable.tsx
-src/features/cotizacion/components/seccionMercancia/DimensionesAereasTable.tsx
-src/features/facturacion/components/detalle/FacturaConceptosTable.tsx
-src/features/portal/components/factura/PortalFacturaConceptosTable.tsx
-src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx
-src/features/embarques/components/pnl/PnlProveedoresTable.tsx
-src/features/embarques/components/pnl/PnlComparativaTable.tsx
-src/features/costeo/components/DemorasTarifaEditor.tsx
-src/features/configuracion/components/CatalogoClavesSATCard.tsx
-src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx
-```
+1. **`useServerPagedList<TRow, TFilters>`** en `src/hooks/shared/` — wrapper que combina `useTableFilters` + `useQuery` + orden controlado. Firma:
+   ```text
+   useServerPagedList({
+     queryKey, fetcher: ({ search, filters, sort, from, to, range }) => Promise<{rows, count}>,
+     defaultFilters, filterLabels, defaultSort, defaultPageSize
+   })
+   ```
+2. **`buildPagedFetcher(supabase, tableOrRpc, columns, mappers)`** — helper que arma un query `.range(from,to)` con `count: 'exact'`, aplica search y filtros, y devuelve `{rows, count}`.
+3. **`sortableColumn<T>()`** — builder en `columnBuilders.tsx` que declara `id` sin `sortingFn` (server-sort) y con `enableSorting: true`, para no dejar builders inconsistentes.
+4. **Test de arquitectura** `server-paged-lists.test.ts` — falla si una lista importa `DataTable` sin `sortMode="server"` y sin `pagination`. La allowlist arranca con las listas ya migradas.
 
-Cada entrada lleva un comentario `//` explicando por qué no migra (form-table editable, sub-tabla read-only estática, catálogo con toggles, etc.).
+## Olas de migración
 
-### 3. Test de arquitectura de respaldo
+### Ola 1 — Cierre de bandejas financieras (bloque solicitado)
+Tablas: **Cartera**, **CxpPorPagar**, **CxpPorCapturar**, **CxpAging**, **Comisiones**.
 
-Nuevo archivo `src/__tests__/architecture/no-raw-table.test.ts`:
+Para cada una:
+- Reescribir hook (`useCarteraPendiente`, `useBandejasCxp*`, `useComisiones`) para devolver `{ rows, count }` con `.range()`, orden y filtros aplicados en servidor.
+- Agregar barra con `search`, filtros de moneda/estado/rango de fechas, chip de vencidas.
+- Retirar `sortingFn` cliente en columnas y activar `controlledSort`.
+- Actualizar tests unitarios/arquitectura.
 
-- Walkea `src/` con `scripts/lib/walk.ts`.
-- Colecta todos los archivos que hacen `from "@/components/ui/table"`.
-- Falla si el set difiere de una allowlist constante en el propio test (misma lista que ESLint).
+### Ola 2 — CRM
+Tablas: **Leads**, **Oportunidades**, **Actividades**.
+- Reemplazar filtros locales existentes por `UnifiedFiltersBar`.
+- Mover el orden actual (cliente) a server-side con `.range()`.
 
-Sirve como red de respaldo si alguien edita `eslint.config.js` para relajar la regla sin actualizar la lista.
+### Ola 3 — Portales (cliente + agente)
+Tablas: `PortalEmbarques`, `PortalFacturas`, `PortalCotizaciones`, `AgenteTarifas`, `AgenteGarantias`, `AgenteEmbarques`, `PortalEmbarqueDocumentos`.
+- `PortalFiltersBar` se retira y todos los portales pasan a `UnifiedFiltersBar` con el mismo tema.
+- Los RPCs de portal (`portal_*`) ya existentes se extienden con `p_from`, `p_to`, `p_sort_key`, `p_sort_dir`.
 
-### 4. Documentación
+### Ola 4 — Admin y Auditoría
+Tablas: `AdminOrganizaciones`, `Papelera`, `Idempotencia`, `UsuariosInternosTab`, `PortalUsuariosTab`, `OrgMembersCard`, `HallazgoTabla`, `HallazgosTabla`, `TabPlanes`.
+- Estos hoy no tienen filtros; se añaden search + estado + fecha según aplique.
 
-- `CONTRIBUTING.md`: sección corta "Tablas — regla del design system" apuntando a `DataTable` + `columnBuilders` y explicando cómo pedir excepción.
-- `mem://principles/no-raw-table` (nueva memoria tipo `constraint`): "Prohibido importar `@/components/ui/table` fuera de la allowlist. Usar `DataTable` + `defineColumns` + builders. **Why:** unificar design language."
-- Actualizar `mem://index.md` (sección Core, one-liner).
+### Ola 5 — Costeo y Configuración
+Tablas: `CosteoTarifasTable`, `CosteoRutasTable`, `CosteoAgentesTable`, `CosteoNavieras`, `CosteoDemorasVenta`, `TabPuertos`, `TabNavieras`, `TabTiposContenedor`.
+- Muchas son catálogos con <500 filas: para ellas hacemos server-fetch + orden y paginación server, aun cuando el search sea trivial, para mantener consistencia.
 
-### 5. Verificación
+### Ola 6 — Tablas dentro de detalle
+Tablas: `TabCostos`, `TabConciliacion`, `TabDocumentos`, `TabPortalCliente`, `TablaContactos`, `TabProyeccion`, `EmbarquesActivosTable`, `ProfitTable`, `ProveedorOperacionesTable`, `HuecoFacturacionDetalleDialog`.
+- Aquí sí es aceptable orden cliente cuando la tabla vive dentro de un detalle con dataset pequeño; se homologa la barra pero se documenta la excepción en el test de arquitectura.
 
-1. `bunx eslint src/features/cotizacion/routes/Cotizaciones.tsx` (no debe fallar — no usa Table crudo).
-2. Simular violación: `bunx eslint` sobre un archivo temporal con `import { Table } from "@/components/ui/table"` fuera de la allowlist → debe fallar con el mensaje.
-3. `bunx vitest run src/__tests__/architecture/no-raw-table.test.ts` → pasa.
-4. `bun run lint` completo sin warnings.
+## Detalles técnicos
 
-### 6. Changelog + versión
+- **URL sync (`nuqs`)**: `q`, `page`, `ps`, `sort`, `dir`, `from`, `to` + un slug por filtro. Defaults nunca se serializan (URL queda limpia).
+- **RLS/permisos**: cada nuevo `.range()` se prueba contra las policies existentes. No se tocan policies salvo que un filtro necesite índice adicional.
+- **Índices**: se añade índice compuesto en las columnas usadas para orden por default (ej. `facturas(fecha_emision desc)`), como migración separada por ola.
+- **Compatibilidad**: los hooks legados quedan `@deprecated` un release antes de borrarse; el consumidor los reemplaza en el mismo commit de su ola.
+- **CHANGELOG + APP_VERSION**: se registra una entrada por ola con la lista de rutas migradas.
 
-- `src/constants/appVersion.ts` → `13.172.19`.
-- `CHANGELOG.md` → entrada `## [13.172.19] - 2026-07-05` con bullet "Guardrail ESLint + test de arquitectura para prohibir `@/components/ui/table` fuera de la allowlist del design system."
+## Verificación
 
-## Fuera de alcance
+- Tests unitarios de cada hook nuevo (mocking Supabase).
+- Test de arquitectura `server-paged-lists.test.ts` como guardrail.
+- Playwright: 1 spec por ola verificando URL, chips, orden y paginación.
+- Typecheck completo tras cada ola.
 
-- No se migra ninguna tabla adicional. La allowlist congela el estado actual; cualquier migración futura se hace en otro plan.
-- No se toca el override de `features/**` en el bloque genérico de `no-restricted-imports` (afecta barrels de hooks/services, distinto propósito).
+## Entrega
+
+Cada ola se implementa en un mensaje independiente para que puedas revisarla y aprobarla antes de continuar. Este plan solo cubre la **Ola 1** en el siguiente turno (Cartera, CxP×3, Comisiones); las olas 2-6 se abren cuando confirmes.
+
+---
+
+**Analogía**: hoy la app tiene una barra de filtros "de referencia" muy buena, pero solo unas cuantas tablas la usan bien. Es como si tuvieras un uniforme oficial pero la mitad de los empleados sigue con su ropa. En vez de cambiar a los 35 al mismo tiempo (caos), los vestimos en 6 turnos, empezando por el equipo de finanzas.
