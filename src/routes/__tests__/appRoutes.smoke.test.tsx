@@ -118,6 +118,7 @@ describe("routes/appRoutes — gates de rol", () => {
   const CASES: Array<[string, AppRole[]]> = [
     ["/compras", COMPRAS_READ_ROLES],
     ["/compras/aging", COMPRAS_READ_ROLES],
+    ["/compras/por-aprobar", COMPRAS_READ_ROLES],
     ["/compras/facturas", FINANCE_READ_ROLES],
     ["/compras/pagos", FINANCE_READ_ROLES],
     ["/compras/notas-credito", FINANCE_READ_ROLES],
