@@ -32,7 +32,7 @@ import { FacturacionKpisFiscales } from "@/features/facturacion/components/Factu
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
 import { usePermissions } from "@/hooks/shared";
-import { buildFacturaColumns, type Factura } from "./facturacionColumns";
+import { buildFacturaColumns } from "./facturacionColumns";
 
 type TabDef = { value: string; label: string; hint: string };
 
@@ -93,7 +93,7 @@ export default function Facturacion() {
     paginatedFacturas, facturasFiltradas, totalPages,
     facturas,
     loadingFacturas,
-    canEdit, clientesDisponibles,
+    clientesDisponibles,
     exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController({ isInRange, activeTab });
 
