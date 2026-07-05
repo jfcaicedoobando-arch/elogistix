@@ -5,17 +5,18 @@ import {
   moneyColumn,
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 
+// Estado del flujo de aprobación (dominio `aprobacion_cxp` en statusRegistry).
 type EstadoAprob = "pendiente" | "aprobada" | "rechazada";
-const APROB_COLOR: Record<EstadoAprob, string> = {
-  pendiente: "bg-warning/10 text-warning border-warning/20",
-  aprobada: "bg-success/10 text-success border-success/20",
-  rechazada: "bg-destructive/10 text-destructive border-destructive/20",
+const APROB_STATUS: Record<EstadoAprob, string> = {
+  pendiente: "Por aprobar",
+  aprobada: "Aprobada",
+  rechazada: "Rechazada",
 };
-const APROB_LABEL: Record<EstadoAprob, string> = { pendiente: "Por aprobar", aprobada: "Aprobada", rechazada: "Rechazada" };
 
 export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
   return defineColumns<FacturaCxP>([
