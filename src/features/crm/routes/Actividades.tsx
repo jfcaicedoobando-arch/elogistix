@@ -1,8 +1,13 @@
 /**
- * /crm/actividades — Lista global de actividades CRM con filtros.
- * Soporta query param `?filtro=vencidas` que limita a vencidas del usuario.
+ * /crm/actividades — Registro de actividades CRM con URL sync (Ola 2).
+ *
+ * Migrado a `useServerPagedList` + `<UnifiedFiltersBar />`:
+ *   - Todo el estado (búsqueda, tipo, estado, responsable, orden, paginación)
+ *     vive en la URL vía nuqs (`?q=&tipo=&estado=&resp=&sort=&dir=&page=&ps=`).
+ *   - Soporta el shortcut `?filtro=vencidas` que preconfigura pendientes+mías
+ *     y filtra en cliente por `fecha_programada < now` sobre la página server.
  */
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,17 +16,22 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
-import { useDebounce } from "@/hooks/shared";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { useServerPagedList } from "@/hooks/shared/useServerPagedList";
+import { usePermissions } from "@/hooks/shared";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import {
-  useActividades, ACTIVIDAD_TIPOS,
+  listActividades, ACTIVIDAD_SORTABLE_KEYS,
+  type ActividadSortKey,
+} from "@/features/crm/services/actividades";
+import {
+  ACTIVIDAD_TIPOS,
   type CrmActividadRow, type CrmActividadTipo,
 } from "@/features/crm/hooks";
 import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
-import { usePermissions } from "@/hooks/shared";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 
@@ -38,7 +48,7 @@ const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActi
     meta: { width: "w-[110px]" },
   },
   {
-    id: "fecha", header: "Programada", meta: { className: "text-xs" },
+    id: "fecha_programada", header: "Programada", meta: { className: "text-xs" },
     cell: ({ row }) => row.original.fecha_programada ? new Date(row.original.fecha_programada).toLocaleString("es-MX") : "—",
   },
 ]);
@@ -48,35 +58,56 @@ const actionColumn: ColumnDef<CrmActividadRow, unknown> = {
   cell: ({ row }) => <ActividadRowActions actividad={row.original} />,
 };
 
+interface ActividadesFilters extends Record<string, string> {
+  tipo: string;
+  estado: string;
+  responsable: string;
+}
+const DEFAULTS: ActividadesFilters = { tipo: "todos", estado: "pendientes", responsable: "todos" };
+
 export default function Actividades() {
   const { canEditCrm } = usePermissions();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const filtroParam = searchParams.get("filtro");
   const vencidasOnly = filtroParam === "vencidas";
 
-  const [search, setSearch] = useState("");
-  const [tipo, setTipo] = useState<CrmActividadTipo | "todos">("todos");
-  const [estado, setEstado] = useState<"pendientes" | "completadas" | "todas">(vencidasOnly ? "pendientes" : "pendientes");
-  const [responsable, setResponsable] = useState<"mias" | "todos">(vencidasOnly ? "mias" : "todos");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(100);
-  const debounced = useDebounce(search, 300);
+  const list = useServerPagedList<CrmActividadRow, ActividadesFilters>({
+    queryKey: ["crm", "actividades", "paged", user?.id],
+    defaultFilters: DEFAULTS,
+    filterLabels: { tipo: "Tipo", estado: "Estado", responsable: "Responsable" },
+    defaultPageSize: 100,
+    defaultSort: { key: "fecha_programada", dir: "asc" },
+    sortableKeys: ACTIVIDAD_SORTABLE_KEYS,
+    fetcher: async ({ search, filters, sortKey, sortDir, page, pageSize }) => {
+      const { data, count } = await listActividades({
+        search,
+        tipo: (filters.tipo as CrmActividadTipo | "todos") ?? "todos",
+        estado: (filters.estado as "pendientes" | "completadas" | "todas") ?? "pendientes",
+        responsable: (filters.responsable as "mias" | "todos") ?? "todos",
+        page,
+        pageSize,
+        userId: user?.id,
+        sortKey: (sortKey ?? "fecha_programada") as ActividadSortKey,
+        sortDir: sortDir ?? "asc",
+      });
+      return { rows: data, count };
+    },
+  });
 
+  // Shortcut `?filtro=vencidas`: preconfigura pendientes + mías la primera vez.
   useEffect(() => {
     if (vencidasOnly) {
-      setEstado("pendientes");
-      setResponsable("mias");
-      setPage(0);
+      list.setFilter("estado", "pendientes");
+      list.setFilter("responsable", "mias");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vencidasOnly]);
 
-  const { data, isLoading } = useActividades({ search: debounced, tipo, estado, responsable, page, pageSize });
-  const itemsRaw = data?.data ?? [];
   const now = Date.now();
   const items = vencidasOnly
-    ? itemsRaw.filter((a) => a.fecha_programada && new Date(a.fecha_programada).getTime() < now)
-    : itemsRaw;
-  const totalPages = Math.ceil((data?.count ?? 0) / pageSize);
+    ? list.rows.filter((a) => a.fecha_programada && new Date(a.fecha_programada).getTime() < now)
+    : list.rows;
   const columns = canEditCrm ? [...baseColumns, actionColumn] : baseColumns;
 
   const limpiarFiltro = () => {
@@ -92,53 +123,72 @@ export default function Actividades() {
         description="Registro de llamadas, reuniones y tareas de seguimiento CRM"
       />
       <CrmSubheader
-        context={`${data?.count ?? 0} actividades`}
+        context={`${list.count} actividades`}
         actions={vencidasOnly ? (
           <Button variant="outline" size="sm" onClick={limpiarFiltro} className="h-7">
             <X className="h-3 w-3 mr-1" /> Filtro: Vencidas
           </Button>
         ) : undefined}
       />
-      <Card>
-        <CardContent className="p-3 flex flex-col md:flex-row gap-3">
-          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por asunto..." />
-          <Select value={tipo} onValueChange={(v) => { setTipo(v as typeof tipo); setPage(0); }}>
-            <SelectTrigger className="md:w-[140px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los tipos</SelectItem>
-              {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={estado} onValueChange={(v) => { setEstado(v as typeof estado); setPage(0); }}>
-            <SelectTrigger className="md:w-[160px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pendientes">Pendientes</SelectItem>
-              <SelectItem value="completadas">Completadas</SelectItem>
-              <SelectItem value="todas">Todas</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={responsable} onValueChange={(v) => { setResponsable(v as typeof responsable); setPage(0); }}>
-            <SelectTrigger className="md:w-[160px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="mias">Mis actividades</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+
+      <UnifiedFiltersBar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="Buscar por asunto…"
+        chips={list.activeChips}
+        activeCount={list.activeCount}
+        onClearAll={list.resetAll}
+        primary={
+          <>
+            <Select
+              value={list.filters.tipo}
+              onValueChange={(v) => list.setFilter("tipo", v)}
+            >
+              <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los tipos</SelectItem>
+                {ACTIVIDAD_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select
+              value={list.filters.estado}
+              onValueChange={(v) => list.setFilter("estado", v)}
+            >
+              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pendientes">Pendientes</SelectItem>
+                <SelectItem value="completadas">Completadas</SelectItem>
+                <SelectItem value="todas">Todas</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={list.filters.responsable}
+              onValueChange={(v) => list.setFilter("responsable", v)}
+            >
+              <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="mias">Mis actividades</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        }
+      />
+
       <Card>
         <CardContent className="p-0">
           <DataTable
             columns={columns}
             data={items}
-            isLoading={isLoading}
+            isLoading={list.isLoading}
             emptyMessage="Sin actividades"
             rowKey={(a) => a.id}
             density="comfortable"
+            sortMode="server"
+            controlledSort={list.controlledSort}
+            onSortChange={(key, dir) => list.setSort(key, dir)}
             pagination={{
-              page, totalPages, pageSize,
-              onPageChange: setPage,
-              onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+              ...list.pagination,
               pageSizeOptions: [50, 100, 200, 500],
               pageSizeLabels: { 500: "500" },
             }}
