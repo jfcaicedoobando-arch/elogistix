@@ -1,62 +1,88 @@
-## Auditoría visual (768 × 1024, tableta vertical)
+## Objetivo
 
-Capturé las tres páginas con Playwright a 768 px de ancho — el punto crítico donde Tailwind cambia de `sm` a `md`. Analogía: es la "hora pico" del layout: si algo va a romperse, se rompe aquí.
+Dejar toda la app operativa+financiera perfectamente usable en **iPad vertical (768×1024)**: sin scroll horizontal en tablas, filtros compactos y legibles, KPIs en grid, modales con footer sticky, sidebar colapsado por defecto, y sin overlaps/textos truncados.
 
-### 1) `/proformas` — Listado
+## Alcance (15 rutas)
 
-Problemas encontrados:
-- **Filtros comprimidos**: la fila `search + 2 selects "Todos..." + filtros + Exportar CSV` queda apretada; los selects muestran texto truncado ("Todos..."). El botón de filtros aparece como icono suelto sin etiqueta.
-- **Tabla con scroll horizontal**: 7-8 columnas no caben; el usuario pierde de vista Estado/Monto/Acciones al scrollear a la derecha. La columna sticky "# Proforma" ayuda pero solo parcialmente.
-- **Descripción del header** ocupa 2 renglones largos innecesarios en tableta.
+Núcleo operativo: `/inicio`, `/operaciones`, `/embarques`, `/cotizaciones`, `/proformas`, `/facturacion`.
+Financiero: `/compras`, `/cxp`, `/cartera`, `/tesoreria`, `/profit/dashboard`, `/profit/proyeccion`.
+Catálogos: `/clientes`, `/proveedores`.
+Portal cliente/agente y admin **fuera de alcance**.
 
-### 2) `/facturacion`
+Para cada ruta se audita **listado + un detalle representativo + modales/wizards clave** (nuevo cliente, nueva cotización, nueva factura manual, filtros drawer, etc.).
 
-Problemas encontrados:
-- **Card de KPIs top stack vertical**: los 5-6 indicadores (Por timbrar, Facturado mes, Cobrado mes, Por cobrar, Vencido, Últimos 6 meses) se apilan uno debajo del otro con muchísimo whitespace. En tableta caben cómodamente en 2-3 columnas.
-- **Barra de filtros en 2 renglones**: `Todos los estados` + `Todos los clientes` + `Exportar` + `Filtros` + `Mostrando X` se envuelve inconsistente.
-- **Chip "Hueco: 42 · USD… · MXN…"** en la barra de Tabs (Emitidas / Notas de crédito) rompe el renglón: la etiqueta larga empuja las tabs hacia arriba.
-- **Tabla Emitidas** también con scroll horizontal amplio.
+## Método
 
-### 3) `/cartera`
+1. **Captura automatizada con Playwright** a 768×1024 vía script existente `scripts/visual-audit/capture.py` (extender para escenarios detalle+modal). Login con `AUDIT_EMAIL=hector@lopezbenavides.com`.
+2. Por cada ruta se guardan 2–4 screenshots (listado, listado con filtros abiertos, detalle, modal). Se recolectan errores de consola.
+3. Se revisa **cada captura** contra la checklist tableta (ver abajo) y se anota hallazgo con severidad P0/P1/P2 en `.lovable/plan-tablet-audit.md`.
+4. Se ejecuta el smoke E2E (`e2e/specs/*.spec.ts`) sólo como red de seguridad post-fix para verificar que no rompimos flujos.
 
-Problemas encontrados:
-- Los 3 KPI cards se ven bien (grid ya usa `md:grid-cols-3`).
-- **Título del header en la topbar aparece en minúscula** ("cartera") — inconsistente con el resto ("Proformas", "Facturación").
-- **Tabla con scroll horizontal**: la columna `Total` queda cortada; `Días vencido` envuelve encabezado en 2 líneas.
-- **Nombres de cliente largos** se envuelven en 3 líneas (ENTERA SALUD ANIMAL Y NUTRICION S.A. DE C.V) inflando la altura de la fila; falta `line-clamp-2` + tooltip.
+### Checklist tableta (criterios objetivos)
 
----
+- Sin scroll horizontal en tablas de listado principal (permitido en sub-tablas densas si hay sticky y >8 columnas).
+- Headers de página: título + descripción caben en 2 renglones máx.
+- Barras de filtros: 1–2 renglones, selects con labels visibles (no truncados a "Todos…").
+- KPI/dashboards: usan `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4/6` (no stack vertical con whitespace).
+- Modales tipo formulario: `FormDialogShell` con footer sticky y contenido scrolleable.
+- Sidebar colapsado por defecto en `<lg` (ya existe en `Layout.tsx`), sin superponerse al contenido.
+- FAB visible sin tapar última fila (padding `pb-24 md:pb-6`).
+- Textos largos con `line-clamp` + `title` tooltip; encabezados críticos con `whitespace-nowrap`.
+- Sin `text-[10px]`, sin colores hardcoded, tokens semánticos respetados.
 
-## Fixes propuestos (priorizados, solo UI/presentación)
+## Ejecución del reporte
 
-### A. Proformas (`TabProformas` + `ProformasFiltros`)
-1. Reorganizar barra de filtros: `search` a ancho completo en tableta, y en un segundo renglón compacto `[Estado][Cliente][Filtros] · [Exportar CSV]` con `flex-wrap` limpio y labels visibles en selects (no "Todos...").
-2. En tabla: reducir padding lateral de celdas en tableta (`md:px-2`) y bajar `Operador`/`Fecha` a texto `xs` — hoy ya es `xs` pero la columna Operador se lleva 140 px que se puede reducir a 110.
-3. Reemplazar la descripción larga del header por versión corta en `md` (`hidden md:block` vs `sm:hidden`) — o simplemente permitirle 1 sola línea con `line-clamp-1`.
+Fase 1 — **Reporte**:
+- Correr script Playwright ampliado y generar carpeta `/tmp/tablet-audit/` con capturas + `REPORT.md`.
+- Consolidar hallazgos por ruta con severidad y archivo/componente responsable.
 
-### B. Facturación (`Facturacion.tsx` + card de dashboard)
-1. Convertir el card superior de KPIs a `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3` (mismo patrón que usan `FacturacionKpisFiscales`). Cada KPI queda como tile compacto.
-2. En la fila de filtros: unificar todo en un `flex flex-wrap gap-2 items-center` con orden `[search grow][Estado][Cliente][Filtros] … [Exportar]`.
-3. Mover el chip **"Hueco: 42 · USD… · MXN…"** a debajo de los tabs (línea propia) o compactarlo a `Hueco: 42` con tooltip para los montos, evitando que compita con Emitidas / Notas de crédito.
-4. Alinear `Nueva factura manual` como botón secundario en tableta si empuja el layout.
+Fase 2 — **Fixes P0/P1/P2** en varios turnos si es necesario, agrupados por patrón:
 
-### C. Cartera (`Cartera.tsx`)
-1. Corregir el título de la topbar → "Cartera" (`Title Case`); revisar `Breadcrumbs`/`routeMeta`.
-2. Truncar nombres de cliente: `line-clamp-2` + `title={cliente}` para tooltip nativo.
-3. Ajustar columna Cliente a `min-w-[160px] max-w-[220px]`.
-4. Encabezado "Días vencido" → una sola línea con `whitespace-nowrap`.
-
----
+- **Grupo A · Tablas con overflow** (embarques, cotizaciones, compras, cxp, tesorería, clientes, proveedores): reducir padding celda en `md`, `min-w/max-w` en columnas largas, `whitespace-nowrap` en encabezados numéricos, `line-clamp-2 + title` en nombres de cliente/descripción, ocultar columnas secundarias `hidden xl:table-cell` cuando ayude.
+- **Grupo B · Barras de filtros** (usar `UnifiedFiltersBar` donde no esté, `flex flex-wrap gap-2` consistente, drawer `MobileFiltersSheet` reutilizado para `<lg` cuando haya >3 filtros).
+- **Grupo C · Dashboards / KPIs** (`/inicio`, `/facturacion`, `/profit/*`, `/tesoreria`): pasar cards apiladas a `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6`, quitar `min-w-[120px]`, alinear tipografía.
+- **Grupo D · Headers de página**: normalizar via `PageHeader` con `description` de 1 línea (`line-clamp-1` en `md`), acciones agrupadas y con overflow menú si >2.
+- **Grupo E · Modales / Wizards**: verificar `FormDialogShell` con `max-h-[85vh]`, footer sticky y stepper compacto en tableta.
+- **Grupo F · Fixes puntuales** que salgan del reporte (breadcrumb labels, chips que rompen tabs, etc.).
 
 ## Fuera de alcance
-- No se toca lógica de datos, hooks, RLS, ni filtros de negocio.
-- No se rediseñan las tres páginas: son ajustes de responsive puntuales.
-- No se agregan librerías nuevas.
 
-## Verificación
-- Re-capturar los 3 screenshots en tableta (768 × 1024) y en móvil (390 × 844).
-- `bun run lint` limpio.
-- Bump `APP_VERSION` a `13.172.3` + entrada en `CHANGELOG.md`.
+- No se toca lógica de datos, hooks, queries, RLS, ni cálculos.
+- No se rediseñan páginas; sólo ajustes de responsive/tokens.
+- No se agregan librerías.
+- Portal cliente, portal agente y `/admin/*` no entran (se auditan en un tercer turno si lo pides).
 
-## Nota
-Si querés que te muestre **prototipos visuales** de los 3 fixes antes de implementar (útil sobre todo para la barra de KPIs de Facturación), decímelo y lanzo el flujo de "design directions". Si no, arranco directo con los ajustes.
+## Detalles técnicos
+
+- Script base: `scripts/visual-audit/capture.py` — se le agrega un modo `--scenarios` para navegar a `[listado, listado?filtros=open, detalle, modal-nuevo]` por ruta usando selectores estables (`getByRole`).
+- Salida: `/tmp/tablet-audit/<slug>/*.png` + `REPORT.md` + `report.json`.
+- Verificación post-fix:
+  - Re-captura mismas rutas y comparación side-by-side.
+  - `bun run lint` limpio.
+  - `bunx vitest run` (tests existentes) verde.
+  - Smoke E2E local sólo si algún fix toca layouts que los specs recorren.
+- Versionado: cada tanda de fixes bumpea patch en `src/constants/appVersion.ts` y agrega entrada en `CHANGELOG.md` bajo `## [X.Y.Z] - YYYY-MM-DD`.
+
+## Entregables por turno
+
+1. **Turno 1 (build)**: extender script, correr captura, publicar `REPORT.md` con hallazgos priorizados.
+2. **Turnos 2–3**: aplicar fixes por grupos A–F, re-capturar y anexar diff visual al reporte, bump de versión.
+3. **Turno final**: resumen ejecutivo + estado final de checklist tableta por ruta.
+
+## ASCII de la vista tableta objetivo
+
+```text
+768px
+┌───┬─────────────────────────────────────────┐
+│ ▤ │ header 44px  ⌘K  🔔  ☾                  │
+│   ├─────────────────────────────────────────┤
+│ s │ PageHeader (title + desc 1 línea)       │
+│ i │ [tabs strip si aplica]                  │
+│ d │ [filtros flex-wrap · Exportar]          │
+│ e │ ┌─────────────────────────────────────┐ │
+│ b │ │ tabla sin scroll horizontal         │ │
+│ a │ │ · Cliente line-clamp-2              │ │
+│ r │ │ · números whitespace-nowrap         │ │
+│   │ └─────────────────────────────────────┘ │
+└───┴─────────────────────────────────────────┘
+```
