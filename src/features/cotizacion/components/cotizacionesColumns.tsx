@@ -13,7 +13,7 @@ import {
   dateColumn,
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 export interface BuildParams {
   canEdit: boolean;
