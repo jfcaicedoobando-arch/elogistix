@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.13] - 2026-07-05
+- **ui(facturacion)** — El folio de la primera columna (`# Factura`) deja de renderizarse como enlace azul (`text-accent hover:underline`). La fila entera ya navega al detalle vía `onRowClick`, homologando la tabla con Cotizaciones, Clientes, CxP, Proveedores y Embarques Activos. Se elimina el import huérfano de `Link` en `facturacionColumns.tsx`.
+
 ## [13.172.12] - 2026-07-05
 - **ui(facturacion)** — Se retira la columna "Acciones" de la lista `/facturacion`. Timbrar CFDI, Registrar pago, Ver pagos y Cancelar CFDI ahora sólo se ejecutan desde el detalle (`/facturacion/:id`), donde el usuario tiene el contexto completo (conceptos, pagos, timbrado, notas de crédito). Se limpiaron los diálogos huérfanos en `FacturacionDialogs` y el estado asociado en la ruta.
 
