@@ -254,30 +254,12 @@ export default tseslint.config(
     },
   },
   {
-    // Allowlist de tablas: el propio DataTable y tablas editables/excepcionales
-    // que aún no migran a DataTable. Documentar caso a caso.
+    // Allowlist LEGACY del bloque anterior — mantenida por compatibilidad,
+    // pero la enforcement real de `@/components/ui/table` vive en el bloque
+    // `no-raw-table` al final del archivo.
     files: [
       "src/components/shared/DataTable.tsx",
       "src/components/shared/dataTable/**",
-      // Casos editables / con render row complejo — quedan fuera de la migración:
-      "src/components/cotizacion/SeccionMercanciaAerea.tsx",
-      "src/components/cotizacion/SeccionMercanciaMaritimaLCL.tsx",
-      "src/components/cotizacion/SeccionMercanciaCotizacionDetalle.tsx",
-      "src/components/cotizacion/TablaConceptosGenerico.tsx",
-      "src/components/cotizacion/TablaCostosDetalle.tsx",
-      "src/features/embarques/components/DialogDuplicarEmbarque.tsx",
-      "src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx",
-      "src/components/facturacion/detalle/FacturaConceptosTable.tsx",
-      "src/components/portal/factura/PortalFacturaConceptosTable.tsx",
-      // Sub-tablas read-only estáticas (sin sort/paginación) — no requieren DataTable:
-      "src/components/cotizacion/seccionMercancia/DimensionesLCLTable.tsx",
-      "src/components/cotizacion/seccionMercancia/DimensionesAereasTable.tsx",
-      // Bandejas operativas (Cartera/CxP) — listados read-only con totales arriba,
-      // sin sort/paginación cliente; mantienen primitivas de tabla por simplicidad.
-      "src/pages/bandejas/Cartera.tsx",
-      "src/pages/bandejas/CxpPorCapturar.tsx",
-      "src/pages/bandejas/CxpPorPagar.tsx",
-      "src/pages/bandejas/FacturacionPorEmitir.tsx",
     ],
     rules: {
       "no-restricted-imports": "off",
