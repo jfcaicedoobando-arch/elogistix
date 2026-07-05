@@ -29,6 +29,10 @@ export interface FacturaFlags {
    * (creadas antes del corte) se timbraron fuera del sistema.
    */
   puedeTimbrarDesdeSistema: boolean;
+  /** Timbrada, vigente ("Emitida") y con permiso de edición. */
+  puedeCancelarCfdi: boolean;
+  /** Igual que cancelar: sólo se puede sustituir una CFDI vigente. */
+  puedeSustituirCfdi: boolean;
 }
 
 export function deriveFacturaFlags(
@@ -42,6 +46,8 @@ export function deriveFacturaFlags(
       puedeEditarBorrador: false,
       puedeEliminarBorrador: false,
       puedeTimbrarDesdeSistema: false,
+      puedeCancelarCfdi: false,
+      puedeSustituirCfdi: false,
     };
   }
   const sinTimbrar = !factura.uuid_fiscal;
@@ -50,14 +56,20 @@ export function deriveFacturaFlags(
   const puedeEliminarBorrador = esBorrador && canEdit;
   const puedeTimbrarDesdeSistema =
     sinTimbrar && esCreadaConCapacidadTimbrado(factura.fecha_emision);
+  const timbradaVigente = !sinTimbrar && factura.estado === "Emitida";
+  const puedeCancelarCfdi = timbradaVigente && canEdit;
+  const puedeSustituirCfdi = timbradaVigente && canEdit;
   return {
     sinTimbrar,
     esBorrador,
     puedeEditarBorrador,
     puedeEliminarBorrador,
     puedeTimbrarDesdeSistema,
+    puedeCancelarCfdi,
+    puedeSustituirCfdi,
   };
 }
+
 
 /**
  * Helper reutilizable por listas/tablas donde no se necesita el resto de
