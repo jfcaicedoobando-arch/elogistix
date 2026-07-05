@@ -62,16 +62,12 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     meta: { className: "text-xs" },
     cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : "-",
   },
-  {
-    id: "estado", header: "Estado",
-    accessorFn: (e) => e.estadoReal, enableSorting: true,
-    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.estadoReal),
-    cell: ({ row }) => (
-      <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estadoReal)}`}>
-        {row.original.estadoReal}
-      </Badge>
-    ),
-  },
+  statusColumn<EmbarqueMesSiguiente>({
+    id: "estado",
+    header: "Estado",
+    domain: "embarque",
+    accessor: (e) => e.estadoReal,
+  }),
   {
     id: "profit", header: "Profit MXN",
     accessorFn: (e) => e.profitMXN, enableSorting: true,
