@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.21] - 2026-07-05
+- **ui(tablas)** — Homologación de badges de estado en columnas de tabla usando `statusColumn`/`StatusBadge`:
+  - `statusRegistry` gana 8 dominios nuevos: `aprobacion_cxp`, `captura_cxp`, `actividad_crm`, `tarifa_maritima`, `agente`, `garantia_naviera`, `ruta_maritima`, `liquidacion`.
+  - Migraciones directas: `AgenteEmbarques`, `EmbarquesActivosTable` (dashboard), `clienteColumns.cotizacion`, `CosteoAgentesTable`, `CosteoRutasTable`, `ProveedorOperacionesTable`, `Actividades`, `AgenteTarifas`, `cxpColumns` (aprobación), `cxpPorCapturarColumns` (avance), `useGarantiasColumns` (badge read-only).
+  - Se elimina el uso disperso de `getEstadoColor` + `<Badge>` inline en columnas — ahora todas las tablas comparten la misma tipografía, tamaño y paleta por dominio.
+- Resultado: cada estado (embarque, factura, proforma, cotización, actividad CRM, tarifa, agente, garantía, ruta, liquidación, aprobación CxP, captura CxP) se ve idéntico en toda la app.
+
 ## [13.172.20] - 2026-07-05
 - **ui(tablas)** — Se homologan los estados vacío/carga/skeleton de todas las tablas migradas a `DataTable`:
   - El empty state built-in ahora renderiza `EmptyStateInline` internamente → misma tipografía, spacing (`py-10`) e icono (`Inbox` por defecto) que cards y paneles.

@@ -23,7 +23,16 @@ export type StatusDomain =
   | "cotizacion"
   | "lead"
   | "comision"
-  | "org";
+  | "org"
+  // Añadidos v13.172.21 — homologación de badges en tablas.
+  | "aprobacion_cxp"      // CxP flujo de aprobación
+  | "captura_cxp"         // Bandeja "Por capturar" (avance CFDI)
+  | "actividad_crm"       // Actividad CRM: Completada / Pendiente
+  | "tarifa_maritima"     // Estado de aprobación de tarifa de agente
+  | "agente"              // Alta/baja de agentes de costeo (masculino)
+  | "garantia_naviera"    // Ciclo de vida de garantía por contenedor
+  | "ruta_maritima"       // Salud de ruta (Activa/Por vencer/Sin tarifa)
+  | "liquidacion";        // Pago de operación de proveedor
 
 export interface StatusVisual {
   label: string;
@@ -92,6 +101,14 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Activa",
     "Inactiva",
   ],
+  aprobacion_cxp: ["Por aprobar", "Aprobada", "Rechazada"],
+  captura_cxp: ["Sin captura", "Parcial", "Completo"],
+  actividad_crm: ["Pendiente", "Completada"],
+  tarifa_maritima: ["Borrador", "Vigente", "Rechazada"],
+  agente: ["Activo", "Inactivo"],
+  garantia_naviera: ["Pendiente", "Depositado", "Liberado", "Retenido"],
+  ruta_maritima: ["Activa", "Por vencer", "Sin tarifa"],
+  liquidacion: ["Pagado", "Pendiente"],
 };
 
 /** Overrides por dominio cuando el mismo string necesita otro label. */
@@ -123,6 +140,30 @@ const EXTRA: Record<string, EstadoVisual["badge"]> = {
   // Organización
   Activa: "bg-success/15 text-success border border-success/30",
   Inactiva: "bg-muted text-muted-foreground border border-border",
+  // Aprobación CxP
+  "Por aprobar": "bg-warning/15 text-warning border border-warning/30",
+  Aprobada: "bg-success/15 text-success border border-success/30",
+  // Captura CxP
+  "Sin captura": "bg-muted text-muted-foreground border border-border",
+  Parcial: "bg-warning/15 text-warning border border-warning/30",
+  Completo: "bg-success/15 text-success border border-success/30",
+  // Actividad CRM
+  Pendiente: "bg-warning/15 text-warning border border-warning/30",
+  Completada: "bg-success/15 text-success border border-success/30",
+  // Tarifa marítima
+  Borrador: "bg-muted text-muted-foreground border border-border",
+  // (Vigente ya definido arriba; Rechazada usa ESTADO_CONFIG destructive.)
+  // Agente
+  Activo: "bg-success/15 text-success border border-success/30",
+  Inactivo: "bg-muted text-muted-foreground border border-border",
+  // Garantía naviera
+  Depositado: "bg-info/15 text-info border border-info/30",
+  Liberado: "bg-success/15 text-success border border-success/30",
+  Retenido: "bg-destructive/15 text-destructive border border-destructive/30",
+  // Ruta marítima
+  "Sin tarifa": "bg-destructive/15 text-destructive border border-destructive/30",
+  // Liquidación
+  Pagado: "bg-success/15 text-success border border-success/30",
 };
 
 /**

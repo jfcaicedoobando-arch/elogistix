@@ -5,17 +5,18 @@ import {
   moneyColumn,
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 
+// Estado del flujo de aprobación (dominio `aprobacion_cxp` en statusRegistry).
 type EstadoAprob = "pendiente" | "aprobada" | "rechazada";
-const APROB_COLOR: Record<EstadoAprob, string> = {
-  pendiente: "bg-warning/10 text-warning border-warning/20",
-  aprobada: "bg-success/10 text-success border-success/20",
-  rechazada: "bg-destructive/10 text-destructive border-destructive/20",
+const APROB_STATUS: Record<EstadoAprob, string> = {
+  pendiente: "Por aprobar",
+  aprobada: "Aprobada",
+  rechazada: "Rechazada",
 };
-const APROB_LABEL: Record<EstadoAprob, string> = { pendiente: "Por aprobar", aprobada: "Aprobada", rechazada: "Rechazada" };
 
 export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
   return defineColumns<FacturaCxP>([
@@ -126,19 +127,18 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
     },
     {
       id: "aprobacion", header: "Aprobación",
-      accessorFn: (f) => f.estado_aprobacion, enableSorting: true,
+      accessorFn: (f) => APROB_STATUS[f.estado_aprobacion as EstadoAprob],
+      enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.estado_aprobacion),
       meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
-        const ap = row.original.estado_aprobacion;
+        const ap = row.original.estado_aprobacion as EstadoAprob;
         return (
-          <Badge
-            variant="outline"
-            className={APROB_COLOR[ap]}
-            title={ap === "rechazada" && row.original.motivo_rechazo ? row.original.motivo_rechazo : undefined}
-          >
-            {APROB_LABEL[ap]}
-          </Badge>
+          <StatusBadge
+            domain="aprobacion_cxp"
+            status={APROB_STATUS[ap]}
+            className={ap === "rechazada" && row.original.motivo_rechazo ? "cursor-help" : undefined}
+          />
         );
       },
     },

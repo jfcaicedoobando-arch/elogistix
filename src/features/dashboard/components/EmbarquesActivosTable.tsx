@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/features/dashboard/hooks";
 
@@ -62,16 +62,12 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
     meta: { className: "text-xs" },
     cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : "-",
   },
-  {
-    id: "estado", header: "Estado",
-    accessorFn: (e) => e.estadoReal, enableSorting: true,
-    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.estadoReal),
-    cell: ({ row }) => (
-      <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estadoReal)}`}>
-        {row.original.estadoReal}
-      </Badge>
-    ),
-  },
+  statusColumn<EmbarqueMesSiguiente>({
+    id: "estado",
+    header: "Estado",
+    domain: "embarque",
+    accessor: (e) => e.estadoReal,
+  }),
   {
     id: "profit", header: "Profit MXN",
     accessorFn: (e) => e.profitMXN, enableSorting: true,

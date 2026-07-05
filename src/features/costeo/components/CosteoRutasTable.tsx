@@ -13,17 +13,12 @@ import {
 } from "@/components/ui/tooltip";
 import { AlertTriangle, ExternalLink, Trash2 } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import {
   computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER, type RutaEstadoMeta,
 } from "@/features/costeo/utils/rutaEstado";
 
-const TONE_VARIANT: Record<RutaEstadoMeta["tone"], "default" | "destructive" | "secondary" | "outline"> = {
-  success: "default",
-  warning: "outline",
-  destructive: "destructive",
-  muted: "secondary",
-};
 
 function formatFecha(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -127,15 +122,12 @@ export function CosteoRutasTable({ rutasOrdenadas, isLoading, totalRutas, onElim
         meta: { className: "text-sm text-muted-foreground" },
         cell: ({ row }) => formatFecha(row.original.ruta.ultima_actualizacion_tarifa),
       },
-      {
+      statusColumn<FilaRuta>({
         id: "estado",
         header: "Estado",
-        accessorFn: (f) => f.meta.label,
-        enableSorting: true,
-        cell: ({ row }) => (
-          <Badge variant={TONE_VARIANT[row.original.meta.tone]}>{row.original.meta.label}</Badge>
-        ),
-      },
+        domain: "ruta_maritima",
+        accessor: (f) => f.meta.label,
+      }),
       {
         id: "acciones",
         header: "Acciones",

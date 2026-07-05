@@ -14,6 +14,7 @@ import {
 import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { useDebounce } from "@/hooks/shared";
 import {
   useActividades, ACTIVIDAD_TIPOS,
@@ -30,10 +31,11 @@ const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActi
   { id: "entidad", header: "Entidad", meta: { className: "text-xs" }, cell: ({ row }) => row.original.entidad_tipo },
   { id: "responsable", header: "Responsable", meta: { className: "text-xs" }, cell: ({ row }) => row.original.responsable_email || "—" },
   {
-    id: "estado", header: "Estado", meta: { width: "w-[110px]" },
-    cell: ({ row }) => row.original.fecha_completada
-      ? <Badge variant="secondary">Completada</Badge>
-      : <Badge>Pendiente</Badge>,
+    ...statusColumn<CrmActividadRow>({
+      domain: "actividad_crm",
+      accessor: (a) => (a.fecha_completada ? "Completada" : "Pendiente"),
+    }),
+    meta: { width: "w-[110px]" },
   },
   {
     id: "fecha", header: "Programada", meta: { className: "text-xs" },

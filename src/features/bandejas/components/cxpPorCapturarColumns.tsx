@@ -4,21 +4,28 @@
  */
 import { Link } from "react-router-dom";
 import { FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { estatusDeFila } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
 
+// Mapea el estatus interno ("sin"/"parcial"/"completo") al string canónico
+// del dominio `captura_cxp` del statusRegistry.
+const CAPTURA_STATUS: Record<"sin" | "parcial" | "completo", string> = {
+  sin: "Sin captura",
+  parcial: "Parcial",
+  completo: "Completo",
+};
+
 function AvanceBadge({ row }: { row: RowData }) {
-  const estatus = estatusDeFila(row);
-  if (estatus === "sin") return <Badge variant="secondary">Sin captura</Badge>;
-  if (estatus === "parcial")
-    return <Badge className="bg-warning/15 text-warning border-warning/30 hover:bg-warning/20">Parcial</Badge>;
-  return <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/20">Completo</Badge>;
+  // `estatusDeFila` nunca retorna "todos" (ese es un filtro UI), pero el tipo
+  // lo permite; el cast estrecho es seguro y evita ampliar el dominio de status.
+  const estatus = estatusDeFila(row) as "sin" | "parcial" | "completo";
+  return <StatusBadge domain="captura_cxp" status={CAPTURA_STATUS[estatus]} />;
 }
 
 interface BuildOpts {

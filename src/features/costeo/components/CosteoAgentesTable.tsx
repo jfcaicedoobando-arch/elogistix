@@ -5,8 +5,8 @@
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { Trash2, Pencil, UserPlus } from "lucide-react";
 
@@ -70,20 +70,12 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         accessorFn: (a) => a.email ?? "",
         cell: ({ row }) => row.original.email ?? "—",
       },
-      {
+      statusColumn<AgenteRow>({
         id: "activo",
         header: "Activo",
-        accessorFn: (a) => a.activo ? "1" : "0",
-        enableSorting: true,
-        cell: ({ row }) => (
-          <Badge
-            variant={row.original.activo ? "default" : "secondary"}
-            className={row.original.activo ? "bg-success/15 text-success border-success/30" : ""}
-          >
-            {row.original.activo ? "Activo" : "Inactivo"}
-          </Badge>
-        ),
-      },
+        domain: "agente",
+        accessor: (a) => (a.activo ? "Activo" : "Inactivo"),
+      }),
       {
         id: "acciones",
         header: "Acciones",

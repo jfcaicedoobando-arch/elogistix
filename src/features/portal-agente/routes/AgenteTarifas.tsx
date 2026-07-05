@@ -5,13 +5,13 @@
  */
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { useAgenteTarifas } from "@/features/portal-agente/hooks";
@@ -203,8 +203,7 @@ export default function AgenteTarifas() {
 }
 
 function EstadoBadge({ estado }: { estado: string }) {
-  if (estado === "vigente") return <Badge className="bg-success text-success-foreground">Vigente</Badge>;
-  if (estado === "borrador") return <Badge className="bg-warning text-warning-foreground">Borrador</Badge>;
-  if (estado === "rechazada") return <Badge variant="destructive">Rechazada</Badge>;
-  return <Badge variant="outline">{estado}</Badge>;
+  // Capitaliza estado ("vigente" → "Vigente") para casar con DOMAIN_STATUSES.tarifa_maritima.
+  const canonical = estado.charAt(0).toUpperCase() + estado.slice(1);
+  return <StatusBadge domain="tarifa_maritima" status={canonical} />;
 }
