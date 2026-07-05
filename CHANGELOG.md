@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.10] - 2026-07-05
+- **test(e2e/tablet)** — Nuevo spec `e2e/specs/17-modales-captura-responsive.spec.ts` que valida modales `FormDialogShell` y wizard-ruta en tableta (768×1024) y desktop xl+ (1440×900):
+  - **Nuevo Cliente** (`/clientes`): FAB abre el modal, se mide ancho/alto (`overflowX ≤ 1`, `alto ≤ 92 % del viewport`), Escape cierra y foco vuelve al FAB.
+  - **Nuevo Proveedor** (`/proveedores`): mismo checklist.
+  - **Capturar Factura de Proveedor** (`/cxp`): mismo checklist.
+  - **Wizard Nueva Cotización**: FAB navega a `/cotizaciones/nueva` (es ruta, no modal); se valida heading, ausencia de overflow en `<main>` y presencia del botón de salida.
+  - 4 tests × 2 viewports = 8 casos. Cero `console.error`. Corre bajo el project `chromium-internal` con `storageState` del `globalSetup`; sin cambios en `playwright.config.ts` ni en CI.
+
 ## [13.172.9] - 2026-07-05
 - **test(e2e/tablet)** — Nuevo spec `e2e/specs/16-alertdialog-critico-responsive.spec.ts` que valida el `AlertDialog` destructivo de eliminación de embarque en tableta (768×1024) y desktop xl+ (1440×900). Abre el detalle del primer embarque, dispara el diálogo desde el botón "Eliminar", y ejecuta dos ciclos de cierre: (a) botón "Cancelar"/"Entendido" y (b) tecla `Escape`. En cada ciclo verifica que el diálogo desaparece, que el foco vuelve al botón "Eliminar" que lo abrió (restauración de foco de Radix), y que no hay overflow en `<main>` ni `console.error`.
 
