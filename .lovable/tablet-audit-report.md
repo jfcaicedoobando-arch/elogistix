@@ -48,3 +48,23 @@
 - Densidad de tablas: la tabla de `/embarques`, `/proformas`, `/clientes`, `/proveedores` sigue con scroll horizontal interno; funciona pero podría optimizarse ocultando columnas secundarias `hidden xl:table-cell`.
 - Detalles y modales por ruta (`/cotizaciones/:id`, wizards de nueva factura/cotización) — no auditados en profundidad este turno.
 - Portal cliente/agente y `/admin/*` — expresamente fuera del alcance acordado.
+
+---
+
+## Ola 2 · Tablas densas (13.172.5)
+
+Se aplicó `hidden xl:table-cell` a columnas secundarias en 5 tablas para eliminar el scroll horizontal restante en tableta. En desktop (`xl+`, ≥1280px) todas las columnas reaparecen; nada se perdió, sólo se reorganizó.
+
+| Tabla | Columnas ocultadas en tableta | Visibles siempre |
+|---|---|---|
+| `/embarques` | Modo, Origen, Destino | Expediente, BL Master, Contenedores, Cliente, ETD, ETA, Estado |
+| `/proformas` | Operador, Fecha | #, Expediente, Cliente, Estado |
+| `/clientes` | Contacto, Teléfono (`<xl`) · RFC (`<md`, ya en mobile card) | Nombre, Ciudad, acciones |
+| `/proveedores` | Origen, Contacto, Moneda (`<xl`) · RFC/Tax ID (`<md`) | Nombre, Tipo |
+| `/cxp` | Folio prov., Emisión, Días, Mon., Pagado, Aprobación | Folio interno, Proveedor, Vencimiento, Total, Saldo, Estatus |
+
+También: encabezado `Días vencido` acortado a `Días` en `cxpColumns.tsx` (evita el envuelto en 2 líneas).
+
+### Método técnico
+
+`ColumnMeta` ya expone `className` (celda) y `headerClassName` (header). Se añadió `hidden xl:table-cell` a ambos en las columnas objetivo — sin tocar `defineColumns`, hooks ni queries.
