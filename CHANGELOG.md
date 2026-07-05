@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.174.0] - 2026-07-05
+
+- **arquitectura(listados) — Ola 2 CRM (parcial): Leads** — `/crm/leads` migrado a `useServerPagedList` + `<UnifiedFiltersBar />`. Todo el estado (búsqueda, estado, fuente, orden y paginación) vive en la URL vía nuqs (`?q=&estado=&fuente=&sort=&dir=&page=&ps=`) y es shareable/persistente. El fetcher server-side (`listLeads`) ahora acepta `sortKey`/`sortDir` (whitelist: `created_at, empresa, estado, fuente, score`) y aplica orden en Postgres — nunca en cliente.
+- **Tests nuevos**:
+  - `listLeads.test.ts` (5 casos) — contrato server-side: orden por default, sort custom con `range()` correcto para páginas siguientes, filtros `eq()` sólo cuando no son "todos", y `or()` de búsqueda sobre empresa/contacto/email.
+  - `pagedListsAllowlist.test.ts` extendido — allowlist Ola 2 con Leads (10 casos totales pasando).
+- **Oportunidades y Actividades pendientes en Ola 2**: Oportunidades tiene vista Kanban que necesita el set completo (no puede paginarse server-side sin rediseñar la UX), y Actividades requiere extender el hook `useActividades` + tipos. Ambas se abordan en el siguiente turno para no arriesgar regresiones (aprendizaje del bug de `toggleDireccion` en Ola 1).
+
 ## [13.173.3] - 2026-07-05
 
 - **arquitectura(listados) — Guardrail Ola 1** — Nuevo test `pagedListsAllowlist.test.ts` (8 casos) que ancla las rutas ya migradas al primitivo unificado y falla si alguien las revierte a filtros locales. Cubre Cartera, CxP Por Pagar, CxP Aging y Comisiones, verificando que (a) importan `useServerPagedList`/`useClientPagedList` y (b) pasan la prop `pagination` al DataTable. La allowlist se extiende explícitamente ola por ola, forzando a que cada nueva migración toque este archivo (auditoría trazable).
