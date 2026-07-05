@@ -1,5 +1,6 @@
 import React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { LucideIcon } from "lucide-react";
 import { Table, TableFooter } from "@/components/ui/table";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
