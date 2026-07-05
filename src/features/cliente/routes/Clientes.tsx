@@ -66,7 +66,7 @@ export default function Clientes() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const columns = useMemo(
-    () => buildClientesColumns({ onNavigate: (id) => navigate(`/clientes/${id}`) }),
+    () => buildClientesColumns(),
     [navigate],
   );
 

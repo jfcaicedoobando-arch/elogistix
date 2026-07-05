@@ -17,10 +17,13 @@ import {
 
 export type StatusDomain =
   | "factura"
+  | "factura_cxp"
   | "proforma"
   | "embarque"
   | "cotizacion"
-  | "lead";
+  | "lead"
+  | "comision"
+  | "org";
 
 export interface StatusVisual {
   label: string;
@@ -38,6 +41,13 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Vencida",
     "Cancelada",
     "Pendiente",
+  ],
+  factura_cxp: [
+    "Vigente",
+    "Por vencer",
+    "Vencida",
+    "Pagada",
+    "Sin saldo",
   ],
   proforma: [
     "Borrador",
@@ -69,7 +79,18 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Nuevo",
     "Contactado",
     "Calificado",
+    "Descalificado",
+    "Convertido",
     "Descartado",
+  ],
+  comision: [
+    "Devengada",
+    "Liquidada",
+    "Cancelada",
+  ],
+  org: [
+    "Activa",
+    "Inactiva",
   ],
 };
 
@@ -85,10 +106,23 @@ const LABEL_OVERRIDES: Partial<Record<StatusDomain, Record<string, string>>> = {
 
 /** Estilos ad-hoc para dominios/estados que no están en `ESTADO_CONFIG`. */
 const EXTRA: Record<string, EstadoVisual["badge"]> = {
+  // Lead
   Nuevo: "bg-info/15 text-info border border-info/30",
   Contactado: "bg-warning/15 text-warning border border-warning/30",
   Calificado: "bg-success/15 text-success border border-success/30",
+  Descalificado: "bg-destructive/15 text-destructive border border-destructive/30",
+  Convertido: "bg-primary/15 text-primary border border-primary/30",
   Descartado: "bg-muted text-muted-foreground border border-border",
+  // CxP
+  Vigente: "bg-success/15 text-success border border-success/30",
+  "Por vencer": "bg-warning/15 text-warning border border-warning/30",
+  "Sin saldo": "bg-muted text-muted-foreground border border-border",
+  // Comisión
+  Devengada: "bg-warning/15 text-warning border border-warning/30",
+  Liquidada: "bg-success/15 text-success border border-success/30",
+  // Organización
+  Activa: "bg-success/15 text-success border border-success/30",
+  Inactiva: "bg-muted text-muted-foreground border border-border",
 };
 
 /**

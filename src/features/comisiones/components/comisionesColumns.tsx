@@ -1,23 +1,21 @@
-import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import type { ComisionDevengada, EstadoComision } from "@/features/comisiones/services";
-
-const ESTADO_COLOR: Record<EstadoComision, string> = {
-  Devengada: "bg-warning/10 text-warning border-warning/20",
-  Liquidada: "bg-success/10 text-success border-success/20",
-  Cancelada: "bg-muted text-muted-foreground border-border",
-};
+import {
+  statusColumn,
+  moneyColumn,
+  dateColumn,
+} from "@/components/shared/dataTable/columnBuilders";
+import { sortByString } from "@/components/shared/dataTable/sortingFns";
+import { toTitleCase } from "@/lib/formatters";
+import type { ComisionDevengada } from "@/features/comisiones/services";
 
 export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[] {
   return defineColumns<ComisionDevengada>([
     {
-      id: "fecha", header: "Fecha",
-      accessorFn: (c) => c.created_at, enableSorting: true,
-      sortingFn: sortByDate<ComisionDevengada>((c) => c.created_at),
-      meta: { width: "w-[110px]", className: "whitespace-nowrap" },
-      cell: ({ row }) => formatDate(row.original.created_at.slice(0, 10)),
+      ...dateColumn<ComisionDevengada>({
+        id: "fecha", header: "Fecha",
+        accessor: (c) => c.created_at?.slice(0, 10) ?? null,
+      }),
+      meta: { width: "w-[110px]", className: "whitespace-nowrap", sticky: true },
     },
     {
       id: "expediente", header: "Expediente",
@@ -31,49 +29,50 @@ export function buildComisionesColumns(): ColumnDef<ComisionDevengada, unknown>[
     },
     {
       id: "factura", header: "Factura",
-      meta: { width: "w-[110px]", className: "font-mono text-xs" },
+      meta: { width: "w-[110px]", className: "font-mono text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.factura_numero ?? "—",
     },
     {
-      id: "cobrado", header: "Cobrado (MXN)",
-      accessorFn: (c) => c.monto_cobrado_mxn,
-      sortingFn: sortByNumber<ComisionDevengada>((c) => c.monto_cobrado_mxn),
-      enableSorting: true,
-      meta: { width: "w-[130px]", className: "text-right tabular-nums" },
-      cell: ({ row }) => formatCurrency(row.original.monto_cobrado_mxn, "MXN"),
+      ...moneyColumn<ComisionDevengada>({
+        id: "cobrado", header: "Cobrado (MXN)",
+        accessor: (c) => c.monto_cobrado_mxn,
+        defaultCurrency: "MXN",
+      }),
+      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap" },
     },
     {
-      id: "utilidad", header: "Utilidad prorrateada",
-      meta: { width: "w-[150px]", className: "text-right tabular-nums" },
-      cell: ({ row }) => formatCurrency(row.original.utilidad_prorrateada_mxn, "MXN"),
+      ...moneyColumn<ComisionDevengada>({
+        id: "utilidad", header: "Utilidad prorrateada",
+        accessor: (c) => c.utilidad_prorrateada_mxn,
+        defaultCurrency: "MXN",
+      }),
+      meta: { width: "w-[150px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
       id: "pct", header: "%",
-      meta: { width: "w-[60px]", className: "text-right tabular-nums" },
+      meta: { width: "w-[60px]", className: "text-right tabular-nums hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => `${row.original.porcentaje_aplicado.toFixed(1)}%`,
     },
     {
-      id: "comision", header: "Comisión (MXN)",
-      accessorFn: (c) => c.comision_mxn,
-      sortingFn: sortByNumber<ComisionDevengada>((c) => c.comision_mxn),
-      enableSorting: true,
-      meta: { width: "w-[130px]", className: "text-right font-semibold tabular-nums" },
-      cell: ({ row }) => formatCurrency(row.original.comision_mxn, "MXN"),
+      ...moneyColumn<ComisionDevengada>({
+        id: "comision", header: "Comisión (MXN)",
+        accessor: (c) => c.comision_mxn,
+        defaultCurrency: "MXN",
+      }),
+      meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
     },
     {
-      id: "estado", header: "Estado",
-      accessorFn: (c) => c.estado,
+      ...statusColumn<ComisionDevengada>({
+        id: "estado", header: "Estado",
+        domain: "comision",
+        accessor: (c) => c.estado,
+      }),
       sortingFn: sortByString<ComisionDevengada>((c) => c.estado),
       meta: { width: "w-[110px]" },
-      cell: ({ row }) => (
-        <Badge variant="outline" className={ESTADO_COLOR[row.original.estado]}>
-          {row.original.estado}
-        </Badge>
-      ),
     },
     {
       id: "nota", header: "Nota",
-      meta: { width: "min-w-[120px]", className: "text-xs text-muted-foreground" },
+      meta: { width: "min-w-[120px]", className: "text-xs text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.nota ?? "—",
     },
   ]);

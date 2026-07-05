@@ -1,16 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
-import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
+import {
+  statusColumn,
+  moneyColumn,
+  dateColumn,
+} from "@/components/shared/dataTable/columnBuilders";
+import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
+import { toTitleCase } from "@/lib/formatters";
+import type { FacturaCxP } from "@/features/cxp/services";
 
-const ESTATUS_COLOR: Record<EstatusCxP, string> = {
-  Vigente: "bg-success/10 text-success border-success/20",
-  "Por vencer": "bg-warning/10 text-warning border-warning/20",
-  Vencida: "bg-destructive/10 text-destructive border-destructive/20",
-  Pagada: "bg-muted text-muted-foreground border-border",
-  "Sin saldo": "bg-muted text-muted-foreground border-border",
-};
 type EstadoAprob = "pendiente" | "aprobada" | "rechazada";
 const APROB_COLOR: Record<EstadoAprob, string> = {
   pendiente: "bg-warning/10 text-warning border-warning/20",
@@ -61,19 +59,19 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       },
     },
     {
-      id: "emision", header: "Emisión",
-      accessorFn: (f) => f.fecha_emision, enableSorting: true,
-      sortingFn: sortByDate<FacturaCxP>((f) => f.fecha_emision),
+      ...dateColumn<FacturaCxP>({
+        id: "emision", header: "Emisión",
+        accessor: (f) => f.fecha_emision,
+      }),
       meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
     {
-      id: "vencimiento", header: "Vencimiento",
-      accessorFn: (f) => f.fecha_vencimiento ?? "", enableSorting: true,
-      sortingFn: sortByDate<FacturaCxP>((f) => f.fecha_vencimiento ?? ""),
+      ...dateColumn<FacturaCxP>({
+        id: "vencimiento", header: "Vencimiento",
+        accessor: (f) => f.fecha_vencimiento,
+      }),
       // En tableta damos algo menos de ancho para hacer espacio a Saldo/Estatus.
       meta: { width: "w-[95px] xl:w-[110px]", className: "text-xs whitespace-nowrap" },
-      cell: ({ row }) => row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
     },
     {
       id: "dias", header: "Días",
@@ -94,37 +92,37 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       cell: ({ row }) => row.original.moneda,
     },
     {
-      id: "total", header: "Total",
-      accessorFn: (f) => f.total, enableSorting: true,
-      sortingFn: sortByNumber<FacturaCxP>((f) => f.total),
+      ...moneyColumn<FacturaCxP>({
+        id: "total", header: "Total",
+        accessor: (f) => f.total,
+        currencyAccessor: (f) => f.moneda,
+      }),
       // Total oculto en tableta (<xl): mostramos Saldo como monto operativo principal.
       meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => formatCurrency(row.original.total, row.original.moneda),
     },
     {
-      id: "pagado", header: "Pagado",
-      accessorFn: (f) => f.pagado, enableSorting: true,
-      sortingFn: sortByNumber<FacturaCxP>((f) => f.pagado),
+      ...moneyColumn<FacturaCxP>({
+        id: "pagado", header: "Pagado",
+        accessor: (f) => f.pagado,
+        currencyAccessor: (f) => f.moneda,
+      }),
       meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => formatCurrency(row.original.pagado, row.original.moneda),
     },
     {
-      id: "saldo", header: "Saldo",
-      accessorFn: (f) => f.saldo, enableSorting: true,
-      sortingFn: sortByNumber<FacturaCxP>((f) => f.saldo),
+      ...moneyColumn<FacturaCxP>({
+        id: "saldo", header: "Saldo",
+        accessor: (f) => f.saldo,
+        currencyAccessor: (f) => f.moneda,
+      }),
       meta: { width: "w-[115px] xl:w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
-      cell: ({ row }) => formatCurrency(row.original.saldo, row.original.moneda),
     },
     {
-      id: "estatus", header: "Estatus",
-      accessorFn: (f) => f.estatus, enableSorting: true,
-      sortingFn: sortByString<FacturaCxP>((f) => f.estatus),
+      ...statusColumn<FacturaCxP>({
+        id: "estatus", header: "Estatus",
+        domain: "factura_cxp",
+        accessor: (f) => f.estatus,
+      }),
       meta: { width: "w-[110px]" },
-      cell: ({ row }) => (
-        <Badge variant="outline" className={ESTATUS_COLOR[row.original.estatus]}>
-          {row.original.estatus}
-        </Badge>
-      ),
     },
     {
       id: "aprobacion", header: "Aprobación",

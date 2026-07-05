@@ -1,17 +1,131 @@
+/**
+ * Cartera — facturas emitidas con saldo pendiente.
+ * v13.172.16: migrado a DataTable + columnBuilders para unificar con el resto de la app.
+ */
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { Inbox } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCartera } from "@/features/bandejas/domain/aggregates";
-import { Inbox } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
+import { sortByNumber, sortByString } from "@/components/shared/dataTable/sortingFns";
+import EmptyState from "@/components/empty/EmptyState";
+
+type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["data"]>[number];
 
 export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
   const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
+
+  const columns: ColumnDef<CarteraRow, unknown>[] = useMemo(
+    () =>
+      defineColumns<CarteraRow>([
+        {
+          id: "numero",
+          header: "Folio",
+          accessorFn: (r) => r.numero ?? "",
+          enableSorting: true,
+          sortingFn: sortByString<CarteraRow>((r) => r.numero ?? ""),
+          meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
+          cell: ({ row }) => (
+            <Link
+              to={`/facturacion/${row.original.factura_id}`}
+              className="text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {row.original.numero ?? "—"}
+            </Link>
+          ),
+        },
+        {
+          id: "cliente",
+          header: "Cliente",
+          accessorFn: (r) => r.cliente_nombre ?? "",
+          enableSorting: true,
+          sortingFn: sortByString<CarteraRow>((r) => r.cliente_nombre ?? ""),
+          meta: { width: "min-w-[180px]", className: "max-w-[240px] truncate" },
+          cell: ({ row }) => (
+            <span title={row.original.cliente_nombre ?? undefined}>
+              {row.original.cliente_nombre ?? "—"}
+            </span>
+          ),
+        },
+        {
+          id: "embarque",
+          header: "Embarque",
+          meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+          cell: ({ row }) =>
+            row.original.embarque_id ? (
+              <Link
+                to={`/embarques/${row.original.embarque_id}`}
+                className="text-primary hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {row.original.expediente ?? "—"}
+              </Link>
+            ) : (
+              "—"
+            ),
+        },
+        {
+          ...dateColumn<CarteraRow>({
+            id: "vencimiento",
+            header: "Vencimiento",
+            accessor: (r) => r.fecha_vencimiento,
+          }),
+          meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" },
+        },
+        {
+          id: "dias",
+          header: "Días vencido",
+          accessorFn: (r) => r.dias_vencido,
+          enableSorting: true,
+          sortingFn: sortByNumber<CarteraRow>((r) => r.dias_vencido),
+          meta: { width: "w-[110px]", align: "center", className: "whitespace-nowrap" },
+          cell: ({ row }) => (
+            <Badge variant={row.original.dias_vencido > 0 ? "destructive" : "secondary"}>
+              {row.original.dias_vencido}d
+            </Badge>
+          ),
+        },
+        {
+          ...moneyColumn<CarteraRow>({
+            id: "total",
+            header: "Total",
+            accessor: (r) => Number(r.total),
+            currencyAccessor: (r) => r.moneda,
+          }),
+          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+        },
+        {
+          ...moneyColumn<CarteraRow>({
+            id: "saldo",
+            header: "Saldo",
+            accessor: (r) => Number(r.saldo),
+            currencyAccessor: (r) => r.moneda,
+          }),
+          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
+        },
+        {
+          id: "ultimo",
+          header: "Último contacto",
+          meta: { width: "w-[130px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+          cell: ({ row }) =>
+            row.original.ultimo_contacto ? (
+              formatDate(row.original.ultimo_contacto)
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            ),
+        },
+      ]),
+    [],
+  );
 
   return (
     <PageContainer>
@@ -87,66 +201,24 @@ export default function Cartera() {
         </CardContent>
       </Card>
 
-      {/* Desktop / tablet: tabla completa. */}
+      {/* Desktop / tablet: DataTable unificada. */}
       <Card className="hidden sm:block">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Folio</TableHead>
-                <TableHead className="min-w-[160px] max-w-[220px]">Cliente</TableHead>
-                <TableHead>Embarque</TableHead>
-                <TableHead>Vencimiento</TableHead>
-                <TableHead className="text-center whitespace-nowrap">Días vencido</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Saldo</TableHead>
-                <TableHead>Último contacto</TableHead>
-              </TableRow>
-
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Cargando...</TableCell></TableRow>
-              )}
-              {!isLoading && data.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Sin cartera pendiente. ¡Todo cobrado!
-                </TableCell></TableRow>
-              )}
-              {data.map((row) => (
-                <TableRow key={row.factura_id} className="hover:bg-muted/50">
-                  <TableCell>
-                    <Link to={`/facturacion/${row.factura_id}`} className="text-primary hover:underline">
-                      {row.numero ?? "—"}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="max-w-[220px]">
-                    <span className="line-clamp-2 leading-tight" title={row.cliente_nombre ?? undefined}>
-                      {row.cliente_nombre ?? "—"}
-                    </span>
-                  </TableCell>
-
-                  <TableCell>
-                    {row.embarque_id ? (
-                      <Link to={`/embarques/${row.embarque_id}`} className="text-primary hover:underline">
-                        {row.expediente ?? "—"}
-                      </Link>
-                    ) : "—"}
-                  </TableCell>
-                  <TableCell>{row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant={row.dias_vencido > 0 ? "destructive" : "secondary"}>
-                      {row.dias_vencido}d
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(Number(row.total), row.moneda)}</TableCell>
-                  <TableCell className="text-right tabular-nums font-semibold">{formatCurrency(Number(row.saldo), row.moneda)}</TableCell>
-                  <TableCell>{row.ultimo_contacto ? formatDate(row.ultimo_contacto) : <span className="text-muted-foreground">—</span>}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable<CarteraRow>
+            columns={columns}
+            data={data}
+            rowKey={(r) => r.factura_id}
+            isLoading={isLoading}
+            emptyState={
+              <div className="p-6">
+                <EmptyState
+                  icon={Inbox}
+                  title="Sin cartera pendiente"
+                  description="¡Todo cobrado!"
+                />
+              </div>
+            }
+          />
         </CardContent>
       </Card>
     </PageContainer>

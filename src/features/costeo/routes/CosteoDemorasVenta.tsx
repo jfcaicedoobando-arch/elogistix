@@ -1,18 +1,15 @@
 /**
  * Tabulador de venta de demoras al cliente.
- * Independiente del tabulador de costo de la naviera.
- * Oleada 4: migrado a PageContainer + ListSkeleton compartidos.
+ * v13.172.16: migrado de `<Table>` crudo a `DataTable` para unificar look & feel.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { Plus, Trash2 } from "lucide-react";
 import { useDemorasVenta, useDemorasVentaMutations } from "@/features/costeo/hooks/useDemorasVenta";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
-import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { DemoraVentaTarifaInput } from "@/features/costeo/services/demorasVenta";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -40,7 +37,8 @@ export default function CosteoDemorasVenta() {
   const [aEliminar, setAEliminar] = useState<string | null>(null);
   const [intentoEnvio, setIntentoEnvio] = useState(false);
 
-  const tipoMap = new Map(tipos.map((t) => [t.id, t.code || t.name]));
+  type Tarifa = (typeof tarifas)[number];
+  const tipoMap = useMemo(() => new Map(tipos.map((t) => [t.id, t.code || t.name])), [tipos]);
 
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +51,74 @@ export default function CosteoDemorasVenta() {
   };
 
   const tipoInvalido = intentoEnvio && !form.tipo_contenedor_id;
+
+  const columns: ColumnDef<Tarifa, unknown>[] = useMemo(
+    () =>
+      defineColumns<Tarifa>([
+        {
+          id: "tipo",
+          header: "Tipo contenedor",
+          meta: { width: "min-w-[160px]", className: "font-medium", sticky: true },
+          cell: ({ row }) => tipoMap.get(row.original.tipo_contenedor_id) ?? "—",
+        },
+        {
+          id: "desde",
+          header: "Desde día",
+          meta: { width: "w-[110px]", align: "right", className: "tabular-nums" },
+          cell: ({ row }) => row.original.desde_dia,
+        },
+        {
+          id: "hasta",
+          header: "Hasta día",
+          meta: { width: "w-[110px]", align: "right", className: "tabular-nums" },
+          cell: ({ row }) =>
+            row.original.hasta_dia ?? <span aria-label="sin límite">∞</span>,
+        },
+        {
+          ...moneyColumn<Tarifa>({
+            id: "monto",
+            header: "Monto/día USD",
+            accessor: (t) => Number(t.monto_por_dia_usd),
+            defaultCurrency: "USD",
+          }),
+          meta: { width: "w-[150px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" },
+        },
+        {
+          ...dateColumn<Tarifa>({
+            id: "desde_vig",
+            header: "Vigente desde",
+            accessor: (t) => t.vigente_desde,
+          }),
+          meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+        },
+        {
+          ...dateColumn<Tarifa>({
+            id: "hasta_vig",
+            header: "Vigente hasta",
+            accessor: (t) => t.vigente_hasta,
+          }),
+          meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden md:table-cell", headerClassName: "hidden md:table-cell" },
+        },
+        {
+          id: "acciones",
+          header: "",
+          meta: { width: "w-[50px]", align: "right" },
+          cell: ({ row }) => (
+            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setAEliminar(row.original.id)}
+                aria-label="Eliminar tarifa de demoras"
+              >
+                <Trash2 className="size-4 text-destructive" />
+              </Button>
+            </div>
+          ),
+        },
+      ]),
+    [tipoMap],
+  );
 
   return (
     <PageContainer>
@@ -70,54 +136,16 @@ export default function CosteoDemorasVenta() {
         <ListSkeleton rows={5} variant="table" />
       ) : (
         <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tipo contenedor</TableHead>
-                <TableHead className="text-right">Desde día</TableHead>
-                <TableHead className="text-right">Hasta día</TableHead>
-                <TableHead className="text-right">Monto/día USD</TableHead>
-                <TableHead>Vigente desde</TableHead>
-                <TableHead>Vigente hasta</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tarifas.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    Sin tarifas. Crea la primera.
-                  </TableCell>
-                </TableRow>
-              )}
-              {tarifas.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell>{tipoMap.get(t.tipo_contenedor_id) ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{t.desde_dia}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {t.hasta_dia ?? <span aria-label="sin límite">∞</span>}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-medium">
-                    {formatCurrency(Number(t.monto_por_dia_usd), "USD")}
-                  </TableCell>
-                  <TableCell className="text-xs">{formatDate(t.vigente_desde)}</TableCell>
-                  <TableCell className="text-xs">
-                    {t.vigente_hasta ? formatDate(t.vigente_hasta) : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setAEliminar(t.id)}
-                      aria-label="Eliminar tarifa de demoras"
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable<Tarifa>
+            columns={columns}
+            data={tarifas}
+            rowKey={(t) => t.id}
+            emptyState={
+              <div className="p-6 text-center text-muted-foreground">
+                Sin tarifas. Crea la primera.
+              </div>
+            }
+          />
         </Card>
       )}
 

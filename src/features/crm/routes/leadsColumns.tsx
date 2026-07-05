@@ -74,16 +74,16 @@ export function makeLeadsColumns(
       id: "empresa", header: "Empresa",
       accessorFn: (l) => l.empresa, enableSorting: true,
       sortingFn: sortByString<CrmLeadRow>((l) => l.empresa),
-      meta: { width: "min-w-[180px]", className: "font-medium" },
+      meta: { width: "min-w-[180px]", className: "font-medium whitespace-nowrap", sticky: true },
       cell: ({ row }) => toTitleCase(row.original.empresa),
     },
     { id: "contacto", header: "Contacto", meta: { width: "w-[160px]", className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.contacto ?? "") },
-    { id: "email", header: "Email", meta: { width: "w-[200px]", className: "text-xs truncate" }, cell: ({ row }) => row.original.email ?? "" },
-    { id: "fuente", header: "Fuente", meta: { width: "w-[120px]", className: "text-xs" }, cell: ({ row }) => row.original.fuente },
+    { id: "email", header: "Email", meta: { width: "w-[200px]", className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.email ?? "" },
+    { id: "fuente", header: "Fuente", meta: { width: "w-[120px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.fuente },
     {
       id: "estado", header: "Estado", meta: { width: "w-[160px]" },
       cell: ({ row }) => <EstadoCell lead={row.original} />,
     },
-    { id: "score", header: "Score", meta: { width: "w-[60px]", className: "text-center text-xs" }, cell: ({ row }) => row.original.score },
+    { id: "score", header: "Score", meta: { width: "w-[60px]", align: "center", className: "text-center text-xs tabular-nums" }, cell: ({ row }) => row.original.score },
   ]);
 }

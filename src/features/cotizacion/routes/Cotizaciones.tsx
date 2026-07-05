@@ -23,10 +23,9 @@ export default function Cotizaciones() {
     () =>
       buildCotizacionesColumns({
         canEdit: c.canEdit,
-        onEditar: c.irAEditar,
         onEliminar: c.setCotizacionAEliminar,
       }),
-    [c.canEdit, c.irAEditar, c.setCotizacionAEliminar],
+    [c.canEdit, c.setCotizacionAEliminar],
   );
 
   const primaryFilters = (

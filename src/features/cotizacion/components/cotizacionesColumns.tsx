@@ -13,11 +13,10 @@ import {
   dateColumn,
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 export interface BuildParams {
   canEdit: boolean;
-  onEditar: (id: string) => void;
   onEliminar: (id: string) => void;
 }
 
@@ -105,11 +104,6 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
     cols.push(
       actionsColumn<CotizacionListItem>({
         items: () => [
-          {
-            label: "Editar",
-            icon: <Pencil className="h-4 w-4" />,
-            onSelect: (row) => params.onEditar(row.id),
-          },
           {
             label: "Eliminar",
             icon: <Trash2 className="h-4 w-4" />,
