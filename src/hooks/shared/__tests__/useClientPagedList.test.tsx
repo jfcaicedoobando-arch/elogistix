@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import { MemoryRouter } from "react-router-dom";
