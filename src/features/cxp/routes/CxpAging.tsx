@@ -1,17 +1,27 @@
 /**
  * Página de Antigüedad de Saldos (aging) de CxP.
  * Ruta: `/compras/aging`. Tabla por proveedor + 5 KPIs por cubeta.
+ *
+ * v13.173.0 (Ola 1 · Filtros globales) — search + filtro de cubeta + orden +
+ * paginación con URL sync a través de `useClientPagedList` y
+ * `<UnifiedFiltersBar />`.
  */
 import { useMemo } from "react";
 import { LayoutList, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
 import { ComprasTabStrip } from "@/features/cxp/components/ComprasTabStrip";
 import { buildCxpAgingColumns } from "@/features/cxp/components/cxpAgingColumns";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
+import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +40,7 @@ function KpiBucket({ label, value, tone = "default" }: { label: string; value: n
   );
 }
 
-function exportarCsv(rows: ReturnType<typeof useCxpAging>["data"]) {
+function exportarCsv(rows: readonly CxpAgingRow[]) {
   if (!rows || rows.length === 0) return;
   const headers = ["Proveedor", "Facturas", "Vigente", "1-30", "31-60", "61-90", ">90", "Total"];
   const lines = rows.map((r) =>
@@ -49,9 +59,41 @@ function exportarCsv(rows: ReturnType<typeof useCxpAging>["data"]) {
   URL.revokeObjectURL(url);
 }
 
+interface Filters extends Record<string, string> { cubeta: string }
+const DEFAULTS: Filters = { cubeta: "todas" };
+
 export default function CxpAging() {
   const { data = [], isLoading, totales } = useCxpAging();
   const columns = useMemo(() => buildCxpAgingColumns(), []);
+
+  const paged = useClientPagedList<CxpAgingRow, Filters>({
+    data,
+    isLoading,
+    defaultFilters: DEFAULTS,
+    filterLabels: { cubeta: "Con saldo en" },
+    defaultSort: { key: "saldo", dir: "desc" },
+    searchAccessor: (r) => r.proveedor_nombre,
+    filterPredicate: (r, ff) => {
+      switch (ff.cubeta) {
+        case "vigente": return r.vigente > 0;
+        case "1_30":    return r.d_1_30 > 0;
+        case "31_60":   return r.d_31_60 > 0;
+        case "61_90":   return r.d_61_90 > 0;
+        case "mas_90":  return r.mas_90 > 0;
+        default: return true;
+      }
+    },
+    sorters: {
+      proveedor: (a, b) => a.proveedor_nombre.localeCompare(b.proveedor_nombre),
+      facturas: (a, b) => a.num_facturas - b.num_facturas,
+      vigente: (a, b) => a.vigente - b.vigente,
+      d_1_30: (a, b) => a.d_1_30 - b.d_1_30,
+      d_31_60: (a, b) => a.d_31_60 - b.d_31_60,
+      d_61_90: (a, b) => a.d_61_90 - b.d_61_90,
+      mas_90: (a, b) => a.mas_90 - b.mas_90,
+      saldo: (a, b) => a.saldo_total - b.saldo_total,
+    },
+  });
 
   return (
     <PageContainer>
@@ -76,13 +118,41 @@ export default function CxpAging() {
         <KpiBucket label=">90 días" value={totales.mas_90} tone={totales.mas_90 > 0 ? "danger" : "default"} />
       </div>
 
+      <UnifiedFiltersBar
+        search={paged.search}
+        onSearchChange={paged.setSearch}
+        searchPlaceholder="Buscar proveedor…"
+        primary={
+          <Select value={paged.filters.cubeta} onValueChange={(v) => paged.setFilter("cubeta", v)}>
+            <SelectTrigger className="w-[180px]" aria-label="Cubeta">
+              <SelectValue placeholder="Con saldo en" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas las cubetas</SelectItem>
+              <SelectItem value="vigente">Solo vigente</SelectItem>
+              <SelectItem value="1_30">1-30 días</SelectItem>
+              <SelectItem value="31_60">31-60 días</SelectItem>
+              <SelectItem value="61_90">61-90 días</SelectItem>
+              <SelectItem value="mas_90">&gt;90 días</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+        chips={paged.activeChips}
+        activeCount={paged.activeCount}
+        onClearAll={paged.resetAll}
+      />
+
       <Card>
         <CardContent className="p-0">
-          <DataTable
+          <DataTable<CxpAgingRow>
             columns={columns}
-            data={data}
-            isLoading={isLoading}
+            data={paged.rows}
+            isLoading={paged.isLoading}
             rowKey={(r) => r.proveedor_id}
+            sortMode="server"
+            controlledSort={paged.controlledSort}
+            onSortChange={paged.setSort}
+            pagination={paged.pagination}
             emptyMessage="Sin saldos pendientes"
             emptyHint="No hay facturas de proveedor con saldo abierto."
             striped
