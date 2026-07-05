@@ -1,20 +1,53 @@
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { formatCurrencyCompact } from "@/lib/formatters";
+import {
+  moneyColumn,
+  dateColumn,
+} from "@/components/shared/dataTable/columnBuilders";
 import type { CrmOportunidadRow } from "@/features/crm/hooks";
 import type { OportunidadesFiltros } from "@/features/crm/components/oportunidadesFiltersTypes";
 
 export const oportunidadesColumns: ColumnDef<CrmOportunidadRow, unknown>[] = defineColumns<CrmOportunidadRow>([
-  { id: "nombre", header: "Oportunidad", meta: { className: "font-medium" }, cell: ({ row }) => row.original.nombre },
-  { id: "cliente", header: "Cliente", cell: ({ row }) => row.original.cliente_nombre || "—" },
   {
-    id: "monto",
-    header: "Monto",
-    meta: { className: "text-right tabular-nums text-xs" },
-    cell: ({ row }) => formatCurrencyCompact(Number(row.original.monto_estimado ?? 0), row.original.moneda),
+    id: "nombre",
+    header: "Oportunidad",
+    meta: { width: "min-w-[180px]", className: "font-medium whitespace-nowrap", sticky: true },
+    cell: ({ row }) => row.original.nombre,
   },
-  { id: "prob", header: "Prob", meta: { className: "text-center text-xs" }, cell: ({ row }) => `${row.original.probabilidad}%` },
-  { id: "fecha", header: "Cierre est.", meta: { className: "text-xs" }, cell: ({ row }) => row.original.fecha_estimada_cierre || "—" },
-  { id: "vendedor", header: "Vendedor", meta: { className: "text-xs" }, cell: ({ row }) => row.original.vendedor_email || "—" },
+  {
+    id: "cliente",
+    header: "Cliente",
+    meta: { width: "min-w-[160px]", className: "max-w-[220px] truncate" },
+    cell: ({ row }) => row.original.cliente_nombre || "—",
+  },
+  {
+    ...moneyColumn<CrmOportunidadRow>({
+      id: "monto",
+      header: "Monto",
+      accessor: (r) => Number(r.monto_estimado ?? 0),
+      currencyAccessor: (r) => r.moneda,
+    }),
+    meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap text-xs" },
+  },
+  {
+    id: "prob",
+    header: "Prob",
+    meta: { width: "w-[70px]", align: "center", className: "text-center text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+    cell: ({ row }) => `${row.original.probabilidad}%`,
+  },
+  {
+    ...dateColumn<CrmOportunidadRow>({
+      id: "fecha",
+      header: "Cierre est.",
+      accessor: (r) => r.fecha_estimada_cierre,
+    }),
+    meta: { width: "w-[120px]", className: "text-xs whitespace-nowrap" },
+  },
+  {
+    id: "vendedor",
+    header: "Vendedor",
+    meta: { width: "w-[180px]", className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+    cell: ({ row }) => row.original.vendedor_email || "—",
+  },
 ]);
 
 export function activosFiltros(f: OportunidadesFiltros): number {
