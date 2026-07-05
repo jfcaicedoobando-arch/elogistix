@@ -68,12 +68,9 @@ export default tseslint.config(
             message: "Importa desde el barrel del dominio: '@/services/<dominio>' en lugar de archivos internos. Ver ARCHITECTURE.md §5.",
           },
         ],
-        paths: [
-          {
-            name: "@/components/ui/table",
-            message: "Usa <DataTable /> de '@/components/shared/DataTable' para estandarizar tablas. Solo casos editables/excepcionales pueden importar las primitivas; documenta y agrega allowlist en eslint.config.js.",
-          },
-        ],
+        // NOTA: la restricción sobre `@/components/ui/table` vive en su propio
+        // bloque `no-raw-table` al final del archivo — inmune al override que
+        // apaga `no-restricted-imports` en `src/features/**`.
       }],
     },
   },
