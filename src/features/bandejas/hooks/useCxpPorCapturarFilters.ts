@@ -24,7 +24,8 @@ export interface FiltersState {
   direccion: DireccionOrden;
 }
 
-const initial: FiltersState = {
+/** Defaults exportados para reset y tests. */
+export const INITIAL_CXP_CAPTURAR_FILTERS: FiltersState = {
   query: "",
   estatus: "todos",
   antiguedad: "todos",
