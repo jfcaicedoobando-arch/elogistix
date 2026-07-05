@@ -5,8 +5,8 @@
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { Trash2, Pencil, UserPlus } from "lucide-react";
 
