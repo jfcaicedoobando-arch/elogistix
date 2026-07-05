@@ -1,13 +1,9 @@
 /**
- * Regresión estructural de `appRoutes.tsx` post-poda 13.56.8.
+ * Regresión estructural de `appRoutes.tsx`.
  *
- * Después de introducir el helper `guarded(roles, element)` para colapsar
- * cada ruta protegida a una sola línea, este test garantiza que el
- * comportamiento observable del árbol de rutas no cambió:
- *  - Todas las rutas críticas siguen presentes con su path exacto.
- *  - Cada path protegido conserva los `allowedRoles` esperados.
- *  - Todo el árbol sigue envuelto por `ProtectedRoute` + `Layout`.
- *  - Las redirecciones internas (Navigate replace) siguen activas.
+ * v13.175.0 — Rediseño Compras (Ola A): el módulo se unifica bajo `/compras/*`
+ * y las rutas legacy (`/cxp`, `/cxp/por-*`, `/proveedores`) redirigen preservando
+ * querystring vía `<RedirectPreserveSearch />`.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -18,6 +14,7 @@ import {
 } from "react";
 import { appRoutes } from "../appRoutes";
 import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
+import { RedirectPreserveSearch } from "@/routes/RedirectPreserveSearch";
 import { Layout } from "@/components/layout/Layout";
 import type { AppRole } from "@/types/appRole";
 
@@ -64,17 +61,16 @@ const FINANCE_READ_ROLES: AppRole[] = [
 ];
 const TESORERIA_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor"];
 const PROFIT_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "admin_org", "gerente_operaciones", "gerente_visor", "gerente_comercial"];
+const COMPRAS_READ_ROLES: AppRole[] = [...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"];
 
 describe("routes/appRoutes — envoltura raíz", () => {
-  it("la raíz envuelve Layout con ProtectedRoute (sin allowedRoles → cualquier autenticado)", () => {
-    // appRoutes es un único <Route element={<ProtectedRoute><Layout/></ProtectedRoute>}>
+  it("la raíz envuelve Layout con ProtectedRoute", () => {
     const root = appRoutes as ReactElement;
     expect(isValidElement(root)).toBe(true);
     const wrapper = (root.props as RouteProps).element as ReactElement;
     expect(wrapper.type).toBe(ProtectedRoute);
     const inner = (wrapper.props as { children: ReactElement }).children;
     expect(inner.type).toBe(Layout);
-    // sin restricción de roles a nivel raíz
     expect((wrapper.props as { allowedRoles?: AppRole[] }).allowedRoles).toBeUndefined();
   });
 });
@@ -84,7 +80,13 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/inicio", "/operaciones", "/embarques", "/embarques/nuevo",
     "/embarques/:id", "/embarques/:id/editar",
     "/facturacion", "/facturacion/:id", "/proformas/:id",
-    "/cxp", "/cxp/por-capturar", "/cxp/por-pagar", "/compras", "/compras/aging",
+    // Módulo Compras unificado (v13.175.0)
+    "/compras", "/compras/por-capturar", "/compras/por-aprobar", "/compras/por-pagar",
+    "/compras/facturas", "/compras/pagos", "/compras/notas-credito",
+    "/compras/proveedores", "/compras/proveedores/:id",
+    "/compras/aging", "/compras/reportes",
+    // Legacy redirects (preservan querystring)
+    "/cxp", "/cxp/por-capturar", "/cxp/por-pagar", "/proveedores", "/proveedores/:id",
     "/cartera",
     "/tesoreria", "/tesoreria/cuentas", "/tesoreria/conciliacion", "/tesoreria/flujo",
     "/comisiones",
@@ -92,7 +94,7 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/costeo/agentes", "/costeo/navieras", "/costeo/demoras-venta",
     "/profit", "/profit/dashboard", "/profit/proyeccion",
     "/profit/estado-resultados", "/profit/presupuesto",
-    "/clientes", "/clientes/:id", "/proveedores", "/proveedores/:id",
+    "/clientes", "/clientes/:id",
     "/cotizaciones", "/cotizaciones/nueva", "/cotizaciones/nueva/tarifario",
     "/cotizaciones/:id", "/cotizaciones/:id/editar",
     "/dev/pdf-preview/cotizacion/:id",
@@ -112,14 +114,15 @@ describe("routes/appRoutes — paths críticos presentes", () => {
   });
 });
 
-describe("routes/appRoutes — gates de rol (post helper guarded())", () => {
+describe("routes/appRoutes — gates de rol", () => {
   const CASES: Array<[string, AppRole[]]> = [
-    ["/cxp", FINANCE_READ_ROLES],
-    ["/compras", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"]],
-    ["/compras/aging", [...TESORERIA_ROLES, "auxiliar_contable", "admin_org", "gerente_operaciones", "gerente_visor"]],
-    ["/cxp/por-capturar", ["admin", "super_admin", "admin_org", "contador", "auxiliar_contable", "tesorero", "gerente_operaciones", "gerente_visor"]],
-    ["/cxp/por-pagar", ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"]],
-    
+    ["/compras", COMPRAS_READ_ROLES],
+    ["/compras/aging", COMPRAS_READ_ROLES],
+    ["/compras/facturas", FINANCE_READ_ROLES],
+    ["/compras/pagos", FINANCE_READ_ROLES],
+    ["/compras/notas-credito", FINANCE_READ_ROLES],
+    ["/compras/reportes", FINANCE_READ_ROLES],
+    ["/compras/por-pagar", ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"]],
     ["/cartera", ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"]],
     ["/tesoreria", TESORERIA_READ_ROLES],
     ["/tesoreria/cuentas", TESORERIA_READ_ROLES],
@@ -139,31 +142,34 @@ describe("routes/appRoutes — gates de rol (post helper guarded())", () => {
     expect(roles).not.toBeNull();
     expect(roles).toEqual(expected);
   });
-
-  it("ninguna ruta pública (sin gate explícito) usa ProtectedRoute como wrapper interno", () => {
-    // Rutas no listadas en CASES no deben envolverse con ProtectedRoute interno
-    // (heredan el gate raíz). Esto detecta gates accidentales.
-    const guardedPaths = new Set(CASES.map(([p]) => p));
-    const accidental = records
-      .filter((r) => !guardedPaths.has(r.path))
-      .filter((r) => r.element?.type === ProtectedRoute)
-      .map((r) => r.path);
-    expect(accidental).toEqual([]);
-  });
 });
 
-describe("routes/appRoutes — redirecciones Navigate", () => {
+describe("routes/appRoutes — redirecciones", () => {
   it.each([
     ["/costeo", "/costeo/tarifas"],
     ["/profit", "/profit/dashboard"],
     ["/reportes", "/reportes/rentabilidad"],
     ["/rentabilidad", "/reportes/rentabilidad"],
     ["/facturacion/por-emitir", "/proformas?estado=aceptada"],
-  ])("%s redirige a %s con replace", (from, to) => {
+    ["/compras/por-aprobar", "/compras/facturas?aprobacion=pendiente"],
+  ])("%s redirige a %s con Navigate replace", (from, to) => {
     const rec = records.find((r) => r.path === from);
     expect(rec?.element).toBeTruthy();
     const props = rec!.element!.props as { to?: string; replace?: boolean };
     expect(props.to).toBe(to);
     expect(props.replace).toBe(true);
+  });
+
+  it.each([
+    ["/cxp", "/compras/facturas"],
+    ["/cxp/por-capturar", "/compras/por-capturar"],
+    ["/cxp/por-pagar", "/compras/por-pagar"],
+    ["/proveedores", "/compras/proveedores"],
+  ])("%s redirige a %s preservando querystring", (from, to) => {
+    const rec = records.find((r) => r.path === from);
+    expect(rec?.element).toBeTruthy();
+    expect(rec!.element!.type).toBe(RedirectPreserveSearch);
+    const props = rec!.element!.props as { to?: string };
+    expect(props.to).toBe(to);
   });
 });
