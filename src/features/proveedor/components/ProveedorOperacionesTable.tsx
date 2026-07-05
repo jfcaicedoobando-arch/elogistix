@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileX } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, toTitleCase, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 
 export interface ProveedorOperacion {
   embarqueId: string;
