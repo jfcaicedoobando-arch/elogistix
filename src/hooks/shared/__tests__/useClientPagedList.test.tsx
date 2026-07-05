@@ -54,6 +54,11 @@ function setup(data: Row[] = DATA) {
 }
 
 describe("useClientPagedList", () => {
+  beforeEach(() => {
+    // nuqs lee/escribe window.history — reset entre tests para aislarlos.
+    window.history.replaceState(null, "", "/");
+  });
+
   it("aplica default sort ascendente y pagina", () => {
     const { result } = setup();
     expect(result.current.rows.map((r) => r.nombre)).toEqual(["Alfa", "Beta"]);
