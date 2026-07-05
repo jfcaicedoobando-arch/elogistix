@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.174.1] - 2026-07-05
+
+- **arquitectura(listados) — Ola 2 CRM: Actividades** — `/crm/actividades` migrado a `useServerPagedList` + `<UnifiedFiltersBar />`. Búsqueda, tipo, estado, responsable, orden y paginación sincronizados en la URL (`?q=&tipo=&estado=&responsable=&sort=&dir=&page=&ps=`). El shortcut `?filtro=vencidas` sigue funcionando (preconfigura pendientes+mías y filtra en cliente la ventana devuelta por el servidor). El fetcher `listActividades` acepta ahora `sortKey`/`sortDir` (whitelist: `fecha_programada, tipo, asunto, created_at`).
+- **Tests nuevos**:
+  - `listActividades.test.ts` (7 casos) — orden por default con `nullsFirst:false`, sort custom con range de páginas siguientes, `is(fecha_completada, null)` para pendientes, `not(...)` para completadas, `eq(responsable_id, userId)` sólo cuando hay sesión, e `ilike` sobre asunto.
+  - Allowlist Ola 2 extendida — Actividades ancorada en el guardrail (12 casos totales).
+- **Suite filtros globales**: **36/36 tests verdes** (`useClientPagedList` × 8, `useServerPagedList` × 4, `listLeads` × 5, `listActividades` × 7, allowlist × 12).
+
 ## [13.174.0] - 2026-07-05
 
 - **arquitectura(listados) — Ola 2 CRM (parcial): Leads** — `/crm/leads` migrado a `useServerPagedList` + `<UnifiedFiltersBar />`. Todo el estado (búsqueda, estado, fuente, orden y paginación) vive en la URL vía nuqs (`?q=&estado=&fuente=&sort=&dir=&page=&ps=`) y es shareable/persistente. El fetcher server-side (`listLeads`) ahora acepta `sortKey`/`sortDir` (whitelist: `created_at, empresa, estado, fuente, score`) y aplica orden en Postgres — nunca en cliente.

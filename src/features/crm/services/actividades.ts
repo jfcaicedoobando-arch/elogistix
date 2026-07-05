@@ -10,6 +10,9 @@ export type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
 
 import { CRM_ACTIVIDADES_COLUMNS_FULL as COLS, CRM_ACTIVIDADES_COLUMNS_MIN } from "./crmActividadesColumns";
 
+export type ActividadSortKey = "fecha_programada" | "tipo" | "asunto" | "created_at";
+export const ACTIVIDAD_SORTABLE_KEYS = ["fecha_programada", "tipo", "asunto", "created_at"] as const;
+
 export interface ListActividadesParams {
   search: string;
   tipo: CrmActividadTipo | "todos";
@@ -20,13 +23,17 @@ export interface ListActividadesParams {
   page: number;
   pageSize: number;
   userId?: string;
+  sortKey?: ActividadSortKey;
+  sortDir?: "asc" | "desc";
 }
 
 export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
+  const sortKey = p.sortKey ?? "fecha_programada";
+  const sortDir = p.sortDir ?? "asc";
   let q = supabase
     .from("crm_actividades")
     .select(COLS, { count: "exact" })
-    .order("fecha_programada", { ascending: true, nullsFirst: false });
+    .order(sortKey, { ascending: sortDir === "asc", nullsFirst: false });
   if (p.search.trim()) q = q.ilike("asunto", `%${p.search.trim()}%`);
   if (p.tipo !== "todos") q = q.eq("tipo", p.tipo);
   if (p.estado === "pendientes") q = q.is("fecha_completada", null);
