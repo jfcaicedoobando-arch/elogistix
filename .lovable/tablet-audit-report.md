@@ -68,3 +68,34 @@ También: encabezado `Días vencido` acortado a `Días` en `cxpColumns.tsx` (evi
 ### Método técnico
 
 `ColumnMeta` ya expone `className` (celda) y `headerClassName` (header). Se añadió `hidden xl:table-cell` a ambos en las columnas objetivo — sin tocar `defineColumns`, hooks ni queries.
+
+---
+
+## Ola 4 · Cierre (13.172.11)
+
+Se cubrieron con E2E las 3 áreas marcadas como fuera de alcance en el reporte original.
+
+| Área | Spec | Cobertura | Skip automático |
+|---|---|---|---|
+| Portal cliente | `18-portal-responsive.spec.ts` | dashboard, embarques (lista + detalle), facturas, cotizaciones | si faltan `E2E_PORTAL_*` |
+| Super Admin | `19-admin-responsive.spec.ts` | `/admin`, organizaciones, auditoría, configuración | si el usuario E2E no es Super Admin (redirect off `/admin`) |
+| Detalles y wizards | `20-detalles-wizards-responsive.spec.ts` | detalle cotización, cliente (+tabs), proveedor, wizard nueva cotización multi-paso | si no hay datos sembrados |
+
+### Método
+
+Mismo patrón de las olas anteriores:
+
+- 2 viewports por caso (768×1024 y 1440×900).
+- Métricas: `main.scrollWidth - clientWidth ≤ 1`, `doc.scrollWidth - clientWidth ≤ 1`, 0 `console.error`.
+- Sin escribir en BD: el wizard cancela con `Cancelar` o `goBack()` antes de commit.
+- Reutiliza `internalCreds()` y `portalCreds()` de `e2e/fixtures/auth.ts`.
+
+### Resultado
+
+- No se detectaron regresiones nuevas al escribir los specs: los componentes base (`PageHeader`, `FormDialogShell`, `DataTable`) ya arreglados en Olas 1-3 propagan el fix a portal, admin y detalles.
+- **No se aplicaron fixes de código en esta ola** — los specs son la red de contención para que futuras regresiones se detecten en CI.
+- Áreas realmente fuera de alcance que permanecen sin cobertura E2E propia: **rutas `/agente/*`** (no hay `E2E_AGENTE_*` credenciales en el harness) y **mobile <768px** (la app usa cards en mobile, requiere frente aparte).
+
+### Cerrado
+
+La auditoría de tableta 768×1024 queda cerrada. Cualquier nueva ruta o modal que se agregue posterior a 13.172.11 debería incorporarse al spec correspondiente (13-20) o al reporte antes de mergear.
