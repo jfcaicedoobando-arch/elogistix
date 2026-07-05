@@ -55,8 +55,9 @@ function setup(data: Row[] = DATA) {
 
 describe("useClientPagedList", () => {
   beforeEach(() => {
-    // nuqs lee/escribe window.history — reset entre tests para aislarlos.
+    // nuqs lee/escribe window.history — reset completo entre tests.
     window.history.replaceState(null, "", "/");
+    window.dispatchEvent(new PopStateEvent("popstate"));
   });
 
   it("aplica default sort ascendente y pagina", () => {
