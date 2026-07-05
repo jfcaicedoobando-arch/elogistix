@@ -22,7 +22,9 @@ const CAPTURA_STATUS: Record<"sin" | "parcial" | "completo", string> = {
 };
 
 function AvanceBadge({ row }: { row: RowData }) {
-  const estatus = estatusDeFila(row);
+  // `estatusDeFila` nunca retorna "todos" (ese es un filtro UI), pero el tipo
+  // lo permite; el cast estrecho es seguro y evita ampliar el dominio de status.
+  const estatus = estatusDeFila(row) as "sin" | "parcial" | "completo";
   return <StatusBadge domain="captura_cxp" status={CAPTURA_STATUS[estatus]} />;
 }
 
