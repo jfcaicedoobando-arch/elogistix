@@ -43,13 +43,18 @@ export function buildProformasColumns({
       cell: ({ row }) => {
         const p = row.original;
         const selectable = selection.isSelectable(p);
+        if (!selectable) {
+          // Filas no fusionables (facturadas/rechazadas): celda vacía en vez de
+          // checkbox deshabilitado, para evitar el cursor `not-allowed` (🚫).
+          return <div className="flex justify-center" aria-hidden="true" />;
+        }
         return (
           <div onClick={(e) => e.stopPropagation()} className="flex justify-center">
             <Checkbox
               checked={selection.selectedIds.has(p.id)}
-              disabled={!selectable}
               onCheckedChange={() => selection.toggle(p.id)}
               aria-label={`Seleccionar proforma ${p.numero}`}
+              title="Seleccionar para fusionar en una factura"
             />
           </div>
         );
