@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShieldCheck, ShieldOff } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
-  ESTADO_GARANTIA_COLOR,
   ESTADO_GARANTIA_LABEL,
   type EstadoGarantia,
   type GarantiaContenedor,
