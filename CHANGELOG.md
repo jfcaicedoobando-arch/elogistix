@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.175.0] - 2026-07-05
+
+- **UX(Compras) — Ola A: navegación unificada bajo `/compras/*`** — el módulo Compras deja de estar disperso en `/compras`, `/cxp/*` y `/proveedores`. Nuevas rutas: `/compras/facturas`, `/compras/por-capturar`, `/compras/por-aprobar`, `/compras/por-pagar`, `/compras/pagos`, `/compras/notas-credito`, `/compras/proveedores`, `/compras/proveedores/:id`, `/compras/aging`, `/compras/reportes`. Las rutas legacy redirigen preservando querystring vía `RedirectPreserveSearch` (`/cxp?aprobacion=pendiente` sigue funcionando).
+- **UX(Compras) — Fin del `ComprasTabStrip`** — eliminado el tabstrip que aparecía en las 6 páginas del módulo. La navegación entre páginas se hace ahora **exclusivamente por el sidebar**, evitando la duplicidad que confundía al usuario (mismos destinos como items del sidebar y como tabs internos).
+- **UX(Compras) — Sidebar reagrupado** — nuevo `SIDEBAR_COMPRAS_ITEMS` como única fuente de verdad. Cada builder de rol (`contador`, `tesorero`, `auxiliar_contable`, `admin`, `admin_org`, `gerente_operaciones`, `ejecutivo_pricing`) selecciona por URL los items visibles. Se retiraron los duplicados: "Facturas de proveedor" desaparece de Gestión, "Proveedores" desaparece de Directorio, "Por capturar" y "Por pagar" desaparecen de Bandejas.
+- **UX(Compras) — Ola B: Dashboard rediseñado** — `/compras` deja de ser un hub simple con quick-links y se convierte en dashboard: mantiene los 6 KPIs previos (por capturar, por aprobar, con saldo, vencidas, vencido >30 días, por vencer 7d), reordena los 6 quick-links contra las nuevas URLs, y agrega dos secciones nuevas: **Top 5 proveedores con saldo** (ordenado desde `useCxpAging`) y **Últimas facturas capturadas** (5 más recientes por `fecha_emision`).
+- **Rutas internas actualizadas** — links salientes de otros módulos (`Facturacion`, `HoyKpiRow`, `BandaKPIs`, `PagosCajaBlock`, `alertas`, `ProveedorDetalle`, `useProveedorDetalleController`, `bitacora/constants`) apuntan a las nuevas URLs. Los redirects garantizan que no se rompan links guardados.
+- **Tests actualizados**: `appRoutes.smoke.test.tsx` reescrito para el nuevo árbol (11 rutas nuevas bajo `/compras`, 4 redirects legacy con `RedirectPreserveSearch` + preservación de querystring, ampliación de gates de rol). Memoria `mem://features/modulo-compras` actualizada.
+- **Próximas olas**: C (bandeja dedicada `/compras/por-aprobar` + workflow), D (conciliación con embarques), E (pagos y notas de crédito globales), F (reportes).
+
 ## [13.174.1] - 2026-07-05
 
 - **arquitectura(listados) — Ola 2 CRM: Actividades** — `/crm/actividades` migrado a `useServerPagedList` + `<UnifiedFiltersBar />`. Búsqueda, tipo, estado, responsable, orden y paginación sincronizados en la URL (`?q=&tipo=&estado=&responsable=&sort=&dir=&page=&ps=`). El shortcut `?filtro=vencidas` sigue funcionando (preconfigura pendientes+mías y filtra en cliente la ventana devuelta por el servidor). El fetcher `listActividades` acepta ahora `sortKey`/`sortDir` (whitelist: `fecha_programada, tipo, asunto, created_at`).
