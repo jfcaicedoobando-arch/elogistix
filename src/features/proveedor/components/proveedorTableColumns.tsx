@@ -20,8 +20,8 @@ function OrigenBadge({ origen }: { origen: ProveedorListItem["origen_proveedor"]
 export const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineColumns<ProveedorListItem>([
   { id: "nombre", header: "Nombre", accessorFn: (p) => p.nombre, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.nombre), meta: { width: "min-w-[180px]", className: "font-medium" }, cell: ({ row }) => <span title={row.original.nombre}>{toTitleCase(row.original.nombre)}</span> },
   { id: "tipo", header: "Tipo", meta: { width: "w-[160px]" }, cell: ({ row }) => <span className="text-sm">{row.original.tipo ?? "—"}</span> },
-  { id: "origen", header: "Origen", meta: { width: "w-[110px]" }, cell: ({ row }) => <OrigenBadge origen={row.original.origen_proveedor} /> },
-  { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => p.rfc, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.rfc), meta: { width: "w-[140px]", className: "text-xs font-mono" }, cell: ({ row }) => row.original.rfc },
-  { id: "contacto", header: "Contacto", meta: { width: "w-[140px]", className: "text-xs" }, cell: ({ row }) => row.original.contacto ? <span title={row.original.contacto}>{toTitleCase(row.original.contacto)}</span> : null },
-  { id: "moneda", header: "Moneda", meta: { width: "w-[80px]", className: "text-xs" }, cell: ({ row }) => row.original.moneda_preferida },
+  { id: "origen", header: "Origen", meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => <OrigenBadge origen={row.original.origen_proveedor} /> },
+  { id: "rfc", header: "RFC / Tax ID", accessorFn: (p) => p.rfc, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.rfc), meta: { width: "w-[140px]", className: "text-xs font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" }, cell: ({ row }) => row.original.rfc },
+  { id: "contacto", header: "Contacto", meta: { width: "w-[140px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.contacto ? <span title={row.original.contacto}>{toTitleCase(row.original.contacto)}</span> : null },
+  { id: "moneda", header: "Moneda", meta: { width: "w-[80px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" }, cell: ({ row }) => row.original.moneda_preferida },
 ]);

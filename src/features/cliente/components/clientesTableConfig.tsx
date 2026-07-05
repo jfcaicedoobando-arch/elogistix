@@ -40,7 +40,8 @@ export function buildClientesColumns({
       accessorFn: (c) => c.rfc,
       enableSorting: true,
       sortingFn: sortByString<ClienteRow>((c) => c.rfc),
-      meta: { width: "w-[130px]", className: "text-xs font-mono" },
+      // Se oculta en <md porque en móvil ya se muestra en la mobile card.
+      meta: { width: "w-[130px]", className: "text-xs font-mono hidden md:table-cell", headerClassName: "hidden md:table-cell" },
       cell: ({ row }) => (row.original.rfc || "").toUpperCase(),
     },
     {
@@ -56,13 +57,14 @@ export function buildClientesColumns({
     {
       id: "contacto",
       header: "Contacto",
-      meta: { width: "w-[140px]", className: "text-xs" },
+      // Oculto en tableta (<xl) para evitar overflow horizontal.
+      meta: { width: "w-[140px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => toTitleCase(row.original.contacto),
     },
     {
       id: "telefono",
       header: "Teléfono",
-      meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap" },
+      meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatPhoneMx(row.original.telefono),
     },
     actionsColumn<ClienteRow>({

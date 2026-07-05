@@ -6,7 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.5] - 2026-07-05
+- **fix(ui/tablet)** — Ola 2 de la auditoría 768×1024: ocultamiento de columnas secundarias con `hidden xl:table-cell` para eliminar el scroll horizontal en tableta sin sacrificar información en desktop (`xl+` recupera todas las columnas). Cambios por archivo:
+  - `embarqueColumns.tsx`: ocultas `Modo`, `Origen`, `Destino` en `<xl`. Se mantienen visibles `Expediente`, `BL Master`, `Contenedores`, `Cliente`, `ETD`, `ETA`, `Estado`.
+  - `proformasColumns.tsx`: ocultas `Operador` y `Fecha` en `<xl`. Se mantienen `#`, `Expediente`, `Cliente`, `Estado`.
+  - `clientesTableConfig.tsx`: `RFC` oculto en `<md` (ya visible en mobile card), `Contacto` y `Teléfono` en `<xl`. Se mantienen `Nombre`, `Ciudad`, acciones.
+  - `proveedorTableColumns.tsx`: `Origen`, `Contacto` y `Moneda` en `<xl`; `RFC / Tax ID` en `<md`.
+  - `cxpColumns.tsx`: `Folio prov.`, `Emisión`, `Días`, `Mon.`, `Pagado`, `Aprobación` en `<xl`. Se mantienen `Folio interno`, `Proveedor`, `Vencimiento`, `Total`, `Saldo`, `Estatus`. Encabezado "Días vencido" acortado a "Días".
+
 ## [13.172.4] - 2026-07-05
+
 - **fix(ui/tablet)**: auditoría integral 768×1024 (iPad vertical) sobre 14 rutas operativas y financieras. Fixes transversales:
   - `PageHeader.tsx`: el header apila título + acciones hasta `lg` (antes en `md` competían y truncaban títulos como `T…`, `Dashboard Eje…`, `Cotizaciones` con "63 cotizaciones…"). Ahora en tableta el título usa el ancho completo y las acciones caen debajo con `flex-wrap`. Impacta las ~25 páginas que usan `PageHeader`.
   - `HuecoFacturacionChip.tsx`: los montos "· USD… · MXN…" se ocultan hasta `lg` (antes en `md` rompían la fila de tabs Emitidas/Notas de crédito). El conteo "Hueco: 42" sigue visible siempre.

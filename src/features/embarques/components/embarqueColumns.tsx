@@ -98,7 +98,8 @@ export function buildEmbarqueColumns({
     {
       id: "modo",
       header: "Modo",
-      meta: { width: "w-[90px]" },
+      // En tableta (<xl) se oculta para dejar más ancho a Cliente/Estado.
+      meta: { width: "w-[90px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => (
         <span className="flex items-center gap-1.5">
           <ModoIcon modo={row.original.modo} size={14} />
@@ -109,7 +110,7 @@ export function buildEmbarqueColumns({
     {
       id: "origen",
       header: "Origen",
-      meta: { width: "w-[150px]", className: "text-xs truncate" },
+      meta: { width: "w-[150px]", className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getOrigen(row.original));
         return <span title={v} className="block truncate">{v}</span>;
@@ -118,7 +119,7 @@ export function buildEmbarqueColumns({
     {
       id: "destino",
       header: "Destino",
-      meta: { width: "w-[150px]", className: "text-xs truncate" },
+      meta: { width: "w-[150px]", className: "text-xs truncate hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const v = shortName(getDestino(row.original));
         return <span title={v} className="block truncate">{v}</span>;

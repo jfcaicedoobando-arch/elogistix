@@ -32,7 +32,8 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "folio", header: "Folio prov.",
       accessorFn: (f) => f.folio_proveedor, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
-      meta: { width: "w-[120px]", className: "whitespace-nowrap text-xs text-muted-foreground" },
+      // Ocultada en tableta (<xl) para eliminar scroll horizontal en /cxp.
+      meta: { width: "w-[120px]", className: "whitespace-nowrap text-xs text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.folio_proveedor,
     },
     {
@@ -63,7 +64,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "emision", header: "Emisión",
       accessorFn: (f) => f.fecha_emision, enableSorting: true,
       sortingFn: sortByDate<FacturaCxP>((f) => f.fecha_emision),
-      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
     {
@@ -74,10 +75,11 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       cell: ({ row }) => row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
     },
     {
-      id: "dias", header: "Días vencido",
+      id: "dias", header: "Días",
       accessorFn: (f) => f.dias_vencido, enableSorting: true,
       sortingFn: sortByNumber<FacturaCxP>((f) => f.dias_vencido),
-      meta: { width: "w-[90px]", align: "right", className: "tabular-nums text-xs" },
+      // Título compactado a "Días" (antes "Días vencido"). Se oculta en <xl.
+      meta: { width: "w-[70px]", align: "right", className: "tabular-nums text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const f = row.original;
         const saldada = f.estatus === "Pagada" || f.estatus === "Sin saldo";
@@ -87,7 +89,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
     },
     {
       id: "moneda", header: "Mon.",
-      meta: { width: "w-[60px]", className: "text-xs" },
+      meta: { width: "w-[60px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.moneda,
     },
     {
@@ -101,7 +103,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "pagado", header: "Pagado",
       accessorFn: (f) => f.pagado, enableSorting: true,
       sortingFn: sortByNumber<FacturaCxP>((f) => f.pagado),
-      meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap text-success" },
+      meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatCurrency(row.original.pagado, row.original.moneda),
     },
     {
@@ -126,7 +128,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "aprobacion", header: "Aprobación",
       accessorFn: (f) => f.estado_aprobacion, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.estado_aprobacion),
-      meta: { width: "w-[110px]" },
+      meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const ap = row.original.estado_aprobacion;
         return (

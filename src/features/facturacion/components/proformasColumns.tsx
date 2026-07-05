@@ -96,7 +96,8 @@ export function buildProformasColumns({
       accessorFn: (p) => p.operador ?? "",
       enableSorting: true,
       sortingFn: sortByString<ProformaConFactura>((p) => p.operador),
-      meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap" },
+      // Oculto en tableta (<xl) para eliminar scroll horizontal en /proformas.
+      meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.operador ? nombreDesdeEmail(row.original.operador) : <span className="text-muted-foreground">—</span>,
     },
     {
@@ -105,7 +106,7 @@ export function buildProformasColumns({
       accessorFn: (p) => p.fecha_emision,
       enableSorting: true,
       sortingFn: sortByDate<ProformaConFactura>((p) => p.fecha_emision),
-      meta: { width: "w-[100px]", className: "text-xs" },
+      meta: { width: "w-[100px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
     {
