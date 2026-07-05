@@ -57,7 +57,7 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
     { id: "cliente", header: "Cliente", meta: { className: "text-xs" }, cell: ({ row }) => <span title={row.original.clienteNombre}>{toTitleCase(row.original.clienteNombre)}</span> },
     { id: "concepto", header: "Concepto", meta: { className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.concepto) },
     { id: "monto", header: "Monto", meta: { align: "right", className: "text-xs font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.monto, row.original.moneda) },
-    { id: "estado", header: "Estado", cell: ({ row }) => <Badge className={`text-xs ${getEstadoColor(row.original.estadoLiquidacion)}`}>{row.original.estadoLiquidacion}</Badge> },
+    statusColumn<Op>({ id: "estado", header: "Estado", domain: "liquidacion", accessor: (o) => o.estadoLiquidacion }),
     { id: "venc", header: "Vencimiento", meta: { className: "text-xs" }, cell: ({ row }) => row.original.fechaVencimiento ? formatDate(row.original.fechaVencimiento) : '—' },
   ]);
   return (
