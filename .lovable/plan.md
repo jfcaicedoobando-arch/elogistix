@@ -1,78 +1,90 @@
-## Ola 4 · Cerrar auditoría de tableta
+# Plan — Auditoría de completitud ERP de Libre Carga
 
-Extender la auditoría 768×1024 y xl+ (1440×900) a las 3 áreas que quedaron marcadas como "fuera de alcance" en el reporte original. Mismos criterios que Olas 1-3: **0 errores de consola, `<main>` sin overflow horizontal, modales/drawers que caben, foco restaurado al cerrar.**
+## Objetivo
 
-### Alcance
+Responder de forma fundamentada: **¿Es Libre Carga un ERP terminado? ¿Cómo se compara con Odoo/SAP y con CargoWise/Magaya/Descartes?**
 
-**A · Portal cliente / agente**
-Rutas a auditar (headless con login del rol correspondiente si está disponible; si no, sólo lectura de estructura):
-- `/portal` (dashboard cliente)
-- `/portal/embarques` y `/portal/embarques/:id`
-- `/portal/facturacion`
-- `/agente/*` (equivalentes si existen)
+Entregables:
 
-Foco: layout con sidebar propio, gráficos apilados (barra stacked), tarjetas KPI, tablas de embarques del cliente.
+1. **Resumen ejecutivo en chat** (~1 pantalla): madurez global, veredicto y 5 gaps críticos.
+2. **Documento markdown persistente**: `.lovable/audit-erp-completeness.md` con matrices detalladas, evidencia por módulo (rutas/tablas/hooks) y roadmap sugerido.
 
-**B · Módulo `/admin/*`**
-Rutas del dueño Libre Carga:
-- `/admin/tenants` (listado y detalle)
-- `/admin/usuarios`
-- `/admin/auditoria` y hallazgos con "Explicar con IA"
-- `/admin/configuracion` si aplica
+## Método
 
-Foco: tablas densas de tenants/usuarios, modales de impersonación, drawer de hallazgos IA.
+1. **Inventario interno** (ya en curso vía subagente `explore`): recorrer `src/features/*`, `src/routes/*`, `sidebarItems.ts`, `supabase/migrations/*` y clasificar cada módulo como:
+  - `NONE` — no existe
+  - `PARTIAL` — MVP o parcial
+  - `SOLID` — funcional y en uso productivo
+  - `COMPLETE` — cubre casos avanzados y edge cases
+2. **Benchmark generalista**: comparar contra el catálogo estándar Odoo/SAP (Finance, Sales, Purchase, Inventory, MRP, HR, Payroll, Projects, eCommerce, PoS, BI, Website).
+3. **Benchmark vertical**: comparar contra features nucleares de CargoWise/Magaya/Descartes (rate management, quoting, shipment ops, docs BL/HBL/MBL, tracking milestones, customs, EDI, accounting integrado, agent network, container tracking, demurrage).
+4. **Veredicto** por eje: `ERP vertical de forwarder` vs `ERP generalista`.
 
-**C · Detalles y wizards adicionales**
-- `/cotizaciones/:id` (detalle con conceptos, tarifas, timeline)
-- `/proformas/:id`
-- `/clientes/:id` (tabs: contactos, embarques, documentos, tax info)
-- `/proveedores/:id`
-- Wizard **Nueva Cotización** paso a paso (steps 2-N, no sólo step 1 como en spec 17)
-- Wizard **Nueva Factura CxP** completo si tiene pasos
+## Estructura del documento `.lovable/audit-erp-completeness.md`
 
-### Método
+```text
+1. TL;DR (3-5 líneas + veredicto)
+2. Matriz Generalista (Libre Carga vs Odoo vs SAP)
+   ├─ Finance & Accounting
+   ├─ Sales / CRM
+   ├─ Purchasing
+   ├─ Inventory / WMS
+   ├─ Manufacturing / MRP
+   ├─ HR / Payroll
+   ├─ Projects / Timesheets
+   ├─ eCommerce / PoS / Website
+   ├─ BI / Reporting
+   └─ Admin / multi-tenant / i18n
+3. Matriz Vertical Forwarder (Libre Carga vs CargoWise vs Magaya vs Descartes)
+   ├─ Cotización & tarifario
+   ├─ Shipment ops (FCL/LCL/aéreo/terrestre)
+   ├─ Tracking & milestones
+   ├─ Documentación (BL/HBL/MBL, docs onboarding)
+   ├─ Contenedores, demoras, garantías
+   ├─ Customs / aduana
+   ├─ CxC / CxP / Tesorería
+   ├─ CFDI 4.0 / facturación fiscal MX
+   ├─ Portal cliente / agente
+   ├─ Auditoría operativa
+   ├─ EDI / integraciones carrier
+   └─ Comisiones vendedores
+4. Fortalezas diferenciales
+5. Gaps críticos por prioridad (P0/P1/P2)
+6. Veredicto final y posicionamiento de mercado
+7. Roadmap sugerido a 3/6/12 meses
+```
 
-1. **Medir** con Playwright headless en 768×1024 y 1440×900:
-   - `document.body.scrollWidth` vs `clientWidth`
-   - `main.scrollWidth` vs `clientWidth`
-   - Consola: 0 errores
-   - Modales: `dialog.scrollWidth ≤ clientWidth`, `dialog.height ≤ 92vh`
-   - Screenshot por ruta/viewport en `/tmp/tablet-audit-ola4/`
-2. **Categorizar hallazgos** (Ola 4 report) por severidad:
-   - 🔴 overflow real del `<main>` o error de consola
-   - 🟡 scroll horizontal interno aceptable (tabla densa con sticky)
-   - ✅ pasa
-3. **Aplicar fixes por categoría**, no por instancia:
-   - Header/PageHeader ya está resuelto globalmente
-   - Aplicar `hidden xl:table-cell` a columnas secundarias de tablas admin/portal según patrón de Ola 2
-   - Ajustar `xl:grid-cols-N` en KPIs del portal
-   - Modales con overflow → revisar que usen `FormDialogShell` o equivalente con `max-h-[85vh]` y `overflow-y-auto`
-4. **E2E**: 2-3 specs nuevos siguiendo patrón 13-17:
-   - `18-portal-responsive.spec.ts`
-   - `19-admin-responsive.spec.ts`
-   - `20-detalles-wizards-responsive.spec.ts` (extiende spec 17 con wizard multi-paso completo)
+## Hipótesis de trabajo (a validar con el inventario)
 
-### Entregables
+Basado en `mem://index.md`, `README.md` y auditorías previas:
 
-- `.lovable/tablet-audit-report.md` con sección "Ola 4"
-- Fixes de código sólo si hay hallazgos rojos (esperado bajo, la mayor parte del sistema comparte `FormDialogShell` + `DataTable` + `PageHeader` ya arreglados)
-- 3 specs E2E nuevos
-- `CHANGELOG.md` + bump `APP_VERSION` por cada versión aplicada
+- **Fuerte y diferenciado**: Embarques (7 estados, tracking automático, contenedores), Cotizaciones (tarifa-first, versionado, PDF), CFDI 4.0 / Proformas, Auditoría operativa con IA, Portal cliente, Multi-tenant + roles, Costeo tarifas marítimas con ranking Top 3, Garantías/demoras automáticas.
+- **Sólido pero acotado**: CxC/CxP, Tesorería, Reportes, Dashboard ejecutivo, CRM leads/oportunidades, Comisiones.
+- **Parcial**: Inventario/almacén (no aplica al giro), Contabilidad general (facturación sí, GL no confirmado), Aduana/customs.
+- **Ausente esperado**: MRP, HR/Nómina, PoS, eCommerce, Website builder, Timesheets, Bank reconciliation formal, EDI carriers.
 
-### Fuera de alcance de esta ola
+## Veredicto anticipado (a confirmar)
 
-- Cambios de contenido, permisos, RLS o lógica de negocio
-- Rediseñar portales o admin — sólo pulir responsive
-- Mobile (<768px) — la app usa cards en mobile, se auditaría en un frente aparte
+- **Vs Odoo/SAP (generalista)**: Libre Carga **no es** un ERP generalista terminado — le faltan >60% de módulos (MRP, HR, Inventory, PoS, eCommerce). No compite en ese terreno ni pretende hacerlo.
+- **Vs CargoWise/Magaya/Descartes (vertical)**: Libre Carga es un **TMS/forwarder ERP en fase Beta madura** — cubre el flujo core (cotizar → embarcar → facturar → cobrar) mejor localizado a México (CFDI, IVA dinámico, es-MX) que los competidores globales, pero con gaps en EDI, aduana profunda y red de agentes internacional.
+- **Posicionamiento**: nicho México — ERP vertical de forwarder de pequeño/mediano, no un reemplazo de SAP.
 
-### Riesgos
+## Alcance / Fuera de alcance
 
-- El portal cliente y `/admin/*` pueden requerir sesiones con roles distintos al de `hector@lopezbenavides.com`. Si el login de prueba no tiene acceso, la auditoría de esa ruta se marcará como "no auditable con credenciales actuales" y se dejará documentado en el reporte, sin bloquear la ola.
-- Los wizards multi-paso ejercitan formularios reales; el spec navegará hasta el último paso sin enviar (cancelará antes de commit) para no crear datos ruido.
+- **Incluye**: análisis de código existente, memoria del proyecto, comparación conceptual con competidores usando conocimiento público.
+- **Excluye**: no ejecuto features en el navegador, no cambio código, no hago benchmarks de performance ni pricing detallado.
 
-### Detalles técnicos
+## Pasos al implementar
 
-- Helpers `assertNoOverflow()`, `assertDialogFits()` reutilizados de specs 13-17.
-- `storageState` para login rápido, `chromium-internal` project.
-- Screenshots sólo cuando falla o para adjuntar al reporte.
-- Sin dependencias nuevas.
+1. Esperar resultado del subagente de inventario ya en curso.
+2. Completar tablas con evidencia (`src/features/xxx/`, tablas Supabase, rutas).
+3. Escribir `.lovable/audit-erp-completeness.md` (~600-900 líneas).
+4. Publicar resumen ejecutivo en chat con veredicto + top 5 gaps.
+
+## Detalles técnicos
+
+- El documento vive en `.lovable/` (no productivo, no rompe tests ni bundle).
+- No requiere cambio de `APP_VERSION` ni entrada en `CHANGELOG.md` (es documento de análisis, no código).
+- No requiere migraciones ni cambios de UI.
+
+Tambine  dame el reporte en archivo doc o PDF. 
