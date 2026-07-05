@@ -25,7 +25,7 @@ import {
   Facturacion, FacturaDetalle, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Compras, CxpAging, CxpPorCapturar, CxpPorPagar, Cartera,
-  ComprasPagos, ComprasNotasCredito, ComprasReportes,
+  ComprasPagos, ComprasNotasCredito, ComprasReportes, ComprasPorAprobar,
   Tesoreria, TesoreriaCuentas, TesoreriaConciliacion, TesoreriaFlujo, Comisiones,
   CosteoTarifas, CosteoBuscar, CosteoRutas, CosteoAgentes, CosteoNavieras, CosteoDemorasVenta,
   Usuarios, Configuracion,
@@ -75,7 +75,7 @@ export const appRoutes = (
     {/* ── Módulo Compras (v13.175.0 — rediseño Ola A) ────────────────── */}
     <Route path="/compras" element={guarded(COMPRAS_READ_ROLES, <Compras />)} />
     <Route path="/compras/por-capturar" element={guarded(COMPRAS_WRITE_ROLES.concat(["gerente_operaciones", "gerente_visor"]), <CxpPorCapturar />)} />
-    <Route path="/compras/por-aprobar" element={<Navigate to="/compras/facturas?aprobacion=pendiente" replace />} />
+    <Route path="/compras/por-aprobar" element={guarded(COMPRAS_READ_ROLES, <ComprasPorAprobar />)} />
     <Route path="/compras/por-pagar" element={guarded(["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"], <CxpPorPagar />)} />
     <Route path="/compras/facturas" element={guarded(FINANCE_READ_ROLES, <Cxp />)} />
     <Route path="/compras/pagos" element={guarded(FINANCE_READ_ROLES, <ComprasPagos />)} />

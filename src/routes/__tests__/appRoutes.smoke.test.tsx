@@ -118,6 +118,7 @@ describe("routes/appRoutes — gates de rol", () => {
   const CASES: Array<[string, AppRole[]]> = [
     ["/compras", COMPRAS_READ_ROLES],
     ["/compras/aging", COMPRAS_READ_ROLES],
+    ["/compras/por-aprobar", COMPRAS_READ_ROLES],
     ["/compras/facturas", FINANCE_READ_ROLES],
     ["/compras/pagos", FINANCE_READ_ROLES],
     ["/compras/notas-credito", FINANCE_READ_ROLES],
@@ -151,7 +152,6 @@ describe("routes/appRoutes — redirecciones", () => {
     ["/reportes", "/reportes/rentabilidad"],
     ["/rentabilidad", "/reportes/rentabilidad"],
     ["/facturacion/por-emitir", "/proformas?estado=aceptada"],
-    ["/compras/por-aprobar", "/compras/facturas?aprobacion=pendiente"],
   ])("%s redirige a %s con Navigate replace", (from, to) => {
     const rec = records.find((r) => r.path === from);
     expect(rec?.element).toBeTruthy();

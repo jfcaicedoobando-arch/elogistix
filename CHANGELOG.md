@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.176.0] - 2026-07-05
+
+- **UX(Compras) — Ola C: bandeja `/compras/por-aprobar` con página dedicada** — la ruta deja de ser un redirect a `/compras/facturas?aprobacion=pendiente` y ahora es una vista propia (`ComprasPorAprobar`) que lista las solicitudes de aprobación de facturas de proveedor. Incluye:
+  - **KPIs**: contador y monto total (MXN + USD) para Pendientes, Aprobadas, Rechazadas y "Total en vista".
+  - **Sub-filtro por estado** vía tabs (Pendientes / Aprobadas / Rechazadas), con contadores globales.
+  - **Búsqueda** por folio interno, folio proveedor o nombre de proveedor.
+  - **Detalle**: al hacer clic en una fila se abre el `DialogDetallePagosProveedor` existente, que ya integra `BotonesAprobacionFactura` (Aprobar / Rechazar con motivo) para roles autorizados (admin / contador / tesorero).
+  - **Empty states** por estado (no hay pendientes, no hay aprobadas, no hay rechazadas).
+- **Rutas**: `/compras/por-aprobar` ahora usa `guarded(COMPRAS_READ_ROLES, <ComprasPorAprobar />)`. Test de humo actualizado para reflejar que ya no es redirect y para validar el gate de rol.
+- **Próximas olas**: D (conciliación con embarques), E (pagos y notas de crédito globales), F (reportes).
+
 ## [13.175.0] - 2026-07-05
 
 - **UX(Compras) — Ola A: navegación unificada bajo `/compras/*`** — el módulo Compras deja de estar disperso en `/compras`, `/cxp/*` y `/proveedores`. Nuevas rutas: `/compras/facturas`, `/compras/por-capturar`, `/compras/por-aprobar`, `/compras/por-pagar`, `/compras/pagos`, `/compras/notas-credito`, `/compras/proveedores`, `/compras/proveedores/:id`, `/compras/aging`, `/compras/reportes`. Las rutas legacy redirigen preservando querystring vía `RedirectPreserveSearch` (`/cxp?aprobacion=pendiente` sigue funcionando).
