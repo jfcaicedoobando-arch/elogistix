@@ -1,6 +1,4 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { DollarSign, Eye, Stamp, Ban } from "lucide-react";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
@@ -12,24 +10,19 @@ import {
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
 import type { useFacturas } from "@/features/facturacion/hooks";
-import { esCreadaConCapacidadTimbrado } from "@/features/facturacion/domain/facturaFlags";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
-export interface FacturaColumnsOptions {
-  canEdit: boolean;
-  onRegistrarPago: (f: Factura) => void;
-  onVerPagos: (f: Factura) => void;
-  onTimbrar?: (f: Factura) => void;
-  onCancelar?: (f: Factura) => void;
-}
-
-const ESTADOS_PAGABLES = new Set(["Emitida", "Vencida", "Parcialmente pagada"]);
-const ESTADOS_TIMBRABLES = new Set(["Borrador", "Por timbrar"]);
-
-export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Factura, unknown>[] {
-  const { canEdit, onRegistrarPago, onVerPagos, onTimbrar, onCancelar } = opts;
+/**
+ * Columnas de la lista de facturación.
+ *
+ * v13.172.12: se retira la columna "Acciones". Timbrar, Registrar pago,
+ * Ver pagos y Cancelar CFDI viven ahora exclusivamente en el detalle
+ * (`/facturacion/:id`) para evitar operaciones destructivas o fiscales
+ * desde una vista de listado con poco contexto.
+ */
+export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
   return defineColumns<Factura>([
     {
       id: "numero", header: "# Factura",
@@ -113,38 +106,6 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
             <FacturaDownloadButton stored={f.factura_pdf_url ?? null} kind="pdf" facturaId={f.id} />
             <FacturaDownloadButton stored={f.factura_xml_url ?? null} kind="xml" facturaId={f.id} />
-          </div>
-        );
-      },
-    },
-    {
-      id: "acciones", header: "Acciones",
-      meta: { width: "w-[200px]" },
-      cell: ({ row }) => {
-        const f = row.original;
-        const pagable = canEdit && ESTADOS_PAGABLES.has(f.estado);
-        const timbrable = canEdit && onTimbrar && ESTADOS_TIMBRABLES.has(f.estado) && esCreadaConCapacidadTimbrado(f.fecha_emision);
-        const cancelable = canEdit && onCancelar && f.estado === "Emitida";
-        return (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            {timbrable && (
-              <Button variant="default" size="sm" onClick={() => onTimbrar!(f)} title="Timbrar CFDI">
-                <Stamp className="h-3.5 w-3.5 mr-1" /> Timbrar
-              </Button>
-            )}
-            {pagable && (
-              <Button variant="outline" size="sm" onClick={() => onRegistrarPago(f)} title="Registrar pago">
-                <DollarSign className="h-3.5 w-3.5 mr-1" /> Pagar
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" onClick={() => onVerPagos(f)} title="Ver pagos" aria-label="Ver pagos">
-              <Eye className="h-4 w-4" />
-            </Button>
-            {cancelable && (
-              <Button variant="ghost" size="icon" onClick={() => onCancelar!(f)} title="Cancelar CFDI" aria-label="Cancelar CFDI" className="text-destructive">
-                <Ban className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         );
       },

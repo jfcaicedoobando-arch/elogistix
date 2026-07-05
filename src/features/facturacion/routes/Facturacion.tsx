@@ -104,21 +104,9 @@ export default function Facturacion() {
     limpiar();
   };
 
-  const [pagoFactura, setPagoFactura] = useState<Factura | null>(null);
-  const [historialFactura, setHistorialFactura] = useState<Factura | null>(null);
-  const [timbrarFactura, setTimbrarFactura] = useState<Factura | null>(null);
-  const [cancelarFactura, setCancelarFactura] = useState<Factura | null>(null);
-
-  const facturaColumns = useMemo(
-    () => buildFacturaColumns({
-      canEdit,
-      onRegistrarPago: setPagoFactura,
-      onVerPagos: setHistorialFactura,
-      onTimbrar: setTimbrarFactura,
-      onCancelar: setCancelarFactura,
-    }),
-    [canEdit],
-  );
+  // Acciones (Timbrar, Pagar, Ver pagos, Cancelar) viven en el detalle de la
+  // factura (`/facturacion/:id`). La lista ya no dispara esos diálogos.
+  const facturaColumns = useMemo(() => buildFacturaColumns(), []);
 
   const tabs: TabDef[] = [
     { value: "facturas", label: "Emitidas", hint: "CFDI vigentes. Incluye Complemento de Pagos (REP) para facturas PPD." },
@@ -182,12 +170,8 @@ export default function Facturacion() {
         </Tabs>
 
         <FacturacionDialogs
-          pagoFactura={pagoFactura} setPagoFactura={setPagoFactura}
-          historialFactura={historialFactura} setHistorialFactura={setHistorialFactura}
-          timbrarFactura={timbrarFactura} setTimbrarFactura={setTimbrarFactura}
-          cancelarFactura={cancelarFactura} setCancelarFactura={setCancelarFactura}
-          openFacturaManual={openFacturaManual} setOpenFacturaManual={setOpenFacturaManual}
-          canEdit={canEdit}
+          openFacturaManual={openFacturaManual}
+          setOpenFacturaManual={setOpenFacturaManual}
         />
       </TooltipProvider>
     </PageContainer>
