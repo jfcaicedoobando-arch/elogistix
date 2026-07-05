@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.8] - 2026-07-05
+- **test(e2e/tablet)** — Nuevo spec `e2e/specs/15-embarques-responsive.spec.ts` que valida `/embarques` en tableta (768×1024) y desktop xl+ (1440×900): navega lista → abre primer embarque (heading `EL(IMP|EXP|GEN)…`) → regresa a la lista, verificando en cada paso `main.scrollWidth - clientWidth ≤ 1` y ausencia total de `console.error`. Corre bajo el project `chromium-internal` con el `storageState` del `globalSetup`, sin cambios en `playwright.config.ts` ni en el workflow de CI.
+
 ## [13.172.7] - 2026-07-05
 - **fix(ui/tablet)** — Ola 3 (columnas sticky + scroll horizontal residual). Se pulió el DataTable base y se recortaron columnas adicionales en tableta sin sacrificar lectura en desktop:
   - `DataTableHeaderRow.tsx` y `DataTableBody.tsx`: la columna con `meta.sticky` ahora dibuja una sombra sutil al borde derecho (`shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]`), simétrica a la ya existente en `stickyRight`. Da affordance visual del pin cuando el usuario hace scroll horizontal dentro del contenedor de tabla.
