@@ -94,14 +94,15 @@ export default function Cartera() {
             <TableHeader>
               <TableRow>
                 <TableHead>Folio</TableHead>
-                <TableHead>Cliente</TableHead>
+                <TableHead className="min-w-[160px] max-w-[220px]">Cliente</TableHead>
                 <TableHead>Embarque</TableHead>
                 <TableHead>Vencimiento</TableHead>
-                <TableHead className="text-center">Días vencido</TableHead>
+                <TableHead className="text-center whitespace-nowrap">Días vencido</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead>Último contacto</TableHead>
               </TableRow>
+
             </TableHeader>
             <TableBody>
               {isLoading && (
