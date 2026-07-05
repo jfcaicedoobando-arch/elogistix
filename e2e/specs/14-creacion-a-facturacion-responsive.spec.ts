@@ -53,9 +53,8 @@ for (const vp of VIEWPORTS) {
         expect(overflow.doc, `overflow document en ${step.path} @ ${vp.name}`).toBeLessThanOrEqual(1);
       }
 
-      // Verificar que los 3 tabs principales del módulo de facturación siguen
-      // accesibles en ambos viewports (post-rediseño v13.92.0).
-      await expect(page.getByRole("tab", { name: /por timbrar/i }).first()).toBeVisible();
+      // Tabs actuales del módulo de facturación: Emitidas + Notas de crédito
+      // (Por timbrar migró a KPI en el header).
       await expect(page.getByRole("tab", { name: /emitidas/i }).first()).toBeVisible();
       await expect(page.getByRole("tab", { name: /notas de cr/i }).first()).toBeVisible();
 

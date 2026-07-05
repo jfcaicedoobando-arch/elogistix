@@ -26,8 +26,9 @@ for (const vp of VIEWPORTS) {
       await loginAs(page, internalCreds());
       await page.goto("/inicio");
 
+      // El heading del dashboard es un saludo horario ("Buenas tardes…").
       await expect(
-        page.getByRole("heading", { name: /inicio|dashboard|resumen|bienvenido/i }).first(),
+        page.getByRole("heading", { name: /buen(os|as)\s+(d[íi]as|tardes|noches)/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
 
       // Esperar hidratación de widgets/KPIs.
