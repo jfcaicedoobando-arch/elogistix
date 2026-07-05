@@ -19,12 +19,6 @@ import {
   computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER, type RutaEstadoMeta,
 } from "@/features/costeo/utils/rutaEstado";
 
-const TONE_VARIANT: Record<RutaEstadoMeta["tone"], "default" | "destructive" | "secondary" | "outline"> = {
-  success: "default",
-  warning: "outline",
-  destructive: "destructive",
-  muted: "secondary",
-};
 
 function formatFecha(iso: string | null | undefined): string {
   if (!iso) return "—";
