@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
@@ -34,15 +34,9 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
         const esBorradorSinFolio = numero.startsWith("BORRADOR-");
         return (
           <div className="flex items-center gap-1.5">
-            <Link
-              to={`/facturacion/${row.original.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-accent hover:underline"
-            >
-              {esBorradorSinFolio
-                ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
-                : numero}
-            </Link>
+            {esBorradorSinFolio
+              ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
+              : <span>{numero}</span>}
             <AmbienteBadge ambiente={row.original.ambiente} />
           </div>
         );
