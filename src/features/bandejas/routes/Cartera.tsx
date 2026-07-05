@@ -23,7 +23,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
-import EmptyState from "@/components/empty/EmptyState";
+
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 
