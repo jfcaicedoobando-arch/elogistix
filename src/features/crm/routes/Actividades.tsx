@@ -31,10 +31,11 @@ const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActi
   { id: "entidad", header: "Entidad", meta: { className: "text-xs" }, cell: ({ row }) => row.original.entidad_tipo },
   { id: "responsable", header: "Responsable", meta: { className: "text-xs" }, cell: ({ row }) => row.original.responsable_email || "—" },
   {
-    id: "estado", header: "Estado", meta: { width: "w-[110px]" },
-    cell: ({ row }) => row.original.fecha_completada
-      ? <Badge variant="secondary">Completada</Badge>
-      : <Badge>Pendiente</Badge>,
+    ...statusColumn<CrmActividadRow>({
+      domain: "actividad_crm",
+      accessor: (a) => (a.fecha_completada ? "Completada" : "Pendiente"),
+    }),
+    meta: { width: "w-[110px]" },
   },
   {
     id: "fecha", header: "Programada", meta: { className: "text-xs" },
