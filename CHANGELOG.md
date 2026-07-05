@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.2] - 2026-07-05
+- **fix(ux/proformas)**: en la tabla de proformas, las filas no fusionables (facturadas/rechazadas) ya no muestran un checkbox deshabilitado con cursor `not-allowed` (🚫 al hover). Ahora la celda queda vacía y el checkbox sólo aparece en filas seleccionables, con tooltip "Seleccionar para fusionar en una factura". Sin cambios de lógica (`isConvertible` intacto).
+
 ## [13.172.1] - 2026-07-04
 - **chore(lint)**: extraído helper compartido `extractFacturapiMessage` en `_shared/facturapiClient.ts`. Reemplaza el ternario denso repetido en `facturapi-emitir-nota-credito`, `facturapi-cancelar-nota-credito` y `facturapi-descargar` que disparaba 3 warnings de complejidad ciclomática (>16). CI vuelve a pasar con `--max-warnings 0`. Sin cambios funcionales ni de contrato.
 
