@@ -134,25 +134,36 @@ Leyenda: ✅ Completo · 🟢 Sólido · 🟡 Parcial · 🔴 Stub · ⬛ Ausent
 
 ---
 
-## 7. Roadmap sugerido
+## 7. Roadmap sugerido — enfoque TMS/ERP vertical forwarder
 
-### 3 meses
-- Definir modelo HBL/MBL con numeración y PDF.
-- API REST pública read-only + webhooks básicos (embarque creado, factura emitida, pago recibido).
-- Report builder mínimo (queries guardadas + export CSV/PDF programado).
+> Decisión estratégica (jul-2026): Libre Carga se posiciona como **TMS/ERP vertical de forwarder**,
+> NO como ERP generalista. GL/partida doble queda fuera; integración con Contpaqi/Aspel opcional.
+
+### Quick wins (8 semanas, 1 dev fullstack)
+- [ ] **#1 HBL / MBL como entidad de primera clase** — tabla `bl_documentos`, folios por org, PDF, envío por email (semanas 1-2).
+- [ ] **#3 Portal de agente/corresponsal** — bandeja nominados, eventos operativos, upload POD (semana 3).
+- [ ] **#4 Tracking en vivo MSC + Maersk** — edge functions + cron 6h + badge "en vivo" (semanas 4-5).
+- [ ] **#2 Manifiesto consolidado LCL** — agrupador N HBL bajo 1 MBL + PDF/CSV (semana 6).
+- [ ] **#5 Órdenes de compra + match 2-way** — tablas `ordenes_compra*`, tolerancia %, sugerencia en `/cxp/por-capturar` (semanas 7-8).
+- [ ] **#6 Reporte builder mínimo** — backlog según demanda comercial.
+
+Detalle completo y esqueletos de tablas en `.lovable/plan.md`.
 
 ### 6 meses
-- Módulo de aduana MVP (pedimentos, agente aduanal, HS codes básicos).
-- PO + recepción para cerrar ciclo de compras.
-- Tracking API con al menos 2 navieras top (MSC, Maersk).
-- i18n EN.
+- Módulo de aduana MVP (pedimentos, agente aduanal, HS codes básicos, VUCEM básico).
+- Tracking naviera 3-5 carriers adicionales + tracking aéreo (AWB IATA).
+- Exportador de pólizas a Contpaqi/Aspel (sustituto de GL propio).
+- i18n EN para portal cliente y agente.
+- API REST pública read-only + webhooks (embarque creado, factura emitida, pago recibido).
 
 ### 12 meses
-- GL / partida doble opcional (feature flag por org) o integración certificada con Contpaq/Aspel.
-- Modelo aéreo con AWB nativo.
+- Modelo aéreo con AWB nativo end-to-end.
 - Marketplace de agentes / red de partners.
+- Booking directo a naviera (INTTRA o API carrier).
 - Certificación WCA o similar.
+- (Opcional) GL / partida doble bajo feature flag por org si demanda lo justifica.
 
 ---
 
 *Fin del documento.*
+
