@@ -1,13 +1,11 @@
 /**
  * Página: Condiciones por naviera (carta garantía + tabulador de demoras).
- * Oleada 4: migrado a PageContainer + ListSkeleton compartidos.
+ * v13.172.16: migrado de `<Table>` crudo a `DataTable` para homologar look & feel.
  */
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings2, FileSignature } from "lucide-react";
@@ -47,6 +45,62 @@ export default function CosteoNavieras() {
 
   const isLoading = loadingNav || loadingCond;
 
+  const columns: ColumnDef<FilaNaviera, unknown>[] = useMemo(
+    () =>
+      defineColumns<FilaNaviera>([
+        {
+          id: "naviera",
+          header: "Naviera",
+          accessorFn: (f) => f.naviera_nombre,
+          enableSorting: true,
+          meta: { width: "min-w-[180px]", className: "font-medium whitespace-nowrap", sticky: true },
+          cell: ({ row }) => row.original.naviera_nombre,
+        },
+        {
+          id: "scac",
+          header: "SCAC",
+          meta: { width: "w-[100px]", className: "font-mono text-xs" },
+          cell: ({ row }) => row.original.naviera_code,
+        },
+        {
+          id: "carta",
+          header: "Carta garantía",
+          meta: { width: "w-[160px]" },
+          cell: ({ row }) => (
+            <CartaGarantiaBadge
+              tieneCarta={row.original.condicion?.tiene_carta_garantia ?? false}
+              vigenteHasta={row.original.condicion?.carta_garantia_vigente_hasta ?? null}
+            />
+          ),
+        },
+        {
+          id: "diaslibres",
+          header: "Días libres",
+          meta: { width: "w-[110px]", align: "right", className: "tabular-nums" },
+          cell: ({ row }) => row.original.condicion?.dias_libres_demoras_default ?? "—",
+        },
+        {
+          id: "vinculo",
+          header: "Proveedor vinculado",
+          meta: { width: "w-[160px]", className: "text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+          cell: ({ row }) => (row.original.condicion ? "Vinculado" : "Sin configurar"),
+        },
+        {
+          id: "acciones",
+          header: "Acciones",
+          meta: { width: "w-[140px]", align: "right" },
+          cell: ({ row }) => (
+            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+              <Button size="sm" variant="outline" onClick={() => setSeleccion(row.original)}>
+                <Settings2 className="size-4 mr-1" /> Configurar
+              </Button>
+            </div>
+          ),
+        },
+      ]),
+    [],
+  );
+
   return (
     <PageContainer>
       <PageHeader
@@ -58,43 +112,14 @@ export default function CosteoNavieras() {
         <ListSkeleton rows={6} variant="table" />
       ) : (
         <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Naviera</TableHead>
-                <TableHead>SCAC</TableHead>
-                <TableHead>Carta garantía</TableHead>
-                <TableHead className="text-right">Días libres</TableHead>
-                <TableHead>Proveedor vinculado</TableHead>
-                <TableHead className="w-32 text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filas.map((f) => (
-                <TableRow key={f.naviera_id}>
-                  <TableCell className="font-medium">{f.naviera_nombre}</TableCell>
-                  <TableCell className="font-mono text-xs">{f.naviera_code}</TableCell>
-                  <TableCell>
-                    <CartaGarantiaBadge
-                      tieneCarta={f.condicion?.tiene_carta_garantia ?? false}
-                      vigenteHasta={f.condicion?.carta_garantia_vigente_hasta ?? null}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {f.condicion?.dias_libres_demoras_default ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {f.condicion ? "Vinculado" : "Sin configurar"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" variant="outline" onClick={() => setSeleccion(f)}>
-                      <Settings2 className="size-4 mr-1" /> Configurar
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable<FilaNaviera>
+            columns={columns}
+            data={filas}
+            rowKey={(f) => f.naviera_id}
+            emptyState={
+              <div className="p-6 text-center text-muted-foreground">Sin navieras configuradas.</div>
+            }
+          />
         </Card>
       )}
 
