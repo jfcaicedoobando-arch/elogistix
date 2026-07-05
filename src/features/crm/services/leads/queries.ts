@@ -16,12 +16,14 @@ export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
     fuente = "todos",
     page = 0,
     pageSize = 25,
+    sortKey = "created_at",
+    sortDir = "desc",
   } = filtros;
 
   let q = supabase
     .from("crm_leads")
     .select(LEAD_COLUMNS, { count: "exact" })
-    .order("created_at", { ascending: false });
+    .order(sortKey, { ascending: sortDir === "asc" });
 
   if (search.trim()) {
     const term = `%${search.trim()}%`;

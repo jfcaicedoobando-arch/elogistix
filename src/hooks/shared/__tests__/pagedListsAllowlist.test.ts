@@ -13,12 +13,15 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-/** Rutas que ya viven en el patrón unificado (Ola 1). */
+/** Rutas que ya viven en el patrón unificado (Olas 1-2). */
 const MIGRATED_ROUTES = [
+  // Ola 1 — Bandejas financieras
   "src/features/bandejas/routes/Cartera.tsx",
   "src/features/bandejas/routes/CxpPorPagar.tsx",
   "src/features/cxp/routes/CxpAging.tsx",
   "src/features/comisiones/routes/Comisiones.tsx",
+  // Ola 2 — CRM
+  "src/features/crm/routes/Leads.tsx",
 ] as const;
 
 describe("Filtros globales — allowlist de rutas migradas", () => {
