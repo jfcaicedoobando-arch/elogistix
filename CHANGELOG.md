@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.173.1] - 2026-07-05
+
+- **arquitectura(listados)** — Ola 1 continúa (bandejas financieras + tests del primitivo):
+  - Nuevos tests en `useClientPagedList.test.tsx` (8 casos) — cubren default sort, search, filtros custom, rango de fechas, cambio de orden, `resetAll`, cambio de `pageSize` y tolerancia a `data=undefined`. Aislados vía `withNuqsTestingAdapter({ hasMemory: true })`.
+  - **CxP · Por pagar** (`/compras/por-pagar`) migrado a `useClientPagedList` + `<UnifiedFiltersBar />` — search (proveedor/folio/expediente), filtros **Vencidas** y **Moneda**, rango de fecha de vencimiento en Sheet mobile, orden por 7 columnas y paginación con selector 10/20/50/100. URL sync completo.
+  - **CxP · Antigüedad de saldos** (`/compras/aging`) — search de proveedor, filtro **Cubeta** (Vigente / 1-30 / 31-60 / 61-90 / >90), orden por proveedor y por cada cubeta o saldo total, y paginación estándar.
+
 ## [13.173.0] - 2026-07-05
 
 - **arquitectura(listados)** — Cimientos de la Ola 1 del plan de filtros globales:
