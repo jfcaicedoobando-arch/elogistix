@@ -90,16 +90,61 @@ export function aplicarFiltros(
   });
 }
 
+const ESTATUS_VALUES = ["todos", "sin", "parcial", "completo"] as const;
+const ANTIGUEDAD_VALUES = ["todos", "sin_captura", "gt7", "gt30"] as const;
+const ORDEN_VALUES = ["expediente", "antiguedad", "monto", "facturas"] as const;
+const DIR_VALUES = ["asc", "desc"] as const;
+
 export function useCxpPorCapturarFilters(rows: CxpPorCapturarRow[]) {
-  const [state, setState] = useState<FiltersState>(initial);
+  const [urlState, setUrlState] = useQueryStates({
+    q: parseAsString.withDefault(""),
+    estatus: parseAsStringLiteral(ESTATUS_VALUES).withDefault("todos"),
+    antiguedad: parseAsStringLiteral(ANTIGUEDAD_VALUES).withDefault("todos"),
+    sort: parseAsStringLiteral(ORDEN_VALUES).withDefault("antiguedad"),
+    dir: parseAsStringLiteral(DIR_VALUES).withDefault("desc"),
+  });
 
-  const set = <K extends keyof FiltersState>(k: K, v: FiltersState[K]) =>
-    setState((s) => ({ ...s, [k]: v }));
+  const state: FiltersState = useMemo(
+    () => ({
+      query: urlState.q,
+      estatus: urlState.estatus,
+      antiguedad: urlState.antiguedad,
+      ordenarPor: urlState.sort,
+      direccion: urlState.dir,
+    }),
+    [urlState.q, urlState.estatus, urlState.antiguedad, urlState.sort, urlState.dir],
+  );
 
-  const toggleDireccion = () =>
-    setState((s) => ({ ...s, direccion: s.direccion === "asc" ? "desc" : "asc" }));
+  const set = useCallback(
+    <K extends keyof FiltersState>(k: K, v: FiltersState[K]) => {
+      const keyMap: Record<keyof FiltersState, "q" | "estatus" | "antiguedad" | "sort" | "dir"> = {
+        query: "q",
+        estatus: "estatus",
+        antiguedad: "antiguedad",
+        ordenarPor: "sort",
+        direccion: "dir",
+      };
+      const urlKey = keyMap[k];
+      const defaults: Record<string, string> = {
+        q: "",
+        estatus: "todos",
+        antiguedad: "todos",
+        sort: "antiguedad",
+        dir: "desc",
+      };
+      // null cuando es default → URL limpia.
+      setUrlState({ [urlKey]: v === defaults[urlKey] ? null : (v as string) });
+    },
+    [setUrlState],
+  );
 
-  const reset = () => setState(initial);
+  const toggleDireccion = useCallback(() => {
+    setUrlState({ dir: urlState.dir === "asc" ? "desc" : null });
+  }, [setUrlState, urlState.dir]);
+
+  const reset = useCallback(() => {
+    setUrlState({ q: null, estatus: null, antiguedad: null, sort: null, dir: null });
+  }, [setUrlState]);
 
   const filtradas = useMemo(() => aplicarFiltros(rows, state), [rows, state]);
   const isFiltered =
