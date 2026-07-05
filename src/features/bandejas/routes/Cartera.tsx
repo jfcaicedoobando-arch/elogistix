@@ -208,7 +208,7 @@ export default function Cartera() {
             columns={columns}
             data={data}
             rowKey={(r) => r.factura_id}
-            loading={isLoading}
+            isLoading={isLoading}
             emptyState={
               <div className="p-6">
                 <EmptyState

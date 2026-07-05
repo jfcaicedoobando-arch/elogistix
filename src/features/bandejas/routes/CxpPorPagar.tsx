@@ -162,7 +162,7 @@ export default function CxpPorPagar() {
             columns={columns}
             data={data}
             rowKey={(r) => r.factura_id}
-            loading={isLoading}
+            isLoading={isLoading}
             onRowClick={(r) => navigate(`/cxp?factura=${r.factura_id}`)}
             emptyState={
               <div className="p-6">
