@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.172.11] - 2026-07-05
+- **test(e2e/tablet · Ola 4)** — Cierre de la auditoría de tableta con 3 specs nuevos que cubren las áreas que quedaron "fuera de alcance" en Olas 1-3:
+  - `e2e/specs/18-portal-responsive.spec.ts` — `/portal`, `/portal/embarques` (+ detalle), `/portal/facturas`, `/portal/cotizaciones`. Usa `portalCreds()`; si `E2E_PORTAL_EMAIL/PASSWORD` no están seteadas el spec se salta con `test.skip`.
+  - `e2e/specs/19-admin-responsive.spec.ts` — `/admin`, `/admin/organizaciones`, `/admin/auditoria`, `/admin/configuracion`. Sondea el rol antes de correr: si el usuario E2E no es Super Admin y `/admin` redirige fuera, el bloque se salta.
+  - `e2e/specs/20-detalles-wizards-responsive.spec.ts` — Detalles de `/cotizaciones/:id`, `/clientes/:id` (recorre tabs), `/proveedores/:id`, y **wizard `/cotizaciones/nueva`** avanzando por los pasos disponibles hasta 3 clics de "Siguiente" (si validación bloquea, sale). Nada se envía al backend: cancela o hace `goBack()`.
+  - Criterios uniformes: `<main>` sin overflow horizontal (`scrollWidth - clientWidth ≤ 1`), 0 `console.error`, dos viewports (768×1024 y 1440×900).
+  - `.lovable/tablet-audit-report.md` cerrado con sección "Ola 4" documentando el alcance y el resultado.
+
 ## [13.172.10] - 2026-07-05
 - **test(e2e/tablet)** — Nuevo spec `e2e/specs/17-modales-captura-responsive.spec.ts` que valida modales `FormDialogShell` y wizard-ruta en tableta (768×1024) y desktop xl+ (1440×900):
   - **Nuevo Cliente** (`/clientes`): FAB abre el modal, se mide ancho/alto (`overflowX ≤ 1`, `alto ≤ 92 % del viewport`), Escape cierra y foco vuelve al FAB.
