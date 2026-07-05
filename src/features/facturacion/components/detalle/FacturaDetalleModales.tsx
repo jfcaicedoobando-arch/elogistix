@@ -6,6 +6,7 @@ import { DialogRegistrarPago } from "@/features/facturacion/components/DialogReg
 import { DialogTimbrarFactura } from "@/features/facturacion/components/DialogTimbrarFactura";
 import { DialogEnviarFacturaBranded } from "@/features/facturacion/components/DialogEnviarFacturaBranded";
 import { DialogSustituirFactura } from "@/features/facturacion/components/DialogSustituirFactura";
+import { DialogCancelarFactura } from "@/features/facturacion/components/DialogCancelarFactura";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Factura = Tables<"facturas">;
@@ -20,11 +21,14 @@ interface Props {
   setEnviarOpen: (v: boolean) => void;
   sustituirOpen: boolean;
   setSustituirOpen: (v: boolean) => void;
+  cancelarOpen: boolean;
+  setCancelarOpen: (v: boolean) => void;
 }
 
 export function FacturaDetalleModales(props: Props) {
   const { factura, pagoOpen, setPagoOpen, timbrarOpen, setTimbrarOpen,
-    enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen } = props;
+    enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen,
+    cancelarOpen, setCancelarOpen } = props;
   return (
     <>
       <DialogRegistrarPago
@@ -62,6 +66,13 @@ export function FacturaDetalleModales(props: Props) {
         open={sustituirOpen}
         onOpenChange={setSustituirOpen}
       />
+      <DialogCancelarFactura
+        facturaId={cancelarOpen ? factura.id : null}
+        numero={factura.numero}
+        open={cancelarOpen}
+        onOpenChange={setCancelarOpen}
+      />
     </>
   );
 }
+
