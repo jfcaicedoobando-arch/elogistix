@@ -143,11 +143,10 @@ export default function FacturaDetalle() {
       <FacturaDetalleEditableSections
         factura={factura}
         canEdit={canEdit}
-        sinTimbrar={sinTimbrar}
         puedeEditarBorrador={puedeEditarBorrador}
         conceptosVivos={conceptosVivos}
-        onSustituir={() => setSustituirOpen(true)}
       />
+
 
       <FacturaConceptosTable
         snapshot={factura.snapshot_emision}
