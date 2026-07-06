@@ -23,7 +23,7 @@ export function EmbarqueEstadoListItem({ e, estado, onNavigate }: Props) {
       as="li"
       href={`/embarques/${e.id}`}
       ariaLabel={`Ver embarque ${e.expediente}`}
-      onClick={onNavigate}
+      onActivate={onNavigate}
       className="flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-md hover:bg-muted/60 transition-colors group"
     >
       <div className="flex-1 min-w-0">
