@@ -1,69 +1,70 @@
 ## Objetivo
 
-Enriquecer la página de detalle de factura (`/facturacion/:id`) para que, cuando una factura está cancelada, el usuario pueda:
+Cuando se cancela una factura timbrada que provino de una proforma, la proforma debe **regresar automáticamente a estado "pendiente"** (limpiando el vínculo a la factura, fecha de facturación y folio externo), para que el usuario pueda volver a facturarla desde la bandeja de proformas.
 
-1. Descargar el **acuse de cancelación** del SAT (XML nativo y PDF generado a partir de ese XML).
-2. Reintentar la descarga del acuse cuando el SAT aún no lo emitió (`status = pending`).
-3. Ver el **historial completo** de la factura (no sólo bitácora para admin).
+Esto replica el comportamiento que ya existe cuando se elimina un **borrador** de factura (RPC `eliminar_borrador_factura`), pero aplicado al flujo de **cancelación SAT** (`facturapi-cancelar`).
 
 ## Contexto encontrado
 
-- La edge function `facturapi-cancelar` ya guarda `acuse_cancelacion_xml`, `acuse_cancelacion_fecha`, `acuse_cancelacion_status`, `cancelacion_motivo`, `fecha_cancelacion` en `public.facturas`. Esos campos ya existen en `types.ts`.
-- El detalle de factura ya usa `FacturaBitacoraCard`, pero está oculto detrás de `isAdmin`, y sólo muestra "bitácora" (nombre técnico).
-- La barra de acciones vive en `FacturaDetalleActions.tsx`. Cuando la factura está cancelada, hoy sólo muestra "Descargar PDF/XML" (del CFDI original) y "Ver embarque".
-- El acuse SAT sólo se emite como XML; el "PDF del acuse" se genera del lado cliente a partir de los datos ya guardados (uuid, folio, fecha cancelación, motivo, status acuse). Esto es análogo a un "recibo impreso" a partir del sello XML.
+- `supabase/functions/facturapi-cancelar/index.ts` cancela en SAT, guarda acuse y marca la factura como `Cancelada`, pero **no toca la proforma origen**.
+- Al facturar (`src/features/proformas/services/facturar.ts`), se guardan en la proforma: `estado_proforma = 'facturada'`, `factura_id`, `factura_secundaria_id`, `fecha_facturacion`, `folio_factura_externa`.
+- Una proforma puede haber generado **1 o 2 facturas** (venta + demoras). Sólo debe revertirse el campo que corresponde a la factura cancelada; la proforma vuelve a `pendiente` únicamente cuando **ya no quedan facturas activas** ligadas a ella.
+- El RPC `eliminar_borrador_factura` ya usa exactamente este patrón (`estado_proforma = 'pendiente'`, `fecha_facturacion = NULL`, limpia `factura_id`).
 
 ## Cambios
 
-### 1. Descargar acuse XML (nuevo botón en detalle)
+### 1. Edge function `facturapi-cancelar` — revertir proforma
 
-En `FacturaDetalleActions.tsx` y `FacturaDetalle.tsx`:
-- Nuevas props: `estaCancelada`, `acuseXml`, `acuseStatus`, `onDescargarAcuseXml`, `onDescargarAcusePdf`, `onReintentarAcuse`.
-- Cuando `estado === "Cancelada"`:
-  - Si `acuse_cancelacion_xml` existe → botones **"Acuse XML"** y **"Acuse PDF"**.
-  - Si `acuse_cancelacion_status !== "accepted"` (pendiente / error) → botón **"Reintentar acuse"** que reinvoca `facturapi-cancelar` (o un endpoint dedicado — ver decisión abajo) para volver a intentar la descarga.
-- Handler `onDescargarAcuseXml`: crea un `Blob` con el XML guardado, dispara download `acuse-cancelacion-{numero}.xml`.
+Después de marcar la factura como `Cancelada` (y guardar acuse), agregar un bloque:
 
-### 2. Generar PDF del acuse (cliente)
+1. Consultar todas las proformas de la organización donde `factura_id = facturaCancelada.id` **o** `factura_secundaria_id = facturaCancelada.id`.
+2. Para cada proforma encontrada:
+   - Limpiar el campo que apunta a la factura cancelada (`factura_id` o `factura_secundaria_id`).
+   - Si tras la limpieza **ambos** vínculos quedan en `NULL`, poner `estado_proforma = 'pendiente'`, `fecha_facturacion = NULL`, `folio_factura_externa = NULL`.
+   - Si aún queda la otra factura activa, dejar `estado_proforma = 'facturada'` (sólo se limpia el campo puntual).
+3. Registrar el evento en `bitacora_actividad` con acción `factura.cancelada_proforma_revertida` incluyendo `proforma_ids` y `estado_resultante`.
 
-Nuevo generador `src/generators/acuseCancelacionPdf.tsx` (react-pdf, alineado a los generadores existentes en `src/pdf/`):
-- Encabezado con logo/emisor (reutiliza `BrandHeader`).
-- Bloque con: número de factura, UUID SAT, folio fiscal, RFC emisor/receptor, cliente.
-- Bloque cancelación: fecha de cancelación, motivo (con etiqueta legible 01–04), UUID de la factura sustituta si aplica.
-- Bloque acuse: status del acuse, fecha del acuse.
-- Pie de página aclarando que el documento oficial es el XML.
-- Se descarga vía `descargarPdf` con nombre `acuse-cancelacion-{numero}.pdf`.
+Este bloque **no se ejecuta** cuando la invocación viene con `solo_descargar_acuse: true` (ese flag sólo re-baja el acuse, no cancela).
 
-### 3. Reintento de descarga del acuse
+### 2. UI de proformas — sin cambios de lógica
 
-Opción elegida: **reusar `facturapi-cancelar`** con un flag nuevo `{ factura_id, solo_descargar_acuse: true }`. La edge:
-- Si la factura ya está cancelada, salta el `invoices.cancel(...)` y sólo llama a `descargarAcuseCancelacion(...)` actualizando `acuse_cancelacion_xml/fecha/status`.
-- Si no, comportamiento actual sin cambios.
-- Alternativa: crear `facturapi-descargar-acuse`. La reutilización es más simple y consistente.
+- La bandeja de proformas ya filtra por `estado_proforma` y ya muestra el botón "Facturar" para las que están en `pendiente`/`aceptada`, así que el cambio de estado hará que la proforma reaparezca automáticamente lista para volver a facturarse.
+- Se agrega un test unitario ligero al servicio que verifica la lógica de reversión (mock del cliente Supabase).
 
-### 4. Historial de la factura visible siempre
+### 3. Historial visible
 
-Renombrar `FacturaBitacoraCard` → **`FacturaHistorialCard`** (título "Historial") y quitar el gate `isAdmin` en `FacturaDetalle.tsx`. El hook `useBitacora` ya filtra por `entidad_id = facturaId`; los eventos incluyen: `crear`, `timbrar`, `enviar_email`, `cancelar`, `pago_registrado`, etc. Se ordena descendente por `created_at` y se muestra en la columna derecha, debajo de los pagos.
+- El evento `factura.cancelada` ya se registra hoy; con el nuevo bloque se añade `factura.cancelada_proforma_revertida`. Aparecerá en el **Historial de la factura** y en la bitácora general de la proforma.
 
-### 5. Housekeeping
+### 4. Housekeeping
 
-- Bump `APP_VERSION` a `13.205.7`.
-- Entrada en `CHANGELOG.md`.
+- Bump `APP_VERSION` a `13.205.8`.
+- Entrada en `CHANGELOG.md` bajo `[13.205.8]`.
 
-## Diagrama de la nueva barra (factura cancelada)
+## Diagrama del nuevo flujo
 
 ```text
-[Descargar PDF factura] [Descargar XML factura] [Enviar por email]
-[Acuse XML] [Acuse PDF] [Reintentar acuse (si pending)] [Ver embarque]
+Cancelar factura F1
+   ├─ SAT cancel + guardar acuse
+   ├─ facturas.estado = 'Cancelada'
+   └─ proformas ligadas a F1:
+        ├─ limpiar factura_id / factura_secundaria_id según corresponda
+        ├─ si ambos NULL  → estado_proforma = 'pendiente'
+        │                    fecha_facturacion = NULL
+        │                    folio_factura_externa = NULL
+        └─ bitacora: factura.cancelada_proforma_revertida
 ```
 
 ## Fuera de alcance
 
-- No se cambia la lógica de cancelación ni el modelo de datos.
-- No se toca `facturapi-cancelar-nota-credito` ni `facturapi-cancelar-rep` (se puede extender en otra iteración con la misma receta).
-- No se agrega historial al portal cliente (`PortalFacturaDetalle`).
+- No se toca `facturapi-cancelar-nota-credito` ni `facturapi-cancelar-rep` (facturas ligadas a pagos, no a proformas).
+- No se cambia el modelo de datos ni RLS.
+- No se agrega botón manual de "revertir" — la reversión es automática al cancelar.
 
-## Preguntas rápidas antes de construir
+## Duda antes de construir
 
-1. ¿El "PDF del acuse" te sirve como reporte generado por nosotros (con los datos del XML), o esperas descargar un PDF oficial del SAT (que **no existe** — el SAT sólo entrega XML)?
-2. ¿El historial lo quieres visible para **todos los roles** o sólo para roles internos (admin/operaciones/vendedora)?
+Si la proforma originó **dos facturas** (venta + demoras) y sólo cancelas una, ¿prefieres:
+
+- **(A)** Dejar la proforma como `facturada` mientras la otra factura siga activa, y sólo volver a `pendiente` cuando ambas estén canceladas (propuesto arriba), o
+- **(B)** Volver a `pendiente` en cuanto se cancele cualquiera de las dos?
+
+Si no respondes, procedo con **(A)** por ser el comportamiento más seguro (no se re-factura algo que ya tiene otra factura activa).
