@@ -99,24 +99,41 @@ export function rangoUltimosDias(hoy: Date, dias: number = RANGO_DIAS): { inicio
 
 let cache: { rates: { usdMxn: number; eurMxn: number }; expiresAt: number } | null = null;
 
-async function fetchSerieDof(
-  serie: string,
-  token: string,
-  signal: AbortSignal,
-  hoy: Date,
-): Promise<number | null> {
+/**
+ * Fetch USD DOF: consulta un rango en SF43718 y selecciona el FIX del día
+ * hábil anterior a hoy (= Publicación DOF vigente).
+ */
+async function fetchUsdDof(token: string, signal: AbortSignal, hoy: Date): Promise<number | null> {
   const { inicio, fin } = rangoUltimosDias(hoy);
-  const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${serie}/datos/${inicio}/${fin}`;
+  const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${SERIE_USD}/datos/${inicio}/${fin}`;
   const res = await fetch(url, {
     headers: { "Bmx-Token": token, "Accept": "application/json" },
     signal,
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`banxico ${serie} ${res.status}: ${body.slice(0, 200)}`);
+    throw new Error(`banxico ${SERIE_USD} ${res.status}: ${body.slice(0, 200)}`);
   }
   const hoyIso = hoy.toISOString().slice(0, 10);
   return extraerPublicacionDof((await res.json()) as BanxicoResponse, hoyIso);
+}
+
+/**
+ * Fetch EUR: SF46410 no soporta el endpoint de rango (404), sólo `oportuno`.
+ * Para EUR el SAT no exige "Publicación DOF" formal (Art. 20 CFF trata USD);
+ * la tasa Banxico vigente es aceptable para conversión en CFDI.
+ */
+async function fetchEurBanxico(token: string, signal: AbortSignal): Promise<number | null> {
+  const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${SERIE_EUR}/datos/oportuno`;
+  const res = await fetch(url, {
+    headers: { "Bmx-Token": token, "Accept": "application/json" },
+    signal,
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`banxico ${SERIE_EUR} ${res.status}: ${body.slice(0, 200)}`);
+  }
+  return extraerUltimoTC((await res.json()) as BanxicoResponse);
 }
 
 Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
