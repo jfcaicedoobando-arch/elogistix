@@ -6,6 +6,20 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.204.0] - 2026-07-06
+
+- **Módulo Compras · Ola A (candados contables)**:
+  - **A3 · Candado de sobrepago en BD**: nuevo trigger `check_no_sobrepago_proveedor` `BEFORE INSERT OR UPDATE OF monto, deleted_at` en `pagos_proveedor`. Bloquea cualquier intento de registrar un pago cuya suma (con pagos previos y notas de crédito aplicadas) exceda `factura.total + 0.01` de tolerancia. Devuelve `SOBREPAGO_PROVEEDOR` como mensaje reconocible; `pagosProveedorErrors.ts` lo traduce a *"El pago excede el saldo pendiente de la factura. Revisa los pagos previos y las notas de crédito aplicadas."*. Protege contra race conditions cuando dos usuarios registran pagos casi simultáneos.
+  - **A4 · Cerrar factura sin pago (compensación / quita / ajuste histórico / duplicada)**:
+    - Nuevas columnas en `pagos_proveedor`: `es_ajuste boolean not null default false` y `motivo_ajuste text` — permiten distinguir ajustes de pagos reales en reportes de tesorería.
+    - Nueva RPC `cerrar_factura_proveedor_sin_pago(p_factura_id, p_motivo, p_comentario)` (SECURITY DEFINER, search_path = public). Exige factura Vigente, aprobada, con saldo > 0 y motivo dentro de un catálogo tipificado: `compensacion | condonacion | ajuste_historico | duplicada`. Registra un ajuste que salda la factura, cambia el estado a Pagada y escribe en `bitacora_actividad` con `accion = 'cerrar_sin_pago'`.
+    - Nuevo servicio `services/cerrarFacturaSinPago.ts` con el catálogo de motivos etiquetados en español.
+    - Nuevo hook `hooks/useCerrarFacturaSinPago.ts` con invalidaciones de `cxp`, `cxp-aging`, `bandeja` y toasts.
+    - Nuevo componente `components/CerrarFacturaSinPagoDialog.tsx`: doble confirmación (Select tipificado + Textarea opcional + tipear "CERRAR"), mismo patrón que `CancelarFacturaProveedorDialog`.
+    - `DialogDetallePagosProveedor`: nueva bandera `puedeCerrarSinPago` en `flags.ts` (canEdit + aprobada + saldo > 0 + estado Vigente) y botón "Cerrar sin pago" en el toolbar (color warning, tooltip explicativo). El botón sólo aparece cuando la bandera se cumple; no se muestra en facturas ya pagadas o canceladas.
+  - **A2**: la detección de facturas duplicadas (mismo proveedor + folio + fecha) ya existía en `useNuevaFacturaProveedorForm.submit` vía `existeFacturaDuplicada`; se conserva sin cambios (feedback al momento del guardado). El caso "mismo UUID fiscal" también sigue cubierto por el índice único `ux_proveedor_facturas_uuid_fiscal_org`. La mejora on-blur queda como pendiente de UX polish.
+  - **A1**: la ingesta directa de XML/CFDI ya está madura en la app (edge function `parse-cfdi-xml`, `parseCfdi.ts`, `useCargaCfdi`, `CargaCfdiSection`, `CrearProveedorDesdeCfdiDialog`); no se toca.
+
 ## [13.203.1] - 2026-07-06
 
 - **Fix CI + cierre Fase 2**:

@@ -13,6 +13,7 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
+import { useCerrarFacturaProveedorSinPago } from "@/features/cxp/hooks/useCerrarFacturaSinPago";
 import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
 import {
@@ -20,6 +21,7 @@ import {
 } from "./DialogDetallePagosProveedor.sections";
 import { computeFacturaFlags } from "./DialogDetallePagosProveedor.flags";
 import { NotasCreditoSection } from "./NotasCreditoSection";
+import { CerrarFacturaSinPagoDialog } from "./CerrarFacturaSinPagoDialog";
 import { usePermissions } from "@/hooks/shared";
 
 interface Props {
@@ -46,7 +48,9 @@ export function DialogDetallePagosProveedor({
   const f = facturaFresh ?? factura;
   const { data: pagos = [], isLoading } = usePagosProveedor(f?.id);
   const eliminar = useEliminarPagoProveedor(f?.id ?? "");
+  const cerrarSinPago = useCerrarFacturaProveedorSinPago();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const [aCerrarSinPago, setACerrarSinPago] = useState<FacturaCxP | null>(null);
   const { canEditFinance, isAdmin } = usePermissions();
   const puedeAprobar = canEditFinance || isAdmin;
   const flags = computeFacturaFlags(f, canEdit);
@@ -55,6 +59,14 @@ export function DialogDetallePagosProveedor({
     if (!pagoAEliminar) return;
     await eliminar.mutateAsync(pagoAEliminar);
     setPagoAEliminar(null);
+  };
+
+  const handleConfirmCerrarSinPago = async (
+    params: { motivo: import("@/features/cxp/services/cerrarFacturaSinPago").MotivoCierreSinPago; comentario?: string },
+  ) => {
+    if (!aCerrarSinPago) return;
+    await cerrarSinPago.mutateAsync({ ...params, facturaId: aCerrarSinPago.id });
+    setACerrarSinPago(null);
   };
 
   return (
@@ -76,6 +88,7 @@ export function DialogDetallePagosProveedor({
               onPagar={onPagar}
               onEditar={onEditar}
               onEliminar={onEliminar}
+              onCerrarSinPago={setACerrarSinPago}
             />
           )}
 
@@ -115,6 +128,14 @@ export function DialogDetallePagosProveedor({
         finalDescription="Esta acción no se puede deshacer fácilmente."
         isPending={eliminar.isPending}
         onConfirm={handleConfirmEliminar}
+      />
+
+      <CerrarFacturaSinPagoDialog
+        factura={aCerrarSinPago}
+        open={!!aCerrarSinPago}
+        onOpenChange={(o) => { if (!o) setACerrarSinPago(null); }}
+        isPending={cerrarSinPago.isPending}
+        onConfirm={handleConfirmCerrarSinPago}
       />
     </TooltipProvider>
   );

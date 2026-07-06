@@ -2,7 +2,7 @@
  * Sub-componentes presentacionales extraídos de DialogDetallePagosProveedor
  * para mantener su complejidad ciclomática ≤ 16 y tamaño ≤ 200 líneas.
  */
-import { DollarSign, Pencil, Trash2 } from "lucide-react";
+import { DollarSign, Pencil, Trash2, FileCheck2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,10 +23,11 @@ interface ToolbarProps {
   onPagar?: (f: FacturaCxP) => void;
   onEditar?: (f: FacturaCxP) => void;
   onEliminar?: (f: FacturaCxP) => void;
+  onCerrarSinPago?: (f: FacturaCxP) => void;
 }
 
-export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, onEliminar }: ToolbarProps) {
-  const algunaAccion = onPagar || onEditar || onEliminar;
+export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, onEliminar, onCerrarSinPago }: ToolbarProps) {
+  const algunaAccion = onPagar || onEditar || onEliminar || onCerrarSinPago;
   if (!canEdit || !algunaAccion) return null;
   return (
     <div className="px-6 py-3 border-b bg-muted/20 flex flex-wrap items-center gap-2">
@@ -48,6 +49,25 @@ export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, 
         <Button variant="outline" size="sm" onClick={() => onEditar(f)}>
           <Pencil className="h-3.5 w-3.5 mr-1" /> Editar factura
         </Button>
+      )}
+      {onCerrarSinPago && flags.puedeCerrarSinPago && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onCerrarSinPago(f)}
+                className="text-warning border-warning/40 hover:bg-warning/10 hover:text-warning"
+              >
+                <FileCheck2 className="h-3.5 w-3.5 mr-1" /> Cerrar sin pago
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            Saldar la factura mediante ajuste (compensación, quita, etc.) sin registrar un pago real.
+          </TooltipContent>
+        </Tooltip>
       )}
       {onEliminar && (
         <Tooltip>
