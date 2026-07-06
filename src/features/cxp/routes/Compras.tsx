@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import {
   ShoppingCart, Plus, Truck, Inbox, Receipt, Landmark, ArrowRight, LayoutList, ShieldCheck,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -19,8 +19,9 @@ import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import { usePermissions } from "@/hooks/shared";
-import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { TopProveedoresCard, UltimasFacturasCard } from "./_sections/ComprasDashboardCards";
 
 function KpiCard({
   label, value, sub, tone = "default",
