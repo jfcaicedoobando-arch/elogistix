@@ -1,25 +1,223 @@
 /**
- * Placeholder de `/compras/reportes` — Ola F. Reportes analíticos de gasto:
- * top proveedores, gasto por categoría de presupuesto, evolución mensual.
+ * /compras/reportes — Ola F. Analítica de gasto: top proveedores, evolución
+ * mensual y distribución por moneda. Reutiliza el listado de facturas de
+ * proveedor filtrado por fechas de emisión.
  */
-import { BarChart3 } from "lucide-react";
-import { PageContainer } from "@/components/shared/PageContainer";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  BarChart3, Download, TrendingUp, Wallet, Coins, Building2,
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer,
+  CartesianGrid, Legend,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageContainer } from "@/components/shared/PageContainer";
+import { KpiCard } from "@/components/shared/KpiCard";
+import { formatCurrency } from "@/lib/formatters";
+import { descargarBlob } from "@/lib/downloadBlob";
+import { toCSV } from "@/lib/io/csv";
+import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
+import { supabase } from "@/integrations/supabase/client";
+
+interface FacturaLite {
+  id: string;
+  fecha_emision: string | null;
+  total: number;
+  moneda: "MXN" | "USD";
+  proveedor_id: string | null;
+  proveedor_nombre: string | null;
+}
+
+async function fetchFacturasReporte(desde: string, hasta: string): Promise<FacturaLite[]> {
+  const { data, error } = await supabase
+    .from("proveedor_facturas")
+    .select("id, fecha_emision, total, moneda, proveedor_id, proveedores(nombre)")
+    .is("deleted_at", null)
+    .gte("fecha_emision", desde)
+    .lte("fecha_emision", hasta)
+    .order("fecha_emision", { ascending: true })
+    .limit(2000);
+  if (error) throw error;
+  // SAFE-CAST: PostgREST devuelve `proveedores` como relación anidada.
+  const raw = (data ?? []) as unknown as Array<{
+    id: string; fecha_emision: string | null; total: string | number;
+    moneda: "MXN" | "USD"; proveedor_id: string | null;
+    proveedores: { nombre: string | null } | null;
+  }>;
+  return raw.map((r) => ({
+    id: r.id,
+    fecha_emision: r.fecha_emision,
+    total: Number(r.total ?? 0),
+    moneda: r.moneda,
+    proveedor_id: r.proveedor_id,
+    proveedor_nombre: r.proveedores?.nombre ?? "Sin proveedor",
+  }));
+}
+
+function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
+function today(): string { return new Date().toISOString().slice(0, 10); }
 
 export default function ComprasReportes() {
+  const [desde, setDesde] = useState<string>(firstOfYear());
+  const [hasta, setHasta] = useState<string>(today());
+
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["compras", "reportes", { desde, hasta }],
+    queryFn: () => fetchFacturasReporte(desde, hasta),
+  });
+
+  const totalMxn = rows.filter((r) => r.moneda === "MXN").reduce((a, r) => a + r.total, 0);
+  const totalUsd = rows.filter((r) => r.moneda === "USD").reduce((a, r) => a + r.total, 0);
+  const numFacturas = rows.length;
+
+  // Top proveedores — agrupamos por proveedor y moneda.
+  const topProveedores = useMemo(() => {
+    const map = new Map<string, { nombre: string; mxn: number; usd: number; count: number }>();
+    for (const r of rows) {
+      const key = r.proveedor_id ?? r.proveedor_nombre ?? "—";
+      const cur = map.get(key) ?? { nombre: r.proveedor_nombre ?? "—", mxn: 0, usd: 0, count: 0 };
+      cur.count += 1;
+      if (r.moneda === "MXN") cur.mxn += r.total; else cur.usd += r.total;
+      map.set(key, cur);
+    }
+    return Array.from(map.values())
+      .sort((a, b) => (b.mxn + b.usd * 20) - (a.mxn + a.usd * 20))
+      .slice(0, 10);
+  }, [rows]);
+
+  // Evolución mensual (YYYY-MM) por moneda.
+  const evolucion = useMemo(() => {
+    const map = new Map<string, { mes: string; mxn: number; usd: number }>();
+    for (const r of rows) {
+      if (!r.fecha_emision) continue;
+      const mes = r.fecha_emision.slice(0, 7);
+      const cur = map.get(mes) ?? { mes, mxn: 0, usd: 0 };
+      if (r.moneda === "MXN") cur.mxn += r.total; else cur.usd += r.total;
+      map.set(mes, cur);
+    }
+    return Array.from(map.values()).sort((a, b) => a.mes.localeCompare(b.mes));
+  }, [rows]);
+
+  const handleExport = () => {
+    try {
+      const csv = toCSV(
+        topProveedores.map((p) => ({
+          proveedor: p.nombre,
+          facturas: p.count,
+          total_mxn: p.mxn,
+          total_usd: p.usd,
+        })),
+      );
+      descargarBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), `compras-top-proveedores-${desde}-${hasta}.csv`);
+      notifySuccess(undefined, { title: "CSV descargado", description: `${topProveedores.length} proveedores exportados.` });
+    } catch (e) {
+      notifyError(undefined, { title: "No se pudo exportar el CSV", error: e, method: "EXPORT_REPORTES_CSV" });
+    }
+  };
+
   return (
     <PageContainer>
       <PageHeader
         icon={<BarChart3 className="h-6 w-6 text-accent" />}
         title="Reportes de Compras"
-        description="Analítica de gasto por proveedor, categoría y período."
+        description="Analítica de gasto por proveedor y período. Basado en fecha de emisión de la factura."
+        actions={
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={topProveedores.length === 0}>
+            <Download className="h-4 w-4 mr-1.5" /> Exportar CSV
+          </Button>
+        }
       />
+
       <Card>
-        <CardContent className="p-8 text-center text-sm text-muted-foreground">
-          Próximamente. Mientras tanto puedes consultar la
-          <span className="font-medium"> antigüedad de saldos</span> en{" "}
-          <span className="font-medium">/compras/aging</span>.
+        <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="rep-desde" className="text-xs">Desde</Label>
+            <Input id="rep-desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="rep-hasta" className="text-xs">Hasta</Label>
+            <Input id="rep-hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <KpiCard label="Facturas en el período" value={String(numFacturas)} icon={TrendingUp} />
+        <KpiCard label="Total MXN" value={formatCurrency(totalMxn, "MXN")} icon={Wallet} />
+        <KpiCard label="Total USD" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-accent" /> Top 10 proveedores por gasto
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Cargando…</div>
+          ) : topProveedores.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              Sin facturas en el período seleccionado.
+            </div>
+          ) : (
+            <div className="divide-y">
+              {topProveedores.map((p, i) => (
+                <div key={p.nombre + i} className="flex items-center justify-between px-4 py-2 text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs font-mono text-muted-foreground w-5">{i + 1}.</span>
+                    <span className="truncate font-medium">{p.nombre}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({p.count} {p.count === 1 ? "factura" : "facturas"})
+                    </span>
+                  </div>
+                  <div className="flex gap-4 tabular-nums text-xs">
+                    {p.mxn > 0 && <span>{formatCurrency(p.mxn, "MXN")}</span>}
+                    {p.usd > 0 && <span>{formatCurrency(p.usd, "USD")}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-accent" /> Evolución mensual
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {evolucion.length === 0 ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              Sin datos para graficar.
+            </div>
+          ) : (
+            <div style={{ width: "100%", height: 280 }}>
+              <ResponsiveContainer>
+                <BarChart data={evolucion}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="mes" fontSize={11} />
+                  <YAxis fontSize={11} />
+                  <RTooltip
+                    formatter={(v: number, name: string) =>
+                      [formatCurrency(v, name === "usd" ? "USD" : "MXN"), name.toUpperCase()]
+                    }
+                  />
+                  <Legend />
+                  <Bar dataKey="mxn" name="MXN" fill="hsl(var(--primary))" />
+                  <Bar dataKey="usd" name="USD" fill="hsl(var(--accent))" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </CardContent>
       </Card>
     </PageContainer>

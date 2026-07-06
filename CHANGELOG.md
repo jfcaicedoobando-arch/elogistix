@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.178.0] - 2026-07-06
+
+- **UX(Compras) — Olas E y F: pagos globales, notas de crédito y reportes** — se reemplazan los placeholders de `/compras/pagos`, `/compras/notas-credito` y `/compras/reportes` con vistas funcionales:
+  - **`/compras/pagos`**: listado global de pagos a proveedor con filtros de rango de fechas (por default: mes actual), moneda, método de pago y búsqueda; KPIs de total pagado MXN/USD; exporta a CSV. Nuevo servicio `listarPagosProveedorGlobal` con join a factura y proveedor.
+  - **`/compras/notas-credito`**: listado global de NC con filtros por período (por default: año en curso), moneda, estado (Emitida/Aplicada/Cancelada) y búsqueda; KPIs de NC Aplicadas MXN/USD; exporta a CSV. Nuevo servicio `listarNotasCreditoGlobal`.
+  - **`/compras/reportes`**: analítica de gasto con KPIs de facturas/total MXN/USD, ranking Top 10 proveedores por gasto y gráfica de evolución mensual (Recharts BarChart) por moneda; exporta el top a CSV.
+  - **Tests**: nuevos suites `pagosGlobal.test.ts` y `notasCreditoGlobal.test.ts` que cubren mapeo del DTO anidado, filtros en cliente (proveedorId, search) y propagación de errores del cliente Supabase (4 tests c/u).
+
 ## [13.177.0] - 2026-07-06
 
 - **UX(Compras) — Validaciones y toasts en aprobación de facturas** — el flujo Aprobar/Rechazar de `BotonesAprobacionFactura` ahora incluye:
