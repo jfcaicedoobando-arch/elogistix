@@ -6,14 +6,17 @@
  * visualmente por expediente. Al marcar un concepto se pre-llena el monto
  * con el del concepto_costo; el usuario puede editarlo.
  */
-import { useMemo } from "react";
-import { Loader2, Link2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Loader2, Link2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters";
 import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
+import { sugerirVinculos, type SugerenciaVinculo } from "@/features/compras/matching/matcher";
 import { SugerirEmbarqueBlock, type EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 
 export interface SeleccionLinea {
@@ -28,6 +31,13 @@ interface Props {
   seleccion: Record<string, SeleccionLinea>;
   onToggle: (concepto: ConceptoCostoAbierto, checked: boolean) => void;
   onChangeMonto: (conceptoId: string, monto: number) => void;
+  /** Aplica de golpe una lista de sugerencias del motor de matching. */
+  onAplicarSugerencias?: (sugs: ReadonlyArray<{
+    conceptoId: string; concepto: string; monto: number; embarque_id: string;
+  }>) => void;
+  facturaDescripcion?: string;
+  facturaMonto?: number;
+  facturaMoneda?: string;
   embarqueAdHoc: EmbarqueSeleccionado | null;
   onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
 }
