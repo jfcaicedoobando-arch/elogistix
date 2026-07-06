@@ -6,7 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [13.185.0] - 2026-07-06
+## [13.186.0] - 2026-07-06
+
+- **Facturación — Ola 1 de blindaje fiscal (parte 1/2)** — Primeros tres items del roadmap post-auditoría.
+  - **(Item 1) Acuse SAT de cancelación se guarda**: `facturapi-cancelar` ahora descarga el XML del acuse de cancelación desde FacturApi (`GET /invoices/:id/cancellation_receipt/xml`) inmediatamente después de una cancelación exitosa y lo persiste en tres columnas nuevas de `facturas`: `acuse_cancelacion_xml`, `acuse_cancelacion_fecha`, `acuse_cancelacion_status`. Si el SAT aún no lo emitió (404/425), se guarda status `pending` para reintento posterior. La respuesta de la edge function incluye `acuse_status` y `acuse_guardado`. Obligatorio conservar 5 años (SAT 2022+).
+  - **(Item 2) Catálogos SAT completos** en `src/constants/catalogosSAT.ts`: usos CFDI de 5 → **25** (agrega I01-I08 inversiones, D01-D10 deducciones personales, G02 devoluciones, CP01 pagos, CN01 nómina); formas de pago de 6 → **22** (agrega 05 monedero, 06 dinero electrónico, 08 vales, 12-15 dación/subrogación/consignación/condonación, 17 compensación, 23-27 novación/confusión/remisión/prescripción/satisfacción, 29 tarjeta servicios, 30 anticipos, 31 intermediario).
+  - **(Item 5) Factura manual sin folio inválido**: el número provisional cambió de `MAN-{timestamp}` a `BORRADOR-{timestamp}`. La columna de la lista (`facturacionColumns.tsx`) y el header del detalle (`FacturaDetalleHeader.tsx`) ya detectaban el prefijo `BORRADOR-` y muestran *"Sin folio (borrador)"* en cursiva gris. Envío por email y descarga PDF/XML permanecen bloqueados hasta el timbrado (gate `!sinTimbrar` preexistente en `FacturaDetalleActions.tsx`).
+  - **Pendiente Ola 1 (parte 2/2)**: Item 3 (validación UUID CFDI vs SAT en alta de factura proveedor — requiere edge function con integración al servicio SOAP del SAT) e Item 4 (reintento nocturno automático de REP fallidos — requiere cron trigger + edge function). Se implementan en el siguiente turno.
+
+
 
 - **Compras — Conciliación por renglón (partidas)** — El panel de `/compras/conciliacion` ahora es a **nivel de partida**:
   - Cada `concepto_costo` se puede expandir (▸/▾) para ver sus partidas de proveedor: folio, fecha de emisión, descripción, monto y % del cotizado que cubre.
