@@ -34,28 +34,10 @@ const BASELINE: ReadonlySet<string> = new Set<string>([
 const PAGES_COMPONENTS_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 // Allowlist temporal para archivos > 200 líneas pendientes de split.
-// 13.66.21 — Re-incorporados tras crecimiento marginal por features tarifarias/PNL.
-// 13.181.0 — Re-incorporados durante la estabilización de CI (Ola 1 lint):
-//   split diferido para no ampliar el diff. Cada uno pierde ~10-50 líneas en
-//   olas siguientes con extracción de subcomponentes/columnas.
-const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([
-  "src/features/embarques/services/pnlPorContenedor.ts",
-  "src/features/embarques/components/TabDemoras.tsx",
-  "src/features/embarques/components/TabPnlContenedor.tsx",
-  "src/features/embarques/components/EmbarqueDetalleTabs.tsx",
-  "src/features/cxp/components/VincularEmbarqueSection.tsx",
-  "src/features/compras/routes/ComprasNotasCredito.tsx",
-  "src/features/compras/routes/ComprasConciliacion.tsx",
-  "src/features/compras/routes/ComprasPagos.tsx",
-  "src/features/compras/routes/ComprasReportes.tsx",
-  "src/features/costeo/components/CosteoTarifasTable.tsx",
-  "src/features/bandejas/routes/Cartera.tsx",
-  "src/features/cxp/routes/Compras.tsx",
-  "src/features/portal-agente/routes/AgenteTarifas.tsx",
-  "src/features/facturacion/routes/FacturaDetalle.tsx",
-  "src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts",
-  "src/features/crm/routes/Actividades.tsx",
-]);
+// v13.182.0 (Ola 2 · Power-of-10 splits): allowlist VACÍA. Todos los archivos
+// productivos en `src/` cumplen el límite de 200 líneas. Cualquier nuevo
+// oversized falla la CI hasta que se divida.
+const OVERSIZED_BASELINE: ReadonlySet<string> = new Set<string>([]);
 
 
 function walk(dir: string, out: string[] = []): string[] {
