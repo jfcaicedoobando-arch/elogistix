@@ -5186,11 +5186,13 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           diferencia_cambiaria_mxn: number | null
+          es_ajuste: boolean
           fecha_pago: string
           id: string
           metodo_pago: string
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
+          motivo_ajuste: string | null
           notas: string
           organization_id: string
           proveedor_factura_id: string
@@ -5205,11 +5207,13 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
+          es_ajuste?: boolean
           fecha_pago?: string
           id?: string
           metodo_pago?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
+          motivo_ajuste?: string | null
           notas?: string
           organization_id?: string
           proveedor_factura_id: string
@@ -5224,11 +5228,13 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
+          es_ajuste?: boolean
           fecha_pago?: string
           id?: string
           metodo_pago?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
+          motivo_ajuste?: string | null
           notas?: string
           organization_id?: string
           proveedor_factura_id?: string
@@ -7025,6 +7031,10 @@ export type Database = {
         }[]
       }
       cerrar_embarque: { Args: { p_embarque_id: string }; Returns: Json }
+      cerrar_factura_proveedor_sin_pago: {
+        Args: { p_comentario?: string; p_factura_id: string; p_motivo: string }
+        Returns: string
+      }
       check_ratelimit: {
         Args: { p_key: string; p_max?: number; p_window_seconds?: number }
         Returns: Json
