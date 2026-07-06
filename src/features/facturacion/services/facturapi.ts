@@ -122,6 +122,25 @@ export async function reintentarAcuseCancelacion(
 }
 
 /**
+ * Descarga el PDF OFICIAL del acuse SAT desde FacturApi
+ * (`/invoices/{id}/cancellation_receipt/pdf`). No se persiste en BD; el
+ * backend nos entrega el binario y aquí lo devolvemos como `Blob` para que
+ * el navegador dispare la descarga.
+ */
+export async function descargarAcuseCancelacionPdf(facturaId: string): Promise<Blob> {
+  const { data, error } = await supabase.functions.invoke<Blob>("facturapi-cancelar", {
+    body: { factura_id: facturaId, solo_descargar_acuse_pdf: true },
+  });
+  if (error) {
+    const body = await parseFunctionError(error);
+    throw toReadableError(error, body, "No se pudo descargar el PDF del acuse.");
+  }
+  if (!(data instanceof Blob)) {
+    throw new Error("La respuesta no es un PDF válido.");
+  }
+  return data;
+
+/**
  * Clona una factura timbrada como borrador para sustituirla (motivo SAT 01).
  * Devuelve el ID de la factura clonada (estado `Borrador`, con `sustituye_a` enlazado).
  */
