@@ -50,6 +50,25 @@ export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, 
           <Pencil className="h-3.5 w-3.5 mr-1" /> Editar factura
         </Button>
       )}
+      {onCerrarSinPago && flags.puedeCerrarSinPago && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onCerrarSinPago(f)}
+                className="text-warning border-warning/40 hover:bg-warning/10 hover:text-warning"
+              >
+                <FileCheck2 className="h-3.5 w-3.5 mr-1" /> Cerrar sin pago
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            Saldar la factura mediante ajuste (compensación, quita, etc.) sin registrar un pago real.
+          </TooltipContent>
+        </Tooltip>
+      )}
       {onEliminar && (
         <Tooltip>
           <TooltipTrigger asChild>
