@@ -82,8 +82,10 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   );
 
   const borradorVacio = useMemo(
-    () => proformas.find(esBorradorVacio) ?? null,
-    [proformas]
+    () =>
+      proformas.find((p) => esBorradorVacio(p) || esBorradorSinConceptos(p, conceptos)) ??
+      null,
+    [proformas, conceptos],
   );
 
   const handleDescargarProforma = async (proformaId: string) => {
