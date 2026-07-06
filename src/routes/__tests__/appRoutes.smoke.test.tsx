@@ -84,7 +84,7 @@ describe("routes/appRoutes — paths críticos presentes", () => {
     "/compras", "/compras/por-capturar", "/compras/por-aprobar", "/compras/por-pagar",
     "/compras/facturas", "/compras/pagos", "/compras/notas-credito",
     "/compras/proveedores", "/compras/proveedores/:id",
-    "/compras/aging", "/compras/reportes",
+    "/compras/aging", "/compras/reportes", "/compras/conciliacion",
     // Legacy redirects (preservan querystring)
     "/cxp", "/cxp/por-capturar", "/cxp/por-pagar", "/proveedores", "/proveedores/:id",
     "/cartera",
