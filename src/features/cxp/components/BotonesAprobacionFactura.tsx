@@ -1,21 +1,41 @@
 /**
  * Badge + botones de aprobación/rechazo de una factura de proveedor.
  * Solo visible/operable para roles autorizados (admin, contador, tesorero).
- * El rechazo abre un ReasonDialog pidiendo motivo.
+ *
+ * v13.177.0 — Confirmación previa antes de aprobar + validación del motivo de
+ * rechazo (mínimo 3, máximo 500 caracteres). Los toasts de éxito/error se
+ * emiten desde `useAprobarFactura`.
  */
 import { useState } from "react";
-import { Check, X, Clock, XCircle } from "lucide-react";
+import { Check, X, Clock, XCircle, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ReasonDialog } from "@/components/shared/ReasonDialog";
 import { useAprobarFactura } from "@/features/cxp/hooks/useAprobarFactura";
-import type { EstadoAprobacion } from "@/features/cxp/services/aprobacionFactura";
+import {
+  MOTIVO_RECHAZO_MAX,
+  MOTIVO_RECHAZO_MIN,
+  type EstadoAprobacion,
+} from "@/features/cxp/services/aprobacionFactura";
 
 interface Props {
   facturaId: string;
   estado: EstadoAprobacion;
   motivoRechazo?: string | null;
   puedeAprobar: boolean;
+  /** Contexto informativo para los toasts. */
+  folio?: string | null;
+  proveedor?: string | null;
 }
 
 export function EstadoAprobacionBadge({ estado }: { estado: EstadoAprobacion }) {
@@ -30,9 +50,19 @@ export function EstadoAprobacionBadge({ estado }: { estado: EstadoAprobacion }) 
   return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" /> Pendiente</Badge>;
 }
 
-export function BotonesAprobacionFactura({ facturaId, estado, motivoRechazo, puedeAprobar }: Props) {
+export function BotonesAprobacionFactura({
+  facturaId,
+  estado,
+  motivoRechazo,
+  puedeAprobar,
+  folio,
+  proveedor,
+}: Props) {
   const [openRechazo, setOpenRechazo] = useState(false);
+  const [openAprobar, setOpenAprobar] = useState(false);
   const aprobar = useAprobarFactura();
+
+  const ctxLabel = [folio, proveedor].filter(Boolean).join(" · ");
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -44,7 +74,7 @@ export function BotonesAprobacionFactura({ facturaId, estado, motivoRechazo, pue
         <div className="flex gap-2 ml-auto">
           <Button
             size="sm" variant="outline"
-            onClick={() => aprobar.mutate({ id: facturaId, aprobar: true })}
+            onClick={() => setOpenAprobar(true)}
             disabled={aprobar.isPending}
           >
             <Check className="h-4 w-4 mr-1" /> Aprobar
@@ -60,20 +90,67 @@ export function BotonesAprobacionFactura({ facturaId, estado, motivoRechazo, pue
         </div>
       )}
 
+      <AlertDialog open={openAprobar} onOpenChange={setOpenAprobar}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-success" />
+              Aprobar factura
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {ctxLabel ? <><b>{ctxLabel}</b><br /></> : null}
+              Al aprobar, la factura pasará a estado <b>Vigente</b> y quedará lista para programar pago.
+              Esta acción se registrará en la bitácora.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={aprobar.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={aprobar.isPending}
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  await aprobar.mutateAsync({ id: facturaId, aprobar: true, folio, proveedor });
+                  setOpenAprobar(false);
+                } catch {
+                  // El toast lo emite el hook; mantener el diálogo abierto para reintento.
+                }
+              }}
+            >
+              {aprobar.isPending ? "Aprobando…" : "Sí, aprobar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <ReasonDialog
         open={openRechazo}
         onOpenChange={setOpenRechazo}
         icon={XCircle}
         title="Rechazar factura"
-        description="Indica el motivo del rechazo. Será registrado en la bitácora."
+        description={
+          ctxLabel
+            ? `${ctxLabel} — Indica el motivo del rechazo. Será registrado en la bitácora y notificado al proveedor.`
+            : "Indica el motivo del rechazo. Será registrado en la bitácora y notificado al proveedor."
+        }
         label="Motivo"
-        placeholder="Ej. Folio incorrecto, falta XML, monto no coincide con presupuesto..."
+        placeholder={`Ej. Folio incorrecto, falta XML, monto no coincide con presupuesto... (máx. ${MOTIVO_RECHAZO_MAX} caracteres)`}
         confirmLabel="Rechazar factura"
-        minLength={3}
+        minLength={MOTIVO_RECHAZO_MIN}
         pending={aprobar.isPending}
         onConfirm={async (motivo) => {
-          await aprobar.mutateAsync({ id: facturaId, aprobar: false, motivo });
-          setOpenRechazo(false);
+          try {
+            await aprobar.mutateAsync({
+              id: facturaId,
+              aprobar: false,
+              motivo,
+              folio,
+              proveedor,
+            });
+            setOpenRechazo(false);
+          } catch {
+            // El toast lo emite el hook; mantener el diálogo abierto para permitir corregir.
+          }
         }}
       />
     </div>

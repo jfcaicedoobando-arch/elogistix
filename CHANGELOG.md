@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.177.0] - 2026-07-06
+
+- **UX(Compras) — Validaciones y toasts en aprobación de facturas** — el flujo Aprobar/Rechazar de `BotonesAprobacionFactura` ahora incluye:
+  - **Confirmación previa** al aprobar mediante `AlertDialog` (antes se ejecutaba directo al hacer clic).
+  - **Validación completa en el servicio** (`aprobarFacturaProveedor`): UUID de la factura, motivo obligatorio ≥3 chars y ≤500 al rechazar; clase `AprobacionFacturaError` con códigos (`INVALID_ID`, `MOTIVO_REQUIRED`, `MOTIVO_TOO_LONG`, `SESSION_EXPIRED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_STATE`, `NETWORK`, `UNKNOWN`).
+  - **Mapeo de errores del API** de Supabase/PostgREST a mensajes en español mexicano ("Tu sesión expiró.", "No tienes permisos…", "La factura ya fue procesada.", etc.).
+  - **Toasts contextuales**: éxito con folio + proveedor y siguiente paso ("lista para programar pago" / "el proveedor será notificado"); error con `errorCode`, descripción amigable y botón "Ver detalles".
+  - **Diálogos resistentes a error**: si la API rechaza el request, el `AlertDialog` o `ReasonDialog` permanecen abiertos para reintentar o corregir el motivo.
+
 ## [13.176.0] - 2026-07-05
 
 - **UX(Compras) — Ola C: bandeja `/compras/por-aprobar` con página dedicada** — la ruta deja de ser un redirect a `/compras/facturas?aprobacion=pendiente` y ahora es una vista propia (`ComprasPorAprobar`) que lista las solicitudes de aprobación de facturas de proveedor. Incluye:
