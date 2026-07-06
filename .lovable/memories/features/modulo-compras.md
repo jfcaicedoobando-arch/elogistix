@@ -15,6 +15,7 @@ Rutas del módulo:
 - `/compras/notas-credito` — Listado global de NC de proveedor (placeholder, Ola E).
 - `/compras/proveedores` y `/compras/proveedores/:id` — Catálogo y detalle.
 - `/compras/aging` — Antigüedad de saldos (5 cubetas).
+- `/compras/conciliacion` — Conciliación factura ↔ embarque (presupuesto vs facturado por embarque).
 - `/compras/reportes` — Reportes analíticos (placeholder, Ola F).
 
 Rutas legacy con redirect preservando querystring (via `RedirectPreserveSearch`):
