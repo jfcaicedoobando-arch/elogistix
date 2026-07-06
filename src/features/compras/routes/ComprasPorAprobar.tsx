@@ -1,6 +1,6 @@
 /** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
-import { ShieldCheck, Inbox, ClipboardCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -16,9 +16,11 @@ import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasL
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
-import { KPICard, sumaMxn, sumaUsd } from "./ComprasPorAprobar.kpi";
+import { KPICard } from "./ComprasPorAprobar.kpi";
+import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
+import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
 
 type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
@@ -143,21 +145,7 @@ export default function ComprasPorAprobar() {
       <Card>
         <CardContent className="p-0">
           {!isLoading && rows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-              <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
-              <h3 className="text-base font-semibold">
-                {aprobacion === "pendiente"
-                  ? "No hay solicitudes pendientes"
-                  : aprobacion === "aprobada"
-                  ? "No hay facturas aprobadas"
-                  : "No hay facturas rechazadas"}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                {aprobacion === "pendiente"
-                  ? "Todas las facturas capturadas están al día. Cuando llegue una nueva solicitud aparecerá aquí."
-                  : "Cambia de pestaña o ajusta la búsqueda para ver otros estados."}
-              </p>
-            </div>
+            <ComprasPorAprobarEmptyState aprobacion={aprobacion} />
           ) : (
             <DataTable
               columns={columns}
