@@ -116,7 +116,7 @@ export default function Clientes() {
               data={clientes as ClienteRow[]}
               isLoading={isLoading}
               emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
-              onRowClick={(c) => navigate(`/clientes/${c.id}`)}
+              getRowHref={(c) => `/clientes/${c.id}`}
               rowKey={(c) => c.id}
               density="comfortable"
               mobileCard={(c) => <ClienteMobileCard c={c} />}
