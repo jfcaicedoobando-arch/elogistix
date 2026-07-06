@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { Building2, Plus } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
