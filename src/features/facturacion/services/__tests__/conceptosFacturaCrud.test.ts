@@ -38,7 +38,7 @@ describe("conceptosFacturaCrud", () => {
       facturaId: "f1",
       organizationId: "org1",
       moneda: "MXN",
-      input: { descripcion: "Servicio", cantidad: 2, precio_unitario: 50 },
+      input: { descripcion: "Servicio", cantidad: 2, precio_unitario: 50, clave_sat: "78101800" },
     });
     const inserts = mock.tableCalls.filter((c) => c.table === "conceptos_factura" && c.ops.includes("insert"));
     expect(inserts.length).toBe(1);
@@ -49,6 +49,15 @@ describe("conceptosFacturaCrud", () => {
     expect(payload.subtotal).toBe(100);
     expect(payload.iva).toBe(16);
     expect(payload.total).toBe(116);
+  });
+
+  it("α.1 — agregarConceptoFactura rechaza cuando falta clave SAT", async () => {
+    await expect(
+      agregarConceptoFactura({
+        facturaId: "f1", organizationId: "org1", moneda: "MXN",
+        input: { descripcion: "Sin clave", cantidad: 1, precio_unitario: 10 },
+      }),
+    ).rejects.toThrow(/clave SAT/i);
   });
 
   it("recalcularTotalesFactura suma IVA por renglón mezclando 16%, 0% y exento", async () => {
