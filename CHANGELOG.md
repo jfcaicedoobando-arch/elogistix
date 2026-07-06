@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.188.0] - 2026-07-06
+
+- **CxP — Ola 2 · Item 2 · Programación de pagos (parte 1/2)**. Nueva columna `proveedor_facturas.fecha_programada_pago` (`date`) más índice parcial `idx_prov_fact_fecha_prog_pago` para acelerar bandejas. Servicio `programarPagoProveedor(facturaId, fecha)` y hook `useProgramarPagoProveedor` (React Query, invalida `["cxp"]`, `["proveedor-facturas"]` y `["tesoreria"]`). El detalle de factura (`InfoFacturaSection`) ahora expone una fila "Programación de pago" con `Input type="date"`, botón **Guardar** y **Quitar**, deshabilitado cuando la factura ya no tiene saldo. `FacturaCxP.fecha_programada_pago` se agrega al select/mapper para que aparezca en toda la app sin nuevas queries.
+- **Ola 2 · Item 1 · Auto-liquidación (aclaración de status)**. La migración `20260621014425` ya crea los triggers `tg_pagos_proveedor_recalc_liq`, `tg_pfc_recalc_liq` y `tg_proveedor_facturas_recalc_liq` que sincronizan `conceptos_costo.estado_liquidacion` al registrar/anular pagos, cambiar el total o cancelar la factura. Este item quedaba cerrado desde el 21 de junio; el roadmap se marcaba pendiente por error.
+- **Pendiente Ola 2 (parte 2/2)**: bandejas "Por programar" / "Por ejecutar" en la lista de CxP + proyección semanal (Item 2 UI), conciliación bancaria en detalle (Item 3) y cancelación con lógica (Item 4).
+
 ## [13.187.3] - 2026-07-06
 
 - **Fix CI (guardrails Sentry + toasts)** tras logs_77751487976:
