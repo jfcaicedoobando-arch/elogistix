@@ -7,3 +7,4 @@ export * from "./conceptosCostoVinculables";
 export * from "./sugerirEmbarques";
 export * from "./cxpAprobacionCount";
 export * from "./historialFactura";
+export * from "./validarCuadreCfdi";
