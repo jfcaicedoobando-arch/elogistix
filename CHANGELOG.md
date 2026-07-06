@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.197.0] - 2026-07-06
+
+- **Validación de cuadre fiscal del CFDI antes de registrar gasto** (`src/features/cxp/services/validarCuadreCfdi.ts`): nuevo helper puro `validarCuadreCfdi(cfdi)` que aplica 4 reglas con tolerancia de ±0.02 MXN por redondeo — (1) Σ importes por concepto ≈ subtotal, (2) Σ IVA por concepto ≈ `iva_trasladado`, (3) Σ IEPS por concepto ≈ `ieps_trasladado`, (4) `subtotal + iva + ieps − retenciones ≈ total`.
+- **Bloqueo en el punto de captura** (`useNuevaFacturaProveedorForm.handleCfdiParsed`): si el XML no cuadra, el hook muestra un toast de error con los desajustes concretos (ej. "El IVA por concepto suma 1500.00 pero el IVA trasladado del CFDI es 1632.00") y **NO prellena el formulario ni acepta el pending CFDI**. Esto evita registrar facturas con desglose inconsistente que después reventarían la conciliación de DIOT y el costeo de embarque.
+- Tests: `validarCuadreCfdi.test.ts` con 8 casos (happy path, tolerancia de centavos, cada regla individual y CFDI vacío).
+
 ## [13.196.0] - 2026-07-06
 
 - **Parseo automático de IEPS en XML CFDI de proveedor** (importante para forwarders CN→MX: navieras, transportistas y maniobras trasladan IEPS 2% sobre fletes que antes se ignoraba y distorsionaba costos y DIOT):
