@@ -63,6 +63,62 @@ function agruparPorEmbarque(items: ConceptoCostoAbierto[]): Grupo[] {
   return Array.from(map.values());
 }
 
+function pluralS(n: number, base: string): string {
+  return `${n} ${base}${n === 1 ? "" : "s"}`;
+}
+
+function notificarResumen(
+  res: { seleccion: SugerenciaVinculo[]; descartadosPorMoneda: number },
+  totalCandidatos: number,
+) {
+  if (res.seleccion.length === 0) {
+    toast.info("Sin sugerencias con confianza suficiente. Marca manualmente los conceptos.");
+    return;
+  }
+  const fuertes = res.seleccion.filter((s) => s.fuerte).length;
+  const dudosas = res.seleccion.length - fuertes;
+  const sinMatch = totalCandidatos - res.seleccion.length - res.descartadosPorMoneda;
+  const partes: string[] = [`${pluralS(res.seleccion.length, "sugerencia")} aplicada${res.seleccion.length === 1 ? "" : "s"}`];
+  if (dudosas > 0) partes.push(pluralS(dudosas, "dudosa"));
+  if (res.descartadosPorMoneda > 0) partes.push(`${pluralS(res.descartadosPorMoneda, "descartada")} por moneda`);
+  if (sinMatch > 0) partes.push(`${sinMatch} sin match`);
+  toast.success(partes.join(" · "));
+}
+
+function calcularPuedeSugerir(args: {
+  onAplicar: unknown;
+  descripcion?: string;
+  monto?: number;
+  moneda?: string;
+  totalCandidatos: number;
+}): boolean {
+  const { onAplicar, descripcion, monto, moneda, totalCandidatos } = args;
+  return !!onAplicar && !!descripcion && !!moneda && (monto ?? 0) > 0 && totalCandidatos > 0;
+}
+
+function ejecutarSugerencia(args: {
+  data: ConceptoCostoAbierto[];
+  descripcion: string;
+  monto: number;
+  moneda: string;
+  onAplicar: (sugs: ReadonlyArray<{ conceptoId: string; concepto: string; monto: number; embarque_id: string }>) => void;
+  setUltima: (s: SugerenciaVinculo[]) => void;
+}) {
+  const res = sugerirVinculos(
+    { descripcion: args.descripcion, monto: args.monto, moneda: args.moneda },
+    args.data.map((c) => ({
+      id: c.id, concepto: c.concepto, monto: c.monto, moneda: c.moneda, embarque_id: c.embarque_id,
+    })),
+  );
+  args.setUltima(res.seleccion);
+  args.onAplicar(
+    res.seleccion.map((s) => ({
+      conceptoId: s.conceptoId, concepto: s.concepto, monto: s.monto, embarque_id: s.embarque_id,
+    })),
+  );
+  notificarResumen(res, args.data.length);
+}
+
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
@@ -72,51 +128,24 @@ export function VincularEmbarqueSection({
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
 
-  const puedeSugerir =
-    !!onAplicarSugerencias &&
-    !!facturaDescripcion &&
-    !!facturaMoneda &&
-    (facturaMonto ?? 0) > 0 &&
-    (data?.length ?? 0) > 0;
+  const puedeSugerir = calcularPuedeSugerir({
+    onAplicar: onAplicarSugerencias,
+    descripcion: facturaDescripcion,
+    monto: facturaMonto,
+    moneda: facturaMoneda,
+    totalCandidatos: data?.length ?? 0,
+  });
 
   const handleSugerir = () => {
     if (!onAplicarSugerencias || !data) return;
-    const res = sugerirVinculos(
-      {
-        descripcion: facturaDescripcion ?? "",
-        monto: facturaMonto ?? 0,
-        moneda: facturaMoneda ?? "",
-      },
-      data.map((c) => ({
-        id: c.id,
-        concepto: c.concepto,
-        monto: c.monto,
-        moneda: c.moneda,
-        embarque_id: c.embarque_id,
-      })),
-    );
-    setUltimaSugerencia(res.seleccion);
-    onAplicarSugerencias(
-      res.seleccion.map((s) => ({
-        conceptoId: s.conceptoId,
-        concepto: s.concepto,
-        monto: s.monto,
-        embarque_id: s.embarque_id,
-      })),
-    );
-    const fuertes = res.seleccion.filter((s) => s.fuerte).length;
-    const dudosas = res.seleccion.length - fuertes;
-    const sinMatch = (data.length ?? 0) - res.seleccion.length - res.descartadosPorMoneda;
-    if (res.seleccion.length === 0) {
-      toast.info("Sin sugerencias con confianza suficiente. Marca manualmente los conceptos.");
-    } else {
-      toast.success(
-        `${res.seleccion.length} sugerencia${res.seleccion.length === 1 ? "" : "s"} aplicada${res.seleccion.length === 1 ? "" : "s"}` +
-        (dudosas > 0 ? ` · ${dudosas} dudosa${dudosas === 1 ? "" : "s"}` : "") +
-        (res.descartadosPorMoneda > 0 ? ` · ${res.descartadosPorMoneda} descartada${res.descartadosPorMoneda === 1 ? "" : "s"} por moneda` : "") +
-        (sinMatch > 0 ? ` · ${sinMatch} sin match` : ""),
-      );
-    }
+    ejecutarSugerencia({
+      data,
+      descripcion: facturaDescripcion ?? "",
+      monto: facturaMonto ?? 0,
+      moneda: facturaMoneda ?? "",
+      onAplicar: onAplicarSugerencias,
+      setUltima: setUltimaSugerencia,
+    });
   };
 
   if (!proveedorId) return null;

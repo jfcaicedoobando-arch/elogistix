@@ -7,26 +7,25 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
-import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
+import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
+import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
+import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 
-type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];
+
 
 interface Filters extends Record<string, string> {
   moneda: string;
@@ -71,98 +70,7 @@ export default function CxpPorPagar() {
     },
   });
 
-  const columns: ColumnDef<CxpRow, unknown>[] = useMemo(
-    () =>
-      defineColumns<CxpRow>([
-        {
-          id: "proveedor",
-          header: "Proveedor",
-          accessorFn: (r) => r.proveedor_nombre ?? "",
-          enableSorting: true,
-          meta: { width: "min-w-[180px]", className: "font-medium max-w-[240px] truncate", sticky: true },
-          cell: ({ row }) => row.original.proveedor_nombre ?? "—",
-        },
-        {
-          id: "folio",
-          header: "Folio",
-          accessorFn: (r) => r.folio_proveedor ?? "",
-          enableSorting: true,
-          meta: { width: "w-[130px]", className: "font-mono text-xs whitespace-nowrap" },
-          cell: ({ row }) => row.original.folio_proveedor ?? "—",
-        },
-        {
-          id: "embarque",
-          header: "Embarque",
-          enableSorting: false,
-          meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
-          cell: ({ row }) =>
-            row.original.embarque_id ? (
-              <Link
-                to={`/embarques/${row.original.embarque_id}`}
-                className="text-primary hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {row.original.expediente ?? "—"}
-              </Link>
-            ) : (
-              "—"
-            ),
-        },
-        {
-          id: "vencimiento",
-          header: "Vencimiento",
-          accessorFn: (r) => r.fecha_vencimiento ?? "",
-          enableSorting: true,
-          meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" },
-          cell: ({ row }) =>
-            row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
-        },
-        {
-          id: "dias",
-          header: "Días",
-          accessorFn: (r) => r.dias_para_vencer ?? 0,
-          enableSorting: true,
-          meta: { width: "w-[90px]", align: "center" },
-          cell: ({ row }) => {
-            const dias = row.original.dias_para_vencer ?? 0;
-            const variant = variantDiasParaVencer(dias);
-            return (
-              <Badge variant={variant}>
-                {dias < 0 ? `${Math.abs(dias)} venc.` : `${dias}d`}
-              </Badge>
-            );
-          },
-        },
-        {
-          ...moneyColumn<CxpRow>({
-            id: "total",
-            header: "Total",
-            accessor: (r) => Number(r.total),
-            currencyAccessor: (r) => r.moneda,
-          }),
-          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-        },
-        {
-          ...moneyColumn<CxpRow>({
-            id: "pagado",
-            header: "Pagado",
-            accessor: (r) => Number(r.pagado),
-            currencyAccessor: (r) => r.moneda,
-          }),
-          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap text-success hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-        },
-        {
-          ...moneyColumn<CxpRow>({
-            id: "saldo",
-            header: "Saldo",
-            accessor: (r) => Number(r.saldo),
-            currencyAccessor: (r) => r.moneda,
-          }),
-          meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
-        },
-      ]),
-    [],
-  );
+  const columns = useMemo(() => buildCxpPorPagarColumns(), []);
 
   return (
     <PageContainer>

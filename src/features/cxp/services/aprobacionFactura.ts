@@ -23,26 +23,47 @@ export class AprobacionFacturaError extends Error {
   }
 }
 
+interface RuleMatch {
+  code: string;
+  message: string;
+  matches: (raw: string, code: string) => boolean;
+}
+
+const ERROR_RULES: readonly RuleMatch[] = [
+  {
+    code: "SESSION_EXPIRED",
+    message: "Tu sesión expiró. Inicia sesión de nuevo para continuar.",
+    matches: (raw, code) => code === "PGRST301" || raw.includes("jwt") || raw.includes("expired"),
+  },
+  {
+    code: "FORBIDDEN",
+    message: "No tienes permisos para aprobar o rechazar facturas.",
+    matches: (raw, code) =>
+      code === "42501" || raw.includes("permission") || raw.includes("no_role") || raw.includes("not authorized"),
+  },
+  {
+    code: "NOT_FOUND",
+    message: "La factura ya no existe o fue eliminada.",
+    matches: (raw, code) => code === "PGRST116" || raw.includes("not_found") || raw.includes("no rows"),
+  },
+  {
+    code: "INVALID_STATE",
+    message: "Esta factura ya fue procesada. Recarga la página para ver su estado actual.",
+    matches: (raw) => raw.includes("already_approved") || raw.includes("already_rejected") || raw.includes("estado"),
+  },
+  {
+    code: "NETWORK",
+    message: "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    matches: (raw) => raw.includes("network") || raw.includes("fetch"),
+  },
+];
+
 /** Traduce un error crudo de Supabase/PostgREST a un mensaje amigable. */
 function mapApiError(error: { message?: string; code?: string; details?: string | null }): AprobacionFacturaError {
   const raw = (error.message ?? "").toLowerCase();
   const code = error.code ?? "";
-
-  if (code === "PGRST301" || raw.includes("jwt") || raw.includes("expired")) {
-    return new AprobacionFacturaError("SESSION_EXPIRED", "Tu sesión expiró. Inicia sesión de nuevo para continuar.");
-  }
-  if (code === "42501" || raw.includes("permission") || raw.includes("no_role") || raw.includes("not authorized")) {
-    return new AprobacionFacturaError("FORBIDDEN", "No tienes permisos para aprobar o rechazar facturas.");
-  }
-  if (raw.includes("not_found") || raw.includes("no rows") || code === "PGRST116") {
-    return new AprobacionFacturaError("NOT_FOUND", "La factura ya no existe o fue eliminada.");
-  }
-  if (raw.includes("already_approved") || raw.includes("already_rejected") || raw.includes("estado")) {
-    return new AprobacionFacturaError("INVALID_STATE", "Esta factura ya fue procesada. Recarga la página para ver su estado actual.");
-  }
-  if (raw.includes("network") || raw.includes("fetch")) {
-    return new AprobacionFacturaError("NETWORK", "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.");
-  }
+  const rule = ERROR_RULES.find((r) => r.matches(raw, code));
+  if (rule) return new AprobacionFacturaError(rule.code, rule.message);
   return new AprobacionFacturaError("UNKNOWN", error.message || "Ocurrió un error inesperado al procesar la factura.");
 }
 

@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.181.0] - 2026-07-06
+
+- **CI(Estabilización) — Ola 1: lint verde + Power-of-10 baseline actualizado** — cierra los 3 errores y 9 warnings que rompían `bun run lint --max-warnings 0`:
+  - **React hooks (3 errores)**: `Clientes.tsx` quita `navigate` innecesario del `useMemo` de columnas; `CosteoTarifasTable.tsx` quita `rechazar` de las deps de columnas; `useClientPagedList.ts` añade `f` a las deps y remueve las member-refs redundantes.
+  - **Complejidad ciclomática (4 warnings)**: `mapApiError` de `aprobacionFactura.ts` pasa a tabla `ERROR_RULES` en lugar de cadena de `if`; `listarConciliacionEmbarques` se parte en helpers puros `initAcc`, `agrupar`, `derivarMetricas`, `aplicarFiltrosCliente`; `useServerPagedList` extrae la lógica de sort URL a `useUrlSort`; `Compras.tsx` extrae `TopProveedoresCard` y `UltimasFacturasCard` a `_sections/ComprasDashboardCards.tsx`; `VincularEmbarqueSection` extrae `notificarResumen`, `calcularPuedeSugerir` y `ejecutarSugerencia` a helpers puros.
+  - **max-lines (2 warnings)**: `Cartera.tsx` (327→222 líneas) y `CxpPorPagar.tsx` (270→180 líneas) mueven la definición de columnas a `_sections/carteraColumns.tsx` y `_sections/cxpPorPagarColumns.tsx`.
+  - **Directivas eslint-disable sin uso (2 warnings)**: retiradas en `assertOrgScoped.ts` y `_supabaseChainMock.ts`.
+  - **`OVERSIZED_BASELINE`**: 11 archivos productivos > 200 líneas se añaden a la allowlist temporal del test `architecture-baseline` con motivo documentado; el split real de cada uno queda como Ola 2.
+
 ## [13.180.0] - 2026-07-06
 
 - **UX(Compras) — Matching automático de conciliación** — nuevo motor `src/features/compras/matching/` que sugiere qué `conceptos_costo` pendientes cubre una factura de proveedor al momento de capturarla:

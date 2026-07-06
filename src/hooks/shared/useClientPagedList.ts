@@ -117,7 +117,7 @@ export function useClientPagedList<
       if (sortDir === "desc") arr.reverse();
     }
     return arr;
-  }, [data, f.search, f.filters, f.dateFrom, f.dateTo, f.isInRange, filterPredicate, searchAccessor, dateAccessor, sortKey, sortDir, sorters]);
+  }, [data, f, filterPredicate, searchAccessor, dateAccessor, sortKey, sortDir, sorters]);
 
   const filteredCount = processed.length;
   const totalPages = Math.max(1, Math.ceil(filteredCount / f.pageSize));

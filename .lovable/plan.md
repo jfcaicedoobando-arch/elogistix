@@ -1,100 +1,105 @@
 
-# Matching automático de conciliación factura ↔ conceptos_costo
+# Estabilizar CI: lint verde, Power-of-10 y coverage ≥ 30%
 
-## Contexto
+## Diagnóstico (del zip subido)
 
-Hoy en el diálogo "Capturar factura de proveedor" ya existe `VincularEmbarqueSection`: el usuario ve manualmente los conceptos_costo pendientes del proveedor y marca cuáles cubre la factura. El servicio `vincularFacturaAConceptos` liquida los que quedan ≥99% cubiertos.
+CI del último push cerró rojo en 3 jobs. Aggregator reporta `quality=failure`, `tests=failure`, `coverage=failure`.
 
-**Lo que falta**: el sistema no *sugiere* nada. Con facturas de 15+ conceptos, el usuario debe cruzar a ojo la descripción de cada línea de la factura con cada concepto pendiente. Es tedioso y propenso a error.
+### 1. Lint (`eslint . --max-warnings 0`) — falla con 3 errores + 9 warnings
 
-## Qué se construye
+| Archivo | Regla | Detalle |
+|---|---|---|
+| `features/cliente/routes/Clientes.tsx:70` | react-hooks/exhaustive-deps | `useMemo` con dep innecesaria `navigate` |
+| `features/costeo/components/CosteoTarifasTable.tsx:212` | react-hooks/exhaustive-deps | `useMemo` con dep innecesaria `rechazar` |
+| `hooks/shared/useClientPagedList.ts:120` | react-hooks/exhaustive-deps | `useMemo` falta dep `f` |
+| `features/bandejas/routes/Cartera.tsx` | max-lines-per-function (280>200), max-lines (305>250) | |
+| `features/bandejas/routes/CxpPorPagar.tsx:37` | max-lines-per-function (224>200) | |
+| `features/compras/services/conciliacionEmbarques.ts:60` | complexity (19>16) | `listarConciliacionEmbarques` |
+| `features/cxp/routes/Compras.tsx:74` | complexity (17>16) | |
+| `features/cxp/services/aprobacionFactura.ts:27` | complexity (19>16) | `mapApiError` |
+| `hooks/shared/useServerPagedList.ts:55` | complexity (21>16) | |
+| `test/helpers/assertOrgScoped.ts:14` | unused eslint-disable | |
+| `test/utils/_supabaseChainMock.ts:7` | unused eslint-disable | |
 
-Un motor de **matching por similitud + monto** que:
-
-1. Compara cada línea capturada de la factura contra los `conceptos_costo` abiertos del mismo proveedor.
-2. Calcula un score `0..1` combinando:
-   - **Similitud de descripción** (normalizada: sin acentos, minúsculas, sin stopwords "servicio/flete/cargo/de/del/la"). Bigrama de Dice.
-   - **Cercanía de monto** (misma moneda; tolerancia ±5% = 1.0, ±20% = 0.5, >20% = 0).
-   - **Bonus** si el concepto ya está anclado al embarque_id sugerido por otro match del mismo lote.
-3. Recomienda automáticamente los pares con score ≥ 0.75 (confianza alta) y muestra sugerencias con score 0.5–0.75 como "revisar".
-
-## Cambios UI
-
-### A. En captura de factura (diálogo existente)
-
-Nuevo botón **"Sugerir vinculación automática"** dentro de `VincularEmbarqueSection`, visible cuando hay ≥ 1 línea capturada Y ≥ 1 concepto pendiente:
-
-- Al presionarlo, corre el matcher y pre-selecciona las coincidencias con score ≥ 0.75, ajustando el monto al del concepto original.
-- Muestra un resumen breve: `"3 sugerencias aplicadas · 2 dudosas · 1 sin match"`.
-- Un `Popover` "Ver detalle" lista línea-por-línea: emoji del score, descripción factura → descripción concepto, monto, score, botón "Aceptar"/"Rechazar" para las dudosas.
-
-### B. En detalle de factura ya capturada (`/compras/facturas/:id`)
-
-Cuando la factura está capturada pero sin vínculos (`proveedor_facturas_conceptos` vacío) y hay conceptos_costo pendientes del proveedor:
-
-- Banner "Esta factura no está conciliada con ningún embarque. **Sugerir vinculación**".
-- Reusa el mismo motor y modal.
-
-## Estructura de archivos
+### 2. Test `architecture-baseline` — Power of 10 falla con 11 archivos > 200 líneas
 
 ```text
-src/features/compras/matching/
-├── normalizarTexto.ts         # normaliza descripciones (acentos, stopwords)
-├── similitud.ts               # dice bigram + score compuesto
-├── matcher.ts                 # sugerirVinculos(lineasFactura, conceptosAbiertos) → Sugerencia[]
-└── __tests__/
-    ├── normalizarTexto.test.ts
-    ├── similitud.test.ts
-    └── matcher.test.ts        # ≥ 8 casos: match exacto, sinónimos, monedas distintas, empates, sin match
+Cartera.tsx (327)  ·  CxpPorPagar.tsx (270)  ·  Compras.tsx (258)
+ComprasNotasCredito.tsx (242)  ·  CosteoTarifasTable.tsx (240)
+ComprasConciliacion.tsx (228)  ·  ComprasPagos.tsx (226)
+ComprasReportes.tsx (226)  ·  AgenteTarifas.tsx (210)
+FacturaDetalle.tsx (206)  ·  Actividades.tsx (201)
 ```
 
-Componentes:
+Cinco de esas son rutas de Compras que introduje esta semana.
 
-```text
-src/features/cxp/components/
-├── VincularEmbarqueSection.tsx        # + botón "Sugerir" y estado de sugerencias
-├── SugerenciasVinculoDialog.tsx       # NUEVO: revisar/aceptar dudosas
-└── BannerConciliacionSugerida.tsx     # NUEVO: banner en detalle de factura
-```
+### 3. Coverage — funciones 28.93% < umbral 30%
 
-Hook:
+Regla del proyecto: nunca bajar el umbral; escribir tests para el código nuevo. Los servicios y rutas de Compras (`ComprasPagos`, `ComprasNotasCredito`, `ComprasReportes`, `ComprasConciliacion`, matching) están parcialmente testeados a nivel servicio pero las rutas no.
 
-```text
-src/features/cxp/hooks/useSugerenciasVinculo.ts
-```
+---
 
-## Modelo de datos
+## Estrategia
 
-**No** requiere migración. Todo se calcula en cliente sobre datos que ya trae `fetchConceptosCostoAbiertosDeProveedor` + las líneas del formulario / de `conceptos_factura`.
+Tres olas ejecutables secuencialmente. Cada una deja CI un paso más cerca de verde. Bump de versión + CHANGELOG al final de cada ola.
 
-## Scoring (referencia técnica)
+### Ola 1 — Lint verde (v13.181.0)
 
-```text
-score(linea, concepto) =
-  0.6 * similitudDescripcion(linea.desc, concepto.concepto)
-+ 0.4 * cercaniaMonto(linea.monto, concepto.monto, moneda)
-- 0.5  si moneda_linea ≠ moneda_concepto   (penalización dura)
-```
+**Objetivo**: `bun run lint --max-warnings 0` termina con exit 0.
 
-`similitudDescripcion` usa coeficiente de Sørensen–Dice sobre bigramas de caracteres, tras normalizar (lowercase, sin diacríticos, quitar tokens genéricos).
+1. **Errores de hooks (3)**:
+   - `Clientes.tsx:70` — quitar `navigate` del array de deps del `useMemo` (o convertir en `useCallback` si se usa dentro).
+   - `CosteoTarifasTable.tsx:212` — quitar `rechazar` del array de deps.
+   - `useClientPagedList.ts:120` — agregar `f` al array de deps (o extraer a variable estable).
 
-`cercaniaMonto(a, b) = max(0, 1 - |a-b|/max(a,b) * 4)` → ±5% ≈ 0.8, ±25% ≈ 0.
+2. **Complejidad ciclomática (4 warnings)**: refactor mínimo, extraer helpers puros:
+   - `conciliacionEmbarques.ts`: partir el reduce en 3 helpers puros (`agrupar`, `calcularCobertura`, `clasificar`). Ya tenemos `clasificar`, extraemos `agrupar` y `derivarMetricas`.
+   - `aprobacionFactura.ts mapApiError`: pasar a tabla `code → { title, message }` en lugar de `if/else`.
+   - `useServerPagedList.ts`: extraer construcción del query builder a helper.
+   - `Compras.tsx (route)`: extraer los cálculos derivados del dashboard a un helper `resumenComprasDashboard`.
 
-Un concepto sólo puede vincularse a UNA línea (asignación greedy por score descendente).
+3. **Directivas eslint-disable inutilizadas (2 warnings)**:
+   - Quitar la línea `// eslint-disable-next-line no-restricted-imports` en `assertOrgScoped.ts:14` y `_supabaseChainMock.ts:7`.
 
-## Tests
+4. **max-lines / max-lines-per-function (2 warnings)** en `Cartera.tsx` y `CxpPorPagar.tsx`: se atacan en la Ola 2 (mismo trabajo que Power-of-10).
 
-- Unitarios del matcher (fixtures con casos reales: "Flete marítimo Shanghái–Manzanillo" ↔ "flete maritimo mzo").
-- Component test de `VincularEmbarqueSection` verificando que "Sugerir" pre-marca las sugerencias fuertes.
-- Guardrail: `no-raw-table.test.ts` sigue verde (no toca Supabase directo desde componentes).
+### Ola 2 — Power of 10: partir archivos > 200 líneas (v13.182.0)
 
-## Entregables por ola
+**Objetivo**: `architecture-baseline` verde.
 
-**Única ola (v13.180.0)**:
-1. Motor + tests.
-2. Botón "Sugerir" en el diálogo de captura.
-3. `SugerenciasVinculoDialog` para revisar dudosas.
-4. Banner en detalle de factura.
-5. Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
+Patrón único: extraer subcomponentes de presentación a `./_sections/*.tsx` co-ubicados y hooks controllers a `./hooks/use*.ts`. Ningún cambio funcional.
 
-No toca base de datos, no toca RLS, no toca edge functions.
+| Archivo | Extraer |
+|---|---|
+| `Cartera.tsx` (327) | `CarteraKpis.tsx`, `CarteraTable.tsx`, hook `useCarteraController` |
+| `CxpPorPagar.tsx` (270) | `CxpPorPagarKpis.tsx`, `CxpPorPagarTable.tsx` |
+| `Compras.tsx` route (258) | `ComprasQuickLinks.tsx`, `ComprasUltimasFacturas.tsx` |
+| `ComprasNotasCredito.tsx` (242) | `NotasCreditoFilterBar.tsx`, `NotasCreditoTable.tsx` |
+| `ComprasPagos.tsx` (226) | `PagosFilterBar.tsx`, `PagosTable.tsx` |
+| `ComprasReportes.tsx` (226) | `ReportesTopProveedores.tsx`, `ReportesEvolucionMensual.tsx` |
+| `ComprasConciliacion.tsx` (228) | `ConciliacionKpis.tsx`, `ConciliacionTable.tsx` |
+| `CosteoTarifasTable.tsx` (240) | fila y toolbar a subcomponentes |
+| `AgenteTarifas.tsx` (210) | tarjeta a subcomponente |
+| `FacturaDetalle.tsx` (206) | sección de pagos a subcomponente |
+| `Actividades.tsx` (201) | filtro/toolbar a subcomponente |
+
+Cada extracción es mecánica, sin tocar lógica de negocio. Los tests existentes de humo (`routes.smoke.test.tsx`) siguen cubriendo.
+
+### Ola 3 — Coverage ≥ 30% funciones (v13.183.0)
+
+**Objetivo**: subir funciones de 28.93% a ≥ 30%. Delta ≈ 1.1 pt. Basta agregar ~15-25 tests bien elegidos sobre helpers puros extraídos en la Ola 2 y sobre servicios ya nuevos sin tests:
+
+- Tests para los helpers extraídos en Ola 1 (`resumenComprasDashboard`, `derivarMetricas` de conciliación, tabla `mapApiError`).
+- Tests para servicios nuevos que aún no tienen test: revisar `notasCreditoGlobal` / `pagosGlobal` (ya tienen), `reportes` service (falta), `matching/matcher` (ya tiene).
+- Tests para hooks de Compras (`useCarteraController` si se extrae).
+
+Meta operativa: dejar el reporte con "functions ≥ 31%" para tener margen (memoria: no bajar el umbral, sí subir cobertura).
+
+---
+
+## Alcance excluido de este plan
+
+- No se toca la lógica de negocio de ninguna ruta.
+- No se cambia el UI del usuario final.
+- No hay migraciones de base de datos.
+- Cambios en config de eslint o vitest: prohibidos.
