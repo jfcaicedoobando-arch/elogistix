@@ -52,6 +52,29 @@ export interface UseServerPagedListOpts<TRow, TFilters extends Record<string, st
   enabled?: boolean;
 }
 
+function useUrlSort(sortableKeys: readonly string[] | undefined, defaultSort?: { key: string; dir: SortDir }) {
+  const parser = sortableKeys && sortableKeys.length
+    ? parseAsStringLiteral(sortableKeys).withDefault(defaultSort?.key ?? sortableKeys[0])
+    : parseAsString.withDefault(defaultSort?.key ?? "");
+  const [sortKeyRaw, setSortKeyRaw] = useQueryState("sort", parser);
+  const [sortDirRaw, setSortDirRaw] = useQueryState(
+    "dir",
+    parseAsStringLiteral(["asc", "desc"] as const).withDefault(defaultSort?.dir ?? "desc"),
+  );
+  const sortKey = (sortKeyRaw || defaultSort?.key || null) as string | null;
+  const sortDir = (sortDirRaw as SortDir) ?? (defaultSort?.dir ?? "desc");
+  const setSort = useCallback(
+    (key: string | null, dir: SortDir) => {
+      const isDefaultKey = key === (defaultSort?.key ?? null);
+      const isDefaultDir = dir === (defaultSort?.dir ?? "desc");
+      setSortKeyRaw(!key || isDefaultKey ? null : key);
+      setSortDirRaw(isDefaultDir ? null : dir);
+    },
+    [defaultSort, setSortKeyRaw, setSortDirRaw],
+  );
+  return { sortKey, sortDir, setSort };
+}
+
 export function useServerPagedList<
   TRow,
   TFilters extends Record<string, string> = Record<string, string>,
@@ -72,30 +95,7 @@ export function useServerPagedList<
     defaultPageSize,
   });
 
-  // Sort controlado (sincronizado con la URL). Whitelist opcional para
-  // asegurar que solo lleguen keys que el backend sabe interpretar.
-  const sortKeyParser = sortableKeys && sortableKeys.length
-    ? parseAsStringLiteral(sortableKeys).withDefault(defaultSort?.key ?? sortableKeys[0])
-    : parseAsString.withDefault(defaultSort?.key ?? "");
-
-  const [sortKeyRaw, setSortKeyRaw] = useQueryState("sort", sortKeyParser);
-  const [sortDirRaw, setSortDirRaw] = useQueryState(
-    "dir",
-    parseAsStringLiteral(["asc", "desc"] as const).withDefault(defaultSort?.dir ?? "desc"),
-  );
-
-  const sortKey = (sortKeyRaw || defaultSort?.key || null) as string | null;
-  const sortDir = (sortDirRaw as SortDir) ?? (defaultSort?.dir ?? "desc");
-
-  const setSort = useCallback(
-    (key: string | null, dir: SortDir) => {
-      const isDefaultKey = key === (defaultSort?.key ?? null);
-      const isDefaultDir = dir === (defaultSort?.dir ?? "desc");
-      setSortKeyRaw(!key || isDefaultKey ? null : key);
-      setSortDirRaw(isDefaultDir ? null : dir);
-    },
-    [defaultSort, setSortKeyRaw, setSortDirRaw],
-  );
+  const { sortKey, sortDir, setSort } = useUrlSort(sortableKeys, defaultSort);
 
   const from = filtersState.page * filtersState.pageSize;
   const to = from + filtersState.pageSize - 1;
