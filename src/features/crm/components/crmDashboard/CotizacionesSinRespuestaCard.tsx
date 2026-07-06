@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
 import { MailQuestion } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { CotizacionSinRespuestaRow } from "@/features/crm/hooks";
 
 export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRespuestaRow[] }) {
