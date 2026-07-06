@@ -45,6 +45,24 @@ function isPostgresRlsDenied(
   return typeof serializedCode === "string" && serializedCode === "42501";
 }
 
+/**
+ * Errores del pixel de analítica del hosting (`flock.js` en librecarga.com):
+ * son 5xx del endpoint `/~api/analytics` que Lovable inyecta al servir la app.
+ * No es código nuestro y no rompe la UI. Ver Sentry JAVASCRIPT-REACT-22.
+ */
+function isHostingAnalyticsNoise(
+  event: Sentry.ErrorEvent,
+  exc: unknown,
+): boolean {
+  const url = (exc as { request?: { url?: string } } | undefined)?.request?.url
+    ?? (event.request?.url as string | undefined);
+  if (typeof url === "string" && url.includes("/~api/analytics")) return true;
+  const values = event.exception?.values ?? [];
+  return values.some((v) =>
+    v.stacktrace?.frames?.some((f) => (f.filename ?? "").includes("flock.js")),
+  );
+}
+
 export function shouldDropSentryEvent(
   event: Sentry.ErrorEvent,
   hint: Sentry.EventHint | undefined,
@@ -56,6 +74,7 @@ export function shouldDropSentryEvent(
   if (isRecoverableLoadError(event, exc, originalMsg)) return true;
   if (isZodValidationError(exc)) return true;
   if (isPostgresRlsDenied(event, hint?.originalException)) return true;
+  if (isHostingAnalyticsNoise(event, hint?.originalException)) return true;
   return false;
 }
 
