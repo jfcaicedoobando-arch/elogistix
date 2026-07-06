@@ -25,18 +25,21 @@ export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRe
                 ? `/crm/oportunidades/${c.oportunidad_id}`
                 : `/cotizaciones/${c.id}`;
               return (
-                <li
+                <DrilldownRow
                   key={c.id}
-                  className="flex items-center justify-between text-sm py-1 border-b last:border-0"
+                  as="li"
+                  href={href}
+                  ariaLabel={`Ver cotización ${c.folio}`}
+                  className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
                 >
-                  <Link to={href} className="flex flex-col hover:underline truncate">
+                  <div className="flex flex-col truncate">
                     <span className="font-medium truncate max-w-[260px]">
                       {c.folio} · {c.cliente_nombre || "Sin cliente"}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       Enviada hace {c.dias} días
                     </span>
-                  </Link>
+                  </div>
                   <div className="text-right">
                     <div className="text-xs tabular-nums font-semibold">
                       {formatCurrencyCompact(c.subtotal, c.moneda)}
@@ -45,7 +48,7 @@ export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRe
                       {c.dias}d
                     </Badge>
                   </div>
-                </li>
+                </DrilldownRow>
               );
             })}
           </ul>
