@@ -18,6 +18,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
   archivo_xml_url, archivo_pdf_url,
   uuid_verificado, uuid_verificado_fecha, uuid_estatus_sat,
   fecha_programada_pago,
+  fecha_cancelacion, motivo_cancelacion, cancelada_por,
   pagos_proveedor(monto, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor),
@@ -33,6 +34,7 @@ export type Joined = Pick<
   | "archivo_xml_url" | "archivo_pdf_url"
   | "uuid_verificado" | "uuid_verificado_fecha" | "uuid_estatus_sat"
   | "fecha_programada_pago"
+  | "fecha_cancelacion" | "motivo_cancelacion" | "cancelada_por"
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
