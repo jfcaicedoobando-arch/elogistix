@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.187.1] - 2026-07-06
+
+- **Fix CI (guardrails de arquitectura)** tras el logs_77740646363:
+  - **`ConciliacionDetalleSheet.tsx`** (270 líneas) dividido: se extraen `HeaderPanel`, `ResumenGrid`, `CuerpoTabla`, `TablaBody` y `TotalesMonedaFooter` a `ConciliacionDetalleSections.tsx`. El Sheet queda en 91 líneas.
+  - **`reconciliacionCostos.ts`** (245 líneas) dividido en dos: `reconciliacionCostos.helpers.ts` (matemática pura + tipos, re-exportados) y `reconciliacionCostos.ts` (queries Supabase, 70 líneas). El marcador `// SAFE-CAST:` queda inmediatamente arriba del cast (regla mem://principles/safe-cast).
+  - **`facturapi-cancelar/index.ts`** volvió a usar `basicAuthHeader` cuando se agregó la descarga de acuse SAT. El guardrail multi-tenant lo prohíbe en la edge principal, así que se mueve `descargarAcuseCancelacion` a un módulo auxiliar `descargarAcuse.ts` en la misma carpeta. La funcionalidad no cambia.
+  - Se agrega `verificarUuidSat.test.ts` (4 casos: éxito, error de transporte, error de negocio con detail, error sin detail) para compensar el ligero descenso de cobertura tras extraer helpers.
+
 ## [13.187.0] - 2026-07-06
 
 - **Facturación — Ola 1 de blindaje fiscal (parte 2/2)** — Cierra los items 3 y 4 del roadmap post-auditoría.
