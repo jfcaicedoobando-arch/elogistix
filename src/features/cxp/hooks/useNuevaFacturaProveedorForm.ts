@@ -12,6 +12,7 @@ import {
   type CfdiParsedResponse,
   type ConceptoCostoAbierto,
   existeFacturaDuplicada,
+  validarCuadreCfdi,
 } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
