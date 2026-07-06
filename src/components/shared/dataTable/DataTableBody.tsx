@@ -65,7 +65,7 @@ export function DataTableBody<T>({
   getRowHref,
   getRowAriaLabel,
 }: Props<T>) {
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   const cellPad = DENSITY_CELL[density];
   const borderCell = bordered ? "border-r last:border-r-0" : "";
   const leafColumns = table.getAllLeafColumns();
