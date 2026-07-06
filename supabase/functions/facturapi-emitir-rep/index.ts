@@ -217,12 +217,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .eq("id", pago.id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: pago.organization_id,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: pago.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: "facturapi_rep_emitido",
-    entidad: "pago_factura",
-    entidad_id: pago.id,
+    entidadId: pago.id,
     detalles: {
       uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: factura.id,
       xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
