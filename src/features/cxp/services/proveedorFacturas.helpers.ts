@@ -58,6 +58,23 @@ export function clasificar(saldo: number, dias: number, estado: EstadoProveedorF
   return "Vigente";
 }
 
+/** Extraído para bajar complejidad ciclomática de mapJoinedRow (< 17). */
+function mapCancelacion(f: Joined) {
+  return {
+    fecha_cancelacion: f.fecha_cancelacion ?? null,
+    motivo_cancelacion: f.motivo_cancelacion ?? null,
+    cancelada_por: f.cancelada_por ?? null,
+  };
+}
+
+function mapVerificacionSat(f: Joined) {
+  return {
+    uuid_verificado: f.uuid_verificado ?? false,
+    uuid_verificado_fecha: f.uuid_verificado_fecha,
+    uuid_estatus_sat: f.uuid_estatus_sat,
+  };
+}
+
 export function mapJoinedRow(f: Joined): FacturaCxP {
   const pagado = (f.pagos_proveedor ?? [])
     .filter(p => !p.deleted_at)
@@ -67,7 +84,6 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     .reduce((s, n) => s + Number(n.monto), 0);
   const total = Number(f.total);
   const saldo = Math.max(0, total - pagado - nc);
-  // Una factura ya pagada (o sin saldo) nunca debe mostrar días vencidos.
   const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
   const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
   return {
@@ -102,13 +118,9 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     notas: f.notas,
     archivo_xml_url: f.archivo_xml_url,
     archivo_pdf_url: f.archivo_pdf_url,
-    uuid_verificado: f.uuid_verificado ?? false,
-    uuid_verificado_fecha: f.uuid_verificado_fecha,
-    uuid_estatus_sat: f.uuid_estatus_sat,
+    ...mapVerificacionSat(f),
     fecha_programada_pago: f.fecha_programada_pago ?? null,
-    fecha_cancelacion: f.fecha_cancelacion ?? null,
-    motivo_cancelacion: f.motivo_cancelacion ?? null,
-    cancelada_por: f.cancelada_por ?? null,
+    ...mapCancelacion(f),
   };
 }
 
