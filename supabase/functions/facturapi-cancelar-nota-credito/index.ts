@@ -105,12 +105,13 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
     .eq("id", body.nota_credito_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: nc.organization_id,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: nc.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: "facturapi_nc_cancelada",
-    entidad: "factura_nota_credito",
-    entidad_id: body.nota_credito_id,
+    entidadId: body.nota_credito_id,
     detalles: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
   });
 
