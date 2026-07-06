@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.198.0] - 2026-07-06
+
+- **Validaciones extra de retenciones en el cuadre del CFDI** (`validarCuadreCfdi.ts`): además de las 4 reglas previas, ahora bloqueamos el registro cuando (5) las retenciones son negativas, (6) las retenciones superan el 50% del subtotal — techo defensivo, ya que en fletes el máximo esperado es ≈20% (16% IVA + 4% ISR) — y (7) el CFDI declara retenciones pero el total no las descuenta (subtotal + IVA + IEPS < total). Esto atrapa XMLs con retenciones capturadas al vuelo o con signos invertidos antes de que contaminen DIOT y el costeo.
+- Tests: `validarCuadreCfdi.test.ts` ahora cubre 11 casos (3 nuevos: retenciones negativas, retenciones > 50%, retenciones no descontadas del total).
+
 ## [13.197.0] - 2026-07-06
 
 - **Validación de cuadre fiscal del CFDI antes de registrar gasto** (`src/features/cxp/services/validarCuadreCfdi.ts`): nuevo helper puro `validarCuadreCfdi(cfdi)` que aplica 4 reglas con tolerancia de ±0.02 MXN por redondeo — (1) Σ importes por concepto ≈ subtotal, (2) Σ IVA por concepto ≈ `iva_trasladado`, (3) Σ IEPS por concepto ≈ `ieps_trasladado`, (4) `subtotal + iva + ieps − retenciones ≈ total`.
