@@ -101,12 +101,12 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     .eq("id", factura.id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: orgId,
-    user_id: null,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: orgId,
+    usuarioId: null,
+    modulo: "facturacion",
     accion: mapped.bitacora_accion,
-    entidad: "factura",
-    entidad_id: factura.id,
+    entidadId: factura.id,
     detalles: { event_type: event.type, patch: mapped.patch },
   });
 
