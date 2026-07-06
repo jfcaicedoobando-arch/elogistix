@@ -63,6 +63,28 @@ function agruparPorEmbarque(items: ConceptoCostoAbierto[]): Grupo[] {
   return Array.from(map.values());
 }
 
+function pluralS(n: number, base: string): string {
+  return `${n} ${base}${n === 1 ? "" : "s"}`;
+}
+
+function notificarResumen(
+  res: { seleccion: SugerenciaVinculo[]; descartadosPorMoneda: number },
+  totalCandidatos: number,
+) {
+  if (res.seleccion.length === 0) {
+    toast.info("Sin sugerencias con confianza suficiente. Marca manualmente los conceptos.");
+    return;
+  }
+  const fuertes = res.seleccion.filter((s) => s.fuerte).length;
+  const dudosas = res.seleccion.length - fuertes;
+  const sinMatch = totalCandidatos - res.seleccion.length - res.descartadosPorMoneda;
+  const partes: string[] = [`${pluralS(res.seleccion.length, "sugerencia")} aplicada${res.seleccion.length === 1 ? "" : "s"}`];
+  if (dudosas > 0) partes.push(pluralS(dudosas, "dudosa"));
+  if (res.descartadosPorMoneda > 0) partes.push(`${pluralS(res.descartadosPorMoneda, "descartada")} por moneda`);
+  if (sinMatch > 0) partes.push(`${sinMatch} sin match`);
+  toast.success(partes.join(" · "));
+}
+
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
