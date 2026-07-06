@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      _backup_merge_client_users_20260706: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          id: string | null
+          organization_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          organization_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          organization_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      _backup_merge_clientes_20260706: {
+        Row: {
+          ciudad: string | null
+          codigo_postal: string | null
+          contacto: string | null
+          cp: string | null
+          created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number | null
+          direccion: string | null
+          email: string | null
+          estado: string | null
+          id: string | null
+          nombre: string | null
+          organization_id: string | null
+          regimen_fiscal: string | null
+          rfc: string | null
+          telefono: string | null
+          updated_at: string | null
+          uso_cfdi_default: string | null
+        }
+        Insert: {
+          ciudad?: string | null
+          codigo_postal?: string | null
+          contacto?: string | null
+          cp?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dias_credito?: number | null
+          direccion?: string | null
+          email?: string | null
+          estado?: string | null
+          id?: string | null
+          nombre?: string | null
+          organization_id?: string | null
+          regimen_fiscal?: string | null
+          rfc?: string | null
+          telefono?: string | null
+          updated_at?: string | null
+          uso_cfdi_default?: string | null
+        }
+        Update: {
+          ciudad?: string | null
+          codigo_postal?: string | null
+          contacto?: string | null
+          cp?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dias_credito?: number | null
+          direccion?: string | null
+          email?: string | null
+          estado?: string | null
+          id?: string | null
+          nombre?: string | null
+          organization_id?: string | null
+          regimen_fiscal?: string | null
+          rfc?: string | null
+          telefono?: string | null
+          updated_at?: string | null
+          uso_cfdi_default?: string | null
+        }
+        Relationships: []
+      }
       _backup_merge_embarques_20260602: {
         Row: {
           _merge_backed_up_at: string | null
