@@ -67,7 +67,7 @@ export default function Clientes() {
 
   const columns = useMemo(
     () => buildClientesColumns(),
-    [navigate],
+    [],
   );
 
   return (
