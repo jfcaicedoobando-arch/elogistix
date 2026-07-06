@@ -13,10 +13,14 @@
  *   - Rerenders comparados contra su propio mount (catch pérdida de memo).
  */
 import { describe, it, expect, beforeAll } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render as rtlRender, cleanup } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
+
+const render = (ui: ReactElement) => rtlRender(ui, { wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter> });
 
 interface Row {
   id: string;
