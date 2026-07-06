@@ -1,105 +1,66 @@
+## Contexto
 
-# Estabilizar CI: lint verde, Power-of-10 y coverage ≥ 30%
+El CI verde reporta cobertura global:
+- **Statements** 42.46% · **Branches** 37.12% · **Functions 31.75%** · **Lines** 42.82%
+- 4125 tests pasan en 582 archivos.
 
-## Diagnóstico (del zip subido)
+El umbral de funciones está apenas ~2 pts por encima del mínimo actual (30%). Muchos archivos `.ts` puros (services, helpers, mappers, constants) siguen en **0/0/0/0**, lo cual es el mejor blanco costo/beneficio: son fáciles de testear porque no requieren `render`, `Supabase` real ni mocks React.
 
-CI del último push cerró rojo en 3 jobs. Aggregator reporta `quality=failure`, `tests=failure`, `coverage=failure`.
+## Objetivo
 
-### 1. Lint (`eslint . --max-warnings 0`) — falla con 3 errores + 9 warnings
-
-| Archivo | Regla | Detalle |
-|---|---|---|
-| `features/cliente/routes/Clientes.tsx:70` | react-hooks/exhaustive-deps | `useMemo` con dep innecesaria `navigate` |
-| `features/costeo/components/CosteoTarifasTable.tsx:212` | react-hooks/exhaustive-deps | `useMemo` con dep innecesaria `rechazar` |
-| `hooks/shared/useClientPagedList.ts:120` | react-hooks/exhaustive-deps | `useMemo` falta dep `f` |
-| `features/bandejas/routes/Cartera.tsx` | max-lines-per-function (280>200), max-lines (305>250) | |
-| `features/bandejas/routes/CxpPorPagar.tsx:37` | max-lines-per-function (224>200) | |
-| `features/compras/services/conciliacionEmbarques.ts:60` | complexity (19>16) | `listarConciliacionEmbarques` |
-| `features/cxp/routes/Compras.tsx:74` | complexity (17>16) | |
-| `features/cxp/services/aprobacionFactura.ts:27` | complexity (19>16) | `mapApiError` |
-| `hooks/shared/useServerPagedList.ts:55` | complexity (21>16) | |
-| `test/helpers/assertOrgScoped.ts:14` | unused eslint-disable | |
-| `test/utils/_supabaseChainMock.ts:7` | unused eslint-disable | |
-
-### 2. Test `architecture-baseline` — Power of 10 falla con 11 archivos > 200 líneas
-
-```text
-Cartera.tsx (327)  ·  CxpPorPagar.tsx (270)  ·  Compras.tsx (258)
-ComprasNotasCredito.tsx (242)  ·  CosteoTarifasTable.tsx (240)
-ComprasConciliacion.tsx (228)  ·  ComprasPagos.tsx (226)
-ComprasReportes.tsx (226)  ·  AgenteTarifas.tsx (210)
-FacturaDetalle.tsx (206)  ·  Actividades.tsx (201)
-```
-
-Cinco de esas son rutas de Compras que introduje esta semana.
-
-### 3. Coverage — funciones 28.93% < umbral 30%
-
-Regla del proyecto: nunca bajar el umbral; escribir tests para el código nuevo. Los servicios y rutas de Compras (`ComprasPagos`, `ComprasNotasCredito`, `ComprasReportes`, `ComprasConciliacion`, matching) están parcialmente testeados a nivel servicio pero las rutas no.
-
----
+Subir cobertura global de **funciones ≥ 40%** (y arrastrar statements/lines a ~50%) sin tocar código de producción salvo type-only.
 
 ## Estrategia
 
-Tres olas ejecutables secuencialmente. Cada una deja CI un paso más cerca de verde. Bump de versión + CHANGELOG al final de cada ola.
+Analogía: en lugar de testear cada botón (caro), le ponemos "termómetros" a la mecánica interna — las funciones puras — que ya usa el sistema. Un test barato cubre muchas funciones a la vez.
 
-### Ola 1 — Lint verde (v13.181.0)
+Ordenamos por ROI: helpers/servicios de dominio con lógica de negocio primero; hooks y componentes UI después (más costosos).
 
-**Objetivo**: `bun run lint --max-warnings 0` termina con exit 0.
+## Lotes
 
-1. **Errores de hooks (3)**:
-   - `Clientes.tsx:70` — quitar `navigate` del array de deps del `useMemo` (o convertir en `useCallback` si se usa dentro).
-   - `CosteoTarifasTable.tsx:212` — quitar `rechazar` del array de deps.
-   - `useClientPagedList.ts:120` — agregar `f` al array de deps (o extraer a variable estable).
+### Lote 1 — Helpers puros y mappers (ROI alto)
+Archivos objetivo (todos actualmente 0%):
+- `src/features/costeo/**/*Submit.ts`, `*Tarifa.ts`, `*Rutas.ts`, `*Tarifas.ts`
+- `src/features/cliente/**/cliente.ts`, `clienteForm.ts`
+- `src/features/configuracion/**/*.ts` (`useConfiguracion`, `useConfiguracionGlobal`, `useConfiguracionOrg` — extraer partes puras si son hooks)
+- `src/features/auditoria/services/**` (`asignar.ts`, `marcar.ts`, `desmarcar.ts`, `query.ts`, `analyzeHallazgo.ts`)
+- Utilidades sueltas: `columnMeta.ts`, `useRowSelection.ts` reducers, `pnlPorContenedor.helpers` extras.
 
-2. **Complejidad ciclomática (4 warnings)**: refactor mínimo, extraer helpers puros:
-   - `conciliacionEmbarques.ts`: partir el reduce en 3 helpers puros (`agrupar`, `calcularCobertura`, `clasificar`). Ya tenemos `clasificar`, extraemos `agrupar` y `derivarMetricas`.
-   - `aprobacionFactura.ts mapApiError`: pasar a tabla `code → { title, message }` en lugar de `if/else`.
-   - `useServerPagedList.ts`: extraer construcción del query builder a helper.
-   - `Compras.tsx (route)`: extraer los cálculos derivados del dashboard a un helper `resumenComprasDashboard`.
+Aproximado: **~25 archivos** → ~60 tests nuevos.
+Estimación: sube funciones a ~38%.
 
-3. **Directivas eslint-disable inutilizadas (2 warnings)**:
-   - Quitar la línea `// eslint-disable-next-line no-restricted-imports` en `assertOrgScoped.ts:14` y `_supabaseChainMock.ts:7`.
+### Lote 2 — Servicios con Supabase (ROI medio)
+Aplicar patrón `_supabaseChainMock` (ya establecido en el proyecto) para:
+- `admin/services/*` (bandejas, portales, `capacidadUsuarios`, `usePapelera`)
+- `features/comisiones/services/*Devengadas.ts`
+- `features/facturapi/**/credenciales.ts`
+- `features/auditoria/services/auditoriaSnapshots.ts`, `revisarHallazgo.ts`, `resolveHallazgo.ts`
 
-4. **max-lines / max-lines-per-function (2 warnings)** en `Cartera.tsx` y `CxpPorPagar.tsx`: se atacan en la Ola 2 (mismo trabajo que Power-of-10).
+Aproximado: **~15 archivos** → ~40 tests.
+Estimación: sube funciones a ~42%.
 
-### Ola 2 — Power of 10: partir archivos > 200 líneas (v13.182.0)
+### Lote 3 — Componentes de baja complejidad (opcional)
+Solo si no llegamos a 40% después de los lotes 1-2. Cubrir componentes shared con render + assertion básica:
+- `KpiCard.tsx`, `KpiStrip.tsx`, `EmptyState.tsx`, `FormDialogSection.tsx`, `ReasonDialog.tsx`, `NumericInput.tsx`, `PaginationControls.tsx`.
 
-**Objetivo**: `architecture-baseline` verde.
+## Fuera de alcance
 
-Patrón único: extraer subcomponentes de presentación a `./_sections/*.tsx` co-ubicados y hooks controllers a `./hooks/use*.ts`. Ningún cambio funcional.
+- No modificar `vitest.config.ts` ni bajar umbrales (memoria core).
+- No tocar componentes ya con >70% cobertura.
+- No perseguir 100% en rutas/páginas grandes (`admin/routes`, portales) — bajo ROI.
+- No incluir tests E2E ni Playwright.
 
-| Archivo | Extraer |
-|---|---|
-| `Cartera.tsx` (327) | `CarteraKpis.tsx`, `CarteraTable.tsx`, hook `useCarteraController` |
-| `CxpPorPagar.tsx` (270) | `CxpPorPagarKpis.tsx`, `CxpPorPagarTable.tsx` |
-| `Compras.tsx` route (258) | `ComprasQuickLinks.tsx`, `ComprasUltimasFacturas.tsx` |
-| `ComprasNotasCredito.tsx` (242) | `NotasCreditoFilterBar.tsx`, `NotasCreditoTable.tsx` |
-| `ComprasPagos.tsx` (226) | `PagosFilterBar.tsx`, `PagosTable.tsx` |
-| `ComprasReportes.tsx` (226) | `ReportesTopProveedores.tsx`, `ReportesEvolucionMensual.tsx` |
-| `ComprasConciliacion.tsx` (228) | `ConciliacionKpis.tsx`, `ConciliacionTable.tsx` |
-| `CosteoTarifasTable.tsx` (240) | fila y toolbar a subcomponentes |
-| `AgenteTarifas.tsx` (210) | tarjeta a subcomponente |
-| `FacturaDetalle.tsx` (206) | sección de pagos a subcomponente |
-| `Actividades.tsx` (201) | filtro/toolbar a subcomponente |
+## Verificación
 
-Cada extracción es mecánica, sin tocar lógica de negocio. Los tests existentes de humo (`routes.smoke.test.tsx`) siguen cubriendo.
+1. Correr `bunx vitest run --coverage` local sobre carpetas modificadas.
+2. Confirmar que el reporte muestra funciones ≥ 40% globales.
+3. Bump de `APP_VERSION` + entrada en `CHANGELOG.md` al final de cada lote.
 
-### Ola 3 — Coverage ≥ 30% funciones (v13.183.0)
+## Detalles técnicos
 
-**Objetivo**: subir funciones de 28.93% a ≥ 30%. Delta ≈ 1.1 pt. Basta agregar ~15-25 tests bien elegidos sobre helpers puros extraídos en la Ola 2 y sobre servicios ya nuevos sin tests:
+- Usar `vi.mock('@/integrations/supabase/client', ...)` con el helper `_supabaseChainMock.ts` existente para servicios.
+- Los helpers puros no requieren mock: `import { fn } from '...'; expect(fn(input)).toEqual(...)`.
+- Coverage ignora archivos `*.types.ts` e `index.ts` re-exports; los saltamos.
+- Cada lote termina con `mem://index.md` intacto y CHANGELOG bumpeado.
 
-- Tests para los helpers extraídos en Ola 1 (`resumenComprasDashboard`, `derivarMetricas` de conciliación, tabla `mapApiError`).
-- Tests para servicios nuevos que aún no tienen test: revisar `notasCreditoGlobal` / `pagosGlobal` (ya tienen), `reportes` service (falta), `matching/matcher` (ya tiene).
-- Tests para hooks de Compras (`useCarteraController` si se extrae).
-
-Meta operativa: dejar el reporte con "functions ≥ 31%" para tener margen (memoria: no bajar el umbral, sí subir cobertura).
-
----
-
-## Alcance excluido de este plan
-
-- No se toca la lógica de negocio de ninguna ruta.
-- No se cambia el UI del usuario final.
-- No hay migraciones de base de datos.
-- Cambios en config de eslint o vitest: prohibidos.
+¿Confirmas empezar por el **Lote 1**?
