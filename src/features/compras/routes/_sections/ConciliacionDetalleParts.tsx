@@ -1,24 +1,14 @@
 /**
  * Sub-componentes visuales del panel de conciliación por partida
- * (`ConciliacionDetalleSheet`). Extraídos para mantener el componente
- * principal bajo el límite de complejidad ciclomática y de líneas.
+ * (`ConciliacionDetalleSheet`). Sólo exporta componentes — las constantes
+ * y helpers viven en `ConciliacionDetalleHelpers.ts` para que react-refresh
+ * funcione correctamente.
  */
 import { Badge } from "@/components/ui/badge";
-import type { EstatusRenglon } from "@/features/embarques/services/reconciliacionCostos";
 import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 import { CONCILIACION_ESTADO_LABELS } from "./conciliacionColumns";
+import type { ResumenTileTone } from "./ConciliacionDetalleHelpers";
 
-export const ESTATUS_META: Record<
-  EstatusRenglon,
-  { label: string; variant: "outline" | "default" | "secondary" | "destructive"; dot: string }
-> = {
-  sin_match:  { label: "Sin match",  variant: "destructive", dot: "bg-destructive" },
-  parcial:    { label: "Parcial",    variant: "secondary",   dot: "bg-warning" },
-  conciliado: { label: "Conciliado", variant: "default",     dot: "bg-success" },
-  excedente:  { label: "Excedente",  variant: "destructive", dot: "bg-destructive" },
-};
-
-export type ResumenTileTone = "destructive" | "success" | "muted" | "default";
 export function ResumenTile({
   label, value, tone = "default",
 }: { label: string; value: string; tone?: ResumenTileTone }) {
@@ -67,16 +57,4 @@ export function EstadoConciliacionBadge({
       <Icon className="h-3 w-3" /> {meta.label}
     </Badge>
   );
-}
-
-export function toneFromNumber(n: number): ResumenTileTone {
-  if (n > 0) return "destructive";
-  if (n < 0) return "success";
-  return "muted";
-}
-
-export function classFromNumber(n: number): string {
-  if (n > 0) return "text-destructive";
-  if (n < 0) return "text-success";
-  return "text-muted-foreground";
 }
