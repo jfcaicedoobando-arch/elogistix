@@ -1,41 +1,28 @@
-## Contexto
+## Objetivo
 
-Segundo lote del backfill de gap operativo: 5 proformas más facturadas fuera del ERP que hay que mover a `facturada` sin factura vinculada.
+Permitir hacer drilldown desde la tabla de Cartera (`/cartera`) hacia el detalle de cada factura (`/facturacion/:id`) haciendo clic en cualquier parte de la fila, no solo en el folio.
 
-## Folios a mover (5)
+## Contexto actual
 
-Todos existen en Elogistix, en `pendiente/borrador`, `estado_cliente='aceptada'`, sin `factura_id` ni `folio_factura_externa`:
-
-| Folio | estado_revision actual |
-|---|---|
-| PRO-2026-0297 | aprobada |
-| PRO-2026-0322 | pendiente |
-| PRO-2026-0337 | pendiente |
-| PRO-2026-0340 | pendiente |
-| PRO-2026-0948 | pendiente |
+- Hoy sólo el folio (columna "Folio") es un `<Link>` a `/facturacion/${factura_id}`. El resto de la fila no es clickeable.
+- En mobile, las tarjetas de `CarteraMobileList` tampoco navegan al detalle: sólo el folio y el expediente son links.
+- El `DataTable` compartido ya soporta `onRowClick` (agrega `cursor-pointer` y dispara el handler), y las columnas con links internos ya usan `e.stopPropagation()` para no chocar con el row-click (regla del proyecto).
 
 ## Cambios
 
-```text
-estado_proforma   : pendiente → facturada
-estado_aprobacion : borrador  → 'aprobada'   ← forzado para los 5
-origen            : NULL      → 'gap_externo'
-fecha_facturacion : (si NULL) → now()
-updated_at        : now()
-```
+1. **`src/features/bandejas/routes/Cartera.tsx`**
+   - Importar `useNavigate` de `react-router-dom`.
+   - Pasar `onRowClick={(r) => navigate('/facturacion/' + r.factura_id)}` al `<DataTable>`.
 
-Diferencia respecto al lote anterior: en el lote 1 copiamos `estado_aprobacion = estado_revision` porque todos tenían valor válido (consolidada/aprobada). En este lote 4 de 5 están en `estado_revision='pendiente'` y por decisión operativa quedan como `estado_aprobacion='aprobada'` (la facturación externa implica aprobación tácita). No se toca `estado_revision`.
+2. **`src/features/bandejas/routes/_sections/CarteraMobileList.tsx`**
+   - Envolver cada `<li>` con un `<Link to={/facturacion/${row.factura_id}}>` (o convertir el `<li>` en un contenedor clickeable con el link como capa principal), manteniendo los links internos al embarque con `e.stopPropagation()` para que no se dispare el link exterior.
+   - Añadir estilos `hover:bg-muted/40 cursor-pointer` para dar feedback.
 
-No se modifica: `factura_id`, `folio_factura_externa`, montos, cliente, ni ningún otro campo.
+3. **Versionado y bitácora**
+   - Bump `APP_VERSION` en `src/constants/appVersion.ts` a `13.199.3`.
+   - Añadir entrada en `CHANGELOG.md`: "Cartera: drilldown a detalle de factura desde toda la fila (desktop) y tarjeta (mobile)."
 
-## Trazabilidad y respaldo
+## Fuera de alcance
 
-- Respaldo previo en tabla `public._backup_gap_externo_proformas_20260706_lote2` (copia completa de las 5 filas).
-- `origen='gap_externo'` es el mismo valor del lote anterior — así ambos lotes se reportan juntos como "facturado fuera del ERP durante el gap".
-
-## Sección técnica
-
-- Sin migración de esquema.
-- Una sola llamada al tool de escritura: `CREATE TABLE ... AS SELECT` para backup + `UPDATE` con `numero IN (...)` **y** `organization_id='00000000-0000-0000-0000-000000000001'` (defensa en profundidad).
-- Reversión: `UPDATE proformas FROM _backup_gap_externo_proformas_20260706_lote2 ...`.
-- CHANGELOG + bump `APP_VERSION` a `13.199.2` (patch — sigue siendo limpieza operativa).
+- No se cambian columnas, filtros, orden, paginación ni lógica de negocio.
+- No se toca el hook `useCarteraPendiente` ni el endpoint.
