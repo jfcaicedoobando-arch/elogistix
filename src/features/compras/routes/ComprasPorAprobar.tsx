@@ -1,24 +1,25 @@
 /** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
-import { ShieldCheck, Inbox, ClipboardCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
-import { KPICard, sumaMxn, sumaUsd } from "./ComprasPorAprobar.kpi";
+import { KPICard } from "./ComprasPorAprobar.kpi";
+import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
+import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
+import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 
 type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
@@ -115,27 +116,14 @@ export default function ComprasPorAprobar() {
             placeholder="Buscar por folio, folio proveedor o proveedor…"
           />
           {seleccionEnLote && (
-            <div
-              className={cn(
-                "flex items-center justify-between gap-3 rounded-md border px-3 py-2",
-                selected.size > 0 ? "bg-accent/5 border-accent/40" : "bg-muted/30",
-              )}
-            >
-              <p className="text-xs text-muted-foreground">
-                {selected.size === 0
-                  ? "Selecciona una o más facturas para aprobarlas en lote."
-                  : `${selected.size} factura(s) seleccionada(s) · ${formatCurrency(totalSelMxn, "MXN")} · ${formatCurrency(totalSelUsd, "USD")}`}
-                {isRunning && progreso && (
-                  <span className="ml-2 text-accent">
-                    Procesando {progreso.hecho}/{progreso.total}…
-                  </span>
-                )}
-              </p>
-              <Button size="sm" disabled={selected.size === 0 || isRunning} onClick={() => setConfirmOpen(true)}>
-                {isRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
-                Aprobar seleccionadas ({selected.size})
-              </Button>
-            </div>
+            <ComprasPorAprobarBulkBar
+              selectedCount={selected.size}
+              totalSelMxn={totalSelMxn}
+              totalSelUsd={totalSelUsd}
+              isRunning={isRunning}
+              progreso={progreso}
+              onOpenConfirm={() => setConfirmOpen(true)}
+            />
           )}
         </CardContent>
       </Card>
@@ -143,21 +131,7 @@ export default function ComprasPorAprobar() {
       <Card>
         <CardContent className="p-0">
           {!isLoading && rows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-              <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
-              <h3 className="text-base font-semibold">
-                {aprobacion === "pendiente"
-                  ? "No hay solicitudes pendientes"
-                  : aprobacion === "aprobada"
-                  ? "No hay facturas aprobadas"
-                  : "No hay facturas rechazadas"}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                {aprobacion === "pendiente"
-                  ? "Todas las facturas capturadas están al día. Cuando llegue una nueva solicitud aparecerá aquí."
-                  : "Cambia de pestaña o ajusta la búsqueda para ver otros estados."}
-              </p>
-            </div>
+            <ComprasPorAprobarEmptyState aprobacion={aprobacion} />
           ) : (
             <DataTable
               columns={columns}
