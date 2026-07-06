@@ -59,6 +59,8 @@ function normalizarLinea(input: ConceptoFacturaInput) {
   const cantidad = Math.max(1, Math.round(Number(input.cantidad) || 0));
   const precio = Number(input.precio_unitario) || 0;
   const tipo_iva: TipoIvaConcepto = input.tipo_iva ?? "gravado_16";
+  const descripcion = input.descripcion.trim();
+  if (!descripcion) throw new Error("La descripción es obligatoria");
   // α.1 — clave SAT es obligatoria; ya no se autocompleta silenciosamente con
   // "81141601" (Servicios profesionales genéricos). El caller debe elegir del
   // catálogo SAT (`catalogo_claves_sat`) la clave real del servicio facturado.
@@ -67,7 +69,7 @@ function normalizarLinea(input: ConceptoFacturaInput) {
     throw new Error("La clave SAT (c_ClaveProdServ) es obligatoria. Elige la clave correcta del catálogo SAT.");
   }
   return {
-    descripcion: input.descripcion.trim(),
+    descripcion,
     cantidad,
     precio_unitario: precio,
     total: Math.round(cantidad * precio * 100) / 100,
