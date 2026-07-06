@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.2] - 2026-07-06
+
+- **Fix Embarques · Exportar CSV respeta filtro de alertas**: al exportar CSV desde el listado de embarques, el filtro de alertas del sidebar (por vencer, vencidos, en puerto, etc.) se ignoraba y el archivo incluía embarques que la vista ocultaba. Se replica el mismo recorte por `alertIdSet` que hace la tabla dentro de `useEmbarquesPageController.exportarCsv`, exponiendo `alertIdSet` desde `useEmbarquesPageState`. Ahora el CSV coincide con lo que el usuario ve en pantalla.
+
 ## [13.205.1] - 2026-07-06
 
 - **Fix CI (corrida 28812368567)**: se corrigen las 5 regresiones que dejaron rojos los jobs `quality`, `tests` y `coverage`:
