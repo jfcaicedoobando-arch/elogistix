@@ -23,6 +23,7 @@ const baseActual = {
   tipo_cambio_usd: 1,
   subtotal: 1000,
   iva: 160,
+  ieps: 0,
   retenciones: 0,
 };
 
@@ -35,6 +36,7 @@ const basePayload: ActualizarFacturaPayload = {
   tipo_cambio_usd: 1,
   subtotal: 1000,
   iva: 160,
+  ieps: 0,
   retenciones: 0,
   categoria_presupuesto_id: "cat-1",
   notas: "ok",

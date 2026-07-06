@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.196.0] - 2026-07-06
+
+- **Parseo automático de IEPS en XML CFDI de proveedor** (importante para forwarders CN→MX: navieras, transportistas y maniobras trasladan IEPS 2% sobre fletes que antes se ignoraba y distorsionaba costos y DIOT):
+  - `supabase/functions/parse-cfdi-xml/parser.ts`: `extractImpuestos` ahora recorre los `<Traslado>` del bloque raíz `<Impuestos>` y desglosa clave SAT `002` (IVA) de `003` (IEPS). Nuevo helper `extractTrasladosDe` aísla los traslados del comprobante para no duplicar con los de concepto. Nuevo `extractImpuestosConcepto` extrae iva/ieps por `<Concepto>`.
+  - Nuevos campos en el parser: `ieps_trasladado` a nivel comprobante y `iva`/`ieps` por concepto en `CfdiConcepto`.
+  - Test `parseCfdi extrae IEPS (003) trasladado a nivel Comprobante` cubre el caso naviera con IVA 16% + IEPS 2%.
+- **UI del formulario CxP** (`FacturaProveedorFormFields`, `DialogNuevaFacturaProveedor`): nuevo campo IEPS entre IVA y Retenciones. El grid pasa de 3 a 4 columnas. El footer del dialog muestra la línea IEPS solo cuando > 0.
+- **Cálculo de total** (`calcularTotal`, `proveedorFacturas.update`): fórmula ahora es `Subtotal + IVA + IEPS − Retenciones`. `CAMPOS_SENSIBLES` incluye `ieps` para forzar re-aprobación si cambia.
+- **Persistencia**: nueva columna `ieps` en `proveedor_facturas` y `iva`/`ieps` en `proveedor_facturas_conceptos` (default 0, NOT NULL). Precarga del CFDI parseado prellena el campo en el form.
+- **Display**: `InfoFacturaSection` muestra "IEPS" cuando > 0, junto a Subtotal/IVA/Retenciones.
+
 ## [13.195.1] - 2026-07-06
 
 - **CI verde tras Fase α.1**. Fixes de higiene detectados por el pipeline al mergear el batch anterior:

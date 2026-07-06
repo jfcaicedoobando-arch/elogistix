@@ -111,7 +111,7 @@ export function FacturaProveedorFormFields({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div className="space-y-1">
             <Label>Subtotal<RequiredMark /></Label>
             <NumericInput value={toNum(values.subtotal)} onChange={(n) => onChange("subtotal", fromNum(n))} decimals aria-label="Subtotal" />
@@ -119,6 +119,10 @@ export function FacturaProveedorFormFields({
           <div className="space-y-1">
             <Label>IVA</Label>
             <NumericInput value={toNum(values.iva)} onChange={(n) => onChange("iva", fromNum(n))} decimals aria-label="IVA" />
+          </div>
+          <div className="space-y-1">
+            <Label>IEPS</Label>
+            <NumericInput value={toNum(values.ieps)} onChange={(n) => onChange("ieps", fromNum(n))} decimals aria-label="IEPS" />
           </div>
           <div className="space-y-1">
             <Label>Retenciones</Label>

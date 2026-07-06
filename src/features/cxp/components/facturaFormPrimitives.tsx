@@ -18,6 +18,7 @@ export interface FacturaFormValues {
   tc: string;
   subtotal: string;
   iva: string;
+  ieps: string;
   retenciones: string;
   categoriaId: string;
   notas: string;

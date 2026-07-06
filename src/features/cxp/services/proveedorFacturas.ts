@@ -44,6 +44,7 @@ export interface FacturaCxP {
   categoria_nombre: string | null;
   subtotal: number;
   iva: number;
+  ieps: number;
   retenciones: number;
   rfc_proveedor: string | null;
   uuid_fiscal: string | null;

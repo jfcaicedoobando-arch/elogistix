@@ -29,6 +29,7 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
 
   const sub = Number(ctl.values.subtotal) || 0;
   const iva = Number(ctl.values.iva) || 0;
+  const ieps = Number(ctl.values.ieps) || 0;
   const ret = Number(ctl.values.retenciones) || 0;
   const moneda = ctl.values.moneda;
 
@@ -46,6 +47,9 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
       <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs tabular-nums">
         <span className="text-muted-foreground">Subtotal: <span className="text-foreground font-medium">{formatCurrency(sub, moneda)}</span></span>
         <span className="text-muted-foreground">IVA: <span className="text-foreground font-medium">{formatCurrency(iva, moneda)}</span></span>
+        {ieps > 0 && (
+          <span className="text-muted-foreground">IEPS: <span className="text-foreground font-medium">{formatCurrency(ieps, moneda)}</span></span>
+        )}
         <span className="text-muted-foreground">Ret: <span className="text-foreground font-medium">{formatCurrency(ret, moneda)}</span></span>
         <span className="text-muted-foreground">Total <span className="font-medium">{moneda}</span>: <span className="text-foreground text-base font-bold">{formatCurrency(ctl.total, moneda)}</span></span>
       </div>

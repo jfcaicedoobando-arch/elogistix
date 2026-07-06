@@ -23,10 +23,43 @@ Deno.test("parseCfdi extrae campos clave", () => {
   assertEquals(r.total, 1160);
   assertEquals(r.subtotal, 1000);
   assertEquals(r.iva_trasladado, 160);
+  assertEquals(r.ieps_trasladado, 0);
   assertEquals(r.moneda, "MXN");
   assertEquals(r.emisor.rfc, "ACM010101AAA");
   assertEquals(r.emisor.nombre, "ACME SA DE CV");
   assertEquals(r.conceptos.length, 1);
+});
+
+Deno.test("parseCfdi extrae IEPS (003) trasladado a nivel Comprobante", () => {
+  const x = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="77" Fecha="2025-03-14T10:00:00" SubTotal="10000.00" Total="11832.00" Moneda="MXN">
+  <cfdi:Emisor Rfc="ACM010101AAA" Nombre="NAVIERA" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto Descripcion="Flete marítimo" Importe="10000.00">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="10000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1632.00"/>
+          <cfdi:Traslado Base="10000" Impuesto="003" TipoFactor="Tasa" TasaOCuota="0.020000" Importe="200.00"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="1832.00" TotalImpuestosRetenidos="0.00">
+    <cfdi:Traslados>
+      <cfdi:Traslado Base="10000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="1632.00"/>
+      <cfdi:Traslado Base="10000" Impuesto="003" TipoFactor="Tasa" TasaOCuota="0.020000" Importe="200.00"/>
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="dddddddd-eeee-ffff-0000-111111111111"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+  const r = parseCfdi(x);
+  assertEquals(r.iva_trasladado, 1632);
+  assertEquals(r.ieps_trasladado, 200);
+  assertEquals(r.conceptos[0].iva, 1632);
+  assertEquals(r.conceptos[0].ieps, 200);
 });
 
 Deno.test("parseCfdi rechaza versión 3.3", () => {

@@ -12,7 +12,7 @@ type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
 /** Select reutilizado por list + single fetch (evita duplicar el embed). */
 export const PROVEEDOR_FACTURAS_SELECT = `
   id, proveedor_id, proveedor_nombre, embarque_id, folio_proveedor, folio_interno,
-  fecha_emision, fecha_vencimiento, moneda, subtotal, iva, retenciones, total,
+  fecha_emision, fecha_vencimiento, moneda, subtotal, iva, ieps, retenciones, total,
   estado, tipo_cambio_usd, rfc_proveedor, uuid_fiscal, dias_credito, notas,
   estado_aprobacion, motivo_rechazo, categoria_presupuesto_id,
   archivo_xml_url, archivo_pdf_url,
@@ -28,7 +28,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
 export type Joined = Pick<
   ProveedorFacturaRow,
   | "id" | "proveedor_id" | "proveedor_nombre" | "embarque_id" | "folio_proveedor" | "folio_interno"
-  | "fecha_emision" | "fecha_vencimiento" | "moneda" | "subtotal" | "iva" | "retenciones" | "total"
+  | "fecha_emision" | "fecha_vencimiento" | "moneda" | "subtotal" | "iva" | "ieps" | "retenciones" | "total"
   | "estado" | "tipo_cambio_usd" | "rfc_proveedor" | "uuid_fiscal" | "dias_credito" | "notas"
   | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
   | "archivo_xml_url" | "archivo_pdf_url"
@@ -111,6 +111,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     categoria_nombre: f.presupuesto_categorias?.nombre ?? null,
     subtotal: Number(f.subtotal ?? 0),
     iva: Number(f.iva ?? 0),
+    ieps: Number(f.ieps ?? 0),
     retenciones: Number(f.retenciones ?? 0),
     rfc_proveedor: f.rfc_proveedor,
     uuid_fiscal: f.uuid_fiscal,

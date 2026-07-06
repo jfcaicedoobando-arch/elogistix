@@ -28,6 +28,7 @@ type RowLite = FacturaParaEdicion;
 function fromRow(r: RowLite): FacturaFormValues {
   const sub = Number(r.subtotal) || 0;
   const iva = Number(r.iva) || 0;
+  const ieps = Number(r.ieps ?? 0) || 0;
   const ret = Number(r.retenciones) || 0;
   const tc = Number(r.tipo_cambio_usd) || 0;
   return {
@@ -41,6 +42,7 @@ function fromRow(r: RowLite): FacturaFormValues {
     tc: r.moneda === "MXN" ? "" : (tc ? String(tc) : ""),
     subtotal: sub ? String(sub) : "",
     iva: iva ? String(iva) : "",
+    ieps: ieps ? String(ieps) : "",
     retenciones: ret ? String(ret) : "",
     categoriaId: r.categoria_presupuesto_id ?? "",
     notas: r.notas ?? "",
@@ -119,6 +121,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       tipo_cambio_usd: Number(values.tc) || 0,
       subtotal: Number(values.subtotal) || 0,
       iva: Number(values.iva) || 0,
+      ieps: Number(values.ieps) || 0,
       retenciones: Number(values.retenciones) || 0,
       categoria_presupuesto_id: values.categoriaId,
       notas: values.notas,

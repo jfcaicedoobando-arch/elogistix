@@ -25,6 +25,7 @@ export interface ActualizarFacturaPayload {
   tipo_cambio_usd: number;
   subtotal: number;
   iva: number;
+  ieps: number;
   retenciones: number;
   categoria_presupuesto_id: string;
   notas: string;
@@ -36,7 +37,7 @@ export type FacturaParaEdicion = Pick<
   | "id" | "proveedor_id" | "proveedor_nombre" | "folio_proveedor"
   | "fecha_emision" | "fecha_vencimiento" | "dias_credito"
   | "moneda" | "tipo_cambio_usd"
-  | "subtotal" | "iva" | "retenciones" | "total"
+  | "subtotal" | "iva" | "ieps" | "retenciones" | "total"
   | "categoria_presupuesto_id" | "notas" | "estado_aprobacion"
 >;
 
@@ -44,7 +45,7 @@ const FACTURA_EDIT_SELECT = `
   id, proveedor_id, proveedor_nombre, folio_proveedor,
   fecha_emision, fecha_vencimiento, dias_credito,
   moneda, tipo_cambio_usd,
-  subtotal, iva, retenciones, total,
+  subtotal, iva, ieps, retenciones, total,
   categoria_presupuesto_id, notas, estado_aprobacion
 ` as const;
 
@@ -74,11 +75,11 @@ export class SaldoNegativoError extends Error {
 const CAMPOS_SENSIBLES: Array<keyof ActualizarFacturaPayload> = [
   "folio_proveedor", "fecha_emision",
   "moneda", "tipo_cambio_usd",
-  "subtotal", "iva", "retenciones",
+  "subtotal", "iva", "ieps", "retenciones",
 ];
 
 function detectarCambioSensible(
-  actual: Pick<ProveedorFacturaRow, "folio_proveedor" | "fecha_emision" | "moneda" | "tipo_cambio_usd" | "subtotal" | "iva" | "retenciones">,
+  actual: Pick<ProveedorFacturaRow, "folio_proveedor" | "fecha_emision" | "moneda" | "tipo_cambio_usd" | "subtotal" | "iva" | "ieps" | "retenciones">,
   payload: ActualizarFacturaPayload,
 ): boolean {
   return CAMPOS_SENSIBLES.some((k) => {
@@ -98,7 +99,7 @@ export async function actualizarFacturaProveedor(
   // 1) Lee factura actual: necesitamos proveedor_id y estado_aprobacion.
   const { data: actual, error: errActual } = await supabase
     .from("proveedor_facturas")
-    .select("id, proveedor_id, estado_aprobacion, folio_proveedor, fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, retenciones")
+    .select("id, proveedor_id, estado_aprobacion, folio_proveedor, fecha_emision, moneda, tipo_cambio_usd, subtotal, iva, ieps, retenciones")
     .eq("id", id)
     .single();
   if (errActual) throw errActual;
@@ -114,9 +115,11 @@ export async function actualizarFacturaProveedor(
   }
 
   // 3) Validar que el nuevo total no quede por debajo de lo ya pagado.
+  //    Total = Subtotal + IVA + IEPS − Retenciones.
   const nuevoTotal =
     (Number(payload.subtotal) || 0) +
-    (Number(payload.iva) || 0) -
+    (Number(payload.iva) || 0) +
+    (Number(payload.ieps) || 0) -
     (Number(payload.retenciones) || 0);
   const { data: pagos, error: errPagos } = await supabase
     .from("pagos_proveedor")
@@ -141,6 +144,7 @@ export async function actualizarFacturaProveedor(
     tipo_cambio_usd: payload.tipo_cambio_usd,
     subtotal: payload.subtotal,
     iva: payload.iva,
+    ieps: payload.ieps,
     retenciones: payload.retenciones,
     total: nuevoTotal,
     categoria_presupuesto_id: payload.categoria_presupuesto_id,

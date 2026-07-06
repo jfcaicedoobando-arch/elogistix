@@ -5,6 +5,8 @@
 export interface CfdiConcepto {
   descripcion: string;
   importe: number;
+  iva: number;
+  ieps: number;
 }
 
 export interface CfdiParsed {
@@ -17,6 +19,7 @@ export interface CfdiParsed {
   subtotal: number;
   total: number;
   iva_trasladado: number;
+  ieps_trasladado: number;  // Clave SAT 003 — aplica en fletes, maniobras, etc.
   retenciones: number;
   emisor: { rfc: string; nombre: string; regimen: string };
   receptor: { rfc: string; nombre: string };
@@ -47,26 +50,92 @@ function findAllTags(xml: string, localName: string): string[] {
   return xml.match(re) ?? [];
 }
 
-function extractImpuestos(xml: string): { iva: number; retenciones: number } {
-  let iva = 0;
+/**
+ * Suma IVA (002) e IEPS (003) recorriendo los `<Traslado>` del XML.
+ * Estrategia por orden de preferencia (para no duplicar):
+ *   1. Traslados del bloque raíz `<Impuestos><Traslados>...` (fuente de verdad
+ *      cuando existen — SAT lo emite así en CFDI 4.0 con desglose).
+ *   2. Suma de Traslados por concepto (cuando el raíz es self-closing o falta).
+ *   3. Fallback al atributo `TotalImpuestosTrasladados` del raíz (sólo como IVA,
+ *      no permite distinguir IEPS — se pierde el desglose pero no la magnitud).
+ */
+function extractImpuestos(xml: string): { iva: number; ieps: number; retenciones: number } {
   let totRet = 0;
   const allImp = findAllTags(xml, "Impuestos");
   const rootImp = allImp.find(
     (t) => /TotalImpuestosTrasladados|TotalImpuestosRetenidos/i.test(t),
   );
+
+  // 1) Intentar traslados del bloque raíz (si es no self-closing y tiene Traslados).
+  const trasladosRoot = rootImp ? extractTrasladosDe(xml, rootImp) : [];
+  let iva = 0;
+  let ieps = 0;
+  if (trasladosRoot.length > 0) {
+    for (const t of trasladosRoot) {
+      const impCode = attr(t, "Impuesto");
+      const importe = num(attr(t, "Importe"));
+      if (impCode === "002") iva += importe;
+      else if (impCode === "003") ieps += importe;
+    }
+  } else {
+    // 2) Sumar traslados por concepto.
+    for (const c of findConceptoBlocks(xml)) {
+      const imp = extractImpuestosConcepto(c);
+      iva += imp.iva;
+      ieps += imp.ieps;
+    }
+    // 3) Fallback: si tampoco hay traslados por concepto, usar total del raíz como IVA.
+    if (iva === 0 && ieps === 0 && rootImp) {
+      iva = num(attr(rootImp, "TotalImpuestosTrasladados"));
+    }
+  }
+
+  // Retenciones: preferir total del raíz si existe.
   if (rootImp) {
-    iva = num(attr(rootImp, "TotalImpuestosTrasladados"));
     totRet = num(attr(rootImp, "TotalImpuestosRetenidos"));
   } else {
-    // Fallback: sumar traslados de IVA (clave SAT 002) y todas las retenciones.
-    for (const t of findAllTags(xml, "Traslado")) {
-      if (/\bImpuesto\s*=\s*"002"/i.test(t)) iva += num(attr(t, "Importe"));
-    }
     for (const r of findAllTags(xml, "Retencion")) {
       totRet += num(attr(r, "Importe"));
     }
   }
-  return { iva, retenciones: totRet };
+
+  return { iva, ieps, retenciones: totRet };
+}
+
+/**
+ * Aísla los <Traslado> que cuelgan del <Impuestos> raíz (no los de Concepto).
+ * Devuelve [] si el tag raíz es self-closing o no tiene bloque de Traslados.
+ */
+function extractTrasladosDe(xml: string, rootImpTag: string): string[] {
+  // Si es self-closing no tiene hijos.
+  if (/\/>\s*$/.test(rootImpTag)) return [];
+  const idx = xml.indexOf(rootImpTag);
+  if (idx < 0) return [];
+  const closeRe = /<\/(?:[A-Za-z0-9]+:)?Impuestos\s*>/i;
+  const rest = xml.slice(idx + rootImpTag.length);
+  const closeMatch = rest.match(closeRe);
+  if (!closeMatch || closeMatch.index === undefined) return [];
+  const bloque = rest.slice(0, closeMatch.index);
+  return findAllTags(bloque, "Traslado");
+}
+
+/** Extrae IVA/IEPS trasladados de un <Concepto> individual. */
+function extractImpuestosConcepto(conceptoBlock: string): { iva: number; ieps: number } {
+  let iva = 0;
+  let ieps = 0;
+  for (const t of findAllTags(conceptoBlock, "Traslado")) {
+    const impCode = attr(t, "Impuesto");
+    const importe = num(attr(t, "Importe"));
+    if (impCode === "002") iva += importe;
+    else if (impCode === "003") ieps += importe;
+  }
+  return { iva, ieps };
+}
+
+/** Encuentra bloques completos <Concepto>...</Concepto> preservando su contenido. */
+function findConceptoBlocks(xml: string): string[] {
+  const re = /<(?:[A-Za-z0-9]+:)?Concepto\b[^>]*?(?:\/>|>[\s\S]*?<\/(?:[A-Za-z0-9]+:)?Concepto\s*>)/gi;
+  return xml.match(re) ?? [];
 }
 
 export function parseCfdi(xml: string): CfdiParsed {
@@ -93,12 +162,17 @@ export function parseCfdi(xml: string): CfdiParsed {
   const emisor = findTag(xml, "Emisor") ?? "";
   const receptor = findTag(xml, "Receptor") ?? "";
 
-  const { iva, retenciones } = extractImpuestos(xml);
+  const { iva, ieps, retenciones } = extractImpuestos(xml);
 
-  const conceptos: CfdiConcepto[] = findAllTags(xml, "Concepto").slice(0, 10).map((c) => ({
-    descripcion: attr(c, "Descripcion"),
-    importe: num(attr(c, "Importe")),
-  }));
+  const conceptos: CfdiConcepto[] = findConceptoBlocks(xml).slice(0, 10).map((c) => {
+    const imp = extractImpuestosConcepto(c);
+    return {
+      descripcion: attr(c, "Descripcion"),
+      importe: num(attr(c, "Importe")),
+      iva: imp.iva,
+      ieps: imp.ieps,
+    };
+  });
 
   const fechaRaw = attr(comprobante, "Fecha"); // 2025-03-14T10:22:01
   const fecha = fechaRaw.slice(0, 10);
@@ -113,6 +187,7 @@ export function parseCfdi(xml: string): CfdiParsed {
     subtotal: num(attr(comprobante, "SubTotal")),
     total: num(attr(comprobante, "Total")),
     iva_trasladado: iva,
+    ieps_trasladado: ieps,
     retenciones,
     emisor: {
       rfc: attr(emisor, "Rfc"),

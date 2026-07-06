@@ -1,6 +1,8 @@
 export interface CfdiConceptoParsed {
   descripcion: string;
   importe: number;
+  iva: number;
+  ieps: number;
 }
 
 export interface CfdiParsedResponse {
@@ -14,6 +16,7 @@ export interface CfdiParsedResponse {
     subtotal: number;
     total: number;
     iva_trasladado: number;
+    ieps_trasladado: number;
     retenciones: number;
     emisor: { rfc: string; nombre: string; regimen: string };
     receptor: { rfc: string; nombre: string };
