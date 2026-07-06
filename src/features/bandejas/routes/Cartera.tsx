@@ -36,6 +36,7 @@ const DEFAULTS: CarteraFilters = { moneda: "todas", vencidas: "todas" };
 
 
 export default function Cartera() {
+  const navigate = useNavigate();
   const { data = [], isLoading } = useCarteraPendiente();
   const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
 
