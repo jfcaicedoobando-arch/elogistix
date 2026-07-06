@@ -48,7 +48,9 @@ export function DialogDetallePagosProveedor({
   const f = facturaFresh ?? factura;
   const { data: pagos = [], isLoading } = usePagosProveedor(f?.id);
   const eliminar = useEliminarPagoProveedor(f?.id ?? "");
+  const cerrarSinPago = useCerrarFacturaProveedorSinPago();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const [aCerrarSinPago, setACerrarSinPago] = useState<FacturaCxP | null>(null);
   const { canEditFinance, isAdmin } = usePermissions();
   const puedeAprobar = canEditFinance || isAdmin;
   const flags = computeFacturaFlags(f, canEdit);
@@ -57,6 +59,13 @@ export function DialogDetallePagosProveedor({
     if (!pagoAEliminar) return;
     await eliminar.mutateAsync(pagoAEliminar);
     setPagoAEliminar(null);
+  };
+
+  const handleConfirmCerrarSinPago = async (params: Parameters<typeof cerrarSinPago.mutateAsync>[0] extends infer T
+    ? T extends { facturaId: string } ? Omit<T, "facturaId"> : never : never) => {
+    if (!aCerrarSinPago) return;
+    await cerrarSinPago.mutateAsync({ ...params, facturaId: aCerrarSinPago.id });
+    setACerrarSinPago(null);
   };
 
   return (
