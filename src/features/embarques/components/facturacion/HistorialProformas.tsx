@@ -62,7 +62,6 @@ function totalUnico(p: ProformaConFactura) {
 export function HistorialProformas({
   proformas, canEdit, isDeleting, onEliminar,
 }: Props) {
-  const navigate = useNavigate();
   const facturadasCount = proformas.filter(p => p.estado_proforma === "facturada").length;
 
   const columns: ColumnDef<ProformaConFactura, unknown>[] = defineColumns<ProformaConFactura>([
