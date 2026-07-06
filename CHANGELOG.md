@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.199.0] - 2026-07-06
+
+- **Limpieza Elogistix — backfill de proformas legadas**. De 331 proformas, 285 quedaron marcadas como `facturada/borrador` durante la migración del ERP anterior. Se separaron en 3 grupos y se normalizaron: (1) **131 con evidencia real** (con `factura_id` interno o `folio_factura_externa`) — se copió `estado_revision` a `estado_aprobacion`. (2) **154 fantasmas** (sin ninguna evidencia de factura) — se agregó columna `origen` a `public.proformas` y se marcaron con `origen='legacy_erp'`, además de normalizar su aprobación. (3) **5 quedan en borrador** con `estado_revision='pendiente'` (marcadas legacy pero sin normalizar porque no tiene sentido aprobar sin revisar). Respaldo completo en `public._backup_backfill_proformas_20260706` (285 filas). Nuevo índice parcial `idx_proformas_origen` para consultas de legado.
+
 ## [13.198.1] - 2026-07-06
 
 - **Fix crítico: DataTable con `emptyIcon` de Lucide reventaba el detalle de embarque** (Sentry `JAVASCRIPT-REACT-23`). `isLucideIcon` en `DataTableBody.tsx` sólo detectaba componentes función (`typeof === "function"`), pero desde `lucide-react` v0.462 los íconos son `React.forwardRef`, cuya forma runtime es un objeto `{ $$typeof, render, displayName }`. Al no reconocerlos, el ícono se pasaba como children y React lanzaba el invariant #31 ("Objects are not valid as a React child..."). Afectaba `HistorialFacturas` (tab Facturación del embarque) y a cualquier tabla que use `emptyIcon={AlgunIconoLucide}`. Fix: reconocer también objetos forwardRef en el discriminador.
