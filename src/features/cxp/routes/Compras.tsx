@@ -69,7 +69,7 @@ function QuickLink({
       </Card>
     </Link>
   );
-import { TopProveedoresCard, UltimasFacturasCard } from "./_sections/ComprasDashboardCards";
+}
 
 export default function Compras() {
   const { canEdit } = usePermissions();
