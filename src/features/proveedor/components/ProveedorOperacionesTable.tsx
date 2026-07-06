@@ -63,6 +63,7 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
     <DataTable
       columns={opCols}
       data={pageItems}
+      getRowHref={(o) => `/embarques/${o.embarqueId}`}
       rowKey={(o) => `${o.embarqueId}-${o.__idx}`}
       density="compact"
       pagination={{
