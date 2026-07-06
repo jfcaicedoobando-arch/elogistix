@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.194.2] - 2026-07-06
+
+- **Embarques — conceptos sólo desde el Catálogo de productos y servicios**. Los renglones de Costos y Ventas en el wizard de embarques ya no usan la lista hardcoded `CATALOGO_CONCEPTOS` (18 valores fijos). Ahora usan `ConceptoCatalogoSelect`, un combobox estricto que reutiliza `ProductoServicioSelect` sobre `catalogo_claves_sat`. Los conceptos legacy que no existan en el catálogo se muestran marcados con ⚠️ para forzar su actualización al reeditar. La constante queda deprecada (`@deprecated`) pero se conserva para no romper fixtures.
+
 ## [13.194.1] - 2026-07-06
 
 - **CI fix — lint y tests**. Se resolvieron los 3 fallos que rompían la pipeline:
