@@ -19,9 +19,26 @@ export interface QueueConfig {
   rateLimited: boolean
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
 async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promise<boolean> {
-  // Verifica la firma del JWT contra el proyecto y exige role=service_role.
-  // Reemplaza el decode manual base64 (vulnerable a tokens forjados).
+  // 1) Comparación directa contra el service_role key inyectado (constante). Cubre
+  //    tokens legacy (sin claim `sub`) enviados por pg_cron desde Vault, que hacen
+  //    fallar `auth.getClaims` con "missing sub claim" tras la migración de signing keys.
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (serviceRoleKey && timingSafeEqual(token, serviceRoleKey)) {
+    return true
+  }
+
+  // 2) Fallback: validar firma vía JWKS y exigir role=service_role. Aplica para
+  //    tokens emitidos con la clave nueva (contienen `sub`).
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
   if (!anonKey) {
     console.error('verifyServiceRoleToken: SUPABASE_ANON_KEY missing')
@@ -30,20 +47,8 @@ async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promi
   try {
     const anonClient = createClient(supabaseUrl, anonKey)
     const { data, error } = await anonClient.auth.getClaims(token)
-    if (error) {
-      console.error('verifyServiceRoleToken: getClaims error', { message: error.message, name: error.name })
-      return false
-    }
-    if (!data?.claims) {
-      console.error('verifyServiceRoleToken: no claims returned', { tokenLen: token.length })
-      return false
-    }
-    const role = (data.claims as { role?: string }).role
-    if (role !== 'service_role') {
-      console.error('verifyServiceRoleToken: role mismatch', { role })
-      return false
-    }
-    return true
+    if (error || !data?.claims) return false
+    return (data.claims as { role?: string }).role === 'service_role'
   } catch (e) {
     console.error('verifyServiceRoleToken: exception', e)
     return false
