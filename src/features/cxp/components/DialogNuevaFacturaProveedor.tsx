@@ -97,6 +97,10 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           seleccion={ctl.vinculos}
           onToggle={ctl.toggleVinculo}
           onChangeMonto={ctl.setVinculoMonto}
+          onAplicarSugerencias={ctl.aplicarSugerencias}
+          facturaDescripcion={ctl.values.notas || `Factura ${ctl.values.folio}`}
+          facturaMonto={Number(ctl.values.subtotal) || 0}
+          facturaMoneda={ctl.values.moneda}
           embarqueAdHoc={ctl.embarqueAdHoc}
           onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
         />
