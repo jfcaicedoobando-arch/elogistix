@@ -48,6 +48,7 @@ export const CxpPorPagar = lazy(() => import("@/features/bandejas/routes/CxpPorP
 export const ComprasPagos = lazy(() => import("@/features/compras/routes/ComprasPagos"));
 export const ComprasNotasCredito = lazy(() => import("@/features/compras/routes/ComprasNotasCredito"));
 export const ComprasReportes = lazy(() => import("@/features/compras/routes/ComprasReportes"));
+export const ComprasConciliacion = lazy(() => import("@/features/compras/routes/ComprasConciliacion"));
 export const ComprasPorAprobar = lazy(() => import("@/features/compras/routes/ComprasPorAprobar"));
 
 export const Cartera = lazy(() => import("@/features/bandejas/routes/Cartera"));
