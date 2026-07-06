@@ -161,7 +161,8 @@ export default function Cartera() {
             data={paged.rows}
             rowKey={(r) => r.factura_id}
             isLoading={paged.isLoading}
-            onRowClick={(r) => navigate(`/facturacion/${r.factura_id}`)}
+            getRowHref={(r) => `/facturacion/${r.factura_id}`}
+            getRowAriaLabel={(r) => `Ver factura ${r.numero ?? ""}`}
             sortMode="server"
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
