@@ -75,6 +75,27 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       meta: { width: "w-[95px] xl:w-[110px]", className: "text-xs whitespace-nowrap" },
     },
     {
+      ...dateColumn<FacturaCxP>({
+        id: "programado", header: "Prog. pago",
+        accessor: (f) => f.fecha_programada_pago,
+      }),
+      meta: {
+        width: "w-[100px]",
+        className: "text-xs whitespace-nowrap hidden xl:table-cell",
+        headerClassName: "hidden xl:table-cell",
+      },
+      cell: ({ row }) => {
+        const fecha = row.original.fecha_programada_pago;
+        const saldada = row.original.estatus === "Pagada" || row.original.estatus === "Sin saldo";
+        if (!fecha || saldada) return <span className="text-muted-foreground">—</span>;
+        return (
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-2xs px-1.5 py-0 h-5 font-normal tabular-nums">
+            {new Date(`${fecha}T00:00:00`).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}
+          </Badge>
+        );
+      },
+    },
+    {
       id: "dias", header: "Días",
       accessorFn: (f) => f.dias_vencido, enableSorting: true,
       sortingFn: sortByNumber<FacturaCxP>((f) => f.dias_vencido),

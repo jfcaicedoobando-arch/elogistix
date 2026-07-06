@@ -33,14 +33,24 @@ function KPICard({
 
 export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] }) {
   let porPagarMxn = 0, porPagarUsd = 0, vencidasN = 0, porVencer7d = 0;
+  let programadoMxn = 0, programadoUsd = 0, programadoN = 0;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const en7d = new Date(hoy); en7d.setDate(en7d.getDate() + 7);
   for (const f of data) {
     if (f.saldo <= 0) continue;
     if (f.moneda === "USD") porPagarUsd++; else porPagarMxn++;
     if (f.estatus === "Vencida") vencidasN++;
     if (f.estatus === "Por vencer") porVencer7d++;
+    if (f.fecha_programada_pago) {
+      const fp = new Date(`${f.fecha_programada_pago}T00:00:00`);
+      if (fp >= hoy && fp <= en7d) {
+        programadoN++;
+        if (f.moneda === "USD") programadoUsd += f.saldo; else programadoMxn += f.saldo;
+      }
+    }
   }
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 xl:grid-cols-5 gap-2">
       <KPICard label="Por pagar MXN" value={formatCurrency(kpis.por_pagar_mxn, "MXN")} count={porPagarMxn} />
       <KPICard label="Por pagar USD" value={formatCurrency(kpis.por_pagar_usd, "USD")} count={porPagarUsd} />
       <KPICard
@@ -54,6 +64,11 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         value={`${formatCurrency(kpis.por_vencer_7d_mxn, "MXN")} · ${formatCurrency(kpis.por_vencer_7d_usd, "USD")}`}
         count={porVencer7d}
         tone="warn"
+      />
+      <KPICard
+        label="Programado 7 días"
+        value={`${formatCurrency(programadoMxn, "MXN")} · ${formatCurrency(programadoUsd, "USD")}`}
+        count={programadoN}
       />
     </div>
   );
