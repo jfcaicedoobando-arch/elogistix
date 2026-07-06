@@ -129,6 +129,14 @@ export function DialogDetallePagosProveedor({
         isPending={eliminar.isPending}
         onConfirm={handleConfirmEliminar}
       />
+
+      <CerrarFacturaSinPagoDialog
+        factura={aCerrarSinPago}
+        open={!!aCerrarSinPago}
+        onOpenChange={(o) => { if (!o) setACerrarSinPago(null); }}
+        isPending={cerrarSinPago.isPending}
+        onConfirm={handleConfirmCerrarSinPago}
+      />
     </TooltipProvider>
   );
 }
