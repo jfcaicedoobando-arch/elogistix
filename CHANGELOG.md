@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.199.4] - 2026-07-06
+
+- **Fix CI — CxP nueva factura**. El test `useNuevaFacturaProveedorForm` fallaba porque el mock de `@/features/cxp/services` no exponía `validarCuadreCfdi` (usado desde la validación fiscal del CFDI); se agrega al mock. Además, `useNuevaFacturaProveedorForm.ts` (213 → 198 líneas) se compactó para respetar el límite Power-of-10 de ≤200 líneas sin cambiar lógica.
+
 ## [13.199.3] - 2026-07-06
 
 - **Cartera — drilldown a detalle de factura**. En `/cartera` ahora toda la fila (desktop) y la tarjeta completa (mobile) navegan a `/facturacion/:id`, no sólo el folio. Los enlaces internos (folio, expediente del embarque) siguen funcionando con `e.stopPropagation()` para no chocar con el click de fila.
