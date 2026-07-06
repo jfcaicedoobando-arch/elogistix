@@ -212,8 +212,15 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     accion: "facturapi_emitida",
     entidad: "factura",
     entidad_id: body.factura_id,
-    detalles: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId },
+    detalles: {
+      uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
+      xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
+    },
   });
 
-  return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl });
+  return json({
+    uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
+    pdf_url: pdfUrl, xml_url: xmlUrl,
+    xml_backup: respaldo,
+  });
 }));
