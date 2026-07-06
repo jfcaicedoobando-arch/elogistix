@@ -1,8 +1,7 @@
 /**
  * Columnas del aging de CxP: una fila por proveedor con saldo desglosado por
- * antigüedad. Click en proveedor abre `/cxp` filtrado.
+ * antigüedad. Row-click navega a `/cxp?proveedor=...` desde el consumer.
  */
-import { Link } from "react-router-dom";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -24,12 +23,7 @@ export function buildCxpAgingColumns(): ColumnDef<CxpAgingRow, unknown>[] {
       header: "Proveedor",
       accessorKey: "proveedor_nombre",
       cell: ({ row }) => (
-        <Link
-          to={`/cxp?proveedor=${row.original.proveedor_id}`}
-          className="font-medium text-primary hover:underline"
-        >
-          {row.original.proveedor_nombre}
-        </Link>
+        <span className="font-medium">{row.original.proveedor_nombre}</span>
       ),
       enableSorting: true,
     },
