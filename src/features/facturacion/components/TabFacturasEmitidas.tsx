@@ -55,7 +55,6 @@ interface Props {
 }
 
 export function TabFacturasEmitidas(p: Props) {
-  const navigate = useNavigate();
   const selection = useRowSelection();
   const pageIds = useMemo(() => p.data.map((f) => f.id), [p.data]);
   const columnsConSeleccion = useMemo(
