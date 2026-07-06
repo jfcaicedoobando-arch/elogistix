@@ -39,6 +39,14 @@ export function traducirErrorPagoProveedor(err: unknown): string {
     return "Ya existe un pago duplicado con esta referencia.";
   }
 
+  // Sobrepago (trigger check_no_sobrepago_proveedor).
+  if (
+    e.message &&
+    (/SOBREPAGO_PROVEEDOR/i.test(e.message) || /excede el saldo pendiente/i.test(e.message))
+  ) {
+    return "El pago excede el saldo pendiente de la factura. Revisa los pagos previos y las notas de crédito aplicadas.";
+  }
+
   // CHECK violation (incluye el trigger de aprobación)
   if (e.code === "23514" || e.code === "check_violation") {
     if (e.message && e.message.includes("aprobada")) {
