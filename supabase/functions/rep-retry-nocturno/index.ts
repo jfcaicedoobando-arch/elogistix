@@ -98,5 +98,5 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
   const { error: upErr } = await admin.from("alertas_sistema").insert(nuevas);
   if (upErr) return json({ error: "insert_failed", detail: upErr.message }, 500);
 
-  return json({ ok: true, revisados: rows.length, alertas: alertas.length });
+  return json({ ok: true, revisados: rows.length, alertas: nuevas.length });
 }));
