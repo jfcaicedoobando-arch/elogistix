@@ -20,7 +20,7 @@ import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";
-import { esBorradorVacio } from "./facturacion/esBorradorVacio";
+import { esBorradorVacio, esBorradorSinConceptos } from "./facturacion/esBorradorVacio";
 import { calcularEstadosConceptos } from "./facturacion/estadoConceptoBadge";
 import { FlujoFacturacionStepper } from "./facturacion/FlujoFacturacionStepper";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
@@ -82,8 +82,10 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   );
 
   const borradorVacio = useMemo(
-    () => proformas.find(esBorradorVacio) ?? null,
-    [proformas]
+    () =>
+      proformas.find((p) => esBorradorVacio(p) || esBorradorSinConceptos(p, conceptos)) ??
+      null,
+    [proformas, conceptos],
   );
 
   const handleDescargarProforma = async (proformaId: string) => {

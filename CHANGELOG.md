@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.3] - 2026-07-06
+
+- **Fix Embarques · Fuente única de verdad del badge "Proforma generada"**: el badge del header y el tab Facturación podían decir cosas distintas (ej. ELIMP00207 mostraba "PROFORMA GENERADA" mientras el tab reportaba conceptos sin facturar y un borrador PRO-2026-0283 vacío). Ahora `embarques.tiene_proforma` se recalcula automáticamente por trigger de BD considerando la proforma como "real" solo si está aprobada, tiene monto o tiene conceptos_venta vinculados; los borradores vacíos ya no encienden el badge. Se agrega también un trigger sobre `conceptos_venta` para actualizar el flag cuando se vincula/desvincula un concepto, y se hace backfill de todos los embarques con la nueva regla. En UI, `TabFacturacion` amplía la detección de borrador inconsistente para incluir borradores con total pero sin conceptos vinculados, de modo que `ProformaInconsistenteAlert` ofrezca asignar o eliminar el borrador.
+
 ## [13.205.2] - 2026-07-06
 
 - **Fix Embarques · Exportar CSV respeta filtro de alertas**: al exportar CSV desde el listado de embarques, el filtro de alertas del sidebar (por vencer, vencidos, en puerto, etc.) se ignoraba y el archivo incluía embarques que la vista ocultaba. Se replica el mismo recorte por `alertIdSet` que hace la tabla dentro de `useEmbarquesPageController.exportarCsv`, exponiendo `alertIdSet` desde `useEmbarquesPageState`. Ahora el CSV coincide con lo que el usuario ve en pantalla.
