@@ -81,6 +81,11 @@ const COLUMNS = [
   "facturapi_id",
   "dias_credito",
   "ambiente",
+  "acuse_cancelacion_xml",
+  "acuse_cancelacion_fecha",
+  "acuse_cancelacion_status",
+  "cancelacion_motivo",
+  "cancelado_en",
   "proformas:proformas!facturas_proforma_id_fkey(numero)",
 ].join(", ");
 
