@@ -30,9 +30,10 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
         {isLoading && <p className="text-xs text-muted-foreground">Cargando…</p>}
         {!isLoading && data.length === 0 && <Empty text="Este lead aún no tiene oportunidades." />}
         {data.map((o) => (
-          <Link
+          <DrilldownRow
             key={o.id}
-            to={`/crm/oportunidades/${o.id}`}
+            href={`/crm/oportunidades/${o.id}`}
+            ariaLabel={`Ver oportunidad ${o.nombre}`}
             className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50 transition-colors"
           >
             <div className="min-w-0">
@@ -42,8 +43,8 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
                 {Number(o.probabilidad ?? 0)}% · cierre {o.fecha_estimada_cierre ?? "—"}
               </div>
             </div>
-            <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
-          </Link>
+            <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          </DrilldownRow>
         ))}
       </CardContent>
     </Card>
