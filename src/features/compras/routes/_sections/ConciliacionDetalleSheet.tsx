@@ -30,9 +30,8 @@ import {
   EstadoConciliacionBadge,
   EstatusCount,
   ResumenTile,
-  classFromNumber,
-  toneFromNumber,
 } from "./ConciliacionDetalleParts";
+import { classFromNumber, toneFromNumber } from "./ConciliacionDetalleHelpers";
 import { FilaRenglon } from "./ConciliacionDetalleFilaRenglon";
 
 interface Props {
