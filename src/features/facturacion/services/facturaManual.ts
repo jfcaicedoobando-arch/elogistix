@@ -69,8 +69,11 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
   const ivaR = Math.round(iva * 100) / 100;
   const total = Math.round((subtotalR + ivaR) * 100) / 100;
 
-  // Número provisional. La serie/folio real se asignan al timbrar en Facturapi.
-  const numeroProvisional = `MAN-${Date.now().toString().slice(-8)}`;
+  // Número provisional. En UI se muestra como "Sin folio (borrador)"
+  // (ver `facturacionColumns.tsx` y `FacturaDetalleHeader.tsx`). El envío
+  // por email y la descarga están gateados por `!sinTimbrar`, así que el
+  // prefijo `BORRADOR-` nunca sale de la app antes del timbrado.
+  const numeroProvisional = `BORRADOR-${Date.now().toString().slice(-8)}`;
 
   const { data: factura, error: errFact } = await supabase
     .from("facturas")
