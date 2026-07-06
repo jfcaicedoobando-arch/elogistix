@@ -30,6 +30,7 @@ export type Joined = Pick<
   | "estado" | "tipo_cambio_usd" | "rfc_proveedor" | "uuid_fiscal" | "dias_credito" | "notas"
   | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
   | "archivo_xml_url" | "archivo_pdf_url"
+  | "uuid_verificado" | "uuid_verificado_fecha" | "uuid_estatus_sat"
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
