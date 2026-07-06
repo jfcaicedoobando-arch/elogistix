@@ -11,18 +11,10 @@ import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
 import { useBitacora } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
+import { MODULOS_BITACORA } from "@/lib/domain/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 
-const MODULOS = [
-  { valor: "todos", etiqueta: "Todos los módulos" },
-  { valor: "embarques", etiqueta: "Embarques" },
-  { valor: "clientes", etiqueta: "Clientes" },
-  { valor: "proveedores", etiqueta: "Proveedores" },
-  { valor: "cotizaciones", etiqueta: "Cotizaciones" },
-  { valor: "facturas", etiqueta: "Facturas" },
-  { valor: "usuarios", etiqueta: "Usuarios" },
-  { valor: "auth", etiqueta: "Autenticación" },
-];
+const MODULOS = MODULOS_BITACORA;
 
 const RANGOS = [
   { valor: "todo", etiqueta: "Todo el tiempo", dias: null as number | null },

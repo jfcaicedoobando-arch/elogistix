@@ -20,7 +20,13 @@ const MODULO_SINGULAR: Record<string, string> = {
   proveedores: "proveedor",
   cotizaciones: "cotización",
   facturas: "factura",
+  facturacion: "factura",
   usuarios: "usuario",
+  cxp: "factura de proveedor",
+  costeo: "tarifa",
+  crm: "oportunidad",
+  auditoria: "hallazgo",
+  configuracion: "ajuste",
 };
 
 function asString(v: unknown): string | undefined {
@@ -122,6 +128,50 @@ export function describirEntrada(entrada: EntradaBitacora): DescripcionBitacora 
   if (accion === "agregar_nota") return describirNota(detalles);
   if (accion === "factura") return describirFactura(detalles);
 
+  // Facturación (edge functions).
+  if (modulo === "facturacion") {
+    if (accion === "facturapi_emitida") {
+      const uuid = asString(detalles.uuid);
+      return { titulo: "Timbró factura", contexto: uuid ? `UUID ${uuid.slice(0, 8)}…` : undefined };
+    }
+    if (accion === "facturapi_cancelada" || accion === "facturapi_cancelar_failed") {
+      return { titulo: accion === "facturapi_cancelada" ? "Canceló factura" : "Falló cancelación de factura" };
+    }
+    if (accion === "facturapi_sustituida") return { titulo: "Sustituyó factura" };
+    if (accion === "facturapi_nc_emitida") return { titulo: "Emitió nota de crédito" };
+    if (accion === "facturapi_nc_cancelada") return { titulo: "Canceló nota de crédito" };
+    if (accion === "facturapi_rep_emitido") return { titulo: "Timbró complemento de pago" };
+    if (accion === "facturapi_rep_cancelado") return { titulo: "Canceló complemento de pago" };
+    if (accion === "cfdi_enviado") return { titulo: "Envió CFDI por email", contexto: asString(detalles.email) };
+    if (accion === "cfdi_envio_failed") return { titulo: "Falló envío de CFDI" };
+    if (accion === "facturapi_emitir_failed") return { titulo: "Falló timbrado de factura" };
+  }
+
+  // Cuentas por pagar.
+  if (modulo === "cxp") {
+    if (accion === "pagar") {
+      const monto = asNumber(detalles.monto);
+      const moneda = asString(detalles.moneda) ?? "MXN";
+      return {
+        titulo: "Registró pago a proveedor",
+        contexto: monto !== undefined ? formatCurrency(monto, moneda) : undefined,
+      };
+    }
+    if (accion === "cancelar") return { titulo: "Canceló factura de proveedor", contexto: asString(detalles.motivo) };
+    if (accion === "eliminar_pago") return { titulo: "Eliminó pago a proveedor" };
+    if (accion === "crear_nota_credito") return { titulo: "Registró nota de crédito de proveedor" };
+    if (accion === "aplicar_nota_credito") return { titulo: "Aplicó nota de crédito" };
+    if (accion === "cancelar_nota_credito") return { titulo: "Canceló nota de crédito" };
+  }
+
+  // Costeo.
+  if (modulo === "costeo") {
+    if (accion === "crear") return { titulo: "Creó tarifa", contexto: entrada.entidad_nombre || undefined };
+    if (accion === "editar") return { titulo: "Editó tarifa" };
+    if (accion === "eliminar") return { titulo: "Eliminó tarifa" };
+    if (accion === "reemplazar") return { titulo: "Marcó tarifa como reemplazada" };
+  }
+
   if (accion === "crear") {
     if (modulo === "embarques") return describirEmbarqueCreado(detalles);
     return describirCreacionGenerica(modulo);
@@ -150,4 +200,15 @@ export const GRUPOS_ACCION = [
   { valor: "documentos", etiqueta: "Documentos", acciones: ["subir_documento", "eliminar_documento"] },
   { valor: "notas", etiqueta: "Notas", acciones: ["agregar_nota"] },
   { valor: "facturas", etiqueta: "Facturas", acciones: ["factura"] },
+  { valor: "pagos", etiqueta: "Pagos", acciones: ["pagar", "eliminar_pago"] },
+  { valor: "timbrado", etiqueta: "Timbrado", acciones: [
+    "facturapi_emitida", "facturapi_cancelada", "facturapi_sustituida",
+    "facturapi_nc_emitida", "facturapi_nc_cancelada",
+    "facturapi_rep_emitido", "facturapi_rep_cancelado",
+    "cfdi_enviado",
+  ] },
+  { valor: "notas_credito", etiqueta: "Notas de crédito", acciones: [
+    "crear_nota_credito", "aplicar_nota_credito", "cancelar_nota_credito",
+    "facturapi_nc_emitida", "facturapi_nc_cancelada",
+  ] },
 ] as const;

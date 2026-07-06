@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.194.0] - 2026-07-06
+
+- **Bitácora — cobertura extendida a módulos nuevos**. Nuevo helper `registrarActividad` (`src/lib/domain/bitacora/registrar.ts`) con `MODULOS_BITACORA` como única fuente de módulos válidos (kebab lowercase). El dropdown de `/bitacora` ahora incluye CxP, Facturación, Costeo, CRM y Auditoría (antes faltaban).
+- **CxP (Cuentas por pagar)**. `crearFacturaProveedor`, `actualizarFacturaProveedor`, `softDeleteFacturaProveedor`, `cancelarFacturaProveedor`, `registrarPagoProveedor`, `eliminarPagoProveedor`, `crearNotaCreditoProveedor`, `aplicarNotaCredito` y `cancelarNotaCredito` ahora registran cada operación en bitácora (`modulo: "cxp"`, acciones `crear` / `editar` / `eliminar` / `cancelar` / `pagar` / `eliminar_pago` / `crear_nota_credito` / `aplicar_nota_credito` / `cancelar_nota_credito`).
+- **Costeo**. `useCosteoTarifaMutations` registra cada `crear`, `editar`, `eliminar` y `reemplazar` de tarifas marítimas.
+- **Facturación (fix crítico)**. Los edge functions `facturapi-emitir`, `facturapi-cancelar`, `facturapi-emitir-nota-credito`, `facturapi-cancelar-nota-credito`, `facturapi-emitir-rep`, `facturapi-cancelar-rep`, `facturapi-enviar-email` y `facturapi-webhook` insertaban bitácora con columnas inexistentes (`user_id`, `entidad`) → los inserts fallaban silenciosamente y en el histórico sólo existían 5 registros de timbrado. Ahora usan el helper compartido `_shared/bitacora.ts` con el shape correcto (`usuario_id`, `usuario_email`, `modulo: "facturacion"`, `entidad_id`, `entidad_nombre`).
+- **Normalización**. `paso1Crm.ts`, `prospecto.ts` y `bitacoraTarifa.ts` ya usan `modulo: "cotizaciones"` (minúscula) igual que el resto. `agenteHandlers.ts` ahora usa `"usuarios"` en vez de `"Costeo Agentes"`.
+- **Descripciones legibles**. `describirEntrada` reconoce las acciones nuevas de facturación (timbrado/cancelación/NC/REP/envío CFDI), CxP (pagar/cancelar/NC) y costeo (crear/editar/eliminar/reemplazar). Nuevos grupos de filtro: Pagos, Timbrado, Notas de crédito.
+- **Tests**. `registrar.test.ts` verifica el shape del insert y el manejo silencioso de errores. Los grupos de `GRUPOS_ACCION` ya no están hardcoded a 8.
+
 ## [13.193.0] - 2026-07-06
 
 - **Facturación — Ola 3 · Item 1 · Retenciones ISR/IVA por concepto**. Nuevas columnas `conceptos_factura.tasa_ret_isr/tasa_ret_iva/monto_ret_isr/monto_ret_iva` con trigger `calc_concepto_retenciones` que calcula los montos por renglón sobre `cantidad × precio_unitario`. Nuevas columnas rollup `facturas.ret_isr/ret_iva` con trigger `trg_conceptos_factura_rollup` que reagrega automáticamente y ajusta `total = subtotal + iva − ret_isr − ret_iva`. Nuevas columnas espejo `pagos_factura.ret_isr/ret_iva` con trigger `calc_pago_retenciones` que reparte proporcionalmente las retenciones de la factura según `monto_aplicado_factura / (subtotal + iva)` cuando no se envían explícitas — el REP las refleja sin captura extra.

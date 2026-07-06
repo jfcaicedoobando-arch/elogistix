@@ -21,6 +21,7 @@ import {
   type FacturaContext,
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
+import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -157,12 +158,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     invoice = await facturapi.invoices.create(payload) as FapiInvoice;
   } catch (err) {
     const { status, detail } = describeFacturapiError(err);
-    await supabase.from("bitacora_actividad").insert({
-      organization_id: factura.organization_id,
-      user_id: userData.user.id,
+    await registrarBitacoraEdge(supabase, {
+      organizationId: factura.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
       accion: "facturapi_emitir_failed",
-      entidad: "factura",
-      entidad_id: body.factura_id,
+      entidadId: body.factura_id,
+      entidadNombre: factura.numero ?? "",
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
@@ -208,12 +211,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .eq("id", body.factura_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: factura.organization_id,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: factura.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: "facturapi_emitida",
-    entidad: "factura",
-    entidad_id: body.factura_id,
+    entidadId: body.factura_id,
+    entidadNombre: numeroFinal,
     detalles: {
       uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
       xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },

@@ -10,6 +10,7 @@
  * - Revalida duplicado (proveedor + folio + emisión) excluyendo el propio id.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { registrarActividad } from "@/lib/domain/bitacora/registrar";
 import {
   existeFacturaDuplicada,
   type ProveedorFacturaRow,
@@ -159,5 +160,16 @@ export async function actualizarFacturaProveedor(
     .select()
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "editar",
+    entidadId: id,
+    entidadNombre: data.folio_interno ?? data.folio_proveedor ?? "",
+    detalles: {
+      total: data.total,
+      moneda: data.moneda,
+      forzo_reaprobacion: forzarReaprobacion,
+    },
+  });
   return data;
 }

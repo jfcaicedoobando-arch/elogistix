@@ -39,7 +39,7 @@ describe("logTarifaSugeridaAplicada", () => {
       usuarioId: "u1",
       usuarioEmail: "a@b.com",
       accion: "tarifa_sugerida_aplicada",
-      modulo: "Cotizaciones",
+      modulo: "cotizaciones",
       entidadId: "c1", // cotización tiene prioridad sobre tarifaId
       entidadNombre: "Top 2",
     });

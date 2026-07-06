@@ -11,6 +11,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -164,13 +165,14 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
 
   if (!fapiRes.ok) {
     const detail = await fapiRes.text().catch(() => "");
-    await supabase.from("bitacora_actividad").insert({
-      organization_id: target.data.organizationId,
-      user_id: userData.user.id,
+    await registrarBitacoraEdge(supabase, {
+      organizationId: target.data.organizationId,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
       accion: "cfdi_envio_failed",
-      entidad: target.data.tipo,
-      entidad_id: target.data.entidadId,
-      detalles: { email, status: fapiRes.status, detail },
+      entidadId: target.data.entidadId,
+      detalles: { email, tipo: target.data.tipo, status: fapiRes.status, detail },
     });
     const message = fapiRes.status === 404
       ? "CFDI no encontrado en FacturApi (puede estar cancelado)."
@@ -178,13 +180,14 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     return json({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
   }
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: target.data.organizationId,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: target.data.organizationId,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: "cfdi_enviado",
-    entidad: target.data.tipo,
-    entidad_id: target.data.entidadId,
-    detalles: { email },
+    entidadId: target.data.entidadId,
+    detalles: { email, tipo: target.data.tipo },
   });
 
   return json({ ok: true, enviado_a: email });

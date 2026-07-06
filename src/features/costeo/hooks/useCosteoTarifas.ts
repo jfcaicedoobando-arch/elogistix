@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { registrarActividad } from "@/lib/domain/bitacora/registrar";
 import {
   fetchCosteoTarifas,
   insertTarifaConRecargos,
@@ -32,9 +33,17 @@ export function useCosteoTarifaMutations() {
 
   const crear = useMutation({
     mutationFn: (input: TarifaInput) => insertTarifaConRecargos(organizationId!, input),
-    onSuccess: () => {
+    onSuccess: (row) => {
       invalidate();
       toast({ title: "Tarifa guardada" });
+      const rowLike = row as unknown as { id?: string; naviera_nombre?: string; origen_nombre?: string; destino_nombre?: string };
+      registrarActividad({
+        modulo: "costeo",
+        accion: "crear",
+        entidadId: rowLike?.id ?? null,
+        entidadNombre: [rowLike?.origen_nombre, rowLike?.destino_nombre].filter(Boolean).join(" → "),
+        detalles: { naviera: rowLike?.naviera_nombre },
+      });
     },
     onError: (e: Error) =>
       notifyError(toast, { title: "Error al guardar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_1" }),
@@ -79,9 +88,10 @@ export function useCosteoTarifaMutations() {
   const actualizar = useMutation({
     mutationFn: ({ id, input }: { id: string; input: TarifaInput }) =>
       updateTarifaConRecargos(id, input),
-    onSuccess: () => {
+    onSuccess: (_data, vars) => {
       invalidate();
       toast({ title: "Tarifa actualizada" });
+      registrarActividad({ modulo: "costeo", accion: "editar", entidadId: vars.id });
     },
     onError: (e: Error) =>
       notifyError(toast, { title: "Error al actualizar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_2" }),
@@ -89,9 +99,10 @@ export function useCosteoTarifaMutations() {
 
   const reemplazar = useMutation({
     mutationFn: (id: string) => marcarTarifaReemplazada(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       invalidate();
       toast({ title: "Tarifa marcada como reemplazada" });
+      registrarActividad({ modulo: "costeo", accion: "reemplazar", entidadId: id });
     },
     onError: (e: Error) =>
       notifyError(toast, { title: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_3" }),
@@ -99,9 +110,10 @@ export function useCosteoTarifaMutations() {
 
   const eliminar = useMutation({
     mutationFn: (id: string) => deleteTarifa(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       invalidate();
       toast({ title: "Tarifa eliminada" });
+      registrarActividad({ modulo: "costeo", accion: "eliminar", entidadId: id });
     },
     onError: (e: Error) =>
       notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_4" }),

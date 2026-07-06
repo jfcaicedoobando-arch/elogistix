@@ -125,8 +125,10 @@ describe("bitacoraDescripcion.extra", () => {
     expect(r.titulo).toBe("Sync datos");
   });
 
-  it("GRUPOS_ACCION: tiene exactamente 8 grupos definidos", () => {
-    expect(GRUPOS_ACCION).toHaveLength(8);
+  it("GRUPOS_ACCION: incluye los grupos base + nuevos (pagos/timbrado/NC)", () => {
+    expect(GRUPOS_ACCION.length).toBeGreaterThanOrEqual(11);
+    const valores = GRUPOS_ACCION.map((g) => g.valor);
+    expect(valores).toEqual(expect.arrayContaining(["pagos", "timbrado", "notas_credito"]));
   });
 
   it("GRUPOS_ACCION: el grupo 'documentos' contiene subir y eliminar", () => {

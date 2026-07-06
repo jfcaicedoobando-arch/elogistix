@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/lib/domain/bitacora/registrar";
 import { decidirEstadoFactura, type EstadoFacturaProveedor } from "./estadoFacturaProveedor";
 
 export type PagoProveedor = Tables<"pagos_proveedor">;
@@ -103,6 +104,18 @@ export async function registrarPagoProveedor(
 
   // Recalcular estado de la factura origen
   await recalcularEstadoFactura(input.proveedor_factura_id);
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "pagar",
+    entidadId: input.proveedor_factura_id,
+    detalles: {
+      pago_id: data.id,
+      monto: input.monto,
+      moneda: input.moneda,
+      metodo_pago: input.metodo_pago,
+      referencia: input.referencia ?? null,
+    },
+  });
   return data as PagoProveedor;
 }
 
@@ -114,6 +127,12 @@ export async function eliminarPagoProveedor(id: string, facturaId: string, userI
     .eq("id", id);
   if (error) throw error;
   await recalcularEstadoFactura(facturaId);
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "eliminar_pago",
+    entidadId: facturaId,
+    detalles: { pago_id: id, deleted_by: userId },
+  });
 }
 
 /**

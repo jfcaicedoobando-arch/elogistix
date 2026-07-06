@@ -16,6 +16,7 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
+import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -81,12 +82,13 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     ) as FapiCancelResponse;
   } catch (err) {
     const { status, detail } = describeFacturapiError(err);
-    await supabase.from("bitacora_actividad").insert({
-      organization_id: factura.organization_id,
-      user_id: userData.user.id,
+    await registrarBitacoraEdge(supabase, {
+      organizationId: factura.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
       accion: "facturapi_cancelar_failed",
-      entidad: "factura",
-      entidad_id: factura_id,
+      entidadId: factura_id,
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
@@ -118,12 +120,13 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .eq("id", factura_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: factura.organization_id,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: factura.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: esSustitucion ? "facturapi_sustituida" : "facturapi_cancelada",
-    entidad: "factura",
-    entidad_id: factura_id,
+    entidadId: factura_id,
     detalles: {
       motivo,
       sustituye_uuid: sustituye_uuid ?? null,

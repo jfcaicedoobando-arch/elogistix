@@ -46,7 +46,7 @@ export async function registrarBloqueoSinTarifa(payload: BloqueoSinTarifaPayload
       usuario_id: user.id,
       usuario_email: user.email ?? "",
       accion: "cotizacion_bloqueada_sin_tarifa",
-      modulo: "Cotizaciones",
+      modulo: "cotizaciones",
       entidad_id: null,
       entidad_nombre: payload.entidadNombre,
       detalles: toDbJson({
