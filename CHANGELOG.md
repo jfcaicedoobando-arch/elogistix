@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.194.1] - 2026-07-06
+
+- **CI fix — lint y tests**. Se resolvieron los 3 fallos que rompían la pipeline:
+  - `InfoFacturaSection.parts.tsx`: `pickSatVariant` deja de exportarse (solo se usa internamente) para cumplir `react-refresh/only-export-components`.
+  - `facturapi-emitir-nota-credito/index.ts`: se extrajo la lógica post-timbrado a `persistTimbradoNc` para bajar la complejidad ciclomática de 17 → dentro del límite (16).
+  - `useTableFilters.test.tsx`: cambió `NuqsAdapter` (adapter de React puro que lee `window.location`) por `withNuqsTestingAdapter`, eliminando el `ReferenceError: location is not defined` en el shard 4/20 tras el teardown de jsdom.
+
 ## [13.194.0] - 2026-07-06
 
 - **Bitácora — cobertura extendida a módulos nuevos**. Nuevo helper `registrarActividad` (`src/lib/domain/bitacora/registrar.ts`) con `MODULOS_BITACORA` como única fuente de módulos válidos (kebab lowercase). El dropdown de `/bitacora` ahora incluye CxP, Facturación, Costeo, CRM y Auditoría (antes faltaban).
