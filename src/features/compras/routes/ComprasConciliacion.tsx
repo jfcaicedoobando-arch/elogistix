@@ -24,16 +24,17 @@ import {
   type EstadoConciliacion,
 } from "@/features/compras/services/conciliacionEmbarques";
 import { buildConciliacionColumns } from "./_sections/conciliacionColumns";
+import { ConciliacionDetalleSheet } from "./_sections/ConciliacionDetalleSheet";
+import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 
 type EstadoFiltro = EstadoConciliacion | "todos";
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
 export default function ComprasConciliacion() {
-  const navigate = useNavigate();
-  
   const [estado, setEstado] = useState<EstadoFiltro>("todos");
   const [moneda, setMoneda] = useState<MonedaFiltro>("todas");
   const [search, setSearch] = useState("");
+  const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["compras", "conciliacion-embarques", { estado, moneda, search }],
