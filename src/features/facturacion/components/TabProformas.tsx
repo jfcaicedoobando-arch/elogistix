@@ -14,7 +14,6 @@ import { useMemo } from "react";
 
 
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
-  const navigate = useNavigate();
   const c = useTabProformasController({ isInRange });
   const { canEmitirFactura } = usePermissions();
   const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
