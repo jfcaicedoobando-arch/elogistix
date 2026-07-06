@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.6] - 2026-07-06
+
+- **Fix Facturación · Cancelación con sustitución (motivo 01)**: la edge function `facturapi-cancelar` enviaba el UUID SAT de la factura sustituta en el parámetro `substitution` del SDK de FacturApi, provocando `400 "substitution" does not match any of the allowed types`. FacturApi espera el `facturapi_id` (ObjectId Mongo) de la factura sustituta, no el UUID SAT. Ahora se resuelven ambos: se sigue guardando el UUID SAT en bitácora, pero al SDK se le pasa el `facturapi_id`.
+
 ## [13.205.5] - 2026-07-06
 
 - **Fix Facturación · TC de Publicación DOF real (SF43718 con fecha de ayer hábil)**: la versión previa (13.205.4) cambió a la serie `SF60653`, pero esa serie es "Para Pagos" (SAT), no la Publicación DOF que exige el CFDI. Además, seguir usando `datos/oportuno` a partir de las ~12:00 hrs devolvía el FIX de hoy (que es DOF de mañana). Ahora `exchange-rates` consulta las series `SF43718` (USD) y `SF46410` (EUR) en un rango de 10 días naturales y, con la nueva función `extraerPublicacionDof(data, hoyIso)`, selecciona explícitamente la última fila cuya fecha sea **anterior a hoy** — que es la Publicación DOF vigente hoy (Art. 20 CFF). Se agregan 10 tests Deno cubriendo: FIX de hoy publicado, sin FIX de hoy, "N/E" al final, rango vacío, todas las filas >= hoy, fechas mal formateadas, redondeo a 4 decimales y helpers `formatFechaBanxico`/`rangoUltimosDias`. Al desplegar, la caché in-memory se vacía y las siguientes invocaciones traen el DOF correcto.
