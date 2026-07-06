@@ -43,16 +43,20 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
   const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & { sustituida_por_factura_id?: string };
-  // Si viene `sustituida_por_factura_id`, resolver su UUID y forzar motivo 01.
+  // Si viene `sustituida_por_factura_id`, resolver su UUID SAT y su facturapi_id.
+  // FacturApi espera el `facturapi_id` (ObjectId) en el parámetro `substitution`,
+  // NO el UUID SAT. El UUID SAT sólo lo usamos para bitácora/auditoría.
   let sustituyeUuidResuelto: string | undefined = rawBody.sustituye_uuid;
+  let sustituyeFacturapiId: string | undefined;
   const sustituidaPorFacturaId: string | null = rawBody.sustituida_por_factura_id ?? null;
   if (sustituidaPorFacturaId) {
     const { data: nueva } = await supabase
-      .from("facturas").select("id, uuid_fiscal").eq("id", sustituidaPorFacturaId).maybeSingle();
-    if (!nueva?.uuid_fiscal) {
+      .from("facturas").select("id, uuid_fiscal, facturapi_id").eq("id", sustituidaPorFacturaId).maybeSingle();
+    if (!nueva?.uuid_fiscal || !nueva.facturapi_id) {
       return json({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
     }
     sustituyeUuidResuelto = nueva.uuid_fiscal as string;
+    sustituyeFacturapiId = nueva.facturapi_id as string;
   }
 
   const validated = validateCancelacionInput({ ...rawBody, sustituye_uuid: sustituyeUuidResuelto });
@@ -76,9 +80,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   interface FapiCancelResponse { status?: string }
   let cancelResp: FapiCancelResponse;
   try {
+    // `substitution` requiere el facturapi_id (ObjectId) de la factura sustituta.
+    const cancelPayload: { motive: string; substitution?: string } = { motive: motivo };
+    if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
     cancelResp = await facturapi.invoices.cancel(
       factura.facturapi_id,
-      { motive: motivo, substitution: sustituye_uuid },
+      cancelPayload,
     ) as FapiCancelResponse;
   } catch (err) {
     const { status, detail } = describeFacturapiError(err);
