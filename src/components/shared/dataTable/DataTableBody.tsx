@@ -34,9 +34,19 @@ interface Props<T> {
   onRowMouseEnter?: (item: T) => void;
 }
 
-/** Discrimina entre un LucideIcon (función componente) y un ReactNode ya renderizado. */
+/**
+ * Discrimina entre un LucideIcon y un ReactNode ya renderizado.
+ * Los íconos de `lucide-react` v0.462+ son `React.forwardRef`, cuya forma
+ * runtime es un objeto `{ $$typeof, render, displayName }` (NO una función).
+ * Si sólo chequeamos `typeof === "function"`, el icono cae al branch que lo
+ * renderiza como children y React lanza el invariant #31
+ * ("Objects are not valid as a React child..."). Ver Sentry JAVASCRIPT-REACT-23.
+ */
 function isLucideIcon(x: unknown): x is LucideIcon {
-  return typeof x === "function";
+  if (typeof x === "function") return true;
+  if (typeof x !== "object" || x === null) return false;
+  const obj = x as { $$typeof?: unknown; render?: unknown };
+  return typeof obj.render === "function" && obj.$$typeof !== undefined;
 }
 
 export function DataTableBody<T>({

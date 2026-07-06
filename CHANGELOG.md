@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.198.1] - 2026-07-06
+
+- **Fix crítico: DataTable con `emptyIcon` de Lucide reventaba el detalle de embarque** (Sentry `JAVASCRIPT-REACT-23`). `isLucideIcon` en `DataTableBody.tsx` sólo detectaba componentes función (`typeof === "function"`), pero desde `lucide-react` v0.462 los íconos son `React.forwardRef`, cuya forma runtime es un objeto `{ $$typeof, render, displayName }`. Al no reconocerlos, el ícono se pasaba como children y React lanzaba el invariant #31 ("Objects are not valid as a React child..."). Afectaba `HistorialFacturas` (tab Facturación del embarque) y a cualquier tabla que use `emptyIcon={AlgunIconoLucide}`. Fix: reconocer también objetos forwardRef en el discriminador.
+- **Filtro Sentry para el pixel de analítica del hosting** (Sentry `JAVASCRIPT-REACT-22`). `flock.js` (script inyectado por el hosting en `librecarga.com`) genera errores 5xx del endpoint `/~api/analytics` que no son código nuestro ni rompen la UI. Añadido `isHostingAnalyticsNoise` en `dropPredicate.ts` para descartarlos en `beforeSend`.
+
 ## [13.198.0] - 2026-07-06
 
 - **Validaciones extra de retenciones en el cuadre del CFDI** (`validarCuadreCfdi.ts`): además de las 4 reglas previas, ahora bloqueamos el registro cuando (5) las retenciones son negativas, (6) las retenciones superan el 50% del subtotal — techo defensivo, ya que en fletes el máximo esperado es ≈20% (16% IVA + 4% ISR) — y (7) el CFDI declara retenciones pero el total no las descuenta (subtotal + IVA + IEPS < total). Esto atrapa XMLs con retenciones capturadas al vuelo o con signos invertidos antes de que contaminen DIOT y el costeo.
