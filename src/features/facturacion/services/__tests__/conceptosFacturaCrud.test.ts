@@ -92,7 +92,7 @@ describe("conceptosFacturaCrud", () => {
     mock.setTableResult("facturas", { data: null, error: null });
     await actualizarConceptoFactura({
       conceptoId: "c1", facturaId: "f1",
-      input: { descripcion: "Nuevo", cantidad: 1, precio_unitario: 10 },
+      input: { descripcion: "Nuevo", cantidad: 1, precio_unitario: 10, clave_sat: "78101800" },
     });
     const update = mock.tableCalls.find((c) => c.table === "conceptos_factura" && c.ops.includes("update"))!;
     expect(update.opArgs[update.ops.indexOf("eq")]).toEqual(["id", "c1"]);
