@@ -75,4 +75,40 @@ describe("validarCuadreCfdi", () => {
     );
     expect(r.ok).toBe(true);
   });
+
+  it("rechaza retenciones negativas", () => {
+    const r = validarCuadreCfdi(
+      makeCfdi({
+        subtotal: 10000, iva_trasladado: 1600, ieps_trasladado: 0, retenciones: -50,
+        total: 11650,
+        conceptos: [{ descripcion: "F", importe: 10000, iva: 1600, ieps: 0 }],
+      }),
+    );
+    expect(r.ok).toBe(false);
+    expect(r.errores.join(" ")).toMatch(/negativas/i);
+  });
+
+  it("rechaza retenciones que exceden el 50% del subtotal", () => {
+    const r = validarCuadreCfdi(
+      makeCfdi({
+        subtotal: 10000, iva_trasladado: 1600, ieps_trasladado: 0, retenciones: 6000,
+        total: 5600,
+        conceptos: [{ descripcion: "F", importe: 10000, iva: 1600, ieps: 0 }],
+      }),
+    );
+    expect(r.ok).toBe(false);
+    expect(r.errores.join(" ")).toMatch(/50%/);
+  });
+
+  it("rechaza CFDI que declara retenciones pero no las descuenta del total", () => {
+    const r = validarCuadreCfdi(
+      makeCfdi({
+        subtotal: 10000, iva_trasladado: 1600, ieps_trasladado: 0, retenciones: 400,
+        total: 11600, // no descuenta las retenciones
+        conceptos: [{ descripcion: "F", importe: 10000, iva: 1600, ieps: 0 }],
+      }),
+    );
+    expect(r.ok).toBe(false);
+    expect(r.errores.join(" ")).toMatch(/no las descuenta|total/i);
+  });
 });
