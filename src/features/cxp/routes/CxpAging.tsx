@@ -155,8 +155,8 @@ export default function CxpAging() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
-            getRowHref={(r) => `/cxp?proveedor=${r.proveedor_id}`}
-            getRowAriaLabel={(r) => `Ver facturas de ${r.proveedor_nombre}`}
+            onRowClick={(r) => setDrilldown({ prov: r, cubeta: "todas" })}
+            getRowAriaLabel={(r) => `Ver facturas con saldo de ${r.proveedor_nombre}`}
             emptyMessage="Sin saldos pendientes"
             emptyHint="No hay facturas de proveedor con saldo abierto."
             striped
@@ -165,6 +165,13 @@ export default function CxpAging() {
           />
         </CardContent>
       </Card>
+
+      <AgingDrillDownDialog
+        open={!!drilldown}
+        onOpenChange={(o) => !o && setDrilldown(null)}
+        proveedor={drilldown?.prov ?? null}
+        cubetaInicial={drilldown?.cubeta ?? "todas"}
+      />
     </PageContainer>
   );
 }
