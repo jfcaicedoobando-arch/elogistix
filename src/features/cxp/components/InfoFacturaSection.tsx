@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { openFacturaInNewTab } from "@/services/storage/facturas";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
+import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
@@ -172,6 +173,12 @@ export function InfoFacturaSection({ factura: f }: Props) {
           />
         </div>
       </div>
+      <ProgramacionPagoRow
+        facturaId={f.id}
+        fechaProgramada={f.fecha_programada_pago}
+        saldo={f.saldo}
+      />
+
 
       {f.notas && (
         <div className="mt-3 pt-3 border-t">

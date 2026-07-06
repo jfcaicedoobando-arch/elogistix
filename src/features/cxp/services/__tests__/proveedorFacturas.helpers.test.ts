@@ -56,6 +56,7 @@ const baseJoined = (over: Partial<Joined> = {}): Joined => ({
   uuid_verificado: false,
   uuid_verificado_fecha: null,
   uuid_estatus_sat: null,
+  fecha_programada_pago: null,
   pagos_proveedor: null,
   proveedor_notas_credito: null,
   proveedores: { origen_proveedor: "Nacional" },

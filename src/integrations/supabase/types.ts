@@ -5154,6 +5154,7 @@ export type Database = {
           estado_aprobacion: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura: string
           fecha_emision: string
+          fecha_programada_pago: string | null
           fecha_vencimiento: string | null
           folio_interno: string
           folio_proveedor: string
@@ -5192,6 +5193,7 @@ export type Database = {
           estado_aprobacion?: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura?: string
           fecha_emision?: string
+          fecha_programada_pago?: string | null
           fecha_vencimiento?: string | null
           folio_interno: string
           folio_proveedor: string
@@ -5230,6 +5232,7 @@ export type Database = {
           estado_aprobacion?: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura?: string
           fecha_emision?: string
+          fecha_programada_pago?: string | null
           fecha_vencimiento?: string | null
           folio_interno?: string
           folio_proveedor?: string
@@ -6219,6 +6222,7 @@ export type Database = {
           estado_aprobacion: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura: string
           fecha_emision: string
+          fecha_programada_pago: string | null
           fecha_vencimiento: string | null
           folio_interno: string
           folio_proveedor: string
