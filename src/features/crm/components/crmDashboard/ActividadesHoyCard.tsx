@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
 import { Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 
 interface Actividad {
   id: string;
@@ -38,13 +38,19 @@ export function ActividadesHoyCard({ items }: { items: Actividad[] }) {
         ) : (
           <ul className="space-y-1.5">
             {items.map((a) => (
-              <li key={a.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
-                <Link to={entidadHref(a.entidad_tipo, a.entidad_id)} className="flex items-center gap-2 hover:underline">
+              <DrilldownRow
+                key={a.id}
+                as="li"
+                href={entidadHref(a.entidad_tipo, a.entidad_id)}
+                ariaLabel={`Abrir ${a.entidad_tipo} vinculado a ${a.asunto}`}
+                className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+              >
+                <div className="flex items-center gap-2 min-w-0">
                   <Badge variant="outline" className="text-2xs">{a.tipo}</Badge>
                   <span className="font-medium truncate max-w-[420px]">{a.asunto}</span>
-                </Link>
+                </div>
                 <span className="text-xs text-muted-foreground">{formatHora(a.fecha_programada)}</span>
-              </li>
+              </DrilldownRow>
             ))}
           </ul>
         )}

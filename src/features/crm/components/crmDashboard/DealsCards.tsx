@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
 import { Target, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 
 interface DealItem {
   id: string;
@@ -38,16 +38,22 @@ export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
         {items.length === 0 ? <ListEmpty msg="Sin oportunidades por cerrar" /> : (
           <ul className="space-y-1.5">
             {items.map((o) => (
-              <li key={o.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
-                <Link to={`/crm/oportunidades/${o.id}`} className="flex flex-col hover:underline truncate">
+              <DrilldownRow
+                key={o.id}
+                as="li"
+                href={`/crm/oportunidades/${o.id}`}
+                ariaLabel={`Ver oportunidad ${o.nombre}`}
+                className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+              >
+                <div className="flex flex-col truncate">
                   <span className="font-medium truncate max-w-[260px]">{o.nombre}</span>
                   <span className="text-xs text-muted-foreground">{o.cliente_nombre || "Sin cliente"}</span>
-                </Link>
+                </div>
                 <div className="text-right">
                   <div className="text-xs tabular-nums font-semibold">{formatCurrencyCompact(o.monto_estimado, o.moneda)}</div>
                   <div className="text-2xs text-muted-foreground">{o.fecha_estimada_cierre} · {o.probabilidad}%</div>
                 </div>
-              </li>
+              </DrilldownRow>
             ))}
           </ul>
         )}
@@ -68,15 +74,21 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
         {items.length === 0 ? <ListEmpty msg="Todos los leads nuevos están atendidos" /> : (
           <ul className="space-y-1.5">
             {items.map((l) => (
-              <li key={l.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
-                <Link to={`/crm/leads/${l.id}`} className="flex flex-col hover:underline truncate">
+              <DrilldownRow
+                key={l.id}
+                as="li"
+                href={`/crm/leads/${l.id}`}
+                ariaLabel={`Ver lead ${l.empresa}`}
+                className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+              >
+                <div className="flex flex-col truncate">
                   <span className="font-medium truncate max-w-[260px]">{l.empresa}</span>
                   <span className="text-xs text-muted-foreground">{l.contacto || "Sin contacto"} · {l.fuente}</span>
-                </Link>
+                </div>
                 <span className="text-xs text-muted-foreground">
                   {new Date(l.created_at).toLocaleDateString("es-MX")}
                 </span>
-              </li>
+              </DrilldownRow>
             ))}
           </ul>
         )}

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Wallet, TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { ResumenTesoreria } from "@/features/tesoreria/domain";
 
 interface CxpItem {
@@ -76,15 +77,16 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
               Nada por pagar 🎉
             </p>
           ) : (
-            <ul className="divide-y rounded-md border">
-              {cxpPorPagar.map((f) => {
-                const to = f.embarque_id ? `/embarques/${f.embarque_id}` : "/compras/facturas";
-                return (
-                  <li key={f.id}>
-                    <Link
-                      to={to}
-                      className="px-3 py-2 text-sm flex items-center gap-3 hover:bg-muted/50 focus:bg-muted/50 focus:outline-none transition-colors"
-                      aria-label={`Abrir ${f.embarque_id ? "embarque" : "CxP"} ${f.folio_proveedor}`}
+              <ul className="divide-y rounded-md border">
+                {cxpPorPagar.map((f) => {
+                  const to = f.embarque_id ? `/embarques/${f.embarque_id}` : "/compras/facturas";
+                  return (
+                    <DrilldownRow
+                      key={f.id}
+                      as="li"
+                      href={to}
+                      ariaLabel={`Abrir ${f.embarque_id ? "embarque" : "CxP"} ${f.folio_proveedor}`}
+                      className="px-3 py-2 text-sm flex items-center gap-3 hover:bg-muted/50 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="font-medium truncate">{f.folio_proveedor || "—"}</p>
@@ -103,12 +105,11 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
                             })
                           : "—"}
                       </span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                    </DrilldownRow>
+                  );
+                })}
+              </ul>
           )}
         </div>
       </CardContent>

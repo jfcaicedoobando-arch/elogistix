@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { AlertaEjecutiva, SeveridadAlerta } from "@/features/dashboardEjecutivo/services";
 
 interface Props {
@@ -50,9 +50,13 @@ export function AlertasPanel({ alertas }: Props) {
               return (
                 <li key={a.id}>
                   {a.url ? (
-                    <Link to={a.url} className="block hover:bg-muted/50 -mx-2 px-2 py-1 rounded">
+                    <DrilldownRow
+                      href={a.url}
+                      ariaLabel={a.titulo}
+                      className="block hover:bg-muted/50 -mx-2 px-2 py-1 rounded"
+                    >
                       {content}
-                    </Link>
+                    </DrilldownRow>
                   ) : content}
                 </li>
               );
