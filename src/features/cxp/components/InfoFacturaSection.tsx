@@ -3,13 +3,14 @@
  * categoría contable, datos fiscales, desglose, CFDI adjuntos y notas.
  * Sólo lectura.
  */
-import { Info, FileCode, FileText, ExternalLink } from "lucide-react";
+import { Info, FileCode, FileText, ExternalLink, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { openFacturaInNewTab } from "@/services/storage/facturas";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
@@ -72,6 +73,15 @@ function AdjuntoRow({
 
 export function InfoFacturaSection({ factura: f }: Props) {
   const showTc = f.moneda !== "MXN";
+  const verificar = useVerificarUuidSat();
+  const estatusSat = f.uuid_estatus_sat;
+  const statusVariant: "default" | "secondary" | "destructive" =
+    estatusSat === "Vigente" ? "default"
+    : estatusSat === "Cancelado" ? "destructive"
+    : "secondary";
+  const verifDate = f.uuid_verificado_fecha
+    ? new Date(f.uuid_verificado_fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
+    : null;
   return (
     <section className="px-6 py-4 border-b bg-muted/10">
       <div className="flex items-center gap-2 mb-3 text-sm font-medium">
@@ -82,7 +92,41 @@ export function InfoFacturaSection({ factura: f }: Props) {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
         <Field label="Categoría contable" value={f.categoria_nombre} />
         <Field label="RFC proveedor" value={f.rfc_proveedor} mono />
-        <Field label="UUID fiscal (CFDI)" value={f.uuid_fiscal} mono />
+        <div className="flex flex-col gap-1 min-w-0 col-span-2 md:col-span-1">
+          <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+            UUID fiscal (CFDI)
+          </span>
+          <span className="text-sm text-foreground truncate font-mono">
+            {f.uuid_fiscal ?? <span className="text-muted-foreground font-sans">—</span>}
+          </span>
+          {f.uuid_fiscal && (
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              {estatusSat && (
+                <Badge variant={statusVariant} className="text-[10px]">
+                  SAT: {estatusSat}
+                </Badge>
+              )}
+              {verifDate && (
+                <span className="text-[10px] text-muted-foreground">
+                  Verificado {verifDate}
+                </span>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-[11px]"
+                disabled={verificar.isPending}
+                onClick={() => verificar.mutate(f.id)}
+              >
+                {verificar.isPending
+                  ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  : <ShieldCheck className="h-3 w-3 mr-1" />}
+                Verificar en SAT
+              </Button>
+            </div>
+          )}
+        </div>
         <Field label="Subtotal" value={<span className="tabular-nums">{formatCurrency(f.subtotal, f.moneda)}</span>} />
         <Field label="IVA" value={<span className="tabular-nums">{formatCurrency(f.iva, f.moneda)}</span>} />
         <Field label="Retenciones" value={<span className="tabular-nums">{formatCurrency(f.retenciones, f.moneda)}</span>} />

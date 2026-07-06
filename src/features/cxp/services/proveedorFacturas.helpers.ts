@@ -16,6 +16,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
   estado, tipo_cambio_usd, rfc_proveedor, uuid_fiscal, dias_credito, notas,
   estado_aprobacion, motivo_rechazo, categoria_presupuesto_id,
   archivo_xml_url, archivo_pdf_url,
+  uuid_verificado, uuid_verificado_fecha, uuid_estatus_sat,
   pagos_proveedor(monto, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor),
@@ -29,6 +30,7 @@ export type Joined = Pick<
   | "estado" | "tipo_cambio_usd" | "rfc_proveedor" | "uuid_fiscal" | "dias_credito" | "notas"
   | "estado_aprobacion" | "motivo_rechazo" | "categoria_presupuesto_id"
   | "archivo_xml_url" | "archivo_pdf_url"
+  | "uuid_verificado" | "uuid_verificado_fecha" | "uuid_estatus_sat"
 > & {
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
@@ -96,6 +98,9 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     notas: f.notas,
     archivo_xml_url: f.archivo_xml_url,
     archivo_pdf_url: f.archivo_pdf_url,
+    uuid_verificado: f.uuid_verificado ?? false,
+    uuid_verificado_fecha: f.uuid_verificado_fecha,
+    uuid_estatus_sat: f.uuid_estatus_sat,
   };
 }
 

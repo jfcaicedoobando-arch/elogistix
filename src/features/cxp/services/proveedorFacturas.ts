@@ -51,6 +51,9 @@ export interface FacturaCxP {
   notas: string | null;
   archivo_xml_url: string | null;
   archivo_pdf_url: string | null;
+  uuid_verificado: boolean;
+  uuid_verificado_fecha: string | null;
+  uuid_estatus_sat: string | null;
 }
 
 
