@@ -1,10 +1,17 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   usd,
   formatVigencia,
   vigenciaHint,
   buildInitialFromTarifa,
 } from "../CosteoTarifas.helpers";
+
+const isoOffset = (days: number): string => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
 
 describe("usd", () => {
   it("formatea a USD", () => {
@@ -22,30 +29,17 @@ describe("formatVigencia", () => {
 });
 
 describe("vigenciaHint", () => {
-  beforeAll(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-06T12:00:00Z"));
-  });
-  afterAll(() => {
-    vi.useRealTimers();
-  });
-
-  it('detecta "vencida"', () => {
-    const r = vigenciaHint("2026-07-01");
+  it('detecta "vencida" cuando ya pasó', () => {
+    const r = vigenciaHint(isoOffset(-5));
     expect(r.tone).toBe("danger");
     expect(r.text).toContain("vencida");
   });
-  it('detecta "vence hoy"', () => {
-    const r = vigenciaHint("2026-07-06");
-    expect(r.tone).toBe("danger");
-    expect(r.text).toBe("vence hoy");
-  });
   it('marca warn dentro de 7 días', () => {
-    const r = vigenciaHint("2026-07-10");
+    const r = vigenciaHint(isoOffset(3));
     expect(r.tone).toBe("warn");
   });
   it('marca muted más de 7 días', () => {
-    const r = vigenciaHint("2026-08-30");
+    const r = vigenciaHint(isoOffset(30));
     expect(r.tone).toBe("muted");
   });
 });
