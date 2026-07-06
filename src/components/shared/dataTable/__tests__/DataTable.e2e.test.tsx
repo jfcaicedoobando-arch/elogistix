@@ -7,11 +7,15 @@
  * validamos los contratos que consumen Embarques, Cotizaciones y Dashboard.
  */
 import { describe, it, expect, vi } from "vitest";
-import { useState, useMemo } from "react";
-import { render, screen, fireEvent, within, act } from "@testing-library/react";
+import { useState, useMemo, type ReactElement } from "react";
+import { render as rtlRender, screen, fireEvent, within, act } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { DataTable, defineColumns, type ColumnDef, type SortDir } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
+
+const render = (ui: ReactElement) =>
+  rtlRender(ui, { wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter> });
 
 interface EmbarqueRow {
   id: string;

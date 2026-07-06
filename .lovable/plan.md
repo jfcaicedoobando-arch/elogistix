@@ -1,59 +1,54 @@
-## Estado actual
+## Estado del plan
 
-Fase 2 **no** cerró todos los list-items. Quedan cards/list-rows que se comportan como filas de tabla (una card por registro) y siguen envueltos en `<Link>`. El guardrail nuevo sólo bloquea `*columns.tsx`, así que estos archivos no se detectan automáticamente.
+**Respuesta corta: NO al 100%.** Faltan **2 migraciones reales** que aplican la regla del plan y hay **2 issues bloqueantes de CI** que introdujimos y aún no arreglamos.
 
-## Bloques pendientes (Fase 2.1)
+### Lo que ya se hizo (Fases 1 → 4)
 
-### Bloque A — CRM dashboard
-Cada archivo tiene una lista de N items donde cada item es una card clicable. Migrar a `useDrilldownRow`:
+- ✅ **Fase 1** — Infra: `getRowHref` en `DataTable`/`DataTableBody`/`ResponsiveDataTable`, helper `useDrilldownRow`, wrapper `DrilldownRow`, detección de controles internos vía `data-no-row-nav`, tests de `getRowHref` en regresión.
+- ✅ **Fase 2** — Barrido por módulos: ERP (ventas, operaciones, cobranza, compras, catálogos, CRM, costeo, detalle embarque, sub-tablas), auditoría, admin (organizaciones, planes, diagnóstico), reportes, portal cliente/agente, migrados a `getRowHref` / `onRowClick`.
+- ✅ **Fase 2.1** (extra) — Cards / list-items de dashboards (CRM, finanzas, operaciones) migrados a `DrilldownRow`.
+- ✅ **Fase 3** — `src/__tests__/architecture/tables-no-inline-links.test.ts` creado.
+- ✅ **Fase 4** — `APP_VERSION` en `13.203.0`, `CHANGELOG.md` actualizado, `mem://technical/ui-table-standardization` con la regla.
 
-- `src/features/crm/components/crmDashboard/DealsCards.tsx` (líneas 42, 72) — oportunidades y leads.
-- `src/features/crm/components/crmDashboard/ActividadesHoyCard.tsx` (42) — actividades.
-- `src/features/crm/components/crmDashboard/NextBestActionsCard.tsx` (49) — acciones sugeridas.
-- `src/features/crm/components/crmDashboard/CotizacionesSinRespuestaCard.tsx` (32) — cotizaciones.
-- `src/features/crm/components/LineageCard.tsx` (33, 74, 91, 109) — cliente + leads + cotizaciones + embarques del linaje.
+### Lo que falta
 
-### Bloque B — Dashboard / Operaciones / Tesorería
-- `src/features/dashboard/components/EmbarquesPendientesAdminCard.tsx` (61) — fila embarque.
-- `src/features/dashboard/finance/components/PagosCajaBlock.tsx` (37 header-CTA se conserva, 84 list-row → migrar).
-- `src/features/dashboard/finance/components/CobranzaBlock.tsx` (40 header-CTA se conserva, 91 list-row → migrar).
-- `src/features/dashboardEjecutivo/components/AlertasPanel.tsx` (53) — fila alerta.
-- `src/features/operaciones/components/embarquesEstadoDialog/EmbarqueEstadoListItem.tsx` (23) — item completo es link.
+**A. Migraciones pendientes (2 archivos, dentro del scope original):**
 
-### Bloque C — Embarques cierre + Portal cliente
-- `src/features/embarques/components/cierre/CierreCheckItem.tsx` (75) — item de checklist con `to`.
-- `src/features/portal/components/dashboard/PortalFacturacionPendienteCard.tsx` (41) — fila factura pendiente.
+1. `src/features/admin/routes/admin-org/PortalUsuariosTab.tsx:53` — Renderiza `<Link to={fichaPath}>` **dentro de una celda** del `DataTable` de usuarios del portal. Es exactamente el patrón que el plan pidió eliminar. **Fix:** quitar el `<Link>`, pasar `getRowHref={(row) => fichaPathFor(row)}` al `DataTable` y dejar la celda como texto plano.
+2. `src/features/portal/components/dashboard/PortalFacturacionPendienteCard.tsx:41` — Card del dashboard del portal envuelve el bloque de datos con `<Link to="/portal/facturas">`. **Fix:** reemplazar por `<DrilldownRow href="/portal/facturas" ariaLabel="Ver facturas pendientes">` (mismo patrón que ya aplicamos a las otras cards del portal).
 
-### Bloque D — Admin / CxP
-- `src/features/admin/routes/admin-org/PortalUsuariosTab.tsx` (53) — **`<Link>` inline dentro de celda `DataTable`** → migrar a `getRowHref` o quitar el link de la celda.
-- `src/features/cxp/routes/_sections/ComprasDashboardTiles.tsx` (41) — cada tile del dashboard de compras es una card `<Link>` grande. Migrar a `useDrilldownRow` (opcional, revisar si es "botón de navegación" o "fila de datos").
+**B. Fuera de scope — se dejan como están:**
 
-### Bloque E — Guardrail extendido
-Extender `src/__tests__/architecture/tables-no-inline-links.test.ts` (o crear uno nuevo) para escanear también:
-- Archivos que rendericen `.map(...) <Link ...>` inmediatamente dentro de un `<CardContent>` o `<div className="space-y-...">` con más de 1 item por página.
+- `ComprasDashboardTiles.tsx` (`QuickLink`) — es un **tile de navegación** de dashboard tipo botón grande (equivalente a `KpiTile`), no una fila ni card con datos. `<Link>` legítimo.
+- `CierreCheckItem.tsx` — es un item de checklist con `target="_blank"` a un recurso externo (documento). Se comporta como enlace explícito, no como fila de tabla.
+- Marketing, headers, breadcrumbs, KPI tiles, footers, menús de usuario, banners — nunca estuvieron en scope.
 
-Alternativa simple: agregar a la allowlist actual una convención — cualquier archivo que exporte un componente `*Card.tsx` / `*List*.tsx` que use `<Link>` dentro de un `.map()` debe usar `useDrilldownRow`. Esto es difícil de detectar con regex; **mejor camino:** documentar la regla en `mem://` y añadir revisión manual, sin ampliar el test automático (evita falsos positivos en headers/CTAs).
+**C. CI está rojo por 2 errores que introdujimos y no arreglamos:**
 
-### Bloque F — Versionado
-- Bump `APP_VERSION` a `13.203.0`.
-- Entrada `CHANGELOG.md` listando archivos migrados.
+Del log `logs_77877421890.zip`:
 
-## Fuera de alcance (confirmado como legítimo)
+1. **`audit:tests` — `duplicate-title`**: `src/__tests__/architecture/tables-no-inline-links.test.ts:56` tiene el mismo título `"no hay entradas obsoletas en la allowlist"` que `no-raw-table.test.ts:69`. **Fix:** renombrar a `"allowlist de tables-no-inline-links no tiene entradas obsoletas"` (o registrar en `DUPLICATE_ALLOWLIST` de `scripts/lib/tests.ts` si prefieres).
+2. **`DataTable.e2e.test.tsx` — `useNavigate() may be used only in the context of a <Router>`**: al añadir `getRowHref` (Fase 1), envolvimos `.regression.test.tsx` y `.virtual.test.tsx` en `<MemoryRouter>` pero olvidamos `DataTable.e2e.test.tsx`. Falla 25+ tests del shard 20/20. **Fix:** shadow del `render` con wrapper `<MemoryRouter>` (idéntico al patrón de `DataTable.regression.test.tsx:13`).
 
-- Botones-link de header/toolbar de página, breadcrumbs, banners CTA, empty-state CTAs, acciones inline de detalle, marketing/legal, botones "Ver todos". Estos usan `<Button asChild><Link>` fuera de área de fila y son correctos.
+### Propuesta de cierre
 
-## Orden de ejecución
+Un solo bloque de trabajo, 4 archivos:
 
-1. Bloque A (CRM) — 5 archivos.
-2. Bloque B (dashboards + operaciones) — 5 archivos.
-3. Bloque C (cierre + portal) — 2 archivos.
-4. Bloque D (admin + compras) — 2 archivos.
-5. Bloque E — sólo memoria de convención (no test).
-6. Bloque F — versión + changelog.
+```text
+1. PortalUsuariosTab.tsx           → quitar <Link>, usar getRowHref
+2. PortalFacturacionPendienteCard  → <Link> → <DrilldownRow>
+3. tables-no-inline-links.test.ts  → renombrar título duplicado
+4. DataTable.e2e.test.tsx          → envolver render() en <MemoryRouter>
+```
 
-## Detalles técnicos
+Después: bump `APP_VERSION` a `13.203.1` y entrada `CHANGELOG.md` breve ("cierra Fase 2 pendientes + fix CI").
 
-- Patrón por item: `const nav = useDrilldownRow({ href, ariaLabel })` → `<div {...nav} className={cn(nav.className, ...clases originales)}>...</div>`.
-- Conservar controles internos (botones de acción, badges, dropdowns) — el helper ya los ignora vía `data-no-row-nav` / detección de elementos interactivos.
-- No cambiar columnas visibles, layout, iconografía ni lógica.
-- Verificar tras cada bloque: `bunx tsgo --noEmit` + tests afectados.
+### Verificación
+
+- `bun run audit:tests` → 0 violaciones.
+- `bunx vitest run src/components/shared/dataTable/__tests__/DataTable.e2e.test.tsx src/__tests__/architecture/tables-no-inline-links.test.ts` → verde.
+- `rg -n '<Link' src/features/admin/routes/admin-org/PortalUsuariosTab.tsx src/features/portal/components/dashboard/PortalFacturacionPendienteCard.tsx` → 0 resultados.
+
+### Fuera de alcance
+
+No se toca lógica, columnas, permisos ni datos. No se migran los tiles de navegación ni los items de checklist con `target="_blank"`.

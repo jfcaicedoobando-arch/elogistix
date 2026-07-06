@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.203.1] - 2026-07-06
+
+- **Fix CI + cierre Fase 2**:
+  - `PortalFacturacionPendienteCard`: se elimina el `<Link>` que envolvía el `Button` y la card completa pasa a ser `<DrilldownRow href="/portal/facturas">`, alineada con el resto de cards del dashboard del portal.
+  - `DataTable.e2e.test.tsx`: se envuelven los `render()` en `<MemoryRouter>` (faltaba desde v13.200.0 al introducir `getRowHref` con `useNavigate`). Corrige 25+ tests del shard 20/20.
+  - Test guardrail `tables-no-inline-links.test.ts`: se renombra el título del segundo bloque para evitar la colisión con `no-raw-table.test.ts` (falla de `audit:tests` por `duplicate-title`).
+
 ## [13.203.0] - 2026-07-06
 
 - **Fase 2.1 estandarización de list-items tipo card**. Migración a `<DrilldownRow>` (nuevo componente helper) de todas las cards / list-rows que se comportan como filas de tabla:
