@@ -57,34 +57,34 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
           ) : (
             <ul className="divide-y rounded-md border">
               {items.map((it) => (
-                <li key={it.id}>
-                  <Link
-                    to={`/embarques/${it.id}`}
-                    className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-muted/50 focus:bg-muted/50 focus:outline-none transition-colors"
-                    aria-label={`Abrir embarque ${it.expediente ?? it.id}`}
+                <DrilldownRow
+                  key={it.id}
+                  as="li"
+                  href={`/embarques/${it.id}`}
+                  ariaLabel={`Abrir embarque ${it.expediente ?? it.id}`}
+                  className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{it.expediente ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {it.cliente_nombre}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={it.estado === "EIR" ? "outline" : "secondary"}
+                    className={
+                      it.estado === "EIR"
+                        ? "border-orange-300 text-orange-700"
+                        : "bg-success/10 text-success hover:bg-success/10"
+                    }
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{it.expediente ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {it.cliente_nombre}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={it.estado === "EIR" ? "outline" : "secondary"}
-                      className={
-                        it.estado === "EIR"
-                          ? "border-orange-300 text-orange-700"
-                          : "bg-success/10 text-success hover:bg-success/10"
-                      }
-                    >
-                      {it.estado}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
-                      {it.diasEnEstado} d
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </Link>
-                </li>
+                    {it.estado}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground tabular-nums w-12 text-right">
+                    {it.diasEnEstado} d
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                </DrilldownRow>
               ))}
             </ul>
           )}
