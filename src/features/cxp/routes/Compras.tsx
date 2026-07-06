@@ -5,11 +5,9 @@
  * (ComprasTabStrip eliminado en Ola A).
  */
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import {
-  ShoppingCart, Plus, Truck, Inbox, Receipt, Landmark, ArrowRight, LayoutList, ShieldCheck,
+  ShoppingCart, Plus, Truck, Inbox, Receipt, Landmark, LayoutList, ShieldCheck,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -20,57 +18,8 @@ import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import { usePermissions } from "@/hooks/shared";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
 import { TopProveedoresCard, UltimasFacturasCard } from "./_sections/ComprasDashboardCards";
-
-function KpiCard({
-  label, value, sub, tone = "default",
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  tone?: "default" | "warn" | "danger";
-}) {
-  const toneCls = tone === "danger" ? "text-destructive"
-    : tone === "warn" ? "text-warning" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn("text-2xl font-semibold tabular-nums mt-1", toneCls)}>{value}</p>
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5 tabular-nums">{sub}</p>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function QuickLink({
-  to, icon, title, description, kpi,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  kpi: string;
-}) {
-  return (
-    <Link to={to} className="block group">
-      <Card className="h-full transition-colors group-hover:border-primary/40 group-hover:bg-muted/30">
-        <CardContent className="p-4 flex items-start gap-3">
-          <div className="rounded-md bg-primary/10 text-primary p-2">{icon}</div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold text-sm">{title}</h3>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-            <p className="text-sm font-medium tabular-nums mt-2">{kpi}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
+import { KpiCard, QuickLink } from "./_sections/ComprasDashboardTiles";
 
 export default function Compras() {
   const { canEdit } = usePermissions();
