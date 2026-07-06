@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.179.0] - 2026-07-06
+
+- **UX(Compras) — Ola D: Conciliación factura ↔ embarque** — nueva página `/compras/conciliacion` que muestra por embarque el estatus de cobertura de facturación de proveedor sobre los `conceptos_costo`:
+  - Agregado por moneda (MXN/USD) con métricas de presupuestado / facturado / pendiente / % cobertura / conceptos pendientes.
+  - Clasifica automáticamente cada embarque como **Sin facturar** (0% cubierto), **Parcial** (0–99%) o **Conciliada** (≥99%).
+  - Filtros por estado, moneda y búsqueda por expediente/cliente; KPIs de conteos y pendiente global MXN/USD.
+  - Un click en una fila abre el detalle del embarque para operar los conceptos.
+  - Nuevo servicio `listarConciliacionEmbarques` con 5 tests unitarios (agregación, clasificación, filtros, orden y errores).
+  - Sidebar: nuevo ítem "Conciliación" en el módulo Compras (visible para contador, tesorero y admin).
+
 ## [13.178.0] - 2026-07-06
 
 - **UX(Compras) — Olas E y F: pagos globales, notas de crédito y reportes** — se reemplazan los placeholders de `/compras/pagos`, `/compras/notas-credito` y `/compras/reportes` con vistas funcionales:
