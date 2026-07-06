@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { FileX } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
@@ -51,7 +50,7 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
       id: "exp",
       header: "Expediente",
       cell: ({ row }) => (
-        <Link to={`/embarques/${row.original.embarqueId}`} className="text-primary hover:underline font-medium text-xs" onClick={(e) => e.stopPropagation()}>{row.original.expediente}</Link>
+        <span className="font-medium text-xs">{row.original.expediente}</span>
       ),
     },
     { id: "cliente", header: "Cliente", meta: { className: "text-xs" }, cell: ({ row }) => <span title={row.original.clienteNombre}>{toTitleCase(row.original.clienteNombre)}</span> },
@@ -64,6 +63,7 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
     <DataTable
       columns={opCols}
       data={pageItems}
+      getRowHref={(o) => `/embarques/${o.embarqueId}`}
       rowKey={(o) => `${o.embarqueId}-${o.__idx}`}
       density="compact"
       pagination={{

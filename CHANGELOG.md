@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.201.0] - 2026-07-06
+
+- **Fase 2 estandarización de tablas — barrido de Links inline restantes**. Se removieron los `<Link>` inline dentro de celdas / chips de tabla en:
+  - `ProveedorOperacionesTable` (expediente ya no es link; toda la fila navega al embarque vía `getRowHref`).
+  - `TabConciliacion` (los folios de facturas del proveedor pasan a ser badges estáticos; la navegación al detalle de factura se hace desde la bandeja CxP).
+  - `NotasCreditoRecientes` (folio de factura ya no es link; toda la fila navega a `/facturacion/:id` con soporte de teclado y Ctrl+click).
+- **Nuevo helper `useDrilldownRow`** (`src/components/shared/dataTable/useDrilldownRow.ts`) para hacer cards / list-items totalmente navegables con el mismo contrato accesible que `DataTable.getRowHref` (Enter/Space, Ctrl/Cmd+click, click medio, ignora controles internos).
+- Botones-link (`<Button asChild><Link>`) fuera de celdas de tabla se conservan (headers, toolbars, breadcrumbs, acciones). El barrido aplica sólo a Links dentro de celdas y filas-card.
+
 ## [13.200.0] - 2026-07-06
 
 - **Estandarización global de tablas — drilldown accesible por fila**. Nueva prop `getRowHref` en `DataTable` / `ResponsiveDataTable`: la fila entera se comporta como link (`role="link"`, `tabIndex=0`, Enter/Space, Ctrl/Cmd+click abre en pestaña nueva, click medio también). Se detectan automáticamente controles interactivos internos (botones, checkboxes, dropdowns, menús, `[data-no-row-nav]`) para no chocar con el click de la fila. Nuevo helper `rowNav.ts` (`handleRowClick`, `handleRowKeyDown`, `isInteractiveDescendant`, `shouldOpenInNewTab`).

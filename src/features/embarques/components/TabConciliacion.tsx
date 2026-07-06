@@ -6,7 +6,6 @@
  * 5–15%, rojo > 15% o sin factura recibida.
  */
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Scale } from "lucide-react";
@@ -84,10 +83,9 @@ export function TabConciliacion({ embarqueId }: Props) {
         : (
           <div className="flex flex-wrap gap-1">
             {row.original.facturas.map((f) => (
-              <Link key={f.proveedor_factura_id} to={`/cxp?factura=${f.proveedor_factura_id}`}
-                className="text-xs text-primary hover:underline font-mono" onClick={(e) => e.stopPropagation()}>
+              <span key={f.proveedor_factura_id} className="text-xs font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">
                 {f.folio_proveedor}
-              </Link>
+              </span>
             ))}
           </div>
         ),
