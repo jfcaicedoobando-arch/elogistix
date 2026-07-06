@@ -74,15 +74,21 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
         {items.length === 0 ? <ListEmpty msg="Todos los leads nuevos están atendidos" /> : (
           <ul className="space-y-1.5">
             {items.map((l) => (
-              <li key={l.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
-                <Link to={`/crm/leads/${l.id}`} className="flex flex-col hover:underline truncate">
+              <DrilldownRow
+                key={l.id}
+                as="li"
+                href={`/crm/leads/${l.id}`}
+                ariaLabel={`Ver lead ${l.empresa}`}
+                className="flex items-center justify-between text-sm py-1 border-b last:border-0 hover:bg-muted/40 rounded-sm"
+              >
+                <div className="flex flex-col truncate">
                   <span className="font-medium truncate max-w-[260px]">{l.empresa}</span>
                   <span className="text-xs text-muted-foreground">{l.contacto || "Sin contacto"} · {l.fuente}</span>
-                </Link>
+                </div>
                 <span className="text-xs text-muted-foreground">
                   {new Date(l.created_at).toLocaleDateString("es-MX")}
                 </span>
-              </li>
+              </DrilldownRow>
             ))}
           </ul>
         )}
