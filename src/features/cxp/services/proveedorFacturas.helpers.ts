@@ -103,6 +103,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     uuid_verificado: f.uuid_verificado ?? false,
     uuid_verificado_fecha: f.uuid_verificado_fecha,
     uuid_estatus_sat: f.uuid_estatus_sat,
+    fecha_programada_pago: f.fecha_programada_pago ?? null,
   };
 }
 
