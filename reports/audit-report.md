@@ -1,6 +1,6 @@
 # Audit Report — 13.195.0
 
-Generado: 2026-07-06T07:59:03.868Z
+Generado: 2026-07-06T08:03:40.985Z
 
 ## Resumen
 
@@ -8,7 +8,7 @@ Generado: 2026-07-06T07:59:03.868Z
 |---|---|---|
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
-| Power-of-10 (>200 líneas) | ❌ | 1 archivos |
+| Power-of-10 (>200 líneas) | ✅ | 0 archivos |
 | Casts HIGH + CRITICAL | ✅ | 0 / 2059 |
 | Higiene de tests | ✅ | 0 violaciones |
 
@@ -21,7 +21,7 @@ Generado: 2026-07-06T07:59:03.868Z
 ✅ Ninguno
 
 ### Archivos productivos > 200 líneas
--  208  `src/features/cxp/services/proveedorFacturas.ts`
+✅ Ninguno
 
 ## Casts
 
@@ -56,4 +56,4 @@ Total: **2059** — HIGH: **0**, CRITICAL: **0**
 
 ---
 
-_Estado general: ⚠️ Revisar violaciones arriba._
+_Estado general: ✅ Baseline arquitectónico limpio._
