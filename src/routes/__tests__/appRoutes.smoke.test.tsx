@@ -123,6 +123,7 @@ describe("routes/appRoutes — gates de rol", () => {
     ["/compras/pagos", FINANCE_READ_ROLES],
     ["/compras/notas-credito", FINANCE_READ_ROLES],
     ["/compras/reportes", FINANCE_READ_ROLES],
+    ["/compras/conciliacion", COMPRAS_READ_ROLES],
     ["/compras/por-pagar", ["admin", "super_admin", "admin_org", "tesorero", "gerente_operaciones", "gerente_visor"]],
     ["/cartera", ["admin", "super_admin", "admin_org", "contador", "tesorero", "ejecutivo_cobranza", "gerente_operaciones", "gerente_visor"]],
     ["/tesoreria", TESORERIA_READ_ROLES],
