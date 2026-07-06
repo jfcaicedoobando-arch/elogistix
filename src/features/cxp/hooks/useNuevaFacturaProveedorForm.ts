@@ -89,11 +89,8 @@ export function useNuevaFacturaProveedorForm(
       ? { ...prev, [conceptoId]: { ...prev[conceptoId], monto } }
       : prev);
   };
-
-  /**
-   * Aplica de golpe una lista de sugerencias del matcher: reemplaza el estado
-   * actual de vínculos por las sugerencias entregadas.
-   */
+  // Aplica de golpe una lista de sugerencias del matcher: reemplaza el estado
+  // actual de vínculos por las sugerencias entregadas.
   const aplicarSugerencias = (sugs: ReadonlyArray<{
     conceptoId: string; concepto: string; monto: number; embarque_id: string;
   }>) => {
