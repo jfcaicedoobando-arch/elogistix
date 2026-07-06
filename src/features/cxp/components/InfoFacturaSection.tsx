@@ -3,13 +3,14 @@
  * categoría contable, datos fiscales, desglose, CFDI adjuntos y notas.
  * Sólo lectura.
  */
-import { Info, FileCode, FileText, ExternalLink } from "lucide-react";
+import { Info, FileCode, FileText, ExternalLink, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { openFacturaInNewTab } from "@/services/storage/facturas";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
