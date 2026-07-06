@@ -79,14 +79,14 @@ export function extraerPublicacionDof(data: BanxicoResponse, hoyIso: string): nu
 }
 
 /**
- * Formatea `Date` como `DD/MM/YYYY` (formato que espera el endpoint de rango
- * de Banxico SIE). Usa componentes UTC para evitar shift por timezone.
+ * Formatea `Date` como `YYYY-MM-DD` (formato ISO que exige el endpoint de rango
+ * de Banxico SIE, `/datos/{fechaInicio}/{fechaFin}`). Usa componentes UTC.
  */
 export function formatFechaBanxico(d: Date): string {
   const dd = String(d.getUTCDate()).padStart(2, "0");
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
   const yyyy = d.getUTCFullYear();
-  return `${dd}/${mm}/${yyyy}`;
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 /** Devuelve el rango `{inicio, fin}` de los últimos `RANGO_DIAS` días para consulta SIE. */

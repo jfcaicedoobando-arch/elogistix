@@ -184,19 +184,19 @@ Deno.test("extraerPublicacionDof: fecha con formato inválido → la ignora", ()
 
 // ── formatFechaBanxico + rangoUltimosDias ───────────────────
 
-Deno.test("formatFechaBanxico: DD/MM/YYYY en UTC", () => {
-  const d = new Date(Date.UTC(2026, 6, 6)); // 06/07/2026 UTC
-  assertEquals(formatFechaBanxico(d), "06/07/2026");
+Deno.test("formatFechaBanxico: YYYY-MM-DD en UTC", () => {
+  const d = new Date(Date.UTC(2026, 6, 6)); // 2026-07-06 UTC
+  assertEquals(formatFechaBanxico(d), "2026-07-06");
 });
 
 Deno.test("formatFechaBanxico: padea día y mes con ceros", () => {
   const d = new Date(Date.UTC(2026, 0, 5));
-  assertEquals(formatFechaBanxico(d), "05/01/2026");
+  assertEquals(formatFechaBanxico(d), "2026-01-05");
 });
 
 Deno.test("rangoUltimosDias: rango de 10 días termina en hoy", () => {
   const hoy = new Date(Date.UTC(2026, 6, 7));
   const { inicio, fin } = rangoUltimosDias(hoy, 10);
-  assertEquals(fin, "07/07/2026");
-  assertEquals(inicio, "27/06/2026");
+  assertEquals(fin, "2026-07-07");
+  assertEquals(inicio, "2026-06-27");
 });
