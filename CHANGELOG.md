@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.202.0] - 2026-07-06
+
+- **Fase 2 estandarización de tablas — cierre**: portal cliente + costeo + guardrail arquitectónico.
+  - `EmbarqueCard`, `PortalEmbarquesRecientesCard`, `PortalProximosArribosCard`, `PortalEstadoEmbarquesCard`: se eliminó el `<Link>` inline que envolvía cada card/fila. Ahora usan el helper `useDrilldownRow` (fila entera navegable con teclado, Ctrl/Cmd+click y click medio; ignora controles interactivos internos). Los botones "Ver todos" del header se conservan como `<Button asChild><Link>` porque están fuera del área de fila.
+  - `CosteoRutasTable`: migrado de `onRowClick={navigate(...)}` a `getRowHref` (habilita Ctrl+click y consistencia accesible con el resto de la app).
+- **Nuevo guardrail arquitectónico** `src/__tests__/architecture/tables-no-inline-links.test.ts`: falla en CI si algún archivo `*columns.tsx` importa `Link` de `react-router-dom`. La política es que el drilldown se declara vía `getRowHref` en `<DataTable />`, no con links inline en celdas. Allowlist vacía.
+- Bloques de auditoría (`HallazgosTabla`, `HallazgoTabla`) y admin (`AdminOrganizacionesColumns`, `usuariosColumns`, `portalUsuariosColumns`) verificados: ya no tenían `<Link>` inline tras Fase 2 inicial, sólo botones de acción y menús.
+
 ## [13.201.0] - 2026-07-06
 
 - **Fase 2 estandarización de tablas — barrido de Links inline restantes**. Se removieron los `<Link>` inline dentro de celdas / chips de tabla en:
