@@ -120,6 +120,8 @@ function DataTableInner<T>({
             rowClassName={rowClassName}
             onRowClick={onRowClick}
             onRowMouseEnter={onRowMouseEnter}
+            getRowHref={getRowHref}
+            getRowAriaLabel={getRowAriaLabel}
           />
           {renderedFooter && !isLoading && orderedData.length > 0 && (
             <TableFooter>{renderedFooter}</TableFooter>
