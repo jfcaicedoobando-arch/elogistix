@@ -49,7 +49,7 @@ export function FacturaResumenCard({ factura }: Props) {
               mono
               value={
                 factura.proforma_id ? (
-                  <Link to={`/facturacion?proforma=${factura.proforma_id}`} className="text-accent hover:underline">
+                  <Link to={`/proformas/${factura.proforma_id}`} className="text-accent hover:underline">
                     {factura.proformas.numero}
                   </Link>
                 ) : (

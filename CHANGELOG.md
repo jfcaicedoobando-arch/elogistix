@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.11] - 2026-07-06
+
+- **Facturación · Enlace a Proforma origen corregido**: el enlace "Proforma origen" en el detalle de factura apuntaba a `/facturacion?proforma=<id>` (bandeja de facturación) y ahora navega correctamente a `/proformas/:id`.
+
 ## [13.205.10] - 2026-07-06
 
 - **Facturación · Barra de acciones reagrupada**: los botones del detalle de factura ahora se agrupan visualmente con separadores verticales según su función: (1) Timbrado, (2) Documentos del CFDI original — PDF/XML, (3) Acuse SAT — sólo cuando la factura está cancelada (Acuse XML, Acuse PDF, Reintentar acuse), (4) Contexto — Ver embarque y Enviar por email, y (5) Acciones destructivas empujadas a la derecha — Sustituir CFDI, Cancelar CFDI, Eliminar borrador. Cuando la factura está `Cancelada` o `Sustituida` se oculta "Enviar por email" (ya no aplica) y el bloque de acuse queda inmediatamente después de las descargas del CFDI original para que el flujo sea evidente.
