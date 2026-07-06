@@ -1322,8 +1322,11 @@ export type Database = {
           dias_credito: number | null
           direccion: string
           email: string
+          email_cc_default: string[] | null
           estado: string
+          forma_pago_default: string | null
           id: string
+          metodo_pago_default: string | null
           nombre: string
           organization_id: string
           regimen_fiscal: string | null
@@ -1343,8 +1346,11 @@ export type Database = {
           dias_credito?: number | null
           direccion?: string
           email?: string
+          email_cc_default?: string[] | null
           estado?: string
+          forma_pago_default?: string | null
           id?: string
+          metodo_pago_default?: string | null
           nombre: string
           organization_id?: string
           regimen_fiscal?: string | null
@@ -1364,8 +1370,11 @@ export type Database = {
           dias_credito?: number | null
           direccion?: string
           email?: string
+          email_cc_default?: string[] | null
           estado?: string
+          forma_pago_default?: string | null
           id?: string
+          metodo_pago_default?: string | null
           nombre?: string
           organization_id?: string
           regimen_fiscal?: string | null
@@ -7789,6 +7798,15 @@ export type Database = {
       obtener_costos_cotizacion_version: {
         Args: { p_cotizacion_id: string; p_version?: number }
         Returns: Json[]
+      }
+      obtener_defaults_facturacion_cliente: {
+        Args: { p_cliente_id: string }
+        Returns: {
+          cc_emails: string[]
+          forma_pago: string
+          metodo_pago: string
+          uso_cfdi: string
+        }[]
       }
       obtener_top_tarifas: {
         Args: {
