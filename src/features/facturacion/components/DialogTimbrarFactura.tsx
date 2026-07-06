@@ -11,7 +11,10 @@ import { useFactura } from "@/features/facturacion/hooks/useFactura";
 import {
   fetchClienteFiscal,
   actualizarDatosTimbradoFactura,
+  fetchDefaultsFacturacionCliente,
+  guardarDefaultsTimbradoCliente,
   type ClienteFiscalRow,
+  type DefaultsFacturacionCliente,
 } from "@/features/facturacion/services";
 import { enviarCfdiFactura } from "@/features/facturacion/services/enviarCfdiEmail";
 import { useQuery } from "@tanstack/react-query";
