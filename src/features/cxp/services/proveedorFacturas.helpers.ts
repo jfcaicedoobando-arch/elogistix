@@ -98,6 +98,9 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     notas: f.notas,
     archivo_xml_url: f.archivo_xml_url,
     archivo_pdf_url: f.archivo_pdf_url,
+    uuid_verificado: f.uuid_verificado ?? false,
+    uuid_verificado_fecha: f.uuid_verificado_fecha,
+    uuid_estatus_sat: f.uuid_estatus_sat,
   };
 }
 
