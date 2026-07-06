@@ -119,12 +119,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     .eq("id", body.nota_credito_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: nc.organization_id,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: nc.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: "facturapi_nc_emitida",
-    entidad: "factura_nota_credito",
-    entidad_id: body.nota_credito_id,
+    entidadId: body.nota_credito_id,
     detalles: {
       uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: nc.factura_id,
       xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
