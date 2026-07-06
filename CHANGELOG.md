@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.188.1] - 2026-07-06
+
+- **CxP — Ola 2 · Item 2 · Programación de pagos (parte 2/2)**. La lista `/cxp` ahora muestra una columna **Prog. pago** (badge con día/mes) entre "Vencimiento" y "Días", oculta en <xl para no romper el layout. Nuevo KPI **Programado 7 días** con montos MXN/USD y conteo de facturas; el grid pasa de 4 a 5 tarjetas en xl. Ambas señales se calculan en cliente a partir de `fecha_programada_pago` (introducido en 13.188.0), sin nuevas queries.
+
 ## [13.188.0] - 2026-07-06
 
 - **CxP — Ola 2 · Item 2 · Programación de pagos (parte 1/2)**. Nueva columna `proveedor_facturas.fecha_programada_pago` (`date`) más índice parcial `idx_prov_fact_fecha_prog_pago` para acelerar bandejas. Servicio `programarPagoProveedor(facturaId, fecha)` y hook `useProgramarPagoProveedor` (React Query, invalida `["cxp"]`, `["proveedor-facturas"]` y `["tesoreria"]`). El detalle de factura (`InfoFacturaSection`) ahora expone una fila "Programación de pago" con `Input type="date"`, botón **Guardar** y **Quitar**, deshabilitado cuando la factura ya no tiene saldo. `FacturaCxP.fecha_programada_pago` se agrega al select/mapper para que aparezca en toda la app sin nuevas queries.
