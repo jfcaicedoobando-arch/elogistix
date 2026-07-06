@@ -53,7 +53,7 @@ describe("architecture — no <Link> inline en columnas de tabla", () => {
     ).toEqual([]);
   });
 
-  it("no hay entradas obsoletas en la allowlist", () => {
+  it("allowlist de tables-no-inline-links no tiene entradas obsoletas", () => {
     const stale: string[] = [];
     for (const rel of ALLOWLIST) {
       try {
