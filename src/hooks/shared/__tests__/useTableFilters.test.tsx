@@ -1,14 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { NuqsAdapter } from "nuqs/adapters/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 import { MemoryRouter } from "react-router-dom";
 import { useTableFilters } from "@/hooks/shared/useTableFilters";
 import type { PropsWithChildren } from "react";
 
+const NuqsWrapper = withNuqsTestingAdapter();
+
 function wrapper({ children }: PropsWithChildren) {
   return (
     <MemoryRouter>
-      <NuqsAdapter>{children}</NuqsAdapter>
+      <NuqsWrapper>{children}</NuqsWrapper>
     </MemoryRouter>
   );
 }
