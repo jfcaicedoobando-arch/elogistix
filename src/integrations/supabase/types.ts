@@ -3941,6 +3941,7 @@ export type Database = {
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
           factura_pdf_url: string | null
+          factura_xml_backup_path: string | null
           factura_xml_url: string | null
           facturapi_id: string | null
           fecha_emision: string
@@ -3991,6 +3992,7 @@ export type Database = {
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
           factura_pdf_url?: string | null
+          factura_xml_backup_path?: string | null
           factura_xml_url?: string | null
           facturapi_id?: string | null
           fecha_emision?: string
@@ -4041,6 +4043,7 @@ export type Database = {
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
           factura_pdf_url?: string | null
+          factura_xml_backup_path?: string | null
           factura_xml_url?: string | null
           facturapi_id?: string | null
           fecha_emision?: string
@@ -6566,6 +6569,7 @@ export type Database = {
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
           factura_pdf_url: string | null
+          factura_xml_backup_path: string | null
           factura_xml_url: string | null
           facturapi_id: string | null
           fecha_emision: string

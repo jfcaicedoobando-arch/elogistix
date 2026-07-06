@@ -20,6 +20,7 @@ import {
   FACTURAPI_BASE, buildFacturapiPayload, validateContext,
   type FacturaContext,
 } from "./helpers.ts";
+import { respaldarXmlEmitido } from "./respaldarXml.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -174,6 +175,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
   const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
 
+  // Ola 3 · Item 5 — Respaldo automático del XML al bucket `facturas`.
+  // Best-effort: no bloquea el timbrado si falla; se puede reintentar después.
+  const respaldo = await respaldarXmlEmitido({
+    supabase, apiKey: resolved.data.apiKey,
+    facturapiId, organizationId: factura.organization_id,
+    facturaId: body.factura_id, uuid,
+  });
+
   // v13.146.0 — el `numero` interno se asigna aquí, no al crear el borrador.
   // FacturAPI es source of truth para folio y serie. El formato mantiene
   // `<serie><folio>` para compatibilidad con reportes/búsquedas existentes.
@@ -188,6 +197,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       serie: serieTimbrada,
       factura_pdf_url: pdfUrl,
       factura_xml_url: xmlUrl,
+      factura_xml_backup_path: respaldo.path,
       estado: "Emitida",
       ambiente: resolved.data.ambiente,
       timbrado_en: new Date().toISOString(),
@@ -202,8 +212,15 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     accion: "facturapi_emitida",
     entidad: "factura",
     entidad_id: body.factura_id,
-    detalles: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId },
+    detalles: {
+      uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
+      xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
+    },
   });
 
-  return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl });
+  return json({
+    uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
+    pdf_url: pdfUrl, xml_url: xmlUrl,
+    xml_backup: respaldo,
+  });
 }));
