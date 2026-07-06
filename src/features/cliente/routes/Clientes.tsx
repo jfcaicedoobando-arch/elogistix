@@ -31,7 +31,6 @@ import { ClienteMobileCard } from "@/features/cliente/components/ClienteMobileCa
 import { useState, useMemo } from "react";
 
 export default function Clientes() {
-  const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const { organizationId } = useOrgFilter();
   const queryClient = useQueryClient();
