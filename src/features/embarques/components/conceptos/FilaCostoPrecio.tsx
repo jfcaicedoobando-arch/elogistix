@@ -40,10 +40,10 @@ export function FilaCostoPrecio({
         <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
         <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
       </Select>
-      <Select value={costo.concepto} onValueChange={v => update(costo.id, 'concepto', v)}>
-        <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-        <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-      </Select>
+      <ConceptoCatalogoSelect
+        value={costo.concepto}
+        onChange={v => update(costo.id, 'concepto', v)}
+      />
       <NumericInput decimals value={costo.monto} onChange={n => update(costo.id, 'monto', n)} className="text-sm h-10" aria-label="Subtotal costo" />
       <Select value={costo.moneda} onValueChange={v => update(costo.id, 'moneda', v)}>
         <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
