@@ -83,16 +83,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       cell: ({ row }) => {
         const n = row.original.facturas_capturadas;
         if (n === 0) return <span className="text-muted-foreground">0</span>;
-        return (
-          <Link
-            to={`/embarques/${row.original.embarque_id}`}
-            className="text-primary hover:underline tabular-nums"
-            onClick={(e) => e.stopPropagation()}
-            title="Ver facturas del embarque"
-          >
-            {n}
-          </Link>
-        );
+        return <span className="tabular-nums">{n}</span>;
       },
     },
     {
