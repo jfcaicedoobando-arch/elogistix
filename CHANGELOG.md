@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.180.0] - 2026-07-06
+
+- **UX(Compras) — Matching automático de conciliación** — nuevo motor `src/features/compras/matching/` que sugiere qué `conceptos_costo` pendientes cubre una factura de proveedor al momento de capturarla:
+  - Score compuesto por similitud de descripción (Sørensen–Dice sobre bigramas, tras normalizar acentos/stopwords del dominio como "servicio", "cargo", "de/del") y cercanía de monto (±5% ≈ 1.0, ±25% ≈ 0), con penalización dura si la moneda difiere.
+  - Selección greedy que no permite exceder el monto de la factura por más de 5% y respeta la moneda.
+  - Botón **"Sugerir vinculación"** en `VincularEmbarqueSection` (diálogo "Capturar factura de proveedor") que preselecciona los conceptos con confianza alta (score ≥ 0.75) y muestra un toast con el desglose (aplicadas · dudosas · descartadas por moneda · sin match).
+  - Nuevo callback `aplicarSugerencias` en `useNuevaFacturaProveedorForm` para aplicar el resultado de golpe.
+  - Tests: 22 unitarios (`normalizarTexto`, `similitud`, `matcher`).
+
 ## [13.179.0] - 2026-07-06
 
 - **UX(Compras) — Ola D: Conciliación factura ↔ embarque** — nueva página `/compras/conciliacion` que muestra por embarque el estatus de cobertura de facturación de proveedor sobre los `conceptos_costo`:
