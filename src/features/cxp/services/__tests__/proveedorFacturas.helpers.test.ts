@@ -40,6 +40,7 @@ const baseJoined = (over: Partial<Joined> = {}): Joined => ({
   moneda: "MXN",
   subtotal: 100,
   iva: 16,
+  ieps: 0,
   retenciones: 0,
   total: 116,
   estado: "Pendiente" as Joined["estado"],

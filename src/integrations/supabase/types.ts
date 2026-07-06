@@ -5206,6 +5206,7 @@ export type Database = {
           folio_interno: string
           folio_proveedor: string
           id: string
+          ieps: number
           iva: number
           moneda: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion: string | null
@@ -5248,6 +5249,7 @@ export type Database = {
           folio_interno: string
           folio_proveedor: string
           id?: string
+          ieps?: number
           iva?: number
           moneda?: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion?: string | null
@@ -5290,6 +5292,7 @@ export type Database = {
           folio_interno?: string
           folio_proveedor?: string
           id?: string
+          ieps?: number
           iva?: number
           moneda?: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion?: string | null
@@ -5341,6 +5344,8 @@ export type Database = {
           created_at: string
           descripcion: string
           id: string
+          ieps: number
+          iva: number
           monto: number
           organization_id: string
           proveedor_factura_id: string
@@ -5352,6 +5357,8 @@ export type Database = {
           created_at?: string
           descripcion?: string
           id?: string
+          ieps?: number
+          iva?: number
           monto?: number
           organization_id?: string
           proveedor_factura_id: string
@@ -5363,6 +5370,8 @@ export type Database = {
           created_at?: string
           descripcion?: string
           id?: string
+          ieps?: number
+          iva?: number
           monto?: number
           organization_id?: string
           proveedor_factura_id?: string
@@ -6286,6 +6295,7 @@ export type Database = {
           folio_interno: string
           folio_proveedor: string
           id: string
+          ieps: number
           iva: number
           moneda: Database["public"]["Enums"]["moneda"]
           motivo_cancelacion: string | null

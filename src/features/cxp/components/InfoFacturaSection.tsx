@@ -64,6 +64,9 @@ export function InfoFacturaSection({ factura: f }: Props) {
         />
         <Field label="Subtotal" value={<span className="tabular-nums">{formatCurrency(f.subtotal, f.moneda)}</span>} />
         <Field label="IVA" value={<span className="tabular-nums">{formatCurrency(f.iva, f.moneda)}</span>} />
+        {(f.ieps ?? 0) > 0 && (
+          <Field label="IEPS" value={<span className="tabular-nums">{formatCurrency(f.ieps ?? 0, f.moneda)}</span>} />
+        )}
         <Field label="Retenciones" value={<span className="tabular-nums">{formatCurrency(f.retenciones, f.moneda)}</span>} />
         <Field
           label="Moneda"

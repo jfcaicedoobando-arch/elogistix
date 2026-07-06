@@ -36,7 +36,7 @@ export function initialValues(): FacturaFormValues {
     provId: "", provNombre: "", folio: "",
     emision: t, diasCredito: 30, vencimiento: addDays(t, 30),
     moneda: "MXN", tc: "",
-    subtotal: "", iva: "", retenciones: "",
+    subtotal: "", iva: "", ieps: "", retenciones: "",
     categoriaId: "", notas: "",
   };
 }
@@ -44,8 +44,9 @@ export function initialValues(): FacturaFormValues {
 export function calcularTotal(values: FacturaFormValues): number {
   const s = Number(values.subtotal) || 0;
   const i = Number(values.iva) || 0;
+  const e = Number(values.ieps) || 0;
   const r = Number(values.retenciones) || 0;
-  return s + i - r;
+  return s + i + e - r;
 }
 
 export function validateFactura(
@@ -89,6 +90,7 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
     tipo_cambio_usd: Number(values.tc) || 0,
     subtotal: Number(values.subtotal) || 0,
     iva: Number(values.iva) || 0,
+    ieps: Number(values.ieps) || 0,
     retenciones: Number(values.retenciones) || 0,
     total,
     estado: "Vigente" as const,
@@ -102,12 +104,13 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
 }
 
 export function mapCfdiToValues(
-  data: { cfdi: { moneda: string; serie: string | null; folio: string | null; uuid: string; fecha: string; tipo_cambio: number; subtotal: number; iva_trasladado: number; retenciones: number }; ai: { categoria_id: string | null; notas: string | null } },
+  data: { cfdi: { moneda: string; serie: string | null; folio: string | null; uuid: string; fecha: string; tipo_cambio: number; subtotal: number; iva_trasladado: number; ieps_trasladado?: number; retenciones: number }; ai: { categoria_id: string | null; notas: string | null } },
   provId: string,
   provNombre: string,
 ): FacturaFormValues {
   const c = data.cfdi;
   const monedaValida: Moneda = c.moneda === "USD" || c.moneda === "EUR" ? c.moneda : "MXN";
+  const ieps = Number(c.ieps_trasladado ?? 0);
   return {
     provId, provNombre,
     folio: [c.serie, c.folio].filter(Boolean).join("-") || c.uuid.slice(0, 8),
@@ -118,6 +121,7 @@ export function mapCfdiToValues(
     tc: monedaValida === "MXN" ? "" : String(c.tipo_cambio || ""),
     subtotal: String(c.subtotal || ""),
     iva: String(c.iva_trasladado || ""),
+    ieps: ieps ? String(ieps) : "",
     retenciones: String(c.retenciones || ""),
     categoriaId: data.ai.categoria_id ?? "",
     notas: data.ai.notas || "",
