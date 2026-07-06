@@ -69,7 +69,7 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
           rowKey={(r) => r.id}
           density="compact"
           rowClassName={(r) => r.id === embarqueId ? 'bg-accent/10 font-medium' : ''}
-          onRowClick={(r) => r.id !== embarqueId && navigate(`/embarques/${r.id}`)}
+          getRowHref={(r) => r.id !== embarqueId ? `/embarques/${r.id}` : null}
           footer={
             <TableRow className="hover:bg-transparent even:bg-transparent font-semibold">
               <TableCell colSpan={3} className="text-xs text-right">Totales:</TableCell>
