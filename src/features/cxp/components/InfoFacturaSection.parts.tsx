@@ -81,7 +81,7 @@ export function CanceladaBanner({ fecha, motivo }: { fecha: string | null; motiv
   );
 }
 
-export function pickSatVariant(estatus: string | null): "default" | "secondary" | "destructive" {
+function pickSatVariant(estatus: string | null): "default" | "secondary" | "destructive" {
   if (estatus === "Vigente") return "default";
   if (estatus === "Cancelado") return "destructive";
   return "secondary";
