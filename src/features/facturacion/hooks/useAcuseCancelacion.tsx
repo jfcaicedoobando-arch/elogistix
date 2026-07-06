@@ -75,7 +75,7 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
       const data: AcuseCancelacionData = {
         numero: factura.numero,
         uuidFiscal: factura.uuid_fiscal,
-        folioFiscal: factura.folio_fiscal,
+        folioFiscal: factura.folio_fiscal != null ? String(factura.folio_fiscal) : null,
         serie: factura.serie,
         clienteNombre: factura.cliente_nombre,
         rfcCliente: factura.rfc_cliente,
