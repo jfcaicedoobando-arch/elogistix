@@ -13,6 +13,7 @@ import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage } f
 import { buildNcPayload, validateNcContext } from "./helpers.ts";
 import { preloadNcContext, buildNcContextFromRows } from "./data.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
+import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
