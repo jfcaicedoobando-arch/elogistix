@@ -21,7 +21,7 @@ import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
-import { useCurrentOrgId } from "@/features/auth/hooks/useCurrentOrgId";
+
 import {
   listarConciliacionEmbarques,
   type EmbarqueConciliacion,
