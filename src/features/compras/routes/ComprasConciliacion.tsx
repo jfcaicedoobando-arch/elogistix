@@ -7,7 +7,6 @@
  * Un click en una fila lleva al detalle del embarque para operar los conceptos.
  */
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { GitCompare, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,16 +24,17 @@ import {
   type EstadoConciliacion,
 } from "@/features/compras/services/conciliacionEmbarques";
 import { buildConciliacionColumns } from "./_sections/conciliacionColumns";
+import { ConciliacionDetalleSheet } from "./_sections/ConciliacionDetalleSheet";
+import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 
 type EstadoFiltro = EstadoConciliacion | "todos";
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
 export default function ComprasConciliacion() {
-  const navigate = useNavigate();
-  
   const [estado, setEstado] = useState<EstadoFiltro>("todos");
   const [moneda, setMoneda] = useState<MonedaFiltro>("todas");
   const [search, setSearch] = useState("");
+  const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["compras", "conciliacion-embarques", { estado, moneda, search }],
@@ -122,10 +122,12 @@ export default function ComprasConciliacion() {
             isLoading={isLoading}
             emptyMessage="No hay embarques con conceptos de costo para conciliar."
             rowKey={(r) => `${r.embarque_id}-${r.moneda}`}
-            onRowClick={(row) => navigate(`/embarques/${row.embarque_id}`)}
+            onRowClick={(row) => setDetalle(row)}
           />
         </CardContent>
       </Card>
+
+      <ConciliacionDetalleSheet embarque={detalle} onClose={() => setDetalle(null)} />
     </PageContainer>
   );
 }

@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.184.0] - 2026-07-06
+
+- **Compras — Conciliación con desglose inline** — El click en una fila de `/compras/conciliacion` ya no navega a `/embarques/:id`; abre un **panel lateral** (`Sheet`) con el desglose cotizado vs real por concepto (usa `fetchReconciliacionEmbarque` + `calcularResumen`, sin nuevo servicio). Incluye resumen económico (cotizado, real, diferencia, %), tabla de conceptos con facturas de proveedor vinculadas y botón "Abrir embarque" para conservar el acceso completo. Nuevo archivo: `src/features/compras/routes/_sections/ConciliacionDetalleSheet.tsx`.
+
 ## [13.183.1] - 2026-07-06
 
 - **Chore — Knip: código muerto eliminado** — 5 archivos y 3 exports sin referencias detectados por `bun run lint:unused`:
