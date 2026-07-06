@@ -165,13 +165,14 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
 
   if (!fapiRes.ok) {
     const detail = await fapiRes.text().catch(() => "");
-    await supabase.from("bitacora_actividad").insert({
-      organization_id: target.data.organizationId,
-      user_id: userData.user.id,
+    await registrarBitacoraEdge(supabase, {
+      organizationId: target.data.organizationId,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
       accion: "cfdi_envio_failed",
-      entidad: target.data.tipo,
-      entidad_id: target.data.entidadId,
-      detalles: { email, status: fapiRes.status, detail },
+      entidadId: target.data.entidadId,
+      detalles: { email, tipo: target.data.tipo, status: fapiRes.status, detail },
     });
     const message = fapiRes.status === 404
       ? "CFDI no encontrado en FacturApi (puede estar cancelado)."
