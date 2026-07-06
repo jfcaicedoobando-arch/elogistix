@@ -6,6 +6,18 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.183.0] - 2026-07-06
+
+- **Cobertura — Lote 1: tests de helpers puros (Plan cobertura ≥40% funciones)** — 7 nuevos archivos de test, 61 casos, sobre helpers 0% previamente sin cobertura:
+  - `auditoria/hooks/revisiones/hash.test.ts` — determinismo de `hallazgoHash` y `revisionKey`.
+  - `auditoria/domain/ejecutivoScore.test.ts` — `calcularScore` (higiene sola vs 60/40 con riesgo), `calcularRegresion` (ventana ±3d, `diasAtras`).
+  - `auditoria/domain/ejecutivoRanking.test.ts` — MTTR promedio, conteo pendientes/vencidos, alias `rankingOperadores`.
+  - `auditoria/components/ejecutivo/scoreEstadoConfig.test.ts` — 4 estados con tonos semánticos.
+  - `auditoria/hooks/hallazgosTablaFilters.test.ts` — matriz de filtros (texto, regla, severidad, cliente, fechas, revisión, responsable) con `MatchCtx`.
+  - `costeo/components/TarifaForm.helpers.test.ts` — `esFormValido`, `calcularTotal`, `computeGuardarLabel`, `camposFaltantes`.
+  - `costeo/routes/CosteoTarifas.helpers.test.ts` — `formatVigencia`, `vigenciaHint` (offset relativo, sin fake timers), `buildInitialFromTarifa`.
+- Sin cambios de negocio. Objetivo del lote: subir el % global de funciones cubiertas (baseline 31.75%) sin bajar el umbral en `vitest.config.ts`.
+
 ## [13.182.0] - 2026-07-06
 
 - **Arquitectura — Ola 2: Power-of-10 splits reales (16 archivos)** — se divide toda la deuda de tamaño acumulada en la allowlist temporal introducida en Ola 1. Cada archivo queda ≤ 200 líneas sin cambios de negocio: sólo extracción de columnas, sub-componentes, tipos y helpers puros a archivos vecinos (`_sections/*` o `*.helpers.ts`).
