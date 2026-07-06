@@ -211,12 +211,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .eq("id", body.factura_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: factura.organization_id,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: factura.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: "facturapi_emitida",
-    entidad: "factura",
-    entidad_id: body.factura_id,
+    entidadId: body.factura_id,
+    entidadNombre: numeroFinal,
     detalles: {
       uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
       xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
