@@ -65,6 +65,8 @@ function DataTableInner<T>({
   skeletonRows = 5,
   onRowClick,
   onRowMouseEnter,
+  getRowHref,
+  getRowAriaLabel,
   rowKey,
   rowClassName,
   sortMode = "client",
