@@ -9,17 +9,32 @@ import { decidirEstadoFactura, type EstadoFacturaProveedor } from "./estadoFactu
 export type PagoProveedor = Tables<"pagos_proveedor">;
 
 // v13.56.1 — Columnas explícitas (auditoría: evita SELECT * en tablas financieras).
+// v13.190.0 — Incluye movimiento bancario vinculado (Ola 2 · Item 3) vía embed inverso.
 const PAGO_PROVEEDOR_COLUMNS =
-  "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by";
+  "id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd, diferencia_cambiaria_mxn, metodo_pago, referencia, cuenta_bancaria_id, notas, created_by, created_at, updated_at, deleted_at, deleted_by, bbva_movimientos!bbva_movimientos_pago_proveedor_id_fkey(id, fecha, concepto, referencia, cargo, abono, estado_conciliacion)";
 
-export async function listarPagosProveedor(facturaId: string): Promise<PagoProveedor[]> {
+export type PagoProveedorConMov = PagoProveedor & {
+  bbva_movimientos: Array<{
+    id: string;
+    fecha: string;
+    concepto: string | null;
+    referencia: string | null;
+    cargo: number | string;
+    abono: number | string;
+    estado_conciliacion: "Pendiente" | "Conciliado" | "Ignorado";
+  }> | null;
+};
+
+export async function listarPagosProveedor(facturaId: string): Promise<PagoProveedorConMov[]> {
   const { data, error } = await supabase
     .from("pagos_proveedor")
     .select(PAGO_PROVEEDOR_COLUMNS)
     .eq("proveedor_factura_id", facturaId)
+    .is("deleted_at", null)
     .order("fecha_pago", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as PagoProveedor[];
+  // SAFE-CAST: embed inverso está validado por el FK bbva_movimientos_pago_proveedor_id_fkey.
+  return (data ?? []) as unknown as PagoProveedorConMov[];
 }
 
 export interface RegistrarPagoProveedorInput {
