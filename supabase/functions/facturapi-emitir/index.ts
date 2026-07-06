@@ -175,6 +175,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
   const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
 
+  // Ola 3 · Item 5 — Respaldo automático del XML al bucket `facturas`.
+  // Best-effort: no bloquea el timbrado si falla; se puede reintentar después.
+  const respaldo = await respaldarXmlEmitido({
+    supabase, apiKey: resolved.data.apiKey,
+    facturapiId, organizationId: factura.organization_id,
+    facturaId: body.factura_id, uuid,
+  });
+
   // v13.146.0 — el `numero` interno se asigna aquí, no al crear el borrador.
   // FacturAPI es source of truth para folio y serie. El formato mantiene
   // `<serie><folio>` para compatibilidad con reportes/búsquedas existentes.
@@ -189,6 +197,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       serie: serieTimbrada,
       factura_pdf_url: pdfUrl,
       factura_xml_url: xmlUrl,
+      factura_xml_backup_path: respaldo.path,
       estado: "Emitida",
       ambiente: resolved.data.ambiente,
       timbrado_en: new Date().toISOString(),
