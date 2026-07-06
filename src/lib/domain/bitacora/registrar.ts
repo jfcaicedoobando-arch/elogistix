@@ -67,11 +67,11 @@ export async function registrarActividad(input: RegistrarActividadInput): Promis
       detalles: (input.detalles ?? {}) as Json,
     });
     if (error) {
-      // eslint-disable-next-line no-console
+       
       console.warn("[bitacora] registrar falló:", error.message);
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.warn("[bitacora] excepción:", err);
   }
 }

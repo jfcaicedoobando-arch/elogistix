@@ -41,11 +41,11 @@ export async function registrarBitacoraEdge(
       detalles: input.detalles ?? {},
     });
     if (error) {
-      // eslint-disable-next-line no-console
+       
       console.warn("[bitacora-edge] insert falló:", error);
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.warn("[bitacora-edge] excepción:", err);
   }
 }

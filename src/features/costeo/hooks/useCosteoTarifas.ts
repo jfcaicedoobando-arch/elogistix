@@ -36,6 +36,7 @@ export function useCosteoTarifaMutations() {
     onSuccess: (row) => {
       invalidate();
       toast({ title: "Tarifa guardada" });
+      // SAFE-CAST: `row` proviene de insertTarifaConRecargos (RPC tipada como Json); solo se leen campos opcionales para bitácora.
       const rowLike = row as unknown as { id?: string; naviera_nombre?: string; origen_nombre?: string; destino_nombre?: string };
       registrarActividad({
         modulo: "costeo",

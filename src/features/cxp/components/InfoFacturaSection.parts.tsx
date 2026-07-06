@@ -81,12 +81,6 @@ export function CanceladaBanner({ fecha, motivo }: { fecha: string | null; motiv
   );
 }
 
-function pickSatVariant(estatus: string | null): "default" | "secondary" | "destructive" {
-  if (estatus === "Vigente") return "default";
-  if (estatus === "Cancelado") return "destructive";
-  return "secondary";
-}
-
 export function UuidFiscalField({
   uuid, estatus, verifDate, isPending, onVerify,
 }: {
@@ -96,7 +90,8 @@ export function UuidFiscalField({
   isPending: boolean;
   onVerify: () => void;
 }) {
-  const variant = pickSatVariant(estatus);
+  const variant: "default" | "secondary" | "destructive" =
+    estatus === "Vigente" ? "default" : estatus === "Cancelado" ? "destructive" : "secondary";
   return (
     <div className="flex flex-col gap-1 min-w-0 col-span-2 md:col-span-1">
       <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
