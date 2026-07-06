@@ -72,10 +72,14 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
             <UserPlus className="h-3 w-3" /> Lead de origen
           </div>
           {leadId && lead ? (
-            <Link to={`/crm/leads/${leadId}`} className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50">
+            <DrilldownRow
+              href={`/crm/leads/${leadId}`}
+              ariaLabel={`Ver lead ${lead.empresa}`}
+              className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50"
+            >
               <div className="text-sm font-medium truncate">{lead.empresa}</div>
               <Badge variant="outline">{lead.estado}</Badge>
-            </Link>
+            </DrilldownRow>
           ) : (
             <Empty text="Oportunidad creada directamente (sin lead)." />
           )}
@@ -89,13 +93,18 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
           {!isLoadingCots && cots.length === 0 && <Empty text="Aún no hay cotizaciones vinculadas." />}
           <div className="space-y-1">
             {cots.map((c) => (
-              <Link key={c.id} to={`/cotizaciones/${c.id}/editar`} className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50">
+              <DrilldownRow
+                key={c.id}
+                href={`/cotizaciones/${c.id}/editar`}
+                ariaLabel={`Ver cotización ${c.folio}`}
+                className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50"
+              >
                 <div className="text-sm font-medium truncate">{c.folio}</div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">{c.modo}</Badge>
                   <Badge variant="secondary" className="text-xs">{c.estado}</Badge>
                 </div>
-              </Link>
+              </DrilldownRow>
             ))}
           </div>
         </div>
@@ -107,13 +116,18 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
           {embs.length === 0 && <Empty text="Sin embarques generados todavía." />}
           <div className="space-y-1">
             {embs.map((e) => (
-              <Link key={e.id} to={`/embarques/${e.id}`} className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50">
+              <DrilldownRow
+                key={e.id}
+                href={`/embarques/${e.id}`}
+                ariaLabel={`Ver embarque ${e.expediente}`}
+                className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50"
+              >
                 <div className="text-sm font-medium truncate">{e.expediente}</div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">{e.modo}</Badge>
                   <Badge variant="secondary" className="text-xs">{e.estado}</Badge>
                 </div>
-              </Link>
+              </DrilldownRow>
             ))}
           </div>
         </div>
