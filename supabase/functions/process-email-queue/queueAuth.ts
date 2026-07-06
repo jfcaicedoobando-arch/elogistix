@@ -23,14 +23,29 @@ async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promi
   // Verifica la firma del JWT contra el proyecto y exige role=service_role.
   // Reemplaza el decode manual base64 (vulnerable a tokens forjados).
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  if (!anonKey) return false
+  if (!anonKey) {
+    console.error('verifyServiceRoleToken: SUPABASE_ANON_KEY missing')
+    return false
+  }
   try {
     const anonClient = createClient(supabaseUrl, anonKey)
     const { data, error } = await anonClient.auth.getClaims(token)
-    if (error || !data?.claims) return false
-    return data.claims.role === 'service_role'
+    if (error) {
+      console.error('verifyServiceRoleToken: getClaims error', { message: error.message, name: error.name })
+      return false
+    }
+    if (!data?.claims) {
+      console.error('verifyServiceRoleToken: no claims returned', { tokenLen: token.length })
+      return false
+    }
+    const role = (data.claims as { role?: string }).role
+    if (role !== 'service_role') {
+      console.error('verifyServiceRoleToken: role mismatch', { role })
+      return false
+    }
+    return true
   } catch (e) {
-    console.error('JWT verification failed', e)
+    console.error('verifyServiceRoleToken: exception', e)
     return false
   }
 }
