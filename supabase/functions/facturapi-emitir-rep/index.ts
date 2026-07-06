@@ -153,7 +153,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       imp_pagado: impPagado,
       imp_saldo_insoluto: saldoInsoluto,
       metodo_pago: "PPD",
-      tasa_iva: 0.16,
+      tasa_iva: tasaIvaFactura,
     },
   };
 
