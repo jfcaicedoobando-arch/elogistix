@@ -71,12 +71,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     invoice = await facturapi.invoices.create(payload) as FapiInvoice;
   } catch (err) {
     const { status, detail } = describeFacturapiError(err);
-    await supabase.from("bitacora_actividad").insert({
-      organization_id: nc.organization_id,
-      user_id: userData.user.id,
+    await registrarBitacoraEdge(supabase, {
+      organizationId: nc.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
       accion: "facturapi_nc_emitir_failed",
-      entidad: "factura_nota_credito",
-      entidad_id: body.nota_credito_id,
+      entidadId: body.nota_credito_id,
       detalles: { status, response: detail },
     });
     const message = extractFacturapiMessage(detail, status);
