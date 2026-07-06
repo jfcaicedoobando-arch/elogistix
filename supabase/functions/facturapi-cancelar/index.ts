@@ -42,7 +42,45 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   const { data: userData, error: uErr } = await supabase.auth.getUser();
   if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
-  const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & { sustituida_por_factura_id?: string };
+  const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & {
+    sustituida_por_factura_id?: string;
+    solo_descargar_acuse?: boolean;
+  };
+
+  // Modo "solo descargar acuse": la factura ya se canceló antes y sólo
+  // necesitamos volver a preguntarle al SAT por el acuse (útil cuando la
+  // primera cancelación quedó con `acuse_cancelacion_status = 'pending'`).
+  if (rawBody.solo_descargar_acuse === true) {
+    if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
+    const { data: fac, error: facErr } = await supabase
+      .from("facturas")
+      .select("id, facturapi_id, organization_id, estado")
+      .eq("id", rawBody.factura_id)
+      .maybeSingle();
+    if (facErr || !fac) return json({ error: "factura_not_found" }, 404);
+    if (!fac.facturapi_id) return json({ error: "no_timbrada" }, 409);
+    if (fac.estado !== "Cancelada" && fac.estado !== "Sustituida") {
+      return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
+    }
+    const cli = await getFacturapiClient(supabase, fac.organization_id);
+    if (!cli.ok) return json({ error: cli.data.error, message: cli.data.message }, cli.data.status);
+    const acuseSolo = await descargarAcuseCancelacion(fac.facturapi_id, cli.data.apiKey);
+    const { error: updErr2 } = await supabase
+      .from("facturas")
+      .update({
+        acuse_cancelacion_xml: acuseSolo.xml ?? null,
+        acuse_cancelacion_fecha: acuseSolo.xml ? new Date().toISOString() : null,
+        acuse_cancelacion_status: acuseSolo.status,
+      })
+      .eq("id", fac.id);
+    if (updErr2) return json({ error: "db_update_failed", detail: updErr2.message }, 500);
+    return json({
+      ok: true,
+      acuse_status: acuseSolo.status,
+      acuse_guardado: !!acuseSolo.xml,
+    });
+  }
+
   // Si viene `sustituida_por_factura_id`, resolver su UUID SAT y su facturapi_id.
   // FacturApi espera el `facturapi_id` (ObjectId) en el parámetro `substitution`,
   // NO el UUID SAT. El UUID SAT sólo lo usamos para bitácora/auditoría.
