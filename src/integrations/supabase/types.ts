@@ -5111,6 +5111,7 @@ export type Database = {
           numero: string
           operador: string | null
           organization_id: string
+          origen: string | null
           proformas_origen: string[] | null
           rechazada_at: string | null
           snapshot_emision: Json | null
@@ -5159,6 +5160,7 @@ export type Database = {
           numero: string
           operador?: string | null
           organization_id?: string
+          origen?: string | null
           proformas_origen?: string[] | null
           rechazada_at?: string | null
           snapshot_emision?: Json | null
@@ -5207,6 +5209,7 @@ export type Database = {
           numero?: string
           operador?: string | null
           organization_id?: string
+          origen?: string | null
           proformas_origen?: string[] | null
           rechazada_at?: string | null
           snapshot_emision?: Json | null
@@ -6457,6 +6460,7 @@ export type Database = {
           numero: string
           operador: string | null
           organization_id: string
+          origen: string | null
           proformas_origen: string[] | null
           rechazada_at: string | null
           snapshot_emision: Json | null
@@ -6655,6 +6659,7 @@ export type Database = {
           numero: string
           operador: string | null
           organization_id: string
+          origen: string | null
           proformas_origen: string[] | null
           rechazada_at: string | null
           snapshot_emision: Json | null
@@ -6865,6 +6870,7 @@ export type Database = {
           numero: string
           operador: string | null
           organization_id: string
+          origen: string | null
           proformas_origen: string[] | null
           rechazada_at: string | null
           snapshot_emision: Json | null

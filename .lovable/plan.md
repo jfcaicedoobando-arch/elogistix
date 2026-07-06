@@ -1,37 +1,55 @@
+## Contexto
 
-## Errores encontrados en Sentry (release `libre-carga@13.197.0`)
+De las 331 proformas de Elogistix, **285 aparecen como `estado_proforma='facturada'` pero `estado_aprobacion='borrador'**` — huella del ERP anterior. Al desagregarlas encontré 3 subgrupos muy distintos, y no se pueden tratar todos igual.
 
-### 1. `JAVASCRIPT-REACT-22` — HTTP 500 en `POST /~api/analytics`
-- Culpable: `flock.js` (script de tracking del hosting `librecarga.com`, no es código nuestro).
-- Ruta: `/`, 2 eventos, 2 usuarios. No rompe la app (queda como error no manejado del pixel de analítica del host).
-- **Acción propuesta:** ignorar en Sentry (crear inbound filter / `ignoreErrors` para peticiones a `/~api/analytics` y para stack frames de `flock.js`). No hay fix de código.
+## Lo que descubrí al abrir el grupo
 
-### 2. `JAVASCRIPT-REACT-23` — "Objects are not valid as a React child (found: object with keys {$$typeof, render, displayName})"
-- Ruta: `/embarques/:id` (tab del detalle de embarque).
-- Component stack (minificado): `EmbarqueDetalle → Tabs → TabsContent → …contenido de un tab… → DataTable → tbody → tr → td → div`.
-- La forma del objeto (`$$typeof`, `render`, `displayName`) es **la firma exacta de un componente `React.forwardRef`** (Lucide icon, Radix primitive, etc.). Alguien está renderizando la **referencia del componente** en lugar de instanciarlo — típicamente `{Icon}` en vez de `<Icon />`, o `cell: () => Icon` en columnas.
-- Sólo ocurre para un usuario/embarque (`a006c055-…`), lo que sugiere que depende de un dato del embarque (una columna que recibe un componente como `value`).
 
-### Plan de acción
+| Subgrupo                                                             | Filas | Qué significa                                                                |
+| -------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------- |
+| **A. Facturada real dentro del sistema** (`factura_id` presente)     | 120   | Están genuinamente facturadas, solo les falta cerrar el flujo de aprobación. |
+| **B. Facturada por ERP anterior** (`folio_factura_externa` presente) | 11    | Legítimas, facturadas fuera del sistema.                                     |
+| **C. "Facturadas fantasma"** (sin `factura_id` ni folio externo)     | 154   | Dicen "facturada" pero **no hay evidencia** — inconsistencia del ERP viejo.  |
 
-1. **Confirmar la línea exacta con Seer.** Correr `analyze_issue_with_seer` sobre `JAVASCRIPT-REACT-23`. Con release y sourcemaps subidos (`SENTRY_AUTH_TOKEN`), Seer desmangleará las frames `Uo`, `Qn`, `On`, `k`, `N` y apuntará al `.tsx` real.
-2. **Con el archivo identificado, arreglar el render.** Cambios esperados (uno de estos patrones):
-   - `{icon}` → `<Icon />` (o `React.createElement(icon)`) en la celda/badge afectada.
-   - `cell: ({ row }) => row.original.icon` → envolver en JSX con `<Icon />`.
-   - Coerción defensiva: si la columna recibe un `ReactNode | ComponentType`, normalizar a `ReactNode` antes de renderizar.
-3. **Prevención (test de arquitectura).** Añadir un test en `src/__tests__/architecture/` que detecte `cell:` que retornen identificadores `PascalCase` de un `import` de `lucide-react` sin JSX (regex + AST simple). Evita repetición del mismo bug en futuras columnas.
-4. **Filtrar en Sentry el ruido del pixel de analítica** (`JAVASCRIPT-REACT-22`):
-   - Añadir en `src/lib/observability/sentry/core.ts` un `beforeSend` que descarte eventos con `mechanism === "auto.http.client.xhr"` cuya `request.url` termine en `/~api/analytics` o cuyo stack contenga `flock.js`.
-5. **Cerrar issues.** `update_issue` a `resolved` para ambos en el mismo turno del fix, referenciando los IDs en el `CHANGELOG.md` (siguiendo la memoria `mem://preferences/sentry-resolve`).
-6. **Versionado.** Bump `APP_VERSION` a `13.198.1` (o `13.199.0` si el filtro Sentry lo consideras feature) + entrada nueva en `CHANGELOG.md`.
 
-### Detalles técnicos
+Además hay **43 proformas en `pendiente/borrador**` que **no toco** (son captura legítima en curso).
 
-- No tocar `src/integrations/supabase/client.ts` ni tipos auto-generados.
-- El filtro Sentry va sólo en cliente (`beforeSend`); no afecta captura de errores reales.
-- El test de arquitectura debe usar el mismo estilo que `no-raw-table.test.ts` / `sentry-imports-guardrail.test.ts`.
-- Si Seer no logra desmangle (falta sourcemap para ese release), pediremos al usuario abrir la ruta `/embarques/a006c055-e574-4e98-8738-b4f280c3c908` en preview para reproducir con dev-map y capturar la columna exacta.
+## Propuesta de backfill en 2 pasos
 
-### Analogía
+### Paso 1 — Normalizar las 131 proformas con evidencia real (A + B)
 
-Es como si un contenedor traía la **etiqueta del modelo de contenedor** pegada en el lugar donde debería ir el **contenedor mismo**: React esperaba "el ícono ya pintado" y le entregaron "el plano de cómo pintarlo". Hay que decirle a la celda que primero lo instancie (`<Icon />`) antes de meterlo a la tabla.
+Copiar `estado_revision` → `estado_aprobacion` solo cuando hay `factura_id` o `folio_factura_externa`:
+
+```text
+estado_revision = 'consolidada' → estado_aprobacion = 'consolidada'
+estado_revision = 'aprobada'    → estado_aprobacion = 'aprobada'
+estado_revision = 'pendiente'   → NO se toca (no tiene sentido aprobar sin revisar)
+```
+
+Impacto estimado: ~131 filas migradas de `borrador` al estado de revisión que ya tenían.
+
+### Paso 2 — Decidir qué hacer con las 154 "facturadas fantasma"
+
+Aquí necesito tu decisión. Tres opciones:
+
+**Opción 1 — Revertir a `pendiente**` (más limpio)
+Regresar `estado_proforma` a `pendiente`. Aparecerán en la bandeja de "por facturar" y el equipo decide si de verdad debieron facturarse o si eran basura del ERP viejo. Reversible.
+
+**Opción 2 — Marcar como legado archivado**
+Agregar un flag `origen='legacy_erp'` (nueva columna) y mantenerlas como facturadas sin factura. No estorban a operación pero quedan visibles en reportes históricos.
+
+**Opción 3 — Solo aprobarlas y dejarlas como están**
+Copiar `estado_revision → estado_aprobacion` igual que en Paso 1, aceptando que "facturada sin factura" es la realidad heredada. La opción más rápida pero conserva la inconsistencia.
+
+## Sección técnica
+
+- Todo corre en una transacción con respaldo previo a `_backup_backfill_proformas_20260706` (copia completa de las 285 filas antes de tocar).
+- Se usa el mismo enfoque que la fusión de clientes: `BEGIN/COMMIT` con verificación al final (`DO $$ ... RAISE EXCEPTION ... $$`).
+- No requiere migración de esquema salvo que elijas **Opción 2** (agrega columna `origen` a `proformas`).
+- Los 5 casos "facturada + revision=pendiente + sin factura" caen naturalmente en el subgrupo C y siguen la misma decisión que las 154.
+- No se tocan las 3 proformas ya en `facturada/aprobada` ni las 43 en `pendiente/borrador`.
+
+## Lo que necesito de ti
+
+1. **¿Confirmas el Paso 1?** (backfill de las 131 con evidencia — bajo riesgo, reversible). Las proformas que tienen evidencia se marcan como ya facturadas. 
+2. **¿Qué opción tomamos para el Paso 2** (las 154 fantasma)? Vamos con la opcion 2 y se marcan como facturadas. 
