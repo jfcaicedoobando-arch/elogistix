@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import { formatNumber } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
