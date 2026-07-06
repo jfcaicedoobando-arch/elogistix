@@ -90,6 +90,27 @@ export function useNuevaFacturaProveedorForm(
       : prev);
   };
 
+  /**
+   * Aplica de golpe una lista de sugerencias del matcher: reemplaza el estado
+   * actual de vínculos por las sugerencias entregadas.
+   */
+  const aplicarSugerencias = (sugs: ReadonlyArray<{
+    conceptoId: string; concepto: string; monto: number; embarque_id: string;
+  }>) => {
+    setVinculos(() => {
+      const next: VinculosState = {};
+      for (const s of sugs) {
+        next[s.conceptoId] = {
+          embarqueId: s.embarque_id,
+          descripcion: s.concepto,
+          monto: s.monto,
+          montoOriginal: s.monto,
+        };
+      }
+      return next;
+    });
+  };
+
   const reset = () => {
     setValues(initialValues());
     setErrors({});
@@ -172,7 +193,7 @@ export function useNuevaFacturaProveedorForm(
     values, errors, mode, setMode,
     total, pendingCfdi, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed,
-    vinculos, toggleVinculo, setVinculoMonto,
+    vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit,
     isPending: crear.isPending,

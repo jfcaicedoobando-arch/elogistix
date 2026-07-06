@@ -1,110 +1,100 @@
-# Plan: Rediseño del Módulo de Compras
 
-## Problema (auditoría)
+# Matching automático de conciliación factura ↔ conceptos_costo
 
-Hoy Compras vive en 3 prefijos distintos (`/compras/*`, `/cxp/*`, `/proveedores`) y todas sus páginas renderizan un `ComprasTabStrip` que navega a rutas que **ya están en el sidebar**. Resultado: el usuario ve los mismos destinos duplicados (sidebar + tabs) y no entiende qué es un módulo y qué es un atajo.
+## Contexto
 
-Además hay funcionalidad valiosa que existe en BD/servicios pero no tiene UI: pagos globales, notas de crédito globales, presupuesto vs. real, workflow de aprobación completo, dashboard.
+Hoy en el diálogo "Capturar factura de proveedor" ya existe `VincularEmbarqueSection`: el usuario ve manualmente los conceptos_costo pendientes del proveedor y marca cuáles cubre la factura. El servicio `vincularFacturaAConceptos` liquida los que quedan ≥99% cubiertos.
 
-## Objetivo
+**Lo que falta**: el sistema no *sugiere* nada. Con facturas de 15+ conceptos, el usuario debe cruzar a ojo la descripción de cada línea de la factura con cada concepto pendiente. Es tedioso y propenso a error.
 
-Un solo módulo `/compras` con navegación **exclusivamente por sidebar** (sin tabs cross-módulo), rutas coherentes, y las 3 piezas faltantes que pediste: **aprobación**, **conciliación con embarques** y **dashboard**.
+## Qué se construye
 
----
+Un motor de **matching por similitud + monto** que:
 
-## Estructura final propuesta
+1. Compara cada línea capturada de la factura contra los `conceptos_costo` abiertos del mismo proveedor.
+2. Calcula un score `0..1` combinando:
+   - **Similitud de descripción** (normalizada: sin acentos, minúsculas, sin stopwords "servicio/flete/cargo/de/del/la"). Bigrama de Dice.
+   - **Cercanía de monto** (misma moneda; tolerancia ±5% = 1.0, ±20% = 0.5, >20% = 0).
+   - **Bonus** si el concepto ya está anclado al embarque_id sugerido por otro match del mismo lote.
+3. Recomienda automáticamente los pares con score ≥ 0.75 (confianza alta) y muestra sugerencias con score 0.5–0.75 como "revisar".
+
+## Cambios UI
+
+### A. En captura de factura (diálogo existente)
+
+Nuevo botón **"Sugerir vinculación automática"** dentro de `VincularEmbarqueSection`, visible cuando hay ≥ 1 línea capturada Y ≥ 1 concepto pendiente:
+
+- Al presionarlo, corre el matcher y pre-selecciona las coincidencias con score ≥ 0.75, ajustando el monto al del concepto original.
+- Muestra un resumen breve: `"3 sugerencias aplicadas · 2 dudosas · 1 sin match"`.
+- Un `Popover` "Ver detalle" lista línea-por-línea: emoji del score, descripción factura → descripción concepto, monto, score, botón "Aceptar"/"Rechazar" para las dudosas.
+
+### B. En detalle de factura ya capturada (`/compras/facturas/:id`)
+
+Cuando la factura está capturada pero sin vínculos (`proveedor_facturas_conceptos` vacío) y hay conceptos_costo pendientes del proveedor:
+
+- Banner "Esta factura no está conciliada con ningún embarque. **Sugerir vinculación**".
+- Reusa el mismo motor y modal.
+
+## Estructura de archivos
 
 ```text
-Sidebar "Compras"
-├── Dashboard              /compras
-├── Bandejas
-│   ├── Por capturar       /compras/por-capturar   (antes /cxp/por-capturar)
-│   ├── Por aprobar        /compras/por-aprobar    (NUEVO)
-│   └── Por pagar          /compras/por-pagar      (antes /cxp/por-pagar)
-├── Facturas               /compras/facturas       (antes /cxp)
-│   └── :id                /compras/facturas/:id   (drawer/detalle)
-├── Pagos                  /compras/pagos          (NUEVO, listado global)
-├── Notas de crédito       /compras/notas-credito  (NUEVO, listado global)
-├── Proveedores            /compras/proveedores    (antes /proveedores)
-│   └── :id                /compras/proveedores/:id
-├── Antigüedad             /compras/aging          (ya existe, se expone en sidebar)
-└── Reportes               /compras/reportes       (NUEVO: gasto por proveedor/categoría/período)
+src/features/compras/matching/
+├── normalizarTexto.ts         # normaliza descripciones (acentos, stopwords)
+├── similitud.ts               # dice bigram + score compuesto
+├── matcher.ts                 # sugerirVinculos(lineasFactura, conceptosAbiertos) → Sugerencia[]
+└── __tests__/
+    ├── normalizarTexto.test.ts
+    ├── similitud.test.ts
+    └── matcher.test.ts        # ≥ 8 casos: match exacto, sinónimos, monedas distintas, empates, sin match
 ```
 
-Rutas viejas → **redirects 301 client-side** para no romper links guardados.
+Componentes:
 
----
+```text
+src/features/cxp/components/
+├── VincularEmbarqueSection.tsx        # + botón "Sugerir" y estado de sugerencias
+├── SugerenciasVinculoDialog.tsx       # NUEVO: revisar/aceptar dudosas
+└── BannerConciliacionSugerida.tsx     # NUEVO: banner en detalle de factura
+```
 
-## Olas de implementación
+Hook:
 
-### Ola A — Navegación y estructura (base)
-1. **Eliminar `ComprasTabStrip`** de las 6 páginas donde se usa. La navegación entre páginas del módulo se hace únicamente por sidebar.
-2. **Renombrar rutas** al prefijo `/compras/*` en `appRoutes.tsx`. Agregar redirects desde las rutas viejas (`/cxp`, `/cxp/por-capturar`, `/cxp/por-pagar`, `/proveedores`, `/proveedores/:id`) hacia las nuevas.
-3. **Reconstruir sección "Compras" del sidebar** en `sidebarRoleBuilders.ts` con la estructura de arriba, ordenada por flujo (Dashboard → Bandejas → Facturas → Pagos → NC → Proveedores → Aging → Reportes).
-4. **Ajustar roles**: `contador`, `tesorero`, `auxiliar_contable`, `admin_org`, `admin` acceden a la sección; `gerente_operaciones` mantiene solo lectura de Facturas y Proveedores.
-5. **Retirar `/cartera` de la sección Compras** (es CxC, se queda en "Facturación").
+```text
+src/features/cxp/hooks/useSugerenciasVinculo.ts
+```
 
-### Ola B — Dashboard de Compras (`/compras`)
-Reemplaza el hub actual por un dashboard real con:
-- **KPIs**: total por pagar (MXN/USD), vencido, próximo a vencer 7 días, por aprobar, por capturar.
-- **Aging chart** (5 cubetas) resumen, click → `/compras/aging`.
-- **Top 5 proveedores por saldo** con link a detalle.
-- **Gasto del mes por categoría** (usa `presupuesto_categorias`).
-- **Presupuesto vs. real del mes** (usa `presupuesto_mensual`, ya existe la tabla).
-- **Últimas facturas capturadas** (5).
+## Modelo de datos
 
-Solo lectura. Todo lo demás vive en sus rutas.
+**No** requiere migración. Todo se calcula en cliente sobre datos que ya trae `fetchConceptosCostoAbiertosDeProveedor` + las líneas del formulario / de `conceptos_factura`.
 
-### Ola C — Workflow de aprobación (`/compras/por-aprobar`)
-1. Nueva bandeja dedicada. Hoy la aprobación vive dispersa en `Cxp.tsx` con deep-link `?aprobacion=pendiente`; la extraemos a su propia ruta.
-2. Estados de `proveedor_facturas`: `borrador → pendiente_aprobacion → aprobada → pagada` (+ `rechazada`). Migración para añadir `estado_aprobacion`, `aprobada_por`, `aprobada_en`, `motivo_rechazo` si faltan.
-3. UI: tabla con filtros (proveedor, monto, categoría, embarque), acciones Aprobar/Rechazar con motivo, comentarios.
-4. Reglas por rol: `contador` y `admin_org` pueden aprobar; `auxiliar_contable` solo captura.
-5. Badge dinámico en sidebar con el conteo pendiente (ya existe `cxpAprobacionCount.ts`).
+## Scoring (referencia técnica)
 
-### Ola D — Conciliación con embarques
-1. Vista lateral en el detalle de factura: conceptos de costo del embarque vs. conceptos de la factura, con matching automático por descripción/monto.
-2. Botón "Vincular concepto" que crea el enlace en `proveedor_facturas_conceptos`.
-3. En el detalle de embarque, mostrar sección "Facturas de proveedor" con estado (conciliado / parcial / sin factura).
-4. Reporte de discrepancias: presupuestado vs. facturado por embarque.
+```text
+score(linea, concepto) =
+  0.6 * similitudDescripcion(linea.desc, concepto.concepto)
++ 0.4 * cercaniaMonto(linea.monto, concepto.monto, moneda)
+- 0.5  si moneda_linea ≠ moneda_concepto   (penalización dura)
+```
 
-### Ola E — Pagos y Notas de crédito globales
-1. `/compras/pagos`: listado paginado de `pagos_proveedor` con filtros (proveedor, método, fechas, cuenta bancaria). Export CSV. Click → factura origen.
-2. `/compras/notas-credito`: listado paginado de `proveedor_notas_credito` con filtros. Alta desde aquí (además del acceso actual desde el detalle de factura).
+`similitudDescripcion` usa coeficiente de Sørensen–Dice sobre bigramas de caracteres, tras normalizar (lowercase, sin diacríticos, quitar tokens genéricos).
 
-### Ola F — Reportes
-`/compras/reportes` con 3 vistas:
-- Gasto por proveedor (top N, período).
-- Gasto por categoría de presupuesto (barras + tabla).
-- Evolución mensual (12 meses).
+`cercaniaMonto(a, b) = max(0, 1 - |a-b|/max(a,b) * 4)` → ±5% ≈ 0.8, ±25% ≈ 0.
 
-Export CSV/PDF.
+Un concepto sólo puede vincularse a UNA línea (asignación greedy por score descendente).
 
----
+## Tests
 
-## Tests y guardrails
+- Unitarios del matcher (fixtures con casos reales: "Flete marítimo Shanghái–Manzanillo" ↔ "flete maritimo mzo").
+- Component test de `VincularEmbarqueSection` verificando que "Sugerir" pre-marca las sugerencias fuertes.
+- Guardrail: `no-raw-table.test.ts` sigue verde (no toca Supabase directo desde componentes).
 
-Cada ola termina con:
-- **Tests unitarios** de los servicios nuevos (aprobación, listado de pagos, listado de NC, reportes).
-- **Test de navegación**: `sidebarComprasSection.test.tsx` que valida que la sección tenga exactamente los ítems esperados por rol.
-- **Guardrail arquitectural**: extender `pagedListsAllowlist.test.ts` con las nuevas rutas (`por-aprobar`, `pagos`, `notas-credito`) para forzar uso de `useServerPagedList`.
-- **Test de redirects**: `comprasRedirects.test.tsx` que verifica que `/cxp`, `/cxp/por-capturar`, `/cxp/por-pagar`, `/proveedores` redirigen a `/compras/*`.
-- Actualizar `CHANGELOG.md` y bump `APP_VERSION` en cada ola.
+## Entregables por ola
 
----
+**Única ola (v13.180.0)**:
+1. Motor + tests.
+2. Botón "Sugerir" en el diálogo de captura.
+3. `SugerenciasVinculoDialog` para revisar dudosas.
+4. Banner en detalle de factura.
+5. Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
 
-## Detalles técnicos
-
-- **`ComprasTabStrip`**: se elimina el import de las 6 páginas (`Compras.tsx:111`, `Proveedores.tsx:57`, `CxpPorCapturar.tsx:90`, `Cxp.tsx:107`, `CxpPorPagar.tsx:174`, `CxpAging.tsx:111`) y luego se borra el archivo.
-- **Renombrado de rutas**: se hace en `src/routes/appRoutes.tsx:65-68` y se añaden `<Route path="/cxp/*" element={<Navigate to="/compras/facturas" replace />} />` etc. Los componentes NO se mueven de carpeta en esta ola (evita ruido); solo cambia el `path`.
-- **Migración de estados aprobación**: nueva migración en `supabase/migrations/` que agrega columnas si faltan y RLS ya existentes se mantienen.
-- **Dashboard**: nuevo componente `src/features/compras/routes/ComprasDashboard.tsx` que reemplaza `Compras.tsx` actual (renombramos el archivo viejo a `ComprasHubLegacy.tsx` temporalmente y lo eliminamos al terminar Ola B).
-- **Actualizar `mem://features/modulo-compras`** para reflejar el nuevo alcance real.
-
----
-
-## Orden y entrega
-
-Ola A y B en el próximo turno (base + dashboard). Luego C, D, E, F, una por turno, con sus tests. Al finalizar cada ola, resumen breve + siguiente pregunta.
-
-¿Arranco por **Ola A + B** (navegación limpia + dashboard) en el siguiente mensaje?
+No toca base de datos, no toca RLS, no toca edge functions.
