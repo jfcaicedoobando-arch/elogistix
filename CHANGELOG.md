@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.195.1] - 2026-07-06
+
+- **CI verde tras Fase α.1**. Fixes de higiene detectados por el pipeline al mergear el batch anterior:
+  - `src/lib/domain/bitacoraDescripcion.ts` (215→194 líneas): `GRUPOS_ACCION` movido a `bitacoraGrupos.ts` para respetar Power-of-10 (≤200 líneas). `describirEntrada` mantiene su despacho por acción con `eslint-disable-next-line complexity` justificado (branches lineales sin lógica anidada).
+  - `src/features/cxp/services/proveedorFacturas.ts` (208→148 líneas): CRUD (`crear`, `existeDuplicada`, `softDelete`) movido a `proveedorFacturas.crud.ts`. El archivo original ahora solo aloja lectores + KPIs.
+  - `src/features/costeo/hooks/useCosteoTarifas.ts`: cast `as unknown as {...}` marcado con `// SAFE-CAST:` — solo lectura de campos opcionales para bitácora, no cruza fronteras de datos.
+  - `src/features/cxp/components/InfoFacturaSection.parts.tsx`: `pickSatVariant` inlineado dentro de `UuidFiscalField` para eliminar warning de `react-refresh/only-export-components`.
+  - `supabase/functions/facturapi-emitir-nota-credito/index.ts`: bloque `try/catch` de emisión FacturApi extraído a `createNcInvoice` para bajar complejidad ciclomática 17→≤16.
+  - Directivas `eslint-disable no-console` no usadas removidas de `bitacora/registrar.ts` y `_shared/bitacora.ts`.
+- **Resultado**: `bun run lint --max-warnings 0` ✔, `bun run audit:report` = 0 oversized · 0 HIGH · 0 CRITICAL, 161 tests de arquitectura + CxP pasando.
+
 ## [13.195.0] - 2026-07-06
 
 - **Fase α.1 — Fixes fiscales críticos (Roadmap α→δ)**. Cinco correcciones que estaban rechazando o degradando CFDIs sin avisar al usuario:
