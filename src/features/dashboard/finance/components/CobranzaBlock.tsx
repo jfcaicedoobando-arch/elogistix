@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { AgingBuckets } from "@/features/dashboard/finance/hooks/useFinanceDashboard";
 
 interface FacturaVencida {
