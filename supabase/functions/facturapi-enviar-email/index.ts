@@ -180,13 +180,14 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     return json({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
   }
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: target.data.organizationId,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: target.data.organizationId,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: "cfdi_enviado",
-    entidad: target.data.tipo,
-    entidad_id: target.data.entidadId,
-    detalles: { email },
+    entidadId: target.data.entidadId,
+    detalles: { email, tipo: target.data.tipo },
   });
 
   return json({ ok: true, enviado_a: email });
