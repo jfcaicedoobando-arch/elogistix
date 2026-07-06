@@ -183,7 +183,7 @@ export default function FacturaDetalle() {
         snapshotEmision={factura.snapshot_emision}
         canEdit={canEdit}
       />
-      {isAdmin && <FacturaBitacoraCard facturaId={factura.id} />}
+      <FacturaBitacoraCard facturaId={factura.id} />
 
       <FacturaDetalleModales
         factura={factura}
