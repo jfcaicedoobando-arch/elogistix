@@ -23,6 +23,7 @@ interface ToolbarProps {
   onPagar?: (f: FacturaCxP) => void;
   onEditar?: (f: FacturaCxP) => void;
   onEliminar?: (f: FacturaCxP) => void;
+  onCerrarSinPago?: (f: FacturaCxP) => void;
 }
 
 export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, onEliminar }: ToolbarProps) {
