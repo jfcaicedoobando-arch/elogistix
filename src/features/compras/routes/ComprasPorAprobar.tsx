@@ -7,11 +7,23 @@
  * donde ya vive el `BotonesAprobacionFactura` para aprobar/rechazar.
  */
 import { useMemo, useState } from "react";
-import { ShieldCheck, Inbox, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
+import { ShieldCheck, Inbox, ClipboardCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable } from "@/components/shared/DataTable";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import {
   Tabs, TabsList, TabsTrigger,
@@ -20,6 +32,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
+import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
