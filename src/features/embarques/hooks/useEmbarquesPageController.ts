@@ -74,7 +74,12 @@ export function useEmbarquesPageController() {
         ? todos
         : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === state.filterEstado);
 
-      if (filtradosPorEstado.length === 0) {
+      // Filtro de alerta también es client-side (se resuelve contra un set de IDs).
+      const filtradosFinal = state.filterAlerta === "todos" || !state.alertIdSet
+        ? filtradosPorEstado
+        : filtradosPorEstado.filter((e) => state.alertIdSet!.has(e.id));
+
+      if (filtradosFinal.length === 0) {
         notifyError(toast, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques.", method: "USE_EMBARQUES_PAGE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return;
       }
