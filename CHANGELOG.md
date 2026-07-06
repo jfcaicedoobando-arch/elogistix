@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.1] - 2026-07-06
+
+- **Fix CI (corrida 28812368567)**: se corrigen las 5 regresiones que dejaron rojos los jobs `quality`, `tests` y `coverage`:
+  - `cerrarFacturaSinPago.ts:59` — se agrega marcador `// SAFE-CAST:` al `data as unknown as string` (RPC retorna uuid pero Supabase la tipa como `unknown` por el parámetro opcional). Desbloquea `architecture.test.ts` y `safe-casts-services.test.ts`.
+  - `DataTableBody.tsx` — nueva envoltura `useSafeNavigate` que gatea `useNavigate` con `useInRouterContext()` y cae a no-op fuera de `<Router>`. Desbloquea los 7 tests E2E de `DataTable` sin cambiar el comportamiento en producción (siempre hay router).
+  - Se elimina el export deprecado y huérfano `CATALOGO_CONCEPTOS` de `embarqueConstants.ts` (knip lo marcaba como *unused export*; los tests de arquitectura ya prohibían importarlo).
+
 ## [13.205.0] - 2026-07-06
 
 - **Módulo Compras · Ola A verificada + Ola B (arranque)**:

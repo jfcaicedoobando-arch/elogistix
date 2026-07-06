@@ -56,5 +56,8 @@ export async function cerrarFacturaProveedorSinPago(params: {
     ...(comentario ? { p_comentario: comentario } : {}),
   });
   if (error) throw error;
+  // SAFE-CAST: la RPC `cerrar_factura_proveedor_sin_pago` retorna `uuid` (text)
+  // — la firma generada por Supabase la tipa como `unknown` porque acepta
+  // parámetro opcional `p_comentario`. La validación de forma la hace la RPC.
   return data as unknown as string;
 }
