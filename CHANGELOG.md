@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.183.1] - 2026-07-06
+
+- **Chore — Knip: código muerto eliminado** — 5 archivos y 3 exports sin referencias detectados por `bun run lint:unused`:
+  - Elimina `LeadsFiltersBar.tsx`, `DialogCancelarRep.tsx`, `DialogHistorialPagos.tsx`, `DialogTimbrarRep.tsx` y `PagoFacturaRow.tsx` (huérfanos de refactors previos).
+  - Elimina `SIDEBAR_COMPRAS_HUB` (obsoleto desde v13.175.0, ya reemplazado por `SIDEBAR_COMPRAS_ITEMS[0]`), `INITIAL_CXP_CAPTURAR_FILTERS` (constante nunca consumida) y `ESTADO_GARANTIA_COLOR` (mapa de tokens no referenciado).
+  - `bun run lint:unused` ahora pasa sin hallazgos.
+
 ## [13.183.0] - 2026-07-06
 
 - **Cobertura — Lote 1: tests de helpers puros (Plan cobertura ≥40% funciones)** — 7 nuevos archivos de test, 61 casos, sobre helpers 0% previamente sin cobertura:
