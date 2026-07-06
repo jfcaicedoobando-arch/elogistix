@@ -28,8 +28,9 @@ describe("cercaniaMonto", () => {
   it("≥ 0.8 dentro del ±5%", () => {
     expect(cercaniaMonto(1000, 1050)).toBeGreaterThanOrEqual(0.8);
   });
-  it("≈ 0 en ±25%", () => {
-    expect(cercaniaMonto(1000, 1250)).toBeCloseTo(0, 2);
+  it("≈ 0 cuando |Δ|/max ≥ 25%", () => {
+    expect(cercaniaMonto(1000, 1400)).toBe(0); // rel ≈ 0.286 → 0
+    expect(cercaniaMonto(1000, 2000)).toBe(0); // rel = 0.5 → 0
   });
   it("cero si alguno es no positivo", () => {
     expect(cercaniaMonto(0, 100)).toBe(0);
