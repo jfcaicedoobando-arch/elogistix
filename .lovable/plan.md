@@ -1,44 +1,33 @@
-## Diagnóstico
+## Qué hace "Sustituir CFDI"
 
-El toast verde no mintió: el pago **se guardó correctamente**. El problema es que la factura 862 está **duplicada en la base de datos**.
+Cuando una factura ya está timbrada pero salió con un error (RFC/monto/concepto), el SAT no permite editarla — hay que emitir una NUEVA factura correcta y cancelar la vieja apuntando a la nueva (motivo **01 · Comprobante con errores con relación**). El botón "Sustituir CFDI" es el asistente que hace ese flujo en tres pasos:
 
-### Lo que encontré en Elogistix
+1. **Duplica** la factura como un borrador editable (RPC `duplicar_factura_para_sustitucion`), copiando conceptos y datos del cliente.
+2. Te lleva al detalle del borrador para que la corrijas y la **timbres**.
+3. Regresa al diálogo para **cancelar el CFDI original** referenciando el UUID de la sustituta. La original queda marcada como `Sustituida`.
 
-Hay DOS registros distintos con `numero = '862'`, mismo expediente `ELIMP00113`, mismo embarque, mismo cliente, mismo total ($3,370 USD), pero originados por proformas diferentes:
+Analogía: es como cuando escribes mal un cheque — no lo tachas, escribes uno nuevo con la corrección y cancelas el primero anotando "reemplazado por el cheque X". Aquí el sistema hace ese "anotado" formal ante el SAT.
 
-| id (interno) | Creada | Proforma origen | Estado actual |
-|---|---|---|---|
-| `8970c16a…602e41` | 04/05/2026 | PRO-2026-0045 | **Pagada** ← aquí cayó el pago |
-| `014bb9e4…d242fd` | 13/05/2026 | PRO-2026-0238 | Emitida (sin pago) ← lo que Karol ve |
+## Problema del layout en F955
 
-El pago (`6ba92b56…`, $3,370 USD, transferencia, 06/07) se aplicó al registro del 04/05, así que quedó "Pagada"… pero la vista de facturas de Karol le muestra la del 13/05, que sigue "Emitida". Analogía: es como tener dos recibos con el mismo folio pegados uno atrás del otro — le abonaste al de abajo y el de arriba sigue "sin pagar".
+F955 es timbrada y no cancelada, así que se renderizan 6 botones: `PDF · XML | Email · Ver embarque | Sustituir · Cancelar`. El grupo destructivo (Sustituir + Cancelar) usa `ml-auto` para empujarse al extremo derecho. En viewports intermedios (≈1080 px) eso genera dos problemas:
 
-Ninguna de las dos está timbrada (`facturapi_id` y `uuid_fiscal` vacíos en ambas) — son facturas legacy con folio externo capturado manualmente. Por eso el sistema nunca marcó el duplicado.
+- **Sin wrap**: queda un hueco enorme entre "Ver embarque" y "Sustituir CFDI".
+- **Con wrap**: el grupo destructivo salta a una segunda línea pegado a la derecha, desalineado del resto.
 
-## Antes de arreglar necesito confirmación
+Además faltan divisores visuales entre los grupos "Contexto" y "Destructivo".
 
-No puedo decidir yo cuál conservar porque cada factura está ligada a una **proforma diferente**. Pregunto a Karol (o a ti):
+## Cambio
 
-1. **¿Cuál proforma es la "buena"?** PRO-2026-0045 (más vieja) o PRO-2026-0238 (más nueva). La factura de la proforma que se elimine se debe borrar (soft delete) y su proforma se regresará a `pendiente`.
-2. **El pago de $3,370** de 06/07 se re-asignará a la factura que se conserve, quedando esa como **Pagada**.
+`src/features/facturacion/components/detalle/FacturaDetalleActions.tsx`:
 
-## Plan de arreglo (una vez confirmada la proforma buena)
+- Quitar `ml-auto` del grupo destructivo (línea 142) y convertirlo en un fragmento como los demás grupos.
+- Anteponer un `<Divider />` cuando algún grupo previo esté visible (mismo patrón que ya usan los grupos 3 y 4).
+- Resultado: los 5 grupos fluyen con `flex-wrap items-center gap-2` y separadores consistentes, sin empujar la mitad al extremo derecho.
 
-Migración SQL con transacción:
-
-1. Marcar la factura duplicada como `deleted_at = now()`, `deleted_by = <user>` (soft delete respetando el patrón del proyecto).
-2. Revertir su proforma a `estado_proforma = 'pendiente'`, limpiar `factura_id`, `fecha_facturacion` y `folio_factura_externa` (mismo patrón que ya usa `facturapi-cancelar`).
-3. `UPDATE pagos_factura SET factura_id = <factura_conservada>` para el pago `6ba92b56…`.
-4. Recalcular estado de la factura conservada: si `SUM(monto_aplicado_factura) >= total` → `estado = 'Pagada'`; si no → dejar como estaba.
-5. Registrar en `bitacora_actividad` la reasignación con detalles del duplicado.
-
-Bump `APP_VERSION` a `13.205.11` y entrada en `CHANGELOG.md` bajo "Datos · Elogistix" (fix puntual, no cambio de código).
+Bump `APP_VERSION` a `13.205.11` y entrada en `CHANGELOG.md`.
 
 ## Fuera de alcance
 
-- No se toca el flujo de registro de pagos ni la UI de facturación (la duplicación se generó al capturar dos veces el mismo folio externo desde dos proformas distintas; no es un bug reproducible del código actual).
-- No se agrega restricción única `(organization_id, numero)` en `facturas` — se puede hacer aparte porque hay que auditar si existen más duplicados legítimos primero.
-
-## Pregunta que necesito respondida
-
-¿Cuál proforma es la real, **PRO-2026-0045** o **PRO-2026-0238**? (o si prefieres, dime "consérvame la que tiene el pago" y conservo `8970c16a` + su proforma `PRO-2026-0045`, y borro la del 13/05).
+- No cambia la lógica de cuáles botones se muestran ni sus permisos.
+- No se toca el color destructivo de "Cancelar CFDI"/"Eliminar borrador".

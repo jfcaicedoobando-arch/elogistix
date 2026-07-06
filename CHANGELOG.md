@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.12] - 2026-07-06
+
+- **Facturación · Barra de acciones alineada**: el grupo destructivo (Sustituir CFDI / Cancelar CFDI / Eliminar borrador) ya no se empuja al extremo derecho con `ml-auto`; ahora fluye en línea con los demás grupos separado por un divisor vertical. En viewports intermedios (~1080 px) desaparece el hueco entre "Ver embarque" y "Sustituir CFDI" y el wrap queda parejo.
+
 ## [13.205.11] - 2026-07-06
 
 - **Facturación · Enlace a Proforma origen corregido**: el enlace "Proforma origen" en el detalle de factura apuntaba a `/facturacion?proforma=<id>` (bandeja de facturación) y ahora navega correctamente a `/proformas/:id`.
