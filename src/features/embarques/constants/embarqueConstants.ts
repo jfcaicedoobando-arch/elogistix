@@ -22,6 +22,11 @@ export const ICONO_EVENTO: Record<string, string> = {
   Entrega: '🏁', Demora: '⚠️', Inspección: '🔍', Otro: '📝',
 };
 
+/**
+ * @deprecated Los conceptos de costo/venta en embarques ahora provienen del
+ * Catálogo de productos y servicios (`catalogo_claves_sat`). Ver
+ * `ConceptoCatalogoSelect`. Se conserva como referencia legacy — no usar en UI.
+ */
 export const CATALOGO_CONCEPTOS = [
   'Cargos en Origen',
   'Costos Portuarios',

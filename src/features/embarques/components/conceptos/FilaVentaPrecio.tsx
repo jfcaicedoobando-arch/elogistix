@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
-import { CATALOGO_CONCEPTOS } from "@/features/embarques/constants/embarqueConstants";
+import { ConceptoCatalogoSelect } from "@/features/embarques/components/conceptos/ConceptoCatalogoSelect";
 import type { ConceptoVentaLocal as ConceptoVentaRow } from "@/types/concepto";
 
 interface Props {
@@ -33,10 +33,10 @@ export function FilaVentaPrecio({
 }: Props) {
   return (
     <div className={`grid ${cols} gap-2 items-center`}>
-      <Select value={venta.concepto} onValueChange={v => update(venta.id, 'concepto', v)}>
-        <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-        <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-      </Select>
+      <ConceptoCatalogoSelect
+        value={venta.concepto}
+        onChange={v => update(venta.id, 'concepto', v)}
+      />
       <NumericInput value={venta.cantidad} onChange={n => update(venta.id, 'cantidad', n)} className="text-sm h-10" aria-label="Cantidad venta" />
       <NumericInput decimals value={venta.precioUnitario} onChange={n => update(venta.id, 'precioUnitario', n)} className="text-sm h-10" aria-label="Subtotal venta" />
       <Select value={venta.moneda} onValueChange={v => update(venta.id, 'moneda', v)}>

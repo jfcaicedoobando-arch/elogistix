@@ -1,88 +1,47 @@
+## Objetivo
 
-# Extender cobertura de bitácora a módulos nuevos
+Que los renglones de conceptos en cotizaciones y en embarques (costos y ventas) **sólo** puedan capturarse eligiendo un producto del **Catálogo de productos y servicios** (`catalogo_claves_sat`). No texto libre, no listas hardcodeadas.
 
-## Diagnóstico
+## Estado actual
 
-La bitácora (`bitacora_actividad`) está desactualizada:
+- **Cotizaciones** (`ConceptoRowMXN.tsx`, `ConceptoRowUSD.tsx`, `ConceptoDescripcionSelector.tsx`): ✅ Ya usan `ProductoServicioSelect` (combobox estricto contra `catalogo_claves_sat`). Solo hay que verificarlo — no requiere cambios de código.
+- **Embarques → Costos** (`FilaCostoPrecio.tsx`): ❌ Usa `<Select>` con la constante hardcoded `CATALOGO_CONCEPTOS` (18 valores estáticos en `embarqueConstants.ts`).
+- **Embarques → Ventas** (`FilaVentaPrecio.tsx`): ❌ Mismo problema, misma constante.
+- **TabCostos.tsx** (vista sólo-lectura del embarque): solo pinta `row.original.concepto`, no captura → nada que cambiar.
 
-**Sin registro alguno** (implementados en olas recientes):
-- CxP: alta/edición/pago/cancelación de facturas de proveedor, notas de crédito, retenciones.
-- Facturación emitida: emisión CFDI, cancelación, NC, REP (hoy sólo se guarda en `app_logs` del edge function, no visible al usuario).
-- Costeo: tarifas marítimas, condiciones naviera, demoras, garantías.
-- Comisiones y liquidaciones.
-- Configuración global y presupuestos.
+## Cambios
 
-**Inconsistencias en UI** (`src/features/dashboard/routes/Bitacora.tsx`):
-- Faltan opciones `crm`, `auditoria`, `cxp`, `costeo`, `comisiones`, `configuracion`, `facturacion`, `retenciones`.
-- Valores mezclados con mayúsculas (`"Embarques"` vs `"embarques"`) desde `paso1Crm.ts` y `bitacoraTarifa.ts`.
+### 1. Nuevo combobox estricto para embarques
 
-## Alcance
+Crear `src/features/embarques/components/conceptos/ConceptoCatalogoSelect.tsx` — wrapper delgado sobre `ProductoServicioSelect` que:
+- Recibe `value: string` (el nombre del concepto ya guardado).
+- Al seleccionar un producto, emite sólo `p.nombre` (los renglones de embarque no guardan clave SAT / tasa IVA — esos viajan cuando se convierte a factura).
+- Marca en `warning` los conceptos legacy (`Flete Marítimo`, etc.) que no existan en el catálogo maestro para forzar migración al reeditar.
 
-### 1. Helper único de bitácora (frontend)
-Crear `src/lib/domain/bitacora/registrar.ts` con:
-- `registrarActividad({ modulo, accion, entidad, entidadId, descripcion, detalles })`.
-- Toma `auth.getUser` internamente, no lanza (fire-and-forget con `console.warn`).
-- Constante `MODULOS_BITACORA` como single source of truth (kebab lowercase).
+Si es preferible, podemos reutilizar `ProductoServicioSelect` directo y llamar sólo con `onSelect={p => update(id,'concepto',p.nombre)}`; el wrapper es opcional (mejor por claridad y para tests).
 
-Migrar los 5 puntos actuales (`paso1Crm`, `prospecto`, `bitacoraTarifa`, `bitacoraEmbarque`, `cierre`, `loginAudit`) a este helper y **normalizar valores a minúsculas** (`embarques`, `cotizaciones`).
+### 2. Reemplazar los Select hardcoded
 
-### 2. Puntos nuevos de registro
-Añadir llamada a `registrarActividad` en:
+- `FilaCostoPrecio.tsx`: quitar `import { CATALOGO_CONCEPTOS }` y el `<Select value={costo.concepto} …>` por `<ConceptoCatalogoSelect value={costo.concepto} onChange={v => update(costo.id,'concepto',v)} />`.
+- `FilaVentaPrecio.tsx`: idem con `venta.concepto`.
 
-| Módulo | Archivo/hook | Acciones |
-|---|---|---|
-| `cxp` | `useCrearFacturaProveedor`, `useActualizarFacturaProveedor`, `useCancelarFacturaProveedor`, `useRegistrarPagoProveedor`, `useCrearNotaCreditoProveedor` | `crear`, `editar`, `cancelar`, `pagar` |
-| `facturacion` | `facturapi-emitir/index.ts`, `facturapi-emitir-nota-credito`, `facturapi-emitir-rep`, `facturapi-cancelar` (edge functions → escribir a `bitacora_actividad` con user_id de la request) | `emitir`, `cancelar`, `emitir_nc`, `emitir_rep` |
-| `costeo` | Hooks CRUD de `costeo_tarifas`, `costeo_navieras_condiciones`, `costeo_tarifa_recargos`, `costeo_naviera_demoras_tarifa` | `crear`, `editar`, `eliminar` |
-| `comisiones` | Servicios `liquidaciones_comision`, `comisiones_devengadas` | `liquidar`, `ajustar` |
+### 3. Deprecar el catálogo hardcoded
 
-Retenciones NO tendrán módulo propio: se registran como `detalles.retenciones` dentro del evento de `cxp` o `facturacion`.
+- Marcar `CATALOGO_CONCEPTOS` en `embarqueConstants.ts` con un JSDoc `@deprecated` (no la elimino en este PR porque puede aparecer en fixtures/tests; se limpiará cuando ripgrep confirme 0 usos productivos).
+- Añadir test `src/features/embarques/__tests__/conceptos-catalogo.test.tsx` que renderiza `FilaCostoPrecio` y `FilaVentaPrecio` con un `catalogo_claves_sat` mockeado y verifica que las opciones del combobox provienen del catálogo, no de la constante.
 
-### 3. UI del catálogo
-Actualizar `src/features/dashboard/routes/Bitacora.tsx`:
-- Importar `MODULOS_BITACORA` desde el helper.
-- Añadir entradas: CxP, Facturación, Costeo, CRM, Auditoría, Comisiones, Configuración.
-- Extender `GRUPOS_ACCION` en `src/lib/domain/bitacoraDescripcion.ts` con verbos nuevos: `pagar`, `liquidar`, `emitir`, `cancelar`, `timbrar`.
+### 4. Documentación / bitácora
 
-### 4. Descripciones legibles
-Ampliar `bitacoraDescripcion.ts` con plantillas por (`modulo`, `accion`) para los eventos nuevos, ej:
-- `cxp.crear` → "Registró factura de proveedor {folio}"
-- `facturacion.emitir` → "Timbró factura {serie}-{folio} por {monto}"
-- `costeo.crear` → "Creó tarifa {ruta} en {naviera}"
+- Nota en `CHANGELOG.md` bajo una nueva versión patch (`13.194.2`).
+- Bump `APP_VERSION`.
 
-### 5. Tests
-- Extender `bitacoraDescripcion.test.ts` con casos nuevos.
-- Test unitario del helper `registrarActividad` (mock supabase).
-- Un test por hook nuevo verificando que llama a `bitacora_actividad` en éxito.
+## Notas técnicas
 
-### 6. Migración BD
-No requiere cambios de esquema — `bitacora_actividad` ya es genérica. Sólo confirmar índices existentes sobre `(modulo, created_at)` vía `supabase--linter` en fase de implementación.
-
-### 7. Changelog + versión
-- Bump `APP_VERSION` (patch).
-- Entrada `## [X.Y.Z]` con bullets por módulo agregado.
-
-## Detalles técnicos
-
-```text
-src/lib/domain/bitacora/
-├── registrar.ts        (helper único + MODULOS_BITACORA)
-└── __tests__/registrar.test.ts
-
-Modificados:
-- Bitacora.tsx                       (dropdown desde MODULOS_BITACORA)
-- bitacoraDescripcion.ts             (grupos + plantillas nuevas)
-- features/cxp/hooks/*                (~5 hooks)
-- features/costeo/hooks/*             (~4 hooks)
-- features/comisiones/services/*
-- supabase/functions/facturapi-*      (4 edge functions)
-- Migraciones existentes de olas: normalizar strings mayúscula → minúscula
-```
-
-Edge functions escriben directo a `bitacora_actividad` usando `service_role` + `user_id` extraído del JWT de la petición (patrón ya usado en `authenticateRequest`).
+- `ProductoServicioSelect` ya maneja el caso "catálogo vacío" con mensaje que redirige a *Configuración → Facturación → Catálogo de productos y servicios*. Se hereda gratis para embarques.
+- No se toca la BD: `conceptos_costo.descripcion` / `conceptos_venta.descripcion` siguen siendo `text` libre. Sólo se restringe la captura en UI.
+- Fixtures y factories (`cotizacionFactory.ts`) usan strings arbitrarios en tests — no rompen porque la validación es sólo en UI (combobox), no en el esquema Zod.
+- Riesgo bajo: los embarques históricos con `Flete Marítimo` etc. seguirán mostrándose (el combobox los marca legacy con ⚠️) hasta que el usuario los actualice al reeditar.
 
 ## Fuera de alcance
 
-- Reescribir la vista de timeline por entidad (`useActividadEmbarque`) — sigue funcional.
-- Exportar bitácora a CSV/Excel.
-- Retención por 90 días / archivado automático.
+- Facturas emitidas (`FacturaConceptosEditorRows.tsx`) — ya tiene su propio flujo con clave SAT; no lo pediste explícitamente. Lo dejo listo para un siguiente sprint si quieres unificarlo.
