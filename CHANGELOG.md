@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.189.0] - 2026-07-06
+
+- **CxP — Ola 2 · Item 4 · Cancelación de factura de proveedor**. Nueva RPC `cancelar_factura_proveedor(p_factura_id, p_motivo)` (SECURITY DEFINER, `search_path=public`) que valida permisos por organización, exige motivo, bloquea la cancelación si hay pagos activos, cancela automáticamente las NCs asociadas (revierte NC), marca la factura como `Cancelada` con `fecha_cancelacion` / `motivo_cancelacion` / `cancelada_por`, y deja que el trigger `trg_proveedor_facturas_recalc_liq` limpie los conceptos del embarque. Registra la acción en `bitacora_actividad` cuando la tabla existe.
+- **UI**. Botón **Cancelar factura** en la esquina superior de `InfoFacturaSection` que abre un diálogo de doble confirmación (motivo obligatorio ≥ 4 caracteres + escribir `CANCELAR`). Al aplicarse, el banner rojo "Factura cancelada · fecha · motivo" reemplaza al botón; `useCancelarFacturaProveedor` invalida `cxp`, `proveedor-facturas`, `proveedor-notas-credito`, `conceptos-costo` y `embarque` para refrescar KPIs, saldos y auto-liquidación.
+- **Servicio/tipos**. `FacturaCxP` gana `fecha_cancelacion`, `motivo_cancelacion`, `cancelada_por`; el `PROVEEDOR_FACTURAS_SELECT` los incluye para que aparezcan en el detalle sin queries adicionales.
+
 ## [13.188.1] - 2026-07-06
 
 - **CxP — Ola 2 · Item 2 · Programación de pagos (parte 2/2)**. La lista `/cxp` ahora muestra una columna **Prog. pago** (badge con día/mes) entre "Vencimiento" y "Días", oculta en <xl para no romper el layout. Nuevo KPI **Programado 7 días** con montos MXN/USD y conteo de facturas; el grid pasa de 4 a 5 tarjetas en xl. Ambas señales se calculan en cliente a partir de `fecha_programada_pago` (introducido en 13.188.0), sin nuevas queries.
