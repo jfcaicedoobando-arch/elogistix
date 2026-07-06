@@ -46,7 +46,46 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & {
     sustituida_por_factura_id?: string;
     solo_descargar_acuse?: boolean;
+    solo_descargar_acuse_pdf?: boolean;
   };
+
+  // Modo "solo descargar acuse PDF": Facturapi expone el acuse SAT en
+  // formato PDF (además del XML). Aquí lo streameamos como binario al
+  // navegador sin guardarlo en BD (el XML sigue siendo la fuente de verdad).
+  if (rawBody.solo_descargar_acuse_pdf === true) {
+    if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
+    const { data: facp, error: facpErr } = await supabase
+      .from("facturas")
+      .select("id, facturapi_id, organization_id, estado, numero")
+      .eq("id", rawBody.factura_id)
+      .maybeSingle();
+    if (facpErr || !facp) return json({ error: "factura_not_found" }, 404);
+    if (!facp.facturapi_id) return json({ error: "no_timbrada" }, 409);
+    if (facp.estado !== "Cancelada" && facp.estado !== "Sustituida") {
+      return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
+    }
+    const clip = await getFacturapiClient(supabase, facp.organization_id);
+    if (!clip.ok) return json({ error: clip.data.error, message: clip.data.message }, clip.data.status);
+    const pdfRes = await descargarAcuseCancelacionPdf(facp.facturapi_id, clip.data.apiKey);
+    if (!pdfRes.ok) {
+      if (pdfRes.reason === "not_ready") {
+        return json({
+          error: "acuse_pdf_no_disponible",
+          message: "El SAT aún no ha emitido el acuse en PDF. Intenta más tarde o usa 'Reintentar acuse'.",
+        }, 404);
+      }
+      return json({ error: "facturapi_error", status: pdfRes.status }, 502);
+    }
+    const filename = `acuse-cancelacion-${(facp.numero ?? facp.id).replace(/[^A-Za-z0-9._-]+/g, "_")}.pdf`;
+    return new Response(pdfRes.pdf, {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  }
 
   // Modo "solo descargar acuse": la factura ya se canceló antes y sólo
   // necesitamos volver a preguntarle al SAT por el acuse (útil cuando la
