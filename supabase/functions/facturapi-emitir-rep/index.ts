@@ -14,6 +14,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
+import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -185,6 +186,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
   const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
 
+  // Ola 3 · Item 5 — Respaldo automático del XML timbrado (best-effort).
+  const respaldo = await respaldarXmlTimbrado({
+    supabase,
+    apiKey: resolved.data.apiKey,
+    facturapiId,
+    organizationId: pago.organization_id,
+    uuid,
+    folder: "rep",
+  });
+
   const { error: updErr } = await supabase
     .from("pagos_factura")
     .update({
@@ -194,6 +205,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       serie_rep: serieTimbrada,
       rep_pdf_url: pdfUrl,
       rep_xml_url: xmlUrl,
+      rep_xml_backup_path: respaldo.path,
       estado_rep: "Timbrado",
       ambiente: resolved.data.ambiente,
       timbrado_rep_en: new Date().toISOString(),
@@ -209,10 +221,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     accion: "facturapi_rep_emitido",
     entidad: "pago_factura",
     entidad_id: pago.id,
-    detalles: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: factura.id },
+    detalles: {
+      uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: factura.id,
+      xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
+    },
   });
 
-  return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl });
+  return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
 }));
 
 function round2(n: number): number {

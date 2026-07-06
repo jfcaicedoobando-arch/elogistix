@@ -3681,6 +3681,7 @@ export type Database = {
           updated_at: string
           uso_cfdi: string | null
           uuid_fiscal: string | null
+          xml_backup_path: string | null
           xml_url: string | null
         }
         Insert: {
@@ -3715,6 +3716,7 @@ export type Database = {
           updated_at?: string
           uso_cfdi?: string | null
           uuid_fiscal?: string | null
+          xml_backup_path?: string | null
           xml_url?: string | null
         }
         Update: {
@@ -3749,6 +3751,7 @@ export type Database = {
           updated_at?: string
           uso_cfdi?: string | null
           uuid_fiscal?: string | null
+          xml_backup_path?: string | null
           xml_url?: string | null
         }
         Relationships: [
@@ -4505,6 +4508,7 @@ export type Database = {
           rep_error: string | null
           rep_motivo_cancel: string | null
           rep_pdf_url: string | null
+          rep_xml_backup_path: string | null
           rep_xml_url: string | null
           serie_rep: string | null
           timbrado_rep_en: string | null
@@ -4538,6 +4542,7 @@ export type Database = {
           rep_error?: string | null
           rep_motivo_cancel?: string | null
           rep_pdf_url?: string | null
+          rep_xml_backup_path?: string | null
           rep_xml_url?: string | null
           serie_rep?: string | null
           timbrado_rep_en?: string | null
@@ -4571,6 +4576,7 @@ export type Database = {
           rep_error?: string | null
           rep_motivo_cancel?: string | null
           rep_pdf_url?: string | null
+          rep_xml_backup_path?: string | null
           rep_xml_url?: string | null
           serie_rep?: string | null
           timbrado_rep_en?: string | null
