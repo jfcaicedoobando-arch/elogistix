@@ -169,7 +169,7 @@ export default function Oportunidades() {
                 data={ops}
                 isLoading={isLoading}
                 emptyMessage="No hay oportunidades"
-                onRowClick={(o) => navigate(`/crm/oportunidades/${o.id}`)}
+                getRowHref={(o) => `/crm/oportunidades/${o.id}`}
                 rowKey={(o) => o.id}
                 density="comfortable"
               />
