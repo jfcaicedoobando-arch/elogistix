@@ -12,8 +12,37 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
-import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+
+/**
+ * Descarga el acuse SAT de cancelación desde FacturApi.
+ * Endpoint: GET /invoices/{id}/cancellation_receipt/xml
+ * Devuelve { xml, status } — si el SAT aún no procesa la cancelación
+ * (típicamente ~unas horas), status='pending' y xml=null.
+ */
+async function descargarAcuseCancelacion(
+  facturapiId: string,
+  apiKey: string,
+): Promise<{ xml: string | null; status: string }> {
+  try {
+    const res = await fetch(
+      `${FACTURAPI_BASE}/invoices/${facturapiId}/cancellation_receipt/xml`,
+      { headers: { Authorization: basicAuthHeader(apiKey) } },
+    );
+    if (res.status === 200) {
+      const xml = await res.text();
+      return { xml, status: "accepted" };
+    }
+    if (res.status === 404 || res.status === 425) {
+      // 404 = aún no emitido por SAT; 425 = too early. Se reintenta después.
+      return { xml: null, status: "pending" };
+    }
+    return { xml: null, status: `error_${res.status}` };
+  } catch {
+    return { xml: null, status: "error_network" };
+  }
+}
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
