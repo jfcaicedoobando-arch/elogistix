@@ -15,6 +15,7 @@ import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
+import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
