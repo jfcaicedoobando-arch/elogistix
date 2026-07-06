@@ -1089,6 +1089,7 @@ export type Database = {
         Row: {
           cantidad: number
           clave_sat: string
+          clave_unidad: string
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -1109,6 +1110,7 @@ export type Database = {
         Insert: {
           cantidad?: number
           clave_sat?: string
+          clave_unidad?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1129,6 +1131,7 @@ export type Database = {
         Update: {
           cantidad?: number
           clave_sat?: string
+          clave_unidad?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -5324,6 +5327,7 @@ export type Database = {
       proveedor_facturas_conceptos: {
         Row: {
           cantidad: number
+          clave_unidad: string | null
           concepto_costo_id: string | null
           created_at: string
           descripcion: string
@@ -5334,6 +5338,7 @@ export type Database = {
         }
         Insert: {
           cantidad?: number
+          clave_unidad?: string | null
           concepto_costo_id?: string | null
           created_at?: string
           descripcion?: string
@@ -5344,6 +5349,7 @@ export type Database = {
         }
         Update: {
           cantidad?: number
+          clave_unidad?: string | null
           concepto_costo_id?: string | null
           created_at?: string
           descripcion?: string
