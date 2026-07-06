@@ -33,7 +33,6 @@ interface Filters extends Record<string, string> {
 const DEFAULTS: Filters = { moneda: "todas", vencidas: "todas" };
 
 export default function CxpPorPagar() {
-  const navigate = useNavigate();
   const { data = [], isLoading } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
 
