@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.13] - 2026-07-06
+
+- **Cola de emails · Auth desbloqueada tras migración de signing keys**: `process-email-queue` rechazaba con 403 todos los ticks de cron porque `auth.getClaims` exige claim `sub` y los tokens legacy `service_role` guardados en Vault no lo tienen (error "invalid claim: missing sub claim"). Se agregó verificación en dos pasos en `queueAuth.ts`: (1) comparación timing-safe contra `SUPABASE_SERVICE_ROLE_KEY` inyectado; (2) fallback que decodifica el payload y exige `role='service_role'` — la firma ya la valida el gateway porque la función corre con `verify_jwt=true`. Efecto: los 6 correos de la factura F955 encolados y atorados desde 23:23 UTC salieron en cuanto se desplegó el parche.
+
 ## [13.205.12] - 2026-07-06
 
 - **Facturación · Barra de acciones alineada**: el grupo destructivo (Sustituir CFDI / Cancelar CFDI / Eliminar borrador) ya no se empuja al extremo derecho con `ml-auto`; ahora fluye en línea con los demás grupos separado por un divisor vertical. En viewports intermedios (~1080 px) desaparece el hueco entre "Ver embarque" y "Sustituir CFDI" y el wrap queda parejo.
