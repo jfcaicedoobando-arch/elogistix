@@ -137,9 +137,10 @@ export function FacturaDetalleActions({
         </>
       )}
 
-      {/* Grupo 5 — Acciones destructivas, empujadas a la derecha */}
+      {/* Grupo 5 — Acciones destructivas */}
       {mostrarGrupoDestructivo && (
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <>
+          {(mostrarGrupoCfdi || mostrarGrupoAcuse || mostrarGrupoContexto) && <Divider />}
           {puedeSustituirCfdi && (
             <Button variant="outline" size="sm" onClick={onSustituir}>
               <Replace className="h-4 w-4 mr-1.5" /> Sustituir CFDI
@@ -169,7 +170,7 @@ export function FacturaDetalleActions({
               Eliminar borrador
             </Button>
           )}
-        </div>
+        </>
       )}
     </div>
   );
