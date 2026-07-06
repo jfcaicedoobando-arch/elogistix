@@ -1,15 +1,13 @@
 /**
- * Descarga el XML timbrado de FacturApi y lo respalda en el bucket privado
- * `facturas` de Storage. Best-effort: si falla no interrumpe el timbrado.
+ * Wrapper histórico: la implementación se movió a
+ * `_shared/respaldarXmlTimbrado.ts` para compartirla entre las 3 funciones
+ * de timbrado (factura, nota de crédito y REP).
  *
- * Vive fuera de `index.ts` porque el guardrail `facturapi-multi-tenant.test.ts`
- * prohíbe usar `basicAuthHeader` en la edge function principal.
- *
- * Ola 3 · Item 5 — Respaldo automático de XML emitidos.
+ * Se conserva este archivo por compatibilidad con `facturapi-emitir/index.ts`.
+ * Ola 3 · Item 5 — extendido a NC y REP (v13.192.0).
  */
-import { FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import { respaldarXmlTimbrado, type RespaldoResult } from "../_shared/respaldarXmlTimbrado.ts";
 
-// Cliente storage tipado mínimo — evita acoplarnos al createClient importado en el caller.
 interface StorageClient {
   storage: {
     from: (bucket: string) => {
@@ -22,13 +20,9 @@ interface StorageClient {
   };
 }
 
-export interface RespaldoResult {
-  path: string | null;
-  status: "ok" | "skipped" | "error";
-  error?: string;
-}
+export type { RespaldoResult };
 
-export async function respaldarXmlEmitido(params: {
+export function respaldarXmlEmitido(params: {
   supabase: StorageClient;
   apiKey: string;
   facturapiId: string;
@@ -36,25 +30,12 @@ export async function respaldarXmlEmitido(params: {
   facturaId: string;
   uuid: string;
 }): Promise<RespaldoResult> {
-  try {
-    const res = await fetch(`${FACTURAPI_BASE}/invoices/${params.facturapiId}/xml`, {
-      headers: { Authorization: basicAuthHeader(params.apiKey) },
-    });
-    if (!res.ok) {
-      return { path: null, status: "error", error: `facturapi_${res.status}` };
-    }
-    const bytes = new Uint8Array(await res.arrayBuffer());
-    const path = `${params.organizationId}/emitidas/${params.uuid}.xml`;
-    const { error } = await params.supabase.storage.from("facturas").upload(path, bytes, {
-      contentType: "application/xml",
-      upsert: true,
-    });
-    if (error) {
-      const msg = (error as { message?: string }).message ?? "upload_error";
-      return { path: null, status: "error", error: msg };
-    }
-    return { path, status: "ok" };
-  } catch (e) {
-    return { path: null, status: "error", error: (e as Error).message };
-  }
+  return respaldarXmlTimbrado({
+    supabase: params.supabase,
+    apiKey: params.apiKey,
+    facturapiId: params.facturapiId,
+    organizationId: params.organizationId,
+    uuid: params.uuid,
+    folder: "emitidas",
+  });
 }
