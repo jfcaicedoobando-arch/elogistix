@@ -1,47 +1,52 @@
-## Problema
+## Diagnóstico
 
-Al exportar CSV desde la tabla de embarques, el filtro **"Alerta"** (badges de sidebar: por vencer, vencidos, en puerto, etc.) **no se aplica**, por lo que el CSV incluye embarques que la UI ocultó.
+En **ELIMP00207** conviven dos verdades contradictorias porque hoy el badge y el tab miran cosas distintas:
 
-### Causa raíz
+- **Badge "PROFORMA GENERADA"** (header) — se pinta desde `embarques.tiene_proforma`, columna que un trigger (`sync_embarque_tiene_proforma`) pone en `true` **con que exista cualquier fila en `proformas`**, aunque sea un borrador vacío.
+- **Tab Facturación** — lee `conceptos_venta` y muestra la sección de "no facturados" cuando `proforma_id IS NULL` y `estado_facturacion='pendiente'`. Y aparte lista el historial de proformas, incluyendo el borrador PRO-2026-0283 que el usuario ve abajo.
 
-`useEmbarquesPageController.exportarCsv` sólo aplica en el CSV:
-- Los filtros server-side (búsqueda, modo, cliente, operador, fechas).
-- El filtro de estado (client-side, ya cubierto).
+Datos actuales del embarque:
 
-Pero **nunca lee `filterAlerta` ni el `alertasResumen`** que en la vista sí recorta los resultados (ver `useEmbarquesPageState.ts` líneas 95-112). Por eso el CSV trae "una lista mucho más grande".
+```text
+proforma PRO-2026-0283 → estado_aprobacion='borrador', total_mxn=0, total_usd=3920 (pero sin conceptos vinculados)
+conceptos_venta (Flete Marítimo, Cargos en Destino) → proforma_id=NULL, estado='pendiente'
+embarques.tiene_proforma = true   ← "mentira" operativa
+```
 
-## Solución
+Es exactamente el caso que la auditoría ya llama **`proforma_inconsistente`** (borrador vacío + conceptos huérfanos en el mismo embarque). Ya existe un helper `esBorradorVacio` y un `ProformaInconsistenteAlert` con botones para asignar o eliminar el borrador — pero el badge del header ignora ese estado.
 
-Replicar el mismo recorte por alerta que hace la vista, dentro de `exportarCsv`:
+## Analogía
 
-1. En `useEmbarquesPageController.ts`:
-   - Leer `state.filterAlerta` y el set de IDs de la alerta activa (exponerlo desde `useEmbarquesPageState` como `alertIdSet` — hoy es interno).
-   - Después de `filtradosPorEstado`, aplicar:
-     ```ts
-     const filtradosFinal = state.filterAlerta === "todos" || !alertIdSet
-       ? filtradosPorEstado
-       : filtradosPorEstado.filter((e) => alertIdSet.has(e.id));
-     ```
-   - Usar `filtradosFinal` para la validación de "sin datos", el `exportToCsv` y el toast.
+El badge de arriba está mirando un cajón y grita "¡ya hay proforma!" con que vea *cualquier papel*. El tab de abajo, en cambio, revisa si esos papeles realmente cubren los conceptos de venta. Como el papel de arriba es un borrador vacío sin firmas, la caja dice "sí" y el escritorio dice "no". La fuente única de verdad debe ser "¿hay una proforma real que cubra los conceptos?", no "¿existe una fila en la tabla?".
 
-2. En `useEmbarquesPageState.ts`:
-   - Agregar `alertIdSet` y `filterAlerta` al objeto retornado (ya se calculan internamente, sólo hay que exponerlos).
+## Fuente única de verdad propuesta
 
-3. Tests:
-   - Añadir caso en `useEmbarquesPageController.test.tsx`: con `filterAlerta = "por_vencer"` y `alertIdSet` de 2 IDs, el CSV sólo debe contener esos 2 registros.
+Un embarque **tiene proforma** ⇔ existe al menos una proforma **no vacía** vinculada:
+`estado_aprobacion <> 'borrador'` **o** `total_mxn > 0` **o** `total_usd > 0` **o** existe un `concepto_venta.proforma_id = proforma.id`.
 
-4. Versionado:
-   - Bump `APP_VERSION` a `13.205.2`.
-   - Entrada en `CHANGELOG.md`: *Fix: exportar CSV de embarques respeta el filtro de alertas del sidebar.*
+Cualquier borrador vacío se considera "sin proforma" a efectos del badge y de reportes.
 
-## Archivos a tocar
+## Cambios
 
-- `src/features/embarques/hooks/useEmbarquesPageState.ts` (exponer `alertIdSet`, `filterAlerta`)
-- `src/features/embarques/hooks/useEmbarquesPageController.ts` (aplicar filtro alerta antes de generar CSV)
-- `src/features/embarques/hooks/__tests__/useEmbarquesPageController.test.tsx` (nuevo caso)
-- `src/constants/appVersion.ts`
-- `CHANGELOG.md`
+1. **Migración: endurecer el trigger `sync_embarque_tiene_proforma`**
+   - Recalcular `tiene_proforma` en INSERT/UPDATE/DELETE de `proformas` **y** en INSERT/UPDATE/DELETE de `conceptos_venta` (para cuando se vinculan/desvinculan conceptos).
+   - Nueva regla: `tiene_proforma = EXISTS (proforma no-vacía o con conceptos vinculados)`.
+   - Backfill: `UPDATE embarques SET tiene_proforma = <expr>` para reflejar la nueva regla en todos los registros (así ELIMP00207 pasa a `false` hasta que se asignen conceptos o se apruebe el borrador).
 
-## Analogía para principiante
+2. **Front — badge del header (`EmbarqueDetalleHeader.tsx`)**
+   - Además de `embarque.tiene_proforma`, considerar la lista `proformas` del detalle (que ya carga el tab). Si la única proforma es borrador vacío, pintar "SIN PROFORMA" y añadir tooltip: *"Existe un borrador vacío (PRO-YYYY-XXXX). Ver Facturación → Proforma inconsistente."*
+   - Así el badge coincide con lo que el usuario ve dentro del tab, aun antes de que el trigger corra.
 
-Piensa en el filtro de alertas como un **colador extra** que la tabla usa en pantalla pero que quedó fuera de la máquina exportadora. El CSV pasa la fruta por los otros coladores (cliente, fecha, etc.) pero olvida el de alertas, así que caen frutas de más. Vamos a instalarle ese colador también al exportador.
+3. **Tab Facturación (`TabFacturacion.tsx` / `HistorialProformas.tsx`)** — sin cambios de lógica, solo confirmar que el `ProformaInconsistenteAlert` se muestra en este caso (ya debería). Verificar visualmente con ELIMP00207.
+
+4. **Test**
+   - Unit test para el nuevo helper (o para el `ProformaBadge` derivado) que cubra: (a) solo borrador vacío → sin proforma, (b) proforma aprobada → con proforma, (c) borrador con conceptos vinculados → con proforma.
+   - Test SQL/regresión: un embarque con solo borrador vacío debe tener `tiene_proforma=false` tras la migración.
+
+5. **Versionado**
+   - `APP_VERSION` a `13.205.3`.
+   - Entrada en `CHANGELOG.md` describiendo la unificación del "source of truth" del badge.
+
+## Preguntas antes de ejecutar
+
+- ¿Prefieres que la regla trate un borrador **con** conceptos vinculados como "con proforma" (opción actual), o que exija además `estado_aprobacion <> 'borrador'`? Impacta cómo se ve el badge en el momento intermedio "borrador ya con conceptos pero aún no aprobado".
