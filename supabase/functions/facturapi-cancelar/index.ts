@@ -15,6 +15,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
+import { descargarAcuseCancelacionPdf } from "./descargarAcusePdf.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
