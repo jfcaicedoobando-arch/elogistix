@@ -127,6 +127,7 @@ export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
   { title: "Pagos", url: "/compras/pagos", icon: Landmark },
   { title: "Notas de crédito", url: "/compras/notas-credito", icon: ReceiptText },
   { title: "Proveedores", url: "/compras/proveedores", icon: Truck },
+  { title: "Conciliación", url: "/compras/conciliacion", icon: GitCompare },
   { title: "Antigüedad", url: "/compras/aging", icon: LayoutList },
   { title: "Reportes", url: "/compras/reportes", icon: BarChart3 },
 ];
