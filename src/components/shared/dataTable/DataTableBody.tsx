@@ -65,7 +65,11 @@ export function DataTableBody<T>({
   getRowHref,
   getRowAriaLabel,
 }: Props<T>) {
-  const navigate = useNavigate();
+  const inRouter = useInRouterContext();
+  // useNavigate se llama incondicionalmente si hay router. Cuando no lo hay
+  // (tests unitarios directos), usamos un fallback no-op para que la tabla
+  // siga renderizando sin acoplar los tests a MemoryRouter.
+  const navigate: NavigateFunction = inRouter ? useNavigate() : (() => {}) as NavigateFunction;
   const cellPad = DENSITY_CELL[density];
   const borderCell = bordered ? "border-r last:border-r-0" : "";
   const leafColumns = table.getAllLeafColumns();
