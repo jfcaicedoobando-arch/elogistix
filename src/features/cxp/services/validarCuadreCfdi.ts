@@ -37,34 +37,59 @@ export function validarCuadreCfdi(cfdi: CfdiParsedResponse["cfdi"]): CuadreCfdiR
     return { ok: false, errores };
   }
 
+  const subtotal = Number(cfdi.subtotal) || 0;
+  const ivaTras = Number(cfdi.iva_trasladado) || 0;
+  const iepsTras = Number(cfdi.ieps_trasladado) || 0;
+  const retenciones = Number(cfdi.retenciones) || 0;
+  const total = Number(cfdi.total) || 0;
+
   const sumSub = suma(conceptos.map((c) => Number(c.importe) || 0));
   const sumIva = suma(conceptos.map((c) => Number(c.iva) || 0));
   const sumIeps = suma(conceptos.map((c) => Number(c.ieps) || 0));
 
-  if (Math.abs(sumSub - Number(cfdi.subtotal)) > tol) {
+  if (Math.abs(sumSub - subtotal) > tol) {
     errores.push(
-      `Los importes por concepto suman ${money(sumSub)} pero el subtotal del CFDI es ${money(cfdi.subtotal)}.`,
+      `Los importes por concepto suman ${money(sumSub)} pero el subtotal del CFDI es ${money(subtotal)}.`,
     );
   }
-  if (Math.abs(sumIva - Number(cfdi.iva_trasladado)) > tol) {
+  if (Math.abs(sumIva - ivaTras) > tol) {
     errores.push(
-      `El IVA por concepto suma ${money(sumIva)} pero el IVA trasladado del CFDI es ${money(cfdi.iva_trasladado)}.`,
+      `El IVA por concepto suma ${money(sumIva)} pero el IVA trasladado del CFDI es ${money(ivaTras)}.`,
     );
   }
-  if (Math.abs(sumIeps - Number(cfdi.ieps_trasladado)) > tol) {
+  if (Math.abs(sumIeps - iepsTras) > tol) {
     errores.push(
-      `El IEPS por concepto suma ${money(sumIeps)} pero el IEPS trasladado del CFDI es ${money(cfdi.ieps_trasladado)}.`,
+      `El IEPS por concepto suma ${money(sumIeps)} pero el IEPS trasladado del CFDI es ${money(iepsTras)}.`,
     );
   }
 
-  const totalCalc =
-    Number(cfdi.subtotal) +
-    Number(cfdi.iva_trasladado) +
-    Number(cfdi.ieps_trasladado) -
-    Number(cfdi.retenciones);
-  if (Math.abs(totalCalc - Number(cfdi.total)) > tol) {
+  // Retenciones: no negativas y con base fiscal razonable.
+  if (retenciones < -tol) {
     errores.push(
-      `Subtotal + IVA + IEPS − retenciones = ${money(totalCalc)}, pero el total del CFDI es ${money(cfdi.total)}.`,
+      `Las retenciones del CFDI son negativas (${money(retenciones)}); deben ser ≥ 0.`,
+    );
+  }
+  // Techo defensivo: en fletes/forwarders la retención máxima esperada
+  // es 16% IVA + 4% ISR ≈ 20% del subtotal. Damos margen a 50% para no
+  // bloquear CFDIs poco comunes pero atajar errores de captura evidentes.
+  if (retenciones > subtotal * 0.5 + tol) {
+    errores.push(
+      `Las retenciones (${money(retenciones)}) superan el 50% del subtotal (${money(subtotal)}): revisa el XML.`,
+    );
+  }
+  // Redundancia útil: si hay retenciones, el total debe ser menor a
+  // subtotal + IVA + IEPS. Bloquea CFDIs donde el emisor declaró
+  // retenciones pero no las descontó del total.
+  if (retenciones > tol && total > subtotal + ivaTras + iepsTras + tol) {
+    errores.push(
+      `El CFDI declara retenciones por ${money(retenciones)} pero el total (${money(total)}) no las descuenta.`,
+    );
+  }
+
+  const totalCalc = subtotal + ivaTras + iepsTras - retenciones;
+  if (Math.abs(totalCalc - total) > tol) {
+    errores.push(
+      `Subtotal + IVA + IEPS − retenciones = ${money(totalCalc)}, pero el total del CFDI es ${money(total)}.`,
     );
   }
 
