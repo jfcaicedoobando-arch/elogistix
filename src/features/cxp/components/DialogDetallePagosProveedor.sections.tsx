@@ -147,6 +147,7 @@ export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago }: PagosT
                 hint="Diferencia cambiaria en MXN (ganancia o pérdida) entre la tasa de la factura y la tasa del pago."
               />
             </th>
+            <th className="text-left px-4 py-3 font-bold">Banco</th>
             <th className="w-12" />
           </tr>
         </thead>
