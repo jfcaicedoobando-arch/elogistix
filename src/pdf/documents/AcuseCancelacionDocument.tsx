@@ -93,10 +93,10 @@ export function AcuseCancelacionDocument({ data, emisor }: Props) {
           <Text style={styles.label}>Cancelación</Text>
           <KeyValueGrid
             items={[
-              { label: "Motivo SAT", value: motivoLabel(data.motivo) },
-              { label: "Fecha de cancelación", value: data.canceladoEn ? formatDate(data.canceladoEn) : "—" },
-              { label: "Estatus del acuse", value: statusLabel(data.acuseStatus) },
-              { label: "Fecha del acuse", value: data.acuseFecha ? formatDate(data.acuseFecha) : "—" },
+              ["Motivo SAT", motivoLabel(data.motivo)],
+              ["Fecha de cancelación", data.canceladoEn ? formatDate(data.canceladoEn) : "—"],
+              ["Estatus del acuse", statusLabel(data.acuseStatus)],
+              ["Fecha del acuse", data.acuseFecha ? formatDate(data.acuseFecha) : "—"],
             ]}
           />
         </View>
