@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.182.0] - 2026-07-06
+
+- **Arquitectura — Ola 2: Power-of-10 splits reales (16 archivos)** — se divide toda la deuda de tamaño acumulada en la allowlist temporal introducida en Ola 1. Cada archivo queda ≤ 200 líneas sin cambios de negocio: sólo extracción de columnas, sub-componentes, tipos y helpers puros a archivos vecinos (`_sections/*` o `*.helpers.ts`).
+  - **Embarques**: `pnlPorContenedor.ts` (222→199) mueve `round2`, `calcMargen`, `repartirFlat`, `isActivo` y `AcumuladorContenedor` a `pnlPorContenedor.helpers.ts`; `TabDemoras.tsx` (206→122) extrae columnas a `_sections/tabDemorasColumns.tsx`; `TabPnlContenedor.tsx` (240→91) mueve `TablaPorMoneda` a `_sections/TablaPnlPorMoneda.tsx`; `EmbarqueDetalleTabs.tsx` (216→167) extrae tipos derivados a `_sections/embarqueDetalleTabsTypes.ts`.
+  - **CxP / Compras**: `VincularEmbarqueSection.tsx` (249→177) mueve `agruparPorEmbarque`, `pluralS`, `notificarResumen`, `calcularPuedeSugerir` y `ejecutarSugerencia` a `vincularEmbarqueHelpers.ts`; `ComprasNotasCredito.tsx` (241→168), `ComprasConciliacion.tsx` (227→131), `ComprasPagos.tsx` (225→172) y `ComprasReportes.tsx` (225→191) extraen columnas y fetchers a `_sections/*Columns.tsx` / `_sections/reportesFetch.ts`; `Compras.tsx` (216→165) mueve `KpiCard` y `QuickLink` a `_sections/ComprasDashboardTiles.tsx`; `useNuevaFacturaProveedorForm.ts` (202→199) compacta JSDoc a comentario simple; `FacturaDetalle.tsx` (205→200) elimina líneas en blanco redundantes.
+  - **Costeo / Portal agente / Bandejas / CRM**: `CosteoTarifasTable.tsx` (239→76) extrae columnas y `TarifaRow` a `_sections/tarifasColumns.tsx`; `AgenteTarifas.tsx` (209→99) mueve columnas, `EstadoBadge` y `toInitial` a `_sections/agenteTarifasColumns.tsx`; `Cartera.tsx` (224→174) mueve la lista mobile a `_sections/CarteraMobileList.tsx`; `Actividades.tsx` (200) queda exactamente en el límite tras Ola 1.
+  - **`OVERSIZED_BASELINE`**: la allowlist temporal de `architecture-baseline` queda **vacía**; a partir de ahora cualquier nuevo archivo productivo > 200 líneas falla la CI sin excepción.
+
 ## [13.181.0] - 2026-07-06
 
 - **CI(Estabilización) — Ola 1: lint verde + Power-of-10 baseline actualizado** — cierra los 3 errores y 9 warnings que rompían `bun run lint --max-warnings 0`:
