@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.199.3] - 2026-07-06
+
+- **Cartera — drilldown a detalle de factura**. En `/cartera` ahora toda la fila (desktop) y la tarjeta completa (mobile) navegan a `/facturacion/:id`, no sólo el folio. Los enlaces internos (folio, expediente del embarque) siguen funcionando con `e.stopPropagation()` para no chocar con el click de fila.
+
 ## [13.199.2] - 2026-07-06
 
 - **Limpieza Elogistix — lote 2 de gap externo (5 proformas)**. Segundo grupo de proformas facturadas fuera del ERP durante el gap operativo: PRO-2026-0297, 0322, 0337, 0340, 0948. Se movieron de `pendiente/borrador` a `facturada` con `estado_aprobacion='aprobada'` forzado (4 de 5 tenían `estado_revision='pendiente'` porque nunca pasaron por auditoría; la facturación externa se toma como aprobación tácita) y `origen='gap_externo'` (mismo valor del lote 1 para reportar juntos). `fecha_facturacion=now()` cuando estaba vacía. Respaldo en `public._backup_gap_externo_proformas_20260706_lote2`.

@@ -7,6 +7,7 @@
  * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
  */
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -35,6 +36,7 @@ const DEFAULTS: CarteraFilters = { moneda: "todas", vencidas: "todas" };
 
 
 export default function Cartera() {
+  const navigate = useNavigate();
   const { data = [], isLoading } = useCarteraPendiente();
   const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
 
@@ -159,6 +161,7 @@ export default function Cartera() {
             data={paged.rows}
             rowKey={(r) => r.factura_id}
             isLoading={paged.isLoading}
+            onRowClick={(r) => navigate(`/facturacion/${r.factura_id}`)}
             sortMode="server"
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}

@@ -1,9 +1,10 @@
 /**
  * Vista mobile de Cartera (lista de tarjetas) — extraída en v13.182.0 (Wave 2).
+ * v13.199.3: toda la tarjeta navega al detalle de factura.
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { CarteraRow } from "./carteraColumns";
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function CarteraMobileList({ rows, isLoading }: Props) {
+  const navigate = useNavigate();
   return (
     <Card className="sm:hidden">
       <CardContent className="p-0">
@@ -28,14 +30,24 @@ export function CarteraMobileList({ rows, isLoading }: Props) {
         )}
         <ul className="divide-y">
           {rows.map((row) => (
-            <li key={row.factura_id} className="p-3 space-y-1.5">
+            <li
+              key={row.factura_id}
+              role="button"
+              tabIndex={0}
+              aria-label={`Ver factura ${row.numero ?? ""}`}
+              onClick={() => navigate(`/facturacion/${row.factura_id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/facturacion/${row.factura_id}`);
+                }
+              }}
+              className="p-3 space-y-1.5 hover:bg-muted/40 focus:outline-none focus:bg-muted/40 cursor-pointer"
+            >
               <div className="flex items-start justify-between gap-2">
-                <Link
-                  to={`/facturacion/${row.factura_id}`}
-                  className="font-semibold text-primary hover:underline truncate"
-                >
+                <span className="font-semibold text-primary truncate">
                   {row.numero ?? "—"}
-                </Link>
+                </span>
                 <Badge variant={row.dias_vencido > 0 ? "destructive" : "secondary"}>
                   {row.dias_vencido}d
                 </Badge>
@@ -44,6 +56,7 @@ export function CarteraMobileList({ rows, isLoading }: Props) {
               {row.embarque_id && (
                 <Link
                   to={`/embarques/${row.embarque_id}`}
+                  onClick={(e) => e.stopPropagation()}
                   className="text-xs text-primary hover:underline block truncate"
                 >
                   {row.expediente ?? "—"}
