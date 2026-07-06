@@ -163,7 +163,7 @@ async function registrarBitacoraPassword(
     organization_id: ctx.organization_id,
     usuario_id: callerId,
     usuario_email: (userRow as { email?: string } | null)?.email ?? "",
-    modulo: "Costeo Agentes",
+    modulo: "usuarios",
     accion,
     entidad_id: ctx.agente_id,
     entidad_nombre: ctx.email,
