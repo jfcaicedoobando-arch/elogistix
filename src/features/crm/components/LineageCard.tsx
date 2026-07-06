@@ -4,12 +4,12 @@
  *  - OportunidadLineageCard: Oportunidad → Lead origen + Cotizaciones + Embarques
  * 11.13.0: las queries se mueven a `useLineage` (servicio CRM).
  */
-import { Link } from "react-router-dom";
 import { ExternalLink, FileText, Ship, Target, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useLeadLineage, useOportunidadLineage } from "@/features/crm/hooks";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 
 function Empty({ text }: { text: string }) {
   return <p className="text-xs text-muted-foreground">{text}</p>;
