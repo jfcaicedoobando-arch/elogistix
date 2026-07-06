@@ -11,8 +11,15 @@ import { supabase } from "@/integrations/supabase/client";
 export interface FacturaVinculada {
   proveedor_factura_id: string;
   folio_proveedor: string;
+  fecha_emision: string | null;
+  descripcion: string | null;
   monto: number;
 }
+
+export type EstatusRenglon = "sin_match" | "parcial" | "conciliado" | "excedente";
+
+/** Tolerancia relativa para clasificar Conciliado (±1%). */
+export const TOLERANCIA_CONCILIACION = 0.01;
 
 export interface FilaReconciliacion {
   concepto_costo_id: string;
@@ -25,6 +32,7 @@ export interface FilaReconciliacion {
   /** Positivo = nos pasamos del costo cotizado; negativo = ahorro. En %. */
   desviacion_pct: number;
   estado_liquidacion: string;
+  estatus_renglon: EstatusRenglon;
   facturas: FacturaVinculada[];
 }
 
@@ -37,12 +45,29 @@ export interface ResumenReconciliacion {
   conceptos_sin_factura: number;
 }
 
+export interface ResumenPorEstatus {
+  sin_match: number;
+  parcial: number;
+  conciliado: number;
+  excedente: number;
+}
+
+export interface ResumenPorMoneda {
+  moneda: string;
+  cotizado: number;
+  real: number;
+  diferencia: number;
+  desviacion_pct: number;
+}
+
 interface PFCRow {
   monto: number | string;
   concepto_costo_id: string | null;
+  descripcion: string | null;
   proveedor_facturas: {
     id: string;
     folio_proveedor: string;
+    fecha_emision: string | null;
     deleted_at: string | null;
   } | null;
 }
