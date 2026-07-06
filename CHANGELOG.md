@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.187.0] - 2026-07-06
+
+- **Facturación — Ola 1 de blindaje fiscal (parte 2/2)** — Cierra los items 3 y 4 del roadmap post-auditoría.
+  - **(Item 3) Verificación de UUID CFDI contra SAT** en alta/vista de factura de proveedor. Nueva edge function `verificar-uuid-sat` que consulta el Web Service público del SAT (`ConsultaCFDIService.svc`) por SOAP con `re/rr/tt/id` y clasifica la respuesta como **Vigente / Cancelado / No Encontrado / Error**. Migración: se agregan a `proveedor_facturas` las columnas `uuid_verificado` (bool), `uuid_verificado_fecha`, `uuid_estatus_sat`. Nuevo servicio cliente `verificarUuidSat` + hook `useVerificarUuidSat` (React Query) con toasts diferenciados por estatus. Bloquea aprobación/pago de CFDIs apócrifos o cancelados por el proveedor.
+  - **(Item 4) Cron nocturno de REPs pendientes**: nueva edge function `rep-retry-nocturno` que consulta la vista `v_pagos_rep_pendientes` y crea alertas en `alertas_sistema` (severidad **critical** si quedan ≤1 día, **warning** ≤5, **info** ≤7) usando `dedupe_key='rep_pendiente:{pago_id}'` para no duplicar mientras la alerta esté abierta. Programada vía `pg_cron` a las 12:00 UTC (06:00 CDMX) diaria. NO reintenta timbrar automáticamente (consume créditos y requiere validación humana de forma/método), sólo hace visible el riesgo en el panel de alertas.
+  - Con esto queda cerrada la Ola 1 completa (items 1-5). Ola 2 (auto-liquidación, programación de pagos, cierre de flujos) sigue pendiente.
+
 ## [13.186.0] - 2026-07-06
 
 - **Facturación — Ola 1 de blindaje fiscal (parte 1/2)** — Primeros tres items del roadmap post-auditoría.

@@ -5171,7 +5171,10 @@ export type Database = {
           tipo_cambio_usd: number
           total: number
           updated_at: string
+          uuid_estatus_sat: string | null
           uuid_fiscal: string | null
+          uuid_verificado: boolean | null
+          uuid_verificado_fecha: string | null
         }
         Insert: {
           aprobada_at?: string | null
@@ -5206,7 +5209,10 @@ export type Database = {
           tipo_cambio_usd?: number
           total?: number
           updated_at?: string
+          uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
+          uuid_verificado?: boolean | null
+          uuid_verificado_fecha?: string | null
         }
         Update: {
           aprobada_at?: string | null
@@ -5241,7 +5247,10 @@ export type Database = {
           tipo_cambio_usd?: number
           total?: number
           updated_at?: string
+          uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
+          uuid_verificado?: boolean | null
+          uuid_verificado_fecha?: string | null
         }
         Relationships: [
           {
@@ -6227,7 +6236,10 @@ export type Database = {
           tipo_cambio_usd: number
           total: number
           updated_at: string
+          uuid_estatus_sat: string | null
           uuid_fiscal: string | null
+          uuid_verificado: boolean | null
+          uuid_verificado_fecha: string | null
         }
         SetofOptions: {
           from: "*"
