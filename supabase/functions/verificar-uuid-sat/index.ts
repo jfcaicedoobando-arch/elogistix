@@ -70,37 +70,52 @@ async function consultarSat(rfcEmisor: string, rfcReceptor: string, total: numbe
   return { estatus: mapEstatus(estado, codigo), raw: `${codigo} | ${estado}` };
 }
 
+async function loadFactura(admin: ReturnType<typeof createClient>, facturaId: string) {
+  const { data, error } = await admin
+    .from("proveedor_facturas")
+    .select("id, uuid_fiscal, rfc_proveedor, total, organization_id, organizations:organization_id(rfc)")
+    .eq("id", facturaId)
+    .maybeSingle();
+  return { data, error };
+}
+
+async function authenticate(req: Request, cors: HeadersInit) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return { error: json(cors, { error: "unauthorized" }, 401) };
+  const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false },
+  });
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return { error: json(cors, { error: "unauthorized" }, 401) };
+  return { user: data.user };
+}
+
+async function parseBody(req: Request, cors: HeadersInit): Promise<{ id?: string; error?: Response }> {
+  let body: { factura_id?: string };
+  try { body = await req.json(); } catch { return { error: json(cors, { error: "invalid_json" }, 400) }; }
+  if (!body.factura_id) return { error: json(cors, { error: "factura_id_required" }, 400) };
+  return { id: body.factura_id };
+}
+
 Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const cors = buildCors(req);
   if (req.method !== "POST") return json(cors, { error: "method_not_allowed" }, 405);
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json(cors, { error: "unauthorized" }, 401);
+  const auth = await authenticate(req, cors);
+  if (auth.error) return auth.error;
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
-    global: { headers: { Authorization: authHeader } },
-    auth: { persistSession: false },
-  });
-  const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return json(cors, { error: "unauthorized" }, 401);
-
-  let body: { factura_id?: string };
-  try { body = await req.json(); } catch { return json(cors, { error: "invalid_json" }, 400); }
-  if (!body.factura_id) return json(cors, { error: "factura_id_required" }, 400);
+  const parsed = await parseBody(req, cors);
+  if (parsed.error) return parsed.error;
+  const facturaId = parsed.id!;
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-
-  const { data: fact, error: fErr } = await admin
-    .from("proveedor_facturas")
-    .select("id, uuid_fiscal, rfc_proveedor, total, organization_id, organizations:organization_id(rfc)")
-    .eq("id", body.factura_id)
-    .maybeSingle();
+  const { data: fact, error: fErr } = await loadFactura(admin, facturaId);
   if (fErr || !fact) return json(cors, { error: "factura_not_found", detail: fErr?.message }, 404);
   if (!fact.uuid_fiscal) return json(cors, { error: "uuid_fiscal_missing" }, 422);
   if (!fact.rfc_proveedor) return json(cors, { error: "rfc_proveedor_missing" }, 422);
-
   const rfcReceptor = (fact as { organizations?: { rfc?: string } | null }).organizations?.rfc ?? "";
   if (!rfcReceptor) return json(cors, { error: "rfc_receptor_missing" }, 422);
 
@@ -113,7 +128,7 @@ Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
       fact.uuid_fiscal.trim().toUpperCase(),
     );
   } catch (e) {
-    await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { factura_id: body.factura_id } });
+    await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { factura_id: facturaId } });
     return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
   }
 
@@ -124,7 +139,7 @@ Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
       uuid_estatus_sat: result.estatus,
       uuid_verificado_fecha: new Date().toISOString(),
     })
-    .eq("id", body.factura_id);
+    .eq("id", facturaId);
   if (uErr) return json(cors, { error: "update_failed", detail: uErr.message }, 500);
 
   return json(cors, { estatus: result.estatus, raw: result.raw });
