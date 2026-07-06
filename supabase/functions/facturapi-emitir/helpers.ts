@@ -14,6 +14,10 @@ export interface ConceptoInterno {
   unidad?: string | null;
   tasa_iva?: number | null; // 0.16, 0, etc.
   tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
+  /** Ola 3 — retención ISR normalizada (0.10 = 10%). */
+  tasa_ret_isr?: number | null;
+  /** Ola 3 — retención IVA normalizada (0.04, 0.106667). */
+  tasa_ret_iva?: number | null;
 }
 
 export interface FacturaContext {
