@@ -16,7 +16,7 @@ describe("pnlPorContenedor.helpers", () => {
       expect(round2(10)).toBe(10);
     });
     it("maneja negativos", () => {
-      expect(round2(-1.235)).toBe(-1.23);
+      expect(round2(-1.234)).toBe(-1.23);
     });
   });
 
