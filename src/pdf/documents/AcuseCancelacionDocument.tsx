@@ -80,11 +80,11 @@ export function AcuseCancelacionDocument({ data, emisor }: Props) {
           <Text style={styles.label}>Datos del comprobante</Text>
           <KeyValueGrid
             items={[
-              { label: "Serie", value: data.serie ?? "—" },
-              { label: "Folio fiscal", value: data.folioFiscal ?? "—" },
-              { label: "UUID SAT", value: data.uuidFiscal ?? "—" },
-              { label: "Cliente", value: data.clienteNombre ?? "—" },
-              { label: "RFC receptor", value: data.rfcCliente ?? "—" },
+              ["Serie", data.serie ?? "—"],
+              ["Folio fiscal", data.folioFiscal ?? "—"],
+              ["UUID SAT", data.uuidFiscal ?? "—"],
+              ["Cliente", data.clienteNombre ?? "—"],
+              ["RFC receptor", data.rfcCliente ?? "—"],
             ]}
           />
         </View>
