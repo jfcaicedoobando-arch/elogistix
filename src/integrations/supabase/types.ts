@@ -3991,7 +3991,10 @@ export type Database = {
           total: number
           updated_at: string
           uso_cfdi: string | null
+          uuid_estatus_sat: string | null
           uuid_fiscal: string | null
+          uuid_verificado: boolean
+          uuid_verificado_fecha: string | null
         }
         Insert: {
           acuse_cancelacion_fecha?: string | null
@@ -4044,7 +4047,10 @@ export type Database = {
           total?: number
           updated_at?: string
           uso_cfdi?: string | null
+          uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
+          uuid_verificado?: boolean
+          uuid_verificado_fecha?: string | null
         }
         Update: {
           acuse_cancelacion_fecha?: string | null
@@ -4097,7 +4103,10 @@ export type Database = {
           total?: number
           updated_at?: string
           uso_cfdi?: string | null
+          uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
+          uuid_verificado?: boolean
+          uuid_verificado_fecha?: string | null
         }
         Relationships: [
           {
@@ -6637,7 +6646,10 @@ export type Database = {
           total: number
           updated_at: string
           uso_cfdi: string | null
+          uuid_estatus_sat: string | null
           uuid_fiscal: string | null
+          uuid_verificado: boolean
+          uuid_verificado_fecha: string | null
         }[]
         SetofOptions: {
           from: "*"
