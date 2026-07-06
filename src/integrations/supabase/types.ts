@@ -164,6 +164,156 @@ export type Database = {
         }
         Relationships: []
       }
+      _backup_gap_externo_proformas_20260706: {
+        Row: {
+          aceptada_at: string | null
+          aceptada_por: string | null
+          bl_master: string | null
+          cliente_id: string | null
+          cliente_nombre: string | null
+          consolidada_en: string | null
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number | null
+          embarque_id: string | null
+          embarques_ids: string[] | null
+          enviada_at: string | null
+          enviada_por: string | null
+          es_consolidada: boolean | null
+          estado_aprobacion: string | null
+          estado_cliente: string | null
+          estado_proforma: string | null
+          estado_revision: string | null
+          expediente: string | null
+          factura_id: string | null
+          factura_secundaria_id: string | null
+          fecha_emision: string | null
+          fecha_facturacion: string | null
+          folio_factura_externa: string | null
+          id: string | null
+          iva_mxn: number | null
+          iva_usd: number | null
+          motivo_rechazo: string | null
+          notas: string | null
+          numero: string | null
+          operador: string | null
+          organization_id: string | null
+          origen: string | null
+          proformas_origen: string[] | null
+          rechazada_at: string | null
+          snapshot_emision: Json | null
+          subtotal_mxn: number | null
+          subtotal_usd: number | null
+          tasa_iva_aplicada: number | null
+          token_expira_at: string | null
+          token_publico: string | null
+          total_mxn: number | null
+          total_usd: number | null
+          ultimo_envio_email: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aceptada_at?: string | null
+          aceptada_por?: string | null
+          bl_master?: string | null
+          cliente_id?: string | null
+          cliente_nombre?: string | null
+          consolidada_en?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dias_credito?: number | null
+          embarque_id?: string | null
+          embarques_ids?: string[] | null
+          enviada_at?: string | null
+          enviada_por?: string | null
+          es_consolidada?: boolean | null
+          estado_aprobacion?: string | null
+          estado_cliente?: string | null
+          estado_proforma?: string | null
+          estado_revision?: string | null
+          expediente?: string | null
+          factura_id?: string | null
+          factura_secundaria_id?: string | null
+          fecha_emision?: string | null
+          fecha_facturacion?: string | null
+          folio_factura_externa?: string | null
+          id?: string | null
+          iva_mxn?: number | null
+          iva_usd?: number | null
+          motivo_rechazo?: string | null
+          notas?: string | null
+          numero?: string | null
+          operador?: string | null
+          organization_id?: string | null
+          origen?: string | null
+          proformas_origen?: string[] | null
+          rechazada_at?: string | null
+          snapshot_emision?: Json | null
+          subtotal_mxn?: number | null
+          subtotal_usd?: number | null
+          tasa_iva_aplicada?: number | null
+          token_expira_at?: string | null
+          token_publico?: string | null
+          total_mxn?: number | null
+          total_usd?: number | null
+          ultimo_envio_email?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aceptada_at?: string | null
+          aceptada_por?: string | null
+          bl_master?: string | null
+          cliente_id?: string | null
+          cliente_nombre?: string | null
+          consolidada_en?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          dias_credito?: number | null
+          embarque_id?: string | null
+          embarques_ids?: string[] | null
+          enviada_at?: string | null
+          enviada_por?: string | null
+          es_consolidada?: boolean | null
+          estado_aprobacion?: string | null
+          estado_cliente?: string | null
+          estado_proforma?: string | null
+          estado_revision?: string | null
+          expediente?: string | null
+          factura_id?: string | null
+          factura_secundaria_id?: string | null
+          fecha_emision?: string | null
+          fecha_facturacion?: string | null
+          folio_factura_externa?: string | null
+          id?: string | null
+          iva_mxn?: number | null
+          iva_usd?: number | null
+          motivo_rechazo?: string | null
+          notas?: string | null
+          numero?: string | null
+          operador?: string | null
+          organization_id?: string | null
+          origen?: string | null
+          proformas_origen?: string[] | null
+          rechazada_at?: string | null
+          snapshot_emision?: Json | null
+          subtotal_mxn?: number | null
+          subtotal_usd?: number | null
+          tasa_iva_aplicada?: number | null
+          token_expira_at?: string | null
+          token_publico?: string | null
+          total_mxn?: number | null
+          total_usd?: number | null
+          ultimo_envio_email?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       _backup_merge_client_users_20260706: {
         Row: {
           cliente_id: string | null
