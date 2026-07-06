@@ -91,7 +91,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
             data={embarques}
             isLoading={isLoading}
             emptyMessage="Sin embarques con arribo este mes"
-            onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+            getRowHref={(e) => `/embarques/${e.id}`}
             rowKey={(e) => e.id}
             skeletonRows={4}
             density="compact"
