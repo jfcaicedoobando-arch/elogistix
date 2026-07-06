@@ -161,8 +161,8 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
 
   try {
     const [usdMxn, eurMxn] = await Promise.all([
-      fetchSerieDof(SERIE_USD, token, ctrl.signal, hoy),
-      fetchSerieDof(SERIE_EUR, token, ctrl.signal, hoy),
+      fetchUsdDof(token, ctrl.signal, hoy),
+      fetchEurBanxico(token, ctrl.signal),
     ]);
     const rates = {
       usdMxn: usdMxn ?? FALLBACK.usdMxn,
