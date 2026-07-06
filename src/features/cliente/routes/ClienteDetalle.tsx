@@ -118,7 +118,7 @@ export default function ClienteDetalle() {
                 data={embarquesCliente}
                 isLoading={loadingEmbarques}
                 emptyMessage="Sin embarques registrados"
-                onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+                getRowHref={(e) => `/embarques/${e.id}`}
                 rowKey={(e) => e.id}
                 density="compact"
               />
