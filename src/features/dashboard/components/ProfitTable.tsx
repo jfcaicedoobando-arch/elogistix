@@ -74,8 +74,6 @@ const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueC
 ]);
 
 export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: Props) {
-  const navigate = useNavigate();
-
   return (
     <Card>
       <CardHeader className="pb-3">
