@@ -120,12 +120,13 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .eq("id", factura_id);
   if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  await supabase.from("bitacora_actividad").insert({
-    organization_id: factura.organization_id,
-    user_id: userData.user.id,
+  await registrarBitacoraEdge(supabase, {
+    organizationId: factura.organization_id,
+    usuarioId: userData.user.id,
+    usuarioEmail: userData.user.email,
+    modulo: "facturacion",
     accion: esSustitucion ? "facturapi_sustituida" : "facturapi_cancelada",
-    entidad: "factura",
-    entidad_id: factura_id,
+    entidadId: factura_id,
     detalles: {
       motivo,
       sustituye_uuid: sustituye_uuid ?? null,
