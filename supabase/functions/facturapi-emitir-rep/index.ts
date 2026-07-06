@@ -167,12 +167,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: errMsg })
       .eq("id", pago.id);
-    await supabase.from("bitacora_actividad").insert({
-      organization_id: pago.organization_id,
-      user_id: userData.user.id,
+    await registrarBitacoraEdge(supabase, {
+      organizationId: pago.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
       accion: "facturapi_rep_emitir_failed",
-      entidad: "pago_factura",
-      entidad_id: pago.id,
+      entidadId: pago.id,
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
