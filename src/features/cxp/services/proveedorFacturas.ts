@@ -8,6 +8,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/lib/domain/bitacora/registrar";
 import {
   PROVEEDOR_FACTURAS_SELECT,
   mapJoinedRow,
@@ -132,6 +133,19 @@ export async function crearFacturaProveedor(payload: NuevaFacturaProveedorPayloa
     .select()
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "crear",
+    entidadId: data.id,
+    entidadNombre: data.folio_interno ?? data.folio_proveedor ?? "",
+    detalles: {
+      proveedor_id: data.proveedor_id,
+      proveedor_nombre: data.proveedor_nombre,
+      folio_proveedor: data.folio_proveedor,
+      total: data.total,
+      moneda: data.moneda,
+    },
+  });
   return data;
 }
 
@@ -166,5 +180,11 @@ export async function softDeleteFacturaProveedor(id: string, userId: string | nu
     .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
     .eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "eliminar",
+    entidadId: id,
+    detalles: { deleted_by: userId },
+  });
 }
 

@@ -21,7 +21,7 @@ export async function logTarifaSugeridaAplicada(args: LogTarifaSugeridaArgs): Pr
       usuarioId: user.id,
       usuarioEmail: user.email ?? "",
       accion: "tarifa_sugerida_aplicada",
-      modulo: "Cotizaciones",
+      modulo: "cotizaciones",
       entidadId: args.cotizacionId ?? args.tarifaId,
       entidadNombre: `Top ${args.ranking}`,
       detalles: {

@@ -1,50 +1,88 @@
-# Estado del roadmap fiscal — qué queda pendiente
 
-Revisé `CHANGELOG.md` (13.186.0 → 13.187.3), migraciones y edge functions. Este es el corte al día de hoy.
+# Extender cobertura de bitácora a módulos nuevos
 
-## Ola 1 — Blindaje fiscal ✅ COMPLETA
+## Diagnóstico
 
-| # | Item | Estado | Evidencia |
-|---|------|--------|-----------|
-| 1 | Guardar acuse SAT de cancelación | ✅ Hecho | Columnas `facturas.acuse_cancelacion_xml/_fecha/_status` + descarga en `facturapi-cancelar` (13.186.0) |
-| 2 | Catálogos SAT completos (usos CFDI + formas de pago) | ✅ Hecho | `catalogosSAT.ts`: 25 usos, 22 formas de pago (13.186.0) |
-| 3 | Verificación UUID CFDI vs SAT en factura de proveedor | ✅ Hecho | Edge `verificar-uuid-sat` + columnas `proveedor_facturas.uuid_verificado/_fecha/_estatus_sat` + botón en `InfoFacturaSection` (13.187.0 / 13.187.2) |
-| 4 | Reintento automático nocturno de REP fallidos | ✅ Hecho | Edge `rep-retry-nocturno` con `pg_cron` a las 12:00 UTC + alertas en `alertas_sistema` (13.187.0). Nota: crea alertas, no re-timbra automáticamente. |
-| 5 | Sustituir `MAN-{timestamp}` | ✅ Hecho | Prefijo cambiado a `BORRADOR-{timestamp}`, UI muestra "Sin folio (borrador)", envío/PDF/XML bloqueados hasta timbrar (13.186.0) |
+La bitácora (`bitacora_actividad`) está desactualizada:
 
-## Ola 2 — Cierre de flujo operativo ⏳ PENDIENTE (0/4)
+**Sin registro alguno** (implementados en olas recientes):
+- CxP: alta/edición/pago/cancelación de facturas de proveedor, notas de crédito, retenciones.
+- Facturación emitida: emisión CFDI, cancelación, NC, REP (hoy sólo se guarda en `app_logs` del edge function, no visible al usuario).
+- Costeo: tarifas marítimas, condiciones naviera, demoras, garantías.
+- Comisiones y liquidaciones.
+- Configuración global y presupuestos.
 
-| # | Item | Estado |
-|---|------|--------|
-| 1 | Auto-liquidación: trigger que actualice `conceptos_costo.estado_liquidacion` al registrar pago de proveedor | ⏳ Pendiente. Existe util derivada `estadoLiquidacionDerivado.ts` pero no hay trigger BD ni escritura persistente. |
-| 2 | Programación de pagos: campo `fecha_programada_pago`, bandejas "por programar" / "por ejecutar", proyección semanal | ⏳ Pendiente. Columna no existe en `proveedor_facturas`. |
-| 3 | Estado de conciliación bancaria en detalle de factura proveedor (join con `bbva_movimientos`) | ⏳ Pendiente. Tabla existe pero no está referenciada desde `InfoFacturaSection`. |
-| 4 | Cancelación de factura de proveedor con lógica (valida saldo, revierte NC, marca embarque) | ⏳ Pendiente. |
+**Inconsistencias en UI** (`src/features/dashboard/routes/Bitacora.tsx`):
+- Faltan opciones `crm`, `auditoria`, `cxp`, `costeo`, `comisiones`, `configuracion`, `facturacion`, `retenciones`.
+- Valores mezclados con mayúsculas (`"Embarques"` vs `"embarques"`) desde `paso1Crm.ts` y `bitacoraTarifa.ts`.
 
-## Ola 3 — Fiscal avanzado ⏳ PENDIENTE (0/5)
+## Alcance
 
-| # | Item | Estado |
-|---|------|--------|
-| 1 | Retenciones ISR/IVA en `registrarPagoProveedor` (nueva tabla `retenciones_pago`) | ⏳ Pendiente. Tabla no existe. |
-| 2 | Módulo DIOT: generación mensual + export TXT/XML SAT | ⏳ Pendiente. |
-| 3 | Complemento de pago recibido: carga XML, vincula a `pagos_proveedor`, valida vs SAT | ⏳ Pendiente. |
-| 4 | Aging de saldos CxC + reporte de antigüedad | ⏳ Pendiente. Existen buckets en `useFinanceDashboard.ts` pero no hay reporte formal ni PDF dedicado. |
-| 5 | Respaldo automático de XML de facturas emitidas al bucket `facturas` | ⏳ Pendiente. Actualmente sólo se conserva en FacturApi + `facturas.acuse_cancelacion_xml` para cancelaciones. |
+### 1. Helper único de bitácora (frontend)
+Crear `src/lib/domain/bitacora/registrar.ts` con:
+- `registrarActividad({ modulo, accion, entidad, entidadId, descripcion, detalles })`.
+- Toma `auth.getUser` internamente, no lanza (fire-and-forget con `console.warn`).
+- Constante `MODULOS_BITACORA` como single source of truth (kebab lowercase).
 
-## Recomendación de próximo paso
+Migrar los 5 puntos actuales (`paso1Crm`, `prospecto`, `bitacoraTarifa`, `bitacoraEmbarque`, `cierre`, `loginAudit`) a este helper y **normalizar valores a minúsculas** (`embarques`, `cotizaciones`).
 
-Ola 2 tiene mejor ROI operativo inmediato (cierra los ciclos de tesorería / cuentas por pagar que ya están en producción). Sugiero arrancar por **Ola 2 · Item 1 (auto-liquidación)** porque:
+### 2. Puntos nuevos de registro
+Añadir llamada a `registrarActividad` en:
 
-- Ya existe la lógica derivada (`estadoLiquidacionDerivado.ts`) → sólo hay que persistirla con un trigger.
-- Desbloquea los KPIs de "% conceptos liquidados" por embarque sin cálculos en runtime.
-- Es cambio pequeño y aislado (trigger + backfill + refresco de query keys).
+| Módulo | Archivo/hook | Acciones |
+|---|---|---|
+| `cxp` | `useCrearFacturaProveedor`, `useActualizarFacturaProveedor`, `useCancelarFacturaProveedor`, `useRegistrarPagoProveedor`, `useCrearNotaCreditoProveedor` | `crear`, `editar`, `cancelar`, `pagar` |
+| `facturacion` | `facturapi-emitir/index.ts`, `facturapi-emitir-nota-credito`, `facturapi-emitir-rep`, `facturapi-cancelar` (edge functions → escribir a `bitacora_actividad` con user_id de la request) | `emitir`, `cancelar`, `emitir_nc`, `emitir_rep` |
+| `costeo` | Hooks CRUD de `costeo_tarifas`, `costeo_navieras_condiciones`, `costeo_tarifa_recargos`, `costeo_naviera_demoras_tarifa` | `crear`, `editar`, `eliminar` |
+| `comisiones` | Servicios `liquidaciones_comision`, `comisiones_devengadas` | `liquidar`, `ajustar` |
 
-## ¿Con qué avanzo?
+Retenciones NO tendrán módulo propio: se registran como `detalles.retenciones` dentro del evento de `cxp` o `facturacion`.
 
-Opciones:
-1. **Ola 2 completa** en 2 iteraciones (items 1-2 primero, luego 3-4).
-2. **Sólo Ola 2 · Item 1** (auto-liquidación) como quick win.
-3. **Saltar a Ola 3 · Item 5** (respaldo XML) si te preocupa más la contingencia fiscal que el flujo operativo.
-4. Otra combinación que definas.
+### 3. UI del catálogo
+Actualizar `src/features/dashboard/routes/Bitacora.tsx`:
+- Importar `MODULOS_BITACORA` desde el helper.
+- Añadir entradas: CxP, Facturación, Costeo, CRM, Auditoría, Comisiones, Configuración.
+- Extender `GRUPOS_ACCION` en `src/lib/domain/bitacoraDescripcion.ts` con verbos nuevos: `pagar`, `liquidar`, `emitir`, `cancelar`, `timbrar`.
 
-Dime cuál eliges y armo el plan de implementación detallado.
+### 4. Descripciones legibles
+Ampliar `bitacoraDescripcion.ts` con plantillas por (`modulo`, `accion`) para los eventos nuevos, ej:
+- `cxp.crear` → "Registró factura de proveedor {folio}"
+- `facturacion.emitir` → "Timbró factura {serie}-{folio} por {monto}"
+- `costeo.crear` → "Creó tarifa {ruta} en {naviera}"
+
+### 5. Tests
+- Extender `bitacoraDescripcion.test.ts` con casos nuevos.
+- Test unitario del helper `registrarActividad` (mock supabase).
+- Un test por hook nuevo verificando que llama a `bitacora_actividad` en éxito.
+
+### 6. Migración BD
+No requiere cambios de esquema — `bitacora_actividad` ya es genérica. Sólo confirmar índices existentes sobre `(modulo, created_at)` vía `supabase--linter` en fase de implementación.
+
+### 7. Changelog + versión
+- Bump `APP_VERSION` (patch).
+- Entrada `## [X.Y.Z]` con bullets por módulo agregado.
+
+## Detalles técnicos
+
+```text
+src/lib/domain/bitacora/
+├── registrar.ts        (helper único + MODULOS_BITACORA)
+└── __tests__/registrar.test.ts
+
+Modificados:
+- Bitacora.tsx                       (dropdown desde MODULOS_BITACORA)
+- bitacoraDescripcion.ts             (grupos + plantillas nuevas)
+- features/cxp/hooks/*                (~5 hooks)
+- features/costeo/hooks/*             (~4 hooks)
+- features/comisiones/services/*
+- supabase/functions/facturapi-*      (4 edge functions)
+- Migraciones existentes de olas: normalizar strings mayúscula → minúscula
+```
+
+Edge functions escriben directo a `bitacora_actividad` usando `service_role` + `user_id` extraído del JWT de la petición (patrón ya usado en `authenticateRequest`).
+
+## Fuera de alcance
+
+- Reescribir la vista de timeline por entidad (`useActividadEmbarque`) — sigue funcional.
+- Exportar bitácora a CSV/Excel.
+- Retención por 90 días / archivado automático.

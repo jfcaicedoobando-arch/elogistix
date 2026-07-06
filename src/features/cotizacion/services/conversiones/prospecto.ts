@@ -54,7 +54,7 @@ export async function convertirProspectoACliente(input: ProspectoAClienteInput) 
       usuario_id: user.id,
       usuario_email: user.email ?? "",
       accion: "Convertir prospecto a cliente",
-      modulo: "Cotizaciones",
+      modulo: "cotizaciones",
       entidad_id: cotizacionId,
       entidad_nombre: clienteCreado.nombre,
       detalles: toDbJson({ cliente_id: clienteCreado.id }),
