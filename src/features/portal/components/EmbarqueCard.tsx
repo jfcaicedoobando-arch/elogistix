@@ -54,9 +54,13 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
     ? `${e.tipo_servicio}${e.tipo_contenedor ? ` ${e.tipo_contenedor}` : ""}`
     : e.modo === "Aéreo" ? "Aéreo" : null;
   const etaCls = etaProximityClass(e.eta);
+  const rowNav = useDrilldownRow({
+    href: `/portal/embarques/${e.id}`,
+    ariaLabel: `Ver embarque ${e.expediente}`,
+  });
 
   return (
-    <Link to={`/portal/embarques/${e.id}`}>
+    <article {...rowNav} className={cn(rowNav.className, "block")}>
       <Card className={`border-l-4 ${getEstadoBorderColor(estadoVisual)} hover:shadow-md hover:scale-[1.005] transition-all duration-200 group`}>
         <CardContent className="p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
@@ -109,7 +113,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
 
         </CardContent>
       </Card>
-    </Link>
+    </article>
   );
 }
 
