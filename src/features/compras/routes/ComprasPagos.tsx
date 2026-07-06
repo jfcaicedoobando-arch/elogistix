@@ -15,17 +15,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { KpiCard } from "@/components/shared/KpiCard";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import {
   listarPagosProveedorGlobal,
-  type PagoProveedorRow,
 } from "@/features/compras/services/pagosGlobal";
+import { buildPagosColumns } from "./_sections/pagosColumns";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
@@ -65,61 +65,8 @@ export default function ComprasPagos() {
   const totalMxn = rows.filter((r) => r.moneda === "MXN").reduce((a, r) => a + r.monto, 0);
   const totalUsd = rows.filter((r) => r.moneda === "USD").reduce((a, r) => a + r.monto, 0);
 
-  const columns = useMemo(
-    () =>
-      defineColumns<PagoProveedorRow>([
-        {
-          id: "fecha_pago",
-          header: "Fecha",
-          accessorFn: (r) => r.fecha_pago,
-          cell: ({ row }) => formatDate(row.original.fecha_pago),
-        },
-        {
-          id: "proveedor",
-          header: "Proveedor",
-          accessorFn: (r) => r.proveedor_nombre ?? "—",
-          cell: ({ row }) => (
-            <span className="font-medium">{row.original.proveedor_nombre ?? "—"}</span>
-          ),
-        },
-        {
-          id: "folio",
-          header: "Folio interno",
-          accessorFn: (r) => r.factura_folio_interno ?? "—",
-        },
-        {
-          id: "folio_prov",
-          header: "Folio proveedor",
-          accessorFn: (r) => r.factura_folio_proveedor ?? "—",
-        },
-        {
-          id: "metodo",
-          header: "Método",
-          accessorFn: (r) => r.metodo_pago,
-        },
-        {
-          id: "referencia",
-          header: "Referencia",
-          accessorFn: (r) => r.referencia ?? "—",
-          cell: ({ row }) =>
-            row.original.referencia ? (
-              <span className="font-mono text-xs">{row.original.referencia}</span>
-            ) : "—",
-        },
-        {
-          id: "monto",
-          header: "Monto",
-          accessorFn: (r) => r.monto,
-          cell: ({ row }) => (
-            <span className="tabular-nums font-medium">
-              {formatCurrency(row.original.monto, row.original.moneda)}
-            </span>
-          ),
-          meta: { align: "right" },
-        },
-      ]),
-    [],
-  );
+  const columns = useMemo(() => buildPagosColumns(), []);
+
 
   const handleExport = () => {
     try {
