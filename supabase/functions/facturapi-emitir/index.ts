@@ -138,6 +138,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       unidad: "Unidad de servicio",
       tipo_iva: (c.tipo_iva as "gravado_16" | "tasa_0" | "exento" | null) ?? "gravado_16",
       tasa_iva: c.tasa_iva_aplicada != null ? Number(c.tasa_iva_aplicada) : 0.16,
+      tasa_ret_isr: c.tasa_ret_isr != null ? Number(c.tasa_ret_isr) : 0,
+      tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
     })),
     sustituye_uuid: sustituyeUuid,
   };
