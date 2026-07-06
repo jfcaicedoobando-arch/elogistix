@@ -235,8 +235,7 @@ describe("VirtualDataTable E2E — virtualización + paginación", () => {
       />,
     );
     act(() => {
-      rerenderWithRouter(
-        rerender,
+      rerender(
         <VirtualDataTable
           columns={cols}
           data={FIXTURE.filter((r) => r.cliente === "ACME")}
