@@ -1,15 +1,13 @@
 /** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
-import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { ShieldCheck, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/shared";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasLote";
@@ -21,6 +19,7 @@ import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
 import { ComprasPorAprobarEmptyState } from "./ComprasPorAprobar.emptyState";
+import { ComprasPorAprobarBulkBar } from "./ComprasPorAprobar.bulkBar";
 
 type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
 
