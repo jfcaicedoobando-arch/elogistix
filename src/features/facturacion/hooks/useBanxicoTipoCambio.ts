@@ -1,12 +1,13 @@
 /**
- * useBanxicoTipoCambio — obtiene el TC DOF publicado por Banxico para USD/EUR
- * llamando a la edge function unificada `exchange-rates` (que consulta las
- * series SF43718 y SF46410 con caché de 12 h).
+ * useBanxicoTipoCambio — obtiene el TC de Publicación DOF USD/EUR llamando a
+ * la edge function unificada `exchange-rates`.
  *
- * v13.166.0: antes existía una function separada `banxico-tipo-cambio`; se
- * absorbió en `exchange-rates` para tener un único punto de verdad para el
- * TC DOF en todo el sistema.
+ * v13.166.0: se absorbió `banxico-tipo-cambio` en `exchange-rates`.
+ * v13.205.5: la edge ahora consulta SF43718 (USD) y SF46410 (EUR) en un rango
+ * de 10 días y selecciona explícitamente el FIX del día hábil ANTERIOR a hoy,
+ * que es la Publicación DOF vigente para CFDI emitidos hoy (Art. 20 CFF).
  */
+
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchExchangeRates } from "@/features/catalogos/services";

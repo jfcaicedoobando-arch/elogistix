@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.5] - 2026-07-06
+
+- **Fix Facturación · TC de Publicación DOF real (SF43718 con fecha de ayer hábil)**: la versión previa (13.205.4) cambió a la serie `SF60653`, pero esa serie es "Para Pagos" (SAT), no la Publicación DOF que exige el CFDI. Además, seguir usando `datos/oportuno` a partir de las ~12:00 hrs devolvía el FIX de hoy (que es DOF de mañana). Ahora `exchange-rates` consulta las series `SF43718` (USD) y `SF46410` (EUR) en un rango de 10 días naturales y, con la nueva función `extraerPublicacionDof(data, hoyIso)`, selecciona explícitamente la última fila cuya fecha sea **anterior a hoy** — que es la Publicación DOF vigente hoy (Art. 20 CFF). Se agregan 10 tests Deno cubriendo: FIX de hoy publicado, sin FIX de hoy, "N/E" al final, rango vacío, todas las filas >= hoy, fechas mal formateadas, redondeo a 4 decimales y helpers `formatFechaBanxico`/`rangoUltimosDias`. Al desplegar, la caché in-memory se vacía y las siguientes invocaciones traen el DOF correcto.
+
 ## [13.205.4] - 2026-07-06
 
 - **Fix Facturación · TC DOF (SF60653) en lugar de FIX (SF43718)**: el edge function `exchange-rates` consultaba la serie Banxico SIE `SF43718` (FIX), pero el SAT exige el TC DOF para el campo `TipoCambio` del CFDI 4.0 en facturas en moneda extranjera (Art. 20 CFF). Se cambia `SERIE_USD` a `SF60653` — "tipo de cambio para solventar obligaciones denominadas en dólares" publicado en el DOF. Como el DOF republica el FIX del día hábil anterior, `datos/oportuno` sigue devolviendo el TC vigente para operaciones del día. Serie EUR (`SF46410`) sin cambios. Al desplegar, la caché in-memory de 12 h se vacía y las siguientes invocaciones traen ya el DOF.
