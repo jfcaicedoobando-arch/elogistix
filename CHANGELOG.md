@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.9] - 2026-07-06
+
+- **Facturación · Acuse PDF oficial de FacturApi**: el botón "Acuse PDF" en el detalle de una factura cancelada ahora descarga el PDF OFICIAL emitido por FacturApi (`/invoices/{id}/cancellation_receipt/pdf`) en lugar de un PDF generado por Libre Carga. La edge function `facturapi-cancelar` acepta una nueva bandera `solo_descargar_acuse_pdf: true` que resuelve el cliente por organización, obtiene el binario desde FacturApi y lo entrega como `application/pdf`. Si el SAT aún no lo ha emitido, la edge responde 404 y la UI muestra un aviso claro. Se elimina `AcuseCancelacionDocument` (PDF cliente-side ya no se usa).
+
 ## [13.205.8] - 2026-07-06
 
 - **Facturación · Cancelar factura revierte proforma origen**: al cancelar un CFDI (`facturapi-cancelar`), la edge function ahora localiza las proformas ligadas por `factura_id` o `factura_secundaria_id`, limpia el vínculo puntual, y si ambas referencias quedan en `NULL` regresa la proforma a `estado_proforma = 'pendiente'` (`fecha_facturacion`, `folio_factura_externa` a `NULL`). Si la proforma originó 2 facturas y sólo cancelas una, la proforma permanece como `facturada` hasta que la otra también se cancele. No aplica cuando es una sustitución (motivo 01) — la relación se conserva vía `sustituida_por`. El resultado se registra en bitácora dentro de `detalles.proformas_revertidas`.

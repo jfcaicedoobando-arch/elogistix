@@ -1,22 +1,21 @@
 /**
  * useAcuseCancelacion — acciones sobre el acuse SAT de una factura cancelada:
  *  · descargarXml: guarda el XML de acuse como archivo.
- *  · descargarPdf: genera un PDF cliente-side con los datos de cancelación.
+ *  · descargarPdf: descarga el PDF OFICIAL emitido por FacturApi
+ *    (`/invoices/{id}/cancellation_receipt/pdf`) — ya no generamos un PDF
+ *    cliente-side.
  *  · reintentar: mutation que reinvoca `facturapi-cancelar` con
- *    `solo_descargar_acuse: true` para refrescar el acuse cuando el SAT
+ *    `solo_descargar_acuse: true` para refrescar el acuse XML cuando el SAT
  *    aún no lo había emitido en el momento de la cancelación.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { reintentarAcuseCancelacion } from "@/features/facturacion/services/facturapi";
+import {
+  reintentarAcuseCancelacion,
+  descargarAcuseCancelacionPdf,
+} from "@/features/facturacion/services/facturapi";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { descargarBlob } from "@/lib/downloadBlob";
-import { descargarPdf } from "@/pdf/render/descargarPdf";
-import {
-  AcuseCancelacionDocument,
-  type AcuseCancelacionData,
-} from "@/pdf/documents/AcuseCancelacionDocument";
-import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { queryKeys } from "@/lib/query";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 
@@ -71,27 +70,11 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
   async function descargarPdfAcuse() {
     if (!factura) return;
     try {
-      const emisor = await cargarEmisorEmpresa().catch(() => undefined);
-      const data: AcuseCancelacionData = {
-        numero: factura.numero,
-        uuidFiscal: factura.uuid_fiscal,
-        folioFiscal: factura.folio_fiscal != null ? String(factura.folio_fiscal) : null,
-        serie: factura.serie,
-        clienteNombre: factura.cliente_nombre,
-        rfcCliente: factura.rfc_cliente,
-        fechaEmision: factura.fecha_emision,
-        motivo: factura.cancelacion_motivo,
-        canceladoEn: factura.cancelado_en,
-        acuseFecha: factura.acuse_cancelacion_fecha,
-        acuseStatus: factura.acuse_cancelacion_status,
-      };
-      await descargarPdf(
-        <AcuseCancelacionDocument data={data} emisor={emisor ?? undefined} />,
-        nombreArchivoBase(factura),
-      );
+      const blob = await descargarAcuseCancelacionPdf(factura.id);
+      descargarBlob(blob, `${nombreArchivoBase(factura)}.pdf`);
     } catch (err) {
       notifyError(toast, {
-        title: "No se pudo generar el PDF del acuse.",
+        title: "No se pudo descargar el PDF del acuse.",
         error: err,
         method: "FEATURES_FACTURACION_HOOKS_USEACUSECANCELACION_PDF",
       });
