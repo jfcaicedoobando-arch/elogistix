@@ -3923,6 +3923,9 @@ export type Database = {
       }
       facturas: {
         Row: {
+          acuse_cancelacion_fecha: string | null
+          acuse_cancelacion_status: string | null
+          acuse_cancelacion_xml: string | null
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo: string | null
           cancelado_en: string | null
@@ -3970,6 +3973,9 @@ export type Database = {
           uuid_fiscal: string | null
         }
         Insert: {
+          acuse_cancelacion_fecha?: string | null
+          acuse_cancelacion_status?: string | null
+          acuse_cancelacion_xml?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo?: string | null
           cancelado_en?: string | null
@@ -4017,6 +4023,9 @@ export type Database = {
           uuid_fiscal?: string | null
         }
         Update: {
+          acuse_cancelacion_fecha?: string | null
+          acuse_cancelacion_status?: string | null
+          acuse_cancelacion_xml?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo?: string | null
           cancelado_en?: string | null
@@ -6507,6 +6516,9 @@ export type Database = {
           p_uso_cfdi: string
         }
         Returns: {
+          acuse_cancelacion_fecha: string | null
+          acuse_cancelacion_status: string | null
+          acuse_cancelacion_xml: string | null
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo: string | null
           cancelado_en: string | null
