@@ -3,15 +3,25 @@
  * Itera `table.getRowModel().rows` (que ya viene ordenado por TanStack en
  * modo client) y delega el render de cada celda a `flexRender`. Sin
  * `useMemo`/`useEffect` ni `.sort()` manual.
+ *
+ * Drilldown accesible (v13.200.0):
+ * - Si `getRowHref(row)` devuelve string, la fila se comporta como link:
+ *   role=link, tabIndex=0, teclado (Enter/Space), Ctrl/Cmd+click en pestaña
+ *   nueva. Controles internos (botones, checkboxes, dropdowns) se detectan
+ *   automáticamente y NO disparan la navegación.
+ * - `onRowClick` sigue disponible para tablas que abren un modal en vez de
+ *   navegar. `getRowHref` tiene prioridad si ambos están presentes.
  */
 import type React from "react";
 import { Inbox, type LucideIcon } from "lucide-react";
 import { flexRender, type Table } from "@tanstack/react-table";
+import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { cn } from "@/lib/utils";
 import { ALIGN_CLASS, DENSITY_CELL, type ColumnAlign, type TableDensity } from "./types";
+import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
 import "./columnMeta";
 
 interface Props<T> {
@@ -32,7 +42,12 @@ interface Props<T> {
   rowClassName?: (item: T) => string;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
+  /** Si retorna string, la fila navega a esa URL con soporte de teclado y Ctrl+click. */
+  getRowHref?: (item: T) => string | null;
+  /** aria-label opcional para filas navegables (mejora TalkBack/VoiceOver). */
+  getRowAriaLabel?: (item: T) => string;
 }
+
 
 /**
  * Discrimina entre un LucideIcon y un ReactNode ya renderizado.
