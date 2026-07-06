@@ -7,7 +7,10 @@
  *   - `tasa_0`    → 0%
  *   - `exento`    → no aporta IVA (base gravable 0)
  *
- * El total de IVA de la factura se recalcula sumando renglón por renglón.
+ * Además puede llevar retenciones ISR / IVA por renglón (Ola 3 · Item 1).
+ * El trigger BD recalcula `facturas.ret_isr`/`ret_iva` y ajusta `total`,
+ * pero también reflejamos el cálculo aquí para mantener consistencia
+ * inmediata sin depender exclusivamente del round-trip a BD.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -23,6 +26,10 @@ export interface ConceptoFacturaInput {
   precio_unitario: number;
   clave_sat?: string | null;
   tipo_iva?: TipoIvaConcepto;
+  /** Retención ISR normalizada 0..1 (10% → 0.10). */
+  tasa_ret_isr?: number;
+  /** Retención IVA normalizada 0..1 (4% → 0.04). */
+  tasa_ret_iva?: number;
 }
 
 export interface ConceptoFacturaRow {
@@ -36,6 +43,10 @@ export interface ConceptoFacturaRow {
   moneda: Moneda;
   tipo_iva: TipoIvaConcepto;
   tasa_iva_aplicada: number | null;
+  tasa_ret_isr: number;
+  tasa_ret_iva: number;
+  monto_ret_isr: number;
+  monto_ret_iva: number;
 }
 
 function resolverTasa(tipo: TipoIvaConcepto): number | null {
@@ -56,6 +67,8 @@ function normalizarLinea(input: ConceptoFacturaInput) {
     clave_sat: input.clave_sat?.trim() || "81141601",
     tipo_iva,
     tasa_iva_aplicada: resolverTasa(tipo_iva),
+    tasa_ret_isr: Number(input.tasa_ret_isr ?? 0),
+    tasa_ret_iva: Number(input.tasa_ret_iva ?? 0),
   };
 }
 
@@ -105,24 +118,25 @@ export async function eliminarConceptoFactura(params: {
 }
 
 /**
- * Suma renglones vigentes y actualiza `subtotal`, `iva`, `total` en `facturas`.
- * IVA se acumula por renglón según `tasa_iva_aplicada` (null = exento → 0).
+ * Suma renglones vigentes y actualiza `subtotal`, `iva`, `ret_isr`, `ret_iva`
+ * y `total` en `facturas`. El trigger BD ya hace lo mismo; esta función
+ * mantiene la reconciliación inmediata para el cliente.
  */
 export async function recalcularTotalesFactura(facturaId: string): Promise<void> {
   const { data, error } = await supabase
     .from("conceptos_factura")
-    .select("cantidad, precio_unitario, tasa_iva_aplicada, tipo_iva")
+    .select("cantidad, precio_unitario, tasa_iva_aplicada, tipo_iva, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", facturaId)
     .is("deleted_at", null);
   if (error) throw error;
 
   let subtotal = 0;
   let iva = 0;
+  let retIsr = 0;
+  let retIva = 0;
   for (const c of data ?? []) {
     const importe = Number(c.cantidad) * Number(c.precio_unitario);
     subtotal += importe;
-    // Fallback defensivo: si tasa_iva_aplicada viene NULL pero hay tipo_iva
-    // definido, resolver la tasa desde el tipo. Si ambos son null → 0 (exento).
     let tasa: number;
     if (c.tasa_iva_aplicada != null) {
       tasa = Number(c.tasa_iva_aplicada);
@@ -131,14 +145,25 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
       tasa = tipo ? (resolverTasa(tipo) ?? 0) : 0;
     }
     iva += importe * tasa;
+    retIsr += importe * Number(c.tasa_ret_isr ?? 0);
+    retIva += importe * Number(c.tasa_ret_iva ?? 0);
   }
-  const subtotalR = Math.round(subtotal * 100) / 100;
-  const ivaR = Math.round(iva * 100) / 100;
-  const totalR = Math.round((subtotalR + ivaR) * 100) / 100;
+  const r = (n: number) => Math.round(n * 100) / 100;
+  const subtotalR = r(subtotal);
+  const ivaR = r(iva);
+  const retIsrR = r(retIsr);
+  const retIvaR = r(retIva);
+  const totalR = r(subtotalR + ivaR - retIsrR - retIvaR);
 
   const { error: uErr } = await supabase
     .from("facturas")
-    .update({ subtotal: subtotalR, iva: ivaR, total: totalR })
+    .update({
+      subtotal: subtotalR,
+      iva: ivaR,
+      ret_isr: retIsrR,
+      ret_iva: retIvaR,
+      total: totalR,
+    })
     .eq("id", facturaId);
   if (uErr) throw uErr;
 }
@@ -146,7 +171,7 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
 export async function fetchConceptosFactura(facturaId: string): Promise<ConceptoFacturaRow[]> {
   const { data, error } = await supabase
     .from("conceptos_factura")
-    .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda, tipo_iva, tasa_iva_aplicada")
+    .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, monto_ret_isr, monto_ret_iva")
     .eq("factura_id", facturaId)
     .is("deleted_at", null)
     .order("created_at", { ascending: true });

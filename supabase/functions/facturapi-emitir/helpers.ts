@@ -14,6 +14,10 @@ export interface ConceptoInterno {
   unidad?: string | null;
   tasa_iva?: number | null; // 0.16, 0, etc.
   tipo_iva?: "gravado_16" | "tasa_0" | "exento" | null;
+  /** Ola 3 — retención ISR normalizada (0.10 = 10%). */
+  tasa_ret_isr?: number | null;
+  /** Ola 3 — retención IVA normalizada (0.04, 0.106667). */
+  tasa_ret_iva?: number | null;
 }
 
 export interface FacturaContext {
@@ -62,7 +66,12 @@ export interface FacturapiPayload {
       unit_key: string;
       unit_name: string;
       tax_included: false;
-      taxes: Array<{ type: "IVA"; rate: number; factor: "Tasa" | "Exento" }>;
+      taxes: Array<{
+        type: "IVA" | "ISR";
+        rate: number;
+        factor: "Tasa" | "Exento";
+        withholding?: boolean;
+      }>;
     };
   }>;
 }
@@ -116,9 +125,15 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
     },
     items: ctx.conceptos.map((c) => {
       const tipo = c.tipo_iva ?? (c.tasa_iva === 0 ? "tasa_0" : "gravado_16");
-      const taxes = tipo === "exento"
-        ? [{ type: "IVA" as const, rate: 0, factor: "Exento" as const }]
-        : [{ type: "IVA" as const, rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16), factor: "Tasa" as const }];
+      type Tax = { type: "IVA" | "ISR"; rate: number; factor: "Tasa" | "Exento"; withholding?: boolean };
+      const taxes: Tax[] = tipo === "exento"
+        ? [{ type: "IVA", rate: 0, factor: "Exento" }]
+        : [{ type: "IVA", rate: tipo === "tasa_0" ? 0 : (c.tasa_iva ?? 0.16), factor: "Tasa" }];
+      // Ola 3 — retenciones por concepto (withholding: true).
+      const retIsr = Number(c.tasa_ret_isr ?? 0);
+      const retIva = Number(c.tasa_ret_iva ?? 0);
+      if (retIsr > 0) taxes.push({ type: "ISR", rate: retIsr, factor: "Tasa", withholding: true });
+      if (retIva > 0) taxes.push({ type: "IVA", rate: retIva, factor: "Tasa", withholding: true });
       return {
         quantity: c.cantidad,
         product: {

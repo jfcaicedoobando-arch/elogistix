@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.193.0] - 2026-07-06
+
+- **Facturación — Ola 3 · Item 1 · Retenciones ISR/IVA por concepto**. Nuevas columnas `conceptos_factura.tasa_ret_isr/tasa_ret_iva/monto_ret_isr/monto_ret_iva` con trigger `calc_concepto_retenciones` que calcula los montos por renglón sobre `cantidad × precio_unitario`. Nuevas columnas rollup `facturas.ret_isr/ret_iva` con trigger `trg_conceptos_factura_rollup` que reagrega automáticamente y ajusta `total = subtotal + iva − ret_isr − ret_iva`. Nuevas columnas espejo `pagos_factura.ret_isr/ret_iva` con trigger `calc_pago_retenciones` que reparte proporcionalmente las retenciones de la factura según `monto_aplicado_factura / (subtotal + iva)` cuando no se envían explícitas — el REP las refleja sin captura extra.
+- **UI del editor de borrador**. `FacturaConceptosEditorRows` gana dos selectores compactos **Ret. ISR** y **Ret. IVA** con presets (ISR 10%, IVA 4% autotransporte, IVA 10.6667% dos terceras partes). La tabla de conceptos muestra badges de retención por renglón. Los presets viven en `src/features/facturacion/constants/retenciones.ts` para poder ampliarlos sin tocar la UI.
+- **Servicio**. `conceptosFacturaCrud` normaliza `tasa_ret_isr/tasa_ret_iva` en cada insert/update y `recalcularTotalesFactura` incluye retenciones en el rollup local (además del trigger BD, para coherencia inmediata en el cliente).
+- **Facturapi payload**. `buildFacturapiPayload` agrega `taxes` con `withholding: true` para ISR e IVA cuando el concepto trae tasa > 0. El CFDI 4.0 queda con el desglose exacto.
+- **Compat**. Backfill implícito: todas las filas históricas quedan con `0` (columnas `NOT NULL DEFAULT 0`), así que los timbrados anteriores se ven idénticos.
+
 ## [13.192.0] - 2026-07-06
 
 - **Facturación — Ola 3 · Item 5 · Respaldo XML extendido a NC y REP**. Se refactoriza el respaldo del XML timbrado a un helper compartido `_shared/respaldarXmlTimbrado.ts` con parámetro `folder` (`emitidas` | `notas-credito` | `rep`) y se aplica a:

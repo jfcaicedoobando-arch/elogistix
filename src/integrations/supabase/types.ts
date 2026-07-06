@@ -1096,9 +1096,13 @@ export type Database = {
           factura_id: string
           id: string
           moneda: Database["public"]["Enums"]["moneda"]
+          monto_ret_isr: number
+          monto_ret_iva: number
           organization_id: string
           precio_unitario: number
           tasa_iva_aplicada: number | null
+          tasa_ret_isr: number
+          tasa_ret_iva: number
           tipo_iva: string
           total: number
         }
@@ -1112,9 +1116,13 @@ export type Database = {
           factura_id: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
+          monto_ret_isr?: number
+          monto_ret_iva?: number
           organization_id?: string
           precio_unitario?: number
           tasa_iva_aplicada?: number | null
+          tasa_ret_isr?: number
+          tasa_ret_iva?: number
           tipo_iva?: string
           total?: number
         }
@@ -1128,9 +1136,13 @@ export type Database = {
           factura_id?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
+          monto_ret_isr?: number
+          monto_ret_iva?: number
           organization_id?: string
           precio_unitario?: number
           tasa_iva_aplicada?: number | null
+          tasa_ret_isr?: number
+          tasa_ret_iva?: number
           tipo_iva?: string
           total?: number
         }
@@ -3961,6 +3973,8 @@ export type Database = {
           origen: Database["public"]["Enums"]["origen_factura"]
           proforma_id: string | null
           referencia_bl: string | null
+          ret_isr: number
+          ret_iva: number
           rfc_cliente: string | null
           serie: string | null
           serie_id: string | null
@@ -4012,6 +4026,8 @@ export type Database = {
           origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
           referencia_bl?: string | null
+          ret_isr?: number
+          ret_iva?: number
           rfc_cliente?: string | null
           serie?: string | null
           serie_id?: string | null
@@ -4063,6 +4079,8 @@ export type Database = {
           origen?: Database["public"]["Enums"]["origen_factura"]
           proforma_id?: string | null
           referencia_bl?: string | null
+          ret_isr?: number
+          ret_iva?: number
           rfc_cliente?: string | null
           serie?: string | null
           serie_id?: string | null
@@ -4510,6 +4528,8 @@ export type Database = {
           rep_pdf_url: string | null
           rep_xml_backup_path: string | null
           rep_xml_url: string | null
+          ret_isr: number
+          ret_iva: number
           serie_rep: string | null
           timbrado_rep_en: string | null
           timbrado_rep_por: string | null
@@ -4544,6 +4564,8 @@ export type Database = {
           rep_pdf_url?: string | null
           rep_xml_backup_path?: string | null
           rep_xml_url?: string | null
+          ret_isr?: number
+          ret_iva?: number
           serie_rep?: string | null
           timbrado_rep_en?: string | null
           timbrado_rep_por?: string | null
@@ -4578,6 +4600,8 @@ export type Database = {
           rep_pdf_url?: string | null
           rep_xml_backup_path?: string | null
           rep_xml_url?: string | null
+          ret_isr?: number
+          ret_iva?: number
           serie_rep?: string | null
           timbrado_rep_en?: string | null
           timbrado_rep_por?: string | null
@@ -6592,6 +6616,8 @@ export type Database = {
           origen: Database["public"]["Enums"]["origen_factura"]
           proforma_id: string | null
           referencia_bl: string | null
+          ret_isr: number
+          ret_iva: number
           rfc_cliente: string | null
           serie: string | null
           serie_id: string | null
@@ -7318,6 +7344,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      recalc_factura_retenciones: {
+        Args: { p_factura_id: string }
+        Returns: undefined
       }
       recalcular_estado_liquidacion_concepto: {
         Args: { p_concepto_id: string }

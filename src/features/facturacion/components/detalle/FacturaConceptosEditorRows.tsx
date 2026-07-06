@@ -1,6 +1,7 @@
 /**
  * Renglones (visualización + formulario) del editor de conceptos de factura.
  * Extraído de FacturaConceptosEditor para respetar el límite de 200 líneas.
+ * Ola 3 — incluye captura y despliegue de retenciones ISR/IVA por concepto.
  */
 import { Trash2, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/formatters";
+import { RetencionSelects } from "./FacturaConceptosRetencionSelects";
 import type {
   ConceptoFacturaInput,
   ConceptoFacturaRow,
@@ -38,6 +40,16 @@ function IvaBadge({ tipo }: { tipo: TipoIvaConcepto }) {
   return <Badge variant={variant}>{TIPO_IVA_SHORT[tipo]}</Badge>;
 }
 
+function RetBadges({ isr, iva }: { isr: number; iva: number }) {
+  if (!isr && !iva) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1 justify-center">
+      {isr > 0 && <Badge variant="outline" className="text-[10px]">ISR {(isr * 100).toFixed(isr === 0.1 ? 0 : 2)}%</Badge>}
+      {iva > 0 && <Badge variant="outline" className="text-[10px]">IVA {(iva * 100).toFixed(iva === 0.04 ? 0 : 2)}%</Badge>}
+    </div>
+  );
+}
+
 interface RowProps {
   row: ConceptoFacturaRow;
   moneda: Moneda;
@@ -59,15 +71,16 @@ export function ConceptoRow({
   }
   return (
     <div className="grid grid-cols-12 gap-2 items-center border rounded-md p-2">
-      <div className="col-span-4 truncate">
+      <div className="col-span-3 truncate">
         <p className="text-sm font-medium truncate">{row.descripcion}</p>
         <p className="text-xs text-muted-foreground font-mono">SAT {row.clave_sat}</p>
       </div>
       <div className="col-span-1 text-right text-sm">{row.cantidad}</div>
       <div className="col-span-2 text-right text-sm tabular-nums">{formatCurrency(row.precio_unitario, moneda)}</div>
       <div className="col-span-1 flex justify-center"><IvaBadge tipo={row.tipo_iva} /></div>
+      <div className="col-span-2 flex justify-center"><RetBadges isr={row.tasa_ret_isr} iva={row.tasa_ret_iva} /></div>
       <div className="col-span-2 text-right text-sm tabular-nums font-medium">{formatCurrency(row.total, moneda)}</div>
-      <div className="col-span-2 flex justify-end gap-1">
+      <div className="col-span-1 flex justify-end gap-1">
         <Button size="icon" variant="ghost" onClick={onStartEdit} disabled={busy} aria-label="Editar">
           <Pencil className="h-4 w-4" />
         </Button>
@@ -92,7 +105,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
   const tipoIva: TipoIvaConcepto = draft.tipo_iva ?? "gravado_16";
   return (
     <div className="grid grid-cols-12 gap-2 items-end border rounded-md p-2 bg-muted/30">
-      <div className="col-span-4">
+      <div className="col-span-6">
         <Label className="text-xs">Descripción</Label>
         <Input value={draft.descripcion} onChange={(e) => patch({ descripcion: e.target.value })} />
       </div>
@@ -104,7 +117,7 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
         <Label className="text-xs">Cant.</Label>
         <Input type="number" min={1} value={draft.cantidad} onChange={(e) => patch({ cantidad: Number(e.target.value) || 1 })} />
       </div>
-      <div className="col-span-2">
+      <div className="col-span-3">
         <Label className="text-xs">P. unitario</Label>
         <Input type="number" step="0.01" min={0} value={draft.precio_unitario} onChange={(e) => patch({ precio_unitario: Number(e.target.value) || 0 })} />
       </div>
@@ -119,12 +132,17 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
           </SelectContent>
         </Select>
       </div>
-      <div className="col-span-1 flex justify-end gap-1">
-        <Button size="icon" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar">
-          <X className="h-4 w-4" />
+      <RetencionSelects
+        tasaIsr={draft.tasa_ret_isr ?? 0}
+        tasaIva={draft.tasa_ret_iva ?? 0}
+        onChange={patch}
+      />
+      <div className="col-span-12 flex justify-end gap-1">
+        <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy} aria-label="Cancelar">
+          <X className="h-4 w-4 mr-1" /> Cancelar
         </Button>
-        <Button size="icon" onClick={onSave} disabled={busy || !draft.descripcion.trim()} aria-label="Guardar">
-          <Check className="h-4 w-4" />
+        <Button size="sm" onClick={onSave} disabled={busy || !draft.descripcion.trim()} aria-label="Guardar">
+          <Check className="h-4 w-4 mr-1" /> Guardar
         </Button>
       </div>
     </div>
