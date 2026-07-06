@@ -11,7 +11,6 @@ import { NuevaOrganizacionDialog } from "@/features/admin/components/NuevaOrgani
 import { buildAdminOrganizacionesColumns } from "@/features/admin/components/AdminOrganizacionesColumns";
 
 export default function AdminOrganizaciones() {
-  const navigate = useNavigate();
   const { state, setters, data, createOrg } = useAdminOrganizacionesController();
   const columns = useMemo(() => buildAdminOrganizacionesColumns(), []);
 
