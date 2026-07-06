@@ -38,7 +38,6 @@ interface LeadsFilters extends Record<string, string> {
 const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
 
 export default function Leads() {
-  const navigate = useNavigate();
   const { canEditCrm } = usePermissions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
