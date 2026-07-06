@@ -160,5 +160,16 @@ export async function actualizarFacturaProveedor(
     .select()
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "editar",
+    entidadId: id,
+    entidadNombre: data.folio_interno ?? data.folio_proveedor ?? "",
+    detalles: {
+      total: data.total,
+      moneda: data.moneda,
+      forzo_reaprobacion: forzarReaprobacion,
+    },
+  });
   return data;
 }
