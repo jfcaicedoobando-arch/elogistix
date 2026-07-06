@@ -36,6 +36,7 @@ vi.mock("@/features/cxp/services", () => ({
   subirArchivosCfdiFactura: (...a: unknown[]) => subirArchivos(...a),
   vincularFacturaAConceptos: (...a: unknown[]) => vincular(...a),
   existeFacturaDuplicada: vi.fn().mockResolvedValue(false),
+  validarCuadreCfdi: vi.fn().mockReturnValue({ ok: true, errores: [] }),
 }));
 vi.mock("@/features/cxp/hooks", () => ({
   useCrearFacturaProveedor: () => ({ mutateAsync, isPending: false }),
