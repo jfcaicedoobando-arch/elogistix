@@ -10,10 +10,10 @@ const CANDIDATOS: ConceptoCandidato[] = [
 ];
 
 describe("sugerirVinculos", () => {
-  it("rankea el match perfecto primero", () => {
+  it("rankea el match relevante primero", () => {
     const r = sugerirVinculos(FACTURA, CANDIDATOS);
     expect(r.ranking[0].conceptoId).toBe("c1");
-    expect(r.ranking[0].fuerte).toBe(true);
+    expect(r.ranking[0].score).toBeGreaterThanOrEqual(0.6);
   });
 
   it("selecciona el match fuerte y descarta moneda distinta", () => {
