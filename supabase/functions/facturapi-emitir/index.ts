@@ -105,9 +105,20 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
+    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", body.factura_id);
   if (conErr) return json({ error: "conceptos_query_failed", detail: conErr.message }, 500);
+
+  // α.1 — Validación estricta de claves SAT: no permitir timbrar con clave vacía.
+  // Antes había fallback silencioso a "81141601" que hacía que todos los CFDIs
+  // salieran con clave incorrecta sin avisar al usuario.
+  const conceptosSinClave = (conceptos ?? []).filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
+  if (conceptosSinClave.length > 0) {
+    return json({
+      error: "clave_sat_faltante",
+      message: `Hay ${conceptosSinClave.length} concepto(s) sin clave SAT (c_ClaveProdServ). Asigna la clave correcta antes de timbrar.`,
+    }, 422);
+  }
 
   const { data: contactoData } = await supabase
     .from("contactos_cliente")
@@ -135,7 +146,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       cantidad: Number(c.cantidad),
       precio_unitario: Number(c.precio_unitario),
       clave_sat: c.clave_sat,
-      clave_unidad: "E48",
+      // α.1 — Lee clave_unidad de la fila; helpers todavía usa "E48" como fallback defensivo
+      // en caso de que la fila legacy no tenga el campo poblado.
+      clave_unidad: (c as { clave_unidad?: string | null }).clave_unidad ?? "E48",
       unidad: "Unidad de servicio",
       tipo_iva: (c.tipo_iva as "gravado_16" | "tasa_0" | "exento" | null) ?? "gravado_16",
       tasa_iva: c.tasa_iva_aplicada != null ? Number(c.tasa_iva_aplicada) : 0.16,
