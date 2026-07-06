@@ -33,6 +33,10 @@ interface DataTableProps<T> {
   skeletonRows?: number;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
+  /** Si retorna string, la fila navega a esa URL (teclado + Ctrl+click soportados). */
+  getRowHref?: (item: T) => string | null;
+  /** aria-label opcional para filas navegables. */
+  getRowAriaLabel?: (item: T) => string;
   rowKey: (item: T) => string;
   rowClassName?: (item: T) => string;
   sortMode?: "client" | "server";
