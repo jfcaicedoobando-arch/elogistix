@@ -2,7 +2,7 @@
  * Sub-componentes presentacionales extraídos de DialogDetallePagosProveedor
  * para mantener su complejidad ciclomática ≤ 16 y tamaño ≤ 200 líneas.
  */
-import { DollarSign, Pencil, Trash2 } from "lucide-react";
+import { DollarSign, Pencil, Trash2, FileCheck2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
