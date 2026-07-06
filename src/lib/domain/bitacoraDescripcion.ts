@@ -20,7 +20,13 @@ const MODULO_SINGULAR: Record<string, string> = {
   proveedores: "proveedor",
   cotizaciones: "cotización",
   facturas: "factura",
+  facturacion: "factura",
   usuarios: "usuario",
+  cxp: "factura de proveedor",
+  costeo: "tarifa",
+  crm: "oportunidad",
+  auditoria: "hallazgo",
+  configuracion: "ajuste",
 };
 
 function asString(v: unknown): string | undefined {
