@@ -7,8 +7,7 @@
  * Lógica pura (clasificación, mapeo, filtros cliente) en `./proveedorFacturas.helpers`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import { registrarActividad } from "@/lib/domain/bitacora/registrar";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   PROVEEDOR_FACTURAS_SELECT,
   mapJoinedRow,
