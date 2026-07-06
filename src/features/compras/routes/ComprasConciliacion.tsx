@@ -45,7 +45,7 @@ export default function ComprasConciliacion() {
   const [search, setSearch] = useState("");
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["compras", "conciliacion-embarques", { orgId, estado, moneda, search }],
+    queryKey: ["compras", "conciliacion-embarques", { estado, moneda, search }],
     queryFn: () =>
       listarConciliacionEmbarques({
         organizationId: orgId,
