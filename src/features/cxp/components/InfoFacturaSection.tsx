@@ -225,6 +225,17 @@ export function InfoFacturaSection({ factura: f }: Props) {
           <p className="text-sm text-foreground whitespace-pre-wrap mt-1">{f.notas}</p>
         </div>
       )}
+
+      <CancelarFacturaProveedorDialog
+        factura={f}
+        open={openCancel}
+        onOpenChange={setOpenCancel}
+        isPending={cancelar.isPending}
+        onConfirm={async (motivo) => {
+          await cancelar.mutateAsync({ facturaId: f.id, motivo });
+          setOpenCancel(false);
+        }}
+      />
     </section>
   );
 }
