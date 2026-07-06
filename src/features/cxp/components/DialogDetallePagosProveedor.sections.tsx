@@ -26,8 +26,8 @@ interface ToolbarProps {
   onCerrarSinPago?: (f: FacturaCxP) => void;
 }
 
-export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, onEliminar }: ToolbarProps) {
-  const algunaAccion = onPagar || onEditar || onEliminar;
+export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, onEliminar, onCerrarSinPago }: ToolbarProps) {
+  const algunaAccion = onPagar || onEditar || onEliminar || onCerrarSinPago;
   if (!canEdit || !algunaAccion) return null;
   return (
     <div className="px-6 py-3 border-b bg-muted/20 flex flex-wrap items-center gap-2">
