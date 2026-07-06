@@ -107,10 +107,15 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
   if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
   const facturaId = factura.id as string;
 
-  const conceptosRows = input.conceptos.map((c) => {
+  const conceptosRows = input.conceptos.map((c, idx) => {
     const cantidad = Math.max(1, Math.round(Number(c.cantidad)));
     const precio = Number(c.precio_unitario);
     const tipo_iva: TipoIvaConcepto = c.tipo_iva ?? "gravado_16";
+    // α.1 — clave SAT obligatoria; se elimina el fallback silencioso "81141601".
+    const clave = c.clave_sat?.trim();
+    if (!clave) {
+      throw new Error(`El concepto #${idx + 1} ("${c.descripcion || "sin descripción"}") no tiene clave SAT. Selecciona la clave correcta del catálogo SAT antes de crear la factura.`);
+    }
     return {
       factura_id: facturaId,
       descripcion: c.descripcion,
@@ -118,7 +123,7 @@ export async function crearFacturaManual(input: CrearFacturaManualInput): Promis
       precio_unitario: precio,
       total: Math.round(cantidad * precio * 100) / 100,
       moneda: input.moneda,
-      clave_sat: c.clave_sat?.trim() || "81141601",
+      clave_sat: clave,
       organization_id: input.organizationId,
       tipo_iva,
       tasa_iva_aplicada: tasaAplicada(tipo_iva, tasa),

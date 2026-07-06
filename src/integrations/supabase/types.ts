@@ -1089,6 +1089,7 @@ export type Database = {
         Row: {
           cantidad: number
           clave_sat: string
+          clave_unidad: string
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -1109,6 +1110,7 @@ export type Database = {
         Insert: {
           cantidad?: number
           clave_sat?: string
+          clave_unidad?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -1129,6 +1131,7 @@ export type Database = {
         Update: {
           cantidad?: number
           clave_sat?: string
+          clave_unidad?: string
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -3988,7 +3991,10 @@ export type Database = {
           total: number
           updated_at: string
           uso_cfdi: string | null
+          uuid_estatus_sat: string | null
           uuid_fiscal: string | null
+          uuid_verificado: boolean
+          uuid_verificado_fecha: string | null
         }
         Insert: {
           acuse_cancelacion_fecha?: string | null
@@ -4041,7 +4047,10 @@ export type Database = {
           total?: number
           updated_at?: string
           uso_cfdi?: string | null
+          uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
+          uuid_verificado?: boolean
+          uuid_verificado_fecha?: string | null
         }
         Update: {
           acuse_cancelacion_fecha?: string | null
@@ -4094,7 +4103,10 @@ export type Database = {
           total?: number
           updated_at?: string
           uso_cfdi?: string | null
+          uuid_estatus_sat?: string | null
           uuid_fiscal?: string | null
+          uuid_verificado?: boolean
+          uuid_verificado_fecha?: string | null
         }
         Relationships: [
           {
@@ -5324,6 +5336,7 @@ export type Database = {
       proveedor_facturas_conceptos: {
         Row: {
           cantidad: number
+          clave_unidad: string | null
           concepto_costo_id: string | null
           created_at: string
           descripcion: string
@@ -5334,6 +5347,7 @@ export type Database = {
         }
         Insert: {
           cantidad?: number
+          clave_unidad?: string | null
           concepto_costo_id?: string | null
           created_at?: string
           descripcion?: string
@@ -5344,6 +5358,7 @@ export type Database = {
         }
         Update: {
           cantidad?: number
+          clave_unidad?: string | null
           concepto_costo_id?: string | null
           created_at?: string
           descripcion?: string
@@ -6631,7 +6646,10 @@ export type Database = {
           total: number
           updated_at: string
           uso_cfdi: string | null
+          uuid_estatus_sat: string | null
           uuid_fiscal: string | null
+          uuid_verificado: boolean
+          uuid_verificado_fecha: string | null
         }[]
         SetofOptions: {
           from: "*"

@@ -6,6 +6,20 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.195.0] - 2026-07-06
+
+- **Fase α.1 — Fixes fiscales críticos (Roadmap α→δ)**. Cinco correcciones que estaban rechazando o degradando CFDIs sin avisar al usuario:
+  - **REP (Complemento de Pagos) con IVA real**: `facturapi-emitir-rep/index.ts` calculaba la tasa del documento relacionado como `0.16` hardcoded. Ahora deriva la tasa efectiva desde `facturas.iva / facturas.subtotal` y la clasifica en `{0, 0.08, 0.16}`. Antes el SAT rechazaba REPs de facturas de exportación con IVA 0%.
+  - **Verificación SAT para CFDIs emitidos (CxC)**: `verificar-uuid-sat` ahora acepta `tipo: "cxp" | "cxc"`. En modo `cxc` consulta la tabla `facturas`, arma la expresión con emisor = org y receptor = cliente, y actualiza los nuevos campos `facturas.uuid_verificado`, `uuid_estatus_sat`, `uuid_verificado_fecha`. Antes sólo verificaba CxP.
+  - **Clave SAT obligatoria en conceptos de factura**: `conceptosFacturaCrud.ts` y `facturaManual.ts` eliminaron el fallback silencioso `"81141601"` (Servicios profesionales genéricos). Si un concepto llega sin `clave_sat`, la creación falla con mensaje explícito y el usuario debe elegir la clave real del catálogo SAT.
+  - **`clave_unidad` desde la fila, no `"E48"` hardcoded**: `facturapi-emitir/index.ts` ahora lee la clave de unidad SAT del concepto (`conceptos_factura.clave_unidad`, columna nueva con default `E48`). El helper mantiene el fallback defensivo `"E48"` sólo para filas legacy sin la columna poblada.
+  - **Paginación en CxP** (`proveedorFacturas.ts`): `fetchFacturasCxP` reemplaza el `.limit(2000)` hardcoded por `.range(from, to)` con parámetros opcionales `page` (default 1) y `pageSize` (default 200, cap 1000). Con 30 facturas/día el sistema anterior se llenaba en ~67 días y las nuevas dejaban de aparecer.
+- **Migraciones BD**:
+  - `conceptos_factura`: nueva columna `clave_unidad text NOT NULL DEFAULT 'E48'`.
+  - `proveedor_facturas_conceptos`: nueva columna `clave_unidad text` (opcional; se llena al parsear el XML del proveedor).
+  - `facturas`: nuevas columnas `uuid_verificado boolean`, `uuid_estatus_sat text`, `uuid_verificado_fecha timestamptz` para la verificación SAT de emitidos.
+- **Tests actualizados**: `conceptosFacturaCrud.test.ts`, `facturaManual.test.ts` y `verificarUuidSat.test.ts` incluyen fixtures con `clave_sat` real (`78101800` Flete marítimo) y nuevos casos de regresión que confirman que la ausencia de clave lanza error y que el modo `cxc` viaja al edge function.
+
 ## [13.194.2] - 2026-07-06
 
 - **Embarques — conceptos sólo desde el Catálogo de productos y servicios**. Los renglones de Costos y Ventas en el wizard de embarques ya no usan la lista hardcoded `CATALOGO_CONCEPTOS` (18 valores fijos). Ahora usan `ConceptoCatalogoSelect`, un combobox estricto que reutiliza `ProductoServicioSelect` sobre `catalogo_claves_sat`. Los conceptos legacy que no existan en el catálogo se muestran marcados con ⚠️ para forzar su actualización al reeditar. La constante queda deprecada (`@deprecated`) pero se conserva para no romper fixtures.

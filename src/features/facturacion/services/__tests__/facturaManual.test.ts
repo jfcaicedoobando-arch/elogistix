@@ -21,7 +21,7 @@ const baseInput = {
   fechaEmision: "2026-06-01",
   moneda: "MXN" as const,
   tipoCambio: 1,
-  conceptos: [{ descripcion: "Servicio", cantidad: 2, precio_unitario: 50 }],
+  conceptos: [{ descripcion: "Servicio", cantidad: 2, precio_unitario: 50, clave_sat: "78101800" }],
   tasaIva: 0.16,
 };
 
@@ -80,11 +80,13 @@ describe("crearFacturaManual", () => {
     expect(p.fecha_vencimiento).toBe("2026-07-01");
   });
 
-  it("usa clave SAT por default cuando no se especifica", async () => {
-    await crearFacturaManual(baseInput);
-    const rows = conceptosPayload as Array<{ clave_sat: string; cantidad: number }>;
-    expect(rows[0].clave_sat).toBe("81141601");
-    expect(rows[0].cantidad).toBe(2);
+  it("α.1 — rechaza concepto sin clave SAT (ya no hay fallback silencioso)", async () => {
+    await expect(
+      crearFacturaManual({
+        ...baseInput,
+        conceptos: [{ descripcion: "Sin clave", cantidad: 1, precio_unitario: 10 }],
+      }),
+    ).rejects.toThrow(/clave SAT/i);
   });
 
   it("respeta clave SAT custom", async () => {
