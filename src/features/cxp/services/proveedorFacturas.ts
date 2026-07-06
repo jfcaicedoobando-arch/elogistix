@@ -72,15 +72,32 @@ export interface FetchCxPFiltros {
   categoria_presupuesto_id?: string;
   fecha_desde?: string;
   fecha_hasta?: string;
+  /** α.1 — Paginación server-side. Default page=1, pageSize=200. Cap defensivo pageSize<=1000. */
+  page?: number;
+  pageSize?: number;
 }
 
+/** α.1 — Default y cap defensivo para la paginación. */
+const CXP_PAGE_SIZE_DEFAULT = 200;
+const CXP_PAGE_SIZE_MAX = 1000;
+
 export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<FacturaCxP[]> {
+  // α.1 — Antes había .limit(2000) hardcoded → con 30 facturas/día se llenaba
+  // en ~67 días y las nuevas dejaban de aparecer. Ahora paginado con .range().
+  const page = Math.max(1, Math.floor(Number(filtros.page ?? 1)));
+  const pageSize = Math.min(
+    CXP_PAGE_SIZE_MAX,
+    Math.max(1, Math.floor(Number(filtros.pageSize ?? CXP_PAGE_SIZE_DEFAULT))),
+  );
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   let q = supabase
     .from("proveedor_facturas")
     .select(PROVEEDOR_FACTURAS_SELECT)
     .neq("estado", "Cancelada")
     .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
-    .limit(2000);
+    .range(from, to);
 
   if (filtros.proveedor_id && filtros.proveedor_id !== "todos") q = q.eq("proveedor_id", filtros.proveedor_id);
   if (filtros.categoria_presupuesto_id && filtros.categoria_presupuesto_id !== "todas") {
