@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { registrarActividad } from "@/lib/domain/bitacora/registrar";
 
 export type NotaCreditoProveedor = Tables<"proveedor_notas_credito">;
 
@@ -28,6 +29,13 @@ export async function crearNotaCreditoProveedor(
     .select()
     .single();
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "crear_nota_credito",
+    entidadId: data.proveedor_factura_id,
+    entidadNombre: data.folio ?? "",
+    detalles: { nc_id: data.id, monto: data.monto, moneda: data.moneda },
+  });
   return data;
 }
 
@@ -37,6 +45,11 @@ export async function aplicarNotaCredito(id: string): Promise<void> {
     .update({ estado: "Aplicada" })
     .eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "aplicar_nota_credito",
+    entidadId: id,
+  });
 }
 
 export async function cancelarNotaCredito(id: string): Promise<void> {
@@ -45,4 +58,9 @@ export async function cancelarNotaCredito(id: string): Promise<void> {
     .update({ estado: "Cancelada" })
     .eq("id", id);
   if (error) throw error;
+  await registrarActividad({
+    modulo: "cxp",
+    accion: "cancelar_nota_credito",
+    entidadId: id,
+  });
 }
