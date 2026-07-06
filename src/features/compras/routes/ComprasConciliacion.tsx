@@ -162,17 +162,18 @@ export default function ComprasConciliacion() {
   return (
     <PageContainer>
       <PageHeader
-        icon={GitCompare}
+        icon={<GitCompare className="h-6 w-6" />}
         title="Conciliación con embarques"
         description="Presupuesto (conceptos_costo) vs facturación real de proveedor por embarque."
       />
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <KpiCard label="Sin facturar" value={kpis.sinFacturar} icon={AlertTriangle} tone="danger" />
-        <KpiCard label="Parciales" value={kpis.parcial} icon={Clock} tone="warning" />
-        <KpiCard label="Conciliadas" value={kpis.completa} icon={CheckCircle2} tone="success" />
+        <KpiCard label="Sin facturar" value={kpis.sinFacturar} icon={AlertTriangle} variant="destructive" />
+        <KpiCard label="Parciales" value={kpis.parcial} icon={Clock} variant="warning" />
+        <KpiCard label="Conciliadas" value={kpis.completa} icon={CheckCircle2} variant="success" />
         <KpiCard label="Pendiente MXN" value={formatCurrency(kpis.pendienteMxn, "MXN")} />
         <KpiCard label="Pendiente USD" value={formatCurrency(kpis.pendienteUsd, "USD")} />
+
       </div>
 
       <Card>
