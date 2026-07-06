@@ -209,7 +209,7 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
         },
       },
     ]),
-    [mejorPorGrupo, aprobar, rechazar, reactivar, onEditar, onDuplicar, onEliminar],
+    [mejorPorGrupo, aprobar, reactivar, onEditar, onDuplicar, onEliminar],
   );
 
   return (
