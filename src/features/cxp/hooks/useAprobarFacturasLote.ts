@@ -1,0 +1,75 @@
+/**
+ * Hook para aprobar múltiples facturas de proveedor en lote (Ola B · B4).
+ *
+ * Corre las llamadas de forma SECUENCIAL (no paralelas) para no saturar la RPC
+ * ni disparar tormenta de invalidaciones. Reporta progreso y agrega
+ * `{ exitos, fallos }` con detalle por id.
+ */
+import { useCallback, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { aprobarFacturaProveedor } from "@/features/cxp/services";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+
+export interface ResultadoLote {
+  exitos: string[];
+  fallos: Array<{ id: string; error: string }>;
+}
+
+export function useAprobarFacturasLote() {
+  const qc = useQueryClient();
+  const [isRunning, setIsRunning] = useState(false);
+  const [progreso, setProgreso] = useState<{ hecho: number; total: number } | null>(null);
+
+  const aprobar = useCallback(
+    async (ids: readonly string[]): Promise<ResultadoLote> => {
+      if (ids.length === 0) return { exitos: [], fallos: [] };
+      setIsRunning(true);
+      setProgreso({ hecho: 0, total: ids.length });
+
+      const exitos: string[] = [];
+      const fallos: Array<{ id: string; error: string }> = [];
+
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        try {
+          await aprobarFacturaProveedor(id, true);
+          exitos.push(id);
+        } catch (e) {
+          fallos.push({ id, error: e instanceof Error ? e.message : String(e) });
+        }
+        setProgreso({ hecho: i + 1, total: ids.length });
+      }
+
+      // Invalida una sola vez al final.
+      qc.invalidateQueries({ queryKey: ["cxp"] });
+      qc.invalidateQueries({ queryKey: ["proveedor-facturas"] });
+      qc.invalidateQueries({ queryKey: ["bandeja"] });
+
+      if (fallos.length === 0) {
+        notifySuccess(toast, {
+          title: `${exitos.length} factura(s) aprobada(s)`,
+          description: "Todas las solicitudes de la selección se aprobaron correctamente.",
+        });
+      } else if (exitos.length === 0) {
+        notifyError(toast, {
+          title: `No se pudo aprobar ninguna de las ${fallos.length} facturas`,
+          error: new Error(fallos[0].error),
+          method: "USE_APROBAR_FACTURAS_LOTE",
+        });
+      } else {
+        notifySuccess(toast, {
+          title: `${exitos.length} aprobada(s), ${fallos.length} con error`,
+          description: "Revisa las facturas que fallaron para reintentar manualmente.",
+        });
+      }
+
+      setIsRunning(false);
+      setProgreso(null);
+      return { exitos, fallos };
+    },
+    [qc],
+  );
+
+  return { aprobar, isRunning, progreso };
+}
