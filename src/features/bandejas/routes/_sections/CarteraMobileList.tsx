@@ -1,12 +1,13 @@
 /**
- * Vista mobile de Cartera (lista de tarjetas) — extraída en v13.182.0 (Wave 2).
- * v13.199.3: toda la tarjeta navega al detalle de factura.
+ * Vista mobile de Cartera (lista de tarjetas). v13.200.0: cada tarjeta es
+ * navegable (role=link, teclado, Ctrl+click). Sin `<Link>` inline.
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { handleRowClick, handleRowKeyDown } from "@/components/shared/dataTable/rowNav";
 import type { CarteraRow } from "./carteraColumns";
 
 interface Props {
@@ -29,52 +30,40 @@ export function CarteraMobileList({ rows, isLoading }: Props) {
           </div>
         )}
         <ul className="divide-y">
-          {rows.map((row) => (
-            <li
-              key={row.factura_id}
-              role="button"
-              tabIndex={0}
-              aria-label={`Ver factura ${row.numero ?? ""}`}
-              onClick={() => navigate(`/facturacion/${row.factura_id}`)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate(`/facturacion/${row.factura_id}`);
-                }
-              }}
-              className="p-3 space-y-1.5 hover:bg-muted/40 focus:outline-none focus:bg-muted/40 cursor-pointer"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="font-semibold text-primary truncate">
-                  {row.numero ?? "—"}
-                </span>
-                <Badge variant={row.dias_vencido > 0 ? "destructive" : "secondary"}>
-                  {row.dias_vencido}d
-                </Badge>
-              </div>
-              <div className="text-sm font-medium truncate">{row.cliente_nombre ?? "—"}</div>
-              {row.embarque_id && (
-                <Link
-                  to={`/embarques/${row.embarque_id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-xs text-primary hover:underline block truncate"
-                >
-                  {row.expediente ?? "—"}
-                </Link>
-              )}
-              <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                <span>
-                  Vence: {row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}
-                </span>
-                <span className="tabular-nums">
-                  Total: {formatCurrency(Number(row.total), row.moneda)}
-                </span>
-              </div>
-              <div className="text-right text-base font-semibold tabular-nums">
-                {formatCurrency(Number(row.saldo), row.moneda)}
-              </div>
-            </li>
-          ))}
+          {rows.map((row) => {
+            const href = `/facturacion/${row.factura_id}`;
+            return (
+              <li
+                key={row.factura_id}
+                role="link"
+                tabIndex={0}
+                aria-label={`Ver factura ${row.numero ?? ""}`}
+                onClick={(e) => handleRowClick(e, { href, navigate })}
+                onKeyDown={(e) => handleRowKeyDown(e, { href, navigate })}
+                className="p-3 space-y-1.5 cursor-pointer hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-semibold truncate">{row.numero ?? "—"}</span>
+                  <Badge variant={row.dias_vencido > 0 ? "destructive" : "secondary"}>
+                    {row.dias_vencido}d
+                  </Badge>
+                </div>
+                <div className="text-sm font-medium truncate">{row.cliente_nombre ?? "—"}</div>
+                {row.embarque_id && (
+                  <div className="text-xs text-muted-foreground truncate font-mono">
+                    Exp: {row.expediente ?? "—"}
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                  <span>Vence: {row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}</span>
+                  <span className="tabular-nums">Total: {formatCurrency(Number(row.total), row.moneda)}</span>
+                </div>
+                <div className="text-right text-base font-semibold tabular-nums">
+                  {formatCurrency(Number(row.saldo), row.moneda)}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </CardContent>
     </Card>

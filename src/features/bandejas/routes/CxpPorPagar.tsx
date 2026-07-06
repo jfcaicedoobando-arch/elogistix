@@ -7,7 +7,6 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -34,7 +33,6 @@ interface Filters extends Record<string, string> {
 const DEFAULTS: Filters = { moneda: "todas", vencidas: "todas" };
 
 export default function CxpPorPagar() {
-  const navigate = useNavigate();
   const { data = [], isLoading } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
 
@@ -165,7 +163,8 @@ export default function CxpPorPagar() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
-            onRowClick={(r) => navigate(`/cxp?factura=${r.factura_id}`)}
+            getRowHref={(r) => `/cxp?factura=${r.factura_id}`}
+            getRowAriaLabel={(r) => `Factura ${r.folio_proveedor ?? ""} de ${r.proveedor_nombre ?? ""}`}
             emptyIcon={Inbox}
             emptyMessage="Sin facturas pendientes de pago"
             emptyHint="Cuando ingreses una factura de proveedor, aparecerá aquí."

@@ -1,8 +1,7 @@
 /**
  * Definición de columnas para la bandeja CxP — Por capturar.
- * Reutiliza el patrón estándar de DataTable (ColumnDef + meta).
+ * v13.200.0: sin `<Link>` inline. Row-click navega al embarque desde el consumer.
  */
-import { Link } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -13,8 +12,6 @@ import { cn } from "@/lib/utils";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { estatusDeFila } from "@/features/bandejas/hooks/useCxpPorCapturarFilters";
 
-// Mapea el estatus interno ("sin"/"parcial"/"completo") al string canónico
-// del dominio `captura_cxp` del statusRegistry.
 const CAPTURA_STATUS: Record<"sin" | "parcial" | "completo", string> = {
   sin: "Sin captura",
   parcial: "Parcial",
@@ -22,8 +19,6 @@ const CAPTURA_STATUS: Record<"sin" | "parcial" | "completo", string> = {
 };
 
 function AvanceBadge({ row }: { row: RowData }) {
-  // `estatusDeFila` nunca retorna "todos" (ese es un filtro UI), pero el tipo
-  // lo permite; el cast estrecho es seguro y evita ampliar el dominio de status.
   const estatus = estatusDeFila(row) as "sin" | "parcial" | "completo";
   return <StatusBadge domain="captura_cxp" status={CAPTURA_STATUS[estatus]} />;
 }
@@ -41,15 +36,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       accessorFn: (r) => r.expediente ?? "",
       enableSorting: true,
       meta: { width: "w-[130px]", className: "font-mono text-sm whitespace-nowrap" },
-      cell: ({ row }) => (
-        <Link
-          to={`/embarques/${row.original.embarque_id}`}
-          className="text-primary hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {row.original.expediente ?? "—"}
-        </Link>
-      ),
+      cell: ({ row }) => row.original.expediente ?? "—",
     },
     {
       id: "cliente",
@@ -96,16 +83,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
       cell: ({ row }) => {
         const n = row.original.facturas_capturadas;
         if (n === 0) return <span className="text-muted-foreground">0</span>;
-        return (
-          <Link
-            to={`/embarques/${row.original.embarque_id}`}
-            className="text-primary hover:underline tabular-nums"
-            onClick={(e) => e.stopPropagation()}
-            title="Ver facturas del embarque"
-          >
-            {n}
-          </Link>
-        );
+        return <span className="tabular-nums">{n}</span>;
       },
     },
     {

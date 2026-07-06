@@ -6,6 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.200.0] - 2026-07-06
+
+- **Estandarización global de tablas — drilldown accesible por fila**. Nueva prop `getRowHref` en `DataTable` / `ResponsiveDataTable`: la fila entera se comporta como link (`role="link"`, `tabIndex=0`, Enter/Space, Ctrl/Cmd+click abre en pestaña nueva, click medio también). Se detectan automáticamente controles interactivos internos (botones, checkboxes, dropdowns, menús, `[data-no-row-nav]`) para no chocar con el click de la fila. Nuevo helper `rowNav.ts` (`handleRowClick`, `handleRowKeyDown`, `isInteractiveDescendant`, `shouldOpenInNewTab`).
+- **Sin `<Link>` inline en columnas** — se removieron todos los links de folio / expediente / referencias dentro de celdas en:
+  - Cartera (`carteraColumns`, `CarteraMobileList`), CxP Por Pagar (`cxpPorPagarColumns`), CxP Por Capturar (`cxpPorCapturarColumns`), CxP Aging (`cxpAgingColumns`).
+- **Migración de `onRowClick` → `getRowHref`** en tablas que navegan a un detalle (accesibilidad + Ctrl+click):
+  - Cartera, CxP Por Pagar, CxP Por Capturar, CxP Aging, Embarques, Cotizaciones, Clientes, Facturas Emitidas, Proformas, Leads, Oportunidades, EmbarquesActivosTable, ProfitTable, HistorialProformas, HistorialFacturas, AdminOrganizaciones, EmbarquesRelacionadosCard, ClienteDetalle (embarques + cotizaciones del cliente).
+- Se conserva `onRowClick` en tablas que abren un diálogo (CxP principal, Compras Por Aprobar, Compras Conciliación, Hueco de facturación, Agente Garantías, etc.).
+- Tests de `DataTable` se envuelven en `MemoryRouter` porque `useNavigate` requiere contexto de router; se preserva la cobertura existente (12 tests verdes en `DataTable.regression` + `DataTable.virtual`).
+- `isLucideIcon` se extrae a `dataTable/isLucideIcon.ts` para mantener `DataTableBody.tsx` ≤ 200 líneas (Power-of-10).
+
+**Nota:** Este release cubre la infraestructura + primera ola de tablas de alto tráfico. Quedan como iteración siguiente las sub-tablas del detalle de embarque (documentos, costos, demoras, garantías, seguros), auditoría, admin usuarios, costeo (tarifas / agentes / navieras / rutas), configuración (navieras / puertos / tipos contenedor), portal (facturas / embarques / tarifas), y `ProveedorTable` (que hoy usa un callback de selección en vez de navegación directa).
+
 ## [13.199.4] - 2026-07-06
 
 - **Fix CI — CxP nueva factura**. El test `useNuevaFacturaProveedorForm` fallaba porque el mock de `@/features/cxp/services` no exponía `validarCuadreCfdi` (usado desde la validación fiscal del CFDI); se agrega al mock. Además, `useNuevaFacturaProveedorForm.ts` (213 → 198 líneas) se compactó para respetar el límite Power-of-10 de ≤200 líneas sin cambiar lógica.

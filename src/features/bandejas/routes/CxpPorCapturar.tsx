@@ -141,6 +141,8 @@ export default function CxpPorCapturar() {
               sortMode="server"
               controlledSort={controlledSort}
               onSortChange={handleSortChange}
+              getRowHref={(r) => `/embarques/${r.embarque_id}`}
+              getRowAriaLabel={(r) => `Ver embarque ${r.expediente ?? ""}`}
               emptyMessage="Ningún embarque coincide con los filtros"
               emptyState={
                 <div className="text-center py-10">

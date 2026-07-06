@@ -1,8 +1,7 @@
 /**
- * Columnas de la tabla /compras/por-pagar. Extraídas para respetar el límite
- * de líneas de la ruta.
+ * Columnas de la tabla /compras/por-pagar.
+ * v13.200.0: sin `<Link>` inline. Navegación por row-click desde el consumer.
  */
-import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
@@ -35,18 +34,7 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       header: "Embarque",
       enableSorting: false,
       meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
-      cell: ({ row }) =>
-        row.original.embarque_id ? (
-          <Link
-            to={`/embarques/${row.original.embarque_id}`}
-            className="text-primary hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {row.original.expediente ?? "—"}
-          </Link>
-        ) : (
-          "—"
-        ),
+      cell: ({ row }) => row.original.expediente ?? "—",
     },
     {
       id: "vencimiento",

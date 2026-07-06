@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
+import { handleRowClick, handleRowKeyDown } from "./rowNav";
 import type {
   DataTablePagination,
   TableDensity,
@@ -15,11 +17,10 @@ import type {
  *
  * En pantallas `<sm` (móvil 20:9 / iPhone) renderiza una lista de tarjetas
  * táctiles construidas con `mobileCard(row)`. En `≥sm` delega 100% en
- * `DataTable`. La paginación se renderiza una sola vez en cada vista
- * (DataTable en desktop, PaginationControls en móvil) para evitar duplicados.
+ * `DataTable`.
  *
- * Sin lógica de negocio: sólo presentación. No usa media queries en JS,
- * todo se resuelve con clases Tailwind responsive.
+ * v13.200.0: `getRowHref` es reconocido tanto en desktop (fila navegable)
+ * como en mobile (tarjeta navegable con teclado + Ctrl+click).
  */
 interface Props<T> {
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
@@ -28,6 +29,8 @@ interface Props<T> {
   emptyMessage?: string;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
+  getRowHref?: (item: T) => string | null;
+  getRowAriaLabel?: (item: T) => string;
   rowKey: (item: T) => string;
   rowClassName?: (item: T) => string;
   sortMode?: "client" | "server";
@@ -44,8 +47,10 @@ interface Props<T> {
 export function ResponsiveDataTable<T>(props: Props<T>) {
   const {
     data, isLoading, emptyMessage = "Sin resultados", onRowClick,
+    getRowHref, getRowAriaLabel,
     rowKey, mobileCard, pagination, skeletonRows = 5, className,
   } = props;
+  const navigate = useNavigate();
 
   return (
     <div className={className}>
@@ -70,6 +75,29 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
         ) : (
           <ul className="divide-y">
             {data.map((row) => {
+              const href = getRowHref?.(row) ?? null;
+              const ariaLabel = getRowAriaLabel?.(row);
+              if (href) {
+                return (
+                  <li
+                    key={rowKey(row)}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={ariaLabel}
+                    onClick={(e) => handleRowClick(e, { href, navigate })}
+                    onKeyDown={(e) => handleRowKeyDown(e, { href, navigate })}
+                    onAuxClick={(e) => {
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        window.open(href, "_blank", "noopener,noreferrer");
+                      }
+                    }}
+                    className="min-h-[56px] px-3 py-2.5 cursor-pointer active:bg-muted/60 hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  >
+                    {mobileCard(row)}
+                  </li>
+                );
+              }
               const clickable = !!onRowClick;
               return (
                 <li key={rowKey(row)}>
@@ -104,3 +132,4 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
     </div>
   );
 }
+

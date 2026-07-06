@@ -109,7 +109,7 @@ export default function Cotizaciones() {
             data={c.paginated}
             isLoading={c.isLoading}
             emptyMessage="No se encontraron cotizaciones"
-            onRowClick={(r) => c.irADetalle(r.id)}
+            getRowHref={(r) => `/cotizaciones/${r.id}`}
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
             density="comfortable"

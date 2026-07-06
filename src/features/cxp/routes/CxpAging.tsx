@@ -153,6 +153,8 @@ export default function CxpAging() {
             controlledSort={paged.controlledSort}
             onSortChange={paged.setSort}
             pagination={paged.pagination}
+            getRowHref={(r) => `/cxp?proveedor=${r.proveedor_id}`}
+            getRowAriaLabel={(r) => `Ver facturas de ${r.proveedor_nombre}`}
             emptyMessage="Sin saldos pendientes"
             emptyHint="No hay facturas de proveedor con saldo abierto."
             striped

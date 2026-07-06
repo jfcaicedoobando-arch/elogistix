@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { Building2, Plus } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
@@ -11,7 +11,6 @@ import { NuevaOrganizacionDialog } from "@/features/admin/components/NuevaOrgani
 import { buildAdminOrganizacionesColumns } from "@/features/admin/components/AdminOrganizacionesColumns";
 
 export default function AdminOrganizaciones() {
-  const navigate = useNavigate();
   const { state, setters, data, createOrg } = useAdminOrganizacionesController();
   const columns = useMemo(() => buildAdminOrganizacionesColumns(), []);
 
@@ -47,7 +46,7 @@ export default function AdminOrganizaciones() {
           emptyMessage="No se encontraron organizaciones con los filtros aplicados."
           rowKey={(o) => o.id}
           density="comfortable"
-          onRowClick={(o) => navigate(`/admin/organizaciones/${o.id}`)}
+          getRowHref={(o) => `/admin/organizaciones/${o.id}`}
         />
       </div>
 

@@ -33,6 +33,10 @@ interface DataTableProps<T> {
   skeletonRows?: number;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
+  /** Si retorna string, la fila navega a esa URL (teclado + Ctrl+click soportados). */
+  getRowHref?: (item: T) => string | null;
+  /** aria-label opcional para filas navegables. */
+  getRowAriaLabel?: (item: T) => string;
   rowKey: (item: T) => string;
   rowClassName?: (item: T) => string;
   sortMode?: "client" | "server";
@@ -61,6 +65,8 @@ function DataTableInner<T>({
   skeletonRows = 5,
   onRowClick,
   onRowMouseEnter,
+  getRowHref,
+  getRowAriaLabel,
   rowKey,
   rowClassName,
   sortMode = "client",
@@ -114,6 +120,8 @@ function DataTableInner<T>({
             rowClassName={rowClassName}
             onRowClick={onRowClick}
             onRowMouseEnter={onRowMouseEnter}
+            getRowHref={getRowHref}
+            getRowAriaLabel={getRowAriaLabel}
           />
           {renderedFooter && !isLoading && orderedData.length > 0 && (
             <TableFooter>{renderedFooter}</TableFooter>

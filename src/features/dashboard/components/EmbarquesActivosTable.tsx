@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -101,7 +101,6 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
 ]);
 
 export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinancials = false }: Props) {
-  const navigate = useNavigate();
   const nombreMesCap = resumen.nombreMes
     ? resumen.nombreMes.charAt(0).toUpperCase() + resumen.nombreMes.slice(1)
     : "Próximo mes";
@@ -182,7 +181,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
           data={embarques}
           isLoading={isLoading}
           emptyMessage={`Sin embarques con ETA en ${nombreMesCap}`}
-          onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+          getRowHref={(e) => `/embarques/${e.id}`}
           rowKey={(e) => e.id}
           density="compact"
         />

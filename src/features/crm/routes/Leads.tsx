@@ -9,7 +9,7 @@
  * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -38,7 +38,6 @@ interface LeadsFilters extends Record<string, string> {
 const DEFAULTS: LeadsFilters = { estado: "todos", fuente: "todos" };
 
 export default function Leads() {
-  const navigate = useNavigate();
   const { canEditCrm } = usePermissions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -133,7 +132,7 @@ export default function Leads() {
             data={leads}
             isLoading={list.isLoading}
             emptyMessage={list.search ? "No se encontraron leads" : "No hay leads registrados"}
-            onRowClick={(l) => navigate(`/crm/leads/${l.id}`)}
+            getRowHref={(l) => `/crm/leads/${l.id}`}
             rowKey={(l) => l.id}
             density="comfortable"
             sortMode="server"

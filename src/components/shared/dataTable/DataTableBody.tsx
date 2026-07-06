@@ -3,15 +3,26 @@
  * Itera `table.getRowModel().rows` (que ya viene ordenado por TanStack en
  * modo client) y delega el render de cada celda a `flexRender`. Sin
  * `useMemo`/`useEffect` ni `.sort()` manual.
+ *
+ * Drilldown accesible (v13.200.0):
+ * - Si `getRowHref(row)` devuelve string, la fila se comporta como link:
+ *   role=link, tabIndex=0, teclado (Enter/Space), Ctrl/Cmd+click en pestaña
+ *   nueva. Controles internos (botones, checkboxes, dropdowns) se detectan
+ *   automáticamente y NO disparan la navegación.
+ * - `onRowClick` sigue disponible para tablas que abren un modal en vez de
+ *   navegar. `getRowHref` tiene prioridad si ambos están presentes.
  */
 import type React from "react";
 import { Inbox, type LucideIcon } from "lucide-react";
 import { flexRender, type Table } from "@tanstack/react-table";
+import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { cn } from "@/lib/utils";
 import { ALIGN_CLASS, DENSITY_CELL, type ColumnAlign, type TableDensity } from "./types";
+import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
+import { isLucideIcon } from "./isLucideIcon";
 import "./columnMeta";
 
 interface Props<T> {
@@ -24,30 +35,17 @@ interface Props<T> {
   bordered: boolean;
   emptyMessage: string;
   emptyHint?: string;
-  /** Icono para el empty state: LucideIcon (recomendado) o ReactNode custom. */
   emptyIcon?: React.ReactNode | LucideIcon;
-  /** Slot completo para empty state grande con CTA (`<EmptyState>` + wrapper).
-   *  Cuando se pasa, sobrescribe `emptyIcon`/`emptyMessage`/`emptyHint`. */
   emptyState?: React.ReactNode;
   rowClassName?: (item: T) => string;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
+  /** Si retorna string, la fila navega a esa URL con soporte de teclado y Ctrl+click. */
+  getRowHref?: (item: T) => string | null;
+  /** aria-label opcional para filas navegables. */
+  getRowAriaLabel?: (item: T) => string;
 }
 
-/**
- * Discrimina entre un LucideIcon y un ReactNode ya renderizado.
- * Los íconos de `lucide-react` v0.462+ son `React.forwardRef`, cuya forma
- * runtime es un objeto `{ $$typeof, render, displayName }` (NO una función).
- * Si sólo chequeamos `typeof === "function"`, el icono cae al branch que lo
- * renderiza como children y React lanza el invariant #31
- * ("Objects are not valid as a React child..."). Ver Sentry JAVASCRIPT-REACT-23.
- */
-function isLucideIcon(x: unknown): x is LucideIcon {
-  if (typeof x === "function") return true;
-  if (typeof x !== "object" || x === null) return false;
-  const obj = x as { $$typeof?: unknown; render?: unknown };
-  return typeof obj.render === "function" && obj.$$typeof !== undefined;
-}
 
 export function DataTableBody<T>({
   table,
@@ -64,7 +62,10 @@ export function DataTableBody<T>({
   rowClassName,
   onRowClick,
   onRowMouseEnter,
+  getRowHref,
+  getRowAriaLabel,
 }: Props<T>) {
+  const navigate = useNavigate();
   const cellPad = DENSITY_CELL[density];
   const borderCell = bordered ? "border-r last:border-r-0" : "";
   const leafColumns = table.getAllLeafColumns();
@@ -129,16 +130,38 @@ export function DataTableBody<T>({
     <TableBody>
       {rows.map((row) => {
         const item = row.original;
+        const href = getRowHref?.(item) ?? null;
+        const navigable = !!href;
+        const clickable = navigable || !!onRowClick;
         return (
           <TableRow
             key={row.id}
             className={cn(
-              onRowClick && "cursor-pointer",
+              clickable && "cursor-pointer",
+              navigable && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
               !striped && "even:bg-transparent",
               !hoverable && "hover:bg-transparent",
               rowClassName?.(item),
             )}
-            onClick={onRowClick ? () => onRowClick(item) : undefined}
+            role={navigable ? "link" : undefined}
+            tabIndex={navigable ? 0 : undefined}
+            aria-label={navigable ? getRowAriaLabel?.(item) : undefined}
+            onClick={(e) => {
+              if (navigable && href) {
+                handleRowClick(e, { href, navigate });
+                if (e.defaultPrevented) return;
+              }
+              if (onRowClick && !isInteractiveDescendant(e.target)) onRowClick(item);
+            }}
+            onKeyDown={(e) => {
+              if (navigable && href) handleRowKeyDown(e, { href, navigate });
+            }}
+            onAuxClick={(e) => {
+              if (navigable && href && e.button === 1) {
+                e.preventDefault();
+                window.open(href, "_blank", "noopener,noreferrer");
+              }
+            }}
             onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
           >
             {row.getVisibleCells().map((cell) => {

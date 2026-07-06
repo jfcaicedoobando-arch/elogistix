@@ -3,11 +3,15 @@
  * DataTable.regression.test.tsx en 13.85.3 para mantener archivos <300 líneas).
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { embarques, type EmbarqueRow } from "./_dataTableFixtures";
+
+const render = (ui: ReactElement) => rtlRender(ui, { wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter> });
 
 const embarqueColumns: ColumnDef<EmbarqueRow, unknown>[] = defineColumns<EmbarqueRow>([
   { id: "numero", header: "Número", enableSorting: true, accessorFn: (r) => r.numero, sortingFn: sortByString<EmbarqueRow>((r) => r.numero), cell: ({ row }) => row.original.numero },

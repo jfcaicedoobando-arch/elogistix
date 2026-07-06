@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { TrendingUp } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -74,8 +74,6 @@ const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueC
 ]);
 
 export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: Props) {
-  const navigate = useNavigate();
-
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -91,7 +89,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
             data={embarques}
             isLoading={isLoading}
             emptyMessage="Sin embarques con arribo este mes"
-            onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+            getRowHref={(e) => `/embarques/${e.id}`}
             rowKey={(e) => e.id}
             skeletonRows={4}
             density="compact"

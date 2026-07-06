@@ -1,8 +1,8 @@
 /**
- * Columnas de la tabla Cartera (`/facturacion/cartera`). Extraídas para
- * respetar el límite de líneas de la ruta.
+ * Columnas de la tabla Cartera (`/facturacion/cartera`).
+ * v13.200.0: sin `<Link>` inline. La navegación al detalle de factura
+ * se hace por row-click accesible desde `Cartera.tsx` (getRowHref).
  */
-import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
@@ -19,15 +19,7 @@ export function buildCarteraColumns(): ColumnDef<CarteraRow, unknown>[] {
       accessorFn: (r) => r.numero ?? "",
       enableSorting: true,
       meta: { width: "w-[130px]", className: "font-medium whitespace-nowrap", sticky: true },
-      cell: ({ row }) => (
-        <Link
-          to={`/facturacion/${row.original.factura_id}`}
-          className="text-primary hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {row.original.numero ?? "—"}
-        </Link>
-      ),
+      cell: ({ row }) => row.original.numero ?? "—",
     },
     {
       id: "cliente",
@@ -46,18 +38,7 @@ export function buildCarteraColumns(): ColumnDef<CarteraRow, unknown>[] {
       header: "Embarque",
       enableSorting: false,
       meta: { width: "w-[130px]", className: "font-mono text-xs hidden md:table-cell", headerClassName: "hidden md:table-cell" },
-      cell: ({ row }) =>
-        row.original.embarque_id ? (
-          <Link
-            to={`/embarques/${row.original.embarque_id}`}
-            className="text-primary hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {row.original.expediente ?? "—"}
-          </Link>
-        ) : (
-          "—"
-        ),
+      cell: ({ row }) => row.original.expediente ?? "—",
     },
     {
       ...dateColumn<CarteraRow>({

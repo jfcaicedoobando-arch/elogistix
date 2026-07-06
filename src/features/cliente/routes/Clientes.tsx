@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+
 import { Users, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +31,6 @@ import { ClienteMobileCard } from "@/features/cliente/components/ClienteMobileCa
 import { useState, useMemo } from "react";
 
 export default function Clientes() {
-  const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const { organizationId } = useOrgFilter();
   const queryClient = useQueryClient();
@@ -116,7 +115,7 @@ export default function Clientes() {
               data={clientes as ClienteRow[]}
               isLoading={isLoading}
               emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
-              onRowClick={(c) => navigate(`/clientes/${c.id}`)}
+              getRowHref={(c) => `/clientes/${c.id}`}
               rowKey={(c) => c.id}
               density="comfortable"
               mobileCard={(c) => <ClienteMobileCard c={c} />}

@@ -1,5 +1,5 @@
 import { ChevronRight, MoreHorizontal, Receipt, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,6 @@ function totalUnico(p: ProformaConFactura) {
 export function HistorialProformas({
   proformas, canEdit, isDeleting, onEliminar,
 }: Props) {
-  const navigate = useNavigate();
   const facturadasCount = proformas.filter(p => p.estado_proforma === "facturada").length;
 
   const columns: ColumnDef<ProformaConFactura, unknown>[] = defineColumns<ProformaConFactura>([
@@ -151,7 +150,7 @@ export function HistorialProformas({
           data={proformas}
           rowKey={(p) => p.id}
           density="compact"
-          onRowClick={(p) => navigate(`/proformas/${p.id}`)}
+          getRowHref={(p) => `/proformas/${p.id}`}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyIcon={Receipt}
           emptyMessage="No hay proformas generadas para este embarque."

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import { formatNumber } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -18,7 +18,6 @@ interface Props {
 }
 
 export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }: Props) {
-  const navigate = useNavigate();
   const totalPeso = relacionados.reduce((s, r) => s + (Number(r.peso_kg) || 0), 0);
   const totalVol = relacionados.reduce((s, r) => s + (Number(r.volumen_m3) || 0), 0);
   const totalPiezas = relacionados.reduce((s, r) => s + (Number(r.piezas) || 0), 0);
@@ -69,7 +68,7 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
           rowKey={(r) => r.id}
           density="compact"
           rowClassName={(r) => r.id === embarqueId ? 'bg-accent/10 font-medium' : ''}
-          onRowClick={(r) => r.id !== embarqueId && navigate(`/embarques/${r.id}`)}
+          getRowHref={(r) => r.id !== embarqueId ? `/embarques/${r.id}` : null}
           footer={
             <TableRow className="hover:bg-transparent even:bg-transparent font-semibold">
               <TableCell colSpan={3} className="text-xs text-right">Totales:</TableCell>
