@@ -23,7 +23,7 @@ describe("hallazgoHash", () => {
 
 describe("revisionKey", () => {
   it("concatena embarque_id, regla y hash", () => {
-    const h = { embarque_id: "e1", regla: "docs_faltantes", detalle: "x" };
+    const h = { embarque_id: "e1", regla: "docs_faltantes" as const, detalle: "x" };
     const key = revisionKey(h);
     expect(key.startsWith("e1|docs_faltantes|")).toBe(true);
     expect(key.split("|")[2]).toBe(hallazgoHash(h));
