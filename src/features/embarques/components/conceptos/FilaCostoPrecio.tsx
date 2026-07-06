@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { SelectContenedorConcepto } from "@/features/embarques/components/conceptos/SelectContenedorConcepto";
-import { CATALOGO_CONCEPTOS } from "@/features/embarques/constants/embarqueConstants";
+import { ConceptoCatalogoSelect } from "@/features/embarques/components/conceptos/ConceptoCatalogoSelect";
 import type { ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
 
 interface Proveedor { id: string; nombre: string }
