@@ -57,7 +57,7 @@ describe("listarNotasCreditoGlobal", () => {
     expect(rows[0].id).toBe("nc2");
   });
 
-  it("propaga error del cliente Supabase", async () => {
+  it("propaga error del cliente Supabase (notas de crédito)", async () => {
     mock.setTableResult("proveedor_notas_credito", { data: null, error: { message: "boom" } });
     await expect(listarNotasCreditoGlobal()).rejects.toMatchObject({ message: "boom" });
   });

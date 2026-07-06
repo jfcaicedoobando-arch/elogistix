@@ -52,7 +52,7 @@ describe("fetchFacturasReporte", () => {
     expect(await fetchFacturasReporte("a", "b")).toEqual([]);
   });
 
-  it("propaga error", async () => {
+  it("propaga error del fetch de reporte", async () => {
     mock.setTableResult("proveedor_facturas", { data: null, error: new Error("db") });
     await expect(fetchFacturasReporte("a", "b")).rejects.toThrow("db");
   });
