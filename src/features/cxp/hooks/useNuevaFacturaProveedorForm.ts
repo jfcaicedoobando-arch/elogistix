@@ -193,7 +193,7 @@ export function useNuevaFacturaProveedorForm(
     values, errors, mode, setMode,
     total, pendingCfdi, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed,
-    vinculos, toggleVinculo, setVinculoMonto,
+    vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit,
     isPending: crear.isPending,
