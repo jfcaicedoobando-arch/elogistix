@@ -33,7 +33,7 @@ export async function crearNotaCreditoProveedor(
     modulo: "cxp",
     accion: "crear_nota_credito",
     entidadId: data.proveedor_factura_id,
-    entidadNombre: data.folio ?? "",
+    entidadNombre: data.folio_nc ?? "",
     detalles: { nc_id: data.id, monto: data.monto, moneda: data.moneda },
   });
   return data;
