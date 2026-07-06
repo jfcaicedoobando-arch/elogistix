@@ -24,7 +24,8 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { AgingDrillDownDialog, type CubetaAging } from "@/features/cxp/components/AgingDrillDownDialog";
+import { AgingDrillDownDialog } from "@/features/cxp/components/AgingDrillDownDialog";
+import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 
 function KpiBucket({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "warn" | "danger" }) {
   const toneCls =

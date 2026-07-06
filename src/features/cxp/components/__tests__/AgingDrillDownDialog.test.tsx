@@ -2,7 +2,7 @@
  * Test del helper puro `bucketDeDias` del drill-down de aging (Ola B · B1).
  */
 import { describe, it, expect } from "vitest";
-import { bucketDeDias } from "../AgingDrillDownDialog";
+import { bucketDeDias } from "../agingBuckets";
 
 describe("bucketDeDias", () => {
   it("clasifica días vigentes (≤0) como vigente", () => {
