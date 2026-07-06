@@ -1,66 +1,56 @@
-## Contexto
 
-El CI verde reporta cobertura global:
-- **Statements** 42.46% · **Branches** 37.12% · **Functions 31.75%** · **Lines** 42.82%
-- 4125 tests pasan en 582 archivos.
+# Desglose "En detalle" inline en /compras/conciliacion
 
-El umbral de funciones está apenas ~2 pts por encima del mínimo actual (30%). Muchos archivos `.ts` puros (services, helpers, mappers, constants) siguen en **0/0/0/0**, lo cual es el mejor blanco costo/beneficio: son fáciles de testear porque no requieren `render`, `Supabase` real ni mocks React.
+Hoy, al hacer click en una fila de la tabla de conciliación, la app navega a `/embarques/:id` y saca al usuario del contexto de conciliación. La propuesta es abrir un **panel lateral (Sheet)** con el desglose del embarque, sin salir de la pantalla, para poder revisar y operar en línea.
 
-## Objetivo
+## Alcance
 
-Subir cobertura global de **funciones ≥ 40%** (y arrastrar statements/lines a ~50%) sin tocar código de producción salvo type-only.
-
-## Estrategia
-
-Analogía: en lugar de testear cada botón (caro), le ponemos "termómetros" a la mecánica interna — las funciones puras — que ya usa el sistema. Un test barato cubre muchas funciones a la vez.
-
-Ordenamos por ROI: helpers/servicios de dominio con lógica de negocio primero; hooks y componentes UI después (más costosos).
-
-## Lotes
-
-### Lote 1 — Helpers puros y mappers (ROI alto)
-Archivos objetivo (todos actualmente 0%):
-- `src/features/costeo/**/*Submit.ts`, `*Tarifa.ts`, `*Rutas.ts`, `*Tarifas.ts`
-- `src/features/cliente/**/cliente.ts`, `clienteForm.ts`
-- `src/features/configuracion/**/*.ts` (`useConfiguracion`, `useConfiguracionGlobal`, `useConfiguracionOrg` — extraer partes puras si son hooks)
-- `src/features/auditoria/services/**` (`asignar.ts`, `marcar.ts`, `desmarcar.ts`, `query.ts`, `analyzeHallazgo.ts`)
-- Utilidades sueltas: `columnMeta.ts`, `useRowSelection.ts` reducers, `pnlPorContenedor.helpers` extras.
-
-Aproximado: **~25 archivos** → ~60 tests nuevos.
-Estimación: sube funciones a ~38%.
-
-### Lote 2 — Servicios con Supabase (ROI medio)
-Aplicar patrón `_supabaseChainMock` (ya establecido en el proyecto) para:
-- `admin/services/*` (bandejas, portales, `capacidadUsuarios`, `usePapelera`)
-- `features/comisiones/services/*Devengadas.ts`
-- `features/facturapi/**/credenciales.ts`
-- `features/auditoria/services/auditoriaSnapshots.ts`, `revisarHallazgo.ts`, `resolveHallazgo.ts`
-
-Aproximado: **~15 archivos** → ~40 tests.
-Estimación: sube funciones a ~42%.
-
-### Lote 3 — Componentes de baja complejidad (opcional)
-Solo si no llegamos a 40% después de los lotes 1-2. Cubrir componentes shared con render + assertion básica:
-- `KpiCard.tsx`, `KpiStrip.tsx`, `EmptyState.tsx`, `FormDialogSection.tsx`, `ReasonDialog.tsx`, `NumericInput.tsx`, `PaginationControls.tsx`.
-
-## Fuera de alcance
-
-- No modificar `vitest.config.ts` ni bajar umbrales (memoria core).
-- No tocar componentes ya con >70% cobertura.
-- No perseguir 100% en rutas/páginas grandes (`admin/routes`, portales) — bajo ROI.
-- No incluir tests E2E ni Playwright.
-
-## Verificación
-
-1. Correr `bunx vitest run --coverage` local sobre carpetas modificadas.
-2. Confirmar que el reporte muestra funciones ≥ 40% globales.
-3. Bump de `APP_VERSION` + entrada en `CHANGELOG.md` al final de cada lote.
+1. Sustituir la navegación por click en la fila por la apertura de un **Sheet lateral** (drawer derecho, ancho ~`xl`) con el detalle del embarque seleccionado.
+2. Mantener disponible el "ir al embarque completo" como acción secundaria dentro del panel (botón "Abrir embarque"), para no perder el acceso actual.
+3. Dentro del panel mostrar:
+   - **Encabezado**: expediente, cliente, estado del embarque, moneda, badges de estado de conciliación.
+   - **Resumen económico**: cotizado, real facturado, diferencia, % desviación, # conceptos sin factura. Se toma tal cual de `calcularResumen` en `reconciliacionCostos.ts`.
+   - **Tabla de conceptos** (una fila por `concepto_costo`): concepto, proveedor, cotizado, real facturado, diferencia, % desviación, estado de liquidación, y lista de facturas de proveedor vinculadas (folio + monto).
+   - **Acciones por concepto**:
+     - "Vincular factura" → abre el flujo existente de captura/edición de factura de proveedor precargando ese concepto (reusa `vincularFacturaAConceptos` / pantalla de CxP).
+     - "Ver factura" en cada folio vinculado → navega a `/compras/por-aprobar` (o al detalle de factura si existe) filtrando por ese folio.
+4. Manejo de estados de carga y error del panel con `isLoading` y `EmptyState` cuando no haya conceptos.
+5. Cerrar el panel con Escape / click fuera / botón cerrar; conservar filtros de la lista al cerrar.
 
 ## Detalles técnicos
 
-- Usar `vi.mock('@/integrations/supabase/client', ...)` con el helper `_supabaseChainMock.ts` existente para servicios.
-- Los helpers puros no requieren mock: `import { fn } from '...'; expect(fn(input)).toEqual(...)`.
-- Coverage ignora archivos `*.types.ts` e `index.ts` re-exports; los saltamos.
-- Cada lote termina con `mem://index.md` intacto y CHANGELOG bumpeado.
+- **Nuevo componente**: `src/features/compras/routes/_sections/ConciliacionDetalleSheet.tsx`.
+  - Recibe `embarqueId | null` y `onClose`. Usa `Sheet` de `@/components/ui/sheet` (side="right", `w-full sm:max-w-3xl`).
+  - Dispara `useQuery(["compras","conciliacion-detalle", embarqueId], () => fetchReconciliacionEmbarque(embarqueId))` reutilizando `src/features/embarques/services/reconciliacionCostos.ts` (ya existe, ya testeado). No se crea servicio nuevo.
+  - Renderiza resumen calculado con `calcularResumen(filas)` (función pura existente).
+  - Tabla con `DataTable` (density compact) siguiendo estándares del proyecto.
+- **Edición de ComprasConciliacion.tsx**:
+  - Reemplazar `onRowClick={row => navigate(...)}` por `onRowClick={row => setDetalleEmbarqueId(row.embarque_id)}`.
+  - Añadir estado local `detalleEmbarqueId` y montar `<ConciliacionDetalleSheet embarqueId={detalleEmbarqueId} onClose={() => setDetalleEmbarqueId(null)} />`.
+  - Botón "Abrir embarque" dentro del sheet navega a `/embarques/:id` (comportamiento anterior, ahora opcional).
+- **Vincular factura desde el panel**: en Fase 1 el botón navega a `/compras/por-aprobar?embarque=<id>&concepto=<id>` (query params ya consumidos por la bandeja o se agregan si no existen). No se modifica lógica de negocio; sólo se pasa contexto por URL.
+- **Tests**:
+  - Unit test del componente `ConciliacionDetalleSheet` con mocks del servicio (`fetchReconciliacionEmbarque`) — loading, empty y con datos.
+  - Ajustar el smoke test existente de `ComprasConciliacion` si aplica (no debería romperse, sólo cambia handler de click).
+- **Estilos**: usar tokens semánticos (sin colores hardcoded). Reusar badges de estado existentes.
+- **Versionado**: bump `APP_VERSION` a `13.184.0` y entrada en `CHANGELOG.md`:
+  - `Conciliación de compras: desglose por embarque ahora se abre en un panel lateral sin salir de /compras/conciliacion.`
 
-¿Confirmas empezar por el **Lote 1**?
+## Fuera de alcance (para próximo lote)
+
+- Editar montos de conceptos/facturas desde el panel (sólo lectura + navegación a captura).
+- Filtros dentro del panel (moneda/estado de línea) — se puede añadir después si se necesita.
+- Cambios en RLS o servicios de base de datos.
+
+## Diagrama
+
+```text
+/compras/conciliacion
+┌───────────────────────────────────────────┐   ┌──────────────── Sheet ────────────────┐
+│ KPIs + Filtros                            │   │ Expediente · Cliente · [Abrir embarque]│
+│ ┌───────────────────────────────────────┐ │   │ Resumen: cotizado / real / Δ / %      │
+│ │ Fila embarque  ← click abre panel ───►│ │──►│ Tabla conceptos_costo:                │
+│ │ Fila embarque                          │ │   │  concepto · prov · cot · real · Δ · % │
+│ └───────────────────────────────────────┘ │   │  [Vincular factura] [Ver folios]      │
+└───────────────────────────────────────────┘   └──────────────────────────────────────┘
+```
