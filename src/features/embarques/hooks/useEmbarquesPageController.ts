@@ -105,7 +105,7 @@ export function useEmbarquesPageController() {
           { key: "tipo_cambio_eur", label: "T/C EUR" },
           { key: "created_at", label: "Fecha Creación" },
         ],
-        filtradosPorEstado.map((e) => ({
+        filtradosFinal.map((e) => ({
           expediente: e.expediente,
           bl_master: e.bl_master || "",
           cliente_nombre: e.cliente_nombre,
