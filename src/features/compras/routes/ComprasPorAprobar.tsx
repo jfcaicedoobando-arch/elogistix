@@ -10,24 +10,11 @@ import { useMemo, useState } from "react";
 import { ShieldCheck, Inbox, ClipboardCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
-import {
-  Tabs, TabsList, TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/shared";
@@ -36,51 +23,11 @@ import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasL
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { KPICard, sumaMxn, sumaUsd } from "./ComprasPorAprobar.kpi";
+import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
+import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
 
 type AprobacionFiltro = "pendiente" | "aprobada" | "rechazada";
-
-function KPICard({
-  icon: Icon, label, count, monto, tone = "default",
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  count: number;
-  monto?: string;
-  tone?: "default" | "warn" | "success" | "danger";
-}) {
-  const toneCls =
-    tone === "danger" ? "text-destructive"
-    : tone === "success" ? "text-success"
-    : tone === "warn" ? "text-warning"
-    : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-          <Icon className={cn("h-3.5 w-3.5", toneCls)} />
-          <span>{label}</span>
-        </p>
-        <p className={cn("text-lg font-semibold tabular-nums", toneCls)}>
-          {count} <span className="text-xs font-normal text-muted-foreground">
-            {count === 1 ? "factura" : "facturas"}
-          </span>
-        </p>
-        {monto && <p className="text-xs text-muted-foreground tabular-nums">{monto}</p>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function sumaMxn(rows: FacturaCxP[]): number {
-  return rows
-    .filter((f) => f.moneda === "MXN")
-    .reduce((acc, f) => acc + Number(f.total ?? 0), 0);
-}
-function sumaUsd(rows: FacturaCxP[]): number {
-  return rows
-    .filter((f) => f.moneda === "USD")
-    .reduce((acc, f) => acc + Number(f.total ?? 0), 0);
-}
 
 export default function ComprasPorAprobar() {
   const { canEdit } = usePermissions();
@@ -103,50 +50,10 @@ export default function ComprasPorAprobar() {
 
   const seleccionEnLote = canEdit && aprobacion === "pendiente";
 
-  // Columna de selección solo en modo pendiente.
   const columns = useMemo(() => {
     const base = buildCxPColumns();
     if (!seleccionEnLote) return base;
-    const selectionCol = defineColumns<FacturaCxP>([
-      {
-        id: "sel",
-        header: () => {
-          const allIds = rows.map((r) => r.id);
-          const allSel = allIds.length > 0 && allIds.every((id) => selected.has(id));
-          const someSel = allIds.some((id) => selected.has(id));
-          return (
-            <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
-              <Checkbox
-                aria-label={allSel ? "Deseleccionar todas" : "Seleccionar todas"}
-                checked={allSel ? true : someSel ? "indeterminate" : false}
-                onCheckedChange={(v) => {
-                  setSelected(() => (v ? new Set(allIds) : new Set()));
-                }}
-              />
-            </div>
-          );
-        },
-        cell: ({ row }) => (
-          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
-            <Checkbox
-              aria-label={`Seleccionar factura ${row.original.folio_proveedor}`}
-              checked={selected.has(row.original.id)}
-              onCheckedChange={(v) => {
-                setSelected((prev) => {
-                  const next = new Set(prev);
-                  if (v) next.add(row.original.id);
-                  else next.delete(row.original.id);
-                  return next;
-                });
-              }}
-            />
-          </div>
-        ),
-        meta: { align: "center" },
-        size: 40,
-      },
-    ])[0];
-    return [selectionCol, ...base];
+    return [buildSelectionColumn({ rows, selected, setSelected }), ...base];
   }, [rows, selected, seleccionEnLote]);
 
   const currentTotalMxn = useMemo(() => sumaMxn(rows), [rows]);
@@ -157,8 +64,7 @@ export default function ComprasPorAprobar() {
   const totalSelUsd = sumaUsd(seleccionadas);
 
   const handleAprobarLote = async () => {
-    const ids = Array.from(selected);
-    await aprobar(ids);
+    await aprobar(Array.from(selected));
     setSelected(new Set());
     setConfirmOpen(false);
   };
@@ -179,18 +85,8 @@ export default function ComprasPorAprobar() {
           monto={`${formatCurrency(sumaMxn(pendientes), "MXN")} · ${formatCurrency(sumaUsd(pendientes), "USD")}`}
           tone="warn"
         />
-        <KPICard
-          icon={CheckCircle2}
-          label="Aprobadas"
-          count={aprobadas.length}
-          tone="success"
-        />
-        <KPICard
-          icon={XCircle}
-          label="Rechazadas"
-          count={rechazadas.length}
-          tone="danger"
-        />
+        <KPICard icon={CheckCircle2} label="Aprobadas" count={aprobadas.length} tone="success" />
+        <KPICard icon={XCircle} label="Rechazadas" count={rechazadas.length} tone="danger" />
         <KPICard
           icon={ClipboardCheck}
           label={`Total en vista (${aprobacion})`}
@@ -242,16 +138,8 @@ export default function ComprasPorAprobar() {
                   </span>
                 )}
               </p>
-              <Button
-                size="sm"
-                disabled={selected.size === 0 || isRunning}
-                onClick={() => setConfirmOpen(true)}
-              >
-                {isRunning ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                )}
+              <Button size="sm" disabled={selected.size === 0 || isRunning} onClick={() => setConfirmOpen(true)}>
+                {isRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
                 Aprobar seleccionadas ({selected.size})
               </Button>
             </div>
@@ -299,40 +187,15 @@ export default function ComprasPorAprobar() {
         canEdit={canEdit}
       />
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Aprobar {selected.size} factura(s) en lote</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2 text-sm">
-                <p>
-                  Vas a aprobar <strong>{selected.size}</strong> solicitudes en un solo paso. El total involucrado es:
-                </p>
-                <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-0.5">
-                  <li>MXN: {formatCurrency(totalSelMxn, "MXN")}</li>
-                  <li>USD: {formatCurrency(totalSelUsd, "USD")}</li>
-                </ul>
-                <p className="text-xs text-muted-foreground">
-                  El proceso corre factura por factura. Si alguna falla, te lo indicamos al final para revisarla manualmente.
-                </p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRunning}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isRunning}
-              onClick={(e) => {
-                e.preventDefault();
-                void handleAprobarLote();
-              }}
-            >
-              {isRunning && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
-              Aprobar {selected.size}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmarAprobacionLoteDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        cantidad={selected.size}
+        totalMxn={totalSelMxn}
+        totalUsd={totalSelUsd}
+        isRunning={isRunning}
+        onConfirm={() => void handleAprobarLote()}
+      />
     </PageContainer>
   );
 }
