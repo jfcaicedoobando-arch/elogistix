@@ -53,6 +53,9 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-cancelar-nota-credito/index.ts",
   "supabase/functions/notificar-respuesta-cotizacion/index.ts",
   "supabase/functions/enviar-proforma-email/index.ts",
+  // 13.187.0 — Verificación UUID vs SAT + reintento nocturno de REP
+  "supabase/functions/verificar-uuid-sat/index.ts",
+  "supabase/functions/rep-retry-nocturno/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia
