@@ -194,7 +194,6 @@ export function useEmbarquesPageState() {
     expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
     extras,
-    alertasResumen,
-    alertIdSet,
+    alertasResumen, alertIdSet,
   };
 }
