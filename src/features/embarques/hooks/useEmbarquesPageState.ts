@@ -195,5 +195,6 @@ export function useEmbarquesPageState() {
     contenedoresPorExpediente,
     extras,
     alertasResumen,
+    alertIdSet,
   };
 }
