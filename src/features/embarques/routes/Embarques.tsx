@@ -114,7 +114,7 @@ export default function Embarques() {
                 data={filtered}
                 isLoading={isLoading}
                 emptyMessage="No se encontraron embarques"
-                onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+                getRowHref={(e) => `/embarques/${e.id}`}
                 onRowMouseEnter={(e) => prefetchEmbarque(e.id)}
                 rowKey={(e) => e.id}
                 rowClassName={() => "group"}
