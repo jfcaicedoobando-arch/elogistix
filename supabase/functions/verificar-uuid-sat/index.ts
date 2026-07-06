@@ -1,14 +1,17 @@
 /**
  * verificar-uuid-sat — Consulta el estatus de un CFDI en el servicio público del SAT.
  *
- * Entrada: { factura_id: string }  (id de proveedor_facturas)
+ * Entrada:
+ *   { factura_id: string, tipo?: "cxp" | "cxc" }
+ *     - "cxp" (default): factura recibida de proveedor (`proveedor_facturas`)
+ *     - "cxc" (α.1):     factura emitida al cliente (`facturas`)
  * Salida: { estatus: "Vigente"|"Cancelado"|"No Encontrado"|"Error", raw?: string }
  *
  * Consulta al Web Service público del SAT:
  *   https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaCFDIService.svc
  *
  * El expression es: ?re={RFC_EMISOR}&rr={RFC_RECEPTOR}&tt={TOTAL}&id={UUID}
- * v13.187.0
+ * v13.195.0
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
