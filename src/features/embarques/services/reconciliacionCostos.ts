@@ -63,11 +63,11 @@ export interface ResumenPorMoneda {
 interface PFCRow {
   monto: number | string;
   concepto_costo_id: string | null;
-  descripcion: string | null;
+  descripcion?: string | null;
   proveedor_facturas: {
     id: string;
     folio_proveedor: string;
-    fecha_emision: string | null;
+    fecha_emision?: string | null;
     deleted_at: string | null;
   } | null;
 }
