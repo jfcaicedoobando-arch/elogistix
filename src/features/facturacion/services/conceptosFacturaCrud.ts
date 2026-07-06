@@ -104,7 +104,6 @@ export async function actualizarConceptoFactura(params: {
   input: ConceptoFacturaInput;
 }): Promise<void> {
   const linea = normalizarLinea(params.input);
-  if (!linea.descripcion) throw new Error("La descripción es obligatoria");
   const { error } = await supabase
     .from("conceptos_factura")
     .update(linea)
