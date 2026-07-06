@@ -56,10 +56,6 @@ export default function FacturaDetalle() {
 
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
 
-
-
-
-
   if (isLoading) {
     return (
       <PageContainer>
