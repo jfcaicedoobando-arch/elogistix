@@ -147,16 +147,38 @@ export function DataTableBody<T>({
     <TableBody>
       {rows.map((row) => {
         const item = row.original;
+        const href = getRowHref?.(item) ?? null;
+        const navigable = !!href;
+        const clickable = navigable || !!onRowClick;
         return (
           <TableRow
             key={row.id}
             className={cn(
-              onRowClick && "cursor-pointer",
+              clickable && "cursor-pointer",
+              navigable && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
               !striped && "even:bg-transparent",
               !hoverable && "hover:bg-transparent",
               rowClassName?.(item),
             )}
-            onClick={onRowClick ? () => onRowClick(item) : undefined}
+            role={navigable ? "link" : undefined}
+            tabIndex={navigable ? 0 : undefined}
+            aria-label={navigable ? getRowAriaLabel?.(item) : undefined}
+            onClick={(e) => {
+              if (navigable && href) {
+                handleRowClick(e, { href, navigate });
+                if (e.defaultPrevented) return;
+              }
+              if (onRowClick && !isInteractiveDescendant(e.target)) onRowClick(item);
+            }}
+            onKeyDown={(e) => {
+              if (navigable && href) handleRowKeyDown(e, { href, navigate });
+            }}
+            onAuxClick={(e) => {
+              if (navigable && href && e.button === 1) {
+                e.preventDefault();
+                window.open(href, "_blank", "noopener,noreferrer");
+              }
+            }}
             onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
           >
             {row.getVisibleCells().map((cell) => {
