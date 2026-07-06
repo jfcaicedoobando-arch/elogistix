@@ -24,14 +24,6 @@ export interface FiltersState {
   direccion: DireccionOrden;
 }
 
-/** Defaults exportados para reset y tests. */
-export const INITIAL_CXP_CAPTURAR_FILTERS: FiltersState = {
-  query: "",
-  estatus: "todos",
-  antiguedad: "todos",
-  ordenarPor: "antiguedad",
-  direccion: "desc",
-};
 
 /** Determina el estatus de captura a partir de los montos. */
 export function estatusDeFila(row: CxpPorCapturarRow): EstatusFiltro {
