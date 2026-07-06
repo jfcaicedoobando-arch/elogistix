@@ -25,7 +25,7 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 
-type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];
+
 
 interface Filters extends Record<string, string> {
   moneda: string;
