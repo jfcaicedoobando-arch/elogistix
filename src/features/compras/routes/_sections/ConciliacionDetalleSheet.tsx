@@ -1,13 +1,21 @@
 /**
- * Panel lateral con el desglose cotizado vs real de un embarque, invocado
- * desde /compras/conciliacion. Evita sacar al usuario de la pantalla al
- * clickear una fila: reusa `fetchReconciliacionEmbarque` (Fase 2) y
- * `calcularResumen` para presentar la información en línea.
+ * Panel lateral con el desglose cotizado vs real de un embarque a nivel de
+ * partidas (renglones), invocado desde /compras/conciliacion. Reusa
+ * `fetchReconciliacionEmbarque` + funciones puras (`calcularResumen`,
+ * `calcularResumenPorEstatus`, `calcularResumenPorMoneda`,
+ * `fetchPartidasHuerfanasCount`) para presentar toda la información en línea
+ * sin sacar al usuario de la pantalla.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, FileText, Link2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  FileText,
+  Link2,
+} from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -18,13 +26,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency } from "@/lib/formatters";
 import {
   fetchReconciliacionEmbarque,
+  fetchPartidasHuerfanasCount,
   calcularResumen,
+  calcularResumenPorEstatus,
+  calcularResumenPorMoneda,
   type FilaReconciliacion,
+  type EstatusRenglon,
 } from "@/features/embarques/services/reconciliacionCostos";
 import type { EmbarqueConciliacion } from "@/features/compras/services/conciliacionEmbarques";
 import { CONCILIACION_ESTADO_LABELS } from "./conciliacionColumns";
@@ -33,6 +44,13 @@ interface Props {
   embarque: EmbarqueConciliacion | null;
   onClose: () => void;
 }
+
+const ESTATUS_META: Record<EstatusRenglon, { label: string; variant: "outline" | "default" | "secondary" | "destructive"; dot: string }> = {
+  sin_match:  { label: "Sin match", variant: "destructive", dot: "bg-destructive" },
+  parcial:    { label: "Parcial",   variant: "secondary",   dot: "bg-warning" },
+  conciliado: { label: "Conciliado", variant: "default",    dot: "bg-success" },
+  excedente:  { label: "Excedente", variant: "destructive", dot: "bg-destructive" },
+};
 
 export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
   const navigate = useNavigate();
@@ -45,14 +63,32 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
     staleTime: 30_000,
   });
 
+  const { data: huerfanas = 0 } = useQuery({
+    queryKey: ["compras", "conciliacion-huerfanas", embarqueId],
+    queryFn: () => fetchPartidasHuerfanasCount(embarqueId as string),
+    enabled: Boolean(embarqueId),
+    staleTime: 30_000,
+  });
+
   const resumen = useMemo(() => calcularResumen(filas), [filas]);
-  const columns = useMemo(() => buildDetalleColumns(navigate), [navigate]);
+  const resumenEstatus = useMemo(() => calcularResumenPorEstatus(filas), [filas]);
+  const totalesPorMoneda = useMemo(() => calcularResumenPorMoneda(filas), [filas]);
+
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+  const toggle = (id: string) => {
+    setExpandidos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const monedaResumen = embarque?.moneda ?? filas[0]?.moneda ?? "MXN";
 
   return (
     <Sheet open={Boolean(embarque)} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-4xl overflow-y-auto">
         {embarque && (
           <>
             <SheetHeader className="space-y-2 pr-8">
@@ -78,23 +114,38 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
               </div>
             </SheetHeader>
 
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-              <ResumenTile label="Cotizado" value={formatCurrency(resumen.total_cotizado, monedaResumen)} />
-              <ResumenTile label="Real facturado" value={formatCurrency(resumen.total_real, monedaResumen)} />
-              <ResumenTile
-                label="Diferencia"
-                value={formatCurrency(resumen.diferencia_total, monedaResumen)}
-                tone={resumen.diferencia_total > 0 ? "destructive" : resumen.diferencia_total < 0 ? "success" : "muted"}
-              />
-              <ResumenTile
-                label="Desviación %"
-                value={`${resumen.desviacion_pct_total.toFixed(1)}%`}
-                tone={resumen.desviacion_pct_total > 0 ? "destructive" : resumen.desviacion_pct_total < 0 ? "success" : "muted"}
-              />
-            </div>
-
-            <div className="mt-3 text-xs text-muted-foreground">
-              Conceptos sin factura: <strong>{resumen.conceptos_sin_factura}</strong> de {filas.length}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
+                <ResumenTile label="Cotizado" value={formatCurrency(resumen.total_cotizado, monedaResumen)} />
+                <ResumenTile label="Real facturado" value={formatCurrency(resumen.total_real, monedaResumen)} />
+                <ResumenTile
+                  label="Diferencia"
+                  value={formatCurrency(resumen.diferencia_total, monedaResumen)}
+                  tone={resumen.diferencia_total > 0 ? "destructive" : resumen.diferencia_total < 0 ? "success" : "muted"}
+                />
+                <ResumenTile
+                  label="Desviación %"
+                  value={`${resumen.desviacion_pct_total.toFixed(1)}%`}
+                  tone={resumen.desviacion_pct_total > 0 ? "destructive" : resumen.desviacion_pct_total < 0 ? "success" : "muted"}
+                />
+              </div>
+              <div className="rounded-md border p-3">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
+                  Renglones por estatus
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <EstatusCount label="Sin match" count={resumenEstatus.sin_match} tone="destructive" />
+                  <EstatusCount label="Parcial" count={resumenEstatus.parcial} tone="warning" />
+                  <EstatusCount label="Conciliado" count={resumenEstatus.conciliado} tone="success" />
+                  <EstatusCount label="Excedente" count={resumenEstatus.excedente} tone="destructive" />
+                </div>
+                <div className="mt-2 pt-2 border-t text-[11px] text-muted-foreground flex justify-between">
+                  <span>Partidas huérfanas</span>
+                  <span className={huerfanas > 0 ? "text-destructive font-semibold" : "font-semibold"}>
+                    {huerfanas}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="mt-4">
@@ -111,18 +162,185 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
                   description="Este embarque no tiene conceptos de costo registrados para conciliar."
                 />
               ) : (
-                <DataTable
-                  columns={columns}
-                  data={filas}
-                  rowKey={(f) => f.concepto_costo_id}
-                  density="compact"
-                />
+                <>
+                  <div className="rounded-md border overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/50 text-[10px] uppercase tracking-wide text-muted-foreground">
+                        <tr>
+                          <th className="w-6 p-2"></th>
+                          <th className="text-left p-2">Concepto</th>
+                          <th className="text-right p-2">Cotizado</th>
+                          <th className="text-right p-2">Real</th>
+                          <th className="text-right p-2">Δ</th>
+                          <th className="text-right p-2">%</th>
+                          <th className="text-left p-2">Estatus</th>
+                          <th className="w-16 p-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filas.map((f) => (
+                          <FilaRenglon
+                            key={f.concepto_costo_id}
+                            fila={f}
+                            expandido={expandidos.has(f.concepto_costo_id)}
+                            onToggle={() => toggle(f.concepto_costo_id)}
+                            onVincular={() =>
+                              navigate(
+                                `/compras/por-aprobar?embarque=${encodeURIComponent(
+                                  embarque.embarque_id,
+                                )}&concepto=${encodeURIComponent(f.concepto_costo_id)}`,
+                              )
+                            }
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-3 space-y-1">
+                    {totalesPorMoneda.map((t) => (
+                      <div
+                        key={t.moneda}
+                        className="rounded-md border bg-muted/30 px-3 py-2 grid grid-cols-5 gap-2 text-xs tabular-nums"
+                      >
+                        <div className="font-semibold">TOTAL {t.moneda}</div>
+                        <div className="text-right">{formatCurrency(t.cotizado, t.moneda)}</div>
+                        <div className="text-right">{formatCurrency(t.real, t.moneda)}</div>
+                        <div className={`text-right font-medium ${t.diferencia > 0 ? "text-destructive" : t.diferencia < 0 ? "text-success" : ""}`}>
+                          {formatCurrency(t.diferencia, t.moneda)}
+                        </div>
+                        <div className={`text-right ${t.desviacion_pct > 0 ? "text-destructive" : t.desviacion_pct < 0 ? "text-success" : "text-muted-foreground"}`}>
+                          {t.desviacion_pct.toFixed(1)}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </>
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function FilaRenglon({
+  fila,
+  expandido,
+  onToggle,
+  onVincular,
+}: {
+  fila: FilaReconciliacion;
+  expandido: boolean;
+  onToggle: () => void;
+  onVincular: () => void;
+}) {
+  const meta = ESTATUS_META[fila.estatus_renglon];
+  const tienePartidas = fila.facturas.length > 0;
+  const dCls = fila.diferencia > 0 ? "text-destructive font-medium"
+    : fila.diferencia < 0 ? "text-success" : "text-muted-foreground";
+  const pCls = fila.desviacion_pct > 0 ? "text-destructive"
+    : fila.desviacion_pct < 0 ? "text-success" : "text-muted-foreground";
+
+  return (
+    <>
+      <tr className="border-t hover:bg-muted/30">
+        <td className="p-2 align-top">
+          {tienePartidas ? (
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-label={expandido ? "Ocultar partidas" : "Ver partidas"}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {expandido ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+            </button>
+          ) : null}
+        </td>
+        <td className="p-2 align-top">
+          <div className="font-medium">{fila.concepto}</div>
+          <div className="text-[10px] text-muted-foreground">{fila.proveedor_nombre || "—"}</div>
+        </td>
+        <td className="p-2 text-right tabular-nums align-top">
+          {formatCurrency(fila.cotizado, fila.moneda)}
+        </td>
+        <td className="p-2 text-right tabular-nums align-top">
+          {formatCurrency(fila.real_facturado, fila.moneda)}
+        </td>
+        <td className={`p-2 text-right tabular-nums align-top ${dCls}`}>
+          {formatCurrency(fila.diferencia, fila.moneda)}
+        </td>
+        <td className={`p-2 text-right tabular-nums align-top ${pCls}`}>
+          {fila.desviacion_pct.toFixed(1)}%
+        </td>
+        <td className="p-2 align-top">
+          <Badge variant={meta.variant} className="gap-1 text-[10px]">
+            <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
+            {meta.label}
+          </Badge>
+        </td>
+        <td className="p-2 align-top text-right">
+          {!tienePartidas && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-[11px]"
+              onClick={onVincular}
+            >
+              <Link2 className="mr-1 h-3 w-3" /> Vincular
+            </Button>
+          )}
+        </td>
+      </tr>
+      {expandido && tienePartidas && (
+        <tr className="bg-muted/20">
+          <td colSpan={8} className="px-3 py-2">
+            <table className="w-full text-[11px]">
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th className="text-left py-1 font-normal">Folio</th>
+                  <th className="text-left py-1 font-normal">Fecha</th>
+                  <th className="text-left py-1 font-normal">Descripción</th>
+                  <th className="text-right py-1 font-normal">Monto</th>
+                  <th className="text-right py-1 font-normal">% cot.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fila.facturas.map((p) => {
+                  const pct = fila.cotizado > 0 ? (p.monto / fila.cotizado) * 100 : 0;
+                  return (
+                    <tr key={p.proveedor_factura_id + p.folio_proveedor} className="border-t border-border/50">
+                      <td className="py-1 font-mono">{p.folio_proveedor}</td>
+                      <td className="py-1">{p.fecha_emision ?? "—"}</td>
+                      <td className="py-1">{p.descripcion ?? "—"}</td>
+                      <td className="py-1 text-right tabular-nums">{formatCurrency(p.monto, fila.moneda)}</td>
+                      <td className="py-1 text-right tabular-nums text-muted-foreground">
+                        {pct.toFixed(1)}%
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function EstatusCount({ label, count, tone }: { label: string; count: number; tone: "destructive" | "warning" | "success" }) {
+  const dot = tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-success";
+  const numCls = tone === "destructive" ? "text-destructive" : tone === "warning" ? "text-warning" : "text-success";
+  return (
+    <div className="flex items-center justify-between rounded border px-2 py-1">
+      <span className="flex items-center gap-1.5">
+        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+        {label}
+      </span>
+      <span className={`font-semibold tabular-nums ${numCls}`}>{count}</span>
+    </div>
   );
 }
 
@@ -140,7 +358,7 @@ type Tone = "destructive" | "success" | "muted" | "default";
 function ResumenTile({ label, value, tone = "default" }: { label: string; value: string; tone?: Tone }) {
   const toneClass =
     tone === "destructive" ? "text-destructive"
-    : tone === "success" ? "text-emerald-600 dark:text-emerald-400"
+    : tone === "success" ? "text-success"
     : tone === "muted" ? "text-muted-foreground"
     : "text-foreground";
   return (
@@ -149,108 +367,4 @@ function ResumenTile({ label, value, tone = "default" }: { label: string; value:
       <div className={`text-sm font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );
-}
-
-function buildDetalleColumns(navigate: (path: string) => void) {
-  return defineColumns<FilaReconciliacion>([
-    {
-      id: "concepto",
-      header: "Concepto",
-      accessorFn: (r) => r.concepto,
-      cell: ({ row }) => (
-        <div className="min-w-[140px]">
-          <div className="text-xs font-medium">{row.original.concepto}</div>
-          <div className="text-[10px] text-muted-foreground">{row.original.proveedor_nombre || "—"}</div>
-        </div>
-      ),
-    },
-    {
-      id: "cotizado",
-      header: "Cotizado",
-      accessorFn: (r) => r.cotizado,
-      cell: ({ row }) => (
-        <span className="text-xs tabular-nums">
-          {formatCurrency(row.original.cotizado, row.original.moneda)}
-        </span>
-      ),
-    },
-    {
-      id: "real",
-      header: "Real",
-      accessorFn: (r) => r.real_facturado,
-      cell: ({ row }) => (
-        <span className="text-xs tabular-nums">
-          {formatCurrency(row.original.real_facturado, row.original.moneda)}
-        </span>
-      ),
-    },
-    {
-      id: "dif",
-      header: "Δ",
-      accessorFn: (r) => r.diferencia,
-      cell: ({ row }) => {
-        const d = row.original.diferencia;
-        const cls = d > 0 ? "text-destructive font-medium" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground";
-        return (
-          <span className={`text-xs tabular-nums ${cls}`}>
-            {formatCurrency(d, row.original.moneda)}
-          </span>
-        );
-      },
-    },
-    {
-      id: "pct",
-      header: "%",
-      accessorFn: (r) => r.desviacion_pct,
-      cell: ({ row }) => {
-        const p = row.original.desviacion_pct;
-        const cls = p > 0 ? "text-destructive" : p < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground";
-        return <span className={`text-xs tabular-nums ${cls}`}>{p.toFixed(1)}%</span>;
-      },
-    },
-    {
-      id: "estado",
-      header: "Estado",
-      accessorFn: (r) => r.estado_liquidacion,
-      cell: ({ row }) => (
-        <Badge variant="outline" className="text-[10px]">{row.original.estado_liquidacion}</Badge>
-      ),
-    },
-    {
-      id: "facturas",
-      header: "Facturas",
-      accessorFn: (r) => r.facturas.length,
-      cell: ({ row }) => {
-        const facs = row.original.facturas;
-        if (facs.length === 0) {
-          return (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-[11px]"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(
-                  `/compras/por-aprobar?embarque=${encodeURIComponent(
-                    row.original.concepto_costo_id,
-                  )}&concepto=${encodeURIComponent(row.original.concepto_costo_id)}`,
-                );
-              }}
-            >
-              <Link2 className="mr-1 h-3 w-3" /> Vincular
-            </Button>
-          );
-        }
-        return (
-          <div className="flex flex-wrap gap-1">
-            {facs.map((f) => (
-              <Badge key={f.proveedor_factura_id} variant="secondary" className="text-[10px] font-mono">
-                {f.folio_proveedor}
-              </Badge>
-            ))}
-          </div>
-        );
-      },
-    },
-  ]);
 }

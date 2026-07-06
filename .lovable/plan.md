@@ -1,56 +1,84 @@
 
-# Desglose "En detalle" inline en /compras/conciliacion
+# Conciliación factura ↔ embarque a nivel de partidas (renglones)
 
-Hoy, al hacer click en una fila de la tabla de conciliación, la app navega a `/embarques/:id` y saca al usuario del contexto de conciliación. La propuesta es abrir un **panel lateral (Sheet)** con el desglose del embarque, sin salir de la pantalla, para poder revisar y operar en línea.
+Hoy el panel de `/compras/conciliacion` muestra los `conceptos_costo` de un embarque con montos cotizado / real y los folios vinculados como badges. Falta la vista a **nivel de partida** (`proveedor_facturas_conceptos`), un **estatus por renglón** consistente y **totales rodados** por embarque y por moneda.
 
-## Alcance
+## Modelo mental
 
-1. Sustituir la navegación por click en la fila por la apertura de un **Sheet lateral** (drawer derecho, ancho ~`xl`) con el detalle del embarque seleccionado.
-2. Mantener disponible el "ir al embarque completo" como acción secundaria dentro del panel (botón "Abrir embarque"), para no perder el acceso actual.
-3. Dentro del panel mostrar:
-   - **Encabezado**: expediente, cliente, estado del embarque, moneda, badges de estado de conciliación.
-   - **Resumen económico**: cotizado, real facturado, diferencia, % desviación, # conceptos sin factura. Se toma tal cual de `calcularResumen` en `reconciliacionCostos.ts`.
-   - **Tabla de conceptos** (una fila por `concepto_costo`): concepto, proveedor, cotizado, real facturado, diferencia, % desviación, estado de liquidación, y lista de facturas de proveedor vinculadas (folio + monto).
-   - **Acciones por concepto**:
-     - "Vincular factura" → abre el flujo existente de captura/edición de factura de proveedor precargando ese concepto (reusa `vincularFacturaAConceptos` / pantalla de CxP).
-     - "Ver factura" en cada folio vinculado → navega a `/compras/por-aprobar` (o al detalle de factura si existe) filtrando por ese folio.
-4. Manejo de estados de carga y error del panel con `isLoading` y `EmptyState` cuando no haya conceptos.
-5. Cerrar el panel con Escape / click fuera / botón cerrar; conservar filtros de la lista al cerrar.
+```text
+Embarque
+ ├─ concepto_costo #1 (cotizado)         ← "renglón cotizado"
+ │    ├─ pfc partida A (Fac F-001, $500)  ← "renglón real"
+ │    └─ pfc partida B (Fac F-002, $400)
+ └─ concepto_costo #2 (cotizado)
+      └─ (sin partidas)
+```
+
+## Estatus por renglón
+
+- **Renglón cotizado (`concepto_costo`)**:
+  - `Sin match` — no tiene ninguna partida PFC vinculada.
+  - `Parcial` — `real < cotizado * 0.99`.
+  - `Conciliado` — `|real − cotizado| ≤ 1%` del cotizado.
+  - `Excedente` — `real > cotizado * 1.01` (nos pasamos).
+- **Renglón real (`proveedor_facturas_conceptos`)**:
+  - `Vinculado` — tiene `concepto_costo_id` y ese concepto existe / mismo embarque / misma moneda.
+  - `Huérfano` — sin `concepto_costo_id`, o cruza embarques / moneda distinta.
+
+Los umbrales (1%) reusan el criterio ya presente (`vincularFacturaAConceptos` usa 99% para auto-liquidar).
+
+## Alcance funcional
+
+1. Extender `ConciliacionDetalleSheet` (`src/features/compras/routes/_sections/ConciliacionDetalleSheet.tsx`) para que cada renglón cotizado se pueda **expandir** y mostrar sus partidas reales debajo (una sub-tabla), no sólo los folios como badges.
+2. Reemplazar la columna "Estado" (hoy `estado_liquidacion` crudo) por el **estatus de conciliación por renglón** (Sin match / Parcial / Conciliado / Excedente) con color semántico.
+3. Añadir un **bloque de totales** al pie del sheet: Cotizado, Real, Diferencia, % desviación, # renglones por estatus (Sin match / Parcial / Conciliado / Excedente) y # partidas huérfanas si aplica. Segregar por moneda cuando el embarque mezcle MXN + USD.
+4. Añadir columna "Huérfanas" en el KPI del panel: partidas PFC del embarque cuyo `concepto_costo_id` es NULL o apunta a otro embarque (se detectan comparando el embarque de la factura vs el del concepto).
+5. Los datos vienen del servicio existente `fetchReconciliacionEmbarque`; se **enriquece** para traer también `descripcion` y `fecha_emision` de la factura por partida (hoy sólo trae `folio_proveedor`).
 
 ## Detalles técnicos
 
-- **Nuevo componente**: `src/features/compras/routes/_sections/ConciliacionDetalleSheet.tsx`.
-  - Recibe `embarqueId | null` y `onClose`. Usa `Sheet` de `@/components/ui/sheet` (side="right", `w-full sm:max-w-3xl`).
-  - Dispara `useQuery(["compras","conciliacion-detalle", embarqueId], () => fetchReconciliacionEmbarque(embarqueId))` reutilizando `src/features/embarques/services/reconciliacionCostos.ts` (ya existe, ya testeado). No se crea servicio nuevo.
-  - Renderiza resumen calculado con `calcularResumen(filas)` (función pura existente).
-  - Tabla con `DataTable` (density compact) siguiendo estándares del proyecto.
-- **Edición de ComprasConciliacion.tsx**:
-  - Reemplazar `onRowClick={row => navigate(...)}` por `onRowClick={row => setDetalleEmbarqueId(row.embarque_id)}`.
-  - Añadir estado local `detalleEmbarqueId` y montar `<ConciliacionDetalleSheet embarqueId={detalleEmbarqueId} onClose={() => setDetalleEmbarqueId(null)} />`.
-  - Botón "Abrir embarque" dentro del sheet navega a `/embarques/:id` (comportamiento anterior, ahora opcional).
-- **Vincular factura desde el panel**: en Fase 1 el botón navega a `/compras/por-aprobar?embarque=<id>&concepto=<id>` (query params ya consumidos por la bandeja o se agregan si no existen). No se modifica lógica de negocio; sólo se pasa contexto por URL.
-- **Tests**:
-  - Unit test del componente `ConciliacionDetalleSheet` con mocks del servicio (`fetchReconciliacionEmbarque`) — loading, empty y con datos.
-  - Ajustar el smoke test existente de `ComprasConciliacion` si aplica (no debería romperse, sólo cambia handler de click).
-- **Estilos**: usar tokens semánticos (sin colores hardcoded). Reusar badges de estado existentes.
-- **Versionado**: bump `APP_VERSION` a `13.184.0` y entrada en `CHANGELOG.md`:
-  - `Conciliación de compras: desglose por embarque ahora se abre en un panel lateral sin salir de /compras/conciliacion.`
+- **`src/features/embarques/services/reconciliacionCostos.ts`**
+  - Extender `FacturaVinculada` con `descripcion: string | null` y `fecha_emision: string | null` (ya viven en `proveedor_facturas`/`proveedor_facturas_conceptos`).
+  - Ajustar el `select` del embed `proveedor_facturas(id, folio_proveedor, deleted_at, fecha_emision)` y traer `descripcion` de la propia PFC.
+  - Nueva función pura `clasificarRenglon(cotizado, real, tieneFacturas): "sin_match" | "parcial" | "conciliado" | "excedente"` con umbral ±1% (constante exportada `TOLERANCIA_CONCILIACION = 0.01`).
+  - Añadir campo `estatus_renglon` en `FilaReconciliacion` calculado con la función anterior. La función es pura y testeable.
+  - Nueva función pura `calcularResumenPorEstatus(filas)` que devuelve `{ sin_match, parcial, conciliado, excedente }` (conteos).
+  - Nueva query `fetchPartidasHuerfanas(embarqueId)`: `proveedor_facturas_conceptos` cuyo `proveedor_factura_id` apunta a factura de este embarque, pero `concepto_costo_id` es NULL o su `conceptos_costo.embarque_id` es distinto. Devuelve el conteo (para KPI) — sin edición.
+- **`ConciliacionDetalleSheet.tsx`**
+  - Cambiar la columna "Facturas" por un ícono de expandir (chevron) — al hacer click se muestra debajo la sub-tabla de partidas: `folio · fecha · descripción · monto · % del cotizado`.
+  - Cambiar la columna "Estado" por `estatus_renglon` con badges de color: destructive (Sin match / Excedente), warning (Parcial), success (Conciliado).
+  - Añadir fila de **totales** en la parte inferior de la tabla (fuera del `DataTable`, en un `div` con grid), separando por moneda si `filas` mezcla monedas.
+  - Añadir tarjeta compacta con el desglose por estatus (4 números coloreados) al lado del resumen económico existente.
+- **Cambios de datos**: ninguno en BD; sin migraciones. Toda la clasificación es cliente/derivada.
+- **Tests** (unitarios, sin Supabase):
+  - `clasificarRenglon`: casos borde 0 cotizado, negativos, umbral inferior/superior.
+  - `calcularResumenPorEstatus`: mezcla de filas.
+  - `buildFilasReconciliacion`: verificar que `estatus_renglon` se popula correctamente con los nuevos casos.
+- **Versionado**: bump `APP_VERSION` a `13.185.0` + entrada en `CHANGELOG.md`.
 
-## Fuera de alcance (para próximo lote)
+## Fuera de alcance
 
-- Editar montos de conceptos/facturas desde el panel (sólo lectura + navegación a captura).
-- Filtros dentro del panel (moneda/estado de línea) — se puede añadir después si se necesita.
-- Cambios en RLS o servicios de base de datos.
+- Editar/mover partidas entre `conceptos_costo` desde el panel (drag & drop). Sólo lectura + navegación a `/compras/por-aprobar` para corregir.
+- Split de partidas (una partida cubre dos conceptos_costo con proporciones). Sigue siendo 1 PFC → 1 concepto_costo.
+- Cambios en el flujo de auto-liquidación (`vincularFacturaAConceptos`): mantiene su umbral de 99% actual.
+- Persistir el estatus del renglón en BD: se deriva en runtime.
 
-## Diagrama
+## Diagrama de UI
 
 ```text
-/compras/conciliacion
-┌───────────────────────────────────────────┐   ┌──────────────── Sheet ────────────────┐
-│ KPIs + Filtros                            │   │ Expediente · Cliente · [Abrir embarque]│
-│ ┌───────────────────────────────────────┐ │   │ Resumen: cotizado / real / Δ / %      │
-│ │ Fila embarque  ← click abre panel ───►│ │──►│ Tabla conceptos_costo:                │
-│ │ Fila embarque                          │ │   │  concepto · prov · cot · real · Δ · % │
-│ └───────────────────────────────────────┘ │   │  [Vincular factura] [Ver folios]      │
-└───────────────────────────────────────────┘   └──────────────────────────────────────┘
+┌──────────────── Sheet /compras/conciliacion ────────────────┐
+│ Expediente · Cliente · [Abrir embarque]                     │
+│ ┌─Resumen────────┐  ┌─Estatus renglones─────────────────┐   │
+│ │ Cot / Real / Δ │  │ ●Sin match 2  ●Parcial 1 ●OK 4    │   │
+│ │ %              │  │ ●Excedente 1  Huérfanas 0         │   │
+│ └────────────────┘  └───────────────────────────────────┘   │
+│ Concepto     Cot    Real   Δ     %     Estatus              │
+│ ▸ Flete      1,000  1,000  0    0%    ● Conciliado          │
+│ ▾ Maniobras  500    650   +150 +30%   ● Excedente           │
+│      F-001 · 12-may · Maniobras origen  ·  400              │
+│      F-002 · 20-may · Maniobras destino ·  250              │
+│ ▸ Custodia   300      0  -300 -100%   ● Sin match           │
+│ ────────────────────────────────────────────                │
+│ TOTAL MXN    1,800  1,650  -150 -8.3%                       │
+└─────────────────────────────────────────────────────────────┘
 ```
