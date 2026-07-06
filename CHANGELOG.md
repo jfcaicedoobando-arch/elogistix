@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.190.0] - 2026-07-06
+
+- **CxP — Ola 2 · Item 3 · Conciliación bancaria en detalle de factura** (cierra Ola 2). La tabla de pagos del detalle CxP gana una columna **Banco** con badge de conciliación:
+  - Cuando el pago ya tiene un movimiento BBVA vinculado se muestra ✅ *Conciliado* con fecha, monto y referencia del movimiento, más un botón para **desvincular** (usa `desconciliarMovimiento`).
+  - Cuando no hay movimiento, aparece **Vincular banco** que abre un popover con los candidatos: cargos Pendientes en la misma cuenta bancaria del pago, con monto ±$1 y fecha ±5 días, ordenados por Δ monto + Δ días. Al elegir uno se llama `conciliarConPago(movId, "cxp", pagoId)` que marca el movimiento como Conciliado y guarda usuario/fecha.
+- **Servicios**. Nuevo `sugerirMovsParaPagoProveedor` (reusa `TOLERANCIA_MONTO_MXN`/`TOLERANCIA_DIAS` de tesorería) y nuevo componente `ConciliacionPagoCell`. `listarPagosProveedor` ahora incluye el embed inverso `bbva_movimientos!bbva_movimientos_pago_proveedor_id_fkey(...)` para conocer el movimiento vinculado sin queries extra; filtra pagos borrados y devuelve `PagoProveedorConMov`.
+- **Ola 2 cerrada.** Items completados: Auto-liquidación (13.188.0), Programación de pagos (13.188.0 + 13.188.1), Cancelación de factura de proveedor (13.189.0) y Conciliación bancaria en detalle (esta versión). Próximo: Ola 3 (retenciones, DIOT, REP recibido, aging CxC, respaldo XML).
+
 ## [13.189.0] - 2026-07-06
 
 - **CxP — Ola 2 · Item 4 · Cancelación de factura de proveedor**. Nueva RPC `cancelar_factura_proveedor(p_factura_id, p_motivo)` (SECURITY DEFINER, `search_path=public`) que valida permisos por organización, exige motivo, bloquea la cancelación si hay pagos activos, cancela automáticamente las NCs asociadas (revierte NC), marca la factura como `Cancelada` con `fecha_cancelacion` / `motivo_cancelacion` / `cancelada_por`, y deja que el trigger `trg_proveedor_facturas_recalc_liq` limpie los conceptos del embarque. Registra la acción en `bitacora_actividad` cuando la tabla existe.
