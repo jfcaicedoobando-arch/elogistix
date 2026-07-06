@@ -16,6 +16,7 @@ import {
   safeEqual,
   type FacturapiWebhookEvent,
 } from "./helpers.ts";
+import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
