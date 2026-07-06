@@ -1,33 +1,32 @@
-## Qué hace "Sustituir CFDI"
+## Qué encontré
 
-Cuando una factura ya está timbrada pero salió con un error (RFC/monto/concepto), el SAT no permite editarla — hay que emitir una NUEVA factura correcta y cancelar la vieja apuntando a la nueva (motivo **01 · Comprobante con errores con relación**). El botón "Sustituir CFDI" es el asistente que hace ese flujo en tres pasos:
+El correo SÍ se generó y encoló, pero **está atorado en la cola porque el worker que envía no puede autenticarse**. Ninguno de los 6 destinatarios ha recibido nada.
 
-1. **Duplica** la factura como un borrador editable (RPC `duplicar_factura_para_sustitucion`), copiando conceptos y datos del cliente.
-2. Te lleva al detalle del borrador para que la corrijas y la **timbres**.
-3. Regresa al diálogo para **cancelar el CFDI original** referenciando el UUID de la sustituta. La original queda marcada como `Sustituida`.
+### Evidencia
 
-Analogía: es como cuando escribes mal un cheque — no lo tachas, escribes uno nuevo con la corrección y cancelas el primero anotando "reemplazado por el cheque X". Aquí el sistema hace ese "anotado" formal ante el SAT.
+1. `send-transactional-email` encoló los 6 mensajes de F955 a las 23:23 UTC (log: "Transactional email enqueued" x6): `erika@indimextrading.com` (principal), y CC a `karol.hernandez`, `alan.hernandez`, `accounting`, `juanluis.martinez`, `marta.sarmiento` en `elogistixshipping.com`.
+2. `factura_envios` guardó el registro con `estado='enviado'` y los links firmados — pero eso sólo significa "encolado", no "entregado".
+3. `email_send_log` tiene los 6 mensajes con status **`pending`** desde hace ~6 min. Ninguno pasó a `sent`, `failed`, ni `dlq`.
+4. `process-email-queue` está siendo despertado cada 5s por cron: bootea y hace shutdown inmediato **sin loguear ni un batch procesado, ni un error, ni un envío**. Cero salida útil.
 
-## Problema del layout en F955
+### Causa
 
-F955 es timbrada y no cancelada, así que se renderizan 6 botones: `PDF · XML | Email · Ver embarque | Sustituir · Cancelar`. El grupo destructivo (Sustituir + Cancelar) usa `ml-auto` para empujarse al extremo derecho. En viewports intermedios (≈1080 px) eso genera dos problemas:
+`process-email-queue` valida un JWT `service_role` en `verifyServiceRoleToken` (queueAuth.ts). Si falla, devuelve 403 y termina — el catch traga los errores. El síntoma "bootea/muere en silencio cada 5s con la cola llena" coincide **exactamente** con el escenario documentado en la guía de infraestructura de email: *"Si Supabase rota el service-role key y el procesamiento del queue empieza a regresar 401/403, llamar `email_domain--setup_email_infra` de nuevo. Es seguro/idempotente y refresca el secreto de Vault `email_queue_service_role_key`."*
 
-- **Sin wrap**: queda un hueco enorme entre "Ver embarque" y "Sustituir CFDI".
-- **Con wrap**: el grupo destructivo salta a una segunda línea pegado a la derecha, desalineado del resto.
-
-Además faltan divisores visuales entre los grupos "Contexto" y "Destructivo".
+Analogía: el mensajero llega puntual cada 5 segundos a recoger la valija de correos, pero el guardia no reconoce su credencial y lo regresa sin decir por qué. Los correos siguen en la valija sin salir.
 
 ## Cambio
 
-`src/features/facturacion/components/detalle/FacturaDetalleActions.tsx`:
+1. **Ejecutar `email_domain--setup_email_infra`** para refrescar el secreto `email_queue_service_role_key` en Vault (no toca código, no borra la cola, no re-crea nada — sólo re-sincroniza credenciales).
+2. Esperar el próximo tick (~5–10 s) y verificar que:
+   - Los 6 registros en `email_send_log` pasen de `pending` → `sent`.
+   - `process-email-queue` logs muestren un batch procesado.
+3. Si algún destinatario está en `suppressed_emails` (bounce previo, etc.), quedará en `suppressed` — te lo reporto explícitamente.
 
-- Quitar `ml-auto` del grupo destructivo (línea 142) y convertirlo en un fragmento como los demás grupos.
-- Anteponer un `<Divider />` cuando algún grupo previo esté visible (mismo patrón que ya usan los grupos 3 y 4).
-- Resultado: los 5 grupos fluyen con `flex-wrap items-center gap-2` y separadores consistentes, sin empujar la mitad al extremo derecho.
-
-Bump `APP_VERSION` a `13.205.11` y entrada en `CHANGELOG.md`.
+La TTL de emails transaccionales es 60 min y llevan ~6 min; **hay margen amplio** para que se envíen sin caer al DLQ. No hay que re-enviar la factura desde la UI.
 
 ## Fuera de alcance
 
-- No cambia la lógica de cuáles botones se muestran ni sus permisos.
-- No se toca el color destructivo de "Cancelar CFDI"/"Eliminar borrador".
+- No modifico código ni templates de email.
+- No cambio la lógica de `factura_envios`.
+- Si tras el refresh siguen sin salir, escalo con evidencia (logs específicos) antes de tocar la cola manualmente.
