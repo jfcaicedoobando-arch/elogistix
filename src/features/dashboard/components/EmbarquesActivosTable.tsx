@@ -101,7 +101,6 @@ const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<Embarq
 ]);
 
 export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinancials = false }: Props) {
-  const navigate = useNavigate();
   const nombreMesCap = resumen.nombreMes
     ? resumen.nombreMes.charAt(0).toUpperCase() + resumen.nombreMes.slice(1)
     : "Próximo mes";
