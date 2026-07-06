@@ -11,7 +11,6 @@
  *   assertOrgScoped(mock.tableCalls, "embarques", "org-1");
  */
 import { expect } from "vitest";
-// eslint-disable-next-line no-restricted-imports -- helper de tests accede directo al mock compartido
 import type { TableCall } from "@/services/__tests__/_supabaseChainMock";
 
 export function assertOrgScoped(
