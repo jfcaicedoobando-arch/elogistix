@@ -128,14 +128,14 @@ export function useEmbarquesPageController() {
 
       notifySuccess(toast, {
         title: "CSV exportado",
-        description: `${filtradosPorEstado.length} embarques exportados con los filtros actuales.`,
+        description: `${filtradosFinal.length} embarques exportados con los filtros actuales.`,
       });
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al exportar", description: getErrorMessage(err), error: err, method: "USE_EMBARQUES_PAGE_CONTROLLER" });
     } finally {
       setExportandoCsv(false);
     }
-  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.fechaDesde, state.fechaHasta, toast]);
+  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.filterAlerta, state.alertIdSet, state.fechaDesde, state.fechaHasta, toast]);
 
   return {
     state,
