@@ -21,7 +21,19 @@ describe("verificarUuidSat", () => {
     expect(r.estatus).toBe("Vigente");
     expect(supabaseMock.functions.invoke).toHaveBeenCalledWith(
       "verificar-uuid-sat",
-      { body: { factura_id: "fact-1" } },
+      { body: { factura_id: "fact-1", tipo: "cxp" } },
+    );
+  });
+
+  it("α.1 — envía tipo=cxc cuando se solicita para CFDI emitido", async () => {
+    supabaseMock.functions.invoke.mockResolvedValue({
+      data: { estatus: "Vigente", raw: "S - 200 | Vigente" },
+      error: null,
+    });
+    await verificarUuidSat("cxc-1", "cxc");
+    expect(supabaseMock.functions.invoke).toHaveBeenCalledWith(
+      "verificar-uuid-sat",
+      { body: { factura_id: "cxc-1", tipo: "cxc" } },
     );
   });
 
