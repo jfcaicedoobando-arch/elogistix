@@ -84,6 +84,7 @@ export const appRoutes = (
     <Route path="/compras/proveedores/:id" element={<ProveedorDetalle />} />
     <Route path="/compras/aging" element={guarded(COMPRAS_READ_ROLES, <CxpAging />)} />
     <Route path="/compras/reportes" element={guarded(FINANCE_READ_ROLES, <ComprasReportes />)} />
+    <Route path="/compras/conciliacion" element={guarded(COMPRAS_READ_ROLES, <ComprasConciliacion />)} />
 
     {/* Redirects legacy — preservan querystring (ej: ?aprobacion=pendiente) */}
     <Route path="/cxp" element={<RedirectPreserveSearch to="/compras/facturas" />} />
