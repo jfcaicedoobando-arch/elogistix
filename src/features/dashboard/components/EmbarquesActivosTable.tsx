@@ -182,7 +182,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
           data={embarques}
           isLoading={isLoading}
           emptyMessage={`Sin embarques con ETA en ${nombreMesCap}`}
-          onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+          getRowHref={(e) => `/embarques/${e.id}`}
           rowKey={(e) => e.id}
           density="compact"
         />
