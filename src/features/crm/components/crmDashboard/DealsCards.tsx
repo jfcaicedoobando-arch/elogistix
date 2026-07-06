@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
 import { Target, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 
 interface DealItem {
   id: string;
