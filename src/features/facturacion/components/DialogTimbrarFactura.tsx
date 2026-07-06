@@ -110,6 +110,19 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     });
     timbrar.mutate(facturaId, {
       onSuccess: async () => {
+        // Best-effort: guarda los valores usados como preferencia del cliente
+        // para prellenar la siguiente factura. No debe romper el flujo si falla.
+        if (factura.cliente_id) {
+          try {
+            await guardarDefaultsTimbradoCliente(factura.cliente_id, {
+              uso_cfdi_default: usoCfdi,
+              forma_pago_default: formaPago,
+              metodo_pago_default: metodoPago,
+            });
+          } catch (err) {
+            console.warn("[timbrado] no se guardaron los defaults del cliente:", err);
+          }
+        }
         if (enviarEmail) {
           try {
             const r = await enviarCfdiFactura(facturaId);
