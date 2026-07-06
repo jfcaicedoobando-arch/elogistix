@@ -44,6 +44,8 @@ interface Props {
   labelBotonReenviar?: string;
   esReenvio?: boolean;
   loading?: boolean;
+  /** Correos a precargar en el campo CC (heredados del cliente / última factura). */
+  ccInicial?: string[] | null;
   onEnviar: (payload: EnviarDocumentoPayload, form: EnvioFormState) => Promise<void> | void;
 }
 
@@ -51,9 +53,9 @@ export function EnviarDocumentoDialog({
   open, onOpenChange, clienteId, titulo, descripcion,
   buildAsuntoInicial, mostrarMarcarEnviada, labelMarcarEnviada,
   labelBotonEnviar = "Enviar", labelBotonReenviar = "Reenviar",
-  esReenvio, loading, onEnviar,
+  esReenvio, loading, ccInicial, onEnviar,
 }: Props) {
-  const form = useEnvioDocumentoForm(open, clienteId, buildAsuntoInicial);
+  const form = useEnvioDocumentoForm(open, clienteId, buildAsuntoInicial, ccInicial);
 
   const puedeEnviar = form.destinatarios.length > 0 && !loading;
 
