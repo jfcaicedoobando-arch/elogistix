@@ -7,7 +7,6 @@
  * Un click en una fila lleva al detalle del embarque para operar los conceptos.
  */
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { GitCompare, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
