@@ -54,6 +54,12 @@ export function useEnvioDocumentoForm(
   open: boolean,
   clienteId: string | null,
   buildAsuntoInicial: () => string,
+  /**
+   * Correos CC a precargar cuando se abre el dialog (además del usuario logueado).
+   * Se usa para heredar los CC de la última factura enviada al mismo cliente
+   * (o los guardados como preferencia). Editable por el usuario.
+   */
+  ccInicial?: string[] | null,
 ): EnvioFormState {
   const { user } = useAuth();
 
@@ -72,13 +78,23 @@ export function useEnvioDocumentoForm(
   const [mensaje, setMensaje] = useState("");
   const [marcarEnviada, setMarcarEnviada] = useState(true);
 
+  // Serializamos `ccInicial` a string estable para no re-disparar el efecto
+  // cuando el caller reconstruye el array pero el contenido es idéntico.
+  const ccInicialKey = (ccInicial ?? []).join(",");
+
   useEffect(() => {
     if (!open) return;
     setAsunto(buildAsuntoInicial());
     setMensaje("");
     setEmailManual("");
     setEmailsManualesAgregados([]);
-    setCcManual("");
+    // Precargamos CC con los correos heredados (última factura / preferencia
+    // del cliente), excluyendo al usuario logueado (que ya se agrega solo).
+    const userEmailLc = user?.email?.toLowerCase();
+    const precargaCc = (ccInicial ?? [])
+      .map((e) => e.trim())
+      .filter((e) => EMAIL_RE.test(e) && e.toLowerCase() !== userEmailLc);
+    setCcManual(precargaCc.join(", "));
     const pre: Record<string, boolean> = {};
     const principal = contactos.find((c) => c.id === CLIENTE_PRINCIPAL_ID);
     const prioridad = contactos.find(esContactoPrioridadCliente);
@@ -86,7 +102,7 @@ export function useEnvioDocumentoForm(
     else if (prioridad) pre[prioridad.id] = true;
     setSeleccionados(pre);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, contactos]);
+  }, [open, contactos, ccInicialKey]);
 
   const agregarManual = () => {
     const v = emailManual.trim();

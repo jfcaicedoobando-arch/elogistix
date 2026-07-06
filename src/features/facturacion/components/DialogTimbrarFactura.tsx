@@ -11,7 +11,10 @@ import { useFactura } from "@/features/facturacion/hooks/useFactura";
 import {
   fetchClienteFiscal,
   actualizarDatosTimbradoFactura,
+  fetchDefaultsFacturacionCliente,
+  guardarDefaultsTimbradoCliente,
   type ClienteFiscalRow,
+  type DefaultsFacturacionCliente,
 } from "@/features/facturacion/services";
 import { enviarCfdiFactura } from "@/features/facturacion/services/enviarCfdiEmail";
 import { useQuery } from "@tanstack/react-query";
@@ -40,10 +43,21 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     queryFn: () => fetchClienteFiscal(factura!.cliente_id),
   });
 
+  // Defaults resueltos (preferencia guardada del cliente > última factura timbrada).
+  // Se usan como fallback cuando la factura aún no tiene uso_cfdi/forma_pago/metodo_pago.
+  const { data: defaults } = useQuery<DefaultsFacturacionCliente | null>({
+    queryKey: ["cliente_defaults_facturacion", factura?.cliente_id],
+    enabled: !!factura?.cliente_id,
+    queryFn: () => fetchDefaultsFacturacionCliente(factura!.cliente_id),
+    staleTime: 30_000,
+  });
+
   const { toast } = useToast();
-  const [usoCfdi, setUsoCfdi] = useState(factura?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
-  const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? "03");
-  const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? "PUE");
+  const [usoCfdi, setUsoCfdi] = useState(
+    factura?.uso_cfdi ?? defaults?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03",
+  );
+  const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? defaults?.forma_pago ?? "03");
+  const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? defaults?.metodo_pago ?? "PUE");
   const [enviarEmail, setEnviarEmail] = useState(true);
   // Modo inteligente: si todo está listo mostramos confirmación compacta;
   // "Editar datos fiscales" abre el modo completo (analogía: firmar contrato
@@ -57,14 +71,23 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   // fallbacks (G03/03/PUE) cuando se monta antes de que useFactura resuelva.
   useEffect(() => {
     if (!factura) return;
-    setUsoCfdi(factura.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
-    setFormaPago(factura.forma_pago ?? "03");
-    setMetodoPago(factura.metodo_pago ?? "PUE");
+    setUsoCfdi(factura.uso_cfdi ?? defaults?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
+    setFormaPago(factura.forma_pago ?? defaults?.forma_pago ?? "03");
+    setMetodoPago(factura.metodo_pago ?? defaults?.metodo_pago ?? "PUE");
     setModoExpandido(false);
     // Nos apoyamos en las claves granulares para evitar re-disparos por
     // cambios de identidad del objeto `factura` (query invalidations).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [factura?.id, factura?.uso_cfdi, factura?.forma_pago, factura?.metodo_pago, cliente?.uso_cfdi_default]);
+  }, [
+    factura?.id,
+    factura?.uso_cfdi,
+    factura?.forma_pago,
+    factura?.metodo_pago,
+    cliente?.uso_cfdi_default,
+    defaults?.uso_cfdi,
+    defaults?.forma_pago,
+    defaults?.metodo_pago,
+  ]);
 
   if (!facturaId || !factura) return null;
 
@@ -87,6 +110,19 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
     });
     timbrar.mutate(facturaId, {
       onSuccess: async () => {
+        // Best-effort: guarda los valores usados como preferencia del cliente
+        // para prellenar la siguiente factura. No debe romper el flujo si falla.
+        if (factura.cliente_id) {
+          try {
+            await guardarDefaultsTimbradoCliente(factura.cliente_id, {
+              uso_cfdi_default: usoCfdi,
+              forma_pago_default: formaPago,
+              metodo_pago_default: metodoPago,
+            });
+          } catch (err) {
+            console.warn("[timbrado] no se guardaron los defaults del cliente:", err);
+          }
+        }
         if (enviarEmail) {
           try {
             const r = await enviarCfdiFactura(facturaId);

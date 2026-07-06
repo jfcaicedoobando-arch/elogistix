@@ -3,11 +3,20 @@
  * (PDF y XML como enlaces firmados con TTL 30 días). Usa el dialog compartido
  * `EnviarDocumentoDialog` para homologar el design language con cotizaciones
  * y proformas.
+ *
+ * Recuerda los CC del cliente: al abrir precarga los correos guardados como
+ * preferencia (`clientes.email_cc_default`) o, si no existen, los del último
+ * envío. Al éxito los persiste como nueva preferencia (best-effort).
  */
+import { useQuery } from "@tanstack/react-query";
 import { EnviarDocumentoDialog } from "@/components/shared/emails/EnviarDocumentoDialog";
 import { useEnviarFacturaEmail } from "@/features/facturacion/hooks/mutations/useEnviarFacturaEmail";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCurrency } from "@/lib/formatters/numbers";
+import {
+  fetchDefaultsFacturacionCliente,
+  guardarDefaultsCcCliente,
+} from "@/features/facturacion/services";
 import type { Tables } from "@/integrations/supabase/types";
 
 type FacturaLite = Pick<
@@ -26,6 +35,13 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
   const { user } = useAuth();
   const mutation = useEnviarFacturaEmail(factura.id);
 
+  const { data: defaults } = useQuery({
+    queryKey: ["cliente_defaults_facturacion", factura.cliente_id],
+    enabled: !!factura.cliente_id && open,
+    queryFn: () => fetchDefaultsFacturacionCliente(factura.cliente_id!),
+    staleTime: 30_000,
+  });
+
   const totalFormateado = factura.total != null && factura.moneda
     // SAFE-CAST: factura.moneda es enum moneda validado en BD.
     ? formatCurrency(Number(factura.total), factura.moneda as "MXN" | "USD" | "EUR")
@@ -41,6 +57,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
       buildAsuntoInicial={() => `Factura ${factura.numero}`}
       esReenvio={esReenvio}
       loading={mutation.isPending}
+      ccInicial={defaults?.cc_emails ?? null}
       onEnviar={async (payload) => {
         try {
           await mutation.mutateAsync({
@@ -55,6 +72,17 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
               email: user?.email ?? undefined,
             },
           });
+          // Best-effort: guarda como preferencia del cliente los CC finales
+          // (excluyendo al usuario logueado, que se agrega automáticamente).
+          if (factura.cliente_id) {
+            const userEmailLc = user?.email?.toLowerCase();
+            const ccPersist = payload.cc.filter((e) => e.toLowerCase() !== userEmailLc);
+            try {
+              await guardarDefaultsCcCliente(factura.cliente_id, ccPersist);
+            } catch (err) {
+              console.warn("[envio-factura] no se guardaron los CC del cliente:", err);
+            }
+          }
           onOpenChange(false);
         } catch {
           /* toast en hook */

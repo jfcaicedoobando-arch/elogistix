@@ -32,6 +32,13 @@ export type { FacturaParaZip } from "./masivas";
 export {
   fetchClienteFiscal,
   actualizarDatosTimbradoFactura,
+  fetchDefaultsFacturacionCliente,
+  guardarDefaultsTimbradoCliente,
+  guardarDefaultsCcCliente,
 } from "./datosFiscalesCliente";
-export type { ClienteFiscalRow, DatosTimbradoPatch } from "./datosFiscalesCliente";
+export type {
+  ClienteFiscalRow,
+  DatosTimbradoPatch,
+  DefaultsFacturacionCliente,
+} from "./datosFiscalesCliente";
 export * from "./cobranza";
