@@ -1,7 +1,6 @@
 /**
  * Hook controller para DialogNuevaFacturaProveedor.
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
- * Helpers puros viven en `useNuevaFacturaProveedorForm.helpers.ts`.
  */
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -9,10 +8,8 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import {
-  type CfdiParsedResponse,
-  type ConceptoCostoAbierto,
-  existeFacturaDuplicada,
-  validarCuadreCfdi,
+  type CfdiParsedResponse, type ConceptoCostoAbierto,
+  existeFacturaDuplicada, validarCuadreCfdi,
 } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
@@ -22,14 +19,8 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmba
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { uploadCfdiSafe, vincularSafe } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
-  type PendingCfdi,
-  type VinculoLinea,
-  addDays,
-  initialValues,
-  calcularTotal,
-  validateFactura,
-  buildPayload,
-  mapCfdiToValues,
+  type PendingCfdi, type VinculoLinea,
+  addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
 } from "./useNuevaFacturaProveedorForm.helpers";
 
 type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
