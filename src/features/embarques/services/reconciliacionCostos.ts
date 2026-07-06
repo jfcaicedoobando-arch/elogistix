@@ -86,6 +86,28 @@ export function calcularDesviacionPct(cotizado: number, real: number): number {
   return ((real - cotizado) / cotizado) * 100;
 }
 
+/**
+ * Clasifica un renglón cotizado según el monto realmente facturado por
+ * proveedor. Umbral ±`TOLERANCIA_CONCILIACION` (1%) para absorber redondeo/IVA.
+ * - Sin match: no hay ninguna partida vinculada.
+ * - Conciliado: |real − cotizado| ≤ 1% del cotizado (o ambos 0).
+ * - Excedente: real > cotizado * (1 + tolerancia).
+ * - Parcial: cualquier otro caso con al menos una partida vinculada.
+ */
+export function clasificarRenglon(
+  cotizado: number,
+  real: number,
+  tieneFacturas: boolean,
+): EstatusRenglon {
+  if (!tieneFacturas) return "sin_match";
+  if (cotizado <= 0) return real > 0 ? "excedente" : "conciliado";
+  const superior = cotizado * (1 + TOLERANCIA_CONCILIACION);
+  const inferior = cotizado * (1 - TOLERANCIA_CONCILIACION);
+  if (real > superior) return "excedente";
+  if (real < inferior) return "parcial";
+  return "conciliado";
+}
+
 export function buildFilasReconciliacion(
   conceptos: CCRow[],
   vinculos: PFCRow[],
@@ -97,6 +119,8 @@ export function buildFilasReconciliacion(
     arr.push({
       proveedor_factura_id: v.proveedor_facturas.id,
       folio_proveedor: v.proveedor_facturas.folio_proveedor,
+      fecha_emision: v.proveedor_facturas.fecha_emision ?? null,
+      descripcion: v.descripcion ?? null,
       monto: Number(v.monto) || 0,
     });
     porConcepto.set(v.concepto_costo_id, arr);
@@ -116,6 +140,7 @@ export function buildFilasReconciliacion(
       diferencia,
       desviacion_pct: calcularDesviacionPct(cotizado, real),
       estado_liquidacion: c.estado_liquidacion,
+      estatus_renglon: clasificarRenglon(cotizado, real, facs.length > 0),
       facturas: facs,
     };
   });
@@ -137,6 +162,30 @@ export function calcularResumen(filas: FilaReconciliacion[]): ResumenReconciliac
   };
 }
 
+export function calcularResumenPorEstatus(filas: FilaReconciliacion[]): ResumenPorEstatus {
+  const r: ResumenPorEstatus = { sin_match: 0, parcial: 0, conciliado: 0, excedente: 0 };
+  for (const f of filas) r[f.estatus_renglon] += 1;
+  return r;
+}
+
+/** Totales agrupados por moneda (los montos de distintas monedas no se suman). */
+export function calcularResumenPorMoneda(filas: FilaReconciliacion[]): ResumenPorMoneda[] {
+  const map = new Map<string, ResumenPorMoneda>();
+  for (const f of filas) {
+    const cur = map.get(f.moneda) ?? {
+      moneda: f.moneda, cotizado: 0, real: 0, diferencia: 0, desviacion_pct: 0,
+    };
+    cur.cotizado += f.cotizado;
+    cur.real += f.real_facturado;
+    map.set(f.moneda, cur);
+  }
+  return Array.from(map.values()).map((m) => ({
+    ...m,
+    diferencia: m.real - m.cotizado,
+    desviacion_pct: calcularDesviacionPct(m.cotizado, m.real),
+  }));
+}
+
 export async function fetchReconciliacionEmbarque(
   embarqueId: string,
 ): Promise<FilaReconciliacion[]> {
@@ -154,9 +203,42 @@ export async function fetchReconciliacionEmbarque(
   const ids = conceptos.map((c) => c.id);
   const { data: pfc, error: errPfc } = await supabase
     .from("proveedor_facturas_conceptos")
-    .select("monto, concepto_costo_id, proveedor_facturas(id, folio_proveedor, deleted_at)")
+    .select("monto, concepto_costo_id, descripcion, proveedor_facturas(id, folio_proveedor, fecha_emision, deleted_at)")
     .in("concepto_costo_id", ids);
   if (errPfc) throw errPfc;
   // SAFE-CAST: shape modelado por PFCRow a partir del select con embed.
   return buildFilasReconciliacion(conceptos, (pfc ?? []) as unknown as PFCRow[]);
+}
+
+/**
+ * Cuenta partidas de proveedor "huérfanas" para un embarque: PFC ligadas a
+ * una factura de este embarque, pero cuyo `concepto_costo_id` es NULL o apunta
+ * a un concepto de OTRO embarque (data drift).
+ */
+export async function fetchPartidasHuerfanasCount(embarqueId: string): Promise<number> {
+  if (!embarqueId) return 0;
+  const { data: facturas, error: errFa } = await supabase
+    .from("proveedor_facturas")
+    .select("id")
+    .eq("embarque_id", embarqueId)
+    .is("deleted_at", null);
+  if (errFa) throw errFa;
+  const fids = (facturas ?? []).map((f) => f.id).filter((x): x is string => Boolean(x));
+  if (fids.length === 0) return 0;
+
+  const { data: pfc, error: errPfc } = await supabase
+    .from("proveedor_facturas_conceptos")
+    .select("concepto_costo_id, conceptos_costo(embarque_id)")
+    .in("proveedor_factura_id", fids);
+  if (errPfc) throw errPfc;
+
+  // SAFE-CAST: embed de conceptos_costo(embarque_id) modelado localmente.
+  type Row = { concepto_costo_id: string | null; conceptos_costo: { embarque_id: string | null } | null };
+  const rows = (pfc ?? []) as unknown as Row[];
+  let huerfanas = 0;
+  for (const r of rows) {
+    if (!r.concepto_costo_id) { huerfanas += 1; continue; }
+    if (!r.conceptos_costo || r.conceptos_costo.embarque_id !== embarqueId) huerfanas += 1;
+  }
+  return huerfanas;
 }
