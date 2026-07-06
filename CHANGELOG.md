@@ -6,6 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.0] - 2026-07-06
+
+- **Módulo Compras · Ola A verificada + Ola B (arranque)**:
+  - **Verificación Ola A**: se confirmó en BD que el trigger `trg_check_no_sobrepago` está activo sobre `pagos_proveedor`, que la RPC `cerrar_factura_proveedor_sin_pago` está desplegada y que las columnas `es_ajuste`/`motivo_ajuste` existen. La Ola A queda cerrada y en producción.
+  - **Tests Ola A** (nuevos, sin bajar coverage):
+    - `services/__tests__/cerrarFacturaSinPago.test.ts` — RPC con parámetros correctos, comentario opcional, propagación de errores y catálogo tipificado de motivos.
+    - `services/__tests__/pagosProveedorErrors.test.ts` — nuevo caso `SOBREPAGO_PROVEEDOR` (trigger BD Ola A · A3) traducido a mensaje amable.
+    - `hooks/__tests__/useCerrarFacturaSinPago.test.tsx` — éxito con `notifySuccess` + invalidaciones, y `notifyError` en fallo.
+    - `components/__tests__/CerrarFacturaSinPagoDialog.test.tsx` — doble confirmación (motivo obligatorio + texto "CERRAR").
+  - **Ola B · B1 · Drill-down de aging**: nuevo `AgingDrillDownDialog` que se abre al hacer click en una fila de proveedor en `/compras/aging`. Muestra las facturas con saldo abierto de ese proveedor con badge de cubeta (Vigente / 1-30 / 31-60 / 61-90 / >90) y botón *Exportar CSV*. Reemplaza la navegación previa por query-string (`/cxp?proveedor=…`) por un modal más rápido para el contador. Helper puro `bucketDeDias` con test unitario.
+  - **Ola B · B4 · Aprobación de facturas en lote**: nuevo hook `useAprobarFacturasLote` que corre las llamadas de forma secuencial, reporta progreso (`hecho/total`) y devuelve `{ exitos, fallos }`. Nueva columna de selección (checkbox por fila + master) en `/compras/por-aprobar` visible sólo en la pestaña *Pendientes* y para usuarios con permiso de edición. Botón *"Aprobar seleccionadas (N)"* con `AlertDialog` de confirmación que muestra conteo y totales MXN/USD. Al terminar dispara un toast con el resumen (todas ok / mixto / todas fallaron). Rechazo se conserva individual (requiere motivo).
+  - **Fuera de este ciclo**: B2 (conciliación → notificaciones internas) y B3 (layout SPEI/BBVA) quedan para el siguiente PR.
+
 ## [13.204.0] - 2026-07-06
 
 - **Módulo Compras · Ola A (candados contables)**:

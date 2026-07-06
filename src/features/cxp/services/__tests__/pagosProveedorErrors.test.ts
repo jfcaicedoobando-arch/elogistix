@@ -30,6 +30,17 @@ describe("traducirErrorPagoProveedor", () => {
     expect(traducirErrorPagoProveedor({ message: "El embarque está cerrado" })).toMatch(/cerrado/i);
   });
 
+  it("traduce SOBREPAGO_PROVEEDOR (trigger BD · Ola A · A3)", () => {
+    // El trigger `check_no_sobrepago_proveedor` emite el código en el mensaje.
+    expect(
+      traducirErrorPagoProveedor({ message: "SOBREPAGO_PROVEEDOR: monto excede el saldo pendiente" }),
+    ).toMatch(/excede el saldo pendiente/i);
+    // Variante en español que también emite el trigger.
+    expect(
+      traducirErrorPagoProveedor({ message: "el pago excede el saldo pendiente de la factura" }),
+    ).toMatch(/excede el saldo pendiente/i);
+  });
+
   it("fallback genérico cuando no hay info", () => {
     expect(traducirErrorPagoProveedor(null)).toMatch(/Inténtalo/);
     expect(traducirErrorPagoProveedor({})).toMatch(/Inténtalo/);
