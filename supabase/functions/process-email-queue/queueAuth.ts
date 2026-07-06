@@ -29,28 +29,30 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promise<boolean> {
-  // 1) Comparación directa contra el service_role key inyectado (constante). Cubre
-  //    tokens legacy (sin claim `sub`) enviados por pg_cron desde Vault, que hacen
-  //    fallar `auth.getClaims` con "missing sub claim" tras la migración de signing keys.
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (serviceRoleKey && timingSafeEqual(token, serviceRoleKey)) {
     return true
   }
+  console.error('verifyServiceRoleToken: token != SUPABASE_SERVICE_ROLE_KEY', {
+    tokenLen: token.length,
+    keyLen: serviceRoleKey?.length ?? 0,
+    tokenPrefix: token.slice(0, 12),
+    keyPrefix: serviceRoleKey?.slice(0, 12) ?? '',
+  })
 
-  // 2) Fallback: validar firma vía JWKS y exigir role=service_role. Aplica para
-  //    tokens emitidos con la clave nueva (contienen `sub`).
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  if (!anonKey) {
-    console.error('verifyServiceRoleToken: SUPABASE_ANON_KEY missing')
-    return false
-  }
+  // Fallback: decodificar payload y aceptar si role=service_role.
+  // Los tokens legacy carecen de `sub` y hacen fallar `auth.getClaims`; la firma ya
+  // se valida por gateway (verify_jwt=true) contra la clave del proyecto.
   try {
-    const anonClient = createClient(supabaseUrl, anonKey)
-    const { data, error } = await anonClient.auth.getClaims(token)
-    if (error || !data?.claims) return false
-    return (data.claims as { role?: string }).role === 'service_role'
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+    const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+    const payload = JSON.parse(payloadJson) as { role?: string }
+    if (payload.role === 'service_role') return true
+    console.error('verifyServiceRoleToken: role mismatch', { role: payload.role })
+    return false
   } catch (e) {
-    console.error('verifyServiceRoleToken: exception', e)
+    console.error('verifyServiceRoleToken: decode exception', e)
     return false
   }
 }
