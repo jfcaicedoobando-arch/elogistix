@@ -113,12 +113,23 @@ export function NotasCreditoRecientes() {
                   </thead>
                   <tbody>
                     {filtradas.map((n) => (
-                      <tr key={n.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <tr
+                        key={n.id}
+                        role="link"
+                        tabIndex={0}
+                        aria-label={`Ver factura ${n.factura_numero}`}
+                        onClick={() => navigate(`/facturacion/${n.factura_id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigate(`/facturacion/${n.factura_id}`);
+                          }
+                        }}
+                        className="border-b last:border-0 hover:bg-muted/30 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                      >
                         <td className="py-2 px-3 font-mono text-xs whitespace-nowrap">{n.folio}</td>
-                        <td className="py-2 px-3 whitespace-nowrap">
-                          <Link to={`/facturacion/${n.factura_id}`} className="text-accent hover:underline">
-                            {n.factura_numero}
-                          </Link>
+                        <td className="py-2 px-3 whitespace-nowrap font-mono text-xs">
+                          {n.factura_numero}
                         </td>
                         <td className="py-2 px-3 max-w-[200px] truncate" title={toTitleCase(n.cliente_nombre)}>
                           {toTitleCase(n.cliente_nombre)}
