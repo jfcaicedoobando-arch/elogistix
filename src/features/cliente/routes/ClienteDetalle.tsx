@@ -134,7 +134,7 @@ export default function ClienteDetalle() {
                 data={cotizacionesCliente}
                 isLoading={loadingCotizaciones}
                 emptyMessage="Sin cotizaciones registradas"
-                onRowClick={(c) => navigate(`/cotizaciones/${c.id}`)}
+                getRowHref={(c) => `/cotizaciones/${c.id}`}
                 rowKey={(c) => c.id}
                 density="compact"
               />
