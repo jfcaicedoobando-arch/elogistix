@@ -36,7 +36,13 @@ export function NextBestActionsCard({ items, isLoading }: Props) {
             {items.map((it) => {
               const Icon = ICONS[it.icono] ?? Sparkles;
               return (
-                <li key={it.id} className="flex items-center justify-between gap-3 py-2">
+                <DrilldownRow
+                  key={it.id}
+                  as="li"
+                  href={it.href}
+                  ariaLabel={`Ir a ${it.titulo}`}
+                  className="flex items-center justify-between gap-3 py-2 px-2 -mx-2 rounded-md hover:bg-muted/50"
+                >
                   <div className="flex items-start gap-3 min-w-0">
                     <Icon className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                     <div className="min-w-0">
@@ -44,12 +50,8 @@ export function NextBestActionsCard({ items, isLoading }: Props) {
                       <p className="text-xs text-muted-foreground truncate">{it.subtitulo}</p>
                     </div>
                   </div>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link to={it.href}>
-                      Ir <ArrowRight className="h-3 w-3 ml-1" />
-                    </Link>
-                  </Button>
-                </li>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                </DrilldownRow>
               );
             })}
           </ul>
