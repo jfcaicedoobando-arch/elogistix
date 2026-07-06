@@ -143,7 +143,6 @@ export default function FacturaDetalle() {
         conceptosVivos={conceptosVivos}
       />
 
-
       <FacturaConceptosTable
         snapshot={factura.snapshot_emision}
         moneda={factura.moneda}
