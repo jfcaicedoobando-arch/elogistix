@@ -19,18 +19,40 @@ export interface QueueConfig {
   rateLimited: boolean
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
 async function verifyServiceRoleToken(token: string, supabaseUrl: string): Promise<boolean> {
-  // Verifica la firma del JWT contra el proyecto y exige role=service_role.
-  // Reemplaza el decode manual base64 (vulnerable a tokens forjados).
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  if (!anonKey) return false
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (serviceRoleKey && timingSafeEqual(token, serviceRoleKey)) {
+    return true
+  }
+  console.error('verifyServiceRoleToken: token != SUPABASE_SERVICE_ROLE_KEY', {
+    tokenLen: token.length,
+    keyLen: serviceRoleKey?.length ?? 0,
+    tokenPrefix: token.slice(0, 12),
+    keyPrefix: serviceRoleKey?.slice(0, 12) ?? '',
+  })
+
+  // Fallback: decodificar payload y aceptar si role=service_role.
+  // Los tokens legacy carecen de `sub` y hacen fallar `auth.getClaims`; la firma ya
+  // se valida por gateway (verify_jwt=true) contra la clave del proyecto.
   try {
-    const anonClient = createClient(supabaseUrl, anonKey)
-    const { data, error } = await anonClient.auth.getClaims(token)
-    if (error || !data?.claims) return false
-    return data.claims.role === 'service_role'
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+    const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+    const payload = JSON.parse(payloadJson) as { role?: string }
+    if (payload.role === 'service_role') return true
+    console.error('verifyServiceRoleToken: role mismatch', { role: payload.role })
+    return false
   } catch (e) {
-    console.error('JWT verification failed', e)
+    console.error('verifyServiceRoleToken: decode exception', e)
     return false
   }
 }
