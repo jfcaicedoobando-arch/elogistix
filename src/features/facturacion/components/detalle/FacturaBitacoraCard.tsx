@@ -1,6 +1,7 @@
 /**
- * FacturaBitacoraCard — eventos recientes de bitácora filtrados por
- * `modulo='facturas'` y `entidad_id=facturaId`. Sólo visible para admin.
+ * FacturaBitacoraCard — historial de eventos de la factura filtrados por
+ * `modulo='facturas'` y `entidad_id=facturaId`. Visible para todos los
+ * usuarios con acceso al detalle.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,7 +27,7 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <History className="h-4 w-4" />
-          Bitácora
+          Historial de la factura
         </CardTitle>
       </CardHeader>
       <CardContent>

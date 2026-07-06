@@ -94,6 +94,34 @@ export async function cancelarFacturapi(
 }
 
 /**
+ * Reintenta descargar el acuse SAT de una factura ya cancelada.
+ * Invoca `facturapi-cancelar` con la bandera `solo_descargar_acuse: true`,
+ * que salta la llamada `invoices.cancel(...)` y sólo actualiza los campos
+ * `acuse_cancelacion_xml/fecha/status` en la fila.
+ */
+export async function reintentarAcuseCancelacion(
+  facturaId: string,
+): Promise<{ acuse_status: string; acuse_guardado: boolean }> {
+  const { data, error } = await supabase.functions.invoke<
+    { ok?: boolean; acuse_status?: string; acuse_guardado?: boolean } & EdgeErrorBody
+  >(
+    "facturapi-cancelar",
+    { body: { factura_id: facturaId, solo_descargar_acuse: true } },
+  );
+  if (error) {
+    const body = await parseFunctionError(error);
+    throw toReadableError(error, body, "No se pudo descargar el acuse.");
+  }
+  if (data?.error) {
+    throw toReadableError(null, data, data.error);
+  }
+  return {
+    acuse_status: data?.acuse_status ?? "pending",
+    acuse_guardado: !!data?.acuse_guardado,
+  };
+}
+
+/**
  * Clona una factura timbrada como borrador para sustituirla (motivo SAT 01).
  * Devuelve el ID de la factura clonada (estado `Borrador`, con `sustituye_a` enlazado).
  */

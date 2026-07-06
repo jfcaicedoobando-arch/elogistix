@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.7] - 2026-07-06
+
+- **Facturación · Detalle de factura cancelada**: cuando el CFDI está en estado `Cancelada` o `Sustituida`, la barra de acciones del detalle ahora ofrece **Acuse XML** (descarga directa del `acuse_cancelacion_xml` guardado en BD), **Acuse PDF** (documento cliente-side generado con `AcuseCancelacionDocument` + `@react-pdf/renderer` con emisor, UUID, motivo SAT y fechas de cancelación/acuse) y **Reintentar acuse** cuando `acuse_cancelacion_status !== 'accepted'`. El botón de reintento invoca `facturapi-cancelar` con la nueva bandera `solo_descargar_acuse: true`, que salta la llamada `invoices.cancel(...)` y sólo vuelve a preguntar al SAT por el acuse pendiente.
+- **Facturación · Historial visible siempre**: la tarjeta antes llamada "Bitácora" ahora se muestra a todos los usuarios con acceso al detalle (no sólo admin) y se retitula "Historial de la factura".
+
 ## [13.205.6] - 2026-07-06
 
 - **Fix Facturación · Cancelación con sustitución (motivo 01)**: la edge function `facturapi-cancelar` enviaba el UUID SAT de la factura sustituta en el parámetro `substitution` del SDK de FacturApi, provocando `400 "substitution" does not match any of the allowed types`. FacturApi espera el `facturapi_id` (ObjectId Mongo) de la factura sustituta, no el UUID SAT. Ahora se resuelven ambos: se sigue guardando el UUID SAT en bitácora, pero al SDK se le pasa el `facturapi_id`.

@@ -31,13 +31,15 @@ import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useElim
 import { PageContainer } from "@/components/shared/PageContainer";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
+import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { canEdit, isAdmin } = usePermissions();
+  const { canEdit } = usePermissions();
   const { data: factura, isLoading } = useFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
+  const acuse = useAcuseCancelacion(factura);
 
   const [pagoOpen, setPagoOpen] = useState(false);
   const [timbrarOpen, setTimbrarOpen] = useState(false);
@@ -110,6 +112,13 @@ export default function FacturaDetalle() {
         onCancelar={() => setCancelarOpen(true)}
         onEliminarBorrador={puedeEliminarBorrador ? () => setEliminarOpen(true) : undefined}
         eliminando={eliminando}
+        estaCancelada={factura.estado === "Cancelada" || factura.estado === "Sustituida"}
+        acuseDisponible={!!factura.acuse_cancelacion_xml}
+        acuseStatus={factura.acuse_cancelacion_status}
+        onDescargarAcuseXml={acuse.descargarXml}
+        onDescargarAcusePdf={acuse.descargarPdf}
+        onReintentarAcuse={acuse.reintentar}
+        reintentandoAcuse={acuse.reintentando}
       />
 
 
@@ -174,7 +183,7 @@ export default function FacturaDetalle() {
         snapshotEmision={factura.snapshot_emision}
         canEdit={canEdit}
       />
-      {isAdmin && <FacturaBitacoraCard facturaId={factura.id} />}
+      <FacturaBitacoraCard facturaId={factura.id} />
 
       <FacturaDetalleModales
         factura={factura}
