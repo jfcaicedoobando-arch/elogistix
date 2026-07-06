@@ -1,7 +1,6 @@
 /**
  * Hook controller para DialogNuevaFacturaProveedor.
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
- * Helpers puros viven en `useNuevaFacturaProveedorForm.helpers.ts`.
  */
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -9,10 +8,8 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import {
-  type CfdiParsedResponse,
-  type ConceptoCostoAbierto,
-  existeFacturaDuplicada,
-  validarCuadreCfdi,
+  type CfdiParsedResponse, type ConceptoCostoAbierto,
+  existeFacturaDuplicada, validarCuadreCfdi,
 } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
@@ -22,14 +19,8 @@ import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmba
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { uploadCfdiSafe, vincularSafe } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
-  type PendingCfdi,
-  type VinculoLinea,
-  addDays,
-  initialValues,
-  calcularTotal,
-  validateFactura,
-  buildPayload,
-  mapCfdiToValues,
+  type PendingCfdi, type VinculoLinea,
+  addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
 } from "./useNuevaFacturaProveedorForm.helpers";
 
 type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
@@ -90,8 +81,7 @@ export function useNuevaFacturaProveedorForm(
       ? { ...prev, [conceptoId]: { ...prev[conceptoId], monto } }
       : prev);
   };
-  // Aplica de golpe una lista de sugerencias del matcher: reemplaza el estado
-  // actual de vínculos por las sugerencias entregadas.
+  // Reemplaza vínculos por las sugerencias del matcher.
   const aplicarSugerencias = (sugs: ReadonlyArray<{
     conceptoId: string; concepto: string; monto: number; embarque_id: string;
   }>) => {
@@ -99,10 +89,8 @@ export function useNuevaFacturaProveedorForm(
       const next: VinculosState = {};
       for (const s of sugs) {
         next[s.conceptoId] = {
-          embarqueId: s.embarque_id,
-          descripcion: s.concepto,
-          monto: s.monto,
-          montoOriginal: s.monto,
+          embarqueId: s.embarque_id, descripcion: s.concepto,
+          monto: s.monto, montoOriginal: s.monto,
         };
       }
       return next;
@@ -201,13 +189,10 @@ export function useNuevaFacturaProveedorForm(
   };
 
   return {
-    values, errors, mode, setMode,
-    total, pendingCfdi, askCrearProv, setAskCrearProv,
+    values, errors, mode, setMode, total, pendingCfdi, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
-    reset, submit,
-    isPending: crear.isPending,
-    organizationId,
+    reset, submit, isPending: crear.isPending, organizationId,
   };
 }
