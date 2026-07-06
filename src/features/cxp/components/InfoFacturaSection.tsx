@@ -75,6 +75,30 @@ function AdjuntoRow({
   );
 }
 
+function CanceladaBanner({ fecha, motivo }: { fecha: string | null; motivo: string | null }) {
+  const fechaTxt = fecha
+    ? new Date(fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
+    : null;
+  return (
+    <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs">
+      <div className="flex items-center gap-2 font-medium text-destructive">
+        <Ban className="h-3.5 w-3.5" /> Factura cancelada{fechaTxt ? ` · ${fechaTxt}` : ""}
+      </div>
+      {motivo && (
+        <p className="mt-1 text-muted-foreground whitespace-pre-wrap">
+          <span className="font-medium">Motivo:</span> {motivo}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function pickSatVariant(estatus: string | null): "default" | "secondary" | "destructive" {
+  if (estatus === "Vigente") return "default";
+  if (estatus === "Cancelado") return "destructive";
+  return "secondary";
+}
+
 export function InfoFacturaSection({ factura: f }: Props) {
   const showTc = f.moneda !== "MXN";
   const verificar = useVerificarUuidSat();
@@ -82,15 +106,9 @@ export function InfoFacturaSection({ factura: f }: Props) {
   const [openCancel, setOpenCancel] = useState(false);
   const estaCancelada = f.estado === "Cancelada";
   const estatusSat = f.uuid_estatus_sat;
-  const statusVariant: "default" | "secondary" | "destructive" =
-    estatusSat === "Vigente" ? "default"
-    : estatusSat === "Cancelado" ? "destructive"
-    : "secondary";
+  const statusVariant = pickSatVariant(estatusSat);
   const verifDate = f.uuid_verificado_fecha
     ? new Date(f.uuid_verificado_fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
-    : null;
-  const fechaCancel = f.fecha_cancelacion
-    ? new Date(f.fecha_cancelacion).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
     : null;
   return (
     <section className="px-6 py-4 border-b bg-muted/10">
@@ -114,17 +132,9 @@ export function InfoFacturaSection({ factura: f }: Props) {
       </div>
 
       {estaCancelada && (
-        <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs">
-          <div className="flex items-center gap-2 font-medium text-destructive">
-            <Ban className="h-3.5 w-3.5" /> Factura cancelada{fechaCancel ? ` · ${fechaCancel}` : ""}
-          </div>
-          {f.motivo_cancelacion && (
-            <p className="mt-1 text-muted-foreground whitespace-pre-wrap">
-              <span className="font-medium">Motivo:</span> {f.motivo_cancelacion}
-            </p>
-          )}
-        </div>
+        <CanceladaBanner fecha={f.fecha_cancelacion} motivo={f.motivo_cancelacion} />
       )}
+
 
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
