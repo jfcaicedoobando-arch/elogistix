@@ -9,3 +9,4 @@ export * from "./useCxpPendientesAprobacion";
 export * from "./useHistorialFactura";
 export * from "./useEditarFacturaProveedorForm";
 export * from "./useCerrarFacturaSinPago";
+export * from "./useAprobarFacturasLote";
