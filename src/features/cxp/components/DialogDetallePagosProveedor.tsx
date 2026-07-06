@@ -88,6 +88,7 @@ export function DialogDetallePagosProveedor({
               onPagar={onPagar}
               onEditar={onEditar}
               onEliminar={onEliminar}
+              onCerrarSinPago={setACerrarSinPago}
             />
           )}
 
