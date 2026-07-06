@@ -10,34 +10,23 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { Button } from "@/components/ui/button";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
-import { Clock, Save } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
-import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { actualizarDemorasContenedor } from "@/features/embarques/services/contenedores";
 import { toast } from "sonner";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import {
+  buildDemorasColumns,
+  type DraftPatch,
+  type EditableRow,
+} from "./_sections/tabDemorasColumns";
+
 interface Props {
   embarqueId: string;
   canEdit: boolean;
-}
-
-interface EditableRow extends EmbarqueContenedor {
-  // SAFE-CAST: columnas nuevas (13.66.11) aún no regeneradas en supabase/types.ts.
-  fecha_descarga: string | null;
-  fecha_devolucion: string | null;
-  dias_libres_override: number | null;
-}
-
-interface DraftPatch {
-  fecha_descarga?: string | null;
-  fecha_devolucion?: string | null;
-  dias_libres_override?: number | null;
 }
 
 export function TabDemoras({ embarqueId, canEdit }: Props) {
@@ -87,83 +76,10 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
     updateMut.mutate({ id, patch });
   };
 
-  const columns = useMemo<ColumnDef<EditableRow, unknown>[]>(
-    () => defineColumns<EditableRow>([
-      {
-        id: "cont",
-        header: "Contenedor",
-        cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-mono text-sm">
-              {row.original.numero_contenedor || `#${row.original.orden}`}
-            </span>
-            <span className="text-xs text-muted-foreground">{row.original.tipo_contenedor}</span>
-          </div>
-        ),
-      },
-      {
-        id: "f_desc",
-        header: "Fecha de descarga",
-        cell: ({ row }) => (
-          <DatePickerMx
-            value={(valorActual(row.original, "fecha_descarga") as string | null) ?? ""}
-            onChange={(v) => setDraft(row.original.id, { fecha_descarga: v || null })}
-            className="h-8 w-[160px]"
-          />
-        ),
-      },
-      {
-        id: "f_dev",
-        header: "Fecha de devolución",
-        cell: ({ row }) => (
-          <DatePickerMx
-            value={(valorActual(row.original, "fecha_devolucion") as string | null) ?? ""}
-            onChange={(v) => setDraft(row.original.id, { fecha_devolucion: v || null })}
-            className="h-8 w-[160px]"
-          />
-        ),
-      },
-      {
-        id: "dias_libres",
-        header: "Días libres (override)",
-        meta: { align: "right" },
-        cell: ({ row }) => (
-          <Input
-            type="number"
-            min={0}
-            disabled={!canEdit}
-            placeholder="usa naviera"
-            title="Vacío = usa los días libres configurados en la naviera. Capturá un número para sobreescribir."
-            className="h-8 w-[120px] tabular-nums text-right placeholder:italic placeholder:text-muted-foreground/60"
-            value={(valorActual(row.original, "dias_libres_override") as number | null) ?? ""}
-            onChange={(e) => {
-              const raw = e.target.value;
-              setDraft(row.original.id, {
-                dias_libres_override: raw === "" ? null : Number(raw),
-              });
-            }}
-          />
-        ),
-      },
-      {
-        id: "save",
-        header: "",
-        cell: ({ row }) => {
-          const hasDraft = !!drafts[row.original.id];
-          return (
-            <Button
-              size="sm"
-              variant={hasDraft ? "default" : "ghost"}
-              disabled={!hasDraft || updateMut.isPending || !canEdit}
-              onClick={() => guardar(row.original.id)}
-            >
-              <Save className="size-3 mr-1" />
-              Guardar
-            </Button>
-          );
-        },
-      },
-    ]),
+  const columns = useMemo(
+    () => buildDemorasColumns({
+      canEdit, drafts, isPending: updateMut.isPending, valorActual, setDraft, guardar,
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [canEdit, drafts, updateMut.isPending],
   );

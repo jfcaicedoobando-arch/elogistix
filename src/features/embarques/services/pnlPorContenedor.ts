@@ -22,6 +22,13 @@ import type {
   ConceptoCostoRow,
 } from "@/features/embarques/types/embarque";
 import { formatSubexpediente } from "@/features/embarques/domain/embarque/subexpediente";
+import {
+  round2,
+  calcMargen,
+  repartirFlat,
+  isActivo,
+  type AcumuladorContenedor,
+} from "./pnlPorContenedor.helpers";
 
 export interface FilaPnlContenedor {
   contenedorId: string | null; // null = fila "Generales" o "Total"
@@ -49,36 +56,6 @@ export interface CalcularPnlInput {
   contenedores: ReadonlyArray<EmbarqueContenedor>;
   conceptosVenta: ReadonlyArray<ConceptoVentaRow>;
   conceptosCosto: ReadonlyArray<ConceptoCostoRow>;
-}
-
-const round2 = (n: number): number => Math.round(n * 100) / 100;
-const calcMargen = (utilidad: number, venta: number): number =>
-  venta > 0 ? (utilidad / venta) * 100 : 0;
-
-interface AcumuladorContenedor {
-  ventaDirecta: number;
-  costoDirecto: number;
-}
-
-/**
- * Reparte un monto general entre N partes con regla "residuo al último".
- * Cada parte queda en 2 decimales y la suma cuadra al centavo.
- */
-function repartirFlat(monto: number, n: number): number[] {
-  if (n <= 0) return [];
-  const partes = new Array<number>(n);
-  const base = round2(monto / n);
-  let acumulado = 0;
-  for (let i = 0; i < n - 1; i += 1) {
-    partes[i] = base;
-    acumulado = round2(acumulado + base);
-  }
-  partes[n - 1] = round2(monto - acumulado);
-  return partes;
-}
-
-function isActivo<T extends { deleted_at?: string | null }>(row: T): boolean {
-  return !row.deleted_at;
 }
 
 export function calcularPnlPorContenedor(

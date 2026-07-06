@@ -23,42 +23,8 @@ import { formatCurrency } from "@/lib/formatters";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchFacturasReporte } from "./_sections/reportesFetch";
 
-interface FacturaLite {
-  id: string;
-  fecha_emision: string | null;
-  total: number;
-  moneda: "MXN" | "USD";
-  proveedor_id: string | null;
-  proveedor_nombre: string | null;
-}
-
-async function fetchFacturasReporte(desde: string, hasta: string): Promise<FacturaLite[]> {
-  const { data, error } = await supabase
-    .from("proveedor_facturas")
-    .select("id, fecha_emision, total, moneda, proveedor_id, proveedores(nombre)")
-    .is("deleted_at", null)
-    .gte("fecha_emision", desde)
-    .lte("fecha_emision", hasta)
-    .order("fecha_emision", { ascending: true })
-    .limit(2000);
-  if (error) throw error;
-  // SAFE-CAST: PostgREST devuelve `proveedores` como relación anidada.
-  const raw = (data ?? []) as unknown as Array<{
-    id: string; fecha_emision: string | null; total: string | number;
-    moneda: "MXN" | "USD"; proveedor_id: string | null;
-    proveedores: { nombre: string | null } | null;
-  }>;
-  return raw.map((r) => ({
-    id: r.id,
-    fecha_emision: r.fecha_emision,
-    total: Number(r.total ?? 0),
-    moneda: r.moneda,
-    proveedor_id: r.proveedor_id,
-    proveedor_nombre: r.proveedores?.nombre ?? "Sin proveedor",
-  }));
-}
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
 function today(): string { return new Date().toISOString().slice(0, 10); }

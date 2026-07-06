@@ -8,15 +8,13 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCartera } from "@/features/bandejas/domain/aggregates";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -26,6 +24,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCarteraColumns, type CarteraRow } from "./_sections/carteraColumns";
+import { CarteraMobileList } from "./_sections/CarteraMobileList";
 
 interface CarteraFilters extends Record<string, string> {
   moneda: string;
@@ -150,56 +149,7 @@ export default function Cartera() {
       />
 
       {/* Mobile: lista de tarjetas (sm:hidden). Las cifras nunca quedan cortadas. */}
-      <Card className="sm:hidden">
-        <CardContent className="p-0">
-          {isLoading && (
-            <div className="py-8 text-center text-muted-foreground">Cargando...</div>
-          )}
-          {!isLoading && paged.rows.length === 0 && (
-            <div className="py-8 text-center text-muted-foreground">
-              <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              Sin cartera pendiente. ¡Todo cobrado!
-            </div>
-          )}
-          <ul className="divide-y">
-            {paged.rows.map((row) => (
-              <li key={row.factura_id} className="p-3 space-y-1.5">
-                <div className="flex items-start justify-between gap-2">
-                  <Link
-                    to={`/facturacion/${row.factura_id}`}
-                    className="font-semibold text-primary hover:underline truncate"
-                  >
-                    {row.numero ?? "—"}
-                  </Link>
-                  <Badge variant={row.dias_vencido > 0 ? "destructive" : "secondary"}>
-                    {row.dias_vencido}d
-                  </Badge>
-                </div>
-                <div className="text-sm font-medium truncate">{row.cliente_nombre ?? "—"}</div>
-                {row.embarque_id && (
-                  <Link
-                    to={`/embarques/${row.embarque_id}`}
-                    className="text-xs text-primary hover:underline block truncate"
-                  >
-                    {row.expediente ?? "—"}
-                  </Link>
-                )}
-                <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                  <span>
-                    Vence: {row.fecha_vencimiento ? formatDate(row.fecha_vencimiento) : "—"}
-                  </span>
-                  <span className="tabular-nums">
-                    Total: {formatCurrency(Number(row.total), row.moneda)}
-                  </span>
-                </div>
-                <div className="text-right text-base font-semibold tabular-nums">
-                  {formatCurrency(Number(row.saldo), row.moneda)}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <CarteraMobileList rows={paged.rows} isLoading={isLoading} />
 
       {/* Desktop / tablet: DataTable unificada con orden + paginación server-tagged. */}
       <Card className="hidden sm:block">

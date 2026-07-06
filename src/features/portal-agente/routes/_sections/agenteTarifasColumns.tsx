@@ -1,0 +1,135 @@
+/**
+ * Columnas + badge de estado para `AgenteTarifas` — extraídas en v13.182.0
+ * (Wave 2 · Power-of-10 splits).
+ */
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { MoreHorizontal } from "lucide-react";
+import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import type { AgenteTarifaRow } from "@/features/portal-agente/services";
+
+export function EstadoBadge({ estado }: { estado: string }) {
+  // Capitaliza estado ("vigente" → "Vigente") para casar con DOMAIN_STATUSES.tarifa_maritima.
+  const canonical = estado.charAt(0).toUpperCase() + estado.slice(1);
+  return <StatusBadge domain="tarifa_maritima" status={canonical} />;
+}
+
+export function toInitial(t: AgenteTarifaRow): Partial<TarifaInput> {
+  return {
+    agente_id: "",
+    naviera_id: t.naviera_id,
+    ruta_id: t.ruta_id,
+    tipo_contenedor_id: t.tipo_contenedor_id,
+    flete_base: Number(t.flete_base),
+    vigente_desde: t.vigente_desde,
+    vigente_hasta: t.vigente_hasta,
+    dias_libres_demoras: 7,
+    recargos: [],
+  };
+}
+
+export interface AgenteTarifasColumnsDeps {
+  onEditar: (t: AgenteTarifaRow) => void;
+  onDuplicar: (t: AgenteTarifaRow) => void;
+}
+
+export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): ColumnDef<AgenteTarifaRow, unknown>[] {
+  const { onEditar, onDuplicar } = deps;
+  return defineColumns<AgenteTarifaRow>([
+    {
+      id: "ruta",
+      header: "Ruta",
+      accessorFn: (t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`,
+      sortingFn: sortByString((t) => `${t.puerto_origen_nombre} → ${t.puerto_destino_nombre}`),
+      enableSorting: true,
+      meta: { sticky: true, className: "text-sm" },
+      cell: ({ row }) => (
+        <div>
+          <div>{row.original.puerto_origen_nombre} → {row.original.puerto_destino_nombre}</div>
+          {row.original.estado_aprobacion === "rechazada" && row.original.motivo_rechazo && (
+            <p className="text-xs text-destructive mt-1">
+              <strong>Motivo:</strong> {row.original.motivo_rechazo}
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "naviera",
+      header: "Naviera",
+      accessorFn: (t) => t.naviera_nombre,
+      sortingFn: sortByString((t) => t.naviera_nombre),
+      enableSorting: true,
+      cell: ({ row }) => row.original.naviera_nombre,
+    },
+    {
+      id: "contenedor",
+      header: "Contenedor",
+      accessorFn: (t) => t.tipo_contenedor_nombre,
+      enableSorting: true,
+      cell: ({ row }) => row.original.tipo_contenedor_nombre,
+    },
+    {
+      id: "flete",
+      header: "Flete base",
+      accessorFn: (t) => Number(t.flete_base),
+      sortingFn: sortByNumber((t) => Number(t.flete_base)),
+      enableSorting: true,
+      meta: { align: "right", className: "tabular-nums" },
+      cell: ({ row }) =>
+        `${row.original.moneda} ${Number(row.original.flete_base).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`,
+    },
+    {
+      id: "vigencia",
+      header: "Vigencia",
+      accessorFn: (t) => t.vigente_desde,
+      sortingFn: sortByDate((t) => t.vigente_desde),
+      enableSorting: true,
+      meta: { className: "text-xs text-muted-foreground" },
+      cell: ({ row }) => `${row.original.vigente_desde} → ${row.original.vigente_hasta}`,
+    },
+    {
+      id: "estado",
+      header: "Estado",
+      accessorFn: (t) => t.estado_aprobacion,
+      enableSorting: true,
+      cell: ({ row }) => <EstadoBadge estado={row.original.estado_aprobacion} />,
+    },
+    {
+      id: "acciones",
+      header: "",
+      meta: { width: "w-12", align: "right" },
+      cell: ({ row }) => {
+        const t = row.original;
+        const editable = t.estado_aprobacion === "borrador" || t.estado_aprobacion === "rechazada";
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={!editable}
+                  onClick={() => onEditar(t)}
+                >
+                  {t.estado_aprobacion === "rechazada" ? "Corregir y reenviar" : "Editar"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDuplicar(t)}>
+                  Duplicar como nueva
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ]);
+}

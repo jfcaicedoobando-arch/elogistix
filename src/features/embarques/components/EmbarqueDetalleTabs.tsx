@@ -1,4 +1,4 @@
-import { useState, type ComponentProps } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -18,65 +18,16 @@ import { TabSeguros } from "@/features/embarques/components/TabSeguros";
 import { TabCierre } from "@/features/embarques/components/TabCierre";
 import { TabDemoras } from "@/features/embarques/components/TabDemoras";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
-
-
-// Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
-type ResumenProps = ComponentProps<typeof TabResumen>;
-type DocsProps = ComponentProps<typeof TabDocumentos>;
-type CostosProps = ComponentProps<typeof TabCostos>;
-type FacturacionProps = ComponentProps<typeof TabFacturacion>;
-type NotasProps = ComponentProps<typeof TabNotas>;
-type TrackingProps = ComponentProps<typeof TabTracking>;
-
-type DocHandlers = Pick<
-  DocsProps,
-  "uploadingDocId" | "downloadingDocId" | "deletingDocId" | "togglingNoAplicaDocId"
-  | "onUpload" | "onDownload" | "onDelete" | "onToggleNoAplica"
->;
-
-interface Financials {
-  totalVenta: number;
-  totalCosto: number;
-  utilidad: number;
-  margen: number;
-}
-
-// El embarque debe satisfacer simultáneamente los contratos de TabResumen,
-// TabFacturacion y TabTracking, además de exponer los campos que esta vista
-// consume directamente (expediente, created_by_email, created_at).
-type EmbarqueProp = ResumenProps["embarque"]
-  & FacturacionProps["embarque"]
-  & TrackingProps["embarque"]
-  & {
-    expediente: string;
-    modo: string;
-    created_by_email?: string | null;
-    created_at: string;
-  };
-
-interface Props {
-  embarque: EmbarqueProp;
-  embarqueId: string;
-  activeTab: string;
-  setActiveTab: (t: string) => void;
-  estadoVisual: string;
-  canEdit: boolean;
-  documentos: DocsProps["documentos"];
-  conceptosVenta: CostosProps["conceptosVenta"];
-  conceptosCosto: CostosProps["conceptosCosto"];
-  facturas: FacturacionProps["facturas"];
-  notas: NotasProps["notas"];
-  financials: Financials;
-  docHandlers: DocHandlers;
-}
-
-type PnlView = "global" | "contenedor";
+import type {
+  EmbarqueDetalleTabsProps,
+  PnlView,
+} from "./_sections/embarqueDetalleTabsTypes";
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
   documentos, conceptosVenta, conceptosCosto, facturas, notas,
   financials, docHandlers,
-}: Props) {
+}: EmbarqueDetalleTabsProps) {
   const [pnlView, setPnlView] = useState<PnlView>("global");
 
   return (

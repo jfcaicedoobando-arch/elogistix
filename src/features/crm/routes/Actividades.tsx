@@ -174,7 +174,6 @@ export default function Actividades() {
           </>
         }
       />
-
       <Card>
         <CardContent className="p-0">
           <DataTable
