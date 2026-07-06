@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.4] - 2026-07-06
+
+- **Fix Facturación · TC DOF (SF60653) en lugar de FIX (SF43718)**: el edge function `exchange-rates` consultaba la serie Banxico SIE `SF43718` (FIX), pero el SAT exige el TC DOF para el campo `TipoCambio` del CFDI 4.0 en facturas en moneda extranjera (Art. 20 CFF). Se cambia `SERIE_USD` a `SF60653` — "tipo de cambio para solventar obligaciones denominadas en dólares" publicado en el DOF. Como el DOF republica el FIX del día hábil anterior, `datos/oportuno` sigue devolviendo el TC vigente para operaciones del día. Serie EUR (`SF46410`) sin cambios. Al desplegar, la caché in-memory de 12 h se vacía y las siguientes invocaciones traen ya el DOF.
+
 ## [13.205.3] - 2026-07-06
 
 - **Fix Embarques · Fuente única de verdad del badge "Proforma generada"**: el badge del header y el tab Facturación podían decir cosas distintas (ej. ELIMP00207 mostraba "PROFORMA GENERADA" mientras el tab reportaba conceptos sin facturar y un borrador PRO-2026-0283 vacío). Ahora `embarques.tiene_proforma` se recalcula automáticamente por trigger de BD considerando la proforma como "real" solo si está aprobada, tiene monto o tiene conceptos_venta vinculados; los borradores vacíos ya no encienden el badge. Se agrega también un trigger sobre `conceptos_venta` para actualizar el flag cuando se vincula/desvincula un concepto, y se hace backfill de todos los embarques con la nueva regla. En UI, `TabFacturacion` amplía la detección de borrador inconsistente para incluir borradores con total pero sin conceptos vinculados, de modo que `ProformaInconsistenteAlert` ofrezca asignar o eliminar el borrador.
