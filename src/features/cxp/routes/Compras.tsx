@@ -267,50 +267,8 @@ export default function Compras() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Top 5 proveedores con saldo</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            {topProveedores.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">Sin saldos pendientes.</p>
-            ) : (
-              <ul className="divide-y">
-                {topProveedores.map((p) => (
-                  <li key={p.proveedor_id} className="flex items-center justify-between gap-3 p-3 text-sm">
-                    <span className="truncate font-medium">{p.proveedor_nombre}</span>
-                    <span className="tabular-nums text-muted-foreground shrink-0">
-                      {formatCurrency(p.saldo_total, "MXN")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Últimas facturas capturadas</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            {ultimasFacturas.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">Aún no hay facturas capturadas.</p>
-            ) : (
-              <ul className="divide-y">
-                {ultimasFacturas.map((f) => (
-                  <li key={f.id} className="flex items-center justify-between gap-3 p-3 text-sm">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{f.proveedor_nombre ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {f.folio_proveedor ?? "s/folio"} · {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
-                      </p>
-                    </div>
-                    <span className="tabular-nums shrink-0">
-                      {formatCurrency(Number(f.total), f.moneda ?? "MXN")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <TopProveedoresCard rows={topProveedores} />
+        <UltimasFacturasCard rows={ultimasFacturas} />
       </div>
 
       <DialogNuevaFacturaProveedor open={openNueva} onOpenChange={setOpenNueva} />
