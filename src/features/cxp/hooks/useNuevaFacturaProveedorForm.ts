@@ -81,8 +81,7 @@ export function useNuevaFacturaProveedorForm(
       ? { ...prev, [conceptoId]: { ...prev[conceptoId], monto } }
       : prev);
   };
-  // Aplica de golpe una lista de sugerencias del matcher: reemplaza el estado
-  // actual de vínculos por las sugerencias entregadas.
+  // Reemplaza vínculos por las sugerencias del matcher.
   const aplicarSugerencias = (sugs: ReadonlyArray<{
     conceptoId: string; concepto: string; monto: number; embarque_id: string;
   }>) => {
@@ -90,10 +89,8 @@ export function useNuevaFacturaProveedorForm(
       const next: VinculosState = {};
       for (const s of sugs) {
         next[s.conceptoId] = {
-          embarqueId: s.embarque_id,
-          descripcion: s.concepto,
-          monto: s.monto,
-          montoOriginal: s.monto,
+          embarqueId: s.embarque_id, descripcion: s.concepto,
+          monto: s.monto, montoOriginal: s.monto,
         };
       }
       return next;
