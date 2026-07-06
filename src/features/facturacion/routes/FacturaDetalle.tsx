@@ -112,6 +112,13 @@ export default function FacturaDetalle() {
         onCancelar={() => setCancelarOpen(true)}
         onEliminarBorrador={puedeEliminarBorrador ? () => setEliminarOpen(true) : undefined}
         eliminando={eliminando}
+        estaCancelada={factura.estado === "Cancelada" || factura.estado === "Sustituida"}
+        acuseDisponible={!!factura.acuse_cancelacion_xml}
+        acuseStatus={factura.acuse_cancelacion_status}
+        onDescargarAcuseXml={acuse.descargarXml}
+        onDescargarAcusePdf={acuse.descargarPdf}
+        onReintentarAcuse={acuse.reintentar}
+        reintentandoAcuse={acuse.reintentando}
       />
 
 
