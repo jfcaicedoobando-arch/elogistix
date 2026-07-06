@@ -18,7 +18,6 @@ interface Props {
 }
 
 export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }: Props) {
-  const navigate = useNavigate();
   const totalPeso = relacionados.reduce((s, r) => s + (Number(r.peso_kg) || 0), 0);
   const totalVol = relacionados.reduce((s, r) => s + (Number(r.volumen_m3) || 0), 0);
   const totalPiezas = relacionados.reduce((s, r) => s + (Number(r.piezas) || 0), 0);
