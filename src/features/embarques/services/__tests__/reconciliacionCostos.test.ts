@@ -64,10 +64,11 @@ describe("calcularResumen", () => {
     const filas = [
       { concepto_costo_id: "a", concepto: "", proveedor_nombre: "", moneda: "USD",
         cotizado: 1000, real_facturado: 1100, diferencia: 100, desviacion_pct: 10,
-        estado_liquidacion: "Pagado", facturas: [{ proveedor_factura_id: "f", folio_proveedor: "F", monto: 1100 }] },
+        estado_liquidacion: "Pagado", estatus_renglon: "excedente" as const,
+        facturas: [{ proveedor_factura_id: "f", folio_proveedor: "F", fecha_emision: null, descripcion: null, monto: 1100 }] },
       { concepto_costo_id: "b", concepto: "", proveedor_nombre: "", moneda: "USD",
         cotizado: 500, real_facturado: 0, diferencia: -500, desviacion_pct: -100,
-        estado_liquidacion: "Pendiente", facturas: [] },
+        estado_liquidacion: "Pendiente", estatus_renglon: "sin_match" as const, facturas: [] },
     ];
     const r = calcularResumen(filas);
     expect(r.total_cotizado).toBe(1500);
