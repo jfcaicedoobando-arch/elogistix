@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/formatters";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { sugerirMovsParaPagoProveedor } from "@/features/cxp/services/conciliacionBancaria";
 import { conciliarConPago, desconciliarMovimiento } from "@/features/tesoreria/services/conciliacion";
 
