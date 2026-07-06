@@ -133,7 +133,7 @@ export default function Leads() {
             data={leads}
             isLoading={list.isLoading}
             emptyMessage={list.search ? "No se encontraron leads" : "No hay leads registrados"}
-            onRowClick={(l) => navigate(`/crm/leads/${l.id}`)}
+            getRowHref={(l) => `/crm/leads/${l.id}`}
             rowKey={(l) => l.id}
             density="comfortable"
             sortMode="server"
