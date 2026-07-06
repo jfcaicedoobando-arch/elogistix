@@ -36,9 +36,10 @@ import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancel
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { canEdit, isAdmin } = usePermissions();
+  const { canEdit } = usePermissions();
   const { data: factura, isLoading } = useFactura(id);
   useRegisterBreadcrumbLabel(id, factura?.numero);
+  const acuse = useAcuseCancelacion(factura);
 
   const [pagoOpen, setPagoOpen] = useState(false);
   const [timbrarOpen, setTimbrarOpen] = useState(false);
