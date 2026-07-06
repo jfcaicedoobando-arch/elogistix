@@ -12,6 +12,7 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { buildNcPayload, validateNcContext } from "./helpers.ts";
 import { preloadNcContext, buildNcContextFromRows } from "./data.ts";
+import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
