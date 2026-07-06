@@ -3,7 +3,8 @@
  * categoría contable, datos fiscales, desglose, CFDI adjuntos y notas.
  * Sólo lectura.
  */
-import { Info, FileCode, FileText, ExternalLink, ShieldCheck, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Info, FileCode, FileText, ExternalLink, ShieldCheck, Loader2, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { openFacturaInNewTab } from "@/services/storage/facturas";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
+import { useCancelarFacturaProveedor } from "@/features/cxp/hooks/useCancelarFacturaProveedor";
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
+import { CancelarFacturaProveedorDialog } from "@/features/cxp/components/CancelarFacturaProveedorDialog";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
@@ -75,6 +78,9 @@ function AdjuntoRow({
 export function InfoFacturaSection({ factura: f }: Props) {
   const showTc = f.moneda !== "MXN";
   const verificar = useVerificarUuidSat();
+  const cancelar = useCancelarFacturaProveedor();
+  const [openCancel, setOpenCancel] = useState(false);
+  const estaCancelada = f.estado === "Cancelada";
   const estatusSat = f.uuid_estatus_sat;
   const statusVariant: "default" | "secondary" | "destructive" =
     estatusSat === "Vigente" ? "default"
@@ -83,12 +89,43 @@ export function InfoFacturaSection({ factura: f }: Props) {
   const verifDate = f.uuid_verificado_fecha
     ? new Date(f.uuid_verificado_fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
     : null;
+  const fechaCancel = f.fecha_cancelacion
+    ? new Date(f.fecha_cancelacion).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
+    : null;
   return (
     <section className="px-6 py-4 border-b bg-muted/10">
-      <div className="flex items-center gap-2 mb-3 text-sm font-medium">
-        <Info className="h-4 w-4 text-muted-foreground" />
-        <span>Información de la factura</span>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Info className="h-4 w-4 text-muted-foreground" />
+          <span>Información de la factura</span>
+        </div>
+        {!estaCancelada && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-[11px] text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setOpenCancel(true)}
+          >
+            <Ban className="h-3.5 w-3.5 mr-1" />
+            Cancelar factura
+          </Button>
+        )}
       </div>
+
+      {estaCancelada && (
+        <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs">
+          <div className="flex items-center gap-2 font-medium text-destructive">
+            <Ban className="h-3.5 w-3.5" /> Factura cancelada{fechaCancel ? ` · ${fechaCancel}` : ""}
+          </div>
+          {f.motivo_cancelacion && (
+            <p className="mt-1 text-muted-foreground whitespace-pre-wrap">
+              <span className="font-medium">Motivo:</span> {f.motivo_cancelacion}
+            </p>
+          )}
+        </div>
+      )}
+
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
         <Field label="Categoría contable" value={f.categoria_nombre} />
@@ -188,6 +225,17 @@ export function InfoFacturaSection({ factura: f }: Props) {
           <p className="text-sm text-foreground whitespace-pre-wrap mt-1">{f.notas}</p>
         </div>
       )}
+
+      <CancelarFacturaProveedorDialog
+        factura={f}
+        open={openCancel}
+        onOpenChange={setOpenCancel}
+        isPending={cancelar.isPending}
+        onConfirm={async (motivo) => {
+          await cancelar.mutateAsync({ facturaId: f.id, motivo });
+          setOpenCancel(false);
+        }}
+      />
     </section>
   );
 }

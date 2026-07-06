@@ -5143,6 +5143,7 @@ export type Database = {
           aprobada_por: string | null
           archivo_pdf_url: string | null
           archivo_xml_url: string | null
+          cancelada_por: string | null
           categoria_presupuesto_id: string
           created_at: string
           created_by: string | null
@@ -5153,6 +5154,7 @@ export type Database = {
           estado: Database["public"]["Enums"]["estado_proveedor_factura"]
           estado_aprobacion: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura: string
+          fecha_cancelacion: string | null
           fecha_emision: string
           fecha_programada_pago: string | null
           fecha_vencimiento: string | null
@@ -5161,6 +5163,7 @@ export type Database = {
           id: string
           iva: number
           moneda: Database["public"]["Enums"]["moneda"]
+          motivo_cancelacion: string | null
           motivo_rechazo: string | null
           notas: string
           organization_id: string
@@ -5182,6 +5185,7 @@ export type Database = {
           aprobada_por?: string | null
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
+          cancelada_por?: string | null
           categoria_presupuesto_id: string
           created_at?: string
           created_by?: string | null
@@ -5192,6 +5196,7 @@ export type Database = {
           estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
           estado_aprobacion?: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura?: string
+          fecha_cancelacion?: string | null
           fecha_emision?: string
           fecha_programada_pago?: string | null
           fecha_vencimiento?: string | null
@@ -5200,6 +5205,7 @@ export type Database = {
           id?: string
           iva?: number
           moneda?: Database["public"]["Enums"]["moneda"]
+          motivo_cancelacion?: string | null
           motivo_rechazo?: string | null
           notas?: string
           organization_id?: string
@@ -5221,6 +5227,7 @@ export type Database = {
           aprobada_por?: string | null
           archivo_pdf_url?: string | null
           archivo_xml_url?: string | null
+          cancelada_por?: string | null
           categoria_presupuesto_id?: string
           created_at?: string
           created_by?: string | null
@@ -5231,6 +5238,7 @@ export type Database = {
           estado?: Database["public"]["Enums"]["estado_proveedor_factura"]
           estado_aprobacion?: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura?: string
+          fecha_cancelacion?: string | null
           fecha_emision?: string
           fecha_programada_pago?: string | null
           fecha_vencimiento?: string | null
@@ -5239,6 +5247,7 @@ export type Database = {
           id?: string
           iva?: number
           moneda?: Database["public"]["Enums"]["moneda"]
+          motivo_cancelacion?: string | null
           motivo_rechazo?: string | null
           notas?: string
           organization_id?: string
@@ -6211,6 +6220,7 @@ export type Database = {
           aprobada_por: string | null
           archivo_pdf_url: string | null
           archivo_xml_url: string | null
+          cancelada_por: string | null
           categoria_presupuesto_id: string
           created_at: string
           created_by: string | null
@@ -6221,6 +6231,7 @@ export type Database = {
           estado: Database["public"]["Enums"]["estado_proveedor_factura"]
           estado_aprobacion: Database["public"]["Enums"]["estado_aprobacion_factura_proveedor"]
           estado_captura: string
+          fecha_cancelacion: string | null
           fecha_emision: string
           fecha_programada_pago: string | null
           fecha_vencimiento: string | null
@@ -6229,6 +6240,7 @@ export type Database = {
           id: string
           iva: number
           moneda: Database["public"]["Enums"]["moneda"]
+          motivo_cancelacion: string | null
           motivo_rechazo: string | null
           notas: string
           organization_id: string
@@ -6386,6 +6398,10 @@ export type Database = {
         Returns: boolean
       }
       can_view_financials: { Args: { _user_id: string }; Returns: boolean }
+      cancelar_factura_proveedor: {
+        Args: { p_factura_id: string; p_motivo: string }
+        Returns: undefined
+      }
       cartera_pendiente: {
         Args: never
         Returns: {

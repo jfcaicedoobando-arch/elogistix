@@ -55,6 +55,9 @@ export interface FacturaCxP {
   uuid_verificado_fecha: string | null;
   uuid_estatus_sat: string | null;
   fecha_programada_pago: string | null;
+  fecha_cancelacion: string | null;
+  motivo_cancelacion: string | null;
+  cancelada_por: string | null;
 }
 
 
