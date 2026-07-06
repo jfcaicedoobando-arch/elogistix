@@ -45,6 +45,9 @@ const CRITICAL = [
   "supabase/functions/enviar-proforma-email/index.ts",
   // 13.149.1 — Envío branded de facturas (PDF+XML) al cliente
   "supabase/functions/enviar-factura-email/index.ts",
+  // 13.187.0 — Verificación UUID vs SAT + reintento nocturno de REP
+  "supabase/functions/verificar-uuid-sat/index.ts",
+  "supabase/functions/rep-retry-nocturno/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {

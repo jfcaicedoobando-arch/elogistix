@@ -16,8 +16,16 @@ export function useVerificarUuidSat() {
     onSuccess: (res: { estatus: EstatusSat }) => {
       if (res.estatus === "Vigente") toast.success("CFDI Vigente en SAT");
       else if (res.estatus === "Cancelado") toast.warning("CFDI Cancelado en SAT");
-      else if (res.estatus === "No Encontrado") toast.error("CFDI No encontrado en SAT");
-      else toast.error("SAT no devolvió un estatus válido");
+      else if (res.estatus === "No Encontrado")
+        notifyError(toast, {
+          title: "CFDI No encontrado en SAT",
+          method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
+        });
+      else
+        notifyError(toast, {
+          title: "SAT no devolvió un estatus válido",
+          method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
+        });
       qc.invalidateQueries({ queryKey: ["cxp"] });
       qc.invalidateQueries({ queryKey: ["proveedor-facturas"] });
     },
