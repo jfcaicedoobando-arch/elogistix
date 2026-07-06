@@ -39,7 +39,7 @@ const ESTADO_LABELS: Record<EstadoConciliacion, { label: string; variant: "outli
 
 export default function ComprasConciliacion() {
   const navigate = useNavigate();
-  const orgId = useCurrentOrgId();
+  
   const [estado, setEstado] = useState<EstadoFiltro>("todos");
   const [moneda, setMoneda] = useState<MonedaFiltro>("todas");
   const [search, setSearch] = useState("");
