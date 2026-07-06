@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.187.2] - 2026-07-06
+
+- **CxP · Verificación SAT en detalle de factura**: el diálogo de detalle de pagos ahora expone el botón "Verificar en SAT" junto al UUID fiscal. Al ejecutarse llama a la edge `verificar-uuid-sat`, refresca `queryKeys.cxp.*` y muestra un badge con el estatus (`Vigente` / `Cancelado` / `No Encontrado`) más la fecha/hora de la última verificación. Se agregan `uuid_verificado`, `uuid_verificado_fecha` y `uuid_estatus_sat` al select y al tipo `FacturaCxP` para reflejar en tiempo real la respuesta del SAT.
+
 ## [13.187.1] - 2026-07-06
 
 - **Fix CI (guardrails de arquitectura)** tras el logs_77740646363:
