@@ -40,8 +40,8 @@ const filterCompras = (urls: string[]) =>
 const COMPRAS_FULL = SIDEBAR_COMPRAS_ITEMS.map((it) => it.url);
 const COMPRAS_READ_ONLY = ["/compras", "/compras/facturas", "/compras/proveedores", "/compras/aging"];
 const COMPRAS_CAPTURA = ["/compras", "/compras/por-capturar", "/compras/facturas", "/compras/proveedores"];
-const COMPRAS_CONTADOR = ["/compras", "/compras/por-capturar", "/compras/por-aprobar", "/compras/facturas", "/compras/notas-credito", "/compras/proveedores", "/compras/aging", "/compras/reportes"];
-const COMPRAS_TESORERO = ["/compras", "/compras/por-pagar", "/compras/facturas", "/compras/pagos", "/compras/proveedores", "/compras/aging", "/compras/reportes"];
+const COMPRAS_CONTADOR = ["/compras", "/compras/por-capturar", "/compras/por-aprobar", "/compras/facturas", "/compras/notas-credito", "/compras/proveedores", "/compras/conciliacion", "/compras/aging", "/compras/reportes"];
+const COMPRAS_TESORERO = ["/compras", "/compras/por-pagar", "/compras/facturas", "/compras/pagos", "/compras/proveedores", "/compras/conciliacion", "/compras/aging", "/compras/reportes"];
 
 const buildVendedor: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
