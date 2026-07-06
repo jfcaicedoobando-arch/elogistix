@@ -48,7 +48,6 @@ export default function ComprasConciliacion() {
     queryKey: ["compras", "conciliacion-embarques", { estado, moneda, search }],
     queryFn: () =>
       listarConciliacionEmbarques({
-        organizationId: orgId,
         estado: estado === "todos" ? "todos" : estado,
         moneda: moneda === "todas" ? undefined : moneda,
         search: search.trim() || undefined,
