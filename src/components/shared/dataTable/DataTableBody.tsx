@@ -22,6 +22,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { cn } from "@/lib/utils";
 import { ALIGN_CLASS, DENSITY_CELL, type ColumnAlign, type TableDensity } from "./types";
 import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
+import { isLucideIcon } from "./isLucideIcon";
 import "./columnMeta";
 
 interface Props<T> {
@@ -34,35 +35,17 @@ interface Props<T> {
   bordered: boolean;
   emptyMessage: string;
   emptyHint?: string;
-  /** Icono para el empty state: LucideIcon (recomendado) o ReactNode custom. */
   emptyIcon?: React.ReactNode | LucideIcon;
-  /** Slot completo para empty state grande con CTA (`<EmptyState>` + wrapper).
-   *  Cuando se pasa, sobrescribe `emptyIcon`/`emptyMessage`/`emptyHint`. */
   emptyState?: React.ReactNode;
   rowClassName?: (item: T) => string;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
   /** Si retorna string, la fila navega a esa URL con soporte de teclado y Ctrl+click. */
   getRowHref?: (item: T) => string | null;
-  /** aria-label opcional para filas navegables (mejora TalkBack/VoiceOver). */
+  /** aria-label opcional para filas navegables. */
   getRowAriaLabel?: (item: T) => string;
 }
 
-
-/**
- * Discrimina entre un LucideIcon y un ReactNode ya renderizado.
- * Los íconos de `lucide-react` v0.462+ son `React.forwardRef`, cuya forma
- * runtime es un objeto `{ $$typeof, render, displayName }` (NO una función).
- * Si sólo chequeamos `typeof === "function"`, el icono cae al branch que lo
- * renderiza como children y React lanza el invariant #31
- * ("Objects are not valid as a React child..."). Ver Sentry JAVASCRIPT-REACT-23.
- */
-function isLucideIcon(x: unknown): x is LucideIcon {
-  if (typeof x === "function") return true;
-  if (typeof x !== "object" || x === null) return false;
-  const obj = x as { $$typeof?: unknown; render?: unknown };
-  return typeof obj.render === "function" && obj.$$typeof !== undefined;
-}
 
 export function DataTableBody<T>({
   table,
