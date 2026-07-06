@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.191.0] - 2026-07-06
+
+- **Facturación — Ola 3 · Item 5 · Respaldo automático de XML timbrados**. Nueva columna `facturas.factura_xml_backup_path` que apunta a la copia local del CFDI en el bucket privado `facturas`. Tras cada timbrado exitoso, `facturapi-emitir` descarga el XML de FacturApi (auth Basic sobre `/invoices/{id}/xml`) y lo sube a `{organization_id}/emitidas/{uuid}.xml` con `upsert:true`. El resultado del respaldo (`ok` / `skipped` / `error`) se registra en `bitacora_actividad` para auditoría y también se devuelve al cliente en `xml_backup` sin bloquear el timbrado si el respaldo falla (best-effort).
+- **Helper aislado**. `supabase/functions/facturapi-emitir/respaldarXml.ts` — vive fuera de `index.ts` porque el guardrail `facturapi-multi-tenant.test.ts` prohíbe usar `basicAuthHeader` en la edge function principal.
+- **Pendiente Ola 3**. Extender el mismo respaldo a notas de crédito (`facturapi-emitir-nota-credito`) y complementos de pago (`facturapi-emitir-rep`), más un job de backfill para timbrados históricos sin respaldo.
+
 ## [13.190.0] - 2026-07-06
 
 - **CxP — Ola 2 · Item 3 · Conciliación bancaria en detalle de factura** (cierra Ola 2). La tabla de pagos del detalle CxP gana una columna **Banco** con badge de conciliación:
