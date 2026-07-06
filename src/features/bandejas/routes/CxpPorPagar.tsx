@@ -7,24 +7,23 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatCurrency, formatCurrencyCompact, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
-import { resumirCxpPorPagar, variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
+import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
+import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
+import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 
 type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];
 
