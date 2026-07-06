@@ -61,8 +61,9 @@ export function DialogDetallePagosProveedor({
     setPagoAEliminar(null);
   };
 
-  const handleConfirmCerrarSinPago = async (params: Parameters<typeof cerrarSinPago.mutateAsync>[0] extends infer T
-    ? T extends { facturaId: string } ? Omit<T, "facturaId"> : never : never) => {
+  const handleConfirmCerrarSinPago = async (
+    params: { motivo: import("@/features/cxp/services/cerrarFacturaSinPago").MotivoCierreSinPago; comentario?: string },
+  ) => {
     if (!aCerrarSinPago) return;
     await cerrarSinPago.mutateAsync({ ...params, facturaId: aCerrarSinPago.id });
     setACerrarSinPago(null);
