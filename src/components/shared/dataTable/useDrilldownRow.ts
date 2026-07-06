@@ -14,7 +14,7 @@
  */
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { isInteractiveTarget } from "./rowNav";
+import { handleRowClick, handleRowKeyDown, isInteractiveDescendant, shouldOpenInNewTab } from "./rowNav";
 
 interface Params {
   href: string | null | undefined;
