@@ -139,6 +139,8 @@ export async function descargarAcuseCancelacionPdf(facturaId: string): Promise<B
     throw new Error("La respuesta no es un PDF válido.");
   }
   return data;
+}
+
 
 /**
  * Clona una factura timbrada como borrador para sustituirla (motivo SAT 01).
