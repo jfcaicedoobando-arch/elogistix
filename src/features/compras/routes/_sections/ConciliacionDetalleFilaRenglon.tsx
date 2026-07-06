@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
-import { ESTATUS_META, classFromNumber } from "./ConciliacionDetalleParts";
+import { ESTATUS_META, classFromNumber } from "./ConciliacionDetalleHelpers";
 
 interface Props {
   fila: FilaReconciliacion;
