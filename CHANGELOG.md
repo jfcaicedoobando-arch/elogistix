@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.192.0] - 2026-07-06
+
+- **Facturación — Ola 3 · Item 5 · Respaldo XML extendido a NC y REP**. Se refactoriza el respaldo del XML timbrado a un helper compartido `_shared/respaldarXmlTimbrado.ts` con parámetro `folder` (`emitidas` | `notas-credito` | `rep`) y se aplica a:
+  - `facturapi-emitir-nota-credito`: tras timbrar guarda el CFDI en `{organization_id}/notas-credito/{uuid}.xml` y la ruta en la nueva columna `factura_notas_credito.xml_backup_path`.
+  - `facturapi-emitir-rep`: tras timbrar guarda el REP en `{organization_id}/rep/{uuid}.xml` y la ruta en la nueva columna `pagos_factura.rep_xml_backup_path`.
+- **Bitácora**. Ambas funciones registran ahora el resultado del respaldo (`ok` / `skipped` / `error` + path) en `bitacora_actividad` bajo `detalles.xml_backup`, y devuelven el mismo objeto `xml_backup` en la respuesta. El respaldo sigue siendo best-effort: si falla no interrumpe el timbrado.
+- **Compat**. `facturapi-emitir/respaldarXml.ts` queda como wrapper delgado que apunta al helper compartido para no romper la función original.
+- **Pendiente Ola 3**. Job de backfill para timbrados históricos sin respaldo y demás items fiscales (retenciones, DIOT, aging CxC).
+
 ## [13.191.0] - 2026-07-06
 
 - **Facturación — Ola 3 · Item 5 · Respaldo automático de XML timbrados**. Nueva columna `facturas.factura_xml_backup_path` que apunta a la copia local del CFDI en el bucket privado `facturas`. Tras cada timbrado exitoso, `facturapi-emitir` descarga el XML de FacturApi (auth Basic sobre `/invoices/{id}/xml`) y lo sube a `{organization_id}/emitidas/{uuid}.xml` con `upsert:true`. El resultado del respaldo (`ok` / `skipped` / `error`) se registra en `bitacora_actividad` para auditoría y también se devuelve al cliente en `xml_backup` sin bloquear el timbrado si el respaldo falla (best-effort).
