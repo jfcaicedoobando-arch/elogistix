@@ -122,10 +122,12 @@ export default function ComprasConciliacion() {
             isLoading={isLoading}
             emptyMessage="No hay embarques con conceptos de costo para conciliar."
             rowKey={(r) => `${r.embarque_id}-${r.moneda}`}
-            onRowClick={(row) => navigate(`/embarques/${row.embarque_id}`)}
+            onRowClick={(row) => setDetalle(row)}
           />
         </CardContent>
       </Card>
+
+      <ConciliacionDetalleSheet embarque={detalle} onClose={() => setDetalle(null)} />
     </PageContainer>
   );
 }
