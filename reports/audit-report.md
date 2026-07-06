@@ -1,6 +1,6 @@
 # Audit Report — 13.195.0
 
-Generado: 2026-07-06T07:56:29.378Z
+Generado: 2026-07-06T07:59:03.868Z
 
 ## Resumen
 
@@ -8,8 +8,8 @@ Generado: 2026-07-06T07:56:29.378Z
 |---|---|---|
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
-| Power-of-10 (>200 líneas) | ❌ | 2 archivos |
-| Casts HIGH + CRITICAL | ⚠️ | 1 / 2059 |
+| Power-of-10 (>200 líneas) | ❌ | 1 archivos |
+| Casts HIGH + CRITICAL | ✅ | 0 / 2059 |
 | Higiene de tests | ✅ | 0 violaciones |
 
 ## Arquitectura
@@ -21,19 +21,18 @@ Generado: 2026-07-06T07:56:29.378Z
 ✅ Ninguno
 
 ### Archivos productivos > 200 líneas
--  215  `src/lib/domain/bitacoraDescripcion.ts`
 -  208  `src/features/cxp/services/proveedorFacturas.ts`
 
 ## Casts
 
-Total: **2059** — HIGH: **1**, CRITICAL: **0**
+Total: **2059** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
 | SAFE | 569 |
-| LOW | 69 |
+| LOW | 70 |
 | MEDIUM | 1420 |
-| HIGH | 1 |
+| HIGH | 0 |
 | CRITICAL | 0 |
 
 ### Top-10 archivos por peso de riesgo

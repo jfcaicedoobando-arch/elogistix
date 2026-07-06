@@ -1,14 +1,10 @@
 {
   "version": "13.195.0",
-  "generatedAt": "2026-07-06T07:56:29.378Z",
+  "generatedAt": "2026-07-06T07:59:03.868Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": [
-      {
-        "file": "src/lib/domain/bitacoraDescripcion.ts",
-        "lines": 215
-      },
       {
         "file": "src/features/cxp/services/proveedorFacturas.ts",
         "lines": 208
@@ -19,9 +15,9 @@
     "total": 2059,
     "bySeverity": {
       "SAFE": 569,
-      "LOW": 69,
+      "LOW": 70,
       "MEDIUM": 1420,
-      "HIGH": 1,
+      "HIGH": 0,
       "CRITICAL": 0
     },
     "topFiles": [
