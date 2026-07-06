@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.199.2] - 2026-07-06
+
+- **Limpieza Elogistix — lote 2 de gap externo (5 proformas)**. Segundo grupo de proformas facturadas fuera del ERP durante el gap operativo: PRO-2026-0297, 0322, 0337, 0340, 0948. Se movieron de `pendiente/borrador` a `facturada` con `estado_aprobacion='aprobada'` forzado (4 de 5 tenían `estado_revision='pendiente'` porque nunca pasaron por auditoría; la facturación externa se toma como aprobación tácita) y `origen='gap_externo'` (mismo valor del lote 1 para reportar juntos). `fecha_facturacion=now()` cuando estaba vacía. Respaldo en `public._backup_gap_externo_proformas_20260706_lote2`.
+
 ## [13.199.1] - 2026-07-06
 
 - **Limpieza Elogistix — 11 proformas facturadas fuera del sistema (gap externo)**. Durante un periodo sin ERP, 11 proformas aceptadas se facturaron por otro sistema. Se movieron de `pendiente/borrador` a `facturada` copiando `estado_revision` a `estado_aprobacion` y marcándolas con `origen='gap_externo'` (nuevo valor, convive con `legacy_erp` y `NULL`). Se asignó `fecha_facturacion=now()` a las que estaban en blanco. Folios: PRO-2026-0291..0296, 0299, 0318, 0325, 0332, 0336. Respaldo en `public._backup_gap_externo_proformas_20260706`.

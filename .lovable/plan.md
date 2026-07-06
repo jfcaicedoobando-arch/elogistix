@@ -1,42 +1,41 @@
-
 ## Contexto
 
-Durante un gap operativo, Elogistix trabajó fuera del ERP y algunas proformas "Aceptadas" se facturaron por otro sistema. Vamos a moverlas a `facturada` sin factura vinculada, marcándolas con `origen='gap_externo'` para no confundirlas con facturas reales ni con el legado del ERP viejo.
+Segundo lote del backfill de gap operativo: 5 proformas más facturadas fuera del ERP que hay que mover a `facturada` sin factura vinculada.
 
-## Folios a mover (11)
+## Folios a mover (5)
 
-Los 11 existen en Elogistix y están todos en `pendiente/borrador` con cliente `aceptada` y sin factura ni folio externo:
+Todos existen en Elogistix, en `pendiente/borrador`, `estado_cliente='aceptada'`, sin `factura_id` ni `folio_factura_externa`:
 
-| Grupo | Folios | estado_revision |
-|---|---|---|
-| A | 0291, 0292, 0293, 0294, 0295 | consolidada |
-| B | 0296, 0299, 0318, 0325, 0332, 0336 | aprobada |
+| Folio | estado_revision actual |
+|---|---|
+| PRO-2026-0297 | aprobada |
+| PRO-2026-0322 | pendiente |
+| PRO-2026-0337 | pendiente |
+| PRO-2026-0340 | pendiente |
+| PRO-2026-0948 | pendiente |
 
-## Cambios que se aplicarán
-
-Para los 11 folios:
+## Cambios
 
 ```text
-estado_proforma   : pendiente  → facturada
-estado_aprobacion : borrador   → estado_revision (consolidada o aprobada)
-origen            : NULL       → 'gap_externo'
-fecha_facturacion : (si es NULL) → now()   ← para que aparezcan en reportes del periodo
+estado_proforma   : pendiente → facturada
+estado_aprobacion : borrador  → 'aprobada'   ← forzado para los 5
+origen            : NULL      → 'gap_externo'
+fecha_facturacion : (si NULL) → now()
 updated_at        : now()
 ```
 
-No se toca `factura_id`, `folio_factura_externa`, montos, cliente, ni ningún otro campo.
+Diferencia respecto al lote anterior: en el lote 1 copiamos `estado_aprobacion = estado_revision` porque todos tenían valor válido (consolidada/aprobada). En este lote 4 de 5 están en `estado_revision='pendiente'` y por decisión operativa quedan como `estado_aprobacion='aprobada'` (la facturación externa implica aprobación tácita). No se toca `estado_revision`.
+
+No se modifica: `factura_id`, `folio_factura_externa`, montos, cliente, ni ningún otro campo.
 
 ## Trazabilidad y respaldo
 
-1. **Respaldo previo**: tabla `public._backup_gap_externo_proformas_20260706` con copia completa de las 11 filas antes de tocarlas (mismo patrón que el backfill anterior).
-2. **Nuevo valor `gap_externo`** convive con `legacy_erp` en la columna `origen`. Quedan 3 estados de origen posibles:
-   - `NULL` → creada normalmente dentro del sistema.
-   - `legacy_erp` → importada del ERP viejo sin evidencia.
-   - `gap_externo` → facturada fuera del sistema durante el periodo sin ERP.
+- Respaldo previo en tabla `public._backup_gap_externo_proformas_20260706_lote2` (copia completa de las 5 filas).
+- `origen='gap_externo'` es el mismo valor del lote anterior — así ambos lotes se reportan juntos como "facturado fuera del ERP durante el gap".
 
 ## Sección técnica
 
-- No requiere migración de esquema (la columna `origen` ya existe desde el backfill anterior).
-- Todo va en una sola llamada al tool de escritura de datos: `CREATE TABLE ... AS SELECT` para respaldo + `UPDATE` sobre los 11 folios filtrando por `numero IN (...)` **y** `organization_id` de Elogistix (defensa en profundidad).
-- Reversión: `UPDATE proformas ... FROM _backup_gap_externo_proformas_20260706 ...` restaura estado exacto.
-- CHANGELOG + bump de `APP_VERSION` a `13.199.1` (patch — es limpieza operativa, no feature).
+- Sin migración de esquema.
+- Una sola llamada al tool de escritura: `CREATE TABLE ... AS SELECT` para backup + `UPDATE` con `numero IN (...)` **y** `organization_id='00000000-0000-0000-0000-000000000001'` (defensa en profundidad).
+- Reversión: `UPDATE proformas FROM _backup_gap_externo_proformas_20260706_lote2 ...`.
+- CHANGELOG + bump `APP_VERSION` a `13.199.2` (patch — sigue siendo limpieza operativa).
