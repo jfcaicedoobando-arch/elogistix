@@ -94,6 +94,29 @@ export function FacturaDetalleActions({
           <Ban className="h-4 w-4 mr-1.5" /> Cancelar CFDI
         </Button>
       )}
+      {estaCancelada && acuseDisponible && onDescargarAcuseXml && (
+        <Button variant="outline" size="sm" onClick={onDescargarAcuseXml}>
+          <FileCode2 className="h-4 w-4 mr-1.5 text-info" /> Acuse XML
+        </Button>
+      )}
+      {estaCancelada && acuseDisponible && onDescargarAcusePdf && (
+        <Button variant="outline" size="sm" onClick={onDescargarAcusePdf}>
+          <FileArchive className="h-4 w-4 mr-1.5 text-destructive" /> Acuse PDF
+        </Button>
+      )}
+      {estaCancelada && acuseStatus !== "accepted" && onReintentarAcuse && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onReintentarAcuse}
+          disabled={reintentandoAcuse}
+        >
+          {reintentandoAcuse
+            ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            : <RefreshCw className="h-4 w-4 mr-1.5" />}
+          Reintentar acuse
+        </Button>
+      )}
       {onEliminarBorrador && (
         <Button
           variant="outline"
