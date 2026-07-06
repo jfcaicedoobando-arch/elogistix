@@ -165,7 +165,7 @@ export function TabFacturasEmitidas(p: Props) {
             emptyMessage="No se encontraron facturas"
             rowKey={(f) => f.id}
             density="comfortable"
-            onRowClick={(f) => navigate(`/facturacion/${f.id}`)}
+            getRowHref={(f) => `/facturacion/${f.id}`}
             pagination={{
               page: p.page,
               totalPages: p.totalPages,
