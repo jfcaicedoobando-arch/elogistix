@@ -7941,6 +7941,10 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: undefined
       }
+      recompute_embarque_tiene_proforma: {
+        Args: { p_embarque_id: string }
+        Returns: undefined
+      }
       recotizar_cotizacion: {
         Args: { p_cotizacion_id: string; p_motivo: string }
         Returns: Json
