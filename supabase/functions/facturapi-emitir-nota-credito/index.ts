@@ -32,6 +32,33 @@ function json(b: unknown, s = 200) {
   });
 }
 
+interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
+
+async function createNcInvoice(
+  supabase: ReturnType<typeof createClient>,
+  facturapi: { invoices: { create: (p: unknown) => Promise<unknown> } },
+  payload: unknown,
+  meta: { organizationId: string; userId: string; userEmail: string | undefined; notaCreditoId: string },
+): Promise<{ ok: true; invoice: FapiInvoice } | { ok: false; body: unknown; status: number }> {
+  try {
+    const invoice = await facturapi.invoices.create(payload) as FapiInvoice;
+    return { ok: true, invoice };
+  } catch (err) {
+    const { status, detail } = describeFacturapiError(err);
+    await registrarBitacoraEdge(supabase, {
+      organizationId: meta.organizationId,
+      usuarioId: meta.userId,
+      usuarioEmail: meta.userEmail,
+      modulo: "facturacion",
+      accion: "facturapi_nc_emitir_failed",
+      entidadId: meta.notaCreditoId,
+      detalles: { status, response: detail },
+    });
+    const message = extractFacturapiMessage(detail, status);
+    return { ok: false, body: { error: "facturapi_error", status, detail, message }, status: 502 };
+  }
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -54,39 +81,24 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   if (!pre.ok) return json(pre.body, pre.status);
   const { nc, factura, cliente, email } = pre;
 
-
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  const facturapi = resolved.data.client;
 
   const ctx = buildNcContextFromRows(nc, factura, cliente, email);
   const issues = validateNcContext(ctx);
   if (issues.length > 0) return json({ error: "validation_failed", issues }, 422);
 
-  const payload = buildNcPayload(ctx);
-
-  interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
-  let invoice: FapiInvoice;
-  try {
-    invoice = await facturapi.invoices.create(payload) as FapiInvoice;
-  } catch (err) {
-    const { status, detail } = describeFacturapiError(err);
-    await registrarBitacoraEdge(supabase, {
-      organizationId: nc.organization_id,
-      usuarioId: userData.user.id,
-      usuarioEmail: userData.user.email,
-      modulo: "facturacion",
-      accion: "facturapi_nc_emitir_failed",
-      entidadId: body.nota_credito_id,
-      detalles: { status, response: detail },
-    });
-    const message = extractFacturapiMessage(detail, status);
-    return json({ error: "facturapi_error", status, detail, message }, 502);
-  }
+  const created = await createNcInvoice(supabase, resolved.data.client, buildNcPayload(ctx), {
+    organizationId: nc.organization_id,
+    userId: userData.user.id,
+    userEmail: userData.user.email,
+    notaCreditoId: body.nota_credito_id,
+  });
+  if (!created.ok) return json(created.body, created.status);
 
   const persisted = await persistTimbradoNc({
     supabase,
-    invoice,
+    invoice: created.invoice,
     ctx,
     nc,
     apiKey: resolved.data.apiKey,
