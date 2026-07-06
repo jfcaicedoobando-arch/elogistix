@@ -83,10 +83,19 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
 
   if (alertas.length === 0) return json({ ok: true, revisados: rows.length, alertas: 0 });
 
-  // upsert por dedupe_key para no duplicar alertas día tras día
-  const { error: upErr } = await admin
+  // El índice único de dedupe_key es parcial (WHERE acknowledged_at IS NULL) —
+  // filtramos manualmente para no duplicar alertas ya abiertas.
+  const keys = alertas.map((a) => a.dedupe_key);
+  const { data: existentes } = await admin
     .from("alertas_sistema")
-    .upsert(alertas, { onConflict: "dedupe_key" });
+    .select("dedupe_key")
+    .in("dedupe_key", keys)
+    .is("acknowledged_at", null);
+  const abiertos = new Set((existentes ?? []).map((e) => e.dedupe_key));
+  const nuevas = alertas.filter((a) => !abiertos.has(a.dedupe_key));
+  if (nuevas.length === 0) return json({ ok: true, revisados: rows.length, alertas: 0, reabiertas: 0 });
+
+  const { error: upErr } = await admin.from("alertas_sistema").insert(nuevas);
   if (upErr) return json({ error: "insert_failed", detail: upErr.message }, 500);
 
   return json({ ok: true, revisados: rows.length, alertas: alertas.length });
