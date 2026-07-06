@@ -151,7 +151,7 @@ export function HistorialProformas({
           data={proformas}
           rowKey={(p) => p.id}
           density="compact"
-          onRowClick={(p) => navigate(`/proformas/${p.id}`)}
+          getRowHref={(p) => `/proformas/${p.id}`}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyIcon={Receipt}
           emptyMessage="No hay proformas generadas para este embarque."
