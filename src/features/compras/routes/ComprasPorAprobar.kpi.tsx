@@ -1,10 +1,10 @@
 /**
- * KPICard + helpers de suma para /compras/por-aprobar.
- * Extraído para mantener la route < 200 líneas (Power of 10).
+ * KPICard para /compras/por-aprobar.
+ * Helpers puros (`sumaMxn`, `sumaUsd`) viven en `./ComprasPorAprobar.helpers.ts`
+ * para respetar react-refresh/only-export-components.
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { FacturaCxP } from "@/features/cxp/services";
 
 export function KPICard({
   icon: Icon, label, count, monto, tone = "default",
@@ -36,16 +36,4 @@ export function KPICard({
       </CardContent>
     </Card>
   );
-}
-
-export function sumaMxn(rows: FacturaCxP[]): number {
-  return rows
-    .filter((f) => f.moneda === "MXN")
-    .reduce((acc, f) => acc + Number(f.total ?? 0), 0);
-}
-
-export function sumaUsd(rows: FacturaCxP[]): number {
-  return rows
-    .filter((f) => f.moneda === "USD")
-    .reduce((acc, f) => acc + Number(f.total ?? 0), 0);
 }
