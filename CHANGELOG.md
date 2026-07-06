@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.205.8] - 2026-07-06
+
+- **Facturación · Cancelar factura revierte proforma origen**: al cancelar un CFDI (`facturapi-cancelar`), la edge function ahora localiza las proformas ligadas por `factura_id` o `factura_secundaria_id`, limpia el vínculo puntual, y si ambas referencias quedan en `NULL` regresa la proforma a `estado_proforma = 'pendiente'` (`fecha_facturacion`, `folio_factura_externa` a `NULL`). Si la proforma originó 2 facturas y sólo cancelas una, la proforma permanece como `facturada` hasta que la otra también se cancele. No aplica cuando es una sustitución (motivo 01) — la relación se conserva vía `sustituida_por`. El resultado se registra en bitácora dentro de `detalles.proformas_revertidas`.
+
 ## [13.205.7] - 2026-07-06
 
 - **Facturación · Detalle de factura cancelada**: cuando el CFDI está en estado `Cancelada` o `Sustituida`, la barra de acciones del detalle ahora ofrece **Acuse XML** (descarga directa del `acuse_cancelacion_xml` guardado en BD), **Acuse PDF** (documento cliente-side generado con `AcuseCancelacionDocument` + `@react-pdf/renderer` con emisor, UUID, motivo SAT y fechas de cancelación/acuse) y **Reintentar acuse** cuando `acuse_cancelacion_status !== 'accepted'`. El botón de reintento invoca `facturapi-cancelar` con la nueva bandera `solo_descargar_acuse: true`, que salta la llamada `invoices.cancel(...)` y sólo vuelve a preguntar al SAT por el acuse pendiente.
