@@ -7,6 +7,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate } from "@/lib/formatters";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 
 function etaProximityClass(eta: string | null | undefined): string {
   if (!eta) return "text-muted-foreground";
@@ -57,30 +58,39 @@ export function PortalProximosArribosCard({ items }: Props) {
         ) : (
           <div className="space-y-2">
             {items.map((e) => (
-              <Link
-                key={e.id}
-                to={`/portal/embarques/${e.id}`}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm truncate font-mono tabular-nums">{e.expediente}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0 ml-2">
-                  <p className={cn("text-xs font-semibold tabular-nums", etaProximityClass(e.eta))}>
-                    {e.eta ? formatDate(e.eta, "dd MMM") : "—"}
-                  </p>
-                </div>
-              </Link>
+              <ArriboRow key={e.id} e={e} />
             ))}
           </div>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function ArriboRow({ e }: { e: ArriboItem }) {
+  const nav = useDrilldownRow({
+    href: `/portal/embarques/${e.id}`,
+    ariaLabel: `Ver embarque ${e.expediente}`,
+  });
+  return (
+    <div
+      {...nav}
+      className={cn(nav.className, "flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group")}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
+        <div className="min-w-0">
+          <p className="font-medium text-sm truncate font-mono tabular-nums">{e.expediente}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
+          </p>
+        </div>
+      </div>
+      <div className="text-right flex-shrink-0 ml-2">
+        <p className={cn("text-xs font-semibold tabular-nums", etaProximityClass(e.eta))}>
+          {e.eta ? formatDate(e.eta, "dd MMM") : "—"}
+        </p>
+      </div>
+    </div>
   );
 }

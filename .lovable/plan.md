@@ -1,77 +1,52 @@
-## Objetivo Fase 2
+## Objetivo (continuación Fase 2)
 
-Terminar el barrido iniciado en Fase 1: quitar **todos** los `<Link>` inline restantes en celdas de tabla y aplicar `getRowHref` (o `onRowClick` para modales) en las tablas que aún no lo tienen. Sin tocar columnas visibles, filtros ni lógica de negocio.
+Cerrar los bloques restantes del barrido: portal cliente (cards de dashboard + `EmbarqueCard`), costeo (migrar `onRowClick`→`getRowHref` donde navega a URL), y la regla arquitectónica final. Sin tocar columnas visibles ni lógica.
 
-## Bloques a migrar
+## Bloques a ejecutar
 
-Cada bloque es independiente y puede lanzarse en subagentes paralelos. Ninguno comparte archivos con otro.
+### Bloque 1 — Portal cliente: cards y list-items
+Aplicar el helper `useDrilldownRow` (creado en 13.201.0) para dejar la card/fila entera navegable sin `<Link>` inline:
 
-### Bloque A — Compras / CxP restantes
-- `cxpColumns` (bandeja CxP principal), `cxpAgingColumns` (columnas restantes), `ComprasPorAprobar`, `ComprasPagos` (pagosColumns), `ComprasNotasCredito`, `ComprasConciliacion`.
-- `ProveedorOperacionesTable`: quitar `<Link>` del expediente (línea 54) → `getRowHref` a `/embarques/:id`.
+- `src/features/portal/components/EmbarqueCard.tsx` — envolver el contenido en `<article {...useDrilldownRow(...)}>` en vez de `<Link>` externo.
+- `src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx` — cada fila usa `useDrilldownRow`. El header "Ver todos" se mantiene como botón-link (fuera de la lista).
+- `src/features/portal/components/dashboard/PortalProximosArribosCard.tsx` — igual: filas navegables, header con botón "Ver todos".
+- `src/features/portal/components/dashboard/PortalEstadoEmbarquesCard.tsx` — filas navegables (los dos `<Link>` de línea 29 y 45).
 
-### Bloque B — Operaciones / embarques
-- `TabConciliacion`: reemplazar `<Link>` a `/cxp?factura=...` por celda plana; navegación desde row-click de la sub-tabla si aplica.
-- `ReconciliacionTresColumnas`, `HistorialProformas` (ya en Fase 1, revalidar), `HistorialFacturas` (ya en Fase 1, revalidar).
-- `EmbarquesPendientesAdminCard`, `CierreAdminBlock` (dashboard finance): quitar Links, `getRowHref` a detalle.
+### Bloque 2 — Costeo
+- `CosteoRutasTable`: `onRowClick={(f) => navigate(...)}` → `getRowHref={(f) => `/costeo/tarifas?ruta=${f.ruta.id}`}`. Elimina el `useNavigate` si queda sin uso.
+- `CosteoTarifasTable`, `CosteoAgentesTable`, `CosteoDemorasVenta`, `CosteoNavieras`: verificar que ninguno abra edit dialog via link inline; si el row-click abre modal se conserva `onRowClick`.
 
-### Bloque C — Sub-tablas de detalle de embarque
-- `TabDocumentos`, `TabCostos` (`ConceptosCostoCard`, `GrupoConceptosContenedor`), `TabDemoras` (`tabDemorasColumns`), `TabGarantias` (`useGarantiasColumns`), `TabSeguros`, `TablaPnlPorMoneda`, `ResumenConceptosVenta`, `PasoConfirmacionProforma`.
-- Row-click abre el edit inline correspondiente vía `onRowClick` (no hay ruta). `TablaPnlPorMoneda` y otras de solo lectura quedan sin drilldown pero sin Links.
-- `ProformaDetalleCards`: quitar `<Link to="/facturacion/:id">` (línea 64) por texto plano + botón "Ver factura" en la card.
+### Bloque 3 — Auditoría
+- `HallazgosTabla`, `HallazgoTabla`: si navegan a detalle, migrar a `getRowHref`; si abren dialog, mantener `onRowClick`. Confirmar ausencia de `<Link>` en celdas.
 
-### Bloque D — CRM, comisiones, costeo y catálogos
-- `Actividades` (CRM), `comisionesColumns`.
-- Costeo: `CosteoTarifasTable`, `CosteoRutasTable`, `CosteoAgentesTable`, `CosteoNavieras`, `CosteoDemorasVenta`, `tarifasColumns`.
-- Configuración: `TabNavieras`, `TabPuertos`, `TabTiposContenedor` — row-click abre edit dialog (`onRowClick`).
-- Catálogos restantes: `proveedorTableColumns`, `ProveedorTable`, `TablaContactos` (dentro de ClienteDetalle), `TabPortalCliente`.
+### Bloque 4 — Admin
+- `AdminOrganizacionesColumns`, `usuariosColumns`, `portalUsuariosColumns`: quitar cualquier `<Link>` en celda (usar row-click ya presente o menú de acciones).
+- Tablas sin detalle (`TabPlanes`, `DiagnosticoColumns`, `Papelera`, `Idempotencia`): mantener sólo menú de acciones, sin Links inline.
 
-### Bloque E — Auditoría
-- `HallazgosTabla`, `HallazgoTabla`, `hallazgosTablaSelectColumn`.
-- Row-click abre el detalle del hallazgo (dialog o ruta según patrón existente).
-
-### Bloque F — Portal cliente y agente
-- `PortalFacturas`: quitar `<Link>` de la fila (línea 90) → `getRowHref` a `/portal/facturas/:id`.
-- `PortalFacturaDetalle`: quitar `<Link>` a embarque (línea 108) por botón "Ver embarque" en el header/card.
-- `PortalEmbarqueDocumentos`, cards `EmbarqueCard`, `PortalEmbarquesRecientesCard`, `PortalProximosArribosCard`, `PortalEstadoEmbarquesCard`, `PortalFacturacionPendienteCard`: convertir a fila/card completa navegable con `useDrilldownRow` (helper de Fase 1).
-- Agente: `AgenteInicio`, `agenteTarifasColumns`, `AgenteEmbarques`, `AgenteGarantias`, `AgenteTarifas`.
-
-### Bloque G — Admin restantes
-- `AdminOrganizacionesColumns`, `OrgMembersCard`, `UsuariosInternosTab` (usuariosColumns), `PortalUsuariosTab` (línea 53: quitar `<Link>` de ficha).
-- `TabPlanes`, `DiagnosticoColumns`, `Papelera`, `Idempotencia`: los que no tienen detalle mantienen solo menú de acciones (sin Links inline).
-
-### Bloque H — Otros con Link inline detectados
-- `AvisoProformasRechazadas` (facturación): quitar `<Link>` — usar botón.
-- `FacturaResumenCard`, `AccionesProforma`: revisar; si el Link está en botón/acción, se conserva (los botones-link son válidos, solo se prohíben Links en celdas de tabla y en filas de card-lista).
-
-## Fase 3 — Regla arquitectónica (al cierre)
-
+### Bloque 5 — Regla arquitectónica (Fase 3)
 Nuevo test `src/__tests__/architecture/tables-no-inline-links.test.ts`:
-- Falla si un archivo `*Columns.tsx` / `*columns.tsx` importa `Link` de `react-router-dom`.
-- Allowlist vacía al inicio; si algún archivo lo requiere, se documenta con `// @allow-inline-link` y justificación.
+- Escanea `src/**/*columns.tsx` / `*Columns.tsx` y falla si contienen `from "react-router-dom"` con símbolo `Link` importado.
+- Allowlist vacía; excepciones deben añadirse explícitamente.
 
-## Fase 4 — Versionado y bitácora
-
-- Bump `APP_VERSION` a `13.201.0` (continuación del cambio transversal).
-- Entrada `CHANGELOG.md` con bloques migrados.
-- Actualizar memoria `ui-table-standardization` con la política final consolidada.
-
-## Fuera de alcance
-
-- Columnas visibles, orden, filtros, densidad, striping, paginación.
-- Lógica de negocio, permisos, queries.
-- Botones-link fuera de tablas (headers, toolbars, breadcrumbs, menús): se conservan.
+### Bloque 6 — Versionado
+- Bump `APP_VERSION` a `13.202.0`.
+- Entrada `CHANGELOG.md` resumiendo bloques 1–5.
 
 ## Detalles técnicos
 
-- Toda navegación desde tabla usa `getRowHref` (rutas) o `onRowClick` (modales) — nunca ambos en la misma fila.
-- Cards-lista (portal) usan `useDrilldownRow({ href, ariaLabel })` de Fase 1 para tener el mismo comportamiento accesible (Enter/Space, Ctrl/Cmd+click, foco visible).
-- Botones y menús dentro de la fila ya llevan `e.stopPropagation()` o `data-no-row-nav`; se audita fila por fila.
-- Cero cambios en columnas visibles: solo se sustituye `<Link>...</Link>` por `<span>` / texto plano manteniendo estilos.
-- Tests existentes de cada tabla se actualizan solo si asertaban sobre el `<a>` interno.
+- Cards del portal: reemplazar `<Link to={x}>...</Link>` por `<article {...useDrilldownRow({ href: x, ariaLabel })}>...</article>`. El `ChevronRight` decorativo se mantiene con `aria-hidden`.
+- Los botones "Ver todos" del header de cada card **no** son celdas — se conservan como `<Button asChild><Link>`.
+- Cuando una tabla ya tiene `onRowClick` con `navigate(...)`, se migra a `getRowHref` (habilita Ctrl+click y accesibilidad). Si `onRowClick` abre modal, se conserva.
+
+## Fuera de alcance
+
+- Marketing, legal, layouts, headers, breadcrumbs, botones de acción (`<Button asChild><Link>`).
+- Rediseño visual, cambios de columnas, filtros, paginación, lógica.
 
 ## Orden de ejecución
 
-1. Bloques A–H en paralelo por subagentes (uno por bloque).
-2. Fase 3 (test de arquitectura) — al final, cuando todos los bloques terminaron.
-3. Fase 4 (APP_VERSION + CHANGELOG + memoria).
+1. Bloque 1 (portal) — 4 archivos.
+2. Bloque 2 (costeo) — verificar y migrar `CosteoRutasTable`.
+3. Bloques 3–4 (auditoría + admin) — verificaciones puntuales.
+4. Bloque 5 (test arquitectónico).
+5. Bloque 6 (version + changelog).

@@ -8,6 +8,8 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
+import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
+import { cn } from "@/lib/utils";
 
 interface EmbarqueItem {
   id: string;
@@ -54,37 +56,46 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
             {embarques.slice(0, 5).map((e) => {
               const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo ?? "", e.etd ?? null, e.eta ?? null, e.estado ?? "");
               return (
-                <Link
-                  key={e.id}
-                  to={`/portal/embarques/${e.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm">{e.expediente}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">
-                          {getOrigen(e)} → {getDestino(e)}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                    {e.eta && (
-                      <span className="text-2xs text-muted-foreground hidden sm:block">
-                        ETA {formatDate(e.eta, "dd/MM")}
-                      </span>
-                    )}
-                    <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-                  </div>
-                </Link>
+                <EmbarqueRecienteRow key={e.id} e={e} estadoVisual={estadoVisual} />
               );
             })}
           </div>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function EmbarqueRecienteRow({ e, estadoVisual }: { e: EmbarqueItem; estadoVisual: string }) {
+  const nav = useDrilldownRow({
+    href: `/portal/embarques/${e.id}`,
+    ariaLabel: `Ver embarque ${e.expediente}`,
+  });
+  return (
+    <div
+      {...nav}
+      className={cn(nav.className, "flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group")}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
+        <div className="min-w-0">
+          <p className="font-medium text-sm">{e.expediente}</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">
+              {getOrigen(e)} → {getDestino(e)}
+            </span>
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+        {e.eta && (
+          <span className="text-2xs text-muted-foreground hidden sm:block">
+            ETA {formatDate(e.eta, "dd/MM")}
+          </span>
+        )}
+        <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
+      </div>
+    </div>
   );
 }

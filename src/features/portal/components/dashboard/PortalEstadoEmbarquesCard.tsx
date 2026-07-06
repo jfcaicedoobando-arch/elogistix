@@ -1,9 +1,10 @@
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 import { getEstadoColor, getEstadoBarColor } from "@/lib/ui/uiMappings";
 import { pluralS } from "@/lib/formatters";
+import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
+import { cn } from "@/lib/utils";
 
 interface Props {
   total: number;
@@ -26,30 +27,13 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
           </p>
         )}
         {distribucion.map(([estado, count]) => (
-          <Link
-            key={estado}
-            to={`/portal/embarques?estado=${encodeURIComponent(estado)}`}
-            className="flex items-center justify-between text-sm rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={`Filtrar embarques por ${estado} (${count})`}
-          >
-            <div className="flex items-center gap-2">
-              <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
-            </div>
-            <span className="text-muted-foreground font-medium tabular-nums">{count}</span>
-          </Link>
+          <EstadoLegendRow key={estado} estado={estado} count={count} />
         ))}
         <div className="flex h-2.5 rounded-full overflow-hidden mt-2" role="img" aria-label="Distribución de embarques por estado">
           {distribucion.map(([estado, count]) => {
             const pct = (count / total) * 100;
             return (
-              <Link
-                key={estado}
-                to={`/portal/embarques?estado=${encodeURIComponent(estado)}`}
-                className={`${getEstadoBarColor(estado)} transition-all hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm`}
-                style={{ width: `${pct}%` }}
-                title={`${estado}: ${count}`}
-                aria-label={`Filtrar por ${estado}`}
-              />
+              <EstadoBarSegment key={estado} estado={estado} count={count} pct={pct} />
             );
           })}
         </div>
@@ -58,5 +42,38 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+function EstadoLegendRow({ estado, count }: { estado: string; count: number }) {
+  const nav = useDrilldownRow({
+    href: `/portal/embarques?estado=${encodeURIComponent(estado)}`,
+    ariaLabel: `Filtrar embarques por ${estado} (${count})`,
+  });
+  return (
+    <div
+      {...nav}
+      className={cn(nav.className, "flex items-center justify-between text-sm rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/50 transition-colors")}
+    >
+      <div className="flex items-center gap-2">
+        <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
+      </div>
+      <span className="text-muted-foreground font-medium tabular-nums">{count}</span>
+    </div>
+  );
+}
+
+function EstadoBarSegment({ estado, count, pct }: { estado: string; count: number; pct: number }) {
+  const nav = useDrilldownRow({
+    href: `/portal/embarques?estado=${encodeURIComponent(estado)}`,
+    ariaLabel: `Filtrar por ${estado}`,
+  });
+  return (
+    <div
+      {...nav}
+      className={cn(nav.className, getEstadoBarColor(estado), "transition-all hover:opacity-80 rounded-sm")}
+      style={{ width: `${pct}%` }}
+      title={`${estado}: ${count}`}
+    />
   );
 }
