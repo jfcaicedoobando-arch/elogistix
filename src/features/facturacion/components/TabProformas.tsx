@@ -127,7 +127,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
             emptyMessage="No hay proformas generadas"
             rowKey={(p) => p.id}
             density="comfortable"
-            onRowClick={(p) => navigate(`/proformas/${p.id}`)}
+            getRowHref={(p) => `/proformas/${p.id}`}
             pagination={{
               page: c.page,
               totalPages: c.totalPages,
