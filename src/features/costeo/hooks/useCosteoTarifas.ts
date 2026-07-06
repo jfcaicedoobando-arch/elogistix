@@ -33,9 +33,17 @@ export function useCosteoTarifaMutations() {
 
   const crear = useMutation({
     mutationFn: (input: TarifaInput) => insertTarifaConRecargos(organizationId!, input),
-    onSuccess: () => {
+    onSuccess: (row) => {
       invalidate();
       toast({ title: "Tarifa guardada" });
+      const rowLike = row as unknown as { id?: string; naviera_nombre?: string; origen_nombre?: string; destino_nombre?: string };
+      registrarActividad({
+        modulo: "costeo",
+        accion: "crear",
+        entidadId: rowLike?.id ?? null,
+        entidadNombre: [rowLike?.origen_nombre, rowLike?.destino_nombre].filter(Boolean).join(" → "),
+        detalles: { naviera: rowLike?.naviera_nombre },
+      });
     },
     onError: (e: Error) =>
       notifyError(toast, { title: "Error al guardar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_1" }),
