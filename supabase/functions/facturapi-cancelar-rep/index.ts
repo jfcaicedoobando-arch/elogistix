@@ -72,12 +72,13 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-rep", async (req) => {
     ) as FapiCancelResponse;
   } catch (err) {
     const { status, detail } = describeFacturapiError(err);
-    await supabase.from("bitacora_actividad").insert({
-      organization_id: pago.organization_id,
-      user_id: userData.user.id,
+    await registrarBitacoraEdge(supabase, {
+      organizationId: pago.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
       accion: "facturapi_rep_cancelar_failed",
-      entidad: "pago_factura",
-      entidad_id: pago.id,
+      entidadId: pago.id,
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
