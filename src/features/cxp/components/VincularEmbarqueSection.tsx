@@ -85,6 +85,40 @@ function notificarResumen(
   toast.success(partes.join(" · "));
 }
 
+function calcularPuedeSugerir(args: {
+  onAplicar: unknown;
+  descripcion?: string;
+  monto?: number;
+  moneda?: string;
+  totalCandidatos: number;
+}): boolean {
+  const { onAplicar, descripcion, monto, moneda, totalCandidatos } = args;
+  return !!onAplicar && !!descripcion && !!moneda && (monto ?? 0) > 0 && totalCandidatos > 0;
+}
+
+function ejecutarSugerencia(args: {
+  data: ConceptoCostoAbierto[];
+  descripcion: string;
+  monto: number;
+  moneda: string;
+  onAplicar: (sugs: ReadonlyArray<{ conceptoId: string; concepto: string; monto: number; embarque_id: string }>) => void;
+  setUltima: (s: SugerenciaVinculo[]) => void;
+}) {
+  const res = sugerirVinculos(
+    { descripcion: args.descripcion, monto: args.monto, moneda: args.moneda },
+    args.data.map((c) => ({
+      id: c.id, concepto: c.concepto, monto: c.monto, moneda: c.moneda, embarque_id: c.embarque_id,
+    })),
+  );
+  args.setUltima(res.seleccion);
+  args.onAplicar(
+    res.seleccion.map((s) => ({
+      conceptoId: s.conceptoId, concepto: s.concepto, monto: s.monto, embarque_id: s.embarque_id,
+    })),
+  );
+  notificarResumen(res, args.data.length);
+}
+
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
