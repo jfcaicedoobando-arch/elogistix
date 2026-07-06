@@ -1,11 +1,4 @@
-/**
- * Bandeja /compras/por-aprobar — Ola C.
- *
- * Lista dedicada de facturas de proveedor bajo flujo de aprobación
- * (estados: pendiente / aprobada / rechazada). Reutiliza el fetch de CxP
- * filtrando por `aprobacion`, y abre el detalle en `DialogDetallePagosProveedor`
- * donde ya vive el `BotonesAprobacionFactura` para aprobar/rechazar.
- */
+/** Bandeja /compras/por-aprobar — Ola C: facturas bajo flujo de aprobación. */
 import { useMemo, useState } from "react";
 import { ShieldCheck, Inbox, ClipboardCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
