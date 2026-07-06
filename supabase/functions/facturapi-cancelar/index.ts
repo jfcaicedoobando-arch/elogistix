@@ -122,6 +122,11 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   }
   const fapiJson = cancelResp;
 
+  // Descarga inmediata del acuse SAT. Si el SAT aún no lo emite, quedará
+  // como 'pending' y un cron posterior podrá reintentar. Guardar el XML
+  // es OBLIGATORIO por SAT desde 2022 (conservación 5 años).
+  const acuse = await descargarAcuseCancelacion(factura.facturapi_id!, resolved.data.apiKey);
+
   // Si fue sustitución (motivo 01 + sustituta resuelta), marcar estado 'Sustituida'
   // y enlazar `sustituida_por`; si no, el ciclo normal -> 'Cancelada'.
   const esSustitucion = motivo === "01" && !!sustituidaPorFacturaId;
@@ -129,6 +134,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     estado: esSustitucion ? "Sustituida" : "Cancelada",
     cancelacion_motivo: motivo,
     cancelado_en: new Date().toISOString(),
+    acuse_cancelacion_xml: acuse.xml,
+    acuse_cancelacion_fecha: acuse.xml ? new Date().toISOString() : null,
+    acuse_cancelacion_status: acuse.status,
   };
   if (esSustitucion) updatePayload.sustituida_por = sustituidaPorFacturaId;
 
