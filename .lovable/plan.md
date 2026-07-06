@@ -1,52 +1,94 @@
+
+## Objetivo
+
+Que el campo `TipoCambio` de un CFDI en USD/EUR coincida con la **Publicación DOF** que aplica al día de emisión, tal como lo exige el Art. 20 CFF y valida el PAC al timbrar.
+
 ## Diagnóstico
 
-En **ELIMP00207** conviven dos verdades contradictorias porque hoy el badge y el tab miran cosas distintas:
+El cambio previo a **SF60653** fue incorrecto: esa serie es "Para Pagos" (SAT), no la Publicación DOF. La serie correcta es **SF43718** (FIX / DOF), y la única diferencia entre "FIX" y "DOF" es qué fecha tomas del mismo histórico:
 
-- **Badge "PROFORMA GENERADA"** (header) — se pinta desde `embarques.tiene_proforma`, columna que un trigger (`sync_embarque_tiene_proforma`) pone en `true` **con que exista cualquier fila en `proformas`**, aunque sea un borrador vacío.
-- **Tab Facturación** — lee `conceptos_venta` y muestra la sección de "no facturados" cuando `proforma_id IS NULL` y `estado_facturacion='pendiente'`. Y aparte lista el historial de proformas, incluyendo el borrador PRO-2026-0283 que el usuario ve abajo.
+- FIX de hoy = SF43718 con fecha = hoy (se publica ~12:00 hrs)
+- Publicación DOF de hoy = SF43718 con fecha = día hábil anterior
 
-Datos actuales del embarque:
-
-```text
-proforma PRO-2026-0283 → estado_aprobacion='borrador', total_mxn=0, total_usd=3920 (pero sin conceptos vinculados)
-conceptos_venta (Flete Marítimo, Cargos en Destino) → proforma_id=NULL, estado='pendiente'
-embarques.tiene_proforma = true   ← "mentira" operativa
-```
-
-Es exactamente el caso que la auditoría ya llama **`proforma_inconsistente`** (borrador vacío + conceptos huérfanos en el mismo embarque). Ya existe un helper `esBorradorVacio` y un `ProformaInconsistenteAlert` con botones para asignar o eliminar el borrador — pero el badge del header ignora ese estado.
-
-## Analogía
-
-El badge de arriba está mirando un cajón y grita "¡ya hay proforma!" con que vea *cualquier papel*. El tab de abajo, en cambio, revisa si esos papeles realmente cubren los conceptos de venta. Como el papel de arriba es un borrador vacío sin firmas, la caja dice "sí" y el escritorio dice "no". La fuente única de verdad debe ser "¿hay una proforma real que cubra los conceptos?", no "¿existe una fila en la tabla?".
-
-## Fuente única de verdad propuesta
-
-Un embarque **tiene proforma** ⇔ existe al menos una proforma **no vacía** vinculada:
-`estado_aprobacion <> 'borrador'` **o** `total_mxn > 0` **o** `total_usd > 0` **o** existe un `concepto_venta.proforma_id = proforma.id`.
-
-Cualquier borrador vacío se considera "sin proforma" a efectos del badge y de reportes.
+`datos/oportuno` devuelve la fila más reciente, así que a partir del mediodía te da el FIX del día — no el DOF vigente. Necesitamos leer un rango y tomar explícitamente la penúltima fila válida.
 
 ## Cambios
 
-1. **Migración: endurecer el trigger `sync_embarque_tiene_proforma`**
-   - Recalcular `tiene_proforma` en INSERT/UPDATE/DELETE de `proformas` **y** en INSERT/UPDATE/DELETE de `conceptos_venta` (para cuando se vinculan/desvinculan conceptos).
-   - Nueva regla: `tiene_proforma = EXISTS (proforma no-vacía o con conceptos vinculados)`.
-   - Backfill: `UPDATE embarques SET tiene_proforma = <expr>` para reflejar la nueva regla en todos los registros (así ELIMP00207 pasa a `false` hasta que se asignen conceptos o se apruebe el borrador).
+### 1. `supabase/functions/exchange-rates/index.ts`
 
-2. **Front — badge del header (`EmbarqueDetalleHeader.tsx`)**
-   - Además de `embarque.tiene_proforma`, considerar la lista `proformas` del detalle (que ya carga el tab). Si la única proforma es borrador vacío, pintar "SIN PROFORMA" y añadir tooltip: *"Existe un borrador vacío (PRO-YYYY-XXXX). Ver Facturación → Proforma inconsistente."*
-   - Así el badge coincide con lo que el usuario ve dentro del tab, aun antes de que el trigger corra.
+- Revertir `SERIE_USD = "SF43718"` (y mantener `SERIE_EUR = "SF46410"`).
+- Actualizar el header de doc: la serie es la misma FIX/DOF; el "truco" es la fecha.
+- Reemplazar el endpoint por rango de 10 días naturales:
+  `https://www.banxico.org.mx/SieAPIRest/service/v1/series/{serie}/datos/{ddmmyyyy_inicio}/{ddmmyyyy_fin}`.
+- Nueva función pura `extraerPublicacionDof(data, hoyIso)`:
+  - Recorre `datos` de más nuevo a más viejo.
+  - Ignora `"N/E"` y valores no numéricos.
+  - Ignora la fila cuya `fecha` sea `>= hoy` (esa es el FIX de hoy, que será DOF mañana).
+  - Devuelve el primer valor que quede (= FIX del último día hábil anterior a hoy = **DOF vigente hoy**).
+- Mantener `extraerUltimoTC` como export para no romper tests existentes; agregar tests nuevos para `extraerPublicacionDof`.
+- Ajustar el comentario sobre caché: aún 12 h, pero conviene explicar que Banxico publica el nuevo DOF entre las 10:30–12:00, así que el caché matinal puede quedar corto un día. Alternativa (opcional): reducir TTL a 4 h. Lo dejo como decisión futura, por defecto mantengo 12 h.
 
-3. **Tab Facturación (`TabFacturacion.tsx` / `HistorialProformas.tsx`)** — sin cambios de lógica, solo confirmar que el `ProformaInconsistenteAlert` se muestra en este caso (ya debería). Verificar visualmente con ELIMP00207.
+### 2. Tests Deno (`supabase/functions/exchange-rates/exchange_test.ts`)
 
-4. **Test**
-   - Unit test para el nuevo helper (o para el `ProformaBadge` derivado) que cubra: (a) solo borrador vacío → sin proforma, (b) proforma aprobada → con proforma, (c) borrador con conceptos vinculados → con proforma.
-   - Test SQL/regresión: un embarque con solo borrador vacío debe tener `tiene_proforma=false` tras la migración.
+Casos nuevos:
+- Dado un histórico con FIX de hoy publicado y FIX de ayer → devuelve **el de ayer** (DOF vigente).
+- Dado un histórico sin FIX de hoy (aún no son las 12) y FIX de ayer → devuelve **el de ayer** (mismo comportamiento).
+- Con "N/E" en la última fila hábil → salta a la anterior válida.
+- Rango vacío → `null` y activa fallback.
+- Redondeo a 4 decimales conservado.
 
-5. **Versionado**
-   - `APP_VERSION` a `13.205.3`.
-   - Entrada en `CHANGELOG.md` describiendo la unificación del "source of truth" del badge.
+### 3. Frontend — sólo docs / copy
 
-## Preguntas antes de ejecutar
+Archivos con texto obsoleto (no lógica):
+- `src/features/marketing/routes/landingCopy.ts` línea 80 — mantiene "SF43718 y SF46410" (correcto), sólo verificar redacción.
+- `src/features/dashboard/routes/ayudaGlosario.ts` línea 61 — agregar aclaración: "publicación DOF = FIX del día hábil anterior".
+- `src/features/facturacion/hooks/useBanxicoTipoCambio.ts` header — actualizar comentario sobre el modelo.
 
-- ¿Prefieres que la regla trate un borrador **con** conceptos vinculados como "con proforma" (opción actual), o que exija además `estado_aprobacion <> 'borrador'`? Impacta cómo se ve el badge en el momento intermedio "borrador ya con conceptos pero aún no aprobado".
+### 4. Versionado
+
+- `APP_VERSION` → `13.205.5`.
+- `CHANGELOG.md` — nueva entrada `## [13.205.5]` explicando el fix (revirtiendo SF60653 y explicando por qué SF43718 con fecha de ayer es la fuente correcta para CFDI).
+
+### 5. Deploy
+
+- Redesplegar `exchange-rates` (esto vacía caché in-memory).
+- Después del deploy, verificar en logs que devuelve un valor consistente con el DOF publicado hoy en `https://www.banxico.org.mx/tipcamb/tipCamMIAction.do`.
+
+## Detalles técnicos
+
+### Cálculo de fechas
+```ts
+// Rango: últimos 10 días naturales — cubre fines de semana/feriados
+function rangoUltimos10Dias(hoy: Date): { inicio: string; fin: string } {
+  const fmt = (d: Date) =>
+    `${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;
+  const inicio = new Date(hoy); inicio.setUTCDate(inicio.getUTCDate() - 10);
+  return { inicio: fmt(inicio), fin: fmt(hoy) };
+}
+```
+
+### Selección del valor DOF
+```ts
+export function extraerPublicacionDof(data: BanxicoResponse, hoyIso: string): number | null {
+  const datos = data?.bmx?.series?.[0]?.datos ?? [];
+  // Recorremos de la fecha más nueva a la más vieja
+  for (let i = datos.length - 1; i >= 0; i--) {
+    const fila = datos[i];
+    // Convertir "dd/mm/yyyy" → "yyyy-mm-dd" para comparar
+    const [dd, mm, yyyy] = (fila.fecha ?? '').split('/');
+    const filaIso = `${yyyy}-${mm}-${dd}`;
+    if (filaIso >= hoyIso) continue; // salta el FIX de hoy o futuros
+    const num = Number(fila.dato);
+    if (Number.isFinite(num) && num > 0) return +num.toFixed(4);
+  }
+  return null;
+}
+```
+
+### Impacto en datos ya guardados
+Facturas existentes con `tipo_cambio` guardado incorrecto se quedan con ese valor a menos que el usuario dé clic al botón "TC Banxico" en el diálogo de timbrado. No hay backfill automático porque una factura ya timbrada no debe modificar su TC, y una borrador se refresca al presionar el botón.
+
+## No incluido (fuera de alcance)
+
+- No se agrega selector manual entre FIX/DOF/Para Pagos en la UI. Si eventualmente hay que emitir pagos al SAT en USD (SF60653) desde otro módulo, se hará como una edge function separada.
+- No se implementa retención histórica del TC DOF en BD. Si más adelante se requiere auditoría (¿cuál era el DOF el día X?), sería una tabla `tipos_cambio_dof` con job diario — otro sprint.
