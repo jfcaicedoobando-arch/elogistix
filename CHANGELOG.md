@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.206.0] - 2026-07-06
+
+- **Facturación · Memoria por cliente al timbrar**: `clientes` ahora guarda `forma_pago_default`, `metodo_pago_default` y `email_cc_default`. Al abrir el modal de timbrado se prellenan Uso de CFDI, Forma y Método de pago consultando el nuevo RPC `obtener_defaults_facturacion_cliente` (preferencia del cliente > última factura timbrada > fallback G03/03/PUE). Tras timbrar exitosamente los tres valores se persisten como preferencia del cliente (best-effort, no bloquea el flujo). En el envío por correo, el campo CC se precarga con los correos guardados / heredados de la última factura enviada al mismo cliente y se guardan al éxito. Todo sigue siendo editable antes de confirmar. Sin cambios de UI ni de lógica de negocio.
+
 ## [13.205.13] - 2026-07-06
 
 - **Cola de emails · Auth desbloqueada tras migración de signing keys**: `process-email-queue` rechazaba con 403 todos los ticks de cron porque `auth.getClaims` exige claim `sub` y los tokens legacy `service_role` guardados en Vault no lo tienen (error "invalid claim: missing sub claim"). Se agregó verificación en dos pasos en `queueAuth.ts`: (1) comparación timing-safe contra `SUPABASE_SERVICE_ROLE_KEY` inyectado; (2) fallback que decodifica el payload y exige `role='service_role'` — la firma ya la valida el gateway porque la función corre con `verify_jwt=true`. Efecto: los 6 correos de la factura F955 encolados y atorados desde 23:23 UTC salieron en cuanto se desplegó el parche.
