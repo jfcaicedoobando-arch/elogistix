@@ -12,6 +12,7 @@ import {
   type CfdiParsedResponse,
   type ConceptoCostoAbierto,
   existeFacturaDuplicada,
+  validarCuadreCfdi,
 } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
@@ -120,6 +121,19 @@ export function useNuevaFacturaProveedorForm(
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
     const c = data.cfdi;
+
+    // Validación fiscal: el desglose de IVA/IEPS por concepto debe cuadrar
+    // contra los totales declarados en el CFDI antes de registrar el gasto.
+    const cuadre = validarCuadreCfdi(c);
+    if (!cuadre.ok) {
+      notifyError(toast, {
+        title: "El CFDI no cuadra y no se puede registrar",
+        description: cuadre.errores.join(" "),
+        method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CUADRE",
+      });
+      return;
+    }
+
     let provId = "";
     let provNombre = c.emisor.nombre;
     try {
