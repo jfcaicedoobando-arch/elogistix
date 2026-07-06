@@ -65,10 +65,59 @@ function agruparPorEmbarque(items: ConceptoCostoAbierto[]): Grupo[] {
 
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
+  onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
   embarqueAdHoc, onEmbarqueAdHoc,
 }: Props) {
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
+  const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
+
+  const puedeSugerir =
+    !!onAplicarSugerencias &&
+    !!facturaDescripcion &&
+    !!facturaMoneda &&
+    (facturaMonto ?? 0) > 0 &&
+    (data?.length ?? 0) > 0;
+
+  const handleSugerir = () => {
+    if (!onAplicarSugerencias || !data) return;
+    const res = sugerirVinculos(
+      {
+        descripcion: facturaDescripcion ?? "",
+        monto: facturaMonto ?? 0,
+        moneda: facturaMoneda ?? "",
+      },
+      data.map((c) => ({
+        id: c.id,
+        concepto: c.concepto,
+        monto: c.monto,
+        moneda: c.moneda,
+        embarque_id: c.embarque_id,
+      })),
+    );
+    setUltimaSugerencia(res.seleccion);
+    onAplicarSugerencias(
+      res.seleccion.map((s) => ({
+        conceptoId: s.conceptoId,
+        concepto: s.concepto,
+        monto: s.monto,
+        embarque_id: s.embarque_id,
+      })),
+    );
+    const fuertes = res.seleccion.filter((s) => s.fuerte).length;
+    const dudosas = res.seleccion.length - fuertes;
+    const sinMatch = (data.length ?? 0) - res.seleccion.length - res.descartadosPorMoneda;
+    if (res.seleccion.length === 0) {
+      toast.info("Sin sugerencias con confianza suficiente. Marca manualmente los conceptos.");
+    } else {
+      toast.success(
+        `${res.seleccion.length} sugerencia${res.seleccion.length === 1 ? "" : "s"} aplicada${res.seleccion.length === 1 ? "" : "s"}` +
+        (dudosas > 0 ? ` · ${dudosas} dudosa${dudosas === 1 ? "" : "s"}` : "") +
+        (res.descartadosPorMoneda > 0 ? ` · ${res.descartadosPorMoneda} descartada${res.descartadosPorMoneda === 1 ? "" : "s"} por moneda` : "") +
+        (sinMatch > 0 ? ` · ${sinMatch} sin match` : ""),
+      );
+    }
+  };
 
   if (!proveedorId) return null;
   if (isLoading) {
@@ -92,17 +141,37 @@ export function VincularEmbarqueSection({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Link2 className="h-4 w-4 text-accent" />
         <Label className="text-sm font-semibold">Vincular a costos de embarque (opcional)</Label>
         <Badge variant="outline" className="ml-auto text-xs">
           {grupos.length} embarque{grupos.length === 1 ? "" : "s"} con costos pendientes
         </Badge>
+        {puedeSugerir && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8"
+            onClick={handleSugerir}
+          >
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            Sugerir vinculación
+          </Button>
+        )}
       </div>
       <p className="text-xs text-muted-foreground">
-        Marca los conceptos que cubre esta factura. Los conceptos cubiertos al 100% se
-        marcarán como liquidados automáticamente.
+        Marca los conceptos que cubre esta factura, o usa <strong>Sugerir vinculación</strong>{" "}
+        para que el sistema los preseleccione por similitud de descripción y monto. Los
+        conceptos cubiertos al 100% se marcarán como liquidados automáticamente.
       </p>
+      {ultimaSugerencia && ultimaSugerencia.length > 0 && (
+        <div className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
+          Última sugerencia: {ultimaSugerencia.length} concepto
+          {ultimaSugerencia.length === 1 ? "" : "s"} preseleccionado
+          {ultimaSugerencia.length === 1 ? "" : "s"}. Ajusta lo que no cuadre antes de guardar.
+        </div>
+      )}
       <div className="space-y-3 max-h-72 overflow-y-auto rounded-lg border p-2 bg-background">
         {grupos.map((g) => (
           <div key={g.embarqueId} className="rounded-md border bg-muted/20">
