@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { hallazgoHash, revisionKey, AUDITORIA_REVISIONES_KEY } from "../hash";
 
 describe("hallazgoHash", () => {
-  const base = { embarque_id: "e1", regla: "docs_faltantes", detalle: "faltan BL" };
+  const base = { embarque_id: "e1", regla: "docs_faltantes" as const, detalle: "faltan BL" };
+
 
   it("es determinista para el mismo input", () => {
     expect(hallazgoHash(base)).toBe(hallazgoHash({ ...base }));
