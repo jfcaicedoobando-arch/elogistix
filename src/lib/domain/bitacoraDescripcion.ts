@@ -200,4 +200,15 @@ export const GRUPOS_ACCION = [
   { valor: "documentos", etiqueta: "Documentos", acciones: ["subir_documento", "eliminar_documento"] },
   { valor: "notas", etiqueta: "Notas", acciones: ["agregar_nota"] },
   { valor: "facturas", etiqueta: "Facturas", acciones: ["factura"] },
+  { valor: "pagos", etiqueta: "Pagos", acciones: ["pagar", "eliminar_pago"] },
+  { valor: "timbrado", etiqueta: "Timbrado", acciones: [
+    "facturapi_emitida", "facturapi_cancelada", "facturapi_sustituida",
+    "facturapi_nc_emitida", "facturapi_nc_cancelada",
+    "facturapi_rep_emitido", "facturapi_rep_cancelado",
+    "cfdi_enviado",
+  ] },
+  { valor: "notas_credito", etiqueta: "Notas de crédito", acciones: [
+    "crear_nota_credito", "aplicar_nota_credito", "cancelar_nota_credito",
+    "facturapi_nc_emitida", "facturapi_nc_cancelada",
+  ] },
 ] as const;
