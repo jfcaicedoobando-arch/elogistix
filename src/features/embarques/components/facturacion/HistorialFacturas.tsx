@@ -91,7 +91,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
           data={facturas}
           rowKey={(f) => f.id}
           density="compact"
-          onRowClick={(f) => navigate(`/facturacion/${f.id}`)}
+          getRowHref={(f) => `/facturacion/${f.id}`}
           rowClassName={() => "cursor-pointer hover:bg-muted/40"}
           emptyIcon={Receipt}
           emptyMessage="No hay facturas generadas para este embarque."
