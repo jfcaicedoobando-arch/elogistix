@@ -29,6 +29,14 @@ interface Props {
   /** Sólo se pasa cuando la factura es borrador y el usuario puede eliminarla. */
   onEliminarBorrador?: () => void;
   eliminando?: boolean;
+  /** Bloque de acuse — sólo se renderiza si la factura está cancelada. */
+  estaCancelada?: boolean;
+  acuseDisponible?: boolean;
+  acuseStatus?: string | null;
+  onDescargarAcuseXml?: () => void;
+  onDescargarAcusePdf?: () => void;
+  onReintentarAcuse?: () => void;
+  reintentandoAcuse?: boolean;
 }
 
 export function FacturaDetalleActions({
@@ -37,6 +45,8 @@ export function FacturaDetalleActions({
   pdfUrl, xmlUrl, embarqueId,
   onTimbrar, onEnviarEmail, onDownload, onSustituir, onCancelar,
   onEliminarBorrador, eliminando,
+  estaCancelada, acuseDisponible, acuseStatus,
+  onDescargarAcuseXml, onDescargarAcusePdf, onReintentarAcuse, reintentandoAcuse,
 }: Props) {
   const mostrarPdf = !!pdfUrl || !sinTimbrar;
   const mostrarXml = !!xmlUrl || !sinTimbrar;
