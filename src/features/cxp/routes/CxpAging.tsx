@@ -6,7 +6,7 @@
  * paginación con URL sync a través de `useClientPagedList` y
  * `<UnifiedFiltersBar />`.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { LayoutList, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { AgingDrillDownDialog, type CubetaAging } from "@/features/cxp/components/AgingDrillDownDialog";
 
 function KpiBucket({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "warn" | "danger" }) {
   const toneCls =
