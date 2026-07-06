@@ -1,199 +1,37 @@
 
-# Roadmap α→δ — Compras + Facturación (Importador puro CN→MX)
-
-Objetivo: en ~11-14 semanas calendario Libre Carga puede ser el ERP único de un forwarder importador (5 usuarios, 200 embarques/mes), sin Excel paralelo y sin ContPAQi salvo para Contabilidad Electrónica Anexo 24 (fase ε, fuera de este roadmap).
-
-Perfil objetivo: recibe navieras CN, agente aduanal MX, transporte doméstico. Factura al importador mexicano en MXN/USD. IVA 16% dominante, 0% ocasional en flete internacional. No emite export, no autotransporta.
-
----
-
-## Fase α — Fixes críticos + Retenciones + IEPS (Semana 1-3)
-
-Analogía: son las goteras del techo. Sin arreglarlas cualquier feature nueva se moja.
-
-### α.1 Bug fixes bloqueadores (Semana 1)
-
-- `supabase/functions/verificar-uuid-sat/index.ts` — cambiar tabla de `proveedor_facturas` a `facturas` (verificación de CFDIs emitidos)
-- `facturapi-emitir-rep/helpers.ts` — leer `tasa_iva` real de cada concepto documento_relacionado en vez de hardcodear 0.16
-- `conceptosFacturaCrud.ts:67` y `facturaManual.ts:121` — eliminar fallback silencioso a `"81141601"`; validar y lanzar error
-- `facturapi-emitir/index.ts:108-115` — leer `clave_unidad` del concepto en lugar de hardcodear `"E48"`
-- `proveedorFacturas.ts:83` — implementar paginación con `.range(from, to)` y cursor; eliminar `.limit(2000)`
-- Añadir test de regresión para cada uno
-
-### α.2 IEPS parsing (Semana 1-2)
-
-- `parser.ts` — extraer nodo `cfdi:Traslado[@Impuesto="003"]` y `cfdi:Retencion[@Impuesto="003"]` del XML CFDI del proveedor
-- Migración: agregar columnas `ieps_trasladado`, `ieps_retenido` en `proveedor_facturas_conceptos`
-- UI CxP: mostrar IEPS en el desglose de factura recibida
-
-### α.3 Retenciones automáticas (Semana 2)
-
-- Tabla `proveedores`: agregar `tipo_persona` (fisica/moral), `regla_retencion_default_jsonb`
-- Reglas SAT precargadas por régimen fiscal:
-  - Honorarios persona física → ISR 10% + IVA 10.6667%
-  - Servicios de agente aduanal → ISR 0% + IVA 0%/16% según régimen
-  - Servicios de flete a persona física → ISR 0% + IVA 4%
-- Al crear concepto de costo o factura proveedor: prefill `tasa_ret_isr`/`tasa_ret_iva` desde regla del proveedor
-- Al timbrar: warning si proveedor persona física sin retención capturada
-
-### α.4 Alerta de vencimiento CSD (Semana 2)
-
-- Cron `facturapi_csd_check` (diario): lee `facturapi_credenciales.certificado_vence_at`
-- Notificación in-app + email a admins de la org 30/15/7/1 días antes
-- Bloqueo suave al timbrar si CSD vence en <3 días (banner rojo, requiere confirmación)
-
-### α.5 Guardia 4to trimestre en cancelaciones (Semana 3)
-
-- `facturapi-cancelar/helpers.ts` — si `fecha_timbrado` está en oct-dic del año anterior y `now() > 31 enero`: rechazar cancelación con mensaje SAT específico
-- Test unitario con fechas frontera
-
-**Entregable α**: sistema fiscalmente correcto para operación diaria. Sin bugs conocidos, retenciones automáticas, alertas CSD, IEPS visible.
-
----
-
-## Fase β — TC correcto + DIOT + Anticipos (Semana 4-7)
-
-### β.1 TC por operación (Semana 4-5)
-
-- `proveedor_facturas`: agregar `tipo_cambio` y `tipo_cambio_fecha` (default: fecha de emisión CFDI)
-- `facturas` y `pagos_factura`: usar TC del día del timbrado / cobro, consultando Banxico al momento
-- Cache Banxico: reducir a 4h y forzar refresh en horario 12pm-14pm (publicación DOF)
-- `pnlFinanciero` RPC: recalcular convirtiendo cada CFDI con su TC propio
-- Vista de diferencia cambiaria realizada vs no realizada por embarque
-
-### β.2 DIOT — Módulo A-29 (Semana 4-6)
-
-- Nueva sección `Fiscal → DIOT` en dashboard
-- Servicio `diot/export.ts`: genera archivo TXT layout SAT 2024 (pipe-delimited)
-- Agrupa por RFC proveedor + tipo operación (03 nacional / 04 extranjero / 05 global)
-- Distingue IVA 16% / 8% frontera / 0% / exento / retenido
-- Incluye pagados en el periodo (no facturados — DIOT es base flujo)
-- UI: selector de mes + preview tabular + descarga TXT + reporte de proveedores con RFC inválido
-- Test con fixtures de operación real (5 nacionales, 2 extranjeros, 1 global)
-
-### β.3 Anticipos a proveedor (Semana 6-7)
-
-Crítico para importador CN→MX: navieras exigen wire transfer pre-embarque.
-
-- Nueva tabla `anticipos_proveedor`: `proveedor_id`, `monto`, `moneda`, `tipo_cambio`, `embarque_id?`, `estado (emitido/aplicado/liquidado)`, `cfdi_anticipo_uuid?`
-- Flujo: crear anticipo → pago bancario → recibir CFDI anticipo (tipo "P" o "I") → al recibir factura final, aplicar anticipo con nota de crédito
-- Vinculación a embarque desde el momento del anticipo (visible en flujo proyectado como salida real, no proyectada)
-- Reporte "Anticipos sin aplicar >60 días"
-
-**Entregable β**: cierre fiscal mensual desde Libre Carga. DIOT exportable, P&L cuadra con SAT, anticipos gestionados.
-
----
-
-## Fase γ — Volumen operativo (Semana 8-10)
-
-Analogía: convertir 280 clicks/día en 30. La calidad de captura es la nueva línea de defensa.
-
-### γ.1 Timbrado masivo (Semana 8)
-
-- UI en `Facturación`: multi-select con checkbox por fila + botón "Timbrar seleccionadas (N)"
-- Servicio `timbrarLote`: cola con concurrencia 3, retry por factura, progreso en tiempo real
-- Reporte final: X exitosas, Y con error (motivo por cada una), enlaces a corregir
-- Idempotency: si una factura ya está `Timbrada`, skipear silenciosamente
-
-### γ.2 Bulk actions CxP (Semana 8-9)
-
-- Multi-select en tabla `ProveedorFacturas`
-- Acciones masivas: Aprobar, Programar pago (fecha común), Marcar pagadas (con selector de cuenta bancaria y referencia)
-- Confirmación con resumen: "Aprobar 27 facturas por $3,450,200 MXN"
-
-### γ.3 Catálogo SAT autocomplete (Semana 9)
-
-- Componente `SATClaveAutocomplete` sobre `catalogo_claves_sat` (ya en BD)
-- Búsqueda debounced por código o descripción, muestra top 8 con `stringSimilarity`
-- Reemplazar campos de texto libre en: `ConceptoManualForm`, `FacturaConceptoRow`, `ConceptoCostoRow`
-- Prefill inteligente: si concepto="Flete marítimo" → sugerir `78101800`
-
-### γ.4 Layout de dispersión bancaria (Semana 9-10)
-
-- Servicio `tesoreria/dispersion.ts` con adapters por banco: BBVA, Banorte, Santander, SPEI H2H
-- Selector "Programar pagos: N facturas → generar layout [banco]"
-- Genera .txt con formato específico + resumen pre-envío
-- Al confirmar transferencia bancaria: crear `pagos_proveedor` batch con folio de dispersión
-
-### γ.5 Facturas multi-embarque (Semana 10)
-
-- Migración: nueva tabla `factura_embarques (factura_id, embarque_id)` M:N con `monto_asignado` para prorratear
-- Mantener `facturas.embarque_id` como legacy pero deprecar en UI
-- Wizard de emisión: paso "Asignar a embarques" permite múltiples con % o monto fijo
-- P&L por embarque suma su porción de facturas multi-embarque
-
-**Entregable γ**: 200 embarques/mes manejable con 5 usuarios. Captura reducida ~80%.
-
----
-
-## Fase δ — Reporting completo (Semana 11-13)
-
-### δ.1 Aging CxC estándar 30/60/90 (Semana 11)
-
-- Extender `cobranza_seguimiento` con RPC `cxc_aging_estandar` (cubetas 0-30 / 31-60 / 61-90 / >90 / no vencido)
-- Reporte descargable por cliente con contactos, teléfono, último recordatorio
-- Trigger de recordatorios automáticos en las cubetas 31-60 y 61-90 (habilitar `cxc-recordatorios` real)
-
-### δ.2 P&L por ruta y por vendedor (Semana 11-12)
-
-- Ruta = `origen_puerto + destino_puerto` normalizado (usa `puertos` UN/LOCODE)
-- Vista `pnl_por_ruta` con margen % agregado, top 10 rutas rentables y top 5 pérdida
-- P&L por vendedor: agrupa embarques por `crm_oportunidades.vendedor_id` → cierre → factura
-- Módulo de comisiones: calcula sobre utilidad realizada, no sobre venta bruta
-
-### δ.3 Ranking proveedores + alertas de margen (Semana 12)
-
-- Vista `ranking_proveedores`: monto pagado YTD, # facturas, aging promedio, scorecard
-- Alerta push (notificación in-app) cuando embarque pasa a margen <5%
-- Pantalla dedicada "Embarques en pérdida" filtrable por fecha/ruta/vendedor
-
-### δ.4 Complemento Comercio Exterior — versión ligera (Semana 12-13)
-
-Para importador puro no es obligatorio emitir CCE, pero sí puede necesitarlo para servicios de flete internacional facturados con IVA 0%.
-
-- Campo `emitir_con_cce` en factura + subformulario con pedimento, tipo operación, motivo traslado
-- Payload Facturapi extendido con nodo `cce11:ComercioExterior`
-- Solo activable cuando `tipo_iva = "tasa_0"` en al menos un concepto
-
-### δ.5 Búsqueda global mejorada (Semana 13)
-
-- Extender `Ctrl+K` para incluir: UUID, RFC proveedor, BL/AWB, folio interno CxP (FP-XXXXXX)
-- Índices GIN para tsvector en `facturas.uuid`, `proveedor_facturas.folio_interno`, `embarques.bl_master`
-
-**Entregable δ**: reporting a nivel dirección financiera + emisión CCE opcional para IVA 0% + búsqueda de calidad.
-
----
-
-## Fuera de alcance de este roadmap (para decidir después)
-
-- **Fase ε — Contabilidad Electrónica Anexo 24** (10-14 sem adicionales): Catálogo de Cuentas XML, Balanza mensual XML, Pólizas XML. Alternativa: exportador CSV/XML compatible con ContPAQi para mantener la contabilidad allá.
-- **Constancias de Retención (CFDI de Retenciones)** — se puede añadir en fase γ opcional si hay muchos honorarios a personas físicas
-- **Carta Porte 3.1** — no aplica al perfil importador puro
-- **Facturas globales (público general)** — no aplica al perfil B2B forwarder
-- **Conciliación bancaria OFX/CAMT** — mejora a fase δ+1 si el volumen bancario lo justifica
-
----
-
-## Consideraciones técnicas
-
-- Cada fase entrega valor operativo independiente. Se puede pausar entre fases sin dejar el sistema roto.
-- Cada bump crea entrada en `CHANGELOG.md` + `APP_VERSION` conforme al estándar del proyecto.
-- Cada migración de BD respeta la regla GRANT + RLS + policies en el mismo migration.
-- Cada Edge Function nueva sigue el patrón `index.ts + helpers.ts` con test de helpers puros.
-- Tests obligatorios: unitario para helpers de fase α, integración para DIOT/dispersión (β/γ), e2e Playwright para timbrado masivo (γ).
-- Sin cambios a arquitectura multi-tenant existente (todo `organization_id` + RLS ya presente).
-
-## Riesgos y mitigaciones
-
-- **Riesgo**: cambios en layout DIOT SAT año-a-año → **Mitigación**: versionar formato en `diot/formats/2024.ts`, `2025.ts`.
-- **Riesgo**: retenciones automáticas mal calibradas → **Mitigación**: fase piloto con 1 organización, revisión CP externo antes de rollout.
-- **Riesgo**: multi-embarque rompe reconciliación 3 columnas existente → **Mitigación**: migración con backfill de `factura_embarques` desde `facturas.embarque_id` legacy.
-- **Riesgo**: TC por factura invalida P&L histórico → **Mitigación**: backfill con TC del día de fecha_emision al deploy; snapshot previo del P&L en tabla read-only.
-
-## Estimación
-
-- 2 desarrolladores senior full-time: **11-14 semanas calendario**
-- 1 desarrollador senior + apoyo contable: **18-22 semanas calendario**
-- Total sem-hombre: **~22-26**
-
-Al aprobar este plan comenzaré por α.1 (fixes bloqueadores) y α.2 (IEPS parsing) en paralelo — son independientes.
+## Errores encontrados en Sentry (release `libre-carga@13.197.0`)
+
+### 1. `JAVASCRIPT-REACT-22` — HTTP 500 en `POST /~api/analytics`
+- Culpable: `flock.js` (script de tracking del hosting `librecarga.com`, no es código nuestro).
+- Ruta: `/`, 2 eventos, 2 usuarios. No rompe la app (queda como error no manejado del pixel de analítica del host).
+- **Acción propuesta:** ignorar en Sentry (crear inbound filter / `ignoreErrors` para peticiones a `/~api/analytics` y para stack frames de `flock.js`). No hay fix de código.
+
+### 2. `JAVASCRIPT-REACT-23` — "Objects are not valid as a React child (found: object with keys {$$typeof, render, displayName})"
+- Ruta: `/embarques/:id` (tab del detalle de embarque).
+- Component stack (minificado): `EmbarqueDetalle → Tabs → TabsContent → …contenido de un tab… → DataTable → tbody → tr → td → div`.
+- La forma del objeto (`$$typeof`, `render`, `displayName`) es **la firma exacta de un componente `React.forwardRef`** (Lucide icon, Radix primitive, etc.). Alguien está renderizando la **referencia del componente** en lugar de instanciarlo — típicamente `{Icon}` en vez de `<Icon />`, o `cell: () => Icon` en columnas.
+- Sólo ocurre para un usuario/embarque (`a006c055-…`), lo que sugiere que depende de un dato del embarque (una columna que recibe un componente como `value`).
+
+### Plan de acción
+
+1. **Confirmar la línea exacta con Seer.** Correr `analyze_issue_with_seer` sobre `JAVASCRIPT-REACT-23`. Con release y sourcemaps subidos (`SENTRY_AUTH_TOKEN`), Seer desmangleará las frames `Uo`, `Qn`, `On`, `k`, `N` y apuntará al `.tsx` real.
+2. **Con el archivo identificado, arreglar el render.** Cambios esperados (uno de estos patrones):
+   - `{icon}` → `<Icon />` (o `React.createElement(icon)`) en la celda/badge afectada.
+   - `cell: ({ row }) => row.original.icon` → envolver en JSX con `<Icon />`.
+   - Coerción defensiva: si la columna recibe un `ReactNode | ComponentType`, normalizar a `ReactNode` antes de renderizar.
+3. **Prevención (test de arquitectura).** Añadir un test en `src/__tests__/architecture/` que detecte `cell:` que retornen identificadores `PascalCase` de un `import` de `lucide-react` sin JSX (regex + AST simple). Evita repetición del mismo bug en futuras columnas.
+4. **Filtrar en Sentry el ruido del pixel de analítica** (`JAVASCRIPT-REACT-22`):
+   - Añadir en `src/lib/observability/sentry/core.ts` un `beforeSend` que descarte eventos con `mechanism === "auto.http.client.xhr"` cuya `request.url` termine en `/~api/analytics` o cuyo stack contenga `flock.js`.
+5. **Cerrar issues.** `update_issue` a `resolved` para ambos en el mismo turno del fix, referenciando los IDs en el `CHANGELOG.md` (siguiendo la memoria `mem://preferences/sentry-resolve`).
+6. **Versionado.** Bump `APP_VERSION` a `13.198.1` (o `13.199.0` si el filtro Sentry lo consideras feature) + entrada nueva en `CHANGELOG.md`.
+
+### Detalles técnicos
+
+- No tocar `src/integrations/supabase/client.ts` ni tipos auto-generados.
+- El filtro Sentry va sólo en cliente (`beforeSend`); no afecta captura de errores reales.
+- El test de arquitectura debe usar el mismo estilo que `no-raw-table.test.ts` / `sentry-imports-guardrail.test.ts`.
+- Si Seer no logra desmangle (falta sourcemap para ese release), pediremos al usuario abrir la ruta `/embarques/a006c055-e574-4e98-8738-b4f280c3c908` en preview para reproducir con dev-map y capturar la columna exacta.
+
+### Analogía
+
+Es como si un contenedor traía la **etiqueta del modelo de contenedor** pegada en el lugar donde debería ir el **contenedor mismo**: React esperaba "el ícono ya pintado" y le entregaron "el plano de cómo pintarlo". Hay que decirle a la celda que primero lo instancie (`<Icon />`) antes de meterlo a la tabla.
