@@ -21,7 +21,7 @@ const baseInput = {
   fechaEmision: "2026-06-01",
   moneda: "MXN" as const,
   tipoCambio: 1,
-  conceptos: [{ descripcion: "Servicio", cantidad: 2, precio_unitario: 50 }],
+  conceptos: [{ descripcion: "Servicio", cantidad: 2, precio_unitario: 50, clave_sat: "78101800" }],
   tasaIva: 0.16,
 };
 
