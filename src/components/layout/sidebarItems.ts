@@ -33,6 +33,7 @@ import {
   ShieldCheck as ShieldApprove,
   LayoutList,
   ReceiptText,
+  GitCompare,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
