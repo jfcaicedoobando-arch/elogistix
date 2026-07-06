@@ -49,10 +49,11 @@ export async function cerrarFacturaProveedorSinPago(params: {
   motivo: MotivoCierreSinPago;
   comentario?: string;
 }): Promise<string> {
+  const comentario = params.comentario?.trim();
   const { data, error } = await supabase.rpc("cerrar_factura_proveedor_sin_pago", {
     p_factura_id: params.facturaId,
     p_motivo: params.motivo,
-    p_comentario: params.comentario?.trim() || null,
+    ...(comentario ? { p_comentario: comentario } : {}),
   });
   if (error) throw error;
   return data as unknown as string;
