@@ -22,9 +22,10 @@ export const ESTADO_GARANTIA_LABEL: Record<EstadoGarantia, string> = {
   retenido: 'Retenido',
 };
 
-export const ESTADO_GARANTIA_COLOR: Record<EstadoGarantia, string> = {
+const ESTADO_GARANTIA_COLOR: Record<EstadoGarantia, string> = {
   pendiente: 'bg-warning/15 text-warning border-warning/30',
   depositado: 'bg-info/15 text-info border-info/30',
   liberado: 'bg-success/15 text-success border-success/30',
   retenido: 'bg-destructive/15 text-destructive border-destructive/30',
 };
+void ESTADO_GARANTIA_COLOR;

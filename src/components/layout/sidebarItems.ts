@@ -107,11 +107,8 @@ export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
   { title: "Cartera", url: "/cartera", icon: PiggyBank },
 ];
 
-// v13.100.0 — Hub Compras. Deprecado como export standalone en v13.175.0.
-// Se mantiene por compatibilidad hacia SIDEBAR_COMPRAS_ITEMS[0].
-export const SIDEBAR_COMPRAS_HUB: SidebarItem = {
-  title: "Dashboard", url: "/compras", icon: ShoppingCart,
-};
+
+
 
 /**
  * v13.175.0 — Módulo Compras unificado. Todas las rutas viven bajo `/compras/*`
