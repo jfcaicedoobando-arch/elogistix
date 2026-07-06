@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.199.1] - 2026-07-06
+
+- **Limpieza Elogistix — 11 proformas facturadas fuera del sistema (gap externo)**. Durante un periodo sin ERP, 11 proformas aceptadas se facturaron por otro sistema. Se movieron de `pendiente/borrador` a `facturada` copiando `estado_revision` a `estado_aprobacion` y marcándolas con `origen='gap_externo'` (nuevo valor, convive con `legacy_erp` y `NULL`). Se asignó `fecha_facturacion=now()` a las que estaban en blanco. Folios: PRO-2026-0291..0296, 0299, 0318, 0325, 0332, 0336. Respaldo en `public._backup_gap_externo_proformas_20260706`.
+
 ## [13.199.0] - 2026-07-06
 
 - **Limpieza Elogistix — backfill de proformas legadas**. De 331 proformas, 285 quedaron marcadas como `facturada/borrador` durante la migración del ERP anterior. Se separaron en 3 grupos y se normalizaron: (1) **131 con evidencia real** (con `factura_id` interno o `folio_factura_externa`) — se copió `estado_revision` a `estado_aprobacion`. (2) **154 fantasmas** (sin ninguna evidencia de factura) — se agregó columna `origen` a `public.proformas` y se marcaron con `origen='legacy_erp'`, además de normalizar su aprobación. (3) **5 quedan en borrador** con `estado_revision='pendiente'` (marcadas legacy pero sin normalizar porque no tiene sentido aprobar sin revisar). Respaldo completo en `public._backup_backfill_proformas_20260706` (285 filas). Nuevo índice parcial `idx_proformas_origen` para consultas de legado.
