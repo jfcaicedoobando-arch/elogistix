@@ -104,7 +104,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, tipo_iva, tasa_iva_aplicada")
+    .select("descripcion, cantidad, precio_unitario, clave_sat, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", body.factura_id);
   if (conErr) return json({ error: "conceptos_query_failed", detail: conErr.message }, 500);
 
