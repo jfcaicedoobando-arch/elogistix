@@ -84,6 +84,35 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     return json({ error: "facturapi_error", status, detail, message }, 502);
   }
 
+  const persisted = await persistTimbradoNc({
+    supabase,
+    invoice,
+    ctx,
+    nc,
+    apiKey: resolved.data.apiKey,
+    ambiente: resolved.data.ambiente,
+    notaCreditoId: body.nota_credito_id,
+    userId: userData.user.id,
+    userEmail: userData.user.email,
+  });
+  if (!persisted.ok) return json(persisted.body, persisted.status);
+  return json(persisted.body);
+}));
+
+interface PersistNcArgs {
+  supabase: ReturnType<typeof createClient>;
+  invoice: { id: string; uuid: string; folio_number?: number; folio?: number; series?: string };
+  ctx: ReturnType<typeof buildNcContextFromRows>;
+  nc: { organization_id: string; factura_id: string };
+  apiKey: string;
+  ambiente: string;
+  notaCreditoId: string;
+  userId: string;
+  userEmail: string | undefined;
+}
+
+async function persistTimbradoNc(args: PersistNcArgs): Promise<{ ok: true; body: unknown } | { ok: false; body: unknown; status: number }> {
+  const { supabase, invoice, ctx, nc, apiKey, ambiente, notaCreditoId, userId, userEmail } = args;
   const facturapiId = invoice.id;
   const uuid = invoice.uuid;
   const folio = invoice.folio_number ?? invoice.folio ?? 0;
@@ -91,10 +120,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
   const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
 
-  // Ola 3 · Item 5 — Respaldo automático del XML timbrado (best-effort).
   const respaldo = await respaldarXmlTimbrado({
     supabase,
-    apiKey: resolved.data.apiKey,
+    apiKey,
     facturapiId,
     organizationId: nc.organization_id,
     uuid,
@@ -112,25 +140,25 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
       xml_url: xmlUrl,
       xml_backup_path: respaldo.path,
       estado: "Timbrada",
-      ambiente: resolved.data.ambiente,
+      ambiente,
       timbrado_en: new Date().toISOString(),
-      timbrado_por: userData.user.id,
+      timbrado_por: userId,
     })
-    .eq("id", body.nota_credito_id);
-  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+    .eq("id", notaCreditoId);
+  if (updErr) return { ok: false, body: { error: "db_update_failed", detail: updErr.message }, status: 500 };
 
   await registrarBitacoraEdge(supabase, {
     organizationId: nc.organization_id,
-    usuarioId: userData.user.id,
-    usuarioEmail: userData.user.email,
+    usuarioId: userId,
+    usuarioEmail: userEmail,
     modulo: "facturacion",
     accion: "facturapi_nc_emitida",
-    entidadId: body.nota_credito_id,
+    entidadId: notaCreditoId,
     detalles: {
       uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: nc.factura_id,
       xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
     },
   });
 
-  return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
-}));
+  return { ok: true, body: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo } };
+}
