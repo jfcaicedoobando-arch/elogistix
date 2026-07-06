@@ -111,6 +111,7 @@ function describirEliminacionGenerica(modulo: string): DescripcionBitacora {
   return { titulo: `Eliminó ${singular}` };
 }
 
+// eslint-disable-next-line complexity -- despacho por (accion, modulo): cada rama es un if lineal sin lógica anidada; se dejará como está hasta migrar a tabla de despacho.
 export function describirEntrada(entrada: EntradaBitacora): DescripcionBitacora {
   const detalles = (entrada.detalles ?? {}) as Record<string, unknown>;
   const { accion, modulo } = entrada;
