@@ -88,7 +88,6 @@ export async function agregarConceptoFactura(params: {
   input: ConceptoFacturaInput;
 }): Promise<void> {
   const linea = normalizarLinea(params.input);
-  if (!linea.descripcion) throw new Error("La descripción es obligatoria");
   const { error } = await supabase.from("conceptos_factura").insert({
     factura_id: params.facturaId,
     organization_id: params.organizationId,
