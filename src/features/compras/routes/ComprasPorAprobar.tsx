@@ -117,27 +117,14 @@ export default function ComprasPorAprobar() {
             placeholder="Buscar por folio, folio proveedor o proveedor…"
           />
           {seleccionEnLote && (
-            <div
-              className={cn(
-                "flex items-center justify-between gap-3 rounded-md border px-3 py-2",
-                selected.size > 0 ? "bg-accent/5 border-accent/40" : "bg-muted/30",
-              )}
-            >
-              <p className="text-xs text-muted-foreground">
-                {selected.size === 0
-                  ? "Selecciona una o más facturas para aprobarlas en lote."
-                  : `${selected.size} factura(s) seleccionada(s) · ${formatCurrency(totalSelMxn, "MXN")} · ${formatCurrency(totalSelUsd, "USD")}`}
-                {isRunning && progreso && (
-                  <span className="ml-2 text-accent">
-                    Procesando {progreso.hecho}/{progreso.total}…
-                  </span>
-                )}
-              </p>
-              <Button size="sm" disabled={selected.size === 0 || isRunning} onClick={() => setConfirmOpen(true)}>
-                {isRunning ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
-                Aprobar seleccionadas ({selected.size})
-              </Button>
-            </div>
+            <ComprasPorAprobarBulkBar
+              selectedCount={selected.size}
+              totalSelMxn={totalSelMxn}
+              totalSelUsd={totalSelUsd}
+              isRunning={isRunning}
+              progreso={progreso}
+              onOpenConfirm={() => setConfirmOpen(true)}
+            />
           )}
         </CardContent>
       </Card>
