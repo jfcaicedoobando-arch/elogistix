@@ -15,7 +15,7 @@
 import type React from "react";
 import { Inbox, type LucideIcon } from "lucide-react";
 import { flexRender, type Table } from "@tanstack/react-table";
-import { useNavigate } from "react-router-dom";
+import { useSafeNavigate } from "./useSafeNavigate";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
