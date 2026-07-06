@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.185.0] - 2026-07-06
+
+- **Compras — Conciliación por renglón (partidas)** — El panel de `/compras/conciliacion` ahora es a **nivel de partida**:
+  - Cada `concepto_costo` se puede expandir (▸/▾) para ver sus partidas de proveedor: folio, fecha de emisión, descripción, monto y % del cotizado que cubre.
+  - Nueva columna **Estatus** derivada por renglón: `Sin match`, `Parcial`, `Conciliado` (±1%) o `Excedente` (real > cotizado + 1%). Funciones puras `clasificarRenglon`, `calcularResumenPorEstatus`, `calcularResumenPorMoneda` en `reconciliacionCostos.ts`.
+  - Nueva tarjeta de conteo por estatus + contador de **partidas huérfanas** (PFC sin `concepto_costo_id` o apuntando a otro embarque), servida por `fetchPartidasHuerfanasCount`.
+  - Totales agregados al pie del panel, segregados por moneda cuando el embarque mezcla MXN + USD.
+  - `fetchReconciliacionEmbarque` ahora trae `descripcion` y `fecha_emision` de cada partida vinculada.
+  - Tests unitarios nuevos: `reconciliacionCostos.renglon.test.ts` (clasificación, resumen por estatus, resumen por moneda, propagación de estatus en `buildFilasReconciliacion`).
+
 ## [13.184.0] - 2026-07-06
 
 - **Compras — Conciliación con desglose inline** — El click en una fila de `/compras/conciliacion` ya no navega a `/embarques/:id`; abre un **panel lateral** (`Sheet`) con el desglose cotizado vs real por concepto (usa `fetchReconciliacionEmbarque` + `calcularResumen`, sin nuevo servicio). Incluye resumen económico (cotizado, real, diferencia, %), tabla de conceptos con facturas de proveedor vinculadas y botón "Abrir embarque" para conservar el acceso completo. Nuevo archivo: `src/features/compras/routes/_sections/ConciliacionDetalleSheet.tsx`.
