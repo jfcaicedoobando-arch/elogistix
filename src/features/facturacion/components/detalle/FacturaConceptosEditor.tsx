@@ -38,6 +38,8 @@ const EMPTY: ConceptoFacturaInput = {
   precio_unitario: 0,
   clave_sat: "78101800",
   tipo_iva: "gravado_16",
+  tasa_ret_isr: 0,
+  tasa_ret_iva: 0,
 };
 
 export function FacturaConceptosEditor({ facturaId, organizationId, moneda, conceptos }: Props) {
