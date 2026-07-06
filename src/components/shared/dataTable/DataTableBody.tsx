@@ -79,7 +79,10 @@ export function DataTableBody<T>({
   rowClassName,
   onRowClick,
   onRowMouseEnter,
+  getRowHref,
+  getRowAriaLabel,
 }: Props<T>) {
+  const navigate = useNavigate();
   const cellPad = DENSITY_CELL[density];
   const borderCell = bordered ? "border-r last:border-r-0" : "";
   const leafColumns = table.getAllLeafColumns();
