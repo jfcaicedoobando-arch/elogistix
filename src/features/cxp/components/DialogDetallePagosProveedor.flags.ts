@@ -5,13 +5,19 @@ export interface FacturaFlags {
   aprobada: boolean;
   pagable: boolean;
   puedeEliminar: boolean;
+  /** Puede saldarse sin pago real (compensación, quita, etc.). */
+  puedeCerrarSinPago: boolean;
 }
 
 export function computeFacturaFlags(f: FacturaCxP | null, canEdit: boolean): FacturaFlags {
-  if (!f) return { aprobada: false, pagable: false, puedeEliminar: false };
+  if (!f) {
+    return { aprobada: false, pagable: false, puedeEliminar: false, puedeCerrarSinPago: false };
+  }
+  const aprobada = f.estado_aprobacion === "aprobada";
   return {
-    aprobada: f.estado_aprobacion === "aprobada",
+    aprobada,
     pagable: canEdit && f.saldo > 0 && f.estado !== "Borrador",
     puedeEliminar: canEdit && f.pagado <= 0,
+    puedeCerrarSinPago: canEdit && aprobada && f.saldo > 0 && f.estado === "Vigente",
   };
 }
