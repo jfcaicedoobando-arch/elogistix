@@ -50,7 +50,7 @@ export function ProveedorOperacionesTable({ operaciones }: Props) {
       id: "exp",
       header: "Expediente",
       cell: ({ row }) => (
-        <Link to={`/embarques/${row.original.embarqueId}`} className="text-primary hover:underline font-medium text-xs" onClick={(e) => e.stopPropagation()}>{row.original.expediente}</Link>
+        <span className="font-medium text-xs">{row.original.expediente}</span>
       ),
     },
     { id: "cliente", header: "Cliente", meta: { className: "text-xs" }, cell: ({ row }) => <span title={row.original.clienteNombre}>{toTitleCase(row.original.clienteNombre)}</span> },
