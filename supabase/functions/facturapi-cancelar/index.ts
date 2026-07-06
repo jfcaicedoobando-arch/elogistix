@@ -12,8 +12,37 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
-import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+
+/**
+ * Descarga el acuse SAT de cancelación desde FacturApi.
+ * Endpoint: GET /invoices/{id}/cancellation_receipt/xml
+ * Devuelve { xml, status } — si el SAT aún no procesa la cancelación
+ * (típicamente ~unas horas), status='pending' y xml=null.
+ */
+async function descargarAcuseCancelacion(
+  facturapiId: string,
+  apiKey: string,
+): Promise<{ xml: string | null; status: string }> {
+  try {
+    const res = await fetch(
+      `${FACTURAPI_BASE}/invoices/${facturapiId}/cancellation_receipt/xml`,
+      { headers: { Authorization: basicAuthHeader(apiKey) } },
+    );
+    if (res.status === 200) {
+      const xml = await res.text();
+      return { xml, status: "accepted" };
+    }
+    if (res.status === 404 || res.status === 425) {
+      // 404 = aún no emitido por SAT; 425 = too early. Se reintenta después.
+      return { xml: null, status: "pending" };
+    }
+    return { xml: null, status: `error_${res.status}` };
+  } catch {
+    return { xml: null, status: "error_network" };
+  }
+}
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -93,6 +122,11 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   }
   const fapiJson = cancelResp;
 
+  // Descarga inmediata del acuse SAT. Si el SAT aún no lo emite, quedará
+  // como 'pending' y un cron posterior podrá reintentar. Guardar el XML
+  // es OBLIGATORIO por SAT desde 2022 (conservación 5 años).
+  const acuse = await descargarAcuseCancelacion(factura.facturapi_id!, resolved.data.apiKey);
+
   // Si fue sustitución (motivo 01 + sustituta resuelta), marcar estado 'Sustituida'
   // y enlazar `sustituida_por`; si no, el ciclo normal -> 'Cancelada'.
   const esSustitucion = motivo === "01" && !!sustituidaPorFacturaId;
@@ -100,6 +134,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     estado: esSustitucion ? "Sustituida" : "Cancelada",
     cancelacion_motivo: motivo,
     cancelado_en: new Date().toISOString(),
+    acuse_cancelacion_xml: acuse.xml,
+    acuse_cancelacion_fecha: acuse.xml ? new Date().toISOString() : null,
+    acuse_cancelacion_status: acuse.status,
   };
   if (esSustitucion) updatePayload.sustituida_por = sustituidaPorFacturaId;
 
@@ -122,6 +159,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     },
   });
 
-  return json({ ok: true, status: fapiJson.status ?? "canceled", sustituida: esSustitucion });
+  return json({
+    ok: true,
+    status: fapiJson.status ?? "canceled",
+    sustituida: esSustitucion,
+    acuse_status: acuse.status,
+    acuse_guardado: !!acuse.xml,
+  });
 }));
 
