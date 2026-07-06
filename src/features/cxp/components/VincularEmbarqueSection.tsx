@@ -104,19 +104,7 @@ export function VincularEmbarqueSection({
         embarque_id: s.embarque_id,
       })),
     );
-    const fuertes = res.seleccion.filter((s) => s.fuerte).length;
-    const dudosas = res.seleccion.length - fuertes;
-    const sinMatch = (data.length ?? 0) - res.seleccion.length - res.descartadosPorMoneda;
-    if (res.seleccion.length === 0) {
-      toast.info("Sin sugerencias con confianza suficiente. Marca manualmente los conceptos.");
-    } else {
-      toast.success(
-        `${res.seleccion.length} sugerencia${res.seleccion.length === 1 ? "" : "s"} aplicada${res.seleccion.length === 1 ? "" : "s"}` +
-        (dudosas > 0 ? ` · ${dudosas} dudosa${dudosas === 1 ? "" : "s"}` : "") +
-        (res.descartadosPorMoneda > 0 ? ` · ${res.descartadosPorMoneda} descartada${res.descartadosPorMoneda === 1 ? "" : "s"} por moneda` : "") +
-        (sinMatch > 0 ? ` · ${sinMatch} sin match` : ""),
-      );
-    }
+    notificarResumen(res, data.length);
   };
 
   if (!proveedorId) return null;
