@@ -26,6 +26,7 @@ const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
 const ESTADOS: Array<EstadoNotaCredito | "todos"> = ["todos", "Borrador", "Aprobada", "Timbrada", "Aplicada", "Cancelada"];
 
 export function NotasCreditoRecientes() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [estado, setEstado] = useState<EstadoNotaCredito | "todos">("todos");
   const [cliente, setCliente] = useState<string>("todos");
