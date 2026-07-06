@@ -9,7 +9,7 @@
  * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
