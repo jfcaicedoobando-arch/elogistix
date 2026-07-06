@@ -16,8 +16,9 @@ describe("sugerirVinculos", () => {
     expect(r.ranking[0].score).toBeGreaterThanOrEqual(0.6);
   });
 
-  it("selecciona el match fuerte y descarta moneda distinta", () => {
-    const r = sugerirVinculos(FACTURA, CANDIDATOS);
+  it("selecciona el match relevante y descarta moneda distinta", () => {
+    const factura = { ...FACTURA, descripcion: "Flete marítimo" };
+    const r = sugerirVinculos(factura, CANDIDATOS);
     const ids = r.seleccion.map((s) => s.conceptoId);
     expect(ids).toContain("c1");
     expect(ids).not.toContain("c3"); // USD vs MXN
