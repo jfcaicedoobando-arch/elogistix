@@ -8,6 +8,7 @@
 import { Link } from "react-router-dom";
 import {
   FileText, FileCode2, Ship, Stamp, Mail, Trash2, Loader2, Replace, Ban,
+  FileArchive, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
