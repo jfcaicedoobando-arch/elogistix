@@ -2,8 +2,15 @@
  * exchange-rates — TC DOF USD/EUR → MXN publicado por Banxico (Art. 20 CFF).
  *
  * v13.166.0: reescrito para reemplazar Frankfurter.app por la API SIE de Banxico.
+ * v13.205.4: se cambia la serie USD de SF43718 (FIX) a SF60653 (DOF) porque el
+ *            SAT exige el TC DOF para el campo `TipoCambio` del CFDI 4.0 en
+ *            facturas en moneda extranjera. El DOF es el FIX del día hábil
+ *            anterior republicado, así que `datos/oportuno` devuelve el TC
+ *            DOF vigente para operaciones del día en curso.
+ *
  * Series consultadas en paralelo:
- *   - SF43718 → USD/MXN FIX (para obligaciones en moneda extranjera)
+ *   - SF60653 → USD/MXN DOF (tipo de cambio para solventar obligaciones
+ *               denominadas en dólares — publicado en el DOF, exigido por SAT)
  *   - SF46410 → EUR/MXN determinado por Banxico
  *
  * Caché in-memory 12 h para no agotar la cuota diaria del token.
@@ -18,7 +25,7 @@ export const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5 };
 const FETCH_TIMEOUT_MS = 6000;
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
 
-const SERIE_USD = "SF43718";
+const SERIE_USD = "SF60653"; // DOF (antes SF43718 FIX) — requerido por SAT para CFDI
 const SERIE_EUR = "SF46410";
 
 interface BanxicoDato { fecha: string; dato: string }
