@@ -16,8 +16,6 @@ import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortin
 
 const render = (ui: ReactElement) =>
   rtlRender(ui, { wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter> });
-const rerenderWithRouter = (rerender: (ui: ReactElement) => void, ui: ReactElement) =>
-  rerender(<MemoryRouter>{ui}</MemoryRouter>);
 
 interface EmbarqueRow {
   id: string;
