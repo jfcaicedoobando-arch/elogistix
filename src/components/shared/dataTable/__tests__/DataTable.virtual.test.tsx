@@ -26,7 +26,7 @@ describe("VirtualDataTable — render vía rowModel de TanStack", () => {
     expect(screen.getByText("Total")).toBeInTheDocument();
   });
 
-  it("muestra empty state cuando no hay filas", () => {
+  it("muestra empty state cuando no hay filas (VirtualDataTable)", () => {
     render(
       <VirtualDataTable columns={embarqueColumns} data={[]} rowKey={(r) => r.id}
         emptyMessage="Sin datos" />,

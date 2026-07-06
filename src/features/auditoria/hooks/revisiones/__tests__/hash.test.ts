@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { hallazgoHash, revisionKey, AUDITORIA_REVISIONES_KEY } from "../hash";
 
-describe("hallazgoHash", () => {
+describe("hallazgoHash (hash.ts unit)", () => {
   const base = { embarque_id: "e1", regla: "docs_faltantes" as const, detalle: "faltan BL" };
 
 
@@ -21,7 +21,7 @@ describe("hallazgoHash", () => {
   });
 });
 
-describe("revisionKey", () => {
+describe("revisionKey (hash.ts unit)", () => {
   it("concatena embarque_id, regla y hash", () => {
     const h = { embarque_id: "e1", regla: "docs_faltantes" as const, detalle: "x" };
     const key = revisionKey(h);

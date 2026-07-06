@@ -44,7 +44,7 @@ describe("updateCliente", () => {
     expect(mock.tableCalls[0]?.ops).toContain("update");
   });
 
-  it("propaga error de supabase", async () => {
+  it("propaga error de supabase al actualizar cliente", async () => {
     mock.setTableResult("clientes", { data: null, error: { message: "conflict" } });
     await expect(updateCliente("c-1", { nombre: "X" })).rejects.toThrow();
   });

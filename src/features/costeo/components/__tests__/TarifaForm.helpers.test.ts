@@ -40,7 +40,7 @@ describe("buildInitialForm", () => {
   });
 });
 
-describe("calcularTotal", () => {
+describe("calcularTotal (TarifaForm)", () => {
   it("suma flete + recargos incluidos", () => {
     const total = calcularTotal({
       ...baseForm,
