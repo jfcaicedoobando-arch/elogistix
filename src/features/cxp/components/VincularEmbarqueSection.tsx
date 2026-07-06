@@ -128,39 +128,24 @@ export function VincularEmbarqueSection({
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
 
-  const puedeSugerir =
-    !!onAplicarSugerencias &&
-    !!facturaDescripcion &&
-    !!facturaMoneda &&
-    (facturaMonto ?? 0) > 0 &&
-    (data?.length ?? 0) > 0;
+  const puedeSugerir = calcularPuedeSugerir({
+    onAplicar: onAplicarSugerencias,
+    descripcion: facturaDescripcion,
+    monto: facturaMonto,
+    moneda: facturaMoneda,
+    totalCandidatos: data?.length ?? 0,
+  });
 
   const handleSugerir = () => {
     if (!onAplicarSugerencias || !data) return;
-    const res = sugerirVinculos(
-      {
-        descripcion: facturaDescripcion ?? "",
-        monto: facturaMonto ?? 0,
-        moneda: facturaMoneda ?? "",
-      },
-      data.map((c) => ({
-        id: c.id,
-        concepto: c.concepto,
-        monto: c.monto,
-        moneda: c.moneda,
-        embarque_id: c.embarque_id,
-      })),
-    );
-    setUltimaSugerencia(res.seleccion);
-    onAplicarSugerencias(
-      res.seleccion.map((s) => ({
-        conceptoId: s.conceptoId,
-        concepto: s.concepto,
-        monto: s.monto,
-        embarque_id: s.embarque_id,
-      })),
-    );
-    notificarResumen(res, data.length);
+    ejecutarSugerencia({
+      data,
+      descripcion: facturaDescripcion ?? "",
+      monto: facturaMonto ?? 0,
+      moneda: facturaMoneda ?? "",
+      onAplicar: onAplicarSugerencias,
+      setUltima: setUltimaSugerencia,
+    });
   };
 
   if (!proveedorId) return null;
