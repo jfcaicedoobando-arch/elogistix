@@ -13,7 +13,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - **(Item 2) Catálogos SAT completos** en `src/constants/catalogosSAT.ts`: usos CFDI de 5 → **25** (agrega I01-I08 inversiones, D01-D10 deducciones personales, G02 devoluciones, CP01 pagos, CN01 nómina); formas de pago de 6 → **22** (agrega 05 monedero, 06 dinero electrónico, 08 vales, 12-15 dación/subrogación/consignación/condonación, 17 compensación, 23-27 novación/confusión/remisión/prescripción/satisfacción, 29 tarjeta servicios, 30 anticipos, 31 intermediario).
   - **(Item 5) Factura manual sin folio inválido**: el número provisional cambió de `MAN-{timestamp}` a `BORRADOR-{timestamp}`. La columna de la lista (`facturacionColumns.tsx`) y el header del detalle (`FacturaDetalleHeader.tsx`) ya detectaban el prefijo `BORRADOR-` y muestran *"Sin folio (borrador)"* en cursiva gris. Envío por email y descarga PDF/XML permanecen bloqueados hasta el timbrado (gate `!sinTimbrar` preexistente en `FacturaDetalleActions.tsx`).
   - **Pendiente Ola 1 (parte 2/2)**: Item 3 (validación UUID CFDI vs SAT en alta de factura proveedor — requiere edge function con integración al servicio SOAP del SAT) e Item 4 (reintento nocturno automático de REP fallidos — requiere cron trigger + edge function). Se implementan en el siguiente turno.
-
+## [13.185.0] - 2026-07-06
 
 
 - **Compras — Conciliación por renglón (partidas)** — El panel de `/compras/conciliacion` ahora es a **nivel de partida**:
