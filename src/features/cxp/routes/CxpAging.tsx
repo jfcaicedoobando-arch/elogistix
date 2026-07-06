@@ -66,6 +66,7 @@ const DEFAULTS: Filters = { cubeta: "todas" };
 export default function CxpAging() {
   const { data = [], isLoading, totales } = useCxpAging();
   const columns = useMemo(() => buildCxpAgingColumns(), []);
+  const [drilldown, setDrilldown] = useState<{ prov: CxpAgingRow; cubeta: CubetaAging | "todas" } | null>(null);
 
   const paged = useClientPagedList<CxpAgingRow, Filters>({
     data,
