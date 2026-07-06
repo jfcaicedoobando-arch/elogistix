@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.203.0] - 2026-07-06
+
+- **Fase 2.1 estandarización de list-items tipo card**. Migración a `<DrilldownRow>` (nuevo componente helper) de todas las cards / list-rows que se comportan como filas de tabla:
+  - CRM dashboard: `DealsCards` (oportunidades + leads), `ActividadesHoyCard`, `NextBestActionsCard`, `CotizacionesSinRespuestaCard`, `LineageCard` (leads/cotizaciones/embarques del linaje).
+  - Dashboards/Operaciones: `EmbarquesPendientesAdminCard`, `PagosCajaBlock` (top CxP), `CobranzaBlock` (top facturas vencidas), `AlertasPanel`, `EmbarqueEstadoListItem`.
+- **Nuevo componente `<DrilldownRow>`** (`src/components/shared/dataTable/DrilldownRow.tsx`): wrapper accesible (`role="link"`, `tabIndex=0`, Enter/Space, Ctrl/Cmd+click, click medio, ignora controles internos). Acepta prop `onActivate` para casos como cerrar un diálogo antes de navegar.
+- Se conservan como links legítimos (fuera de fila): CTAs de header ("Ver todos", "Ver cartera", "Ver tesorería"), banners, empty-state CTAs, breadcrumbs, tiles de navegación (`ComprasDashboardTiles.QuickLink`), KPI cards con un solo CTA (`PortalFacturacionPendienteCard`), texto de descripción inline (`PortalUsuariosTab`), y `CierreCheckItem` (usa `target="_blank"` intencionalmente).
+
 ## [13.202.0] - 2026-07-06
 
 - **Fase 2 estandarización de tablas — cierre**: portal cliente + costeo + guardrail arquitectónico.
