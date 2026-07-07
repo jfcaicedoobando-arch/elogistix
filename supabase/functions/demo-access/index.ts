@@ -4,14 +4,10 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { initSentryEdge, captureEdgeException } from "../_shared/sentry.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 initSentryEdge("demo-access");
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 
 const DEMO_EMAIL = "demo@librecarga.com";
 const DEMO_PASSWORD = "demo-libre-carga-2026";
