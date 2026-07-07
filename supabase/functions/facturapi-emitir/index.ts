@@ -62,7 +62,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // Cargar factura + cliente + conceptos
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a")
+    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl")
     .eq("id", body.factura_id)
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
