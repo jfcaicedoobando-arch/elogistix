@@ -110,8 +110,9 @@ export function useTableInstance<T>({
     getRowId,
     enableSorting,
     manualSorting: isServer,
-    state: { sorting },
+    state: { sorting, ...(columnVisibility ? { columnVisibility } : {}) },
     onSortingChange,
+    onColumnVisibilityChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting && !isServer ? getSortedRowModel() : undefined,
   });
