@@ -8,6 +8,7 @@ import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
 
 interface ConceptoVentaDb {
+  id: string;
   descripcion: string;
   cantidad: number;
   precio_unitario: number | string;
@@ -15,6 +16,7 @@ interface ConceptoVentaDb {
   contenedor_id: string | null;
 }
 interface ConceptoCostoDb {
+  id: string;
   proveedor_id: string | null;
   concepto: string;
   monto: number | string;
