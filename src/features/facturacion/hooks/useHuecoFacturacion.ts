@@ -23,7 +23,7 @@ export type { FilaHueco, HuecoFacturacionResult };
 export function useHuecoFacturacion() {
   const { organizationId } = useOrgFilter();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.facturacion.hueco(organizationId),
     queryFn: () => fetchHuecoFacturacion({ organizationId: organizationId ?? null }),
     staleTime: 60_000,
@@ -45,6 +45,8 @@ export function useHuecoFacturacion() {
 
   return {
     isLoading,
+    isError,
+    refetch,
     filas,
     totalEmbarques,
     totalUsd,
