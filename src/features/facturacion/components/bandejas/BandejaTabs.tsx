@@ -38,14 +38,7 @@ function badgeClass(tone: Def["tone"]): string {
   return "bg-muted text-muted-foreground";
 }
 
-interface BadgeConteosMap {
-  "por-facturar": number;
-  "por-timbrar": number;
-  "por-enviar": number;
-  "por-cobrar": number;
-  "vencidas": number;
-  "rep-pendientes": number;
-}
+type BadgeConteosMap = Record<Exclude<BandejaId, "emitidas" | "notas">, number>;
 
 export function BandejaTabs() {
   const { data: conteos } = useBandejaConteos();
@@ -63,7 +56,8 @@ export function BandejaTabs() {
   return (
     <TabsList className="bg-transparent border-0 p-0 h-auto flex flex-wrap gap-1">
       {DEFS.map((d) => {
-        const count = (counts as Record<string, number | undefined>)[d.id];
+        const count = d.id === "emitidas" || d.id === "notas" ? 0 : counts[d.id];
+
         return (
           <TabsTrigger
             key={d.id}
