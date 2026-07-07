@@ -1,40 +1,61 @@
 ## Problema
 
-El shard 14 falla en `useEmbarqueEstadoActions.branches.test.tsx`:
-
-```
-FAIL sync automático > dispara syncEstado cuando el estado calculado difiere del actual
-Number of calls: 0
-```
+Un visitante de `librecarga.com` hace clic en **"Probar demo"** y no pasa nada visible: el botón se queda cargando y luego falla. Reproducido con Playwright contra producción.
 
 ## Causa
 
-En v13.209.3 se añadió un gate al `useEffect` de sync automático para evitar el error RLS 42501 en `eventos_embarque` cuando un rol sin permisos (p. ej. `contador`) abre el detalle:
+En la consola del navegador aparece:
 
-```ts
-const puedeSincronizarEstado = isAdmin || isSuperAdmin || canEditOperations;
-...
-if (!puedeSincronizarEstado) return;
+```
+Access to fetch at 'https://…supabase.co/functions/v1/demo-access'
+from origin 'https://librecarga.com' has been blocked by CORS policy:
+Request header field baggage is not allowed by Access-Control-Allow-Headers
+in preflight response.
 ```
 
-El test mock de `usePermissions` sólo expone `{ isAdmin, canEditFinance }`, así que `canEditOperations` e `isSuperAdmin` quedan `undefined` y el gate bloquea el sync en el escenario esperado.
+Sentry (activo en producción) inyecta los headers `sentry-trace` y `baggage` en fetches que matchean `tracePropagationTargets`, incluyendo `*.supabase.co/functions/v1`. El navegador dispara un preflight `OPTIONS` y la respuesta no autoriza esos headers → cancela el POST.
 
-## Fix (solo test)
+Este mismo bug ya se corrigió en el resto de edge functions en la v13.114.13 mediante el helper compartido `_shared/cors.ts`, que incluye `sentry-trace, baggage` en `ALLOW_HEADERS`. Pero `supabase/functions/demo-access/index.ts` sigue usando un `corsHeaders` **local hardcodeado** que quedó fuera de esa migración:
 
-Actualizar `src/features/embarques/hooks/__tests__/useEmbarqueEstadoActions.branches.test.tsx`:
+```ts
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+```
 
-1. Ampliar el objeto `h.perms` y su reset en `beforeEach` para incluir `canEditOperations` e `isSuperAdmin` (default `false`), reflejando la firma real del hook.
-2. En el `describe("sync automático")`:
-   - Caso "dispara syncEstado…": setear `h.perms.canEditOperations = true` antes del `renderH`, porque ahora el sync automático requiere permiso de operaciones.
-   - Caso "NO dispara sync…": dejarlo como está (sin permisos → sigue sin disparar, cubre además la rama del nuevo gate).
-3. Añadir un test extra opcional: "no dispara sync cuando el usuario carece de permisos (rol contador)" para blindar la regresión del error de producción reportado.
+Es un endpoint público por diseño (sin JWT) → aplica `corsHeaders` wildcard del shared.
+
+## Fix
+
+**`supabase/functions/demo-access/index.ts`:**
+
+1. Reemplazar el `corsHeaders` local por el import del shared:
+   ```ts
+   import { corsHeaders } from "../_shared/cors.ts";
+   ```
+2. Borrar la constante local.
+3. El resto del handler (OPTIONS + Response con headers) queda idéntico.
+
+Con eso, el preflight autoriza `sentry-trace, baggage` (y los `x-supabase-client-*` que el SDK v2.95+ también envía) y el botón vuelve a funcionar en `librecarga.com`.
+
+## Verificación
+
+- Deploy de `demo-access`.
+- Playwright contra `https://librecarga.com`: click en "Probar demo" → esperar redirect a `/inicio` y screenshot post-navegación.
+- Confirmar en logs de la edge function una invocación 200 nueva (ahora sólo hay `booted`).
 
 ## Fuera de alcance
 
-- No se modifica `useEmbarqueEstadoActions.ts` — el gate es correcto y arregla el bug real (RLS `eventos_embarque`).
-- No hay cambios en RLS, BD, ni en el flujo de sync.
-- No se bumpea `APP_VERSION` porque es sólo un ajuste de test; se registra una línea breve en `CHANGELOG.md` bajo la versión `13.209.3` existente (patch de test).
+- No se toca el flujo de `enterDemoMode`, la RPC `seed_demo_organization`, ni el frontend.
+- No se cambian dominios permitidos ni políticas.
+
+## Registro
+
+- Bump `APP_VERSION` a `13.209.4`.
+- Entrada en `CHANGELOG.md` [13.209.4] — Fix: botón "Probar demo" fallaba en `librecarga.com` por CORS (`baggage`/`sentry-trace`); ahora usa el helper `_shared/cors.ts`.
 
 ## Analogía
 
-El código nuevo es un candado en la puerta: sólo abre para admin/super_admin/operaciones. El test antiguo probaba la puerta sin darle llave; ahora le entregamos la llave correcta al caso que debe abrir, y agregamos un caso que verifica que quien no tiene llave se queda fuera (que es justo el bug que reportó el contador).
+Es como un guardia en la puerta de un edificio que sólo deja entrar visitas con una lista muy corta de credenciales aceptadas. Sentry, sin avisar, le añadió dos credenciales nuevas a cada visitante (`sentry-trace` y `baggage`). Como el guardia de `demo-access` nunca fue actualizado, rechazó a todos los visitantes que venían de `librecarga.com`. Cambiamos ese guardia por el "estándar del edificio" que ya conoce las credenciales nuevas.
