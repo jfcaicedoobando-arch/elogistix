@@ -44,11 +44,15 @@ export interface PagoContext {
     tasa_iva: number;
   };
   serie?: string | null;           // Serie del REP (si se usa serie distinta a las facturas)
+  /** v13.208.0 — Expediente y BLs del embarque asociado. */
+  referencias?: ReferenciasEmbarque | null;
 }
 
 export interface FacturapiRepPayload {
   type: "P";
   serie?: string;
+  /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
+  pdf_custom_section?: string;
   customer: {
     legal_name: string;
     tax_id: string;
