@@ -36,7 +36,10 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const reabrirEmbarque = useReabrirEmbarque();
   const syncEstado = useSyncEstadoEmbarque();
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
-  const { canEditFinance, isAdmin } = usePermissions();
+  const { canEditFinance, isAdmin, canEditOperations, isSuperAdmin } = usePermissions();
+  // v13.209.3 — Auto-sync sólo si el usuario puede escribir en embarques/eventos_embarque.
+  // Roles como contador/viewer no tienen permiso por RLS y provocaban error 42501.
+  const puedeSincronizarEstado = isAdmin || isSuperAdmin || canEditOperations;
 
   const siguienteEstado = embarque ? getSiguienteEstado(embarque.estado) : null;
   const { faltantes: docsFaltantes, bloqueante: docsBloqueantes } =
@@ -64,11 +67,12 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   useEffect(() => {
     if (!embarqueId || !modo || !estado) return;
     if (!tipo) return;
+    if (!puedeSincronizarEstado) return;
     const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd ?? null, eta ?? null, estado);
     if (estadoCalculado !== estado) {
       syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail: user?.email ?? '' });
     }
-  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, user?.email]);
+  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, user?.email, puedeSincronizarEstado]);
 
   const conceptosSinProforma = conceptosVenta.filter(
     (c) => c.estado_facturacion !== "en_proforma",

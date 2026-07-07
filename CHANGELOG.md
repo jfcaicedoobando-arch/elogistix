@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.209.3] - 2026-07-07
+
+- **Embarques · Auto-sync de estado sólo para roles con permiso de escritura**: al abrir el detalle de un embarque, un `useEffect` recalcula el estado (Confirmado/En Tránsito/Arribado/etc.) según ETD/ETA y, si difiere, lo sincroniza a BD insertando además un evento en `eventos_embarque`. Ese flujo hacía la escritura para cualquier usuario con acceso al detalle, pero RLS sólo permite `admin`, `operador` y `super_admin`. Un usuario `contador` (isela.martinez@elogistixshipping.com) veía el toast `Error al sincronizar estado: new row violates row-level security policy for table "eventos_embarque"` (código 42501). Ahora el efecto sólo dispara la mutación cuando `usePermissions()` indica `isAdmin || isSuperAdmin || canEditOperations`; para el resto de roles queda como no-op silencioso. No cambia BD, RLS ni la lógica de cálculo — sólo el gate en cliente.
+
 ## [13.209.2] - 2026-07-07
 
 - **Embarques · Badge de proformas refleja la respuesta del cliente**: en la tarjeta "Proformas Generadas" dentro del detalle de un embarque, el badge de estado ahora usa `getEstadoUnificado()` (la misma lógica que el listado global de proformas). Antes sólo miraba `estado_revision`, por lo que una proforma que el cliente ya había aceptado (`estado_cliente = 'aceptada'`) se seguía viendo como "Pendiente revisión" si nadie la había aprobado internamente. Caso reportado: PRO-2026-0278 del embarque ELIMP00021, aceptada por el cliente el 27-may-2026. Nueva prioridad del badge: Facturada → Borrador vacío → Consolidada → Rechazada por cliente → Aceptada por cliente → Pendiente revisión (sólo si no hay respuesta del cliente) → Enviada al cliente. Fix únicamente de presentación: no toca BD, ni el flujo de revisión, ni el portal público.
