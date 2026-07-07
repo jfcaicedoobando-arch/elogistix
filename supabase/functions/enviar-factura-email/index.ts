@@ -49,10 +49,18 @@ Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
   const keyRes = await resolveFacturapiKey(authed.admin, factura.organization_id);
   if (!keyRes.ok) return json(cors, { error: keyRes.data.error, message: keyRes.data.message }, keyRes.data.status);
 
+  // Fallback: si la factura fue timbrada en el ambiente opuesto (típico
+  // cuando la org migró de sandbox → live), intenta descargar con la key
+  // del otro ambiente si el primario responde 404 invoice_not_found.
+  const fallback = await resolveFacturapiKeyOtherAmbiente(
+    authed.admin as unknown as SupabaseLike,
+    factura.organization_id,
+  );
+
   const ts = Date.now();
   let paths: { pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string };
   try {
-    paths = await prepareAttachments(authed.admin, factura, keyRes.data.apiKey, ts);
+    paths = await prepareAttachments(authed.admin, factura, keyRes.data.apiKey, ts, fallback?.apiKey ?? null);
   } catch (e) {
     await captureEdgeException(e, { fn: 'enviar-factura-email', extra: { phase: 'fetch_upload_sign', factura_id: factura.id } });
     return json(cors, { error: 'No se pudo preparar los adjuntos', detail: (e as Error).message }, 500);
