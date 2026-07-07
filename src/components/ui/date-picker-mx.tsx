@@ -159,6 +159,7 @@ export function DatePickerMx({
         value={text}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         onBlur={handleBlur}
         placeholder={placeholder}
         aria-invalid={invalid || undefined}
