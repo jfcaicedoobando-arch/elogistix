@@ -41,10 +41,11 @@ function make(overrides: Partial<React.ComponentProps<typeof DestinatariosPicker
 }
 
 describe("DestinatariosPicker", () => {
-  it("renderiza contactos cliente y separa proveedores", () => {
+  it("renderiza contactos cliente y oculta proveedores/shippers", () => {
     make();
     expect(screen.getByText("juan@cliente.com")).toBeInTheDocument();
-    expect(screen.getByText(/Mostrar proveedores/)).toBeInTheDocument();
+    expect(screen.queryByText(/Mostrar proveedores/)).not.toBeInTheDocument();
+    expect(screen.queryByText("prov@x.com")).not.toBeInTheDocument();
     expect(screen.getByText("extra@x.com")).toBeInTheDocument();
   });
 

@@ -35,6 +35,7 @@ export {
   fetchDefaultsFacturacionCliente,
   guardarDefaultsTimbradoCliente,
   guardarDefaultsCcCliente,
+  guardarDefaultsDestinatariosCliente,
 } from "./datosFiscalesCliente";
 export type {
   ClienteFiscalRow,

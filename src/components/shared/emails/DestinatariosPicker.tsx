@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, AlertTriangle } from "lucide-react";
+import { X } from "lucide-react";
 import { EMAIL_RE, type Contacto } from "@/hooks/emails/useEnvioDocumentoForm";
 import { esContactoProveedor, CLIENTE_PRINCIPAL_ID } from "@/features/cotizacion/services/envios";
 
@@ -56,21 +56,14 @@ export function DestinatariosPicker({
   emailManual, setEmailManual, emailsManualesAgregados, agregarManual, quitarManual,
 }: Props) {
   const clienteContactos = contactos.filter((c) => !esContactoProveedor(c));
-  const proveedorContactos = contactos.filter(esContactoProveedor);
 
   return (
     <div className="space-y-2">
       <Label>Destinatarios</Label>
       {loadingContactos && <p className="text-sm text-muted-foreground">Cargando contactos…</p>}
-      {!loadingContactos && contactos.length === 0 && (
+      {!loadingContactos && clienteContactos.length === 0 && (
         <p className="text-sm text-muted-foreground">
           Este cliente no tiene contactos con email. Agrega uno manualmente abajo.
-        </p>
-      )}
-      {!loadingContactos && clienteContactos.length === 0 && proveedorContactos.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Este cliente no tiene contactos propios registrados. Captura el correo del cliente
-          manualmente o agrega un contacto en su ficha.
         </p>
       )}
 
@@ -80,19 +73,6 @@ export function DestinatariosPicker({
         ))}
       </div>
 
-      {proveedorContactos.length > 0 && (
-        <details className="rounded-md border border-dashed border-muted-foreground/30 px-2 py-1">
-          <summary className="cursor-pointer text-xs text-muted-foreground flex items-center gap-1 py-1">
-            <AlertTriangle className="h-3 w-3" />
-            Mostrar proveedores / shippers ({proveedorContactos.length}) — no recomendado
-          </summary>
-          <div className="space-y-1 pt-1">
-            {proveedorContactos.map((c) => (
-              <ContactoRow key={c.id} c={c} checked={!!seleccionados[c.id]} onToggle={(v) => onToggle(c.id, v)} warning />
-            ))}
-          </div>
-        </details>
-      )}
 
       {emailsManualesAgregados.length > 0 && (
         <div className="flex flex-wrap gap-1">

@@ -1,107 +1,81 @@
 
-# Propagar `{Org}_{nombre}` a todos los archivos descargables/enviables
+# Mejora al modal "Enviar factura por correo"
 
-Ya lo aplicamos a `facturapi-descargar` (PDF/XML de factura, REP y NC). Falta el resto de puntos donde el usuario recibe un archivo.
+Dos cambios pedidos, ambos con impacto en piezas compartidas:
 
-Analogía: la política de "sticker con la organización" ya se aplica en la ventanilla A; ahora hay que aplicarla en las ventanillas B, C, D…
+## 1. Quitar la sección de correos de proveedores/shippers
 
-## Alcance detectado
+Hoy `DestinatariosPicker` (compartido por factura, cotización y proforma) muestra un bloque colapsable **"Mostrar proveedores / shippers (N) — no recomendado"**. El usuario quiere que ese bloque desaparezca por completo — nunca se debe mandar factura a un shipper.
 
-### Server-side (edge functions)
-| Función | Situación actual | Cambio |
-|---|---|---|
-| `enviar-factura-email/helpers.ts` | `Factura-{numero}.pdf/xml` | `{Org}_Factura-{numero}.pdf/xml` |
-| `enviar-cotizacion-email/handlers.ts` | `createSignedUrl` sin `download` (baja con el nombre feo del path) | agregar `download: '{Org}_Cotizacion-{folio}.pdf'` |
-| `facturapi-cancelar/index.ts` | `acuse-cancelacion-{numero}.pdf` | `{Org}_acuse-cancelacion-{numero}.pdf` |
-| `facturapi-descargar/index.ts` | ✅ ya hecho | — |
-| `enviar-proforma-email/index.ts` | Sólo envía link al portal (sin PDF adjunto) | Sin cambios |
+Cambio:
+- `src/components/shared/emails/DestinatariosPicker.tsx`: eliminar el `<details>` de `proveedorContactos` y el filtro visual. La lista sólo muestra `clienteContactos` (con `esContactoProveedor === false`). Los contactos tipo proveedor/shipper quedan ocultos siempre.
+- Ajustar `__tests__/DestinatariosPicker.test.tsx` para reflejar el borrado (si tiene aserciones sobre el bloque).
 
-Cada función ya conoce el `organization_id` de la entidad; añadir un helper `slugifyOrg` + una consulta `SELECT nombre FROM organizations WHERE id = <org>`. Como los tres archivos comparten el patrón, se extrae un helper único en `supabase/functions/_shared/orgSlug.ts`:
+Alcance colateral: cotización y proforma también dejan de ver ese bloque. Consistente con la lógica de negocio (no mandarle factura/cotización al proveedor del cliente).
 
-```ts
-export function slugifyOrg(nombre: string | null | undefined): string {
-  const s = (nombre ?? "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 40);
-  return s || "org";
-}
-export async function fetchOrgSlug(admin, orgId: string): Promise<string> { ... }
-```
+## 2. Recordar destinatarios manuales y CC entre envíos al mismo cliente
 
-Y en `facturapi-descargar/index.ts` migrar sus funciones internas a este helper compartido (dejamos DRY el módulo).
+Hoy el modal ya recuerda **CC** por cliente (`clientes.email_cc_default` + fallback al último `factura_envios.cc`). Falta hacer lo mismo con los **destinatarios manuales** (emails escritos a mano que no vienen de la ficha del cliente).
 
-### Client-side (generadores PDF)
-| Archivo | Nombre actual | Nombre nuevo |
-|---|---|---|
-| `src/generators/cotizacionPdf.tsx` | `{folio}-cotizacion` | `{Org}_{folio}-cotizacion` |
-| `src/generators/proformaPdf.tsx` (x2) | `{numero}-proforma[-consolidada]` | `{Org}_{numero}-proforma[-consolidada]` |
-| `src/generators/rentabilidadPdf.tsx` | `Rentabilidad_...` | `{Org}_Rentabilidad_...` |
-| `src/features/cxp/routes/Cxp.tsx` | `Reporte_Cartera_{fecha}` | `{Org}_Reporte_Cartera_{fecha}` |
-| `src/features/presupuesto/components/TabVsReal.tsx` | (revisar) | prefijo `{Org}_` |
-| `src/features/profit/routes/ProfitEstadoResultados.tsx` | (revisar) | prefijo `{Org}_` |
-| `src/features/tesoreria/routes/Tesoreria.tsx` | (revisar) | prefijo `{Org}_` |
-| `src/features/cotizacion/routes/CotizacionInformativaDetalle.tsx` (Tarifario) | (revisar) | prefijo `{Org}_` |
+### Backend
 
-Fuera de alcance: CSVs de aging/reconciliación (son datos, no "archivos que se descargan por mail"). Si el usuario los quiere, se agregan en una siguiente ola.
+- Nueva migración:
+  - `ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS email_destinatarios_default text[];`
+  - Actualizar `obtener_defaults_facturacion_cliente(uuid)` para devolver también `destinatarios_emails text[]`, con COALESCE:
+    - preferencia guardada en `clientes.email_destinatarios_default`, o
+    - último `factura_envios.destinatarios` (extrayendo sólo los emails que NO estén en `contactos_cliente.email` del mismo cliente — así no duplicamos los del checkbox).
 
-Helper cliente en `src/lib/filenames.ts`:
+### Servicios
 
-```ts
-import { fetchEmisorEmpresa } from "@/features/configuracion/services";
+- `src/features/facturacion/services/datosFiscalesCliente.ts`:
+  - Añadir `destinatarios_emails: string[] | null` en `DefaultsFacturacionCliente`.
+  - Nueva función `guardarDefaultsDestinatariosCliente(clienteId, emails)` → `UPDATE clientes SET email_destinatarios_default = $2`.
+  - Reexport en `services/index.ts`.
 
-export function slugifyOrg(nombre: string | null | undefined): string { /* misma lógica */ }
+### Hook compartido
 
-/** Devuelve el slug del emisor configurado. Cache vía fetchEmisorEmpresa. */
-export async function getOrgFilenameSlug(): Promise<string> {
-  const emisor = await fetchEmisorEmpresa();
-  return slugifyOrg(emisor.razonSocial);
-}
+- `src/hooks/emails/useEnvioDocumentoForm.ts`:
+  - Nuevo prop opcional `destinatariosManualesInicial?: string[] | null`.
+  - En el `useEffect` de apertura, en vez de `setEmailsManualesAgregados([])`, precargar con la lista filtrada (regex email + dedupe contra los emails de los contactos ya listados, para no duplicar).
 
-export async function withOrgPrefix(name: string): Promise<string> {
-  const slug = await getOrgFilenameSlug();
-  return `${slug}_${name}`;
-}
-```
+- `src/components/shared/emails/EnviarDocumentoDialog.tsx`:
+  - Nuevo prop opcional `destinatariosInicial?: string[] | null` reenviado al hook.
 
-Se reusa el cache de 5 min de `fetchEmisorEmpresa`, así que agregar el prefijo no añade queries perceptibles.
+### Wiring del modal de factura
 
-Uso típico:
-```ts
-await descargarPdf(<Doc/>, await withOrgPrefix(`${folio}-cotizacion`));
-```
+- `src/features/facturacion/components/DialogEnviarFacturaBranded.tsx`:
+  - Pasar `destinatariosInicial={defaults?.destinatarios_emails ?? null}`.
+  - En `onEnviar` (además del guardado de CC ya existente): calcular `manualesPersist = payload.destinatarios.filter(d => !d.contacto_id).map(d => d.email)` y llamar `guardarDefaultsDestinatariosCliente(factura.cliente_id, manualesPersist)` con `try/catch` best-effort.
 
 ### Tests
-- Test unitario de `slugifyOrg` (frontend y edge — misma lógica, dos casas): acentos, espacios, símbolos, string vacío, límite 40 chars.
-- Extender `descargarCfdiFacturapi.test.ts`: ya cubre parseo de filename, sin cambios.
-- Extender un test de `enviar-factura-email` para verificar que `signUrl` recibe filename con prefijo (mockear `admin.storage`).
 
-### Versión y changelog
-- `APP_VERSION` → `13.213.39`.
-- Entrada `[13.213.39]` en `CHANGELOG.md`.
+- Extender `DialogEnviarFacturaBranded` (si tiene test) o el test del hook `useEnvioDocumentoForm`:
+  - Que `destinatariosManualesInicial` precarga los badges y no duplica con contactos.
+  - Que al vaciar la lista y enviar, se persiste `[]` (para "olvidar" preferencias explícitamente).
+- `guardarDefaultsDestinatariosCliente`: test mínimo del service (mock supabase).
 
-## Deploy
-- `supabase--deploy_edge_functions` para las 3 funciones tocadas: `enviar-factura-email`, `enviar-cotizacion-email`, `facturapi-cancelar` (y `facturapi-descargar` si movemos al helper compartido).
+### Metadata
+
+- `APP_VERSION` → `13.213.41`.
+- Nueva entrada `## [13.213.41] - 2026-07-07` en `CHANGELOG.md` explicando ambos cambios con analogía breve (agenda de correos que se acuerda de los invitados frecuentes; sacar los mails de los proveedores del picker porque no son destinatarios válidos de una factura al cliente).
+
+## Fuera de alcance
+
+- Persistir destinatarios manuales para cotización/proforma (mismo patrón, pero requiere cuatro cambios adicionales por módulo). Se puede hacer en otra ola si el usuario lo pide.
+- No se elimina el helper `esContactoProveedor` — sigue usándose para filtrar la lista, sólo desaparece de la UI el bloque expandible.
 
 ## Archivos
+
 Nuevos:
-- `supabase/functions/_shared/orgSlug.ts`
-- `src/lib/filenames.ts`
-- `src/lib/__tests__/filenames.test.ts`
+- `supabase/migrations/<timestamp>_defaults_destinatarios_cliente.sql`
 
 Editados:
-- `supabase/functions/facturapi-descargar/index.ts` (usar helper compartido — refactor sin cambio funcional)
-- `supabase/functions/enviar-factura-email/helpers.ts`
-- `supabase/functions/enviar-cotizacion-email/handlers.ts`
-- `supabase/functions/facturapi-cancelar/index.ts`
-- `src/generators/cotizacionPdf.tsx`
-- `src/generators/proformaPdf.tsx`
-- `src/generators/rentabilidadPdf.tsx`
-- `src/features/cxp/routes/Cxp.tsx`
-- `src/features/presupuesto/components/TabVsReal.tsx`
-- `src/features/profit/routes/ProfitEstadoResultados.tsx`
-- `src/features/tesoreria/routes/Tesoreria.tsx`
-- `src/features/cotizacion/routes/CotizacionInformativaDetalle.tsx`
+- `src/components/shared/emails/DestinatariosPicker.tsx`
+- `src/components/shared/emails/__tests__/DestinatariosPicker.test.tsx` (si aplica)
+- `src/hooks/emails/useEnvioDocumentoForm.ts`
+- `src/components/shared/emails/EnviarDocumentoDialog.tsx`
+- `src/features/facturacion/services/datosFiscalesCliente.ts`
+- `src/features/facturacion/services/index.ts`
+- `src/features/facturacion/components/DialogEnviarFacturaBranded.tsx`
 - `src/constants/appVersion.ts`
 - `CHANGELOG.md`

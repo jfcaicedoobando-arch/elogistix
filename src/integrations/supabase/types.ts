@@ -1383,6 +1383,7 @@ export type Database = {
           direccion: string
           email: string
           email_cc_default: string[] | null
+          email_destinatarios_default: string[] | null
           estado: string
           forma_pago_default: string | null
           id: string
@@ -1407,6 +1408,7 @@ export type Database = {
           direccion?: string
           email?: string
           email_cc_default?: string[] | null
+          email_destinatarios_default?: string[] | null
           estado?: string
           forma_pago_default?: string | null
           id?: string
@@ -1431,6 +1433,7 @@ export type Database = {
           direccion?: string
           email?: string
           email_cc_default?: string[] | null
+          email_destinatarios_default?: string[] | null
           estado?: string
           forma_pago_default?: string | null
           id?: string
@@ -7863,6 +7866,7 @@ export type Database = {
         Args: { p_cliente_id: string }
         Returns: {
           cc_emails: string[]
+          destinatarios_emails: string[]
           forma_pago: string
           metodo_pago: string
           uso_cfdi: string

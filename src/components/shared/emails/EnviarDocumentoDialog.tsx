@@ -46,6 +46,8 @@ interface Props {
   loading?: boolean;
   /** Correos a precargar en el campo CC (heredados del cliente / última factura). */
   ccInicial?: string[] | null;
+  /** Correos manuales a precargar como destinatarios (heredados del cliente / último envío). */
+  destinatariosInicial?: string[] | null;
   onEnviar: (payload: EnviarDocumentoPayload, form: EnvioFormState) => Promise<void> | void;
 }
 
@@ -53,9 +55,9 @@ export function EnviarDocumentoDialog({
   open, onOpenChange, clienteId, titulo, descripcion,
   buildAsuntoInicial, mostrarMarcarEnviada, labelMarcarEnviada,
   labelBotonEnviar = "Enviar", labelBotonReenviar = "Reenviar",
-  esReenvio, loading, ccInicial, onEnviar,
+  esReenvio, loading, ccInicial, destinatariosInicial, onEnviar,
 }: Props) {
-  const form = useEnvioDocumentoForm(open, clienteId, buildAsuntoInicial, ccInicial);
+  const form = useEnvioDocumentoForm(open, clienteId, buildAsuntoInicial, ccInicial, destinatariosInicial);
 
   const puedeEnviar = form.destinatarios.length > 0 && !loading;
 
