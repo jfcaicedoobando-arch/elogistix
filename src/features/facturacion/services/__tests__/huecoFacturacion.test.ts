@@ -63,9 +63,9 @@ describe("fetchHuecoFacturacion", () => {
     expect(r.totalUsd).toBeCloseTo(10 + 100 / 20, 2);
   });
 
-  it("ordena filas por diasDesdeEtd descendente", async () => {
+  it("ordena filas por diasDesdeEta descendente", async () => {
     mock.setTableResult("embarques", {
-      data: [emb("nuevo", { etd: "2026-06-08" }), emb("viejo", { etd: "2026-05-01" })],
+      data: [emb("nuevo", { eta: "2026-06-10" }), emb("viejo", { eta: "2026-05-01" })],
       error: null,
     });
     mock.setTableResult("conceptos_venta", { data: [], error: null });
