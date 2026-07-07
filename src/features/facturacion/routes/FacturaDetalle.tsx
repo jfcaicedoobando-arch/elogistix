@@ -8,33 +8,28 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { useFactura } from "@/features/facturacion/hooks";
-import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
-import { usePermissions } from "@/hooks/shared";
-import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
-import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
-import { FacturaEmisorCard } from "@/features/facturacion/components/detalle/FacturaEmisorCard";
-import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/FacturaReceptorCard";
-import { FacturaTotalesCard } from "@/features/facturacion/components/detalle/FacturaTotalesCard";
-import { FacturaTimbradoCard } from "@/features/facturacion/components/detalle/FacturaTimbradoCard";
-import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
-import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
-import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
-import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
-import { FacturaDetalleActionsBar } from "@/features/facturacion/components/detalle/FacturaDetalleActionsBar";
-import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
-import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
-import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
-import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { usePermissions } from "@/hooks/shared";
+import {
+  useFactura, usePagosFactura,
+} from "@/features/facturacion/hooks";
+import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
+import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
+import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
-import { usePagosFactura } from "@/features/facturacion/hooks";
 import { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
+import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
+import {
+  FacturaResumenCard, FacturaEmisorCard, FacturaReceptorCard,
+  FacturaTotalesCard, FacturaTimbradoCard, FacturaConceptosTable,
+  FacturaPagosSection, FacturaBitacoraCard, FacturaDetalleActionsBar,
+  FacturaNotasCreditoSeccion, FacturaDetalleHeader, FacturaDetalleModales,
+  FacturaDetalleEditableSections,
+} from "@/features/facturacion/components/detalle";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
