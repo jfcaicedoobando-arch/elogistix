@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
-import { useProformasPendientes } from "@/features/embarques/hooks/useProformas";
+
 import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
 import { MiniSerie } from "./DashboardEjecutivoFacturacionMiniSerie";
 import { mesLabel } from "./DashboardEjecutivoFacturacionMiniSerie.helpers";
