@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.28] - 2026-07-07
+- Permisos: el botón "Registrar pago" ahora aparece para `contador`, `auxiliar_contable`, `ejecutivo_cobranza` (además de admins). `deriveFacturaFlags` acepta un nuevo parámetro `canRegistrarCobro` que reemplaza a `canEdit` para gatear ese botón; el resto de flags (editar borrador, cancelar, sustituir) siguen usando `canEdit`. `usePermissions.REGISTRAR_COBRO` incluye ahora `auxiliar_contable`.
+- BD: RLS de `pagos_factura` amplía la política Tenant CRUD para incluir `admin_org`, `auxiliar_contable` y `ejecutivo_cobranza`, para que el INSERT no falle silenciosamente para roles financieros modernos.
+
 ## [13.213.27] - 2026-07-07
 - UX: `DatePickerMx` ahora acepta pegar fechas en múltiples formatos (ISO `YYYY-MM-DD`, `DD/MM/YYYY`, `DD-MM-YYYY`, `DD.MM.YYYY`, "7 de julio de 2026"). Mejora aplicada globalmente, útil por ejemplo al registrar pagos copiando la fecha del estado de cuenta. Nuevo helper `parseFlexible` con tests.
 
