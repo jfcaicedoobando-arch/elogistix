@@ -117,6 +117,9 @@ export async function fetchProformasPendientes(
     )
     .eq("organization_id", organizationId)
     .eq("estado_revision", "pendiente")
+    .neq("estado_proforma", "facturada")
+    .is("factura_id", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
 
