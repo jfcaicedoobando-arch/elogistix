@@ -63,7 +63,7 @@ export const appRoutes = (
     }
   >
     <Route path="/inicio" element={<Dashboard />} />
-    <Route path="/dashboard-direccion" element={guarded(["admin", "admin_org", "super_admin", "gerente_comercial", "gerente_visor", "gerente_operaciones"], <DireccionDashboard />)} />
+    <Route path="/dashboard" element={guarded(["admin", "admin_org", "super_admin", "gerente_comercial", "gerente_visor", "gerente_operaciones"], <DireccionDashboard />)} />
     <Route path="/operaciones" element={<Operaciones />} />
     <Route path="/embarques" element={<Embarques />} />
     <Route path="/embarques/nuevo" element={<NuevoEmbarque />} />
