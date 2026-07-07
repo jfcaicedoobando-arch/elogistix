@@ -52,6 +52,8 @@ interface DataTableProps<T> {
   footer?: React.ReactNode | ((data: T[]) => React.ReactNode);
   pagination?: DataTablePagination;
   className?: string;
+  /** Ancla el encabezado al top del contenedor de scroll (útil en tablas largas). */
+  stickyHeader?: boolean;
 }
 
 function DataTableInner<T>({
@@ -80,6 +82,7 @@ function DataTableInner<T>({
   footer,
   pagination,
   className,
+  stickyHeader = false,
 }: DataTableProps<T>) {
   const table = useTableInstance<T>({
     data,
@@ -104,7 +107,7 @@ function DataTableInner<T>({
             componente `Table` shadcn comprime las columnas y oculta las
             últimas (Estado/ETA) sin activar el scroll horizontal. */}
         <Table className="min-w-max">
-          <DataTableHeaderRow table={table} striped={striped} bordered={bordered} />
+          <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
           <DataTableBody
             table={table}
             isLoading={isLoading}
