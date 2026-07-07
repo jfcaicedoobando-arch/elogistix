@@ -5,6 +5,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.45] - 2026-07-07
+- **Nuevos defaults CFDI al generar borradores de factura**:
+  - Uso CFDI: `G03` (Gastos en general) — sin cambio.
+  - Método de pago: `PPD` (Pago en parcialidades o diferido).
+  - Forma de pago: `99` (Por definir).
+  - Aplica a los dos flujos: conversión Proforma → Factura (un clic) y Diálogo de factura manual. También a los fallbacks del diálogo de timbrado y del formulario de datos fiscales.
+  - El contable puede seguir editando cualquiera de los tres valores antes de timbrar.
+  - Analogía: antes el sistema pre-llenaba el recibo como "contado, transferencia hoy"; ahora lo pre-llena como "pago diferido, forma por definir", que es lo que casi siempre aplica en este negocio.
+
 ## [13.213.44] - 2026-07-07
 - **Dashboard de Facturación: se retira el KPI "Proformas por revisar"**:
   - El estado `estado_revision` es una aprobación interna del rol ventas/operativo (dentro del embarque, en Historial de Proformas), no del contable.

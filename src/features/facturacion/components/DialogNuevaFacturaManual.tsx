@@ -40,7 +40,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const INITIAL_FISCAL: DatosFiscalesValue = {
   serie: "A", fechaEmision: today(), diasCredito: 0, moneda: "MXN",
-  usoCfdi: "G03", formaPago: "03", metodoPago: "PUE", tipoCambio: 1,
+  usoCfdi: "G03", formaPago: "99", metodoPago: "PPD", tipoCambio: 1,
 };
 
 const INITIAL_CONCEPTOS: ConceptoManualInput[] = [

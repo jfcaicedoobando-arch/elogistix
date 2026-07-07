@@ -31,8 +31,8 @@ function resolverDefaults(
   defaults: DefaultsFacturacionCliente | null | undefined,
 ) {
   const usoCfdi = factura?.uso_cfdi ?? defaults?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03";
-  const formaPago = factura?.forma_pago ?? defaults?.forma_pago ?? "03";
-  const metodoPago = factura?.metodo_pago ?? defaults?.metodo_pago ?? "PUE";
+  const formaPago = factura?.forma_pago ?? defaults?.forma_pago ?? "99";
+  const metodoPago = factura?.metodo_pago ?? defaults?.metodo_pago ?? "PPD";
   return { usoCfdi, formaPago, metodoPago };
 }
 
