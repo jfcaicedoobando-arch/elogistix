@@ -6,7 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.212.0] - 2026-07-07
+
+- **Feature · /facturacion Fase 2 (bandejas de trabajo estilo ERP)**: se sustituyen los 2 tabs planos (Emitidas / Notas) por **8 bandejas por acción pendiente**: Por facturar · Por timbrar · Por enviar · Por cobrar · Vencidas · REP pendientes · Emitidas · Notas de crédito. Cada bandeja muestra un badge con conteo (naranja para acción operativa, rojo para riesgo) y una acción rápida por fila que abre el detalle en `/facturacion/:id?accion=...`. Se elimina el `HuecoFacturacionChip` inline — su contenido vive ahora en la bandeja "Por facturar". La bandeja activa se sincroniza con la URL (`?bandeja=por-timbrar`) para enlaces profundos. Archivos nuevos: `services/bandejas.ts`, `hooks/useBandejas.ts`, `components/bandejas/{BandejaTabs, TablaBandejaSimple, BandejaPorFacturar, BandejaPorTimbrar, BandejaPorEnviar, BandejaPorCobrar, BandejaVencidas, BandejaRepPendientes}.tsx`. Sin cambios de esquema; queries usan `count: 'exact', head: true` para badges (payload cero). Reglas `esCreadaConCapacidadTimbrado` reutilizadas para "Por timbrar". Plan en `.lovable/plan.md`.
+
 ## [13.211.0] - 2026-07-07
+
 
 - **Refactor · /facturacion Fase 1 (cockpit estilo ERP)**: primer paso del rediseño hacia estándar Odoo/SAP. (1) Se colapsan las dos bandas de KPIs en una: se elimina `FacturacionKpisFiscales` de la página — los conteos de proformas convertibles, facturas sin timbrar y REP pendientes migrarán a badges sobre las bandejas de trabajo en Fase 2. (2) Se renombra el KPI ambiguo **"Por timbrar" → "Proformas por facturar"** y se añade tooltip explicativo (contaba proformas, no CFDIs; confundía). (3) Nuevo `<PeriodoFiscalSelector>` en el header con presets Este mes / Mes pasado / Este trimestre / Ejercicio / Todo, que sincroniza con la URL vía `useFacturacionDateRange`. Sin cambios de esquema; hooks existentes reusados. Plan completo en `.lovable/plan.md`.
 
