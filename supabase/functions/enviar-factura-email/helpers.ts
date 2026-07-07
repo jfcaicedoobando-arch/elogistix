@@ -227,9 +227,10 @@ export async function prepareAttachments(
   await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
   const safeNumero = sanitizeDownloadFilename(factura.numero ?? 'factura');
+  const orgSlug = await fetchOrgSlug(admin, factura.organization_id);
   const [pdfLink, xmlLink] = await Promise.all([
-    signUrl(admin, pdfPath, `Factura-${safeNumero}.pdf`),
-    signUrl(admin, xmlPath, `Factura-${safeNumero}.xml`),
+    signUrl(admin, pdfPath, `${orgSlug}_Factura-${safeNumero}.pdf`),
+    signUrl(admin, xmlPath, `${orgSlug}_Factura-${safeNumero}.xml`),
   ]);
   return { pdfPath, xmlPath, pdfLink, xmlLink };
 }
