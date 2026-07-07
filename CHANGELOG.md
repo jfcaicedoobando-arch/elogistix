@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.29] - 2026-07-07
+- **Fix CI · lint**: corrige escapes innecesarios en el regex de `parseFlexible` (`DatePickerMx`) y reduce complejidad de `deriveFacturaFlags` para que `bun run lint -- --max-warnings 0` pase limpio. Sin cambios de comportamiento.
+
 ## [13.213.28] - 2026-07-07
 - Permisos: el botón "Registrar pago" ahora aparece para `contador`, `auxiliar_contable`, `ejecutivo_cobranza` (además de admins). `deriveFacturaFlags` acepta un nuevo parámetro `canRegistrarCobro` que reemplaza a `canEdit` para gatear ese botón; el resto de flags (editar borrador, cancelar, sustituir) siguen usando `canEdit`. `usePermissions.REGISTRAR_COBRO` incluye ahora `auxiliar_contable`.
 - BD: RLS de `pagos_factura` amplía la política Tenant CRUD para incluir `admin_org`, `auxiliar_contable` y `ejecutivo_cobranza`, para que el INSERT no falle silenciosamente para roles financieros modernos.
