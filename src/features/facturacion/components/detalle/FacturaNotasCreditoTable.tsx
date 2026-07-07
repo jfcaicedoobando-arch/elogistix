@@ -86,9 +86,7 @@ export function FacturaNotasCreditoTable(props: Props) {
                 <td className="py-2 px-2 font-mono text-xs">
                   <span className="inline-flex items-center gap-1.5">
                     {folioRender.esBorrador ? (
-                      <Badge variant="outline" className="bg-muted text-muted-foreground font-normal">
-                        {folioRender.texto}
-                      </Badge>
+                      <CfdiEstadoBadge tono="borrador">{folioRender.texto}</CfdiEstadoBadge>
                     ) : (
                       folioRender.texto
                     )}
@@ -98,7 +96,7 @@ export function FacturaNotasCreditoTable(props: Props) {
                 <td className="py-2 px-2 text-xs">{formatDate(n.fecha_emision)}</td>
                 <td className="py-2 px-2 text-xs">{n.motivo}</td>
                 <td className="py-2 px-2">
-                  <Badge variant="outline" className={ESTADO_COLOR[n.estado]}>{n.estado}</Badge>
+                  <CfdiEstadoBadge tono={ESTADO_TONO[n.estado]}>{n.estado}</CfdiEstadoBadge>
                 </td>
                 <td className="py-2 px-2 text-right tabular-nums">
                   {formatCurrency(Number(n.monto), n.moneda)}
