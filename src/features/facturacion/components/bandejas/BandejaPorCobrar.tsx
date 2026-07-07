@@ -1,15 +1,16 @@
 /**
  * Bandeja "Por cobrar": facturas vigentes con saldo > 0, no vencidas.
- * Patrón unificado: Card + UnifiedFiltersBar + useClientPagedList.
+ * Estados unificados vía `<BandejaShell />`.
  */
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Inbox } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
-import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
+import { BandejaShell } from "./BandejaShell";
 
 interface FilaCobranza {
   id: string;
@@ -42,10 +43,14 @@ const columns = defineColumns<FilaCobranza>([
 ]);
 
 export function BandejaPorCobrar() {
-  const { data, isLoading } = useCobranza({ estatus: "todos", moneda: "todas" });
+  const { data, isLoading, isError, refetch } = useCobranza({ estatus: "todos", moneda: "todas" });
   const filas = useMemo<FilaCobranza[]>(
     () => (data ?? []).filter((f) => f.saldo > 0 && f.estatus_cobranza !== "Vencida"),
     [data],
+  );
+  const monedas = useMemo(
+    () => Array.from(new Set(filas.map((r) => r.moneda).filter(Boolean))).sort(),
+    [filas],
   );
   const paged = useClientPagedList<FilaCobranza, Filters>({
     data: filas,
@@ -62,21 +67,30 @@ export function BandejaPorCobrar() {
       saldo: (a, b) => a.saldo - b.saldo,
     },
   });
-  const totalCount = filas.length;
 
   return (
-    <div className="space-y-3">
-      <UnifiedFiltersBar
-        search={paged.search}
-        onSearchChange={paged.setSearch}
-        searchPlaceholder="Buscar folio o cliente…"
-        chips={paged.activeChips}
-        activeCount={paged.activeCount}
-        onClearAll={paged.resetAll}
-      />
-      <div className="text-xs text-muted-foreground">
-        Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} facturas por cobrar
-      </div>
+    <BandejaShell
+      isError={isError}
+      onRetry={() => refetch()}
+      search={paged.search}
+      onSearchChange={paged.setSearch}
+      searchPlaceholder="Buscar folio o cliente…"
+      chips={paged.activeChips}
+      activeCount={paged.activeCount}
+      onClearAll={paged.resetAll}
+      primary={
+        <Select value={paged.filters.moneda} onValueChange={(v) => paged.setFilter("moneda", v)}>
+          <SelectTrigger className="w-[140px]" aria-label="Moneda">
+            <SelectValue placeholder="Moneda" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas monedas</SelectItem>
+            {monedas.map((m) => (<SelectItem key={m} value={m}>{m}</SelectItem>))}
+          </SelectContent>
+        </Select>
+      }
+      counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {filas.length} facturas por cobrar</>}
+    >
       <Card>
         <CardContent className="p-0">
           <DataTable
@@ -84,7 +98,8 @@ export function BandejaPorCobrar() {
             data={paged.rows}
             isLoading={paged.isLoading}
             emptyIcon={Inbox}
-            emptyMessage="Sin saldos por cobrar. ✅"
+            emptyMessage="Sin saldos por cobrar."
+            emptyHint="Cuando una factura vigente tenga saldo pendiente, aparecerá aquí."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
@@ -95,6 +110,6 @@ export function BandejaPorCobrar() {
           />
         </CardContent>
       </Card>
-    </div>
+    </BandejaShell>
   );
 }
