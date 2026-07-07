@@ -80,7 +80,7 @@ beforeEach(() => {
   h.calcEstado.mockReset().mockImplementation((_m, _t, _e, _a, estado) => estado);
   h.conceptos = [];
   h.docs = { faltantes: [], bloqueante: false, loading: false };
-  h.perms = { isAdmin: false, canEditFinance: false };
+  h.perms = { isAdmin: false, canEditFinance: false, canEditOperations: false, isSuperAdmin: false };
   h.validacion = { data: undefined };
   h.sonnerSuccess.mockReset(); h.sonnerError.mockReset();
   h.notifyError.mockReset(); h.notifySuccess.mockReset();
@@ -149,7 +149,7 @@ describe("useEmbarqueEstadoActions — candado de documentos", () => {
 
 describe("useEmbarqueEstadoActions — gate de cierre", () => {
   it("gate_cierre por rol: usuario sin permiso financiero no puede cerrar", async () => {
-    h.perms = { isAdmin: false, canEditFinance: false };
+    h.perms = { isAdmin: false, canEditFinance: false, canEditOperations: false, isSuperAdmin: false };
     h.validacion = { data: { puede_cerrar: true } };
     const { result } = renderH({ estado: "EIR" });
     expect(result.current.cierreEsSiguiente).toBe(true);
@@ -164,7 +164,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
   });
 
   it("gate_cierre por checklist: rol OK pero validacion bloquea", async () => {
-    h.perms = { isAdmin: false, canEditFinance: true };
+    h.perms = { isAdmin: false, canEditFinance: true, canEditOperations: false, isSuperAdmin: false };
     h.validacion = { data: { puede_cerrar: false } };
     const { result } = renderH({ estado: "EIR" });
     expect(result.current.cierreMotivoBloqueo).toBe("checklist");
@@ -173,7 +173,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
   });
 
   it("admin bypassea checklist incompleto y avanza a Cerrado", async () => {
-    h.perms = { isAdmin: true, canEditFinance: false };
+    h.perms = { isAdmin: true, canEditFinance: false, canEditOperations: false, isSuperAdmin: false };
     h.validacion = { data: { puede_cerrar: false } };
     const { result } = renderH({ estado: "EIR" });
     expect(result.current.cierrePuedeAvanzar).toBe(true);
@@ -182,7 +182,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
   });
 
   it("confirmarCierreSinProforma cierra dialog y dispara avance a Cerrado", async () => {
-    h.perms = { isAdmin: true, canEditFinance: true };
+    h.perms = { isAdmin: true, canEditFinance: true, canEditOperations: true, isSuperAdmin: false };
     const { result } = renderH({ estado: "EIR" });
     await act(async () => { await result.current.confirmarCierreSinProforma(); });
     await waitFor(() => expect(h.avanzar).toHaveBeenCalledWith(
@@ -194,6 +194,7 @@ describe("useEmbarqueEstadoActions — gate de cierre", () => {
 
 describe("useEmbarqueEstadoActions — sync automático", () => {
   it("dispara syncEstado cuando el estado calculado difiere del actual", async () => {
+    h.perms = { isAdmin: false, canEditFinance: false, canEditOperations: true, isSuperAdmin: false };
     h.calcEstado.mockReturnValue("En Tránsito");
     renderH({ estado: "Confirmado" });
     await waitFor(() => expect(h.sync).toHaveBeenCalledWith(
@@ -202,7 +203,16 @@ describe("useEmbarqueEstadoActions — sync automático", () => {
   });
 
   it("NO dispara sync cuando el calculado coincide con el actual", async () => {
+    h.perms = { isAdmin: true, canEditFinance: false, canEditOperations: true, isSuperAdmin: false };
     h.calcEstado.mockReturnValue("Confirmado");
+    renderH({ estado: "Confirmado" });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(h.sync).not.toHaveBeenCalled();
+  });
+
+  it("NO dispara sync cuando el usuario no tiene permisos (rol contador)", async () => {
+    h.perms = { isAdmin: false, canEditFinance: false, canEditOperations: false, isSuperAdmin: false };
+    h.calcEstado.mockReturnValue("En Tránsito");
     renderH({ estado: "Confirmado" });
     await new Promise((r) => setTimeout(r, 0));
     expect(h.sync).not.toHaveBeenCalled();
