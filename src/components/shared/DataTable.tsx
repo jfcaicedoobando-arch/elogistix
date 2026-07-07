@@ -1,5 +1,5 @@
 import React from "react";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, VisibilityState } from "@tanstack/react-table";
 import type { LucideIcon } from "lucide-react";
 import { Table, TableFooter } from "@/components/ui/table";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -17,7 +17,7 @@ import type {
 // en eslint.config.js → react-refresh override, igual que `src/components/ui/**`.
 export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
-export type { ColumnDef } from "@tanstack/react-table";
+export type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 
 interface DataTableProps<T> {
   /** API única: `ColumnDef<T, unknown>[]` de TanStack. Construir con
