@@ -5,6 +5,12 @@
  * Facturapi docs Complemento de Pagos:
  *   https://docs.facturapi.io/api/#tag/Invoices/operation/createInvoice (type: "P")
  */
+import {
+  buildPdfCustomSection,
+  type ReferenciasEmbarque,
+} from "../_shared/referenciasEmbarque.ts";
+export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
+
 
 export interface PagoContext {
   // Receptor (mismo del CFDI original)
