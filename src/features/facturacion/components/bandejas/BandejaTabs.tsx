@@ -8,9 +8,11 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useHuecoFacturacion } from "@/features/facturacion/hooks";
 import { useBandejaConteos } from "@/features/facturacion/hooks/useBandejas";
+import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
 
 export type BandejaId =
-  | "por-facturar" | "por-timbrar" | "por-enviar"
+  | "embarques-sin-factura" | "proformas-listas"
+  | "por-timbrar" | "por-enviar"
   | "por-cobrar" | "vencidas" | "rep-pendientes"
   | "emitidas" | "notas";
 
@@ -22,8 +24,9 @@ interface Def {
 }
 
 const DEFS: Def[] = [
-  { id: "por-facturar", label: "Por facturar", hint: "Embarques cerrados sin CFDI (hueco de facturación).", tone: "warn" },
-  { id: "por-timbrar", label: "Por timbrar", hint: "Borradores creados en el sistema pendientes de enviar a FacturApi.", tone: "warn" },
+  { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cerrados hace más de 5 días que aún no tienen CFDI (hueco de facturación). Puede que falte generar la proforma o que la proforma exista pero no se haya convertido a factura.", tone: "warn" },
+  { id: "proformas-listas", label: "Proformas listas", hint: "Proformas aprobadas internamente (estado 'aprobada') que aún no se han convertido a factura borrador. Acción: 'Convertir a factura' de un clic.", tone: "warn" },
+  { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn" },
   { id: "por-enviar", label: "Por enviar", hint: "CFDI ya timbrados que no se han mandado por correo al cliente.", tone: "warn" },
   { id: "por-cobrar", label: "Por cobrar", hint: "Facturas vigentes con saldo pendiente, aún no vencidas.", tone: "default" },
   { id: "vencidas", label: "Vencidas", hint: "Facturas con vencimiento pasado y saldo > 0.", tone: "danger" },
@@ -43,9 +46,11 @@ type BadgeConteosMap = Record<Exclude<BandejaId, "emitidas" | "notas">, number>;
 export function BandejaTabs() {
   const { data: conteos } = useBandejaConteos();
   const { totalEmbarques } = useHuecoFacturacion();
+  const { data: proformasListasCount = 0 } = useProformasListasCount();
 
   const counts: BadgeConteosMap = {
-    "por-facturar": totalEmbarques,
+    "embarques-sin-factura": totalEmbarques,
+    "proformas-listas": proformasListasCount,
     "por-timbrar": conteos?.porTimbrar ?? 0,
     "por-enviar": conteos?.porEnviar ?? 0,
     "por-cobrar": conteos?.porCobrar ?? 0,

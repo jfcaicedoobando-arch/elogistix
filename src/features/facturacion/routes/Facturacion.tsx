@@ -26,6 +26,7 @@ import { PeriodoFiscalSelector } from "@/features/facturacion/components/Periodo
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
 import { BandejaTabs, type BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
 import { BandejaPorFacturar } from "@/features/facturacion/components/bandejas/BandejaPorFacturar";
+import { BandejaProformasListas } from "@/features/facturacion/components/bandejas/BandejaProformasListas";
 import { BandejaPorTimbrar } from "@/features/facturacion/components/bandejas/BandejaPorTimbrar";
 import { BandejaPorEnviar } from "@/features/facturacion/components/bandejas/BandejaPorEnviar";
 import { BandejaPorCobrar } from "@/features/facturacion/components/bandejas/BandejaPorCobrar";
@@ -42,8 +43,15 @@ const LEGACY_TAB_REDIRECTS: Record<string, string> = {
   pendientes: "/proformas?estado=aceptada",
 };
 
+// Alias hacia atrás: `?bandeja=por-facturar` sigue funcionando y apunta al
+// nuevo id `embarques-sin-factura` (mismo contenido, nombre más claro).
+const BANDEJA_ALIASES: Record<string, BandejaId> = {
+  "por-facturar": "embarques-sin-factura",
+};
+
 const BANDEJAS_VALIDAS: BandejaId[] = [
-  "por-facturar", "por-timbrar", "por-enviar",
+  "embarques-sin-factura", "proformas-listas",
+  "por-timbrar", "por-enviar",
   "por-cobrar", "vencidas", "rep-pendientes",
   "emitidas", "notas",
 ];
@@ -58,9 +66,12 @@ export default function Facturacion() {
 
   const { setRango, limpiar, isInRange, desdeIso, hastaIso } = useFacturacionDateRange();
 
-  const bandejaUrl = searchParams.get("bandeja") as BandejaId | null;
+  const bandejaUrlRaw = searchParams.get("bandeja");
+  const bandejaAliased = bandejaUrlRaw && BANDEJA_ALIASES[bandejaUrlRaw]
+    ? BANDEJA_ALIASES[bandejaUrlRaw]
+    : (bandejaUrlRaw as BandejaId | null);
   const activeBandeja: BandejaId =
-    bandejaUrl && BANDEJAS_VALIDAS.includes(bandejaUrl) ? bandejaUrl : "por-timbrar";
+    bandejaAliased && BANDEJAS_VALIDAS.includes(bandejaAliased) ? bandejaAliased : "por-timbrar";
 
   const setActiveBandeja = useCallback((next: string) => {
     const params = new URLSearchParams(searchParams);
@@ -122,8 +133,11 @@ export default function Facturacion() {
             <BandejaTabs />
           </div>
 
-          <TabsContent value="por-facturar" className="space-y-4">
+          <TabsContent value="embarques-sin-factura" className="space-y-4">
             <BandejaPorFacturar />
+          </TabsContent>
+          <TabsContent value="proformas-listas" className="space-y-4">
+            <BandejaProformasListas />
           </TabsContent>
           <TabsContent value="por-timbrar" className="space-y-4">
             <BandejaPorTimbrar />

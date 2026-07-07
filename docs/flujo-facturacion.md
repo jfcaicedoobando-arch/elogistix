@@ -31,6 +31,21 @@ Complemento de Pagos (REP).
 | 5    | REP automático tras pago en facturas **PPD** ya timbradas.                             | ✅ 13.137.2 |
 | 6    | Documentación + futuras KPIs (proformas convertibles, REPs pendientes).                | ✅ 13.137.2 |
 
+## ¿Qué mide cada KPI/bandeja del cockpit `/facturacion`?
+
+Los tres números que verás en la página miden **puntos distintos** del
+embudo — no cuadran entre sí, y ese es el diseño. Alineación aplicada en
+13.213.0:
+
+| KPI / Bandeja                | Fuente                                                                                | Qué mide                                                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| KPI **Proformas por revisar** | `proformas` con `estado_revision = 'pendiente'`                                       | Proformas creadas desde embarques, esperando aprobación **interna**         |
+| KPI **Listas para facturar**  | `proformas` con `estado_revision = 'aprobada'` y `factura_id IS NULL`                 | Aprobadas listas para convertir a factura (CFDI). Cuadra con `/proformas`   |
+| Bandeja **Embarques sin factura** | `useHuecoFacturacion` (ETD > hoy − 5d, sin CFDI por expediente)                     | Embarques cerrados que aún no tienen factura (haya o no proforma)           |
+| Bandeja **Proformas listas** | Mismo query que el KPI "Listas para facturar"                                         | Lista accionable con "Convertir a factura" (usa `useConvertirProformaDirecto`) |
+| Bandeja **Por timbrar**      | `facturas` en Borrador post 01/07/2026 sin `facturapi_id`                             | Borradores creados en el sistema pendientes de mandar a FacturApi           |
+
+
 ## Punto a punto
 
 ### 1. Conversión (1:1 o N:1)
