@@ -5,6 +5,9 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import {
+  isoToDisplay, isoToDate, dateToIso, applyMask, parseDisplay,
+} from "./date-picker-mx-helpers";
 
 interface DatePickerMxProps {
   /** ISO date string YYYY-MM-DD (o vacío) */
@@ -13,57 +16,6 @@ interface DatePickerMxProps {
   placeholder?: string;
   className?: string;
   title?: string;
-}
-
-const MIN_YEAR = 1900;
-const MAX_YEAR = 2100;
-
-function isoToDisplay(iso: string): string {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  if (!y || !m || !d) return "";
-  return `${d}/${m}/${y}`;
-}
-
-function isoToDate(iso: string): Date | undefined {
-  if (!iso) return undefined;
-  const [y, m, d] = iso.split("-").map(Number);
-  if (!y || !m || !d) return undefined;
-  return new Date(y, m - 1, d);
-}
-
-function dateToIso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-/** Aplica máscara DD/MM/YYYY a un string de solo dígitos */
-function applyMask(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 8);
-  const dd = digits.slice(0, 2);
-  const mm = digits.slice(2, 4);
-  const yyyy = digits.slice(4, 8);
-  if (digits.length <= 2) return dd;
-  if (digits.length <= 4) return `${dd}/${mm}`;
-  return `${dd}/${mm}/${yyyy}`;
-}
-
-/** Parsea DD/MM/YYYY -> ISO YYYY-MM-DD, o null si inválido */
-function parseDisplay(text: string): string | null {
-  const m = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!m) return null;
-  const dd = Number(m[1]);
-  const mm = Number(m[2]);
-  const yyyy = Number(m[3]);
-  if (yyyy < MIN_YEAR || yyyy > MAX_YEAR) return null;
-  if (mm < 1 || mm > 12) return null;
-  if (dd < 1 || dd > 31) return null;
-  const date = new Date(yyyy, mm - 1, dd);
-  if (
-    date.getFullYear() !== yyyy ||
-    date.getMonth() !== mm - 1 ||
-    date.getDate() !== dd
-  ) return null;
-  return dateToIso(date);
 }
 
 /**

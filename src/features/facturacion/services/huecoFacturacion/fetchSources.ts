@@ -76,6 +76,8 @@ export async function fetchConceptosVentaDeEmbarques(
     proforma_id: string | null;
     proformas: { estado_proforma: string | null; deleted_at: string | null } | null;
   };
+  // SAFE-CAST: Supabase infiere `proformas` como Json | null en el inner select;
+  // el tipo `Row` describe la forma real de la respuesta y se valida por acceso a campos.
   const rows = (data ?? []) as unknown as Row[];
   return rows.map((r) => ({
     embarque_id: r.embarque_id,

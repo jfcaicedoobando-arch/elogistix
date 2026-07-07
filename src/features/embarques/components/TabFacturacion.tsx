@@ -1,16 +1,5 @@
 import { useState, useMemo } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
-import { Loader2, FilePlus2, ListChecks, FileText } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { FilePlus2, ListChecks, FileText } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
@@ -27,6 +16,7 @@ import { FlujoFacturacionStepper } from "./facturacion/FlujoFacturacionStepper";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
+import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
 import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
@@ -185,43 +175,24 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         initialFiltroContenedor={dialogInitialFiltro}
       />
 
-      <AlertDialog open={!!proformaAEliminar} onOpenChange={(o) => !o && setProformaAEliminar(null)}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar proforma</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de eliminar la proforma <strong>{proformaAEliminar?.numero}</strong>? Los conceptos volverán a estado Pendiente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={eliminarProforma.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={eliminarProforma.isPending}
-              onClick={async (e) => {
-                e.preventDefault();
-                if (!proformaAEliminar) return;
-                try {
-                  await eliminarProforma.mutateAsync({
-                    proformaId: proformaAEliminar.id,
-                    embarqueId: embarque.id,
-                    numero: proformaAEliminar.numero,
-                  });
-                  setProformaAEliminar(null);
-                } catch {
-                  // Error manejado en hook
-                }
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {eliminarProforma.isPending ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Eliminando...</>
-              ) : (
-                <>Eliminar</>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DialogEliminarProforma
+        proformaAEliminar={proformaAEliminar}
+        isPending={eliminarProforma.isPending}
+        onCancel={() => setProformaAEliminar(null)}
+        onConfirm={async () => {
+          if (!proformaAEliminar) return;
+          try {
+            await eliminarProforma.mutateAsync({
+              proformaId: proformaAEliminar.id,
+              embarqueId: embarque.id,
+              numero: proformaAEliminar.numero,
+            });
+            setProformaAEliminar(null);
+          } catch {
+            // Error manejado en hook
+          }
+        }}
+      />
     </div>
   );
 }

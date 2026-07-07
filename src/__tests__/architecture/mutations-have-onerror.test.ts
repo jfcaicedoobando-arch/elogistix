@@ -20,7 +20,10 @@ const ROOT = path.resolve(__dirname, "../../..");
  * Mantener vacío salvo razón sólida documentada.
  */
 const WHITELIST = new Set<string>([
-  // Vacío por diseño.
+  // `useEliminarEmbarque` es silencioso por diseño: la UI consumidora
+  // (`DialogEliminarEmbarque`) muestra el toast con el mensaje enriquecido
+  // (expediente + error real). Un onError aquí produciría doble toast.
+  "src/features/embarques/hooks/mutations/useDeleteEmbarque.ts",
 ]);
 
 function findUseMutationsWithoutOnError(filePath: string): number[] {

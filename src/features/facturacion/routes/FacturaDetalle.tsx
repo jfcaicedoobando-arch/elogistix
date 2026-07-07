@@ -3,22 +3,22 @@
  * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
  * de timbrado automáticamente.
  */
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { useFactura } from "@/features/facturacion/hooks";
-import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
-import { usePermissions } from "@/hooks/shared";
+import { PageContainer } from "@/components/shared/PageContainer";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
+import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
+import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
+import { useFacturaDetalleController } from "@/features/facturacion/hooks/useFacturaDetalleController";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
 import { FacturaEmisorCard } from "@/features/facturacion/components/detalle/FacturaEmisorCard";
 import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/FacturaReceptorCard";
 import { FacturaTotalesCard } from "@/features/facturacion/components/detalle/FacturaTotalesCard";
 import { FacturaTimbradoCard } from "@/features/facturacion/components/detalle/FacturaTimbradoCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
-import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
 import { FacturaDetalleActionsBar } from "@/features/facturacion/components/detalle/FacturaDetalleActionsBar";
@@ -26,49 +26,23 @@ import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/de
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { useEliminarBorradorFactura } from "@/features/facturacion/hooks/useEliminarBorradorFactura";
-import { PageContainer } from "@/components/shared/PageContainer";
-import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
-import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
-import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
-import { usePagosFactura } from "@/features/facturacion/hooks";
-import { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { canEdit } = usePermissions();
-  const { data: factura, isLoading } = useFactura(id);
-  useRegisterBreadcrumbLabel(id, factura?.numero);
-  const acuse = useAcuseCancelacion(factura);
-
-  const [pagoOpen, setPagoOpen] = useState(false);
-  const [timbrarOpen, setTimbrarOpen] = useState(false);
-  const [enviarOpen, setEnviarOpen] = useState(false);
-  const [sustituirOpen, setSustituirOpen] = useState(false);
-  const [cancelarOpen, setCancelarOpen] = useState(false);
-  const [eliminarOpen, setEliminarOpen] = useState(false);
-
-  const { data: pagos = [] } = usePagosFactura(id);
-  const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);
-  const saldo = Math.max(0, Number(factura?.total ?? 0) - totalPagado);
-  const pagoRepPendiente = pagos.find(
-    (p) => p.estado_rep === "Pendiente" || p.estado_rep === "Error",
-  );
-  const pagosRepPendientes = pagos.filter(
-    (p) => p.estado_rep === "Pendiente" || p.estado_rep === "Error",
-  ).length;
-
-  const flags = deriveFacturaFlags(factura, canEdit, { saldo, pagosRepPendientes });
   const {
-    sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema,
-  } = flags;
-  const handleDownload = useDescargarCfdi(factura?.id);
-  const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
-  const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
-  const timbrarRep = useTimbrarRep(factura?.id);
+    canEdit, factura, isLoading, acuse, flags,
+    pagoRepPendiente, handleDownload, eliminar, eliminando,
+    conceptosVivos, timbrarRep,
+  } = useFacturaDetalleController(id);
+  useRegisterBreadcrumbLabel(id, factura?.numero);
+  const {
+    pagoOpen, setPagoOpen, timbrarOpen, setTimbrarOpen,
+    enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen,
+    cancelarOpen, setCancelarOpen, eliminarOpen, setEliminarOpen,
+  } = useFacturaDetalleDialogs();
 
+  const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
 
   if (isLoading) {

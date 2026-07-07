@@ -11,18 +11,20 @@
  *   automáticamente y NO disparan la navegación.
  * - `onRowClick` sigue disponible para tablas que abren un modal en vez de
  *   navegar. `getRowHref` tiene prioridad si ambos están presentes.
+ *
+ * Skeleton y empty state se delegan a componentes dedicados para respetar
+ * el límite Power of 10 (≤200 líneas por archivo).
  */
 import type React from "react";
-import { Inbox, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { flexRender, type Table } from "@tanstack/react-table";
 import { useSafeNavigate } from "./useSafeNavigate";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { cn } from "@/lib/utils";
-import { ALIGN_CLASS, DENSITY_CELL, DENSITY_ROW_MIN_H, type ColumnAlign, type TableDensity } from "./types";
+import { ALIGN_CLASS, DENSITY_CELL, type ColumnAlign, type TableDensity } from "./types";
 import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
-import { isLucideIcon } from "./isLucideIcon";
+import { DataTableBodySkeleton } from "./DataTableBodySkeleton";
+import { DataTableBodyEmpty } from "./DataTableBodyEmpty";
 import "./columnMeta";
 
 interface Props<T> {
@@ -46,24 +48,10 @@ interface Props<T> {
   getRowAriaLabel?: (item: T) => string;
 }
 
-
 export function DataTableBody<T>({
-  table,
-  isLoading,
-  skeletonRows,
-  density,
-  striped,
-  hoverable,
-  bordered,
-  emptyMessage,
-  emptyHint,
-  emptyIcon,
-  emptyState,
-  rowClassName,
-  onRowClick,
-  onRowMouseEnter,
-  getRowHref,
-  getRowAriaLabel,
+  table, isLoading, skeletonRows, density, striped, hoverable, bordered,
+  emptyMessage, emptyHint, emptyIcon, emptyState,
+  rowClassName, onRowClick, onRowMouseEnter, getRowHref, getRowAriaLabel,
 }: Props<T>) {
   const navigate = useSafeNavigate();
   const cellPad = DENSITY_CELL[density];
@@ -71,89 +59,22 @@ export function DataTableBody<T>({
   const leafColumns = table.getAllLeafColumns();
 
   if (isLoading) {
-    // Skeleton alineado 1:1 con las filas reales:
-    // - mismo `meta.width`, `align`, `sticky`, `className` que la fila real
-    //   → columnas no cambian de ancho ni de alineación al llegar los datos.
-    // - `DENSITY_ROW_MIN_H` fija el alto por densidad → cero salto vertical.
-    // - anchos de la barra varían por columna con un patrón determinista
-    //   para que el skeleton no parezca una rejilla rígida.
-    const rowMinH = DENSITY_ROW_MIN_H[density];
-    const barWidths = ["w-3/5", "w-4/5", "w-2/3", "w-3/4", "w-1/2", "w-5/6"];
     return (
-      <TableBody role="status" aria-busy="true" aria-live="polite">
-        <TableRow className="sr-only">
-          <TableCell colSpan={leafColumns.length}>Cargando…</TableCell>
-        </TableRow>
-        {Array.from({ length: skeletonRows }).map((_, i) => (
-          <TableRow
-            key={`skeleton-${i}`}
-            className={cn("hover:bg-transparent", !striped && "even:bg-transparent", rowMinH)}
-          >
-            {leafColumns.map((col, colIdx) => {
-              const meta = col.columnDef.meta ?? {};
-              const align: ColumnAlign = meta.align ?? "left";
-              const barW = barWidths[(i + colIdx) % barWidths.length];
-              // La barra se envuelve en un flex-container que respeta el
-              // align de la columna para que aparente el mismo layout que
-              // el contenido real (números a la derecha, texto a la izq.).
-              const wrapJustify =
-                align === "right" ? "justify-end" : align === "center" ? "justify-center" : "justify-start";
-              return (
-                <TableCell
-                  key={col.id}
-                  className={cn(
-                    meta.width,
-                    cellPad,
-                    ALIGN_CLASS[align],
-                    borderCell,
-                    meta.className,
-                    meta.sticky && "sticky left-0 z-[5] bg-background shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
-                    meta.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
-                  )}
-                >
-                  <div className={cn("flex items-center", wrapJustify)}>
-                    <Skeleton className={cn("h-4", barW)} />
-                  </div>
-                </TableCell>
-              );
-            })}
-          </TableRow>
-        ))}
-      </TableBody>
+      <DataTableBodySkeleton
+        table={table} skeletonRows={skeletonRows} density={density}
+        striped={striped} bordered={bordered}
+      />
     );
   }
 
   const rows = table.getRowModel().rows;
   if (rows.length === 0) {
-    // Empty state homologado: `emptyState` slot sólo se usa cuando el caller
-    // quiere un `<EmptyState>` grande con CTA (páginas de bandeja, tabs de
-    // embarque). El default renderiza `EmptyStateInline` — misma fuente
-    // visual que cards/paneles → toda la app se ve idéntica.
-    const iconComponent = isLucideIcon(emptyIcon) ? emptyIcon : undefined;
-    const iconNode = !isLucideIcon(emptyIcon) ? emptyIcon : undefined;
     return (
-      <TableBody>
-        <TableRow className="hover:bg-transparent even:bg-transparent">
-          <TableCell colSpan={leafColumns.length} className="p-0">
-            {emptyState ?? (
-              iconNode ? (
-                <div className="flex flex-col items-center justify-center gap-2 text-center py-10 px-4 text-muted-foreground">
-                  {iconNode}
-                  <p className="text-sm">{emptyMessage}</p>
-                  {emptyHint && <p className="text-xs opacity-75 max-w-xs">{emptyHint}</p>}
-                </div>
-              ) : (
-                <EmptyStateInline
-                  icon={iconComponent ?? Inbox}
-                  message={emptyMessage}
-                  hint={emptyHint}
-                  className="py-10"
-                />
-              )
-            )}
-          </TableCell>
-        </TableRow>
-      </TableBody>
+      <DataTableBodyEmpty
+        colSpan={leafColumns.length}
+        emptyMessage={emptyMessage} emptyHint={emptyHint}
+        emptyIcon={emptyIcon} emptyState={emptyState}
+      />
     );
   }
 
@@ -202,11 +123,7 @@ export function DataTableBody<T>({
                 <TableCell
                   key={cell.id}
                   className={cn(
-                    meta.width,
-                    cellPad,
-                    ALIGN_CLASS[align],
-                    borderCell,
-                    meta.className,
+                    meta.width, cellPad, ALIGN_CLASS[align], borderCell, meta.className,
                     meta.sticky && "sticky left-0 z-[5] bg-background shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                     meta.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                   )}
