@@ -61,6 +61,7 @@ interface Props {
 
 export function FacturaNotasCreditoTable(props: Props) {
   const { notas, canEdit, uuidFacturaOriginal, timbrando, onTimbrar, onEmail, onCancelar } = props;
+  const [previewNc, setPreviewNc] = useState<NotaCreditoRow | null>(null);
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
