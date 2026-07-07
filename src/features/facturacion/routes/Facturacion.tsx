@@ -129,7 +129,7 @@ export default function Facturacion() {
         <DashboardEjecutivoFacturacion />
 
         <Tabs value={activeBandeja} onValueChange={setActiveBandeja}>
-          <div className="border-b overflow-x-auto">
+          <div className="sticky top-0 z-20 -mx-4 px-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 overflow-x-auto">
             <BandejaTabs />
           </div>
 
