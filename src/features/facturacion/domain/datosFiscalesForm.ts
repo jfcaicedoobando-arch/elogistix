@@ -22,8 +22,8 @@ export function inicialesDatosFiscales(factura: FacturaDetalle): DatosFiscalesEs
   const tcRaw = factura.tipo_cambio == null ? null : Number(factura.tipo_cambio);
   return {
     usoCfdi: factura.uso_cfdi ?? "G03",
-    formaPago: factura.forma_pago ?? "03",
-    metodoPago: factura.metodo_pago ?? "PUE",
+    formaPago: factura.forma_pago ?? "99",
+    metodoPago: factura.metodo_pago ?? "PPD",
     diasCredito: factura.dias_credito ?? 0,
     tipoCambio: tcRaw && tcRaw > 0 ? tcRaw : null,
     notas: factura.notas ?? "",
