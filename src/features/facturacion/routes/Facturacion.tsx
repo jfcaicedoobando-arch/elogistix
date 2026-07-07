@@ -66,9 +66,12 @@ export default function Facturacion() {
 
   const { setRango, limpiar, isInRange, desdeIso, hastaIso } = useFacturacionDateRange();
 
-  const bandejaUrl = searchParams.get("bandeja") as BandejaId | null;
+  const bandejaUrlRaw = searchParams.get("bandeja");
+  const bandejaAliased = bandejaUrlRaw && BANDEJA_ALIASES[bandejaUrlRaw]
+    ? BANDEJA_ALIASES[bandejaUrlRaw]
+    : (bandejaUrlRaw as BandejaId | null);
   const activeBandeja: BandejaId =
-    bandejaUrl && BANDEJAS_VALIDAS.includes(bandejaUrl) ? bandejaUrl : "por-timbrar";
+    bandejaAliased && BANDEJAS_VALIDAS.includes(bandejaAliased) ? bandejaAliased : "por-timbrar";
 
   const setActiveBandeja = useCallback((next: string) => {
     const params = new URLSearchParams(searchParams);
