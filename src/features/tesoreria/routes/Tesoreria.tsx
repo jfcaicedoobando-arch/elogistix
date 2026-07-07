@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocument";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { withOrgPrefix } from "@/lib/filenames";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
