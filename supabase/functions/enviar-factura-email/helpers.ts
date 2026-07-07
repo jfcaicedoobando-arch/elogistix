@@ -94,14 +94,10 @@ export function sanitizeDownloadFilename(name: string): string {
 }
 
 export async function signUrl(
-  admin: ReturnType<typeof createClient>,
-  path: string,
-  downloadFilename?: string,
+  admin: ReturnType<typeof createClient>, path: string, downloadFilename?: string,
 ): Promise<string> {
   const opts = downloadFilename ? { download: downloadFilename } : undefined;
-  const { data, error } = await admin.storage
-    .from('facturas-pdf')
-    .createSignedUrl(path, SIGNED_URL_TTL, opts);
+  const { data, error } = await admin.storage.from('facturas-pdf').createSignedUrl(path, SIGNED_URL_TTL, opts);
   if (error || !data) throw new Error(`Signed URL ${path}: ${error?.message}`);
   return data.signedUrl;
 }
@@ -203,11 +199,9 @@ export async function prepareAttachments(
   await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
   const safeNumero = sanitizeDownloadFilename(factura.numero ?? 'factura');
-  const pdfFilename = `Factura-${safeNumero}.pdf`;
-  const xmlFilename = `Factura-${safeNumero}.xml`;
   const [pdfLink, xmlLink] = await Promise.all([
-    signUrl(admin, pdfPath, pdfFilename),
-    signUrl(admin, xmlPath, xmlFilename),
+    signUrl(admin, pdfPath, `Factura-${safeNumero}.pdf`),
+    signUrl(admin, xmlPath, `Factura-${safeNumero}.xml`),
   ]);
   return { pdfPath, xmlPath, pdfLink, xmlLink };
 }
