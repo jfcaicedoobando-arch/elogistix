@@ -99,6 +99,19 @@ function MiniSerie({
   );
 }
 
+interface FacturadoUi { label: string; tone: "warn" | "default"; hint: string }
+
+function buildFacturadoUi(facturasSinTc: number): FacturadoUi {
+  const sinTc = facturasSinTc > 0;
+  return {
+    label: sinTc ? "Facturado mes ⚠️" : "Facturado mes",
+    tone: sinTc ? "warn" : "default",
+    hint: sinTc
+      ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
+      : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.",
+  };
+}
+
 export function DashboardEjecutivoFacturacion() {
   const dash = useDashboardEjecutivoFacturacion();
   const { kpis: cob } = useCobranza({ estatus: "todos", moneda: "todas" });
@@ -116,13 +129,7 @@ export function DashboardEjecutivoFacturacion() {
   const cobradoArr = tendencia.map((t) => t.cobrado_mxn);
   const meses = tendencia.map((t) => mesLabel(t.mes));
 
-  const facturasSinTc = dash.data?.facturas_sin_tc ?? 0;
-  const sinTc = facturasSinTc > 0;
-  const facturadoLabel = sinTc ? "Facturado mes ⚠️" : "Facturado mes";
-  const facturadoTone: "warn" | "default" = sinTc ? "warn" : "default";
-  const facturadoHint = sinTc
-    ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
-    : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.";
+  const facturado = buildFacturadoUi(dash.data?.facturas_sin_tc ?? 0);
   const porRevisarTone: "warn" | "default" = porRevisar > 0 ? "warn" : "default";
   const listasTone: "warn" | "default" = proformasListas > 0 ? "warn" : "default";
 
