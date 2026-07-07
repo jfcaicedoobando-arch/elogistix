@@ -3,7 +3,7 @@
  * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
  * de timbrado automáticamente.
  */
-import { useState } from "react";
+
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,14 @@ export default function FacturaDetalle() {
   useRegisterBreadcrumbLabel(id, factura?.numero);
   const acuse = useAcuseCancelacion(factura);
 
-  const dialogs = useFacturaDetalleDialogs();
+  const {
+    pagoOpen, setPagoOpen,
+    timbrarOpen, setTimbrarOpen,
+    enviarOpen, setEnviarOpen,
+    sustituirOpen, setSustituirOpen,
+    cancelarOpen, setCancelarOpen,
+    eliminarOpen, setEliminarOpen,
+  } = useFacturaDetalleDialogs();
 
   const { data: pagos = [] } = usePagosFactura(id);
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);
