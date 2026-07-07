@@ -32,7 +32,7 @@ export function buildHuecoCsvRows(filas: FilaHueco[]): Record<string, unknown>[]
     eta: f.eta ? formatDate(f.eta) : "",
     bl_master: f.bl_master ?? "",
     bl_house: f.bl_house ?? "",
-    dias_sin_facturar: f.diasDesdeEtd,
+    dias_sin_facturar: f.diasDesdeEta,
     venta_usd: f.ventaUsd.toFixed(2),
     venta_mxn: f.ventaMxn.toFixed(2),
   }));

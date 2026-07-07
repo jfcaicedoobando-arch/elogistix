@@ -1,5 +1,7 @@
 /**
  * Agregaciones puras (sin I/O) para el "Hueco de Facturación".
+ *
+ * v13.213.4 — Criterio basado en ETA (llegada) en vez de ETD (salida).
  */
 import { sumarConceptosEnMxn, sumarConceptosEnUsd } from "@/features/facturacion/domain/proyeccionFacturacion";
 import type { EmbarqueHuecoRow } from "./fetchSources";
@@ -9,11 +11,11 @@ export interface FilaHueco {
   expediente: string;
   cliente_nombre: string;
   operador: string;
-  etd: string;
-  eta: string | null;
+  etd: string | null;
+  eta: string;
   bl_master: string | null;
   bl_house: string | null;
-  diasDesdeEtd: number;
+  diasDesdeEta: number;
   ventaMxn: number;
   ventaUsd: number;
 }
@@ -40,7 +42,7 @@ export function construirFilaHueco(
   ventasMap: Map<string, { monto: number; moneda: string }[]>,
   hoy: Date,
 ): FilaHueco | null {
-  if (!e.etd) return null;
+  if (!e.eta) return null;
   const tcUsd = Number(e.tipo_cambio_usd ?? 1);
   const tcEur = Number(e.tipo_cambio_eur ?? 1);
   const ventas = ventasMap.get(e.id) ?? [];
@@ -53,7 +55,7 @@ export function construirFilaHueco(
     eta: e.eta,
     bl_master: e.bl_master ?? null,
     bl_house: e.bl_house ?? null,
-    diasDesdeEtd: diasDesde(e.etd, hoy),
+    diasDesdeEta: diasDesde(e.eta, hoy),
     ventaMxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
     ventaUsd: sumarConceptosEnUsd(ventas, tcUsd, tcEur),
   };

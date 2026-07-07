@@ -11,7 +11,7 @@ const fila: FilaHueco = {
   eta: "2026-05-15",
   bl_master: "BLM",
   bl_house: null,
-  diasDesdeEtd: 10,
+  diasDesdeEta: 10,
   ventaUsd: 123.456,
   ventaMxn: 2469.12,
 };
@@ -38,7 +38,7 @@ describe("buildHuecoCsvRows", () => {
   });
 
   it("devuelve etd/eta vacío cuando faltan", () => {
-    const [row] = buildHuecoCsvRows([{ ...fila, etd: "", eta: null }]);
+    const [row] = buildHuecoCsvRows([{ ...fila, etd: null, eta: "" }]);
     expect(row.etd).toBe("");
     expect(row.eta).toBe("");
   });

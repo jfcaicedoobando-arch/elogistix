@@ -1,12 +1,13 @@
 /**
  * Orquestador del "Hueco de Facturación".
  *
- * Un embarque está en "hueco" si:
- *   - ETD >= 2026-04-01 (fecha de inicio del modelo nuevo)
- *   - (hoy - ETD) > 5 días (ya nos facturó el proveedor)
- *   - Y NO tiene factura con factura_pdf_url asociada por expediente.
+ * v13.213.4 — Criterio basado en **ETA** (llegada del contenedor):
+ *   - `eta` capturado (embarques sin ETA se excluyen).
+ *   - `eta ≥ 2026-04-01` (corte del modelo nuevo, no revive back-fill).
+ *   - `eta ≤ hoy` (el contenedor ya llegó o llega hoy → necesita CFDI para aduana).
+ *   - Y NO tiene factura con `factura_pdf_url` asociada por expediente.
  *   - Y NO todos sus conceptos de venta están en proformas marcadas como
- *     `facturada` (aceptación histórica del back-fill). v13.213.3.
+ *     `facturada` (aceptación histórica del back-fill).
  */
 import { fetchEmbarquesParaHueco, fetchVentasYFacturas, type ConceptoVentaDetalle } from "./fetchSources";
 import {
@@ -23,8 +24,6 @@ export interface HuecoFacturacionResult {
   totalUsd: number;
   totalMxn: number;
 }
-
-const DIAS_UMBRAL = 5;
 
 /**
  * Devuelve el Set de embarque_id cuyos conceptos de venta no borrados están
@@ -60,11 +59,9 @@ export async function fetchHuecoFacturacion({
   organizationId: string | null;
   hoy?: Date;
 }): Promise<HuecoFacturacionResult> {
-  const limite = new Date(hoy);
-  limite.setDate(limite.getDate() - DIAS_UMBRAL - 1);
-  const limiteIso = limite.toISOString().slice(0, 10);
+  const hoyIso = hoy.toISOString().slice(0, 10);
 
-  const arr = await fetchEmbarquesParaHueco(organizationId, limiteIso);
+  const arr = await fetchEmbarquesParaHueco(organizationId, hoyIso);
   if (arr.length === 0) {
     return { filas: [], totalEmbarques: 0, totalUsd: 0, totalMxn: 0 };
   }
@@ -94,7 +91,7 @@ export async function fetchHuecoFacturacion({
     filas.push(fila);
   }
 
-  filas.sort((a, b) => b.diasDesdeEtd - a.diasDesdeEtd);
+  filas.sort((a, b) => b.diasDesdeEta - a.diasDesdeEta);
 
   return { filas, totalEmbarques: filas.length, totalUsd, totalMxn };
 }

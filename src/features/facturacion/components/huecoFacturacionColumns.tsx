@@ -41,13 +41,13 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
   {
-    id: "etd",
-    header: "ETD",
-    accessorFn: (f) => f.etd,
+    id: "eta",
+    header: "ETA",
+    accessorFn: (f) => f.eta,
     enableSorting: true,
-    sortingFn: sortByDate<FilaHueco>((f) => f.etd),
+    sortingFn: sortByDate<FilaHueco>((f) => f.eta),
     meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
-    cell: ({ row }) => formatDate(row.original.etd),
+    cell: ({ row }) => formatDate(row.original.eta),
   },
   {
     id: "bl",
@@ -74,13 +74,13 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
   },
   {
     id: "dias",
-    header: "Días sin facturar",
-    accessorFn: (f) => f.diasDesdeEtd,
+    header: "Días desde ETA",
+    accessorFn: (f) => f.diasDesdeEta,
     enableSorting: true,
-    sortingFn: sortByNumber<FilaHueco>((f) => f.diasDesdeEtd),
+    sortingFn: sortByNumber<FilaHueco>((f) => f.diasDesdeEta),
     meta: { width: "w-[140px]", align: "center" },
     cell: ({ row }) => {
-      const d = row.original.diasDesdeEtd;
+      const d = row.original.diasDesdeEta;
       const tone = getDiasVencidosTone(d);
       return (
         <Badge

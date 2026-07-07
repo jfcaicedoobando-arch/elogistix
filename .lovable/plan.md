@@ -1,13 +1,52 @@
-# Sin cambios — sólo era una duda
+# Rehacer bandeja "Embarques sin factura" — basada en ETA
 
-## Conclusión
+## Problema
 
-ELIMP00300 aparece correctamente en la bandeja **"Embarques sin factura"** porque cumple las 3 reglas del hueco de facturación:
+Hoy la bandeja usa **ETD + 5 días** como disparador. En importación marítima CN→MX una travesía dura 20-40 días, así que un embarque con ETD hace 6 días **ni siquiera ha llegado al puerto** — es imposible que le falte factura porque aún no cruza aduana. Genera ruido y confunde.
 
-1. **ETD posterior al 01/04/2026** — el suyo es 22/06/2026 ✅
-2. **Ya pasaron más de 5 días desde el ETD** — han pasado ~15 días ✅
-3. **No hay CFDI ni proforma histórica** — tiene 2 conceptos de venta pendientes sin proforma ✅
+## Criterio nuevo (aprobado)
 
-El nombre de la bandeja habla de "cerrados" pero el filtro real es por **ETD**, no por estado del embarque. El objetivo es avisar de embarques que ya zarparon hace rato y siguen sin factura al cliente.
+Un embarque cae en la bandeja **sólo si**:
 
-**No se toca nada** — quedó claro que la bandeja funciona como debe.
+1. **`eta` capturado** (embarques sin ETA se excluyen).
+2. **`eta ≤ hoy`** — el contenedor ya llegó o llega hoy.
+3. **No tiene CFDI real** por expediente (sin cambio).
+4. **No está cubierto por aceptación histórica** (sus conceptos no están todos en proformas `facturada` — sin cambio).
+5. Se mantiene el corte del modelo nuevo (ETA ≥ 2026-04-01) para no revivir embarques ya cerrados con back-fill.
+
+## Cambios de código
+
+### `src/features/facturacion/services/huecoFacturacion/fetchSources.ts`
+- `fetchEmbarquesParaHueco`: filtrar por `eta` (no `etd`), con `not("eta", "is", null)` + `lte("eta", hoyIso)` + `gte("eta", "2026-04-01")`. Ordenar por `eta` ascendente.
+
+### `src/features/facturacion/services/huecoFacturacion/index.ts`
+- Cambiar cálculo de `limiteIso`: ya no es `hoy - 5`, ahora es `hoy` (para el filtro por ETA vencido).
+- Eliminar `DIAS_UMBRAL = 5` (o dejarlo en 0).
+
+### `src/features/facturacion/services/huecoFacturacion/buildFilas.ts`
+- Renombrar `diasDesdeEtd` → `diasDesdeEta` en `FilaHueco`.
+- `construirFilaHueco`: guardarse contra `!e.eta` (retornar null); calcular `diasDesdeEta` con `e.eta`.
+
+### `src/features/facturacion/components/huecoFacturacionColumns.tsx`
+- Cambiar columna "ETD" por "ETA".
+- Cambiar columna "Días desde ETD" por "Días desde ETA".
+- Ordenar la tabla por `eta` ascendente (los que llegaron hace más tiempo arriba).
+
+### `src/features/facturacion/components/bandejas/BandejaTabs.tsx`
+- Actualizar tooltip: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Puede que falte generar la proforma o convertirla a factura."
+
+### Tests
+- `src/features/facturacion/services/huecoFacturacion/__tests__/buildFilas.test.ts`: actualizar fixtures y assertions (eta en vez de etd; ya sin cálculo de 5 días).
+- Añadir caso: embarque con ETA futuro → no aparece. Embarque sin ETA → no aparece. Embarque con ETA de ayer y sin CFDI → sí aparece.
+
+### Versionado y bitácora
+- Bump `APP_VERSION` en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md` explicando el cambio de criterio (ETD → ETA).
+
+## Fuera de alcance
+- No cambio la lógica de "aceptación histórica" (proformas facturadas de back-fill).
+- No cambio el nombre de la bandeja (`embarques-sin-factura`), sólo el tooltip.
+- No cambio otros KPIs de facturación que puedan usar ETD (los reviso pero no los toco en este plan).
+
+## Analogía
+Antes era como avisar "prepara la factura" el día que sale el barco de Shanghái — sin sentido porque tardará 30 días en llegar. Ahora avisa cuando el barco ya está tocando puerto en Manzanillo/Lázaro, que es cuando de verdad necesitas la factura para cruzar aduana.

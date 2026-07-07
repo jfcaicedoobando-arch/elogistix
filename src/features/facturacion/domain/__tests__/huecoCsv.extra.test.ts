@@ -17,7 +17,7 @@ function makeFilaHueco(overrides: Partial<FilaHueco> = {}): FilaHueco {
     eta: "2024-03-15",
     bl_master: "MASTER123",
     bl_house: "HOUSE456",
-    diasDesdeEtd: 10,
+    diasDesdeEta: 10,
     ventaUsd: 1500.5,
     ventaMxn: 25000.75,
     ...overrides,
@@ -104,14 +104,14 @@ describe("huecoCsv · buildHuecoCsvRows", () => {
     expect(row.bl_house).toBe("");
   });
 
-  it("huecoCsv: eta es cadena vacía cuando es null", () => {
-    const fila = makeFilaHueco({ eta: null });
+  it("huecoCsv: etd es cadena vacía cuando es null", () => {
+    const fila = makeFilaHueco({ etd: null });
     const [row] = buildHuecoCsvRows([fila]);
-    expect(row.eta).toBe("");
+    expect(row.etd).toBe("");
   });
 
-  it("dias_sin_facturar refleja diasDesdeEtd", () => {
-    const fila = makeFilaHueco({ diasDesdeEtd: 42 });
+  it("dias_sin_facturar refleja diasDesdeEta", () => {
+    const fila = makeFilaHueco({ diasDesdeEta: 42 });
     const [row] = buildHuecoCsvRows([fila]);
     expect(row.dias_sin_facturar).toBe(42);
   });
