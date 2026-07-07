@@ -177,6 +177,10 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
     rdoc.exchange = dr.tipo_cambio_dr;
   }
 
+  // v13.208.0 — Bloque "Referencias del embarque" al pie del PDF.
+  const pdfSection = buildPdfCustomSection(ctx.referencias);
+  if (pdfSection) payload.pdf_custom_section = pdfSection;
+
   return payload;
 }
 
