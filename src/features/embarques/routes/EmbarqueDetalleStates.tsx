@@ -1,15 +1,9 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import EmptyState from "@/components/empty/EmptyState";
 import { PackageX } from "lucide-react";
 
 export function LoadingState() {
-  return (
-    <div className="space-y-6">
-      <Skeleton className="h-10 w-64" />
-      <Skeleton className="h-20 w-full" />
-      <Skeleton className="h-64 w-full" />
-    </div>
-  );
+  return <DetailSkeleton />;
 }
 
 export function NotFoundState({ onBack }: { onBack: () => void }) {
