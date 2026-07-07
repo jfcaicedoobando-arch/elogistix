@@ -3,7 +3,7 @@
  * Estados unificados vía `<BandejaShell />` (loading + empty + error).
  */
 import { Card, CardContent } from "@/components/ui/card";
-import { FileClock } from "lucide-react";
+import { Stamp } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
@@ -65,9 +65,9 @@ export function BandejaPorTimbrar() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyIcon={FileClock}
-            emptyMessage="No hay facturas pendientes de timbrar."
-            emptyHint="Los CFDI recién creados aparecerán aquí antes de timbrarse."
+            emptyIcon={Stamp}
+            emptyMessage="No hay CFDI en borrador esperando timbrado."
+            emptyHint="Aparecerán aquí las facturas creadas en el sistema que aún no se hayan enviado al PAC (FacturApi). Criterio: campo timbrada = false."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

@@ -3,7 +3,7 @@
  * Estados unificados vía `<BandejaShell />`.
  */
 import { Card, CardContent } from "@/components/ui/card";
-import { Send } from "lucide-react";
+import { MailWarning } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
@@ -62,9 +62,9 @@ export function BandejaPorEnviar() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyIcon={Send}
-            emptyMessage="Todos los CFDI timbrados ya se enviaron."
-            emptyHint="Cuando un CFDI se timbre y aún no se envíe por correo, aparecerá aquí."
+            emptyIcon={MailWarning}
+            emptyMessage="Todos los CFDI timbrados ya se enviaron al cliente."
+            emptyHint="Aparecerán aquí los CFDI ya timbrados que todavía no tienen registro de envío por correo. Criterio: timbrada = true y sin fecha_envio."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

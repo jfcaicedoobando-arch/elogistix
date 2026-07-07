@@ -2,7 +2,7 @@
  * Bandeja "Por facturar" (hueco de facturación): embarques cerrados sin CFDI.
  * Estados unificados vía `<BandejaShell />`.
  */
-import { Download, Inbox } from "lucide-react";
+import { Download, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
@@ -67,9 +67,9 @@ export function BandejaPorFacturar() {
               columns={huecoFacturacionColumns}
               data={paged.rows}
               isLoading={paged.isLoading}
-              emptyIcon={Inbox}
-              emptyMessage="No hay hueco de facturación."
-              emptyHint="Cuando un embarque llegue (ETA cumplida) sin factura emitida, aparecerá aquí."
+              emptyIcon={PackageCheck}
+              emptyMessage="Sin embarques listos por facturar — no hay hueco de facturación."
+              emptyHint="Aparecerán aquí los embarques cuya ETA ya se cumplió y todavía no tienen un CFDI emitido asociado. Criterio: embarque con ETA ≤ hoy y sin factura_id."
               rowKey={(row) => row.embarque_id}
               getRowHref={(row) => `/embarques/${row.embarque_id}?tab=facturacion`}
               getRowAriaLabel={(row) => `Abrir embarque ${row.expediente ?? row.embarque_id}`}
