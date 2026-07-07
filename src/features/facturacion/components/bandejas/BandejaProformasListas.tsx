@@ -47,7 +47,7 @@ export function BandejaProformasListas() {
       columnas={columnas}
       data={data}
       isLoading={isLoading}
-      emptyMessage="No hay proformas aprobadas pendientes de facturar. ✅"
+      emptyMessage="No hay proformas aceptadas por el cliente pendientes de facturar. ✅"
       rowKey={(r) => r.id}
       accion={{
         label: isPending ? "Convirtiendo..." : "Convertir a factura",
