@@ -4,7 +4,7 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Inbox } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
@@ -97,9 +97,9 @@ export function BandejaPorCobrar() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyIcon={Inbox}
-            emptyMessage="Sin saldos por cobrar."
-            emptyHint="Cuando una factura vigente tenga saldo pendiente, aparecerá aquí."
+            emptyIcon={Wallet}
+            emptyMessage="Sin facturas vigentes con saldo por cobrar."
+            emptyHint="Aparecerán aquí los CFDI (PPD o PUE) timbrados con saldo pendiente cuya fecha de vencimiento aún no llega. Criterio: saldo > 0 y estatus_cobranza ≠ Vencida."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

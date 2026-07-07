@@ -4,7 +4,7 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { AlarmClock } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -115,9 +115,9 @@ export function BandejaVencidas() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyIcon={AlertCircle}
-            emptyMessage="Sin cartera vencida."
-            emptyHint="¡Todas las facturas están al día!"
+            emptyIcon={AlarmClock}
+            emptyMessage="Sin cartera vencida — todas las facturas están al día."
+            emptyHint="Aparecerán aquí los CFDI cuyo vencimiento ya pasó y siguen con saldo pendiente. Criterio: saldo > 0 y fecha_vencimiento < hoy."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}

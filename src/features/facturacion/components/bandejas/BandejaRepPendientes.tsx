@@ -3,7 +3,7 @@
  * ha timbrado. Estados unificados vía `<BandejaShell />`.
  */
 import { Card, CardContent } from "@/components/ui/card";
-import { Receipt } from "lucide-react";
+import { ReceiptText } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -94,9 +94,9 @@ export function BandejaRepPendientes() {
             columns={columns}
             data={paged.rows}
             isLoading={paged.isLoading}
-            emptyIcon={Receipt}
-            emptyMessage="No hay complementos de pago pendientes."
-            emptyHint="Los pagos aplicados a facturas PPD sin REP timbrado aparecerán aquí."
+            emptyIcon={ReceiptText}
+            emptyMessage="Sin complementos de pago (REP) pendientes ante el SAT."
+            emptyHint="Aparecerán aquí los pagos registrados sobre facturas PPD cuyo complemento de pago todavía no se timbra o quedó en error. Criterio: factura PPD con pago aplicado + REP en estado Pendiente o Error."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.factura_id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.factura_numero}`}
