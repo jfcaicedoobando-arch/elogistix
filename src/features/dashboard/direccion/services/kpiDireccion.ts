@@ -29,7 +29,7 @@ export async function fetchDireccionKpis(
   const aggs = agregarEmbarques(embarquesData.embarques, embarquesData.ventas, embarquesData.costos);
   const antiguedad = calcularAntiguedad(facturasData.facturas, facturasData.pagos, fallbackUsdMxn, hoy);
   return {
-    hero: calcularHero(aggs, facturasData.facturas, antiguedad, fallbackUsdMxn, hoy, mesActual, mesPrev),
+    hero: calcularHero({ aggs, facturas: facturasData.facturas, antiguedad, fallbackUsd: fallbackUsdMxn, hoy, mesActual, mesPrev }),
     margen_6m: calcularMargen6m(aggs, hoy),
     margen_por_modo: calcularMargenPorModo(aggs.filter((a) => a.mes === mesActual)),
     antiguedad,

@@ -113,10 +113,13 @@ export function calcularAntiguedad(facturas: FacturaRow[], pagos: PagoRow[], fal
   return [buckets.Corriente, buckets["1-30"], buckets["31-60"], buckets["+60"]];
 }
 
-export function calcularHero(
-  aggs: EmbarqueAgg[], facturas: FacturaRow[], antiguedad: BucketAntiguedad[],
-  fallbackUsd: number, hoy: Date, mesActual: string, mesPrev: string,
-): HeroKpis {
+export interface CalcularHeroParams {
+  aggs: EmbarqueAgg[]; facturas: FacturaRow[]; antiguedad: BucketAntiguedad[];
+  fallbackUsd: number; hoy: Date; mesActual: string; mesPrev: string;
+}
+
+export function calcularHero(params: CalcularHeroParams): HeroKpis {
+  const { aggs, facturas, antiguedad, fallbackUsd, hoy, mesActual, mesPrev } = params;
   const cur = aggs.filter((a) => a.mes === mesActual);
   const prev = aggs.filter((a) => a.mes === mesPrev);
   const v = cur.reduce((s, a) => s + a.venta, 0);
