@@ -140,7 +140,7 @@ function ProformaDetalleContent({ data, onVolver }: ContentProps) {
 
       {totales && <TotalesCard totales={totales} />}
       <NotasCard notas={proforma.notas} />
-      {factura && <FacturaAsociadaCard factura={factura} />}
+      {facturas.length > 0 && <FacturaAsociadaCard facturas={facturas} />}
     </PageContainer>
   );
 }
