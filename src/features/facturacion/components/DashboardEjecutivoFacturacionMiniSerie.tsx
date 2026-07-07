@@ -6,8 +6,6 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/formatters";
 
-export { mesLabel } from "./DashboardEjecutivoFacturacionMiniSerie.helpers";
-
 interface Props {
   titulo: string;
   data: number[];
