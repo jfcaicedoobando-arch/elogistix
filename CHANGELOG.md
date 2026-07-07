@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.40] - 2026-07-07
+- **Fix test CI — `auxiliar_contable` NO registra cobros**:
+  - `src/hooks/shared/usePermissions.ts`: quitamos `auxiliar_contable` de la lista `REGISTRAR_COBRO`. La política declarada por el test es "sólo captura factura de proveedor"; el código tenía además permiso para registrar cobros, lo que rompía la separación de responsabilidades entre auxiliar contable y ejecutivo de cobranza.
+  - Analogía: el auxiliar contable es el que da de alta las facturas que llegan; cobrarle a los clientes es tarea del área de cobranza. Antes tenía las dos llaves; ahora sólo la de captura.
+
 ## [13.213.39] - 2026-07-07
 - **Prefijo `{Org}_` en TODOS los archivos descargables/enviables**:
   - Edge functions con adjuntos/enlaces de descarga:
