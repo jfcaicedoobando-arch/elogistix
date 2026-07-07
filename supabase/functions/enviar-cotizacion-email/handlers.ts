@@ -201,9 +201,13 @@ export async function handleSend(params: SendParams): Promise<Response> {
   if (parsed.validRecipients.length === 0) return json(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
   if (!parsed.pdfStoragePath) return json(cors, { error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
 
+  const safeFolio = (cot.folio ?? 'cotizacion').replace(/[^A-Za-z0-9._-]+/g, '_');
+  const orgSlug = await fetchOrgSlug(admin, cot.organization_id);
   const { data: signed, error: signErr } = await admin
     .storage.from('cotizaciones-pdf')
-    .createSignedUrl(parsed.pdfStoragePath, SIGNED_URL_TTL);
+    .createSignedUrl(parsed.pdfStoragePath, SIGNED_URL_TTL, {
+      download: `${orgSlug}_Cotizacion-${safeFolio}.pdf`,
+    });
   if (signErr || !signed) return json(cors, { error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
 
   const pdfLink = signed.signedUrl;
