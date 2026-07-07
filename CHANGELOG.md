@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.34] - 2026-07-07
+- **Auditoría UI/UX Facturación & Compras — Ola 5 (Dashboard Compras)**:
+  - `/compras`: fix del KPI **"Por vencer 7 días"** que mostraba `USD 0 USD` (doble sufijo). El valor principal ahora también usa `formatCurrencyCompact` (era `formatCurrency` con decimales completos) para quedar visualmente alineado con el resto de KPIs. El sublabel muestra el monto USD en formato compacto sin sufijo redundante.
+  - Analogía: la etiqueta del bote decía "USD USD"; se le quitó el sticker duplicado, igual que en Ola 1 con "MXN MXN".
+
 ## [13.213.33] - 2026-07-07
 - **Auditoría UI/UX Facturación & Compras — Ola 4 (colores semánticos de antigüedad)**:
   - Nuevo helper `src/features/facturacion/utils/aging.ts` con dos buckets basados en tokens semánticos (`--warning`, `--destructive`, `--muted`): `agingVencidoBucket` (1-30 / 31-60 / 61-90 / 90+ d) y `agingPorCobrarBucket` (>7 d, ≤7 d, vence hoy). Tests unitarios incluidos.
