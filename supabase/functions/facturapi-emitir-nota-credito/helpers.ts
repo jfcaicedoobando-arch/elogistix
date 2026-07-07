@@ -4,6 +4,12 @@
  *
  * Lógica pura — sin red, sin Supabase — para que sea testeable con Deno test.
  */
+import {
+  formatDescripcionConReferencias,
+  buildPdfCustomSection,
+  type ReferenciasEmbarque,
+} from "../_shared/referenciasEmbarque.ts";
+export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 
 export interface ConceptoNC {
   descripcion: string;
