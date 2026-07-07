@@ -34,11 +34,7 @@ interface Props {
 }
 
 export function FacturaPagosSection({
-  facturaId,
-  facturaNumero,
-  totalFactura,
-  moneda,
-  canEdit,
+  facturaId, facturaNumero, totalFactura, moneda, canEdit,
 }: Props) {
   const { toast } = useToast();
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
