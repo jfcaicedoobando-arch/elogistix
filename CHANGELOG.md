@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.3] - 2026-07-07
+
+- **Fix · "Hueco de facturación" no respetaba aceptación histórica**: la bandeja "Por facturar" y el KPI del dashboard mostraban como pendientes embarques cuyos conceptos ya vivían en proformas marcadas como `facturada` por el back-fill (`origen='gap_externo'`), aunque nunca se les emitiera CFDI. Ejemplo: `ELEXP00250` aparecía como "falta factura" mientras `validar_cierre_embarque` ya lo consideraba OK. Ahora `fetchHuecoFacturacion` trae también el `estado_proforma` de cada concepto y excluye a los embarques donde el 100% de los conceptos no borrados están en `estado_facturacion='en_proforma'` con la proforma padre en `estado_proforma='facturada'`. Impacto medido en BD: 71 → 53 embarques en el hueco. Sin migración de datos ni cambios de esquema. Analogía: el checklist interno ya sabía que "una nota vieja firmada por el cliente" cuenta como facturado; el radar del dashboard ahora usa el mismo criterio.
+
 ## [13.213.2] - 2026-07-07
 
 - **Fix · `enviar-factura-email` fallaba con 500 "FacturApi pdf 404 invoice_not_found"** para facturas históricas timbradas en un ambiente (sandbox) distinto al configurado actualmente en la org (live). La edge function pedía el PDF/XML sólo con la key del ambiente actual y FacturApi contestaba 404 porque esa factura vive en la otra cuenta. Ahora `prepareAttachments` acepta una `fallbackKey`: si el fetch primario responde 404, reintenta con la key del ambiente opuesto (nueva helper `resolveFacturapiKeyOtherAmbiente` en `_shared/facturapiAuth.ts`). Analogía: son dos oficinas de correos distintas (sandbox y live); si tu factura no está en una, ahora probamos en la otra antes de rendirnos. Sin cambios de esquema.
