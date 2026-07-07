@@ -157,10 +157,10 @@ export function DashboardEjecutivoFacturacion() {
             />
 
             <Kpi
-              label={facturadoLabel}
+              label={facturado.label}
               value={formatCurrencyCompact(facturadoMes, "MXN")}
-              tone={facturadoTone}
-              hint={facturadoHint}
+              tone={facturado.tone}
+              hint={facturado.hint}
             />
 
             <Kpi label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} tone="success" />
