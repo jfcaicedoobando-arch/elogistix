@@ -1,50 +1,54 @@
-# Habilitar "Registrar pago" en facturas legacy
+# Permitir pegar fecha en el modal "Registrar pago"
 
 ## Diagnóstico
 
-La factura **638** está en estado **Emitida** pero no tiene `uuid_fiscal` (fue timbrada antes del corte del sistema, `fecha_emision = 2026-01-15`, previo al 01/07/2026).
+El campo "Fecha de pago" usa `DatePickerMx` (`src/components/ui/date-picker-mx.tsx`). Hoy sólo acepta captura con máscara `DD/MM/AAAA`:
 
-La lógica actual en `deriveFacturaFlags` (`src/features/facturacion/domain/facturaFlags.ts`) exige:
+- El handler `handleChange` llama `applyMask`, que **borra todo lo no numérico**.
+- Si el usuario pega `2026-07-07`, `07-Jul-2026`, `7 de julio 2026` o incluso `07/07/2026` con caracteres extra, la máscara reordena mal los dígitos (ej. `2026-07-07` → dígitos `20260707` → `20/26/0707` inválido).
+- Por eso "pegar" no funciona: la máscara está pensada sólo para tecleo secuencial.
 
-```
-timbradaVigente = !sinTimbrar && estado === "Emitida"
-puedeRegistrarPago = timbradaVigente && canEdit && saldo > 0.01
-```
-
-Como `uuid_fiscal` es `NULL`, `sinTimbrar = true` → `timbradaVigente = false` → el botón "Registrar pago" no aparece en la barra superior (`FacturaDetalleActionsBar`).
-
-**Analogía:** es como una factura de papel que se timbró en la ventanilla del SAT antes de que existiera el sistema. El sistema la reconoce como "Emitida", pero como no tiene su "código de barras" (UUID) interno, bloquea el cobro.
+**Analogía:** el input es como un buzón con ranuras fijas para día/mes/año. Cuando pegas, los dígitos caen en la ranura equivocada.
 
 ## Cambios propuestos
 
-### 1. `src/features/facturacion/domain/facturaFlags.ts`
-- Introducir noción de **factura vigente cobrable**: `estado === "Emitida"` y no cancelada/sustituida, independiente de si tiene `uuid_fiscal`.
-- `puedeRegistrarPago = esVigente && canEdit && saldo > 0.01` (permite legacy).
-- `puedeCancelarCfdi` y `puedeSustituirCfdi` se mantienen limitados a facturas con `uuid_fiscal` (no se puede cancelar en el SAT algo que no está timbrado aquí).
+### 1. `src/components/ui/date-picker-mx-helpers.ts`
+Agregar `parseFlexible(raw: string): string | null` que intenta varios formatos comunes y devuelve ISO `YYYY-MM-DD`:
+- `DD/MM/YYYY` y `D/M/YYYY` (con `/`, `-` o `.` como separador).
+- `YYYY-MM-DD` / `YYYY/MM/DD` (ISO).
+- `DD MMM YYYY` y `DD de MMMM de YYYY` en español (ene, feb, … o enero, febrero, …) — opcional pero útil para copiar/pegar desde estados de cuenta.
+- Fallback: `new Date(raw)` sólo si el resultado es válido y tiene los 3 componentes claros (para evitar interpretaciones ambiguas de EE.UU. tipo `07/07/2026`).
 
-### 2. `src/features/facturacion/hooks/useRegistrarPagoSubmit.ts`
-- Si la factura es PPD **pero** no tiene `uuid_fiscal` (legacy), omitir el timbrado automático de REP. El pago se registra normalmente; no se intenta llamar a FacturAPI.
-- Log claro en consola/toast: "Pago registrado. REP no aplicable (factura legacy)."
+Mantener `parseDisplay` (estricto `DD/MM/YYYY`) intacto para no romper la validación en `blur`.
 
-### 3. `src/features/facturacion/components/detalle/FacturaDetalleActionsBar.tsx`
-- Sin cambios de lógica; ya reacciona a `flags.puedeRegistrarPago`.
+### 2. `src/components/ui/date-picker-mx.tsx`
+Añadir `onPaste` al `<input>`:
 
-### 4. Tests
-- `src/features/facturacion/domain/__tests__/facturaFlags.test.ts`: caso "factura Emitida sin uuid_fiscal con saldo" → `puedeRegistrarPago = true`, `puedeCancelarCfdi = false`.
-- Test del submit hook: pago PPD sin `uuid_fiscal` no dispara `emitirRep`.
+- Preventa el evento.
+- Toma `e.clipboardData.getData("text")`.
+- Intenta `parseFlexible(pegado)`.
+- Si es válido: setea `text = isoToDisplay(iso)`, `onChange(iso)`, `setInvalid(false)`.
+- Si no: cae al comportamiento actual (aplica máscara sobre lo pegado, para que al menos los dígitos entren).
 
-### 5. Metadatos
-- Bump `APP_VERSION` a `13.213.26`.
-- Entrada en `CHANGELOG.md` describiendo el fix.
+No cambia contrato (`value` sigue siendo ISO) ni afecta al selector de calendario.
 
-## Alcance / no incluye
+### 3. Tests
+- `src/components/ui/__tests__/date-picker-mx-helpers.test.ts` (o el existente si ya hay): agregar casos para `parseFlexible` con `"2026-07-07"`, `"7/7/2026"`, `"07.07.2026"`, `"07-07-2026"`, `"7 de julio de 2026"`, y entradas inválidas (`"foobar"`, `""`).
+- Test de integración ligero para `DatePickerMx`: simular `paste` de `"2026-07-07"` y verificar que `onChange` recibe `"2026-07-07"`.
 
-- No cambia la política de timbrado: facturas legacy siguen sin poder timbrarse desde el sistema (`puedeTimbrarDesdeSistema` sin cambio).
-- No modifica RLS ni servicios de pagos.
-- No toca portal cliente.
+### 4. Metadatos
+- Bump `APP_VERSION` a `13.213.27`.
+- Entrada en `CHANGELOG.md`: "DatePickerMx acepta pegar fechas en formatos ISO, DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY y texto en español."
+
+## Alcance
+
+- Cambio afecta **todos** los inputs `DatePickerMx` de la app (proformas, embarques, cotizaciones, etc.), no sólo el modal de pago. Es una mejora general segura.
+- No modifica esquemas, servicios ni RLS.
+- No toca lógica de negocio de pagos.
 
 ## Verificación
 
-- Abrir factura 638 con usuario admin: aparece "Registrar pago" en la barra superior.
-- Registrar un abono parcial: se guarda, saldo baja, no intenta timbrar REP.
-- Facturas normales (con UUID) siguen disparando REP automático si son PPD.
+- En "Registrar pago" pegar `2026-07-07` → aparece `07/07/2026`.
+- Pegar `7/7/2026` → aparece `07/07/2026`.
+- Pegar `hola mundo` → se ignora (o cae al filtro de dígitos, sin romper el campo).
+- Tecleo manual y selección de calendario siguen funcionando igual.
