@@ -20,7 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { cn } from "@/lib/utils";
-import { ALIGN_CLASS, DENSITY_CELL, type ColumnAlign, type TableDensity } from "./types";
+import { ALIGN_CLASS, DENSITY_CELL, DENSITY_ROW_MIN_H, type ColumnAlign, type TableDensity } from "./types";
 import { handleRowClick, handleRowKeyDown, isInteractiveDescendant } from "./rowNav";
 import { isLucideIcon } from "./isLucideIcon";
 import "./columnMeta";
