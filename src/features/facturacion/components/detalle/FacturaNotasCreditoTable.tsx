@@ -107,6 +107,13 @@ export function FacturaNotasCreditoTable(props: Props) {
                   <div className="flex justify-end items-center gap-1">
                     {timbrada && (
                       <>
+                        <Button
+                          variant="outline" size="icon" className="h-7 w-7"
+                          title="Previsualizar PDF" aria-label="Previsualizar PDF"
+                          onClick={() => setPreviewNc(n)}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
                         <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
                         <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
                         <Button
