@@ -79,3 +79,5 @@ export const OportunidadDetalle = lazy(() => import("@/features/crm/routes/Oport
 export const ActividadesCrm = lazy(() => import("@/features/crm/routes/Actividades"));
 export const AnaliticaCrm = lazy(() => import("@/features/crm/routes/Analitica"));
 export const CrmConfiguracion = lazy(() => import("@/features/crm/routes/Configuracion"));
+
+export const DireccionDashboard = lazy(() => import("@/features/dashboard/direccion/DireccionDashboard"));
