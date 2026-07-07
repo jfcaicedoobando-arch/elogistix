@@ -8,6 +8,7 @@
  *   4. Contexto — Ver embarque, Enviar por email (oculto si cancelada).
  *   5. Acciones destructivas al final — Sustituir, Cancelar, Eliminar.
  */
+import { Fragment, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText, FileCode2, Ship, Stamp, Mail, Trash2, Loader2, Replace, Ban,
