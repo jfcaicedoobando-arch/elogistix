@@ -1,13 +1,9 @@
-// @ts-nocheck — Corre en runtime Deno (Edge Function), no en el bundle web.
+// @ts-nocheck — Runtime Deno (Edge Function), no bundle web.
 import * as React from 'npm:react@18.3.1';
-import {
-  Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
-} from 'npm:@react-email/components@0.0.22';
+import { Button, Section, Text } from 'npm:@react-email/components@0.0.22';
 import type { TemplateEntry } from './registry.ts';
-
-const SITE_NAME = 'Libre Carga';
-const BRAND_PRIMARY = '#1B2B4B';
-const BRAND_ACCENT = '#2563EB';
+import { EmailLayout, EmailRow, EmailMensaje } from './_layout/EmailLayout.tsx';
+import * as S from './_layout/styles.ts';
 
 interface Props {
   folio?: string;
@@ -28,80 +24,47 @@ interface Props {
   ejecutivoTelefono?: string;
 }
 
-const InfoCard = ({ origen, destino, modo, incoterm, vigencia, totalMxn, totalUsd }: Props) => (
-  <Section style={card}>
-    <Row label="Ruta" value={`${origen ?? ''} → ${destino ?? ''}`} />
-    {modo && <Row label="Modo" value={modo} />}
-    {incoterm && <Row label="Incoterm" value={incoterm} />}
-    {vigencia && <Row label="Vigencia" value={vigencia} />}
-    {totalMxn && <Row label="Total MXN" value={totalMxn} highlight />}
-    {totalUsd && <Row label="Total USD" value={totalUsd} highlight />}
-  </Section>
-);
-
-const MensajeBlock = ({ mensaje }: { mensaje: string }) => (
-  <Section style={mensajeBox}>
-    <Text style={mensajeLabel}>Mensaje</Text>
-    <Text style={mensajeText}>{mensaje}</Text>
-  </Section>
-);
-
-const CtaBlock = ({ enlacePortal, enlacePdf }: { enlacePortal?: string; enlacePdf?: string }) => (
-  <Section style={{ textAlign: 'center', marginTop: '28px' }}>
-    {enlacePortal && <Button href={enlacePortal} style={btnPrimary}>Ver cotización en el portal</Button>}
-    {enlacePdf && (
-      <div style={{ marginTop: '12px' }}>
-        <Button href={enlacePdf} style={btnSecondary}>Descargar PDF</Button>
-      </div>
-    )}
-  </Section>
-);
-
-const Firma = ({ ejecutivoNombre, ejecutivoEmail, ejecutivoTelefono }: Props) => {
-  if (!ejecutivoNombre) return null;
-  return (
-    <Section>
-      <Text style={firmaLabel}>Tu ejecutivo de cuenta</Text>
-      <Text style={firmaNombre}>{ejecutivoNombre}</Text>
-      {ejecutivoEmail && <Text style={firmaLinea}>{ejecutivoEmail}</Text>}
-      {ejecutivoTelefono && <Text style={firmaLinea}>{ejecutivoTelefono}</Text>}
-    </Section>
-  );
-};
-
 const CotizacionEnviadaEmail = (props: Props) => {
-  const { folio = 'COT-XXXX', cliente = 'Cliente', contacto, origen = '', destino = '', mensaje, enlacePortal, enlacePdf } = props;
+  const {
+    folio = 'COT-XXXX', cliente = 'Cliente', contacto,
+    origen = '', destino = '', modo, incoterm, vigencia, totalMxn, totalUsd,
+    mensaje, enlacePortal, enlacePdf,
+  } = props;
   return (
-    <Html lang="es" dir="ltr">
-      <Head />
-      <Preview>{`Cotización ${folio} — ${origen} → ${destino}`}</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Heading style={h1}>Cotización {folio}</Heading>
-          <Text style={lead}>
-            {contacto ? `Hola ${contacto},` : 'Hola,'} adjuntamos la cotización solicitada para <strong>{cliente}</strong>.
-          </Text>
+    <EmailLayout
+      previewText={`Cotización ${folio} — ${origen} → ${destino}`}
+      documentType={{ tone: 'cotizacion', label: 'Cotización' }}
+      title={`Cotización ${folio}`}
+      greeting={
+        <>{contacto ? `Hola ${contacto}, ` : 'Hola, '}adjuntamos la cotización solicitada para <strong>{cliente}</strong>.</>
+      }
+      ejecutivo={{
+        ejecutivoNombre: props.ejecutivoNombre,
+        ejecutivoEmail: props.ejecutivoEmail,
+        ejecutivoTelefono: props.ejecutivoTelefono,
+      }}
+    >
+      <Section style={S.card}>
+        <EmailRow label="Ruta" value={`${origen} → ${destino}`} />
+        {modo && <EmailRow label="Modo" value={modo} />}
+        {incoterm && <EmailRow label="Incoterm" value={incoterm} />}
+        {vigencia && <EmailRow label="Vigencia" value={vigencia} />}
+        {totalMxn && <EmailRow label="Total MXN" value={totalMxn} highlight />}
+        {totalUsd && <EmailRow label="Total USD" value={totalUsd} highlight />}
+      </Section>
 
-          <InfoCard {...props} />
-          {mensaje && <MensajeBlock mensaje={mensaje} />}
-          <CtaBlock enlacePortal={enlacePortal} enlacePdf={enlacePdf} />
+      {mensaje && <EmailMensaje mensaje={mensaje} />}
 
-          <Hr style={hr} />
-          <Firma {...props} />
-
-          <Text style={footer}>{SITE_NAME} · Esta cotización se generó automáticamente desde nuestro sistema.</Text>
-        </Container>
-      </Body>
-    </Html>
+      <Section style={S.ctaWrap}>
+        {enlacePortal && <Button href={enlacePortal} style={S.btnPrimary}>Ver cotización en el portal</Button>}
+        {enlacePdf && <Button href={enlacePdf} style={S.btnSecondary}>Descargar PDF</Button>}
+        <Text style={S.ctaHint}>
+          Cualquier duda, responde directamente a este correo.
+        </Text>
+      </Section>
+    </EmailLayout>
   );
 };
-
-const Row = ({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) => (
-  <div style={{ marginBottom: '10px' }}>
-    <Text style={rowLabel}>{label}</Text>
-    <Text style={highlight ? rowValueStrong : rowValue}>{value}</Text>
-  </div>
-);
 
 export const template = {
   component: CotizacionEnviadaEmail,
@@ -132,22 +95,3 @@ export const template = {
     ejecutivoTelefono: '+52 55 1234 5678',
   },
 } satisfies TemplateEntry;
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Inter, Arial, sans-serif', padding: '24px 0' };
-const container = { padding: '24px', maxWidth: '600px', margin: '0 auto', backgroundColor: '#ffffff' };
-const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: BRAND_PRIMARY, margin: '0 0 12px' };
-const lead = { fontSize: '15px', color: '#0F172A', lineHeight: '1.5', margin: '0 0 20px' };
-const card = { backgroundColor: '#F8FAFC', borderRadius: '8px', padding: '20px', border: '1px solid #E2E8F0' };
-const rowLabel = { fontSize: '11px', fontWeight: 'bold' as const, color: '#64748B', textTransform: 'uppercase' as const, margin: '0 0 2px', letterSpacing: '0.04em' };
-const rowValue = { fontSize: '14px', color: '#0F172A', margin: '0' };
-const rowValueStrong = { fontSize: '16px', color: BRAND_PRIMARY, margin: '0', fontWeight: 'bold' as const };
-const mensajeBox = { backgroundColor: '#EFF6FF', borderRadius: '8px', padding: '16px 20px', margin: '20px 0 0', borderLeft: `3px solid ${BRAND_ACCENT}` };
-const mensajeLabel = { fontSize: '11px', fontWeight: 'bold' as const, color: BRAND_ACCENT, textTransform: 'uppercase' as const, margin: '0 0 6px', letterSpacing: '0.04em' };
-const mensajeText = { fontSize: '14px', color: '#0F172A', margin: '0', lineHeight: '1.5', whiteSpace: 'pre-wrap' as const };
-const btnPrimary = { backgroundColor: BRAND_ACCENT, color: '#ffffff', padding: '12px 28px', borderRadius: '6px', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' as const, display: 'inline-block' };
-const btnSecondary = { backgroundColor: '#ffffff', color: BRAND_PRIMARY, padding: '10px 24px', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', fontWeight: 'bold' as const, border: `1px solid ${BRAND_PRIMARY}`, display: 'inline-block' };
-const hr = { borderColor: '#E2E8F0', margin: '32px 0 20px' };
-const firmaLabel = { fontSize: '11px', fontWeight: 'bold' as const, color: '#64748B', textTransform: 'uppercase' as const, margin: '0 0 4px', letterSpacing: '0.04em' };
-const firmaNombre = { fontSize: '14px', color: BRAND_PRIMARY, fontWeight: 'bold' as const, margin: '0 0 2px' };
-const firmaLinea = { fontSize: '13px', color: '#475569', margin: '0' };
-const footer = { fontSize: '11px', color: '#94A3B8', textAlign: 'center' as const, margin: '32px 0 0' };
