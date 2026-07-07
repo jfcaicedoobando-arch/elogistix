@@ -15,7 +15,7 @@ const h = vi.hoisted(() => ({
   calcEstado: vi.fn(),
   conceptos: [] as Array<{ estado_facturacion: string }>,
   docs: { faltantes: [] as string[], bloqueante: false, loading: false },
-  perms: { isAdmin: false, canEditFinance: false },
+  perms: { isAdmin: false, canEditFinance: false, canEditOperations: false, isSuperAdmin: false },
   validacion: { data: undefined as undefined | { puede_cerrar: boolean } },
   sonnerSuccess: vi.fn(),
   sonnerError: vi.fn(),
