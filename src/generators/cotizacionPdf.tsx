@@ -27,6 +27,6 @@ export async function generarPdfCotizacion(
       emisor={emisor}
       tiposContenedor={tiposContenedor}
     />,
-    `${cotizacion.folio}-cotizacion`,
+    `${slugifyOrg(emisor.razonSocial)}_${cotizacion.folio}-cotizacion`,
   );
 }
