@@ -23,7 +23,8 @@ DECLARE
   whitelist text[] := ARRAY[
     'ratelimit_buckets',           -- bucket de rate limiting interno
     '_backup_merge_embarques_20260602',
-    '_backup_merge_fk_remap_20260602'
+    '_backup_merge_fk_remap_20260602',
+    '_backup_conceptos_venta_elimp00195_20260706'
   ];
 BEGIN
   -- 1) Tablas con RLS pero sin policies
