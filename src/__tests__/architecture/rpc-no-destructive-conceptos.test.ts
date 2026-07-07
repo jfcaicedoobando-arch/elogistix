@@ -17,17 +17,14 @@ import { join } from "path";
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
 const TABLAS_PROTEGIDAS = ["conceptos_venta", "conceptos_costo"] as const;
 
-// Migraciones históricas (previas al fix) que legítimamente contenían el
-// patrón. Cualquier migración NUEVA que lo reintroduzca hará fallar el test.
-const ALLOWLIST = new Set<string>([
-  "20260313065240_d41b45c7-9c3e-46cb-a856-4bee41ad1f88.sql",
-  "20260313065940_bb4d9629-cacb-47aa-be95-aa742633d8db.sql",
-  "20260313070348_f2c54d97-1ec8-4d34-a2bf-679dc6bc3d73.sql",
-  "20260326215709_d7186378-3972-41c7-bf8f-02e755e5fbfb.sql",
-  "20260413013536_cc22d70a-248f-48b4-b3e1-0487013e619a.sql",
-  "20260515195451_31d04a9c-3e27-46e8-a79a-b5fd506215f6.sql",
-  "20260516195302_46cddeca-c330-446e-b180-08c3ebd66423.sql",
-]);
+// Migraciones anteriores al fix v13.207.0 (timestamp `20260707000409`) que
+// legítimamente contenían el patrón. Cualquier migración NUEVA que lo
+// reintroduzca hará fallar el test.
+const FIX_TIMESTAMP = "20260707000409";
+function esHistorica(nombreArchivo: string): boolean {
+  const ts = nombreArchivo.slice(0, 14);
+  return /^\d{14}$/.test(ts) && ts < FIX_TIMESTAMP;
+}
 
 function contieneDeleteInsertPeligroso(sql: string, tabla: string): boolean {
   const lower = sql.toLowerCase();
