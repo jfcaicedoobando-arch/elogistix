@@ -1,47 +1,82 @@
 
-## Cambio
+## Problema
 
-Actualizar los valores por defecto usados al **generar un borrador de factura** para que todos partan de:
+La página de detalle de una factura ya muestra "de qué proforma viene" porque la factura guarda `proforma_id`. Pero al revés no funciona: la proforma se apoyaba en su propio campo `factura_id` que:
 
-- **Uso CFDI:** `G03` (Gastos en general) — ya está así.
-- **Método de pago:** `PPD` (Pago en parcialidades o diferido).
-- **Forma de pago:** `99` (Por definir).
+- El flujo nuevo de conversión ("un clic") ya no llena — se quedó como `NULL`.
+- Aunque lo llenara, sólo cabe **una** factura, y ahora una proforma puede convertirse en **varias** facturas (una por moneda: USD y MXN, porque el SAT no admite CFDI multi-moneda).
 
-Estos defaults son sólo el arranque del borrador; el contable los puede cambiar antes de timbrar.
+Verificado en la base: las últimas 15 proformas facturadas tienen `proforma.factura_id = NULL` a pesar de que su(s) factura(s) sí las apuntan vía `facturas.proforma_id`.
 
-## Puntos de código a tocar
+Resultado: en `ProformaDetalle` la sección "Factura asociada" no aparece — la información existe pero se lee del lado equivocado.
 
-Hay dos flujos que crean borradores y ambos hardcodean los valores:
+## Fix
 
-1. `src/features/proformas/hooks/useConvertirProformaDirecto.ts` (líneas 41-43)  
-   Conversión "un clic" proforma → borrador.  
-   `metodoPago: "PUE"` → `"PPD"`  ·  `formaPago: "03"` → `"99"`  ·  usoCfdi ya es `G03`.
+Cambiar la consulta del detalle a la dirección correcta (factura → proforma) y soportar múltiples facturas.
 
-2. `src/features/facturacion/components/DialogNuevaFacturaManual.tsx` (línea 43)  
-   Diálogo de factura manual.  
-   `formaPago: "03"` → `"99"`  ·  `metodoPago: "PUE"` → `"PPD"`  ·  usoCfdi ya es `G03`.  
-   Se preserva la lógica que sobrescribe `usoCfdi` con el `uso_cfdi_default` del cliente si existe (línea 79).
+### 1. Query — `src/features/proformas/services/queries.ts`
 
-3. Fallbacks de coherencia (para que si un borrador viejo o proceso legacy llega sin valores, el diálogo de timbrar y el form de datos fiscales muestren los mismos defaults):
-   - `src/features/facturacion/hooks/useTimbrarFacturaDialog.ts` — `?? "03"` → `?? "99"`, `?? "PUE"` → `?? "PPD"`.
-   - `src/features/facturacion/domain/datosFiscalesForm.ts` — `?? "PUE"` → `?? "PPD"` (ahí no hay fallback de forma_pago).
+En `fetchProformaDetalle` (y su fila hermana si aplica), reemplazar la relación forward:
 
-No se toca la base de datos (las columnas no tienen `DEFAULT` y los INSERT siempre pasan valor explícito desde el código).
+```text
+facturas_full:factura_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url)
+```
+
+por la inversa (array vía FK `facturas.proforma_id`):
+
+```text
+facturas_asociadas:facturas!proforma_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url, deleted_at)
+```
+
+Ordenar por `created_at asc` para presentar en orden. Filtrar `deleted_at IS NULL` en cliente o en la relación (Supabase permite `filter`).
+
+Se conserva `facturas:factura_id(...)` sólo si algún otro consumidor lo depende; si no, se elimina limpio.
+
+### 2. Tipos — `src/features/proformas/services/types.ts`
+
+- Reemplazar `facturas_full: {...} | null` por `facturas_asociadas: {...}[]`.
+- Ajustar el tipo de retorno del hook y export re-export.
+
+### 3. UI — `src/features/proformas/components/ProformaDetalleCards.tsx`
+
+`FacturaAsociadaCard` pasa a recibir un array:
+
+- Si `array.length === 0`: no renderiza (igual que hoy).
+- Si `array.length === 1`: mismo diseño actual, título "Factura asociada".
+- Si `array.length > 1`: título "Facturas asociadas (N)", una card por factura, cada una con su badge de estado, montos en su moneda, UUID y botón **Ver factura**.
+
+### 4. Ruta — `src/features/proformas/routes/ProformaDetalle.tsx`
+
+Pasar el array nuevo a `<FacturaAsociadaCard>` (línea 143).
+
+### 5. Fallback legacy
+
+Los datos históricos que aún tengan `proforma.factura_id` seteado pero **no** tengan `facturas.proforma_id` en su factura correspondiente. Antes del cambio de código haremos una verificación rápida: si existen huecos, un backfill que corra:
+
+```text
+UPDATE facturas f
+SET proforma_id = p.id
+FROM proformas p
+WHERE p.factura_id = f.id AND f.proforma_id IS NULL AND f.deleted_at IS NULL;
+```
+
+(Sólo se ejecuta si el conteo previo `>0`.)
 
 ## Housekeeping
 
 - `CHANGELOG.md`: entrada nueva.
-- `src/constants/appVersion.ts`: bump patch a `13.213.45`.
+- `src/constants/appVersion.ts`: bump a `13.213.46`.
 
 ## Analogía
 
-Antes el sistema pre-llenaba el recibo como "pago al contado hoy con transferencia" (PUE + 03). Ahora lo pre-llena como "pago diferido, forma por definir" (PPD + 99), que es lo que necesita quien va a facturar y cobrar después.
+Antes la proforma miraba sólo por una mirilla que dejó de usarse. Ahora mira desde el otro lado — la factura ya lleva su propia flecha "vengo de aquí", y la proforma sólo tiene que seguir esas flechas de vuelta. Y si son dos facturas (una por moneda), las muestra las dos.
 
 ## Archivos a tocar
 
-- `src/features/proformas/hooks/useConvertirProformaDirecto.ts`
-- `src/features/facturacion/components/DialogNuevaFacturaManual.tsx`
-- `src/features/facturacion/hooks/useTimbrarFacturaDialog.ts`
-- `src/features/facturacion/domain/datosFiscalesForm.ts`
+- `src/features/proformas/services/queries.ts`
+- `src/features/proformas/services/types.ts`
+- `src/features/proformas/components/ProformaDetalleCards.tsx`
+- `src/features/proformas/routes/ProformaDetalle.tsx`
+- Migración opcional de backfill (sólo si hay huecos)
 - `CHANGELOG.md`
 - `src/constants/appVersion.ts`
