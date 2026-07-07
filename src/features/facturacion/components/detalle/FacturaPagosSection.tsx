@@ -52,6 +52,7 @@ export function FacturaPagosSection({
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
 
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);
   const saldo = Math.max(0, totalFactura - totalPagado);
