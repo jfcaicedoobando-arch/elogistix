@@ -13,6 +13,7 @@ import { formatCurrencyCompact, formatCurrency } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 import { useProformasPendientes } from "@/features/embarques/hooks/useProformas";
+import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
 
 type Tone = "default" | "success" | "warn" | "danger";
 
