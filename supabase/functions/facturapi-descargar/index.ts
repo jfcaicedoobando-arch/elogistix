@@ -102,6 +102,31 @@ async function resolveTarget(
   return { ok: false, status: 400, body: { error: "missing_id", message: "factura_id, pago_id o nota_credito_id requerido" } };
 }
 
+/**
+ * Normaliza el nombre de la organización para usarlo como prefijo del nombre de
+ * archivo descargado: sin acentos, sin caracteres inseguros y con guiones bajos
+ * en lugar de espacios. Máx 40 chars para evitar Content-Disposition largos.
+ */
+function slugifyOrg(nombre: string): string {
+  const s = nombre
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+  return s || "org";
+}
+
+async function resolveOrgSlug(
+  supabase: ReturnType<typeof createClient>, organizationId: string,
+): Promise<string> {
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("nombre")
+    .eq("id", organizationId)
+    .maybeSingle();
+  return slugifyOrg((org?.nombre as string | undefined) ?? "org");
+}
+
 
 
 Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
@@ -146,7 +171,8 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
 
   const contentType = tipo === "pdf" ? "application/pdf" : "application/xml";
   const ext = tipo === "pdf" ? "pdf" : "xml";
-  const filename = `${target.data.filename}.${ext}`;
+  const orgSlug = await resolveOrgSlug(supabase, target.data.organizationId);
+  const filename = `${orgSlug}_${target.data.filename}.${ext}`;
 
   return new Response(fapiRes.body, {
     status: 200,

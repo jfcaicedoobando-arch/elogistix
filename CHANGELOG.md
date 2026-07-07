@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.38] - 2026-07-07
+- **PDF/XML de factura: nombre del archivo con la organización + folio**:
+  - `facturapi-descargar` ahora antepone un slug del nombre de la organización dueña de la factura al filename. Ejemplos: `MiEmpresa_A123.pdf`, `MiEmpresa_REP-B45.xml`, `MiEmpresa_NC-C7.pdf`. El slug quita acentos, cambia espacios/caracteres raros por `_` y se limita a 40 chars.
+  - El frontend no cambia: `descargarCfdiFacturapi` ya usaba el `Content-Disposition` del servidor, así que el nuevo nombre se aplica automáticamente en PDF y XML.
+  - Analogía: antes todos los archivos llegaban con "sobre 123" y era fácil revolverlos entre tenants; ahora vienen con "TuEmpresa_sobre-123" para saber de un vistazo a quién pertenecen.
+
 ## [13.213.37] - 2026-07-07
 - **Fix CI — gate de auditoría verde**:
   - `src/features/cxp/routes/Cxp.tsx` bajó de 245 → 195 líneas: config de columnas movida a `src/features/cxp/routes/_config/cxpColumnConfig.ts` y los dos deep-links (`?factura`, `?aprobacion`) encapsulados en el nuevo hook `useCxpDeepLinks`.
