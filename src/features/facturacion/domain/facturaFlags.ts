@@ -52,6 +52,7 @@ export function deriveFacturaFlags(
   factura: FacturaFlagsInput | null | undefined,
   canEdit: boolean,
   ctx: FacturaFlagsContext = {},
+  canRegistrarCobro: boolean = canEdit,
 ): FacturaFlags {
   if (!factura) {
     return {
@@ -82,7 +83,7 @@ export function deriveFacturaFlags(
   const puedeCancelarCfdi = timbradaVigente && canEdit;
   const puedeSustituirCfdi = timbradaVigente && canEdit;
   const saldo = ctx.saldo ?? 0;
-  const puedeRegistrarPago = vigenteCobrable && canEdit && saldo > 0.01;
+  const puedeRegistrarPago = vigenteCobrable && canRegistrarCobro && saldo > 0.01;
   const repPendiente = (ctx.pagosRepPendientes ?? 0) > 0;
   return {
     sinTimbrar,
