@@ -1,16 +1,5 @@
 import { useState, useMemo } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
-import { Loader2, FilePlus2, ListChecks, FileText } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { FilePlus2, ListChecks, FileText } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
@@ -27,6 +16,7 @@ import { FlujoFacturacionStepper } from "./facturacion/FlujoFacturacionStepper";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
 import { ProformaInconsistenteAlert } from "./facturacion/ProformaInconsistenteAlert";
 import { AvisoProformasRechazadas } from "./facturacion/AvisoProformasRechazadas";
+import { DialogEliminarProforma } from "./facturacion/DialogEliminarProforma";
 import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
