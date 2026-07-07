@@ -201,6 +201,8 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
           puedeTimbrar={puedeTimbrar}
         />
       )}
+      {/* v13.208.0 — Vista previa de Expediente + BLs que se propagan al CFDI. */}
+      <ReferenciasEmbarquePreview factura={factura} />
     </FormDialogShell>
   );
 }
