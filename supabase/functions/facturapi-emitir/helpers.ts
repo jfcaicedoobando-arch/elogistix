@@ -4,6 +4,12 @@
  *
  * Facturapi docs: https://docs.facturapi.io/api/
  */
+import {
+  formatDescripcionConReferencias,
+  buildPdfCustomSection,
+  type ReferenciasEmbarque,
+} from "../_shared/referenciasEmbarque.ts";
+export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 
 export interface ConceptoInterno {
   descripcion: string;
