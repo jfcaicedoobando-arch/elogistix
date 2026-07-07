@@ -53,6 +53,7 @@ export interface DefaultsFacturacionCliente {
   forma_pago: string | null;
   metodo_pago: string | null;
   cc_emails: string[] | null;
+  destinatarios_emails: string[] | null;
 }
 
 export async function fetchDefaultsFacturacionCliente(
@@ -86,6 +87,21 @@ export async function guardarDefaultsCcCliente(
   const { error } = await supabase
     .from("clientes")
     .update({ email_cc_default: ccEmails })
+    .eq("id", clienteId);
+  if (error) throw error;
+}
+
+/**
+ * Persiste los destinatarios manuales usados en el último envío (correos que
+ * NO vienen de la ficha de contactos del cliente). Best-effort.
+ */
+export async function guardarDefaultsDestinatariosCliente(
+  clienteId: string,
+  emails: string[],
+): Promise<void> {
+  const { error } = await supabase
+    .from("clientes")
+    .update({ email_destinatarios_default: emails })
     .eq("id", clienteId);
   if (error) throw error;
 }
