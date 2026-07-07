@@ -1,15 +1,14 @@
 /**
  * Bandeja "Por enviar": CFDI ya timbrados sin envío al cliente.
- * Sigue el patrón unificado (Card + UnifiedFiltersBar + useClientPagedList).
+ * Estados unificados vía `<BandejaShell />`.
  */
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Send } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
-import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useFacturasPorEnviar, type FilaPorEnviar } from "@/features/facturacion/hooks/useBandejas";
+import { BandejaShell } from "./BandejaShell";
 
 const columns = defineColumns<FilaPorEnviar>([
   {
@@ -29,7 +28,7 @@ const columns = defineColumns<FilaPorEnviar>([
 ]);
 
 export function BandejaPorEnviar() {
-  const { data, isLoading } = useFacturasPorEnviar();
+  const { data, isLoading, isError, refetch } = useFacturasPorEnviar();
   const paged = useClientPagedList<FilaPorEnviar, Record<string, string>>({
     data,
     isLoading,
@@ -46,18 +45,17 @@ export function BandejaPorEnviar() {
   const totalCount = data?.length ?? 0;
 
   return (
-    <div className="space-y-3">
-      <UnifiedFiltersBar
-        search={paged.search}
-        onSearchChange={paged.setSearch}
-        searchPlaceholder="Buscar folio o cliente…"
-        chips={paged.activeChips}
-        activeCount={paged.activeCount}
-        onClearAll={paged.resetAll}
-      />
-      <div className="text-xs text-muted-foreground">
-        Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} CFDI por enviar
-      </div>
+    <BandejaShell
+      isError={isError}
+      onRetry={() => refetch()}
+      search={paged.search}
+      onSearchChange={paged.setSearch}
+      searchPlaceholder="Buscar folio o cliente…"
+      chips={paged.activeChips}
+      activeCount={paged.activeCount}
+      onClearAll={paged.resetAll}
+      counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} CFDI por enviar</>}
+    >
       <Card>
         <CardContent className="p-0">
           <DataTable
@@ -65,7 +63,8 @@ export function BandejaPorEnviar() {
             data={paged.rows}
             isLoading={paged.isLoading}
             emptyIcon={Send}
-            emptyMessage="Todos los CFDI timbrados ya se enviaron. ✅"
+            emptyMessage="Todos los CFDI timbrados ya se enviaron."
+            emptyHint="Cuando un CFDI se timbre y aún no se envíe por correo, aparecerá aquí."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
@@ -76,6 +75,6 @@ export function BandejaPorEnviar() {
           />
         </CardContent>
       </Card>
-    </div>
+    </BandejaShell>
   );
 }

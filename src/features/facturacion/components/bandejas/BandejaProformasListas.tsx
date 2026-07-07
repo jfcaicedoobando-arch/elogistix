@@ -1,16 +1,15 @@
 /**
  * Bandeja "Proformas listas": proformas aprobadas sin factura asociada.
- * Patrón unificado: Card + UnifiedFiltersBar + useClientPagedList.
+ * Estados unificados vía `<BandejaShell />`.
  */
-
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCheck2 } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { clientColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatCurrency } from "@/lib/formatters";
-import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useProformasListas, type FilaProformaLista } from "@/features/facturacion/hooks/useProformasListas";
+import { BandejaShell } from "./BandejaShell";
 
 const columns = defineColumns<FilaProformaLista>([
   {
@@ -48,7 +47,7 @@ const columns = defineColumns<FilaProformaLista>([
 ]);
 
 export function BandejaProformasListas() {
-  const { data, isLoading } = useProformasListas();
+  const { data, isLoading, isError, refetch } = useProformasListas();
   const paged = useClientPagedList<FilaProformaLista, Record<string, string>>({
     data,
     isLoading,
@@ -66,18 +65,17 @@ export function BandejaProformasListas() {
   const totalCount = data?.length ?? 0;
 
   return (
-    <div className="space-y-3">
-      <UnifiedFiltersBar
-        search={paged.search}
-        onSearchChange={paged.setSearch}
-        searchPlaceholder="Buscar proforma, cliente o expediente…"
-        chips={paged.activeChips}
-        activeCount={paged.activeCount}
-        onClearAll={paged.resetAll}
-      />
-      <div className="text-xs text-muted-foreground">
-        Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} proformas listas
-      </div>
+    <BandejaShell
+      isError={isError}
+      onRetry={() => refetch()}
+      search={paged.search}
+      onSearchChange={paged.setSearch}
+      searchPlaceholder="Buscar proforma, cliente o expediente…"
+      chips={paged.activeChips}
+      activeCount={paged.activeCount}
+      onClearAll={paged.resetAll}
+      counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} proformas listas</>}
+    >
       <Card>
         <CardContent className="p-0">
           <DataTable
@@ -85,7 +83,8 @@ export function BandejaProformasListas() {
             data={paged.rows}
             isLoading={paged.isLoading}
             emptyIcon={FileCheck2}
-            emptyMessage="No hay proformas aceptadas por el cliente pendientes de facturar. ✅"
+            emptyMessage="No hay proformas aceptadas por el cliente pendientes de facturar."
+            emptyHint="Cuando el cliente acepte una proforma, aparecerá aquí lista para convertir a CFDI."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/proformas/${r.id}`}
             getRowAriaLabel={(r) => `Abrir proforma ${r.numero || r.id}`}
@@ -96,6 +95,6 @@ export function BandejaProformasListas() {
           />
         </CardContent>
       </Card>
-    </div>
+    </BandejaShell>
   );
 }
