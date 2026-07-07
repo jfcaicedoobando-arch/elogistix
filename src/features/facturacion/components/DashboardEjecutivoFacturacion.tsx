@@ -146,7 +146,7 @@ export function DashboardEjecutivoFacturacion() {
               label="Listas para facturar"
               value={proformasListas.toString()}
               tone={listasTone}
-              hint="Proformas aprobadas internamente y sin factura asociada — listas para convertir a CFDI. Se convierten desde la bandeja 'Proformas listas'."
+              hint="Proformas aceptadas por el cliente y sin factura emitida — listas para timbrar. Se convierten desde la bandeja 'Proformas listas'."
             />
 
             <Kpi

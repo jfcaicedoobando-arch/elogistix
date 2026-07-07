@@ -1,119 +1,54 @@
 
-## Diagnóstico: los 3 números miden cosas distintas (y uno está mal etiquetado)
+## Diagnóstico
 
-El flujo correcto del negocio es:
+Confirmado, no es que las 23 sean "reales": son **legacy data**. Los dos módulos usan definiciones distintas de "lista para facturar":
 
-```text
-Embarque cerrado
-   └─▶ Proforma (estado_revision = 'pendiente')   ← esperando aprobación INTERNA
-         └─▶ Proforma aprobada (estado_revision = 'aprobada', factura_id IS NULL)
-               └─▶ Factura Borrador (sin uuid_fiscal)
-                     └─▶ CFDI timbrado
-                           └─▶ Pago  →  REP (si es PPD)
+| Módulo | Filtro actual | Resultado |
+|---|---|---|
+| `/proformas` (badge Aceptada) | `estado_proforma <> 'facturada'` **AND** `estado_cliente = 'aceptada'` | **9** ✅ |
+| `/facturacion` bandeja "Proformas listas" | `estado_revision = 'aprobada'` **AND** `factura_id IS NULL` | **23** ❌ |
+
+Query a la DB (`proformas` sin `deleted_at`):
+- 23 filas cumplen el filtro de Facturación.
+- De esas, **22 tienen `estado_proforma = 'facturada'`** (ya conceptualmente cerradas en flujo legacy, pero nunca se les asignó `factura_id` porque el CFDI se emitió fuera del sistema o antes de que existiera el link). Sólo 3 tienen totales normales; el resto son basura histórica.
+- Las 9 "reales" tienen `estado_proforma='pendiente'` + `estado_cliente='aceptada'` + `factura_id IS NULL`.
+
+Analogía: es como si en /proformas cuentas "notas firmadas por el cliente que aún no tienen factura oficial", y en /facturación cuentas "notas visadas por el gerente" — pero en la data vieja hay 22 notas que el gerente visó, se archivaron como "facturadas" a mano, y nunca se ligaron a un CFDI. Esas ya no deberían aparecer como pendientes.
+
+## Cambios
+
+### 1. `src/features/facturacion/services/proformasListas.ts`
+Reemplazar el filtro en `fetchProformasListas` y `fetchProformasListasCount` para que coincida con `getEstadoUnificado === 'aceptada'`:
+
+```ts
+.eq("estado_cliente", "aceptada")
+.neq("estado_proforma", "facturada")
+.is("factura_id", null)
+.is("deleted_at", null)
 ```
 
-Consulté la base y los 3 números que ves en `/facturacion` vienen de **puntos distintos** del embudo:
+Retirar `.eq("estado_revision", "aprobada")` — ese campo es de revisión interna previa, no del ciclo cliente→factura, y es lo que estaba dejando pasar las 22 legacy.
 
-| Número que ves     | De dónde sale                                                                 | Qué mide realmente                                                       |
-| ------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| **9** (en /proformas) | `proformas` con `estado_revision='aprobada'` y `factura_id IS NULL` filtrado por tu org | Proformas listas para convertir a factura                                |
-| **29** (KPI dashboard) | `useProformasPendientes()` → `estado_revision='pendiente'`                    | Proformas **pendientes de revisión interna** (¡NO aprobadas!)            |
-| **43** (tab "Por facturar") | `useHuecoFacturacion` → embarques con ETD > hace 5 días y sin CFDI por expediente | Embarques cerrados que **no tienen factura** (haya proforma o no)         |
+Actualizar el bloque JSDoc del archivo para reflejar la nueva definición y citar `getEstadoUnificado` como fuente de verdad.
 
-### El bug de fondo
+### 2. `src/features/facturacion/components/bandejas/BandejaProformasListas.tsx`
+Cambiar el tooltip / `emptyMessage` para leer "aceptadas por el cliente y sin factura" en lugar de "aprobadas". Sin cambios de lógica.
 
-En `DashboardEjecutivoFacturacion.tsx` línea 110-140:
+### 3. `src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx`
+El KPI "Listas para facturar" usa el mismo hook, así que se corrige solo. Actualizar el tooltip: "Proformas aceptadas por el cliente, sin factura emitida — listo para timbrar."
 
-- La variable se llama `porTimbrar` pero se llena con `proformasPendientes.length` (que son `estado_revision='pendiente'`).
-- El label dice **"Proformas por facturar"** y el tooltip afirma _"aprobadas por el cliente que aún no se han convertido en factura"_.
-- Pero el query es de proformas **pendientes de revisión interna**, no aprobadas.
+### 4. `docs/flujo-facturacion.md`
+Añadir nota: `estado_revision` (aprobación interna) **no** se usa para decidir facturación; el gate es `estado_cliente='aceptada'`. Documentar que las 22 filas legacy con `estado_proforma='facturada' AND factura_id IS NULL` son data histórica intencional (no se auto-limpian).
 
-Por eso ves 29 cuando en `/proformas` sólo hay 9 aprobadas.
+### 5. Versionado
+Bump `APP_VERSION` a `13.213.1` y entrada en `CHANGELOG.md`:
+> Fix: bandeja "Proformas listas" y KPI del dashboard ahora usan el mismo criterio que `/proformas` (`estado_cliente='aceptada'` + no facturada), eliminando 22 falsos positivos de data legacy.
 
-Además, la tab "Por facturar" no muestra proformas: muestra el **hueco** (embarques sin CFDI), que es una métrica de vigilancia distinta y perfectamente válida — pero mezclada con las otras confunde.
+## Fuera de alcance
 
----
+- **No** tocar ni migrar las 22 filas legacy. Si más adelante quieres una limpieza masiva, se puede hacer en otro turno con un script que las mueva a `deleted_at` o les asigne `factura_id` de un CFDI externo — decisión tuya.
+- **No** cambiar el flujo aprobación interna → aceptación cliente. Sigue igual.
 
-## Plan de arreglo (sólo UI y un hook nuevo, sin tocar datos)
+## Verificación
 
-### 1. Renombrar el KPI mal etiquetado
-
-En `DashboardEjecutivoFacturacion.tsx`:
-- Cambiar el label **"Proformas por facturar"** → **"Proformas por revisar"**.
-- Ajustar el tooltip para que diga la verdad: _"Proformas generadas desde embarques que aún no han sido revisadas/aprobadas internamente. Una vez aprobadas pasan a 'Listas para facturar'."_
-- Mantener la tonalidad `warn` cuando > 0.
-
-### 2. Agregar un KPI faltante: "Listas para facturar"
-
-Nuevo hook `useProformasAprobadasSinFactura(orgId)` que hace:
-
-```sql
-select count(*) from proformas
-where organization_id = :org
-  and estado_revision = 'aprobada'
-  and factura_id is null
-```
-
-(usar `count: 'exact', head: true`, sin traer filas).
-
-Pintarlo como sexto KPI en el dashboard, tono `warn` cuando > 0, con tooltip _"Proformas aprobadas listas para convertir en factura (CFDI)"_. Este es el número que debería cuadrar con los **9** que ves en `/proformas`.
-
-### 3. Renombrar la bandeja "Por facturar" para que quede claro qué mide
-
-En `BandejaTabs.tsx` renombrar la pestaña **"Por facturar"** → **"Embarques sin factura"** (o **"Hueco de facturación"**). Es lo que ya muestra internamente (`BandejaPorFacturar` reusa `useHuecoFacturacion`). Con el nombre correcto deja de confundirse con el KPI de proformas.
-
-Su badge de conteo sigue viniendo de `useHuecoFacturacion` (los 43).
-
-### 4. Añadir una bandeja "Proformas listas" al lado
-
-Nueva pestaña **"Proformas listas"** al inicio de `BandejaTabs`, que muestre la lista real (`estado_revision='aprobada'` + `factura_id IS NULL`) con:
-- Columnas: Nº proforma · Cliente · Embarque · Total · Moneda · Fecha
-- Acción rápida por fila: **"Convertir a factura"** (abrir `ConvertirAFacturaDialog` ya existente — no hay que crearlo).
-- Badge de conteo = mismo número del KPI nuevo (los 9 en tu caso).
-
-Con eso, el flujo queda visible en la fila de tabs en el orden real del negocio:
-
-```text
-[Embarques sin factura]  [Proformas listas]  [Por timbrar]  [Por enviar]
-        (43)                   (9)              (…)            (…)
-   ↓                        ↓
-   embarques cerrados       proformas aprobadas
-   que faltan proforma      esperando conversión
-   o factura                a CFDI
-```
-
-### 5. Documentación y versión
-
-- Actualizar `docs/flujo-facturacion.md`: añadir la sección "¿Qué mide cada bandeja/KPI?" con la tabla de arriba.
-- Bump `APP_VERSION` → `13.213.0` y entry en `CHANGELOG.md`.
-
----
-
-## Detalles técnicos
-
-**Archivos a crear**
-- `src/features/facturacion/services/proformasListas.ts` — fetch de proformas aprobadas sin factura (lista + conteo).
-- `src/features/facturacion/hooks/useProformasListas.ts` — react-query wrapper (staleTime 60s).
-- `src/features/facturacion/components/bandejas/BandejaProformasListas.tsx` — tabla con acción "Convertir a factura".
-
-**Archivos a editar**
-- `src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx` — renombrar KPI y añadir "Listas para facturar".
-- `src/features/facturacion/components/bandejas/BandejaTabs.tsx` — renombrar tab existente y añadir la nueva pestaña.
-- `src/features/facturacion/routes/Facturacion.tsx` — enrutar el nuevo `?bandeja=proformas-listas`.
-- `src/features/facturacion/services/bandejas.ts` — sumar `proformasListas` a `BandejaConteos`.
-- `docs/flujo-facturacion.md`, `CHANGELOG.md`, `src/constants/appVersion.ts`.
-
-**Fuera de alcance**
-- No se toca `useProformasPendientes` (se sigue usando en `/proformas` para el listado de pendientes).
-- No se cambia lógica de conversión, timbrado, envío, ni RLS.
-- No hay migración de base de datos.
-
-## Analogía (para que quede claro)
-
-Imagina una panadería:
-
-- **Hueco (43)** = pedidos que ya se entregaron y todavía no le hemos pasado la cuenta al cliente.
-- **Pendientes de revisión (29 → "Por revisar")** = notas de cuenta que el vendedor escribió pero el gerente aún no las firma.
-- **Listas para facturar (9 → nuevo KPI)** = notas ya firmadas por el gerente, esperando a que caja emita la factura oficial (CFDI).
-
-Hoy el dashboard te enseña la "pila del gerente" (29) con el nombre "listas para facturar", y por eso no cuadra con nada. El plan pone cada pila con su nombre correcto.
+Después del cambio, ambos números deben ser **9** en el navegador (bandeja + KPI), y el count query en DB devolver 9.
