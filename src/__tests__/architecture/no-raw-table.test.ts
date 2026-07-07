@@ -25,6 +25,8 @@ const ALLOWLIST: readonly string[] = [
   // Implementación misma del DataTable — consume las primitivas.
   "src/components/shared/DataTable.tsx",
   "src/components/shared/dataTable/DataTableBody.tsx",
+  "src/components/shared/dataTable/DataTableBodyEmpty.tsx",
+  "src/components/shared/dataTable/DataTableBodySkeleton.tsx",
   "src/components/shared/dataTable/DataTableHeaderRow.tsx",
   // Form-tables editables con render row complejo (inputs/textareas por celda).
   "src/features/cotizacion/components/SeccionMercanciaAerea.tsx",
