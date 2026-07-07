@@ -13,14 +13,13 @@ import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
 import { resolveFacturapiKey, resolveFacturapiKeyOtherAmbiente, type SupabaseLike } from '../_shared/facturapiAuth.ts';
 import {
   authenticateRequest,
-  buildTemplateData,
   json,
   loadFactura,
   parseBody,
-  persistEnvio,
   prepareAttachments,
   sendToRecipients,
 } from './helpers.ts';
+import { buildTemplateData, persistEnvio } from './persist.ts';
 
 Deno.serve(wrapEdgeHandler("enviar-factura-email", async (req) => {
   const preflight = handlePreflightStrict(req);
