@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { captureEdgeException } from '../_shared/sentry.ts';
+import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
