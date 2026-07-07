@@ -5,6 +5,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.44] - 2026-07-07
+- **Dashboard de Facturación: se retira el KPI "Proformas por revisar"**:
+  - El estado `estado_revision` es una aprobación interna del rol ventas/operativo (dentro del embarque, en Historial de Proformas), no del contable.
+  - Contabilidad sólo trabaja con proformas ya aceptadas por el cliente (KPI "Listas para facturar"), así que el KPI de revisión no aportaba y confundía.
+  - Grid del dashboard pasa de 7 a 6 columnas en desktop.
+  - Analogía: quitamos del tablero del cajero un contador que era del analista de crédito.
+
 ## [13.213.43] - 2026-07-07
 - **Fix: KPI "Proformas por revisar" del dashboard de Facturación mostraba basura legacy**:
   - Contaba 33 proformas migradas del sistema anterior que ya estaban facturadas fuera de la app pero nadie las había marcado como revisadas.
