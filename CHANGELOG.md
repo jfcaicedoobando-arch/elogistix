@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.16] - 2026-07-07
+
+- **Chore · Limpieza de código muerto (`lint:unused` / knip)**: se eliminaron 5 archivos y 2 exports que ya no importaba nadie: componentes `FacturaDetalleActions.tsx` + `FacturaDetalleActionGroups.tsx` (barra de acciones vieja del detalle de factura, ya sustituida por `FacturaDetalleEditableSections`), `FacturacionKpisFiscales.tsx` (tarjetas KPI fiscales que no se montan en ninguna ruta), `HuecoFacturacionChip.tsx` + `HuecoFacturacionDetalleDialog.tsx` (chip inline del hueco que quedó huérfano), su hook `useFacturacionKpisFiscales.ts` + service `kpisFiscales.ts` + test, y la función `finMesUtc` de `dashboard/direccion/services/mxn.ts`. Sin cambios de UI ni de lógica: sólo se saca del árbol lo que ya no se usaba. Analogía: barrimos los cajones del taller y tiramos las herramientas duplicadas que nadie tomaba desde hace meses — el taller queda igual pero más ligero.
+
 ## [13.213.15] - 2026-07-07
 
 - **Chore · Lint fixes (`--max-warnings 0`)**: (1) `DashboardEjecutivoFacturacion.tsx` bajó de complejidad 17 → dentro del límite extrayendo la derivación de `label/tone/hint` del KPI "Facturado mes" a un helper puro `buildFacturadoUi`. (2) `supabase/functions/enviar-factura-email/helpers.ts` bajó de 266 → 234 líneas moviendo `buildTemplateData` y `persistEnvio` a un nuevo archivo `persist.ts` (mismos tipos, mismos imports en `index.ts`). Sin cambios de lógica. Analogía: teníamos una carpeta con 266 hojas y el máximo era 250 — sacamos las 2 formas más largas a una carpeta anexa y ahora la principal cabe holgada.
