@@ -43,7 +43,7 @@ describe("Migraciones — no destruir conceptos facturados", () => {
       const infractoras: string[] = [];
       for (const archivo of readdirSync(MIGRATIONS_DIR)) {
         if (!archivo.endsWith(".sql")) continue;
-        if (ALLOWLIST.has(archivo)) continue;
+        if (esHistorica(archivo)) continue;
         const sql = readFileSync(join(MIGRATIONS_DIR, archivo), "utf8");
         if (contieneDeleteInsertPeligroso(sql, tabla)) {
           infractoras.push(archivo);
