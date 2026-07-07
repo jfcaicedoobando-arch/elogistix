@@ -5,31 +5,23 @@
  * de registrar pago: `total − Σ monto_aplicado_factura`.
  */
 import { useState } from "react";
-import { Loader2, Trash2, CheckCircle2, Clock, Eye } from "lucide-react";
+import { Loader2, Trash2, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
-import { useRegistrarActividad } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared";
+import { useRegistrarActividad, useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
-import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
-import { CfdiEstadoBadge } from "@/features/facturacion/components/CfdiEstadoBadge";
+import { PagoRepCell } from "./PagoRepCell";
 
 interface Props {
   facturaId: string;
@@ -42,11 +34,7 @@ interface Props {
 }
 
 export function FacturaPagosSection({
-  facturaId,
-  facturaNumero,
-  totalFactura,
-  moneda,
-  canEdit,
+  facturaId, facturaNumero, totalFactura, moneda, canEdit,
 }: Props) {
   const { toast } = useToast();
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
@@ -118,12 +106,7 @@ export function FacturaPagosSection({
                   </tr>
                 </thead>
                 <tbody>
-                  {pagos.map((p) => {
-                    // v13.213.20 — FacturAPI = source of truth para el folio del REP.
-                    // Sin timbrar: chip gris "REP pendiente". Timbrado: `<serie><folio>`.
-                    const repTimbrado = p.estado_rep === "Timbrado" && p.folio_rep != null;
-                    const repCancelado = p.estado_rep === "Cancelado";
-                    return (
+                  {pagos.map((p) => (
                     <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="py-2 px-2 whitespace-nowrap">{formatDate(p.fecha_pago)}</td>
                       <td className="py-2 px-2 text-right tabular-nums">
@@ -137,41 +120,13 @@ export function FacturaPagosSection({
                         {p.referencia || "—"}
                       </td>
                       <td className="py-2 px-2">
-                        {repTimbrado ? (
-                          <div className="flex items-center gap-1.5">
-                            <CfdiEstadoBadge tono="timbrada" mono>
-                              {`${p.serie_rep ?? ""}${p.folio_rep}`}
-                            </CfdiEstadoBadge>
-                            <Button
-                              variant="outline" size="icon" className="h-6 w-6"
-                              title="Previsualizar PDF del REP" aria-label="Previsualizar PDF del REP"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPreviewRep({ id: p.id, label: `${p.serie_rep ?? ""}${p.folio_rep}` });
-                              }}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                            <FacturaDownloadButton
-                              stored={null}
-                              kind="pdf"
-                              pagoId={p.id}
-                              size="icon"
-                              className="h-6 w-6"
-                            />
-                            <FacturaDownloadButton
-                              stored={null}
-                              kind="xml"
-                              pagoId={p.id}
-                              size="icon"
-                              className="h-6 w-6"
-                            />
-                          </div>
-                        ) : repCancelado ? (
-                          <CfdiEstadoBadge tono="cancelada">REP cancelado</CfdiEstadoBadge>
-                        ) : (
-                          <CfdiEstadoBadge tono="borrador">REP pendiente</CfdiEstadoBadge>
-                        )}
+                        <PagoRepCell
+                          pagoId={p.id}
+                          estadoRep={p.estado_rep}
+                          serieRep={p.serie_rep ?? null}
+                          folioRep={p.folio_rep ?? null}
+                          onPreview={(id, label) => setPreviewRep({ id, label })}
+                        />
                       </td>
                       {canEdit && (
                         <td className="py-2 px-2">
@@ -189,8 +144,7 @@ export function FacturaPagosSection({
                         </td>
                       )}
                     </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -223,10 +177,7 @@ export function FacturaPagosSection({
             <AlertDialogCancel disabled={eliminar.isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               disabled={eliminar.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                handleEliminar();
-              }}
+              onClick={(e) => { e.preventDefault(); handleEliminar(); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {eliminar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Eliminar"}
