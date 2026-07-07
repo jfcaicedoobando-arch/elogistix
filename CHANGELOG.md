@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.210.1] - 2026-07-07
+
+- **Fix · Dashboard Dirección movido a `/dashboard`**: la ruta pedida originalmente era `/dashboard` (no `/dashboard-direccion`). Como la ruta `/dashboard` estaba libre — el dashboard operativo vive en `/inicio` — se cambia sin conflicto ni redirect.
+
 ## [13.210.0] - 2026-07-07
 
 - **Feature · Dashboard Dirección (`/dashboard-direccion`)**: nueva vista ejecutiva para dueño/gerencia con foco en tendencia y riesgo, no en detalle operativo. Compone 4 secciones — Hero (utilidad bruta del mes + Δ pts vs mes anterior, cartera vencida resaltada en rojo, facturación vs meta fija con barra de progreso), Rentabilidad (margen 6m con mes actual resaltado, margen por modo Marítimo/Aéreo/Terrestre), Riesgo y cartera (buckets Corriente/1-30/31-60/+60 con colores semánticos, top 5 clientes por concentración de margen) y Pulso (embarques activos con desglose, alertas, estatus fiscal). Datos reales desde `embarques + conceptos_venta/costo + facturas + pagos_factura`; **placeholder "sin datos"** para documentos vencidos (no hay campo de vencimiento en `documentos_embarque`). Meta de facturación configurable en `src/features/dashboard/direccion/constants.ts` (`META_FACTURACION_MENSUAL_MXN = 5_500_000`). Ruta protegida para roles `admin`, `admin_org`, `super_admin`, `gerente_comercial`, `gerente_visor`, `gerente_operaciones`.
