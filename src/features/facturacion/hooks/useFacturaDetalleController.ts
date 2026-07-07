@@ -13,7 +13,7 @@ import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import { usePermissions } from "@/hooks/shared";
 
 export function useFacturaDetalleController(id: string | undefined) {
-  const { canEdit } = usePermissions();
+  const { canEdit, canRegistrarCobro } = usePermissions();
   const { data: factura, isLoading } = useFactura(id);
   const acuse = useAcuseCancelacion(factura);
   const { data: pagos = [] } = usePagosFactura(id);
@@ -25,7 +25,7 @@ export function useFacturaDetalleController(id: string | undefined) {
   const pagosRepPendientes = pagos.filter(
     (p) => p.estado_rep === "Pendiente" || p.estado_rep === "Error",
   ).length;
-  const flags = deriveFacturaFlags(factura, canEdit, { saldo, pagosRepPendientes });
+  const flags = deriveFacturaFlags(factura, canEdit, { saldo, pagosRepPendientes }, canRegistrarCobro);
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
