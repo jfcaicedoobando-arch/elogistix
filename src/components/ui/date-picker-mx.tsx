@@ -75,6 +75,19 @@ export function DatePickerMx({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pegado = e.clipboardData.getData("text");
+    if (!pegado) return;
+    const iso = parseFlexible(pegado);
+    if (iso) {
+      e.preventDefault();
+      setText(isoToDisplay(iso));
+      setInvalid(false);
+      if (iso !== value) onChange(iso);
+    }
+    // Si no se pudo parsear, cae al onChange normal (aplicará máscara sobre los dígitos).
+  };
+
   const handleBlur = () => {
     commit(text);
     // Si quedó inválido, restaurar al último válido
