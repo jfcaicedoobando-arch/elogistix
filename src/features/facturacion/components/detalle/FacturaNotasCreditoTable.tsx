@@ -2,12 +2,14 @@
  * Tabla de notas de crédito ligadas a una factura. Extraída de
  * FacturaNotasCreditoSeccion para mantener el archivo ≤ 200 líneas.
  */
-import { Mail, XCircle, Stamp } from "lucide-react";
+import { useState } from "react";
+import { Mail, XCircle, Stamp, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
+import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import type { EstadoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
