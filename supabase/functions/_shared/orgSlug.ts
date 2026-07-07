@@ -20,8 +20,18 @@ export function slugifyOrg(nombre: string | null | undefined): string {
   return s || "org";
 }
 
-// deno-lint-ignore no-explicit-any
-type AnySupabaseClient = { from: (t: string) => any };
+type OrgRow = { nombre?: string | null };
+
+type QueryBuilder = {
+  select: (columns: string) => FilterBuilder;
+};
+
+type FilterBuilder = {
+  eq: (column: string, value: string) => FilterBuilder;
+  maybeSingle: () => Promise<{ data: OrgRow | null }>;
+};
+
+type AnySupabaseClient = { from: (t: string) => QueryBuilder };
 
 /** Devuelve el slug del nombre de la organización, o "org" si no se encuentra. */
 export async function fetchOrgSlug(
@@ -34,7 +44,7 @@ export async function fetchOrgSlug(
       .select("nombre")
       .eq("id", organizationId)
       .maybeSingle();
-    return slugifyOrg((data?.nombre as string | undefined) ?? null);
+    return slugifyOrg(data?.nombre ?? null);
   } catch {
     return "org";
   }
