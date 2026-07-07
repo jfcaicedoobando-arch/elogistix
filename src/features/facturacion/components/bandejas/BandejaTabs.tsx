@@ -16,23 +16,32 @@ export type BandejaId =
   | "por-cobrar" | "vencidas" | "rep-pendientes"
   | "emitidas" | "notas";
 
+type GroupId = "preparar" | "cobrar" | "historico";
+
 interface Def {
   id: BandejaId;
   label: string;
   hint: string;
   tone: "default" | "warn" | "danger";
+  group: GroupId;
 }
 
+const GROUP_LABELS: Record<GroupId, string> = {
+  preparar: "Preparar",
+  cobrar: "Cobrar",
+  historico: "Histórico",
+};
+
 const DEFS: Def[] = [
-  { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura.", tone: "warn" },
-  { id: "proformas-listas", label: "Proformas listas", hint: "Proformas aprobadas internamente (estado 'aprobada') que aún no se han convertido a factura borrador. Acción: 'Convertir a factura' de un clic.", tone: "warn" },
-  { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn" },
-  { id: "por-enviar", label: "Por enviar", hint: "CFDI ya timbrados que no se han mandado por correo al cliente.", tone: "warn" },
-  { id: "por-cobrar", label: "Por cobrar", hint: "Facturas vigentes con saldo pendiente, aún no vencidas.", tone: "default" },
-  { id: "vencidas", label: "Vencidas", hint: "Facturas con vencimiento pasado y saldo > 0.", tone: "danger" },
-  { id: "rep-pendientes", label: "REP pendientes", hint: "Complementos de Pago (REP) para facturas PPD que faltan por timbrar.", tone: "danger" },
-  { id: "emitidas", label: "Emitidas", hint: "Historial completo de facturas emitidas.", tone: "default" },
-  { id: "notas", label: "Notas de crédito", hint: "Historial de notas de crédito.", tone: "default" },
+  { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura.", tone: "warn", group: "preparar" },
+  { id: "proformas-listas", label: "Proformas listas", hint: "Proformas aprobadas internamente (estado 'aprobada') que aún no se han convertido a factura borrador. Acción: 'Convertir a factura' de un clic.", tone: "warn", group: "preparar" },
+  { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn", group: "preparar" },
+  { id: "por-enviar", label: "Por enviar", hint: "CFDI ya timbrados que no se han mandado por correo al cliente.", tone: "warn", group: "preparar" },
+  { id: "por-cobrar", label: "Por cobrar", hint: "Facturas vigentes con saldo pendiente, aún no vencidas.", tone: "default", group: "cobrar" },
+  { id: "vencidas", label: "Vencidas", hint: "Facturas con vencimiento pasado y saldo > 0.", tone: "danger", group: "cobrar" },
+  { id: "rep-pendientes", label: "REP pendientes", hint: "Complementos de Pago (REP) para facturas PPD que faltan por timbrar.", tone: "danger", group: "cobrar" },
+  { id: "emitidas", label: "Emitidas", hint: "Historial completo de facturas emitidas.", tone: "default", group: "historico" },
+  { id: "notas", label: "Notas de crédito", hint: "Historial de notas de crédito.", tone: "default", group: "historico" },
 ];
 
 function badgeClass(tone: Def["tone"]): string {
