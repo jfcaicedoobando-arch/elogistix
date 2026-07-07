@@ -77,7 +77,8 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       }
       return json({ error: "facturapi_error", status: pdfRes.status }, 502);
     }
-    const filename = `acuse-cancelacion-${(facp.numero ?? facp.id).replace(/[^A-Za-z0-9._-]+/g, "_")}.pdf`;
+    const orgSlug = await fetchOrgSlug(supabase, facp.organization_id);
+    const filename = `${orgSlug}_acuse-cancelacion-${(facp.numero ?? facp.id).replace(/[^A-Za-z0-9._-]+/g, "_")}.pdf`;
     return new Response(pdfRes.pdf, {
       status: 200,
       headers: {
