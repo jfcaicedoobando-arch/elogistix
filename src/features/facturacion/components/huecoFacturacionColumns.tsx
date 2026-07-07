@@ -41,13 +41,13 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
   {
-    id: "etd",
-    header: "ETD",
-    accessorFn: (f) => f.etd,
+    id: "eta",
+    header: "ETA",
+    accessorFn: (f) => f.eta,
     enableSorting: true,
-    sortingFn: sortByDate<FilaHueco>((f) => f.etd),
+    sortingFn: sortByDate<FilaHueco>((f) => f.eta),
     meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
-    cell: ({ row }) => formatDate(row.original.etd),
+    cell: ({ row }) => formatDate(row.original.eta),
   },
   {
     id: "bl",
