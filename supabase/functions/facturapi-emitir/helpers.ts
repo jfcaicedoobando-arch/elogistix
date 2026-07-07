@@ -58,6 +58,8 @@ export interface FacturapiPayload {
   exchange?: number;
   related?: string[];
   relation?: string;
+  /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
+  pdf_custom_section?: string;
   customer: {
     legal_name: string;
     tax_id: string;
