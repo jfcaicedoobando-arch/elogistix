@@ -34,6 +34,7 @@ import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTi
 import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 import { usePagosFactura } from "@/features/facturacion/hooks";
 import { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
+import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -43,12 +44,7 @@ export default function FacturaDetalle() {
   useRegisterBreadcrumbLabel(id, factura?.numero);
   const acuse = useAcuseCancelacion(factura);
 
-  const [pagoOpen, setPagoOpen] = useState(false);
-  const [timbrarOpen, setTimbrarOpen] = useState(false);
-  const [enviarOpen, setEnviarOpen] = useState(false);
-  const [sustituirOpen, setSustituirOpen] = useState(false);
-  const [cancelarOpen, setCancelarOpen] = useState(false);
-  const [eliminarOpen, setEliminarOpen] = useState(false);
+  const dialogs = useFacturaDetalleDialogs();
 
   const { data: pagos = [] } = usePagosFactura(id);
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);

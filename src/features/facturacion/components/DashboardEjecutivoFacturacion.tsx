@@ -9,11 +9,12 @@
  */
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatCurrencyCompact, formatCurrency } from "@/lib/formatters";
+import { formatCurrencyCompact } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 import { useProformasPendientes } from "@/features/embarques/hooks/useProformas";
 import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
+import { MiniSerie, mesLabel } from "./DashboardEjecutivoFacturacionMiniSerie";
 
 type Tone = "default" | "success" | "warn" | "danger";
 
@@ -38,63 +39,6 @@ function Kpi({ label, value, tone = "default", hint }: { label: string; value: s
     <div className="min-w-0 px-3 py-2">
       <p className="text-[11px] text-muted-foreground uppercase tracking-wide truncate">{labelNode}</p>
       <p className={`text-lg font-semibold tabular-nums ${cls}`}>{value}</p>
-    </div>
-  );
-}
-
-
-const NOMBRES_MES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-
-function mesLabel(ymStr: string): string {
-  const [, m] = ymStr.split("-");
-  const idx = Number.parseInt(m, 10) - 1;
-  return NOMBRES_MES[idx] ?? ymStr;
-}
-
-function MiniSerie({
-  titulo,
-  data,
-  meses,
-  colorClass,
-}: {
-  titulo: string;
-  data: number[];
-  meses: string[];
-  colorClass: string;
-}) {
-  const max = Math.max(0, ...data);
-  const hayDatos = max > 0;
-  return (
-    <div className="flex flex-col gap-1 min-w-[100px]">
-      <div className="text-2xs text-muted-foreground uppercase tracking-wide">{titulo}</div>
-      {hayDatos ? (
-        <>
-          <div className="flex items-end gap-1 h-6">
-            {data.map((v, i) => {
-              const h = Math.max(2, Math.round((v / max) * 24));
-              return (
-                <Tooltip key={i}>
-                  <TooltipTrigger asChild>
-                    <div className={`w-2.5 rounded-sm ${colorClass}`} style={{ height: `${h}px` }} />
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {meses[i]}: {formatCurrency(v, "MXN")}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-          </div>
-          <div className="flex gap-1">
-            {meses.map((m, i) => (
-              <span key={i} className="w-2.5 text-center text-[8px] text-muted-foreground leading-none">
-                {m.charAt(0)}
-              </span>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="h-6 flex items-center text-2xs italic text-muted-foreground">Sin datos</div>
-      )}
     </div>
   );
 }
