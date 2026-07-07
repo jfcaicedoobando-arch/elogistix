@@ -1,11 +1,15 @@
 /**
- * Bandeja "REP pendientes": pagos aplicados a facturas PPD cuyo
- * Complemento de Pagos (REP) no se ha timbrado (estado_rep en
- * 'Pendiente' o 'Error'). Drilldown al detalle de la factura padre.
+ * Bandeja "REP pendientes": pagos aplicados a facturas PPD cuyo REP no se
+ * ha timbrado. Patrón unificado: Card + UnifiedFiltersBar + useClientPagedList.
  */
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Receipt } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
+import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
+import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { usePagosRepPendientes, type FilaRepPendiente } from "@/features/facturacion/hooks/useBandejas";
 
 function badgeTone(estado: string): "outline" | "destructive" {
@@ -14,43 +18,83 @@ function badgeTone(estado: string): "outline" | "destructive" {
 
 const columns = defineColumns<FilaRepPendiente>([
   {
-    id: "fol",
+    id: "factura",
     header: "Factura",
-    cell: ({ row }) => <span className="font-mono">{row.original.factura_numero}</span>,
+    accessorFn: (r) => r.factura_numero,
+    enableSorting: true,
+    meta: { width: "w-[140px]", className: "font-mono whitespace-nowrap", sticky: true },
+    cell: ({ row }) => row.original.factura_numero,
   },
-  { id: "cli", header: "Cliente", accessorFn: (r) => r.cliente_nombre },
+  clientColumn<FilaRepPendiente>({ accessor: (r) => r.cliente_nombre }),
+  { ...dateColumn<FilaRepPendiente>({ id: "fecha_pago", header: "Fecha pago", accessor: (r) => r.fecha_pago }),
+    meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
+  { ...moneyColumn<FilaRepPendiente>({ id: "monto", header: "Monto",
+      accessor: (r) => r.monto, currencyAccessor: (r) => r.moneda }),
+    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-medium" } },
   {
-    id: "fp",
-    header: "Fecha pago",
-    accessorFn: (r) => r.fecha_pago,
-    cell: ({ row }) => formatDate(row.original.fecha_pago),
-  },
-  {
-    id: "mon",
-    header: "Monto",
-    meta: { align: "right" },
-    accessorFn: (r) => r.monto,
-    cell: ({ row }) => formatCurrency(row.original.monto, row.original.moneda),
-  },
-  {
-    id: "est",
+    id: "estado",
     header: "Estado REP",
     accessorFn: (r) => r.estado_rep,
+    enableSorting: true,
+    meta: { width: "w-[120px]" },
     cell: ({ row }) => <Badge variant={badgeTone(row.original.estado_rep)}>{row.original.estado_rep}</Badge>,
   },
 ]);
 
+interface Filters extends Record<string, string> { estado: string }
+const DEFAULTS: Filters = { estado: "todos" };
+
 export function BandejaRepPendientes() {
   const { data, isLoading } = usePagosRepPendientes();
+  const paged = useClientPagedList<FilaRepPendiente, Filters>({
+    data,
+    isLoading,
+    defaultFilters: DEFAULTS,
+    filterLabels: { estado: "Estado REP" },
+    defaultSort: { key: "fecha_pago", dir: "desc" },
+    searchAccessor: (r) => `${r.factura_numero} ${r.cliente_nombre}`,
+    filterPredicate: (r, ff) => ff.estado === "todos" || r.estado_rep === ff.estado,
+    sorters: {
+      factura: (a, b) => a.factura_numero.localeCompare(b.factura_numero),
+      cliente: (a, b) => a.cliente_nombre.localeCompare(b.cliente_nombre),
+      fecha_pago: (a, b) => a.fecha_pago.localeCompare(b.fecha_pago),
+      monto: (a, b) => a.monto - b.monto,
+      estado: (a, b) => a.estado_rep.localeCompare(b.estado_rep),
+    },
+  });
+  const totalCount = data?.length ?? 0;
+
   return (
-    <DataTable
-      columns={columns}
-      data={data ?? []}
-      isLoading={isLoading}
-      emptyMessage="No hay complementos de pago pendientes. ✅"
-      rowKey={(r) => r.id}
-      getRowHref={(r) => `/facturacion/${r.factura_id}`}
-      getRowAriaLabel={(r) => `Abrir factura ${r.factura_numero}`}
-    />
+    <div className="space-y-3">
+      <UnifiedFiltersBar
+        search={paged.search}
+        onSearchChange={paged.setSearch}
+        searchPlaceholder="Buscar factura o cliente…"
+        chips={paged.activeChips}
+        activeCount={paged.activeCount}
+        onClearAll={paged.resetAll}
+      />
+      <div className="text-xs text-muted-foreground">
+        Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} complementos pendientes
+      </div>
+      <Card>
+        <CardContent className="p-0">
+          <DataTable
+            columns={columns}
+            data={paged.rows}
+            isLoading={paged.isLoading}
+            emptyIcon={Receipt}
+            emptyMessage="No hay complementos de pago pendientes. ✅"
+            rowKey={(r) => r.id}
+            getRowHref={(r) => `/facturacion/${r.factura_id}`}
+            getRowAriaLabel={(r) => `Abrir factura ${r.factura_numero}`}
+            sortMode="server"
+            controlledSort={paged.controlledSort}
+            onSortChange={paged.setSort}
+            pagination={paged.pagination}
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 }
