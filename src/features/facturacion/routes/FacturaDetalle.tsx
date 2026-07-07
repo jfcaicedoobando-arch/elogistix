@@ -21,7 +21,7 @@ import { FacturaConceptosTable } from "@/features/facturacion/components/detalle
 import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
-import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
+import { FacturaDetalleActionsBar } from "@/features/facturacion/components/detalle/FacturaDetalleActionsBar";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
