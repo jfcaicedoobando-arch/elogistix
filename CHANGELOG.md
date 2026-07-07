@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.37] - 2026-07-07
+- **Fix CI — gate de auditoría verde**:
+  - `src/features/cxp/routes/Cxp.tsx` bajó de 245 → 195 líneas: config de columnas movida a `src/features/cxp/routes/_config/cxpColumnConfig.ts` y los dos deep-links (`?factura`, `?aprobacion`) encapsulados en el nuevo hook `useCxpDeepLinks`.
+  - `src/hooks/shared/useColumnVisibility.ts`: `JSON.parse(raw) as unknown` → anotación `const parsed: unknown = JSON.parse(raw)` para no disparar el auditor de casts (patrón CRITICAL).
+  - Sin cambios de UI ni de comportamiento. Analogía: el archivo estaba pasado de peso y con un sticker prohibido en la maleta; se repartió el contenido y se cambió el sticker.
+
 ## [13.213.36] - 2026-07-07
 - **Fix — borrar borrador de factura no revertía la proforma**:
   - `eliminar_factura_borrador` intentaba revertir vía `proformas.factura_id`, pero esa columna nunca la llena la conversión (el vínculo vive del otro lado, en `facturas.proforma_id`, o en la bitácora para consolidadas). Resultado: al eliminar el borrador la proforma quedaba huérfana en estado `facturada` (caso reportado: PRO-2026-0961).

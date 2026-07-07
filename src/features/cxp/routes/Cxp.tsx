@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useCallback, useMemo } from "react";
 import { Plus, FileText, Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DataTable } from "@/components/shared/DataTable";
-import { ColumnVisibilityMenu, type ColumnOption } from "@/components/shared/ColumnVisibilityMenu";
+import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { EliminarFacturaCxpDialog } from "@/features/cxp/components/EliminarFacturaCxpDialog";
 import { usePermissions, useColumnVisibility } from "@/hooks/shared";
-import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
+import {
+  useFacturasCxP,
+  useEliminarFacturaProveedor,
+  useCxpPageState,
+  useCxpDeepLinks,
+} from "@/features/cxp/hooks";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
 import { DialogEditarFacturaProveedor } from "@/features/cxp/components/DialogEditarFacturaProveedor";
@@ -18,6 +22,7 @@ import { DialogRegistrarPagoProveedor } from "@/features/cxp/components/DialogRe
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import { CxpFiltros } from "@/features/cxp/components/CxpFiltros";
 import { CxpKpiCards } from "@/features/cxp/components/CxpKpiCards";
+import { CXP_COL_DEFAULTS, CXP_COL_OPTIONS } from "@/features/cxp/routes/_config/cxpColumnConfig";
 
 import { useCobranza } from "@/features/facturacion/hooks";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
@@ -25,80 +30,25 @@ import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
-// Preset por defecto de columnas visibles en /compras/facturas.
-// Las no marcadas aquí aparecen como opcionales en el menú "Columnas".
-const CXP_COL_DEFAULTS: Record<string, boolean> = {
-  folio_interno: true,
-  folio: false,       // Folio prov. (opcional)
-  proveedor: true,
-  emision: false,     // opcional
-  vencimiento: true,
-  programado: false,  // opcional
-  dias: true,
-  moneda: false,      // opcional
-  total: true,
-  pagado: false,      // opcional
-  saldo: true,
-  estatus: true,
-  aprobacion: false,  // opcional
-};
-
-const CXP_COL_OPTIONS: ColumnOption[] = [
-  { id: "folio_interno", label: "Folio", required: true },
-  { id: "folio", label: "Folio prov." },
-  { id: "proveedor", label: "Proveedor", required: true },
-  { id: "emision", label: "Emisión" },
-  { id: "vencimiento", label: "Vencimiento" },
-  { id: "programado", label: "Prog. pago" },
-  { id: "dias", label: "Días" },
-  { id: "moneda", label: "Moneda" },
-  { id: "total", label: "Total" },
-  { id: "pagado", label: "Pagado" },
-  { id: "saldo", label: "Saldo", required: true },
-  { id: "estatus", label: "Estatus", required: true },
-  { id: "aprobacion", label: "Aprobación" },
-];
-
 // NOTE: CxpFiltros retiene su API propia (9 props + hooks de proveedores/categorías).
 // UnifiedFiltersBar no cabe limpio sin refactorizar el estado de página — pendiente Oleada 5.
 
 export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const { data = [], isLoading, kpis } = useFacturasCxP(f.queryArgs);
   const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
 
-  // Deep-link desde búsqueda global: /cxp?factura={id} abre el detalle.
-  useEffect(() => {
-    const id = searchParams.get("factura");
-    if (!id || isLoading) return;
-    const found = data.find((row) => row.id === id);
-    if (found) {
-      f.setDetalle(found);
-      setSearchParams((sp) => {
-        const next = new URLSearchParams(sp);
-        next.delete("factura");
-        return next;
-      }, { replace: true });
-    }
-  }, [searchParams, data, isLoading, f, setSearchParams]);
+  useCxpDeepLinks({
+    data,
+    isLoading,
+    onOpenDetalle: f.setDetalle,
+    onSetAprobacion: f.setAprobacion,
+  });
 
-  // Deep-link: /cxp?aprobacion=pendiente activa el chip "Por aprobar".
-  useEffect(() => {
-    const ap = searchParams.get("aprobacion");
-    if (ap === "pendiente" || ap === "aprobada" || ap === "rechazada") {
-      f.setAprobacion(ap);
-      setSearchParams((sp) => {
-        const next = new URLSearchParams(sp);
-        next.delete("aprobacion");
-        return next;
-      }, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   const handlePdf = async () => {
     await descargarPdf(
