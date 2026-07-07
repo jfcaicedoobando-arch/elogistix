@@ -10,6 +10,7 @@ import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { fetchTiposContenedor } from "@/features/catalogos/services";
+import { slugifyOrg } from "@/lib/filenames";
 
 export async function generarPdfCotizacion(
   cotizacion: CotizacionRow,
