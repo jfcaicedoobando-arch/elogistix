@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.33] - 2026-07-07
+- **Auditoría UI/UX Facturación & Compras — Ola 4 (colores semánticos de antigüedad)**:
+  - Nuevo helper `src/features/facturacion/utils/aging.ts` con dos buckets basados en tokens semánticos (`--warning`, `--destructive`, `--muted`): `agingVencidoBucket` (1-30 / 31-60 / 61-90 / 90+ d) y `agingPorCobrarBucket` (>7 d, ≤7 d, vence hoy). Tests unitarios incluidos.
+  - `/facturacion` bandeja **Vencidas**: la columna "Días" ahora se llama "Antigüedad" y usa el bucket semántico — el ojo distingue de un vistazo si una factura tiene 15 d (ámbar suave) o 120 d (rojo fuerte). Antes se usaban variants `outline/secondary/destructive` sin escalón claro.
+  - `/facturacion` bandeja **Por cobrar**: nueva columna "Vence en" con el mismo tratamiento — muestra `Vence hoy` en warning fuerte, `1-7 d` en warning suave, `>7 d` en gris. Ordenable. Antes sólo se veía la fecha suelta.
+  - Analogía: es como cambiar un semáforo binario (verde/rojo) por un termómetro de 4 franjas — mismo dato, mucho más rápido de leer.
+
 ## [13.213.32] - 2026-07-07
 - **Auditoría UI/UX Facturación & Compras — Ola 3 (reorganización cockpit Facturación)**:
   - `/facturacion`: las 9 bandejas se agruparon visualmente en 3 fases (`Preparar`, `Cobrar`, `Histórico`) con un encabezado discreto y un separador vertical entre grupos. Sin cambios de URL ni de datos: `?bandeja=...` sigue funcionando igual. Analogía: antes había 9 cajones sueltos en el escritorio; ahora están en 3 archiveros rotulados. El ojo encuentra la bandeja correcta más rápido.
