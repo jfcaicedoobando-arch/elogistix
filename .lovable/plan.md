@@ -1,81 +1,72 @@
 
 ## Objetivo
 
-Que toda factura timbrada muestre **Expediente**, **BL Master** y **BL House** del embarque, tanto en el **XML del SAT** (dentro de la descripción de cada concepto) como en un **bloque destacado** en el PDF de FacturAPI. Aplica a facturas nuevas; las ya timbradas no se re‑emiten.
+Que el botón **"Descargar XML"** (y de paso "Descargar PDF") del correo de factura ejecute realmente una descarga en lugar de abrir el archivo en el navegador.
 
-## Analogía rápida
+## Causa raíz
 
-Piensa en la factura como un sobre postal:
-- El **XML SAT** es la etiqueta oficial que Hacienda revisa — ahí metemos el Exp/BL como parte de cada renglón para que quede impreso legalmente.
-- El **PDF de FacturAPI** es el sobre bonito — ahí ponemos un sello grande con "Referencias" para que el cliente lo vea de un golpe.
+En `supabase/functions/enviar-factura-email/helpers.ts`, la función `signUrl(admin, path)` crea la URL firmada sin el parámetro `download`. Supabase responde con `Content-Type: application/xml` y sin `Content-Disposition`, por lo que Chrome/Safari/Firefox muestran el XML como página.
 
 ## Cambios
 
-### 1. Backend — `supabase/functions/facturapi-emitir/`
+### 1. `supabase/functions/enviar-factura-email/helpers.ts`
 
-**a) `index.ts`** — al cargar la factura, también leer del embarque vinculado (`facturas.embarque_id → embarques`) los campos `expediente`, `bl_master`, `bl_house`. Si la factura no está atada a un embarque específico, hacer fallback a `facturas.expediente` y `facturas.referencia_bl` (ya existen en la tabla).
+**a)** Modificar `signUrl` para aceptar un `downloadFilename?: string` opcional. Cuando venga, pasarlo al SDK como tercer argumento:
 
-Construir un objeto `referencias`:
+```ts
+export async function signUrl(
+  admin: ReturnType<typeof createClient>,
+  path: string,
+  downloadFilename?: string,
+): Promise<string> {
+  const opts = downloadFilename ? { download: downloadFilename } : undefined;
+  const { data, error } = await admin.storage
+    .from('facturas-pdf')
+    .createSignedUrl(path, SIGNED_URL_TTL, opts);
+  if (error || !data) throw new Error(`Signed URL ${path}: ${error?.message}`);
+  return data.signedUrl;
+}
 ```
-{ expediente: "ELIMP00195", bl_master: "COSU...", bl_house: "HL2504XYZ" }
+
+**b)** En `prepareAttachments`, armar nombres amigables (`Factura-<numero>.pdf` / `Factura-<numero>.xml`) y pasarlos:
+
+```ts
+const pdfFilename = `Factura-${factura.numero}.pdf`;
+const xmlFilename = `Factura-${factura.numero}.xml`;
+const [pdfLink, xmlLink] = await Promise.all([
+  signUrl(admin, pdfPath, pdfFilename),
+  signUrl(admin, xmlPath, xmlFilename),
+]);
 ```
-Pasarlo al `FacturaContext`.
 
-**b) `helpers.ts`** — dos cambios en `buildFacturapiPayload`:
+Sanear el número de factura para evitar caracteres inválidos en el nombre (regex `[^A-Za-z0-9._-]` → `_`).
 
-- **Prefijo por concepto (va al XML SAT):** anteponer a `c.descripcion` un encabezado compacto:
-  `"[Exp. {expediente} · BL/M: {master} · BL/H: {house}] {descripcion_original}"`.
-  Solo se agregan las partes que existan (si no hay `bl_master`, se omite). Un solo helper puro `formatDescripcionConReferencias(descripcion, referencias)` con pruebas unitarias.
+### 2. Tests
 
-- **Bloque "Referencias" en el PDF:** setear `payload.pdf_custom_section` con HTML corto tipo:
-  ```
-  <h4>Referencias del embarque</h4>
-  <ul><li>Expediente: ELIMP00195</li><li>BL Master: ...</li><li>BL House: ...</li></ul>
-  ```
-  (FacturAPI acepta HTML sanitizado en ese campo y lo imprime al pie del PDF.)
+- Actualizar/crear `supabase/functions/enviar-factura-email/helpers_test.ts` con un caso que verifique que `signUrl` es llamada con `{ download: 'Factura-XXX.xml' }` cuando se le pasa filename (mock del cliente Supabase).
+- Test de saneado del nombre (por ejemplo `A/1024` → `A_1024`).
 
-**c) `helpers_test.ts`** — casos: solo expediente, expediente+master, los tres, ninguno (no rompe), y descripciones muy largas (validar que no exceda el límite de 1000 char del SAT — si excede, truncar la parte original con `…`).
+### 3. Retrocompatibilidad
 
-### 2. Feature flag y retrocompatibilidad
+- No requiere migración ni cambios en el bucket. Los correos ya enviados no se re-firman (siguen igual).
+- Correos que se envíen a partir del deploy tendrán el header correcto automáticamente. XML se descarga; PDF también (algunos navegadores ya lo descargaban por el viewer built-in, ahora será consistente).
 
-Nada de migración: los campos ya existen en BD. Se activa automáticamente en la próxima emisión. Notas de credito y REP (`facturapi-emitir-nota-credito`, `facturapi-emitir-rep`) reciben el mismo tratamiento para consistencia (mismo helper compartido).
+### 4. Changelog + versión
 
-### 3. Frontend — pequeño ajuste UX
+- Bump `APP_VERSION` a `13.209.0`.
+- Entrada en `CHANGELOG.md`: "Correos de factura · el botón Descargar XML ahora fuerza la descarga del archivo en lugar de abrirlo en el navegador (parámetro `download` de Supabase Signed URLs). Aplica también a PDF."
 
-- En `DialogTimbrarFactura.tsx`: mostrar una vista previa de cómo se verá el primer concepto con el prefijo, para que la vendedora confirme antes de timbrar.
-- Editable: si el usuario no quiere el prefijo en un concepto específico (raro), puede quitarlo manualmente en la descripción antes de timbrar. Comportamiento por defecto = prefijado.
-
-### 4. Tests
-
-- `helpers_test.ts` (Deno) — helper de formato de descripción y armado de `pdf_custom_section`.
-- `src/features/facturacion/__tests__/referencias-embarque.test.ts` (Vitest) — el hidratador que jala expediente/BLs desde el embarque.
-
-### 5. Changelog + versión
-
-- Bump `APP_VERSION` a `13.208.0`.
-- Entrada en `CHANGELOG.md` bajo `## [13.208.0]`.
-
-## Archivos afectados (estimado)
+## Archivos afectados
 
 ```text
-supabase/functions/facturapi-emitir/index.ts                  (mod)
-supabase/functions/facturapi-emitir/helpers.ts                (mod)
-supabase/functions/facturapi-emitir/helpers_test.ts           (mod)
-supabase/functions/facturapi-emitir-nota-credito/…            (mod, mismo helper)
-supabase/functions/facturapi-emitir-rep/…                     (mod, mismo helper)
-src/features/facturacion/components/DialogTimbrarFactura.tsx  (mod, preview)
-src/features/facturacion/__tests__/referencias-embarque.test.ts (nuevo)
-src/constants/appVersion.ts                                   (bump)
-CHANGELOG.md                                                  (entrada)
+supabase/functions/enviar-factura-email/helpers.ts       (mod, ~10 líneas)
+supabase/functions/enviar-factura-email/helpers_test.ts  (mod o nuevo)
+src/constants/appVersion.ts                              (bump)
+CHANGELOG.md                                             (entrada)
 ```
-
-## Detalles técnicos
-
-- **Límite SAT**: el campo `Descripcion` en CFDI 4.0 admite hasta 1000 caracteres. El helper trunca la descripción original si el prefijo + texto supera 990 chars (deja margen).
-- **Sanitización**: `pdf_custom_section` va con HTML mínimo (h4/ul/li) sin atributos, para evitar que FacturAPI lo rechace.
-- **Cuando no hay embarque**: si la factura es "manual sin embarque" (poco común), se usa lo que haya en `facturas.expediente` / `facturas.referencia_bl`; si ambos son null, no se agrega prefijo ni bloque — la factura sale como hoy.
 
 ## Fuera de alcance
 
-- Re‑emitir facturas ya timbradas (implicaría cancelación + sustitución; se puede hacer caso por caso a mano).
-- Addenda XML personalizada por cliente (opción C descartada — no la pidieron).
+- Cambiar el mecanismo de descarga a un proxy autenticado (`facturapi-descargar`). El bucket `facturas-pdf` ya guarda los archivos y las URLs firmadas expiran, así que sigue siendo seguro.
+- Tocar el template `factura-enviada.tsx`. El fix es 100% en el backend.
+- Correos que envía FacturAPI directamente (vía `facturapi-enviar-email` — endpoint `/invoices/<id>/email`). Esos correos son distintos y no se cambian aquí.
