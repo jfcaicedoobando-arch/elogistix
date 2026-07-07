@@ -116,8 +116,13 @@ export default function FacturaDetalle() {
         acuse={acuse}
         eliminando={eliminando}
         puedeEliminarBorrador={puedeEliminarBorrador}
+        timbrarRepPending={timbrarRep.isPending}
         onTimbrar={() => setTimbrarOpen(true)}
         onEnviarEmail={() => setEnviarOpen(true)}
+        onRegistrarPago={() => setPagoOpen(true)}
+        onTimbrarRep={() => {
+          if (pagoRepPendiente) timbrarRep.mutate(pagoRepPendiente.id);
+        }}
         onSustituir={() => setSustituirOpen(true)}
         onCancelar={() => setCancelarOpen(true)}
         onEliminar={() => setEliminarOpen(true)}
