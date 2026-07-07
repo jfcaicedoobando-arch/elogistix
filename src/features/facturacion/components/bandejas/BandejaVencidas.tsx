@@ -1,14 +1,12 @@
 /**
  * Bandeja "Vencidas": facturas con vencimiento pasado y saldo > 0.
- * Reusa `useCobranza`. Ordena por días de vencimiento (más vencido primero).
+ * Ordena por días de vencimiento (más vencido primero). Drilldown al detalle.
  */
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { CreditCard } from "lucide-react";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
-import { TablaBandejaSimple, type ColumnaBandeja } from "./TablaBandejaSimple";
 
 interface FilaVencida {
   id: string;
@@ -26,8 +24,37 @@ function toneDias(d: number): "outline" | "secondary" | "destructive" {
   return "outline";
 }
 
+const columns = defineColumns<FilaVencida>([
+  {
+    id: "num",
+    header: "Folio",
+    cell: ({ row }) => <span className="font-mono">{row.original.numero}</span>,
+  },
+  { id: "cli", header: "Cliente", accessorFn: (r) => r.cliente_nombre },
+  {
+    id: "fv",
+    header: "Venció",
+    accessorFn: (r) => r.fecha_vencimiento,
+    cell: ({ row }) => formatDate(row.original.fecha_vencimiento),
+  },
+  {
+    id: "dv",
+    header: "Días",
+    accessorFn: (r) => r.dias_vencido,
+    cell: ({ row }) => (
+      <Badge variant={toneDias(row.original.dias_vencido)}>{row.original.dias_vencido} d</Badge>
+    ),
+  },
+  {
+    id: "sal",
+    header: "Saldo",
+    meta: { align: "right" },
+    accessorFn: (r) => r.saldo,
+    cell: ({ row }) => formatCurrency(row.original.saldo, row.original.moneda),
+  },
+]);
+
 export function BandejaVencidas() {
-  const navigate = useNavigate();
   const { data, isLoading } = useCobranza({ estatus: "todos", moneda: "todas" });
   const filas = useMemo<FilaVencida[]>(
     () =>
@@ -39,29 +66,15 @@ export function BandejaVencidas() {
     [data],
   );
 
-  const columnas: ColumnaBandeja<FilaVencida>[] = [
-    { key: "num", header: "Folio", cell: (r) => <span className="font-mono">{r.numero}</span> },
-    { key: "cli", header: "Cliente", cell: (r) => r.cliente_nombre },
-    { key: "fv", header: "Venció", cell: (r) => formatDate(r.fecha_vencimiento) },
-    { key: "dv", header: "Días", cell: (r) => (
-      <Badge variant={toneDias(r.dias_vencido)}>{r.dias_vencido} d</Badge>
-    ) },
-    { key: "sal", header: "Saldo", className: "text-right tabular-nums",
-      cell: (r) => formatCurrency(r.saldo, r.moneda) },
-  ];
-
   return (
-    <TablaBandejaSimple<FilaVencida>
-      columnas={columnas}
+    <DataTable
+      columns={columns}
       data={filas}
       isLoading={isLoading}
       emptyMessage="Sin cartera vencida. ✅"
       rowKey={(r) => r.id}
-      accion={{
-        label: "Cobrar",
-        icon: <CreditCard className="h-3.5 w-3.5 mr-1" />,
-        onClick: (r) => navigate(`/facturacion/${r.id}?accion=pagar`),
-      }}
+      getRowHref={(r) => `/facturacion/${r.id}`}
+      getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
     />
   );
 }
