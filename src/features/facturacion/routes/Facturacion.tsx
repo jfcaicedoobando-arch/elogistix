@@ -26,6 +26,7 @@ import { PeriodoFiscalSelector } from "@/features/facturacion/components/Periodo
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
 import { BandejaTabs, type BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
 import { BandejaPorFacturar } from "@/features/facturacion/components/bandejas/BandejaPorFacturar";
+import { BandejaProformasListas } from "@/features/facturacion/components/bandejas/BandejaProformasListas";
 import { BandejaPorTimbrar } from "@/features/facturacion/components/bandejas/BandejaPorTimbrar";
 import { BandejaPorEnviar } from "@/features/facturacion/components/bandejas/BandejaPorEnviar";
 import { BandejaPorCobrar } from "@/features/facturacion/components/bandejas/BandejaPorCobrar";
@@ -42,8 +43,15 @@ const LEGACY_TAB_REDIRECTS: Record<string, string> = {
   pendientes: "/proformas?estado=aceptada",
 };
 
+// Alias hacia atrás: `?bandeja=por-facturar` sigue funcionando y apunta al
+// nuevo id `embarques-sin-factura` (mismo contenido, nombre más claro).
+const BANDEJA_ALIASES: Record<string, BandejaId> = {
+  "por-facturar": "embarques-sin-factura",
+};
+
 const BANDEJAS_VALIDAS: BandejaId[] = [
-  "por-facturar", "por-timbrar", "por-enviar",
+  "embarques-sin-factura", "proformas-listas",
+  "por-timbrar", "por-enviar",
   "por-cobrar", "vencidas", "rep-pendientes",
   "emitidas", "notas",
 ];
