@@ -83,6 +83,7 @@ export function BandejaPorCobrar() {
       numero: (a, b) => a.numero.localeCompare(b.numero),
       cliente: (a, b) => a.cliente_nombre.localeCompare(b.cliente_nombre),
       vencimiento: (a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento),
+      faltan: (a, b) => a.dias_vencido - b.dias_vencido,
       saldo: (a, b) => a.saldo - b.saldo,
     },
   });
