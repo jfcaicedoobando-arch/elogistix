@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
+import { agingPorCobrarBucket } from "@/features/facturacion/utils/aging";
 import { BandejaShell } from "./BandejaShell";
 
 interface FilaCobranza {
@@ -37,6 +38,24 @@ const columns = defineColumns<FilaCobranza>([
   clientColumn<FilaCobranza>({ accessor: (r) => r.cliente_nombre }),
   { ...dateColumn<FilaCobranza>({ id: "vencimiento", header: "Vence", accessor: (r) => r.fecha_vencimiento }),
     meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
+  {
+    id: "faltan",
+    header: "Vence en",
+    accessorFn: (r) => r.dias_vencido,
+    enableSorting: true,
+    meta: { width: "w-[110px]", align: "center" },
+    cell: ({ row }) => {
+      const b = agingPorCobrarBucket(row.original.dias_vencido);
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${b.className}`}
+          aria-label={b.ariaLabel}
+        >
+          {b.label}
+        </span>
+      );
+    },
+  },
   { ...moneyColumn<FilaCobranza>({ id: "saldo", header: "Saldo",
       accessor: (r) => r.saldo, currencyAccessor: (r) => r.moneda }),
     meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" } },
