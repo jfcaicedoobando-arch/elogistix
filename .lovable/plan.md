@@ -1,181 +1,158 @@
-# Rediseño de /facturacion al nivel Odoo / SAP
 
-## 1. Diagnóstico de lo que hay hoy
+# Fase 2 — Bandejas de trabajo en /facturacion
 
-Analogía: hoy /facturacion es como una **oficina con un escritorio grande, dos bandejas de "salida" y varios cajones escondidos en otros pisos**. El contador ve el escritorio (KPIs), pero para trabajar tiene que ir a otro piso (`/cartera`, `/compras/por-pagar`, `/proformas`, `/reportes/cierre-mensual`).
+## Objetivo
 
-Estructura actual:
+Sustituir los 2 tabs actuales (`Emitidas`, `Notas de crédito`) por **7 bandejas de trabajo** con badges de conteo, cada una con una acción rápida por fila. Es el corazón del rediseño estilo Odoo/SAP: el usuario entra y ve dónde hay trabajo pendiente hoy.
 
-```text
-/facturacion
-├── Banda 1: DashboardEjecutivoFacturacion (5 KPIs + tendencia)
-├── Banda 2: FacturacionKpisFiscales (3 KPIs fiscales — se solapa)
-├── HuecoFacturacionChip (inline, junto a tabs)
-├── Tab "Emitidas"        ← única bandeja real
-├── Tab "Notas de crédito" ← historial
-└── Botón "Nueva factura manual"
-```
+## Analogía
 
-Redirecciones legacy que **delatan que el módulo se desmembró**:
+Hoy hay un cajón grande con todas las facturas revueltas. Después de Fase 2 hay **7 cajones etiquetados**, cada uno con un número rojo si tiene pendientes y con una sola acción principal ("Timbrar", "Enviar", "Cobrar")\. El usuario abre el cajón que le urge y trabaja.
 
-- `?tab=cobranza` → `/cartera`
-- `?tab=liquidacion` → `/compras/por-pagar`
-- `?tab=proyeccion` → `/reportes/cierre-mensual`
-- `?tab=pendientes` → `/proformas?estado=aceptada`
-
-Problemas concretos:
-
-1. **Dos bandas de KPIs** que compiten (una con montos, otra con conteos). El "29 por timbrar" del `DashboardEjecutivo` cuenta proformas, no CFDIs — confunde al usuario.
-2. **Sólo hay una bandeja de trabajo** ("Emitidas"). Todo lo demás son links a otras rutas → el usuario pierde el contexto fiscal.
-3. **No hay bandejas por "estado de acción"** (Por timbrar, Por enviar al cliente, Por pagar, Vencidas, PPD sin REP). En un ERP eso es la columna vertebral.
-4. **El ciclo Proforma → Factura → CFDI → Pago → REP → Cobranza está partido en 4 URLs**. En Odoo/SAP todo el ciclo AR vive bajo un mismo módulo.
-5. **No hay período fiscal activo visible** (mes/ejercicio, cierre contable, layout SAT DIOT). SAP siempre muestra la "posting period" en la esquina.
-6. **No hay lista de tareas priorizadas** (aging, vencimientos hoy, próximos 7 días). Es información que existe pero está dispersa.
-
-## 2. Cómo lo resuelven Odoo y SAP
-
-**Odoo — módulo Accounting > Customer Invoices:**
-
-- Un solo hub con **filtros salvables** ("Draft", "To validate", "Posted", "Overdue", "To collect").
-- **Kanban lateral por estado** y lista central por default.
-- KPI row muy sobria (2-3 números máximo).
-- Botón "New" siempre a la derecha; acción principal por fila = "Register Payment" o "Send & Print".
-- Aging report como sub-vista integrada, no como otra página.
-
-**SAP FI/AR — transacción FBL5N + F.30:**
-
-- Cockpit por **workflow status**: partidas abiertas, partidas vencidas, próximas a vencer, en compensación.
-- Buscador tipo command palette; los usuarios no navegan, **teclean el estatus que quieren**.
-- Cada línea abre un "document flow" (Proforma → Factura → Pago → REP) — traza completa del documento.
-- Cierre de período **bloquea** creación de CFDI con fecha vieja.
-
-Común a ambos: **un módulo = un ciclo completo**, con bandejas por acción pendiente, no por objeto de base de datos.
-
-## 3. Propuesta de acomodo
-
-Analogía: convertir /facturacion de **"vitrina de facturas emitidas"** a **"cabina de facturación fiscal"** — una sola pantalla donde el equipo administrativo entra en la mañana y sabe qué hacer hoy.
-
-### 3.1 Layout propuesto
+## Bandejas a construir
 
 ```text
-┌────────────────────────────────────────────────────────────────────┐
-│  Facturación · Julio 2026 · Ejercicio abierto     [+ Nueva] [⚙]    │  ← Header con periodo fiscal
-├────────────────────────────────────────────────────────────────────┤
-│  Facturado mes  Cobrado mes  Por cobrar  Vencido   Meta mes        │  ← 1 sola banda KPI (5 tiles)
-│  $2.3M          $1.8M        $4.1M       $780K     42% ▓▓░░░       │
-├────────────────────────────────────────────────────────────────────┤
-│  [ 📥 Por timbrar 12 ] [ 📤 Por enviar 8 ] [ 💳 Por cobrar 34 ]    │  ← Bandejas de trabajo
-│  [ ⚠ Vencidas 6 ] [ 🧾 REP pendientes 4 ] [ ✅ Emitidas ] [ ↩ NC ] │
-├────────────────────────────────────────────────────────────────────┤
-│  Lista contextual a la bandeja activa                              │
-│  · Búsqueda + filtros persistentes (cliente, fecha, monto, moneda) │
-│  · Columnas: Folio · Cliente · Emisión · Vence · Total · Saldo · ⚡│
-│  · Acción rápida por fila (Timbrar / Enviar / Registrar pago)      │
-├────────────────────────────────────────────────────────────────────┤
-│  Panel lateral (colapsable): Aging 0-15 / 16-30 / 31-60 / 61-90 /+ │
-└────────────────────────────────────────────────────────────────────┘
+[ 📄 Por facturar N ] [ 📥 Por timbrar N ] [ 📤 Por enviar N ]
+[ 💳 Por cobrar N ] [ ⚠ Vencidas N ] [ 🧾 REP pendientes N ]
+[ ✅ Emitidas ] [ ↩ Notas de crédito ]
 ```
 
-### 3.2 Cambios estructurales
+| # | Bandeja           | Fuente de datos                                                            | Hook a reusar / extender                                       | Acción rápida por fila |
+| - | ----------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------- |
+| 1 | Por facturar      | Embarques cerrados sin CFDI (hueco de facturación)                         | `useHuecoFacturacion` (ya existe)                              | "Generar factura"      |
+| 2 | Por timbrar       | `facturas` con `estado='Borrador'` + `facturapi_id IS NULL` + fecha ≥ corte | Nuevo `useFacturasPorTimbrar` sobre `facturas`                 | "Timbrar"              |
+| 3 | Por enviar        | Facturas timbradas sin envío exitoso en `factura_envios`                   | Nuevo `useFacturasPorEnviar`                                   | "Enviar CFDI"          |
+| 4 | Por cobrar        | `useCobranza` → `estatus_cobranza IN ('Al corriente','Por vencer')`, saldo>0 | `useCobranza` (ya existe)                                      | "Registrar pago"       |
+| 5 | Vencidas          | `useCobranza` → `estatus_cobranza='Vencida'`, saldo>0                      | `useCobranza`                                                  | "Registrar pago"       |
+| 6 | REP pendientes    | `pagos_factura.estado_rep IN ('Pendiente','Error')`                        | Nuevo `usePagosRepPendientes`                                  | "Timbrar REP"          |
+| 7 | Emitidas          | Historial completo (comportamiento actual)                                 | `useFacturacionPageController` (sin cambios)                   | Menú kebab actual      |
+| 8 | Notas de crédito  | Historial NC (comportamiento actual)                                       | `NotasCreditoRecientes` (sin cambios)                          | -                      |
 
-**A. Colapsar los dos KPI bands en uno.**
-Un solo `<FacturacionCockpitKpis>` con 5 tiles: Facturado mes, Cobrado mes, Por cobrar, Vencido, Avance vs meta. Los 3 conteos fiscales (Proformas convertibles, Facturas sin timbrar, REP pendientes) se convierten en **badges numéricos sobre las bandejas correspondientes**, no en tiles duplicadas.
+Los conteos de las bandejas 2, 3 y 6 son los mismos que hoy están en `FacturacionKpisFiscales` (retirado en Fase 1). Vuelven como **badges numéricos** al lado del nombre de cada bandeja.
 
-**B. Sustituir los 2 tabs por 7 bandejas de trabajo** (workflow queues):
+## Estructura de archivos
 
+```text
+src/features/facturacion/components/bandejas/
+  BandejaTabs.tsx                  # trigger row con badges (≤120 líneas)
+  BandejaPorFacturar.tsx           # reusa useHuecoFacturacion
+  BandejaPorTimbrar.tsx            # nueva query
+  BandejaPorEnviar.tsx             # nueva query
+  BandejaPorCobrar.tsx             # useCobranza filtrado
+  BandejaVencidas.tsx              # useCobranza filtrado
+  BandejaRepPendientes.tsx         # nueva query
+  BandejaEmitidas.tsx              # extrae la lista actual
+  BandejaNotasCredito.tsx          # wrapper de NotasCreditoRecientes
+  columns/
+    porTimbrarColumns.tsx          # Folio · Cliente · Total · Emisión · Acción
+    porEnviarColumns.tsx
+    repPendientesColumns.tsx
 
-| Bandeja          | Qué contiene                                                               | De dónde sale el dato                               |
-| ---------------- | -------------------------------------------------------------------------- | --------------------------------------------------- |
-| Por timbrar      | Facturas `estado='Borrador'` + `facturapi_id IS NULL` + fecha ≥ 01/07/2026 | `facturas`                                          |
-| Por enviar       | Facturas timbradas sin `factura_envios` exitoso                            | `facturas` ⋈ `factura_envios`                       |
-| Por cobrar       | CFDI vigentes con saldo > 0, no vencidos                                   | `facturas` (estado=Emitida, saldo>0)                |
-| Vencidas         | CFDI con `fecha_vencimiento < hoy` y saldo > 0                             | `facturas`                                          |
-| REP pendientes   | Pagos aplicados a facturas PPD sin complemento timbrado                    | `pagos_factura.estado_rep IN ('Pendiente','Error')` |
-| Emitidas         | Historial completo (la tab actual)                                         | `facturas`                                          |
-| Notas de crédito | Historial NC                                                               | `factura_notas_credito`                             |
+src/features/facturacion/services/
+  bandejas.ts                      # queries nuevas (porTimbrar, porEnviar, repPendientes)
 
+src/features/facturacion/hooks/
+  useFacturasPorTimbrar.ts
+  useFacturasPorEnviar.ts
+  usePagosRepPendientes.ts
+  useBandejaConteos.ts             # 1 sola query con count:'exact', head:true × 6
+```
 
-Cada bandeja tiene su badge de conteo en el trigger — el usuario ve de golpe dónde hay trabajo.
+Cada archivo ≤200 líneas (Power of 10).
 
-**C. Hueco de facturación** → deja de ser un chip suelto y se convierte en una **bandeja "Por facturar (embarques)"** al inicio, con las proformas convertibles. Esto une la etapa pre-CFDI al mismo cockpit.
+## Navegación y URL
 
-**D. Selector de periodo fiscal en el header.**
-Botón `Julio 2026 ▾` que filtra todo el cockpit (KPIs + bandejas + lista). Preset "Este mes / Mes pasado / Este trimestre / Ejercicio". Alinea con el "posting period" de SAP.
+- El tab activo se sincroniza con la URL: `/facturacion?bandeja=por-timbrar`.
+- Default: `por-timbrar` si hay pendientes, si no `emitidas`.
+- Los redirects legacy (`?tab=cobranza|liquidacion|proyeccion|pendientes`) se conservan.
 
-**E. Panel lateral de aging colapsable.**
-En vez de mandar al usuario a `/cartera`, muestra las 5 cubetas (0-15, 16-30, 31-60, 61-90, 90+) en una barra vertical clickeable que filtra la bandeja "Vencidas".
+## Contadores de badges
 
-**F. Acción rápida por fila.**
-Cada bandeja expone **una acción principal** (no un menú kebab de 8 opciones): en "Por timbrar" → botón "Timbrar"; en "Por enviar" → "Enviar CFDI"; en "Por cobrar" → "Registrar pago"; en "REP pendientes" → "Timbrar REP". El resto de acciones queda en el detalle `/facturacion/:id`.
+Un solo hook `useBandejaConteos` hace 6 `count: 'exact', head: true` en paralelo (patrón ya usado en `kpisFiscales.ts`). Refresh cada 60 s. Muestra el número sólo cuando > 0; badge en tono `warning` (naranja) para "Por timbrar / Por enviar / REP pendientes", `danger` (rojo) para "Vencidas", `default` para el resto.
 
-**G. Barra de acciones masivas (ya existe `FacturasMasivasToolbar`).**
-Se activa al seleccionar filas: timbrar en lote, enviar en lote, exportar CSV, exportar layout contable.
+## Acción rápida por fila
 
-### 3.3 Lo que NO cambia (para no romper cosas)
+Cada bandeja de acción muestra **un solo botón principal** al final de la fila:
+- Por timbrar → abre `DialogTimbrarFactura` (ya existe).
+- Por enviar → abre `DialogEnviarCfdi` (ya existe).
+- Por cobrar / Vencidas → abre `DialogRegistrarPago` (ya existe).
+- REP pendientes → llama `useTimbrarRep` (ya existe).
+- Por facturar → navega a `/embarques/:id` (o abre wizard de conversión — lo que ya use el HuecoDetalleDialog).
 
-- Rutas `/cartera`, `/compras/por-pagar`, `/reportes/cierre-mensual`, `/proformas` siguen existiendo — sólo dejamos de depender de ellas para el trabajo cotidiano de facturación. Los redirects legacy se mantienen.
-- `/facturacion/:id` (detalle) queda igual.
-- El sidebar sigue apuntando a `/facturacion`.
-- El schema de BD no se toca — todo se resuelve con hooks/vistas.
+El resto de acciones (cancelar, sustituir, descargar) siguen en `/facturacion/:id`.
 
-## 4. Qué falta para llegar al estándar Odoo/SAP
+## HuecoFacturacionChip
 
-Cosas que **hoy no existen** en el proyecto y que sí son estándar en un ERP maduro:
+Se elimina el chip inline junto a los tabs. Toda su información vive ahora en la bandeja "Por facturar" (con más contexto y columnas).
 
-1. **Document flow visual** — línea de tiempo Proforma → Factura → CFDI → Pago → REP en el detalle. Hoy hay pedazos; falta el diagrama.
-2. **Periodos fiscales bloqueables** — que un admin pueda "cerrar julio" y bloquear alta de CFDI con fecha ≤ julio. Requiere tabla `periodos_fiscales`.
-3. **Aging report como sub-vista** — la información existe (`useCobranza`), sólo hay que embeberla como panel.
-4. **Vistas salvables por usuario** — "Mis filtros" (ej. "Mis clientes vencidos > 60 días"). Requiere tabla `vistas_usuario`.
-5. **Command palette fiscal** — `Ctrl+K` que entienda "vencidas", "por timbrar", "cliente X". El proyecto ya tiene búsqueda global; se puede extender.
-6. **Multi-moneda visible en KPIs** — hoy todo se convierte a MXN. Odoo/SAP siempre muestran ambas monedas.
-7. **Reporte DIOT + declaración mensual** en el mismo cockpit (hoy vive en `/reportes/cierre-mensual`).
-8. **Auditoría por documento** — quién timbró, quién canceló, quién envió, con timestamps. Existe `bitacora_actividad`; falta exponerlo en el detalle.
+## Riesgos y mitigaciones
 
-## 5. Fases sugeridas (orden y riesgo)
+1. **Campos faltantes en el RPC `facturas_listado`**: el listado paginado hoy no expone `facturapi_id` ni `uuid_fiscal`. Solución: para las bandejas "Por timbrar" y "Por enviar" hago queries directas a `facturas` (no vía RPC) con los filtros necesarios. Payload chico porque el N esperado es bajo (docenas, no miles).
+2. **REP pendientes**: `pagos_factura.estado_rep` ya existe (usado en `kpisFiscales.ts`), pero no tengo columnas de "fecha del pago" y "factura relacionada" listas para tabla. Solución: consulta directa con `select` explícito y join a `facturas(numero, cliente_nombre)`.
+3. **Rendimiento**: 6 conteos + 1 lista visible = 7 queries por render. Se cachean 60 s con React Query.
+4. **Volver atrás**: Fase 2 no borra la tab "Emitidas" — la mantiene como una bandeja más, así que el flujo actual sigue disponible. Nada se rompe.
 
-**Fase 1 — Consolidación visual (bajo riesgo, alto impacto).**
+## Fuera de alcance de Fase 2
 
-- Unificar los 2 KPI bands en uno.
-- Renombrar "Por timbrar" del KPI actual → "Proformas por facturar" (o mover a la bandeja).
-- Añadir selector de periodo fiscal en el header (sólo filtra en memoria, no bloquea).
+- Panel de aging integrado (Fase 3).
+- Document flow en detalle (Fase 4).
+- Cierre de periodo fiscal (descartado por producto).
+- Vistas salvables por usuario (Fase 6).
+- Command palette fiscal (Fase 6).
 
-**Fase 2 — Bandejas de trabajo (medio riesgo).**
+## Entregables
 
-- Rediseñar los tabs como 7 bandejas con badges de conteo.
-- Cada bandeja reusa hooks existentes (`useCobranza`, `useFacturas`, `useProformasPendientes`, `useFacturacionKpisFiscales`).
-- Añadir acción rápida por fila.
-- Migrar `HuecoFacturacionChip` a bandeja "Por facturar".
+1. 8 componentes de bandeja + 3 hooks + 1 servicio nuevos.
+2. `Facturacion.tsx` refactorizado a orquestador de bandejas (≤200 líneas).
+3. `HuecoFacturacionChip` eliminado del layout (se sigue exportando por si algún test lo usa).
+4. `TabFacturasEmitidas` → renombra internamente a `BandejaEmitidas` (misma lógica).
+5. Tests unitarios de los 3 hooks nuevos.
+6. Bump de versión y entrada de CHANGELOG.
 
-**Fase 3 — Panel de aging integrado (bajo riesgo).**
+## Detalles técnicos
 
-- Componente `<AgingSidebar>` que reusa `useCobranza` y filtra la bandeja "Vencidas" al clickear una cubeta.
+- `useBandejaConteos` retorna `{ porFacturar, porTimbrar, porEnviar, porCobrar, vencidas, repPendientes }` con refresh 60 s.
+- Query "Por timbrar":
+  ```sql
+  select id, numero, cliente_nombre, total, moneda, fecha_emision
+  from facturas
+  where organization_id = :org
+    and estado = 'Borrador'
+    and facturapi_id is null
+    and fecha_emision >= '2026-07-01'
+  order by fecha_emision desc;
+  ```
+- Query "Por enviar":
+  ```sql
+  select f.id, f.numero, f.cliente_nombre, f.total, f.moneda, f.fecha_emision
+  from facturas f
+  left join factura_envios e
+    on e.factura_id = f.id and e.estado = 'enviado'
+  where f.organization_id = :org
+    and f.uuid_fiscal is not null
+    and e.id is null
+  order by f.fecha_emision desc;
+  ```
+  Alternativa si el `left join` es lento: dos queries y filtro en memoria.
+- Query "REP pendientes":
+  ```sql
+  select p.id, p.fecha_pago, p.monto, p.moneda, p.estado_rep,
+         f.numero, f.cliente_nombre
+  from pagos_factura p
+  join facturas f on f.id = p.factura_id
+  where p.organization_id = :org
+    and p.estado_rep in ('Pendiente','Error')
+  order by p.fecha_pago desc;
+  ```
+- Todas las queries respetan RLS (multi-tenant) por `organization_id`.
+- Reuso total de diálogos existentes (timbrar / enviar / pagar / timbrar REP).
 
-**Fase 4 — Document flow en detalle (medio riesgo).**
+## Orden de implementación
 
-- Componente `<DocumentFlowTimeline>` en `/facturacion/:id` mostrando el ciclo completo.
-
-**Fase 5 — Cierre de periodo fiscal (alto riesgo — toca BD).**
-
-- Tabla `periodos_fiscales` + RPC para cerrar.
-- Bloqueo en creación de CFDI si el periodo destino está cerrado.
-
-**Fase 6 — Vistas salvables y command palette fiscal (medio riesgo).**
-
-- Persistir filtros por usuario.
-- Extender `Ctrl+K` con verbos fiscales.
-
-## 6. Detalles técnicos (para el equipo)
-
-- **Reuso de hooks** — no hay que crear queries nuevas para las Fases 1-4. Se usan: `useFacturacionPageController`, `useCobranza`, `useProformasPendientes`, `useFacturacionKpisFiscales`, `useDashboardEjecutivoFacturacion`, `useHuecoFacturacion`.
-- **Estado del tab activo** → mover a URL (`?bandeja=por-timbrar`) para links profundos y refresh sin perder contexto.
-- **Cada bandeja** = componente `<Bandeja{Nombre}>` que recibe filtros ya calculados y renderiza un `DataTable` + una acción principal — ≤ 200 líneas por archivo (Power of 10).
-- **Contador de badges** debe usar `count: 'exact', head: true` (patrón ya usado en `kpisFiscales.ts`) para no traer payload.
-- **Migración suave**: Fase 1 y 2 se pueden hacer detrás de un flag `NUEVO_COCKPIT_FACTURACION` para poder volver atrás si algo se rompe.
-- **Riesgo principal**: la lógica de "puedeTimbrarDesdeSistema" (fecha ≥ 01/07/2026) debe respetarse en la bandeja "Por timbrar" — reusar `esCreadaConCapacidadTimbrado` de `facturaFlags.ts`.
-
-## 7. Preguntas abiertas (que conviene resolver antes de codear)
-
-1. ¿Cerrar el período fiscal es una necesidad real hoy, o basta con filtrar visualmente? (define si Fase 5 va o no).  No es necesario. 
-2. ¿Los usuarios de facturación quieren ver **también** cuentas por pagar (proveedores) en el mismo cockpit, o sólo AR (clientes)? Odoo los separa; SAP los une bajo "Financials". Vamos con la opcion Odoo. Solo clientes. 
-3. ¿La "meta de facturación" que ya definimos para dirección ($5.5M MXN) se muestra también acá o es sólo dirección? No se muestra. 
-4. ¿Priorizamos Fase 1+2 (rediseño visual) o Fase 4 (document flow) primero? hacemos las fases en orden. 
+1. **Servicio + hooks** (`bandejas.ts`, `useFacturasPorTimbrar`, `useFacturasPorEnviar`, `usePagosRepPendientes`, `useBandejaConteos`).
+2. **Columns files** (3 nuevos).
+3. **8 componentes de bandeja** (empezando por las 3 nuevas; las de cobranza y emitidas reusan lo existente).
+4. **`BandejaTabs`** — trigger row con badges.
+5. **Refactor de `Facturacion.tsx`** para orquestar bandejas y URL `?bandeja=`.
+6. Eliminar `HuecoFacturacionChip` del layout.
+7. Tests + changelog + bump.
