@@ -91,7 +91,7 @@ export async function fetchHuecoFacturacion({
     filas.push(fila);
   }
 
-  filas.sort((a, b) => b.diasDesdeEtd - a.diasDesdeEtd);
+  filas.sort((a, b) => b.diasDesdeEta - a.diasDesdeEta);
 
   return { filas, totalEmbarques: filas.length, totalUsd, totalMxn };
 }
