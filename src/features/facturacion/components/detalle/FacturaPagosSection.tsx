@@ -89,11 +89,8 @@ export function FacturaPagosSection({
               </Badge>
             )}
           </div>
-          {canEdit && saldo > 0 && (
-            <Button size="sm" onClick={onRegistrarPago}>
-              <Plus className="h-4 w-4 mr-1" /> Registrar pago
-            </Button>
-          )}
+          {/* El botón "Registrar pago" vive ahora en la barra superior de acciones
+              del detalle (`FacturaDetalleActionsBar`) para mantener el patrón unificado. */}
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
