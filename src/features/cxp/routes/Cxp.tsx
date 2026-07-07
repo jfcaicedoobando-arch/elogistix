@@ -119,6 +119,7 @@ export default function Cxp() {
   }, [f]);
 
   const columns = useMemo(() => buildCxPColumns(), []);
+  const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
 
   return (
     <PageContainer>
@@ -144,7 +145,7 @@ export default function Cxp() {
       <CxpKpiCards kpis={kpis} data={data} />
 
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
           <CxpFiltros
             search={f.search} onSearchChange={f.setSearch}
             estatus={f.estatus} onEstatusChange={f.setEstatus}
@@ -156,6 +157,15 @@ export default function Cxp() {
             fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
             fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
           />
+          <div className="flex justify-end">
+            <ColumnVisibilityMenu
+              options={CXP_COL_OPTIONS}
+              visibility={colVis.visibility}
+              onToggle={colVis.toggle}
+              onReset={colVis.reset}
+              isCustom={colVis.isCustom}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -185,6 +195,12 @@ export default function Cxp() {
               density="compact"
               initialSort={{ key: "folio_interno", dir: "desc" }}
               onRowClick={(fact) => f.setDetalle(fact)}
+              stickyHeader
+              columnVisibility={colVis.visibility}
+              onColumnVisibilityChange={(updater) => {
+                const next = typeof updater === "function" ? updater(colVis.visibility) : updater;
+                colVis.setVisibility(next);
+              }}
             />
           )}
         </CardContent>
