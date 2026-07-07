@@ -71,7 +71,7 @@ export function deriveFacturaFlags(
   const sinTimbrar = !factura.uuid_fiscal;
   const esBorrador = factura.estado === "Borrador" && !factura.facturapi_id;
   const puedeEditarBorrador = esBorrador && canEdit;
-  const puedeEliminarBorrador = esBorrador && canEdit;
+  const puedeEliminarBorrador = puedeEditarBorrador;
   const puedeTimbrarDesdeSistema =
     sinTimbrar && esCreadaConCapacidadTimbrado(factura.fecha_emision);
   const estaCancelada = factura.estado === "Cancelada" || factura.estado === "Sustituida";
