@@ -2,7 +2,7 @@
  * Bandeja "REP pendientes": pagos aplicados a facturas PPD cuyo REP no se
  * ha timbrado. Patrón unificado: Card + UnifiedFiltersBar + useClientPagedList.
  */
-import { useMemo } from "react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Receipt } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
@@ -64,7 +64,7 @@ export function BandejaRepPendientes() {
   });
   const totalCount = data?.length ?? 0;
 
-  return useMemo(() => (
+  return (
     <div className="space-y-3">
       <UnifiedFiltersBar
         search={paged.search}
@@ -96,5 +96,5 @@ export function BandejaRepPendientes() {
         </CardContent>
       </Card>
     </div>
-  ), [paged, totalCount]);
+  );
 }

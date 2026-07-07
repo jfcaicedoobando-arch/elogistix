@@ -2,7 +2,7 @@
  * Bandeja "Por enviar": CFDI ya timbrados sin envío al cliente.
  * Sigue el patrón unificado (Card + UnifiedFiltersBar + useClientPagedList).
  */
-import { useMemo } from "react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Send } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
@@ -45,7 +45,7 @@ export function BandejaPorEnviar() {
   });
   const totalCount = data?.length ?? 0;
 
-  return useMemo(() => (
+  return (
     <div className="space-y-3">
       <UnifiedFiltersBar
         search={paged.search}
@@ -77,5 +77,5 @@ export function BandejaPorEnviar() {
         </CardContent>
       </Card>
     </div>
-  ), [paged, totalCount]);
+  );
 }

@@ -3,7 +3,7 @@
  * pendientes de FacturApi. Sigue el patrón unificado de listas:
  * Card + UnifiedFiltersBar + useClientPagedList + DataTable con orden.
  */
-import { useMemo } from "react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { FileClock } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
@@ -49,7 +49,7 @@ export function BandejaPorTimbrar() {
   });
   const totalCount = data?.length ?? 0;
 
-  return useMemo(() => (
+  return (
     <div className="space-y-3">
       <UnifiedFiltersBar
         search={paged.search}
@@ -81,5 +81,5 @@ export function BandejaPorTimbrar() {
         </CardContent>
       </Card>
     </div>
-  ), [paged, totalCount]);
+  );
 }

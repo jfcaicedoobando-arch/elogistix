@@ -2,7 +2,7 @@
  * Bandeja "Proformas listas": proformas aprobadas sin factura asociada.
  * Patrón unificado: Card + UnifiedFiltersBar + useClientPagedList.
  */
-import { useMemo } from "react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCheck2 } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
@@ -65,7 +65,7 @@ export function BandejaProformasListas() {
   });
   const totalCount = data?.length ?? 0;
 
-  return useMemo(() => (
+  return (
     <div className="space-y-3">
       <UnifiedFiltersBar
         search={paged.search}
@@ -97,5 +97,5 @@ export function BandejaProformasListas() {
         </CardContent>
       </Card>
     </div>
-  ), [paged, totalCount]);
+  );
 }
