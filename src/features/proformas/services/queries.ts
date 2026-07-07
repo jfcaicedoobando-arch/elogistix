@@ -41,18 +41,26 @@ export type ProformaEmbarqueFull = {
   contenedores: Array<{ numero_contenedor: string; tipo_contenedor: string | null }> | null;
 };
 
+export type ProformaFacturaAsociada = {
+  id: string;
+  numero: string | null;
+  estado: string;
+  total: number;
+  moneda: string;
+  fecha_emision: string | null;
+  uuid_fiscal: string | null;
+  factura_pdf_url: string | null;
+  factura_xml_url: string | null;
+};
+
 export type ProformaDetalleFull = ProformaConFactura & {
-  facturas_full: {
-    id: string;
-    numero: string;
-    estado: string;
-    total: number;
-    moneda: string;
-    fecha_emision: string | null;
-    uuid_fiscal: string | null;
-    factura_pdf_url: string | null;
-    factura_xml_url: string | null;
-  } | null;
+  /**
+   * Factura(s) generadas a partir de esta proforma. Se resuelve vía la FK
+   * inversa `facturas.proforma_id → proformas.id` porque el flujo de
+   * conversión "un clic" puede producir varias facturas (una por moneda —
+   * el SAT no permite CFDI multi-moneda) y ya no llena `proformas.factura_id`.
+   */
+  facturas_asociadas: ProformaFacturaAsociada[];
   cliente_full: ProformaClienteFull | null;
   embarque_full: ProformaEmbarqueFull | null;
 };
@@ -64,7 +72,7 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
       [
         "*",
         "facturas:factura_id(factura_pdf_url, factura_xml_url)",
-        "facturas_full:factura_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url)",
+        "facturas_asociadas:facturas!proforma_id(id, numero, estado, total, moneda, fecha_emision, uuid_fiscal, factura_pdf_url, factura_xml_url, deleted_at, created_at)",
         "cliente_full:cliente_id(nombre, rfc, direccion, ciudad, estado, cp)",
         "embarque_full:embarque_id(modo, tipo, incoterm, bl_house, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, descripcion_mercancia, contenedores:embarque_contenedores(numero_contenedor, tipo_contenedor))",
       ].join(", "),
@@ -73,8 +81,19 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  return fromDb<ProformaDetalleFull>(data);
+  // Filtrar facturas eliminadas lógicamente y ordenar por fecha de creación.
+  type RawAsociada = ProformaFacturaAsociada & { deleted_at: string | null; created_at: string };
+  const raw = data as unknown as {
+    facturas_asociadas?: RawAsociada[] | null;
+  } & Record<string, unknown>;
+  const asociadas = (raw.facturas_asociadas ?? [])
+    .filter((f) => !f.deleted_at)
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+    .map(({ deleted_at: _d, created_at: _c, ...rest }) => rest);
+  const merged = { ...(data as unknown as Record<string, unknown>), facturas_asociadas: asociadas };
+  return fromDb<ProformaDetalleFull>(merged);
 }
+
 
 
 

@@ -5,6 +5,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.46] - 2026-07-07
+- **Trazabilidad Proforma → Factura en el detalle de la proforma**:
+  - La tarjeta "Factura asociada" ahora encuentra la(s) factura(s) por la FK `facturas.proforma_id` (dirección inversa) en vez del campo obsoleto `proformas.factura_id`, que el flujo nuevo de conversión no llena.
+  - Soporta múltiples facturas por proforma: cuando la proforma se dividió por moneda (USD + MXN), se muestran las dos con su badge de estado, moneda, UUID y botón "Ver factura".
+  - Analogía: antes la proforma miraba por una mirilla que ya nadie usaba; ahora sigue las flechas que las propias facturas dejan hacia ella.
+
 ## [13.213.45] - 2026-07-07
 - **Nuevos defaults CFDI al generar borradores de factura**:
   - Uso CFDI: `G03` (Gastos en general) — sin cambio.

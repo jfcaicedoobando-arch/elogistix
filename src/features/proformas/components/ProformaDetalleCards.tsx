@@ -17,7 +17,7 @@ export { AccionesProforma } from "./AccionesProforma";
 export { EstadoBadges } from "./ProformaEstadoBadges";
 
 type Totales = ReturnType<typeof calcularTotalesProforma>;
-type FacturaAsociada = NonNullable<ProformaDetalleFull["facturas_full"]>;
+type FacturaAsociada = ProformaDetalleFull["facturas_asociadas"][number];
 
 
 export function TotalDestacado({ totales }: { totales: Totales }) {
@@ -49,16 +49,18 @@ export function NotasCard({ notas }: { notas: string | null | undefined }) {
 
 
 
-export function FacturaAsociadaCard({ factura }: { factura: FacturaAsociada }) {
+function FacturaAsociadaItem({ factura, showHeader }: { factura: FacturaAsociada; showHeader: boolean }) {
   const timbrada = !!factura.uuid_fiscal;
   const tieneArchivos = !!(factura.factura_pdf_url || factura.factura_xml_url || timbrada);
+  const numero = factura.numero || "(borrador sin folio)";
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          Factura asociada
-          <span className="font-mono">{factura.numero}</span>
+        <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
+          {showHeader && <span>Factura asociada</span>}
+          <span className="font-mono">{numero}</span>
           <StatusBadge domain="factura" status={factura.estado} />
+          <span className="text-xs text-muted-foreground font-normal">{factura.moneda}</span>
         </CardTitle>
         <Button size="sm" asChild>
           <Link to={`/facturacion/${factura.id}`}>
@@ -91,6 +93,25 @@ export function FacturaAsociadaCard({ factura }: { factura: FacturaAsociada }) {
     </Card>
   );
 }
+
+export function FacturaAsociadaCard({ facturas }: { facturas: FacturaAsociada[] }) {
+  if (!facturas.length) return null;
+  if (facturas.length === 1) {
+    return <FacturaAsociadaItem factura={facturas[0]} showHeader />;
+  }
+  return (
+    <div className="space-y-3">
+      <h2 className="text-lg font-semibold">Facturas asociadas ({facturas.length})</h2>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Esta proforma se dividió en varios CFDI (el SAT no permite CFDI multi-moneda).
+      </p>
+      {facturas.map((f) => (
+        <FacturaAsociadaItem key={f.id} factura={f} showHeader={false} />
+      ))}
+    </div>
+  );
+}
+
 
 export function TotalesCard({ totales }: { totales: Totales }) {
   const hasUsd = totales.subtotal_usd > 0;
