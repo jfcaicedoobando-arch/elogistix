@@ -1,16 +1,16 @@
 /**
  * Bandeja "REP pendientes": pagos aplicados a facturas PPD cuyo REP no se
- * ha timbrado. Patrón unificado: Card + UnifiedFiltersBar + useClientPagedList.
+ * ha timbrado. Estados unificados vía `<BandejaShell />`.
  */
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Receipt } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
-import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { usePagosRepPendientes, type FilaRepPendiente } from "@/features/facturacion/hooks/useBandejas";
+import { BandejaShell } from "./BandejaShell";
 
 function badgeTone(estado: string): "outline" | "destructive" {
   return estado === "Error" ? "destructive" : "outline";
@@ -45,7 +45,7 @@ interface Filters extends Record<string, string> { estado: string }
 const DEFAULTS: Filters = { estado: "todos" };
 
 export function BandejaRepPendientes() {
-  const { data, isLoading } = usePagosRepPendientes();
+  const { data, isLoading, isError, refetch } = usePagosRepPendientes();
   const paged = useClientPagedList<FilaRepPendiente, Filters>({
     data,
     isLoading,
@@ -65,18 +65,29 @@ export function BandejaRepPendientes() {
   const totalCount = data?.length ?? 0;
 
   return (
-    <div className="space-y-3">
-      <UnifiedFiltersBar
-        search={paged.search}
-        onSearchChange={paged.setSearch}
-        searchPlaceholder="Buscar factura o cliente…"
-        chips={paged.activeChips}
-        activeCount={paged.activeCount}
-        onClearAll={paged.resetAll}
-      />
-      <div className="text-xs text-muted-foreground">
-        Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} complementos pendientes
-      </div>
+    <BandejaShell
+      isError={isError}
+      onRetry={() => refetch()}
+      search={paged.search}
+      onSearchChange={paged.setSearch}
+      searchPlaceholder="Buscar factura o cliente…"
+      chips={paged.activeChips}
+      activeCount={paged.activeCount}
+      onClearAll={paged.resetAll}
+      primary={
+        <Select value={paged.filters.estado} onValueChange={(v) => paged.setFilter("estado", v)}>
+          <SelectTrigger className="w-[160px]" aria-label="Estado REP">
+            <SelectValue placeholder="Estado REP" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos los estados</SelectItem>
+            <SelectItem value="Pendiente">Pendiente</SelectItem>
+            <SelectItem value="Error">Error</SelectItem>
+          </SelectContent>
+        </Select>
+      }
+      counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} complementos pendientes</>}
+    >
       <Card>
         <CardContent className="p-0">
           <DataTable
@@ -84,7 +95,8 @@ export function BandejaRepPendientes() {
             data={paged.rows}
             isLoading={paged.isLoading}
             emptyIcon={Receipt}
-            emptyMessage="No hay complementos de pago pendientes. ✅"
+            emptyMessage="No hay complementos de pago pendientes."
+            emptyHint="Los pagos aplicados a facturas PPD sin REP timbrado aparecerán aquí."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.factura_id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.factura_numero}`}
@@ -95,6 +107,6 @@ export function BandejaRepPendientes() {
           />
         </CardContent>
       </Card>
-    </div>
+    </BandejaShell>
   );
 }
