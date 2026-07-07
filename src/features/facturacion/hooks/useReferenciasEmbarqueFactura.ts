@@ -1,18 +1,16 @@
 /**
- * useReferenciasEmbarqueFactura — v13.208.0
+ * useReferenciasEmbarqueFactura — v13.209.1
  *
  * Devuelve el trío Expediente + BL Master + BL House que se propagará al
  * CFDI cuando se timbre la factura. Prioridad:
- *   1. Si `factura.embarque_id` está presente → lee del embarque.
- *   2. Fallback a los snapshots en la propia factura (`expediente`,
- *      `referencia_bl`).
+ *   1. Si `factura.embarque_id` está presente → lee del embarque (vía servicio).
+ *   2. Fallback a los snapshots en la propia factura.
  *
- * Mantiene un contrato pequeño (analogía: un traductor que va al archivero
- * del embarque a copiar 3 campos) para poder reusarlo en la vista previa
- * de `DialogTimbrarFactura` y en tests aislados.
+ * La consulta al cliente Supabase vive en el servicio
+ * `services/referenciasEmbarque.ts` para respetar la jerarquía de capas.
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchReferenciasEmbarque } from "@/features/facturacion/services/referenciasEmbarque";
 
 export interface ReferenciasEmbarqueFactura {
   expediente: string | null;
@@ -61,16 +59,12 @@ export function useReferenciasEmbarqueFactura(factura: FacturaInput | null | und
     queryFn: async () => {
       const fallback = computeReferenciasFallback(factura);
       if (!embarqueId) return fallback;
-      const { data, error } = await supabase
-        .from("embarques")
-        .select("expediente, bl_master, bl_house")
-        .eq("id", embarqueId)
-        .maybeSingle();
-      if (error || !data) return fallback;
+      const row = await fetchReferenciasEmbarque(embarqueId);
+      if (!row) return fallback;
       return {
-        expediente: data.expediente ?? fallback.expediente,
-        bl_master: data.bl_master ?? null,
-        bl_house: data.bl_house ?? fallback.bl_house,
+        expediente: row.expediente ?? fallback.expediente,
+        bl_master: row.bl_master ?? null,
+        bl_house: row.bl_house ?? fallback.bl_house,
       };
     },
   });

@@ -21,7 +21,7 @@ import { FacturaConceptosTable } from "@/features/facturacion/components/detalle
 import { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
-import { FacturaDetalleActions } from "@/features/facturacion/components/detalle/FacturaDetalleActions";
+import { FacturaDetalleActionsBar } from "@/features/facturacion/components/detalle/FacturaDetalleActionsBar";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
@@ -48,10 +48,10 @@ export default function FacturaDetalle() {
   const [cancelarOpen, setCancelarOpen] = useState(false);
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
+  const flags = deriveFacturaFlags(factura, canEdit);
   const {
     sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema,
-    puedeSustituirCfdi, puedeCancelarCfdi,
-  } = deriveFacturaFlags(factura, canEdit);
+  } = flags;
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
@@ -96,33 +96,23 @@ export default function FacturaDetalle() {
         ambiente={factura.ambiente}
       />
 
-      <FacturaDetalleActions
+      <FacturaDetalleActionsBar
+        factura={factura}
         canEdit={canEdit}
-        sinTimbrar={sinTimbrar}
-        puedeTimbrarDesdeSistema={puedeTimbrarDesdeSistema}
-        puedeSustituirCfdi={puedeSustituirCfdi}
-        puedeCancelarCfdi={puedeCancelarCfdi}
-        pdfUrl={factura.factura_pdf_url}
-        xmlUrl={factura.factura_xml_url}
-        embarqueId={factura.embarque_id ?? null}
+        flags={flags}
+        acuse={acuse}
+        eliminando={eliminando}
+        puedeEliminarBorrador={puedeEliminarBorrador}
         onTimbrar={() => setTimbrarOpen(true)}
         onEnviarEmail={() => setEnviarOpen(true)}
-        onDownload={handleDownload}
         onSustituir={() => setSustituirOpen(true)}
         onCancelar={() => setCancelarOpen(true)}
-        onEliminarBorrador={puedeEliminarBorrador ? () => setEliminarOpen(true) : undefined}
-        eliminando={eliminando}
-        estaCancelada={factura.estado === "Cancelada" || factura.estado === "Sustituida"}
-        acuseDisponible={!!factura.acuse_cancelacion_xml}
-        acuseStatus={factura.acuse_cancelacion_status}
-        onDescargarAcuseXml={acuse.descargarXml}
-        onDescargarAcusePdf={acuse.descargarPdf}
-        onReintentarAcuse={acuse.reintentar}
-        reintentandoAcuse={acuse.reintentando}
+        onEliminar={() => setEliminarOpen(true)}
+        onDownload={handleDownload}
       />
 
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
         <FacturaEmisorCard />
         {factura.cliente_id && (
           <FacturaReceptorCard
