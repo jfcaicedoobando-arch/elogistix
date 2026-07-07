@@ -5,7 +5,7 @@
  * de registrar pago: `total − Σ monto_aplicado_factura`.
  */
 import { useState } from "react";
-import { Loader2, Trash2, CheckCircle2, Clock, Eye, FileText } from "lucide-react";
+import { Loader2, Trash2, CheckCircle2, Clock, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
