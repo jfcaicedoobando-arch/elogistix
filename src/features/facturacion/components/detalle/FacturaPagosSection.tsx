@@ -109,11 +109,17 @@ export function FacturaPagosSection({
                     <th className="text-right py-2 px-2">Aplicado</th>
                     <th className="text-left py-2 px-2">Forma</th>
                     <th className="text-left py-2 px-2">Referencia</th>
+                    <th className="text-left py-2 px-2">REP</th>
                     {canEdit && <th className="w-10"></th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {pagos.map((p) => (
+                  {pagos.map((p) => {
+                    // v13.213.20 — FacturAPI = source of truth para el folio del REP.
+                    // Sin timbrar: chip gris "REP pendiente". Timbrado: `<serie><folio>`.
+                    const repTimbrado = p.estado_rep === "Timbrado" && p.folio_rep != null;
+                    const repCancelado = p.estado_rep === "Cancelado";
+                    return (
                     <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="py-2 px-2 whitespace-nowrap">{formatDate(p.fecha_pago)}</td>
                       <td className="py-2 px-2 text-right tabular-nums">
@@ -125,6 +131,21 @@ export function FacturaPagosSection({
                       <td className="py-2 px-2">{p.forma_pago}</td>
                       <td className="py-2 px-2 max-w-[200px] truncate" title={p.referencia ?? ""}>
                         {p.referencia || "—"}
+                      </td>
+                      <td className="py-2 px-2">
+                        {repTimbrado ? (
+                          <Badge variant="outline" className="bg-success/10 text-success border-success/20 font-mono text-xs">
+                            {`${p.serie_rep ?? ""}${p.folio_rep}`}
+                          </Badge>
+                        ) : repCancelado ? (
+                          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
+                            REP cancelado
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-muted text-muted-foreground text-xs font-normal">
+                            REP pendiente
+                          </Badge>
+                        )}
                       </td>
                       {canEdit && (
                         <td className="py-2 px-2">
@@ -142,7 +163,8 @@ export function FacturaPagosSection({
                         </td>
                       )}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
