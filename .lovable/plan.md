@@ -1,64 +1,68 @@
 
-# Auditoría Facturación & Compras — Ola 2: Compras (densidad y acciones)
+# Bug — Proforma 0961 sigue "facturada" tras borrar el borrador
 
-Continuamos con la ola que más dolor le quita al contable: reducir ruido visual en las tablas de Compras y devolverles espacio útil.
+## Causa raíz
 
-Analogía: hoy cada renglón trae un botón grande con la misma leyenda; es como si cada expediente tuviera un post-it que dice "abrir" — mejor que la manija esté en el fólder y ya. Además, ordenamos las columnas por prioridad de uso, no por historia.
+La conversión de proforma a factura y el borrado del borrador **no hablan el mismo idioma**:
 
-## Alcance
+- Al **convertir** (`convertir_proformas_a_factura`): la factura guarda el link (`facturas.proforma_id = proforma.id`) y la proforma se marca `estado_proforma = 'facturada'`. **No** se llena `proformas.factura_id` (esa columna queda `NULL`).
+- Al **borrar el borrador** (`eliminar_factura_borrador`): intenta revertir con `UPDATE proformas WHERE factura_id = p_factura_id`. Como esa columna nunca se llenó, el `UPDATE` no toca ninguna fila y la proforma queda huérfana en estado `facturada`.
 
-1. **`/compras/por-capturar` — quitar ruido de la columna Acción**
-   - Reemplazar el botón textual `[📄 Capturar factura]` de cada fila por un ícono `+` (48 px, tooltip "Capturar factura", `aria-label` accesible).
-   - Toda la fila se vuelve clickeable (abre el mismo drawer). Cursor pointer y hover sutil.
-   - El espacio recuperado se usa para separar "Presupuesto" y "Facturado" en dos columnas alineadas a la derecha con `tabular-nums`, en vez del `MXN 0.00 / MXN 6,844.80` que envuelve hoy.
-   - Sticky header al hacer scroll (para no perder el contexto en listas de 158+).
+Verificado en DB para PRO-2026-0961 (id `2f00be9a…`):
+- Factura draft `b163c205…` (USD) creada 22:26 — ya eliminada, no aparece en `facturas`.
+- Bitácora `factura.borrador_generado` guardó `proforma_ids = [2f00be9a…]`.
+- Proforma sigue con `estado_proforma='facturada'`, `fecha_facturacion=2026-07-07`.
 
-2. **`/compras/facturas` — tabla con densidad configurable**
-   - Preset por defecto (más limpio): Folio, Proveedor, Vencimiento, Días, Total, Saldo, Estatus, Acción.
-   - Columnas opcionales (visibles con el botón "Filtros" → nueva sección "Columnas"): Folio Prov., Emisión, Prog. Pago, Pagado, Aprobación, Moneda.
-   - La preferencia se guarda por usuario/tenant en `browserStorage` (llave `cxp-facturas-columns`).
-   - Sticky header y `min-width` por columna para evitar el corte silencioso de "Aprobación".
-   - Botón `Reporte PDF` movido al menú "Más" (⋯) para reducir botones primarios visibles.
+Analogía: cuando entregas el paquete al mensajero, le pones un sticker rojo a la caja ("enviado"). Si el mensajero devuelve el paquete, quien lo recibe se olvida de quitar el sticker rojo — la caja se ve como "enviada" para siempre.
 
-3. **`/compras/conciliacion` — ajustar overflow**
-   - Añadir `min-width` a columnas críticas y `title` en badges truncados ("Sin facturar", "Parcial", "Conciliada") para que al hover se lea completo.
-   - Header sticky para tablas largas.
+## Solución (2 pasos)
 
-## Fuera de alcance de esta ola
-- Cambios en lógica de negocio o cálculos.
-- Renombrar rutas.
-- Tocar el Dashboard de Compras (queda para Ola 3 junto con Facturación).
+### 1) Migration — arreglar `eliminar_factura_borrador`
 
-## Detalle técnico
+Reemplazar el `WHERE factura_id = p_factura_id` por una revert que use las fuentes reales del vínculo:
 
-- Nuevo componente reutilizable `ColumnVisibilityMenu` alimentado por TanStack Table `columnVisibility` (API nativa v8). Se monta dentro del popover `Filtros` existente.
-- Persistencia con el wrapper permitido `@/lib/browserStorage` (memory core: prohibido `localStorage` directo).
-- Sticky header: clase utilitaria en el `<TableHead>` base — no romper la variante "striped" del estándar de tablas.
-- Ícono `+` con `<Button size="icon" variant="ghost">` y `<Tooltip>`; row-click delega en el mismo handler (usar `e.stopPropagation()` en el botón para respetar la memoria `technical/event-propagation-standards`).
-- Añadir tests de:
-  - `useCxpFacturasColumns` (visibility persistence: default + toggle + reload).
-  - Snapshot mínimo del preset default en `Cxp` para atrapar regresiones de headers.
+- **Caso 1:1** (proforma única): leer `v_factura.proforma_id` capturado en el `SELECT * INTO v_factura`.
+- **Caso 1:N** (consolidada, `proforma_id NULL` en la factura): leer el array `proforma_ids` desde la última entrada de bitácora `factura.borrador_generado` con `entidad_id = p_factura_id`.
 
-## Archivos a tocar (estimado)
+Unir ambos en un `uuid[] v_proforma_ids` y correr:
 
-- `src/features/cxp/routes/Cxp.tsx`
-- `src/features/cxp/components/cxpColumns.tsx`
-- `src/features/cxp/components/ColumnVisibilityMenu.tsx` (nuevo)
-- `src/features/cxp/hooks/useCxpFacturasColumns.ts` (nuevo)
-- `src/features/bandejas/routes/_sections/cxpPorPagarColumns.tsx` (no aplica, es otra vista) — no se toca.
-- `src/features/cxp/routes/_sections/CxpPorCapturar*.tsx` (ícono + row click + columnas).
-- `src/features/cxp/routes/ComprasConciliacion.tsx` (min-width + tooltips en badges).
-- `src/components/shared/DataTable/*` — sticky header opt-in (`stickyHeader?: boolean`).
-- Tests correspondientes.
-- `APP_VERSION` → `13.213.31` y entrada en `CHANGELOG.md`.
+```sql
+UPDATE proformas
+   SET estado_proforma   = 'pendiente',
+       fecha_facturacion = NULL,
+       factura_id        = NULL,  -- por si a futuro se llena
+       updated_at        = now()
+ WHERE id = ANY(v_proforma_ids);
+```
 
-## Riesgos y mitigación
-- Riesgo: cambiar el botón por ícono confunde a usuarios acostumbrados. Mitigación: tooltip claro + fila clickeable + mantener la misma acción destino.
-- Riesgo: preferencia de columnas por usuario podría "esconder" info en soporte. Mitigación: opción "Restablecer columnas" en el menú.
-- Riesgo: sticky header con tablas ya scrolleables horizontalmente puede verse raro. Mitigación: sólo sticky en vertical (`top-0`), no interfiere con scroll X.
+La bitácora final registra `proformas_revertidas = v_proforma_ids` (ya lo hacía).
+
+### 2) Data fix puntual — proforma 0961
+
+Con la RPC nueva ejecutar un `UPDATE` manual sobre la proforma huérfana:
+
+```sql
+UPDATE proformas
+   SET estado_proforma='pendiente', fecha_facturacion=NULL, updated_at=now()
+ WHERE id='2f00be9a-54cb-40de-bb57-204ab163d5b8';
+```
+
+Se conserva `estado_cliente = 'aceptada'` (el cliente sí la aceptó; sólo revertimos la parte fiscal).
+
+## Fuera de alcance
+- Cambiar la dirección del FK (usar `proformas.factura_id`) — implicaría refactor grande de la conversión y no aporta a este fix.
+- Tocar `enforce_proforma_aceptada_before_factura` o `marcar_proforma_facturada`.
 
 ## Validación
-- Screenshots antes/después de las 3 pantallas en FHD.
-- `bun run lint --max-warnings 0` y tests unitarios de la ola.
+- Repetir el flujo aceptar → convertir → eliminar borrador con una proforma de prueba: la proforma debe quedar `estado_proforma='pendiente'` con `estado_cliente='aceptada'`.
+- Confirmar por SQL que 0961 volvió a `pendiente`.
+- `bun run lint` verde.
+- Bump `APP_VERSION` → `13.213.36` y entrada en `CHANGELOG.md`.
 
-¿Ejecuto esta Ola 2 completa? Si prefieres partirla por pantalla (empezar solo con `/compras/por-capturar` para validar el nuevo patrón antes de aplicarlo a Facturas), dímelo y lo hago así.
+## Archivos a tocar
+- **Migration**: `CREATE OR REPLACE FUNCTION public.eliminar_factura_borrador` con nueva lógica de revert.
+- **Data**: `UPDATE` puntual a la proforma 0961.
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
+
+Sin cambios de frontend — el hook y el servicio siguen llamando al mismo RPC.
