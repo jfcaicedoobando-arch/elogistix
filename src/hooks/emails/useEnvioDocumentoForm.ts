@@ -60,6 +60,12 @@ export function useEnvioDocumentoForm(
    * (o los guardados como preferencia). Editable por el usuario.
    */
   ccInicial?: string[] | null,
+  /**
+   * Correos manuales (destinatarios que NO vienen de la ficha del cliente) a
+   * precargar como badges cuando se abre el dialog. Se usa para heredar la
+   * lista del último envío o de la preferencia del cliente. Editable.
+   */
+  destinatariosManualesInicial?: string[] | null,
 ): EnvioFormState {
   const { user } = useAuth();
 
