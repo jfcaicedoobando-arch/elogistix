@@ -18,6 +18,13 @@ export interface FacturaFlagsInput {
   fecha_emision?: string | null;
 }
 
+export interface FacturaFlagsContext {
+  /** Saldo pendiente en la moneda de la factura. */
+  saldo?: number;
+  /** Cuántos pagos aún tienen REP pendiente o con error. */
+  pagosRepPendientes?: number;
+}
+
 export interface FacturaFlags {
   sinTimbrar: boolean;
   esBorrador: boolean;
