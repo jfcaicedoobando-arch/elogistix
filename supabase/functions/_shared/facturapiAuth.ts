@@ -214,4 +214,37 @@ export async function resolveFacturapiKey(
   };
 }
 
+/**
+ * Devuelve la API key del ambiente OPUESTO al configurado en la org, si
+ * existe. Sirve como fallback para facturas históricas timbradas en un
+ * ambiente distinto al actual (típico cuando la org migra de sandbox → live
+ * y las facturas viejas siguen guardando su `facturapi_id` original).
+ * Devuelve `null` si no hay credencial, no hay secret configurado o si el
+ * secret está vacío.
+ */
+export async function resolveFacturapiKeyOtherAmbiente(
+  supabase: SupabaseLike,
+  organizationId: string,
+): Promise<{ apiKey: string; ambiente: FacturapiAmbiente } | null> {
+  const { data: cred } = await supabase
+    .from("facturapi_credenciales")
+    .select(
+      "ambiente, api_key_sandbox_secret_name, api_key_live_secret_name, api_key_sandbox_vault_id, api_key_live_vault_id, facturapi_org_id",
+    )
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (!cred) return null;
+  const current: FacturapiAmbiente = cred.ambiente === "live" ? "live" : "sandbox";
+  const other: FacturapiAmbiente = current === "live" ? "sandbox" : "live";
+  const vaultId = other === "live" ? cred.api_key_live_vault_id : cred.api_key_sandbox_vault_id;
+  const vaultKey = await tryVaultKey(supabase, organizationId, other, vaultId);
+  if (vaultKey) return { apiKey: vaultKey, ambiente: other };
+  const secretName = other === "live" ? cred.api_key_live_secret_name : cred.api_key_sandbox_secret_name;
+  if (!secretName) return null;
+  const apiKey = Deno.env.get(secretName) ?? "";
+  if (!apiKey) return null;
+  return { apiKey, ambiente: other };
+}
+
+
 
