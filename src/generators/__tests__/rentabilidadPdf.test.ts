@@ -37,7 +37,7 @@ describe("generarRentabilidadPdf", () => {
     expect(mockEmisor).toHaveBeenCalledOnce();
     expect(mockDescargar).toHaveBeenCalledOnce();
     const [, filename] = mockDescargar.mock.calls[0] as [unknown, string];
-    expect(filename).toBe("rentabilidad-2024-01-01_2024-03-31");
+    expect(filename).toBe("Empresa_SA_rentabilidad-2024-01-01_2024-03-31");
   });
 
   it("propaga el error si descargarPdf lanza", async () => {
