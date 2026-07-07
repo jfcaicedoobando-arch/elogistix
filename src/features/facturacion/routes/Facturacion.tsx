@@ -1,66 +1,40 @@
 /**
- * Módulo Facturación (v13.145.10 — limpieza post-workflow "un clic").
+ * Cockpit de Facturación (Fase 2 — bandejas de trabajo estilo ERP).
  *
- * Con el flujo nuevo (cliente acepta → conversión de un clic a borrador de
- * factura), el paso interno "aprobar proforma" desapareció. Se eliminaron:
- *   - Tab "Por timbrar" (filtraba por estado_revision='pendiente', flujo viejo).
- *   - Bandeja /facturacion/por-emitir (duplicaba la tab).
- *   - GuiaPrefacturacion (explicaba el flujo antiguo).
+ * En vez de 2 tabs planos, el módulo se organiza en 8 bandejas por acción
+ * pendiente (Por facturar, Por timbrar, Por enviar, Por cobrar, Vencidas,
+ * REP pendientes, Emitidas, Notas de crédito). Cada bandeja tiene su
+ * conteo en un badge y una acción rápida por fila.
  *
- * La visibilidad de "qué está por facturarse" queda en dos lugares:
- *   - HuecoFacturacionChip (chip inline junto a los tabs — embarques con
- *     ETD > 5 días sin CFDI). Antes era una tira roja de ancho completo.
- *   - /proformas con filtro por estado_cliente.
+ * La bandeja activa se sincroniza con la URL (`?bandeja=por-timbrar`)
+ * para permitir enlaces profundos y refresh sin perder contexto.
  *
  * URLs viejas (?tab=cobranza|liquidacion|proyeccion|pendientes) → redirect.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { Info, FilePlus2 } from "lucide-react";
+import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFacturasEmitidas";
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
-import { HuecoFacturacionChip } from "@/features/facturacion/components/HuecoFacturacionChip";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
 import { PeriodoFiscalSelector } from "@/features/facturacion/components/PeriodoFiscalSelector";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
+import { BandejaTabs, type BandejaId } from "@/features/facturacion/components/bandejas/BandejaTabs";
+import { BandejaPorFacturar } from "@/features/facturacion/components/bandejas/BandejaPorFacturar";
+import { BandejaPorTimbrar } from "@/features/facturacion/components/bandejas/BandejaPorTimbrar";
+import { BandejaPorEnviar } from "@/features/facturacion/components/bandejas/BandejaPorEnviar";
+import { BandejaPorCobrar } from "@/features/facturacion/components/bandejas/BandejaPorCobrar";
+import { BandejaVencidas } from "@/features/facturacion/components/bandejas/BandejaVencidas";
+import { BandejaRepPendientes } from "@/features/facturacion/components/bandejas/BandejaRepPendientes";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { buildFacturaColumns } from "./facturacionColumns";
 
-
-type TabDef = { value: string; label: string; hint: string };
-
-function TabTriggerInfo({ tab }: { tab: TabDef }) {
-  return (
-    <TabsTrigger
-      value={tab.value}
-      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none -mb-px"
-    >
-      <span className="flex items-center gap-1.5">
-        {tab.label}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span role="button" tabIndex={0} aria-label={`Info: ${tab.label}`}
-              onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}
-              className="inline-flex">
-              <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-[240px] text-xs">{tab.hint}</TooltipContent>
-        </Tooltip>
-      </span>
-    </TabsTrigger>
-  );
-}
-
-// Redirige URLs viejas a sus módulos correctos.
 const LEGACY_TAB_REDIRECTS: Record<string, string> = {
   cobranza: "/cartera",
   liquidacion: "/compras/por-pagar",
@@ -68,8 +42,14 @@ const LEGACY_TAB_REDIRECTS: Record<string, string> = {
   pendientes: "/proformas?estado=aceptada",
 };
 
+const BANDEJAS_VALIDAS: BandejaId[] = [
+  "por-facturar", "por-timbrar", "por-enviar",
+  "por-cobrar", "vencidas", "rep-pendientes",
+  "emitidas", "notas",
+];
+
 export default function Facturacion() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const legacyTab = searchParams.get("tab");
   const redirectTo = legacyTab ? LEGACY_TAB_REDIRECTS[legacyTab] : undefined;
 
@@ -77,7 +57,16 @@ export default function Facturacion() {
   const [openFacturaManual, setOpenFacturaManual] = useState(false);
 
   const { setRango, limpiar, isInRange, desdeIso, hastaIso } = useFacturacionDateRange();
-  const [activeTab, setActiveTab] = useState<string>("facturas");
+
+  const bandejaUrl = searchParams.get("bandeja") as BandejaId | null;
+  const activeBandeja: BandejaId =
+    bandejaUrl && BANDEJAS_VALIDAS.includes(bandejaUrl) ? bandejaUrl : "por-timbrar";
+
+  const setActiveBandeja = useCallback((next: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("bandeja", next);
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const parseIso = (iso: string): Date | null => {
     if (!iso) return null;
@@ -96,23 +85,13 @@ export default function Facturacion() {
     loadingFacturas,
     clientesDisponibles,
     exportarFacturasCsv, exportarLayoutContable,
-  } = useFacturacionPageController({ isInRange, activeTab });
+  } = useFacturacionPageController({ isInRange, activeTab: "facturas" });
 
   const clearFiltros = () => {
-    setSearch("");
-    setFilter("estado", "todos");
-    setFilter("cliente", "todos");
-    limpiar();
+    setSearch(""); setFilter("estado", "todos"); setFilter("cliente", "todos"); limpiar();
   };
 
-  // Acciones (Timbrar, Pagar, Ver pagos, Cancelar) viven en el detalle de la
-  // factura (`/facturacion/:id`). La lista ya no dispara esos diálogos.
   const facturaColumns = useMemo(() => buildFacturaColumns(), []);
-
-  const tabs: TabDef[] = [
-    { value: "facturas", label: "Emitidas", hint: "CFDI vigentes. Incluye Complemento de Pagos (REP) para facturas PPD." },
-    { value: "notas", label: "Notas de crédito", hint: "Historial de notas de crédito emitidas y su estado." },
-  ];
 
   if (redirectTo) return <Navigate to={redirectTo} replace />;
 
@@ -120,12 +99,13 @@ export default function Facturacion() {
     <PageContainer>
       <TooltipProvider delayDuration={150}>
         <div className="flex items-start justify-between gap-3 flex-wrap">
-          <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
+          <PageHeader
+            title="Facturación"
+            description="Cockpit fiscal: CFDI, complemento de pagos (REP) y cartera de clientes"
+          />
           <div className="flex items-center gap-2 shrink-0">
             <PeriodoFiscalSelector
-              desdeIso={desdeIso}
-              hastaIso={hastaIso}
-              onChange={(r) => setRango(r)}
+              desdeIso={desdeIso} hastaIso={hastaIso} onChange={(r) => setRango(r)}
             />
             {canEmitirFactura && (
               <Button onClick={() => setOpenFacturaManual(true)}>
@@ -135,31 +115,37 @@ export default function Facturacion() {
           </div>
         </div>
 
-        {/* Fase 1: una sola banda de KPIs. Los 3 conteos fiscales
-            (proformas convertibles, facturas sin timbrar, REP pendientes)
-            se moverán a badges sobre las bandejas de trabajo en Fase 2. */}
         <DashboardEjecutivoFacturacion />
 
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b">
-            <TabsList className="bg-transparent border-0 p-0 h-auto">
-              {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
-            </TabsList>
-            {/* Chip inline: hueco de facturación (sólo renderiza si hay hueco) */}
-            <HuecoFacturacionChip />
+        <Tabs value={activeBandeja} onValueChange={setActiveBandeja}>
+          <div className="border-b overflow-x-auto">
+            <BandejaTabs />
           </div>
 
-          <TabsContent value="facturas" className="space-y-4">
+          <TabsContent value="por-facturar" className="space-y-4">
+            <BandejaPorFacturar />
+          </TabsContent>
+          <TabsContent value="por-timbrar" className="space-y-4">
+            <BandejaPorTimbrar />
+          </TabsContent>
+          <TabsContent value="por-enviar" className="space-y-4">
+            <BandejaPorEnviar />
+          </TabsContent>
+          <TabsContent value="por-cobrar" className="space-y-4">
+            <BandejaPorCobrar />
+          </TabsContent>
+          <TabsContent value="vencidas" className="space-y-4">
+            <BandejaVencidas />
+          </TabsContent>
+          <TabsContent value="rep-pendientes" className="space-y-4">
+            <BandejaRepPendientes />
+          </TabsContent>
+          <TabsContent value="emitidas" className="space-y-4">
             <TabFacturasEmitidas
               search={search} setSearch={setSearch}
-              filterEstado={filterEstado}
-              filterCliente={filterCliente}
-              setFilter={setFilter}
-              fechaDesde={desdeIso ?? ""}
-              setFechaDesde={setFechaDesde}
-              fechaHasta={hastaIso ?? ""}
-              setFechaHasta={setFechaHasta}
+              filterEstado={filterEstado} filterCliente={filterCliente} setFilter={setFilter}
+              fechaDesde={desdeIso ?? ""} setFechaDesde={setFechaDesde}
+              fechaHasta={hastaIso ?? ""} setFechaHasta={setFechaHasta}
               clientes={clientesDisponibles}
               onClearFiltros={clearFiltros}
               exportarFacturasCsv={exportarFacturasCsv}
@@ -173,7 +159,6 @@ export default function Facturacion() {
               pageSize={pageSize} setPageSize={setPageSize}
             />
           </TabsContent>
-
           <TabsContent value="notas" className="space-y-4">
             <NotasCreditoRecientes />
           </TabsContent>
