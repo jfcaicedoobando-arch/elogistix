@@ -181,10 +181,7 @@ export function FacturaPagosSection({
             <AlertDialogCancel disabled={eliminar.isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               disabled={eliminar.isPending}
-              onClick={(e) => {
-                e.preventDefault();
-                handleEliminar();
-              }}
+              onClick={(e) => { e.preventDefault(); handleEliminar(); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {eliminar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Eliminar"}
