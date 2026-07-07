@@ -1,32 +1,13 @@
-# Limpieza: proformas Aceptadas antiguas → Facturadas (histórico)
+# Sin cambios — sólo era una duda
 
-## Contexto
-En Elogistix hay **6 proformas** con estado cliente **Aceptada** pero todavía en `pendiente` de facturación, con fecha de emisión anterior al **25/06/2026**. Son de embarques viejos (previos al alta de facturación electrónica), así que las tratamos como aceptación histórica — igual que hicimos con PRO-2026-0278.
+## Conclusión
 
-## Proformas afectadas (Elogistix)
+ELIMP00300 aparece correctamente en la bandeja **"Embarques sin factura"** porque cumple las 3 reglas del hueco de facturación:
 
-| Número | Emisión | Cliente | Expediente | Total |
-|---|---|---|---|---|
-| PRO-2026-0195 | 13/05/2026 | INDIMEX TRADING | ELGEN00206 | 23,890 USD |
-| PRO-2026-0284 | 27/05/2026 | INDIMEX TRADING | ELIMP00169 | 2,910 USD |
-| PRO-2026-0286 | 29/05/2026 | INDIMEX TRADING | ELIMP00024 | 1,300 USD |
-| PRO-2026-0287 | 29/05/2026 | INDIMEX TRADING | ELIMP00024 | 1,300 USD |
-| PRO-2026-0298 | 03/06/2026 | IMPORTADORA GLOBAL | ELIMP00224 | 1,040 USD |
-| PRO-2026-0341 | 23/06/2026 | INDIMEX TRADING | ELIMP00263 | 4,760 USD |
+1. **ETD posterior al 01/04/2026** — el suyo es 22/06/2026 ✅
+2. **Ya pasaron más de 5 días desde el ETD** — han pasado ~15 días ✅
+3. **No hay CFDI ni proforma histórica** — tiene 2 conceptos de venta pendientes sin proforma ✅
 
-## Qué se va a cambiar (solo datos, no código)
+El nombre de la bandeja habla de "cerrados" pero el filtro real es por **ETD**, no por estado del embarque. El objetivo es avisar de embarques que ya zarparon hace rato y siguen sin factura al cliente.
 
-- En `proformas` (filtrando org Elogistix + `estado_proforma='pendiente'` + `estado_cliente='aceptada'` + `fecha_emision < 2026-06-25`):
-  - `estado_proforma` → `facturada`
-  - `fecha_facturacion` ← `fecha_emision` (si estaba vacía)
-  - `folio_factura_externa` ← `HISTORICO` (si estaba vacío)
-- En `conceptos_venta` con `proforma_id` en esas 6 proformas:
-  - `estado_facturacion` → `facturado`
-
-## Fuera de alcance
-- No se toca ninguna proforma ya `facturada` (ya están bien).
-- No se emiten facturas reales, no se generan CFDI, no se crean pagos.
-- No se modifica código de la app.
-
-## Analogía rápida
-Es como cerrar manualmente unos expedientes viejos poniéndoles el sello de "cobrado histórico" — sin generar recibo nuevo, solo marcando el estado como cerrado para que el sistema deje de pedirles factura.
+**No se toca nada** — quedó claro que la bandeja funciona como debe.
