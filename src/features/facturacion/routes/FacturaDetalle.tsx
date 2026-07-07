@@ -32,6 +32,8 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
+import { usePagosFactura } from "@/features/facturacion/hooks";
+import { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
