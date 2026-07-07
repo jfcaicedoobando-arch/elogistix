@@ -79,12 +79,12 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
 
   const pre = await preloadNcContext(supabase, body.nota_credito_id);
   if (!pre.ok) return json(pre.body, pre.status);
-  const { nc, factura, cliente, email } = pre;
+  const { nc, factura, cliente, email, referencias } = pre;
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
-  const ctx = buildNcContextFromRows(nc, factura, cliente, email);
+  const ctx = buildNcContextFromRows(nc, factura, cliente, email, referencias);
   const issues = validateNcContext(ctx);
   if (issues.length > 0) return json({ error: "validation_failed", issues }, 422);
 
