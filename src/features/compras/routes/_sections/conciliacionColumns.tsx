@@ -94,12 +94,13 @@ export function buildConciliacionColumns() {
       id: "estado_conciliacion",
       header: "Conciliación",
       accessorFn: (r) => r.estado_conciliacion,
+      meta: { width: "w-[130px]" },
       cell: ({ row }) => {
         const meta = CONCILIACION_ESTADO_LABELS[row.original.estado_conciliacion];
         const Icon = meta.icon;
         return (
-          <Badge variant={meta.variant} className="gap-1 text-xs">
-            <Icon className="h-3 w-3" /> {meta.label}
+          <Badge variant={meta.variant} className="gap-1 text-xs whitespace-nowrap" title={meta.label}>
+            <Icon className="h-3 w-3 shrink-0" /> {meta.label}
           </Badge>
         );
       },

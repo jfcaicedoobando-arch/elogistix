@@ -2,9 +2,10 @@
  * Definición de columnas para la bandeja CxP — Por capturar.
  * v13.200.0: sin `<Link>` inline. Row-click navega al embarque desde el consumer.
  */
-import { FileText } from "lucide-react";
+import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -107,14 +108,24 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
     },
     {
       id: "acciones",
-      header: "Acción",
-      meta: { width: "w-[180px]", align: "right" },
+      header: "",
+      meta: { width: "w-[56px]", align: "center" },
       cell: ({ row }) => (
-        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" onClick={() => onCapturar(row.original)}>
-            <FileText className="h-3.5 w-3.5 mr-1.5" />
-            Capturar factura
-          </Button>
+        <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={() => onCapturar(row.original)}
+                aria-label={`Capturar factura del embarque ${row.original.expediente ?? row.original.embarque_id}`}
+              >
+                <FilePlus2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Capturar factura</TooltipContent>
+          </Tooltip>
         </div>
       ),
     },

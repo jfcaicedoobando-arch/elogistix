@@ -143,6 +143,7 @@ export default function CxpPorCapturar() {
               onSortChange={handleSortChange}
               getRowHref={(r) => `/embarques/${r.embarque_id}`}
               getRowAriaLabel={(r) => `Ver embarque ${r.expediente ?? ""}`}
+              stickyHeader
               emptyMessage="Ningún embarque coincide con los filtros"
               emptyState={
                 <div className="text-center py-10">

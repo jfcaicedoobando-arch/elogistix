@@ -20,6 +20,7 @@ import {
   type OnChangeFn,
   type SortingState,
   type Updater,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import type { SortDir } from "./types";
 
@@ -42,6 +43,9 @@ interface Args<T> {
   /** Orden inicial para modo client. Ignorado en server-sort (la fuente
    *  de verdad vive en el page-state). */
   initialSort?: { key: string; dir: SortDir };
+  /** Visibilidad de columnas controlada (persistida por el caller). */
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
 }
 
 function fromControlled(sort: ControlledSort | undefined): SortingState {
@@ -62,6 +66,8 @@ export function useTableInstance<T>({
   getRowId,
   enableSorting = true,
   initialSort,
+  columnVisibility,
+  onColumnVisibilityChange,
 }: Args<T>) {
   const isServer = sortMode === "server";
 
@@ -104,8 +110,9 @@ export function useTableInstance<T>({
     getRowId,
     enableSorting,
     manualSorting: isServer,
-    state: { sorting },
+    state: { sorting, ...(columnVisibility ? { columnVisibility } : {}) },
     onSortingChange,
+    onColumnVisibilityChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting && !isServer ? getSortedRowModel() : undefined,
   });

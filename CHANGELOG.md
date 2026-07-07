@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.31] - 2026-07-07
+- **Auditoría UI/UX Facturación & Compras — Ola 2 (densidad y acciones)**:
+  - `/compras/por-capturar`: el botón "Capturar factura" repetido en cada fila (ancho ~180 px) se sustituyó por un botón-ícono `+` (48 px) con tooltip "Capturar factura" y `aria-label`. Recuperamos ~120 px por renglón sin perder la acción. Se agregó `stickyHeader` para que al hacer scroll no se pierdan los encabezados. Analogía: cada expediente tenía un post-it grande que decía "abrir"; lo cambiamos por un ícono discreto en la manija del fólder.
+  - `/compras/facturas`: nuevo menú **Columnas** (`ColumnVisibilityMenu`) que permite al usuario mostrar/ocultar columnas y persiste la preferencia por usuario en `browserStorage` (`lc:col-vis:cxp-facturas-columns`). Preset por defecto reducido a: Folio, Proveedor, Vencimiento, Días, Total, Saldo, Estatus. Opcionales: Folio Prov., Emisión, Prog. Pago, Moneda, Pagado, Aprobación. Nuevo hook `useColumnVisibility` con tests (defaults, toggle-persistencia, reset, JSON corrupto). Sticky header activado.
+  - `/compras/conciliacion`: la columna "Conciliación" fija ancho de 130 px, `whitespace-nowrap` y `title` en el badge para evitar el truncado `Sin factu…`. Sticky header activado.
+  - `DataTable` base: nuevas props opt-in `stickyHeader`, `columnVisibility`, `onColumnVisibilityChange`. Cero cambios de comportamiento en tablas que no las usan.
+
 ## [13.213.30] - 2026-07-07
 - **Auditoría UI/UX Facturación & Compras — Ola 1 (bugs críticos)**:
   - `/compras/por-pagar`: la tarjeta "Saldo total" mostraba `MXN MXN 1.5K · USD USD 47.2K` (doble prefijo). Se eliminó el prefijo manual porque `formatCurrencyCompact` ya lo agrega. Analogía: la etiqueta del bote decía "leche" dos veces; le quitamos el sticker duplicado.

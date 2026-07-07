@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { DataTable } from "@/components/shared/DataTable";
+import { ColumnVisibilityMenu, type ColumnOption } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { EliminarFacturaCxpDialog } from "@/features/cxp/components/EliminarFacturaCxpDialog";
-import { usePermissions } from "@/hooks/shared";
+import { usePermissions, useColumnVisibility } from "@/hooks/shared";
 import { useFacturasCxP, useEliminarFacturaProveedor, useCxpPageState } from "@/features/cxp/hooks";
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
@@ -23,6 +24,40 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+
+// Preset por defecto de columnas visibles en /compras/facturas.
+// Las no marcadas aquí aparecen como opcionales en el menú "Columnas".
+const CXP_COL_DEFAULTS: Record<string, boolean> = {
+  folio_interno: true,
+  folio: false,       // Folio prov. (opcional)
+  proveedor: true,
+  emision: false,     // opcional
+  vencimiento: true,
+  programado: false,  // opcional
+  dias: true,
+  moneda: false,      // opcional
+  total: true,
+  pagado: false,      // opcional
+  saldo: true,
+  estatus: true,
+  aprobacion: false,  // opcional
+};
+
+const CXP_COL_OPTIONS: ColumnOption[] = [
+  { id: "folio_interno", label: "Folio", required: true },
+  { id: "folio", label: "Folio prov." },
+  { id: "proveedor", label: "Proveedor", required: true },
+  { id: "emision", label: "Emisión" },
+  { id: "vencimiento", label: "Vencimiento" },
+  { id: "programado", label: "Prog. pago" },
+  { id: "dias", label: "Días" },
+  { id: "moneda", label: "Moneda" },
+  { id: "total", label: "Total" },
+  { id: "pagado", label: "Pagado" },
+  { id: "saldo", label: "Saldo", required: true },
+  { id: "estatus", label: "Estatus", required: true },
+  { id: "aprobacion", label: "Aprobación" },
+];
 
 // NOTE: CxpFiltros retiene su API propia (9 props + hooks de proveedores/categorías).
 // UnifiedFiltersBar no cabe limpio sin refactorizar el estado de página — pendiente Oleada 5.
@@ -84,6 +119,7 @@ export default function Cxp() {
   }, [f]);
 
   const columns = useMemo(() => buildCxPColumns(), []);
+  const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
 
   return (
     <PageContainer>
@@ -109,7 +145,7 @@ export default function Cxp() {
       <CxpKpiCards kpis={kpis} data={data} />
 
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
           <CxpFiltros
             search={f.search} onSearchChange={f.setSearch}
             estatus={f.estatus} onEstatusChange={f.setEstatus}
@@ -121,6 +157,15 @@ export default function Cxp() {
             fechaDesde={f.fechaDesde} onFechaDesdeChange={f.setFechaDesde}
             fechaHasta={f.fechaHasta} onFechaHastaChange={f.setFechaHasta}
           />
+          <div className="flex justify-end">
+            <ColumnVisibilityMenu
+              options={CXP_COL_OPTIONS}
+              visibility={colVis.visibility}
+              onToggle={colVis.toggle}
+              onReset={colVis.reset}
+              isCustom={colVis.isCustom}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -150,6 +195,12 @@ export default function Cxp() {
               density="compact"
               initialSort={{ key: "folio_interno", dir: "desc" }}
               onRowClick={(fact) => f.setDetalle(fact)}
+              stickyHeader
+              columnVisibility={colVis.visibility}
+              onColumnVisibilityChange={(updater) => {
+                const next = typeof updater === "function" ? updater(colVis.visibility) : updater;
+                colVis.setVisibility(next);
+              }}
             />
           )}
         </CardContent>

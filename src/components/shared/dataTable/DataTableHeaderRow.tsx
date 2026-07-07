@@ -15,17 +15,19 @@ interface Props<T> {
   table: Table<T>;
   striped: boolean;
   bordered: boolean;
+  /** Cuando es true, el encabezado se ancla al top del contenedor de scroll. */
+  stickyHeader?: boolean;
 }
 
-export function DataTableHeaderRow<T>({ table, striped, bordered }: Props<T>) {
+export function DataTableHeaderRow<T>({ table, striped, bordered, stickyHeader = false }: Props<T>) {
   const borderCell = bordered ? "border-r last:border-r-0" : "";
 
   return (
-    <TableHeader>
+    <TableHeader className={cn(stickyHeader && "sticky top-0 z-30 bg-background shadow-[0_1px_0_hsl(var(--border))]")}>
       {table.getHeaderGroups().map((headerGroup) => (
         <TableRow
           key={headerGroup.id}
-          className={cn("hover:bg-transparent", !striped && "even:bg-transparent")}
+          className={cn("hover:bg-transparent", !striped && "even:bg-transparent", stickyHeader && "bg-background")}
         >
           {headerGroup.headers.map((header) => {
             const meta = header.column.columnDef.meta ?? {};

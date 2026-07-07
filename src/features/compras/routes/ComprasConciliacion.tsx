@@ -123,6 +123,7 @@ export default function ComprasConciliacion() {
             emptyMessage="No hay embarques con conceptos de costo para conciliar."
             rowKey={(r) => `${r.embarque_id}-${r.moneda}`}
             onRowClick={(row) => setDetalle(row)}
+            stickyHeader
           />
         </CardContent>
       </Card>
