@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.209.6] - 2026-07-07
+
+- **Arquitectura · Power of 10 (200 líneas)**: `useEmbarqueEstadoActions.ts` había subido a 208 líneas al extraer el sub-hook de auto-sync. Se compactaron comentarios verbosos, el `switch` de bloqueos y el `return` para dejar el archivo en 171 líneas, sin cambios de comportamiento. Desbloquea `architecture-baseline` y `audit-report`.
+
 ## [13.209.5] - 2026-07-07
 
 - **Lint · Reducción de complejidad ciclomática**: `useEmbarqueEstadoActions` (complejidad 18) extrae el `useEffect` de auto-sync a un sub-hook `useAutoSyncEstadoEmbarque`. `useTimbrarFacturaDialog` (complejidad 23) extrae los fallbacks `??` a `resolverDefaults(...)` y los pasos post-timbrado a `guardarDefaultsSiClienteExiste` + `enviarCfdiSiHabilitado`. Sin cambios de comportamiento; sólo reorganización para pasar `eslint --max-warnings 0`.

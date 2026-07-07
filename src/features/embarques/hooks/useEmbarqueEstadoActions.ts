@@ -82,7 +82,6 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const usuarioEmail = user?.email ?? "";
   useAutoSyncEstadoEmbarque(embarque, puedeSincronizarEstado, usuarioEmail);
 
-
   const conceptosSinProforma = conceptosVenta.filter(
     (c) => c.estado_facturacion !== "en_proforma",
   ).length;
@@ -94,11 +93,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const ejecutarAvance = useCallback(async (siguiente: string) => {
     if (!embarque || !id) return;
     try {
-      await avanzarEstado.mutateAsync({
-        embarqueId: id,
-        nuevoEstado: siguiente,
-        usuarioEmail: user?.email ?? '',
-      });
+      await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: siguiente, usuarioEmail });
       registrarActividad.mutate({
         accion: 'cambiar_estado', modulo: 'embarques',
         entidad_id: id, entidad_nombre: embarque.expediente,
@@ -107,34 +102,21 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
-      // El backend devuelve "documentos_faltantes: ...": mostramos block dialog.
-      if (msg.includes("documentos_faltantes")) {
-        setBlockDocsOpen(true);
-        return;
-      }
+      if (msg.includes("documentos_faltantes")) { setBlockDocsOpen(true); return; }
       notifyError(toast, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
     }
-  }, [embarque, id, avanzarEstado, user?.email, registrarActividad, toast]);
+  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, toast]);
 
   const handleAvanzarEstado = async () => {
     if (!embarque || !id) return;
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
-
     const bloqueo = clasificarBloqueoAvance({
-      docsBloqueantes,
-      docsFaltantesCount: docsFaltantes.length,
-      siguiente,
-      bloqueoCierreMotivo,
+      docsBloqueantes, docsFaltantesCount: docsFaltantes.length, siguiente, bloqueoCierreMotivo,
     });
-
     switch (bloqueo) {
-      case "block_docs":
-        setBlockDocsOpen(true);
-        return;
-      case "warn_docs":
-        setWarnDocsOpen(true);
-        return;
+      case "block_docs": setBlockDocsOpen(true); return;
+      case "warn_docs": setWarnDocsOpen(true); return;
       case "gate_cierre":
         notifyError(toast, {
           title: bloqueoCierreMotivo === "rol"
@@ -143,13 +125,11 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
           method: "GATE_CERRAR_EMBARQUE",
         });
         return;
-      case "ok":
-        await ejecutarAvance(siguiente);
+      case "ok": await ejecutarAvance(siguiente);
     }
   };
 
   const confirmarCierreSinProforma = useCallback(async () => {
-    // v13.89.1 — Mantiene compatibilidad de API; el flujo real ya valida server-side.
     setWarnCierreOpen(false);
     await ejecutarAvance("Cerrado");
   }, [ejecutarAvance]);
@@ -165,10 +145,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const handleReabrir = async () => {
     if (!embarque || !id) return;
     try {
-      await reabrirEmbarque.mutateAsync({
-        embarqueId: id,
-        usuarioEmail: user?.email ?? '',
-      });
+      await reabrirEmbarque.mutateAsync({ embarqueId: id, usuarioEmail });
       registrarActividad.mutate({
         accion: 'reabrir_embarque', modulo: 'embarques',
         entidad_id: id, entidad_nombre: embarque.expediente,
@@ -181,27 +158,14 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   };
 
   return {
-    handleAvanzarEstado,
-    avanzarEstado,
-    handleReabrir,
-    reabrirEmbarque,
-    warnCierreOpen,
-    setWarnCierreOpen,
-    confirmarCierreSinProforma,
-    conceptosSinProforma,
-    // Candado de documentos
-    docsFaltantes,
-    docsBloqueantes,
-    warnDocsOpen,
-    setWarnDocsOpen,
-    blockDocsOpen,
-    setBlockDocsOpen,
-    confirmarAvanceConDocsPendientes,
-    siguienteEstado,
-    // v13.89.1 — Cierre: visibilidad y bloqueo
-    cierreEsSiguiente: cierreVisible,
-    rolPuedeCerrar,
+    handleAvanzarEstado, avanzarEstado, handleReabrir, reabrirEmbarque,
+    warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
+    docsFaltantes, docsBloqueantes,
+    warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
+    confirmarAvanceConDocsPendientes, siguienteEstado,
+    cierreEsSiguiente: cierreVisible, rolPuedeCerrar,
     cierrePuedeAvanzar: cierreVisible && bloqueoCierreMotivo === null,
     cierreMotivoBloqueo: bloqueoCierreMotivo,
   };
 }
+
