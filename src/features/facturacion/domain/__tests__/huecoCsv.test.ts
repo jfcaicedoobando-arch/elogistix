@@ -11,7 +11,7 @@ const fila: FilaHueco = {
   eta: "2026-05-15",
   bl_master: "BLM",
   bl_house: null,
-  diasDesdeEtd: 10,
+  diasDesdeEta: 10,
   ventaUsd: 123.456,
   ventaMxn: 2469.12,
 };
