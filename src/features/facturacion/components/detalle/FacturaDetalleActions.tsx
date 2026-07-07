@@ -163,72 +163,86 @@ function GrupoDestructivo({
   );
 }
 
-export function FacturaDetalleActions({
-  canEdit, sinTimbrar, puedeTimbrarDesdeSistema,
-  puedeSustituirCfdi, puedeCancelarCfdi,
-  pdfUrl, xmlUrl, embarqueId,
-  onTimbrar, onEnviarEmail, onDownload, onSustituir, onCancelar,
-  onEliminarBorrador, eliminando,
-  estaCancelada, acuseDisponible, acuseStatus,
-  onDescargarAcuseXml, onDescargarAcusePdf, onReintentarAcuse, reintentandoAcuse,
-}: Props) {
-  const mostrarPdf = !!pdfUrl || !sinTimbrar;
-  const mostrarXml = !!xmlUrl || !sinTimbrar;
+function computeVisibility(props: Props) {
+  const mostrarPdf = !!props.pdfUrl || !props.sinTimbrar;
+  const mostrarXml = !!props.xmlUrl || !props.sinTimbrar;
   const mostrarGrupoCfdi = mostrarPdf || mostrarXml;
-  const mostrarGrupoAcuse = !!estaCancelada && (acuseDisponible || acuseStatus !== "accepted");
-  const mostrarEnviarEmail = !sinTimbrar && !estaCancelada;
-  const mostrarGrupoContexto = mostrarEnviarEmail || !!embarqueId;
-  const mostrarGrupoDestructivo = puedeSustituirCfdi || puedeCancelarCfdi || !!onEliminarBorrador;
+  const mostrarGrupoAcuse = !!props.estaCancelada && (!!props.acuseDisponible || props.acuseStatus !== "accepted");
+  const mostrarEnviarEmail = !props.sinTimbrar && !props.estaCancelada;
+  const mostrarGrupoContexto = mostrarEnviarEmail || !!props.embarqueId;
+  const mostrarGrupoDestructivo = props.puedeSustituirCfdi || props.puedeCancelarCfdi || !!props.onEliminarBorrador;
+  return {
+    mostrarPdf, mostrarXml, mostrarGrupoCfdi, mostrarGrupoAcuse,
+    mostrarEnviarEmail, mostrarGrupoContexto, mostrarGrupoDestructivo,
+  };
+}
+
+export function FacturaDetalleActions(props: Props) {
+  const v = computeVisibility(props);
+  const sections: Array<{ show: boolean; node: React.ReactNode }> = [
+    {
+      show: v.mostrarGrupoCfdi,
+      node: (
+        <GrupoCfdi
+          mostrarPdf={v.mostrarPdf} mostrarXml={v.mostrarXml}
+          pdfUrl={props.pdfUrl} xmlUrl={props.xmlUrl} onDownload={props.onDownload}
+        />
+      ),
+    },
+    {
+      show: v.mostrarGrupoAcuse,
+      node: (
+        <GrupoAcuse
+          acuseDisponible={props.acuseDisponible} acuseStatus={props.acuseStatus}
+          onDescargarAcuseXml={props.onDescargarAcuseXml}
+          onDescargarAcusePdf={props.onDescargarAcusePdf}
+          onReintentarAcuse={props.onReintentarAcuse}
+          reintentandoAcuse={props.reintentandoAcuse}
+        />
+      ),
+    },
+    {
+      show: v.mostrarGrupoContexto,
+      node: (
+        <GrupoContexto
+          mostrarEnviarEmail={v.mostrarEnviarEmail}
+          embarqueId={props.embarqueId} onEnviarEmail={props.onEnviarEmail}
+        />
+      ),
+    },
+    {
+      show: v.mostrarGrupoDestructivo,
+      node: (
+        <GrupoDestructivo
+          puedeSustituirCfdi={props.puedeSustituirCfdi}
+          puedeCancelarCfdi={props.puedeCancelarCfdi}
+          onSustituir={props.onSustituir} onCancelar={props.onCancelar}
+          onEliminarBorrador={props.onEliminarBorrador} eliminando={props.eliminando}
+        />
+      ),
+    },
+  ];
+
+  let previoVisible = false;
+  const renderedSections = sections.filter((s) => s.show).map((s, i) => {
+    const needsDivider = previoVisible;
+    previoVisible = true;
+    return (
+      <React.Fragment key={i}>
+        {needsDivider && <Divider />}
+        {s.node}
+      </React.Fragment>
+    );
+  });
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {canEdit && puedeTimbrarDesdeSistema && (
-        <Button size="sm" onClick={onTimbrar}>
+      {props.canEdit && props.puedeTimbrarDesdeSistema && (
+        <Button size="sm" onClick={props.onTimbrar}>
           <Stamp className="h-4 w-4 mr-1.5" /> Timbrar factura
         </Button>
       )}
-
-      {mostrarGrupoCfdi && (
-        <GrupoCfdi
-          mostrarPdf={mostrarPdf} mostrarXml={mostrarXml}
-          pdfUrl={pdfUrl} xmlUrl={xmlUrl} onDownload={onDownload}
-        />
-      )}
-
-      {mostrarGrupoAcuse && (
-        <>
-          {mostrarGrupoCfdi && <Divider />}
-          <GrupoAcuse
-            acuseDisponible={acuseDisponible} acuseStatus={acuseStatus}
-            onDescargarAcuseXml={onDescargarAcuseXml}
-            onDescargarAcusePdf={onDescargarAcusePdf}
-            onReintentarAcuse={onReintentarAcuse}
-            reintentandoAcuse={reintentandoAcuse}
-          />
-        </>
-      )}
-
-      {mostrarGrupoContexto && (
-        <>
-          {(mostrarGrupoCfdi || mostrarGrupoAcuse) && <Divider />}
-          <GrupoContexto
-            mostrarEnviarEmail={mostrarEnviarEmail}
-            embarqueId={embarqueId} onEnviarEmail={onEnviarEmail}
-          />
-        </>
-      )}
-
-      {mostrarGrupoDestructivo && (
-        <>
-          {(mostrarGrupoCfdi || mostrarGrupoAcuse || mostrarGrupoContexto) && <Divider />}
-          <GrupoDestructivo
-            puedeSustituirCfdi={puedeSustituirCfdi}
-            puedeCancelarCfdi={puedeCancelarCfdi}
-            onSustituir={onSustituir} onCancelar={onCancelar}
-            onEliminarBorrador={onEliminarBorrador} eliminando={eliminando}
-          />
-        </>
-      )}
+      {renderedSections}
     </div>
   );
 }
