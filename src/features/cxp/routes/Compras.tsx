@@ -103,8 +103,8 @@ export default function Compras() {
         />
         <KpiCard
           label="Por vencer 7 días"
-          value={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
-          sub={formatCurrencyCompact(kpis.por_vencer_7d_usd, "USD") + " USD"}
+          value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
+          sub={formatCurrencyCompact(kpis.por_vencer_7d_usd, "USD")}
           tone={kpis.por_vencer_7d_mxn + kpis.por_vencer_7d_usd > 0 ? "warn" : "default"}
         />
       </div>
