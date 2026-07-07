@@ -39,9 +39,10 @@ export function TabVsReal() {
     if (!data) return;
     await descargarPdf(
       <ReportePresupuestoDocument resumen={data} />,
-      `Reporte_Presupuesto_${periodo}.pdf`,
+      await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
     );
   };
+
 
   return (
     <div className="space-y-3">
