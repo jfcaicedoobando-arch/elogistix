@@ -148,8 +148,7 @@ export function FacturaPagosSection({
                         </td>
                       )}
                     </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>
