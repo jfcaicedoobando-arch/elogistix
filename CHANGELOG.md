@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.20] - 2026-07-07
+
+- **Feature · FacturAPI = source of truth también para NC y REP**: hoy las **facturas** ya lo hacían (borrador con `numero = BORRADOR-<ts>`, y al timbrar la edge sobreescribe `numero = <serie><folio>` con lo que devuelve FacturAPI). Ahora aplicamos el mismo patrón a los otros dos CFDIs del módulo:
+  - **Notas de crédito**: (1) se quita el input "Folio interno *" de `DialogCrearNotaCredito` y `NotaCreditoCamposFiscales` — el usuario ya no captura folio manual; (2) `crearNotaCredito` asigna `folio = BORRADOR-<ts>` cuando no se pasa uno; (3) la edge `facturapi-emitir-nota-credito` ahora sobreescribe la columna `folio` con `<serie><folio_fiscal>` al timbrar (antes sólo poblaba `folio_fiscal`/`serie` y dejaba el folio manual desalineado del que emite el SAT); (4) `FacturaNotasCreditoTable` muestra chip gris "Borrador" mientras el folio empieza por `BORRADOR-`, y `<serie><folio_fiscal>` una vez timbrada.
+  - **REP (complemento de pago)**: a nivel datos ya cumplía (no hay folio de entrada del usuario, `folio_rep`/`serie_rep` los pone FacturAPI). Se agrega una columna "REP" a la tabla de pagos en `FacturaPagosSection` con chip verde `<serie_rep><folio_rep>` cuando está timbrado, gris "REP pendiente" cuando no, y rojo "REP cancelado" cuando aplica.
+  - **Test nuevo**: `notasCredito.test.ts` valida el patrón `BORRADOR-<ts>` automático.
+  - Sin cambios de esquema, RLS ni backfill de NCs históricas (queda opcional para más adelante). Analogía: en un banco, el folio de un cheque lo asigna el banco al emitirlo, no el que llena la papeleta — antes en NC dejábamos que el usuario "escribiera" el folio del cheque en la papeleta y luego el banco emitía uno distinto; ahora la papeleta lleva sólo un "borrador" hasta que el banco (FacturAPI) le pone el folio bueno.
+
 ## [13.213.19] - 2026-07-07
 
 - **Design · Un solo lenguaje visual para los correos al cliente**: los 3 correos transaccionales (Cotización, Proforma, Factura) ahora comparten un shell único (`_shared/transactional-email-templates/_layout/`) con (a) header con logo `librecarga-logo.png` y chip por tipo de documento — azul para Cotización, ámbar para Proforma (acción requerida), verde para Factura (CFDI emitido); (b) tokens únicos de color/tipografía en `tokens.ts` (sin triplicar estilos); (c) `EmailLayout`, `EmailRow`, `EmailMensaje` y `EmailFirma` reutilizables; (d) mismo card gris de detalles, mismo bloque azul de mensaje, mismos botones (primario azul + secundario contorno), mismo footer. Cada template pasó de ~150 → ~80 líneas. Sin cambios de props, `subject`, `templateData` ni call-sites. Analogía: antes eran tres cartas escritas en máquinas distintas con el mismo membrete a mano; ahora son papelería impresa del mismo taller.
