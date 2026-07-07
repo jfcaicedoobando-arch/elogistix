@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, AlertTriangle } from "lucide-react";
+import { X } from "lucide-react";
 import { EMAIL_RE, type Contacto } from "@/hooks/emails/useEnvioDocumentoForm";
 import { esContactoProveedor, CLIENTE_PRINCIPAL_ID } from "@/features/cotizacion/services/envios";
 
