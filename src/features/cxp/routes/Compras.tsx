@@ -17,7 +17,7 @@ import { useCxpPorCapturar } from "@/features/bandejas/hooks/useBandejas";
 import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
 import { usePermissions } from "@/hooks/shared";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
+import { formatCurrencyCompact } from "@/lib/formatters";
 import { TopProveedoresCard, UltimasFacturasCard } from "./_sections/ComprasDashboardCards";
 import { KpiCard, QuickLink } from "./_sections/ComprasDashboardTiles";
 
@@ -103,8 +103,8 @@ export default function Compras() {
         />
         <KpiCard
           label="Por vencer 7 días"
-          value={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
-          sub={formatCurrencyCompact(kpis.por_vencer_7d_usd, "USD") + " USD"}
+          value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
+          sub={formatCurrencyCompact(kpis.por_vencer_7d_usd, "USD")}
           tone={kpis.por_vencer_7d_mxn + kpis.por_vencer_7d_usd > 0 ? "warn" : "default"}
         />
       </div>
