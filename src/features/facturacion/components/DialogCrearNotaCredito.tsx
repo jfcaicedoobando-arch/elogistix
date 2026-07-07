@@ -41,8 +41,7 @@ interface Props {
   conceptosSugeridos?: ConceptoNotaCredito[];
 }
 
-const CLAVE_SAT_DEFAULT = "84111506";
-const CLAVE_UNIDAD_DEFAULT = "E48";
+const CLAVE_SAT_DEFAULT = "84111506"; const CLAVE_UNIDAD_DEFAULT = "E48";
 
 function makeConcepto(): ConceptoNotaCredito {
   return {

@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.25] - 2026-07-07
+
+- **Fix CI · Power of 10 (≤200 líneas)**: `DialogCrearNotaCredito.tsx` quedaba en 201 líneas (el auditor cuenta con `split("\n").length`, que suma 1 al trailing newline). Se fusionan las dos constantes `CLAVE_SAT_DEFAULT` y `CLAVE_UNIDAD_DEFAULT` en una sola línea. Ajuste puramente cosmético, sin cambios de lógica. Analogía: el elevador marcaba "máx. 200" y entrábamos 201 — juntamos a dos pasajeros en un mismo asiento y la alarma deja de sonar.
+
 ## [13.213.24] - 2026-07-07
 
 - **Fix CI · Power of 10 (≤200 líneas)**: `FacturaPagosSection.tsx` había crecido a 246 líneas al integrar la previsualización de REP. Se extrae la celda de estado/acciones del REP a un nuevo componente `PagoRepCell.tsx` y se compacta el `AlertDialog` de eliminar pago. Ahora el archivo queda en 197 líneas y las pruebas `audit-report` / `architecture-baseline` vuelven a pasar. Analogía: la caja del historial de pagos ya no cabía en el estante — sacamos los adornos del REP a su propia caja y todo vuelve a acomodarse.
