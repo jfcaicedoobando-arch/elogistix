@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.4] - 2026-07-07
+
+- **Cambio · Bandeja "Embarques sin factura" ahora usa ETA en lugar de ETD**: el disparador cambia de "ETD hace más de 5 días" a "ETA ≤ hoy" (contenedor ya llegó o llega hoy). En importación marítima CN→MX una travesía dura 20-40 días, así que usar ETD generaba falsos positivos enormes (embarques que aún no llegaban al puerto y por tanto no necesitaban factura para aduana). Ahora sólo caen los embarques cuyo contenedor ya llegó, respetando el corte del modelo nuevo (`eta ≥ 2026-04-01`). Embarques sin ETA capturado se excluyen. Se renombra `FilaHueco.diasDesdeEtd → diasDesdeEta`, columna de tabla "Días sin facturar → Días desde ETA", y se actualiza el tooltip de la pestaña. Analogía: antes avisábamos "prepara la factura" el día que el barco zarpaba de Shanghái; ahora avisamos cuando ya está atracando en Manzanillo, que es cuando de verdad se necesita el CFDI para cruzar aduana. Sin migración de datos ni cambios de esquema.
+
 ## [13.213.3] - 2026-07-07
 
 - **Fix · "Hueco de facturación" no respetaba aceptación histórica**: la bandeja "Por facturar" y el KPI del dashboard mostraban como pendientes embarques cuyos conceptos ya vivían en proformas marcadas como `facturada` por el back-fill (`origen='gap_externo'`), aunque nunca se les emitiera CFDI. Ejemplo: `ELEXP00250` aparecía como "falta factura" mientras `validar_cierre_embarque` ya lo consideraba OK. Ahora `fetchHuecoFacturacion` trae también el `estado_proforma` de cada concepto y excluye a los embarques donde el 100% de los conceptos no borrados están en `estado_facturacion='en_proforma'` con la proforma padre en `estado_proforma='facturada'`. Impacto medido en BD: 71 → 53 embarques en el hueco. Sin migración de datos ni cambios de esquema. Analogía: el checklist interno ya sabía que "una nota vieja firmada por el cliente" cuenta como facturado; el radar del dashboard ahora usa el mismo criterio.
