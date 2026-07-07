@@ -5,6 +5,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.43] - 2026-07-07
+- **Fix: KPI "Proformas por revisar" del dashboard de Facturación mostraba basura legacy**:
+  - Contaba 33 proformas migradas del sistema anterior que ya estaban facturadas fuera de la app pero nadie las había marcado como revisadas.
+  - La query ahora exige además que la proforma no esté `facturada`, no tenga factura enlazada y no esté eliminada.
+  - Backfill: las 33 proformas viejas pasan de `estado_revision = pendiente` a `aprobada` para reflejar la realidad.
+  - Analogía: bandeja de "correo por leer" con 33 sobres ya contestados y archivados — ahora el filtro los ignora y el backfill los marca como leídos.
+
 ## [13.213.42] - 2026-07-07
 - **Fix: fecha de vencimiento de facturas se sincroniza con los días de crédito**:
   - Cuando editabas los días de crédito de una factura antes de timbrar, se guardaba el número pero la `fecha_vencimiento` seguía con el valor viejo y la factura salía con vencimiento incorrecto en cobranza.
