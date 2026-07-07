@@ -133,8 +133,11 @@ export default function Facturacion() {
             <BandejaTabs />
           </div>
 
-          <TabsContent value="por-facturar" className="space-y-4">
+          <TabsContent value="embarques-sin-factura" className="space-y-4">
             <BandejaPorFacturar />
+          </TabsContent>
+          <TabsContent value="proformas-listas" className="space-y-4">
+            <BandejaProformasListas />
           </TabsContent>
           <TabsContent value="por-timbrar" className="space-y-4">
             <BandejaPorTimbrar />
