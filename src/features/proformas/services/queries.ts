@@ -90,7 +90,8 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
     .filter((f) => !f.deleted_at)
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
     .map(({ deleted_at: _d, created_at: _c, ...rest }) => rest);
-  return fromDb<ProformaDetalleFull>({ ...data, facturas_asociadas: asociadas });
+  const merged = { ...(data as Record<string, unknown>), facturas_asociadas: asociadas };
+  return fromDb<ProformaDetalleFull>(merged);
 }
 
 
