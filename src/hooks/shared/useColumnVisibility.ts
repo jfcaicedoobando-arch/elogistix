@@ -20,7 +20,7 @@ function readFromStorage(key: string): ColumnVisibility | null {
   const raw = safeLocalStorage.getItem(`${PREFIX}${key}`);
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as unknown;
+    const parsed: unknown = JSON.parse(raw);
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       const out: ColumnVisibility = {};
       for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
