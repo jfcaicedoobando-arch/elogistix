@@ -155,6 +155,7 @@ export async function preloadNcContext(
   const cliente = await loadCliente(supabase, factura.cliente_id);
   if (!cliente) return { ok: false, status: 404, body: { error: "cliente_not_found" } };
   const email = await loadEmailPrincipal(supabase, factura.cliente_id);
-  return { ok: true, nc, factura, cliente, email };
+  const referencias = await loadReferenciasEmbarque(supabase, factura);
+  return { ok: true, nc, factura, cliente, email, referencias };
 }
 
