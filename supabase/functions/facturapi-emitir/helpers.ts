@@ -43,6 +43,8 @@ export interface FacturaContext {
   conceptos: ConceptoInterno[];
   /** UUID de la factura sustituida cuando este CFDI la reemplaza (relación SAT 04). */
   sustituye_uuid?: string | null;
+  /** v13.208.0 — Expediente y BLs del embarque para propagar al CFDI y al PDF. */
+  referencias?: ReferenciasEmbarque | null;
 }
 
 
