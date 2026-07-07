@@ -25,6 +25,54 @@ interface FacturaLike {
   metodo_pago: string | null;
 }
 
+function resolverDefaults(
+  factura: FacturaLike | null | undefined,
+  cliente: ClienteFiscalRow | null | undefined,
+  defaults: DefaultsFacturacionCliente | null | undefined,
+) {
+  const usoCfdi = factura?.uso_cfdi ?? defaults?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03";
+  const formaPago = factura?.forma_pago ?? defaults?.forma_pago ?? "03";
+  const metodoPago = factura?.metodo_pago ?? defaults?.metodo_pago ?? "PUE";
+  return { usoCfdi, formaPago, metodoPago };
+}
+
+async function guardarDefaultsSiClienteExiste(
+  clienteId: string | null,
+  usoCfdi: string,
+  formaPago: string,
+  metodoPago: string,
+) {
+  if (!clienteId) return;
+  try {
+    await guardarDefaultsTimbradoCliente(clienteId, {
+      uso_cfdi_default: usoCfdi,
+      forma_pago_default: formaPago,
+      metodo_pago_default: metodoPago,
+    });
+  } catch (err) {
+    console.warn("[timbrado] no se guardaron los defaults del cliente:", err);
+  }
+}
+
+async function enviarCfdiSiHabilitado(
+  facturaId: string,
+  habilitado: boolean,
+  toast: ReturnType<typeof useToast>["toast"],
+) {
+  if (!habilitado) return;
+  try {
+    const r = await enviarCfdiFactura(facturaId);
+    toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
+  } catch (err) {
+    notifyError(toast, {
+      title: "Factura timbrada, pero no se envió el email",
+      description: getErrorMessage(err),
+      method: "ON_ERROR",
+      errorCode: ERROR_CODES.VALIDATION_FAILED,
+    });
+  }
+}
+
 export function useTimbrarFacturaDialog(
   factura: FacturaLike | null | undefined,
   cliente: ClienteFiscalRow | null | undefined,
@@ -33,19 +81,19 @@ export function useTimbrarFacturaDialog(
 ) {
   const timbrar = useTimbrarFactura();
   const { toast } = useToast();
-  const [usoCfdi, setUsoCfdi] = useState(
-    factura?.uso_cfdi ?? defaults?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03",
-  );
-  const [formaPago, setFormaPago] = useState(factura?.forma_pago ?? defaults?.forma_pago ?? "03");
-  const [metodoPago, setMetodoPago] = useState(factura?.metodo_pago ?? defaults?.metodo_pago ?? "PUE");
+  const initial = resolverDefaults(factura, cliente, defaults);
+  const [usoCfdi, setUsoCfdi] = useState(initial.usoCfdi);
+  const [formaPago, setFormaPago] = useState(initial.formaPago);
+  const [metodoPago, setMetodoPago] = useState(initial.metodoPago);
   const [enviarEmail, setEnviarEmail] = useState(true);
   const [modoExpandido, setModoExpandido] = useState(false);
 
   useEffect(() => {
     if (!factura) return;
-    setUsoCfdi(factura.uso_cfdi ?? defaults?.uso_cfdi ?? cliente?.uso_cfdi_default ?? "G03");
-    setFormaPago(factura.forma_pago ?? defaults?.forma_pago ?? "03");
-    setMetodoPago(factura.metodo_pago ?? defaults?.metodo_pago ?? "PUE");
+    const next = resolverDefaults(factura, cliente, defaults);
+    setUsoCfdi(next.usoCfdi);
+    setFormaPago(next.formaPago);
+    setMetodoPago(next.metodoPago);
     setModoExpandido(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -60,30 +108,8 @@ export function useTimbrarFacturaDialog(
     });
     timbrar.mutate(factura.id, {
       onSuccess: async () => {
-        if (factura.cliente_id) {
-          try {
-            await guardarDefaultsTimbradoCliente(factura.cliente_id, {
-              uso_cfdi_default: usoCfdi,
-              forma_pago_default: formaPago,
-              metodo_pago_default: metodoPago,
-            });
-          } catch (err) {
-            console.warn("[timbrado] no se guardaron los defaults del cliente:", err);
-          }
-        }
-        if (enviarEmail) {
-          try {
-            const r = await enviarCfdiFactura(factura.id);
-            toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
-          } catch (err) {
-            notifyError(toast, {
-              title: "Factura timbrada, pero no se envió el email",
-              description: getErrorMessage(err),
-              method: "ON_ERROR",
-              errorCode: ERROR_CODES.VALIDATION_FAILED,
-            });
-          }
-        }
+        await guardarDefaultsSiClienteExiste(factura.cliente_id, usoCfdi, formaPago, metodoPago);
+        await enviarCfdiSiHabilitado(factura.id, enviarEmail, toast);
         onClose();
       },
     });
@@ -99,3 +125,4 @@ export function useTimbrarFacturaDialog(
     onConfirm,
   };
 }
+

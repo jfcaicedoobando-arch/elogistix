@@ -24,6 +24,31 @@ import {
 export { getSiguienteEstado } from "./useEmbarqueEstadoActions.helpers";
 
 /**
+ * Auto-sync del estado calculado a BD. Se aísla en su propio hook para
+ * mantener la complejidad ciclomática del hook principal bajo control.
+ */
+function useAutoSyncEstadoEmbarque(
+  embarque: EmbarqueRow | undefined,
+  puedeSincronizarEstado: boolean,
+  usuarioEmail: string,
+) {
+  const { mutate: syncEstadoMutate } = useSyncEstadoEmbarque();
+  const embarqueId = embarque?.id;
+  const modo = embarque?.modo;
+  const tipo = embarque?.tipo;
+  const etd = embarque?.etd ?? null;
+  const eta = embarque?.eta ?? null;
+  const estado = embarque?.estado;
+  useEffect(() => {
+    if (!embarqueId || !modo || !tipo || !estado || !puedeSincronizarEstado) return;
+    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado);
+    if (estadoCalculado !== estado) {
+      syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail });
+    }
+  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, usuarioEmail, puedeSincronizarEstado]);
+}
+
+/**
  * Hook focalizado en la sincronización + avance de estado del embarque.
  * Candado de documentos al avanzar (bloqueante en estados avanzados, suave en
  * Confirmado/En Tránsito). Cierre: validación dura por rol + checklist.
@@ -34,11 +59,10 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const registrarActividad = useRegistrarActividad();
   const avanzarEstado = useAvanzarEstadoEmbarque();
   const reabrirEmbarque = useReabrirEmbarque();
-  const syncEstado = useSyncEstadoEmbarque();
-  const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
+  const conceptosQuery = useEmbarqueConceptosVenta(id);
+  const conceptosVenta = conceptosQuery.data ?? [];
   const { canEditFinance, isAdmin, canEditOperations, isSuperAdmin } = usePermissions();
   // v13.209.3 — Auto-sync sólo si el usuario puede escribir en embarques/eventos_embarque.
-  // Roles como contador/viewer no tienen permiso por RLS y provocaban error 42501.
   const puedeSincronizarEstado = isAdmin || isSuperAdmin || canEditOperations;
 
   const siguienteEstado = embarque ? getSiguienteEstado(embarque.estado) : null;
@@ -48,31 +72,16 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   // v13.89.1 — Validación dura para cierre: solo admin/finanzas pueden cerrar,
   // y solo si todas las reglas del checklist (CxC, CxP, docs, etc.) pasan.
   const cierreVisible = siguienteEstado === "Cerrado";
-  const { data: validacionCierre } = useValidacionCierre(cierreVisible ? id : undefined);
+  const idCierre = cierreVisible ? id : undefined;
+  const { data: validacionCierre } = useValidacionCierre(idCierre);
   const rolPuedeCerrar = isAdmin || canEditFinance;
-  // v13.135.59 — Admins (super_admin / admin_org / admin) pueden forzar el
-  // cierre aunque el checklist esté incompleto. Para los demás roles el
-  // checklist sigue siendo bloqueante.
+  // v13.135.59 — Admins pueden forzar el cierre aunque el checklist esté incompleto.
   const validacionOk = validacionCierre?.puede_cerrar === true || isAdmin;
   const bloqueoCierreMotivo = resolveCierreGate(cierreVisible, rolPuedeCerrar, validacionOk);
 
-  // Auto-sync estado calculado a BD. Sólo recalcula si cambian inputs reales.
-  const embarqueId = embarque?.id;
-  const modo = embarque?.modo;
-  const tipo = embarque?.tipo;
-  const etd = embarque?.etd;
-  const eta = embarque?.eta;
-  const estado = embarque?.estado;
-  const { mutate: syncEstadoMutate } = syncEstado;
-  useEffect(() => {
-    if (!embarqueId || !modo || !estado) return;
-    if (!tipo) return;
-    if (!puedeSincronizarEstado) return;
-    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd ?? null, eta ?? null, estado);
-    if (estadoCalculado !== estado) {
-      syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail: user?.email ?? '' });
-    }
-  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, user?.email, puedeSincronizarEstado]);
+  const usuarioEmail = user?.email ?? "";
+  useAutoSyncEstadoEmbarque(embarque, puedeSincronizarEstado, usuarioEmail);
+
 
   const conceptosSinProforma = conceptosVenta.filter(
     (c) => c.estado_facturacion !== "en_proforma",
