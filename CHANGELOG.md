@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.41] - 2026-07-07
+- **Modal "Enviar factura por correo" más limpio y con memoria por cliente**:
+  - Quitamos del selector de destinatarios el bloque expandible de proveedores/shippers. La factura nunca debería llegarle a un shipper; ahora el picker sólo lista los contactos del cliente.
+  - Los correos manuales que se agregan al enviar (además de los CC, que ya se recordaban) quedan guardados por cliente. La próxima vez que abras el modal para ese cliente aparecen precargados y editables.
+  - Backend: nueva columna `clientes.email_destinatarios_default` y el RPC `obtener_defaults_facturacion_cliente` ahora regresa también los destinatarios manuales (preferencia guardada o los del último envío, sin duplicar los que ya vienen de contactos del cliente).
+  - Componentes/hook compartidos (`DestinatariosPicker`, `useEnvioDocumentoForm`, `EnviarDocumentoDialog`): nuevo prop `destinatariosInicial`.
+  - Analogía: es como una agenda de correos que se acuerda de los invitados frecuentes de cada cliente en vez de pedirte escribirlos otra vez.
+
 ## [13.213.40] - 2026-07-07
 - **Fix test CI — `auxiliar_contable` NO registra cobros**:
   - `src/hooks/shared/usePermissions.ts`: quitamos `auxiliar_contable` de la lista `REGISTRAR_COBRO`. La política declarada por el test es "sólo captura factura de proveedor"; el código tenía además permiso para registrar cobros, lo que rompía la separación de responsabilidades entre auxiliar contable y ejecutivo de cobranza.
