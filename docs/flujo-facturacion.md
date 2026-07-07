@@ -40,7 +40,7 @@ embudo — no cuadran entre sí, y ese es el diseño. Alineación aplicada en
 | KPI / Bandeja                | Fuente                                                                                | Qué mide                                                                    |
 | ---------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | KPI **Proformas por revisar** | `proformas` con `estado_revision = 'pendiente'`                                       | Proformas creadas desde embarques, esperando aprobación **interna**         |
-| KPI **Listas para facturar**  | `proformas` con `estado_revision = 'aprobada'` y `factura_id IS NULL`                 | Aprobadas listas para convertir a factura (CFDI). Cuadra con `/proformas`   |
+| KPI **Listas para facturar**  | `proformas` con `estado_cliente='aceptada' AND estado_proforma <> 'facturada' AND factura_id IS NULL` | Aceptadas por el cliente, listas para convertir a CFDI. Cuadra con `/proformas` (badge Aceptada) |
 | Bandeja **Embarques sin factura** | `useHuecoFacturacion` (ETD > hoy − 5d, sin CFDI por expediente)                     | Embarques cerrados que aún no tienen factura (haya o no proforma)           |
 | Bandeja **Proformas listas** | Mismo query que el KPI "Listas para facturar"                                         | Lista accionable con "Convertir a factura" (usa `useConvertirProformaDirecto`) |
 | Bandeja **Por timbrar**      | `facturas` en Borrador post 01/07/2026 sin `facturapi_id`                             | Borradores creados en el sistema pendientes de mandar a FacturApi           |
