@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.209.1] - 2026-07-07
+
+- **Arquitectura · Cumplimiento Power of 10 y jerarquía de capas**: se dividen los archivos de facturación que rebasaron 200 líneas al añadir la vista previa de referencias del embarque. `FacturaDetalleActions.tsx` (250) extrae sus 4 grupos visuales a `FacturaDetalleActionGroups.tsx`; `DialogTimbrarFactura.tsx` (209) mueve estado + efecto + `onConfirm` a `useTimbrarFacturaDialog`; `FacturaDetalle.tsx` (209) delega la barra de acciones a `FacturaDetalleActionsBar`. Además, `useReferenciasEmbarqueFactura.ts` deja de importar el cliente Supabase directamente y consume el nuevo servicio `services/referenciasEmbarque.ts`, respetando el flujo Pages → Hooks → Services → Lib exigido por los tests arquitectónicos.
+
 ## [13.209.0] - 2026-07-07
 
 - **Facturación · Correos de factura descargan XML correctamente**: al hacer clic en "Descargar XML" (o "Descargar PDF") desde el correo de envío de factura, el archivo ahora se descarga en lugar de abrirse como página en el navegador. Causa raíz: las URLs firmadas del bucket `facturas-pdf` se generaban sin el parámetro `download`, así que Chrome/Safari/Firefox recibían `Content-Type: application/xml` sin `Content-Disposition: attachment` y mostraban el XML inline. Fix en `supabase/functions/enviar-factura-email/helpers.ts`: `signUrl` ahora acepta un `downloadFilename` opcional y lo pasa como `{ download: 'Factura-<numero>.<ext>' }` al SDK de Supabase, que añade el header correcto. Nombre de archivo saneado (regex `[^A-Za-z0-9._-]` → `_`) para evitar caracteres inválidos. Sin cambios en el bucket, template ni migraciones; los correos ya enviados siguen igual y los nuevos descargan directo.
