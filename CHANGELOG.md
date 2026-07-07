@@ -5,6 +5,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.42] - 2026-07-07
+- **Fix: fecha de vencimiento de facturas se sincroniza con los días de crédito**:
+  - Cuando editabas los días de crédito de una factura antes de timbrar, se guardaba el número pero la `fecha_vencimiento` seguía con el valor viejo y la factura salía con vencimiento incorrecto en cobranza.
+  - Agregamos un trigger en la base de datos que recalcula `fecha_vencimiento = fecha_emision + dias_credito` en cada INSERT/UPDATE de `facturas`. Así siempre quedan alineados, sin importar desde qué pantalla se edite.
+  - Incluye backfill único: se corrigen las facturas existentes cuyo vencimiento no coincidía con su plazo.
+  - Analogía: antes cambiabas el plazo del pagaré pero olvidabas mover la fecha límite escrita abajo; ahora el sistema la reescribe solo.
 
 ## [13.213.41] - 2026-07-07
 - **Modal "Enviar factura por correo" más limpio y con memoria por cliente**:
