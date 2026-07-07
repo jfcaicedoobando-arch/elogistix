@@ -17,7 +17,7 @@ export { AccionesProforma } from "./AccionesProforma";
 export { EstadoBadges } from "./ProformaEstadoBadges";
 
 type Totales = ReturnType<typeof calcularTotalesProforma>;
-type FacturaAsociada = NonNullable<ProformaDetalleFull["facturas_full"]>;
+type FacturaAsociada = ProformaDetalleFull["facturas_asociadas"][number];
 
 
 export function TotalDestacado({ totales }: { totales: Totales }) {
