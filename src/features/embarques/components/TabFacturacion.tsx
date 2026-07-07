@@ -163,13 +163,15 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
       <AvisoProformasRechazadas proformas={proformas} />
 
 
-      <HistorialProformas
-        proformas={proformas}
-        canEdit={canEdit}
-        isDeleting={eliminarProforma.isPending}
-        onDescargar={handleDescargarProforma}
-        onEliminar={(id, numero) => setProformaAEliminar({ id, numero })}
-      />
+      <div ref={registerRef("proformas")} data-focus="proformas">
+        <HistorialProformas
+          proformas={proformas}
+          canEdit={canEdit}
+          isDeleting={eliminarProforma.isPending}
+          onDescargar={handleDescargarProforma}
+          onEliminar={(id, numero) => setProformaAEliminar({ id, numero })}
+        />
+      </div>
 
       <div ref={registerRef("cxc")} data-focus="cxc">
         <HistorialFacturas facturas={facturas} proformas={proformas} />
