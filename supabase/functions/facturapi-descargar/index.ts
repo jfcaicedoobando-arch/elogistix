@@ -150,7 +150,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
 
   const contentType = tipo === "pdf" ? "application/pdf" : "application/xml";
   const ext = tipo === "pdf" ? "pdf" : "xml";
-  const orgSlug = await resolveOrgSlug(supabase, target.data.organizationId);
+  const orgSlug = await fetchOrgSlug(supabase, target.data.organizationId);
   const filename = `${orgSlug}_${target.data.filename}.${ext}`;
 
   return new Response(fapiRes.body, {
