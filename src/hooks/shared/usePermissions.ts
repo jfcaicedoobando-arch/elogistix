@@ -103,6 +103,7 @@ const REGISTRAR_COBRO: readonly AppRole[] = [
   "admin_org",
   "admin",
   "contador",
+  "auxiliar_contable",
   "ejecutivo_cobranza",
 ];
 
