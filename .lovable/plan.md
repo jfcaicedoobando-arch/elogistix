@@ -1,23 +1,50 @@
+# Habilitar "Registrar pago" en facturas legacy
+
 ## Diagnóstico
 
-El CI falla en un solo test:
+La factura **638** está en estado **Emitida** pero no tiene `uuid_fiscal` (fue timbrada antes del corte del sistema, `fecha_emision = 2026-01-15`, previo al 01/07/2026).
 
-- `architecture-baseline.test.ts` → `Power of 10: 0 archivos productivos > 200 líneas`.
-- Único archivo violador: `src/features/facturacion/components/DialogCrearNotaCredito.tsx` con **201 líneas**.
+La lógica actual en `deriveFacturaFlags` (`src/features/facturacion/domain/facturaFlags.ts`) exige:
 
-El auditor cuenta con `readFileSync(...).split("\n").length`, así que un archivo con 200 saltos de línea (200 según `wc -l`) le da 201. Necesitamos reducir el archivo al menos en 1 línea real (no basta borrar el newline final; queda igual).
+```
+timbradaVigente = !sinTimbrar && estado === "Emitida"
+puedeRegistrarPago = timbradaVigente && canEdit && saldo > 0.01
+```
 
-Analogía: es como un elevador con letrero "máx. 200 personas". Ahora mismo entramos 201 y la alarma dispara. Hay que sacar a alguien (fusionar dos líneas en una) para que el resto del edificio siga funcionando.
+Como `uuid_fiscal` es `NULL`, `sinTimbrar = true` → `timbradaVigente = false` → el botón "Registrar pago" no aparece en la barra superior (`FacturaDetalleActionsBar`).
 
-## Plan
+**Analogía:** es como una factura de papel que se timbró en la ventanilla del SAT antes de que existiera el sistema. El sistema la reconoce como "Emitida", pero como no tiene su "código de barras" (UUID) interno, bloquea el cobro.
 
-1. Editar `src/features/facturacion/components/DialogCrearNotaCredito.tsx`:
-   - Colapsar 2 líneas consecutivas seguras (p. ej. las dos constantes `CLAVE_SAT_DEFAULT` / `CLAVE_UNIDAD_DEFAULT` en una sola línea, o quitar una línea en blanco redundante entre bloques de imports/tipos).
-   - Objetivo: `split("\n").length ≤ 200`.
-2. No tocar lógica, JSX ni props: es un ajuste puramente cosmético para pasar el guardrail Power-of-10.
-3. Bump `APP_VERSION` a `13.213.25` + entrada en `CHANGELOG.md` describiendo el fix de CI (regla existente en memoria del proyecto).
-4. No hay otros tests fallando en los logs subidos, así que no se tocan más archivos.
+## Cambios propuestos
+
+### 1. `src/features/facturacion/domain/facturaFlags.ts`
+- Introducir noción de **factura vigente cobrable**: `estado === "Emitida"` y no cancelada/sustituida, independiente de si tiene `uuid_fiscal`.
+- `puedeRegistrarPago = esVigente && canEdit && saldo > 0.01` (permite legacy).
+- `puedeCancelarCfdi` y `puedeSustituirCfdi` se mantienen limitados a facturas con `uuid_fiscal` (no se puede cancelar en el SAT algo que no está timbrado aquí).
+
+### 2. `src/features/facturacion/hooks/useRegistrarPagoSubmit.ts`
+- Si la factura es PPD **pero** no tiene `uuid_fiscal` (legacy), omitir el timbrado automático de REP. El pago se registra normalmente; no se intenta llamar a FacturAPI.
+- Log claro en consola/toast: "Pago registrado. REP no aplicable (factura legacy)."
+
+### 3. `src/features/facturacion/components/detalle/FacturaDetalleActionsBar.tsx`
+- Sin cambios de lógica; ya reacciona a `flags.puedeRegistrarPago`.
+
+### 4. Tests
+- `src/features/facturacion/domain/__tests__/facturaFlags.test.ts`: caso "factura Emitida sin uuid_fiscal con saldo" → `puedeRegistrarPago = true`, `puedeCancelarCfdi = false`.
+- Test del submit hook: pago PPD sin `uuid_fiscal` no dispara `emitirRep`.
+
+### 5. Metadatos
+- Bump `APP_VERSION` a `13.213.26`.
+- Entrada en `CHANGELOG.md` describiendo el fix.
+
+## Alcance / no incluye
+
+- No cambia la política de timbrado: facturas legacy siguen sin poder timbrarse desde el sistema (`puedeTimbrarDesdeSistema` sin cambio).
+- No modifica RLS ni servicios de pagos.
+- No toca portal cliente.
 
 ## Verificación
 
-- `bunx vitest run src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts` debe pasar en verde.
+- Abrir factura 638 con usuario admin: aparece "Registrar pago" en la barra superior.
+- Registrar un abono parcial: se guarda, saldo baja, no intenta timbrar REP.
+- Facturas normales (con UUID) siguen disparando REP automático si son PPD.
