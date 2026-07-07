@@ -52,14 +52,16 @@ export default function Cxp() {
 
 
   const handlePdf = async () => {
+    const fecha = new Date().toISOString().slice(0, 10);
     await descargarPdf(
       <ReporteCarteraDocument
-        fechaCorte={new Date().toISOString().slice(0, 10)}
+        fechaCorte={fecha}
         cxc={cxc} cxp={data}
       />,
-      `Reporte_Cartera_${new Date().toISOString().slice(0, 10)}.pdf`,
+      await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
     );
   };
+
 
   const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
