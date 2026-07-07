@@ -36,6 +36,8 @@ export interface NotaCreditoContext {
     email?: string | null;
   };
   conceptos: ConceptoNC[];
+  /** v13.208.0 — Expediente y BLs del embarque para propagar al CFDI y al PDF. */
+  referencias?: ReferenciasEmbarque | null;
 }
 
 export interface FacturapiNcPayload {
