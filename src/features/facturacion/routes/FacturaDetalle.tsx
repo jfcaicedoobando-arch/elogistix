@@ -23,13 +23,19 @@ import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancel
 import { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
-import {
-  FacturaResumenCard, FacturaEmisorCard, FacturaReceptorCard,
-  FacturaTotalesCard, FacturaTimbradoCard, FacturaConceptosTable,
-  FacturaPagosSection, FacturaBitacoraCard, FacturaDetalleActionsBar,
-  FacturaNotasCreditoSeccion, FacturaDetalleHeader, FacturaDetalleModales,
-  FacturaDetalleEditableSections,
-} from "@/features/facturacion/components/detalle";
+import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
+import { FacturaEmisorCard } from "@/features/facturacion/components/detalle/FacturaEmisorCard";
+import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/FacturaReceptorCard";
+import { FacturaTotalesCard } from "@/features/facturacion/components/detalle/FacturaTotalesCard";
+import { FacturaTimbradoCard } from "@/features/facturacion/components/detalle/FacturaTimbradoCard";
+import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
+import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
+import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
+import { FacturaDetalleActionsBar } from "@/features/facturacion/components/detalle/FacturaDetalleActionsBar";
+import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
+import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
+import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
+import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
