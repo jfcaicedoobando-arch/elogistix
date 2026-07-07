@@ -94,14 +94,10 @@ export function sanitizeDownloadFilename(name: string): string {
 }
 
 export async function signUrl(
-  admin: ReturnType<typeof createClient>,
-  path: string,
-  downloadFilename?: string,
+  admin: ReturnType<typeof createClient>, path: string, downloadFilename?: string,
 ): Promise<string> {
   const opts = downloadFilename ? { download: downloadFilename } : undefined;
-  const { data, error } = await admin.storage
-    .from('facturas-pdf')
-    .createSignedUrl(path, SIGNED_URL_TTL, opts);
+  const { data, error } = await admin.storage.from('facturas-pdf').createSignedUrl(path, SIGNED_URL_TTL, opts);
   if (error || !data) throw new Error(`Signed URL ${path}: ${error?.message}`);
   return data.signedUrl;
 }
