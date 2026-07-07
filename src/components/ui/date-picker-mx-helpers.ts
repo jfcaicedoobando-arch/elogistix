@@ -90,7 +90,7 @@ export function parseFlexible(raw: string): string | null {
   if (iso) return buildIso(Number(iso[1]), Number(iso[2]), Number(iso[3]));
 
   // DD[/-.]MM[/-.]YYYY
-  const dmy = s.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);
+  const dmy = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
   if (dmy) return buildIso(Number(dmy[3]), Number(dmy[2]), Number(dmy[1]));
 
   // DD [de] MES [de] YYYY (español)
@@ -105,4 +105,3 @@ export function parseFlexible(raw: string): string | null {
 
   return null;
 }
-
