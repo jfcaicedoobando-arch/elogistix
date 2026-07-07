@@ -87,13 +87,13 @@ export function useEnvioDocumentoForm(
   // Serializamos `ccInicial` a string estable para no re-disparar el efecto
   // cuando el caller reconstruye el array pero el contenido es idéntico.
   const ccInicialKey = (ccInicial ?? []).join(",");
+  const destInicialKey = (destinatariosManualesInicial ?? []).join(",");
 
   useEffect(() => {
     if (!open) return;
     setAsunto(buildAsuntoInicial());
     setMensaje("");
     setEmailManual("");
-    setEmailsManualesAgregados([]);
     // Precargamos CC con los correos heredados (última factura / preferencia
     // del cliente), excluyendo al usuario logueado (que ya se agrega solo).
     const userEmailLc = user?.email?.toLowerCase();
@@ -101,6 +101,22 @@ export function useEnvioDocumentoForm(
       .map((e) => e.trim())
       .filter((e) => EMAIL_RE.test(e) && e.toLowerCase() !== userEmailLc);
     setCcManual(precargaCc.join(", "));
+    // Precargamos destinatarios manuales heredados, evitando duplicar los
+    // emails que ya vengan de los contactos del cliente.
+    const contactoEmails = new Set(contactos.map((c) => c.email.toLowerCase()));
+    const precargaDest = (destinatariosManualesInicial ?? [])
+      .map((e) => e.trim())
+      .filter((e) => EMAIL_RE.test(e) && !contactoEmails.has(e.toLowerCase()));
+    // Dedupe manteniendo orden
+    const seenDest = new Set<string>();
+    setEmailsManualesAgregados(
+      precargaDest.filter((e) => {
+        const k = e.toLowerCase();
+        if (seenDest.has(k)) return false;
+        seenDest.add(k);
+        return true;
+      }),
+    );
     const pre: Record<string, boolean> = {};
     const principal = contactos.find((c) => c.id === CLIENTE_PRINCIPAL_ID);
     const prioridad = contactos.find(esContactoPrioridadCliente);
@@ -108,7 +124,7 @@ export function useEnvioDocumentoForm(
     else if (prioridad) pre[prioridad.id] = true;
     setSeleccionados(pre);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, contactos, ccInicialKey]);
+  }, [open, contactos, ccInicialKey, destInicialKey]);
 
   const agregarManual = () => {
     const v = emailManual.trim();
