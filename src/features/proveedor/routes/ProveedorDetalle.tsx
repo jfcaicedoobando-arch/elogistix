@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { formatCurrency, toTitleCase, formatPhoneMx } from "@/lib/formatters";
 import EditarProveedorDialog from "@/features/proveedor/components/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
@@ -33,7 +33,7 @@ export default function ProveedorDetalle() {
   useRegisterBreadcrumbLabel(id, proveedor?.nombre);
 
   if (isLoading) {
-    return <div className="space-y-4 p-8">{[1, 2, 3].map((indice) => <Skeleton key={indice} className="h-24 w-full" />)}</div>;
+    return <div className="p-8"><DetailSkeleton /></div>;
   }
 
   if (!proveedor) {

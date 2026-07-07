@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardSkeleton } from "@/components/shared/skeletons";
 
 import {
   usePortalEmbarques,
@@ -36,19 +36,7 @@ export default function PortalDashboard() {
   } = usePortalDashboardKpis(embarques, facturas);
 
   if (loadingEmb || loadingCot || loadingFac) {
-    return (
-      <div className="space-y-4 sm:space-y-6">
-
-        <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 sm:h-32" />)}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton kpis={3} charts={2} />;
   }
 
   return (

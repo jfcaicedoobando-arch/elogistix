@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { formatCurrency } from "@/lib/formatters";
 
 const CHART_COLORS = [
@@ -24,7 +24,7 @@ interface Props {
 
 export default function ReportesTopChart({ data, isLoading }: Props) {
   function renderBody() {
-    if (isLoading) return <Skeleton className="h-full w-full" />;
+    if (isLoading) return <ChartSkeleton height={300} />;
     if (data.length === 0) {
       return <p className="text-sm text-muted-foreground pt-10 text-center">Sin datos en el periodo seleccionado</p>;
     }

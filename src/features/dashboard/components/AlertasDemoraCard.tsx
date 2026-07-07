@@ -3,7 +3,7 @@ import { AlertTriangle, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import type { AlertaDemora } from "@/features/dashboard/hooks";
 import { toTitleCase } from "@/lib/formatters";
 
@@ -17,9 +17,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
 
   function renderBody() {
     if (isLoading) {
-      return Array.from({ length: 3 }).map((_, i) => (
-        <Skeleton key={i} className="h-14 w-full" />
-      ));
+      return <ListSkeleton rows={3} />;
     }
     if (alertas.length === 0) {
       return (

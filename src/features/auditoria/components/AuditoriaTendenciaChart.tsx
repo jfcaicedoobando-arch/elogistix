@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { TrendingUp } from "lucide-react";
 import { useAuditoriaSnapshots } from "@/features/auditoria/hooks";
 
@@ -20,7 +20,7 @@ export function AuditoriaTendenciaChart() {
   const { data, isLoading } = useAuditoriaSnapshots(30);
 
   function renderBody() {
-    if (isLoading) return <Skeleton className="h-48 w-full" />;
+    if (isLoading) return <ChartSkeleton height={192} />;
     if (!data || data.length === 0) {
       return (
         <div className="text-xs text-muted-foreground py-12 text-center">

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -79,13 +79,7 @@ export default function Bitacora() {
 
   function renderActividad() {
     if (isLoading) {
-      return (
-        <div className="space-y-4">
-          {Array.from({ length: 8 }).map((_, indice) => (
-            <Skeleton key={indice} className="h-8 w-full" />
-          ))}
-        </div>
-      );
+      return <ListSkeleton rows={8} />;
     }
     return (
       <BitacoraActividad

@@ -7,7 +7,8 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
 import { useEmbarqueDetalleData } from "@/features/embarques/hooks/useEmbarqueDetalleData";
 import { calcularPnlPorContenedor } from "@/features/embarques/services/pnlPorContenedor";
@@ -40,12 +41,8 @@ export function TabPnlContenedor({ embarqueId, expediente }: Props) {
   if (loadingConceptos || loadingContenedores) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-        <Skeleton className="h-64" />
+        <KpiGridSkeleton count={4} heightClass="h-24" />
+        <ChartSkeleton height={256} />
       </div>
     );
   }

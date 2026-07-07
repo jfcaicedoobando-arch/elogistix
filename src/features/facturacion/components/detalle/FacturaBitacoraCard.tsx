@@ -4,7 +4,7 @@
  * usuarios con acceso al detalle.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { useBitacora } from "@/hooks/shared";
 import { formatDate } from "@/lib/formatters";
 import { History } from "lucide-react";
@@ -32,7 +32,7 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Skeleton className="h-16 w-full" />
+          <ListSkeleton rows={3} />
         ) : entradas.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
             Sin eventos registrados para esta factura.

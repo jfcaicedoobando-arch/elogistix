@@ -3,7 +3,7 @@ import { CalendarClock, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { formatDate, toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { ProximoArribo } from "@/features/dashboard/hooks";
@@ -23,9 +23,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
 
   function renderBody() {
     if (isLoading) {
-      return Array.from({ length: 3 }).map((_, i) => (
-        <Skeleton key={i} className="h-14 w-full" />
-      ));
+      return <ListSkeleton rows={3} />;
     }
     if (arribos.length === 0) {
       return (

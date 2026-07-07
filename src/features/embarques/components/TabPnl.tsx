@@ -5,7 +5,8 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { AlertCircle } from "lucide-react";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
@@ -25,10 +26,8 @@ export function TabPnl({ embarqueId }: Props) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
-        </div>
-        <Skeleton className="h-64" />
+        <KpiGridSkeleton count={4} heightClass="h-24" />
+        <ChartSkeleton height={256} />
       </div>
     );
   }

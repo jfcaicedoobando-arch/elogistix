@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { EnviarCotizacionDialog } from "@/features/cotizacion/components/detalle/EnviarCotizacionDialog";
 import { HistorialEnviosCard } from "@/features/cotizacion/components/detalle/HistorialEnviosCard";
 import { useHistorialEnviosCotizacion } from "@/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail";
@@ -49,7 +49,7 @@ export default function CotizacionDetalle() {
   useRegisterBreadcrumbLabel(id, cotizacion?.folio);
 
   if (isLoading) {
-    return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
+    return <DetailSkeleton sections={1} />;
   }
 
   if (!cotizacion) {

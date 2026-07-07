@@ -4,7 +4,7 @@
  */
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 
 interface Row {
   fn: string;
@@ -24,7 +24,7 @@ export default function HealthTopErrorsChart({ loading, data }: Props) {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Skeleton className="h-44 w-full" />
+          <ChartSkeleton height={176} />
         ) : data.length === 0 ? (
           <div className="text-xs text-muted-foreground py-10 text-center">
             Sin errores en el rango seleccionado.

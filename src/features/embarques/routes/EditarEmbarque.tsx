@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useEditarEmbarqueWizard } from "@/features/embarques/hooks";
 import { EmbarqueWizardLayout } from "@/features/embarques/components/EmbarqueWizardLayout";
@@ -44,15 +44,15 @@ export default function EditarEmbarque() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
-        <div className="flex-none border-b bg-background p-4 space-y-3">
+        <SkeletonGroup className="flex-none border-b bg-background p-4 space-y-3">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-8 w-full" />
-        </div>
+        </SkeletonGroup>
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-4xl mx-auto space-y-4">
+          <SkeletonGroup className="max-w-4xl mx-auto space-y-4">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-64 w-full" />
-          </div>
+          </SkeletonGroup>
         </div>
       </div>
     );

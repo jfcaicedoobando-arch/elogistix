@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -109,7 +109,7 @@ export default function TesoreriaConciliacion() {
             </div>
             <Card><CardContent density="flush">
               {isLoading ? (
-                <div className="p-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+                <div className="p-4"><ListSkeleton rows={5} /></div>
               ) : movs.length === 0 ? (
                 <p className="p-6 text-sm text-muted-foreground text-center">No hay movimientos.</p>
               ) : (

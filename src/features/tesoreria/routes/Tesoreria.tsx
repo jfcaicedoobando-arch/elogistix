@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { Link } from "react-router-dom";
 import { Wallet, ArrowRight, FileText, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -60,9 +60,7 @@ export default function Tesoreria() {
       />
 
       {isLoading || !data ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
-        </div>
+        <KpiGridSkeleton count={4} heightClass="h-20" />
       ) : (
         <>
           <section>

@@ -5,7 +5,7 @@
 import { DollarSign, Pencil, Trash2, FileCheck2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { formatCurrency } from "@/lib/formatters";
 import { Kpi, HeaderWithTooltip } from "./DialogDetallePagosProveedor.parts";
 import { BotonesAprobacionFactura } from "./BotonesAprobacionFactura";
@@ -132,13 +132,7 @@ interface PagosTableProps {
 
 export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago }: PagosTableProps) {
   if (isLoading) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
-      </div>
-    );
+    return <ListSkeleton rows={3} />;
   }
   if (pagos.length === 0) {
     return (

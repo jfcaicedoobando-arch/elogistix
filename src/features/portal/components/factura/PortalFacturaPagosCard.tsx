@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePortalPagosFactura } from "@/features/portal/hooks";
@@ -31,7 +31,7 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
-          <Skeleton className="h-20 w-full" />
+          <ListSkeleton rows={2} />
         ) : pagos.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
             Aún no se han registrado pagos para esta factura.

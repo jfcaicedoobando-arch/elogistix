@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { Users } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import type { OperadorData } from "@/features/operaciones/hooks";
@@ -30,12 +30,8 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Skeleton className="h-[300px] w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-48 w-full" />
-            ))}
-          </div>
+          <ChartSkeleton height={300} />
+          <KpiGridSkeleton count={3} heightClass="h-48" desktopCols={3} />
         </CardContent>
       </Card>
     );

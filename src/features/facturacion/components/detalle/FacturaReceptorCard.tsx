@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, X, UserCog, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FieldGridSkeleton } from "@/components/shared/skeletons";
 import {
   fetchClienteFiscal,
   type ClienteFiscalRow,
@@ -88,7 +88,7 @@ export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Pr
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Skeleton className="h-24 w-full" />
+          <FieldGridSkeleton fields={5} cols={3} />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div className="min-w-0 md:col-span-2">

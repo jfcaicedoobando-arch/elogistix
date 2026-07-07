@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageSkeleton } from "@/components/shared/skeletons";
 import { usePortalFacturas, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
@@ -39,7 +39,7 @@ export default function PortalFacturas() {
   }, [facturas, search, filtroEstado]);
 
   if (isLoading) {
-    return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>;
+    return <PageSkeleton />;
   }
 
   return (

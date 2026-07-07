@@ -80,7 +80,10 @@ export function DataTableBody<T>({
     const rowMinH = DENSITY_ROW_MIN_H[density];
     const barWidths = ["w-3/5", "w-4/5", "w-2/3", "w-3/4", "w-1/2", "w-5/6"];
     return (
-      <TableBody>
+      <TableBody role="status" aria-busy="true" aria-live="polite">
+        <TableRow className="sr-only">
+          <TableCell colSpan={leafColumns.length}>Cargando…</TableCell>
+        </TableRow>
         {Array.from({ length: skeletonRows }).map((_, i) => (
           <TableRow
             key={`skeleton-${i}`}

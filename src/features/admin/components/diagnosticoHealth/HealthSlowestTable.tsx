@@ -3,7 +3,7 @@
  * Extraído de `DiagnosticoHealthPanel`.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
 interface Row {
   fn: string;
@@ -30,7 +30,7 @@ export default function HealthSlowestTable({ loading, data }: Props) {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Skeleton className="h-44 w-full" />
+          <ListSkeleton rows={5} />
         ) : data.length === 0 ? (
           <div className="text-xs text-muted-foreground py-10 text-center">
             Sin mediciones de latencia.

@@ -7,7 +7,8 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { useFlujoProyectado } from "@/features/tesoreria/hooks";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -43,9 +44,7 @@ export default function TesoreriaFlujo() {
       />
 
       {isLoading || !data ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
-        </div>
+        <KpiGridSkeleton count={4} heightClass="h-20" />
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -74,13 +73,13 @@ export default function TesoreriaFlujo() {
           <Card>
             <CardContent density="compact">
               <h3 className="text-sm font-semibold mb-3">Flujo semanal (MXN)</h3>
-              <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+              <Suspense fallback={<ChartSkeleton height={288} />}>
                 <GraficoFlujoProyectado semanas={data.semanas} />
               </Suspense>
             </CardContent>
           </Card>
 
-          <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+          <Suspense fallback={<ChartSkeleton height={256} detailed={false} />}>
             <TablaFlujoSemanal semanas={data.semanas} />
           </Suspense>
         </>
