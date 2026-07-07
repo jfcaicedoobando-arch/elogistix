@@ -122,7 +122,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
     items: ctx.conceptos.map((c) => ({
       quantity: c.cantidad,
       product: {
-        description: c.descripcion,
+        // v13.208.0 — prefijo con Expediente + BLs.
+        description: formatDescripcionConReferencias(c.descripcion, ctx.referencias),
         product_key: c.clave_sat ?? "",
         price: c.precio_unitario,
         unit_key: c.clave_unidad ?? "E48",
@@ -135,5 +136,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
+  // v13.208.0 — bloque "Referencias del embarque" al pie del PDF.
+  const pdfSection = buildPdfCustomSection(ctx.referencias);
+  if (pdfSection) payload.pdf_custom_section = pdfSection;
   return payload;
 }
