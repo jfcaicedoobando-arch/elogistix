@@ -74,3 +74,31 @@ Deno.test("basicAuthHeader genera Basic con password vacío", () => {
   const h = basicAuthHeader("sk_test_123");
   assertEquals(h, `Basic ${btoa("sk_test_123:")}`);
 });
+
+// v13.208.0 — Referencias de embarque: prefijo por concepto + pdf_custom_section.
+Deno.test("buildFacturapiPayload prefija la descripción con Exp + BLs", () => {
+  const p = buildFacturapiPayload({
+    ...baseCtx,
+    referencias: { expediente: "ELIMP00195", bl_master: "COSU1", bl_house: "HL2" },
+  });
+  assertEquals(
+    p.items[0].product.description,
+    "[Exp. ELIMP00195 · BL/M: COSU1 · BL/H: HL2] Flete marítimo",
+  );
+  assert(p.pdf_custom_section?.includes("Referencias del embarque"));
+});
+
+Deno.test("buildFacturapiPayload sin referencias deja description intacta", () => {
+  const p = buildFacturapiPayload(baseCtx);
+  assertEquals(p.items[0].product.description, "Flete marítimo");
+  assertEquals(p.pdf_custom_section, undefined);
+});
+
+Deno.test("buildFacturapiPayload con referencias vacías no altera nada", () => {
+  const p = buildFacturapiPayload({
+    ...baseCtx,
+    referencias: { expediente: null, bl_master: null, bl_house: null },
+  });
+  assertEquals(p.items[0].product.description, "Flete marítimo");
+  assertEquals(p.pdf_custom_section, undefined);
+});
