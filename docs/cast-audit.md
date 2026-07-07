@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **2090**
+Total de `as` casts detectados: **2089**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
 | SAFE      | 0 | 570     | 27.3% |
 | LOW       | 1 | 72      | 3.4% |
-| MEDIUM    | 2 | 1447   | 69.2% |
+| MEDIUM    | 2 | 1447   | 69.3% |
 | HIGH      | 3 | 0     | 0.0% |
-| CRITICAL  | 4 | 1 | 0.0% |
+| CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **2090**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [CRITICAL] `src/hooks/shared/useColumnVisibility.ts:23`
-
-```ts
-const parsed = JSON.parse(raw) as unknown;
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
