@@ -146,6 +146,10 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
   return conceptosVenta
     .filter((v) => v.concepto)
     .map((v) => ({
+      // v13.207.0 — Enviamos el UUID de BD (si existe) para que el RPC
+      // `actualizar_embarque_completo` haga merge en sitio y NO borre
+      // conceptos que ya estén facturados.
+      ...(v.dbId ? { id: v.dbId } : {}),
       descripcion: v.concepto,
       cantidad: v.cantidad,
       precio_unitario: v.precioUnitario,
@@ -162,6 +166,7 @@ export function buildConceptosCostoPayload(
   return conceptosCosto
     .filter((c) => c.concepto)
     .map((c) => ({
+      ...(c.dbId ? { id: c.dbId } : {}),
       proveedor_id: c.proveedorId || null,
       proveedor_nombre: proveedoresDb.find((p) => p.id === c.proveedorId)?.nombre || "",
       concepto: c.concepto,

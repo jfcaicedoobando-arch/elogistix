@@ -8,6 +8,7 @@ import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
 
 interface ConceptoVentaDb {
+  id: string;
   descripcion: string;
   cantidad: number;
   precio_unitario: number | string;
@@ -15,6 +16,7 @@ interface ConceptoVentaDb {
   contenedor_id: string | null;
 }
 interface ConceptoCostoDb {
+  id: string;
   proveedor_id: string | null;
   concepto: string;
   monto: number | string;
@@ -39,8 +41,8 @@ interface Params<TForm extends FieldValues> {
   cargandoContenedores: boolean;
   conceptosVentaDb: ConceptoVentaDb[];
   conceptosCostoDb: ConceptoCostoDb[];
-  inicializarVenta: (rows: Array<{ id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null }>) => void;
-  inicializarCosto: (rows: Array<{ id: number; proveedorId: string; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
+  inicializarVenta: (rows: Array<{ id: number; dbId?: string | null; concepto: string; cantidad: number; precioUnitario: number; moneda: string; contenedorId: string | null }>) => void;
+  inicializarCosto: (rows: Array<{ id: number; dbId?: string | null; proveedorId: string; concepto: string; monto: number; moneda: string; contenedorId: string | null }>) => void;
   methods: UseFormReturn<TForm>;
 }
 
@@ -50,6 +52,7 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
     if (!p.initialized || p.hidratoVenta || p.conceptosVentaDb.length === 0) return;
     p.inicializarVenta(p.conceptosVentaDb.map((v, i) => ({
       id: i + 1,
+      dbId: v.id, // v13.207.0 — preservamos UUID para merge en RPC
       concepto: v.descripcion,
       cantidad: v.cantidad,
       precioUnitario: Number(v.precio_unitario),
@@ -65,6 +68,7 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
     if (!p.initialized || p.hidratoCosto || p.conceptosCostoDb.length === 0) return;
     p.inicializarCosto(p.conceptosCostoDb.map((c, i) => ({
       id: i + 1,
+      dbId: c.id, // v13.207.0 — preservamos UUID para merge en RPC
       proveedorId: c.proveedor_id ?? "",
       concepto: c.concepto,
       monto: Number(c.monto),
