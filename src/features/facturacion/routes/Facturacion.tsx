@@ -121,16 +121,25 @@ export default function Facturacion() {
       <TooltipProvider delayDuration={150}>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <PageHeader title="Facturación" description="Emisión de CFDI, complemento de pagos (REP) y notas de crédito" />
-          {canEmitirFactura && (
-            <Button onClick={() => setOpenFacturaManual(true)} className="shrink-0">
-              <FilePlus2 className="h-4 w-4 mr-2" /> Nueva factura manual
-            </Button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            <PeriodoFiscalSelector
+              desdeIso={desdeIso}
+              hastaIso={hastaIso}
+              onChange={(r) => setRango(r)}
+            />
+            {canEmitirFactura && (
+              <Button onClick={() => setOpenFacturaManual(true)}>
+                <FilePlus2 className="h-4 w-4 mr-2" /> Nueva factura manual
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Dashboard de KPIs (siempre visible) — primer golpe de vista */}
+        {/* Fase 1: una sola banda de KPIs. Los 3 conteos fiscales
+            (proformas convertibles, facturas sin timbrar, REP pendientes)
+            se moverán a badges sobre las bandejas de trabajo en Fase 2. */}
         <DashboardEjecutivoFacturacion />
-        <FacturacionKpisFiscales />
+
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b">
