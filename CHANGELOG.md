@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.27] - 2026-07-07
+- UX: `DatePickerMx` ahora acepta pegar fechas en múltiples formatos (ISO `YYYY-MM-DD`, `DD/MM/YYYY`, `DD-MM-YYYY`, `DD.MM.YYYY`, "7 de julio de 2026"). Mejora aplicada globalmente, útil por ejemplo al registrar pagos copiando la fecha del estado de cuenta. Nuevo helper `parseFlexible` con tests.
+
 ## [13.213.26] - 2026-07-07
 - Fix: en el detalle de factura, ahora aparece el botón "Registrar pago" en facturas legacy (estado Emitida sin `uuid_fiscal`, timbradas fuera del sistema antes del 01/07/2026). `deriveFacturaFlags` distingue entre "vigente cobrable" y "timbrada vigente"; cancelar/sustituir siguen requiriendo UUID. Test agregado en `facturaFlags.test.ts`.
 
