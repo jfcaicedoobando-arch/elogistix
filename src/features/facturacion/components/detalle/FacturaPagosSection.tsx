@@ -9,7 +9,7 @@ import { Loader2, Trash2, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,7 +94,7 @@ export function FacturaPagosSection({
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
-            <Skeleton className="h-20 w-full" />
+            <ListSkeleton rows={3} />
           ) : pagos.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
               Aún no se han registrado pagos para esta factura.

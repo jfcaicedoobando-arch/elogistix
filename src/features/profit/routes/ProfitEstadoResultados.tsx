@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, Calendar, Download, FileText, Info } from "l
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { useEstadoResultados } from "@/features/profit/hooks/useEstadoResultados";
@@ -95,12 +95,7 @@ export default function ProfitEstadoResultados() {
       <Card>
         <CardContent className="p-0">
           {c.isLoading ? (
-            <div className="p-6 space-y-3">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
+            <div className="p-6"><ListSkeleton rows={4} /></div>
           ) : sinDatos || !data ? (
             <EmptyStateInline
               icon={Calendar}

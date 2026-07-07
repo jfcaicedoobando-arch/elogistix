@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
@@ -34,7 +34,7 @@ export default function PortalEmbarqueDetalle() {
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   if (isLoading) {
-    return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-20 w-full" /><Skeleton className="h-64 w-full" /></div>;
+    return <DetailSkeleton />;
   }
 
   if (!embarque) {

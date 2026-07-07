@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { AlertTriangle, Check, BellOff } from "lucide-react";
 import { useAlertasSistemaList, useAcknowledgeAlerta } from "@/features/admin/hooks";
 import { format } from "date-fns";
@@ -41,11 +41,7 @@ export default function AlertasSistemaPanel() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-14 w-full" />
-            <Skeleton className="h-14 w-full" />
-            <Skeleton className="h-14 w-full" />
-          </div>
+          <ListSkeleton rows={3} />
         ) : alertas.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">
             <BellOff className="h-10 w-10 mx-auto mb-2 opacity-50" />

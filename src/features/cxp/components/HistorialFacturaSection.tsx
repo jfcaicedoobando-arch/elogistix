@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDateTimeShort } from "@/lib/formatters";
 import {
@@ -130,10 +130,7 @@ export function HistorialFacturaSection({ facturaId }: Props) {
       </CollapsibleTrigger>
       <CollapsibleContent className="px-6 pb-5">
         {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
+          <ListSkeleton rows={3} />
         ) : isError ? (
           <div className="flex flex-col items-center gap-2 py-4 text-center">
             <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -162,10 +159,7 @@ export function HistorialFacturaSection({ facturaId }: Props) {
               </div>
             )}
             {eventos.length === 0 ? (
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
+              <ListSkeleton rows={2} />
             ) : (
               <ol className="relative border-l-2 border-border ml-3 space-y-4 pl-1 mt-2">
                 {eventos.map((ev, i) => (

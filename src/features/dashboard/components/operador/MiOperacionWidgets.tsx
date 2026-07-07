@@ -5,7 +5,7 @@
 import { ArrowRight, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 
 interface WidgetCardProps {
   icon: LucideIcon;
@@ -40,7 +40,7 @@ export function WidgetCard({
       </CardHeader>
       <CardContent className="space-y-1 max-h-[260px] overflow-y-auto">
         {isLoading
-          ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
+          ? <ListSkeleton rows={3} />
           : children}
       </CardContent>
     </Card>

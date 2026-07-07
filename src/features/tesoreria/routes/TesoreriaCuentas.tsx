@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -36,7 +36,7 @@ export default function TesoreriaCuentas() {
       />
 
       {isLoading ? (
-        <Skeleton className="h-32" />
+        <KpiGridSkeleton count={3} heightClass="h-32" desktopCols={3} />
       ) : cuentas.length === 0 ? (
         <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">Aún no hay cuentas. Crea la primera.</CardContent></Card>
       ) : (

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { EyeOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,7 +92,7 @@ export function PanelConciliacionMovimiento({ movimiento, onClose }: Props) {
           <>
             <div>
               <h4 className="text-xs font-semibold mb-2 text-muted-foreground">Candidatos (±$1, ±5 días)</h4>
-              {isLoading ? <Skeleton className="h-20" /> : candidatos.length === 0 ? (
+              {isLoading ? <CardSkeleton lines={2} showHeader={false} /> : candidatos.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Sin candidatos. Crea el pago manualmente desde CxC/CxP o ignora este movimiento.</p>
               ) : (
                 <ul className="space-y-2">

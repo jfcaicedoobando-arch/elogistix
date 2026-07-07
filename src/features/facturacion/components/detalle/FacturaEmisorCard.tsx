@@ -6,7 +6,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FieldGridSkeleton } from "@/components/shared/skeletons";
 import { fetchEmisorEmpresa } from "@/features/configuracion/services";
 
 export function FacturaEmisorCard() {
@@ -25,7 +25,7 @@ export function FacturaEmisorCard() {
       </CardHeader>
       <CardContent className="space-y-1 text-sm">
         {isLoading || !emisor ? (
-          <Skeleton className="h-16 w-full" />
+          <FieldGridSkeleton fields={4} cols={2} />
         ) : (
           <>
             <p className="font-semibold">{emisor.razonSocial}</p>

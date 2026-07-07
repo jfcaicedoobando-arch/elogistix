@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { TrendingUp, AlertTriangle, Package, Container, Ship, RefreshCw } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
@@ -32,7 +32,7 @@ export default function Operaciones() {
   const { data: pendientesReaprob = 0 } = useCotizacionesPendientesReaprobacion();
 
   function renderTendenciaChart() {
-    if (isLoading) return <Skeleton className="h-[260px] w-full" />;
+    if (isLoading) return <ChartSkeleton height={260} />;
     return (
       <Suspense fallback={<ChartSkeleton height={260} />}>
         <OperacionesTendenciaChart data={chartData} />

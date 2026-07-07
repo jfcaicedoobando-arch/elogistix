@@ -4,7 +4,7 @@
  */
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 
 export interface TimelinePoint {
   label: string;
@@ -26,7 +26,7 @@ export default function HealthTimelineChart({ loading, data }: Props) {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Skeleton className="h-44 w-full" />
+          <ChartSkeleton height={176} />
         ) : data.length === 0 ? (
           <div className="text-xs text-muted-foreground py-12 text-center">
             Sin datos en el rango seleccionado.

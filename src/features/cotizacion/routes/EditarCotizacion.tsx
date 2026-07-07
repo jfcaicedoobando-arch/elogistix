@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { useToast } from "@/hooks/shared";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/features/cotizacion/hooks";
@@ -26,7 +26,7 @@ export default function EditarCotizacion() {
   const { data: costos, isLoading: costosLoading } = useCotizacionCostos(id);
 
   if (isLoading || costosLoading) {
-    return <div className="space-y-4 p-6"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
+    return <div className="p-6"><DetailSkeleton sections={1} /></div>;
   }
 
   if (!cotizacion || !canEdit || cotizacion.estado !== "Borrador") {

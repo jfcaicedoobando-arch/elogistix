@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle } from "lucide-react";
 import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
@@ -30,13 +30,7 @@ export default function PortalFacturaDetalle() {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
+    return <DetailSkeleton />;
   }
 
   if (!factura) {

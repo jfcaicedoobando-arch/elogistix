@@ -4,7 +4,8 @@
 import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { Download } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
@@ -69,12 +70,8 @@ export default function ProfitDashboardEjecutivo() {
 
       {isLoading && (
         <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-          <Skeleton className="h-64" />
+          <KpiGridSkeleton count={6} heightClass="h-24" desktopCols={6} />
+          <ChartSkeleton height={256} />
         </div>
       )}
 

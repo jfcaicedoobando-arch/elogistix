@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { Plus, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { formatCurrency } from "@/lib/formatters";
 import {
   useNotasCreditoFactura, useAplicarNotaCredito, useCancelarNotaCredito,
@@ -49,7 +49,7 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
       </div>
 
       {isLoading ? (
-        <div className="p-3"><Skeleton className="h-9 w-full" /></div>
+        <div className="p-3"><ListSkeleton rows={2} /></div>
       ) : notas.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-6">Sin notas de crédito registradas.</p>
       ) : (

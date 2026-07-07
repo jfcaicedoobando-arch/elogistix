@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { PackageCheck, Anchor, ChevronRight } from "lucide-react";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
@@ -45,11 +46,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
             Top 10 más antiguos
           </p>
           {isLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-9 w-full" />
-              ))}
-            </div>
+            <ListSkeleton rows={3} />
           ) : items.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
               No hay embarques pendientes 🎉

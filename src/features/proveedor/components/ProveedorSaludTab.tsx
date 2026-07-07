@@ -3,7 +3,7 @@
  * Consume la RPC `proveedor_salud`.
  */
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { Badge } from "@/components/ui/badge";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -36,11 +36,7 @@ export function ProveedorSaludTab({ proveedorId }: { proveedorId: string }) {
   const { data, isLoading } = useProveedorSalud(proveedorId);
 
   if (isLoading || !data) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {[1, 2, 3, 4, 5, 6].map((indice) => <Skeleton key={indice} className="h-24 w-full" />)}
-      </div>
-    );
+    return <KpiGridSkeleton count={6} heightClass="h-24" desktopCols={3} />;
   }
 
   const tonePct = semaforoToneFromPct(data.pct_pagadas_a_tiempo);

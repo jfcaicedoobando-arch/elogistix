@@ -15,7 +15,7 @@ import { useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Sparkles, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import { usePuertos, useTiposContenedor } from "@/features/catalogos/hooks";
 import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDialog";
@@ -128,7 +128,9 @@ export default function SugerenciasTarifaInline({
 
       {isFetching && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Skeleton className="h-40" /><Skeleton className="h-40" /><Skeleton className="h-40" />
+          <CardSkeleton lines={4} />
+          <CardSkeleton lines={4} />
+          <CardSkeleton lines={4} />
         </div>
       )}
 

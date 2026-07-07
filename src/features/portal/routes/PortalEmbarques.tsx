@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageSkeleton } from "@/components/shared/skeletons";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
@@ -32,13 +32,7 @@ export default function PortalEmbarques() {
   } = usePortalEmbarquesController();
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

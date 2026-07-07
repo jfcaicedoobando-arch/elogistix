@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -39,7 +39,7 @@ export function TabCaptura({ anio, onAnioChange }: Props) {
   const [draft, setDraft] = useState<Record<string, string>>({});
 
   if (cats.isLoading || presup.isLoading) {
-    return <Skeleton className="h-64 w-full" />;
+    return <CardSkeleton lines={8} />;
   }
 
   const handleBlur = async (categoria_id: string, periodo: string, raw: string) => {

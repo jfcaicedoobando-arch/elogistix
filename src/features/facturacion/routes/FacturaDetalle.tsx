@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { useFactura } from "@/features/facturacion/hooks";
 import { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
 import { usePermissions } from "@/hooks/shared";
@@ -74,9 +74,7 @@ export default function FacturaDetalle() {
   if (isLoading) {
     return (
       <PageContainer>
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
+        <DetailSkeleton />
       </PageContainer>
     );
   }

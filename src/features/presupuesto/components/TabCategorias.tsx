@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -53,7 +53,7 @@ export function TabCategorias() {
     }
   };
 
-  if (cats.isLoading) return <Skeleton className="h-48 w-full" />;
+  if (cats.isLoading) return <CardSkeleton lines={6} />;
   const sinDatos = (cats.data ?? []).length === 0;
 
   return (

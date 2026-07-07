@@ -3,7 +3,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import PaginationControls from "@/components/shared/PaginationControls";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
 import { handleRowClick, handleRowKeyDown } from "./rowNav";
 import type {
@@ -62,11 +62,11 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
       {/* Mobile cards */}
       <div className="sm:hidden">
         {isLoading && data.length === 0 ? (
-          <div className="p-3 space-y-2">
+          <SkeletonGroup className="p-3 space-y-2">
             {Array.from({ length: skeletonRows }).map((_, i) => (
               <Skeleton key={i} className="h-20 w-full rounded-lg" />
             ))}
-          </div>
+          </SkeletonGroup>
         ) : data.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
             <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />

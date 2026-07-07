@@ -4,7 +4,7 @@
  */
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardSkeleton } from "@/components/shared/skeletons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { useDireccionKpis } from "@/features/dashboard/direccion/hooks/useDireccionKpis";
@@ -32,15 +32,7 @@ export default function DireccionDashboard() {
       )}
 
       {isLoading || !data ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
-          </div>
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
+        <DashboardSkeleton kpis={3} showHeader={false} />
       ) : (
         <>
           <HeroCards hero={data.hero} />

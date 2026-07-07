@@ -6,7 +6,7 @@ import { ExternalLink, FileText } from "lucide-react";
 import { SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency } from "@/lib/formatters";
 import {
@@ -172,13 +172,7 @@ export function CuerpoTabla({
   totalesPorMoneda: TotalesMoneda;
 }) {
   if (isLoading) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
-      </div>
-    );
+    return <ListSkeleton rows={3} />;
   }
   if (filas.length === 0) {
     return (

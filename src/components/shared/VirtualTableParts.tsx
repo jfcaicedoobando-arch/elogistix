@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
 import { flexRender, type Table } from "@tanstack/react-table";
 import { ALIGN_CLASS, type ColumnAlign } from "@/components/shared/dataTable/types";
@@ -33,18 +33,28 @@ export function VirtualHeaderRow<T>({ table, gridTemplate }: { table: Table<T>; 
 
 export function SkeletonRows<T>({ count, table, gridTemplate, cellPad }: { count: number; table: Table<T>; gridTemplate: string; cellPad: string }) {
   const cols = table.getAllLeafColumns();
+  // Anchos variables por columna+fila para que no parezca una rejilla rígida
+  // (mismo criterio que `DataTableBody`).
+  const barWidths = ["w-3/5", "w-4/5", "w-2/3", "w-3/4", "w-1/2", "w-5/6"];
   return (
-    <div>
+    <SkeletonGroup>
       {Array.from({ length: count }).map((_, i) => (
         <div key={`sk-${i}`} className="grid border-b" style={{ gridTemplateColumns: gridTemplate }}>
-          {cols.map((c) => (
-            <div key={c.id} className={cn("px-3", cellPad)}>
-              <Skeleton className="h-4 w-full" />
-            </div>
-          ))}
+          {cols.map((c, colIdx) => {
+            const meta = c.columnDef.meta ?? {};
+            const align: ColumnAlign = meta.align ?? "left";
+            const wrapJustify =
+              align === "right" ? "justify-end" : align === "center" ? "justify-center" : "justify-start";
+            const barW = barWidths[(i + colIdx) % barWidths.length];
+            return (
+              <div key={c.id} className={cn("px-3 flex items-center", cellPad, wrapJustify)}>
+                <Skeleton className={cn("h-4", barW)} />
+              </div>
+            );
+          })}
         </div>
       ))}
-    </div>
+    </SkeletonGroup>
   );
 }
 

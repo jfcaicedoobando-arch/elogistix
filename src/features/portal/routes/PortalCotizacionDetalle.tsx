@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/shared/skeletons";
 import { usePortalCotizacion } from "@/features/portal/hooks";
 import SeccionMercanciaCotizacionDetalle from "@/features/cotizacion/components/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/features/cotizacion/components/TablaConceptosGenerico";
@@ -32,12 +32,7 @@ export default function PortalCotizacionDetalle() {
   } = usePortalCotizacionDetalleController(id);
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
+    return <DetailSkeleton sections={1} />;
   }
 
   if (!cot) {

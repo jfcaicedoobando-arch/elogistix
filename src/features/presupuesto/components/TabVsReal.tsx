@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MonthPickerMx } from "@/components/ui/month-picker-mx";
@@ -55,7 +55,7 @@ export function TabVsReal() {
       </div>
 
       {isLoading || !data ? (
-        <Skeleton className="h-64 w-full" />
+        <CardSkeleton lines={8} />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
