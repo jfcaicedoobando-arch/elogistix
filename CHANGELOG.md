@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.23] - 2026-07-07
+
+- **UI · Chips de estado unificados para NC y REP**: se agrega el componente `CfdiEstadoBadge` que centraliza el esquema de color y texto de todos los chips de estado del detalle de factura. Antes: NC usaba `success` (verde) para "Aplicada" y REP usaba `success` (verde) para "Timbrado" — el mismo color para dos etapas distintas del ciclo. Ahora la paleta es única en toda la pantalla:
+  - `borrador` (gris/muted): "Borrador" en folio de NC, "REP pendiente" en columna REP.
+  - `aprobada` (ámbar/warning): NC aprobada.
+  - `timbrada` (azul/info): NC timbrada y folio de REP timbrado (mismo tono para "recién emitido").
+  - `aplicada` (verde/success): NC aplicada a la factura.
+  - `cancelada` (rojo/destructive): NC cancelada y "REP cancelado".
+  - `FacturaNotasCreditoTable` y `FacturaPagosSection` ahora consumen `CfdiEstadoBadge` y ya no repiten clases inline `bg-*/10 text-* border-*/20`. Analogía: es como pintar todos los semáforos del edificio con la misma norma en vez de que cada piso elija sus colores — desde lejos ya se entiende qué significa cada luz.
+
 ## [13.213.22] - 2026-07-07
 
 - **Feature · Previsualización de PDF para NC y REP con la misma papelería que la factura**: se agrega un nuevo componente `DialogPreviewCfdiPdf` que renderiza en un iframe el PDF timbrado descargado vía el proxy `facturapi-descargar` (mismo endpoint que ya usaban las descargas de factura). Como el PDF lo genera FacturAPI con la configuración de logo/branding de la organización, la papelería queda idéntica a la de las facturas.
