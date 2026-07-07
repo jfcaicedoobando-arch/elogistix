@@ -60,14 +60,12 @@ function buildFacturadoUi(facturasSinTc: number): FacturadoUi {
 export function DashboardEjecutivoFacturacion() {
   const dash = useDashboardEjecutivoFacturacion();
   const { kpis: cob } = useCobranza({ estatus: "todos", moneda: "todas" });
-  const { data: proformasPendientes = [] } = useProformasPendientes();
   const { data: proformasListas = 0 } = useProformasListasCount();
 
   const facturadoMes = dash.data?.facturado_mes_mxn ?? 0;
   const cobradoMes = dash.data?.cobrado_mes_mxn ?? 0;
   const porCobrar = cob.total_mxn;
   const vencido = cob.vencido_mxn;
-  const porRevisar = proformasPendientes.length;
 
   const tendencia = dash.data?.tendencia ?? [];
   const facturadoArr = tendencia.map((t) => t.facturado_mxn);
@@ -75,7 +73,6 @@ export function DashboardEjecutivoFacturacion() {
   const meses = tendencia.map((t) => mesLabel(t.mes));
 
   const facturado = buildFacturadoUi(dash.data?.facturas_sin_tc ?? 0);
-  const porRevisarTone: "warn" | "default" = porRevisar > 0 ? "warn" : "default";
   const listasTone: "warn" | "default" = proformasListas > 0 ? "warn" : "default";
 
   return (
@@ -83,16 +80,11 @@ export function DashboardEjecutivoFacturacion() {
       <Card>
         <CardContent className="p-3">
           {/*
-            6 KPIs (Por revisar, Listas para facturar, Facturado, Cobrado,
-            Por cobrar, Vencido) + tendencia. Desktop xl: 7 columnas.
+            5 KPIs (Listas para facturar, Facturado, Cobrado, Por cobrar,
+            Vencido) + tendencia. Desktop xl: 6 columnas.
           */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
-            <Kpi
-              label="Proformas por revisar"
-              value={porRevisar.toString()}
-              tone={porRevisarTone}
-              hint="Proformas generadas desde embarques que aún no han sido revisadas ni aprobadas internamente (estado 'pendiente'). Una vez aprobadas pasan a 'Listas para facturar'."
-            />
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
+
 
             <Kpi
               label="Listas para facturar"
