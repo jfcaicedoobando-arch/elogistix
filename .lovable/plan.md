@@ -1,81 +1,38 @@
+## Problema
 
-# Mejora al modal "Enviar factura por correo"
+Al editar los **días de crédito** de una factura (antes de timbrar) el campo se guarda correctamente en `facturas.dias_credito`, pero `facturas.fecha_vencimiento` NO se recalcula. Queda con el valor original (normalmente `fecha_emision + 0` días) y la factura aparece con vencimiento incorrecto en cobranza.
 
-Dos cambios pedidos, ambos con impacto en piezas compartidas:
+Analogía: es como cambiar el plazo del pagaré pero olvidar mover la fecha límite escrita hasta abajo — el sistema sigue mirando la fecha vieja.
 
-## 1. Quitar la sección de correos de proveedores/shippers
+## Causa
 
-Hoy `DestinatariosPicker` (compartido por factura, cotización y proforma) muestra un bloque colapsable **"Mostrar proveedores / shippers (N) — no recomendado"**. El usuario quiere que ese bloque desaparezca por completo — nunca se debe mandar factura a un shipper.
+`actualizarDatosTimbradoFactura` (en `src/features/facturacion/services/datosFiscalesCliente.ts`) hace `update({ dias_credito, ... })` sin tocar `fecha_vencimiento`, y no existe ningún trigger en Postgres que lo recalcule. Afecta a los dos caminos que editan crédito:
 
-Cambio:
-- `src/components/shared/emails/DestinatariosPicker.tsx`: eliminar el `<details>` de `proveedorContactos` y el filtro visual. La lista sólo muestra `clienteContactos` (con `esContactoProveedor === false`). Los contactos tipo proveedor/shipper quedan ocultos siempre.
-- Ajustar `__tests__/DestinatariosPicker.test.tsx` para reflejar el borrado (si tiene aserciones sobre el bloque).
+- Autoguardado de la card "Configuración de timbrado" (`useAutoSaveDatosFiscales`).
+- Cualquier update futuro que cambie `fecha_emision` o `dias_credito`.
 
-Alcance colateral: cotización y proforma también dejan de ver ese bloque. Consistente con la lógica de negocio (no mandarle factura/cotización al proveedor del cliente).
+## Solución
 
-## 2. Recordar destinatarios manuales y CC entre envíos al mismo cliente
+**Trigger en base de datos** (una sola fuente de verdad, cubre ambos caminos y edge cases futuros).
 
-Hoy el modal ya recuerda **CC** por cliente (`clientes.email_cc_default` + fallback al último `factura_envios.cc`). Falta hacer lo mismo con los **destinatarios manuales** (emails escritos a mano que no vienen de la ficha del cliente).
+1. **Migración** `recompute_fecha_vencimiento_facturas`:
+   - Crear `public.facturas_set_fecha_vencimiento()` — función `BEFORE INSERT OR UPDATE` en `public.facturas` que, si cambia `fecha_emision` o `dias_credito` (o en INSERT), setea:
+     ```
+     NEW.fecha_vencimiento := NEW.fecha_emision + COALESCE(NEW.dias_credito, 0)
+     ```
+   - Crear el trigger `trg_facturas_set_fecha_vencimiento`.
+   - **Backfill** único: `UPDATE public.facturas SET fecha_vencimiento = fecha_emision + COALESCE(dias_credito, 0) WHERE fecha_vencimiento IS DISTINCT FROM (fecha_emision + COALESCE(dias_credito, 0)) AND estado IN ('borrador','timbrada','parcial','vencida');` — corrige facturas ya afectadas.
+   - Respeta el CHECK `facturas_venc_despues_emision` (siempre `>= fecha_emision`).
 
-### Backend
+2. **CHANGELOG + APP_VERSION** bump patch (`13.213.42`) con nota corta en español.
 
-- Nueva migración:
-  - `ALTER TABLE public.clientes ADD COLUMN IF NOT EXISTS email_destinatarios_default text[];`
-  - Actualizar `obtener_defaults_facturacion_cliente(uuid)` para devolver también `destinatarios_emails text[]`, con COALESCE:
-    - preferencia guardada en `clientes.email_destinatarios_default`, o
-    - último `factura_envios.destinatarios` (extrayendo sólo los emails que NO estén en `contactos_cliente.email` del mismo cliente — así no duplicamos los del checkbox).
+## No cambia
 
-### Servicios
-
-- `src/features/facturacion/services/datosFiscalesCliente.ts`:
-  - Añadir `destinatarios_emails: string[] | null` en `DefaultsFacturacionCliente`.
-  - Nueva función `guardarDefaultsDestinatariosCliente(clienteId, emails)` → `UPDATE clientes SET email_destinatarios_default = $2`.
-  - Reexport en `services/index.ts`.
-
-### Hook compartido
-
-- `src/hooks/emails/useEnvioDocumentoForm.ts`:
-  - Nuevo prop opcional `destinatariosManualesInicial?: string[] | null`.
-  - En el `useEffect` de apertura, en vez de `setEmailsManualesAgregados([])`, precargar con la lista filtrada (regex email + dedupe contra los emails de los contactos ya listados, para no duplicar).
-
-- `src/components/shared/emails/EnviarDocumentoDialog.tsx`:
-  - Nuevo prop opcional `destinatariosInicial?: string[] | null` reenviado al hook.
-
-### Wiring del modal de factura
-
-- `src/features/facturacion/components/DialogEnviarFacturaBranded.tsx`:
-  - Pasar `destinatariosInicial={defaults?.destinatarios_emails ?? null}`.
-  - En `onEnviar` (además del guardado de CC ya existente): calcular `manualesPersist = payload.destinatarios.filter(d => !d.contacto_id).map(d => d.email)` y llamar `guardarDefaultsDestinatariosCliente(factura.cliente_id, manualesPersist)` con `try/catch` best-effort.
-
-### Tests
-
-- Extender `DialogEnviarFacturaBranded` (si tiene test) o el test del hook `useEnvioDocumentoForm`:
-  - Que `destinatariosManualesInicial` precarga los badges y no duplica con contactos.
-  - Que al vaciar la lista y enviar, se persiste `[]` (para "olvidar" preferencias explícitamente).
-- `guardarDefaultsDestinatariosCliente`: test mínimo del service (mock supabase).
-
-### Metadata
-
-- `APP_VERSION` → `13.213.41`.
-- Nueva entrada `## [13.213.41] - 2026-07-07` en `CHANGELOG.md` explicando ambos cambios con analogía breve (agenda de correos que se acuerda de los invitados frecuentes; sacar los mails de los proveedores del picker porque no son destinatarios válidos de una factura al cliente).
-
-## Fuera de alcance
-
-- Persistir destinatarios manuales para cotización/proforma (mismo patrón, pero requiere cuatro cambios adicionales por módulo). Se puede hacer en otra ola si el usuario lo pide.
-- No se elimina el helper `esContactoProveedor` — sigue usándose para filtrar la lista, sólo desaparece de la UI el bloque expandible.
+- No se toca la UI ni los servicios en TypeScript: el cliente sigue enviando solo `dias_credito` y el trigger se encarga del resto.
+- No afecta a `proveedor_facturas` (misma columna pero flujo distinto).
 
 ## Archivos
 
-Nuevos:
-- `supabase/migrations/<timestamp>_defaults_destinatarios_cliente.sql`
-
-Editados:
-- `src/components/shared/emails/DestinatariosPicker.tsx`
-- `src/components/shared/emails/__tests__/DestinatariosPicker.test.tsx` (si aplica)
-- `src/hooks/emails/useEnvioDocumentoForm.ts`
-- `src/components/shared/emails/EnviarDocumentoDialog.tsx`
-- `src/features/facturacion/services/datosFiscalesCliente.ts`
-- `src/features/facturacion/services/index.ts`
-- `src/features/facturacion/components/DialogEnviarFacturaBranded.tsx`
-- `src/constants/appVersion.ts`
-- `CHANGELOG.md`
+- **nuevo** `supabase/migrations/<timestamp>_facturas_recompute_fecha_vencimiento.sql`
+- editado `CHANGELOG.md`
+- editado `src/constants/appVersion.ts`
