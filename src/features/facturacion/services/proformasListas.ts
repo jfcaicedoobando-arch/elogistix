@@ -1,10 +1,17 @@
 /**
- * Servicio: proformas aprobadas listas para convertir a factura.
+ * Servicio: proformas aceptadas por el cliente y listas para convertir a factura.
  *
- * Una proforma está "lista para facturar" cuando:
- *   - `estado_revision = 'aprobada'` (aprobada internamente)
- *   - `factura_id IS NULL` (aún no se ha convertido a CFDI/borrador)
+ * Una proforma está "lista para facturar" cuando su `getEstadoUnificado`
+ * (ver `@/features/proformas/lib/estadoUnificado`) resuelve a `'aceptada'`:
+ *   - `estado_cliente = 'aceptada'` (el cliente aceptó la proforma)
+ *   - `estado_proforma <> 'facturada'` (aún no cerrada en flujo legacy)
+ *   - `factura_id IS NULL` (sin CFDI/borrador enlazado)
  *   - `deleted_at IS NULL` (no eliminada lógicamente)
+ *
+ * Nota: `estado_revision` es aprobación INTERNA (previo a mandar al cliente)
+ * y NO forma parte del gate de facturación. Filtrar por él dejaba pasar
+ * ~22 filas legacy con `estado_proforma='facturada' AND factura_id IS NULL`
+ * (CFDI emitido fuera del sistema) que inflaban el contador.
  *
  * Sólo I/O — la orquestación vive en `hooks/useProformasListas.ts`.
  */
@@ -25,7 +32,8 @@ export async function fetchProformasListas(orgId: string): Promise<FilaProformaL
     .from("proformas")
     .select("id, numero, cliente_nombre, expediente, total_usd, total_mxn, created_at")
     .eq("organization_id", orgId)
-    .eq("estado_revision", "aprobada")
+    .eq("estado_cliente", "aceptada")
+    .neq("estado_proforma", "facturada")
     .is("factura_id", null)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -39,7 +47,8 @@ export async function fetchProformasListasCount(orgId: string): Promise<number> 
     .from("proformas")
     .select("id", { count: "exact", head: true })
     .eq("organization_id", orgId)
-    .eq("estado_revision", "aprobada")
+    .eq("estado_cliente", "aceptada")
+    .neq("estado_proforma", "facturada")
     .is("factura_id", null)
     .is("deleted_at", null);
   if (error) throw error;
