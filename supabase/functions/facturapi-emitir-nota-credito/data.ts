@@ -3,7 +3,7 @@
  * Aíslan ramas/`??` para reducir la complejidad ciclomática del handler.
  */
 import type { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import type { NotaCreditoContext, ConceptoNC } from "./helpers.ts";
+import type { NotaCreditoContext, ConceptoNC, ReferenciasEmbarque } from "./helpers.ts";
 
 export type SupabaseLike = ReturnType<typeof createClient>;
 
