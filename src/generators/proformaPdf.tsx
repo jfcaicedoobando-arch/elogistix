@@ -29,6 +29,7 @@ interface GenerarPdfProformaParams {
 export async function generarPdfProforma(params: GenerarPdfProformaParams): Promise<void> {
   const { proforma, embarque, cliente, tasaIva = TASA_IVA } = params;
   const emisor = await cargarEmisorEmpresa();
+  const orgSlug = slugifyOrg(emisor.razonSocial);
   if (
     params.proforma.es_consolidada &&
     params.conceptosConsolidados &&
@@ -42,7 +43,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
         conceptosConsolidados={params.conceptosConsolidados}
         emisor={emisor}
       />,
-      `${proforma.numero}-proforma-consolidada`,
+      `${orgSlug}_${proforma.numero}-proforma-consolidada`,
     );
     return;
   }
@@ -55,7 +56,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
       tasaIva={tasaIva}
       emisor={emisor}
     />,
-    `${proforma.numero}-proforma`,
+    `${orgSlug}_${proforma.numero}-proforma`,
   );
 }
 
