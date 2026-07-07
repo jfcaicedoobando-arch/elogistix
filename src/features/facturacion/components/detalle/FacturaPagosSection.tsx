@@ -5,7 +5,7 @@
  * de registrar pago: `total − Σ monto_aplicado_factura`.
  */
 import { useState } from "react";
-import { Loader2, Trash2, CheckCircle2, Clock } from "lucide-react";
+import { Loader2, Trash2, CheckCircle2, Clock, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
+import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 
 interface Props {
   facturaId: string;
@@ -50,6 +52,7 @@ export function FacturaPagosSection({
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
+  const [previewRep, setPreviewRep] = useState<{ id: string; label: string } | null>(null);
 
   const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);
   const saldo = Math.max(0, totalFactura - totalPagado);
@@ -134,9 +137,35 @@ export function FacturaPagosSection({
                       </td>
                       <td className="py-2 px-2">
                         {repTimbrado ? (
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/20 font-mono text-xs">
-                            {`${p.serie_rep ?? ""}${p.folio_rep}`}
-                          </Badge>
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 font-mono text-xs">
+                              {`${p.serie_rep ?? ""}${p.folio_rep}`}
+                            </Badge>
+                            <Button
+                              variant="outline" size="icon" className="h-6 w-6"
+                              title="Previsualizar PDF del REP" aria-label="Previsualizar PDF del REP"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewRep({ id: p.id, label: `${p.serie_rep ?? ""}${p.folio_rep}` });
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            <FacturaDownloadButton
+                              stored={null}
+                              kind="pdf"
+                              pagoId={p.id}
+                              size="icon"
+                              className="h-6 w-6"
+                            />
+                            <FacturaDownloadButton
+                              stored={null}
+                              kind="xml"
+                              pagoId={p.id}
+                              size="icon"
+                              className="h-6 w-6"
+                            />
+                          </div>
                         ) : repCancelado ? (
                           <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
                             REP cancelado
@@ -208,6 +237,13 @@ export function FacturaPagosSection({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DialogPreviewCfdiPdf
+        open={!!previewRep}
+        onOpenChange={(o) => !o && setPreviewRep(null)}
+        pagoId={previewRep?.id}
+        title={previewRep ? `Complemento de pago ${previewRep.label}` : "Complemento de pago"}
+      />
     </>
   );
 }

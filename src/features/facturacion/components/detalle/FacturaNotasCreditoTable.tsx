@@ -2,12 +2,14 @@
  * Tabla de notas de crédito ligadas a una factura. Extraída de
  * FacturaNotasCreditoSeccion para mantener el archivo ≤ 200 líneas.
  */
-import { Mail, XCircle, Stamp } from "lucide-react";
+import { useState } from "react";
+import { Mail, XCircle, Stamp, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
+import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import type { EstadoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
 const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
@@ -59,6 +61,7 @@ interface Props {
 
 export function FacturaNotasCreditoTable(props: Props) {
   const { notas, canEdit, uuidFacturaOriginal, timbrando, onTimbrar, onEmail, onCancelar } = props;
+  const [previewNc, setPreviewNc] = useState<NotaCreditoRow | null>(null);
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -104,6 +107,13 @@ export function FacturaNotasCreditoTable(props: Props) {
                   <div className="flex justify-end items-center gap-1">
                     {timbrada && (
                       <>
+                        <Button
+                          variant="outline" size="icon" className="h-7 w-7"
+                          title="Previsualizar PDF" aria-label="Previsualizar PDF"
+                          onClick={() => setPreviewNc(n)}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
                         <FacturaDownloadButton stored={n.pdf_url} kind="pdf" notaCreditoId={n.id} />
                         <FacturaDownloadButton stored={n.xml_url} kind="xml" notaCreditoId={n.id} />
                         <Button
@@ -140,6 +150,12 @@ export function FacturaNotasCreditoTable(props: Props) {
           })}
         </tbody>
       </table>
+      <DialogPreviewCfdiPdf
+        open={!!previewNc}
+        onOpenChange={(o) => !o && setPreviewNc(null)}
+        notaCreditoId={previewNc?.id}
+        title={previewNc ? `Nota de crédito ${previewNc.serie ?? ""}${previewNc.folio_fiscal ?? previewNc.folio}` : "Nota de crédito"}
+      />
     </div>
   );
 }

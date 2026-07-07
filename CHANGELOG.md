@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.22] - 2026-07-07
+
+- **Feature · Previsualización de PDF para NC y REP con la misma papelería que la factura**: se agrega un nuevo componente `DialogPreviewCfdiPdf` que renderiza en un iframe el PDF timbrado descargado vía el proxy `facturapi-descargar` (mismo endpoint que ya usaban las descargas de factura). Como el PDF lo genera FacturAPI con la configuración de logo/branding de la organización, la papelería queda idéntica a la de las facturas.
+  - `FacturaNotasCreditoTable`: junto a los botones de descargar PDF/XML y reenviar por email, se añade un botón "Previsualizar PDF" (ícono `Eye`) para cada NC en estado `Timbrada` o `Aplicada`.
+  - `FacturaPagosSection` (columna REP): cuando el REP está timbrado, además del chip verde con el folio, se muestran ahora tres acciones inline: previsualizar (`Eye`), descargar PDF y descargar XML — usando `FacturaDownloadButton` con `pagoId` como identificador.
+  - Analogía: es como abrir el PDF de la factura desde la vista de detalle sin bajarlo a la máquina — ahora la NC y el REP tienen la misma cortesía.
+
 ## [13.213.21] - 2026-07-07
 
 - **Feature · Correos de NC y REP con el mismo design language que Cotización/Proforma/Factura**: se agregan dos nuevas plantillas transaccionales que consumen el shell compartido `_layout/EmailLayout.tsx` (mismo header con logo `librecarga-logo.png`, chip de tipo de documento, tabla de datos, mensaje libre, firma del ejecutivo y footer con unsubscribe automático):
