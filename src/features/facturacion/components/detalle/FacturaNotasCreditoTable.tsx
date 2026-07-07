@@ -150,6 +150,12 @@ export function FacturaNotasCreditoTable(props: Props) {
           })}
         </tbody>
       </table>
+      <DialogPreviewCfdiPdf
+        open={!!previewNc}
+        onOpenChange={(o) => !o && setPreviewNc(null)}
+        notaCreditoId={previewNc?.id}
+        title={previewNc ? `Nota de crédito ${previewNc.serie ?? ""}${previewNc.folio_fiscal ?? previewNc.folio}` : "Nota de crédito"}
+      />
     </div>
   );
 }
