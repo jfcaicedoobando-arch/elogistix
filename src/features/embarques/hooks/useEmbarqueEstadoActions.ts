@@ -67,11 +67,12 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   useEffect(() => {
     if (!embarqueId || !modo || !estado) return;
     if (!tipo) return;
+    if (!puedeSincronizarEstado) return;
     const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd ?? null, eta ?? null, estado);
     if (estadoCalculado !== estado) {
       syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail: user?.email ?? '' });
     }
-  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, user?.email]);
+  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, user?.email, puedeSincronizarEstado]);
 
   const conceptosSinProforma = conceptosVenta.filter(
     (c) => c.estado_facturacion !== "en_proforma",
