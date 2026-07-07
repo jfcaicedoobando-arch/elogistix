@@ -14,7 +14,8 @@ import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/u
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 import { useProformasPendientes } from "@/features/embarques/hooks/useProformas";
 import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
-import { MiniSerie, mesLabel } from "./DashboardEjecutivoFacturacionMiniSerie";
+import { MiniSerie } from "./DashboardEjecutivoFacturacionMiniSerie";
+import { mesLabel } from "./DashboardEjecutivoFacturacionMiniSerie.helpers";
 
 type Tone = "default" | "success" | "warn" | "danger";
 

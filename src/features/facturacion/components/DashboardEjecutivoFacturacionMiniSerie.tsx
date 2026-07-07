@@ -6,14 +6,6 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency } from "@/lib/formatters";
 
-const NOMBRES_MES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-
-export function mesLabel(ymStr: string): string {
-  const [, m] = ymStr.split("-");
-  const idx = Number.parseInt(m, 10) - 1;
-  return NOMBRES_MES[idx] ?? ymStr;
-}
-
 interface Props {
   titulo: string;
   data: number[];
