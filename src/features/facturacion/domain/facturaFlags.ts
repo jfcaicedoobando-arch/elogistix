@@ -75,10 +75,14 @@ export function deriveFacturaFlags(
     sinTimbrar && esCreadaConCapacidadTimbrado(factura.fecha_emision);
   const estaCancelada = factura.estado === "Cancelada" || factura.estado === "Sustituida";
   const timbradaVigente = !sinTimbrar && factura.estado === "Emitida";
+  // Factura vigente cobrable: incluye facturas legacy (Emitida sin uuid_fiscal,
+  // timbradas fuera del sistema antes del corte). Cancelar/Sustituir sí requiere
+  // uuid_fiscal porque son operaciones contra el SAT.
+  const vigenteCobrable = factura.estado === "Emitida" && !estaCancelada;
   const puedeCancelarCfdi = timbradaVigente && canEdit;
   const puedeSustituirCfdi = timbradaVigente && canEdit;
   const saldo = ctx.saldo ?? 0;
-  const puedeRegistrarPago = timbradaVigente && canEdit && saldo > 0.01;
+  const puedeRegistrarPago = vigenteCobrable && canEdit && saldo > 0.01;
   const repPendiente = (ctx.pagosRepPendientes ?? 0) > 0;
   return {
     sinTimbrar,

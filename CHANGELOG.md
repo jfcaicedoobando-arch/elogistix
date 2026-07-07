@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.26] - 2026-07-07
+- Fix: en el detalle de factura, ahora aparece el botón "Registrar pago" en facturas legacy (estado Emitida sin `uuid_fiscal`, timbradas fuera del sistema antes del 01/07/2026). `deriveFacturaFlags` distingue entre "vigente cobrable" y "timbrada vigente"; cancelar/sustituir siguen requiriendo UUID. Test agregado en `facturaFlags.test.ts`.
+
 ## [13.213.25] - 2026-07-07
 
 - **Fix CI · Power of 10 (≤200 líneas)**: `DialogCrearNotaCredito.tsx` quedaba en 201 líneas (el auditor cuenta con `split("\n").length`, que suma 1 al trailing newline). Se fusionan las dos constantes `CLAVE_SAT_DEFAULT` y `CLAVE_UNIDAD_DEFAULT` en una sola línea. Ajuste puramente cosmético, sin cambios de lógica. Analogía: el elevador marcaba "máx. 200" y entrábamos 201 — juntamos a dos pasajeros en un mismo asiento y la alarma deja de sonar.
