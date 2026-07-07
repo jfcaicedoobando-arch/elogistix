@@ -1,54 +1,66 @@
 
 ## Diagnóstico
 
-Confirmado, no es que las 23 sean "reales": son **legacy data**. Los dos módulos usan definiciones distintas de "lista para facturar":
+Reproduje el caso con `ELEXP00250` (embarque `77780925…`, ETD 2026-04-12):
 
-| Módulo | Filtro actual | Resultado |
-|---|---|---|
-| `/proformas` (badge Aceptada) | `estado_proforma <> 'facturada'` **AND** `estado_cliente = 'aceptada'` | **9** ✅ |
-| `/facturacion` bandeja "Proformas listas" | `estado_revision = 'aprobada'` **AND** `factura_id IS NULL` | **23** ❌ |
+- Tiene 3 conceptos de venta, todos con `estado_facturacion='en_proforma'`.
+- Los 3 apuntan a 2 proformas con `estado_proforma='facturada'`, `origen='gap_externo'`, sin `factura_id` ni `folio_factura_externa` (aceptación histórica del back-fill).
+- El RPC `validar_cierre_embarque` **ya lo considera OK** en la regla `venta_conceptos_facturados` (pasa como facturado por proforma histórica).
+- **Pero** la lista "Hueco de facturación" (que alimenta la bandeja "Por facturar" y el KPI del dashboard) sólo excluye embarques que tengan una fila real en `facturas` con `factura_pdf_url` para el mismo expediente. Como estos embarques no tienen CFDI, se cuelan al hueco y se muestran como "falta factura".
 
-Query a la DB (`proformas` sin `deleted_at`):
-- 23 filas cumplen el filtro de Facturación.
-- De esas, **22 tienen `estado_proforma = 'facturada'`** (ya conceptualmente cerradas en flujo legacy, pero nunca se les asignó `factura_id` porque el CFDI se emitió fuera del sistema o antes de que existiera el link). Sólo 3 tienen totales normales; el resto son basura histórica.
-- Las 9 "reales" tienen `estado_proforma='pendiente'` + `estado_cliente='aceptada'` + `factura_id IS NULL`.
+Analogía: el checklist interno del embarque ya sabe que "una nota vieja firmada por el cliente" cuenta como facturado, pero el radar del dashboard sigue buscando sólo CFDI oficiales, así que ELEXP00250 aparece en las dos listas contradictorias.
 
-Analogía: es como si en /proformas cuentas "notas firmadas por el cliente que aún no tienen factura oficial", y en /facturación cuentas "notas visadas por el gerente" — pero en la data vieja hay 22 notas que el gerente visó, se archivaron como "facturadas" a mano, y nunca se ligaron a un CFDI. Esas ya no deberían aparecer como pendientes.
+Medición en BD: hoy hay **71** embarques en el hueco; **18** de ellos (incluye ELEXP00250) tienen todos sus conceptos cubiertos por proformas `facturada`. Después del fix, el hueco debe quedar en **53**.
 
 ## Cambios
 
-### 1. `src/features/facturacion/services/proformasListas.ts`
-Reemplazar el filtro en `fetchProformasListas` y `fetchProformasListasCount` para que coincida con `getEstadoUnificado === 'aceptada'`:
-
-```ts
-.eq("estado_cliente", "aceptada")
-.neq("estado_proforma", "facturada")
-.is("factura_id", null)
-.is("deleted_at", null)
+### 1. `src/features/facturacion/services/huecoFacturacion/fetchSources.ts`
+Añadir una consulta paralela nueva `fetchConceptosVentaDeEmbarques(ids)` que traiga:
 ```
+id, embarque_id, estado_facturacion, proforma_id, deleted_at,
+proformas!inner ( id, estado_proforma, deleted_at )
+```
+filtrando `deleted_at IS NULL` en los conceptos.
 
-Retirar `.eq("estado_revision", "aprobada")` — ese campo es de revisión interna previa, no del ciclo cliente→factura, y es lo que estaba dejando pasar las 22 legacy.
+Exponerla desde `fetchVentasYFacturas` en el mismo `Promise.all` (renombrarlo internamente a `fetchDatosHueco`), devolviendo `{ ventas, facturas, conceptosDetalle }`. Los `ventas` que ya se usan para calcular MXN/USD no cambian de forma.
 
-Actualizar el bloque JSDoc del archivo para reflejar la nueva definición y citar `getEstadoUnificado` como fuente de verdad.
+### 2. `src/features/facturacion/services/huecoFacturacion/index.ts`
+Antes de construir cada fila:
+- Construir un `Set<string> excluidosPorProformaHistorica` con los `embarque_id` que cumplen:
+  - Tienen ≥ 1 concepto de venta no borrado.
+  - **Todos** sus conceptos no borrados tienen `estado_facturacion='en_proforma'` **y** su proforma asociada tiene `estado_proforma='facturada'` y no está borrada.
+- En el bucle actual, añadir `if (excluidosPorProformaHistorica.has(e.id)) continue;` justo después del check existente por `facturadosSet`.
 
-### 2. `src/features/facturacion/components/bandejas/BandejaProformasListas.tsx`
-Cambiar el tooltip / `emptyMessage` para leer "aceptadas por el cliente y sin factura" en lugar de "aprobadas". Sin cambios de lógica.
+Regla puramente aditiva: no cambia el comportamiento para embarques con CFDI real, ni para los que tienen conceptos sueltos o proformas aún no facturadas.
 
-### 3. `src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx`
-El KPI "Listas para facturar" usa el mismo hook, así que se corrige solo. Actualizar el tooltip: "Proformas aceptadas por el cliente, sin factura emitida — listo para timbrar."
+### 3. `src/features/facturacion/services/huecoFacturacion/buildFilas.ts`
+Sin cambios de lógica. Sólo documentar en el JSDoc del módulo la nueva condición de exclusión "todos los conceptos ya viven en una proforma marcada como `facturada` (aceptación histórica)".
 
-### 4. `docs/flujo-facturacion.md`
-Añadir nota: `estado_revision` (aprobación interna) **no** se usa para decidir facturación; el gate es `estado_cliente='aceptada'`. Documentar que las 22 filas legacy con `estado_proforma='facturada' AND factura_id IS NULL` son data histórica intencional (no se auto-limpian).
+### 4. Tests
+- `src/features/facturacion/services/huecoFacturacion/__tests__/buildFilas.test.ts`: agregar caso "excluye embarque cuando todos los conceptos están en proformas facturadas" y caso "no excluye si al menos un concepto sigue `pendiente` o vive en proforma no-facturada".
+- Ajustar el mock/`_supabaseChainMock` para la nueva query de conceptos_venta si algún test integrador del hook `useHuecoFacturacion` deja de pasar.
 
-### 5. Versionado
-Bump `APP_VERSION` a `13.213.1` y entrada en `CHANGELOG.md`:
-> Fix: bandeja "Proformas listas" y KPI del dashboard ahora usan el mismo criterio que `/proformas` (`estado_cliente='aceptada'` + no facturada), eliminando 22 falsos positivos de data legacy.
+### 5. Bandeja / KPI (sin cambios de código)
+`BandejaPorFacturar` y el KPI "Por facturar" del `DashboardEjecutivoFacturacion` leen del mismo hook `useHuecoFacturacion`, así que ambos bajarán automáticamente al mismo número corregido.
+
+### 6. Versionado
+- Bump `APP_VERSION` a `13.213.3` en `src/constants/appVersion.ts`.
+- Entrada nueva en `CHANGELOG.md`:
+  > **Fix:** el "Hueco de facturación" (bandeja "Por facturar" + KPI) ahora respeta la aceptación histórica: si todos los conceptos de venta de un embarque ya viven en proformas con `estado_proforma='facturada'`, el embarque se considera facturado aunque no exista CFDI. Alinea la bandeja con lo que ya reportaba `validar_cierre_embarque`. Ejemplo: `ELEXP00250` deja de aparecer.
 
 ## Fuera de alcance
 
-- **No** tocar ni migrar las 22 filas legacy. Si más adelante quieres una limpieza masiva, se puede hacer en otro turno con un script que las mueva a `deleted_at` o les asigne `factura_id` de un CFDI externo — decisión tuya.
-- **No** cambiar el flujo aprobación interna → aceptación cliente. Sigue igual.
+- **No** se emiten CFDI faltantes ni se "curan" los back-fills — sólo se cambia el criterio de conteo.
+- **No** se toca el RPC `validar_cierre_embarque` (ya usa la definición correcta).
+- **No** se cambia la definición de "Proformas listas" (fix anterior de `13.213.1` sigue vigente).
+- **No** se limpia data legacy en BD.
 
 ## Verificación
 
-Después del cambio, ambos números deben ser **9** en el navegador (bandeja + KPI), y el count query en DB devolver 9.
+1. En el navegador, la bandeja "Por facturar" y el KPI deben bajar de 43 → **53** (¿o el número exacto que dé el hook filtrado; DB midió 71→53 hoy). El embarque `ELEXP00250` no aparece.
+2. Consulta de control en BD antes/después:
+   ```sql
+   -- Debe devolver 0 embarques con TODOS los conceptos en proformas 'facturada'
+   -- después del despliegue (visto desde la UI del hueco).
+   ```
+3. Tests unitarios nuevos pasan; los existentes de `buildFilas`/`useHuecoFacturacion` siguen verdes.
