@@ -31,7 +31,9 @@ export function BandejaPorFacturar() {
         data={filas}
         isLoading={isLoading}
         emptyMessage="No hay hueco de facturación. ✅"
+        rowKey={(row) => row.embarque_id}
       />
+
     </div>
   );
 }
