@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.15] - 2026-07-07
+
+- **Chore · Lint fixes (`--max-warnings 0`)**: (1) `DashboardEjecutivoFacturacion.tsx` bajó de complejidad 17 → dentro del límite extrayendo la derivación de `label/tone/hint` del KPI "Facturado mes" a un helper puro `buildFacturadoUi`. (2) `supabase/functions/enviar-factura-email/helpers.ts` bajó de 266 → 234 líneas moviendo `buildTemplateData` y `persistEnvio` a un nuevo archivo `persist.ts` (mismos tipos, mismos imports en `index.ts`). Sin cambios de lógica. Analogía: teníamos una carpeta con 266 hojas y el máximo era 250 — sacamos las 2 formas más largas a una carpeta anexa y ahora la principal cabe holgada.
+
 ## [13.213.14] - 2026-07-07
 
 - **Fix · Toast duplicado al eliminar embarque**: al confirmar la eliminación aparecían dos notificaciones ("Embarque eliminado" genérico + "Embarque eliminado — {expediente} fue eliminado permanentemente"). El hook `useEliminarEmbarque` disparaba su propio `notifySuccess`/`notifyError`, y encima `DialogEliminarEmbarque` disparaba otro con el mensaje enriquecido. Se quitan los toasts del hook — el hook queda enfocado sólo en la mutación + invalidación de queries de `embarques`/`cotizaciones`, y la UI (el dialog, único caller real) sigue mostrando el toast con el expediente. Resultado: **1 toast** de éxito o error, con el detalle correcto. Analogía: dos meseros llegaban a avisar lo mismo a la misma mesa; ahora sólo llega el que trae la orden completa con el nombre del platillo.
