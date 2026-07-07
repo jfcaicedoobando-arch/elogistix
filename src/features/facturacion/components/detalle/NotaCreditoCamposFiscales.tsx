@@ -1,8 +1,11 @@
 /**
- * Bloque de campos fiscales (folio, fecha, motivo, uso CFDI, forma de pago,
+ * Bloque de campos fiscales (fecha, motivo, uso CFDI, forma de pago,
  * descripción) para DialogCrearNotaCredito.
+ *
+ * v13.213.20 — se quitó el campo "Folio interno": el borrador arranca con
+ * `BORRADOR-<ts>` y al timbrar FacturAPI es la fuente de verdad
+ * (`<serie><folio>`), igual que en facturas.
  */
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
@@ -21,8 +24,6 @@ const MOTIVOS: { value: Motivo; label: string }[] = [
 ];
 
 interface Props {
-  folio: string;
-  setFolio: (v: string) => void;
   fecha: string;
   setFecha: (v: string) => void;
   motivo: Motivo;
@@ -36,14 +37,10 @@ interface Props {
 }
 
 export function NotaCreditoCamposFiscales(props: Props) {
-  const { folio, setFolio, fecha, setFecha, motivo, setMotivo, usoCfdi, setUsoCfdi, formaPago, setFormaPago, descripcion, setDescripcion } = props;
+  const { fecha, setFecha, motivo, setMotivo, usoCfdi, setUsoCfdi, formaPago, setFormaPago, descripcion, setDescripcion } = props;
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="nc-folio">Folio interno *</Label>
-          <Input id="nc-folio" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="NC-001" />
-        </div>
         <div className="space-y-1.5">
           <Label htmlFor="nc-fecha">Fecha *</Label>
           <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
@@ -66,7 +63,7 @@ export function NotaCreditoCamposFiscales(props: Props) {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5 col-span-2">
+        <div className="space-y-1.5">
           <Label>Forma de pago *</Label>
           <Select value={formaPago} onValueChange={setFormaPago}>
             <SelectTrigger><SelectValue /></SelectTrigger>
