@@ -147,7 +147,8 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       return {
         quantity: c.cantidad,
         product: {
-          description: c.descripcion,
+          // v13.208.0 — prefijo con Expediente + BLs (queda en el XML SAT).
+          description: formatDescripcionConReferencias(c.descripcion, ctx.referencias),
           product_key: c.clave_sat ?? "",
           price: c.precio_unitario,
           unit_key: c.clave_unidad ?? "E48",
@@ -166,6 +167,9 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
     payload.related = [ctx.sustituye_uuid];
     payload.relation = "04";
   }
+  // v13.208.0 — bloque "Referencias del embarque" al pie del PDF de FacturAPI.
+  const pdfSection = buildPdfCustomSection(ctx.referencias);
+  if (pdfSection) payload.pdf_custom_section = pdfSection;
   return payload;
 }
 
