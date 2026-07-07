@@ -34,7 +34,8 @@ interface Props {
   totalFactura: number;
   moneda: string;
   canEdit: boolean;
-  onRegistrarPago: () => void;
+  /** @deprecated Ahora el botón vive en `FacturaDetalleActionsBar`. */
+  onRegistrarPago?: () => void;
 }
 
 export function FacturaPagosSection({
@@ -43,7 +44,6 @@ export function FacturaPagosSection({
   totalFactura,
   moneda,
   canEdit,
-  onRegistrarPago,
 }: Props) {
   const { toast } = useToast();
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
