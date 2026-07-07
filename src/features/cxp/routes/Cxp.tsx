@@ -29,6 +29,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { withOrgPrefix } from "@/lib/filenames";
 
 // NOTE: CxpFiltros retiene su API propia (9 props + hooks de proveedores/categorías).
 // UnifiedFiltersBar no cabe limpio sin refactorizar el estado de página — pendiente Oleada 5.
