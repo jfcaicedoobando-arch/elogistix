@@ -32,6 +32,8 @@ export function BandejaPorFacturar() {
         isLoading={isLoading}
         emptyMessage="No hay hueco de facturación. ✅"
         rowKey={(row) => row.embarque_id}
+        getRowHref={(row) => `/embarques/${row.embarque_id}?tab=facturacion`}
+        getRowAriaLabel={(row) => `Abrir embarque ${row.expediente ?? row.embarque_id}`}
       />
 
     </div>
