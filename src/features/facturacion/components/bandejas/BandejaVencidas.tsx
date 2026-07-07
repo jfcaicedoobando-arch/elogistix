@@ -6,11 +6,11 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlarmClock } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
+import { agingVencidoBucket } from "@/features/facturacion/utils/aging";
 import { BandejaShell } from "./BandejaShell";
 
 interface FilaVencida {
@@ -26,12 +26,6 @@ interface FilaVencida {
 interface Filters extends Record<string, string> { moneda: string }
 const DEFAULTS: Filters = { moneda: "todas" };
 
-function toneDias(d: number): "outline" | "secondary" | "destructive" {
-  if (d > 60) return "destructive";
-  if (d > 30) return "secondary";
-  return "outline";
-}
-
 const columns = defineColumns<FilaVencida>([
   {
     id: "numero",
@@ -46,13 +40,21 @@ const columns = defineColumns<FilaVencida>([
     meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" } },
   {
     id: "dias",
-    header: "Días",
+    header: "Antigüedad",
     accessorFn: (r) => r.dias_vencido,
     enableSorting: true,
-    meta: { width: "w-[100px]", align: "center" },
-    cell: ({ row }) => (
-      <Badge variant={toneDias(row.original.dias_vencido)}>{row.original.dias_vencido} d</Badge>
-    ),
+    meta: { width: "w-[110px]", align: "center" },
+    cell: ({ row }) => {
+      const b = agingVencidoBucket(row.original.dias_vencido);
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${b.className}`}
+          aria-label={b.ariaLabel}
+        >
+          {b.label}
+        </span>
+      );
+    },
   },
   { ...moneyColumn<FilaVencida>({ id: "saldo", header: "Saldo",
       accessor: (r) => r.saldo, currencyAccessor: (r) => r.moneda }),
