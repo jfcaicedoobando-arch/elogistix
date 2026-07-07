@@ -180,7 +180,7 @@ function computeVisibility(props: Props) {
 
 export function FacturaDetalleActions(props: Props) {
   const v = computeVisibility(props);
-  const sections: Array<{ show: boolean; node: React.ReactNode }> = [
+  const sections: Array<{ show: boolean; node: ReactNode }> = [
     {
       show: v.mostrarGrupoCfdi,
       node: (
@@ -229,10 +229,10 @@ export function FacturaDetalleActions(props: Props) {
     const needsDivider = previoVisible;
     previoVisible = true;
     return (
-      <React.Fragment key={i}>
+      <Fragment key={i}>
         {needsDivider && <Divider />}
         {s.node}
-      </React.Fragment>
+      </Fragment>
     );
   });
 
