@@ -1,16 +1,14 @@
 /**
- * Bandeja "Por timbrar": borradores creados en el sistema (post 01/07/2026)
- * pendientes de FacturApi. Sigue el patrón unificado de listas:
- * Card + UnifiedFiltersBar + useClientPagedList + DataTable con orden.
+ * Bandeja "Por timbrar": borradores creados en el sistema pendientes de FacturApi.
+ * Estados unificados vía `<BandejaShell />` (loading + empty + error).
  */
-
 import { Card, CardContent } from "@/components/ui/card";
 import { FileClock } from "lucide-react";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { clientColumn, moneyColumn, dateColumn } from "@/components/shared/dataTable/columnBuilders";
-import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { useFacturasPorTimbrar, type FilaPorTimbrar } from "@/features/facturacion/hooks/useBandejas";
+import { BandejaShell } from "./BandejaShell";
 
 const columns = defineColumns<FilaPorTimbrar>([
   {
@@ -33,7 +31,7 @@ const columns = defineColumns<FilaPorTimbrar>([
 ]);
 
 export function BandejaPorTimbrar() {
-  const { data, isLoading } = useFacturasPorTimbrar();
+  const { data, isLoading, isError, refetch } = useFacturasPorTimbrar();
   const paged = useClientPagedList<FilaPorTimbrar, Record<string, string>>({
     data,
     isLoading,
@@ -50,18 +48,17 @@ export function BandejaPorTimbrar() {
   const totalCount = data?.length ?? 0;
 
   return (
-    <div className="space-y-3">
-      <UnifiedFiltersBar
-        search={paged.search}
-        onSearchChange={paged.setSearch}
-        searchPlaceholder="Buscar folio o cliente…"
-        chips={paged.activeChips}
-        activeCount={paged.activeCount}
-        onClearAll={paged.resetAll}
-      />
-      <div className="text-xs text-muted-foreground">
-        Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} borradores
-      </div>
+    <BandejaShell
+      isError={isError}
+      onRetry={() => refetch()}
+      search={paged.search}
+      onSearchChange={paged.setSearch}
+      searchPlaceholder="Buscar folio o cliente…"
+      chips={paged.activeChips}
+      activeCount={paged.activeCount}
+      onClearAll={paged.resetAll}
+      counter={<>Mostrando <strong className="text-foreground">{paged.filteredCount}</strong> de {totalCount} borradores</>}
+    >
       <Card>
         <CardContent className="p-0">
           <DataTable
@@ -69,7 +66,8 @@ export function BandejaPorTimbrar() {
             data={paged.rows}
             isLoading={paged.isLoading}
             emptyIcon={FileClock}
-            emptyMessage="No hay facturas pendientes de timbrar. ✅"
+            emptyMessage="No hay facturas pendientes de timbrar."
+            emptyHint="Los CFDI recién creados aparecerán aquí antes de timbrarse."
             rowKey={(r) => r.id}
             getRowHref={(r) => `/facturacion/${r.id}`}
             getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
@@ -80,6 +78,6 @@ export function BandejaPorTimbrar() {
           />
         </CardContent>
       </Card>
-    </div>
+    </BandejaShell>
   );
 }
