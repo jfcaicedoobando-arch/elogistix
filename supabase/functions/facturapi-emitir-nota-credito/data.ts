@@ -29,6 +29,9 @@ interface FacturaRow {
   rfc_cliente: string | null;
   uso_cfdi: string | null;
   forma_pago: string | null;
+  embarque_id: string | null;
+  expediente: string | null;
+  referencia_bl: string | null;
 }
 
 interface ClienteRow {
