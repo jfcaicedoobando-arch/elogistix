@@ -12,6 +12,7 @@ import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReportePresupuestoDocument } from "@/pdf/documents/ReportePresupuestoDocument";
+import { withOrgPrefix } from "@/lib/filenames";
 
 function mesActual(): string {
   const d = new Date();
@@ -38,9 +39,10 @@ export function TabVsReal() {
     if (!data) return;
     await descargarPdf(
       <ReportePresupuestoDocument resumen={data} />,
-      `Reporte_Presupuesto_${periodo}.pdf`,
+      await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
     );
   };
+
 
   return (
     <div className="space-y-3">

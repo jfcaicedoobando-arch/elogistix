@@ -1,79 +1,107 @@
-# Nombre de archivo PDF/XML de factura con Organización + folio
 
-Hoy el edge function `facturapi-descargar` devuelve nombres tipo `A123.pdf` (sólo serie+folio). Los usuarios quieren identificar la organización que descargó el archivo para no revolverlos entre tenants.
+# Propagar `{Org}_{nombre}` a todos los archivos descargables/enviables
 
-Analogía: en el buzón todos llegaban con "Sobre 123"; ahora vendrán con "LibreCarga_Sobre-123" para saber a quién pertenece.
+Ya lo aplicamos a `facturapi-descargar` (PDF/XML de factura, REP y NC). Falta el resto de puntos donde el usuario recibe un archivo.
 
-## Cambios
+Analogía: la política de "sticker con la organización" ya se aplica en la ventanilla A; ahora hay que aplicarla en las ventanillas B, C, D…
 
-### 1) `supabase/functions/facturapi-descargar/index.ts`
+## Alcance detectado
 
-Después de `resolveTarget` (ya conocemos `organizationId`), agregar un fetch a `public.organizations`:
+### Server-side (edge functions)
+| Función | Situación actual | Cambio |
+|---|---|---|
+| `enviar-factura-email/helpers.ts` | `Factura-{numero}.pdf/xml` | `{Org}_Factura-{numero}.pdf/xml` |
+| `enviar-cotizacion-email/handlers.ts` | `createSignedUrl` sin `download` (baja con el nombre feo del path) | agregar `download: '{Org}_Cotizacion-{folio}.pdf'` |
+| `facturapi-cancelar/index.ts` | `acuse-cancelacion-{numero}.pdf` | `{Org}_acuse-cancelacion-{numero}.pdf` |
+| `facturapi-descargar/index.ts` | ✅ ya hecho | — |
+| `enviar-proforma-email/index.ts` | Sólo envía link al portal (sin PDF adjunto) | Sin cambios |
+
+Cada función ya conoce el `organization_id` de la entidad; añadir un helper `slugifyOrg` + una consulta `SELECT nombre FROM organizations WHERE id = <org>`. Como los tres archivos comparten el patrón, se extrae un helper único en `supabase/functions/_shared/orgSlug.ts`:
 
 ```ts
-const { data: org } = await supabase
-  .from("organizations")
-  .select("nombre")
-  .eq("id", target.data.organizationId)
-  .maybeSingle();
-const orgSlug = slugifyOrg(org?.nombre ?? "org");
+export function slugifyOrg(nombre: string | null | undefined): string {
+  const s = (nombre ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+  return s || "org";
+}
+export async function fetchOrgSlug(admin, orgId: string): Promise<string> { ... }
 ```
 
-Y componer el filename final:
+Y en `facturapi-descargar/index.ts` migrar sus funciones internas a este helper compartido (dejamos DRY el módulo).
+
+### Client-side (generadores PDF)
+| Archivo | Nombre actual | Nombre nuevo |
+|---|---|---|
+| `src/generators/cotizacionPdf.tsx` | `{folio}-cotizacion` | `{Org}_{folio}-cotizacion` |
+| `src/generators/proformaPdf.tsx` (x2) | `{numero}-proforma[-consolidada]` | `{Org}_{numero}-proforma[-consolidada]` |
+| `src/generators/rentabilidadPdf.tsx` | `Rentabilidad_...` | `{Org}_Rentabilidad_...` |
+| `src/features/cxp/routes/Cxp.tsx` | `Reporte_Cartera_{fecha}` | `{Org}_Reporte_Cartera_{fecha}` |
+| `src/features/presupuesto/components/TabVsReal.tsx` | (revisar) | prefijo `{Org}_` |
+| `src/features/profit/routes/ProfitEstadoResultados.tsx` | (revisar) | prefijo `{Org}_` |
+| `src/features/tesoreria/routes/Tesoreria.tsx` | (revisar) | prefijo `{Org}_` |
+| `src/features/cotizacion/routes/CotizacionInformativaDetalle.tsx` (Tarifario) | (revisar) | prefijo `{Org}_` |
+
+Fuera de alcance: CSVs de aging/reconciliación (son datos, no "archivos que se descargan por mail"). Si el usuario los quiere, se agregan en una siguiente ola.
+
+Helper cliente en `src/lib/filenames.ts`:
 
 ```ts
-const filename = `${orgSlug}_${target.data.filename}.${ext}`;
-```
+import { fetchEmisorEmpresa } from "@/features/configuracion/services";
 
-**Formato resultante**:
+export function slugifyOrg(nombre: string | null | undefined): string { /* misma lógica */ }
 
-- Factura normal: `LibreCarga_A123.pdf`
-- REP (complemento de pago): `LibreCarga_REP-B45.xml`
-- Nota de crédito: `LibreCarga_NC-C7.pdf`
+/** Devuelve el slug del emisor configurado. Cache vía fetchEmisorEmpresa. */
+export async function getOrgFilenameSlug(): Promise<string> {
+  const emisor = await fetchEmisorEmpresa();
+  return slugifyOrg(emisor.razonSocial);
+}
 
-Se conserva la lógica actual de `target.data.filename` para que el subtipo (REP/NC) siga visible.
-
-### 2) Helper `slugifyOrg`
-
-Colocado en el mismo `index.ts` (función pequeña, no vale la pena archivo aparte):
-
-```ts
-function slugifyOrg(nombre: string): string {
-  return nombre
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   // quita acentos
-    .replace(/[^a-zA-Z0-9]+/g, "_")                     // no-alfanum → _
-    .replace(/^_+|_+$/g, "")                            // trim underscores
-    .slice(0, 40) || "org";                             // fallback y límite
+export async function withOrgPrefix(name: string): Promise<string> {
+  const slug = await getOrgFilenameSlug();
+  return `${slug}_${name}`;
 }
 ```
 
-Reglas:
+Se reusa el cache de 5 min de `fetchEmisorEmpresa`, así que agregar el prefijo no añade queries perceptibles.
 
-- Sin acentos ni ñ (`México` → `Mexico`).
-- Sin espacios ni caracteres raros: `Libre Carga S.A.` → `Libre_Carga_S_A`.
-- Máx 40 chars para no romper Content-Disposition.
-- Si queda vacío, `org`.
+Uso típico:
+```ts
+await descargarPdf(<Doc/>, await withOrgPrefix(`${folio}-cotizacion`));
+```
 
-### 3) Tests
+### Tests
+- Test unitario de `slugifyOrg` (frontend y edge — misma lógica, dos casas): acentos, espacios, símbolos, string vacío, límite 40 chars.
+- Extender `descargarCfdiFacturapi.test.ts`: ya cubre parseo de filename, sin cambios.
+- Extender un test de `enviar-factura-email` para verificar que `signUrl` recibe filename con prefijo (mockear `admin.storage`).
 
-- `supabase/functions/facturapi-descargar/__tests__/*` (Deno): agregar/actualizar caso que valide `Content-Disposition` contiene el prefijo de la org. Si no existen tests Deno de esta función, crear uno mínimo o extender el existente en `src/features/facturacion/services/__tests__/descargarCfdiFacturapi.test.ts` como cobertura del cliente (parsea filename tal cual venga; ya cubierto).
-- Sin cambios en el frontend: `descargarCfdiFacturapi` lee el filename del header, así que el nuevo nombre baja automáticamente.
+### Versión y changelog
+- `APP_VERSION` → `13.213.39`.
+- Entrada `[13.213.39]` en `CHANGELOG.md`.
 
-### 4) Versión y changelog
-
-- `APP_VERSION` → `13.213.38`.
-- Entrada `[13.213.38]` en `CHANGELOG.md` explicando el cambio de nombres de archivo.
-
-## Fuera de alcance
-
-- Nombres de archivo del PDF de proforma / reporte de cartera (esos se generan cliente-side; si se solicitan luego, aplicar la misma convención).
-- Cambiar el orden del filename (org vs folio) — usaremos `{Org}_{folio}` porque agrupa los archivos por tenant al ordenarlos alfabéticamente.
+## Deploy
+- `supabase--deploy_edge_functions` para las 3 funciones tocadas: `enviar-factura-email`, `enviar-cotizacion-email`, `facturapi-cancelar` (y `facturapi-descargar` si movemos al helper compartido).
 
 ## Archivos
+Nuevos:
+- `supabase/functions/_shared/orgSlug.ts`
+- `src/lib/filenames.ts`
+- `src/lib/__tests__/filenames.test.ts`
 
-- `supabase/functions/facturapi-descargar/index.ts`
-- (opcional) test Deno de la edge function
+Editados:
+- `supabase/functions/facturapi-descargar/index.ts` (usar helper compartido — refactor sin cambio funcional)
+- `supabase/functions/enviar-factura-email/helpers.ts`
+- `supabase/functions/enviar-cotizacion-email/handlers.ts`
+- `supabase/functions/facturapi-cancelar/index.ts`
+- `src/generators/cotizacionPdf.tsx`
+- `src/generators/proformaPdf.tsx`
+- `src/generators/rentabilidadPdf.tsx`
+- `src/features/cxp/routes/Cxp.tsx`
+- `src/features/presupuesto/components/TabVsReal.tsx`
+- `src/features/profit/routes/ProfitEstadoResultados.tsx`
+- `src/features/tesoreria/routes/Tesoreria.tsx`
+- `src/features/cotizacion/routes/CotizacionInformativaDetalle.tsx`
 - `src/constants/appVersion.ts`
 - `CHANGELOG.md`
-
-El archivo no debe de hacer mencion de librecarga, debe de hacer mencion de la org o tenant de libre carga.

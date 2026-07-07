@@ -29,6 +29,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { withOrgPrefix } from "@/lib/filenames";
 
 // NOTE: CxpFiltros retiene su API propia (9 props + hooks de proveedores/categorías).
 // UnifiedFiltersBar no cabe limpio sin refactorizar el estado de página — pendiente Oleada 5.
@@ -51,14 +52,16 @@ export default function Cxp() {
 
 
   const handlePdf = async () => {
+    const fecha = new Date().toISOString().slice(0, 10);
     await descargarPdf(
       <ReporteCarteraDocument
-        fechaCorte={new Date().toISOString().slice(0, 10)}
+        fechaCorte={fecha}
         cxc={cxc} cxp={data}
       />,
-      `Reporte_Cartera_${new Date().toISOString().slice(0, 10)}.pdf`,
+      await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
     );
   };
+
 
   const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {

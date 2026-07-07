@@ -17,6 +17,7 @@ import { exportToCsv } from "@/generators/exportCsv";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { withOrgPrefix } from "@/lib/filenames";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -35,9 +36,10 @@ export default function ProfitEstadoResultados() {
     if (!data) return;
     await descargarPdf(
       <ReporteEERRDocument periodo={c.mesActual.key} fuente={c.fuente} data={data} />,
-      `Reporte_EERR_${c.mesActual.key}.pdf`,
+      await withOrgPrefix(`Reporte_EERR_${c.mesActual.key}.pdf`),
     );
   };
+
 
   const sinDatos = !c.isLoading && data && data.ingresos.length === 0 && data.costos.length === 0;
 

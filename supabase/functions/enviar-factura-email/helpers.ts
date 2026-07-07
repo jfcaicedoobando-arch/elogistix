@@ -5,6 +5,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { captureEdgeException } from "../_shared/sentry.ts";
 import { FACTURAPI_BASE, basicAuthHeader } from '../_shared/facturapiAuth.ts';
+import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 
 export const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -226,9 +227,10 @@ export async function prepareAttachments(
   await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
   const safeNumero = sanitizeDownloadFilename(factura.numero ?? 'factura');
+  const orgSlug = await fetchOrgSlug(admin, factura.organization_id);
   const [pdfLink, xmlLink] = await Promise.all([
-    signUrl(admin, pdfPath, `Factura-${safeNumero}.pdf`),
-    signUrl(admin, xmlPath, `Factura-${safeNumero}.xml`),
+    signUrl(admin, pdfPath, `${orgSlug}_Factura-${safeNumero}.pdf`),
+    signUrl(admin, xmlPath, `${orgSlug}_Factura-${safeNumero}.xml`),
   ]);
   return { pdfPath, xmlPath, pdfLink, xmlLink };
 }

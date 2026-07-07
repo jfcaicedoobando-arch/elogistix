@@ -9,6 +9,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocument";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { withOrgPrefix } from "@/lib/filenames";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
@@ -27,14 +28,16 @@ export default function Tesoreria() {
 
   const handlePdf = async () => {
     if (!data) return;
+    const fecha = new Date().toISOString().slice(0, 10);
     await descargarPdf(
       <ReporteTesoreriaDocument
-        fechaCorte={new Date().toISOString().slice(0, 10)}
+        fechaCorte={fecha}
         resumen={data}
       />,
-      `Reporte_Tesoreria_${new Date().toISOString().slice(0, 10)}.pdf`,
+      await withOrgPrefix(`Reporte_Tesoreria_${fecha}.pdf`),
     );
   };
+
 
   return (
     <PageContainer>
