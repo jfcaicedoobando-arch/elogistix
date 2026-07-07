@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
-  isoToDisplay, isoToDate, dateToIso, applyMask, parseDisplay,
+  isoToDisplay, isoToDate, dateToIso, applyMask, parseDisplay, parseFlexible,
 } from "./date-picker-mx-helpers";
 
 interface DatePickerMxProps {
@@ -73,6 +73,19 @@ export function DatePickerMx({
       e.preventDefault();
       commit(text);
     }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pegado = e.clipboardData.getData("text");
+    if (!pegado) return;
+    const iso = parseFlexible(pegado);
+    if (iso) {
+      e.preventDefault();
+      setText(isoToDisplay(iso));
+      setInvalid(false);
+      if (iso !== value) onChange(iso);
+    }
+    // Si no se pudo parsear, cae al onChange normal (aplicará máscara sobre los dígitos).
   };
 
   const handleBlur = () => {
@@ -146,6 +159,7 @@ export function DatePickerMx({
         value={text}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         onBlur={handleBlur}
         placeholder={placeholder}
         aria-invalid={invalid || undefined}
