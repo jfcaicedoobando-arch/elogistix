@@ -35,6 +35,10 @@ const WHITELIST = new Set<string>([
   // de envío vive aquí porque la acción es opcional (checkbox) y no forma
   // parte del hook de timbrado.
   "src/features/facturacion/components/DialogTimbrarFactura.tsx",
+  // `useTimbrarFacturaDialog` extrae la lógica de `DialogTimbrarFactura`
+  // (Power of 10 <200 líneas). Mantiene la misma justificación: el toast
+  // del envío opcional del CFDI por email vive aquí, no en `useTimbrarFactura`.
+  "src/features/facturacion/hooks/useTimbrarFacturaDialog.ts",
 ]);
 
 const TOAST_TOKENS = /\b(toast\s*[.(]|notifySuccess|notifyError|notifyWarning|notifyInfo)\b/;
