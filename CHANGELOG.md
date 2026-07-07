@@ -6,6 +6,20 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.39] - 2026-07-07
+- **Prefijo `{Org}_` en TODOS los archivos descargables/enviables**:
+  - Edge functions con adjuntos/enlaces de descarga:
+    - `enviar-factura-email`: los links firmados a PDF/XML de factura ahora se descargan como `{Org}_Factura-{numero}.pdf|xml`.
+    - `enviar-cotizacion-email`: el link firmado al PDF de cotización ahora se descarga como `{Org}_Cotizacion-{folio}.pdf` (antes bajaba con el nombre feo del path de storage).
+    - `facturapi-cancelar`: el acuse de cancelación en PDF baja como `{Org}_acuse-cancelacion-{numero}.pdf`.
+    - `facturapi-descargar`: refactor interno para usar el helper compartido `_shared/orgSlug.ts` (mismo comportamiento).
+  - Generadores PDF cliente-side:
+    - Cotizaciones (`{Org}_{folio}-cotizacion`), proformas normales y consolidadas (`{Org}_{numero}-proforma[-consolidada]`), tarifario (`{Org}_tarifario-{folio}`).
+    - Reportes de cartera (CxP), presupuesto vs real, EERR, tesorería y rentabilidad — todos con prefijo `{Org}_`.
+  - Nuevo helper compartido `slugifyOrg` en dos casas (Deno: `supabase/functions/_shared/orgSlug.ts`, frontend: `src/lib/filenames.ts`). Sin acentos, sin símbolos, máx 40 chars, fallback `org`.
+  - `enviar-proforma-email` sin cambios (sólo envía enlace al portal, no adjunta PDF).
+  - Analogía: la política de "stickers con la organización" que aplicamos ayer a las descargas directas ahora se aplica también a la ventanilla de correos y a todos los reportes del sistema.
+
 ## [13.213.38] - 2026-07-07
 - **PDF/XML de factura: nombre del archivo con la organización + folio**:
   - `facturapi-descargar` ahora antepone un slug del nombre de la organización dueña de la factura al filename. Ejemplos: `MiEmpresa_A123.pdf`, `MiEmpresa_REP-B45.xml`, `MiEmpresa_NC-C7.pdf`. El slug quita acentos, cambia espacios/caracteres raros por `_` y se limita a 40 chars.
