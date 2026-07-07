@@ -48,10 +48,10 @@ export default function FacturaDetalle() {
   const [cancelarOpen, setCancelarOpen] = useState(false);
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
+  const flags = deriveFacturaFlags(factura, canEdit);
   const {
     sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema,
-    puedeSustituirCfdi, puedeCancelarCfdi,
-  } = deriveFacturaFlags(factura, canEdit);
+  } = flags;
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
@@ -99,7 +99,7 @@ export default function FacturaDetalle() {
       <FacturaDetalleActionsBar
         factura={factura}
         canEdit={canEdit}
-        flags={{ sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema, puedeSustituirCfdi, puedeCancelarCfdi }}
+        flags={flags}
         acuse={acuse}
         eliminando={eliminando}
         puedeEliminarBorrador={puedeEliminarBorrador}
