@@ -237,6 +237,13 @@ export function FacturaPagosSection({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DialogPreviewCfdiPdf
+        open={!!previewRep}
+        onOpenChange={(o) => !o && setPreviewRep(null)}
+        pagoId={previewRep?.id}
+        title={previewRep ? `Complemento de pago ${previewRep.label}` : "Complemento de pago"}
+      />
     </>
   );
 }
