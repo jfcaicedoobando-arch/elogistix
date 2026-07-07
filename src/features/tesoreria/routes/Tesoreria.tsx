@@ -28,14 +28,16 @@ export default function Tesoreria() {
 
   const handlePdf = async () => {
     if (!data) return;
+    const fecha = new Date().toISOString().slice(0, 10);
     await descargarPdf(
       <ReporteTesoreriaDocument
-        fechaCorte={new Date().toISOString().slice(0, 10)}
+        fechaCorte={fecha}
         resumen={data}
       />,
-      `Reporte_Tesoreria_${new Date().toISOString().slice(0, 10)}.pdf`,
+      await withOrgPrefix(`Reporte_Tesoreria_${fecha}.pdf`),
     );
   };
+
 
   return (
     <PageContainer>
