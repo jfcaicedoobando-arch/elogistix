@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.21] - 2026-07-07
+
+- **Feature · Correos de NC y REP con el mismo design language que Cotización/Proforma/Factura**: se agregan dos nuevas plantillas transaccionales que consumen el shell compartido `_layout/EmailLayout.tsx` (mismo header con logo `librecarga-logo.png`, chip de tipo de documento, tabla de datos, mensaje libre, firma del ejecutivo y footer con unsubscribe automático):
+  - `nota-credito-enviada.tsx` — chip rojo "Nota de crédito · CFDI emitido", datos: fecha de emisión, factura relacionada, total, motivo, UUID y UUID de factura original; CTAs "Descargar PDF" / "Descargar XML".
+  - `rep-enviado.tsx` — chip índigo "Complemento de pago · CFDI emitido", datos: fecha de pago, factura relacionada, monto, forma de pago, UUID y UUID de factura original; mismos CTAs.
+  - Se registran en `_shared/transactional-email-templates/registry.ts` como `nota-credito-enviada` y `rep-enviado`.
+  - Se agregan tonos `nota-credito` y `rep` a `_layout/tokens.ts` (rojo `#FEE2E2/#991B1B` e índigo `#E0E7FF/#3730A3`) para mantener toda la paleta de chips en un solo lugar.
+  - **Nota de wiring**: hoy los reenvíos de NC/REP se disparan vía `facturapi-enviar-email`, que delega en el email nativo de FacturAPI (adjunta PDF+XML pero usa la plantilla genérica de FacturAPI). Estas plantillas quedan listas para consumirse desde una edge branded análoga a `enviar-factura-email` en un siguiente paso; el consumo desde `facturapi-enviar-email` no se cambia en este release porque requiere subir PDF/XML al bucket y firmar URLs (misma lógica que `enviar-factura-email/helpers.ts`).
+
 ## [13.213.20] - 2026-07-07
 
 - **Feature · FacturAPI = source of truth también para NC y REP**: hoy las **facturas** ya lo hacían (borrador con `numero = BORRADOR-<ts>`, y al timbrar la edge sobreescribe `numero = <serie><folio>` con lo que devuelve FacturAPI). Ahora aplicamos el mismo patrón a los otros dos CFDIs del módulo:
