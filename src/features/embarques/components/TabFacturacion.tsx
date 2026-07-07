@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
-import { Loader2 } from "lucide-react";
+import { Loader2, FilePlus2, ListChecks, FileText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
 import { useProformasEmbarque, useEliminarProforma } from "@/features/embarques/hooks";
