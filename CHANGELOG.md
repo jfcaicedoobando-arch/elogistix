@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.24] - 2026-07-07
+
+- **Fix CI · Power of 10 (≤200 líneas)**: `FacturaPagosSection.tsx` había crecido a 246 líneas al integrar la previsualización de REP. Se extrae la celda de estado/acciones del REP a un nuevo componente `PagoRepCell.tsx` y se compacta el `AlertDialog` de eliminar pago. Ahora el archivo queda en 197 líneas y las pruebas `audit-report` / `architecture-baseline` vuelven a pasar. Analogía: la caja del historial de pagos ya no cabía en el estante — sacamos los adornos del REP a su propia caja y todo vuelve a acomodarse.
+
 ## [13.213.23] - 2026-07-07
 
 - **UI · Chips de estado unificados para NC y REP**: se agrega el componente `CfdiEstadoBadge` que centraliza el esquema de color y texto de todos los chips de estado del detalle de factura. Antes: NC usaba `success` (verde) para "Aplicada" y REP usaba `success` (verde) para "Timbrado" — el mismo color para dos etapas distintas del ciclo. Ahora la paleta es única en toda la pantalla:
