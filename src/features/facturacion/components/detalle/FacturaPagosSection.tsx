@@ -29,6 +29,7 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
+import { CfdiEstadoBadge } from "@/features/facturacion/components/CfdiEstadoBadge";
 
 interface Props {
   facturaId: string;
