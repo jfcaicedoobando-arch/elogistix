@@ -54,6 +54,9 @@ interface DataTableProps<T> {
   className?: string;
   /** Ancla el encabezado al top del contenedor de scroll (útil en tablas largas). */
   stickyHeader?: boolean;
+  /** Visibilidad de columnas controlada (persistida por el caller vía `useColumnVisibility`). */
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
 }
 
 function DataTableInner<T>({
@@ -83,6 +86,8 @@ function DataTableInner<T>({
   pagination,
   className,
   stickyHeader = false,
+  columnVisibility,
+  onColumnVisibilityChange,
 }: DataTableProps<T>) {
   const table = useTableInstance<T>({
     data,
@@ -92,6 +97,8 @@ function DataTableInner<T>({
     onSortChange,
     initialSort,
     getRowId: (row, index) => rowKey(row) ?? String(index),
+    columnVisibility,
+    onColumnVisibilityChange,
   });
 
   // Footer recibe el set ya ordenado/visible según TanStack.
