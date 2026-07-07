@@ -10,7 +10,7 @@
  */
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
-import { resolveFacturapiKey } from '../_shared/facturapiAuth.ts';
+import { resolveFacturapiKey, resolveFacturapiKeyOtherAmbiente, type SupabaseLike } from '../_shared/facturapiAuth.ts';
 import {
   authenticateRequest,
   buildTemplateData,
