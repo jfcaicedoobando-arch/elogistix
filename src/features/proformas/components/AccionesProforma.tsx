@@ -1,13 +1,18 @@
 /**
- * Barra de acciones del detalle de proforma.
- * Extraída de `ProformaDetalleCards.tsx` para mantener ≤200 líneas (Power of 10 #4).
- * Orquesta: Descargar PDF · Enviar al cliente · Aceptar/Rechazar manual ·
- * Ver embarque · Convertir a factura (un clic, con defaults SAT).
+ * Barra de acciones del detalle de proforma. Usa el componente compartido
+ * `DetalleActionBar` para mantener el mismo design language que
+ * `FacturaDetalle` y `TabFacturacion` del embarque.
+ *
+ * Acciones:
+ * - primary: Convertir a factura (cuando el cliente aceptó y hay permiso).
+ * - secondary: Descargar PDF · Enviar al cliente · Aceptar/Rechazar manual.
+ * - more: Ver embarque (drilldown al expediente).
  */
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Download, Ship, Loader2, FileText, Mail, CheckCircle2, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  Download, Ship, FileText, Mail, CheckCircle2, XCircle,
+} from "lucide-react";
+import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
@@ -27,19 +32,6 @@ interface Props {
   proforma: ProformaDetalleFull;
   downloadingId: string | null;
   onDescargar: () => void;
-}
-
-function BotonesRespuestaManual({ onSelect }: { onSelect: (m: "aceptada" | "rechazada") => void }) {
-  return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => onSelect("aceptada")}>
-        <CheckCircle2 className="h-4 w-4 mr-1.5 text-success" /> Aceptar (manual)
-      </Button>
-      <Button variant="outline" size="sm" onClick={() => onSelect("rechazada")}>
-        <XCircle className="h-4 w-4 mr-1.5 text-red-600" /> Rechazar (manual)
-      </Button>
-    </>
-  );
 }
 
 function computarFlags(
@@ -79,48 +71,44 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     diasCredito: proforma.dias_credito ?? 0,
   });
 
+  const primary: DetalleActionItem | null = puedeConvertir
+    ? { id: "convertir", label: "Convertir a factura", icon: FileText, onClick: onConvertir, loading: convirtiendo }
+    : null;
+
+  const secondary: DetalleActionItem[] = [
+    { id: "pdf", label: "Descargar PDF", icon: Download, onClick: onDescargar, loading: cargando },
+  ];
+  if (!facturada) {
+    secondary.push({ id: "enviar", label: "Enviar al cliente", icon: Mail, onClick: () => setEnviarOpen(true) });
+  }
+  if (puedeResponder) {
+    secondary.push({
+      id: "aceptar", label: "Aceptar (manual)", icon: CheckCircle2, iconClassName: "text-success",
+      onClick: () => setManualOpen("aceptada"),
+    });
+    secondary.push({
+      id: "rechazar", label: "Rechazar (manual)", icon: XCircle, iconClassName: "text-red-600",
+      onClick: () => setManualOpen("rechazada"),
+    });
+  }
+
+  const more: DetalleActionItem[] = [];
+  if (proforma.embarque_id) {
+    more.push({
+      id: "embarque", label: "Ver embarque", icon: Ship,
+      href: `/embarques/${proforma.embarque_id}?tab=facturacion`,
+    });
+  }
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="outline" size="sm" disabled={cargando} onClick={onDescargar}>
-        {cargando
-          ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-          : <Download className="h-4 w-4 mr-1.5" />}
-        Descargar PDF
-      </Button>
-
-      {!facturada && (
-        <Button variant="outline" size="sm" onClick={() => setEnviarOpen(true)}>
-          <Mail className="h-4 w-4 mr-1.5" /> Enviar al cliente
-        </Button>
-      )}
-
-      {puedeResponder && <BotonesRespuestaManual onSelect={setManualOpen} />}
-
-      {proforma.embarque_id && (
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/embarques/${proforma.embarque_id}?tab=facturacion`}>
-            <Ship className="h-4 w-4 mr-1.5" /> Ver embarque
-          </Link>
-        </Button>
-      )}
-
-      {puedeConvertir && (
-        <Button size="sm" onClick={onConvertir} disabled={convirtiendo}>
-          {convirtiendo
-            ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-            : <FileText className="h-4 w-4 mr-1.5" />}
-          Convertir a factura
-        </Button>
-      )}
-
+    <div className="space-y-2">
+      <DetalleActionBar primary={primary} secondary={secondary} more={more} />
       {mostrarHint && (
-        <span className="text-xs text-muted-foreground self-center ml-1">
+        <p className="text-xs text-muted-foreground">
           Para facturar, el cliente debe aceptar la proforma.
-        </span>
+        </p>
       )}
-
       <EnviarProformaDialog open={enviarOpen} onOpenChange={setEnviarOpen} proforma={proforma} />
-
       {manualOpen && (
         <RespuestaClienteManualDialog
           open={!!manualOpen}

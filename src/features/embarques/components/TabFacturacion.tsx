@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
-import { Loader2 } from "lucide-react";
+import { Loader2, FilePlus2, ListChecks, FileText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { useTasaIVA } from "@/features/catalogos/hooks";
 import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks";
 import { useProformasEmbarque, useEliminarProforma } from "@/features/embarques/hooks";
@@ -94,8 +95,37 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
     await descargarProformaPdf(proforma, { embarqueOverride: embarque });
   };
 
+  // Barra unificada arriba del tab. Reutiliza `useFocusSection` para saltar
+  // a las secciones (Proformas / Facturas) sin duplicar handlers.
+  const hayConceptosPendientes = conceptos.some(c => c.estado_facturacion !== 'en_proforma');
+  const abrirGenerarProforma = () => {
+    setDialogInitialFiltro('todos');
+    setDialogOpen(true);
+  };
+  const scrollTo = (id: string) => {
+    const el = document.querySelector<HTMLElement>(`[data-focus="${id}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const actionPrimary: DetalleActionItem | null = hayConceptosPendientes && canEdit
+    ? { id: "gen-proforma", label: "Generar proforma", icon: FilePlus2, onClick: abrirGenerarProforma }
+    : null;
+  const actionSecondary: DetalleActionItem[] = [];
+  if (proformas.length > 0) {
+    actionSecondary.push({
+      id: "ver-proformas", label: "Ver proformas", icon: ListChecks,
+      onClick: () => scrollTo("proformas"),
+    });
+  }
+  if (facturas.length > 0) {
+    actionSecondary.push({
+      id: "ver-facturas", label: "Ver facturas", icon: FileText,
+      onClick: () => scrollTo("cxc"),
+    });
+  }
+
   return (
     <div className="space-y-4">
+      <DetalleActionBar primary={actionPrimary} secondary={actionSecondary} />
       <FlujoFacturacionStepper
         conceptosCount={conceptos.length}
         facturadosCount={Array.from(estadosConceptos.values()).filter(e => e === "facturado").length}
@@ -133,13 +163,15 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
       <AvisoProformasRechazadas proformas={proformas} />
 
 
-      <HistorialProformas
-        proformas={proformas}
-        canEdit={canEdit}
-        isDeleting={eliminarProforma.isPending}
-        onDescargar={handleDescargarProforma}
-        onEliminar={(id, numero) => setProformaAEliminar({ id, numero })}
-      />
+      <div ref={registerRef("proformas")} data-focus="proformas">
+        <HistorialProformas
+          proformas={proformas}
+          canEdit={canEdit}
+          isDeleting={eliminarProforma.isPending}
+          onDescargar={handleDescargarProforma}
+          onEliminar={(id, numero) => setProformaAEliminar({ id, numero })}
+        />
+      </div>
 
       <div ref={registerRef("cxc")} data-focus="cxc">
         <HistorialFacturas facturas={facturas} proformas={proformas} />

@@ -1,9 +1,21 @@
 /**
- * FacturaDetalleActionsBar — envuelve `FacturaDetalleActions` derivando sus
- * props a partir de la factura + flags + acuse, para mantener la página
- * `FacturaDetalle` por debajo del límite de 200 líneas (Power of 10).
+ * FacturaDetalleActionsBar — construye las listas declarativas de acciones
+ * (primary / secondary / more / destructive) que consume `DetalleActionBar`.
+ *
+ * Reglas por estado:
+ * - Borrador: primary = Timbrar factura · destructivo = Eliminar borrador.
+ * - Emitida con saldo: primary = Registrar pago (o Timbrar REP si hay REPs
+ *   pendientes) · secondary = Enviar email + Descargar PDF.
+ * - Emitida liquidada: primary = Enviar email · secondary = Descargar PDF.
+ * - Cancelada/Sustituida: secondary = Descargar PDF + Acuse XML/PDF.
+ * Descargas XML, Ver embarque, Sustituir/Cancelar CFDI y Reintentar acuse
+ * viven en el menú "Más acciones" para no saturar el header.
  */
-import { FacturaDetalleActions } from "./FacturaDetalleActions";
+import {
+  Stamp, Mail, FileText, FileCode2, Ship, Trash2, Replace, Ban,
+  FileArchive, RefreshCw, DollarSign,
+} from "lucide-react";
+import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 import type { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
@@ -18,42 +30,114 @@ interface Props {
   acuse: AcuseHandle;
   eliminando: boolean;
   puedeEliminarBorrador: boolean;
+  timbrarRepPending?: boolean;
   onTimbrar: () => void;
   onEnviarEmail: () => void;
+  onRegistrarPago: () => void;
+  onTimbrarRep: () => void;
   onSustituir: () => void;
   onCancelar: () => void;
   onEliminar: () => void;
   onDownload: (stored: string | null, tipo: "pdf" | "xml") => void;
 }
 
-export function FacturaDetalleActionsBar({
-  factura, canEdit, flags, acuse, eliminando, puedeEliminarBorrador,
-  onTimbrar, onEnviarEmail, onSustituir, onCancelar, onEliminar, onDownload,
-}: Props) {
+function buildPrimary(props: Props): DetalleActionItem | null {
+  const { flags, canEdit } = props;
+  if (canEdit && flags.puedeTimbrarDesdeSistema) {
+    return { id: "timbrar", label: "Timbrar factura", icon: Stamp, onClick: props.onTimbrar };
+  }
+  if (canEdit && flags.repPendiente && !flags.estaCancelada) {
+    return {
+      id: "rep", label: "Timbrar REP", icon: Stamp,
+      onClick: props.onTimbrarRep, loading: props.timbrarRepPending,
+    };
+  }
+  if (canEdit && flags.puedeRegistrarPago) {
+    return { id: "cobrar", label: "Registrar pago", icon: DollarSign, onClick: props.onRegistrarPago };
+  }
+  if (!flags.sinTimbrar && !flags.estaCancelada) {
+    return { id: "enviar", label: "Enviar por email", icon: Mail, onClick: props.onEnviarEmail };
+  }
+  return null;
+}
+
+function buildSecondary(props: Props, primaryId: string | null): DetalleActionItem[] {
+  const { factura, flags, acuse } = props;
+  const items: DetalleActionItem[] = [];
+  const mostrarPdf = !!factura.factura_pdf_url || !flags.sinTimbrar;
+  const mostrarXml = !!factura.factura_xml_url || !flags.sinTimbrar;
+
+  if (!flags.sinTimbrar && !flags.estaCancelada && primaryId !== "enviar") {
+    items.push({ id: "enviar", label: "Enviar por email", icon: Mail, onClick: props.onEnviarEmail });
+  }
+  if (mostrarPdf) {
+    items.push({
+      id: "pdf", label: "Descargar PDF", icon: FileText, iconClassName: "text-destructive",
+      onClick: () => props.onDownload(factura.factura_pdf_url, "pdf"),
+    });
+  }
+  if (flags.estaCancelada && !!factura.acuse_cancelacion_xml) {
+    items.push({
+      id: "acuse-xml", label: "Acuse XML", icon: FileCode2, iconClassName: "text-info",
+      onClick: acuse.descargarXml,
+    });
+    items.push({
+      id: "acuse-pdf", label: "Acuse PDF", icon: FileArchive, iconClassName: "text-destructive",
+      onClick: acuse.descargarPdf,
+    });
+  }
+  if (mostrarXml) {
+    items.push({
+      id: "xml", label: "Descargar XML", icon: FileCode2, iconClassName: "text-info",
+      onClick: () => props.onDownload(factura.factura_xml_url, "xml"),
+    });
+  }
+  return items;
+}
+
+function buildMore(props: Props): DetalleActionItem[] {
+  const { factura, flags, acuse } = props;
+  const items: DetalleActionItem[] = [];
+  if (factura.embarque_id) {
+    items.push({
+      id: "ver-embarque", label: "Ver embarque", icon: Ship,
+      href: `/embarques/${factura.embarque_id}`,
+    });
+  }
+  if (flags.puedeSustituirCfdi) {
+    items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
+  }
+  if (flags.puedeCancelarCfdi) {
+    items.push({
+      id: "cancelar", label: "Cancelar CFDI", icon: Ban, destructive: true, onClick: props.onCancelar,
+    });
+  }
+  if (flags.estaCancelada && factura.acuse_cancelacion_status !== "accepted") {
+    items.push({
+      id: "reintentar-acuse", label: "Reintentar acuse", icon: RefreshCw,
+      onClick: acuse.reintentar, loading: acuse.reintentando,
+    });
+  }
+  return items;
+}
+
+export function FacturaDetalleActionsBar(props: Props) {
+  const primary = buildPrimary(props);
+  const secondary = buildSecondary(props, primary?.id ?? null);
+  const more = buildMore(props);
+  const destructive: DetalleActionItem | null = props.puedeEliminarBorrador
+    ? {
+        id: "eliminar-borrador", label: "Eliminar borrador", icon: Trash2,
+        onClick: props.onEliminar, loading: props.eliminando,
+      }
+    : null;
+
   return (
-    <FacturaDetalleActions
-      canEdit={canEdit}
-      sinTimbrar={flags.sinTimbrar}
-      puedeTimbrarDesdeSistema={flags.puedeTimbrarDesdeSistema}
-      puedeSustituirCfdi={flags.puedeSustituirCfdi}
-      puedeCancelarCfdi={flags.puedeCancelarCfdi}
-      pdfUrl={factura.factura_pdf_url}
-      xmlUrl={factura.factura_xml_url}
-      embarqueId={factura.embarque_id ?? null}
-      onTimbrar={onTimbrar}
-      onEnviarEmail={onEnviarEmail}
-      onDownload={onDownload}
-      onSustituir={onSustituir}
-      onCancelar={onCancelar}
-      onEliminarBorrador={puedeEliminarBorrador ? onEliminar : undefined}
-      eliminando={eliminando}
-      estaCancelada={factura.estado === "Cancelada" || factura.estado === "Sustituida"}
-      acuseDisponible={!!factura.acuse_cancelacion_xml}
-      acuseStatus={factura.acuse_cancelacion_status}
-      onDescargarAcuseXml={acuse.descargarXml}
-      onDescargarAcusePdf={acuse.descargarPdf}
-      onReintentarAcuse={acuse.reintentar}
-      reintentandoAcuse={acuse.reintentando}
+    <DetalleActionBar
+      primary={primary}
+      secondary={secondary}
+      more={more}
+      destructive={destructive}
     />
   );
 }

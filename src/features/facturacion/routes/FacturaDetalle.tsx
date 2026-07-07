@@ -32,6 +32,8 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 import { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
+import { usePagosFactura } from "@/features/facturacion/hooks";
+import { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -48,13 +50,24 @@ export default function FacturaDetalle() {
   const [cancelarOpen, setCancelarOpen] = useState(false);
   const [eliminarOpen, setEliminarOpen] = useState(false);
 
-  const flags = deriveFacturaFlags(factura, canEdit);
+  const { data: pagos = [] } = usePagosFactura(id);
+  const totalPagado = pagos.reduce((s, p) => s + Number(p.monto_aplicado_factura ?? 0), 0);
+  const saldo = Math.max(0, Number(factura?.total ?? 0) - totalPagado);
+  const pagoRepPendiente = pagos.find(
+    (p) => p.estado_rep === "Pendiente" || p.estado_rep === "Error",
+  );
+  const pagosRepPendientes = pagos.filter(
+    (p) => p.estado_rep === "Pendiente" || p.estado_rep === "Error",
+  ).length;
+
+  const flags = deriveFacturaFlags(factura, canEdit, { saldo, pagosRepPendientes });
   const {
     sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema,
   } = flags;
   const handleDownload = useDescargarCfdi(factura?.id);
   const { eliminar, isPending: eliminando } = useEliminarBorradorFactura();
   const { data: conceptosVivos = [] } = useConceptosFactura(factura?.id);
+  const timbrarRep = useTimbrarRep(factura?.id);
 
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
 
@@ -103,8 +116,13 @@ export default function FacturaDetalle() {
         acuse={acuse}
         eliminando={eliminando}
         puedeEliminarBorrador={puedeEliminarBorrador}
+        timbrarRepPending={timbrarRep.isPending}
         onTimbrar={() => setTimbrarOpen(true)}
         onEnviarEmail={() => setEnviarOpen(true)}
+        onRegistrarPago={() => setPagoOpen(true)}
+        onTimbrarRep={() => {
+          if (pagoRepPendiente) timbrarRep.mutate(pagoRepPendiente.id);
+        }}
         onSustituir={() => setSustituirOpen(true)}
         onCancelar={() => setCancelarOpen(true)}
         onEliminar={() => setEliminarOpen(true)}

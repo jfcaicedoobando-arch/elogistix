@@ -18,6 +18,13 @@ export interface FacturaFlagsInput {
   fecha_emision?: string | null;
 }
 
+export interface FacturaFlagsContext {
+  /** Saldo pendiente en la moneda de la factura. */
+  saldo?: number;
+  /** Cuántos pagos aún tienen REP pendiente o con error. */
+  pagosRepPendientes?: number;
+}
+
 export interface FacturaFlags {
   sinTimbrar: boolean;
   esBorrador: boolean;
@@ -33,11 +40,18 @@ export interface FacturaFlags {
   puedeCancelarCfdi: boolean;
   /** Igual que cancelar: sólo se puede sustituir una CFDI vigente. */
   puedeSustituirCfdi: boolean;
+  /** Timbrada, no cancelada y con saldo > 0. Habilita "Registrar pago" arriba. */
+  puedeRegistrarPago: boolean;
+  /** Existe al menos 1 pago con estado_rep Pendiente/Error. */
+  repPendiente: boolean;
+  /** Timbrada y no cancelada/sustituida. */
+  estaCancelada: boolean;
 }
 
 export function deriveFacturaFlags(
   factura: FacturaFlagsInput | null | undefined,
   canEdit: boolean,
+  ctx: FacturaFlagsContext = {},
 ): FacturaFlags {
   if (!factura) {
     return {
@@ -48,6 +62,9 @@ export function deriveFacturaFlags(
       puedeTimbrarDesdeSistema: false,
       puedeCancelarCfdi: false,
       puedeSustituirCfdi: false,
+      puedeRegistrarPago: false,
+      repPendiente: false,
+      estaCancelada: false,
     };
   }
   const sinTimbrar = !factura.uuid_fiscal;
@@ -56,9 +73,13 @@ export function deriveFacturaFlags(
   const puedeEliminarBorrador = esBorrador && canEdit;
   const puedeTimbrarDesdeSistema =
     sinTimbrar && esCreadaConCapacidadTimbrado(factura.fecha_emision);
+  const estaCancelada = factura.estado === "Cancelada" || factura.estado === "Sustituida";
   const timbradaVigente = !sinTimbrar && factura.estado === "Emitida";
   const puedeCancelarCfdi = timbradaVigente && canEdit;
   const puedeSustituirCfdi = timbradaVigente && canEdit;
+  const saldo = ctx.saldo ?? 0;
+  const puedeRegistrarPago = timbradaVigente && canEdit && saldo > 0.01;
+  const repPendiente = (ctx.pagosRepPendientes ?? 0) > 0;
   return {
     sinTimbrar,
     esBorrador,
@@ -67,6 +88,9 @@ export function deriveFacturaFlags(
     puedeTimbrarDesdeSistema,
     puedeCancelarCfdi,
     puedeSustituirCfdi,
+    puedeRegistrarPago,
+    repPendiente,
+    estaCancelada,
   };
 }
 

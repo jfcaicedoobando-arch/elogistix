@@ -5,7 +5,7 @@
  * de registrar pago: `total − Σ monto_aplicado_factura`.
  */
 import { useState } from "react";
-import { Loader2, Plus, Trash2, CheckCircle2, Clock } from "lucide-react";
+import { Loader2, Trash2, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,8 @@ interface Props {
   totalFactura: number;
   moneda: string;
   canEdit: boolean;
-  onRegistrarPago: () => void;
+  /** @deprecated Ahora el botón vive en `FacturaDetalleActionsBar`. */
+  onRegistrarPago?: () => void;
 }
 
 export function FacturaPagosSection({
@@ -43,7 +44,6 @@ export function FacturaPagosSection({
   totalFactura,
   moneda,
   canEdit,
-  onRegistrarPago,
 }: Props) {
   const { toast } = useToast();
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
@@ -89,11 +89,8 @@ export function FacturaPagosSection({
               </Badge>
             )}
           </div>
-          {canEdit && saldo > 0 && (
-            <Button size="sm" onClick={onRegistrarPago}>
-              <Plus className="h-4 w-4 mr-1" /> Registrar pago
-            </Button>
-          )}
+          {/* El botón "Registrar pago" vive ahora en la barra superior de acciones
+              del detalle (`FacturaDetalleActionsBar`) para mantener el patrón unificado. */}
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
