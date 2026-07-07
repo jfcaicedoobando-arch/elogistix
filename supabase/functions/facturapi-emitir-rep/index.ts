@@ -71,7 +71,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   // 2) Factura
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, total, subtotal, iva, moneda, tipo_cambio, metodo_pago, uuid_fiscal, folio_fiscal, cliente_id, rfc_cliente")
+    .select("id, numero, serie, total, subtotal, iva, moneda, tipo_cambio, metodo_pago, uuid_fiscal, folio_fiscal, cliente_id, rfc_cliente, embarque_id, expediente, referencia_bl")
     .eq("id", pago.factura_id)
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
@@ -127,6 +127,24 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   const impPagado = Number(pago.monto_aplicado_factura ?? 0);
   const saldoInsoluto = round2(saldoAnt - impPagado);
 
+  // v13.208.0 — Referencias del embarque vinculado a la factura (con fallback a snapshot).
+  let refExpediente: string | null = (factura as { expediente?: string | null }).expediente ?? null;
+  let refBlMaster: string | null = null;
+  let refBlHouse: string | null = (factura as { referencia_bl?: string | null }).referencia_bl ?? null;
+  const embarqueId = (factura as { embarque_id?: string | null }).embarque_id ?? null;
+  if (embarqueId) {
+    const { data: emb } = await supabase
+      .from("embarques")
+      .select("expediente, bl_master, bl_house")
+      .eq("id", embarqueId)
+      .maybeSingle();
+    if (emb) {
+      refExpediente = (emb as { expediente?: string | null }).expediente ?? refExpediente;
+      refBlMaster = (emb as { bl_master?: string | null }).bl_master ?? null;
+      refBlHouse = (emb as { bl_house?: string | null }).bl_house ?? refBlHouse;
+    }
+  }
+
   // 5) Construir contexto
   const ctx: PagoContext = {
     receptor: {
@@ -154,6 +172,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       imp_saldo_insoluto: saldoInsoluto,
       metodo_pago: "PPD",
       tasa_iva: tasaIvaFactura,
+    },
+    referencias: {
+      expediente: refExpediente,
+      bl_master: refBlMaster,
+      bl_house: refBlHouse,
     },
   };
 

@@ -5,6 +5,12 @@
  * Facturapi docs Complemento de Pagos:
  *   https://docs.facturapi.io/api/#tag/Invoices/operation/createInvoice (type: "P")
  */
+import {
+  buildPdfCustomSection,
+  type ReferenciasEmbarque,
+} from "../_shared/referenciasEmbarque.ts";
+export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
+
 
 export interface PagoContext {
   // Receptor (mismo del CFDI original)
@@ -38,11 +44,15 @@ export interface PagoContext {
     tasa_iva: number;
   };
   serie?: string | null;           // Serie del REP (si se usa serie distinta a las facturas)
+  /** v13.208.0 — Expediente y BLs del embarque asociado. */
+  referencias?: ReferenciasEmbarque | null;
 }
 
 export interface FacturapiRepPayload {
   type: "P";
   serie?: string;
+  /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
+  pdf_custom_section?: string;
   customer: {
     legal_name: string;
     tax_id: string;
@@ -166,6 +176,10 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
   if (!sameCurrency && dr.tipo_cambio_dr > 0) {
     rdoc.exchange = dr.tipo_cambio_dr;
   }
+
+  // v13.208.0 — Bloque "Referencias del embarque" al pie del PDF.
+  const pdfSection = buildPdfCustomSection(ctx.referencias);
+  if (pdfSection) payload.pdf_custom_section = pdfSection;
 
   return payload;
 }

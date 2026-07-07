@@ -4,6 +4,12 @@
  *
  * Facturapi docs: https://docs.facturapi.io/api/
  */
+import {
+  formatDescripcionConReferencias,
+  buildPdfCustomSection,
+  type ReferenciasEmbarque,
+} from "../_shared/referenciasEmbarque.ts";
+export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 
 export interface ConceptoInterno {
   descripcion: string;
@@ -37,6 +43,8 @@ export interface FacturaContext {
   conceptos: ConceptoInterno[];
   /** UUID de la factura sustituida cuando este CFDI la reemplaza (relación SAT 04). */
   sustituye_uuid?: string | null;
+  /** v13.208.0 — Expediente y BLs del embarque para propagar al CFDI y al PDF. */
+  referencias?: ReferenciasEmbarque | null;
 }
 
 
@@ -50,6 +58,8 @@ export interface FacturapiPayload {
   exchange?: number;
   related?: string[];
   relation?: string;
+  /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
+  pdf_custom_section?: string;
   customer: {
     legal_name: string;
     tax_id: string;
@@ -137,7 +147,8 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       return {
         quantity: c.cantidad,
         product: {
-          description: c.descripcion,
+          // v13.208.0 — prefijo con Expediente + BLs (queda en el XML SAT).
+          description: formatDescripcionConReferencias(c.descripcion, ctx.referencias),
           product_key: c.clave_sat ?? "",
           price: c.precio_unitario,
           unit_key: c.clave_unidad ?? "E48",
@@ -156,6 +167,9 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
     payload.related = [ctx.sustituye_uuid];
     payload.relation = "04";
   }
+  // v13.208.0 — bloque "Referencias del embarque" al pie del PDF de FacturAPI.
+  const pdfSection = buildPdfCustomSection(ctx.referencias);
+  if (pdfSection) payload.pdf_custom_section = pdfSection;
   return payload;
 }
 

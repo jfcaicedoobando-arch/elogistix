@@ -24,6 +24,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
+import { ReferenciasEmbarquePreview } from "./ReferenciasEmbarquePreview";
 
 interface Props {
   facturaId: string | null;
@@ -200,6 +201,8 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
           puedeTimbrar={puedeTimbrar}
         />
       )}
+      {/* v13.208.0 — Vista previa de Expediente + BLs que se propagan al CFDI. */}
+      <ReferenciasEmbarquePreview factura={factura} />
     </FormDialogShell>
   );
 }

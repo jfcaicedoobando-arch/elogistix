@@ -62,7 +62,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // Cargar factura + cliente + conceptos
   const { data: factura, error: fErr } = await supabase
     .from("facturas")
-    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a")
+    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl")
     .eq("id", body.factura_id)
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
@@ -127,6 +127,25 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .eq("es_principal", true)
     .maybeSingle();
 
+  // v13.208.0 — Referencias del embarque: expediente + BL Master + BL House.
+  // Prioridad: datos del embarque vinculado → fallback a los campos snapshot
+  // en la propia factura (`facturas.expediente`, `facturas.referencia_bl`).
+  let refExpediente: string | null = factura.expediente ?? null;
+  let refBlMaster: string | null = null;
+  let refBlHouse: string | null = factura.referencia_bl ?? null;
+  if (factura.embarque_id) {
+    const { data: emb } = await supabase
+      .from("embarques")
+      .select("expediente, bl_master, bl_house")
+      .eq("id", factura.embarque_id)
+      .maybeSingle();
+    if (emb) {
+      refExpediente = emb.expediente ?? refExpediente;
+      refBlMaster = emb.bl_master ?? null;
+      refBlHouse = emb.bl_house ?? refBlHouse;
+    }
+  }
+
   const ctx: FacturaContext = {
     serie: factura.serie ?? null,
     forma_pago: factura.forma_pago ?? "",
@@ -156,6 +175,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
     })),
     sustituye_uuid: sustituyeUuid,
+    referencias: {
+      expediente: refExpediente,
+      bl_master: refBlMaster,
+      bl_house: refBlHouse,
+    },
   };
 
 

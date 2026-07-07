@@ -3,7 +3,7 @@
  * Aíslan ramas/`??` para reducir la complejidad ciclomática del handler.
  */
 import type { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import type { NotaCreditoContext, ConceptoNC } from "./helpers.ts";
+import type { NotaCreditoContext, ConceptoNC, ReferenciasEmbarque } from "./helpers.ts";
 
 export type SupabaseLike = ReturnType<typeof createClient>;
 
@@ -29,6 +29,9 @@ interface FacturaRow {
   rfc_cliente: string | null;
   uso_cfdi: string | null;
   forma_pago: string | null;
+  embarque_id: string | null;
+  expediente: string | null;
+  referencia_bl: string | null;
 }
 
 interface ClienteRow {
@@ -52,7 +55,7 @@ export async function loadNc(supabase: SupabaseLike, id: string): Promise<NcRow 
 export async function loadFactura(supabase: SupabaseLike, id: string): Promise<FacturaRow | null> {
   const { data } = await supabase
     .from("facturas")
-    .select("id, uuid_fiscal, cliente_id, rfc_cliente, uso_cfdi, forma_pago")
+    .select("id, uuid_fiscal, cliente_id, rfc_cliente, uso_cfdi, forma_pago, embarque_id, expediente, referencia_bl")
     .eq("id", id)
     .maybeSingle();
   return (data as FacturaRow | null) ?? null;
@@ -78,11 +81,36 @@ export async function loadEmailPrincipal(supabase: SupabaseLike, clienteId: stri
 }
 
 
+export async function loadReferenciasEmbarque(
+  supabase: SupabaseLike,
+  factura: FacturaRow,
+): Promise<ReferenciasEmbarque> {
+  let refExpediente: string | null = factura.expediente ?? null;
+  let refBlMaster: string | null = null;
+  let refBlHouse: string | null = factura.referencia_bl ?? null;
+  if (factura.embarque_id) {
+    const { data: emb } = await supabase
+      .from("embarques")
+      .select("expediente, bl_master, bl_house")
+      .eq("id", factura.embarque_id)
+      .maybeSingle();
+    const row = emb as { expediente?: string | null; bl_master?: string | null; bl_house?: string | null } | null;
+    if (row) {
+      refExpediente = row.expediente ?? refExpediente;
+      refBlMaster = row.bl_master ?? null;
+      refBlHouse = row.bl_house ?? refBlHouse;
+    }
+  }
+  return { expediente: refExpediente, bl_master: refBlMaster, bl_house: refBlHouse };
+}
+
+
 export function buildNcContextFromRows(
   nc: NcRow,
   factura: FacturaRow,
   cliente: ClienteRow,
   email: string | null,
+  referencias: ReferenciasEmbarque | null = null,
 ): NotaCreditoContext {
   const usoCfdi = nc.uso_cfdi ?? factura.uso_cfdi ?? cliente.uso_cfdi_default ?? "G02";
   const formaPago = nc.forma_pago ?? factura.forma_pago ?? "";
@@ -106,11 +134,12 @@ export function buildNcContextFromRows(
       email,
     },
     conceptos,
+    referencias,
   };
 }
 
 export type PreloadResult =
-  | { ok: true; nc: NcRow; factura: FacturaRow; cliente: ClienteRow; email: string | null }
+  | { ok: true; nc: NcRow; factura: FacturaRow; cliente: ClienteRow; email: string | null; referencias: ReferenciasEmbarque }
   | { ok: false; status: number; body: unknown };
 
 export async function preloadNcContext(
@@ -126,6 +155,7 @@ export async function preloadNcContext(
   const cliente = await loadCliente(supabase, factura.cliente_id);
   if (!cliente) return { ok: false, status: 404, body: { error: "cliente_not_found" } };
   const email = await loadEmailPrincipal(supabase, factura.cliente_id);
-  return { ok: true, nc, factura, cliente, email };
+  const referencias = await loadReferenciasEmbarque(supabase, factura);
+  return { ok: true, nc, factura, cliente, email, referencias };
 }
 

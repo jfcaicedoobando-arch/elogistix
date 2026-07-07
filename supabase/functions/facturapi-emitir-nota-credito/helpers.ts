@@ -4,6 +4,12 @@
  *
  * Lógica pura — sin red, sin Supabase — para que sea testeable con Deno test.
  */
+import {
+  formatDescripcionConReferencias,
+  buildPdfCustomSection,
+  type ReferenciasEmbarque,
+} from "../_shared/referenciasEmbarque.ts";
+export type { ReferenciasEmbarque } from "../_shared/referenciasEmbarque.ts";
 
 export interface ConceptoNC {
   descripcion: string;
@@ -30,6 +36,8 @@ export interface NotaCreditoContext {
     email?: string | null;
   };
   conceptos: ConceptoNC[];
+  /** v13.208.0 — Expediente y BLs del embarque para propagar al CFDI y al PDF. */
+  referencias?: ReferenciasEmbarque | null;
 }
 
 export interface FacturapiNcPayload {
@@ -41,6 +49,8 @@ export interface FacturapiNcPayload {
   exchange?: number;
   related: string[];
   relationship: "01";
+  /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
+  pdf_custom_section?: string;
   customer: {
     legal_name: string;
     tax_id: string;
@@ -112,7 +122,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
     items: ctx.conceptos.map((c) => ({
       quantity: c.cantidad,
       product: {
-        description: c.descripcion,
+        // v13.208.0 — prefijo con Expediente + BLs.
+        description: formatDescripcionConReferencias(c.descripcion, ctx.referencias),
         product_key: c.clave_sat ?? "",
         price: c.precio_unitario,
         unit_key: c.clave_unidad ?? "E48",
@@ -125,5 +136,8 @@ export function buildNcPayload(ctx: NotaCreditoContext): FacturapiNcPayload {
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
+  // v13.208.0 — bloque "Referencias del embarque" al pie del PDF.
+  const pdfSection = buildPdfCustomSection(ctx.referencias);
+  if (pdfSection) payload.pdf_custom_section = pdfSection;
   return payload;
 }
