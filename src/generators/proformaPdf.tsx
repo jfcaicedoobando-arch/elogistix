@@ -10,6 +10,7 @@ import { ProformaDocument } from "@/pdf/documents/ProformaDocument";
 import { ProformaConsolidadaDocument } from "@/pdf/documents/ProformaConsolidadaDocument";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
+import { slugifyOrg } from "@/lib/filenames";
 import type { EmbarqueLite, ClienteLite } from "@/pdf/documents/proformaShared";
 
 type ProformaRow = Tables<"proformas">;
