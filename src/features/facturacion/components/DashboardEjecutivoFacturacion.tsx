@@ -134,10 +134,12 @@ export function DashboardEjecutivoFacturacion() {
           */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
             <Kpi
-              label="Por timbrar"
+              label="Proformas por facturar"
               value={porTimbrar.toString()}
               tone={porTimbrarTone}
+              hint="Proformas aprobadas por el cliente que aún no se han convertido en factura (CFDI). No confundir con 'facturas sin timbrar' (borradores)."
             />
+
             <Kpi
               label={facturadoLabel}
               value={formatCurrencyCompact(facturadoMes, "MXN")}
