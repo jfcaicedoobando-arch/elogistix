@@ -1,61 +1,31 @@
 ## Problema
 
-Un visitante de `librecarga.com` hace clic en **"Probar demo"** y no pasa nada visible: el botón se queda cargando y luego falla. Reproducido con Playwright contra producción.
+El test `demo-access/index_test.ts` (línea 14) todavía busca el string literal `"Access-Control-Allow-Origin": "*"` en el código fuente. En el fix anterior del botón "Probar demo" migramos la función `demo-access` a CORS estricto (`corsHeaders` importado de `_shared/cors.ts`), así que el test quedó desactualizado y rompe el shard "Edge Functions (Deno tests)".
 
-## Causa
+Es la única falla del CI (1 failed, 283 passed).
 
-En la consola del navegador aparece:
+## Cambios
 
-```
-Access to fetch at 'https://…supabase.co/functions/v1/demo-access'
-from origin 'https://librecarga.com' has been blocked by CORS policy:
-Request header field baggage is not allowed by Access-Control-Allow-Headers
-in preflight response.
-```
+**1. `supabase/functions/demo-access/index_test.ts`**
 
-Sentry (activo en producción) inyecta los headers `sentry-trace` y `baggage` en fetches que matchean `tracePropagationTargets`, incluyendo `*.supabase.co/functions/v1`. El navegador dispara un preflight `OPTIONS` y la respuesta no autoriza esos headers → cancela el POST.
+Reemplazar la aserción del preflight para que verifique el nuevo contrato (CORS estricto compartido) en vez del wildcard:
 
-Este mismo bug ya se corrigió en el resto de edge functions en la v13.114.13 mediante el helper compartido `_shared/cors.ts`, que incluye `sentry-trace, baggage` en `ALLOW_HEADERS`. Pero `supabase/functions/demo-access/index.ts` sigue usando un `corsHeaders` **local hardcodeado** que quedó fuera de esa migración:
+- Mantener `assertStringIncludes(indexSource, 'req.method === "OPTIONS"')`.
+- Cambiar `'"Access-Control-Allow-Origin": "*"'` por dos aserciones:
+  - `assertStringIncludes(indexSource, 'from "../_shared/cors.ts"')`
+  - `assertStringIncludes(indexSource, "corsHeaders")`
 
-```ts
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-```
+Esto sigue protegiendo contra regresiones (que se olvide manejar OPTIONS o quitar CORS), pero alineado con la política de CORS estricto del proyecto.
 
-Es un endpoint público por diseño (sin JWT) → aplica `corsHeaders` wildcard del shared.
+**2. `CHANGELOG.md` + `src/constants/appVersion.ts`**
 
-## Fix
-
-**`supabase/functions/demo-access/index.ts`:**
-
-1. Reemplazar el `corsHeaders` local por el import del shared:
-   ```ts
-   import { corsHeaders } from "../_shared/cors.ts";
-   ```
-2. Borrar la constante local.
-3. El resto del handler (OPTIONS + Response con headers) queda idéntico.
-
-Con eso, el preflight autoriza `sentry-trace, baggage` (y los `x-supabase-client-*` que el SDK v2.95+ también envía) y el botón vuelve a funcionar en `librecarga.com`.
+Bump a `13.209.7` con nota: "Fix · Test demo-access alineado con CORS estricto (`_shared/cors.ts`)".
 
 ## Verificación
 
-- Deploy de `demo-access`.
-- Playwright contra `https://librecarga.com`: click en "Probar demo" → esperar redirect a `/inicio` y screenshot post-navegación.
-- Confirmar en logs de la edge function una invocación 200 nueva (ahora sólo hay `booted`).
-
-## Fuera de alcance
-
-- No se toca el flujo de `enterDemoMode`, la RPC `seed_demo_organization`, ni el frontend.
-- No se cambian dominios permitidos ni políticas.
-
-## Registro
-
-- Bump `APP_VERSION` a `13.209.4`.
-- Entrada en `CHANGELOG.md` [13.209.4] — Fix: botón "Probar demo" fallaba en `librecarga.com` por CORS (`baggage`/`sentry-trace`); ahora usa el helper `_shared/cors.ts`.
+- `deno test supabase/functions/demo-access/` debe pasar los 5 tests.
+- No hay cambios de lógica de runtime; sólo el test y el changelog.
 
 ## Analogía
 
-Es como un guardia en la puerta de un edificio que sólo deja entrar visitas con una lista muy corta de credenciales aceptadas. Sentry, sin avisar, le añadió dos credenciales nuevas a cada visitante (`sentry-trace` y `baggage`). Como el guardia de `demo-access` nunca fue actualizado, rechazó a todos los visitantes que venían de `librecarga.com`. Cambiamos ese guardia por el "estándar del edificio" que ya conoce las credenciales nuevas.
+El test era como un guardia que revisaba que la puerta tuviera un letrero exacto que decía "abierto a todos". Cambiamos la puerta a una con lista de invitados (CORS estricto), pero olvidamos actualizar al guardia — sigue buscando el letrero viejo y reporta que "algo está mal". Actualizamos las instrucciones del guardia para que verifique la lista de invitados.
