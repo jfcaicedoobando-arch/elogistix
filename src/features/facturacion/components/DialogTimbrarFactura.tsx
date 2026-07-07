@@ -24,6 +24,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTimbrado";
 import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
+import { ReferenciasEmbarquePreview } from "./ReferenciasEmbarquePreview";
 
 interface Props {
   facturaId: string | null;
