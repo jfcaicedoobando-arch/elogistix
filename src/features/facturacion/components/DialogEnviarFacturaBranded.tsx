@@ -59,6 +59,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
       esReenvio={esReenvio}
       loading={mutation.isPending}
       ccInicial={defaults?.cc_emails ?? null}
+      destinatariosInicial={defaults?.destinatarios_emails ?? null}
       onEnviar={async (payload) => {
         try {
           await mutation.mutateAsync({
@@ -74,7 +75,8 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
             },
           });
           // Best-effort: guarda como preferencia del cliente los CC finales
-          // (excluyendo al usuario logueado, que se agrega automáticamente).
+          // (excluyendo al usuario logueado, que se agrega automáticamente)
+          // y los destinatarios manuales (los que no vienen de contactos_cliente).
           if (factura.cliente_id) {
             const userEmailLc = user?.email?.toLowerCase();
             const ccPersist = payload.cc.filter((e) => e.toLowerCase() !== userEmailLc);
@@ -82,6 +84,14 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
               await guardarDefaultsCcCliente(factura.cliente_id, ccPersist);
             } catch (err) {
               console.warn("[envio-factura] no se guardaron los CC del cliente:", err);
+            }
+            const manualesPersist = payload.destinatarios
+              .filter((d) => !d.contacto_id)
+              .map((d) => d.email);
+            try {
+              await guardarDefaultsDestinatariosCliente(factura.cliente_id, manualesPersist);
+            } catch (err) {
+              console.warn("[envio-factura] no se guardaron los destinatarios del cliente:", err);
             }
           }
           onOpenChange(false);
