@@ -28,11 +28,12 @@ import { TabFacturasEmitidas } from "@/features/facturacion/components/TabFactur
 import { NotasCreditoRecientes } from "@/features/facturacion/components/NotasCreditoRecientes";
 import { HuecoFacturacionChip } from "@/features/facturacion/components/HuecoFacturacionChip";
 import { DashboardEjecutivoFacturacion } from "@/features/facturacion/components/DashboardEjecutivoFacturacion";
-import { FacturacionKpisFiscales } from "@/features/facturacion/components/FacturacionKpisFiscales";
+import { PeriodoFiscalSelector } from "@/features/facturacion/components/PeriodoFiscalSelector";
 import { FacturacionDialogs } from "@/features/facturacion/components/FacturacionDialogs";
 import { useFacturacionPageController, useFacturacionDateRange } from "@/features/facturacion/hooks";
 import { usePermissions } from "@/hooks/shared";
 import { buildFacturaColumns } from "./facturacionColumns";
+
 
 type TabDef = { value: string; label: string; hint: string };
 
