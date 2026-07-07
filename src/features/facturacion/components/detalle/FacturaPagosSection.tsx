@@ -139,9 +139,9 @@ export function FacturaPagosSection({
                       <td className="py-2 px-2">
                         {repTimbrado ? (
                           <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 font-mono text-xs">
+                            <CfdiEstadoBadge tono="timbrada" mono>
                               {`${p.serie_rep ?? ""}${p.folio_rep}`}
-                            </Badge>
+                            </CfdiEstadoBadge>
                             <Button
                               variant="outline" size="icon" className="h-6 w-6"
                               title="Previsualizar PDF del REP" aria-label="Previsualizar PDF del REP"
@@ -168,13 +168,9 @@ export function FacturaPagosSection({
                             />
                           </div>
                         ) : repCancelado ? (
-                          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
-                            REP cancelado
-                          </Badge>
+                          <CfdiEstadoBadge tono="cancelada">REP cancelado</CfdiEstadoBadge>
                         ) : (
-                          <Badge variant="outline" className="bg-muted text-muted-foreground text-xs font-normal">
-                            REP pendiente
-                          </Badge>
+                          <CfdiEstadoBadge tono="borrador">REP pendiente</CfdiEstadoBadge>
                         )}
                       </td>
                       {canEdit && (
