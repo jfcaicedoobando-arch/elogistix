@@ -88,7 +88,7 @@ export function DialogPreviewCfdiPdf({
       icon={FileText}
       title={title}
       description={description ?? "Vista previa del CFDI generado por FacturAPI."}
-      size="xl"
+      size="4xl"
       footer={
         <>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
