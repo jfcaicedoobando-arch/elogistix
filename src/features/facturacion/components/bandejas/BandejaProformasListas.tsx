@@ -1,69 +1,55 @@
 /**
  * Bandeja "Proformas listas": proformas aprobadas internamente y sin
- * factura asociada. Acción rápida: convertir a factura borrador de un
- * clic (usa `useConvertirProformaDirecto`).
+ * factura asociada. Drilldown al detalle de la proforma, donde vive
+ * el botón "Convertir a factura".
  */
-import { useNavigate } from "react-router-dom";
-import { FileCheck2 } from "lucide-react";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { useOrgFilter } from "@/hooks/shared";
 import { useProformasListas, type FilaProformaLista } from "@/features/facturacion/hooks/useProformasListas";
-import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
-import { TablaBandejaSimple, type ColumnaBandeja } from "./TablaBandejaSimple";
+
+const columns = defineColumns<FilaProformaLista>([
+  {
+    id: "num",
+    header: "Nº proforma",
+    cell: ({ row }) => <span className="font-mono">{row.original.numero || "—"}</span>,
+  },
+  { id: "cli", header: "Cliente", accessorFn: (r) => r.cliente_nombre },
+  {
+    id: "exp",
+    header: "Expediente",
+    accessorFn: (r) => r.expediente ?? "—",
+    cell: ({ row }) => row.original.expediente ?? "—",
+  },
+  {
+    id: "tot",
+    header: "Total",
+    meta: { align: "right" },
+    cell: ({ row }) => {
+      const r = row.original;
+      if (r.total_usd && r.total_usd > 0) return formatCurrency(r.total_usd, "USD");
+      if (r.total_mxn && r.total_mxn > 0) return formatCurrency(r.total_mxn, "MXN");
+      return "—";
+    },
+  },
+  {
+    id: "fe",
+    header: "Aprobada",
+    accessorFn: (r) => r.created_at,
+    cell: ({ row }) => formatDate(row.original.created_at),
+  },
+]);
 
 export function BandejaProformasListas() {
-  const navigate = useNavigate();
   const { data, isLoading } = useProformasListas();
-  const { organizationId } = useOrgFilter();
-  const { convertir, isPending } = useConvertirProformaDirecto();
-
-  const columnas: ColumnaBandeja<FilaProformaLista>[] = [
-    {
-      key: "num",
-      header: "Nº proforma",
-      cell: (r) => <span className="font-mono">{r.numero || "—"}</span>,
-    },
-    { key: "cli", header: "Cliente", cell: (r) => r.cliente_nombre },
-    {
-      key: "exp",
-      header: "Expediente",
-      cell: (r) => r.expediente ?? "—",
-    },
-    {
-      key: "tot",
-      header: "Total",
-      className: "text-right tabular-nums",
-      cell: (r) => {
-        if (r.total_usd && r.total_usd > 0) return formatCurrency(r.total_usd, "USD");
-        if (r.total_mxn && r.total_mxn > 0) return formatCurrency(r.total_mxn, "MXN");
-        return "—";
-      },
-    },
-    { key: "fe", header: "Aprobada", cell: (r) => formatDate(r.created_at) },
-  ];
-
   return (
-    <TablaBandejaSimple<FilaProformaLista>
-      columnas={columnas}
-      data={data}
+    <DataTable
+      columns={columns}
+      data={data ?? []}
       isLoading={isLoading}
       emptyMessage="No hay proformas aceptadas por el cliente pendientes de facturar. ✅"
       rowKey={(r) => r.id}
-      accion={{
-        label: isPending ? "Convirtiendo..." : "Convertir a factura",
-        icon: <FileCheck2 className="h-3.5 w-3.5 mr-1" />,
-        onClick: (r) => {
-          if (!organizationId || isPending) return;
-          convertir(
-            { proformaIds: [r.id], organizationId },
-            {
-              onSuccess: () => {
-                navigate("/facturacion?bandeja=por-timbrar");
-              },
-            },
-          );
-        },
-      }}
+      getRowHref={(r) => `/proformas/${r.id}`}
+      getRowAriaLabel={(r) => `Abrir proforma ${r.numero || r.id}`}
     />
   );
 }

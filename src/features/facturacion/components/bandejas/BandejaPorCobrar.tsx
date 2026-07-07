@@ -1,13 +1,11 @@
 /**
  * Bandeja "Por cobrar": facturas vigentes con saldo > 0, no vencidas.
- * Reusa `useCobranza`. Acción rápida: registrar pago (en el detalle).
+ * Drilldown de fila al detalle del CFDI.
  */
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { CreditCard } from "lucide-react";
+import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
-import { TablaBandejaSimple, type ColumnaBandeja } from "./TablaBandejaSimple";
 
 interface FilaCobranza {
   id: string;
@@ -19,8 +17,29 @@ interface FilaCobranza {
   dias_vencido: number;
 }
 
+const columns = defineColumns<FilaCobranza>([
+  {
+    id: "num",
+    header: "Folio",
+    cell: ({ row }) => <span className="font-mono">{row.original.numero}</span>,
+  },
+  { id: "cli", header: "Cliente", accessorFn: (r) => r.cliente_nombre },
+  {
+    id: "fv",
+    header: "Vence",
+    accessorFn: (r) => r.fecha_vencimiento,
+    cell: ({ row }) => formatDate(row.original.fecha_vencimiento),
+  },
+  {
+    id: "sal",
+    header: "Saldo",
+    meta: { align: "right" },
+    accessorFn: (r) => r.saldo,
+    cell: ({ row }) => formatCurrency(row.original.saldo, row.original.moneda),
+  },
+]);
+
 export function BandejaPorCobrar() {
-  const navigate = useNavigate();
   const { data, isLoading } = useCobranza({ estatus: "todos", moneda: "todas" });
   const filas = useMemo<FilaCobranza[]>(
     () =>
@@ -32,26 +51,15 @@ export function BandejaPorCobrar() {
     [data],
   );
 
-  const columnas: ColumnaBandeja<FilaCobranza>[] = [
-    { key: "num", header: "Folio", cell: (r) => <span className="font-mono">{r.numero}</span> },
-    { key: "cli", header: "Cliente", cell: (r) => r.cliente_nombre },
-    { key: "fv", header: "Vence", cell: (r) => formatDate(r.fecha_vencimiento) },
-    { key: "sal", header: "Saldo", className: "text-right tabular-nums",
-      cell: (r) => formatCurrency(r.saldo, r.moneda) },
-  ];
-
   return (
-    <TablaBandejaSimple<FilaCobranza>
-      columnas={columnas}
+    <DataTable
+      columns={columns}
       data={filas}
       isLoading={isLoading}
       emptyMessage="Sin saldos por cobrar. ✅"
       rowKey={(r) => r.id}
-      accion={{
-        label: "Registrar pago",
-        icon: <CreditCard className="h-3.5 w-3.5 mr-1" />,
-        onClick: (r) => navigate(`/facturacion/${r.id}?accion=pagar`),
-      }}
+      getRowHref={(r) => `/facturacion/${r.id}`}
+      getRowAriaLabel={(r) => `Abrir factura ${r.numero}`}
     />
   );
 }

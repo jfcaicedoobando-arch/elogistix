@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.5] - 2026-07-07
+
+- **UI · Bandejas de Facturación alineadas al design language**: las 7 bandejas del cockpit (`Por facturar`, `Por timbrar`, `Por enviar`, `Por cobrar`, `Vencidas`, `REP pendientes`, `Proformas listas`) ahora usan el `DataTable` estándar del resto de la app en lugar de `TablaBandejaSimple`. Cada fila es un drilldown al detalle (`/facturacion/{id}`, `/proformas/{id}`, `/embarques/{id}?tab=facturacion`) con soporte para teclado (Enter) y Ctrl+click; se elimina la columna de acción por fila (`Timbrar`, `Enviar`, `Pagar`, `Convertir a factura`, etc.) porque esas acciones ya viven dentro del detalle. Se elimina el componente `TablaBandejaSimple.tsx`. Sin cambios de datos ni de lógica de filtrado. Analogía: la bandeja deja de ser un formulario con botoncitos al final de cada renglón y se convierte en un radar — cada renglón es un enlace al expediente, y las acciones se ejecutan dentro del expediente.
+
 ## [13.213.4] - 2026-07-07
 
 - **Cambio · Bandeja "Embarques sin factura" ahora usa ETA en lugar de ETD**: el disparador cambia de "ETD hace más de 5 días" a "ETA ≤ hoy" (contenedor ya llegó o llega hoy). En importación marítima CN→MX una travesía dura 20-40 días, así que usar ETD generaba falsos positivos enormes (embarques que aún no llegaban al puerto y por tanto no necesitaban factura para aduana). Ahora sólo caen los embarques cuyo contenedor ya llegó, respetando el corte del modelo nuevo (`eta ≥ 2026-04-01`). Embarques sin ETA capturado se excluyen. Se renombra `FilaHueco.diasDesdeEtd → diasDesdeEta`, columna de tabla "Días sin facturar → Días desde ETA", y se actualiza el tooltip de la pestaña. Analogía: antes avisábamos "prepara la factura" el día que el barco zarpaba de Shanghái; ahora avisamos cuando ya está atracando en Manzanillo, que es cuando de verdad se necesita el CFDI para cruzar aduana. Sin migración de datos ni cambios de esquema.
