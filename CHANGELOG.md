@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.209.5] - 2026-07-07
+
+- **Lint · Reducción de complejidad ciclomática**: `useEmbarqueEstadoActions` (complejidad 18) extrae el `useEffect` de auto-sync a un sub-hook `useAutoSyncEstadoEmbarque`. `useTimbrarFacturaDialog` (complejidad 23) extrae los fallbacks `??` a `resolverDefaults(...)` y los pasos post-timbrado a `guardarDefaultsSiClienteExiste` + `enviarCfdiSiHabilitado`. Sin cambios de comportamiento; sólo reorganización para pasar `eslint --max-warnings 0`.
+
 ## [13.209.4] - 2026-07-07
 
 - **Landing · Botón "Probar demo" en librecarga.com**: el click no hacía nada porque el preflight CORS de la edge function `demo-access` rechazaba los headers `sentry-trace` y `baggage` que Sentry inyecta automáticamente en producción a fetches contra `*.supabase.co/functions/v1`. La función usaba un `corsHeaders` local hardcodeado que quedó fuera de la migración v13.114.13. Ahora importa `corsHeaders` desde `supabase/functions/_shared/cors.ts`, que ya incluye `sentry-trace, baggage` y los headers `x-supabase-client-*` del SDK v2.95+. Sin cambios en el flujo demo, RLS ni frontend.
