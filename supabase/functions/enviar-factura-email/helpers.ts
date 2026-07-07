@@ -214,13 +214,14 @@ export async function prepareAttachments(
   factura: FacturaCtx,
   apiKey: string,
   ts: number,
+  fallbackKey: string | null = null,
 ): Promise<{ pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string }> {
   const basePath = `${factura.organization_id}/${factura.id}/${factura.numero}-${ts}`;
   const pdfPath = `${basePath}.pdf`;
   const xmlPath = `${basePath}.xml`;
   const [pdfBytes, xmlBytes] = await Promise.all([
-    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'pdf'),
-    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'xml'),
+    fetchFacturapiFileWithFallback(apiKey, fallbackKey, factura.facturapi_id!, 'pdf'),
+    fetchFacturapiFileWithFallback(apiKey, fallbackKey, factura.facturapi_id!, 'xml'),
   ]);
   await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
