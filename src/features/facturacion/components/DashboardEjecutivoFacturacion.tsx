@@ -103,12 +103,13 @@ export function DashboardEjecutivoFacturacion() {
   const dash = useDashboardEjecutivoFacturacion();
   const { kpis: cob } = useCobranza({ estatus: "todos", moneda: "todas" });
   const { data: proformasPendientes = [] } = useProformasPendientes();
+  const { data: proformasListas = 0 } = useProformasListasCount();
 
   const facturadoMes = dash.data?.facturado_mes_mxn ?? 0;
   const cobradoMes = dash.data?.cobrado_mes_mxn ?? 0;
   const porCobrar = cob.total_mxn;
   const vencido = cob.vencido_mxn;
-  const porTimbrar = proformasPendientes.length;
+  const porRevisar = proformasPendientes.length;
 
   const tendencia = dash.data?.tendencia ?? [];
   const facturadoArr = tendencia.map((t) => t.facturado_mxn);
@@ -122,23 +123,30 @@ export function DashboardEjecutivoFacturacion() {
   const facturadoHint = sinTc
     ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
     : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.";
-  const porTimbrarTone: "warn" | "default" = porTimbrar > 0 ? "warn" : "default";
+  const porRevisarTone: "warn" | "default" = porRevisar > 0 ? "warn" : "default";
+  const listasTone: "warn" | "default" = proformasListas > 0 ? "warn" : "default";
 
   return (
     <TooltipProvider delayDuration={150}>
       <Card>
         <CardContent className="p-3">
           {/*
-            Tablet (md, 768+): 3 columnas · 2 filas para 5 KPIs (+ tendencia debajo).
-            Desktop (xl, 1280+): 6 columnas en una sola fila con divisores verticales.
-            Móvil: 2 columnas apretadas para que las cifras no se apilen en 5 renglones.
+            6 KPIs (Por revisar, Listas para facturar, Facturado, Cobrado,
+            Por cobrar, Vencido) + tendencia. Desktop xl: 7 columnas.
           */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
             <Kpi
-              label="Proformas por facturar"
-              value={porTimbrar.toString()}
-              tone={porTimbrarTone}
-              hint="Proformas aprobadas por el cliente que aún no se han convertido en factura (CFDI). No confundir con 'facturas sin timbrar' (borradores)."
+              label="Proformas por revisar"
+              value={porRevisar.toString()}
+              tone={porRevisarTone}
+              hint="Proformas generadas desde embarques que aún no han sido revisadas ni aprobadas internamente (estado 'pendiente'). Una vez aprobadas pasan a 'Listas para facturar'."
+            />
+
+            <Kpi
+              label="Listas para facturar"
+              value={proformasListas.toString()}
+              tone={listasTone}
+              hint="Proformas aprobadas internamente y sin factura asociada — listas para convertir a CFDI. Se convierten desde la bandeja 'Proformas listas'."
             />
 
             <Kpi
@@ -155,6 +163,8 @@ export function DashboardEjecutivoFacturacion() {
               value={formatCurrencyCompact(vencido, "MXN")}
               tone="danger"
             />
+
+
 
 
             {tendencia.length > 0 && (
