@@ -35,6 +35,9 @@ describe("deriveFacturaFlags", () => {
       puedeTimbrarDesdeSistema: true,
       puedeCancelarCfdi: false,
       puedeSustituirCfdi: false,
+      puedeRegistrarPago: false,
+      repPendiente: false,
+      estaCancelada: false,
     });
   });
 
