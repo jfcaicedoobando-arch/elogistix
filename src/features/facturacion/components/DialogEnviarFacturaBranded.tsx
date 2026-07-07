@@ -16,6 +16,7 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import {
   fetchDefaultsFacturacionCliente,
   guardarDefaultsCcCliente,
+  guardarDefaultsDestinatariosCliente,
 } from "@/features/facturacion/services";
 import type { Tables } from "@/integrations/supabase/types";
 
