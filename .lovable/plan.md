@@ -1,150 +1,124 @@
-## Objetivo
+# Auditoría de skeletons de la app
 
-Unificar la barra de acciones de los 3 detalles a los que llegan los drilldowns de las bandejas de facturación, con un patrón común: **acción primaria a la izquierda → grupo secundario visible → menú "Más acciones" (⋮) → botón destructivo aislado a la derecha**. Además, subir las acciones que hoy viven enterradas dentro de tarjetas (Registrar pago, Timbrar REP, Generar proforma) al top del detalle.
+**Alcance medido:** 240 usos de `<Skeleton />` distribuidos en 80 archivos. Solo 3 primitivas centrales existen hoy: `Skeleton` (ui), `ListSkeleton` (states), `ChartSkeleton`. El resto son ensambles ad-hoc página por página.
 
-## Alcance
+Analogía: hoy cada pantalla "dibuja su propio esqueleto a mano". Queremos una caja de piezas Lego con 4–5 formas listas que cualquier pantalla arme en 1 línea, y que respire (accesibilidad + reduced-motion) sola.
 
-Los 3 destinos del drilldown:
-1. `FacturaDetalle` (`/facturacion/:id`) — llega desde Por timbrar, Por enviar, Por cobrar, Vencidas, REP pendientes.
-2. `ProformaDetalle` (`/proformas/:id`) — llega desde Proformas listas.
-3. `TabFacturacion` del embarque (`/embarques/:id?tab=facturacion`) — llega desde Por facturar.
+---
 
-## Diseño del componente compartido
+## Hallazgos (severidad → impacto)
 
-Nuevo componente en `src/components/shared/DetalleActionBar.tsx`:
+### 1. CRITICAL — Sin `prefers-reduced-motion`
+- **Archivo:** `src/components/ui/skeleton.tsx:4`
+- **Qué pasa:** todas las 240 instancias heredan `animate-pulse` sin condicional. Cero ocurrencias de `motion-safe` / `motion-reduce` / `prefers-reduced-motion` en todo el repo.
+- **Riesgo:** usuarios con vestíbulo sensible (mareo, migraña, WCAG 2.3.3) reciben pulso continuo en toda la app. Falla accesibilidad.
+- **Fix:** cambiar `animate-pulse` → `motion-safe:animate-pulse` en la primitiva. Un solo diff, cero riesgo, corrige las 240 instancias.
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│ [Acción primaria]  [Sec 1] [Sec 2]        [⋮ Más]     [Destructivo] │
-└─────────────────────────────────────────────────────────────────────┘
-```
+### 2. CRITICAL — Skeletons no anuncian carga a lectores de pantalla
+- **Archivos:** solo `ListSkeleton` marca `role="status" aria-live="polite" aria-label="Cargando"`. `Skeleton`, `ChartSkeleton`, `RouteLoadingFallback`, `DataTableBody`, `VirtualTableParts.SkeletonRows` y las 200+ instancias ad-hoc no lo hacen.
+- **Riesgo:** VoiceOver / NVDA no anuncian "cargando" — el usuario cree que la app se congeló. Bloquea WCAG 4.1.3 (Status Messages).
+- **Fix:** agregar `role="status"` + `aria-busy="true"` + `aria-label="Cargando"` en la primitiva y en los wrappers de grupo (`RouteLoadingFallback`, `SkeletonRows`, `DataTableBody[isLoading]`, `ChartSkeleton`). El `Skeleton` individual dentro de un grupo debe ser `aria-hidden`.
 
-Contrato (recibe listas declarativas, sin lógica de negocio dentro):
+### 3. HIGH — Duplicación masiva del mismo patrón "N tarjetas de altura X"
+- **Archivos:** repetido literalmente en:
+  - `RouteLoadingFallback.tsx:22-25` (4 cards h-24)
+  - `Tesoreria.tsx:64` (4 cards h-20)
+  - `DireccionDashboard.tsx:36-42` (3 cards h-32 + 2 h-64)
+  - `PortalDashboard.tsx:44-49` (3 cards h-20 + 2 h-64)
+  - `ArribosCard.tsx`, `KpiCard.tsx`, `KpiTile.tsx` (cada uno con `<Skeleton className="h-X w-Y" />` inline)
+  - `HistorialFacturaSection`, `AlertasSistemaPanel`, `NotasCreditoSection`, `EmbarquesPendientesAdminCard`, `TimelineEstadosCard`, `TrackingPublicoLoading`, `EmbarqueDetalleStates.LoadingState`, etc.
+- **Riesgo:** cualquier cambio de estilo (altura, radio, animación, contraste) requiere tocar N archivos. Divergencia visual entre páginas ya presente (h-20 vs h-24 vs h-32 sin criterio).
+- **Fix:** introducir 4 primitivas nuevas en `src/components/shared/states/`:
+  - `KpiGridSkeleton` (columnas + altura por breakpoint)
+  - `CardSkeleton` (una card con título + 2 líneas)
+  - `DetailSkeleton` (patrón header + grid — reemplaza `RouteLoadingFallback`, `EmbarqueDetalleStates.LoadingState`, `TesoreriaCuentas`, `Tesoreria`, `DireccionDashboard`, `PortalDashboard`)
+  - `FieldGridSkeleton` (`FacturaReceptorCard`, `FacturaEmisorCard`, `FacturaBitacoraCard`, `FacturaPagosSection`, `PortalFacturaPagosCard` — todos usan `Skeleton h-16..24 w-full` que da un bloque plano poco informativo)
 
-```ts
-type ActionItem = {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  onClick: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  tone?: "default" | "destructive";
-  href?: string;              // renderiza <Link> si viene
-};
+### 4. HIGH — Skeletons planos que no comunican la forma real
+- **Archivos:** `FacturaReceptorCard.tsx:91` (`<Skeleton className="h-24 w-full" />` para lo que después será un grid 3×2 con labels + values), `FacturaPagosSection`, `FacturaBitacoraCard`, `FacturaEmisorCard`, `PortalFacturaPagosCard`, `NotasCreditoSection`, `PanelConciliacionMovimiento`, `AuditoriaEjecutivoTab`.
+- **Riesgo:** salto visual grande cuando cargan datos (el bloque plano de 96px se convierte en un grid detallado de ~200px). Contradice el trabajo hecho en `DataTableBody` (donde ya se alineó 1:1 con las filas reales).
+- **Fix:** replicar el criterio de `DataTableBody`: cada skeleton debe reflejar la estructura del contenido final (labels arriba, barras alineadas a la derecha para números, alturas fijas por densidad).
 
-interface DetalleActionBarProps {
-  primary?: ActionItem;       // botón sólido, 1 sola acción principal
-  secondary?: ActionItem[];   // botones outline visibles (máx 3, resto va a "Más")
-  moreLabel?: string;         // default "Más acciones"
-  more?: ActionItem[];        // dentro de DropdownMenu
-  destructive?: ActionItem;   // aislado a la derecha con divider
-}
-```
+### 5. HIGH — `RouteLoadingFallback` es genérico y engaña
+- **Archivo:** `src/components/layout/RouteLoadingFallback.tsx`
+- **Qué pasa:** dibuja header + 4 KPIs + tabla, pero rutas como `/facturas/:id` (detalle), `/cotizaciones/:id`, `/embarques/:id`, portal, etc. no tienen esa estructura. El usuario ve el "flash" del layout equivocado antes del real.
+- **Riesgo:** más CLS percibido que si mostráramos un skeleton neutro. Además rutas de portal cargan este layout con Sidebar/KPIs que no aplican.
+- **Fix:** dividir en `PageSkeleton` (neutro: header + `space-y-6` genérico, sin KPIs), y que cada `<Suspense>` de ruta declare el suyo (dashboard usa `DashboardSkeleton`, detalle usa `DetailSkeleton`, tabla usa `TableSkeleton`).
 
-Reglas de composición:
-- `primary` = tono `default` (botón sólido). Es la CTA fiscal/operativa del estado actual.
-- `secondary` = máx **3** visibles (responsive). Del 4º en adelante el componente los empuja automáticamente a `more`.
-- `more` = `DropdownMenu` con trigger `Button variant="outline" size="sm"` + icono `MoreHorizontal`. Cerrado por defecto.
-- `destructive` = separado por `<Divider />`, alineado a la derecha con `justify-between` en el wrapper.
-- Wrap responsivo: `flex flex-wrap items-center gap-2`. En mobile todos hacen wrap; el destructivo mantiene su divider.
+### 6. HIGH — Duplicación de skeleton de tabla entre `DataTable` y `VirtualDataTable`
+- **Archivos:** `DataTableBody.tsx:73-121` (skeleton avanzado con ancho variable + align + sticky) vs `VirtualTableParts.tsx:34-49` (skeleton genérico `h-4 w-full` sin variación ni align).
+- **Riesgo:** las tablas virtuales (listas grandes) se ven "más pobres" que las normales. Regresión invisible cada vez que se toca una y no la otra.
+- **Fix:** extraer `renderTableSkeletonRow(leafColumns, density, rowIndex)` a un módulo compartido (`dataTable/tableSkeletonRow.tsx`) y consumirlo desde ambos.
 
-## Mapeo por detalle
+### 7. MEDIUM — Skeleton en `KpiCard` / `KpiTile` no respeta la tipografía adaptativa
+- **Archivos:** `KpiCard.tsx:58` (`h-8 w-24`), `KpiTile.tsx:44` (`h-7 w-20`), `ArribosCard.tsx:115` (`h-6 w-8`).
+- **Qué pasa:** el valor real cambia de `text-3xl` → `text-lg` según longitud, pero el skeleton siempre es del mismo tamaño → cuando llegan datos, el card salta de alto.
+- **Fix:** el skeleton del valor debe usar la altura mínima que después ocupa `text-3xl leading-tight` (aprox `h-9`). Congelar `min-h` de la card entera durante loading.
 
-### 1) `FacturaDetalle`
+### 8. MEDIUM — `ChartSkeleton` solo pinta un rectángulo
+- **Archivo:** `src/components/shared/ChartSkeleton.tsx`
+- **Qué pasa:** un `Skeleton` liso de altura fija, sin ejes ni barras/líneas. Cuando llega el chart real (con ejes, leyenda, tooltip) el layout salta 30–60px.
+- **Fix:** agregar pseudo ejes X/Y con `Skeleton` de baja opacidad + 4–6 barras verticales con alturas variables. Coste ~15 líneas, mantiene la altura y evita CLS.
 
-Reescribir `FacturaDetalleActionsBar` para armar arrays y delegar en `DetalleActionBar`. Deriva de `flags` + `acuse`.
+### 9. MEDIUM — Loop de 3 booleans para decidir loading
+- **Archivo:** `PortalDashboard.tsx:38` (`loadingEmb || loadingCot || loadingFac`), y patrones similares en `Tesoreria.tsx`, `Reportes.tsx`, `DireccionDashboard.tsx`.
+- **Riesgo:** cascada — mientras UNA query esté cargando, todas las cards ya listas quedan ocultas tras el skeleton monolítico. Peor TTI percibido.
+- **Fix:** cada tarjeta acepta su propio `isLoading` y muestra su propio skeleton (progressive reveal). Ya existe la infra (`KpiCard.loading`, `KpiTile.loading`); falta usarla en dashboards de portal / dirección / tesorería.
 
-| Estado                        | primary                | secondary (visibles)                    | more (⋮)                                              | destructive         |
-|-------------------------------|------------------------|-----------------------------------------|--------------------------------------------------------|---------------------|
-| Borrador (sin timbrar)        | **Timbrar factura**    | —                                       | —                                                      | Eliminar borrador   |
-| Timbrada, saldo pendiente     | **Registrar pago**     | Enviar email · Descargar PDF            | Descargar XML · Ver embarque · Sustituir · Cancelar    | —                   |
-| Timbrada, liquidada           | **Enviar email**       | Descargar PDF                           | Descargar XML · Ver embarque · Sustituir · Cancelar    | —                   |
-| Con pagos sin REP (REP pend.) | **Timbrar REP**        | Descargar PDF · Enviar email            | Descargar XML · Ver embarque · Sustituir · Cancelar    | —                   |
-| Cancelada / Sustituida        | —                      | Descargar PDF · Acuse XML · Acuse PDF   | Descargar XML · Reintentar acuse · Ver embarque        | —                   |
+### 10. MEDIUM — `role="status"` sin `sr-only` texto explícito
+- **Archivo:** `ListSkeleton.tsx:26-28`
+- **Qué pasa:** el único que anuncia lo hace con `aria-label`, pero un `<span className="sr-only">Cargando lista…</span>` es más robusto entre lectores.
+- **Fix:** convención: todo grupo skeleton lleva `<span className="sr-only">{loadingLabel}</span>` como primer hijo.
 
-Cambios concretos:
-- **Subir `Registrar pago`** al action bar. Se pasa como callback desde `FacturaDetalle` (ya existe `setPagoOpen`). El botón del mismo nombre dentro de `FacturaPagosSection` se **elimina** para no duplicar.
-- **Agregar `Timbrar REP`**: nueva prop/flag. Si `factura` está timbrada, tiene al menos 1 pago aplicado y falta el complemento de pagos, aparece como `primary`. Callback abre el diálogo existente de REP (revisar `useTimbrarComplementoPago` / `DialogoTimbrarREP` — si no existe con ese nombre exacto, agregar `TODO` técnico y lanzar toast placeholder para que el hook actual se conecte en el mismo turno).
-- La lógica de decisión (`sinTimbrar`, `liquidada`, `repPendiente`, `estaCancelada`) sale de `deriveFacturaFlags` extendido con `repPendiente` (nueva propiedad derivada de `pagos.length > 0 && !factura.rep_timbrado`).
+### 11. LOW — Radios inconsistentes
+- **Archivos:** `RouteLoadingFallback` usa `rounded-2xl`/`rounded-xl`/`rounded-lg` mezclado; `DireccionDashboard` usa `rounded-xl`; `Tesoreria` usa el default (`rounded-md` de la primitiva).
+- **Fix:** primitiva por tipo (`CardSkeleton` = `rounded-xl`, `ChartSkeleton` = `rounded-lg`, texto = `rounded-md`).
 
-### 2) `ProformaDetalle`
+### 12. LOW — `Array.from({ length: 4 }).map(...)` repetido ~25 veces
+- **Fix:** helper `<Repeat n={4}>{(i) => ...}</Repeat>` o `range(4).map(...)`. Cosmético pero legible.
 
-Reescribir `AccionesProforma` para usar `DetalleActionBar`:
+---
 
-| Estado                        | primary                | secondary                         | more (⋮)              | destructive |
-|-------------------------------|------------------------|-----------------------------------|-----------------------|-------------|
-| Borrador / Enviada a cliente  | **Convertir a factura**| Descargar PDF · Enviar al cliente | Marcar aceptada · Marcar rechazada | — |
-| Aceptada (lista)              | **Convertir a factura**| Descargar PDF · Enviar al cliente | —                     | — |
-| Facturada                     | —                      | Descargar PDF · Ver factura       | —                     | — |
-| Rechazada                     | —                      | Descargar PDF                     | Enviar al cliente     | — |
+## Plan de consolidación (3 fases)
 
-### 3) `TabFacturacion` del embarque
+### Fase 1 — Base primitiva (impacto máximo, 1 archivo)
+Actualizar `src/components/ui/skeleton.tsx`:
+- `motion-safe:animate-pulse` (resuelve hallazgo #1 en toda la app)
+- `role="status"` + `aria-busy="true"` + `aria-label` opcional cuando no viene de un contenedor
+- Prop `variant?: "text" | "block" | "circle" | "chart"` con radios/alturas por defecto
 
-Insertar un `DetalleActionBar` **arriba** del `FlujoFacturacionStepper` (antes no existía barra unificada):
+### Fase 2 — Librería `src/components/shared/skeletons/`
+Nuevos archivos (~30 líneas cada uno, <200 líneas total):
+- `PageSkeleton.tsx` (reemplaza `RouteLoadingFallback` genérico)
+- `DetailSkeleton.tsx` (header + 2 columnas grid, para páginas `/*/:id`)
+- `DashboardSkeleton.tsx` (KPI grid + 2 charts) — reemplaza `DireccionDashboard`, `PortalDashboard`, `Tesoreria`, `Reportes` loading
+- `KpiGridSkeleton.tsx` (props: `count`, `mobileCols`, `heightClass`)
+- `CardSkeleton.tsx` (para reemplazar los 60+ `<Skeleton className="h-N w-full" />` dentro de cards)
+- `FieldGridSkeleton.tsx` (labels + values grid — reemplaza receptor/emisor/pagos/bitácora de factura)
+- `ChartSkeleton.tsx` mejorado (ejes + barras)
+- Barrel `index.ts` + tests unitarios de a11y (`toHaveAccessibleName("Cargando")`)
 
-| Contexto                                     | primary                       | secondary                    | more (⋮)          | destructive |
-|----------------------------------------------|-------------------------------|------------------------------|-------------------|-------------|
-| Hay conceptos pendientes (sin proforma)      | **Generar proforma**          | Ver historial de proformas   | Ver facturas      | — |
-| Todo en proforma, ninguna facturada          | —                             | Ver proformas · Ver facturas | —                 | — |
-| Ya facturado todo                            | —                             | Ver facturas                 | —                 | — |
+### Fase 3 — Migración incremental
+Ir archivo por archivo reemplazando ensambles ad-hoc con las primitivas. Priorizado por tráfico:
+1. `RouteLoadingFallback` → `PageSkeleton` (afecta cada navegación lazy)
+2. Dashboards: Portal, Dirección, Tesorería, Reportes, Operaciones, Admin, Profit
+3. Detalles: Factura, Proforma, Embarque, Cotización, Proveedor, Cliente
+4. Tablas virtuales: extraer `tableSkeletonRow` compartido entre `DataTable` y `VirtualDataTable`
+5. Cards KPI: unificar `Skeleton` interno en `KpiCard`, `KpiTile`, `ArribosCard`
 
-Los botones "Ver proformas / Ver facturas" hacen scroll a las secciones (`useFocusSection`), reutilizando `registerRef`. `Generar proforma` abre el `DialogGenerarProforma` existente con filtro `'todos'` (mismo callback que hoy usa `ResumenConceptosVenta`).
+Cada PR de migración cubre 3–5 archivos, sin cambios de comportamiento, verificable visualmente en preview.
 
-## Cambios técnicos por archivo
+## Detalles técnicos
 
-1. **Nuevo** `src/components/shared/DetalleActionBar.tsx` (< 200 líneas)
-   - Renderiza primary + secondary + more + destructive según contrato.
-   - Usa `DropdownMenu` de shadcn para "Más acciones" (cerrado por defecto).
-   - Alinea destructivo a la derecha con `ml-auto` + `Divider`.
-
-2. **Nuevo** `src/components/shared/DetalleActionBar.test.tsx`
-   - Overflow: con 5 secondary, 2 quedan visibles + 3 caen en "Más".
-   - Loading en un ítem deshabilita ese botón.
-   - Destructivo no aparece en "Más".
-
-3. **Editar** `src/features/facturacion/domain/facturaFlags.ts`
-   - Añadir `repPendiente: boolean` (requiere pagos > 0 sin REP timbrado).
-   - Añadir `puedeRegistrarPago: boolean = !sinTimbrar && !estaCancelada && saldo > 0`.
-
-4. **Editar** `src/features/facturacion/components/detalle/FacturaDetalleActionsBar.tsx`
-   - Construir arrays `primary/secondary/more/destructive` según los flags.
-   - Delegar en `<DetalleActionBar />`.
-   - Recibir `saldoPendiente` y `onTimbrarRep` como nuevas props.
-
-5. **Editar** `src/features/facturacion/routes/FacturaDetalle.tsx`
-   - Nuevo estado `repOpen` + prop `onTimbrarRep` hacia el ActionsBar.
-   - Calcular `saldo` (o subirlo desde `FacturaPagosSection` — se comparte vía `usePagosFactura` en el hijo; expondremos el mismo hook aquí).
-   - Pasar callback `onRegistrarPago` que ya existía; la sección de pagos deja de renderizar su botón.
-
-6. **Editar** `src/features/facturacion/components/detalle/FacturaPagosSection.tsx`
-   - Quitar el botón `Registrar pago` del header de la card (queda sólo la lista + resumen).
-   - Mantener `onRegistrarPago` en props (no rompe firma), pero no se usa desde el header.
-
-7. **Borrar** archivos obsoletos: ninguno — reutilizamos `FacturaDetalleActionGroups.tsx` como catálogo de íconos/labels que el `ActionsBar` importa para armar cada `ActionItem`.
-
-8. **Editar** `src/features/proformas/components/AccionesProforma.tsx`
-   - Reescribir el `return` para armar los arrays y delegar en `<DetalleActionBar />`.
-   - Mantener diálogos internos (`enviarOpen`, `manualOpen`).
-
-9. **Editar** `src/features/embarques/components/TabFacturacion.tsx`
-   - Insertar `<DetalleActionBar />` como primer hijo del wrapper, antes de `FlujoFacturacionStepper`.
-   - Callbacks: reutilizar el mismo `setDialogOpen` / `registerRef`.
-
-10. **Mantenimiento**
-    - Bump `APP_VERSION` a `13.213.8` en `src/constants/appVersion.ts`.
-    - Entrada en `CHANGELOG.md`:
-      `## [13.213.8] - 2026-07-07` con bullets: barra de acciones unificada en Factura/Proforma/Tab Facturación, Registrar pago y Timbrar REP subidos al header, patrón "Más acciones" para descargas secundarias.
-
-## Verificación
-
-- `bun x tsgo` (typecheck) verde.
-- `bunx vitest run src/components/shared/DetalleActionBar.test.tsx` verde.
-- `bunx vitest run src/features/facturacion` verde (regresión de flags).
-- Playwright headless: login demo → `/facturacion` → click en fila Por cobrar → `Registrar pago` visible en el top del detalle → screenshot como evidencia.
+- Nada de esto cambia lógica de negocio, queries, ni rutas — es 100% presentación.
+- Coverage: agregar tests de a11y (`role="status"`, `aria-busy`) a la primitiva y a los 6 wrappers nuevos.
+- Bundle: neto ~ +2 KB (6 componentes nuevos) − ~ 4 KB de ensambles ad-hoc reescritos → **reduce bundle**.
+- CLS objetivo: 0.02 → <0.01 en las 5 rutas críticas (dashboard, factura, embarque, portal, tesorería) — medible antes/después.
+- Bump versión al final de Fase 1 (`13.213.11`), Fase 2 (`13.213.12`), y por lote en Fase 3.
+- CHANGELOG en cada fase con analogía Lego para el usuario principiante.
 
 ## Fuera de alcance
 
-- CxP (`/compras/facturas`) no tiene detalle por factura hoy — no se toca.
-- No se agrega ninguna acción nueva al listado/tablas (las bandejas quedan como están, sólo filas clickeables).
-- No se cambian los diálogos existentes (Timbrar, Enviar, Registrar pago, Sustituir, Cancelar) — sólo cómo se disparan.
+- Reemplazar Radix Suspense por otro sistema de streaming.
+- Cambiar la duración/curva de `animate-pulse` (queda default de Tailwind).
+- Introducir shimmer gradiente (más costoso y peor a11y que pulse).
