@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.36] - 2026-07-07
+- **Fix — borrar borrador de factura no revertía la proforma**:
+  - `eliminar_factura_borrador` intentaba revertir vía `proformas.factura_id`, pero esa columna nunca la llena la conversión (el vínculo vive del otro lado, en `facturas.proforma_id`, o en la bitácora para consolidadas). Resultado: al eliminar el borrador la proforma quedaba huérfana en estado `facturada` (caso reportado: PRO-2026-0961).
+  - La RPC ahora recolecta el `proforma_ids` combinando tres fuentes (link directo, link inverso `facturas.proforma_id` y el array registrado en `bitacora_actividad` para el evento `factura.borrador_generado`) y revierte todas a `pendiente` con `fecha_facturacion = NULL`.
+  - Fix puntual: PRO-2026-0961 vuelve a `pendiente` conservando `estado_cliente = 'aceptada'`.
+  - Analogía: al mensajero le devolvían el paquete pero nadie quitaba el sticker rojo de "enviado"; ahora sí se despega.
+
 ## [13.213.35] - 2026-07-07
 - **Auditoría UI/UX Facturación & Compras — Ola 6 (tooltips explicativos)**:
   - `KpiCard` (dashboard Compras) ahora acepta prop opcional `hint`: renderiza un ícono `Info` accesible (con `aria-label`, `role="button"` y foco visible) junto al label; al hover/foco muestra un tooltip explicando el criterio del KPI.
