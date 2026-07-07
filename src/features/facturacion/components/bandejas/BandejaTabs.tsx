@@ -24,7 +24,7 @@ interface Def {
 }
 
 const DEFS: Def[] = [
-  { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cerrados hace más de 5 días que aún no tienen CFDI (hueco de facturación). Puede que falte generar la proforma o que la proforma exista pero no se haya convertido a factura.", tone: "warn" },
+  { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura.", tone: "warn" },
   { id: "proformas-listas", label: "Proformas listas", hint: "Proformas aprobadas internamente (estado 'aprobada') que aún no se han convertido a factura borrador. Acción: 'Convertir a factura' de un clic.", tone: "warn" },
   { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn" },
   { id: "por-enviar", label: "Por enviar", hint: "CFDI ya timbrados que no se han mandado por correo al cliente.", tone: "warn" },
