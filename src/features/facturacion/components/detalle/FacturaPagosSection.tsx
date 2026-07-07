@@ -137,9 +137,35 @@ export function FacturaPagosSection({
                       </td>
                       <td className="py-2 px-2">
                         {repTimbrado ? (
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/20 font-mono text-xs">
-                            {`${p.serie_rep ?? ""}${p.folio_rep}`}
-                          </Badge>
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 font-mono text-xs">
+                              {`${p.serie_rep ?? ""}${p.folio_rep}`}
+                            </Badge>
+                            <Button
+                              variant="outline" size="icon" className="h-6 w-6"
+                              title="Previsualizar PDF del REP" aria-label="Previsualizar PDF del REP"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewRep({ id: p.id, label: `${p.serie_rep ?? ""}${p.folio_rep}` });
+                              }}
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            <FacturaDownloadButton
+                              stored={null}
+                              kind="pdf"
+                              pagoId={p.id}
+                              size="icon"
+                              className="h-6 w-6"
+                            />
+                            <FacturaDownloadButton
+                              stored={null}
+                              kind="xml"
+                              pagoId={p.id}
+                              size="icon"
+                              className="h-6 w-6"
+                            />
+                          </div>
                         ) : repCancelado ? (
                           <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
                             REP cancelado
