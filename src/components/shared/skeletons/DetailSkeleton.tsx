@@ -1,5 +1,5 @@
 /**
- * `<DetailSkeleton />` — para páginas `/*/:id` (factura, embarque, cotización).
+ * `<DetailSkeleton />` — para páginas de detalle (factura, embarque, cotización).
  * Header + fila de metadatos + 2 columnas de cards.
  */
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
