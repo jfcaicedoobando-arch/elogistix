@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.35] - 2026-07-07
+- **Auditoría UI/UX Facturación & Compras — Ola 6 (tooltips explicativos)**:
+  - `KpiCard` (dashboard Compras) ahora acepta prop opcional `hint`: renderiza un ícono `Info` accesible (con `aria-label`, `role="button"` y foco visible) junto al label; al hover/foco muestra un tooltip explicando el criterio del KPI.
+  - Se agregaron hints a los 6 KPIs de `/compras` (Embarques por capturar, Por aprobar, Facturas con saldo, Vencidas, Vencido > 30 días, Por vencer 7 días). Analogía: cada indicador ahora tiene su "letrero pequeño" que explica de dónde sale el número — reduce las preguntas de "¿esto qué cuenta exactamente?" al contador nuevo.
+
 ## [13.213.34] - 2026-07-07
 - **Auditoría UI/UX Facturación & Compras — Ola 5 (Dashboard Compras)**:
   - `/compras`: fix del KPI **"Por vencer 7 días"** que mostraba `USD 0 USD` (doble sufijo). El valor principal ahora también usa `formatCurrencyCompact` (era `formatCurrency` con decimales completos) para quedar visualmente alineado con el resto de KPIs. El sublabel muestra el monto USD en formato compacto sin sufijo redundante.
