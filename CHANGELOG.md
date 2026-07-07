@@ -6,7 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.211.0] - 2026-07-07
+
+- **Refactor · /facturacion Fase 1 (cockpit estilo ERP)**: primer paso del rediseño hacia estándar Odoo/SAP. (1) Se colapsan las dos bandas de KPIs en una: se elimina `FacturacionKpisFiscales` de la página — los conteos de proformas convertibles, facturas sin timbrar y REP pendientes migrarán a badges sobre las bandejas de trabajo en Fase 2. (2) Se renombra el KPI ambiguo **"Por timbrar" → "Proformas por facturar"** y se añade tooltip explicativo (contaba proformas, no CFDIs; confundía). (3) Nuevo `<PeriodoFiscalSelector>` en el header con presets Este mes / Mes pasado / Este trimestre / Ejercicio / Todo, que sincroniza con la URL vía `useFacturacionDateRange`. Sin cambios de esquema; hooks existentes reusados. Plan completo en `.lovable/plan.md`.
+
 ## [13.210.1] - 2026-07-07
+
 
 - **Fix · Dashboard Dirección movido a `/dashboard`**: la ruta pedida originalmente era `/dashboard` (no `/dashboard-direccion`). Como la ruta `/dashboard` estaba libre — el dashboard operativo vive en `/inicio` — se cambia sin conflicto ni redirect.
 
