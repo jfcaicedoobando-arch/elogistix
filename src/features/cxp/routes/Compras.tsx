@@ -77,35 +77,41 @@ export default function Compras() {
           label="Embarques por capturar"
           value={metrics.embarquesPorCapturar}
           sub="presupuesto sin factura"
+          hint="Embarques que ya tienen presupuesto operativo cargado pero aún no se ha capturado la factura del proveedor. Van a la bandeja 'Por capturar'."
         />
         <KpiCard
           label="Por aprobar"
           value={pendientesAprob}
           sub={pendientesAprob > 0 ? formatCurrencyCompact(metrics.porAprobarMonto, "MXN") : "Sin pendientes"}
           tone={pendientesAprob > 0 ? "warn" : "default"}
+          hint="Facturas capturadas con estado 'pendiente' de aprobación contable. Hasta que se aprueben no pueden pasar a 'Por pagar'."
         />
         <KpiCard
           label="Facturas con saldo"
           value={metrics.facturasConSaldo}
           sub={`${formatCurrencyCompact(kpis.por_pagar_mxn, "MXN")} · ${formatCurrencyCompact(kpis.por_pagar_usd, "USD")}`}
+          hint="Facturas de proveedor con saldo > 0 (aprobadas o vencidas). Suma total desglosada por moneda."
         />
         <KpiCard
           label="Vencidas"
           value={metrics.vencidas}
           sub={`${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}`}
           tone={vencidoTotal > 0 ? "danger" : "default"}
+          hint="Facturas cuyo vencimiento ya pasó y siguen con saldo pendiente. Prioridad de pago."
         />
         <KpiCard
           label="Vencido > 30 días"
           value={formatCurrencyCompact(vencidoMas30, "MXN")}
           sub="Cubetas 31-60, 61-90 y >90"
           tone={vencidoMas30 > 0 ? "danger" : "default"}
+          hint="Saldo total (MXN equivalente) de facturas vencidas hace más de 30 días. Riesgo alto de reclamo del proveedor."
         />
         <KpiCard
           label="Por vencer 7 días"
           value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
           sub={formatCurrencyCompact(kpis.por_vencer_7d_usd, "USD")}
           tone={kpis.por_vencer_7d_mxn + kpis.por_vencer_7d_usd > 0 ? "warn" : "default"}
+          hint="Facturas cuyo vencimiento cae dentro de los próximos 7 días. Programar el pago antes de que entren a 'Vencidas'."
         />
       </div>
 
