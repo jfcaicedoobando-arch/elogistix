@@ -98,12 +98,13 @@ const PAGAR_PROVEEDOR: readonly AppRole[] = [
   "admin",
   "tesorero",
 ];
+// v13.213.40 — auxiliar_contable NO registra cobros (separación de responsabilidades):
+// sólo captura facturas de proveedor. Cobros los registran contador + ejecutivo_cobranza.
 const REGISTRAR_COBRO: readonly AppRole[] = [
   "super_admin",
   "admin_org",
   "admin",
   "contador",
-  "auxiliar_contable",
   "ejecutivo_cobranza",
 ];
 
