@@ -125,13 +125,13 @@ describe("construirFilaHueco", () => {
     tipo_cambio_eur: 22,
   };
 
-  it("devuelve null cuando etd falta", () => {
-    expect(construirFilaHueco({ ...baseE, etd: null as unknown as string }, new Map(), new Date())).toBeNull();
+  it("devuelve null cuando eta falta", () => {
+    expect(construirFilaHueco({ ...baseE, eta: null as unknown as string }, new Map(), new Date())).toBeNull();
   });
 
-  it("calcula diasDesdeEtd respecto a hoy", () => {
-    const r = construirFilaHueco(baseE as never, new Map(), new Date("2026-06-12T00:00:00"));
-    expect(r?.diasDesdeEtd).toBe(11);
+  it("calcula diasDesdeEta respecto a hoy", () => {
+    const r = construirFilaHueco(baseE as never, new Map(), new Date("2026-06-25T00:00:00"));
+    expect(r?.diasDesdeEta).toBe(5);
   });
 
   it("ventaMxn=0 cuando no hay ventas en el map", () => {
