@@ -81,11 +81,36 @@ export async function loadEmailPrincipal(supabase: SupabaseLike, clienteId: stri
 }
 
 
+export async function loadReferenciasEmbarque(
+  supabase: SupabaseLike,
+  factura: FacturaRow,
+): Promise<ReferenciasEmbarque> {
+  let refExpediente: string | null = factura.expediente ?? null;
+  let refBlMaster: string | null = null;
+  let refBlHouse: string | null = factura.referencia_bl ?? null;
+  if (factura.embarque_id) {
+    const { data: emb } = await supabase
+      .from("embarques")
+      .select("expediente, bl_master, bl_house")
+      .eq("id", factura.embarque_id)
+      .maybeSingle();
+    const row = emb as { expediente?: string | null; bl_master?: string | null; bl_house?: string | null } | null;
+    if (row) {
+      refExpediente = row.expediente ?? refExpediente;
+      refBlMaster = row.bl_master ?? null;
+      refBlHouse = row.bl_house ?? refBlHouse;
+    }
+  }
+  return { expediente: refExpediente, bl_master: refBlMaster, bl_house: refBlHouse };
+}
+
+
 export function buildNcContextFromRows(
   nc: NcRow,
   factura: FacturaRow,
   cliente: ClienteRow,
   email: string | null,
+  referencias: ReferenciasEmbarque | null = null,
 ): NotaCreditoContext {
   const usoCfdi = nc.uso_cfdi ?? factura.uso_cfdi ?? cliente.uso_cfdi_default ?? "G02";
   const formaPago = nc.forma_pago ?? factura.forma_pago ?? "";
@@ -109,11 +134,12 @@ export function buildNcContextFromRows(
       email,
     },
     conceptos,
+    referencias,
   };
 }
 
 export type PreloadResult =
-  | { ok: true; nc: NcRow; factura: FacturaRow; cliente: ClienteRow; email: string | null }
+  | { ok: true; nc: NcRow; factura: FacturaRow; cliente: ClienteRow; email: string | null; referencias: ReferenciasEmbarque }
   | { ok: false; status: number; body: unknown };
 
 export async function preloadNcContext(
