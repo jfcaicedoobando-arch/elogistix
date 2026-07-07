@@ -5,8 +5,10 @@
  *   - ETD >= 2026-04-01 (fecha de inicio del modelo nuevo)
  *   - (hoy - ETD) > 5 días (ya nos facturó el proveedor)
  *   - Y NO tiene factura con factura_pdf_url asociada por expediente.
+ *   - Y NO todos sus conceptos de venta están en proformas marcadas como
+ *     `facturada` (aceptación histórica del back-fill). v13.213.3.
  */
-import { fetchEmbarquesParaHueco, fetchVentasYFacturas } from "./fetchSources";
+import { fetchEmbarquesParaHueco, fetchVentasYFacturas, type ConceptoVentaDetalle } from "./fetchSources";
 import {
   construirFilaHueco,
   indexarVentas,
@@ -23,6 +25,33 @@ export interface HuecoFacturacionResult {
 }
 
 const DIAS_UMBRAL = 5;
+
+/**
+ * Devuelve el Set de embarque_id cuyos conceptos de venta no borrados están
+ * TODOS cubiertos por una proforma con `estado_proforma='facturada'`. Estos
+ * embarques se consideran facturados por aceptación histórica (back-fill) y
+ * deben excluirse del hueco aunque no exista CFDI real.
+ */
+export function calcularExclusionesPorProformaHistorica(
+  conceptos: ConceptoVentaDetalle[],
+): Set<string> {
+  const agrupado = new Map<string, { total: number; cubiertos: number }>();
+  for (const c of conceptos) {
+    const acc = agrupado.get(c.embarque_id) ?? { total: 0, cubiertos: 0 };
+    acc.total += 1;
+    const cubierto =
+      c.estado_facturacion === "en_proforma" &&
+      !!c.proforma_id &&
+      c.proforma_estado === "facturada";
+    if (cubierto) acc.cubiertos += 1;
+    agrupado.set(c.embarque_id, acc);
+  }
+  const excluidos = new Set<string>();
+  for (const [id, { total, cubiertos }] of agrupado) {
+    if (total > 0 && cubiertos === total) excluidos.add(id);
+  }
+  return excluidos;
+}
 
 export async function fetchHuecoFacturacion({
   organizationId,
@@ -45,10 +74,11 @@ export async function fetchHuecoFacturacion({
     new Set(arr.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  const { ventas, facturas } = await fetchVentasYFacturas(ids, expedientes);
+  const { ventas, facturas, conceptosDetalle } = await fetchVentasYFacturas(ids, expedientes);
   const facturadosSet = new Set<string>(
     facturas.map((f) => f.expediente).filter((x): x is string => !!x),
   );
+  const excluidosPorProformaHistorica = calcularExclusionesPorProformaHistorica(conceptosDetalle);
   const ventasMap = indexarVentas(ventas);
 
   const filas: FilaHueco[] = [];
@@ -56,6 +86,7 @@ export async function fetchHuecoFacturacion({
   let totalMxn = 0;
   for (const e of arr) {
     if (e.expediente && facturadosSet.has(e.expediente)) continue;
+    if (excluidosPorProformaHistorica.has(e.id)) continue;
     const fila = construirFilaHueco(e, ventasMap, hoy);
     if (!fila) continue;
     totalMxn += fila.ventaMxn;

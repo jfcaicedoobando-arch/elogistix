@@ -14,6 +14,54 @@ import {
   indexarVentas,
   construirFilaHueco,
 } from "@/features/facturacion/services/huecoFacturacion/buildFilas";
+import { calcularExclusionesPorProformaHistorica } from "@/features/facturacion/services/huecoFacturacion";
+import type { ConceptoVentaDetalle } from "@/features/facturacion/services/huecoFacturacion/fetchSources";
+
+describe("calcularExclusionesPorProformaHistorica", () => {
+  const mk = (o: Partial<ConceptoVentaDetalle> & { embarque_id: string }): ConceptoVentaDetalle => ({
+    estado_facturacion: "en_proforma",
+    proforma_id: "p1",
+    proforma_estado: "facturada",
+    ...o,
+  });
+
+  it("excluye embarque cuando todos los conceptos están en proformas facturadas", () => {
+    const set = calcularExclusionesPorProformaHistorica([
+      mk({ embarque_id: "e1" }),
+      mk({ embarque_id: "e1" }),
+    ]);
+    expect(set.has("e1")).toBe(true);
+  });
+
+  it("no excluye si al menos un concepto sigue pendiente", () => {
+    const set = calcularExclusionesPorProformaHistorica([
+      mk({ embarque_id: "e1" }),
+      mk({ embarque_id: "e1", estado_facturacion: "pendiente", proforma_id: null, proforma_estado: null }),
+    ]);
+    expect(set.has("e1")).toBe(false);
+  });
+
+  it("no excluye si la proforma padre no está facturada", () => {
+    const set = calcularExclusionesPorProformaHistorica([
+      mk({ embarque_id: "e1", proforma_estado: "pendiente" }),
+    ]);
+    expect(set.has("e1")).toBe(false);
+  });
+
+  it("no excluye si no hay conceptos", () => {
+    const set = calcularExclusionesPorProformaHistorica([]);
+    expect(set.size).toBe(0);
+  });
+
+  it("maneja múltiples embarques de forma independiente", () => {
+    const set = calcularExclusionesPorProformaHistorica([
+      mk({ embarque_id: "e1" }),
+      mk({ embarque_id: "e2", proforma_estado: "pendiente" }),
+    ]);
+    expect(set.has("e1")).toBe(true);
+    expect(set.has("e2")).toBe(false);
+  });
+});
 
 describe("diasDesde", () => {
   it("devuelve 0 cuando fecha = hoy", () => {
