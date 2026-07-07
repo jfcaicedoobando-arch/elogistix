@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.32] - 2026-07-07
+- **Auditoría UI/UX Facturación & Compras — Ola 3 (reorganización cockpit Facturación)**:
+  - `/facturacion`: las 9 bandejas se agruparon visualmente en 3 fases (`Preparar`, `Cobrar`, `Histórico`) con un encabezado discreto y un separador vertical entre grupos. Sin cambios de URL ni de datos: `?bandeja=...` sigue funcionando igual. Analogía: antes había 9 cajones sueltos en el escritorio; ahora están en 3 archiveros rotulados. El ojo encuentra la bandeja correcta más rápido.
+  - Barra de bandejas ahora es `sticky top-0` con fondo `backdrop-blur`, para que al hacer scroll en listas largas (por ejemplo Vencidas 82) siempre esté visible dónde estás parado y puedas saltar a otra bandeja sin subir hasta arriba.
+
 ## [13.213.31] - 2026-07-07
 - **Auditoría UI/UX Facturación & Compras — Ola 2 (densidad y acciones)**:
   - `/compras/por-capturar`: el botón "Capturar factura" repetido en cada fila (ancho ~180 px) se sustituyó por un botón-ícono `+` (48 px) con tooltip "Capturar factura" y `aria-label`. Recuperamos ~120 px por renglón sin perder la acción. Se agregó `stickyHeader` para que al hacer scroll no se pierdan los encabezados. Analogía: cada expediente tenía un post-it grande que decía "abrir"; lo cambiamos por un ícono discreto en la manija del fólder.

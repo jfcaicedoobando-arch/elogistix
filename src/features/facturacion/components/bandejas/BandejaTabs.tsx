@@ -16,23 +16,32 @@ export type BandejaId =
   | "por-cobrar" | "vencidas" | "rep-pendientes"
   | "emitidas" | "notas";
 
+type GroupId = "preparar" | "cobrar" | "historico";
+
 interface Def {
   id: BandejaId;
   label: string;
   hint: string;
   tone: "default" | "warn" | "danger";
+  group: GroupId;
 }
 
+const GROUP_LABELS: Record<GroupId, string> = {
+  preparar: "Preparar",
+  cobrar: "Cobrar",
+  historico: "Histórico",
+};
+
 const DEFS: Def[] = [
-  { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura.", tone: "warn" },
-  { id: "proformas-listas", label: "Proformas listas", hint: "Proformas aprobadas internamente (estado 'aprobada') que aún no se han convertido a factura borrador. Acción: 'Convertir a factura' de un clic.", tone: "warn" },
-  { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn" },
-  { id: "por-enviar", label: "Por enviar", hint: "CFDI ya timbrados que no se han mandado por correo al cliente.", tone: "warn" },
-  { id: "por-cobrar", label: "Por cobrar", hint: "Facturas vigentes con saldo pendiente, aún no vencidas.", tone: "default" },
-  { id: "vencidas", label: "Vencidas", hint: "Facturas con vencimiento pasado y saldo > 0.", tone: "danger" },
-  { id: "rep-pendientes", label: "REP pendientes", hint: "Complementos de Pago (REP) para facturas PPD que faltan por timbrar.", tone: "danger" },
-  { id: "emitidas", label: "Emitidas", hint: "Historial completo de facturas emitidas.", tone: "default" },
-  { id: "notas", label: "Notas de crédito", hint: "Historial de notas de crédito.", tone: "default" },
+  { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura.", tone: "warn", group: "preparar" },
+  { id: "proformas-listas", label: "Proformas listas", hint: "Proformas aprobadas internamente (estado 'aprobada') que aún no se han convertido a factura borrador. Acción: 'Convertir a factura' de un clic.", tone: "warn", group: "preparar" },
+  { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn", group: "preparar" },
+  { id: "por-enviar", label: "Por enviar", hint: "CFDI ya timbrados que no se han mandado por correo al cliente.", tone: "warn", group: "preparar" },
+  { id: "por-cobrar", label: "Por cobrar", hint: "Facturas vigentes con saldo pendiente, aún no vencidas.", tone: "default", group: "cobrar" },
+  { id: "vencidas", label: "Vencidas", hint: "Facturas con vencimiento pasado y saldo > 0.", tone: "danger", group: "cobrar" },
+  { id: "rep-pendientes", label: "REP pendientes", hint: "Complementos de Pago (REP) para facturas PPD que faltan por timbrar.", tone: "danger", group: "cobrar" },
+  { id: "emitidas", label: "Emitidas", hint: "Historial completo de facturas emitidas.", tone: "default", group: "historico" },
+  { id: "notas", label: "Notas de crédito", hint: "Historial de notas de crédito.", tone: "default", group: "historico" },
 ];
 
 function badgeClass(tone: Def["tone"]): string {
@@ -58,41 +67,59 @@ export function BandejaTabs() {
     "rep-pendientes": conteos?.repPendientes ?? 0,
   };
 
-  return (
-    <TabsList className="bg-transparent border-0 p-0 h-auto flex flex-wrap gap-1">
-      {DEFS.map((d) => {
-        const count = d.id === "emitidas" || d.id === "notas" ? 0 : counts[d.id];
+  const groups: GroupId[] = ["preparar", "cobrar", "historico"];
 
+  return (
+    <TabsList className="bg-transparent border-0 p-0 h-auto flex flex-wrap items-stretch gap-0">
+      {groups.map((group, gIdx) => {
+        const defs = DEFS.filter((d) => d.group === group);
         return (
-          <TabsTrigger
-            key={d.id}
-            value={d.id}
-            className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none -mb-px"
-          >
-            <span className="flex items-center gap-1.5">
-              {d.label}
-              {typeof count === "number" && count > 0 && (
-                <span className={`text-[10px] font-semibold rounded-full px-1.5 py-0.5 tabular-nums ${badgeClass(d.tone)}`}>
-                  {count}
-                </span>
-              )}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Info: ${d.label}`}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    className="inline-flex"
-                  >
-                    <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[240px] text-xs">{d.hint}</TooltipContent>
-              </Tooltip>
-            </span>
-          </TabsTrigger>
+          <div key={group} className="flex items-stretch">
+            {gIdx > 0 && (
+              <span aria-hidden className="mx-2 self-center h-6 w-px bg-border" />
+            )}
+            <div className="flex flex-col">
+              <span className="px-3 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {GROUP_LABELS[group]}
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {defs.map((d) => {
+                  const count = d.id === "emitidas" || d.id === "notas" ? 0 : counts[d.id];
+                  return (
+                    <TabsTrigger
+                      key={d.id}
+                      value={d.id}
+                      className="rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none -mb-px"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {d.label}
+                        {typeof count === "number" && count > 0 && (
+                          <span className={`text-[10px] font-semibold rounded-full px-1.5 py-0.5 tabular-nums ${badgeClass(d.tone)}`}>
+                            {count}
+                          </span>
+                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`Info: ${d.label}`}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              className="inline-flex"
+                            >
+                              <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-[240px] text-xs">{d.hint}</TooltipContent>
+                        </Tooltip>
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         );
       })}
     </TabsList>
