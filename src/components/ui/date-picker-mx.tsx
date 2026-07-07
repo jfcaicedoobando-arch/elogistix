@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
-  isoToDisplay, isoToDate, dateToIso, applyMask, parseDisplay,
+  isoToDisplay, isoToDate, dateToIso, applyMask, parseDisplay, parseFlexible,
 } from "./date-picker-mx-helpers";
 
 interface DatePickerMxProps {
