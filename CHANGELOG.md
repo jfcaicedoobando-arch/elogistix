@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.209.2] - 2026-07-07
+
+- **Embarques · Badge de proformas refleja la respuesta del cliente**: en la tarjeta "Proformas Generadas" dentro del detalle de un embarque, el badge de estado ahora usa `getEstadoUnificado()` (la misma lógica que el listado global de proformas). Antes sólo miraba `estado_revision`, por lo que una proforma que el cliente ya había aceptado (`estado_cliente = 'aceptada'`) se seguía viendo como "Pendiente revisión" si nadie la había aprobado internamente. Caso reportado: PRO-2026-0278 del embarque ELIMP00021, aceptada por el cliente el 27-may-2026. Nueva prioridad del badge: Facturada → Borrador vacío → Consolidada → Rechazada por cliente → Aceptada por cliente → Pendiente revisión (sólo si no hay respuesta del cliente) → Enviada al cliente. Fix únicamente de presentación: no toca BD, ni el flujo de revisión, ni el portal público.
+
 ## [13.209.1] - 2026-07-07
 
 - **Arquitectura · Cumplimiento Power of 10 y jerarquía de capas**: se dividen los archivos de facturación que rebasaron 200 líneas al añadir la vista previa de referencias del embarque. `FacturaDetalleActions.tsx` (250) extrae sus 4 grupos visuales a `FacturaDetalleActionGroups.tsx`; `DialogTimbrarFactura.tsx` (209) mueve estado + efecto + `onConfirm` a `useTimbrarFacturaDialog`; `FacturaDetalle.tsx` (209) delega la barra de acciones a `FacturaDetalleActionsBar`. Además, `useReferenciasEmbarqueFactura.ts` deja de importar el cliente Supabase directamente y consume el nuevo servicio `services/referenciasEmbarque.ts`, respetando el flujo Pages → Hooks → Services → Lib exigido por los tests arquitectónicos.
