@@ -1,38 +1,58 @@
+
 ## Problema
 
-Al editar los **días de crédito** de una factura (antes de timbrar) el campo se guarda correctamente en `facturas.dias_credito`, pero `facturas.fecha_vencimiento` NO se recalcula. Queda con el valor original (normalmente `fecha_emision + 0` días) y la factura aparece con vencimiento incorrecto en cobranza.
+El dashboard de Facturación muestra **33 proformas por revisar**, pero son datos viejos: proformas migradas del sistema anterior que ya fueron facturadas fuera de la app y quedaron con `estado_revision = 'pendiente'` porque nadie las tocó tras la migración.
 
-Analogía: es como cambiar el plazo del pagaré pero olvidar mover la fecha límite escrita hasta abajo — el sistema sigue mirando la fecha vieja.
+Verificado en la base:
 
-## Causa
+```text
+33 proformas  →  estado_cliente = aceptada
+                  estado_proforma = facturada
+                  factura_id IS NULL      (facturadas fuera del sistema)
+                  estado_revision = pendiente
+```
 
-`actualizarDatosTimbradoFactura` (en `src/features/facturacion/services/datosFiscalesCliente.ts`) hace `update({ dias_credito, ... })` sin tocar `fecha_vencimiento`, y no existe ningún trigger en Postgres que lo recalcule. Afecta a los dos caminos que editan crédito:
+Son exactamente el mismo tipo de basura que ya depuramos hace un momento en "Listas para facturar".
 
-- Autoguardado de la card "Configuración de timbrado" (`useAutoSaveDatosFiscales`).
-- Cualquier update futuro que cambie `fecha_emision` o `dias_credito`.
+## Analogía
 
-## Solución
+Es como una bandeja de "correo por leer" donde 33 sobres ya fueron abiertos, contestados y archivados hace meses — solo que nadie apretó el botón "marcar como leído". La bandeja miente.
 
-**Trigger en base de datos** (una sola fuente de verdad, cubre ambos caminos y edge cases futuros).
+## Fix (dos capas, igual que la vez pasada)
 
-1. **Migración** `recompute_fecha_vencimiento_facturas`:
-   - Crear `public.facturas_set_fecha_vencimiento()` — función `BEFORE INSERT OR UPDATE` en `public.facturas` que, si cambia `fecha_emision` o `dias_credito` (o en INSERT), setea:
-     ```
-     NEW.fecha_vencimiento := NEW.fecha_emision + COALESCE(NEW.dias_credito, 0)
-     ```
-   - Crear el trigger `trg_facturas_set_fecha_vencimiento`.
-   - **Backfill** único: `UPDATE public.facturas SET fecha_vencimiento = fecha_emision + COALESCE(dias_credito, 0) WHERE fecha_vencimiento IS DISTINCT FROM (fecha_emision + COALESCE(dias_credito, 0)) AND estado IN ('borrador','timbrada','parcial','vencida');` — corrige facturas ya afectadas.
-   - Respeta el CHECK `facturas_venc_despues_emision` (siempre `>= fecha_emision`).
+### 1. Corregir la query del KPI (evita futuros falsos positivos)
 
-2. **CHANGELOG + APP_VERSION** bump patch (`13.213.42`) con nota corta en español.
+`src/features/proformas/services/queries.ts` — función que alimenta `useProformasPendientes`:
 
-## No cambia
+Añadir a la query que filtra `estado_revision = 'pendiente'`:
+- `.neq("estado_proforma", "facturada")`
+- `.is("factura_id", null)`
+- `.is("deleted_at", null)`
 
-- No se toca la UI ni los servicios en TypeScript: el cliente sigue enviando solo `dias_credito` y el trigger se encarga del resto.
-- No afecta a `proveedor_facturas` (misma columna pero flujo distinto).
+Con esto, una proforma solo se considera "por revisar" si de verdad está pendiente y todavía no se facturó ni internamente ni por fuera.
 
-## Archivos
+### 2. Migración de backfill (limpia los 33 registros viejos)
 
-- **nuevo** `supabase/migrations/<timestamp>_facturas_recompute_fecha_vencimiento.sql`
-- editado `CHANGELOG.md`
-- editado `src/constants/appVersion.ts`
+Nueva migración que actualice a `estado_revision = 'aprobada'` las proformas que cumplen:
+- `estado_cliente = 'aceptada'`
+- `estado_proforma = 'facturada'`
+- `estado_revision = 'pendiente'`
+- `deleted_at IS NULL`
+
+Es un `UPDATE` acotado — no toca datos vivos.
+
+### 3. Housekeeping
+
+- `CHANGELOG.md`: entrada nueva.
+- `src/constants/appVersion.ts`: bump de versión patch.
+
+## Resultado esperado
+
+El KPI "Proformas por revisar" pasa de 33 → 0 (o al conteo real de pendientes legítimas), y a futuro no volverá a inflarse con basura legacy.
+
+## Archivos a tocar
+
+- `src/features/proformas/services/queries.ts` (filtros extra)
+- `supabase/migrations/<timestamp>_backfill_proformas_revision.sql` (nueva)
+- `CHANGELOG.md`
+- `src/constants/appVersion.ts`
