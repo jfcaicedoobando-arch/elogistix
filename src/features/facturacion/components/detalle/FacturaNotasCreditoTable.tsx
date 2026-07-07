@@ -4,20 +4,20 @@
  */
 import { useState } from "react";
 import { Mail, XCircle, Stamp, Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { FacturaDownloadButton } from "@/features/facturacion/components/FacturaDownloadButton";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
+import { CfdiEstadoBadge, type CfdiEstadoTono } from "@/features/facturacion/components/CfdiEstadoBadge";
 import type { EstadoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
-const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
-  Borrador: "bg-muted text-muted-foreground",
-  Aprobada: "bg-warning/10 text-warning border-warning/20",
-  Timbrada: "bg-info/10 text-info border-info/20",
-  Aplicada: "bg-success/10 text-success border-success/20",
-  Cancelada: "bg-destructive/10 text-destructive border-destructive/20",
+const ESTADO_TONO: Record<EstadoNotaCredito, CfdiEstadoTono> = {
+  Borrador: "borrador",
+  Aprobada: "aprobada",
+  Timbrada: "timbrada",
+  Aplicada: "aplicada",
+  Cancelada: "cancelada",
 };
 
 export interface NotaCreditoRow {
