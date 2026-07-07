@@ -71,18 +71,46 @@ export function DataTableBody<T>({
   const leafColumns = table.getAllLeafColumns();
 
   if (isLoading) {
+    // Skeleton alineado 1:1 con las filas reales:
+    // - mismo `meta.width`, `align`, `sticky`, `className` que la fila real
+    //   → columnas no cambian de ancho ni de alineación al llegar los datos.
+    // - `DENSITY_ROW_MIN_H` fija el alto por densidad → cero salto vertical.
+    // - anchos de la barra varían por columna con un patrón determinista
+    //   para que el skeleton no parezca una rejilla rígida.
+    const rowMinH = DENSITY_ROW_MIN_H[density];
+    const barWidths = ["w-3/5", "w-4/5", "w-2/3", "w-3/4", "w-1/2", "w-5/6"];
     return (
       <TableBody>
         {Array.from({ length: skeletonRows }).map((_, i) => (
           <TableRow
             key={`skeleton-${i}`}
-            className={cn("hover:bg-transparent", !striped && "even:bg-transparent")}
+            className={cn("hover:bg-transparent", !striped && "even:bg-transparent", rowMinH)}
           >
-            {leafColumns.map((col) => {
+            {leafColumns.map((col, colIdx) => {
               const meta = col.columnDef.meta ?? {};
+              const align: ColumnAlign = meta.align ?? "left";
+              const barW = barWidths[(i + colIdx) % barWidths.length];
+              // La barra se envuelve en un flex-container que respeta el
+              // align de la columna para que aparente el mismo layout que
+              // el contenido real (números a la derecha, texto a la izq.).
+              const wrapJustify =
+                align === "right" ? "justify-end" : align === "center" ? "justify-center" : "justify-start";
               return (
-                <TableCell key={col.id} className={cn(meta.width, cellPad, borderCell)}>
-                  <Skeleton className="h-4 w-full" />
+                <TableCell
+                  key={col.id}
+                  className={cn(
+                    meta.width,
+                    cellPad,
+                    ALIGN_CLASS[align],
+                    borderCell,
+                    meta.className,
+                    meta.sticky && "sticky left-0 z-[5] bg-background shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
+                    meta.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
+                  )}
+                >
+                  <div className={cn("flex items-center", wrapJustify)}>
+                    <Skeleton className={cn("h-4", barW)} />
+                  </div>
                 </TableCell>
               );
             })}
