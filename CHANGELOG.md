@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.207.0] - 2026-07-06
+
+- **Embarques · Guardar ya no borra conceptos facturados** (bug crítico de trazabilidad): el RPC `actualizar_embarque_completo` hacía `DELETE FROM conceptos_venta` + reinsertar en cada guardado, lo que rompía el vínculo con proformas/facturas y dejaba los conceptos como "pendiente/manual". Ahora la RPC hace **merge por `id`**: actualiza en sitio los conceptos existentes (respetando `estado_facturacion` y `proforma_id`), inserta solo los nuevos y soft-deletea únicamente pendientes removidos desde la UI. Los facturados y los costos ya pagados quedan inmutables. Frontend: `ConceptoVentaLocal`/`ConceptoCostoLocal` ganan campo opcional `dbId` y los payloads (`buildConceptosVentaPayload`/`buildConceptosCostoPayload`) reenvían el UUID de BD cuando existe. Reparación puntual: 16 conceptos de venta del embarque ELIMP00195 quedaron vinculados a PRO-2026-0956 y marcados como facturados (1 concepto de "Demoras" queda pendiente para facturación posterior). Backup en `_backup_conceptos_venta_elimp00195_20260706`.
+
 ## [13.206.0] - 2026-07-06
 
 - **Facturación · Memoria por cliente al timbrar**: `clientes` ahora guarda `forma_pago_default`, `metodo_pago_default` y `email_cc_default`. Al abrir el modal de timbrado se prellenan Uso de CFDI, Forma y Método de pago consultando el nuevo RPC `obtener_defaults_facturacion_cliente` (preferencia del cliente > última factura timbrada > fallback G03/03/PUE). Tras timbrar exitosamente los tres valores se persisten como preferencia del cliente (best-effort, no bloquea el flujo). En el envío por correo, el campo CC se precarga con los correos guardados / heredados de la última factura enviada al mismo cliente y se guardan al éxito. Todo sigue siendo editable antes de confirmar. Sin cambios de UI ni de lógica de negocio.
