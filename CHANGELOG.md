@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.2] - 2026-07-07
+
+- **Fix · `enviar-factura-email` fallaba con 500 "FacturApi pdf 404 invoice_not_found"** para facturas históricas timbradas en un ambiente (sandbox) distinto al configurado actualmente en la org (live). La edge function pedía el PDF/XML sólo con la key del ambiente actual y FacturApi contestaba 404 porque esa factura vive en la otra cuenta. Ahora `prepareAttachments` acepta una `fallbackKey`: si el fetch primario responde 404, reintenta con la key del ambiente opuesto (nueva helper `resolveFacturapiKeyOtherAmbiente` en `_shared/facturapiAuth.ts`). Analogía: son dos oficinas de correos distintas (sandbox y live); si tu factura no está en una, ahora probamos en la otra antes de rendirnos. Sin cambios de esquema.
+
 ## [13.213.1] - 2026-07-07
 
 - **Fix · Bandeja "Proformas listas" y KPI "Listas para facturar" mostraban 23 en lugar de 9**: el filtro usaba `estado_revision='aprobada' AND factura_id IS NULL`, criterio que dejaba pasar 22 filas legacy con `estado_proforma='facturada' AND factura_id IS NULL` (CFDI emitido fuera del sistema en el flujo anterior). Ahora `fetchProformasListas` / `fetchProformasListasCount` usan el mismo gate que `getEstadoUnificado === 'aceptada'` en `/proformas`: `estado_cliente='aceptada' AND estado_proforma <> 'facturada' AND factura_id IS NULL AND deleted_at IS NULL`. Bandeja y KPI del dashboard ahora coinciden con el listado de `/proformas` (9). Tooltips y `emptyMessage` reescritos para reflejar "aceptadas por el cliente". `estado_revision` (aprobación interna previa) no forma parte del gate de facturación. Sin migración de datos: las 22 filas legacy permanecen intactas como historial.

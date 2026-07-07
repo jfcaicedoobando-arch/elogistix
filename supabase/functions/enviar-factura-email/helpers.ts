@@ -70,11 +70,37 @@ export async function fetchFacturapiFile(apiKey: string, facturapiId: string, ti
   const res = await fetch(url, { headers: { Authorization: basicAuthHeader(apiKey) } });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    throw new Error(`FacturApi ${tipo} ${res.status}: ${detail.slice(0, 200)}`);
+    const err = new Error(`FacturApi ${tipo} ${res.status}: ${detail.slice(0, 200)}`) as Error & { status?: number; body?: string };
+    err.status = res.status;
+    err.body = detail;
+    throw err;
   }
   const ab = await res.arrayBuffer();
   return new Uint8Array(ab);
 }
+
+/**
+ * Descarga PDF/XML probando primero la key primaria (ambiente actual de la
+ * org) y, si FacturApi responde 404 `invoice_not_found`, reintenta con la
+ * key del ambiente opuesto. Cubre facturas históricas timbradas antes de
+ * cambiar la org de sandbox a live (o viceversa).
+ */
+export async function fetchFacturapiFileWithFallback(
+  primaryKey: string,
+  fallbackKey: string | null,
+  facturapiId: string,
+  tipo: 'pdf' | 'xml',
+): Promise<Uint8Array> {
+  try {
+    return await fetchFacturapiFile(primaryKey, facturapiId, tipo);
+  } catch (e) {
+    const err = e as Error & { status?: number; body?: string };
+    const is404 = err.status === 404 || /\b404\b/.test(err.message);
+    if (!is404 || !fallbackKey) throw e;
+    return await fetchFacturapiFile(fallbackKey, facturapiId, tipo);
+  }
+}
+
 
 export async function uploadToBucket(
   admin: ReturnType<typeof createClient>,
@@ -188,13 +214,14 @@ export async function prepareAttachments(
   factura: FacturaCtx,
   apiKey: string,
   ts: number,
+  fallbackKey: string | null = null,
 ): Promise<{ pdfPath: string; xmlPath: string; pdfLink: string; xmlLink: string }> {
   const basePath = `${factura.organization_id}/${factura.id}/${factura.numero}-${ts}`;
   const pdfPath = `${basePath}.pdf`;
   const xmlPath = `${basePath}.xml`;
   const [pdfBytes, xmlBytes] = await Promise.all([
-    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'pdf'),
-    fetchFacturapiFile(apiKey, factura.facturapi_id!, 'xml'),
+    fetchFacturapiFileWithFallback(apiKey, fallbackKey, factura.facturapi_id!, 'pdf'),
+    fetchFacturapiFileWithFallback(apiKey, fallbackKey, factura.facturapi_id!, 'xml'),
   ]);
   await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
