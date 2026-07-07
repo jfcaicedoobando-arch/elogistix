@@ -1,31 +1,86 @@
-## Problema
+# Dashboard Dirección (`/dashboard-direccion`)
 
-El test `demo-access/index_test.ts` (línea 14) todavía busca el string literal `"Access-Control-Allow-Origin": "*"` en el código fuente. En el fix anterior del botón "Probar demo" migramos la función `demo-access` a CORS estricto (`corsHeaders` importado de `_shared/cors.ts`), así que el test quedó desactualizado y rompe el shard "Edge Functions (Deno tests)".
+Nueva vista ejecutiva para dueño/gerencia. Enrutada aparte para no romper el `/dashboard` operativo actual (que ya rutea por rol). Al final, para roles `admin`, `admin_org`, `super_admin`, `gerente_comercial`, `gerente_visor` mostraremos un enlace/redirección.
 
-Es la única falla del CI (1 failed, 283 passed).
+## Fuentes de datos (real vs. placeholder)
 
-## Cambios
+Todo filtrado por `organization_id` del usuario y excluyendo `deleted_at IS NOT NULL`.
 
-**1. `supabase/functions/demo-access/index_test.ts`**
+### 1) Fila hero
+- **Utilidad bruta del mes** — REAL.
+  - Ventana: `embarques.cerrado_at` dentro del mes actual (embarques cerrados = utilidad realizada). Fallback si no hay `cerrado_at`: `eta` del mes.
+  - Venta = suma `conceptos_venta.total` de esos embarques, convertida a MXN con `tipo_cambio_usd/eur` del embarque.
+  - Costo = suma `conceptos_costo.monto` (misma conversión).
+  - Utilidad = Venta − Costo; Margen % = Utilidad/Venta. Compara vs. mismo cálculo del mes anterior (Δ en puntos porcentuales).
+- **Cartera vencida** — REAL.
+  - `facturas` con `estado IN ('Emitida','Parcial')`, `fecha_vencimiento < today`, no canceladas.
+  - Saldo pendiente = `total − Σ pagos_factura.monto_aplicado_factura` por factura (MXN equiv con `tipo_cambio`).
+  - Muestra suma y `COUNT(DISTINCT cliente_id)`.
+- **Facturación del mes vs meta** — REAL.
+  - Suma `facturas.total` (MXN equiv) con `fecha_emision` del mes, `estado != 'Cancelada'`.
+  - Meta fija: `META_FACTURACION_MENSUAL_MXN = 5_500_000` en `src/features/dashboard/direccion/constants.ts`.
 
-Reemplazar la aserción del preflight para que verifique el nuevo contrato (CORS estricto compartido) en vez del wildcard:
+### 2) Rentabilidad
+- **Margen 6 meses** — REAL. Repetir cálculo de utilidad/margen por mes usando `cerrado_at` (o `eta` fallback) de los últimos 6 meses. Mes actual resaltado.
+- **Margen por modo** — REAL. Agrupar embarques del mes por `embarques.modo` (maritimo/aereo/terrestre). Barras horizontales con margen %.
 
-- Mantener `assertStringIncludes(indexSource, 'req.method === "OPTIONS"')`.
-- Cambiar `'"Access-Control-Allow-Origin": "*"'` por dos aserciones:
-  - `assertStringIncludes(indexSource, 'from "../_shared/cors.ts"')`
-  - `assertStringIncludes(indexSource, "corsHeaders")`
+### 3) Riesgo y cartera
+- **Antigüedad por buckets** — REAL. Facturas con saldo > 0. Buckets por `today − fecha_vencimiento`: `<=0` Corriente, `1-30`, `31-60`, `>60`.
+- **Concentración top 5 clientes** — REAL. Suma de utilidad (venta−costo, MXN) por `cliente_id` en el mes; top 5 y su % del margen total.
 
-Esto sigue protegiendo contra regresiones (que se olvide manejar OPTIONS o quitar CORS), pero alineado con la política de CORS estricto del proyecto.
+### 4) Pulso del negocio
+- **Embarques activos** — REAL. `embarques.estado` ≠ `Entregado`/`Cancelado`; desglose por estado.
+- **Alertas operativas** — PARCIAL:
+  - Arribos próximos 7 días → REAL (`eta BETWEEN today AND today+7`).
+  - Demoras → REAL si hay `estado='En puerto'` con ETA vencida; si no, placeholder.
+  - Documentos vencidos → **placeholder "sin datos"** (no hay campo directo de vencimiento en `documentos_embarque`).
+- **Estatus fiscal** — PARCIAL:
+  - CFDI timbrados del mes → REAL (`facturas.timbrado_en` en el mes actual, `uuid_fiscal IS NOT NULL`).
+  - Acuses de cancelación pendientes → REAL (`estado='Cancelada' AND acuse_cancelacion_status IS DISTINCT FROM 'aceptado'`).
 
-**2. `CHANGELOG.md` + `src/constants/appVersion.ts`**
+### Placeholders (avisos al usuario)
+- **Documentos vencidos** en alertas operativas.
+- **Demoras** se reduce a "en puerto sin movimiento" si no hay señal más fina.
 
-Bump a `13.209.7` con nota: "Fix · Test demo-access alineado con CORS estricto (`_shared/cors.ts`)".
+## Arquitectura de código
 
-## Verificación
+```
+src/features/dashboard/direccion/
+├── constants.ts                  # META_FACTURACION_MENSUAL_MXN
+├── DireccionDashboard.tsx        # página, compone secciones
+├── services/
+│   ├── kpiHero.ts                # utilidad, cartera, facturación
+│   ├── kpiRentabilidad.ts        # 6 meses + por modo
+│   ├── kpiCartera.ts             # buckets + top clientes
+│   └── kpiPulso.ts               # activos, alertas, fiscal
+├── hooks/
+│   └── useDireccionKpis.ts       # useQuery orquestador
+└── components/
+    ├── HeroCards.tsx
+    ├── RentabilidadSection.tsx
+    ├── CarteraSection.tsx
+    └── PulsoSection.tsx
+```
 
-- `deno test supabase/functions/demo-access/` debe pasar los 5 tests.
-- No hay cambios de lógica de runtime; sólo el test y el changelog.
+Ruta añadida en `src/routes/appRoutes.tsx` protegida por roles ejecutivos. Reutilizamos `formatCurrencyMXN`, `convertirAMXN` y `useExchangeRates` existentes. Charts con `recharts` (ya usado en el proyecto).
 
-## Analogía
+## Diseño
+- Tarjetas blancas, borde `border-border`, rounded-xl (12px), sombra sutil.
+- Tipografía tabular en cifras (`font-variant-numeric: tabular-nums`).
+- Semántica de color: `text-destructive`/`bg-destructive/10` para vencido; `text-emerald-600` para positivo; `text-amber-600` advertencia. Todo vía tokens semánticos donde sea posible.
+- Grid responsivo: `grid-cols-1 md:grid-cols-3` en hero; `md:grid-cols-2` en secciones intermedias; `md:grid-cols-3` en pulso.
 
-El test era como un guardia que revisaba que la puerta tuviera un letrero exacto que decía "abierto a todos". Cambiamos la puerta a una con lista de invitados (CORS estricto), pero olvidamos actualizar al guardia — sigue buscando el letrero viejo y reporta que "algo está mal". Actualizamos las instrucciones del guardia para que verifique la lista de invitados.
+## Fuera de alcance
+- No se cambia la lógica del `/dashboard` operativo actual.
+- No se agregan tablas nuevas ni migraciones.
+- No se implementan documentos vencidos (queda placeholder).
+
+## Changelog
+Bump a `13.210.0` + entrada en `CHANGELOG.md`.
+
+---
+
+**Confirma antes de codificar:**
+1. ¿Ruta nueva `/dashboard-direccion` o reemplazar `/dashboard` para roles ejecutivos?
+2. ¿Base del margen = embarques **cerrados** en el mes (utilidad realizada) o **arribados por ETA** (utilidad devengada)? Propongo cerrados con fallback a ETA.
+3. Placeholder confirmado para "documentos vencidos".
