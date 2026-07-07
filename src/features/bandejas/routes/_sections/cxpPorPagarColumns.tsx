@@ -50,12 +50,12 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       header: "Días",
       accessorFn: (r) => r.dias_para_vencer ?? 0,
       enableSorting: true,
-      meta: { width: "w-[90px]", align: "center" },
+      meta: { width: "w-[100px]", align: "center" },
       cell: ({ row }) => {
         const dias = row.original.dias_para_vencer ?? 0;
         const variant = variantDiasParaVencer(dias);
         return (
-          <Badge variant={variant}>
+          <Badge variant={variant} className="whitespace-nowrap">
             {dias < 0 ? `${Math.abs(dias)} venc.` : `${dias}d`}
           </Badge>
         );

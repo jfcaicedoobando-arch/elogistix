@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.30] - 2026-07-07
+- **Auditoría UI/UX Facturación & Compras — Ola 1 (bugs críticos)**:
+  - `/compras/por-pagar`: la tarjeta "Saldo total" mostraba `MXN MXN 1.5K · USD USD 47.2K` (doble prefijo). Se eliminó el prefijo manual porque `formatCurrencyCompact` ya lo agrega. Analogía: la etiqueta del bote decía "leche" dos veces; le quitamos el sticker duplicado.
+  - `/compras/proveedores`: RFC/Tax ID mostraban entidades HTML sin decodificar (ej. `AL&AMP;0807074L5`). Nuevo helper `decodeHtmlEntities` en `src/lib/formatters/` con tests, aplicado en `proveedorTableColumns` para el render y el sort.
+  - `/compras/por-pagar` columna "Días": el badge `58 venc.` se partía en dos líneas. Se subió el ancho de la columna a `100px` y se agregó `whitespace-nowrap` al Badge.
+
 ## [13.213.29] - 2026-07-07
 - **Fix CI · lint**: corrige escapes innecesarios en el regex de `parseFlexible` (`DatePickerMx`) y reduce complejidad de `deriveFacturaFlags` para que `bun run lint -- --max-warnings 0` pase limpio. Sin cambios de comportamiento.
 

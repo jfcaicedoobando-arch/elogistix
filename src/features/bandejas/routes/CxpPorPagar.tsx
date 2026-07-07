@@ -89,9 +89,9 @@ export default function CxpPorPagar() {
           <CardContent>
             <div className="text-2xl font-semibold tabular-nums">{formatCurrency(saldoMXN, "MXN")}</div>
             <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-1">
-              {porMoneda.MXN > 0 && <span>MXN {formatCurrencyCompact(porMoneda.MXN, "MXN")}</span>}
-              {porMoneda.USD > 0 && <span>· USD {formatCurrencyCompact(porMoneda.USD, "USD")}</span>}
-              {porMoneda.EUR > 0 && <span>· EUR {formatCurrencyCompact(porMoneda.EUR, "EUR")}</span>}
+              {porMoneda.MXN > 0 && <span>{formatCurrencyCompact(porMoneda.MXN, "MXN")}</span>}
+              {porMoneda.USD > 0 && <span>· {formatCurrencyCompact(porMoneda.USD, "USD")}</span>}
+              {porMoneda.EUR > 0 && <span>· {formatCurrencyCompact(porMoneda.EUR, "EUR")}</span>}
             </div>
             {faltaTipoCambio > 0 && (
               <p className="text-2xs text-warning mt-0.5">
