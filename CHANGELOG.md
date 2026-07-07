@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.209.7] - 2026-07-07
+
+- **Fix · Test `demo-access` alineado con CORS estricto**: el test de preflight buscaba el literal `"Access-Control-Allow-Origin": "*"` en el fuente, pero en v13.209.4 migramos la función a `corsHeaders` desde `_shared/cors.ts` (CORS estricto, sin wildcard). Ahora el test verifica el import compartido + uso de `corsHeaders`, protegiendo la misma regresión sin exigir wildcard. Cierra la falla del shard "Edge Functions (Deno tests)".
+
 ## [13.209.6] - 2026-07-07
 
 - **Arquitectura · Power of 10 (200 líneas)**: `useEmbarqueEstadoActions.ts` había subido a 208 líneas al extraer el sub-hook de auto-sync. Se compactaron comentarios verbosos, el `switch` de bloqueos y el `return` para dejar el archivo en 171 líneas, sin cambios de comportamiento. Desbloquea `architecture-baseline` y `audit-report`.

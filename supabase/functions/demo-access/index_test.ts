@@ -11,7 +11,9 @@ const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.ur
 
 Deno.test("demo-access: maneja preflight CORS antes que cualquier lógica", () => {
   assertStringIncludes(indexSource, 'req.method === "OPTIONS"');
-  assertStringIncludes(indexSource, '"Access-Control-Allow-Origin": "*"');
+  // CORS estricto compartido (política del proyecto: no wildcard).
+  assertStringIncludes(indexSource, 'from "../_shared/cors.ts"');
+  assertStringIncludes(indexSource, "corsHeaders");
 });
 
 Deno.test("demo-access: usa service role key con persistSession=false", () => {
