@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.213.19] - 2026-07-07
+
+- **Design · Un solo lenguaje visual para los correos al cliente**: los 3 correos transaccionales (Cotización, Proforma, Factura) ahora comparten un shell único (`_shared/transactional-email-templates/_layout/`) con (a) header con logo `librecarga-logo.png` y chip por tipo de documento — azul para Cotización, ámbar para Proforma (acción requerida), verde para Factura (CFDI emitido); (b) tokens únicos de color/tipografía en `tokens.ts` (sin triplicar estilos); (c) `EmailLayout`, `EmailRow`, `EmailMensaje` y `EmailFirma` reutilizables; (d) mismo card gris de detalles, mismo bloque azul de mensaje, mismos botones (primario azul + secundario contorno), mismo footer. Cada template pasó de ~150 → ~80 líneas. Sin cambios de props, `subject`, `templateData` ni call-sites. Analogía: antes eran tres cartas escritas en máquinas distintas con el mismo membrete a mano; ahora son papelería impresa del mismo taller.
+
 ## [13.213.18] - 2026-07-07
 
 - **Chore · Fixes CI (post-split)**: (1) Test `no-raw-table` — se añaden a la ALLOWLIST los dos archivos nuevos surgidos del split de `DataTableBody.tsx` (`DataTableBodyEmpty.tsx` y `DataTableBodySkeleton.tsx`), ambos ya cubiertos por el patrón `dataTable/**` en `eslint.config.js`. (2) `DashboardEjecutivoFacturacionMiniSerie.tsx` — se mueve el helper `mesLabel` a un archivo aparte (`.helpers.ts`) para satisfacer `react-refresh/only-export-components`, que exige que un archivo de componente sólo exporte componentes. Sin cambios funcionales. Analogía: el inspector encontró dos cajas nuevas sin sello (allowlist) y una herramienta metida en la caja equivocada — les pusimos el sello y movimos la herramienta a su repisa.
