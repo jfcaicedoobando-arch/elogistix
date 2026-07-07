@@ -45,12 +45,9 @@ export default function FacturaDetalle() {
   const acuse = useAcuseCancelacion(factura);
 
   const {
-    pagoOpen, setPagoOpen,
-    timbrarOpen, setTimbrarOpen,
-    enviarOpen, setEnviarOpen,
-    sustituirOpen, setSustituirOpen,
-    cancelarOpen, setCancelarOpen,
-    eliminarOpen, setEliminarOpen,
+    pagoOpen, setPagoOpen, timbrarOpen, setTimbrarOpen,
+    enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen,
+    cancelarOpen, setCancelarOpen, eliminarOpen, setEliminarOpen,
   } = useFacturaDetalleDialogs();
 
   const { data: pagos = [] } = usePagosFactura(id);
