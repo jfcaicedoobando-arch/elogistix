@@ -15,6 +15,7 @@ import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters"
 import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
+import { getEstadoUnificado } from "@/features/proformas/lib/estadoUnificado";
 
 interface Props {
   proformas: ProformaConFactura[];
@@ -26,22 +27,31 @@ interface Props {
 }
 
 function renderEstado(p: ProformaConFactura, proformas: ProformaConFactura[]) {
-  const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
   const rev = p.estado_revision ?? "aprobada";
   const vacio = esBorradorVacio(p);
-  if (facturada) return <Badge variant="success" className="w-fit">Facturada</Badge>;
+  const unificado = getEstadoUnificado(p);
+
+  // 1. Cerrados / especiales — mantienen su badge propio.
+  if (unificado === "facturada") return <Badge variant="success" className="w-fit">Facturada</Badge>;
   if (vacio) return (
     <Badge variant="outline" className="w-fit bg-warning/10 text-warning border-warning/30">
       Borrador vacío
     </Badge>
   );
-  if (rev === "pendiente") return <Badge variant="warning" className="w-fit">Pendiente revisión</Badge>;
   if (rev === "consolidada") {
     const num = proformas.find(x => x.id === p.consolidada_en)?.numero;
     return <Badge variant="info" className="w-fit">Consolidada{num ? ` en ${num}` : ""}</Badge>;
   }
-  return <Badge variant="success" className="w-fit">Aprobada</Badge>;
+
+  // 2. Respuesta del cliente tiene prioridad sobre revisión interna.
+  if (unificado === "rechazada") return <Badge variant="destructive" className="w-fit">Rechazada</Badge>;
+  if (unificado === "aceptada") return <Badge variant="success" className="w-fit">Aceptada</Badge>;
+
+  // 3. Sin respuesta del cliente: reflejar el estado de revisión interna.
+  if (rev === "pendiente") return <Badge variant="warning" className="w-fit">Pendiente revisión</Badge>;
+  return <Badge variant="outline" className="w-fit">Enviada al cliente</Badge>;
 }
+
 
 function totalUnico(p: ProformaConFactura) {
   const usd = Number(p.total_usd);
