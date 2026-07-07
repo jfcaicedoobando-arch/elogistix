@@ -38,8 +38,8 @@ export function useConvertirProformaDirecto() {
       return convertirProformaAFactura({
         proformaIds: input.proformaIds,
         serieId: serie.id,
-        metodoPago: "PUE",
-        formaPago: "03",
+        metodoPago: "PPD",
+        formaPago: "99",
         usoCfdi: "G03",
         diasCredito: input.diasCredito ?? 0,
         notas: null,
