@@ -104,6 +104,17 @@ describe("deriveFacturaFlags", () => {
       true,
     );
     expect(r.puedeTimbrarDesdeSistema).toBe(false);
+
+  it("Legacy: Emitida sin uuid_fiscal + saldo → puedeRegistrarPago true, no cancelable", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Emitida", uuid_fiscal: null, fecha_emision: PRE },
+      true,
+      { saldo: 500 },
+    );
+    expect(r.puedeRegistrarPago).toBe(true);
+    expect(r.puedeCancelarCfdi).toBe(false);
+    expect(r.puedeSustituirCfdi).toBe(false);
+    expect(r.puedeTimbrarDesdeSistema).toBe(false);
   });
 });
 
