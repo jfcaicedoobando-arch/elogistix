@@ -9,6 +9,7 @@ import {
 } from "@/pdf/documents/RentabilidadDocument";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
+import { slugifyOrg } from "@/lib/filenames";
 
 export type { RentabilidadClienteRow, RentabilidadKpis };
 
@@ -24,6 +25,6 @@ export async function generarRentabilidadPdf(input: RentabilidadPdfInput): Promi
   const emisor = await cargarEmisorEmpresa();
   await descargarPdf(
     <RentabilidadDocument {...input} emisor={emisor} />,
-    `rentabilidad-${input.fechaDesde}_${input.fechaHasta}`,
+    `${slugifyOrg(emisor.razonSocial)}_rentabilidad-${input.fechaDesde}_${input.fechaHasta}`,
   );
 }
