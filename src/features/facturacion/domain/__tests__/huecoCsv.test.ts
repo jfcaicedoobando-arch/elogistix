@@ -38,7 +38,7 @@ describe("buildHuecoCsvRows", () => {
   });
 
   it("devuelve etd/eta vacío cuando faltan", () => {
-    const [row] = buildHuecoCsvRows([{ ...fila, etd: "", eta: null }]);
+    const [row] = buildHuecoCsvRows([{ ...fila, etd: null, eta: "" }]);
     expect(row.etd).toBe("");
     expect(row.eta).toBe("");
   });
