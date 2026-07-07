@@ -21,6 +21,10 @@ const ESTADO_COLOR: Record<EstadoNotaCredito, string> = {
 export interface NotaCreditoRow {
   id: string;
   folio: string;
+  /** Serie fiscal devuelta por FacturAPI (source of truth post-timbre). */
+  serie?: string | null;
+  /** Folio fiscal numérico devuelto por FacturAPI (source of truth post-timbre). */
+  folio_fiscal?: number | null;
   fecha_emision: string;
   motivo: string;
   estado: EstadoNotaCredito;
@@ -29,6 +33,18 @@ export interface NotaCreditoRow {
   pdf_url: string | null;
   xml_url: string | null;
   ambiente: "sandbox" | "live" | null;
+}
+
+/**
+ * v13.213.20 — FacturAPI = source of truth para el folio.
+ * Los borradores llevan un folio provisional `BORRADOR-<ts>`; al timbrar
+ * la edge sobreescribe `folio` con `<serie><folio_fiscal>`.
+ */
+function renderFolio(n: NotaCreditoRow): { texto: string; esBorrador: boolean } {
+  const esBorrador = n.folio.startsWith("BORRADOR-");
+  if (esBorrador) return { texto: "Borrador", esBorrador: true };
+  if (n.folio_fiscal != null) return { texto: `${n.serie ?? ""}${n.folio_fiscal}`, esBorrador: false };
+  return { texto: n.folio, esBorrador: false };
 }
 
 interface Props {
@@ -61,11 +77,18 @@ export function FacturaNotasCreditoTable(props: Props) {
             const timbrada = n.estado === "Timbrada" || n.estado === "Aplicada";
             const cancelable = n.estado === "Timbrada";
             const puedeTimbrar = n.estado === "Borrador" && !!uuidFacturaOriginal;
+            const folioRender = renderFolio(n);
             return (
               <tr key={n.id} className="border-b last:border-0 hover:bg-muted/30">
                 <td className="py-2 px-2 font-mono text-xs">
                   <span className="inline-flex items-center gap-1.5">
-                    {n.folio}
+                    {folioRender.esBorrador ? (
+                      <Badge variant="outline" className="bg-muted text-muted-foreground font-normal">
+                        {folioRender.texto}
+                      </Badge>
+                    ) : (
+                      folioRender.texto
+                    )}
                     <AmbienteBadge ambiente={n.ambiente} />
                   </span>
                 </td>

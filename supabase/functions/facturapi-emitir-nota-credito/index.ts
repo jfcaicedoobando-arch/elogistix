@@ -141,9 +141,15 @@ async function persistTimbradoNc(args: PersistNcArgs): Promise<{ ok: true; body:
     folder: "notas-credito",
   });
 
+  // v13.213.20 — FacturAPI = source of truth para el folio de la NC.
+  // El borrador arranca con `BORRADOR-<ts>`; al timbrar lo sobreescribimos
+  // con `<serie><folio>` (mismo formato que facturas, sin separador).
+  const folioFinal = `${serieTimbrada}${folio}`;
+
   const { error: updErr } = await supabase
     .from("factura_notas_credito")
     .update({
+      folio: folioFinal,
       facturapi_id: facturapiId,
       uuid_fiscal: uuid,
       folio_fiscal: folio,
@@ -166,8 +172,10 @@ async function persistTimbradoNc(args: PersistNcArgs): Promise<{ ok: true; body:
     modulo: "facturacion",
     accion: "facturapi_nc_emitida",
     entidadId: notaCreditoId,
+    entidadNombre: folioFinal,
     detalles: {
-      uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, factura_id: nc.factura_id,
+      uuid, folio, serie: serieTimbrada, folio_final: folioFinal,
+      facturapi_id: facturapiId, factura_id: nc.factura_id,
       xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
     },
   });

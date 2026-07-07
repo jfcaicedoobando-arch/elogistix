@@ -59,6 +59,15 @@ describe("services/facturas/notasCredito", () => {
     await expect(crearNotaCredito(INPUT as never)).rejects.toThrow();
   });
 
+  it("crearNotaCredito asigna folio provisional BORRADOR-<ts> cuando no viene folio (v13.213.20)", async () => {
+    mock.setTableResult("factura_notas_credito", { data: { id: "nc1" }, error: null });
+    const { folio: _omit, ...sinFolio } = INPUT;
+    void _omit;
+    await crearNotaCredito(sinFolio as never);
+    const payload = mock.getMutationPayload("factura_notas_credito", "insert") as { folio?: string };
+    expect(payload.folio).toMatch(/^BORRADOR-\d{1,8}$/);
+  });
+
   it("cambiarEstadoNotaCredito permite Borrador→Aprobada", async () => {
     mock.setTableResult("factura_notas_credito", { data: null, error: null });
     await expect(

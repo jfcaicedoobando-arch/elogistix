@@ -64,7 +64,6 @@ export function DialogCrearNotaCredito({
   const qc = useQueryClient();
   const timbrar = useTimbrarNotaCredito(facturaId);
 
-  const [folio, setFolio] = useState("");
   const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
   const [motivo, setMotivo] = useState<Motivo>("Descuento");
   const [descripcion, setDescripcion] = useState("");
@@ -78,7 +77,6 @@ export function DialogCrearNotaCredito({
   useEffect(() => {
     if (open) {
       setConceptos(conceptosSugeridos?.length ? conceptosSugeridos.map((c) => ({ ...c })) : [makeConcepto()]);
-      setFolio(`NC-${Date.now().toString().slice(-6)}`);
     }
   }, [open, conceptosSugeridos]);
 
@@ -92,13 +90,13 @@ export function DialogCrearNotaCredito({
   const conceptosValidos =
     conceptos.length > 0 &&
     conceptos.every((c) => c.descripcion.trim() && c.cantidad > 0 && c.precio_unitario >= 0);
-  const puedeGuardar = !!folio.trim() && !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo;
+  const puedeGuardar = !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo;
   const puedeTimbrar = puedeGuardar && !sinUuid;
 
+  // v13.213.20 — sin folio de entrada: el servicio asigna `BORRADOR-<ts>`.
   const crearMut = useMutation({
     mutationFn: () => crearNotaCredito({
       factura_id: facturaId,
-      folio: folio.trim(),
       motivo,
       descripcion: descripcion.trim(),
       monto,
@@ -120,7 +118,12 @@ export function DialogCrearNotaCredito({
     setGuardando(true);
     try {
       const nueva = await crearMut.mutateAsync();
-      toast({ title: "Nota de crédito creada", description: `Folio ${nueva.folio}` });
+      toast({
+        title: "Borrador de nota de crédito creado",
+        description: timbrarAhora
+          ? "Se timbrará ahora y FacturAPI asignará el folio fiscal."
+          : "El folio fiscal se asignará al timbrar.",
+      });
       if (timbrarAhora && !sinUuid) await timbrar.mutateAsync(nueva.id);
       onOpenChange(false);
     } catch (err) {
@@ -172,7 +175,6 @@ export function DialogCrearNotaCredito({
       )}
 
       <NotaCreditoCamposFiscales
-        folio={folio} setFolio={setFolio}
         fecha={fecha} setFecha={setFecha}
         motivo={motivo} setMotivo={setMotivo}
         usoCfdi={usoCfdi} setUsoCfdi={setUsoCfdi}

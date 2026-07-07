@@ -23,7 +23,8 @@ export interface ConceptoNotaCredito {
 
 export interface CrearNotaCreditoInput {
   factura_id: string;
-  folio: string;
+  /** Opcional: si no viene, se asigna `BORRADOR-<ts>` (mismo patrón que facturas). */
+  folio?: string;
   motivo: NotaCredito["motivo"];
   descripcion: string;
   monto: number;
@@ -98,9 +99,14 @@ export async function listarNotasCreditoRecientes(
 
 export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<NotaCredito> {
   const user = await getCurrentUser();
-  const { conceptos, ...rest } = input;
+  const { conceptos, folio, ...rest } = input;
+  // v13.213.20 — patrón "FacturAPI = source of truth" (mismo que facturas):
+  // el borrador arranca con folio provisional `BORRADOR-<ts>` y al timbrar
+  // la edge `facturapi-emitir-nota-credito` lo sobreescribe con `<serie><folio>`.
+  const folioFinal = folio?.trim() || `BORRADOR-${Date.now().toString().slice(-8)}`;
   const payload: TablesInsert<"factura_notas_credito"> = {
     ...rest,
+    folio: folioFinal,
     // SAFE-CAST: ConceptoNotaCredito[] es serializable a Json (objetos planos).
     conceptos: (conceptos ?? []) as unknown as TablesInsert<"factura_notas_credito">["conceptos"],
     created_by: user.id,
