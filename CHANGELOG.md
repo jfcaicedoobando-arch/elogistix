@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.209.4] - 2026-07-07
+
+- **Landing · Botón "Probar demo" en librecarga.com**: el click no hacía nada porque el preflight CORS de la edge function `demo-access` rechazaba los headers `sentry-trace` y `baggage` que Sentry inyecta automáticamente en producción a fetches contra `*.supabase.co/functions/v1`. La función usaba un `corsHeaders` local hardcodeado que quedó fuera de la migración v13.114.13. Ahora importa `corsHeaders` desde `supabase/functions/_shared/cors.ts`, que ya incluye `sentry-trace, baggage` y los headers `x-supabase-client-*` del SDK v2.95+. Sin cambios en el flujo demo, RLS ni frontend.
+
 ## [13.209.3] - 2026-07-07
 
 - **Embarques · Auto-sync de estado sólo para roles con permiso de escritura**: al abrir el detalle de un embarque, un `useEffect` recalcula el estado (Confirmado/En Tránsito/Arribado/etc.) según ETD/ETA y, si difiere, lo sincroniza a BD insertando además un evento en `eventos_embarque`. Ese flujo hacía la escritura para cualquier usuario con acceso al detalle, pero RLS sólo permite `admin`, `operador` y `super_admin`. Un usuario `contador` (isela.martinez@elogistixshipping.com) veía el toast `Error al sincronizar estado: new row violates row-level security policy for table "eventos_embarque"` (código 42501). Ahora el efecto sólo dispara la mutación cuando `usePermissions()` indica `isAdmin || isSuperAdmin || canEditOperations`; para el resto de roles queda como no-op silencioso. No cambia BD, RLS ni la lógica de cálculo — sólo el gate en cliente.
