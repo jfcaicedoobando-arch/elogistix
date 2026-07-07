@@ -1,58 +1,53 @@
 
-## Problema
+## Diagnóstico del workflow
 
-El dashboard de Facturación muestra **33 proformas por revisar**, pero son datos viejos: proformas migradas del sistema anterior que ya fueron facturadas fuera de la app y quedaron con `estado_revision = 'pendiente'` porque nadie las tocó tras la migración.
+Rastreando `estado_revision` en el código:
 
-Verificado en la base:
+- Se **crea** en `pendiente` cuando operativo/ventas genera una proforma desde un embarque (`DialogGenerarProforma`).
+- Se **aprueba/rechaza** dentro del embarque, en `HistorialProformas.tsx` (pestaña Facturación del embarque). Es un control **interno de ventas/operaciones** para revisar la proforma antes de enviarla al cliente.
+- **Nunca** se toca desde el módulo Facturación.
+
+El flujo real del contable es:
 
 ```text
-33 proformas  →  estado_cliente = aceptada
-                  estado_proforma = facturada
-                  factura_id IS NULL      (facturadas fuera del sistema)
-                  estado_revision = pendiente
+Ventas revisa → cliente acepta → LISTAS PARA FACTURAR → contable timbra
+                                        ↑ aquí entra facturación
 ```
 
-Son exactamente el mismo tipo de basura que ya depuramos hace un momento en "Listas para facturar".
+## Conclusión
+
+El KPI **"Proformas por revisar"** en el dashboard de Facturación está fuera de scope: mide trabajo de otro rol (ventas/operativo). Meterlo ahí:
+
+- Confunde al contable con un número que no es su responsabilidad.
+- Fue la causa del ruido de las 33 legacy que acabamos de depurar.
+
+**Sí está deprecado** para el rol contable. Se quita del dashboard de Facturación.
 
 ## Analogía
 
-Es como una bandeja de "correo por leer" donde 33 sobres ya fueron abiertos, contestados y archivados hace meses — solo que nadie apretó el botón "marcar como leído". La bandeja miente.
+Es como si en el tablero del cajero del banco apareciera "expedientes pendientes de aprobar por el analista de crédito". Interesante, pero no es su chamba y sólo estorba.
 
-## Fix (dos capas, igual que la vez pasada)
+## Cambio propuesto
 
-### 1. Corregir la query del KPI (evita futuros falsos positivos)
+`src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx`:
 
-`src/features/proformas/services/queries.ts` — función que alimenta `useProformasPendientes`:
+1. Quitar el bloque `<Kpi label="Proformas por revisar" .../>` (líneas ~90-95).
+2. Quitar el hook `useProformasPendientes` y la variable `porRevisar` / `porRevisarTone` (líneas 15, 63, 70, 78).
+3. Bajar el grid de 7 a 6 columnas en xl (`xl:grid-cols-7` → `xl:grid-cols-6`) y actualizar el comentario que dice "6 KPIs (Por revisar, Listas…)".
 
-Añadir a la query que filtra `estado_revision = 'pendiente'`:
-- `.neq("estado_proforma", "facturada")`
-- `.is("factura_id", null)`
-- `.is("deleted_at", null)`
+El KPI **"Listas para facturar"** se queda — ese sí es del contable.
 
-Con esto, una proforma solo se considera "por revisar" si de verdad está pendiente y todavía no se facturó ni internamente ni por fuera.
+No se toca:
+- `useProformasPendientes` (lo siguen usando otras pantallas de embarques/ventas).
+- La lógica de `estado_revision` en la base ni en `HistorialProformas`.
 
-### 2. Migración de backfill (limpia los 33 registros viejos)
-
-Nueva migración que actualice a `estado_revision = 'aprobada'` las proformas que cumplen:
-- `estado_cliente = 'aceptada'`
-- `estado_proforma = 'facturada'`
-- `estado_revision = 'pendiente'`
-- `deleted_at IS NULL`
-
-Es un `UPDATE` acotado — no toca datos vivos.
-
-### 3. Housekeeping
+## Housekeeping
 
 - `CHANGELOG.md`: entrada nueva.
-- `src/constants/appVersion.ts`: bump de versión patch.
-
-## Resultado esperado
-
-El KPI "Proformas por revisar" pasa de 33 → 0 (o al conteo real de pendientes legítimas), y a futuro no volverá a inflarse con basura legacy.
+- `src/constants/appVersion.ts`: bump patch a `13.213.44`.
 
 ## Archivos a tocar
 
-- `src/features/proformas/services/queries.ts` (filtros extra)
-- `supabase/migrations/<timestamp>_backfill_proformas_revision.sql` (nueva)
+- `src/features/facturacion/components/DashboardEjecutivoFacturacion.tsx`
 - `CHANGELOG.md`
 - `src/constants/appVersion.ts`
