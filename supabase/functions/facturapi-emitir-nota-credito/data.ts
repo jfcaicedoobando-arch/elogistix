@@ -55,7 +55,7 @@ export async function loadNc(supabase: SupabaseLike, id: string): Promise<NcRow 
 export async function loadFactura(supabase: SupabaseLike, id: string): Promise<FacturaRow | null> {
   const { data } = await supabase
     .from("facturas")
-    .select("id, uuid_fiscal, cliente_id, rfc_cliente, uso_cfdi, forma_pago")
+    .select("id, uuid_fiscal, cliente_id, rfc_cliente, uso_cfdi, forma_pago, embarque_id, expediente, referencia_bl")
     .eq("id", id)
     .maybeSingle();
   return (data as FacturaRow | null) ?? null;
