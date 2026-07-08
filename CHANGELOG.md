@@ -5,6 +5,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.215.0] - 2026-07-08
+- **Conciliación masiva de conceptos legacy** (`reconciliar_conceptos_facturados_legacy`). Marca automáticamente como `facturado` los conceptos de venta pendientes cuyo embarque ya cuenta con una factura Emitida/Pagada/Parcialmente pagada **o** con una proforma en estado `facturada`. Además, intenta ligar `proforma_id` haciendo *matching* por descripción+moneda+total contra `proforma_conceptos_consolidados`, y como fallback liga a la única proforma facturada del embarque cuando existe una sola.
+- **Alcance**: embarques en estados Confirmado, En Tránsito, Arribo, Llegada, En Aduana, Entregado, EIR y Cerrado (bypasea el candado de embarques cerrados sólo dentro de la función).
+- **Corrida única**: al aplicar la migración se ejecutó una vez. Resultado: **37 conceptos** actualizados en **11 embarques** (33/9 en la org principal + 4/2 en la otra org). De ellos, **31** quedaron ligados a su proforma; los 6 restantes se marcaron como `facturado` con `proforma_id NULL` (facturas emitidas fuera del sistema, sin conceptos consolidados que empatar).
+- **Reversibilidad**: sólo modifica `estado_facturacion` y `proforma_id`. El trigger `trg_sync_conceptos_venta_facturado` (v13.213.47) garantiza que embarques nuevos no requieran esta conciliación.
+- Analogía: como pasar un sello de "cobrado" por toda la caja de recibos viejos comparando cada recibo con la lista de facturas ya emitidas.
+
 ## [13.214.9] - 2026-07-08
 - **Conciliación legacy ELIMP00169 (EIR)**: los 2 conceptos de venta (Flete Marítimo USD 2,765 + Cargos en Destino USD 125) estaban `pendiente` y sin `proforma_id`, pero la factura ya se había emitido fuera del sistema y la proforma **PRO-2026-0297** era la buena. Se ligaron ambos conceptos a esa proforma y se marcaron como `facturado`. La proforma duplicada **PRO-2026-0284** se revirtió a `pendiente` (el catálogo actual sólo permite `pendiente`/`facturada`; no tenía factura vinculada).
 - Analogía: los boletos se cobraron en la taquilla de al lado; sólo faltaba anotarlos en el registro de la sala. Y el registro extra que quedó abierto lo dejamos marcado como no cobrado.
