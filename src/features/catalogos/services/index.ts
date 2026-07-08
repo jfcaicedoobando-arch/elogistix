@@ -37,6 +37,9 @@ export interface TipoContenedor {
 export interface ExchangeRates {
   usdMxn: number;
   eurMxn: number;
+  /** Fecha (ISO YYYY-MM-DD) del FIX efectivamente aplicado por Banxico. Sólo
+   *  la edge la devuelve; puede quedar undefined si viene del fallback. */
+  fechaAplicada?: string;
 }
 
 // ─── Navieras ────────────────────────────────────────────────────────────────
