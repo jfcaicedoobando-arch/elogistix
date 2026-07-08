@@ -1,14 +1,17 @@
 /**
  * Orquestador del "Hueco de Facturación".
  *
- * v13.213.4 — Criterio basado en **ETA** (llegada del contenedor):
+ * v13.217.0 — Se amplía la ventana a **ETA ≤ hoy + 3 días** para dar buffer al
+ * agente aduanal (antes: `eta ≤ hoy`). Criterios:
  *   - `eta` capturado (embarques sin ETA se excluyen).
  *   - `eta ≥ 2026-04-01` (corte del modelo nuevo, no revive back-fill).
- *   - `eta ≤ hoy` (el contenedor ya llegó o llega hoy → necesita CFDI para aduana).
+ *   - `eta ≤ hoy + 3 días` (ya vencidos o próximos a arribar → necesita CFDI
+ *     para cruzar aduana con margen).
  *   - Y NO tiene factura con `factura_pdf_url` asociada por expediente.
  *   - Y NO todos sus conceptos de venta están en proformas marcadas como
  *     `facturada` (aceptación histórica del back-fill).
  */
+
 import { fetchEmbarquesParaHueco, fetchVentasYFacturas, type ConceptoVentaDetalle } from "./fetchSources";
 import {
   construirFilaHueco,
