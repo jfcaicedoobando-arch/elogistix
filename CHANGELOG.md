@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.218.1] - 2026-07-08
+- **Fix de datos · Colisión de folio ELIMP00149**: existían dos embarques distintos compartiendo el mismo expediente por una colisión histórica (mismo folio asignado a dos embarques creados con 18 minutos de diferencia). Se reasigna el embarque **cerrado** (BL Master `034G521324`, creado 08-Abr 15:44) al folio libre `ELIMP00304`. El embarque activo en EIR (BL Master `034G523190`) conserva `ELIMP00149`. Se registra en bitácora (`accion = reasignacion_folio`) con el motivo y el folio anterior/nuevo.
+- Analogía: dos carpetas físicas tenían la misma etiqueta "149"; se le puso a la carpeta ya archivada la etiqueta libre "304" para que cada expediente vuelva a tener un folio único, sin tocar nada del contenido de ninguna de las dos.
+
 ## [13.218.0] - 2026-07-08
 - **Auditoría CxP · Reconciliación de renglones de factura de proveedor huérfanos**: la bandeja "Por capturar" contaba facturas por `proveedor_facturas.embarque_id` (link directo al embarque) mientras que el Detalle de costos del embarque hace JOIN por `proveedor_facturas_conceptos.concepto_costo_id`. En 4 embarques auditados (ELIMP00149, 00189, 00193, 00203) las facturas FP-000023/026/027/029 mostraban 0 renglones válidos porque el editor de embarques hacía `delete + insert` de `conceptos_costo` con IDs nuevos, dejando referencias colgantes en `proveedor_facturas_conceptos`.
 - **Reconciliación (migración)**: se re-ligan los renglones huérfanos buscando pareja determinística en el mismo embarque (proveedor + concepto + monto redondeado). Resultado: **31 renglones rehidratados**, 0 huérfanos globales. Se corre con `session_replication_role = replica` para poder tocar embarques cerrados durante el mantenimiento.
