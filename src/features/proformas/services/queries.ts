@@ -85,13 +85,6 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
   return fromDb<ProformaDetalleFull>(mergeProformaDetalle(data));
 }
 
-
-
-
-
-
-
-
 export async function fetchProformasAprobadas(organizationId: string): Promise<ProformaConFactura[]> {
   const { data, error } = await supabase
     .from("proformas")
