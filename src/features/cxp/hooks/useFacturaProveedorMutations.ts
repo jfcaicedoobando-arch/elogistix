@@ -17,7 +17,9 @@ export function useCrearFacturaProveedor() {
     mutationFn: (payload: NuevaFacturaProveedorPayload) => crearFacturaProveedor(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
-      notifySuccess(undefined, { title: "Factura de proveedor creada" });
+      // El toast de éxito lo emite `useNuevaFacturaProveedorForm.submit` al
+      // terminar todo el flujo (insert + storage + vínculos), para evitar el
+      // doble toast reportado en 13.218.1 (Karol, captura de factura).
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al crear factura proveedor: ${error.message}`, error, method: "CREATE_FACTURA_PROVEEDOR" });
