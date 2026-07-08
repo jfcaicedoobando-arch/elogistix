@@ -89,7 +89,12 @@ function EditorBody({ factura, ctl, categorias }: EditorBodyProps) {
         errors={ctl.errors}
         proveedorReadOnly
         proveedorNombre={factura.proveedor_nombre}
+        tcOrigen={ctl.tcOrigen}
+        tcFechaAplicada={ctl.tcFechaAplicada}
+        onObtenerDof={ctl.obtenerDofManual}
+        dofLoading={ctl.dofLoading}
       />
+
     </>
   );
 }
