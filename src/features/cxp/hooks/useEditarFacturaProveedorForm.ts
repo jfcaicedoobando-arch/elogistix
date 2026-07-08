@@ -186,5 +186,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
     isPending: actualizar.isPending,
     isLoadingRow,
     isErrorRow,
+    tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
+
 }
