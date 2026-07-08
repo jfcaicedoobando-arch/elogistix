@@ -47,9 +47,9 @@ export function TrackingNuevoEventoForm({
   onClose,
 }: Props) {
   const [modo, setModo] = useState<Modo>("menu");
-  const crearEvento = useCreateEventoEmbarque();
-  const actualizarEta = useActualizarEta();
-  const actualizarFechaLlegada = useActualizarFechaLlegadaReal();
+  const crearEvento = useCreateEventoEmbarque({ silent: true });
+  const actualizarEta = useActualizarEta({ silent: true });
+  const actualizarFechaLlegada = useActualizarFechaLlegadaReal({ silent: true });
   const { user } = useAuth();
   const { toast } = useToast();
 

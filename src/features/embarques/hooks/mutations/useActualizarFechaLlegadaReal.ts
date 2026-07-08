@@ -13,7 +13,13 @@ interface Input {
   fechaIso: string;
 }
 
-export function useActualizarFechaLlegadaReal() {
+interface Options {
+  /** Si es true, no dispara toasts internos (éxito ni error). El caller es responsable de notificar. */
+  silent?: boolean;
+}
+
+export function useActualizarFechaLlegadaReal(options: Options = {}) {
+  const { silent = false } = options;
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ embarqueId, fechaIso }: Input) =>
@@ -22,9 +28,10 @@ export function useActualizarFechaLlegadaReal() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
-      notifySuccess(undefined, { title: "Fecha de llegada actualizada" });
+      if (!silent) notifySuccess(undefined, { title: "Fecha de llegada actualizada" });
     },
     onError: (error: Error) => {
+      if (silent) return;
       notifyError(undefined, { title: `Error al actualizar fecha: ${error.message}`, error, method: "UPDATE_FECHA_LLEGADA_REAL" });
     },
   });

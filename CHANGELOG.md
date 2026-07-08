@@ -5,6 +5,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.1] - 2026-07-08
+- **Fix: toasts duplicados en Tracking**: al actualizar el ETA o marcar la llegada real, antes salían 3 toasts apilados (uno de cada mutation interna + el final del formulario). Los hooks `useActualizarEta`, `useActualizarFechaLlegadaReal` y `useCreateEventoEmbarque` ahora aceptan `{ silent: true }` para silenciar sus toasts internos; `TrackingNuevoEventoForm` los usa con ese flag y deja **un solo toast** por acción ("ETA actualizada" o "Llegada real registrada"). Otros consumidores de esos hooks no cambian.
+- Analogía: antes cada eslabón de la cadena tocaba su propio timbre; ahora solo suena el timbre de la puerta principal.
+
 ## [13.214.0] - 2026-07-08
 - **Rediseño del tab de Tracking (solo 2 acciones)**: el botón "Registrar Evento" ahora ofrece únicamente **Actualizar ETA** y **Marcar Llegada real**. Los 9 tipos anteriores (Zarpe, Transbordo, Descarga, Despacho Aduanal, Liberación, En Ruta Terrestre, Entrega, Demora, Inspección, Otro) se retiran del UI; los eventos históricos siguen visibles en el timeline.
   - **Actualizar ETA**: actualiza `embarques.eta` (ETA vigente que consume toda la app: hueco de facturación, dashboards, alertas) y genera un evento `Cambio de ETA` con la fuente/motivo capturada por el operador.
