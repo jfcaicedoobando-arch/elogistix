@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.216.0] - 2026-07-08
+- **Embarque › Tab Costos** rediseñado con enfoque en análisis de costos reales vs cotizados:
+  - Se elimina la carta "Conceptos de Venta" (esa información vive en el tab Facturación).
+  - Los costos ahora se **agrupan por proveedor**, con subtotales por moneda (cotizado → facturado → Δ) en el encabezado del grupo, colapsable individualmente.
+  - Cada renglón muestra las **facturas de proveedor ligadas** (folio + fecha) como chips con tooltip (monto, vencimiento, estado de pago, descripción), la **Δ vs cotizado** con % de desviación y coloreado (verde ahorro / rojo excedente) y un badge de estado del renglón (Conciliado / Parcial / Excedente / Sin factura).
+  - Nueva columna **Pago** con el estado real de la(s) factura(s) vinculadas (Pagada / Vigente).
+  - Fila final de **totales por moneda** (MXN y USD por separado).
+- Backend: `fetchReconciliacionEmbarque` ahora trae también `fecha_vencimiento` y `estado` de `proveedor_facturas` para alimentar los nuevos tooltips y badges.
+- Analogía: en vez de dos listas separadas de "lo que vendemos" y "lo que gastamos", el tab funciona como una hoja de conciliación por proveedor: cada gasto muestra a qué factura corresponde y qué tan lejos quedó del presupuesto.
+
 ## [13.215.1] - 2026-07-08
 - **Compras › Por capturar**: la bandeja ahora oculta los embarques en estado `Cerrado`. La RPC `cxp_por_capturar` filtra `e.estado <> 'Cerrado'`, así el equipo sólo ve expedientes activos donde todavía tiene sentido capturar facturas de proveedor. Los 100 embarques cerrados legacy dejan de aparecer.
 - Analogía: como archivar las cajas viejas y dejar sólo los pendientes actuales sobre el escritorio.
