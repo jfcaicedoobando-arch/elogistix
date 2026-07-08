@@ -152,10 +152,9 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
 }
 
 /**
- * Actualiza la fecha de llegada real del embarque. Usada por el form de
- * tracking cuando se registra un evento de "Arribo a Puerto" o "Entrega"
- * y el operador confirma sincronizar la fecha visible en el resto del
- * sistema. RLS de la tabla aplica tenancy automáticamente.
+ * Actualiza la fecha de llegada real del embarque y avanza el estado a "Arribo".
+ * v13.214.0: única vía UI para marcar el arribo del embarque, invocada desde
+ * el tab de Tracking. RLS aplica tenancy automáticamente.
  */
 export async function actualizarFechaLlegadaRealEmbarque(
   embarqueId: string,
@@ -163,7 +162,25 @@ export async function actualizarFechaLlegadaRealEmbarque(
 ): Promise<void> {
   const { error } = await supabase
     .from('embarques')
-    .update({ fecha_llegada_real: fechaIso })
+    .update({
+      fecha_llegada_real: fechaIso,
+      estado: 'Arribo' as EmbarqueInsert['estado'],
+    })
+    .eq('id', embarqueId);
+  if (error) throw error;
+}
+
+/**
+ * Actualiza el ETA vigente del embarque. El `eta_original` queda congelado
+ * por trigger de BD y no se modifica. v13.214.0.
+ */
+export async function actualizarEtaEmbarque(
+  embarqueId: string,
+  nuevaEta: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('embarques')
+    .update({ eta: nuevaEta })
     .eq('id', embarqueId);
   if (error) throw error;
 }
