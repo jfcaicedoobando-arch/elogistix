@@ -5,7 +5,6 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
 import {
   embarqueInsertSchema,
-  notaSchema,
   parseOrThrow,
 } from "@/lib/validation/mutationSchemas";
 
@@ -20,7 +19,7 @@ const rpcIdExpedienteArraySchema = z.array(
   z.object({ id: z.string().uuid(), expediente: z.string() }),
 );
 
-type EmbarqueInsert = TablesInsert<'embarques'>;
+
 
 export interface CrearEmbarqueRpcInput {
   embarque: TablesInsert<'embarques'>;
