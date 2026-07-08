@@ -150,7 +150,11 @@ export function EmbarqueDetalleHeader({
         onBlockDocsOpenChange={onBlockDocsOpenChange}
         onConfirmarAvanceConDocsPendientes={onConfirmarAvanceConDocsPendientes}
         onIrADocumentos={onIrADocumentos}
+        blockFechaLlegadaOpen={blockFechaLlegadaOpen}
+        onBlockFechaLlegadaOpenChange={onBlockFechaLlegadaOpenChange}
+        onIrATracking={onIrATracking}
       />
+
     </div>
   );
 }
