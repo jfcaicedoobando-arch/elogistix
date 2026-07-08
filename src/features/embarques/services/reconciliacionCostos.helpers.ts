@@ -115,6 +115,8 @@ export function buildFilasReconciliacion(
       proveedor_factura_id: v.proveedor_facturas.id,
       folio_proveedor: v.proveedor_facturas.folio_proveedor,
       fecha_emision: v.proveedor_facturas.fecha_emision ?? null,
+      fecha_vencimiento: v.proveedor_facturas.fecha_vencimiento ?? null,
+      estatus_pago: v.proveedor_facturas.estado ?? null,
       descripcion: v.descripcion ?? null,
       monto: Number(v.monto) || 0,
     });
