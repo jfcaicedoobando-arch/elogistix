@@ -63,8 +63,10 @@ export function EmbarqueDetalleHeader({
   warnDocsOpen, onWarnDocsOpenChange,
   blockDocsOpen, onBlockDocsOpenChange,
   onConfirmarAvanceConDocsPendientes, onIrADocumentos,
+  blockFechaLlegadaOpen, onBlockFechaLlegadaOpenChange, onIrATracking,
   cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
+
   const { isAdmin } = usePermissions();
   const puedeReabrir = isAdmin && estadoVisual === "Cerrado";
   const bloqueadoPorDocs = docsBloqueantes && docsFaltantes.length > 0;
