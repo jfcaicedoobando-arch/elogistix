@@ -1,0 +1,3 @@
+ALTER TABLE public.embarques ADD COLUMN IF NOT EXISTS facturado_historico BOOLEAN NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_embarques_facturado_historico ON public.embarques (facturado_historico) WHERE facturado_historico = true;
+COMMENT ON COLUMN public.embarques.facturado_historico IS 'Marca embarques del sistema anterior ya facturados fuera de la plataforma; se excluyen del hueco de facturación.';

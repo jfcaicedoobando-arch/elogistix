@@ -3895,6 +3895,7 @@ export type Database = {
           etd: string | null
           etd_original: string | null
           expediente: string
+          facturado_historico: boolean
           fecha_creacion: string
           fecha_llegada_real: string | null
           hawb: string | null
@@ -3971,6 +3972,7 @@ export type Database = {
           etd?: string | null
           etd_original?: string | null
           expediente: string
+          facturado_historico?: boolean
           fecha_creacion?: string
           fecha_llegada_real?: string | null
           hawb?: string | null
@@ -4047,6 +4049,7 @@ export type Database = {
           etd?: string | null
           etd_original?: string | null
           expediente?: string
+          facturado_historico?: boolean
           fecha_creacion?: string
           fecha_llegada_real?: string | null
           hawb?: string | null
