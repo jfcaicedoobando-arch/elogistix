@@ -4,6 +4,9 @@ import { fetchTopTarifas, type TopTarifasParams } from "@/features/costeo/servic
 
 export function useTopTarifas(p: Partial<TopTarifasParams>) {
   const { organizationId } = useOrganization();
+  // Normalizar fecha: "" (input date vacío) debe tratarse como no proveída,
+  // no propagarse al RPC como date inválido (Postgres 22007).
+  const fecha = p.fecha && p.fecha.length > 0 ? p.fecha : undefined;
   const enabled = !!(
     organizationId && p.puertoOrigenId && p.puertoDestinoId && p.tipoContenedorId
   );
@@ -15,14 +18,14 @@ export function useTopTarifas(p: Partial<TopTarifasParams>) {
       p.puertoOrigenId,
       p.puertoDestinoId,
       p.tipoContenedorId,
-      p.fecha ?? null,
+      fecha ?? null,
     ],
     queryFn: () =>
       fetchTopTarifas({
         puertoOrigenId: p.puertoOrigenId!,
         puertoDestinoId: p.puertoDestinoId!,
         tipoContenedorId: p.tipoContenedorId!,
-        fecha: p.fecha,
+        fecha,
         organizationId: organizationId!,
       }),
     enabled,

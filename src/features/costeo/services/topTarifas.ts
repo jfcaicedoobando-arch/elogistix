@@ -13,11 +13,14 @@ export interface TopTarifasParams {
 }
 
 export async function fetchTopTarifas(p: TopTarifasParams): Promise<TopTarifaRow[]> {
+  // Cinturón + tirantes: si llega "" desde arriba, tratarlo como no proveída
+  // para no mandar un date inválido al RPC (Postgres 22007).
+  const fecha = p.fecha && p.fecha.length > 0 ? p.fecha : new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase.rpc("get_top_tarifas", {
     p_puerto_origen_id: p.puertoOrigenId,
     p_puerto_destino_id: p.puertoDestinoId,
     p_tipo_contenedor_id: p.tipoContenedorId,
-    p_fecha: p.fecha ?? new Date().toISOString().slice(0, 10),
+    p_fecha: fecha,
     p_organization_id: p.organizationId ?? undefined,
   });
   if (error) throw error;
