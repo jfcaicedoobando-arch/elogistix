@@ -8030,6 +8030,15 @@ export type Database = {
         Args: { p_embarque_id: string }
         Returns: undefined
       }
+      reconciliar_conceptos_facturados_legacy: {
+        Args: never
+        Returns: {
+          conceptos_actualizados: number
+          conceptos_ligados_a_proforma: number
+          embarques_afectados: number
+          organization_id: string
+        }[]
+      }
       recotizar_cotizacion: {
         Args: { p_cotizacion_id: string; p_motivo: string }
         Returns: Json
