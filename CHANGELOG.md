@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.218.4] - 2026-07-08
+- **Fix crash · "Invalid time value" al capturar factura de proveedor** (Sentry `JAVASCRIPT-REACT-29`): al limpiar el campo "Fecha de emisión" con la X del DatePicker, `values.emision` quedaba en `""`. El siguiente cambio en emisión o en "Días de crédito" recalculaba el vencimiento con `addDays("", 30)` → `new Date("T00:00:00")` es Invalid Date y `toISOString()` lanzaba `RangeError: Invalid time value`, tumbando el diálogo con la pantalla de error. Se blinda `addDays` en `useNuevaFacturaProveedorForm.helpers.ts`: si el iso viene vacío o no cumple el formato `YYYY-MM-DD`, regresa `""` en vez de crashear. Se agregan tests unitarios (`addDays("", 30) === ""`, ISO inválido, string arbitrario).
+- Analogía: la calculadora que suma días a una fecha ya no explota si el papelito de la fecha viene en blanco — ahora también entrega un papelito en blanco.
+
 ## [13.218.3] - 2026-07-08
 - **Fix UX · Doble toast al registrar pago a proveedor**: mismo patrón que 13.218.2 pero en pagos. `useRegistrarPagoProveedor.onSuccess` emitía "Pago a proveedor registrado" y `DialogRegistrarPagoProveedor.submit` emitía "Pago registrado". Además, en errores, la mutation y el `catch` del diálogo emitían dos toasts rojos con el mismo mensaje. Se quitan ambas notificaciones del hook `useRegistrarPagoProveedor` y se conserva la del diálogo (única vía UI actual). La invalidación de queries se mantiene.
 - El hook `useEliminarPagoProveedor` no se toca: es la única vía y no hay toast a nivel diálogo, así que su notificación sigue siendo correcta.
