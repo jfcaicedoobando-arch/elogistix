@@ -1,71 +1,70 @@
 ## Diagnóstico
 
-ELIMP00291 pasó a **Arribo** sin `fecha_llegada_real` porque hay dos entradas y la del header no la exige:
+Cuando Valeria actualiza el ETA del embarque 256, se insertan **dos eventos idénticos** en `eventos_embarque` con tipo `Cambio de ETA`. Motivo:
 
-1. **Tab Tracking → "Marcar Llegada real"**: sí pide fecha (correcto).
-2. **Header → "Avanzar a Arribo"**: llama a la RPC `avanzar_estado_embarque`, que **solo valida documentos faltantes** — no valida `fecha_llegada_real`. Actualiza `estado='Arribo'` dejando la fecha en NULL.
+1. **Frontend** (`TrackingNuevoEventoForm.tsx`, línea 111): tras `actualizarEta.mutateAsync(...)`, llama `crearEvento.mutateAsync({ tipo: "Cambio de ETA", ... })` → **Evento #1**.
+2. **Trigger de BD** `trg_embarques_log_eta_change` sobre `embarques`: al hacer `UPDATE embarques SET eta = ...`, la función `log_embarque_eta_change` inserta automáticamente otro evento `Cambio de ETA` → **Evento #2**.
 
-Confirmado en BD: `ELIMP00291 → estado=Arribo, fecha_llegada_real=NULL`.
+La función del trigger ya tiene un guard de deduplicación (busca eventos "Cambio de ETA" creados en los últimos 30 s), pero corre **antes** del insert del frontend, por lo que el guard nunca ve el evento del frontend y se dispara igual. El resultado es un registro duplicado en la timeline.
 
-## Regla a aplicar
+El mismo defecto aplica a "Marcar Llegada real": el frontend inserta un `Arribo a Puerto` y el trigger, al detectar cambio en `fecha_llegada_real`, inserta otro.
 
-Para avanzar a **Arribo** (venga del header o de cualquier otro camino) **es obligatorio** tener registrada la `fecha_llegada_real`. La fuente única de verdad debe ser el backend.
+**Analogía:** Es como si al firmar la bitácora, un asistente también firmara automáticamente "por si acaso" — terminamos con dos firmas iguales.
+
+## Decisión
+
+El frontend es la fuente rica: incluye el email del usuario real (no `sistema`), la `ubicacion`/`fuente` capturada por el operador y una `fecha` significativa. El trigger sólo era una red de seguridad.
+
+**Fix:** eliminar el trigger `trg_embarques_log_eta_change` y su función `log_embarque_eta_change`. El frontend queda como única vía de registro para estos dos eventos, y ya está encapsulado en `TrackingNuevoEventoForm` (única UI que actualiza `eta` y `fecha_llegada_real`).
 
 ## Cambios
 
-### 1. Backend (fuente única) — migración nueva
+### 1. Migración de BD
 
-Actualizar `public.avanzar_estado_embarque` para que, además del candado de documentos, cuando `p_nuevo_estado = 'Arribo'` verifique:
+Nueva migración `supabase/migrations/<timestamp>_drop_log_embarque_eta_change.sql`:
 
 ```sql
-IF p_nuevo_estado = 'Arribo' THEN
-  SELECT fecha_llegada_real INTO v_flr FROM embarques WHERE id = p_embarque_id;
-  IF v_flr IS NULL THEN
-    RAISE EXCEPTION 'fecha_llegada_real_requerida'
-      USING ERRCODE = 'P0001',
-            HINT = 'Registra la Llegada real desde el tab Tracking antes de avanzar a Arribo.';
-  END IF;
-END IF;
+DROP TRIGGER IF EXISTS trg_embarques_log_eta_change ON public.embarques;
+DROP FUNCTION IF EXISTS public.log_embarque_eta_change();
 ```
 
-Se coloca **antes** del `UPDATE`. Aplica a cualquier caller (UI, scripts, futuras integraciones).
+Justificación en comentario: se elimina para evitar duplicados con los inserts explícitos del frontend en `TrackingNuevoEventoForm`.
 
-### 2. Frontend — botón "Avanzar a Arribo"
+### 2. Limpieza retroactiva del embarque 256
 
-En `AvanzarEstadoButton.tsx` (y `useEmbarqueEstadoActions`):
+Como parte de la misma migración, un `DELETE` idempotente que borre los duplicados existentes (mantener el evento más antiguo por embarque + minuto):
 
-- Si `siguienteEstado === 'Arribo'` y el embarque no tiene `fecha_llegada_real`, el botón abre un `AlertDialog` explicativo (mismo patrón que "docs faltantes") en vez del confirm genérico:
-  - Título: "Registra primero la llegada real".
-  - Cuerpo: "Para pasar a Arribo debes capturar la fecha de llegada real desde el tab Tracking."
-  - Acción primaria: **"Ir a Tracking"** (navega a `?tab=tracking`).
-  - Acción secundaria: Cerrar.
-- No se toca el flujo del tab Tracking (`MarcarLlegadaForm` / `TrackingNuevoEventoForm`).
+```sql
+WITH ranked AS (
+  SELECT id,
+         ROW_NUMBER() OVER (
+           PARTITION BY embarque_id, tipo, date_trunc('minute', created_at)
+           ORDER BY created_at ASC
+         ) AS rn
+  FROM public.eventos_embarque
+  WHERE tipo IN ('Cambio de ETA', 'Arribo a Puerto')
+    AND deleted_at IS NULL
+)
+UPDATE public.eventos_embarque
+SET deleted_at = now()
+WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
+```
 
-Clasificación en `clasificarBloqueoAvance` gana un caso nuevo `"block_fecha_llegada"` para dirigir al dialog correcto.
+Se hace soft-delete (`deleted_at`), coherente con el resto de la tabla.
 
-### 3. Manejo del error del RPC
+### 3. Versionado y changelog
 
-En `useEmbarqueEstadoActions` (donde ya se clasifica `documentos_faltantes:`), agregar rama para `fecha_llegada_real_requerida` que dispare `notifyError` con el mensaje amigable (por si alguien llega al RPC sin pasar por la validación de UI — p.ej. carrera).
+- `src/constants/appVersion.ts` → `13.214.7`.
+- `CHANGELOG.md` → nueva entrada `[13.214.7] - 2026-07-08` describiendo el fix del duplicado.
 
-### 4. Corrección de datos de ELIMP00291
+## Detalles técnicos
 
-Un solo comando (fuera de migración, ejecutado bajo aprobación) — **elige uno**:
-
-- **Opción A (más probable)**: Valeria sabe la fecha real → capturarla desde el tab Tracking una vez desplegado el fix. No requiere acción del sistema.
-- **Opción B**: hacer un `UPDATE embarques SET fecha_llegada_real = <fecha> WHERE expediente='ELIMP00291'` con la fecha que confirme Valeria.
-
-Pregunto abajo cuál prefieres.
-
-### 5. Versionado + changelog
-
-- `APP_VERSION` → `13.214.6`.
-- `CHANGELOG.md` → entrada `[13.214.6]` describiendo el candado en RPC y el dialog en el header.
+- No se modifica ningún archivo TS/TSX: la lógica del frontend ya es correcta.
+- El trigger `trg_embarques_freeze_eta_original` (que congela `eta_original`) se conserva — es una responsabilidad distinta.
+- No afecta el módulo de auditoría ni notificaciones: ninguno depende de `log_embarque_eta_change`.
+- RLS y GRANTs no cambian (sólo se elimina un trigger/función).
 
 ## Fuera de alcance
 
-- Backfill masivo (auditar si hay otros embarques con `estado='Arribo' AND fecha_llegada_real IS NULL`): lo puedo listar como diagnóstico separado si lo pides, pero no lo modifico automáticamente.
-- Reglas para otros estados (Entregado, Cerrado ya usan otros candados existentes).
-
-## Pregunta pendiente
-
-Para ELIMP00291 específicamente: ¿quieres que Valeria capture la fecha después del fix (Opción A), o que ejecute un UPDATE con la fecha que ella indique (Opción B)?
+- Cambios de UI en la timeline.
+- Otros triggers de `embarques`.
