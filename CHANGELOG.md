@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.217.0] - 2026-07-08
+- **Bandeja "Embarques sin factura"** (Facturación › `?bandeja=embarques-sin-factura`): se amplía la ventana de aviso. Antes se mostraban solo embarques con **ETA ≤ hoy**; ahora también entran los que están **dentro de los próximos 3 días** (ETA ≤ hoy + 3). Esto da buffer al agente aduanal para preparar el CFDI antes del arribo real.
+- El badge "Días desde ETA" ahora muestra `faltan N d` cuando el ETA es futuro (valores negativos) y `N d` cuando ya venció, para no confundir.
+- Copy del encabezado y del estado vacío actualizados al nuevo criterio.
+- Analogía: antes el semáforo se prendía solo cuando el barco ya había atracado; ahora también se prende cuando está a la vista del puerto (3 días antes), para reaccionar con tiempo.
+
 ## [13.216.2] - 2026-07-08
+
 - **Limpieza**: se eliminan `useCostosConFactura`, `estadoLiquidacionDerivado` y el helper `ToggleGruposButton` — quedaron sin uso tras el rediseño del tab Costos (v13.216.0). No hay cambio funcional.
 
 ## [13.216.1] - 2026-07-08

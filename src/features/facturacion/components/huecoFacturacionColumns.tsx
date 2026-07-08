@@ -81,6 +81,9 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
     meta: { width: "w-[140px]", align: "center" },
     cell: ({ row }) => {
       const d = row.original.diasDesdeEta;
+      // v13.217.0 — Con la ventana ampliada a hoy+3, `d` puede ser negativo
+      // (ETA futura). Mostramos "faltan N d" para no confundir con "hace N d".
+      const label = d < 0 ? `faltan ${Math.abs(d)} d` : `${d} d`;
       const tone = getDiasVencidosTone(d);
       return (
         <Badge
@@ -92,10 +95,11 @@ export const huecoFacturacionColumns: ColumnDef<FilaHueco, unknown>[] = defineCo
             tone === "default" && "bg-muted text-foreground",
           )}
         >
-          {d} días
+          {label}
         </Badge>
       );
     },
+
   },
   {
     id: "venta_usd",

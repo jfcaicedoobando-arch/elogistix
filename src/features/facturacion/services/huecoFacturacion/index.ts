@@ -1,14 +1,17 @@
 /**
  * Orquestador del "Hueco de Facturación".
  *
- * v13.213.4 — Criterio basado en **ETA** (llegada del contenedor):
+ * v13.217.0 — Se amplía la ventana a **ETA ≤ hoy + 3 días** para dar buffer al
+ * agente aduanal (antes: `eta ≤ hoy`). Criterios:
  *   - `eta` capturado (embarques sin ETA se excluyen).
  *   - `eta ≥ 2026-04-01` (corte del modelo nuevo, no revive back-fill).
- *   - `eta ≤ hoy` (el contenedor ya llegó o llega hoy → necesita CFDI para aduana).
+ *   - `eta ≤ hoy + 3 días` (ya vencidos o próximos a arribar → necesita CFDI
+ *     para cruzar aduana con margen).
  *   - Y NO tiene factura con `factura_pdf_url` asociada por expediente.
  *   - Y NO todos sus conceptos de venta están en proformas marcadas como
  *     `facturada` (aceptación histórica del back-fill).
  */
+
 import { fetchEmbarquesParaHueco, fetchVentasYFacturas, type ConceptoVentaDetalle } from "./fetchSources";
 import {
   construirFilaHueco,
@@ -59,9 +62,13 @@ export async function fetchHuecoFacturacion({
   organizationId: string | null;
   hoy?: Date;
 }): Promise<HuecoFacturacionResult> {
-  const hoyIso = hoy.toISOString().slice(0, 10);
+  // v13.217.0 — ampliamos el límite a hoy + 3 días naturales para dar buffer
+  // al agente aduanal antes del arribo real del contenedor.
+  const limite = new Date(hoy.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const limiteEtaIso = limite.toISOString().slice(0, 10);
 
-  const arr = await fetchEmbarquesParaHueco(organizationId, hoyIso);
+  const arr = await fetchEmbarquesParaHueco(organizationId, limiteEtaIso);
+
   if (arr.length === 0) {
     return { filas: [], totalEmbarques: 0, totalUsd: 0, totalMxn: 0 };
   }

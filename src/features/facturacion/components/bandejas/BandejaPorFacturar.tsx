@@ -41,10 +41,11 @@ export function BandejaPorFacturar() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground tabular-nums">{totalEmbarques}</span>{" "}
-          embarque(s) con ETA cumplida sin CFDI ·{" "}
+          embarque(s) sin CFDI (ETA vencida o dentro de 3 días) ·{" "}
           <span className="tabular-nums">{formatCurrency(totalUsd, "USD")}</span> ·{" "}
           <span className="tabular-nums">{formatCurrency(totalMxn, "MXN")}</span>
         </div>
+
         <Button size="sm" variant="outline" onClick={exportarCsv} disabled={filas.length === 0 || isError}>
           <Download className="h-4 w-4 mr-2" /> CSV
         </Button>
@@ -69,7 +70,8 @@ export function BandejaPorFacturar() {
               isLoading={paged.isLoading}
               emptyIcon={PackageCheck}
               emptyMessage="Sin embarques listos por facturar — no hay hueco de facturación."
-              emptyHint="Aparecerán aquí los embarques cuya ETA ya se cumplió y todavía no tienen un CFDI emitido asociado. Criterio: embarque con ETA ≤ hoy y sin factura_id."
+              emptyHint="Aparecerán aquí los embarques con ETA vencida o próxima (hasta 3 días) que todavía no tienen un CFDI emitido asociado. Criterio: ETA ≤ hoy + 3 días y sin factura_id."
+
               rowKey={(row) => row.embarque_id}
               getRowHref={(row) => `/embarques/${row.embarque_id}?tab=facturacion`}
               getRowAriaLabel={(row) => `Abrir embarque ${row.expediente ?? row.embarque_id}`}
