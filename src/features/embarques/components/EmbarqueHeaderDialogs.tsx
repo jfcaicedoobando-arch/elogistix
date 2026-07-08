@@ -105,6 +105,24 @@ export function EmbarqueHeaderDialogs({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={blockFechaLlegadaOpen} onOpenChange={onBlockFechaLlegadaOpenChange}>
+        <AlertDialogContent className={dialogSize.sm}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-destructive" /> Registra primero la llegada real
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Para pasar a <strong>Arribo</strong> debes capturar la fecha de llegada real desde el tab <strong>Tracking</strong> (botón "Marcar Llegada real"). Este dato es obligatorio para calcular puntualidad y demoras.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cerrar</AlertDialogCancel>
+            <AlertDialogAction onClick={onIrATracking}>Ir a Tracking</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
+
