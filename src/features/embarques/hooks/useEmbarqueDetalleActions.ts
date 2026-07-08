@@ -32,7 +32,10 @@ export function useEmbarqueDetalleActions(embarque: EmbarqueRow | undefined, id:
     setWarnDocsOpen: estado.setWarnDocsOpen,
     blockDocsOpen: estado.blockDocsOpen,
     setBlockDocsOpen: estado.setBlockDocsOpen,
+    blockFechaLlegadaOpen: estado.blockFechaLlegadaOpen,
+    setBlockFechaLlegadaOpen: estado.setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes: estado.confirmarAvanceConDocsPendientes,
+
     downloadingDocId: docs.downloadingDocId,
     avanzarEstado: estado.avanzarEstado,
     uploadDoc: docs.uploadDoc,
