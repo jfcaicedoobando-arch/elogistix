@@ -50,7 +50,32 @@ export function useNuevaFacturaProveedorForm(
   const manualTcRef = useRef(false);
 
 
+  // Mutación que consulta el TC DOF vigente para la fecha de emisión.
+  const tcDof = useTcDofPorFecha((r) => {
+    setValues((p) => ({ ...p, tc: String(r.tipoCambio) }));
+    setTcOrigen("dof");
+    setTcFechaAplicada(r.fechaAplicada);
+    if (errors.tc) setErrors((e) => ({ ...e, tc: undefined }));
+  });
+
   const total = useMemo(() => calcularTotal(values), [values]);
+
+  // Auto-fetch del TC DOF cuando hay moneda ≠ MXN + fecha emisión válida.
+  // Se dispara al cambiar moneda o emisión; NO pisa un TC manual ni uno del CFDI.
+  useEffect(() => {
+    if (values.moneda === "MXN") return;
+    if (!isFechaEmisionValida(values.emision)) return;
+    if (tcOrigen === "manual" || tcOrigen === "cfdi") return;
+    const t = setTimeout(() => {
+      tcDof.mutate({
+        moneda: values.moneda as MonedaTc,
+        fecha: values.emision,
+        silent: true,
+      });
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.moneda, values.emision]);
 
   const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {
     setValues((prev) => {
@@ -60,8 +85,31 @@ export function useNuevaFacturaProveedorForm(
       }
       return next;
     });
+    if (k === "tc") {
+      manualTcRef.current = true;
+      setTcOrigen(v ? "manual" : "vacio");
+      setTcFechaAplicada(undefined);
+    }
+    if (k === "moneda") {
+      // Al cambiar moneda reseteamos el origen para permitir auto-fetch nuevo.
+      manualTcRef.current = false;
+      setTcOrigen(v === "MXN" ? "vacio" : "vacio");
+      setTcFechaAplicada(undefined);
+    }
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
   };
+
+  const obtenerDofManual = () => {
+    if (values.moneda === "MXN") return;
+    if (!isFechaEmisionValida(values.emision)) return;
+    manualTcRef.current = false; // botón manual gana sobre "manual" previo
+    tcDof.mutate({
+      moneda: values.moneda as MonedaTc,
+      fecha: values.emision,
+      silent: false,
+    });
+  };
+
 
   const handleProveedor = (id: string, nombre: string) => {
     setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
