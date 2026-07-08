@@ -157,10 +157,7 @@ export function TabTracking({ embarqueId, embarque }: Props) {
           etaActual={embarque?.eta}
           fechaLlegadaRealActual={embarque?.fecha_llegada_real}
           destinoDefault={
-            (embarque as { puerto_destino?: string | null; aeropuerto_destino?: string | null; ciudad_destino?: string | null } | null)?.puerto_destino
-            ?? (embarque as { aeropuerto_destino?: string | null } | null)?.aeropuerto_destino
-            ?? (embarque as { ciudad_destino?: string | null } | null)?.ciudad_destino
-            ?? ""
+            embarque?.puerto_destino ?? embarque?.aeropuerto_destino ?? embarque?.ciudad_destino ?? ""
           }
           onClose={() => setFormAbierto(false)}
         />
