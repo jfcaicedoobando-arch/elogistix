@@ -1,57 +1,38 @@
 
-# Mejorar Tab Costos del embarque
+# Adelgazar tab Conciliación (evitar solape con Costos)
 
 ## Objetivo
-Enfocar el tab **Costos** en el análisis de costos reales vs cotizados, eliminando duplicidad con el tab Facturación y exponiendo la información de la factura de proveedor con la que cada concepto fue conciliado.
+El nuevo tab **Costos** ya cubre cotizado-vs-facturado por concepto. El tab **Conciliación** conserva únicamente lo que no vive en Costos: la comparación tripartita con la tarifa vigente y el rastro de decisión de tarifa.
 
 ## Cambios
 
-### 1. Quitar la carta "Conceptos de Venta"
-- En `src/features/embarques/components/TabCostos.tsx` eliminar:
-  - La sección `<Card>` de Conceptos de Venta (líneas ~123-143).
-  - Definición de `ventaColumns` y el prop `conceptosVenta` (queda sólo `totalVenta` para el KPI).
-- Actualizar `EmbarqueDetalleTabs.tsx` para dejar de pasar `conceptosVenta` al `TabCostos` (esa data queda únicamente en Facturación).
-- Los 4 KPIs (Total Venta / Total Costo / Utilidad / Margen) se conservan intactos.
+### `src/features/embarques/components/TabConciliacion.tsx`
+Quitar:
+- La **tabla "Cotizado vs Real por concepto (facturas proveedor)"** completa (líneas 139-158) — duplica lo que ya muestra la tabla agrupada por proveedor en el tab Costos.
+- La grilla de **4 KPIs** de Total Cotizado / Total Real / Desviación / Sin factura (líneas 95-108 y 128-137) — los totales ya viven en Costos y los KPIs macro en el header del embarque.
+- Los helpers `colorDesviacion` y `fmtPct` si dejan de usarse tras la limpieza; se conservan sólo si `ReconciliacionTresColumnas` los reutiliza (a verificar al editar).
+- El import de `DataTable`, `defineColumns`, `useMemo`, `formatCurrency`, `toTitleCase`, `Scale`, `EmptyState`, `calcularResumen`, `FilaReconciliacion` que ya no se usen (limpieza de imports).
 
-### 2. Mostrar información de la factura de proveedor por concepto
-Actualmente `TabCostos` ya usa `useCostosConFactura` sólo para saber si existe factura (Set de ids). Se sustituye por el pipeline de reconciliación que ya devuelve facturas ligadas por concepto.
+Conservar / reordenar (queda así el tab):
+1. Banner **"Decisión aplicada"** (tarifa: sin_cambios / mantenida / refrescada / sustituida / re-aprobada por ventas) — sin cambios en su contenido.
+2. Carta **Reconciliación 3 columnas (Cotizado · Refrescado · Real)** con el componente `ReconciliacionTresColumnas` — sin cambios.
+3. Se agrega una línea de ayuda al final: "El detalle por proveedor y facturas ligadas está en la pestaña **Costos**." con enlace que cambia `activeTab` a `costos` (o simple hint textual si el componente no recibe el setter — en ese caso se deja sólo el texto). Nota: como `TabConciliacion` sólo recibe `embarqueId`, se implementa como texto plano sin navegación programática para no alterar contratos.
 
-- Nuevo hook `useReconciliacionCostos(embarqueId)` (o reutilizar `fetchReconciliacionCostos` existente en `reconciliacionCostos.ts`) que devuelve `FilaReconciliacion[]` con:
-  - `facturas: FacturaVinculada[]` (folio_proveedor, fecha_emision, monto, proveedor_factura_id).
-  - `real_facturado`, `diferencia`, `desviacion_pct`, `estatus_renglon`.
-- Extender la consulta para traer también `estatus_pago` de `proveedor_facturas` (Pagada / Pendiente / Vencida) — se agrega al tipo `FacturaVinculada` y a `PFCRow.proveedor_facturas`.
-- Nuevas columnas en la tabla de costos (después de Monto):
-  - **Facturado**: monto real (rojo/verde tenue según desviación).
-  - **Δ vs cotizado**: diferencia y % (badge de estatus_renglon: Sin match / Parcial / Conciliado / Excedente).
-  - **Factura(s)**: chips con `Folio · dd/MM/yyyy`, con tooltip mostrando monto y estado de pago. Click abre la factura de proveedor en el módulo Compras (`/compras/facturas/:id`). Si hay varias, se muestran apiladas.
-  - **Pago**: badge Pagada / Pendiente / Vencida (usa `estatus_pago`; si hay varias facturas, muestra el peor estado).
-- La columna existente "Liquidación" pasa a derivarse del `estatus_renglon` para ser consistente (Sin match ≙ Pendiente).
+### Sin cambios en:
+- `EmbarqueDetalleTabs.tsx` — el tab sigue existiendo con el mismo id `conciliacion`.
+- Hook `useReconciliacionEmbarque` — sigue usado por el tab Costos y por `ReconciliacionTresColumnas` internamente.
+- Módulo global de Conciliación en Compras (`/compras/conciliacion`) — fuera de alcance.
 
-### 3. Agrupar costos por proveedor
-- Reemplazar la `DataTable` plana dentro de `ConceptosCostoCard` por una lista de sub-tablas, una por proveedor, ordenadas alfabéticamente.
-- Cada grupo:
-  - Encabezado sticky con nombre del proveedor + contador de conceptos + **subtotal por moneda** (cotizado / facturado / diferencia).
-  - Tabla compacta con las columnas descritas arriba.
-  - Collapsible (abierto por defecto). Estado persistido sólo en memoria.
-- Al final de la carta, fila de **totales por moneda** (MXN, USD por separado) con cotizado, facturado y diferencia.
-
-### 4. Versionado + changelog
-- Bump `APP_VERSION` → `13.216.0` (feature menor).
-- Entrada en `CHANGELOG.md` describiendo los tres cambios.
+### Versionado + changelog
+- Bump `APP_VERSION` → `13.216.1` (patch, sólo poda visual).
+- Entrada en `CHANGELOG.md` explicando la simplificación y por qué (evitar duplicidad con el tab Costos).
 
 ## Fuera de alcance
-- Tab Facturación: no se toca.
-- Módulo de Compras: no cambia; sólo se linkea desde los chips.
-- Lógica de reconciliación masiva ya implementada: se reutiliza tal cual.
+- No se elimina el tab ni se renombra.
+- No se toca la lógica de `ReconciliacionTresColumnas`.
+- No se cambian los KPIs superiores del detalle de embarque.
 
-## Detalles técnicos
-- Archivos principales a editar:
-  - `src/features/embarques/components/TabCostos.tsx`
-  - `src/features/embarques/components/costos/ConceptosCostoCard.tsx`
-  - `src/features/embarques/components/EmbarqueDetalleTabs.tsx` (props)
-  - `src/features/embarques/services/reconciliacionCostos.helpers.ts` (agregar `estatus_pago` a `FacturaVinculada` + `PFCRow`)
-  - `src/features/embarques/services/reconciliacionCostos.ts` (select con `estatus_pago`)
-  - `src/features/embarques/hooks/` (nuevo `useReconciliacionCostos.ts`)
-  - `src/constants/appVersion.ts`, `CHANGELOG.md`
-- Se respeta ≤200 líneas por componente extrayendo `GrupoCostosProveedor.tsx` para cada grupo.
-- Tests: añadir un test unitario al helper de agrupación por proveedor + moneda (subtotales) y ampliar el fixture del helper existente para cubrir `estatus_pago`.
+## Verificación
+- `bunx tsgo --noEmit` limpio.
+- Tests existentes de `reconciliacionCostos.*` siguen pasando (no dependen del componente).
+- Chequeo visual en `/embarques/:id?tab=conciliacion`: el tab queda con banner + carta 3 columnas + hint.
