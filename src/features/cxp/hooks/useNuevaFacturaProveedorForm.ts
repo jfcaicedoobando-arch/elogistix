@@ -161,7 +161,11 @@ export function useNuevaFacturaProveedorForm(
     setAskCrearProv(null);
     setVinculos({});
     setEmbarqueAdHoc(initialEmbarqueAdHoc ?? null);
+    setTcOrigen("vacio");
+    setTcFechaAplicada(undefined);
+    manualTcRef.current = false;
   };
+
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
     const c = data.cfdi;
