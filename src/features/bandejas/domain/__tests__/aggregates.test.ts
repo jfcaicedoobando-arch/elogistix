@@ -44,13 +44,18 @@ describe("bandejas/domain/aggregates", () => {
     expect(variantDiasParaVencer(8)).toBe("outline");
   });
 
-  it("resumirCxpPorCapturar suma presupuesto y facturas", () => {
+  it("resumirCxpPorCapturar separa presupuesto por moneda", () => {
     const r = resumirCxpPorCapturar([
       // @ts-expect-error fixture parcial
-      { costos_presupuestados: 1000, facturas_capturadas: 2 },
+      { presupuestado_mxn: 1000, presupuestado_usd: 0, facturas_capturadas: 2 },
       // @ts-expect-error fixture parcial
-      { costos_presupuestados: "500", facturas_capturadas: 0 },
+      { presupuestado_mxn: "500", presupuestado_usd: 200, facturas_capturadas: 0 },
     ]);
-    expect(r).toEqual({ total: 2, totalPresupuestado: 1500, facturasCapturadas: 2 });
+    expect(r).toEqual({
+      total: 2,
+      totalPresupuestadoMxn: 1500,
+      totalPresupuestadoUsd: 200,
+      facturasCapturadas: 2,
+    });
   });
 });
