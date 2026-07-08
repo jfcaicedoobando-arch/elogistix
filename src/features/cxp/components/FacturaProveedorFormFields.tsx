@@ -114,16 +114,36 @@ export function FacturaProveedorFormFields({
           </div>
           {showTc && (
             <div className="space-y-1">
-              <Label>Tipo de cambio a MXN<RequiredMark /></Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>Tipo de cambio a MXN<RequiredMark /></Label>
+                {onObtenerDof && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-2xs"
+                    onClick={onObtenerDof}
+                    disabled={dofLoading}
+                    title="Consulta la Publicación DOF Banxico vigente en la fecha de emisión."
+                  >
+                    {dofLoading
+                      ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      : <RefreshCw className="h-3 w-3 mr-1" />}
+                    Obtener DOF
+                  </Button>
+                )}
+              </div>
               <NumericInput
                 value={toNum(values.tc)}
                 onChange={(n) => onChange("tc", fromNum(n))}
                 decimals
                 aria-label="Tipo de cambio a MXN"
               />
+              <TcOrigenHint origen={tcOrigen} fechaAplicada={tcFechaAplicada} />
               <FieldError msg={errors.tc} />
             </div>
           )}
+
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
