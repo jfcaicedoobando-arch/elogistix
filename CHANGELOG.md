@@ -5,6 +5,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.7] - 2026-07-08
+- **Fix: la línea de tiempo de tracking registraba dos veces cada actualización de ETA** (caso reportado: embarque ELIMP00256). Al actualizar el ETA, el frontend insertaba un evento `Cambio de ETA` con contexto rico (usuario real, fuente/motivo) y, en paralelo, un trigger de BD (`log_embarque_eta_change`) insertaba otro evento genérico. El guard de deduplicación del trigger corría antes del insert del frontend, por lo que nunca lo detectaba. Mismo defecto afectaba a `Arribo a Puerto` al marcar la llegada real.
+- **Cambio**: se elimina el trigger `trg_embarques_log_eta_change` y su función `log_embarque_eta_change`. El frontend queda como única vía de registro (más rica en contexto). Se marcan como eliminados los eventos duplicados existentes en embarques abiertos, conservando el original.
+- Analogía: antes al firmar la bitácora, un asistente también firmaba automáticamente "por si acaso" y quedaban dos firmas iguales. Ahora sólo firma quien captura el evento.
+
 ## [13.214.6] - 2026-07-08
 - **Fix: se podía avanzar a "Arribo" sin registrar la fecha de llegada real**: el botón "Avanzar a Arribo" del header del embarque llamaba a la RPC `avanzar_estado_embarque`, que sólo validaba documentos faltantes y no exigía `fecha_llegada_real`. Caso reportado: ELIMP00291 quedó en `Arribo` con `fecha_llegada_real=NULL`, rompiendo KPIs de puntualidad y demoras.
 - **Candado en el servidor**: la RPC `avanzar_estado_embarque` ahora rechaza cualquier avance a `Arribo` si `fecha_llegada_real` está vacía (error `fecha_llegada_real_requerida`). Aplica a cualquier camino (UI, scripts, integraciones), no sólo al botón del header.
