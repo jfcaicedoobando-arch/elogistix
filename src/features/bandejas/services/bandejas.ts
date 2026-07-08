@@ -4,8 +4,10 @@ export interface CxpPorCapturarRow {
   embarque_id: string;
   expediente: string | null;
   cliente_nombre: string | null;
-  costos_presupuestados: number;
-  monto_facturado: number;
+  presupuestado_mxn: number;
+  presupuestado_usd: number;
+  facturado_mxn: number;
+  facturado_usd: number;
   facturas_capturadas: number;
   ultima_factura_fecha: string | null;
   dias_desde_ultima_factura: number | null;
