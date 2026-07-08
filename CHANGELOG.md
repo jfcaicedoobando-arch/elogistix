@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.216.2] - 2026-07-08
+- **Limpieza**: se eliminan `useCostosConFactura`, `estadoLiquidacionDerivado` y el helper `ToggleGruposButton` — quedaron sin uso tras el rediseño del tab Costos (v13.216.0). No hay cambio funcional.
+
 ## [13.216.1] - 2026-07-08
 - **Embarque › Tab Conciliación** adelgazado: se retira la tabla "Cotizado vs Real por concepto" y los 4 KPIs (Total Cotizado, Total Real, Desviación, Sin factura) porque ese detalle ahora vive en el tab Costos agrupado por proveedor. El tab conserva sólo lo único que aporta: el banner de **Decisión aplicada** sobre la tarifa y la carta **Reconciliación 3 columnas** (Cotizado · Refrescado · Real).
 - Se agrega un hint al pie enlazando conceptualmente al tab Costos para el detalle por proveedor.

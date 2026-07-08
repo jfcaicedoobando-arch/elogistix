@@ -5,7 +5,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { format } from "date-fns";
@@ -212,14 +212,5 @@ export function GrupoCostosProveedor({
         </div>
       )}
     </div>
-  );
-}
-
-/** Pequeño botón para expandir/colapsar todos los grupos de una carta. */
-export function ToggleGruposButton({ allOpen, onToggle }: { allOpen: boolean; onToggle: () => void }) {
-  return (
-    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onToggle}>
-      {allOpen ? "Colapsar todo" : "Expandir todo"}
-    </Button>
   );
 }
