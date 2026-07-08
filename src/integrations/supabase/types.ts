@@ -7470,12 +7470,14 @@ export type Database = {
         Args: never
         Returns: {
           cliente_nombre: string
-          costos_presupuestados: number
           dias_desde_ultima_factura: number
           embarque_id: string
           expediente: string
+          facturado_mxn: number
+          facturado_usd: number
           facturas_capturadas: number
-          monto_facturado: number
+          presupuestado_mxn: number
+          presupuestado_usd: number
           ultima_factura_fecha: string
         }[]
       }
