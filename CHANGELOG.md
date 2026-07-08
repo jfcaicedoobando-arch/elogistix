@@ -5,6 +5,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.4] - 2026-07-08
+- **Fix: widget "Sin tracking reciente" incluía embarques ya arribados**: el widget del dashboard del operador consideraba embarques en estado `Arribo` y `En Aduana`, así que un embarque como ELIMP00223 (ya llegado al puerto destino) aparecía con "26D de retraso" aunque su ETA ya no es relevante. Ahora el widget filtra únicamente embarques `En Tránsito`, que son los que sí requieren actualización de tracking.
+- Analogía: es como quitar del pizarrón de "pendientes por llamar" a los clientes que ya llegaron a la oficina — una vez que están adentro, ya no tiene sentido perseguirlos.
+
 ## [13.214.3] - 2026-07-08
 - **Fix: dashboard mostraba "26D de retraso" tras actualizar ETA**: el widget "Sin tracking reciente" (dashboard del operador) cuenta días desde el último registro en `eventos_embarque`. Antes, actualizar el ETA desde el wizard de edición u otras rutas no dejaba huella en esa bitácora, así que el widget se quedaba con el conteo viejo (caso reportado: ELIMP00263 con 26d aunque Valeria ya había movido el ETA de 06-jul a 13-jul).
 - **Nuevo trigger `trg_embarques_log_eta_change`**: cualquier cambio de `eta` o `fecha_llegada_real` en `embarques` genera automáticamente un evento en la bitácora ("Cambio de ETA" o "Arribo a Puerto"). El trigger evita duplicar cuando el tab Tracking ya inserta el evento (ventana anti-dedupe de 30 s).
