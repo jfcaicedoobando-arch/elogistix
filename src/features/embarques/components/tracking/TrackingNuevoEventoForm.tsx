@@ -27,6 +27,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { formatDate } from "@/lib/formatters";
 import { ActualizarEtaForm } from "./ActualizarEtaForm";
 import { MarcarLlegadaForm } from "./MarcarLlegadaForm";
+import { supabase } from "@/integrations/supabase/client";
 
 type Modo = "menu" | "eta" | "llegada";
 
@@ -139,6 +140,20 @@ export function TrackingNuevoEventoForm({
       onCancel={() => setModo("menu")}
       onSubmit={async ({ fecha, ubicacion }) => {
         try {
+          const { count, error: docsErr } = await supabase
+            .from("documentos_embarque")
+            .select("id", { count: "exact", head: true })
+            .eq("embarque_id", embarqueId)
+            .eq("estado", "Pendiente")
+            .is("deleted_at", null);
+          if (docsErr) throw docsErr;
+          if ((count ?? 0) > 0) {
+            notifyError(toast, {
+              title: "Documentos incompletos",
+              description: `Hay ${count} documento(s) pendiente(s). Súbelos antes de marcar la llegada real.`,
+            });
+            return;
+          }
           const fechaIso = new Date(`${fecha}T00:00:00`).toISOString();
           await actualizarFechaLlegada.mutateAsync({ embarqueId, fechaIso });
           await crearEvento.mutateAsync({

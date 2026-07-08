@@ -5,6 +5,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.5] - 2026-07-08
+- **Precondición para "Marcar Llegada real"**: ahora, para avanzar un embarque de `En Tránsito` a `Arribo` se validan dos cosas: (1) que los documentos requeridos estén completos y (2) que se capture la fecha de llegada real. Si al enviar el formulario aún existen documentos en estado `Pendiente`, se muestra un toast avisando cuántos faltan y no se actualiza el embarque — el operador debe subirlos y reintentar.
+- Analogía: es como firmar la aduana antes de bajar del avión — si faltan sellos en el pasaporte (documentos), el sistema no te deja anunciar que ya llegaste.
+
 ## [13.214.4] - 2026-07-08
 - **Fix: widget "Sin tracking reciente" incluía embarques ya arribados**: el widget del dashboard del operador consideraba embarques en estado `Arribo` y `En Aduana`, así que un embarque como ELIMP00223 (ya llegado al puerto destino) aparecía con "26D de retraso" aunque su ETA ya no es relevante. Ahora el widget filtra únicamente embarques `En Tránsito`, que son los que sí requieren actualización de tracking.
 - Analogía: es como quitar del pizarrón de "pendientes por llamar" a los clientes que ya llegaron a la oficina — una vez que están adentro, ya no tiene sentido perseguirlos.
