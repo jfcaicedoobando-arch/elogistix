@@ -72,7 +72,7 @@ export function useEmbarquesPageController() {
       // Filtro de estado se calcula client-side (no es columna directa de DB).
       const filtradosPorEstado = state.filterEstado === "todos"
         ? todos
-        : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === state.filterEstado);
+        : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real) === state.filterEstado);
 
       // Filtro de alerta también es client-side (se resuelve contra un set de IDs).
       const filtradosFinal = state.filterAlerta === "todos" || !state.alertIdSet
