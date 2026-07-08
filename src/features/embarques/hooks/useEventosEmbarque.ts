@@ -49,15 +49,22 @@ interface CreateEventoInput {
   usuario: string;
 }
 
-export function useCreateEventoEmbarque() {
+interface CreateEventoOptions {
+  /** Si es true, no dispara toasts internos (éxito ni error). El caller es responsable de notificar. */
+  silent?: boolean;
+}
+
+export function useCreateEventoEmbarque(options: CreateEventoOptions = {}) {
+  const { silent = false } = options;
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateEventoInput) => insertEventoEmbarque(input),
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
-      notifySuccess(undefined, { title: "Evento agregado" });
+      if (!silent) notifySuccess(undefined, { title: "Evento agregado" });
     },
     onError: (error: Error) => {
+      if (silent) return;
       notifyError(undefined, { title: `Error al agregar evento: ${error.message}`, error, method: "CREATE_EVENTO_EMBARQUE" });
     },
   });

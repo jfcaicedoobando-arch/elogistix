@@ -13,7 +13,13 @@ interface Input {
   nuevaEta: string;
 }
 
-export function useActualizarEta() {
+interface Options {
+  /** Si es true, no dispara toasts internos (éxito ni error). El caller es responsable de notificar. */
+  silent?: boolean;
+}
+
+export function useActualizarEta(options: Options = {}) {
+  const { silent = false } = options;
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ embarqueId, nuevaEta }: Input) =>
@@ -22,9 +28,10 @@ export function useActualizarEta() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
-      notifySuccess(undefined, { title: "ETA actualizada" });
+      if (!silent) notifySuccess(undefined, { title: "ETA actualizada" });
     },
     onError: (error: Error) => {
+      if (silent) return;
       notifyError(undefined, {
         title: `Error al actualizar ETA: ${error.message}`,
         error,
