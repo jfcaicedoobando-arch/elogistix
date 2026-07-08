@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.218.0] - 2026-07-08
+- **Auditoría CxP · Reconciliación de renglones de factura de proveedor huérfanos**: la bandeja "Por capturar" contaba facturas por `proveedor_facturas.embarque_id` (link directo al embarque) mientras que el Detalle de costos del embarque hace JOIN por `proveedor_facturas_conceptos.concepto_costo_id`. En 4 embarques auditados (ELIMP00149, 00189, 00193, 00203) las facturas FP-000023/026/027/029 mostraban 0 renglones válidos porque el editor de embarques hacía `delete + insert` de `conceptos_costo` con IDs nuevos, dejando referencias colgantes en `proveedor_facturas_conceptos`.
+- **Reconciliación (migración)**: se re-ligan los renglones huérfanos buscando pareja determinística en el mismo embarque (proveedor + concepto + monto redondeado). Resultado: **31 renglones rehidratados**, 0 huérfanos globales. Se corre con `session_replication_role = replica` para poder tocar embarques cerrados durante el mantenimiento.
+- **Prevención estructural**: nueva FK `proveedor_facturas_conceptos.concepto_costo_id → conceptos_costo(id) ON DELETE SET NULL`. Si en el futuro se vuelve a borrar un concepto de costo, el renglón de factura queda automáticamente `NULL` (visible como "sin ligar") en vez de convertirse en referencia colgante que engaña a los reportes. Se agrega índice `idx_pfc_concepto_costo_id`.
+- **Auditoría continua**: nueva RPC `auditoria_pfc_huerfanos()` que lista los renglones con `concepto_costo_id` colgante, por si vuelve a pasar.
+- **Fix RPC `eliminar_factura_borrador`**: se mantiene el fix de 13.217.1 (cast `uuid` en `array_agg`).
+- Analogía: cada concepto de costo es una casilla numerada en una repisa; cada renglón de factura tiene una etiqueta "va en la casilla #X". Al editar el embarque se tiraban todas las casillas y se ponían nuevas con otra numeración, pero las etiquetas seguían apuntando a los números viejos. La migración vuelve a pegar cada etiqueta en la casilla correcta según el contenido, y a partir de ahora las etiquetas se despegan solas si vuelven a tirar las casillas.
+
 ## [13.217.1] - 2026-07-08
 - **Fix**: eliminar borradores de factura consolidada fallaba con `COALESCE could not convert type uuid[] to text[]` (código 42846). La RPC `eliminar_factura_borrador` leía los `proforma_ids` de la bitácora como `text` y los mezclaba con un array `uuid[]`. Se corrige casteando a `uuid` antes del `array_agg`.
 - Analogía: la caja decía "solo cajones de UUID" pero el operador metía sobres de texto. Ahora los sobres se traducen a UUID antes de guardarse.
