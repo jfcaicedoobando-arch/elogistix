@@ -6,7 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.217.1] - 2026-07-08
+- **Fix**: eliminar borradores de factura consolidada fallaba con `COALESCE could not convert type uuid[] to text[]` (código 42846). La RPC `eliminar_factura_borrador` leía los `proforma_ids` de la bitácora como `text` y los mezclaba con un array `uuid[]`. Se corrige casteando a `uuid` antes del `array_agg`.
+- Analogía: la caja decía "solo cajones de UUID" pero el operador metía sobres de texto. Ahora los sobres se traducen a UUID antes de guardarse.
+
 ## [13.217.0] - 2026-07-08
+
 - **Bandeja "Embarques sin factura"** (Facturación › `?bandeja=embarques-sin-factura`): se amplía la ventana de aviso. Antes se mostraban solo embarques con **ETA ≤ hoy**; ahora también entran los que están **dentro de los próximos 3 días** (ETA ≤ hoy + 3). Esto da buffer al agente aduanal para preparar el CFDI antes del arribo real.
 - El badge "Días desde ETA" ahora muestra `faltan N d` cuando el ETA es futuro (valores negativos) y `N d` cuando ya venció, para no confundir.
 - Copy del encabezado y del estado vacío actualizados al nuevo criterio.
