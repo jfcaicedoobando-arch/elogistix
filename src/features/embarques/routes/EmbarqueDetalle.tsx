@@ -69,7 +69,7 @@ export default function EmbarqueDetalle() {
   if (isLoading) return <LoadingState />;
   if (!embarque) return <NotFoundState onBack={() => navigate("/embarques")} />;
 
-  const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
+  const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real);
   const siguienteEstado = getSiguienteEstado(estadoVisual);
   const uploadingDocId = uploadDoc.isPending ? (uploadDoc.variables?.docId ?? null) : null;
   const deletingDocId = deleteDoc.isPending ? (deleteDoc.variables?.docId ?? null) : null;
