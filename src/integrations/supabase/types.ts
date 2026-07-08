@@ -6002,6 +6002,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "proveedor_facturas_conceptos_concepto_costo_id_fkey"
+            columns: ["concepto_costo_id"]
+            isOneToOne: false
+            referencedRelation: "conceptos_costo"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proveedor_facturas_conceptos_proveedor_factura_id_fkey"
             columns: ["proveedor_factura_id"]
             isOneToOne: false
@@ -7019,6 +7026,20 @@ export type Database = {
       auditoria_embarques_org:
         | { Args: never; Returns: Json }
         | { Args: { p_organization_id: string }; Returns: Json }
+      auditoria_pfc_huerfanos: {
+        Args: never
+        Returns: {
+          concepto_costo_id_huerfano: string
+          descripcion: string
+          embarque_id: string
+          expediente: string
+          folio_interno: string
+          monto: number
+          organization_id: string
+          pfc_id: string
+          proveedor_factura_id: string
+        }[]
+      }
       avanzar_estado_embarque: {
         Args: {
           p_descripcion_evento: string
