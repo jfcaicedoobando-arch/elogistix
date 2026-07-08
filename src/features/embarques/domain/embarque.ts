@@ -8,6 +8,7 @@
 // Cálculo del estado visual de un embarque
 // ============================================================
 
+// eslint-disable-next-line max-params -- Firma consumida por >15 callers; refactor a options object es un cambio invasivo separado.
 export function calcularEstadoEmbarque(
   modo: string,
   tipo: string,
