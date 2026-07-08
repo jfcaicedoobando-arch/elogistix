@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.218.3] - 2026-07-08
+- **Fix UX · Doble toast al registrar pago a proveedor**: mismo patrón que 13.218.2 pero en pagos. `useRegistrarPagoProveedor.onSuccess` emitía "Pago a proveedor registrado" y `DialogRegistrarPagoProveedor.submit` emitía "Pago registrado". Además, en errores, la mutation y el `catch` del diálogo emitían dos toasts rojos con el mismo mensaje. Se quitan ambas notificaciones del hook `useRegistrarPagoProveedor` y se conserva la del diálogo (única vía UI actual). La invalidación de queries se mantiene.
+- El hook `useEliminarPagoProveedor` no se toca: es la única vía y no hay toast a nivel diálogo, así que su notificación sigue siendo correcta.
+
 ## [13.218.2] - 2026-07-08
 - **Fix UX · Doble toast al capturar factura de proveedor**: al registrar una factura Karol veía dos toasts de éxito ("Factura de proveedor creada" + "Factura de proveedor capturada"). El primero lo emitía `useCrearFacturaProveedor.onSuccess` apenas se insertaba la fila, y el segundo `useNuevaFacturaProveedorForm.submit` al terminar el flujo completo (insert + subida XML/PDF + vínculo a embarque). Se elimina el toast de la mutation y se conserva el del formulario, que es el que confirma que **todo** el flujo terminó bien. La invalidación de queries y el toast de error de la mutation se mantienen intactos.
 - Analogía: el cajero decía "recibí tu depósito" al meter el dinero al cajón y luego el sistema decía "depósito completado" al imprimir el comprobante. Solo se conserva el segundo aviso, que es el que realmente confirma que ya terminó todo.
