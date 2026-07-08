@@ -77,7 +77,10 @@ export function aplicarFiltros(
       case "expediente":
         return ((a.expediente ?? "") > (b.expediente ?? "") ? 1 : -1) * dir;
       case "monto":
-        return ((Number(a.costos_presupuestados) || 0) - (Number(b.costos_presupuestados) || 0)) * dir;
+        // Suma ambas monedas como proxy para ordenamiento (no para display).
+        const totalA = (Number(a.presupuestado_mxn) || 0) + (Number(a.presupuestado_usd) || 0);
+        const totalB = (Number(b.presupuestado_mxn) || 0) + (Number(b.presupuestado_usd) || 0);
+        return (totalA - totalB) * dir;
       case "facturas":
         return (a.facturas_capturadas - b.facturas_capturadas) * dir;
       case "antiguedad":
