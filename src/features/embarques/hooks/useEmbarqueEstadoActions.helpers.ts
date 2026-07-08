@@ -19,15 +19,22 @@ export function resolveCierreGate(
 }
 
 /** Clasifica el siguiente paso al intentar avanzar. Función pura. */
-export type BloqueoAvance = "block_docs" | "warn_docs" | "gate_cierre" | "ok";
+export type BloqueoAvance =
+  | "block_docs"
+  | "warn_docs"
+  | "gate_cierre"
+  | "block_fecha_llegada"
+  | "ok";
 export function clasificarBloqueoAvance(params: {
   docsBloqueantes: boolean;
   docsFaltantesCount: number;
   siguiente: string;
   bloqueoCierreMotivo: "rol" | "checklist" | null;
+  fechaLlegadaReal: string | null;
 }): BloqueoAvance {
-  const { docsBloqueantes, docsFaltantesCount, siguiente, bloqueoCierreMotivo } = params;
+  const { docsBloqueantes, docsFaltantesCount, siguiente, bloqueoCierreMotivo, fechaLlegadaReal } = params;
   if (docsBloqueantes && docsFaltantesCount > 0) return "block_docs";
+  if (siguiente === "Arribo" && !fechaLlegadaReal) return "block_fecha_llegada";
   if (!docsBloqueantes && docsFaltantesCount > 0) return "warn_docs";
   if (siguiente === "Cerrado" && bloqueoCierreMotivo !== null) return "gate_cierre";
   return "ok";
