@@ -48,6 +48,7 @@ export async function fetchEmbarquesParaHueco(
     .not("eta", "is", null)
     .gte("eta", "2026-04-01")
     .lte("eta", hoyIso)
+    .eq("facturado_historico", false)
     .order("eta", { ascending: true });
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
