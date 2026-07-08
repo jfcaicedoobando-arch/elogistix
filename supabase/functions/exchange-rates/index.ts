@@ -100,9 +100,9 @@ export function rangoUltimosDias(hoy: Date, dias: number = RANGO_DIAS): { inicio
 // Caché: para "hoy" usamos TTL corto (12h). Para fechas históricas la respuesta
 // es inmutable (el DOF de 15/06/2025 no cambia nunca), así que TTL largo.
 const CACHE_TTL_HISTORICO_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
-const cacheHoy: { rates: { usdMxn: number; eurMxn: number }; expiresAt: number } | null = null;
-let cacheHoyRef: typeof cacheHoy = cacheHoy;
+let cacheHoyRef: { rates: { usdMxn: number; eurMxn: number; fechaAplicada?: string }; expiresAt: number } | null = null;
 const cacheHistorico = new Map<string, { rates: { usdMxn: number; eurMxn: number; fechaAplicada?: string }; expiresAt: number }>();
+
 
 /**
  * Fetch USD DOF por fecha objetivo (default = hoy). Consulta un rango de 10
