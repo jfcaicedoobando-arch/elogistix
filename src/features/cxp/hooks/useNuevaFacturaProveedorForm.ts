@@ -6,10 +6,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import {
   type CfdiParsedResponse, type ConceptoCostoAbierto,
-  existeFacturaDuplicada, validarCuadreCfdi,
+  existeFacturaDuplicada,
 } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
@@ -20,8 +19,9 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { uploadCfdiSafe, vincularSafe, buildFacturaSuccessDescription } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
   type PendingCfdi, type VinculoLinea,
-  addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
+  addDays, initialValues, calcularTotal, validateFactura, buildPayload,
 } from "./useNuevaFacturaProveedorForm.helpers";
+import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
 
