@@ -5,6 +5,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.2] - 2026-07-08
+- **Split de `mutations.ts` (Power-of-10 200 líneas)**: se extraen las cuatro mutaciones directas (`actualizarEstadoEmbarque`, `actualizarFechaLlegadaRealEmbarque`, `actualizarEtaEmbarque`, `insertarNotaEmbarque`) a `services/embarqueDirectMutations.ts`. `mutations.ts` queda en 154 líneas y sigue re-exportando las funciones, así ningún import externo cambia. Restablece los baselines de `architecture-baseline` y `audit-report`.
+
 ## [13.214.1] - 2026-07-08
 - **Fix: toasts duplicados en Tracking**: al actualizar el ETA o marcar la llegada real, antes salían 3 toasts apilados (uno de cada mutation interna + el final del formulario). Los hooks `useActualizarEta`, `useActualizarFechaLlegadaReal` y `useCreateEventoEmbarque` ahora aceptan `{ silent: true }` para silenciar sus toasts internos; `TrackingNuevoEventoForm` los usa con ese flag y deja **un solo toast** por acción ("ETA actualizada" o "Llegada real registrada"). Otros consumidores de esos hooks no cambian.
 - Analogía: antes cada eslabón de la cadena tocaba su propio timbre; ahora solo suena el timbre de la puerta principal.
