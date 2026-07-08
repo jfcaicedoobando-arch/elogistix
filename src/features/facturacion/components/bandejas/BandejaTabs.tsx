@@ -111,7 +111,13 @@ export function BandejaTabs() {
                               <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
                             </span>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-[240px] text-xs">{d.hint}</TooltipContent>
+                          <TooltipContent
+                            side="bottom"
+                            collisionPadding={12}
+                            className="max-w-sm text-xs leading-relaxed whitespace-normal"
+                          >
+                            {d.hint}
+                          </TooltipContent>
                         </Tooltip>
                       </span>
                     </TabsTrigger>
