@@ -57,10 +57,12 @@ export default function EmbarqueDetalle() {
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
     docsFaltantes, docsBloqueantes,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
+    blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
     cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
+
 
   const financials = useEmbarqueFinancials({
     conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,
