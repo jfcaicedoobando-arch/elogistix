@@ -77,7 +77,7 @@ export async function fetchSinTrackingOperador(email: string): Promise<SinTracki
     .from("embarques")
     .select("id, expediente, cliente_nombre, estado, eta")
     .eq("operador", email)
-    .in("estado", ["En Tránsito", "Arribo", "En Aduana"])
+    .in("estado", ["En Tránsito"])
     .limit(200);
   if (error) throw error;
   if (!embarques || embarques.length === 0) return [];
