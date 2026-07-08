@@ -36,6 +36,11 @@ describe("useNuevaFacturaProveedorForm.helpers", () => {
     it("salta año", () => {
       expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
     });
+    it("devuelve '' cuando la emisión está vacía o es inválida (Sentry JAVASCRIPT-REACT-29)", () => {
+      expect(addDays("", 30)).toBe("");
+      expect(addDays("2026-13-40", 30)).toBe("");
+      expect(addDays("no-es-fecha", 30)).toBe("");
+    });
   });
 
   describe("today", () => {

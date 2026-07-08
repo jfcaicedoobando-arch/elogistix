@@ -1,35 +1,63 @@
-# Fix: doble toast al registrar factura de proveedor
+# Fix: RangeError "Invalid time value" al capturar factura de proveedor
 
-## Causa
+## Causa exacta
 
-Al capturar una factura de proveedor se emiten **dos** toasts de éxito distintos:
+Sentry issue [JAVASCRIPT-REACT-29](https://elogistix.sentry.io/issues/JAVASCRIPT-REACT-29) apunta al frame:
 
-1. `src/features/cxp/hooks/useFacturaProveedorMutations.ts` → `useCrearFacturaProveedor.onSuccess` dispara `notifySuccess("Factura de proveedor creada")` en cuanto la fila entra a BD.
-2. `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts` (línea 183) dispara `toast.success("Factura de proveedor capturada")` al terminar el flujo completo (insert + subida de XML/PDF a storage + vínculo a embarque/conceptos).
+```ts
+// src/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers.ts
+export function addDays(iso: string, days: number): string {
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10); // ← lanza "Invalid time value"
+}
+```
 
-El del formulario es el correcto: aparece hasta que todos los efectos secundarios corren, y su texto ("capturada") coincide con lo que espera Karol. El de la mutation es prematuro y sobra.
+Cuando Karol limpió el campo "Fecha de emisión" con la X del `DatePickerMx` (o el input quedó vacío por un blur con texto inválido), `values.emision` se puso en `""`. Luego el `handleChange` del formulario recalculó el vencimiento:
+
+```ts
+if (k === "emision" || k === "diasCredito") {
+  next.vencimiento = addDays(next.emision, Number(next.diasCredito) || 0);
+}
+```
+
+Con `next.emision === ""`, `new Date("T00:00:00")` es Invalid Date y `toISOString()` lanza `RangeError`. La excepción sube al render y dispara la React Error Boundary → pantalla de error.
 
 ## Cambio
 
-Archivo: `src/features/cxp/hooks/useFacturaProveedorMutations.ts`
+Archivo único: `src/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers.ts`
 
-- En `useCrearFacturaProveedor`, quitar el `notifySuccess(...)` de `onSuccess`. Se mantiene la invalidación de queries (`qc.invalidateQueries`) y el `onError` intacto.
-- El toast único de éxito lo seguirá emitiendo `useNuevaFacturaProveedorForm.submit` al final del flujo.
+Blindar `addDays` para que devuelva `""` (o el iso original) cuando la entrada no es una fecha válida `YYYY-MM-DD`:
 
-No se toca:
-- `useEliminarFacturaProveedor` ni `useActualizarFacturaProveedor` (esos sí son la única vía y su toast debe quedarse).
-- El hook `useNuevaFacturaProveedorForm` ni sus side effects (los toasts amarillos de "guardada pero XML falló" siguen funcionando cuando aplica).
+```ts
+export function addDays(iso: string, days: number): string {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "";
+  const d = new Date(iso + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return "";
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+```
+
+Con esto:
+- Si emisión está vacía → vencimiento queda vacío (el campo se muestra en blanco, `validateFactura` ya obliga a que el total > 0 y el submit valida el resto).
+- Si el usuario captura una emisión válida, todo sigue igual.
+- No hay más crashes por Invalid time value en este flujo.
 
 ## Verificación
 
-- Correr `bunx vitest run src/features/cxp/hooks/__tests__/useNuevaFacturaProveedorForm.test.tsx` — sigue esperando `toast.success` una sola vez.
-- Revisar si algún otro test (`useFacturaProveedorMutations`) asertaba el `notifySuccess` de creación; ajustarlo si aplica.
+- Añadir un caso al test existente `useNuevaFacturaProveedorForm.helpers.test.ts` que verifique `addDays("", 30) === ""` y `addDays("2026-13-40", 30) === ""`.
+- Correr `bunx vitest run src/features/cxp/hooks/__tests__/useNuevaFacturaProveedorForm.helpers.test.ts` y confirmar que los tests preexistentes (fecha válida) siguen pasando.
 
-## Versionado
+## Sentry
 
-- Bump `APP_VERSION` a `13.218.2` (patch).
-- Entrada en `CHANGELOG.md` describiendo el fix.
+- Marcar el issue `JAVASCRIPT-REACT-29` como resolved con `update_issue` referenciando el fix.
+
+## Versionado y changelog
+
+- Bump `APP_VERSION` a `13.218.4` (patch).
+- Entrada en `CHANGELOG.md` describiendo el fix y el issueId.
 
 ## Analogía
 
-Es como si el cajero de un banco dijera "recibí tu depósito" al meter el dinero al cajón, y luego el sistema volviera a decir "depósito completado" cuando terminó de imprimir el comprobante. Los dos avisos hablan del mismo momento, pero solo el segundo es el que confirma que ya está todo listo — el primero sobra y confunde.
+Es como una calculadora que suma días a una fecha: si el papelito de la fecha viene en blanco, la calculadora no debe explotar — debe devolver también un papelito en blanco. Ahora la calculadora primero revisa que el papelito traiga una fecha antes de sumar.
