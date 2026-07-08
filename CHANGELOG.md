@@ -5,6 +5,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.50] - 2026-07-08
+- **Marca `facturado_historico` en embarques**: nueva columna booleana en `embarques` (+ índice parcial) para excluir del hueco de facturación los embarques del sistema anterior que ya fueron facturados por fuera. `fetchEmbarquesParaHueco` ahora filtra `facturado_historico = false`. Se marcan 9 expedientes históricos: `ELIMP00003`, `ELIMP00058`, `ELIMP00140`, `ELIMP00141`, `ELIMP00143`, `ELIMP00146`, `ELIMP00150` (x2) y `ELEXP00250`. Reversible con un UPDATE.
+
 ## [13.213.49] - 2026-07-08
 - **Fix CI (arquitectura + tests)**: `fetchProformaPorId` extrae su post-procesado a `queries.helpers.ts` con `mergeProformaDetalle`, marcando los dos casts como `SAFE-CAST` (PostgREST embed). Baja `queries.ts` a <200 líneas y el test unitario ahora espera `facturas_asociadas: []` cuando no hay facturas asociadas.
 
