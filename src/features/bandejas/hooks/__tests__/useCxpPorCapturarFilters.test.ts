@@ -6,8 +6,10 @@ const row = (over: Partial<CxpPorCapturarRow>): CxpPorCapturarRow => ({
   embarque_id: "e1",
   expediente: "EXP-001",
   cliente_nombre: "Acme",
-  costos_presupuestados: 1000,
-  monto_facturado: 0,
+  presupuestado_mxn: 1000,
+  presupuestado_usd: 0,
+  facturado_mxn: 0,
+  facturado_usd: 0,
   facturas_capturadas: 0,
   ultima_factura_fecha: null,
   dias_desde_ultima_factura: null,
@@ -17,9 +19,36 @@ const row = (over: Partial<CxpPorCapturarRow>): CxpPorCapturarRow => ({
 describe("useCxpPorCapturarFilters helpers", () => {
   it("estatusDeFila distingue sin/parcial/completo", () => {
     expect(estatusDeFila(row({}))).toBe("sin");
-    expect(estatusDeFila(row({ facturas_capturadas: 1, monto_facturado: 400 }))).toBe("parcial");
-    expect(estatusDeFila(row({ facturas_capturadas: 2, monto_facturado: 1000 }))).toBe("completo");
-    expect(estatusDeFila(row({ facturas_capturadas: 2, monto_facturado: 1200 }))).toBe("completo");
+    expect(estatusDeFila(row({ facturas_capturadas: 1, facturado_mxn: 400 }))).toBe("parcial");
+    expect(estatusDeFila(row({ facturas_capturadas: 2, facturado_mxn: 1000 }))).toBe("completo");
+    expect(estatusDeFila(row({ facturas_capturadas: 2, facturado_mxn: 1200 }))).toBe("completo");
+  });
+
+  it("estatusDeFila evalúa MXN y USD por separado", () => {
+    // Presupuesto mixto: MXN cubierto pero USD no → parcial
+    expect(
+      estatusDeFila(
+        row({
+          facturas_capturadas: 1,
+          presupuestado_mxn: 500,
+          presupuestado_usd: 200,
+          facturado_mxn: 500,
+          facturado_usd: 0,
+        }),
+      ),
+    ).toBe("parcial");
+    // Ambas monedas cubiertas → completo
+    expect(
+      estatusDeFila(
+        row({
+          facturas_capturadas: 2,
+          presupuestado_mxn: 500,
+          presupuestado_usd: 200,
+          facturado_mxn: 500,
+          facturado_usd: 200,
+        }),
+      ),
+    ).toBe("completo");
   });
 
   it("filtra por query en expediente y cliente", () => {
@@ -41,11 +70,11 @@ describe("useCxpPorCapturarFilters helpers", () => {
     expect(r.map((x) => x.embarque_id)).toEqual(["b"]);
   });
 
-  it("ordena por monto descendente", () => {
+  it("ordena por monto descendente (suma ambas monedas como proxy)", () => {
     const rows = [
-      row({ embarque_id: "a", costos_presupuestados: 100 }),
-      row({ embarque_id: "b", costos_presupuestados: 900 }),
-      row({ embarque_id: "c", costos_presupuestados: 500 }),
+      row({ embarque_id: "a", presupuestado_mxn: 100 }),
+      row({ embarque_id: "b", presupuestado_mxn: 900 }),
+      row({ embarque_id: "c", presupuestado_mxn: 500 }),
     ];
     const r = aplicarFiltros(rows, {
       query: "", estatus: "todos", antiguedad: "todos", ordenarPor: "monto", direccion: "desc",

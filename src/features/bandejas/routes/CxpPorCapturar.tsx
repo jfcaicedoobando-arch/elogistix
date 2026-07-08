@@ -52,7 +52,7 @@ const SORT_TO_COL: Record<OrdenarPor, string> = {
 
 export default function CxpPorCapturar() {
   const { data = [], isLoading } = useCxpPorCapturar();
-  const { totalPresupuestado, facturasCapturadas } = resumirCxpPorCapturar(data);
+  const { totalPresupuestadoMxn, totalPresupuestadoUsd, facturasCapturadas } = resumirCxpPorCapturar(data);
   const filters = useCxpPorCapturarFilters(data);
   const [picked, setPicked] = useState<EmbarqueSeleccionado | null>(null);
 
@@ -79,6 +79,14 @@ export default function CxpPorCapturar() {
     }
   };
 
+  // Etiqueta compuesta: muestra la moneda con presupuesto, o ambas si están mezcladas.
+  const presupuestoLabel = (() => {
+    const mxn = totalPresupuestadoMxn > 0 ? formatCurrency(totalPresupuestadoMxn, "MXN") : null;
+    const usd = totalPresupuestadoUsd > 0 ? formatCurrency(totalPresupuestadoUsd, "USD") : null;
+    if (mxn && usd) return `${mxn} · ${usd}`;
+    return mxn ?? usd ?? formatCurrency(0, "MXN");
+  })();
+
   return (
     <PageContainer>
       <PageHeader
@@ -98,8 +106,8 @@ export default function CxpPorCapturar() {
         />
         <KPICard
           icon={<Coins className="h-3.5 w-3.5" />}
-          label="Costo presupuestado (MXN)"
-          value={formatCurrency(totalPresupuestado, "MXN")}
+          label="Costo presupuestado"
+          value={presupuestoLabel}
         />
         <KPICard
           icon={<FileStack className="h-3.5 w-3.5" />}

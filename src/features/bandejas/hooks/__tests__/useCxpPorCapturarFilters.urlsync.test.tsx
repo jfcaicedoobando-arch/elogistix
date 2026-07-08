@@ -14,9 +14,9 @@ import type { CxpPorCapturarRow } from "@/features/bandejas/services/bandejas";
 const wrapper = withNuqsTestingAdapter({ hasMemory: true });
 
 const rows: CxpPorCapturarRow[] = [
-  { embarque_id: "a", expediente: "EXP-001", cliente_nombre: "Acme",  costos_presupuestados: 100, monto_facturado:   0, facturas_capturadas: 0, ultima_factura_fecha: null, dias_desde_ultima_factura: null },
-  { embarque_id: "b", expediente: "EXP-002", cliente_nombre: "Beta",  costos_presupuestados: 900, monto_facturado: 900, facturas_capturadas: 2, ultima_factura_fecha: null, dias_desde_ultima_factura: 45 },
-  { embarque_id: "c", expediente: "EXP-003", cliente_nombre: "Gamma", costos_presupuestados: 500, monto_facturado: 250, facturas_capturadas: 1, ultima_factura_fecha: null, dias_desde_ultima_factura: 3 },
+  { embarque_id: "a", expediente: "EXP-001", cliente_nombre: "Acme",  presupuestado_mxn: 100, presupuestado_usd: 0, facturado_mxn:   0, facturado_usd: 0, facturas_capturadas: 0, ultima_factura_fecha: null, dias_desde_ultima_factura: null },
+  { embarque_id: "b", expediente: "EXP-002", cliente_nombre: "Beta",  presupuestado_mxn: 900, presupuestado_usd: 0, facturado_mxn: 900, facturado_usd: 0, facturas_capturadas: 2, ultima_factura_fecha: null, dias_desde_ultima_factura: 45 },
+  { embarque_id: "c", expediente: "EXP-003", cliente_nombre: "Gamma", presupuestado_mxn: 500, presupuestado_usd: 0, facturado_mxn: 250, facturado_usd: 0, facturas_capturadas: 1, ultima_factura_fecha: null, dias_desde_ultima_factura: 3 },
 ];
 
 describe("useCxpPorCapturarFilters (URL sync)", () => {

@@ -25,12 +25,20 @@ export interface FiltersState {
 }
 
 
-/** Determina el estatus de captura a partir de los montos. */
+/**
+ * Determina el estatus de captura a partir de los montos, evaluando MXN y USD
+ * por separado (no se pueden sumar). Un embarque está `completo` sólo cuando
+ * TODAS las monedas con presupuesto > 0 están cubiertas.
+ */
 export function estatusDeFila(row: CxpPorCapturarRow): EstatusFiltro {
   if (row.facturas_capturadas === 0) return "sin";
-  const presup = Number(row.costos_presupuestados) || 0;
-  const fact = Number(row.monto_facturado) || 0;
-  if (presup > 0 && fact >= presup) return "completo";
+  const presupMxn = Number(row.presupuestado_mxn) || 0;
+  const presupUsd = Number(row.presupuestado_usd) || 0;
+  const factMxn = Number(row.facturado_mxn) || 0;
+  const factUsd = Number(row.facturado_usd) || 0;
+  const mxnOk = presupMxn <= 0 || factMxn >= presupMxn;
+  const usdOk = presupUsd <= 0 || factUsd >= presupUsd;
+  if (mxnOk && usdOk && (presupMxn > 0 || presupUsd > 0)) return "completo";
   return "parcial";
 }
 
@@ -69,7 +77,10 @@ export function aplicarFiltros(
       case "expediente":
         return ((a.expediente ?? "") > (b.expediente ?? "") ? 1 : -1) * dir;
       case "monto":
-        return ((Number(a.costos_presupuestados) || 0) - (Number(b.costos_presupuestados) || 0)) * dir;
+        // Suma ambas monedas como proxy para ordenamiento (no para display).
+        const totalA = (Number(a.presupuestado_mxn) || 0) + (Number(a.presupuestado_usd) || 0);
+        const totalB = (Number(b.presupuestado_mxn) || 0) + (Number(b.presupuestado_usd) || 0);
+        return (totalA - totalB) * dir;
       case "facturas":
         return (a.facturas_capturadas - b.facturas_capturadas) * dir;
       case "antiguedad":

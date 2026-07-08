@@ -84,17 +84,20 @@ export function variantDiasParaVencer(dias: number): DiasVariant {
 // ===== CxP por capturar =====
 export interface CxpCapturarSummary {
   total: number;
-  totalPresupuestado: number;
+  totalPresupuestadoMxn: number;
+  totalPresupuestadoUsd: number;
   facturasCapturadas: number;
 }
 
 export function resumirCxpPorCapturar(rows: CxpPorCapturarRow[]): CxpCapturarSummary {
-  let totalPresupuestado = 0;
+  let totalPresupuestadoMxn = 0;
+  let totalPresupuestadoUsd = 0;
   let facturasCapturadas = 0;
   for (const r of rows) {
-    totalPresupuestado += num(r.costos_presupuestados);
+    totalPresupuestadoMxn += num(r.presupuestado_mxn);
+    totalPresupuestadoUsd += num(r.presupuestado_usd);
     facturasCapturadas += r.facturas_capturadas ?? 0;
   }
-  return { total: rows.length, totalPresupuestado, facturasCapturadas };
+  return { total: rows.length, totalPresupuestadoMxn, totalPresupuestadoUsd, facturasCapturadas };
 }
 
