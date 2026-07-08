@@ -23,7 +23,12 @@ export interface VinculoLinea {
 }
 
 export function addDays(iso: string, days: number): string {
+  // Blindaje: si la emisión viene vacía o no es un ISO YYYY-MM-DD, devolvemos ""
+  // en lugar de crashear con RangeError: Invalid time value.
+  // Sentry: JAVASCRIPT-REACT-29.
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "";
   const d = new Date(iso + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return "";
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
