@@ -5,6 +5,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.3] - 2026-07-08
+- **Fix: dashboard mostraba "26D de retraso" tras actualizar ETA**: el widget "Sin tracking reciente" (dashboard del operador) cuenta días desde el último registro en `eventos_embarque`. Antes, actualizar el ETA desde el wizard de edición u otras rutas no dejaba huella en esa bitácora, así que el widget se quedaba con el conteo viejo (caso reportado: ELIMP00263 con 26d aunque Valeria ya había movido el ETA de 06-jul a 13-jul).
+- **Nuevo trigger `trg_embarques_log_eta_change`**: cualquier cambio de `eta` o `fecha_llegada_real` en `embarques` genera automáticamente un evento en la bitácora ("Cambio de ETA" o "Arribo a Puerto"). El trigger evita duplicar cuando el tab Tracking ya inserta el evento (ventana anti-dedupe de 30 s).
+- **Backfill histórico**: se insertó el evento "Cambio de ETA" faltante para los 12 embarques activos afectados (incluyendo ELIMP00263, ELIMP00256, ELIMP00265, ELIMP00290). Los 4 embarques cerrados con el mismo síntoma quedan intactos porque ya no aparecen en el widget.
+- Analogía: antes cada operador tenía su cuaderno de bitácora, pero podía cambiar la ETA en la carátula del expediente sin anotarla en el cuaderno. Ahora, cambiar la ETA en cualquier sitio le pega un "post-it" automático al cuaderno para que nada quede huérfano.
+
 ## [13.214.2] - 2026-07-08
 - **Split de `mutations.ts` (Power-of-10 200 líneas)**: se extraen las cuatro mutaciones directas (`actualizarEstadoEmbarque`, `actualizarFechaLlegadaRealEmbarque`, `actualizarEtaEmbarque`, `insertarNotaEmbarque`) a `services/embarqueDirectMutations.ts`. `mutations.ts` queda en 154 líneas y sigue re-exportando las funciones, así ningún import externo cambia. Restablece los baselines de `architecture-baseline` y `audit-report`.
 
