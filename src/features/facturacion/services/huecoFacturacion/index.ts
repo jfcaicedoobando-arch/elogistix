@@ -62,9 +62,13 @@ export async function fetchHuecoFacturacion({
   organizationId: string | null;
   hoy?: Date;
 }): Promise<HuecoFacturacionResult> {
-  const hoyIso = hoy.toISOString().slice(0, 10);
+  // v13.217.0 — ampliamos el límite a hoy + 3 días naturales para dar buffer
+  // al agente aduanal antes del arribo real del contenedor.
+  const limite = new Date(hoy.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const limiteEtaIso = limite.toISOString().slice(0, 10);
 
-  const arr = await fetchEmbarquesParaHueco(organizationId, hoyIso);
+  const arr = await fetchEmbarquesParaHueco(organizationId, limiteEtaIso);
+
   if (arr.length === 0) {
     return { filas: [], totalEmbarques: 0, totalUsd: 0, totalMxn: 0 };
   }
