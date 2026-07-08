@@ -1,46 +1,53 @@
-## Contexto
 
-En `/facturacion` cada tab de bandeja (Embarques sin factura, Proformas listas, Por timbrar, etc.) muestra un ícono ℹ️ con un tooltip explicativo. Los `hint` son textos largos (~150–230 caracteres), por ejemplo:
+## Objetivo
 
-> "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura."
+Sacar 9 embarques del sistema anterior del listado "Embarques sin factura" en `/facturacion`, sin crear CFDIs falsos ni proformas sintéticas. Se agrega una marca reversible por embarque.
 
-El tooltip está renderizado en `src/features/facturacion/components/bandejas/BandejaTabs.tsx:114` con:
+## Embarques a marcar (confirmados en la base)
 
-```tsx
-<TooltipContent side="bottom" className="max-w-[240px] text-xs">{d.hint}</TooltipContent>
-```
+| Expediente   | Cliente                              | ETA         |
+| ------------ | ------------------------------------ | ----------- |
+| ELIMP00003   | INDIMEX TRADING                      | 2026-04-06  |
+| ELIMP00058   | INDIMEX TRADING                      | 2026-04-15  |
+| ELIMP00140   | INDIMEX TRADING                      | 2026-05-02  |
+| ELIMP00141   | INDIMEX TRADING                      | 2026-04-26  |
+| ELIMP00143   | INDIMEX TRADING                      | 2026-05-01  |
+| ELIMP00146   | INDIMEX TRADING                      | 2026-05-02  |
+| ELIMP00150   | INDIMEX TRADING                      | 2026-05-01  |
+| ELIMP00150   | INDIMEX TRADING                      | 2026-05-01  |
+| ELEXP00250   | COMERCIALIZADORA VISTRAIN-GONZALEZ   | 2026-05-25  |
 
-**Problema:** 240 px + `text-xs` obliga a que el texto se apile en muchas líneas muy angostas, y en combinación con `overflow-hidden` del `TooltipContent` base + el espacio vertical disponible que Radix reporta (`--radix-popper-available-height` ≈ 340 px en pantallas chicas), las últimas líneas quedan cortadas. En laptops (viewport 1081×675, que es el caso del usuario) el efecto es peor.
+(hay dos filas con expediente `ELIMP00150` — ambas se marcan)
 
-## Cambio
+## Cambios
 
-Un solo archivo, sin lógica:
+### 1. Migración: nueva columna en `embarques`
 
-**`src/features/facturacion/components/bandejas/BandejaTabs.tsx` (línea 114)** — cambiar el className del `TooltipContent`:
+- Agregar `facturado_historico BOOLEAN NOT NULL DEFAULT false` a `public.embarques`.
+- Índice parcial `WHERE facturado_historico = true` para consultas rápidas.
+- **Analogía:** es como una "estampa de archivado" que le pones a un expediente viejo para que la bandeja de pendientes lo ignore, pero el expediente sigue completo.
 
-- `max-w-[240px]` → `max-w-sm` (384 px) para que el texto quepa en 4–6 líneas cómodas.
-- `text-xs` → `text-xs leading-relaxed` para respirar entre renglones.
-- Añadir `whitespace-normal` explícito (defensivo, evita que un ancestor con `whitespace-nowrap` lo rompa).
-- Añadir `collisionPadding={12}` al `<TooltipContent>` para que Radix reubique el tooltip si se sale por debajo del viewport.
+### 2. Data patch: prender el flag en los 9 embarques
 
-Resultado esperado: el hint completo se lee de un vistazo, con el mismo look & feel del resto de tooltips.
+Un `UPDATE embarques SET facturado_historico = true WHERE id IN (...)` con los 9 IDs listados arriba.
 
-## Fuera de alcance
+### 3. Excluir del "hueco de facturación"
 
-- No se toca `src/components/ui/tooltip.tsx` (afectaría a toda la app).
-- No se cambian los textos de los `hint`.
-- No se toca ningún tooltip fuera de la barra de bandejas de facturación.
+Archivo: `src/features/facturacion/services/huecoFacturacion/fetchSources.ts`
+- En `fetchEmbarquesParaHueco`, agregar `.or("facturado_historico.is.null,facturado_historico.eq.false")` (o `.eq("facturado_historico", false)`) al query.
+- Sin cambios en la UI ni en la lógica de cobertura por proformas.
+
+### 4. Versionado y bitácora
+
+- `APP_VERSION` → `13.213.50`.
+- Entrada en `CHANGELOG.md` describiendo la marca de facturación histórica y los 9 expedientes afectados.
 
 ## Verificación
 
-1. Abrir `/facturacion` y hacer hover sobre el ℹ️ de cada tab: el texto completo debe verse sin cortes.
-2. Reducir el viewport a 1081×675 (el del usuario) y repetir en la última pestaña de la derecha (que suele colisionar con el borde): el tooltip debe reposicionarse arriba o desplazarse dentro del viewport.
-3. `bunx vitest run src/features/facturacion` → sin regresiones.
+1. Correr el `bunx vitest run` relevante (`huecoFacturacion` si existe test) — no debe romper.
+2. Abrir `/facturacion` → tab "Embarques sin factura": los 9 expedientes ya no aparecen.
+3. El resto de embarques del listado sigue igual.
 
-## Registro
+## Reversibilidad
 
-Bump patch de `APP_VERSION` + entrada breve en `CHANGELOG.md` ("Tooltips de bandejas de facturación: ancho ampliado para leer el hint completo").
-
-## Analogía
-
-Es como si la etiqueta explicativa de cada bandeja estuviera pegada en un post-it demasiado angosto: cabía el título, pero las últimas líneas se doblaban hacia atrás y no se veían. Le damos un post-it un poco más ancho y con más aire entre renglones — sin cambiar el mensaje ni el estilo del resto de la app.
+Si algún expediente se marcó por error, un simple `UPDATE embarques SET facturado_historico = false WHERE expediente = '...'` lo devuelve al listado. No se pierde información.
