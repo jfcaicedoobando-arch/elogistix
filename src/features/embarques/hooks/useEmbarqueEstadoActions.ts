@@ -168,10 +168,12 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
     docsFaltantes, docsBloqueantes,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
+    blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes, siguienteEstado,
     cierreEsSiguiente: cierreVisible, rolPuedeCerrar,
     cierrePuedeAvanzar: cierreVisible && bloqueoCierreMotivo === null,
     cierreMotivoBloqueo: bloqueoCierreMotivo,
   };
+
 }
 
