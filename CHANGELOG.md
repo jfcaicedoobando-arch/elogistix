@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.219.1] - 2026-07-08
+- **Bugfix · Doble toast al capturar factura de proveedor (reportado por Karol)**: al guardar una factura que además vinculaba conceptos o creaba un concepto ad-hoc en un embarque, se mostraban dos notificaciones encimadas ("N conceptos marcados como pagados" + "Factura de proveedor capturada"). Ahora se consolida en un **único toast** de éxito con la información del vínculo como descripción (ej. `Factura de proveedor capturada · 2 conceptos marcados como pagados`). Los warnings de fallos parciales (XML no subió, vínculo falló) se mantienen como avisos independientes porque son condiciones de error reales.
+- Archivos: `useNuevaFacturaProveedorForm.sideEffects.ts` (retorna resultado en vez de emitir toast), `useNuevaFacturaProveedorForm.ts` (submit consolida toast final).
+- Analogía: antes el cajero te daba dos recibos —uno por el producto y otro por el cambio—; ahora te entrega uno solo que dice ambas cosas.
+
 ## [13.219.0] - 2026-07-08
 - **Feature · Auto-fill del TC DOF por fecha de emisión en captura/edición de factura de proveedor**: al elegir moneda USD/EUR y capturar (o cambiar) la **fecha de emisión**, el sistema consulta Banxico y pega el **tipo de cambio DOF vigente ese día** (no el de hoy). El campo TC muestra una línea debajo con la fecha efectivamente aplicada (`DOF 12/06/2025 · Banxico SF43718`) y un botón chiquito **Obtener DOF** para re-consultar manualmente. Si la factura viene de un **CFDI XML**, se respeta el TC del emisor (etiquetado como `Del CFDI del proveedor`). Si el usuario escribe el TC a mano, la etiqueta cambia a `Capturado manualmente` y el auto-fetch deja de pisar. Mismo comportamiento aplica en el modal de editar factura.
 - **Backend**: la edge `exchange-rates` gana un parámetro opcional `fecha=YYYY-MM-DD` (query string o body JSON). Sin `fecha` mantiene el comportamiento actual (DOF de hoy, caché 12 h). Con fecha histórica consulta SF43718 (USD) en rango y aplica `extraerPublicacionDof` sobre esa fecha; devuelve `fechaAplicada` para que la UI lo muestre. Caché en memoria por fecha, TTL 30 días para históricas (respuesta inmutable) y 12 h para hoy.

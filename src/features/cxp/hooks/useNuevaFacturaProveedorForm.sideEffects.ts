@@ -33,6 +33,15 @@ export async function uploadCfdiSafe(params: {
   }
 }
 
+/**
+ * Resultado de la vinculación best-effort para que el submit consolide un
+ * único toast de éxito (evita doble toast reportado por Karol, 13.219.1).
+ */
+export interface VincularSafeResult {
+  liquidados?: number;
+  conceptoAdHocExpediente?: string;
+}
+
 export async function vincularSafe(params: {
   facturaId: string;
   organizationId: string | null;
@@ -40,9 +49,9 @@ export async function vincularSafe(params: {
   total: number;
   vinculos: Record<string, VinculoLinea>;
   embarqueAdHoc: EmbarqueSeleccionado | null;
-}): Promise<void> {
+}): Promise<VincularSafeResult> {
   const { facturaId, organizationId, values, total, vinculos, embarqueAdHoc } = params;
-  if (!organizationId) return;
+  if (!organizationId) return {};
 
   const lineas = Object.entries(vinculos).map(([conceptoCostoId, v]) => ({
     conceptoCostoId,
@@ -59,14 +68,12 @@ export async function vincularSafe(params: {
         fechaEmision: values.emision,
         lineas,
       });
-      if (res.liquidados.length > 0) {
-        toast.success(`${res.liquidados.length} concepto(s) marcados como pagados`);
-      }
+      return { liquidados: res.liquidados.length };
     } catch (linkErr) {
       const err = linkErr as { message?: string };
       toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
+      return {};
     }
-    return;
   }
 
   if (embarqueAdHoc && values.provId) {
@@ -82,10 +89,24 @@ export async function vincularSafe(params: {
         folio: values.folio.trim(),
         fechaEmision: values.emision,
       });
-      toast.success(`Concepto creado en embarque ${embarqueAdHoc.expediente}`);
+      return { conceptoAdHocExpediente: embarqueAdHoc.expediente };
     } catch (e) {
       const err = e as { message?: string };
       toast.warning(`Factura guardada pero no se pudo crear el concepto: ${err.message ?? "error"}`);
+      return {};
     }
   }
+  return {};
+}
+
+export function buildFacturaSuccessDescription(r: VincularSafeResult): string | undefined {
+  if (r.liquidados && r.liquidados > 0) {
+    return r.liquidados === 1
+      ? "1 concepto marcado como pagado"
+      : `${r.liquidados} conceptos marcados como pagados`;
+  }
+  if (r.conceptoAdHocExpediente) {
+    return `Concepto creado en embarque ${r.conceptoAdHocExpediente}`;
+  }
+  return undefined;
 }

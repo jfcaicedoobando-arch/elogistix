@@ -17,7 +17,7 @@ import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
 import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { uploadCfdiSafe, vincularSafe } from "./useNuevaFacturaProveedorForm.sideEffects";
+import { uploadCfdiSafe, vincularSafe, buildFacturaSuccessDescription } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
   type PendingCfdi, type VinculoLinea,
   addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
@@ -244,13 +244,16 @@ export function useNuevaFacturaProveedorForm(
       const created = await crear.mutateAsync(
         buildPayload({ values, total, userId: user?.id, pendingCfdi, vinculos }),
       );
+      let sideResult = {};
       if (created?.id) {
         await uploadCfdiSafe({ facturaId: created.id, organizationId, pendingCfdi });
-        await vincularSafe({
+        sideResult = await vincularSafe({
           facturaId: created.id, organizationId, values, total, vinculos, embarqueAdHoc,
         });
       }
-      toast.success("Factura de proveedor capturada");
+      toast.success("Factura de proveedor capturada", {
+        description: buildFacturaSuccessDescription(sideResult),
+      });
       reset();
       onDone();
     } catch (e) {
