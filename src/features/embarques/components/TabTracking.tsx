@@ -105,6 +105,7 @@ function FreshnessHeader({
   );
 }
 
+// eslint-disable-next-line complexity -- Render de alto nivel con múltiples secciones condicionales opcionales; extraer más subcomponentes fragmentaría el layout.
 export function TabTracking({ embarqueId, embarque }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const { canEdit } = usePermissions();
