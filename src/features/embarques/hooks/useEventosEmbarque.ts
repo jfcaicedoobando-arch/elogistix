@@ -28,6 +28,7 @@ export const TIPOS_EVENTO_TRACKING = [
   "Entrega",
   "Demora",
   "Inspección",
+  "Cambio de ETA",
   "Otro",
 ] as const;
 

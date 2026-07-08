@@ -140,7 +140,7 @@ export function buildEmbarqueColumns({
     // — Builder: statusColumn (Oleada 1) —
     statusColumn<EmbarqueRow>({
       domain: "embarque",
-      accessor: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
+      accessor: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real),
     }),
   ]);
 }

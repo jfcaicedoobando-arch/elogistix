@@ -39,13 +39,14 @@ function useAutoSyncEstadoEmbarque(
   const etd = embarque?.etd ?? null;
   const eta = embarque?.eta ?? null;
   const estado = embarque?.estado;
+  const fechaLlegadaReal = embarque?.fecha_llegada_real ?? null;
   useEffect(() => {
     if (!embarqueId || !modo || !tipo || !estado || !puedeSincronizarEstado) return;
-    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado);
+    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado, fechaLlegadaReal);
     if (estadoCalculado !== estado) {
       syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail });
     }
-  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate, usuarioEmail, puedeSincronizarEstado]);
+  }, [embarqueId, modo, tipo, etd, eta, estado, fechaLlegadaReal, syncEstadoMutate, usuarioEmail, puedeSincronizarEstado]);
 }
 
 /**

@@ -102,7 +102,7 @@ export function useEmbarquesPageState() {
     let all = resultadoFull ?? [];
     if (estadoFilterActivo) {
       all = all.filter(
-        (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === filterEstado,
+        (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real) === filterEstado,
       );
     }
     if (alertaFilterActivo && alertIdSet) {

@@ -5,6 +5,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.0] - 2026-07-08
+- **Rediseño del tab de Tracking (solo 2 acciones)**: el botón "Registrar Evento" ahora ofrece únicamente **Actualizar ETA** y **Marcar Llegada real**. Los 9 tipos anteriores (Zarpe, Transbordo, Descarga, Despacho Aduanal, Liberación, En Ruta Terrestre, Entrega, Demora, Inspección, Otro) se retiran del UI; los eventos históricos siguen visibles en el timeline.
+  - **Actualizar ETA**: actualiza `embarques.eta` (ETA vigente que consume toda la app: hueco de facturación, dashboards, alertas) y genera un evento `Cambio de ETA` con la fuente/motivo capturada por el operador.
+  - **Marcar Llegada real**: única vía UI para pasar el embarque de "En Tránsito" a "Arribo". Actualiza `fecha_llegada_real` y `estado='Arribo'` y genera un evento `Arribo a Puerto`.
+- **ETA original congelado**: nueva regla en BD — `eta_original` (y `etd_original`) se llenan automáticamente al crear el embarque y quedan inmutables por trigger. Backfill: se rellenaron los ETAs originales faltantes en 21 embarques.
+- **Bloqueo automático hacia "Arribo"**: `calcularEstadoEmbarque` deja al embarque en "En Tránsito" aunque el ETA haya vencido, mientras no exista `fecha_llegada_real`. Así se obliga a los operadores a capturar la llegada real antes de avanzar. Aplica a listado, detalle, columnas, auto-sync y timeline de fases.
+- **Nuevo enum de tracking**: se agregó `Cambio de ETA` a `tipo_evento_tracking` con ícono 📅.
+- Analogía: antes el tracking parecía una libreta abierta con 11 casillas; ahora es un semáforo con 2 botones grandes ("ya me dieron nuevo ETA" / "ya llegó"), y ninguna otra puerta te deja marcar el arribo si no capturas la fecha real.
+
 ## [13.213.51] - 2026-07-08
 - **Marca `facturado_historico` en 13 embarques adicionales**: se excluyen del hueco de facturación los expedientes `ELIMP00114`, `ELIMP00169`, `ELIMP00172`, `ELIMP00205`, `ELIMP00207`, `ELIMP00219`, `ELIMP00223`, `ELIMP00224`, `ELIMP00234`, `ELIMP00252`, `ELIMP00259`, `ELIMP00264` y `ELIMP00282` (facturados por fuera en el sistema anterior). Reversible con un UPDATE.
 

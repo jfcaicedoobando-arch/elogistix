@@ -30,6 +30,9 @@ type EmbarqueTrackingProps = Pick<
   | "bl_master"
   | "mawb"
   | "expediente"
+  | "puerto_destino"
+  | "aeropuerto_destino"
+  | "ciudad_destino"
 >;
 
 interface Props {
@@ -151,7 +154,11 @@ export function TabTracking({ embarqueId, embarque }: Props) {
         <TrackingNuevoEventoForm
           embarqueId={embarqueId}
           estadoActual={embarque?.estado}
+          etaActual={embarque?.eta}
           fechaLlegadaRealActual={embarque?.fecha_llegada_real}
+          destinoDefault={
+            embarque?.puerto_destino ?? embarque?.aeropuerto_destino ?? embarque?.ciudad_destino ?? ""
+          }
           onClose={() => setFormAbierto(false)}
         />
       )}

@@ -14,6 +14,7 @@ export function calcularEstadoEmbarque(
   etd: string | null,
   eta: string | null,
   estadoActual: string,
+  fechaLlegadaReal?: string | null,
 ): string {
   const ESTADOS_MANUALES = ["Arribo", "En Aduana", "Entregado", "EIR", "Cerrado"];
   if (ESTADOS_MANUALES.includes(estadoActual)) return estadoActual;
@@ -33,7 +34,12 @@ export function calcularEstadoEmbarque(
 
   if (hoy < fechaETD) return "Confirmado";
   if (hoy >= fechaETD && hoy < fechaETA) return "En Tránsito";
-  if (hoy >= fechaETA) return "Arribo";
+  // v13.214.0 — Solo pasa a "Arribo" cuando el operador captura la fecha de
+  // llegada real. Si el ETA venció sin llegada real capturada, se queda en
+  // "En Tránsito" para forzar la acción manual desde el tab de Tracking.
+  if (hoy >= fechaETA) {
+    return fechaLlegadaReal ? "Arribo" : "En Tránsito";
+  }
 
   return estadoActual;
 }
