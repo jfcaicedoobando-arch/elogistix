@@ -122,8 +122,15 @@ export async function deleteTipoContenedor(id: string): Promise<void> {
 
 const EXCHANGE_RATES_FALLBACK: ExchangeRates = { usdMxn: 17.25, eurMxn: 18.5 };
 
-export async function fetchExchangeRates(): Promise<ExchangeRates> {
-  const { data, error } = await supabase.functions.invoke("exchange-rates");
+/**
+ * @param fecha ISO `YYYY-MM-DD` opcional. Si se provee y es anterior a hoy,
+ *   la edge devuelve la Publicación DOF vigente **ese** día (útil para
+ *   valuar facturas de proveedor emitidas en el pasado). Sin fecha, o con
+ *   fecha ≥ hoy, se comporta como antes (DOF de hoy).
+ */
+export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates> {
+  const body = fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? { fecha } : undefined;
+  const { data, error } = await supabase.functions.invoke("exchange-rates", body ? { body } : {});
   if (error) {
     // `FunctionsFetchError` = el navegador no logró siquiera contactar la edge
     // (cold start, micro-corte de red, AdBlock). Es transitorio y la app tiene
@@ -153,6 +160,8 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
   return {
     usdMxn: data?.usdMxn ?? EXCHANGE_RATES_FALLBACK.usdMxn,
     eurMxn: data?.eurMxn ?? EXCHANGE_RATES_FALLBACK.eurMxn,
+    fechaAplicada: data?.fechaAplicada,
   };
 }
+
 
