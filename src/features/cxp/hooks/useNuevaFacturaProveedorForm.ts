@@ -264,5 +264,7 @@ export function useNuevaFacturaProveedorForm(
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit, isPending: crear.isPending, organizationId,
+    tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
+
 }
