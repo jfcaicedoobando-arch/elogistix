@@ -73,4 +73,18 @@ describe("fetchHuecoFacturacion", () => {
     const r = await fetchHuecoFacturacion({ organizationId: null, hoy: HOY });
     expect(r.filas.map((f) => f.embarque_id)).toEqual(["viejo", "nuevo"]);
   });
+
+  it("v13.217.0 — el límite superior de ETA es hoy + 3 días", async () => {
+    mock.setTableResult("embarques", { data: [], error: null });
+    mock.setTableResult("conceptos_venta", { data: [], error: null });
+    mock.setTableResult("facturas", { data: [], error: null });
+    await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    const embarquesCall = mock.tableCalls.find((c) => c.table === "embarques");
+    expect(embarquesCall).toBeDefined();
+    const lteIdx = embarquesCall!.ops.indexOf("lte");
+    expect(lteIdx).toBeGreaterThanOrEqual(0);
+    // HOY = 2026-06-15 → límite = 2026-06-18
+    expect(embarquesCall!.opArgs[lteIdx]).toEqual(["eta", "2026-06-18"]);
+  });
 });
+
