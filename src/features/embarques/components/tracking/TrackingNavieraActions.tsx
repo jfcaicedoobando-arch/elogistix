@@ -101,10 +101,19 @@ export function TrackingNavieraActions(props: Props) {
 
   const handleCopy = async () => {
     if (!referencia) return;
-    await navigator.clipboard.writeText(referencia.trim());
-    setCopied(true);
-    notifySuccess(toast, { title: `${refLabel} copiado`, description: referencia.trim() });
-    setTimeout(() => setCopied(false), 2000);
+    const texto = referencia.trim();
+    const ok = await copyTextWithFallback(texto);
+    if (ok) {
+      setCopied(true);
+      notifySuccess(toast, { title: `${refLabel} copiado`, description: texto });
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      notifyError(toast, {
+        title: "No se pudo copiar",
+        description: `Copia manualmente: ${texto}`,
+        method: "TRACKING_COPY_BL",
+      });
+    }
   };
 
   const handleOpen = () => {
