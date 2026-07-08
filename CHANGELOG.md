@@ -5,6 +5,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.49] - 2026-07-08
+- **Fix CI (arquitectura + tests)**: `fetchProformaPorId` extrae su post-procesado a `queries.helpers.ts` con `mergeProformaDetalle`, marcando los dos casts como `SAFE-CAST` (PostgREST embed). Baja `queries.ts` a <200 líneas y el test unitario ahora espera `facturas_asociadas: []` cuando no hay facturas asociadas.
+
 ## [13.213.48] - 2026-07-08
 - **Tooltips de bandejas de facturación**: los íconos ℹ️ de las tabs (`/facturacion`) ahora usan `max-w-sm` con `leading-relaxed` y `collisionPadding`, para que el texto completo del hint se lea de un vistazo sin quedar cortado en pantallas chicas.
 
