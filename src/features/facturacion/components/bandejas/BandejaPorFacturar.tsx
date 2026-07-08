@@ -41,10 +41,11 @@ export function BandejaPorFacturar() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground tabular-nums">{totalEmbarques}</span>{" "}
-          embarque(s) con ETA cumplida sin CFDI ·{" "}
+          embarque(s) sin CFDI (ETA vencida o dentro de 3 días) ·{" "}
           <span className="tabular-nums">{formatCurrency(totalUsd, "USD")}</span> ·{" "}
           <span className="tabular-nums">{formatCurrency(totalMxn, "MXN")}</span>
         </div>
+
         <Button size="sm" variant="outline" onClick={exportarCsv} disabled={filas.length === 0 || isError}>
           <Download className="h-4 w-4 mr-2" /> CSV
         </Button>
