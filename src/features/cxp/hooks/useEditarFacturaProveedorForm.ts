@@ -5,7 +5,7 @@
  * useActualizarFacturaProveedor. NO toca CFDI ni vínculos a embarque
  * (esos flujos viven en sus propias secciones).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useActualizarFacturaProveedor } from "@/features/cxp/hooks";
@@ -22,6 +22,9 @@ import {
   validateFactura,
 } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
+import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
+
 
 type RowLite = FacturaParaEdicion;
 
@@ -68,6 +71,16 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
   const [values, setValues] = useState<FacturaFormValues | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof FacturaFormValues, string>>>({});
   const [initial, setInitial] = useState<FacturaFormValues | null>(null);
+  const [tcOrigen, setTcOrigen] = useState<TcOrigen>("vacio");
+  const [tcFechaAplicada, setTcFechaAplicada] = useState<string | undefined>();
+  const manualTcRef = useRef(false);
+
+  const tcDof = useTcDofPorFecha((r) => {
+    setValues((p) => (p ? { ...p, tc: String(r.tipoCambio) } : p));
+    setTcOrigen("dof");
+    setTcFechaAplicada(r.fechaAplicada);
+    if (errors.tc) setErrors((e) => ({ ...e, tc: undefined }));
+  });
 
   useEffect(() => {
     if (row) {
@@ -75,10 +88,18 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       setValues(v);
       setInitial(v);
       setErrors({});
+      // Al cargar factura existente, si tiene TC lo consideramos "manual" (valor
+      // ya guardado por el usuario o legacy) hasta que decida re-consultar DOF.
+      setTcOrigen(v.moneda !== "MXN" && v.tc ? "manual" : "vacio");
+      setTcFechaAplicada(undefined);
+      manualTcRef.current = v.moneda !== "MXN" && !!v.tc;
     } else if (!factura) {
       setValues(null);
       setInitial(null);
       setErrors({});
+      setTcOrigen("vacio");
+      setTcFechaAplicada(undefined);
+      manualTcRef.current = false;
     }
   }, [row, factura]);
 
@@ -93,8 +114,30 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
       }
       return next;
     });
+    if (k === "tc") {
+      manualTcRef.current = true;
+      setTcOrigen(v ? "manual" : "vacio");
+      setTcFechaAplicada(undefined);
+    }
+    if (k === "moneda") {
+      manualTcRef.current = false;
+      setTcOrigen("vacio");
+      setTcFechaAplicada(undefined);
+    }
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
   };
+
+  const obtenerDofManual = () => {
+    if (!values || values.moneda === "MXN") return;
+    if (!isFechaEmisionValida(values.emision)) return;
+    manualTcRef.current = false;
+    tcDof.mutate({
+      moneda: values.moneda as MonedaTc,
+      fecha: values.emision,
+      silent: false,
+    });
+  };
+
 
   // Proveedor NO editable: callback no-op para satisfacer el contrato del form reutilizado.
   const handleProveedorNoop = () => { /* read-only en edit */ };
@@ -143,5 +186,7 @@ export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarPara
     isPending: actualizar.isPending,
     isLoadingRow,
     isErrorRow,
+    tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
+
 }

@@ -2,7 +2,7 @@
  * Hook controller para DialogNuevaFacturaProveedor.
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
@@ -22,6 +22,8 @@ import {
   type PendingCfdi, type VinculoLinea,
   addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
 } from "./useNuevaFacturaProveedorForm.helpers";
+import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
+import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
 
 type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
 
@@ -41,8 +43,39 @@ export function useNuevaFacturaProveedorForm(
   const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(
     initialEmbarqueAdHoc ?? null,
   );
+  const [tcOrigen, setTcOrigen] = useState<TcOrigen>("vacio");
+  const [tcFechaAplicada, setTcFechaAplicada] = useState<string | undefined>();
+  // Marca puesta por el usuario cuando escribe manualmente el TC; evita que el
+  // auto-fetch la sobreescriba en el próximo cambio de fecha.
+  const manualTcRef = useRef(false);
+
+
+  // Mutación que consulta el TC DOF vigente para la fecha de emisión.
+  const tcDof = useTcDofPorFecha((r) => {
+    setValues((p) => ({ ...p, tc: String(r.tipoCambio) }));
+    setTcOrigen("dof");
+    setTcFechaAplicada(r.fechaAplicada);
+    if (errors.tc) setErrors((e) => ({ ...e, tc: undefined }));
+  });
 
   const total = useMemo(() => calcularTotal(values), [values]);
+
+  // Auto-fetch del TC DOF cuando hay moneda ≠ MXN + fecha emisión válida.
+  // Se dispara al cambiar moneda o emisión; NO pisa un TC manual ni uno del CFDI.
+  useEffect(() => {
+    if (values.moneda === "MXN") return;
+    if (!isFechaEmisionValida(values.emision)) return;
+    if (tcOrigen === "manual" || tcOrigen === "cfdi") return;
+    const t = setTimeout(() => {
+      tcDof.mutate({
+        moneda: values.moneda as MonedaTc,
+        fecha: values.emision,
+        silent: true,
+      });
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.moneda, values.emision]);
 
   const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {
     setValues((prev) => {
@@ -52,8 +85,31 @@ export function useNuevaFacturaProveedorForm(
       }
       return next;
     });
+    if (k === "tc") {
+      manualTcRef.current = true;
+      setTcOrigen(v ? "manual" : "vacio");
+      setTcFechaAplicada(undefined);
+    }
+    if (k === "moneda") {
+      // Al cambiar moneda reseteamos el origen para permitir auto-fetch nuevo.
+      manualTcRef.current = false;
+      setTcOrigen(v === "MXN" ? "vacio" : "vacio");
+      setTcFechaAplicada(undefined);
+    }
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
   };
+
+  const obtenerDofManual = () => {
+    if (values.moneda === "MXN") return;
+    if (!isFechaEmisionValida(values.emision)) return;
+    manualTcRef.current = false; // botón manual gana sobre "manual" previo
+    tcDof.mutate({
+      moneda: values.moneda as MonedaTc,
+      fecha: values.emision,
+      silent: false,
+    });
+  };
+
 
   const handleProveedor = (id: string, nombre: string) => {
     setValues((p) => ({ ...p, provId: id, provNombre: nombre }));
@@ -105,7 +161,11 @@ export function useNuevaFacturaProveedorForm(
     setAskCrearProv(null);
     setVinculos({});
     setEmbarqueAdHoc(initialEmbarqueAdHoc ?? null);
+    setTcOrigen("vacio");
+    setTcFechaAplicada(undefined);
+    manualTcRef.current = false;
   };
+
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
     const c = data.cfdi;
@@ -133,7 +193,17 @@ export function useNuevaFacturaProveedorForm(
     setValues(mapCfdiToValues(data, provId, provNombre));
     setErrors({});
     setPendingCfdi({ uuid: c.uuid, rfcEmisor: c.emisor.rfc, xmlFile: files.xml, pdfFile: files.pdf });
+    // El XML del CFDI trae el tipo_cambio oficial del emisor — respetarlo.
+    if (c.moneda !== "MXN" && Number(c.tipo_cambio) > 0) {
+      setTcOrigen("cfdi");
+      setTcFechaAplicada(c.fecha);
+      manualTcRef.current = false;
+    } else {
+      setTcOrigen("vacio");
+      setTcFechaAplicada(undefined);
+    }
   };
+
 
   const validate = (): boolean => {
     const next = validateFactura(values, total);
@@ -194,5 +264,7 @@ export function useNuevaFacturaProveedorForm(
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit, isPending: crear.isPending, organizationId,
+    tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
+
 }

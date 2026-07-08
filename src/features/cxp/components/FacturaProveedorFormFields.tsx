@@ -3,11 +3,12 @@
  * Inputs numéricos sin spinners (NumericInput), secciones con iconos
  * y agrupación moneda+importes. El total vive en el header del dialog.
  */
-import { CalendarDays, Coins, FileText } from "lucide-react";
+import { CalendarDays, Coins, FileText, Loader2, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -18,10 +19,14 @@ import {
   type FacturaFormValues, type CategoriaPresupuestoLite,
 } from "./facturaFormPrimitives";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
+import { formatFechaEs } from "@/features/cxp/hooks/useTcDofPorFecha";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
 export type { FacturaFormValues };
+
+/** De dónde salió el valor del campo `tc`. Controla el hint bajo el input. */
+export type TcOrigen = "dof" | "cfdi" | "manual" | "vacio";
 
 interface Props {
   values: FacturaFormValues;
@@ -33,6 +38,14 @@ interface Props {
   /** Modo edición: oculta el combobox y muestra el proveedor como read-only. */
   proveedorReadOnly?: boolean;
   proveedorNombre?: string;
+  /** Origen actual del valor `tc` — controla el hint debajo del input. */
+  tcOrigen?: TcOrigen;
+  /** Fecha (YYYY-MM-DD) del FIX efectivamente aplicado por Banxico. */
+  tcFechaAplicada?: string;
+  /** Handler del botón "Obtener DOF". Si se omite, no se renderiza el botón. */
+  onObtenerDof?: () => void;
+  /** Estado de carga del auto-fetch/click del botón "Obtener DOF". */
+  dofLoading?: boolean;
 }
 
 const toNum = (s: string) => (s === "" ? 0 : Number(s) || 0);
@@ -41,8 +54,10 @@ const fromNum = (n: number) => (n === 0 ? "" : String(n));
 export function FacturaProveedorFormFields({
   values, onChange, onProveedor, categorias, errors = {},
   proveedorReadOnly = false, proveedorNombre,
+  tcOrigen = "vacio", tcFechaAplicada, onObtenerDof, dofLoading = false,
 }: Props) {
   const showTc = values.moneda !== "MXN";
+
 
   return (
     <div className="space-y-5">
@@ -99,16 +114,36 @@ export function FacturaProveedorFormFields({
           </div>
           {showTc && (
             <div className="space-y-1">
-              <Label>Tipo de cambio a MXN<RequiredMark /></Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>Tipo de cambio a MXN<RequiredMark /></Label>
+                {onObtenerDof && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-2xs"
+                    onClick={onObtenerDof}
+                    disabled={dofLoading}
+                    title="Consulta la Publicación DOF Banxico vigente en la fecha de emisión."
+                  >
+                    {dofLoading
+                      ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      : <RefreshCw className="h-3 w-3 mr-1" />}
+                    Obtener DOF
+                  </Button>
+                )}
+              </div>
               <NumericInput
                 value={toNum(values.tc)}
                 onChange={(n) => onChange("tc", fromNum(n))}
                 decimals
                 aria-label="Tipo de cambio a MXN"
               />
+              <TcOrigenHint origen={tcOrigen} fechaAplicada={tcFechaAplicada} />
               <FieldError msg={errors.tc} />
             </div>
           )}
+
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -160,3 +195,16 @@ export function FacturaProveedorFormFields({
     </div>
   );
 }
+
+function TcOrigenHint({ origen, fechaAplicada }: { origen: TcOrigen; fechaAplicada?: string }) {
+  if (origen === "vacio") return null;
+  const fecha = formatFechaEs(fechaAplicada);
+  const text =
+    origen === "dof"
+      ? `DOF ${fecha || "—"} · Banxico SF43718`
+      : origen === "cfdi"
+        ? "Del CFDI del proveedor"
+        : "Capturado manualmente";
+  return <p className="text-[11px] text-muted-foreground">{text}</p>;
+}
+

@@ -92,7 +92,12 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           categorias={cats.data ?? []}
           total={ctl.total}
           errors={ctl.errors}
+          tcOrigen={ctl.tcOrigen}
+          tcFechaAplicada={ctl.tcFechaAplicada}
+          onObtenerDof={ctl.obtenerDofManual}
+          dofLoading={ctl.dofLoading}
         />
+
 
         <VincularEmbarqueSection
           proveedorId={ctl.values.provId}

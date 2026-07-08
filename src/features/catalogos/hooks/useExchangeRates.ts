@@ -5,7 +5,7 @@ import { fetchExchangeRates } from "@/features/catalogos/services";
 export function useExchangeRates() {
   return useQuery({
     queryKey: queryKeys.exchangeRates.all,
-    queryFn: fetchExchangeRates,
+    queryFn: () => fetchExchangeRates(),
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: 1,
   });

@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [13.218.6] - 2026-07-08
+## [13.219.0] - 2026-07-08
+- **Feature · Auto-fill del TC DOF por fecha de emisión en captura/edición de factura de proveedor**: al elegir moneda USD/EUR y capturar (o cambiar) la **fecha de emisión**, el sistema consulta Banxico y pega el **tipo de cambio DOF vigente ese día** (no el de hoy). El campo TC muestra una línea debajo con la fecha efectivamente aplicada (`DOF 12/06/2025 · Banxico SF43718`) y un botón chiquito **Obtener DOF** para re-consultar manualmente. Si la factura viene de un **CFDI XML**, se respeta el TC del emisor (etiquetado como `Del CFDI del proveedor`). Si el usuario escribe el TC a mano, la etiqueta cambia a `Capturado manualmente` y el auto-fetch deja de pisar. Mismo comportamiento aplica en el modal de editar factura.
+- **Backend**: la edge `exchange-rates` gana un parámetro opcional `fecha=YYYY-MM-DD` (query string o body JSON). Sin `fecha` mantiene el comportamiento actual (DOF de hoy, caché 12 h). Con fecha histórica consulta SF43718 (USD) en rango y aplica `extraerPublicacionDof` sobre esa fecha; devuelve `fechaAplicada` para que la UI lo muestre. Caché en memoria por fecha, TTL 30 días para históricas (respuesta inmutable) y 12 h para hoy.
+- **Servicio**: `fetchExchangeRates(fecha?)` acepta el nuevo argumento manteniendo retrocompat total con dashboard, cotizaciones, facturación de cliente y otros consumers.
+- Nuevo hook `useTcDofPorFecha` (mutación con toast opcional y notificación de error controlada).
+- Analogía: hasta ayer el cajero siempre te daba el tipo de cambio del pizarrón del día. Ahora primero revisa **qué día se emitió tu factura** y te da el tipo de cambio que estaba pegado en el pizarrón **ese** día.
+
+
 - **Fix · Top tarifas truena con fecha vacía en `/cotizaciones/nueva`** (Sentry `JAVASCRIPT-REACT-1M` regresado, 9 eventos / 4 usuarios): `useTopTarifas` recibía `fecha: ""` (input date vacío) y lo pasaba tal cual al RPC `get_top_tarifas`. `p.fecha ?? default` sólo cubre `null`/`undefined`, no `""`, así que el `""` llegaba a Postgres y explotaba con `22007 – invalid input syntax for type date: ""`. Se normaliza `""` a `undefined` tanto en el hook como en el servicio (cinturón + tirantes) para que use la fecha de hoy como default.
 - **Sentry housekeeping**: `JAVASCRIPT-REACT-23` (icono renderizado como objeto en tabla de `/embarques/:id`) marcado como resuelto — no ha vuelto a ocurrir en 2 días y ya pasamos por 20+ releases desde el crash original (13.197.0 → 13.218.6). También se ignoran `JAVASCRIPT-REACT-24` (validación SAT — dato del cliente), `26` (bot HeadlessChrome tocando la demo) y `27` (FacturApi 404 por factura ya inexistente).
 - Analogía: el buscador de tarifas es como un mostrador que pregunta "¿para qué día?"; si el cliente entrega una nota **en blanco** el mostrador la aceptaba y se la pasaba al almacén, que se ofendía. Ahora si la nota viene en blanco, el mostrador usa la fecha de hoy y todo sigue.

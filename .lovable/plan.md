@@ -1,69 +1,77 @@
-# Auditoría Sentry — 5 issues abiertos en 24h
+# TC DOF por fecha de emisión en captura de factura de proveedor
 
-## Panorama
+## Qué queremos
 
-| # | Issue | Eventos | Usuarios | Causa | Acción |
-|---|---|---|---|---|---|
-| 1 | `JAVASCRIPT-REACT-1M` (regressed) | 53 | 7 | **Bug real:** cast jsonb → text[] en RPC | Fix con migración |
-| 2 | `JAVASCRIPT-REACT-1V` (regressed) | 21 | 2 | **Duplicado de 1M** (release distinto) | Se resuelve con el mismo fix |
-| 3 | `JAVASCRIPT-REACT-25` | 1 | 1 | Config faltante (FacturApi no configurado) | Ignore + mejor UX (no como crash) |
-| 4 | `JAVASCRIPT-REACT-28` | 2 | 1 | Validación del SAT (razón social ≠ RFC) | Ignore (dato del usuario, no bug) |
-| 5 | `JAVASCRIPT-REACT-1Z` | 2 | 1 | HTTP 502 transitorio de FacturApi | Ignore (upstream) |
+Cuando el usuario captura una factura de proveedor en moneda distinta a MXN (USD / EUR), el campo **Tipo de cambio a MXN** debe llenarse **solo**, con el TC DOF vigente en la **fecha de emisión** de la factura (no la de hoy). Así queda alineado con lo que el SAT exige para CFDI: la Publicación DOF vigente el día que se emitió el comprobante.
 
-## Fix principal — Issues #1 y #2
+Ejemplo: si la factura fue emitida el 15/06/2025 en USD, el sistema jala el FIX del último día hábil anterior a esa fecha (que es la Publicación DOF vigente el 15/06/2025) y lo pega en el campo.
 
-**Síntoma:** al abrir el diálogo de timbrar/enviar factura en `/facturacion/:id`, Sentry captura `code: 22P02 – malformed array literal: "[\"karol.hernandez@..\", ..]"`. `queryKey = ["cliente_defaults_facturacion", <cliente_id>]`.
+Analogía: hoy el sistema es un cajero que siempre te da el tipo de cambio del pizarrón del día. Vamos a hacer que primero revise qué día fue emitida la factura y te dé el tipo de cambio que estaba en el pizarrón **ese** día.
 
-**Causa exacta:** la migración `20260707230551_688593e5-a0bf-4431-9b6d-106979898873.sql` (RPC `obtener_defaults_facturacion_cliente`) hace:
+## Cómo se va a comportar el modal
 
-```sql
-DECLARE v_last_cc text[];
-...
-SELECT fe.cc INTO v_last_cc
-FROM public.factura_envios fe ...
-```
+1. Con **moneda = MXN**: sin cambios (el campo TC sigue oculto).
+2. Cuando el usuario cambia a **USD** o **EUR**, o cuando cambia la **fecha de emisión** estando en USD/EUR, el sistema consulta Banxico automáticamente y llena el campo TC con el DOF de esa fecha. Toast discreto: `TC DOF 15/06/2025 · USD 17.2834`.
+3. Debajo del campo TC aparece una línea pequeña con la fecha y la fuente aplicada: "DOF 15/06/2025 · Banxico SF43718". Si el usuario edita el TC a mano, esa línea cambia a "Capturado manualmente".
+4. Al lado del campo TC hay un botón chiquito "Obtener DOF" para forzar la consulta (por si Banxico estaba caído la primera vez o cambió la emisión).
+5. Si la factura viene de un **XML CFDI**, respetamos el TC que trae el XML (es dato legal del emisor). Igual mostramos el botón "Obtener DOF" por si el usuario lo quiere reemplazar.
+6. Si la fecha de emisión es futura o inválida, no consultamos y dejamos el campo editable manualmente como hoy.
+7. Si Banxico falla o la fecha es muy vieja y no hay dato, mostramos un aviso suave y dejamos el campo vacío para captura manual. No bloqueamos el guardado (la validación de "TC obligatorio si moneda≠MXN" ya existe).
 
-Pero `public.factura_envios.cc` es **`jsonb`**, no `text[]`. Postgres intenta castear el jsonb (un array JSON literal `["a@x","b@x",...]`) a `text[]` y truena con:
+Mismo comportamiento se aplica al modal de **editar factura de proveedor** para no dejar el editor "más tonto" que la captura.
 
-```
-"[" must introduce explicitly-specified array dimensions
-```
+## Detalles técnicos
 
-Confirmado con `information_schema.columns`: `factura_envios.cc` = `jsonb`, y los datos reales (`SELECT cc::text FROM factura_envios`) muestran `["karol.hernandez@...", ...]` (JSON), no `{karol.hernandez@...,...}` (Postgres array).
+### 1. Extender la edge `exchange-rates` para aceptar fecha histórica
 
-**Fix:** cambiar el SELECT para convertir el jsonb array en `text[]` correctamente:
+Hoy la edge devuelve siempre el TC DOF vigente **hoy** con caché 12 h. Le vamos a agregar un parámetro opcional `fecha=YYYY-MM-DD` (por query string, para poder cachear en el borde por URL):
 
-```sql
-SELECT ARRAY(SELECT jsonb_array_elements_text(fe.cc))
-  INTO v_last_cc
-FROM public.factura_envios fe
-JOIN public.facturas f ON f.id = fe.factura_id
-WHERE f.cliente_id = p_cliente_id
-  AND fe.organization_id = v_org
-  AND fe.estado = 'enviado'
-ORDER BY fe.created_at DESC
-LIMIT 1;
-```
+- Sin `fecha` → comportamiento actual (DOF de hoy, caché 12 h).
+- Con `fecha=YYYY-MM-DD` → consulta SF43718 (USD) y SF46410 (EUR) en un rango de 10 días **hacia atrás desde `fecha`** y aplica el mismo `extraerPublicacionDof(data, fecha)` que ya existe (descartar filas con `filaIso >= fecha`).
+- Cache en memoria por fecha (Map con key = `fecha`), TTL 30 días para fechas históricas (son inmutables) y 12 h para "hoy".
+- SF46410 sigue usando `oportuno` cuando `fecha` es hoy; para fechas históricas también intenta rango, y si Banxico no da dato usa fallback como ahora.
+- Contrato de respuesta invariante: `{ usdMxn, eurMxn, fechaAplicada?: string }`. `fechaAplicada` es la fecha de la fila que se usó (útil para mostrar en el hint "DOF 12/06/2025").
 
-Se hace en una nueva migración `CREATE OR REPLACE FUNCTION public.obtener_defaults_facturacion_cliente(...)`. No cambia la firma ni los `GRANT`.
+### 2. Servicio y hook
 
-**Verificación:**
-- `select * from obtener_defaults_facturacion_cliente('87bdcbf1-4476-43f5-a6a2-ac4991658f6e')` debe regresar una fila con `cc_emails` como `text[]` sin lanzar `22P02`.
-- Recargar `/facturacion/<id>` en preview con un cliente que tenga historial de envíos y confirmar que el diálogo abre.
+- `src/features/catalogos/services/index.ts` → `fetchExchangeRates(fecha?: string)` acepta el nuevo parámetro y lo pasa como query string a la edge. Sin `fecha`, se comporta igual que hoy (retrocompat total; no rompe consumers existentes: hooks de dashboard, cotizaciones, facturación de cliente).
+- `src/features/facturacion/hooks/useBanxicoTipoCambio.ts` → agregar sobrecarga que acepta `fecha?: string` (para uso desde CxP; el módulo de facturación de cliente sigue igual porque siempre quiere el DOF de hoy). Alternativamente, hook nuevo `useTcDofPorFecha` para no arriesgar regresiones. Voto por hook nuevo dedicado.
 
-**Sentry:** marcar `JAVASCRIPT-REACT-1M` y `JAVASCRIPT-REACT-1V` como `resolved` referenciando la nueva migración.
+### 3. Hook del formulario CxP
 
-## Issues #3, #4, #5 — no son bugs de código
+- `useNuevaFacturaProveedorForm` gana un efecto: cuando `values.moneda !== "MXN"` y `values.emision` es un ISO válido, dispara `useTcDofPorFecha` con debounce 250 ms. En `onSuccess` hace `handleChange("tc", String(tc))` y guarda `tcOrigen` (`"dof" | "cfdi" | "manual"`) en state local del hook para renderizar el hint.
+- Cuando el usuario edita el campo TC a mano, `handleChange("tc", ...)` marca `tcOrigen = "manual"`.
+- Cuando llega CFDI parseado con `tipo_cambio`, `tcOrigen = "cfdi"` y **no** dispara la consulta DOF (respetar dato legal).
+- Reset del `tcOrigen` cuando el usuario cambia a MXN o abre el modal en blanco.
 
-- **#25 – FacturApi no configurado:** un usuario intentó timbrar sin haber configurado FacturApi para su organización. El `throw` ya es intencional y muestra un mensaje claro. Recomendación: `update_issue` → `ignored` (`untilEscalating`) con `reason` explicando que es error esperado de configuración. Opcional: envolver el `throw` para no reportar a Sentry cuando el mensaje ya se muestra en toast (no lo incluyo aquí porque cambia lógica de negocio y sólo ocurrió 1 vez).
-- **#28 – Razón social ≠ RFC (SAT):** el SAT rechazó el timbrado porque la razón social del receptor no coincide con la registrada en el CSF. Es dato del cliente, no un bug. Ignorar en Sentry.
-- **#1Z – HTTP 502:** error transitorio de upstream (FacturApi o gateway). Ignorar en Sentry `forDuration` 1 semana; si vuelve, ya escalará solo.
+### 4. UI en `FacturaProveedorFormFields`
 
-## Versionado y changelog
+- Nuevo prop `tcOrigen` y `tcFechaAplicada` (opcionales).
+- Debajo del `NumericInput` del TC:
+  - `tcOrigen === "dof"` → `DOF {fechaAplicada} · Banxico SF43718` en `text-xs text-muted-foreground`.
+  - `tcOrigen === "cfdi"` → `Del CFDI del proveedor`.
+  - `tcOrigen === "manual"` → `Capturado manualmente`.
+- Botón pequeño `Obtener DOF` (variant ghost, size sm) al lado del label, deshabilitado mientras `mutation.isPending`. Al hacer click fuerza el fetch y pisa `tcOrigen = "dof"`.
 
-- Bump `APP_VERSION` a `13.218.5`.
-- Entrada en `CHANGELOG.md` describiendo el fix del RPC + issueIds resueltos e ignorados.
+### 5. Réplica en el modal de edición
 
-## Analogía
+- Los mismos props (`tcOrigen`, `tcFechaAplicada`, botón "Obtener DOF") aplican tal cual en `DialogEditarFacturaProveedor` porque comparte `FacturaProveedorFormFields`. El `useEditarFacturaProveedorForm` gana el mismo efecto de auto-fetch.
 
-El RPC era como una charola marcada "sólo cubiertos" (text[]) donde alguien puso una servilleta doblada con dibujos de cubiertos (jsonb array). Cuando el mesero quería tomar cubiertos de la charola, se atoraba porque el papel no eran cubiertos. Ahora primero desdoblamos la servilleta y sacamos los cubiertos reales antes de ponerlos en la charola.
+### 6. Tests
+
+- Unit: nueva rama de `fetchExchangeRates(fecha)` que arma la URL con `?fecha=...`.
+- Unit: `useTcDofPorFecha` no dispara si `moneda === "MXN"`, si `emision === ""`, o si emision es fecha futura.
+- Unit: helper del hook CxP marca `tcOrigen = "cfdi"` cuando `mapCfdiToValues` llenó el TC.
+- Edge: `extraerPublicacionDof` ya está testeado; agregar caso "fecha histórica del 2024" con rango simulado.
+- Regresión: `fetchExchangeRates()` sin argumento sigue funcionando idéntico (hooks existentes no cambian).
+
+### 7. Changelog y versión
+
+- Bump `APP_VERSION` a `13.219.0` (feature nueva).
+- Entrada en `CHANGELOG.md` explicando el auto-fill de TC DOF por fecha de emisión, con la analogía del cajero.
+
+## Fuera de alcance
+
+- No tocamos el módulo de **facturación de cliente**: ahí siempre se emite hoy, el TC de hoy sigue siendo lo correcto. Sólo comparte la edge, que queda retrocompatible.
+- No tocamos pagos a proveedor (el TC de pago sí es la fecha del pago, tema aparte).
+- No cambiamos la política del CFDI: si el XML trae TC, gana el XML.
