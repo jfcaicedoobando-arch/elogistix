@@ -82,18 +82,10 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  // Filtrar facturas eliminadas lógicamente y ordenar por fecha de creación.
-  type RawAsociada = ProformaFacturaAsociada & { deleted_at: string | null; created_at: string };
-  const raw = data as unknown as {
-    facturas_asociadas?: RawAsociada[] | null;
-  } & Record<string, unknown>;
-  const asociadas = (raw.facturas_asociadas ?? [])
-    .filter((f) => !f.deleted_at)
-    .sort((a, b) => a.created_at.localeCompare(b.created_at))
-    .map(({ deleted_at: _d, created_at: _c, ...rest }) => rest);
-  const merged = { ...(data as unknown as Record<string, unknown>), facturas_asociadas: asociadas };
-  return fromDb<ProformaDetalleFull>(merged);
+  return fromDb<ProformaDetalleFull>(mergeProformaDetalle(data));
 }
+
+
 
 
 
