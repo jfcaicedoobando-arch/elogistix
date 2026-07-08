@@ -5,7 +5,7 @@
  * useActualizarFacturaProveedor. NO toca CFDI ni vínculos a embarque
  * (esos flujos viven en sus propias secciones).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useActualizarFacturaProveedor } from "@/features/cxp/hooks";
@@ -22,6 +22,9 @@ import {
   validateFactura,
 } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
+import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
+
 
 type RowLite = FacturaParaEdicion;
 
