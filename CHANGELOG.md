@@ -5,6 +5,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.48] - 2026-07-08
+- **Tooltips de bandejas de facturación**: los íconos ℹ️ de las tabs (`/facturacion`) ahora usan `max-w-sm` con `leading-relaxed` y `collisionPadding`, para que el texto completo del hint se lea de un vistazo sin quedar cortado en pantallas chicas.
+
 ## [13.213.47] - 2026-07-08
 - **Propagación automática Proforma → Conceptos de venta al facturar**:
   - Nuevo trigger `trg_sync_conceptos_venta_facturado` en `proformas`: cuando `estado_proforma` pasa a `facturada`, los `conceptos_venta` ligados a esa proforma pasan automáticamente a `estado_facturacion='facturado'`. Si la proforma se revierte a `pendiente` vuelven a `en_proforma`, y si se elimina se desligan y regresan a `pendiente`.
