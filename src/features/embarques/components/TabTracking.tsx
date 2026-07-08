@@ -30,6 +30,9 @@ type EmbarqueTrackingProps = Pick<
   | "bl_master"
   | "mawb"
   | "expediente"
+  | "puerto_destino"
+  | "aeropuerto_destino"
+  | "ciudad_destino"
 >;
 
 interface Props {
