@@ -11,3 +11,5 @@ export * from "./useEditarFacturaProveedorForm";
 export * from "./useCerrarFacturaSinPago";
 export * from "./useAprobarFacturasLote";
 export * from "./useCxpDeepLinks";
+export * from "./useTcDofPorFecha";
+
