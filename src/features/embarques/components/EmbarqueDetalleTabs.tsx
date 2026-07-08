@@ -95,7 +95,7 @@ export function EmbarqueDetalleTabs({
 
       <TabsContent value="costos" className="space-y-6">
         <TabCostos
-          conceptosVenta={conceptosVenta}
+          
           conceptosCosto={conceptosCosto}
           totalVenta={financials.totalVenta}
           totalCosto={financials.totalCosto}
