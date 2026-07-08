@@ -8,11 +8,11 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { CalendarClock } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 
-export const etaSchema = z.object({
+const etaSchema = z.object({
   fecha: z.string().min(1, "Fecha requerida"),
   fuente: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
 });
-export type EtaForm = z.infer<typeof etaSchema>;
+type EtaForm = z.infer<typeof etaSchema>;
 
 interface Props {
   etaActual: string | null;

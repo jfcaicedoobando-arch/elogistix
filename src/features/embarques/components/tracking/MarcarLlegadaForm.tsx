@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Anchor } from "lucide-react";
 
-export const llegadaSchema = z.object({
+const llegadaSchema = z.object({
   fecha: z.string().min(1, "Fecha requerida"),
   ubicacion: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
 });
-export type LlegadaForm = z.infer<typeof llegadaSchema>;
+type LlegadaForm = z.infer<typeof llegadaSchema>;
 
 interface Props {
   fechaLlegadaActual: string | null;
