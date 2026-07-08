@@ -5,6 +5,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+
+## [13.215.1] - 2026-07-08
+- **Compras › Por capturar**: la bandeja ahora oculta los embarques en estado `Cerrado`. La RPC `cxp_por_capturar` filtra `e.estado <> 'Cerrado'`, así el equipo sólo ve expedientes activos donde todavía tiene sentido capturar facturas de proveedor. Los 100 embarques cerrados legacy dejan de aparecer.
+- Analogía: como archivar las cajas viejas y dejar sólo los pendientes actuales sobre el escritorio.
+
 ## [13.215.0] - 2026-07-08
 - **Conciliación masiva de conceptos legacy** (`reconciliar_conceptos_facturados_legacy`). Marca automáticamente como `facturado` los conceptos de venta pendientes cuyo embarque ya cuenta con una factura Emitida/Pagada/Parcialmente pagada **o** con una proforma en estado `facturada`. Además, intenta ligar `proforma_id` haciendo *matching* por descripción+moneda+total contra `proforma_conceptos_consolidados`, y como fallback liga a la única proforma facturada del embarque cuando existe una sola.
 - **Alcance**: embarques en estados Confirmado, En Tránsito, Arribo, Llegada, En Aduana, Entregado, EIR y Cerrado (bypasea el candado de embarques cerrados sólo dentro de la función).
