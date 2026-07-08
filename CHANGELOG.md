@@ -5,6 +5,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.8] - 2026-07-08
+- **Conciliación legacy ELIMP00149 (EIR)**: los 12 conceptos de venta del embarque quedaron creados sin `proforma_id` en una versión anterior del sistema, por lo que aparecían como *Pendientes de facturar* aunque la proforma **PRO-2026-0034** ya estaba `facturada` y con factura **874** Pagada. Se ligaron los 12 conceptos a esa proforma y se marcaron como `facturado`. El trigger `trg_sync_conceptos_venta_facturado` (v13.213.47) evita que esto vuelva a ocurrir con embarques nuevos.
+- Analogía: los boletos ya estaban usados y la función ya terminó, pero en el registro seguían apareciendo como "no canjeados" porque nadie escribió el número de boleto en la lista. Le pusimos el sello.
+
 ## [13.214.7] - 2026-07-08
 - **Fix: la línea de tiempo de tracking registraba dos veces cada actualización de ETA** (caso reportado: embarque ELIMP00256). Al actualizar el ETA, el frontend insertaba un evento `Cambio de ETA` con contexto rico (usuario real, fuente/motivo) y, en paralelo, un trigger de BD (`log_embarque_eta_change`) insertaba otro evento genérico. El guard de deduplicación del trigger corría antes del insert del frontend, por lo que nunca lo detectaba. Mismo defecto afectaba a `Arribo a Puerto` al marcar la llegada real.
 - **Cambio**: se elimina el trigger `trg_embarques_log_eta_change` y su función `log_embarque_eta_change`. El frontend queda como única vía de registro (más rica en contexto). Se marcan como eliminados los eventos duplicados existentes en embarques abiertos, conservando el original.
