@@ -1,23 +1,14 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Receipt } from "lucide-react";
-import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import EmptyState from "@/components/empty/EmptyState";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/formatters";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
-import { useCostosConFactura } from "@/features/embarques/hooks/useCostosConFactura";
-import {
-  getEstadoLiquidacionDerivado,
-  getEstadoLiquidacionBadgeClass,
-} from "@/features/embarques/utils/estadoLiquidacionDerivado";
+import { useReconciliacionEmbarque } from "@/features/embarques/hooks/useReconciliacionEmbarque";
 
 import { ConceptosCostoCard } from "./costos/ConceptosCostoCard";
-import type { ConceptoVentaRow, ConceptoCostoRow } from "@/features/embarques/hooks";
+import type { ConceptoCostoRow } from "@/features/embarques/hooks";
 
 interface Props {
-  conceptosVenta: ConceptoVentaRow[];
   conceptosCosto: ConceptoCostoRow[];
   totalVenta: number;
   totalCosto: number;
@@ -34,15 +25,10 @@ const kpiColors = [
   'border-l-4 border-l-info',
 ];
 
-export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
+export function TabCostos({ conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
-  const { data: costosConFactura } = useCostosConFactura(embarqueId);
-  const costosConFacturaSet = useMemo(
-    () => costosConFactura ?? new Set<string>(),
-    [costosConFactura],
-  );
-
+  const { data: filasReconc = [] } = useReconciliacionEmbarque(embarqueId);
 
   const showContenedorCol = contenedores.length >= 2;
   const contenedorLabelById = useMemo(() => {
@@ -53,48 +39,6 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
 
   const renderContenedor = (id: string | null | undefined) =>
     id ? (contenedorLabelById.get(id) ?? 'General') : <span className="text-muted-foreground">General</span>;
-
-  const ventaColumns = useMemo<ColumnDef<ConceptoVentaRow, unknown>[]>(() => {
-    const base: ColumnDef<ConceptoVentaRow, unknown>[] = [
-      { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.descripcion },
-      { id: "cant", header: "Cant.", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => row.original.cantidad },
-      { id: "pu", header: "P. Unitario", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
-      { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
-    ];
-    if (showContenedorCol) {
-      base.push({ id: "contenedor", header: "Contenedor", cell: ({ row }) => renderContenedor(row.original.contenedor_id) });
-    }
-    base.push({ id: "total", header: "Total", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.total), row.original.moneda) });
-    return defineColumns<ConceptoVentaRow>(base);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showContenedorCol, contenedorLabelById]);
-
-  const costoColumns = useMemo<ColumnDef<ConceptoCostoRow, unknown>[]>(() => {
-    const base: ColumnDef<ConceptoCostoRow, unknown>[] = [
-      { id: "proveedor", header: "Proveedor", cell: ({ row }) => <span title={row.original.proveedor_nombre}>{toTitleCase(row.original.proveedor_nombre)}</span> },
-      { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.concepto },
-      { id: "monto", header: "Monto", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.monto), row.original.moneda) },
-      { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
-    ];
-    if (showContenedorCol) {
-      base.push({ id: "contenedor", header: "Contenedor", cell: ({ row }) => renderContenedor(row.original.contenedor_id) });
-    }
-    base.push({
-      id: "liq",
-      header: "Liquidación",
-      cell: ({ row }) => {
-        const estado = getEstadoLiquidacionDerivado(row.original, costosConFacturaSet);
-        return (
-          <Badge variant="outline" className={getEstadoLiquidacionBadgeClass(estado)}>
-            {estado}
-          </Badge>
-        );
-      },
-    });
-    return defineColumns<ConceptoCostoRow>(base);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showContenedorCol, contenedorLabelById, costosConFacturaSet]);
-
 
   const kpis = [
     { label: 'Total Venta', value: formatCurrency(totalVenta), color: '' },
@@ -120,35 +64,13 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
         ))}
       </div>
 
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <DataTable
-            columns={ventaColumns}
-            data={conceptosVenta}
-            rowKey={(c) => c.id}
-            density="compact"
-            emptyState={
-              <div className="p-6">
-                <EmptyState
-                  icon={Receipt}
-                  title="Sin conceptos de venta"
-                  description={irACargarCostos ? "Haz clic en el ícono o en el botón para capturar los conceptos de venta." : "Aún no se han registrado conceptos de venta para este embarque."}
-                  primaryAction={irACargarCostos}
-                />
-              </div>
-            }
-          />
-        </CardContent>
-      </Card>
-
       <ConceptosCostoCard
+        filas={filasReconc}
         conceptosCosto={conceptosCosto}
-        columns={costoColumns}
-        costosConFactura={costosConFacturaSet}
+        showContenedorCol={showContenedorCol}
+        renderContenedor={renderContenedor}
         irACargarCostos={irACargarCostos}
       />
     </div>
   );
 }
-
