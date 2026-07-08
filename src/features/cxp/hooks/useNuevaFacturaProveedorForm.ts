@@ -6,10 +6,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import {
   type CfdiParsedResponse, type ConceptoCostoAbierto,
-  existeFacturaDuplicada, validarCuadreCfdi,
+  existeFacturaDuplicada,
 } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
@@ -20,8 +19,9 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { uploadCfdiSafe, vincularSafe, buildFacturaSuccessDescription } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
   type PendingCfdi, type VinculoLinea,
-  addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
+  addDays, initialValues, calcularTotal, validateFactura, buildPayload,
 } from "./useNuevaFacturaProveedorForm.helpers";
+import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
 
@@ -168,40 +168,22 @@ export function useNuevaFacturaProveedorForm(
 
 
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
-    const c = data.cfdi;
-
-    // Validación fiscal: el desglose de IVA/IEPS por concepto debe cuadrar
-    // contra los totales declarados en el CFDI antes de registrar el gasto.
-    const cuadre = validarCuadreCfdi(c);
-    if (!cuadre.ok) {
+    const result = await procesarCfdiParsed(data, files, organizationId);
+    if (!result.ok) {
       notifyError(toast, {
         title: "El CFDI no cuadra y no se puede registrar",
-        description: cuadre.errores.join(" "),
+        description: result.cuadreError,
         method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CUADRE",
       });
       return;
     }
-
-    let provId = "";
-    let provNombre = c.emisor.nombre;
-    try {
-      const found = await findProveedorByRfcEnOrg(c.emisor.rfc, organizationId);
-      if (found) { provId = found.id; provNombre = found.nombre; }
-      else setAskCrearProv({ rfc: c.emisor.rfc, nombre: c.emisor.nombre });
-    } catch { /* lookup opcional */ }
-
-    setValues(mapCfdiToValues(data, provId, provNombre));
+    setValues(result.values);
     setErrors({});
-    setPendingCfdi({ uuid: c.uuid, rfcEmisor: c.emisor.rfc, xmlFile: files.xml, pdfFile: files.pdf });
-    // El XML del CFDI trae el tipo_cambio oficial del emisor — respetarlo.
-    if (c.moneda !== "MXN" && Number(c.tipo_cambio) > 0) {
-      setTcOrigen("cfdi");
-      setTcFechaAplicada(c.fecha);
-      manualTcRef.current = false;
-    } else {
-      setTcOrigen("vacio");
-      setTcFechaAplicada(undefined);
-    }
+    setPendingCfdi(result.pendingCfdi);
+    setAskCrearProv(result.askCrearProv);
+    setTcOrigen(result.tcOrigen);
+    setTcFechaAplicada(result.tcFechaAplicada);
+    manualTcRef.current = false;
   };
 
 
