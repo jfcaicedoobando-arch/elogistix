@@ -64,6 +64,7 @@ export function calcularFasesEmbarque(
     embarque.etd,
     embarque.eta,
     embarque.estado,
+    embarque.fecha_llegada_real,
   );
   const faseActual = faseIdParaEstado(estadoVisual);
   const orden: FaseId[] = ["cotizacion", "confirmado", "en_transito", "llegada", "cerrado"];
