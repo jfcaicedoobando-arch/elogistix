@@ -5,6 +5,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.9] - 2026-07-08
+- **Conciliación legacy ELIMP00169 (EIR)**: los 2 conceptos de venta (Flete Marítimo USD 2,765 + Cargos en Destino USD 125) estaban `pendiente` y sin `proforma_id`, pero la factura ya se había emitido fuera del sistema y la proforma **PRO-2026-0297** era la buena. Se ligaron ambos conceptos a esa proforma y se marcaron como `facturado`. La proforma duplicada **PRO-2026-0284** se revirtió a `pendiente` (el catálogo actual sólo permite `pendiente`/`facturada`; no tenía factura vinculada).
+- Analogía: los boletos se cobraron en la taquilla de al lado; sólo faltaba anotarlos en el registro de la sala. Y el registro extra que quedó abierto lo dejamos marcado como no cobrado.
+
 ## [13.214.8] - 2026-07-08
 - **Conciliación legacy ELIMP00149 (EIR)**: los 12 conceptos de venta del embarque quedaron creados sin `proforma_id` en una versión anterior del sistema, por lo que aparecían como *Pendientes de facturar* aunque la proforma **PRO-2026-0034** ya estaba `facturada` y con factura **874** Pagada. Se ligaron los 12 conceptos a esa proforma y se marcaron como `facturado`. El trigger `trg_sync_conceptos_venta_facturado` (v13.213.47) evita que esto vuelva a ocurrir con embarques nuevos.
 - Analogía: los boletos ya estaban usados y la función ya terminó, pero en el registro seguían apareciendo como "no canjeados" porque nadie escribió el número de boleto en la lista. Le pusimos el sello.
