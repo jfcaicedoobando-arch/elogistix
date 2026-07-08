@@ -90,6 +90,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const [warnCierreOpen, setWarnCierreOpen] = useState(false);
   const [warnDocsOpen, setWarnDocsOpen] = useState(false);
   const [blockDocsOpen, setBlockDocsOpen] = useState(false);
+  const [blockFechaLlegadaOpen, setBlockFechaLlegadaOpen] = useState(false);
 
   const ejecutarAvance = useCallback(async (siguiente: string) => {
     if (!embarque || !id) return;
@@ -104,6 +105,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
       if (msg.includes("documentos_faltantes")) { setBlockDocsOpen(true); return; }
+      if (msg.includes("fecha_llegada_real_requerida")) { setBlockFechaLlegadaOpen(true); return; }
       notifyError(toast, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
     }
   }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, toast]);
@@ -114,9 +116,11 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     if (!siguiente) return;
     const bloqueo = clasificarBloqueoAvance({
       docsBloqueantes, docsFaltantesCount: docsFaltantes.length, siguiente, bloqueoCierreMotivo,
+      fechaLlegadaReal: embarque.fecha_llegada_real ?? null,
     });
     switch (bloqueo) {
       case "block_docs": setBlockDocsOpen(true); return;
+      case "block_fecha_llegada": setBlockFechaLlegadaOpen(true); return;
       case "warn_docs": setWarnDocsOpen(true); return;
       case "gate_cierre":
         notifyError(toast, {
@@ -129,6 +133,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       case "ok": await ejecutarAvance(siguiente);
     }
   };
+
 
   const confirmarCierreSinProforma = useCallback(async () => {
     setWarnCierreOpen(false);
