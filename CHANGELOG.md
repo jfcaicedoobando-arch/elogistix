@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.216.1] - 2026-07-08
+- **Embarque › Tab Conciliación** adelgazado: se retira la tabla "Cotizado vs Real por concepto" y los 4 KPIs (Total Cotizado, Total Real, Desviación, Sin factura) porque ese detalle ahora vive en el tab Costos agrupado por proveedor. El tab conserva sólo lo único que aporta: el banner de **Decisión aplicada** sobre la tarifa y la carta **Reconciliación 3 columnas** (Cotizado · Refrescado · Real).
+- Se agrega un hint al pie enlazando conceptualmente al tab Costos para el detalle por proveedor.
+- Analogía: dos gavetas mostraban la misma lista; se dejó una sola con el detalle y en la otra sólo quedó lo que no está en ningún otro lado (la comparación con la tarifa vigente y la decisión que se tomó).
+
 ## [13.216.0] - 2026-07-08
 - **Embarque › Tab Costos** rediseñado con enfoque en análisis de costos reales vs cotizados:
   - Se elimina la carta "Conceptos de Venta" (esa información vive en el tab Facturación).
