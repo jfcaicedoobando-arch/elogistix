@@ -1,51 +1,46 @@
 ## Contexto
 
-Hoy tenemos tres columnas relevantes:
+En `/facturacion` cada tab de bandeja (Embarques sin factura, Proformas listas, Por timbrar, etc.) muestra un ícono ℹ️ con un tooltip explicativo. Los `hint` son textos largos (~150–230 caracteres), por ejemplo:
 
-- `proformas.estado_proforma` — `pendiente` | `facturada` (fuente de verdad del ciclo comercial).
-- `conceptos_venta.estado_facturacion` — `pendiente` | `en_proforma` | `facturado` (estado por línea).
-- `embarques.tiene_proforma` — booleano derivado, ya lo mantiene el trigger `trg_sync_embarque_tiene_proforma`.
+> "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura."
 
-**El hueco:** cuando una proforma pasa a `facturada`, sus `conceptos_venta` se quedan en `en_proforma`. Sólo migraciones puntuales los han llevado a `facturado`. Por eso el estado facturado del embarque hoy se **deriva** (JOIN a proformas) en vez de ser un hecho local.
+El tooltip está renderizado en `src/features/facturacion/components/bandejas/BandejaTabs.tsx:114` con:
 
-Datos actuales: **463 conceptos** en `en_proforma` cuya proforma ya está `facturada` (deberían ser `facturado`) y **29** ya correctos.
+```tsx
+<TooltipContent side="bottom" className="max-w-[240px] text-xs">{d.hint}</TooltipContent>
+```
+
+**Problema:** 240 px + `text-xs` obliga a que el texto se apile en muchas líneas muy angostas, y en combinación con `overflow-hidden` del `TooltipContent` base + el espacio vertical disponible que Radix reporta (`--radix-popper-available-height` ≈ 340 px en pantallas chicas), las últimas líneas quedan cortadas. En laptops (viewport 1081×675, que es el caso del usuario) el efecto es peor.
 
 ## Cambio
 
-### 1. Migración: trigger + backfill
+Un solo archivo, sin lógica:
 
-**a) Trigger `trg_sync_conceptos_venta_facturado` en `proformas`**
-- Cuando `estado_proforma` cambia a `facturada` → `UPDATE conceptos_venta SET estado_facturacion='facturado' WHERE proforma_id = NEW.id AND deleted_at IS NULL`.
-- Cuando pasa de `facturada` a `pendiente` (rollback) → volver esas líneas a `en_proforma` (siguen ligadas a la proforma).
-- Cuando la proforma se soft-borra (`deleted_at`) → conceptos vuelven a `pendiente` y se les limpia `proforma_id` (patrón que ya usa `services/crud.ts` en cliente).
-- El trigger corre con `SECURITY DEFINER` + `SET app.auditoria_backfill_legacy='on'` durante su ejecución, para no chocar con `bloquear_conceptos_en_embarque_cerrado` cuando el embarque ya está Cerrado.
+**`src/features/facturacion/components/bandejas/BandejaTabs.tsx` (línea 114)** — cambiar el className del `TooltipContent`:
 
-**b) Backfill único** para los 463 conceptos ya inconsistentes: reutilizar el mismo path del trigger sobre las proformas facturadas actuales.
+- `max-w-[240px]` → `max-w-sm` (384 px) para que el texto quepa en 4–6 líneas cómodas.
+- `text-xs` → `text-xs leading-relaxed` para respirar entre renglones.
+- Añadir `whitespace-normal` explícito (defensivo, evita que un ancestor con `whitespace-nowrap` lo rompa).
+- Añadir `collisionPadding={12}` al `<TooltipContent>` para que Radix reubique el tooltip si se sale por debajo del viewport.
 
-### 2. Simplificar la lectura
+Resultado esperado: el hint completo se lee de un vistazo, con el mismo look & feel del resto de tooltips.
 
-`src/features/embarques/components/facturacion/estadoConceptoBadge.tsx` y `TabFacturacion.tsx` hoy cruzan `proformas.estado_proforma` para decidir si un concepto está facturado. Después del trigger, `conceptos_venta.estado_facturacion === 'facturado'` es suficiente. Quitar el cross-check (menos código, misma UI).
+## Fuera de alcance
 
-### 3. Sin cambios en el flujo de creación
-
-`facturar.ts` sigue igual: crea `facturas`, actualiza `proformas`. El trigger se encarga de propagar a `conceptos_venta` automáticamente — el frontend no toca ese campo.
-
-### 4. Nada nuevo en `embarques`
-
-No añadimos `embarques.estado_facturacion` aún. La agregación (total / parcial / ninguno) se sigue calculando desde `conceptos_venta`, que ahora sí es fuente confiable.
+- No se toca `src/components/ui/tooltip.tsx` (afectaría a toda la app).
+- No se cambian los textos de los `hint`.
+- No se toca ningún tooltip fuera de la barra de bandejas de facturación.
 
 ## Verificación
 
-Después de correr la migración:
-
-- `SELECT count(*) FROM conceptos_venta cv JOIN proformas p ON p.id=cv.proforma_id WHERE p.estado_proforma='facturada' AND cv.estado_facturacion<>'facturado' AND cv.deleted_at IS NULL;` → debe ser **0**.
-- Abrir un embarque cuya proforma esté facturada → badges "Facturado" sin necesidad del JOIN.
-- Timbrar una proforma nueva en la app → los conceptos ligados quedan `facturado` sin intervención.
+1. Abrir `/facturacion` y hacer hover sobre el ℹ️ de cada tab: el texto completo debe verse sin cortes.
+2. Reducir el viewport a 1081×675 (el del usuario) y repetir en la última pestaña de la derecha (que suele colisionar con el borde): el tooltip debe reposicionarse arriba o desplazarse dentro del viewport.
+3. `bunx vitest run src/features/facturacion` → sin regresiones.
 
 ## Registro
 
-Bump de `APP_VERSION` + entrada en `CHANGELOG.md` describiendo el trigger y el backfill.
+Bump patch de `APP_VERSION` + entrada breve en `CHANGELOG.md` ("Tooltips de bandejas de facturación: ancho ampliado para leer el hint completo").
 
 ## Analogía
 
-Hoy, cuando el cliente pregunta "¿ya facturaste esto?", tenemos que ir corriendo al archivero de proformas para comprobarlo. Con este cambio, cada renglón del embarque ya trae el sello "Facturado" pegado. El archivero sigue existiendo, pero ya no hay que abrirlo para responder.
+Es como si la etiqueta explicativa de cada bandeja estuviera pegada en un post-it demasiado angosto: cabía el título, pero las últimas líneas se doblaban hacia atrás y no se veían. Le damos un post-it un poco más ancho y con más aire entre renglones — sin cambiar el mensaje ni el estilo del resto de la app.
