@@ -7,6 +7,8 @@ export interface FacturaVinculada {
   proveedor_factura_id: string;
   folio_proveedor: string;
   fecha_emision: string | null;
+  fecha_vencimiento: string | null;
+  estatus_pago: string | null;
   descripcion: string | null;
   monto: number;
 }
