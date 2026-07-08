@@ -17,7 +17,7 @@ describe("resolveCierreGate", () => {
 });
 
 describe("clasificarBloqueoAvance", () => {
-  const base = { docsBloqueantes: false, docsFaltantesCount: 0, siguiente: "Confirmado", bloqueoCierreMotivo: null };
+  const base = { docsBloqueantes: false, docsFaltantesCount: 0, siguiente: "Confirmado", bloqueoCierreMotivo: null, fechaLlegadaReal: null };
   it("block_docs cuando docs son bloqueantes y faltan", () => {
     expect(clasificarBloqueoAvance({ ...base, docsBloqueantes: true, docsFaltantesCount: 2 })).toBe("block_docs");
   });
@@ -27,7 +27,14 @@ describe("clasificarBloqueoAvance", () => {
   it("gate_cierre cuando siguiente es Cerrado y hay bloqueo de cierre", () => {
     expect(clasificarBloqueoAvance({ ...base, siguiente: "Cerrado", bloqueoCierreMotivo: "checklist" })).toBe("gate_cierre");
   });
+  it("block_fecha_llegada cuando siguiente es Arribo y falta fecha_llegada_real", () => {
+    expect(clasificarBloqueoAvance({ ...base, siguiente: "Arribo", fechaLlegadaReal: null })).toBe("block_fecha_llegada");
+  });
+  it("ok cuando siguiente es Arribo y hay fecha_llegada_real", () => {
+    expect(clasificarBloqueoAvance({ ...base, siguiente: "Arribo", fechaLlegadaReal: "2026-07-01" })).toBe("ok");
+  });
   it("ok cuando no hay bloqueos", () => {
     expect(clasificarBloqueoAvance(base)).toBe("ok");
   });
+
 });
