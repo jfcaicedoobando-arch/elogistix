@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.218.2] - 2026-07-08
+- **Fix UX · Doble toast al capturar factura de proveedor**: al registrar una factura Karol veía dos toasts de éxito ("Factura de proveedor creada" + "Factura de proveedor capturada"). El primero lo emitía `useCrearFacturaProveedor.onSuccess` apenas se insertaba la fila, y el segundo `useNuevaFacturaProveedorForm.submit` al terminar el flujo completo (insert + subida XML/PDF + vínculo a embarque). Se elimina el toast de la mutation y se conserva el del formulario, que es el que confirma que **todo** el flujo terminó bien. La invalidación de queries y el toast de error de la mutation se mantienen intactos.
+- Analogía: el cajero decía "recibí tu depósito" al meter el dinero al cajón y luego el sistema decía "depósito completado" al imprimir el comprobante. Solo se conserva el segundo aviso, que es el que realmente confirma que ya terminó todo.
+
 ## [13.218.1] - 2026-07-08
 - **Fix de datos · Colisión de folio ELIMP00149**: existían dos embarques distintos compartiendo el mismo expediente por una colisión histórica (mismo folio asignado a dos embarques creados con 18 minutos de diferencia). Se reasigna el embarque **cerrado** (BL Master `034G521324`, creado 08-Abr 15:44) al folio libre `ELIMP00304`. El embarque activo en EIR (BL Master `034G523190`) conserva `ELIMP00149`. Se registra en bitácora (`accion = reasignacion_folio`) con el motivo y el folio anterior/nuevo.
 - Analogía: dos carpetas físicas tenían la misma etiqueta "149"; se le puso a la carpeta ya archivada la etiqueta libre "304" para que cada expediente vuelva a tener un folio único, sin tocar nada del contenido de ninguna de las dos.
