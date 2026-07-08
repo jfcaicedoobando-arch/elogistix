@@ -1,30 +1,25 @@
-## Problema
+## Regla
 
-El widget "Sin tracking reciente" (Mi Operación) incluye embarques con estado `Arribo`. Un embarque ya arribado no necesita actualizar ETA, por lo que aparece como "26D de retraso" injustificadamente (caso ELIMP00223).
+Para avanzar un embarque de **En Tránsito → Arribo** se deben cumplir 2 condiciones:
+1. Documentos requeridos completos (sin `documentos_embarque` con `estado='Pendiente'` y `deleted_at IS NULL`).
+2. Registrar la fecha de llegada real (flujo actual).
 
-## Causa
+Si el operador intenta "Marcar Llegada real" con documentos pendientes, se muestra un **toast de advertencia** ("Faltan N documentos por completar antes de marcar la llegada"), no se persiste nada, y no avanza a Arribo.
 
-En `src/features/embarques/services/dashboardOperador.ts`, la función `fetchSinTrackingOperador` filtra por:
+## Cambios
 
-```ts
-.in("estado", ["En Tránsito", "Arribo", "En Aduana"])
-```
+**`TrackingNuevoEventoForm.tsx`** (único archivo con lógica):
+- Antes de invocar `actualizarFechaLlegada.mutateAsync` en el submit del modo `"llegada"`, consultar `documentos_embarque` del embarque:
+  - `select("id", { count: "exact", head: true }).eq("embarque_id", embarqueId).eq("estado","Pendiente").is("deleted_at", null)`
+  - Si `count > 0`: `notifyError(toast, { title: "Documentos incompletos", description: "Hay N documentos pendientes. Súbelos antes de marcar la llegada real." })` y `return` (no cerrar el modal para que reintente después).
+- No se toca `MarcarLlegadaForm.tsx` ni la mutación; la validación vive en el submit handler.
 
-`Arribo` significa que el buque ya llegó al puerto destino — el tracking de ETA deja de ser relevante. `En Aduana` es una etapa posterior, también post-arribo.
+**Versionado/bitácora**:
+- `src/constants/appVersion.ts` → `13.214.5`.
+- `CHANGELOG.md` → entrada `[13.214.5]` describiendo la nueva precondición.
 
-## Cambio propuesto
+## Fuera de alcance
 
-**Un solo archivo:** `src/features/embarques/services/dashboardOperador.ts`
-
-- Quitar `"Arribo"` del filtro `.in("estado", ...)` en `fetchSinTrackingOperador`.
-- Evaluar también quitar `"En Aduana"` (ya arribó, la operación relevante es despacho aduanal, no tracking marítimo). **Recomendado: dejar sólo `["En Tránsito"]`.**
-- Actualizar el comentario de reglas de negocio del archivo.
-
-## Versionado y bitácora
-
-- `src/constants/appVersion.ts` → `13.214.4`.
-- `CHANGELOG.md` → entrada `[13.214.4]` describiendo la exclusión de embarques ya arribados del widget.
-
-## Pregunta abierta
-
-¿Confirmas que el widget sólo debe listar embarques en `**En Tránsito**`? (Si prefieres mantener `En Aduana`, lo dejo también.) Solo en Transito 
+- El botón sigue habilitado (mostrar toast al submit es lo pedido; no bloqueamos el botón).
+- No se agrega trigger de BD (la regla es a nivel UI para dar mensaje amigable).
+- Documentos "requeridos" = todos los que existen en `documentos_embarque` con estado `Pendiente` (no se cambia el catálogo).
