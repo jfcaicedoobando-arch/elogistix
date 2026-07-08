@@ -2,7 +2,7 @@
  * Hook controller para DialogNuevaFacturaProveedor.
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
@@ -22,6 +22,8 @@ import {
   type PendingCfdi, type VinculoLinea,
   addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
 } from "./useNuevaFacturaProveedorForm.helpers";
+import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
+import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
 
 type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
 
@@ -41,6 +43,12 @@ export function useNuevaFacturaProveedorForm(
   const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(
     initialEmbarqueAdHoc ?? null,
   );
+  const [tcOrigen, setTcOrigen] = useState<TcOrigen>("vacio");
+  const [tcFechaAplicada, setTcFechaAplicada] = useState<string | undefined>();
+  // Marca puesta por el usuario cuando escribe manualmente el TC; evita que el
+  // auto-fetch la sobreescriba en el próximo cambio de fecha.
+  const manualTcRef = useRef(false);
+
 
   const total = useMemo(() => calcularTotal(values), [values]);
 
