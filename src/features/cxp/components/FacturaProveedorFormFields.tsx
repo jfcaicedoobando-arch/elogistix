@@ -195,3 +195,16 @@ export function FacturaProveedorFormFields({
     </div>
   );
 }
+
+function TcOrigenHint({ origen, fechaAplicada }: { origen: TcOrigen; fechaAplicada?: string }) {
+  if (origen === "vacio") return null;
+  const fecha = formatFechaEs(fechaAplicada);
+  const text =
+    origen === "dof"
+      ? `DOF ${fecha || "—"} · Banxico SF43718`
+      : origen === "cfdi"
+        ? "Del CFDI del proveedor"
+        : "Capturado manualmente";
+  return <p className="text-[11px] text-muted-foreground">{text}</p>;
+}
+
