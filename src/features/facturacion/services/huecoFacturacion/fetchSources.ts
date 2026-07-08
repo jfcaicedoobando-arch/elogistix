@@ -30,15 +30,14 @@ export interface ConceptoVentaDetalle {
 }
 
 /**
- * v13.213.4 — Criterio nuevo: filtrar por **ETA** (llegada) en lugar de ETD (salida).
- * En importación marítima CN→MX la travesía dura 20-40 días; usar ETD generaba
- * falsos positivos (embarques que aún no llegaban al puerto). Ahora sólo caen
- * los embarques cuyo contenedor ya llegó o llega hoy (`eta ≤ hoy`), respetando
- * el corte del modelo nuevo (`eta ≥ 2026-04-01`).
+ * v13.217.0 — Filtra por **ETA** (llegada) del contenedor. Devuelve embarques
+ * con `eta` entre el corte del modelo nuevo (`2026-04-01`) y `limiteEtaIso`
+ * (típicamente `hoy + 3 días`), para dar buffer al agente aduanal antes del
+ * arribo real.
  */
 export async function fetchEmbarquesParaHueco(
   organizationId: string | null,
-  hoyIso: string,
+  limiteEtaIso: string,
 ): Promise<EmbarqueHuecoRow[]> {
   let q = supabase
     .from("embarques")
@@ -47,9 +46,10 @@ export async function fetchEmbarquesParaHueco(
     )
     .not("eta", "is", null)
     .gte("eta", "2026-04-01")
-    .lte("eta", hoyIso)
+    .lte("eta", limiteEtaIso)
     .eq("facturado_historico", false)
     .order("eta", { ascending: true });
+
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
   if (error) throw error;
