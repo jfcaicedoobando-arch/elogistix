@@ -27,6 +27,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { formatDate } from "@/lib/formatters";
 import { ActualizarEtaForm } from "./ActualizarEtaForm";
 import { MarcarLlegadaForm } from "./MarcarLlegadaForm";
+import { supabase } from "@/integrations/supabase/client";
 
 type Modo = "menu" | "eta" | "llegada";
 
