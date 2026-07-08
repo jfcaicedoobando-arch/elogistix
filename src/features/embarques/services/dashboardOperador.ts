@@ -3,9 +3,10 @@
  * Aísla las queries a Supabase para que el hook `useDashboardOperador`
  * no importe directamente `@/integrations/supabase/client` (regla de capas).
  *
- * Reglas de negocio (v12.51.0):
+ * Reglas de negocio (v13.214.4):
  * - Filtrar embarques por `operador = email del usuario`.
- * - "Sin tracking reciente":
+ * - "Sin tracking reciente": SOLO embarques `En Tránsito` (una vez que arriban
+ *   ya no requiere actualizar ETA, así que se excluyen `Arribo` y `En Aduana`).
  *     · más de 7 días sin un evento manual nuevo, o
  *     · faltan ≤ 2 días para la ETA y el último evento es anterior a (ETA − 2 días).
  *
