@@ -17,7 +17,7 @@ import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
 import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { uploadCfdiSafe, vincularSafe } from "./useNuevaFacturaProveedorForm.sideEffects";
+import { uploadCfdiSafe, vincularSafe, buildFacturaSuccessDescription } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
   type PendingCfdi, type VinculoLinea,
   addDays, initialValues, calcularTotal, validateFactura, buildPayload, mapCfdiToValues,
