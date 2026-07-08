@@ -65,6 +65,8 @@ export interface PFCRow {
     id: string;
     folio_proveedor: string;
     fecha_emision?: string | null;
+    fecha_vencimiento?: string | null;
+    estado?: string | null;
     deleted_at: string | null;
   } | null;
 }
