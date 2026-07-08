@@ -57,10 +57,12 @@ export default function EmbarqueDetalle() {
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
     docsFaltantes, docsBloqueantes,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
+    blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
     cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
+
 
   const financials = useEmbarqueFinancials({
     conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,
@@ -103,12 +105,16 @@ export default function EmbarqueDetalle() {
         onBlockDocsOpenChange={setBlockDocsOpen}
         onConfirmarAvanceConDocsPendientes={confirmarAvanceConDocsPendientes}
         onIrADocumentos={() => { setBlockDocsOpen(false); setActiveTab("documentos"); }}
+        blockFechaLlegadaOpen={blockFechaLlegadaOpen}
+        onBlockFechaLlegadaOpenChange={setBlockFechaLlegadaOpen}
+        onIrATracking={() => { setBlockFechaLlegadaOpen(false); setActiveTab("tracking"); }}
         cierreEsSiguiente={cierreEsSiguiente}
         rolPuedeCerrar={rolPuedeCerrar}
         cierrePuedeAvanzar={cierrePuedeAvanzar}
         cierreMotivoBloqueo={cierreMotivoBloqueo}
         onIrACierre={() => setActiveTab("cierre")}
       />
+
 
 
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />

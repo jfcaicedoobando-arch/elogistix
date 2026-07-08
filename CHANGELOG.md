@@ -5,7 +5,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.214.6] - 2026-07-08
+- **Fix: se podía avanzar a "Arribo" sin registrar la fecha de llegada real**: el botón "Avanzar a Arribo" del header del embarque llamaba a la RPC `avanzar_estado_embarque`, que sólo validaba documentos faltantes y no exigía `fecha_llegada_real`. Caso reportado: ELIMP00291 quedó en `Arribo` con `fecha_llegada_real=NULL`, rompiendo KPIs de puntualidad y demoras.
+- **Candado en el servidor**: la RPC `avanzar_estado_embarque` ahora rechaza cualquier avance a `Arribo` si `fecha_llegada_real` está vacía (error `fecha_llegada_real_requerida`). Aplica a cualquier camino (UI, scripts, integraciones), no sólo al botón del header.
+- **Diálogo en el header**: si el operador presiona "Avanzar a Arribo" sin fecha registrada, ahora se abre un diálogo que lo redirige al tab **Tracking** para usar "Marcar Llegada real" (el único flujo que actualiza la fecha y el estado en una sola operación).
+- Analogía: antes había dos puertas para entrar al galpón de "Arribo" — la del tab Tracking pedía firmar el registro de entrada, la del header no. Ahora las dos puertas exigen la firma.
+
 ## [13.214.5] - 2026-07-08
+
 - **Precondición para "Marcar Llegada real"**: ahora, para avanzar un embarque de `En Tránsito` a `Arribo` se validan dos cosas: (1) que los documentos requeridos estén completos y (2) que se capture la fecha de llegada real. Si al enviar el formulario aún existen documentos en estado `Pendiente`, se muestra un toast avisando cuántos faltan y no se actualiza el embarque — el operador debe subirlos y reintentar.
 - Analogía: es como firmar la aduana antes de bajar del avión — si faltan sellos en el pasaporte (documentos), el sistema no te deja anunciar que ya llegaste.
 

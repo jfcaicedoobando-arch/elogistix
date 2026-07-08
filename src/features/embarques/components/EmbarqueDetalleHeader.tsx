@@ -40,6 +40,10 @@ interface Props {
   onBlockDocsOpenChange: (open: boolean) => void;
   onConfirmarAvanceConDocsPendientes: () => void;
   onIrADocumentos: () => void;
+  // Fecha de llegada real obligatoria al avanzar a Arribo
+  blockFechaLlegadaOpen: boolean;
+  onBlockFechaLlegadaOpenChange: (open: boolean) => void;
+  onIrATracking: () => void;
   // v13.89.1 — Cierre gateado
   cierreEsSiguiente: boolean;
   rolPuedeCerrar: boolean;
@@ -47,6 +51,7 @@ interface Props {
   cierreMotivoBloqueo: "rol" | "checklist" | null;
   onIrACierre: () => void;
 }
+
 
 export function EmbarqueDetalleHeader({
   embarque, estadoVisual, siguienteEstado, canEdit, avanzandoEstado,
@@ -58,8 +63,10 @@ export function EmbarqueDetalleHeader({
   warnDocsOpen, onWarnDocsOpenChange,
   blockDocsOpen, onBlockDocsOpenChange,
   onConfirmarAvanceConDocsPendientes, onIrADocumentos,
+  blockFechaLlegadaOpen, onBlockFechaLlegadaOpenChange, onIrATracking,
   cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
 }: Props) {
+
   const { isAdmin } = usePermissions();
   const puedeReabrir = isAdmin && estadoVisual === "Cerrado";
   const bloqueadoPorDocs = docsBloqueantes && docsFaltantes.length > 0;
@@ -143,7 +150,11 @@ export function EmbarqueDetalleHeader({
         onBlockDocsOpenChange={onBlockDocsOpenChange}
         onConfirmarAvanceConDocsPendientes={onConfirmarAvanceConDocsPendientes}
         onIrADocumentos={onIrADocumentos}
+        blockFechaLlegadaOpen={blockFechaLlegadaOpen}
+        onBlockFechaLlegadaOpenChange={onBlockFechaLlegadaOpenChange}
+        onIrATracking={onIrATracking}
       />
+
     </div>
   );
 }
