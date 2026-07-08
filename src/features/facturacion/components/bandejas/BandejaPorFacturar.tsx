@@ -70,7 +70,8 @@ export function BandejaPorFacturar() {
               isLoading={paged.isLoading}
               emptyIcon={PackageCheck}
               emptyMessage="Sin embarques listos por facturar — no hay hueco de facturación."
-              emptyHint="Aparecerán aquí los embarques cuya ETA ya se cumplió y todavía no tienen un CFDI emitido asociado. Criterio: embarque con ETA ≤ hoy y sin factura_id."
+              emptyHint="Aparecerán aquí los embarques con ETA vencida o próxima (hasta 3 días) que todavía no tienen un CFDI emitido asociado. Criterio: ETA ≤ hoy + 3 días y sin factura_id."
+
               rowKey={(row) => row.embarque_id}
               getRowHref={(row) => `/embarques/${row.embarque_id}?tab=facturacion`}
               getRowAriaLabel={(row) => `Abrir embarque ${row.expediente ?? row.embarque_id}`}
