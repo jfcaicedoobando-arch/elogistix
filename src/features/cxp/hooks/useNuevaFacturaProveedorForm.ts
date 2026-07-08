@@ -193,7 +193,17 @@ export function useNuevaFacturaProveedorForm(
     setValues(mapCfdiToValues(data, provId, provNombre));
     setErrors({});
     setPendingCfdi({ uuid: c.uuid, rfcEmisor: c.emisor.rfc, xmlFile: files.xml, pdfFile: files.pdf });
+    // El XML del CFDI trae el tipo_cambio oficial del emisor — respetarlo.
+    if (c.moneda !== "MXN" && Number(c.tipo_cambio) > 0) {
+      setTcOrigen("cfdi");
+      setTcFechaAplicada(c.fecha);
+      manualTcRef.current = false;
+    } else {
+      setTcOrigen("vacio");
+      setTcFechaAplicada(undefined);
+    }
   };
+
 
   const validate = (): boolean => {
     const next = validateFactura(values, total);
