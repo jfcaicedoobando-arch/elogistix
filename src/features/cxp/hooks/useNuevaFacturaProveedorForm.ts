@@ -244,13 +244,16 @@ export function useNuevaFacturaProveedorForm(
       const created = await crear.mutateAsync(
         buildPayload({ values, total, userId: user?.id, pendingCfdi, vinculos }),
       );
+      let sideResult = {};
       if (created?.id) {
         await uploadCfdiSafe({ facturaId: created.id, organizationId, pendingCfdi });
-        await vincularSafe({
+        sideResult = await vincularSafe({
           facturaId: created.id, organizationId, values, total, vinculos, embarqueAdHoc,
         });
       }
-      toast.success("Factura de proveedor capturada");
+      toast.success("Factura de proveedor capturada", {
+        description: buildFacturaSuccessDescription(sideResult),
+      });
       reset();
       onDone();
     } catch (e) {
