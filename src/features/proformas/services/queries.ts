@@ -164,8 +164,6 @@ export async function fetchClienteParaPdf(clienteId: string) {
   return data;
 }
 
-
-
 export async function fetchEmbarqueParaPdf(embarqueId: string) {
   const { data, error } = await supabase
     .from("embarques")
