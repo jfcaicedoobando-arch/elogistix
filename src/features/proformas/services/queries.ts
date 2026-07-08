@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
+import { mergeProformaDetalle } from "./queries.helpers";
 import type {
   ConceptoVentaRow,
   ProformaConFactura,
