@@ -6,7 +6,7 @@
  *
  * Extraído de `EmbarqueDetalleHeader.tsx` para respetar el límite de 200 líneas.
  */
-import { AlertTriangle, FileWarning } from "lucide-react";
+import { AlertTriangle, FileWarning, CalendarClock } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -28,6 +28,10 @@ interface Props {
   onBlockDocsOpenChange: (open: boolean) => void;
   onConfirmarAvanceConDocsPendientes: () => void;
   onIrADocumentos: () => void;
+  // Fecha de llegada real obligatoria (Arribo)
+  blockFechaLlegadaOpen: boolean;
+  onBlockFechaLlegadaOpenChange: (open: boolean) => void;
+  onIrATracking: () => void;
 }
 
 export function EmbarqueHeaderDialogs({
@@ -37,7 +41,9 @@ export function EmbarqueHeaderDialogs({
   warnDocsOpen, onWarnDocsOpenChange,
   blockDocsOpen, onBlockDocsOpenChange,
   onConfirmarAvanceConDocsPendientes, onIrADocumentos,
+  blockFechaLlegadaOpen, onBlockFechaLlegadaOpenChange, onIrATracking,
 }: Props) {
+
   return (
     <>
       <AlertDialog open={warnCierreOpen} onOpenChange={onWarnCierreOpenChange}>
