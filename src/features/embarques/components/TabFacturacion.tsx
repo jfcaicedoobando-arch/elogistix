@@ -53,11 +53,12 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const { registerRef } = useFocusSection();
 
   // Mapa concepto.id → estado tri-valor (pendiente | en_proforma | facturado).
-  // El estado "facturado" se deriva cruzando con `proformas.estado_proforma`
-  // porque `conceptos_venta.estado_facturacion` es binario en BD.
+  // Ya se lee directo de `conceptos_venta.estado_facturacion` — el trigger
+  // `trg_sync_conceptos_venta_facturado` lo mantiene consistente con
+  // `proformas.estado_proforma`.
   const estadosConceptos = useMemo(
-    () => calcularEstadosConceptos(conceptos, proformas),
-    [conceptos, proformas]
+    () => calcularEstadosConceptos(conceptos),
+    [conceptos]
   );
 
   const conceptosPendientes = useMemo(

@@ -5,6 +5,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
+## [13.213.47] - 2026-07-08
+- **Propagación automática Proforma → Conceptos de venta al facturar**:
+  - Nuevo trigger `trg_sync_conceptos_venta_facturado` en `proformas`: cuando `estado_proforma` pasa a `facturada`, los `conceptos_venta` ligados a esa proforma pasan automáticamente a `estado_facturacion='facturado'`. Si la proforma se revierte a `pendiente` vuelven a `en_proforma`, y si se elimina se desligan y regresan a `pendiente`.
+  - Backfill: 463 conceptos históricos cuya proforma ya estaba facturada quedaron sincronizados a `facturado` (antes seguían en `en_proforma` porque el estado sólo se marcaba en la proforma).
+  - Frontend: `estadoConceptoBadge` y `TabFacturacion` ya no cruzan con `proformas.estado_proforma`; leen directo de `conceptos_venta.estado_facturacion`. Menos código y una única fuente de verdad.
+  - Analogía: antes cada renglón del embarque preguntaba a la proforma "¿ya te facturaron?"; ahora cada renglón trae su propio sello de "Facturado" pegado en cuanto la proforma se cierra.
+
 ## [13.213.46] - 2026-07-07
 - **Trazabilidad Proforma → Factura en el detalle de la proforma**:
   - La tarjeta "Factura asociada" ahora encuentra la(s) factura(s) por la FK `facturas.proforma_id` (dirección inversa) en vez del campo obsoleto `proformas.factura_id`, que el flujo nuevo de conversión no llena.
