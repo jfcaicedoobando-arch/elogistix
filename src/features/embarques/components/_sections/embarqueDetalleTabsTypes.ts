@@ -52,7 +52,7 @@ export interface EmbarqueDetalleTabsProps {
   estadoVisual: string;
   canEdit: boolean;
   documentos: DocsProps["documentos"];
-  conceptosVenta: CostosProps["conceptosVenta"];
+  
   conceptosCosto: CostosProps["conceptosCosto"];
   facturas: FacturacionProps["facturas"];
   notas: NotasProps["notas"];

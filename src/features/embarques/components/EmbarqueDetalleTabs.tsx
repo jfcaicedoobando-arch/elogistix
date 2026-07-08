@@ -25,7 +25,7 @@ import type {
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
-  documentos, conceptosVenta, conceptosCosto, facturas, notas,
+  documentos, conceptosCosto, facturas, notas,
   financials, docHandlers,
 }: EmbarqueDetalleTabsProps) {
   const [pnlView, setPnlView] = useState<PnlView>("global");
@@ -95,7 +95,7 @@ export function EmbarqueDetalleTabs({
 
       <TabsContent value="costos" className="space-y-6">
         <TabCostos
-          conceptosVenta={conceptosVenta}
+          
           conceptosCosto={conceptosCosto}
           totalVenta={financials.totalVenta}
           totalCosto={financials.totalCosto}

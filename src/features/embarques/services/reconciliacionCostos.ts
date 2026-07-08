@@ -29,7 +29,7 @@ export async function fetchReconciliacionEmbarque(
   const ids = conceptos.map((c) => c.id);
   const { data: pfc, error: errPfc } = await supabase
     .from("proveedor_facturas_conceptos")
-    .select("monto, concepto_costo_id, descripcion, proveedor_facturas(id, folio_proveedor, fecha_emision, deleted_at)")
+    .select("monto, concepto_costo_id, descripcion, proveedor_facturas(id, folio_proveedor, fecha_emision, fecha_vencimiento, estado, deleted_at)")
     .in("concepto_costo_id", ids);
   if (errPfc) throw errPfc;
   // SAFE-CAST: shape modelado por PFCRow a partir del select con embed.

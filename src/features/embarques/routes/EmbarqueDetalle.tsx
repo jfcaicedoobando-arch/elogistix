@@ -128,7 +128,7 @@ export default function EmbarqueDetalle() {
         estadoVisual={estadoVisual}
         canEdit={canEdit}
         documentos={documentos}
-        conceptosVenta={conceptosVenta}
+        
         conceptosCosto={conceptosCosto}
         facturas={facturas}
         notas={notas}
