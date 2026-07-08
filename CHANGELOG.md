@@ -14,7 +14,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 - **Nuevo enum de tracking**: se agregó `Cambio de ETA` a `tipo_evento_tracking` con ícono 📅.
 - Analogía: antes el tracking parecía una libreta abierta con 11 casillas; ahora es un semáforo con 2 botones grandes ("ya me dieron nuevo ETA" / "ya llegó"), y ninguna otra puerta te deja marcar el arribo si no capturas la fecha real.
 
-
+## [13.213.51] - 2026-07-08
 - **Marca `facturado_historico` en 13 embarques adicionales**: se excluyen del hueco de facturación los expedientes `ELIMP00114`, `ELIMP00169`, `ELIMP00172`, `ELIMP00205`, `ELIMP00207`, `ELIMP00219`, `ELIMP00223`, `ELIMP00224`, `ELIMP00234`, `ELIMP00252`, `ELIMP00259`, `ELIMP00264` y `ELIMP00282` (facturados por fuera en el sistema anterior). Reversible con un UPDATE.
 
 ## [13.213.50] - 2026-07-08
