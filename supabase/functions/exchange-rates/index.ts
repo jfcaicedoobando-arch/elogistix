@@ -97,14 +97,21 @@ export function rangoUltimosDias(hoy: Date, dias: number = RANGO_DIAS): { inicio
   return { inicio: formatFechaBanxico(inicio), fin: formatFechaBanxico(fin) };
 }
 
-let cache: { rates: { usdMxn: number; eurMxn: number }; expiresAt: number } | null = null;
+// Caché: para "hoy" usamos TTL corto (12h). Para fechas históricas la respuesta
+// es inmutable (el DOF de 15/06/2025 no cambia nunca), así que TTL largo.
+const CACHE_TTL_HISTORICO_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
+const cacheHoy: { rates: { usdMxn: number; eurMxn: number }; expiresAt: number } | null = null;
+let cacheHoyRef: typeof cacheHoy = cacheHoy;
+const cacheHistorico = new Map<string, { rates: { usdMxn: number; eurMxn: number; fechaAplicada?: string }; expiresAt: number }>();
 
 /**
- * Fetch USD DOF: consulta un rango en SF43718 y selecciona el FIX del día
- * hábil anterior a hoy (= Publicación DOF vigente).
+ * Fetch USD DOF por fecha objetivo (default = hoy). Consulta un rango de 10
+ * días hacia atrás y selecciona la última fila con `filaIso < fechaObjetivo`.
  */
-async function fetchUsdDof(token: string, signal: AbortSignal, hoy: Date): Promise<number | null> {
-  const { inicio, fin } = rangoUltimosDias(hoy);
+async function fetchUsdDof(
+  token: string, signal: AbortSignal, fechaObjetivo: Date,
+): Promise<{ tc: number | null; fechaAplicada?: string }> {
+  const { inicio, fin } = rangoUltimosDias(fechaObjetivo);
   const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${SERIE_USD}/datos/${inicio}/${fin}`;
   const res = await fetch(url, {
     headers: { "Bmx-Token": token, "Accept": "application/json" },
@@ -114,26 +121,70 @@ async function fetchUsdDof(token: string, signal: AbortSignal, hoy: Date): Promi
     const body = await res.text().catch(() => "");
     throw new Error(`banxico ${SERIE_USD} ${res.status}: ${body.slice(0, 200)}`);
   }
-  const hoyIso = hoy.toISOString().slice(0, 10);
-  return extraerPublicacionDof((await res.json()) as BanxicoResponse, hoyIso);
+  const objIso = fechaObjetivo.toISOString().slice(0, 10);
+  const json = (await res.json()) as BanxicoResponse;
+  const tc = extraerPublicacionDof(json, objIso);
+  // Buscar la fila efectivamente aplicada para reportarla al cliente.
+  let fechaAplicada: string | undefined;
+  const datos = json?.bmx?.series?.[0]?.datos ?? [];
+  for (let i = datos.length - 1; i >= 0; i--) {
+    const partes = (datos[i]?.fecha ?? "").split("/");
+    if (partes.length !== 3) continue;
+    const [dd, mm, yyyy] = partes;
+    const filaIso = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+    if (filaIso >= objIso) continue;
+    const num = Number(datos[i].dato);
+    if (Number.isFinite(num) && num > 0) { fechaAplicada = filaIso; break; }
+  }
+  return { tc, fechaAplicada };
 }
 
 /**
- * Fetch EUR: SF46410 no soporta el endpoint de rango (404), sólo `oportuno`.
- * Para EUR el SAT no exige "Publicación DOF" formal (Art. 20 CFF trata USD);
- * la tasa Banxico vigente es aceptable para conversión en CFDI.
+ * Fetch EUR: SF46410 no soporta rango (404), sólo `oportuno`. Para "hoy" usa
+ * oportuno; para fecha histórica intenta rango y si no hay datos cae a oportuno.
+ * El SAT no exige "Publicación DOF" formal para EUR (Art. 20 CFF trata USD).
  */
-async function fetchEurBanxico(token: string, signal: AbortSignal): Promise<number | null> {
-  const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${SERIE_EUR}/datos/oportuno`;
-  const res = await fetch(url, {
-    headers: { "Bmx-Token": token, "Accept": "application/json" },
-    signal,
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`banxico ${SERIE_EUR} ${res.status}: ${body.slice(0, 200)}`);
+async function fetchEurBanxico(
+  token: string, signal: AbortSignal, fechaObjetivo: Date, esHoy: boolean,
+): Promise<number | null> {
+  if (esHoy) {
+    const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${SERIE_EUR}/datos/oportuno`;
+    const res = await fetch(url, {
+      headers: { "Bmx-Token": token, "Accept": "application/json" },
+      signal,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`banxico ${SERIE_EUR} ${res.status}: ${body.slice(0, 200)}`);
+    }
+    return extraerUltimoTC((await res.json()) as BanxicoResponse);
   }
-  return extraerUltimoTC((await res.json()) as BanxicoResponse);
+  // Fecha histórica: intentar rango; si falla, silenciosamente devolvemos null.
+  try {
+    const { inicio, fin } = rangoUltimosDias(fechaObjetivo);
+    const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${SERIE_EUR}/datos/${inicio}/${fin}`;
+    const res = await fetch(url, {
+      headers: { "Bmx-Token": token, "Accept": "application/json" },
+      signal,
+    });
+    if (!res.ok) return null;
+    const objIso = fechaObjetivo.toISOString().slice(0, 10);
+    return extraerPublicacionDof((await res.json()) as BanxicoResponse, objIso);
+  } catch {
+    return null;
+  }
+}
+
+function parseFechaParam(url: URL): { fecha: Date; esHoy: boolean; key: string } {
+  const raw = url.searchParams.get("fecha");
+  const hoy = new Date();
+  const hoyIso = hoy.toISOString().slice(0, 10);
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw >= hoyIso) {
+    return { fecha: hoy, esHoy: true, key: "hoy" };
+  }
+  const d = new Date(raw + "T12:00:00Z"); // mediodía UTC para evitar drift de TZ
+  if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy" };
+  return { fecha: d, esHoy: false, key: raw };
 }
 
 Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
@@ -141,11 +192,19 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
   if (preflight) return preflight;
 
   const log = createLogger(req, "exchange-rates");
+  const { fecha, esHoy, key } = parseFechaParam(new URL(req.url));
 
-  // Caché en memoria — sobrevive entre invocaciones mientras la instancia esté caliente.
-  if (cache && cache.expiresAt > Date.now()) {
-    log.finish(200, "rates_cache_hit", { payload: cache.rates });
-    return jsonResponse(cache.rates);
+  // Caché: "hoy" usa cacheHoyRef con TTL corto; históricas usan Map con TTL largo.
+  if (esHoy && cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
+    log.finish(200, "rates_cache_hit_hoy", { payload: cacheHoyRef.rates });
+    return jsonResponse(cacheHoyRef.rates);
+  }
+  if (!esHoy) {
+    const hit = cacheHistorico.get(key);
+    if (hit && hit.expiresAt > Date.now()) {
+      log.finish(200, "rates_cache_hit_historico", { payload: hit.rates });
+      return jsonResponse(hit.rates);
+    }
   }
 
   const token = Deno.env.get("BANXICO_SIE_TOKEN");
@@ -157,19 +216,23 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-  const hoy = new Date();
 
   try {
-    const [usdMxn, eurMxn] = await Promise.all([
-      fetchUsdDof(token, ctrl.signal, hoy),
-      fetchEurBanxico(token, ctrl.signal),
+    const [usd, eurMxn] = await Promise.all([
+      fetchUsdDof(token, ctrl.signal, fecha),
+      fetchEurBanxico(token, ctrl.signal, fecha, esHoy),
     ]);
     const rates = {
-      usdMxn: usdMxn ?? FALLBACK.usdMxn,
+      usdMxn: usd.tc ?? FALLBACK.usdMxn,
       eurMxn: eurMxn ?? FALLBACK.eurMxn,
+      fechaAplicada: usd.fechaAplicada,
     };
-    cache = { rates, expiresAt: Date.now() + CACHE_TTL_MS };
-    log.finish(200, "rates_ok", { payload: rates });
+    if (esHoy) {
+      cacheHoyRef = { rates, expiresAt: Date.now() + CACHE_TTL_MS };
+    } else {
+      cacheHistorico.set(key, { rates, expiresAt: Date.now() + CACHE_TTL_HISTORICO_MS });
+    }
+    log.finish(200, esHoy ? "rates_ok_hoy" : "rates_ok_historico", { payload: rates });
     return jsonResponse(rates);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -180,3 +243,4 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
     clearTimeout(timer);
   }
 }));
+
