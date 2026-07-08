@@ -90,6 +90,8 @@ export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFul
 
 
 
+
+
 export async function fetchProformasAprobadas(organizationId: string): Promise<ProformaConFactura[]> {
   const { data, error } = await supabase
     .from("proformas")
