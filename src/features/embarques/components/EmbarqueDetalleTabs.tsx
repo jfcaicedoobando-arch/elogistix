@@ -25,7 +25,7 @@ import type {
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
-  documentos, conceptosVenta, conceptosCosto, facturas, notas,
+  documentos, conceptosCosto, facturas, notas,
   financials, docHandlers,
 }: EmbarqueDetalleTabsProps) {
   const [pnlView, setPnlView] = useState<PnlView>("global");
