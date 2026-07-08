@@ -1,44 +1,71 @@
-## Cambio de negocio
+# Auditoría "Por capturar" vs "Detalle de costos"
 
-Ampliar la bandeja **"Embarques sin factura"** (hueco de facturación) para incluir también embarques cuyo ETA cae en los **próximos 3 días**, no solo los ya vencidos. Así hay más buffer con los agentes aduanales.
+## Hallazgos
 
-**Criterio nuevo:** `ETA ≤ hoy + 3 días` (antes: `ETA ≤ hoy`).
-Sigue respetando el corte `ETA ≥ 2026-04-01` y que el embarque no tenga CFDI asociado.
+Consulté los 4 expedientes en la base y encontré **dos problemas distintos** que explican el síntoma:
 
-## Archivos a tocar
+### 1. Enlaces huérfanos (causa principal)
 
-1. **`src/features/facturacion/services/huecoFacturacion/fetchSources.ts`**
-   - Cambiar el filtro `.lte("eta", hoyIso)` para usar `hoy + 3 días`.
-   - Ajustar el comentario del docblock.
+La bandeja **Por capturar** cuenta facturas usando `proveedor_facturas.embarque_id` (link directo al embarque). El **Detalle de costos** en cambio muestra "sin factura" porque hace JOIN por `proveedor_facturas_conceptos.concepto_costo_id`. Ese `concepto_costo_id` está **apuntando a IDs de conceptos que ya no existen** en `conceptos_costo`.
 
-2. **`src/features/facturacion/services/huecoFacturacion/index.ts`**
-   - Pasar `hoy + 3 días` como límite superior al fetch.
-   - Actualizar el comentario de reglas (`eta ≤ hoy` → `eta ≤ hoy + 3 días`).
+| Folio proveedor | Embarque | Renglones ligados | Renglones válidos (cc_exists) |
+|---|---|---|---|
+| FP-000015 | ELIMP00203 | 1 | 1 ✅ |
+| FP-000016 | ELIMP00203 | 1 | 1 ✅ |
+| FP-000023 | ELIMP00149 | 6 | **0** ❌ |
+| FP-000025 | ELIMP00193 | 3 | 3 ✅ |
+| FP-000026 | ELIMP00189 | 9 | **0** ❌ |
+| FP-000027 | ELIMP00189 | 9 | **0** ❌ |
+| FP-000028 | ELIMP00203 | 1 | 1 ✅ |
+| FP-000029 | ELIMP00149 | 6 | **0** ❌ |
 
-3. **`src/features/facturacion/services/huecoFacturacion/buildFilas.ts`** (opcional/cosmético)
-   - `diasDesdeEta` puede volverse negativo (ej. `-2` = "faltan 2 días"). La lógica ya lo soporta matemáticamente; solo revisamos que el sort desc siga teniendo sentido (los más vencidos arriba, futuros abajo → sí).
+Los renglones "❌" apuntan a UUIDs de `conceptos_costo` que fueron **borrados** (no soft-delete, hard-delete). Encaja con el patrón conocido del editor de embarques (memoria `features/editar-embarques`): al editar, borra todos los conceptos e inserta nuevos con IDs distintos → deja las facturas con referencias colgantes.
 
-4. **`src/features/facturacion/components/bandejas/BandejaPorFacturar.tsx`**
-   - Copy del encabezado: `"embarque(s) con ETA cumplida sin CFDI"` → `"embarque(s) sin CFDI (ETA vencida o dentro de 3 días)"`.
-   - `emptyHint`: reflejar el nuevo criterio.
+### 2. Embarque ELIMP00149 duplicado
 
-5. **`src/features/facturacion/components/huecoFacturacionColumns.tsx`** (verificar)
-   - Si la columna "Días" muestra el valor crudo, un `-2` es legible pero confuso. Formatear como `"vence en 2 d"` cuando `diasDesdeEta < 0` y `"+N d"` cuando `≥ 0`. (Cambio de presentación, no de datos.)
+Existen **dos filas** con expediente `ELIMP00149`:
+- `1b3e2fff…` — tiene las 2 facturas (FP-000023, FP-000029) y 12 conceptos.
+- `14081b92…` — sin facturas, con 10 conceptos.
 
-6. **Tests**
-   - `src/features/facturacion/services/__tests__/huecoFacturacion.test.ts`: agregar caso de embarque con ETA a +2 días que sí debe aparecer, y otro a +5 días que NO debe aparecer.
-   - `src/features/facturacion/domain/__tests__/huecoCsv.extra.test.ts`: si un test asume `diasDesdeEta ≥ 0`, ajustar.
+Puede confundir aún más el reporte y probablemente sea un embarque creado por duplicado. Se atiende aparte.
 
-7. **Versionado / changelog**
-   - Bump `APP_VERSION` en `src/constants/appVersion.ts` a `13.217.0` (cambio de reglas de negocio, minor).
-   - Entrada en `CHANGELOG.md`: describir la ampliación del rango a 3 días.
+## Plan
+
+### Paso 1 — Reporte de reconciliación (solo lectura)
+
+Crear una vista/RPC diagnóstica `auditoria_pfc_huerfanos()` que devuelva por organización todos los `proveedor_facturas_conceptos` cuyo `concepto_costo_id` no existe en `conceptos_costo`. Sirve para auditoría continua, no solo para estos 4 casos.
+
+### Paso 2 — Migración de rehidratación
+
+Migración SQL que, para cada renglón huérfano:
+1. Toma el `embarque_id` de la factura (`pf.embarque_id`) y busca en `conceptos_costo` el candidato con **mismo proveedor + concepto + monto + moneda** (y no ligado aún a otra factura).
+2. Si encuentra match único → actualiza `pfc.concepto_costo_id` al ID vigente.
+3. Si no hay match o hay ambigüedad → deja `NULL` y registra en `bitacora_actividad` (`pfc.huerfano_no_reconciliado`).
+
+Corre en modo idempotente y solo toca renglones con `cc_exists = false`.
+
+### Paso 3 — Prevención estructural
+
+Aplicar en la misma migración:
+- **FK con `ON DELETE SET NULL`** en `proveedor_facturas_conceptos.concepto_costo_id`. Así, si en el futuro se vuelven a borrar conceptos, el campo queda en `NULL` (visible como "sin ligar") en vez de convertirse en referencia colgante que engaña a los reportes.
+- Ajustar la UI del detalle de costos para mostrar los renglones de factura con `concepto_costo_id IS NULL` en una sección "Renglones de factura sin conciliar" del embarque, para que no queden invisibles.
+
+### Paso 4 — Duplicado ELIMP00149
+
+Presentar los dos registros lado a lado con sus conceptos/proformas/facturas para que decidas cuál conservar. **No se fusiona sin tu confirmación.** Puede resolverse en otro turno.
+
+### Paso 5 — Versionado y changelog
+
+- `APP_VERSION` bump patch.
+- Entrada en `CHANGELOG.md` describiendo la reconciliación y el nuevo comportamiento `ON DELETE SET NULL`.
+
+## Detalles técnicos
+
+- Los renglones válidos (`ELIMP00193`, `ELIMP00203`) confirman que el diseño de la tabla funciona; el daño lo causa el editor de embarques al hacer delete+insert de `conceptos_costo`.
+- La bandeja **Por capturar** seguirá contando por `embarque_id` — no requiere cambio.
+- El detalle de costos ya hace el JOIN correcto; con el paso 2 empezará a mostrar la factura ligada.
+- No se toca la tabla `_backup_conceptos_venta_elimp00195_20260706` ni ningún backup.
 
 ## Analogía
 
-Antes la bandeja era como un semáforo que se prendía solo cuando el barco ya había atracado. Ahora se prende también cuando ya está a la vista del puerto (3 días de anticipación), para que operaciones tenga margen de reacción con el agente aduanal.
-
-## Notas técnicas
-
-- El filtro `gte("eta", "2026-04-01")` se mantiene intacto — no revive back-fill.
-- No hay cambios de base de datos ni RLS: es todo query + presentación.
-- `diasDesdeEta` seguirá siendo `floor((hoy - eta)/día)`, por lo que embarques futuros darán valores negativos. El sort `desc` deja los más vencidos arriba, lo cual es la prioridad operativa correcta.
+Imagina que cada concepto de costo es una casilla numerada en una repisa, y cada renglón de factura tiene una etiqueta "va en la casilla #X". Cuando se edita el embarque, se tiran todas las casillas y se ponen unas nuevas con numeración distinta — pero las etiquetas de las facturas siguen apuntando a los números viejos. **Paso 2** vuelve a pegar las etiquetas en la casilla correcta según el contenido. **Paso 3** hace que, si algún día vuelven a tirar las casillas, las etiquetas se despeguen solas (queden en blanco) en vez de quedar apuntando al vacío.
