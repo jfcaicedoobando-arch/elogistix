@@ -214,12 +214,3 @@ export function GrupoCostosProveedor({
     </div>
   );
 }
-
-/** Pequeño botón para expandir/colapsar todos los grupos de una carta. */
-export function ToggleGruposButton({ allOpen, onToggle }: { allOpen: boolean; onToggle: () => void }) {
-  return (
-    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onToggle}>
-      {allOpen ? "Colapsar todo" : "Expandir todo"}
-    </Button>
-  );
-}
