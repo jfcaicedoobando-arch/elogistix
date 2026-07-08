@@ -51,19 +51,33 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
     {
       id: "avance",
       header: "Avance",
-      meta: { width: "w-[200px]" },
+      meta: { width: "w-[220px]" },
       cell: ({ row }) => {
-        const presup = Number(row.original.costos_presupuestados) || 0;
-        const fact = Number(row.original.monto_facturado) || 0;
-        const pct = presup > 0 ? Math.min(100, Math.round((fact / presup) * 100)) : 0;
+        const presupMxn = Number(row.original.presupuestado_mxn) || 0;
+        const presupUsd = Number(row.original.presupuestado_usd) || 0;
+        const factMxn = Number(row.original.facturado_mxn) || 0;
+        const factUsd = Number(row.original.facturado_usd) || 0;
+        // Barra: porcentaje de la moneda con mayor presupuesto (no se pueden mezclar).
+        const dominante = presupUsd > presupMxn
+          ? { presup: presupUsd, fact: factUsd }
+          : { presup: presupMxn, fact: factMxn };
+        const pct = dominante.presup > 0
+          ? Math.min(100, Math.round((dominante.fact / dominante.presup) * 100))
+          : 0;
         return (
           <div>
             <div className="flex items-center gap-2">
               <Progress value={pct} className="h-2 flex-1" />
               <span className="text-xs tabular-nums text-muted-foreground w-9 text-right">{pct}%</span>
             </div>
-            <div className="text-[11px] text-muted-foreground tabular-nums mt-0.5">
-              {formatCurrency(fact, "MXN")} / {formatCurrency(presup, "MXN")}
+            <div className="text-[11px] text-muted-foreground tabular-nums mt-0.5 space-y-0.5">
+              {presupMxn > 0 && (
+                <div>{formatCurrency(factMxn, "MXN")} / {formatCurrency(presupMxn, "MXN")}</div>
+              )}
+              {presupUsd > 0 && (
+                <div>{formatCurrency(factUsd, "USD")} / {formatCurrency(presupUsd, "USD")}</div>
+              )}
+              {presupMxn <= 0 && presupUsd <= 0 && <div>—</div>}
             </div>
           </div>
         );
