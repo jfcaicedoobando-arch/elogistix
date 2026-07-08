@@ -175,14 +175,26 @@ async function fetchEurBanxico(
   }
 }
 
-function parseFechaParam(url: URL): { fecha: Date; esHoy: boolean; key: string } {
-  const raw = url.searchParams.get("fecha");
+/**
+ * Extrae la fecha objetivo. Prioriza query string (`?fecha=YYYY-MM-DD`) y
+ * como fallback el body JSON `{ fecha }` (para `supabase.functions.invoke`,
+ * que serializa como POST).
+ */
+export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string }> {
   const hoy = new Date();
   const hoyIso = hoy.toISOString().slice(0, 10);
+  const url = new URL(req.url);
+  let raw = url.searchParams.get("fecha") ?? "";
+  if (!raw && req.method === "POST") {
+    try {
+      const body = await req.clone().json();
+      if (body && typeof body.fecha === "string") raw = body.fecha;
+    } catch { /* body no era JSON o vacío */ }
+  }
   if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw >= hoyIso) {
     return { fecha: hoy, esHoy: true, key: "hoy" };
   }
-  const d = new Date(raw + "T12:00:00Z"); // mediodía UTC para evitar drift de TZ
+  const d = new Date(raw + "T12:00:00Z");
   if (Number.isNaN(d.getTime())) return { fecha: hoy, esHoy: true, key: "hoy" };
   return { fecha: d, esHoy: false, key: raw };
 }
@@ -192,7 +204,8 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
   if (preflight) return preflight;
 
   const log = createLogger(req, "exchange-rates");
-  const { fecha, esHoy, key } = parseFechaParam(new URL(req.url));
+  const { fecha, esHoy, key } = await resolverFecha(req);
+
 
   // Caché: "hoy" usa cacheHoyRef con TTL corto; históricas usan Map con TTL largo.
   if (esHoy && cacheHoyRef && cacheHoyRef.expiresAt > Date.now()) {
