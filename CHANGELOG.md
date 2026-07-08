@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.219.3] - 2026-07-08
+- **Bugfix · Lint `no-case-declarations` en `useCxpPorCapturarFilters.ts`**: el `case "monto"` del ordenamiento declaraba `const totalA/totalB` sin llaves, lo que ESLint marca como error porque cada `case` comparte el mismo bloque. Se envolvió el cálculo en llaves para que las variables vivan solo dentro de ese caso, sin cambiar la lógica de ordenamiento.
+- Archivos: `hooks/useCxpPorCapturarFilters.ts`.
+- Analogía: es como poner puertas entre los cuartos de una casa compartida; antes las variables "se escapaban" al pasillo del `switch`, ahora cada caso tiene su propia habitación con cerradura.
+
 ## [13.219.2] - 2026-07-08
 - **Bugfix · Avance en "Por capturar" mezclaba MXN y USD como si fueran la misma moneda**: la columna Avance y el KPI de costo presupuestado sumaban `conceptos_costo.monto` y `proveedor_facturas.total` sin importar la divisa, y el resultado se mostraba siempre en MXN. Un embarque con presupuesto de **6,410 USD** aparecía como **$6,410 MXN**; embarques con mezcla (60,500 MXN + 354 USD) se sumaban a **60,854** sin unidad real. Ahora el RPC `cxp_por_capturar` devuelve montos separados por moneda (`presupuestado_mxn`, `presupuestado_usd`, `facturado_mxn`, `facturado_usd`), la columna muestra dos renglones cuando hay mezcla (cada uno con su símbolo) y la barra de progreso usa la moneda con mayor presupuesto. El estatus "sin/parcial/completo" también evalúa MXN y USD por separado.
 - Archivos: migración de la función `cxp_por_capturar`, `services/bandejas.ts` (interfaz), `components/cxpPorCapturarColumns.tsx` (celda Avance con doble línea), `hooks/useCxpPorCapturarFilters.ts` (`estatusDeFila` por moneda), `domain/aggregates.ts` (`resumirCxpPorCapturar` separa `totalPresupuestadoMxn` y `totalPresupuestadoUsd`), `routes/CxpPorCapturar.tsx` (KPI compuesto).
