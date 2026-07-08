@@ -124,7 +124,7 @@ export default function Embarques() {
                 density="comfortable"
                 className="pb-24 sm:pb-0"
                 mobileCard={(e) => {
-                  const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+                  const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
                   return (
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
