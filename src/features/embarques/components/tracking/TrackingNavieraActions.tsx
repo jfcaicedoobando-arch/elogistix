@@ -6,7 +6,41 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ExternalLink, Copy, Check, AlertCircle } from "lucide-react";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+
+/**
+ * Copia texto al portapapeles con fallback para entornos donde la Clipboard API
+ * está bloqueada por Permissions-Policy (ej. iframes de preview). Cae a un
+ * <textarea> temporal + document.execCommand("copy") que sí funciona.
+ */
+async function copyTextWithFallback(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Cae al fallback.
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.left = "0";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 
 interface Props {
   modo: string;
