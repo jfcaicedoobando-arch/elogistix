@@ -8306,6 +8306,7 @@ export type Database = {
         | "Demora"
         | "Inspección"
         | "Otro"
+        | "Cambio de ETA"
       tipo_nota: "nota" | "cambio_estado" | "documento" | "factura" | "sistema"
       tipo_operacion:
         | "Importación"
@@ -8611,6 +8612,7 @@ export const Constants = {
         "Demora",
         "Inspección",
         "Otro",
+        "Cambio de ETA",
       ],
       tipo_nota: ["nota", "cambio_estado", "documento", "factura", "sistema"],
       tipo_operacion: [
