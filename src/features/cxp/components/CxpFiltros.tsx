@@ -101,51 +101,20 @@ export function CxpFiltros(props: Props) {
         <div className="hidden md:flex md:items-center md:gap-2 md:flex-wrap">
           <SearchInput value={props.search} onChange={props.onSearchChange}
             placeholder="Buscar folio o proveedor..." className="flex-1 min-w-[220px]" />
-          <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
-            {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
-              <Button key={opt} type="button"
-                variant={props.origen === opt ? "default" : "ghost"}
-                size="sm" className="h-8 px-3 text-xs"
-                onClick={() => props.onOrigenChange(opt)}>
-                {opt === 'todos' ? 'Todos' : opt}
-              </Button>
-            ))}
-          </div>
-          <Select value={props.estatus} onValueChange={(v) => props.onEstatusChange(v as EstatusCxP | "todos")}>
-            <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {ESTATUS.map((e) => (
-                <SelectItem key={e} value={e}>
-                  {e === "todos" ? "Todos los estatus" : e}
-                </SelectItem>
+          <div className="flex flex-col gap-0.5 shrink-0">
+            <span className="text-2xs uppercase tracking-wider text-muted-foreground/70 px-1">Origen</span>
+            <div className="flex gap-1 rounded-md border bg-background p-0.5">
+              {(['todos', 'Nacional', 'Extranjero'] as const).map((opt) => (
+                <Button key={opt} type="button"
+                  variant={props.origen === opt ? "default" : "ghost"}
+                  size="sm" className="h-8 px-3 text-xs"
+                  onClick={() => props.onOrigenChange(opt)}>
+                  {opt === 'todos' ? 'Todos' : opt}
+                </Button>
               ))}
-            </SelectContent>
-          </Select>
-          <Select value={props.moneda} onValueChange={(v) => props.onMonedaChange(v as typeof props.moneda)}>
-            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas</SelectItem>
-              <SelectItem value="MXN">MXN</SelectItem>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="EUR">EUR</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex gap-1 rounded-md border bg-background p-0.5 shrink-0">
-            {([
-              { v: 'todos', l: 'Todas' },
-              { v: 'pendiente', l: 'Por aprobar' },
-              { v: 'aprobada', l: 'Aprobadas' },
-              { v: 'rechazada', l: 'Rechazadas' },
-            ] as const).map(({ v, l }) => (
-              <Button key={v} type="button"
-                variant={props.aprobacion === v ? "default" : "ghost"}
-                size="sm" className="h-8 px-3 text-xs"
-                onClick={() => props.onAprobacionChange(v)}>
-                {l}
-              </Button>
-            ))}
+            </div>
           </div>
-          <FilterButton count={secondaryActive} />
+          <FilterButton count={totalActive - (props.origen !== "todos" ? 1 : 0)} />
         </div>
 
         <SheetContent side="right" className={mobileFilterSheet}>
