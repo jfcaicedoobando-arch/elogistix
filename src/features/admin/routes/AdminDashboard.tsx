@@ -38,7 +38,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         {cards.map((card) => {
           const inner = (
-            <Card className="transition-all group-hover:shadow-md group-hover:-translate-y-0.5 group-hover:border-primary/40">
+            <Card className="transition-all group-hover:shadow-raised group-hover:-translate-y-0.5 group-hover:border-primary/40">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
                 <card.icon className={`h-4 w-4 ${card.tone}`} />
