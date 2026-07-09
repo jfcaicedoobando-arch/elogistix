@@ -1,12 +1,8 @@
-import { useState, useEffect } from 'react';
+/**
+ * Alias histórico de `useDebouncedValue`. Se conserva para no romper los ~12
+ * call-sites que importan `useDebounce` desde `@/hooks/shared`. La lógica vive
+ * ahora en `@/lib/hooks/useDebouncedValue`.
+ */
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 
-export function useDebounce<T>(value: T, delay = 300): T {
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debounced;
-}
+export const useDebounce = useDebouncedValue;
