@@ -58,19 +58,22 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
       <KPICard label="Por pagar USD" value={formatCurrency(kpis.por_pagar_usd, "USD")} count={porPagarUsd} />
       <KPICard
         label="Vencido"
-        value={`${formatCurrency(kpis.vencido_mxn, "MXN")} · ${formatCurrency(kpis.vencido_usd, "USD")}`}
+        value={formatCurrency(kpis.vencido_mxn, "MXN")}
+        secondary={formatCurrency(kpis.vencido_usd, "USD")}
         count={vencidasN}
         tone="danger"
       />
       <KPICard
         label="Por vencer 7 días"
-        value={`${formatCurrency(kpis.por_vencer_7d_mxn, "MXN")} · ${formatCurrency(kpis.por_vencer_7d_usd, "USD")}`}
+        value={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
+        secondary={formatCurrency(kpis.por_vencer_7d_usd, "USD")}
         count={porVencer7d}
         tone="warn"
       />
       <KPICard
         label="Programado 7 días"
-        value={`${formatCurrency(programadoMxn, "MXN")} · ${formatCurrency(programadoUsd, "USD")}`}
+        value={formatCurrency(programadoMxn, "MXN")}
+        secondary={formatCurrency(programadoUsd, "USD")}
         count={programadoN}
       />
     </div>
