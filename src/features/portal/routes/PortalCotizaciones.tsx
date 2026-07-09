@@ -89,7 +89,7 @@ export default function PortalCotizaciones() {
             return (
               <Card
                 key={c.id}
-                className="cursor-pointer transition-all hover:shadow-sm hover:border-accent/30 group"
+                className="cursor-pointer transition-all hover:shadow-raised hover:border-accent/30 group"
                 onClick={() => navigate(`/portal/cotizaciones/${c.id}`)}
               >
                 <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
