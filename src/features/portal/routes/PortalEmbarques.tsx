@@ -38,9 +38,11 @@ export default function PortalEmbarques() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Ship className="h-6 w-6 text-accent" />}
         title="Mis Embarques"
         actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
       />
+
 
       <PortalFiltersBar
         search={search}
