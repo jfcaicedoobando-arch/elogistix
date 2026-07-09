@@ -48,7 +48,7 @@ export default function Diagnostico() {
 
   const description = useMemo(() => {
     if (isLoading) return "Cargando registros…";
-    return `${total.toLocaleString("es-MX")} registros — página ${page} de ${totalPages}${
+    return `${formatNumber(total)} registros — página ${page} de ${totalPages}${
       isFetching ? " (actualizando…)" : ""
     }`;
   }, [total, page, totalPages, isLoading, isFetching]);
