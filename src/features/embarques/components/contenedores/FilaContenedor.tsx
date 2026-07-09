@@ -1,5 +1,6 @@
 /**
  * Una fila editable para un contenedor dentro de ListaContenedoresEditable.
+ * v13.232.0 · Confirmación migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useId, useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -13,20 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import type { TipoContenedor } from "@/features/catalogos/hooks";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
   index: number;
@@ -80,31 +71,24 @@ export function FilaContenedor({
         )}
       </div>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar contenedor #{index + 1}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se quitará el contenedor «{value.numero_contenedor || "sin número"}»
-              {value.tipo_contenedor ? ` (${value.tipo_contenedor})` : ""} de la lista.
-              El cambio se aplica al presionar <strong>Guardar cambios</strong>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={(e) => {
-                e.preventDefault();
-                onDelete();
-                setConfirmOpen(false);
-              }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`¿Eliminar contenedor #${index + 1}?`}
+        variant="destructive"
+        confirmLabel="Eliminar"
+        onConfirm={() => {
+          onDelete();
+          setConfirmOpen(false);
+        }}
+        description={
+          <>
+            Se quitará el contenedor «{value.numero_contenedor || "sin número"}»
+            {value.tipo_contenedor ? ` (${value.tipo_contenedor})` : ""} de la lista.
+            El cambio se aplica al presionar <strong>Guardar cambios</strong>.
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">

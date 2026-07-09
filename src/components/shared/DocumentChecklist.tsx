@@ -1,17 +1,7 @@
 import { useRef, useState } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 export type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
@@ -25,21 +15,6 @@ interface Props {
 export default function DocumentChecklist({ documentos, onFileChange, descripcion }: Props) {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
-
-  const handleDeleteClick = (docNombre: string) => {
-    setPendingDelete(docNombre);
-  };
-
-  const handleConfirmDelete = () => {
-    if (pendingDelete) {
-      onFileChange(pendingDelete, undefined);
-    }
-    setPendingDelete(null);
-  };
-
-  const handleCancel = () => {
-    setPendingDelete(null);
-  };
 
   return (
     <div className="space-y-3">
@@ -77,7 +52,7 @@ export default function DocumentChecklist({ documentos, onFileChange, descripcio
                 variant="ghost"
                 size="sm"
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => handleDeleteClick(doc.nombre)}
+                onClick={() => setPendingDelete(doc.nombre)}
                 aria-label={`Eliminar archivo ${doc.nombre}`}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden />
@@ -93,25 +68,20 @@ export default function DocumentChecklist({ documentos, onFileChange, descripcio
         </div>
       ))}
 
-      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) handleCancel(); }}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminará el archivo adjunto de <strong>{pendingDelete}</strong>. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancel}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={!!pendingDelete}
+        onOpenChange={(o) => { if (!o) setPendingDelete(null); }}
+        title="¿Eliminar archivo?"
+        variant="destructive"
+        confirmLabel="Eliminar"
+        onConfirm={() => {
+          if (pendingDelete) onFileChange(pendingDelete, undefined);
+          setPendingDelete(null);
+        }}
+        description={
+          <>Se eliminará el archivo adjunto de <strong>{pendingDelete}</strong>. Esta acción no se puede deshacer.</>
+        }
+      />
     </div>
   );
 }

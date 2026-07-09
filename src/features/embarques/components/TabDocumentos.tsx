@@ -1,13 +1,9 @@
 import { useMemo, useState } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { DataTable } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
@@ -95,28 +91,20 @@ export function TabDocumentos({
         documentos={documentos}
       />
 
-      <AlertDialog open={!!docToDelete} onOpenChange={(open) => { if (!open) setDocToDelete(null); }}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
-            <AlertDialogDescription>
-              El archivo <strong>{docToDelete?.nombre}</strong> será eliminado permanentemente. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (docToDelete && onDelete) onDelete(docToDelete);
-                setDocToDelete(null);
-              }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={!!docToDelete}
+        onOpenChange={(open) => { if (!open) setDocToDelete(null); }}
+        title="¿Eliminar documento?"
+        variant="destructive"
+        confirmLabel="Eliminar"
+        onConfirm={() => {
+          if (docToDelete && onDelete) onDelete(docToDelete);
+          setDocToDelete(null);
+        }}
+        description={
+          <>El archivo <strong>{docToDelete?.nombre}</strong> será eliminado permanentemente. Esta acción no se puede deshacer.</>
+        }
+      />
     </>
   );
 }

@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { Trash2, UserPlus, Users } from "lucide-react";
 import type { MemberRow } from "@/features/admin/hooks";
@@ -31,7 +31,14 @@ interface OrgMembersCardProps {
   onRemove: (memberId: string) => void;
 }
 
+/**
+ * v13.232.0 · Confirmación de eliminación migrada a `ConfirmActionDialog`
+ * a nivel Card (un único diálogo compartido). Se guarda la fila objetivo
+ * en estado local, en lugar de un AlertDialog por fila (Lote 7d.2).
+ */
 export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onRemove }: OrgMembersCardProps) {
+  const [memberAEliminar, setMemberAEliminar] = useState<MemberRow | null>(null);
+
   const columns: ColumnDef<MemberRow, unknown>[] = defineColumns<MemberRow>([
     { id: "email", header: "Usuario", meta: { width: "min-w-[200px]", className: "font-medium" }, cell: ({ row }) => row.original.email ?? row.original.user_id },
     {
@@ -74,35 +81,17 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
     },
     {
       id: "eliminar", header: "", meta: { headerClassName: "w-12" },
-      cell: ({ row }) => {
-        const m = row.original;
-        return (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" aria-label="Eliminar miembro">
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className={dialogSize.sm}>
-              <AlertDialogHeader>
-                <AlertDialogTitle>¿Eliminar miembro?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Se eliminará a <strong>{m.email}</strong> de esta organización. El usuario seguirá existiendo en el sistema.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={(e) => { e.preventDefault(); onRemove(m.id); }}
-                >
-                  Eliminar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        );
-      },
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive"
+          aria-label="Eliminar miembro"
+          onClick={() => setMemberAEliminar(row.original)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
     },
   ]);
 
@@ -126,6 +115,23 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
           density="comfortable"
         />
       </CardContent>
+
+      <ConfirmActionDialog
+        open={!!memberAEliminar}
+        onOpenChange={(o) => { if (!o) setMemberAEliminar(null); }}
+        title="¿Eliminar miembro?"
+        variant="destructive"
+        confirmLabel="Eliminar"
+        onConfirm={() => {
+          if (memberAEliminar) onRemove(memberAEliminar.id);
+          setMemberAEliminar(null);
+        }}
+        description={
+          memberAEliminar
+            ? <>Se eliminará a <strong>{memberAEliminar.email}</strong> de esta organización. El usuario seguirá existiendo en el sistema.</>
+            : null
+        }
+      />
     </Card>
   );
 }

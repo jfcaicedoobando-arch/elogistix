@@ -1,10 +1,11 @@
+/**
+ * Botón "Avanzar a <siguiente estado>" del header de embarque.
+ * v13.232.0 · Migrado a `ConfirmActionDialog` (Lote 7d.2).
+ */
+import { useState } from "react";
 import { ChevronRight, FileWarning } from "lucide-react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
@@ -24,47 +25,45 @@ export function AvanzarEstadoButton({
   bloqueadoPorDocs, docsFaltantes, cierreBloqueadoPorChecklist,
   onAvanzarEstado, onIrACierre, onIrADocumentos,
 }: Props) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   // v13.142.5 — Cuando faltan docs, el botón NO se deshabilita: abre un
   // AlertDialog explicativo. Esto reemplaza el tooltip (invisible en móvil).
   if (bloqueadoPorDocs) {
-    const trigger = (
-      <Button size="sm" disabled={avanzandoEstado}>
-        <ChevronRight className="h-4 w-4 mr-1" />
-        Avanzar a {siguienteEstado}
-      </Button>
-    );
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <AlertDialog>
+      <>
+        <TooltipProvider>
+          <Tooltip>
             <TooltipTrigger asChild>
-              <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+              <Button size="sm" disabled={avanzandoEstado} onClick={() => setDialogOpen(true)}>
+                <ChevronRight className="h-4 w-4 mr-1" />
+                Avanzar a {siguienteEstado}
+              </Button>
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Faltan documentos para pasar a {siguienteEstado}</p>
             </TooltipContent>
-            <AlertDialogContent className={dialogSize.sm}>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <FileWarning className="h-5 w-5 text-destructive" /> No se puede avanzar
-                </AlertDialogTitle>
-                <AlertDialogDescription asChild>
-                  <div className="space-y-2">
-                    <p>Para pasar a <strong>{siguienteEstado}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
-                    <ul className="list-disc list-inside text-sm">
-                      {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
-                    </ul>
-                  </div>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cerrar</AlertDialogCancel>
-                <AlertDialogAction onClick={onIrADocumentos}>Ir a Documentos</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </Tooltip>
-      </TooltipProvider>
+          </Tooltip>
+        </TooltipProvider>
+        <ConfirmActionDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          title="No se puede avanzar"
+          titleIcon={<FileWarning className="h-5 w-5 text-destructive" aria-hidden />}
+          titleDestructive
+          confirmLabel="Ir a Documentos"
+          cancelLabel="Cerrar"
+          onConfirm={() => { setDialogOpen(false); onIrADocumentos(); }}
+          description={
+            <div className="space-y-2">
+              <p>Para pasar a <strong>{siguienteEstado}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
+              <ul className="list-disc list-inside text-sm">
+                {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
+              </ul>
+            </div>
+          }
+        />
+      </>
     );
   }
 
@@ -88,25 +87,22 @@ export function AvanzarEstadoButton({
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button size="sm" disabled={avanzandoEstado}>
-          <ChevronRight className="h-4 w-4 mr-1" />
-          Avanzar a {siguienteEstado}
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className={dialogSize.sm}>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar cambio de estado</AlertDialogTitle>
-          <AlertDialogDescription>
-            ¿Estás seguro de cambiar el estado de <strong>{estadoVisual}</strong> a <strong>{siguienteEstado}</strong>? Esta acción quedará registrada en la bitácora.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onAvanzarEstado}>Confirmar</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <Button size="sm" disabled={avanzandoEstado} onClick={() => setDialogOpen(true)}>
+        <ChevronRight className="h-4 w-4 mr-1" />
+        Avanzar a {siguienteEstado}
+      </Button>
+      <ConfirmActionDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title="Confirmar cambio de estado"
+        confirmLabel="Confirmar"
+        isPending={avanzandoEstado}
+        onConfirm={() => { setDialogOpen(false); onAvanzarEstado(); }}
+        description={
+          <>¿Estás seguro de cambiar el estado de <strong>{estadoVisual}</strong> a <strong>{siguienteEstado}</strong>? Esta acción quedará registrada en la bitácora.</>
+        }
+      />
+    </>
   );
 }

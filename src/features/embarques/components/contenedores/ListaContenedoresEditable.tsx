@@ -1,26 +1,17 @@
 /**
  * Editor de lista dinámica de contenedores. Reutilizable en wizard y vista detalle.
+ * v13.232.0 · Confirmación migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import {
   crearContenedorVacio,
   type ContenedorBorrador,
 } from "@/features/embarques/types/contenedor";
 import { FilaContenedor } from "./FilaContenedor";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 const SOFT_CAP = 50;
 
@@ -100,27 +91,17 @@ export function ListaContenedoresEditable({
         Agregar contenedor
       </Button>
 
-      <AlertDialog open={confirmSoftCap} onOpenChange={setConfirmSoftCap}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Agregar otro contenedor?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Ya tienes {value.length} contenedores en este embarque. Asegúrate de que sea correcto antes de continuar.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setConfirmSoftCap(false);
-                appendRow();
-              }}
-            >
-              Sí, agregar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={confirmSoftCap}
+        onOpenChange={setConfirmSoftCap}
+        title="¿Agregar otro contenedor?"
+        confirmLabel="Sí, agregar"
+        onConfirm={() => {
+          setConfirmSoftCap(false);
+          appendRow();
+        }}
+        description={`Ya tienes ${value.length} contenedores en este embarque. Asegúrate de que sea correcto antes de continuar.`}
+      />
     </div>
   );
 }

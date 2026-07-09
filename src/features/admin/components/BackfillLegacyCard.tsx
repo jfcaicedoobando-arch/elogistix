@@ -4,7 +4,9 @@
  * falsos positivos en la auditoría operativa de embarques previos al módulo
  * de facturación.
  *
- * Solo super_admin. Doble confirmación tipo ELIMINAR.
+ * Solo super_admin. Doble confirmación tipo EJECUTAR.
+ *
+ * v13.232.0 · Migrado a `ConfirmActionDialog` con Label a11y (Lote 7d.2).
  */
 import { useState } from "react";
 import { Database, Loader2, CheckCircle2 } from "lucide-react";
@@ -13,11 +15,8 @@ import { useBackfillLegacy } from "@/features/admin/hooks/useBackfillLegacy";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { Label } from "@/components/ui/label";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 export function BackfillLegacyCard() {
   const [open, setOpen] = useState(false);
@@ -69,34 +68,37 @@ export function BackfillLegacyCard() {
           </div>
         )}
 
-        <AlertDialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setConfirmText(""); }}>
-          <AlertDialogContent className={dialogSize.md}>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Ejecutar backfill legacy</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción modifica registros en <strong>conceptos_venta</strong> y{" "}
-                <strong>proformas</strong> de TODAS las organizaciones. Solo afecta filas
-                donde ya existe una factura emitida correspondiente. No es reversible.
-                Escribe <strong>EJECUTAR</strong> para confirmar.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
+        <ConfirmActionDialog
+          open={open}
+          onOpenChange={(o) => { setOpen(o); if (!o) setConfirmText(""); }}
+          size="md"
+          title="Ejecutar backfill legacy"
+          confirmLabel="Ejecutar"
+          confirmDisabled={confirmText !== "EJECUTAR"}
+          isPending={run.isPending}
+          onConfirm={() => run.mutate()}
+          description={
+            <>
+              Esta acción modifica registros en <strong>conceptos_venta</strong> y{" "}
+              <strong>proformas</strong> de TODAS las organizaciones. Solo afecta filas
+              donde ya existe una factura emitida correspondiente. No es reversible.
+            </>
+          }
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="backfill-confirm" className="text-xs">
+              Escribe <span className="font-mono font-semibold">EJECUTAR</span> para confirmar
+            </Label>
             <Input
+              id="backfill-confirm"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="EJECUTAR"
               autoFocus
+              autoComplete="off"
             />
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={confirmText !== "EJECUTAR" || run.isPending}
-                onClick={(e) => { e.preventDefault(); run.mutate(); }}
-              >
-                Ejecutar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          </div>
+        </ConfirmActionDialog>
       </CardContent>
     </Card>
   );

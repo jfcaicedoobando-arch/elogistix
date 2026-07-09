@@ -1,5 +1,6 @@
 /**
  * Tab Configuración de categorías presupuestales.
+ * v13.232.0 · Confirmación migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
 import { toast } from "sonner";
@@ -7,10 +8,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CardSkeleton } from "@/components/shared/skeletons";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   usePresupuestoCategorias, useEliminarCategoriaPresupuesto,
@@ -20,7 +18,6 @@ import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 export function TabCategorias() {
   const { organizationId } = useOrganization();
   const cats = usePresupuestoCategorias(false);
@@ -124,20 +121,15 @@ export function TabCategorias() {
 
       <DialogCategoria open={open} onOpenChange={setOpen} categoria={editar} />
 
-      <AlertDialog open={!!borrarId} onOpenChange={(v) => !v && setBorrarId(null)}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar categoría</AlertDialogTitle>
-            <AlertDialogDescription>
-              También se eliminarán los montos presupuestados asociados. Las facturas mantendrán su histórico sin categoría.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEliminar}>Eliminar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={!!borrarId}
+        onOpenChange={(v) => { if (!v) setBorrarId(null); }}
+        title="Eliminar categoría"
+        variant="destructive"
+        confirmLabel="Eliminar"
+        onConfirm={handleEliminar}
+        description="También se eliminarán los montos presupuestados asociados. Las facturas mantendrán su histórico sin categoría."
+      />
     </div>
   );
 }

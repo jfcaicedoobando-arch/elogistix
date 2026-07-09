@@ -5,21 +5,13 @@
  * v13.177.0 — Confirmación previa antes de aprobar + validación del motivo de
  * rechazo (mínimo 3, máximo 500 caracteres). Los toasts de éxito/error se
  * emiten desde `useAprobarFactura`.
+ * v13.232.0 · Aprobar migrado a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
 import { Check, X, Clock, XCircle, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { ReasonDialog } from "@/components/shared/ReasonDialog";
 import { useAprobarFactura } from "@/features/cxp/hooks/useAprobarFactura";
 import {
@@ -90,38 +82,29 @@ export function BotonesAprobacionFactura({
         </div>
       )}
 
-      <AlertDialog open={openAprobar} onOpenChange={setOpenAprobar}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-success" />
-              Aprobar factura
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {ctxLabel ? <><b>{ctxLabel}</b><br /></> : null}
-              Al aprobar, la factura pasará a estado <b>Vigente</b> y quedará lista para programar pago.
-              Esta acción se registrará en la bitácora.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={aprobar.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={aprobar.isPending}
-              onClick={async (e) => {
-                e.preventDefault();
-                try {
-                  await aprobar.mutateAsync({ id: facturaId, aprobar: true, folio, proveedor });
-                  setOpenAprobar(false);
-                } catch {
-                  // El toast lo emite el hook; mantener el diálogo abierto para reintento.
-                }
-              }}
-            >
-              {aprobar.isPending ? "Aprobando…" : "Sí, aprobar"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={openAprobar}
+        onOpenChange={setOpenAprobar}
+        title="Aprobar factura"
+        titleIcon={<CheckCircle2 className="h-5 w-5 text-success" aria-hidden />}
+        confirmLabel={aprobar.isPending ? "Aprobando…" : "Sí, aprobar"}
+        isPending={aprobar.isPending}
+        onConfirm={async () => {
+          try {
+            await aprobar.mutateAsync({ id: facturaId, aprobar: true, folio, proveedor });
+            setOpenAprobar(false);
+          } catch {
+            // El toast lo emite el hook; mantener el diálogo abierto para reintento.
+          }
+        }}
+        description={
+          <>
+            {ctxLabel ? <><b>{ctxLabel}</b><br /></> : null}
+            Al aprobar, la factura pasará a estado <b>Vigente</b> y quedará lista para programar pago.
+            Esta acción se registrará en la bitácora.
+          </>
+        }
+      />
 
       <ReasonDialog
         open={openRechazo}
