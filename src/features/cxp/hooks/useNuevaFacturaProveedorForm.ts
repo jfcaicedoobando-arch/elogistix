@@ -116,38 +116,17 @@ export function useNuevaFacturaProveedorForm(
   };
 
   const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
-    setVinculos((prev) => {
-      const next = { ...prev };
-      if (!checked) { delete next[c.id]; return next; }
-      next[c.id] = {
-        embarqueId: c.embarque_id,
-        descripcion: c.concepto,
-        monto: c.monto,
-        montoOriginal: c.monto,
-      };
-      return next;
-    });
+    setVinculos((prev) => toggleVinculoReducer(prev, c, checked));
   };
 
   const setVinculoMonto = (conceptoId: string, monto: number) => {
-    setVinculos((prev) => prev[conceptoId]
-      ? { ...prev, [conceptoId]: { ...prev[conceptoId], monto } }
-      : prev);
+    setVinculos((prev) => setVinculoMontoReducer(prev, conceptoId, monto));
   };
-  // Reemplaza vínculos por las sugerencias del matcher.
+
   const aplicarSugerencias = (sugs: ReadonlyArray<{
     conceptoId: string; concepto: string; monto: number; embarque_id: string;
   }>) => {
-    setVinculos(() => {
-      const next: VinculosState = {};
-      for (const s of sugs) {
-        next[s.conceptoId] = {
-          embarqueId: s.embarque_id, descripcion: s.concepto,
-          monto: s.monto, montoOriginal: s.monto,
-        };
-      }
-      return next;
-    });
+    setVinculos(() => aplicarSugerenciasReducer(sugs));
   };
 
   const reset = () => {
