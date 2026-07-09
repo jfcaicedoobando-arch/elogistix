@@ -95,7 +95,7 @@ export default function CxpPorCapturar() {
     <PageContainer>
       <PageHeader
         icon={<Package className="h-6 w-6 text-accent" />}
-        title="CxP — Por capturar"
+        title={`CxP — Por capturar${data.length > 0 ? ` · ${data.length}` : ""}`}
         description="Embarques con costos presupuestados. Captura las facturas de proveedor y concílialas contra el embarque."
       />
 
