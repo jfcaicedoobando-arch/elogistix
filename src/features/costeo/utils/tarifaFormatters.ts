@@ -1,12 +1,16 @@
 /**
  * Formatters compartidos por componentes de tarifas de costeo.
+ *
+ * DRY: son wrappers finos sobre `@/lib/formatters` para preservar las firmas
+ * existentes en los call-sites y evitar duplicar `new Intl.NumberFormat`.
  */
-export const usdTarifa = (n: number | null | undefined) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: "USD" }).format(Number(n || 0));
+import { formatCurrency, formatDate } from "@/lib/formatters";
+
+export const usdTarifa = (n: number | null | undefined): string =>
+  formatCurrency(Number(n || 0), "USD");
 
 export const formatFechaMx = (iso: string | null | undefined): string => {
   if (!iso) return "—";
-  const [y, m, d] = String(iso).split("T")[0].split("-");
-  if (!y || !m || !d) return String(iso);
-  return `${d}/${m}/${y}`;
+  const clean = String(iso).split("T")[0];
+  return formatDate(clean, "dd/MM/yyyy");
 };
