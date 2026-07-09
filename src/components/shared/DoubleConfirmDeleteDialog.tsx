@@ -62,9 +62,15 @@ function DoubleConfirmInner({
         <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar {entityName}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {description || `Se eliminará ${entityName} de forma permanente.`}
-            </AlertDialogDescription>
+            {typeof description === "string" || !description ? (
+              <AlertDialogDescription>
+                {description || `Se eliminará ${entityName} de forma permanente.`}
+              </AlertDialogDescription>
+            ) : (
+              <AlertDialogDescription asChild>
+                <div className="text-sm text-muted-foreground">{description}</div>
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -78,9 +84,15 @@ function DoubleConfirmInner({
         <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle>⚠️ Confirmar eliminación</AlertDialogTitle>
-            <AlertDialogDescription>
-              {finalDescription || "¿Estás completamente seguro? Esta acción no se puede deshacer."}
-            </AlertDialogDescription>
+            {typeof finalDescription === "string" || !finalDescription ? (
+              <AlertDialogDescription>
+                {finalDescription || "¿Estás completamente seguro? Esta acción no se puede deshacer."}
+              </AlertDialogDescription>
+            ) : (
+              <AlertDialogDescription asChild>
+                <div className="text-sm text-muted-foreground">{finalDescription}</div>
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
           <div className="space-y-2 py-2">
             <Label htmlFor="confirm-delete" className="text-sm text-muted-foreground">
