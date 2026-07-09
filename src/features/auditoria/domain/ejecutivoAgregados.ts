@@ -51,6 +51,8 @@ export function emptyPorRegla(): Record<ReglaAuditoria, number> {
     cxc_vencida: 0,
     cxp_por_capturar_estancada: 0,
     cxp_vencida: 0,
+    contenedor_datos_incompletos: 0,
+    contenedor_fechas_incompletas: 0,
   };
 }
 

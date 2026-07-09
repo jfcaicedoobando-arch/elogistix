@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.235.0] - 2026-07-09
+- **Backend · AUD-1 · Auditoría de embarques ahora consulta `embarque_contenedores`**: la RPC `auditoria_embarques_org` incorpora dos reglas nuevas que leen directamente la tabla de contenedores (fuente de verdad) en lugar de depender de las columnas legacy `peso_kg`/`volumen_m3`/`piezas` mantenidas por trigger sobre `embarques`.
+  - **`contenedor_datos_incompletos`** (severidad `alto`): embarques marítimos con `tipo_carga` FCL en estados avanzados (En Tránsito, En Aduana, Llegada, Arribo, Entregado) que tienen contenedores sin peso o volumen capturado.
+  - **`contenedor_fechas_incompletas`** (severidad `medio`): embarques Entregado/Cerrado con contenedores sin fecha de descarga o devolución.
+  - Se agregan los contadores correspondientes en `por_regla`. La lista `hallazgos` mantiene el mismo shape (regla, severidad, detalle, embarque_id, etc.).
+  - Frontend actualizado: `ReglaAuditoria`, `REGLA_INFO` (icons `Container` y `CalendarClock`), `REGLA_SHORT_LABELS`, `reglaLabel`, `reglaToTab` (ambas apuntan al tab `resumen` del embarque para editar contenedores), `REGLAS_ORDEN` y el helper `emptyPorRegla()` de agregados ejecutivos. Fixtures de 3 tests de hooks (`useAuditoriaEjecutivo`, `useAuditoriaEjecutivo.edge`, `useAuditoriaPageController`) extendidos con los dos contadores nuevos.
+  - Beneficio: si algún día se retira la columna legacy o se apaga el trigger de compatibilidad, la auditoría sigue detectando correctamente los huecos de datos operativos porque ya lee de la tabla nueva.
+
 ## [13.234.0] - 2026-07-09
 - **Refactor · DRY Lote 7f · `useDebouncedValue` canónico en `@/lib/hooks` (DRY-7)**: se movió la lógica de debounce a `src/lib/hooks/useDebouncedValue.ts` con su barrel `@/lib/hooks`. El histórico `useDebounce` de `@/hooks/shared/useDebounce.ts` ahora es un alias delgado que re-exporta `useDebouncedValue`, así los ~12 call-sites existentes no cambian. Se migraron los dos `useEffect + setTimeout` inline restantes: `src/components/shared/GlobalSearch.tsx` (debounce de query de búsqueda global, 300 ms) y `src/features/admin/routes/admin-org/UsuariosInternosTab.tsx` (debounce de búsqueda de usuarios, 200 ms; ahora debouncea directamente `busqueda.trim().toLowerCase()`). Se añadieron 4 tests para el canónico (`src/lib/hooks/__tests__/useDebouncedValue.test.tsx`) y se conservan los 3 tests del alias `useDebounce`. Con esto queda una sola implementación oficial de debounce en el codebase.
 
