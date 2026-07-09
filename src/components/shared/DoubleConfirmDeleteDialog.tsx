@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
+import type { ReactNode } from "react";
+
 interface DoubleConfirmDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entityName: string;
-  /** First step description (e.g. "El embarque X será eliminado permanentemente.") */
-  description?: string;
-  /** Second step description */
-  finalDescription?: string;
+  /** First step description (string o ReactNode con <strong>, listas, spinners). */
+  description?: ReactNode;
+  /** Second step description (string o ReactNode). */
+  finalDescription?: ReactNode;
   onConfirm: () => void | Promise<void>;
   isPending?: boolean;
 }

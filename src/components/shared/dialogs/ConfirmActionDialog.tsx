@@ -5,6 +5,7 @@
  * `AlertDialog` inline. Para borrados irreversibles usa
  * `<DeleteConfirmDialog />` (typable ELIMINAR).
  */
+import type * as React from "react";
 import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -23,7 +24,8 @@ export interface ConfirmActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description?: string;
+  /** String o ReactNode; usa ReactNode para incluir <strong>, listas o spinners. */
+  description?: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "default" | "destructive";
@@ -48,7 +50,13 @@ export function ConfirmActionDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description ? (
-            <AlertDialogDescription>{description}</AlertDialogDescription>
+            typeof description === "string" ? (
+              <AlertDialogDescription>{description}</AlertDialogDescription>
+            ) : (
+              <AlertDialogDescription asChild>
+                <div className="text-sm text-muted-foreground">{description}</div>
+              </AlertDialogDescription>
+            )
           ) : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
