@@ -64,7 +64,11 @@ export default function CxpPorCapturar() {
     });
   };
 
-  const columns = useMemo(() => buildCxpPorCapturarColumns({ onCapturar: handleCapturar }), []);
+  const hideEstatus = filters.state.estatus === "sin";
+  const columns = useMemo(
+    () => buildCxpPorCapturarColumns({ onCapturar: handleCapturar, hideEstatus }),
+    [hideEstatus],
+  );
 
   const controlledSort = {
     key: SORT_TO_COL[filters.state.ordenarPor] || null,
