@@ -41,7 +41,7 @@ export function KpiGridSkeleton({
   return (
     <SkeletonGroup className={cn("grid gap-4", MOBILE_COLS[mobileCols], DESKTOP_COLS[desktopCols], className)}>
       {Array.from({ length: Math.max(1, count) }).map((_, i) => (
-        <Skeleton key={i} className={cn("rounded-2xl", heightClass)} />
+        <Skeleton key={i} className={cn("rounded-lg", heightClass)} />
       ))}
     </SkeletonGroup>
   );
