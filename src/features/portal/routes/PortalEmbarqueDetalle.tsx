@@ -62,21 +62,18 @@ export default function PortalEmbarqueDetalle() {
 
       <PageHeader
         icon={<Ship className="h-6 w-6 text-accent" />}
-        title={
-          <span className="flex items-center gap-2">
-            <span className="break-all">{embarque.expediente}</span>
-            <ModoIcon modo={embarque.modo} size={18} circle />
-          </span>
-        }
+        title={embarque.expediente}
         description={
           <span className="flex items-center gap-2 flex-wrap">
             <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
+            <ModoIcon modo={embarque.modo} size={16} circle />
             <span className="text-xs sm:text-sm text-muted-foreground">
               {embarque.tipo} • {embarque.modo} • {embarque.incoterm}
             </span>
           </span>
         }
       />
+
 
 
       {/* Progress Tracker */}
