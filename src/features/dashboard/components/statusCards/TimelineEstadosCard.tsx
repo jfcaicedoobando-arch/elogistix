@@ -35,7 +35,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                       relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full
                       bg-gradient-to-br ${cfg.gradient}
                       transition-all duration-300 ease-out
-                      hover:scale-110 hover:shadow-lg cursor-pointer
+                      hover:scale-110 hover:shadow-raised cursor-pointer
                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
                       ring-1 ring-border/20
                     `}
