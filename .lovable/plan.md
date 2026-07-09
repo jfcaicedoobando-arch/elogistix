@@ -1,69 +1,70 @@
-## Diagnóstico
+# Auditoría UI/UX Global · 1920×1080
 
-En la bandeja **Compras → Por capturar**, la columna **Avance** muestra `monto_facturado / costos_presupuestados` formateados siempre como **MXN**. Pero al revisar la base de datos:
+## Objetivo
+Lograr cohesión visual total: eliminar "parches", overflows en Full HD y desalineaciones entre módulos. Entregable = reportes en markdown con hallazgos priorizados y snippets listos, aplicados por lotes bajo tu aprobación.
 
-- `conceptos_costo` tiene `moneda` (MXN/USD) sin tipo de cambio, y el RPC `cxp_por_capturar` **suma `cc.monto` sin importar la divisa**.
-- `proveedor_facturas.total` también se suma sin separar por moneda.
+## Metodología
 
-Ejemplo real: el embarque `ELIMP00305` tiene presupuestado **6,410 USD**, pero en la tabla aparece como **$6,410.00 MXN**. Cuando un embarque mezcla MXN y USD (como `ELIMP00300`: 60,500 MXN + 354 USD), se suman como si fueran la misma moneda → **60,854 "MXN"**, cifra sin sentido.
+Auditaré en **capas** (no ruta-por-ruta secuencial ciego), porque el 80% de los problemas de "sentirse parche" nacen de inconsistencias transversales. Después bajo a rutas específicas donde el patrón se rompe.
 
-Analogía: es como sumar pesos y dólares en la misma cuenta del changuito del súper — el total no significa nada.
+### Capa 0 — Base del sistema (1 turno, solo lectura)
+Inventario de la fuente de verdad para poder marcar como "violación" todo lo demás:
+- `src/index.css` + `tailwind.config.ts` → tokens de color, sombras, radios, tipografía.
+- Componentes base shadcn en `src/components/ui/*` → variantes canónicas de button, card, dialog, input, table, badge.
+- Layout raíz: `Layout.tsx`, `AppSidebar.tsx`, header, breadcrumbs, contenedor principal (¿`max-w-*`? ¿`container`? ¿ancho fluido?).
+- Grid de página estándar: padding lateral, gap vertical entre secciones, ancho de contenido.
 
-## Cambios propuestos
+Salida: **`docs/ui-audit/00-baseline.md`** — tabla de tokens, variantes canónicas, y las reglas contra las que auditaré todo lo demás.
 
-### 1. RPC `cxp_por_capturar` (migración)
-Devolver montos separados por moneda:
-- `presupuestado_mxn`, `presupuestado_usd`
-- `facturado_mxn`, `facturado_usd`
-- (Se conservan `facturas_capturadas`, `ultima_factura_fecha`, `dias_desde_ultima_factura`.)
+### Capa 1 — Transversal: patrones repetidos (1 turno, solo lectura)
+Busca con `rg` en todo `src/`:
+- **Colores hardcodeados**: `text-white`, `bg-black`, `bg-[#…]`, `text-gray-*`, `text-slate-*` fuera de tokens.
+- **Tipografía dispareja**: mezcla de `text-sm/text-base` para labels, `text-2xl/text-3xl` para títulos de página, `font-bold` vs `font-semibold` en headers.
+- **Spacing**: `p-3` vs `p-4` vs `p-6` en cards del mismo nivel; `gap-2/gap-3/gap-4` en toolbars; padding lateral de página distinto por ruta.
+- **Radios y sombras**: `rounded-md/lg/xl` mezclados; `shadow-sm/md` vs tokens `shadow-card/raised`.
+- **Anchos fijos** que rompen a 1920×1080: `max-w-7xl` (1280px → deja bandas laterales enormes en Full HD), containers `w-[…]px`, tablas sin `w-full`.
 
-Los campos se calculan con `SUM(cc.monto) FILTER (WHERE cc.moneda = 'MXN')` y equivalente para USD, y `SUM(pf.total) FILTER (WHERE pf.moneda = 'MXN'/'USD')` sobre facturas no canceladas.
+Salida: **`docs/ui-audit/01-transversal.md`** con conteo por infracción y top-10 archivos ofensores.
 
-### 2. `CxpPorCapturarRow` (`src/features/bandejas/services/bandejas.ts`)
-Reemplazar `costos_presupuestados` y `monto_facturado` por los cuatro campos por moneda.
+### Capa 2 — Componentes del UI kit (1 turno)
+Compara instancias reales vs canon para: **Button, Card, Dialog/Modal, Input/Form, Table, Badge, Tabs, Empty state, Toolbar de filtros**. Marca "roturas" (usos que no usan la variante shadcn).
 
-### 3. Columna "Avance" (`src/features/bandejas/components/cxpPorCapturarColumns.tsx`)
-- Mostrar dos líneas cuando exista mezcla: una para MXN y otra para USD, cada una con `facturado / presupuestado` formateados en su divisa.
-- Barra de progreso: usar el porcentaje de la moneda con mayor presupuesto (evita mezclar). Cuando sólo hay una moneda, se muestra una sola línea (comportamiento actual).
+Salida: **`docs/ui-audit/02-componentes.md`**.
 
-### 4. Filtro/estatus (`useCxpPorCapturarFilters.ts` + `estatusDeFila`)
-Ajustar `estatusDeFila` para clasificar "sin / parcial / completo" comparando **por moneda**:
-- `completo` si todas las monedas con presupuesto > 0 están cubiertas (≥99%).
-- `sin` si no hay ninguna factura.
-- `parcial` en cualquier otro caso.
+### Capa 3 — Rutas por tranches (3–5 turnos)
+Recorridos con Playwright a **viewport 1920×1080** capturando screenshots. Agrupo por dominio para no repetir hallazgos:
 
-### 5. Agregado en `aggregates.ts` (`resumirCxpPorCapturar`)
-`totalPresupuestado` se separa en `totalPresupuestadoMxn` y `totalPresupuestadoUsd`. Actualizar el consumidor (`useBandejas` / KPI) para mostrar ambos.
+```text
+Tranche A · Operación diaria
+  /inicio · /embarques · /embarques/:id · /cotizaciones · /cotizaciones/:id
+Tranche B · Financiero
+  /cxp · /cxp/por-capturar · /facturacion · /facturacion/:id · /tesoreria
+Tranche C · Catálogos y admin
+  /clientes · /proveedores · /admin/* · /configuracion · /auditoria
+Tranche D · Portales
+  /portal/cliente · /portal/agente
+```
 
-### 6. Tests
-Actualizar:
-- `src/features/bandejas/domain/__tests__/aggregates.test.ts` (nuevos campos)
-- `src/features/bandejas/hooks/__tests__/useCxpPorCapturarFilters.test.ts` (estatus por moneda)
+Para cada tranche: screenshot + reporte con hallazgos numerados (severidad, ruta, componente, snippet corregido).
 
-### 7. Versionado y CHANGELOG
-- `APP_VERSION` → `13.219.2`
-- Entrada en `CHANGELOG.md` (root) con analogía del "changuito con dos monederos".
+### Capa 4 — Aplicación de fixes por lotes
+Después de tu OK sobre cada reporte, aplico fixes en un solo commit lógico:
+- **Lote 1** — tokens y utilidades globales (index.css, tailwind.config.ts, variantes UI).
+- **Lote 2** — normalización de spacing/tipografía a nivel Layout y páginas.
+- **Lote 3+** — arreglos específicos por ruta.
 
-## Fuera de alcance
-- No se homologa USD a MXN con un TC estimado (los conceptos de costo no tienen TC); mostrar por moneda es más fiel.
-- No se toca la bandeja **Por pagar** (ésa ya separa por moneda y sí tiene TC en `proveedor_facturas`).
+Cada lote: bump `APP_VERSION`, entrada en `CHANGELOG.md`, tests si aplica.
+
+## Salidas concretas
+- Carpeta `docs/ui-audit/` con reportes markdown numerados.
+- Screenshots en `docs/ui-audit/screenshots/` referenciados desde los reportes.
+- Fixes agrupados por lote, cada uno con su changelog entry.
 
 ## Detalles técnicos
+- Playwright a `viewport={width:1920,height:1080}` con la sesión inyectada (`LOVABLE_BROWSER_AUTH_STATUS=injected`) para poder entrar a rutas autenticadas.
+- Uso `code--exec` con `rg` para conteos rápidos en Capa 1–2.
+- Uso subagentes (`acp_subagent--explore`) en paralelo para acelerar Capa 3 cuando la tranche toca ≥4 rutas.
+- No aplico ningún cambio hasta que apruebes el reporte de la capa correspondiente.
 
-```sql
--- Migración: reemplaza cxp_por_capturar con filtered aggregates por moneda.
-CREATE OR REPLACE FUNCTION public.cxp_por_capturar()
-RETURNS TABLE (
-  embarque_id uuid, expediente text, cliente_nombre text,
-  presupuestado_mxn numeric, presupuestado_usd numeric,
-  facturado_mxn numeric, facturado_usd numeric,
-  facturas_capturadas int, ultima_factura_fecha date, dias_desde_ultima_factura int
-) ... $$
-  SELECT ...
-    COALESCE(SUM(cc.monto) FILTER (WHERE cc.moneda='MXN'), 0),
-    COALESCE(SUM(cc.monto) FILTER (WHERE cc.moneda='USD'), 0),
-    (SELECT COALESCE(SUM(total) FILTER (WHERE moneda='MXN'),0) FROM proveedor_facturas ...),
-    ...
-  HAVING COALESCE(SUM(cc.monto),0) > 0
-$$;
-```
+## Punto de partida propuesto
+Arrancar por **Capa 0 + Capa 1** en el próximo turno (solo lectura, sin cambios), entregando `00-baseline.md` y `01-transversal.md` con el top de infracciones globales. Con eso ya tendrás visibilidad de cuánto "parche" real hay antes de bajar a rutas.
