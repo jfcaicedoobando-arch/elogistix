@@ -156,7 +156,45 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
       "Factura de proveedor vigente cuya fecha de vencimiento ya pasó sin que se haya programado el pago.",
     icon: Banknote,
   },
+  contenedor_datos_incompletos: {
+    shortLabel: "Contenedor sin peso/volumen",
+    label: "Contenedores sin peso o volumen",
+    description:
+      "Embarques marítimos FCL avanzados con contenedores donde falta capturar peso o volumen.",
+    icon: Container,
+  },
+  contenedor_fechas_incompletas: {
+    shortLabel: "Contenedor sin fechas",
+    label: "Contenedores sin fecha de descarga o devolución",
+    description:
+      "Embarques Entregado o Cerrado con contenedores cuya fecha de descarga o devolución no ha sido capturada.",
+    icon: CalendarClock,
+  },
 };
+
+/** Orden canónico de presentación (mayor severidad operativa primero). */
+export const REGLAS_ORDEN: ReglaAuditoria[] = [
+  "factura_cancelada_sin_sustitucion",
+  "cxc_vencida",
+  "cxp_vencida",
+  "docs_pendientes_avanzado",
+  "ventas_sin_facturar",
+  "margen_negativo",
+  "factura_sin_timbrar",
+  "rep_pendiente",
+  "cxp_por_capturar_estancada",
+  "contenedor_datos_incompletos",
+  "contenedor_fechas_incompletas",
+  "margen_bajo",
+  "proforma_inconsistente",
+  "proforma_vencida",
+  "proforma_borrador_abandonada",
+  "venta_sin_costo",
+  "costo_sin_venta",
+  "embarque_huerfano",
+  "docs_faltantes",
+  "fechas",
+];
 
 /** Orden canónico de presentación (mayor severidad operativa primero). */
 export const REGLAS_ORDEN: ReglaAuditoria[] = [
