@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { Receipt } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 
 interface ConceptoSnapshot {
@@ -42,6 +43,8 @@ interface Props {
     precio_unitario: number;
     total: number;
     tipo_iva?: TipoIvaConcepto;
+    embarque_id?: string | null;
+    embarque_expediente?: string | null;
   }>;
 }
 

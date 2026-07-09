@@ -1,120 +1,114 @@
-# Bundle Lote 7e · DRY-3, DRY-4, DRY-5, DRY-6
+## Objetivo
 
-Cerramos el bloque de **cleanup pequeño** del backlog en una sola versión menor. Todos los cambios son de **presentación** (formatters + literales de ruta): no tocan lógica de negocio, RLS ni queries.
+Cerrar los 3 huecos de trazabilidad y propagación cuando **N proformas de distintos embarques del mismo cliente** se fusionan en una sola factura:
 
----
+1. **Trazabilidad línea → embarque** en la factura.
+2. **Cabecera multi-embarque** (todos los embarques ligados, no solo el primero).
+3. **Propagación de pago** de la factura hacia cada embarque involucrado.
 
-## Analogía rápida
-
-Hoy tenemos **cuatro reglas iguales escritas cuatro veces** en la casa (formatters de dólares, formatters de pesos, rutas del portal, y el `toLocaleString` suelto). Vamos a dejar **una sola regla oficial** en la cocina (`@/lib/formatters`, `@/constants/routes`) y a que todos los cuartos usen esa. Si mañana cambia el formato, se cambia en un solo lugar.
-
----
-
-## Alcance (4 sub-ítems)
-
-### DRY-3 · Unificar `usdFormatter` en `costeo`
-
-Hoy existen **dos** versiones:
-
-- `src/features/costeo/routes/CosteoTarifas.helpers.ts` → `usd(n)` + `usdFormatter = { format: usd }` (objeto).
-- `src/features/costeo/components/TarifaForm.helpers.ts` → `usdFormatter(n)` (función).
-
-**Acción:**
-1. Añadir un helper canónico `formatUSD(n)` en `src/lib/formatters/numbers.ts` (wrapper sobre `formatCurrency(n, "USD")`) — ya usado internamente, sólo se expone.
-2. Reemplazar los dos `usdFormatter` locales por el import canónico.
-3. Ajustar `TarifaForm.tsx` y `CosteoTarifas.helpers.test.ts` a la nueva firma (función `(n) => string`).
-
-### DRY-4 · Formatters de moneda locales en `cierreCheckFormatters.ts`
-
-El archivo mantiene un `fmtMoney(n, moneda)` local que ya delega en `formatCurrency`. La duplicación real es el manejo defensivo (`Number.isFinite`). Se mueve al canónico.
-
-**Acción:**
-1. Añadir `formatCurrencySafe(n, currency)` en `@/lib/formatters/numbers.ts` (misma lógica: `Number(n)` + `isFinite` fallback a `String(n)`).
-2. `cierreCheckFormatters.ts` reemplaza `fmtMoney` por `formatCurrencySafe`.
-3. Actualizar test si aplica.
-
-### DRY-5 · Builders `portal.*` en `@/constants/routes`
-
-Ya existe `ROUTES.PORTAL_*` y `buildRoute.portalEmbarque(id)`. Faltan constantes que se usan como rutas de "vuelta" (`/portal/embarques`, `/portal/cotizaciones`, `/portal/facturas`, `/portal/login`, `/portal/perfil`) en 6 archivos con literales inline.
-
-**Acción:**
-1. No hace falta crear constantes nuevas (ya están en `ROUTES`); el hallazgo real es que los call-sites usan literales.
-2. Reemplazar literales `"/portal/embarques"`, `"/portal/cotizaciones"`, `"/portal/facturas"`, `"/portal/login"`, `"/portal/perfil"` por `ROUTES.PORTAL_*` en:
-   - `PortalUserMenu.tsx`, `PortalLayout.tsx`, `PortalFacturaDetalle.tsx`, `PortalCotizacionDetalle.tsx`, `PortalEmbarqueDetalle.tsx`, `PortalProximosArribosCard.tsx`, `PortalEmbarquesRecientesCard.tsx`, `PortalFacturacionPendienteCard.tsx`, `PortalKpiGrid.tsx`, `portalNav.ts`.
-3. **NO** se tocan tests (`makeWrapper("/portal/embarques")`) porque son rutas del router de prueba — no consumidores.
-
-### DRY-6 · Migrar `.toLocaleString("es-MX")` numérico a `formatNumber()`
-
-De los 15 sitios encontrados, la mayoría son **fechas** (`new Date().toLocaleString("es-MX")`) — ésos NO se tocan (son fechas, no números).
-
-Los **numéricos** son 9 sitios:
-
-- `SeccionContenedoresReadonly.tsx` (peso_kg, volumen_m3) — 2 líneas.
-- `_helpers.tsx` (auditoria ejecutivo) — 1 línea.
-- `AuditoriaKpis.tsx` — 1 línea.
-- `Diagnostico.tsx` (total registros) — 1 línea.
-- `HealthKpisRow.tsx` — 4 líneas.
-- `HealthSlowestTable.tsx` — 1 línea.
-
-**Acción:** reemplazar `n.toLocaleString("es-MX")` por `formatNumber(n)`. Comportamiento idéntico para enteros (sin decimales); para floats mantiene 2 decimales — no aplica en estos sitios porque todos son conteos enteros.
+Sin romper el flujo actual (proforma única sigue funcionando igual).
 
 ---
 
-## Detalles técnicos
+## Cambios de base de datos (una sola migración)
 
-**Archivos modificados (estimado ~14):**
+### A. Trazabilidad línea → embarque
+Agregar a `public.conceptos_factura`:
+- `embarque_id uuid REFERENCES embarques(id)` — opcional (NULL para conceptos manuales o consolidados MXN sin embarque puntual).
+- `proforma_id_origen uuid REFERENCES proformas(id) ON DELETE SET NULL` — proforma de la que salió la línea.
+- Índice `(factura_id, embarque_id)`.
 
-```text
-src/lib/formatters/numbers.ts                     (+2 helpers)
-src/features/costeo/routes/CosteoTarifas.helpers.ts
-src/features/costeo/components/TarifaForm.helpers.ts
-src/features/costeo/components/TarifaForm.tsx
-src/features/costeo/components/__tests__/TarifaForm.helpers.test.ts
-src/features/embarques/utils/cierreCheckFormatters.ts
-src/features/portal/components/layout/PortalUserMenu.tsx
-src/features/portal/components/PortalLayout.tsx
-src/features/portal/components/layout/portalNav.ts
-src/features/portal/routes/PortalFacturaDetalle.tsx
-src/features/portal/routes/PortalCotizacionDetalle.tsx
-src/features/portal/routes/PortalEmbarqueDetalle.tsx
-src/features/portal/components/dashboard/PortalProximosArribosCard.tsx
-src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx
-src/features/portal/components/dashboard/PortalFacturacionPendienteCard.tsx
-src/features/portal/components/dashboard/PortalKpiGrid.tsx
-src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx
-src/features/auditoria/components/AuditoriaKpis.tsx
-src/features/auditoria/components/ejecutivo/_helpers.tsx
-src/features/admin/routes/Diagnostico.tsx
-src/features/admin/components/diagnosticoHealth/HealthKpisRow.tsx
-src/features/admin/components/diagnosticoHealth/HealthSlowestTable.tsx
-CHANGELOG.md
-src/constants/appVersion.ts
-```
+### B. Cabecera multi-embarque
+Nueva tabla puente `public.factura_embarques`:
+- `factura_id uuid NOT NULL REFERENCES facturas(id) ON DELETE CASCADE`
+- `embarque_id uuid NOT NULL REFERENCES embarques(id)`
+- `organization_id uuid NOT NULL`
+- PK compuesto `(factura_id, embarque_id)`.
+- RLS + GRANTs estándar (authenticated CRUD via `has_org_access`, service_role ALL).
+- Conservamos `facturas.embarque_id` como "embarque principal" (retrocompatibilidad con listados y filtros existentes).
 
-**Versión:** bump a `13.233.0` (minor por DRY refactor sin cambios funcionales).
+### C. Propagación de pago
+Nueva columna en `public.embarques`:
+- `cobro_cliente_status text NOT NULL DEFAULT 'pendiente'` con CHECK en `('pendiente','parcial','pagado')`.
+- `cobro_cliente_actualizado_at timestamptz`.
 
-**Reglas respetadas:** memory `core` (financialUtils/formatters centralizados), Power-of-10 (helpers puros, sin any), y `constants/routes.ts` como fuente única.
+**No** tocamos el enum `estado_embarque` (es operativo: En Tránsito, Entregado, EIR…). El cobro es una dimensión independiente y así lo mantenemos.
+
+### D. Trigger `trg_facturas_estado_a_embarques`
+Trigger `AFTER UPDATE OF estado ON facturas`:
+- Cuando `NEW.estado IN ('Pagada','Parcialmente pagada','Cancelada')` y cambió, recalcula el estado de cobro de cada embarque de `factura_embarques` así:
+  - Para cada embarque, mira **todas sus facturas no canceladas** vía `factura_embarques`.
+  - Si todas están `Pagada` → `pagado`.
+  - Si alguna está `Pagada` o `Parcialmente pagada` → `parcial`.
+  - Si ninguna → `pendiente`.
+- Actualiza `cobro_cliente_status` + timestamp.
+
+### E. RPC `convertir_proformas_a_factura` (actualización)
+- Al hacer `INSERT INTO conceptos_factura`, poblar `embarque_id` y `proforma_id_origen` desde la proforma origen de cada línea (join a `conceptos_venta.proforma_id → proformas.embarque_id`).
+- Para proformas **consolidadas** (`proforma_conceptos_consolidados`), guardar `embarque_id = NULL` pero sí `proforma_id_origen`.
+- Después del `INSERT` de la factura, poblar `factura_embarques` con el `DISTINCT embarque_id` de las proformas seleccionadas.
+- La cabecera `facturas.embarque_id` sigue guardando `v_first.embarque_id` como principal.
+
+### F. Backfill
+En la misma migración: poblar `factura_embarques` con `(id, embarque_id)` de facturas existentes que tengan `embarque_id NOT NULL`, para que la propagación funcione retroactivamente.
 
 ---
 
-## Riesgos
+## Cambios de frontend (mínimos, presentación)
 
-- **Rutas del portal:** si algún literal se olvida, el usuario sigue navegando a la ruta correcta (son idénticos). Riesgo cero funcional; sólo pérdida de la ganancia DRY.
-- **Formatters:** `formatCurrency` con `USD` produce `"US$1,234.00"`; el `usdFormatter` viejo también. Se validará con un smoke rápido.
-- **`formatNumber` vs `.toLocaleString`:** para enteros producen exactamente el mismo string.
+### 1. Detalle de factura (`FacturaDetallePage` / equivalente)
+- En la tabla de conceptos, agregar columna **"Embarque"** con el `expediente` / `bl_master` cuando `embarque_id != NULL`. Enlace a `/embarques/:id`.
+- Encabezado: en vez de "Embarque: EXP-123", mostrar chips con todos los embarques (query a `factura_embarques → embarques`) cuando hay >1.
+
+### 2. Detalle de embarque
+- Badge nuevo **"Cobro: Pendiente / Parcial / Pagado"** al lado del estado operativo, leyendo `cobro_cliente_status`.
+- En la sección financiera, listar facturas ligadas vía `factura_embarques` (hoy solo se ve una).
+
+### 3. Portal cliente factura
+- Misma columna "Embarque" en el desglose (`PortalFacturaConceptosTable.tsx`) cuando el snapshot lo incluya.
+
+**No hay cambios de lógica de negocio**: el estado se calcula server-side vía trigger.
 
 ---
 
 ## Verificación
 
-1. `bun run typecheck` y `bun run lint --max-warnings 0`.
-2. `bun test src/features/costeo` y `bun test src/features/embarques/utils`.
-3. Vista rápida en preview: `/costeo/tarifas`, `/auditoria`, `/admin/diagnostico`, `/portal/*`.
+- Tests unitarios del RPC (`convertirAFactura.test.ts`) extendidos con caso multi-embarque asertando `factura_embarques` y `conceptos_factura.embarque_id`.
+- Test del trigger con `pg_tap` en `supabase/tests/rls/` (o script directo):
+  - factura Pagada → embarques marcados `pagado`.
+  - 2 facturas del mismo embarque, una Pagada → `parcial`.
+  - factura Cancelada no cuenta.
+- E2E `08-flujo-fiscal.spec.ts` extendido: registrar pago total → asertar badge de cobro en detalle de embarque.
+- `tsgo` + `bun test` verdes.
 
 ---
 
-## Siguiente después de este bundle
+## Detalles técnicos (para revisión de dev)
 
-DRY-7 (`useDebouncedValue` compartido, S) → luego AUD-1 (migración RPC, M).
+**Orden de la migración**:
+```
+1. ALTER TABLE conceptos_factura ADD embarque_id, proforma_id_origen
+2. CREATE TABLE factura_embarques (+ GRANT + RLS + policies)
+3. ALTER TABLE embarques ADD cobro_cliente_status, cobro_cliente_actualizado_at
+4. CREATE OR REPLACE FUNCTION recalcular_cobro_embarques(embarque_ids uuid[])
+5. CREATE TRIGGER trg_facturas_estado_a_embarques
+6. CREATE OR REPLACE convertir_proformas_a_factura (versión nueva)
+7. Backfill factura_embarques
+```
 
-**¿Confirmo y arranco?**
+**Retrocompatibilidad**:
+- `facturas.embarque_id` se mantiene (evita reescribir filtros existentes en listados). Es el "principal" y sigue apuntando al primer embarque.
+- Reportes existentes que agrupan por `embarque_id` en la cabecera siguen funcionando; los nuevos (línea a línea) usan `conceptos_factura.embarque_id`.
+
+**Riesgos**:
+- El trigger dispara en cada UPDATE de `facturas.estado` → mitigado con `WHEN (OLD.estado IS DISTINCT FROM NEW.estado)`.
+- Facturas legacy sin `factura_embarques` → cubierto por el backfill.
+
+## Archivos afectados (estimado)
+
+- `supabase/migrations/<timestamp>_multi_embarque_factura.sql` (nuevo, ~200 líneas)
+- `src/features/facturacion/components/*` — columna Embarque en tabla de conceptos (2-3 archivos)
+- `src/features/embarques/components/*` — badge de cobro + lista de facturas (2 archivos)
+- `src/features/portal/components/factura/PortalFacturaConceptosTable.tsx` — columna Embarque
+- `src/features/proformas/services/__tests__/convertirAFactura.test.ts` — nuevo caso
+- `CHANGELOG.md` + `appVersion.ts` bump

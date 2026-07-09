@@ -5,6 +5,7 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";
+import { CobroClienteBadge } from "./CobroClienteBadge";
 import { EmbarqueBadgeAdmin } from "./EmbarqueBadgeAdmin";
 import { EmbarqueHeaderDialogs } from "./EmbarqueHeaderDialogs";
 import { EmbarqueDetalleHeaderActions } from "./EmbarqueDetalleHeaderActions";
@@ -84,6 +85,7 @@ export function EmbarqueDetalleHeader({
           </Badge>
           <ProformaBadge tieneProforma={embarque.tiene_proforma} size="sm" />
           <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
+          <CobroClienteBadge status={embarque.cobro_cliente_status as "pendiente" | "parcial" | "pagado" | null | undefined} />
         </div>
         <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
         {embarque.cotizacion_id ? (
