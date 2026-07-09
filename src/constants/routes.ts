@@ -7,7 +7,6 @@
  *
  * REGLAS:
  *   - `ROUTES.*` son rutas estáticas (string const).
- *   - `buildRoute.*` son funciones para rutas parametrizadas (`/:id`, etc.).
  *   - Los `path=` en `src/routes/appRoutes.tsx` (definición del router) siguen
  *     siendo literales — este archivo es para consumidores, no definiciones.
  *   - Al añadir una ruta nueva: registrarla aquí primero y consumir desde aquí.
