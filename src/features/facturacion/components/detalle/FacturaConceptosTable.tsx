@@ -158,6 +158,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
             <TableHeader>
               <TableRow>
                 <TableHead>Concepto</TableHead>
+                {mostrarEmbarque && <TableHead className="w-32">Embarque</TableHead>}
                 <TableHead className="text-right w-20">Cant.</TableHead>
                 <TableHead className="text-right w-32">P. Unitario</TableHead>
                 <TableHead className="text-center w-24">IVA</TableHead>
@@ -173,6 +174,20 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
                 return (
                   <TableRow key={i}>
                     <TableCell>{descripcion}</TableCell>
+                    {mostrarEmbarque && (
+                      <TableCell className="text-xs">
+                        {c.embarque_expediente && c.embarque_id ? (
+                          <Link
+                            to={`/embarques/${c.embarque_id}`}
+                            className="text-accent hover:underline"
+                          >
+                            {c.embarque_expediente}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right tabular-nums">{c.cantidad ?? 1}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatCurrency(Number(precio), moneda)}
