@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailSkeleton } from "@/components/shared/skeletons";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
@@ -12,6 +13,7 @@ import { PortalEmbarqueTimeline } from "@/features/portal/components/PortalEmbar
 import { PortalEmbarqueDocumentos } from "@/features/portal/components/PortalEmbarqueDocumentos";
 import { PortalEmbarqueResumenTab } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueResumenTab";
 import { PortalEmbarqueStepper } from "@/features/portal/components/embarqueDetalle/PortalEmbarqueStepper";
+
 
 import { usePortalEmbarqueDetalleController } from "@/features/embarques/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
@@ -49,24 +51,33 @@ export default function PortalEmbarqueDetalle() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/portal/embarques")} className="mt-0.5 shrink-0" aria-label="Volver a mis embarques">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold break-all">{embarque.expediente}</h1>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate("/portal/embarques")}
+        className="-ml-2 mb-1"
+      >
+        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
+      </Button>
+
+      <PageHeader
+        icon={<Ship className="h-6 w-6 text-accent" />}
+        title={
+          <span className="flex items-center gap-2">
+            <span className="break-all">{embarque.expediente}</span>
             <ModoIcon modo={embarque.modo} size={18} circle />
-          </div>
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          </span>
+        }
+        description={
+          <span className="flex items-center gap-2 flex-wrap">
             <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {embarque.tipo} • {embarque.modo} • {embarque.incoterm}
-            </p>
-          </div>
-        </div>
-      </div>
+            </span>
+          </span>
+        }
+      />
+
 
       {/* Progress Tracker */}
       <PortalEmbarqueStepper
