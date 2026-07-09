@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 
 interface Props {
   initials: string;
