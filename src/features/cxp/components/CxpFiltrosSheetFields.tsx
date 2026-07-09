@@ -20,6 +20,8 @@ interface Props {
   onEstatusChange: (v: EstatusCxP | "todos") => void;
   moneda: "todas" | "MXN" | "USD" | "EUR";
   onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
+  aprobacion: "todos" | "pendiente" | "aprobada" | "rechazada";
+  onAprobacionChange: (v: "todos" | "pendiente" | "aprobada" | "rechazada") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
   categoriaPresupuestoId: string;
