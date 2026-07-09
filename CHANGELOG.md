@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.225.0] - 2026-07-09
+- **UI · Auditoría Lote 5 (Capa 3 Tranche C) · cohesión en Clientes/Proveedores/Agentes**: cinco fixes derivados del reporte `docs/ui-audit/05-capa3-tranche-c.md`.
+  1. **`/costeo/agentes` — nombres a Title Case** (`CosteoAgentesTable.tsx`): antes se mostraban tal cual venían de BD (`AGENTEPRUEBA`, `LONGSAIL`, `CTL LOGISTICS MEXICO S.A. DE C.V.`) rompiendo con `/clientes` y `/proveedores`. Ahora el nombre y el contacto se normalizan con `toTitleCase` en la celda (sin mutar BD).
+  2. **`/costeo/agentes` — acciones consolidadas en kebab** (`CosteoAgentesTable.tsx`): las 3 icon-buttons inline (Invitar/Editar/Eliminar) — con papelera roja siempre visible — se colapsaron a un `DropdownMenu` con `MoreHorizontal`. Row-click ahora abre editar (paridad con `/proveedores`) y el borrado sigue pasando por `ConfirmDeleteAlert`.
+  3. **`/costeo/agentes` — buscador local en Card** (`CosteoAgentes.tsx`): la ruta no tenía filtro/buscador. Se añadió `SearchInput` envuelto en `Card` (mismo patrón que `/proveedores`) que filtra por nombre/país/contacto/email en memoria. También se añadió contador de agentes en la descripción del `PageHeader` (paridad con `/clientes`).
+  4. **`/clientes` — placeholders `—` en celdas vacías** (`clientesTableConfig.tsx`): antes las columnas Contacto/Teléfono/Ciudad quedaban vacías cuando el campo era `null` (>40% de las filas). Ahora renderizan `—` con `text-muted-foreground` para diferenciar "sin dato" de un error visual.
+  5. **Breadcrumbs — Title Case en segmentos alfabéticos** (`Breadcrumbs.tsx`): antes rutas como `/compras/proveedores` mostraban "compras › Proveedores" y `/costeo/agentes` mostraba "Costeo › agentes". Se registraron `compras` y `agentes` en `SEGMENT_LABELS` y `formatDynamicSegment` capitaliza segmentos alfabéticos puros como fallback.
+
 ## [13.224.0] - 2026-07-09
 - **UI · Auditoría Lote 4 (Capa 3 Tranche B) · cohesión en Facturación/CxP/Por-capturar**: nueve fixes derivados del reporte `docs/ui-audit/04-capa3-tranche-b.md` (capturas 1920×1080 en `docs/ui-audit/screenshots/`).
   1. **`/cxp` — H1 unificado** (`Cxp.tsx`): el título pasó de "Cuentas por Pagar" a **"Facturas de proveedor"** para alinearlo con el sidebar/breadcrumb ("Facturas"). La subrutina "Cuentas por Pagar" se mantiene como descripción (contexto financiero), evitando 3 nombres distintos para la misma ruta.
