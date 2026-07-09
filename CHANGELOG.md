@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.236.1] - 2026-07-09
+- **Fix · CI verde tras Ola P1/P2**:
+  - `auditoriaConfig.ts` bajaba a 200 líneas pero con 3 líneas en blanco al final el conteo del auditor (`split("\n").length`) daba 201 y disparaba `Power of 10 > 200`. Se recortan los blank lines finales.
+  - Tests `useDebounce.test.tsx` (wrapper legacy) y `useDebouncedValue.test.tsx` (hook nuevo compartido) compartían los tres títulos `it(...)` → `audit:tests` fallaba con `duplicate-title (3)`. Se prefijan los del wrapper con `wrapper useDebounce:` para diferenciarlos sin duplicar cobertura.
+
 ## [13.236.0] - 2026-07-09
 - **Refactor · Ola P1+P2 auditoría · Power-of-10 y limpieza de exports muertos**:
   - **P1 (Power-of-10):** `supabase/functions/user-management/handlers.ts` (304 líneas, único archivo productivo fuera del límite) se partió en cuatro archivos: `types.ts` (interfaces + catálogos `VALID_ROLES` / `ASSIGNABLE_BY_ORG_ADMIN`), `createHandler.ts` (`validateCreatePayload`, `handleCreate`, `resolveTargetOrgId`), `deleteHandler.ts` (`handleDelete`) y `listHandler.ts` (`resolveOrgScope`, `handleList`). El propio `handlers.ts` queda como barrel de re-exports para conservar la API pública consumida por `index.ts`, `clientHandlers.ts`, `agenteHandlers.ts`, `portalEmailsHandler.ts` y `validate_test.ts`; ningún consumidor cambia.

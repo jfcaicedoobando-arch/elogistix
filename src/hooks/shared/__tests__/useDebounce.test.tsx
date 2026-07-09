@@ -6,12 +6,12 @@ describe("useDebounce", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("retorna el valor inicial inmediatamente", () => {
+  it("wrapper useDebounce: retorna el valor inicial inmediatamente", () => {
     const { result } = renderHook(() => useDebounce("a", 300));
     expect(result.current).toBe("a");
   });
 
-  it("retarda actualizaciones según delay", () => {
+  it("wrapper useDebounce: retarda actualizaciones según delay", () => {
     const { result, rerender } = renderHook(({ v }) => useDebounce(v, 300), {
       initialProps: { v: "a" },
     });
@@ -23,7 +23,7 @@ describe("useDebounce", () => {
     expect(result.current).toBe("b");
   });
 
-  it("cancela timer pendiente al cambiar valor de nuevo", () => {
+  it("wrapper useDebounce: cancela timer pendiente al cambiar valor de nuevo", () => {
     const { result, rerender } = renderHook(({ v }) => useDebounce(v, 300), {
       initialProps: { v: "a" },
     });

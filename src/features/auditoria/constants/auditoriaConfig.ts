@@ -195,6 +195,3 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "docs_faltantes",
   "fechas",
 ];
-
-
-
