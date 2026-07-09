@@ -33,7 +33,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
               className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
             >
               <div
-                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground ${
                   e.diasDemora >= 5 ? "bg-destructive" : "bg-warning"
                 }`}
               >

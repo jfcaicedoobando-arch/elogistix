@@ -40,7 +40,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                       ring-1 ring-border/20
                     `}
                   >
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" aria-hidden="true" />
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" aria-hidden="true" />
                   </button>
 
                   <div className="mt-1.5 sm:mt-2">

@@ -44,12 +44,12 @@ export default function PortalLayout() {
         <PortalBreadcrumbsBar breadcrumbs={breadcrumbs} />
       </div>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
+      <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
         <Outlet />
       </main>
 
       <footer className="hidden md:block border-t bg-card/40 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted-foreground">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted-foreground">
           <span>
             © {new Date().getFullYear()} {orgName ?? "Libre Carga"} · Portal de Cliente
           </span>

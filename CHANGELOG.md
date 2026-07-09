@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.220.0] - 2026-07-09
+- **UI · Auditoría visual Lote 1 · cohesión a 1920×1080**: primer lote de la auditoría UI/UX global (ver `docs/ui-audit/00-baseline.md` y `01-transversal.md`). Dos correcciones transversales de bajo riesgo:
+  1. **Ancho canónico en portales**: los layouts del **Portal Cliente** y **Portal Agente** usaban `max-w-7xl` (1280px), lo que dejaba bandas vacías de ~320px a cada lado en monitores Full HD. Se unificaron a `max-w-screen-2xl` (1536px) —el mismo ancho que usa `PageContainer` en la app interna— y se eliminó el breakpoint extra `lg:px-8` para dejar el mismo `px-4 sm:px-6` que la app interna. Archivos: `portal/components/PortalLayout.tsx`, `portal/components/layout/PortalHeader.tsx`, `portal/components/layout/PortalBreadcrumbsBar.tsx`, `portal-agente/components/AgenteLayout.tsx` (7 ocurrencias en 4 archivos).
+  2. **Iconos sobre badges usando token semántico**: en `TimelineEstadosCard`, `ArribosCard` y `AlertasDemoraCard` los iconos y números sobre círculos de color intenso usaban `text-white` hardcodeado. Se cambiaron a `text-primary-foreground` para respetar la regla del sistema de "nunca hardcodear color".
+- Analogía: es como estandarizar el ancho de los pasillos en toda la oficina — antes el ala del cliente y el ala del agente tenían pasillos angostos con paredes vacías a los lados, ahora todas las alas de la oficina tienen el mismo ancho útil de trabajo.
+
 ## [13.219.4] - 2026-07-08
 - **Chore · Power-of-10: split de `useNuevaFacturaProveedorForm.ts` y `FacturaProveedorFormFields.tsx`**: ambos habían superado el límite de 200 líneas tras los fixes recientes. Se extrajeron: (1) `useNuevaFacturaProveedorForm.submit.ts` con `runSubmit` + `handleSubmitError` (bloqueo de duplicados, mutación, side-effects y toast único); (2) `useNuevaFacturaProveedorForm.vinculos.ts` con reducers puros para toggle/setMonto/aplicarSugerencias; (3) `FacturaProveedorFormFields.hint.tsx` con `TcOrigenHint`. Sin cambios de comportamiento.
 - Archivos: `hooks/useNuevaFacturaProveedorForm.{ts,submit.ts,vinculos.ts}`, `components/FacturaProveedorFormFields.{tsx,hint.tsx}`.

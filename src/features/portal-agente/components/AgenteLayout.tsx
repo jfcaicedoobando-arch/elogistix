@@ -37,7 +37,7 @@ export default function AgenteLayout() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between h-14 sm:h-16 gap-2">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 sm:h-16 gap-2">
           <Link to="/agente" className="flex items-center min-w-0">
             <BrandLockup
               variant="horizontal"
@@ -112,12 +112,12 @@ export default function AgenteLayout() {
         </nav>
       </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 py-6">
         <Outlet />
       </main>
 
       <footer className="border-t bg-card/40 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-[11px] text-muted-foreground">
           <span>© {new Date().getFullYear()} Libre Carga · Portal del Agente</span>
           <span className="tabular-nums">v{APP_VERSION}</span>
         </div>
