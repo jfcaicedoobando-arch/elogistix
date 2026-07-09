@@ -51,7 +51,7 @@ export function AuditoriaKpis({ critico, alto, medio }: Props) {
                 {label}
               </div>
               <div className={cn("text-2xl font-bold tabular-nums", accent)}>
-                {values[key].toLocaleString("es-MX")}
+                {formatNumber(values[key])}
               </div>
               <div className="text-xs text-muted-foreground mt-0.5 truncate">{description}</div>
             </div>
