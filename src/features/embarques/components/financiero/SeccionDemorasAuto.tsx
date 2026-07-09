@@ -1,6 +1,7 @@
 /**
  * Sección de demoras automáticas dentro del Tab Costos del embarque.
  * Permite calcular y recalcular las demoras tomando los días del timeline.
+ * v13.232.0 · Confirmación migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +11,7 @@ import { Calculator, RefreshCw, AlertTriangle, Trash2 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useRecalcularDemoras, useEliminarDemorasAuto } from "@/features/embarques/hooks/useDemorasEmbarque";
 import type { DemoraDesglose } from "@/features/embarques/types/demoraDesglose";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 interface Props {
   embarqueId: string;
@@ -26,6 +22,7 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
   const recalc = useRecalcularDemoras(embarqueId);
   const elim = useEliminarDemorasAuto(embarqueId);
   const [last, setLast] = useState<DemoraDesglose | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleRecalcular = async () => {
     const res = await recalc.mutateAsync();
@@ -49,27 +46,21 @@ export function SeccionDemorasAuto({ embarqueId, canEdit }: Props) {
               <RefreshCw className={`size-4 mr-2 ${recalc.isPending ? 'animate-spin' : ''}`} />
               Recalcular
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="text-destructive">
-                  <Trash2 className="size-4 mr-2" /> Eliminar auto
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className={dialogSize.sm}>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Eliminar demoras automáticas</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Se eliminarán los conceptos de costo y venta marcados como "demoras_auto". Los conceptos manuales no se tocarán.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => elim.mutate()} className="bg-destructive text-destructive-foreground">
-                    Eliminar
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setConfirmOpen(true)}>
+              <Trash2 className="size-4 mr-2" /> Eliminar auto
+            </Button>
+            <ConfirmActionDialog
+              open={confirmOpen}
+              onOpenChange={setConfirmOpen}
+              title="Eliminar demoras automáticas"
+              variant="destructive"
+              confirmLabel="Eliminar"
+              onConfirm={() => {
+                elim.mutate();
+                setConfirmOpen(false);
+              }}
+              description={'Se eliminarán los conceptos de costo y venta marcados como "demoras_auto". Los conceptos manuales no se tocarán.'}
+            />
           </div>
         )}
       </CardHeader>
