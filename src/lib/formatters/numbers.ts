@@ -11,6 +11,19 @@ export const formatCurrency = (amount: number, currency: string = 'MXN'): string
   return formatted;
 };
 
+/** Wrapper canónico para montos en USD (DRY: reemplaza `usdFormatter` locales del feature costeo). */
+export const formatUSD = (amount: number): string => formatCurrency(amount, "USD");
+
+/**
+ * Formatea moneda con fallback defensivo cuando el valor no es un número finito.
+ * DRY: reemplaza el `fmtMoney` local de `cierreCheckFormatters.ts`.
+ */
+export const formatCurrencySafe = (value: unknown, currency: string = "MXN"): string => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return String(value);
+  return formatCurrency(num, currency);
+};
+
 /**
  * Formato de moneda compacto para KPIs/tarjetas estrechas.
  *

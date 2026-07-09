@@ -1,149 +1,120 @@
-# Pendientes de auditorías recientes
+# Bundle Lote 7e · DRY-3, DRY-4, DRY-5, DRY-6
 
-Compilado desde: `docs/audit-tests-2026-06-08.md`, `docs/refactor/dry-hooks-audit.md`, `docs/cast-audit.md`, `docs/rls-multitenant-audit.md`, `docs/auditoria.md`, `docs/ui-audit/99-resumen.md` y el hilo actual (Sprint DRY 7a → 7c).
-
-**Este documento es sólo un inventario — no ejecuta nada.**
+Cerramos el bloque de **cleanup pequeño** del backlog en una sola versión menor. Todos los cambios son de **presentación** (formatters + literales de ruta): no tocan lógica de negocio, RLS ni queries.
 
 ---
 
-## 🟢 Ya cerrado (referencia)
+## Analogía rápida
 
-- Auditoría de tests: Sprints 1-4 completos (1442/1442 verdes).
-- RLS Multitenant: 67/67 tablas OK.
-- Cast Audit: 0 HIGH / 0 CRITICAL.
-- UI Audit Capas 0-3: 22 hallazgos resueltos, 27/27 rutas con `PageHeader`/`PageContainer`.
-- Sprint DRY: 7a (formatters), 7b (rutas centralizadas), 7c (consolidación AlertDialog + fix crítico `DialogEliminarEmbarque` + tests).
+Hoy tenemos **cuatro reglas iguales escritas cuatro veces** en la casa (formatters de dólares, formatters de pesos, rutas del portal, y el `toLocaleString` suelto). Vamos a dejar **una sola regla oficial** en la cocina (`@/lib/formatters`, `@/constants/routes`) y a que todos los cuartos usen esa. Si mañana cambia el formato, se cambia en un solo lugar.
 
 ---
 
-## 🔴 Pendientes CRÍTICOS
+## Alcance (4 sub-ítems)
 
-Ninguno. Todos los CRITICAL identificados están resueltos.
+### DRY-3 · Unificar `usdFormatter` en `costeo`
 
----
+Hoy existen **dos** versiones:
 
-## 🟠 Pendientes ALTOS
+- `src/features/costeo/routes/CosteoTarifas.helpers.ts` → `usd(n)` + `usdFormatter = { format: usd }` (objeto).
+- `src/features/costeo/components/TarifaForm.helpers.ts` → `usdFormatter(n)` (función).
 
-### AUD-1 · Migrar RPC `auditoria_embarques_org` a `embarque_contenedores`
+**Acción:**
+1. Añadir un helper canónico `formatUSD(n)` en `src/lib/formatters/numbers.ts` (wrapper sobre `formatCurrency(n, "USD")`) — ya usado internamente, sólo se expone.
+2. Reemplazar los dos `usdFormatter` locales por el import canónico.
+3. Ajustar `TarifaForm.tsx` y `CosteoTarifas.helpers.test.ts` a la nueva firma (función `(n) => string`).
 
-- **Fuente:** `docs/auditoria.md §7` + `mem://audit/pendings`.
-- **Problema:** la RPC lee columnas legacy de `public.embarques` (`contenedor`, `tipo_contenedor`, `peso`, `volumen`, `piezas`) que hoy se mantienen por trigger desde `embarque_contenedores`. Si el trigger se apaga o se retiran las columnas, la auditoría de peso/volumen/contenedor deja de detectar correctamente.
-- **Esfuerzo:** M (una migración SQL + backfill de tests).
+### DRY-4 · Formatters de moneda locales en `cierreCheckFormatters.ts`
 
-### DRY-1 · Extender canónicos a los 18 `AlertDialog` inline restantes (Lote 7d)
+El archivo mantiene un `fmtMoney(n, moneda)` local que ya delega en `formatCurrency`. La duplicación real es el manejo defensivo (`Number.isFinite`). Se mueve al canónico.
 
-- **Fuente:** hilo actual (cierre del Lote 7c).
-- **Problema:** 18 diálogos siguen inline porque contienen forms embebidos (`Textarea`, `RadioGroup`, `Checkbox`, inputs con validación). No caben en la API actual sin un slot `children`.
-- **Archivos:** `PortalCotizacionConfirmDialog`, `DesvincularCotizacionDialog`, `ConfirmSinDesgloseDialog`, `BotonesAprobacionFactura`, `CancelarFacturaProveedorDialog`, `CerrarFacturaSinPagoDialog`, `EmbarqueHeaderDialogs`, `TabDocumentos`, `FilaContenedor`, `ListaContenedoresEditable`, `SeccionDemorasAuto`, `AvanzarEstadoButton`, `FacturaPagosSection`, `TabCategorias`, `OrgMembersCard`, `BackfillLegacyCard`, `DocumentChecklist`, `ComprasPorAprobar.confirmDialog`.
-- **Esfuerzo:** M (extender `ConfirmActionDialog` con slot `children`, migrar en 3-4 tandas).
+**Acción:**
+1. Añadir `formatCurrencySafe(n, currency)` en `@/lib/formatters/numbers.ts` (misma lógica: `Number(n)` + `isFinite` fallback a `String(n)`).
+2. `cierreCheckFormatters.ts` reemplaza `fmtMoney` por `formatCurrencySafe`.
+3. Actualizar test si aplica.
 
----
+### DRY-5 · Builders `portal.*` en `@/constants/routes`
 
-## 🟡 Pendientes MEDIOS
+Ya existe `ROUTES.PORTAL_*` y `buildRoute.portalEmbarque(id)`. Faltan constantes que se usan como rutas de "vuelta" (`/portal/embarques`, `/portal/cotizaciones`, `/portal/facturas`, `/portal/login`, `/portal/perfil`) en 6 archivos con literales inline.
 
-### DRY-2 · KPI strips ad-hoc no usan `<KpiCard>` / `<KpiStrip>`
+**Acción:**
+1. No hace falta crear constantes nuevas (ya están en `ROUTES`); el hallazgo real es que los call-sites usan literales.
+2. Reemplazar literales `"/portal/embarques"`, `"/portal/cotizaciones"`, `"/portal/facturas"`, `"/portal/login"`, `"/portal/perfil"` por `ROUTES.PORTAL_*` en:
+   - `PortalUserMenu.tsx`, `PortalLayout.tsx`, `PortalFacturaDetalle.tsx`, `PortalCotizacionDetalle.tsx`, `PortalEmbarqueDetalle.tsx`, `PortalProximosArribosCard.tsx`, `PortalEmbarquesRecientesCard.tsx`, `PortalFacturacionPendienteCard.tsx`, `PortalKpiGrid.tsx`, `portalNav.ts`.
+3. **NO** se tocan tests (`makeWrapper("/portal/embarques")`) porque son rutas del router de prueba — no consumidores.
 
-- **Fuente:** `docs/refactor/dry-hooks-audit.md` (C-2).
-- **Sitios:** 4 archivos.
-- **Esfuerzo:** M.
+### DRY-6 · Migrar `.toLocaleString("es-MX")` numérico a `formatNumber()`
 
-### DRY-3 · `usdFormatter` estático duplicado dentro del feature `costeo`
+De los 15 sitios encontrados, la mayoría son **fechas** (`new Date().toLocaleString("es-MX")`) — ésos NO se tocan (son fechas, no números).
 
-- **Fuente:** dry-hooks-audit U-3.
-- **Sitios:** 2 archivos.
-- **Esfuerzo:** S.
+Los **numéricos** son 9 sitios:
 
-### DRY-4 · `cierreCheckFormatters.ts` — otro formatter de moneda local
+- `SeccionContenedoresReadonly.tsx` (peso_kg, volumen_m3) — 2 líneas.
+- `_helpers.tsx` (auditoria ejecutivo) — 1 línea.
+- `AuditoriaKpis.tsx` — 1 línea.
+- `Diagnostico.tsx` (total registros) — 1 línea.
+- `HealthKpisRow.tsx` — 4 líneas.
+- `HealthSlowestTable.tsx` — 1 línea.
 
-- **Fuente:** dry-hooks-audit H-3.
-- **Sitios:** 2 archivos.
-- **Esfuerzo:** S.
-
-### DRY-5 · Rutas relativas del portal sin constante
-
-- **Fuente:** dry-hooks-audit K-2.
-- **Sitios:** 6 archivos (falta agregar builders `portal.*` en `src/constants/routes.ts`).
-- **Esfuerzo:** S.
-
-### DRY-6 · `.toLocaleString("es-MX")` numérico vs `formatNumber()`
-
-- **Fuente:** dry-hooks-audit K-3.
-- **Sitios:** 4 archivos.
-- **Esfuerzo:** S.
-
-### DRY-7 · `useDebouncedValue` compartido
-
-- **Fuente:** dry-hooks-audit (único hook que sobrevive el filtro YAGNI).
-- **Sitios:** ~4 (`useEffect + setTimeout` repetido).
-- **Esfuerzo:** S.
+**Acción:** reemplazar `n.toLocaleString("es-MX")` por `formatNumber(n)`. Comportamiento idéntico para enteros (sin decimales); para floats mantiene 2 decimales — no aplica en estos sitios porque todos son conteos enteros.
 
 ---
 
-## 🔵 Pendientes BAJOS
+## Detalles técnicos
 
-### UI-1 · Capa 4 de UI Audit — modo oscuro
+**Archivos modificados (estimado ~14):**
 
-- **Fuente:** `docs/ui-audit/99-resumen.md §6`.
-- **Alcance:** pasada completa de dark-mode sobre las 27 rutas.
-- **Esfuerzo:** L.
+```text
+src/lib/formatters/numbers.ts                     (+2 helpers)
+src/features/costeo/routes/CosteoTarifas.helpers.ts
+src/features/costeo/components/TarifaForm.helpers.ts
+src/features/costeo/components/TarifaForm.tsx
+src/features/costeo/components/__tests__/TarifaForm.helpers.test.ts
+src/features/embarques/utils/cierreCheckFormatters.ts
+src/features/portal/components/layout/PortalUserMenu.tsx
+src/features/portal/components/PortalLayout.tsx
+src/features/portal/components/layout/portalNav.ts
+src/features/portal/routes/PortalFacturaDetalle.tsx
+src/features/portal/routes/PortalCotizacionDetalle.tsx
+src/features/portal/routes/PortalEmbarqueDetalle.tsx
+src/features/portal/components/dashboard/PortalProximosArribosCard.tsx
+src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx
+src/features/portal/components/dashboard/PortalFacturacionPendienteCard.tsx
+src/features/portal/components/dashboard/PortalKpiGrid.tsx
+src/features/embarques/components/contenedores/SeccionContenedoresReadonly.tsx
+src/features/auditoria/components/AuditoriaKpis.tsx
+src/features/auditoria/components/ejecutivo/_helpers.tsx
+src/features/admin/routes/Diagnostico.tsx
+src/features/admin/components/diagnosticoHealth/HealthKpisRow.tsx
+src/features/admin/components/diagnosticoHealth/HealthSlowestTable.tsx
+CHANGELOG.md
+src/constants/appVersion.ts
+```
 
-### UI-2 · Vistas móviles < 640 px
+**Versión:** bump a `13.233.0` (minor por DRY refactor sin cambios funcionales).
 
-- **Fuente:** `docs/ui-audit/99-resumen.md §6`.
-- **Alcance:** hoy sólo validadas puntualmente (filtros de portal).
-- **Esfuerzo:** M.
-
-### UI-3 · Accesibilidad AA/AAA con herramienta automatizada
-
-- **Fuente:** `docs/ui-audit/99-resumen.md §6`. Contraste y navegación por teclado no medidos con Axe/Lighthouse.
-- **Esfuerzo:** S (correr Axe) + variable (fixes).
-
-### UI-4 · Snapshots visuales de las 27 rutas en Playwright
-
-- **Fuente:** `docs/ui-audit/99-resumen.md §7 punto 3` (recomendación).
-- **Esfuerzo:** M.
-
-### TEST-1 · Auditoría trimestral ligera de UI (~2 h)
-
-- **Fuente:** `docs/ui-audit/99-resumen.md §7 punto 4`.
-- **Próxima ventana:** octubre 2026.
-
----
-
-## 📊 Recap por severidad
-
-
-| Severidad | Cantidad                |
-| --------- | ----------------------- |
-| Críticos  | 0                       |
-| Altos     | 2 (AUD-1, DRY-1)        |
-| Medios    | 6 (DRY-2 → DRY-7)       |
-| Bajos     | 5 (UI-1 → UI-4, TEST-1) |
-| **Total** | **13**                  |
-
+**Reglas respetadas:** memory `core` (financialUtils/formatters centralizados), Power-of-10 (helpers puros, sin any), y `constants/routes.ts` como fuente única.
 
 ---
 
-## 🎯 Recomendación de orden
+## Riesgos
 
-Si vamos a atacar el backlog, sugiero este orden por relación valor/riesgo:
-
-1. **DRY-1 (Lote 7d)** — cerrar la consolidación de dialogs; ya tenemos momentum, la extensión del canónico con `children` es 1 archivo.
-2. **DRY-5 + DRY-3 + DRY-4 + DRY-6** — bundle "cleanup pequeño" en un solo minor (S+S+S+S ≈ 1 versión).
-3. **DRY-7** — `useDebouncedValue` compartido (S).
-4. **AUD-1** — migración de RPC; necesita ventana de mantenimiento + tests SQL.
-5. **DRY-2** — KPI strips.
-6. **UI-3** (Axe) antes que UI-1/UI-2 porque da métrica objetiva.
-7. **UI-1** (dark mode), **UI-2** (móvil), **UI-4** (snapshots), **TEST-1** (auditoría trimestral).
+- **Rutas del portal:** si algún literal se olvida, el usuario sigue navegando a la ruta correcta (son idénticos). Riesgo cero funcional; sólo pérdida de la ganancia DRY.
+- **Formatters:** `formatCurrency` con `USD` produce `"US$1,234.00"`; el `usdFormatter` viejo también. Se validará con un smoke rápido.
+- **`formatNumber` vs `.toLocaleString`:** para enteros producen exactamente el mismo string.
 
 ---
 
-## Notas técnicas
+## Verificación
 
-- Los ítems marcados como "resueltos" en los docs siguen en el archivo porque los MD se conservan como historial; no requieren acción.
-- `mem://audit/pendings` (referenciada en `docs/auditoria.md §7`) existe como entrada del índice de memoria pero **no en el filesystem** — si quieres, en el próximo pase se puede materializar como archivo `.md` para no perder trazabilidad.
-- El cast-audit se autogenera con `bun scripts/audit-casts.ts`; conviene reejecutarlo tras el próximo sprint DRY para verificar que no introducimos casts nuevos.
+1. `bun run typecheck` y `bun run lint --max-warnings 0`.
+2. `bun test src/features/costeo` y `bun test src/features/embarques/utils`.
+3. Vista rápida en preview: `/costeo/tarifas`, `/auditoria`, `/admin/diagnostico`, `/portal/*`.
 
 ---
 
-**Siguiente paso sugerido:** confirma si arrancamos con **DRY-1 (Lote 7d)** o prefieres primero el bundle **DRY-3/4/5/6** (cleanup pequeño de bajo riesgo). vamos en orden
+## Siguiente después de este bundle
+
+DRY-7 (`useDebouncedValue` compartido, S) → luego AUD-1 (migración RPC, M).
+
+**¿Confirmo y arranco?**
