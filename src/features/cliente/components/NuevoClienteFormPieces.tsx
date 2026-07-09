@@ -72,24 +72,33 @@ interface ModoTabsProps {
   onChange: (modo: "manual" | "csf") => void;
 }
 
-/** Toggle segmentado (estilo Tabs) entre captura manual y subida de CSF. */
+/** Toggle segmentado entre captura manual y subida de CSF (ToggleGroup del UI kit). */
 export function ModoAltaTabs({ modo, onChange }: ModoTabsProps) {
   return (
-    <div className="inline-flex rounded-md border bg-muted/40 p-0.5">
-      {(["manual", "csf"] as const).map((m) => (
-        <button
-          key={m}
-          type="button"
-          onClick={() => onChange(m)}
-          className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-[5px] transition-colors",
-            modo === m ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {m === "manual" ? "Captura manual" : "Subir CSF (PDF)"}
-        </button>
-      ))}
-    </div>
+    <ToggleGroup
+      type="single"
+      size="sm"
+      value={modo}
+      onValueChange={(v) => {
+        if (v === "manual" || v === "csf") onChange(v);
+      }}
+      className="inline-flex rounded-md border bg-muted/40 p-0.5"
+    >
+      <ToggleGroupItem
+        value="manual"
+        aria-label="Captura manual"
+        className="text-xs data-[state=on]:bg-background data-[state=on]:text-foreground"
+      >
+        Captura manual
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="csf"
+        aria-label="Subir CSF (PDF)"
+        className="text-xs data-[state=on]:bg-background data-[state=on]:text-foreground"
+      >
+        Subir CSF (PDF)
+      </ToggleGroupItem>
+    </ToggleGroup>
   );
 }
 
