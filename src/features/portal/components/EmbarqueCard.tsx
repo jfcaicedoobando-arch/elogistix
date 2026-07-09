@@ -61,7 +61,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
 
   return (
     <article {...rowNav} className={cn(rowNav.className, "block")}>
-      <Card className={`border-l-4 ${getEstadoBorderColor(estadoVisual)} hover:shadow-md hover:scale-[1.005] transition-all duration-200 group`}>
+      <Card className={`border-l-4 ${getEstadoBorderColor(estadoVisual)} hover:shadow-raised hover:scale-[1.005] transition-all duration-200 group`}>
         <CardContent className="p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
