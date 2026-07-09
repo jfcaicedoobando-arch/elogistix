@@ -100,27 +100,29 @@ export function BandejaTabs() {
                             {count}
                           </span>
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              aria-label={`Info: ${d.label}`}
-                              onClick={(e) => e.stopPropagation()}
-                              onKeyDown={(e) => e.stopPropagation()}
-                              className="inline-flex"
+                        {d.hint && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                aria-label={`Info: ${d.label}`}
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                                className="inline-flex"
+                              >
+                                <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              collisionPadding={12}
+                              className="max-w-sm text-xs leading-relaxed whitespace-normal"
                             >
-                              <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            collisionPadding={12}
-                            className="max-w-sm text-xs leading-relaxed whitespace-normal"
-                          >
-                            {d.hint}
-                          </TooltipContent>
-                        </Tooltip>
+                              {d.hint}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </span>
                     </TabsTrigger>
                   );
