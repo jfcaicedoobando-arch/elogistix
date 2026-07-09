@@ -79,7 +79,7 @@ export function BandejaTabs() {
               <span aria-hidden className="mx-2 self-center h-6 w-px bg-border" />
             )}
             <div className="flex flex-col">
-              <span className="px-3 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              <span className="px-3 pt-0.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                 {GROUP_LABELS[group]}
               </span>
               <div className="flex flex-wrap gap-1">
