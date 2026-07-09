@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.219.4] - 2026-07-08
+- **Chore · Power-of-10: split de `useNuevaFacturaProveedorForm.ts` y `FacturaProveedorFormFields.tsx`**: ambos habían superado el límite de 200 líneas tras los fixes recientes. Se extrajeron: (1) `useNuevaFacturaProveedorForm.submit.ts` con `runSubmit` + `handleSubmitError` (bloqueo de duplicados, mutación, side-effects y toast único); (2) `useNuevaFacturaProveedorForm.vinculos.ts` con reducers puros para toggle/setMonto/aplicarSugerencias; (3) `FacturaProveedorFormFields.hint.tsx` con `TcOrigenHint`. Sin cambios de comportamiento.
+- Archivos: `hooks/useNuevaFacturaProveedorForm.{ts,submit.ts,vinculos.ts}`, `components/FacturaProveedorFormFields.{tsx,hint.tsx}`.
+- Analogía: un cuaderno demasiado grueso se separó en cuadernitos temáticos; la portada (hook/componente) sigue diciendo lo mismo, pero cada tema vive en su propio librito.
+
 ## [13.219.3] - 2026-07-08
 - **Bugfix · Lint `no-case-declarations` en `useCxpPorCapturarFilters.ts`**: el `case "monto"` del ordenamiento declaraba `const totalA/totalB` sin llaves, lo que ESLint marca como error porque cada `case` comparte el mismo bloque. Se envolvió el cálculo en llaves para que las variables vivan solo dentro de ese caso, sin cambiar la lógica de ordenamiento.
 - Archivos: `hooks/useCxpPorCapturarFilters.ts`.
