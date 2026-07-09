@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.237.0] - 2026-07-09
+- **Feat · Trazabilidad línea→embarque en factura + badge de cobro**:
+  - `fetchConceptosFactura` ahora hace join a `embarques(expediente)` y aplana el resultado en `embarque_expediente`, exponiendo también `embarque_id` y `proforma_id_origen`.
+  - `FacturaConceptosTable` gana columna "Embarque" (desktop) y mini-link (mobile) con `<Link to="/embarques/:id">` cuando el concepto tiene origen — se oculta si ningún renglón está ligado (retro-compatible con facturas legacy).
+  - Nuevo `CobroClienteBadge` en el header de embarque: muestra `Cobro parcial` / `Cobrado` leyendo `cobro_cliente_status`, que se propaga automáticamente vía trigger cuando la factura se marca pagada.
+  - Columnas centralizadas: `EMBARQUE_DETAIL_COLUMNS` incorpora `cobro_cliente_status` y `cobro_cliente_actualizado_at`.
+
 ## [13.236.1] - 2026-07-09
 - **Fix · CI verde tras Ola P1/P2**:
   - `auditoriaConfig.ts` bajaba a 200 líneas pero con 3 líneas en blanco al final el conteo del auditor (`split("\n").length`) daba 201 y disparaba `Power of 10 > 200`. Se recortan los blank lines finales.

@@ -47,6 +47,10 @@ export interface ConceptoFacturaRow {
   tasa_ret_iva: number;
   monto_ret_isr: number;
   monto_ret_iva: number;
+  embarque_id: string | null;
+  proforma_id_origen: string | null;
+  /** Expediente del embarque origen (join). Null si el concepto no está ligado. */
+  embarque_expediente: string | null;
 }
 
 function resolverTasa(tipo: TipoIvaConcepto): number | null {
@@ -178,10 +182,17 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
 export async function fetchConceptosFactura(facturaId: string): Promise<ConceptoFacturaRow[]> {
   const { data, error } = await supabase
     .from("conceptos_factura")
-    .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, monto_ret_isr, monto_ret_iva")
+    .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, monto_ret_isr, monto_ret_iva, embarque_id, proforma_id_origen, embarques:embarque_id(expediente)")
     .eq("factura_id", facturaId)
     .is("deleted_at", null)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as ConceptoFacturaRow[];
+  // SAFE-CAST: aplanamos el join anidado a `embarque_expediente` para consumo UI.
+  return (data ?? []).map((row) => {
+    const emb = (row as { embarques?: { expediente?: string | null } | null }).embarques;
+    return {
+      ...(row as Omit<ConceptoFacturaRow, "embarque_expediente">),
+      embarque_expediente: emb?.expediente ?? null,
+    } as ConceptoFacturaRow;
+  });
 }

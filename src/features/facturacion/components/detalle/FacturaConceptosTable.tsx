@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatters";
 import { Receipt } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
 
 interface ConceptoSnapshot {
@@ -25,6 +26,8 @@ interface ConceptoSnapshot {
   importe?: number;
   total?: number;
   tipo_iva?: TipoIvaConcepto | null;
+  embarque_id?: string | null;
+  embarque_expediente?: string | null;
   /** Snapshot Facturapi: `product.taxes: [{ type, rate, factor }]` */
   product?: {
     taxes?: Array<{ type?: string; rate?: number; factor?: string }>;
@@ -42,6 +45,8 @@ interface Props {
     precio_unitario: number;
     total: number;
     tipo_iva?: TipoIvaConcepto;
+    embarque_id?: string | null;
+    embarque_expediente?: string | null;
   }>;
 }
 
@@ -89,8 +94,11 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
         precio_unitario: c.precio_unitario,
         importe: c.total,
         tipo_iva: c.tipo_iva,
+        embarque_id: c.embarque_id ?? null,
+        embarque_expediente: c.embarque_expediente ?? null,
       }))
     : parseConceptos(snapshot);
+  const mostrarEmbarque = conceptos.some((c) => c.embarque_expediente);
 
   if (conceptos.length === 0) {
     return (
@@ -126,6 +134,14 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
                   <p className="text-sm font-medium">{descripcion}</p>
                   <IvaCell tipo={tipoIva} />
                 </div>
+                {c.embarque_expediente && c.embarque_id && (
+                  <Link
+                    to={`/embarques/${c.embarque_id}`}
+                    className="mt-1 inline-block text-xs text-accent hover:underline"
+                  >
+                    {c.embarque_expediente}
+                  </Link>
+                )}
                 <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                   <span>Cant: {c.cantidad ?? 1}</span>
                   <span className="font-bold text-foreground tabular-nums">
@@ -142,6 +158,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
             <TableHeader>
               <TableRow>
                 <TableHead>Concepto</TableHead>
+                {mostrarEmbarque && <TableHead className="w-32">Embarque</TableHead>}
                 <TableHead className="text-right w-20">Cant.</TableHead>
                 <TableHead className="text-right w-32">P. Unitario</TableHead>
                 <TableHead className="text-center w-24">IVA</TableHead>
@@ -157,6 +174,20 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
                 return (
                   <TableRow key={i}>
                     <TableCell>{descripcion}</TableCell>
+                    {mostrarEmbarque && (
+                      <TableCell className="text-xs">
+                        {c.embarque_expediente && c.embarque_id ? (
+                          <Link
+                            to={`/embarques/${c.embarque_id}`}
+                            className="text-accent hover:underline"
+                          >
+                            {c.embarque_expediente}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right tabular-nums">{c.cantidad ?? 1}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatCurrency(Number(precio), moneda)}

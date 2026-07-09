@@ -1706,6 +1706,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           descripcion: string
+          embarque_id: string | null
           factura_id: string
           id: string
           moneda: Database["public"]["Enums"]["moneda"]
@@ -1713,6 +1714,7 @@ export type Database = {
           monto_ret_iva: number
           organization_id: string
           precio_unitario: number
+          proforma_id_origen: string | null
           tasa_iva_aplicada: number | null
           tasa_ret_isr: number
           tasa_ret_iva: number
@@ -1727,6 +1729,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion: string
+          embarque_id?: string | null
           factura_id: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -1734,6 +1737,7 @@ export type Database = {
           monto_ret_iva?: number
           organization_id?: string
           precio_unitario?: number
+          proforma_id_origen?: string | null
           tasa_iva_aplicada?: number | null
           tasa_ret_isr?: number
           tasa_ret_iva?: number
@@ -1748,6 +1752,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion?: string
+          embarque_id?: string | null
           factura_id?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -1755,6 +1760,7 @@ export type Database = {
           monto_ret_iva?: number
           organization_id?: string
           precio_unitario?: number
+          proforma_id_origen?: string | null
           tasa_iva_aplicada?: number | null
           tasa_ret_isr?: number
           tasa_ret_iva?: number
@@ -1762,6 +1768,13 @@ export type Database = {
           total?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "conceptos_factura_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conceptos_factura_factura_id_fkey"
             columns: ["factura_id"]
@@ -1775,6 +1788,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conceptos_factura_proforma_id_origen_fkey"
+            columns: ["proforma_id_origen"]
+            isOneToOne: false
+            referencedRelation: "proformas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conceptos_factura_proforma_id_origen_fkey"
+            columns: ["proforma_id_origen"]
+            isOneToOne: false
+            referencedRelation: "v_proforma_factura_link"
+            referencedColumns: ["proforma_id"]
           },
         ]
       }
@@ -3878,6 +3905,8 @@ export type Database = {
           ciudad_origen: string | null
           cliente_id: string
           cliente_nombre: string
+          cobro_cliente_actualizado_at: string | null
+          cobro_cliente_status: string
           consignatario: string
           contenedor: string | null
           cotizacion_id: string | null
@@ -3955,6 +3984,8 @@ export type Database = {
           ciudad_origen?: string | null
           cliente_id: string
           cliente_nombre?: string
+          cobro_cliente_actualizado_at?: string | null
+          cobro_cliente_status?: string
           consignatario?: string
           contenedor?: string | null
           cotizacion_id?: string | null
@@ -4032,6 +4063,8 @@ export type Database = {
           ciudad_origen?: string | null
           cliente_id?: string
           cliente_nombre?: string
+          cobro_cliente_actualizado_at?: string | null
+          cobro_cliente_status?: string
           consignatario?: string
           contenedor?: string | null
           cotizacion_id?: string | null
@@ -4209,6 +4242,49 @@ export type Database = {
           },
           {
             foreignKeyName: "eventos_embarque_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      factura_embarques: {
+        Row: {
+          created_at: string
+          embarque_id: string
+          factura_id: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          embarque_id: string
+          factura_id: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string
+          embarque_id?: string
+          factura_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "factura_embarques_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factura_embarques_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "factura_embarques_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -8039,6 +8115,10 @@ export type Database = {
       }
       recalc_factura_retenciones: {
         Args: { p_factura_id: string }
+        Returns: undefined
+      }
+      recalcular_cobro_embarques: {
+        Args: { p_embarque_ids: string[] }
         Returns: undefined
       }
       recalcular_estado_liquidacion_concepto: {
