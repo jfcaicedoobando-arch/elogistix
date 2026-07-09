@@ -37,6 +37,18 @@ function isActive(href: string, pathname: string) {
   return href === "/agente" ? pathname === "/agente" : pathname.startsWith(href);
 }
 
+function computeInitials(source: string): string {
+  return (
+    source
+      .split(" ")
+      .map((w) => w[0])
+      .filter(Boolean)
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "?"
+  );
+}
+
 function useAgenteBreadcrumbs(pathname: string, labels: Record<string, string>): PortalCrumb[] {
   return useMemo(() => {
     const parts = pathname.split("/").filter(Boolean);
@@ -71,14 +83,7 @@ export default function AgenteLayout() {
   };
 
   const nombreParaIniciales = ctx?.agenteNombre ?? user?.email ?? "";
-  const initials =
-    nombreParaIniciales
-      .split(" ")
-      .map((w) => w[0])
-      .filter(Boolean)
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "?";
+  const initials = computeInitials(nombreParaIniciales);
 
   const orgName = ctx?.organizacionNombre ?? null;
 
