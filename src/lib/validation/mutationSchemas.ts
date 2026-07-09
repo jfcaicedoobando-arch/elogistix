@@ -157,7 +157,7 @@ export const eventoTrackingSchema = z.object({
   ubicacion: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
   descripcion: z.string().max(500, "Máximo 500 caracteres").optional().default(""),
 });
-export type EventoTrackingFormValues = z.infer<typeof eventoTrackingSchema>;
+
 
 
 

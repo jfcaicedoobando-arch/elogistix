@@ -50,15 +50,6 @@ export function useProformas() {
   });
 }
 
-export function useProformasPendientes() {
-  const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: queryKeys.proformas.pendientes(organizationId),
-    enabled: !!organizationId,
-    queryFn: () => fetchProformasPendientes(organizationId!),
-    staleTime: 30_000,
-  });
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mutations
