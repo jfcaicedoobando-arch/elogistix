@@ -24,13 +24,13 @@ export const PORTAL_BREADCRUMB_MAP: Record<string, string> = {
 };
 
 export function getActiveSectionLabel(pathname: string): string | null {
-  if (pathname === "/portal") return "Inicio";
+  if (pathname === ROUTES.PORTAL) return "Inicio";
   for (const item of PORTAL_NAV_ITEMS) {
-    if (item.href !== "/portal" && pathname.startsWith(item.href)) return item.label;
+    if (item.href !== ROUTES.PORTAL && pathname.startsWith(item.href)) return item.label;
   }
   return null;
 }
 
 export function isPortalNavItemActive(href: string, pathname: string): boolean {
-  return href === "/portal" ? pathname === "/portal" : pathname.startsWith(href);
+  return href === ROUTES.PORTAL ? pathname === ROUTES.PORTAL : pathname.startsWith(href);
 }
