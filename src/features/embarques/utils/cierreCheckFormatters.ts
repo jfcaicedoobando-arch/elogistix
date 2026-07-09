@@ -2,15 +2,12 @@
  * Formatters de detalle para checks de cierre.
  * Extraídos de `cierreCheckMeta.ts` para mantener éste bajo 200 líneas (v13.89.4).
  */
+import { formatCurrency } from "@/lib/formatters";
 
 const fmtMoney = (n: unknown, moneda = "MXN"): string => {
   const num = Number(n);
   if (!Number.isFinite(num)) return String(n);
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: moneda,
-    maximumFractionDigits: 2,
-  }).format(num);
+  return formatCurrency(num, moneda);
 };
 
 export const pick = (d: unknown, key: string): unknown =>
