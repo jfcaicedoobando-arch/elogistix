@@ -1,4 +1,5 @@
 import { Ship, FileText, Receipt, LayoutDashboard, User, type LucideIcon } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
 
 export interface PortalNavItem {
   label: string;
@@ -7,19 +8,19 @@ export interface PortalNavItem {
 }
 
 export const PORTAL_NAV_ITEMS: PortalNavItem[] = [
-  { label: "Inicio", href: "/portal", icon: LayoutDashboard },
-  { label: "Embarques", href: "/portal/embarques", icon: Ship },
-  { label: "Cotizaciones", href: "/portal/cotizaciones", icon: FileText },
-  { label: "Facturas", href: "/portal/facturas", icon: Receipt },
-  { label: "Perfil", href: "/portal/perfil", icon: User },
+  { label: "Inicio", href: ROUTES.PORTAL, icon: LayoutDashboard },
+  { label: "Embarques", href: ROUTES.PORTAL_EMBARQUES, icon: Ship },
+  { label: "Cotizaciones", href: ROUTES.PORTAL_COTIZACIONES, icon: FileText },
+  { label: "Facturas", href: ROUTES.PORTAL_FACTURAS, icon: Receipt },
+  { label: "Perfil", href: ROUTES.PORTAL_PERFIL, icon: User },
 ];
 
 export const PORTAL_BREADCRUMB_MAP: Record<string, string> = {
-  "/portal": "Inicio",
-  "/portal/embarques": "Embarques",
-  "/portal/cotizaciones": "Cotizaciones",
-  "/portal/facturas": "Facturas",
-  "/portal/perfil": "Perfil",
+  [ROUTES.PORTAL]: "Inicio",
+  [ROUTES.PORTAL_EMBARQUES]: "Embarques",
+  [ROUTES.PORTAL_COTIZACIONES]: "Cotizaciones",
+  [ROUTES.PORTAL_FACTURAS]: "Facturas",
+  [ROUTES.PORTAL_PERFIL]: "Perfil",
 };
 
 export function getActiveSectionLabel(pathname: string): string | null {
