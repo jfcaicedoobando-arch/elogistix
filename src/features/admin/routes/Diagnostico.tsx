@@ -14,6 +14,7 @@ import { DiagnosticoHealthPanel } from "@/features/admin/components/DiagnosticoH
 import AlertasSistemaPanel from "@/features/admin/components/AlertasSistemaPanel";
 import { diagnosticoColumns } from "@/features/admin/components/DiagnosticoColumns";
 import { useDebounce } from "@/hooks/shared";
+import { formatNumber } from "@/lib/formatters";
 
 const DIAGNOSTICO_PAGE_SIZE = 50;
 
