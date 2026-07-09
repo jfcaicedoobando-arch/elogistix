@@ -23,7 +23,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
   const clientesRestantes = Math.max(operador.clientesDesglose.length - TOP_CLIENTES, 0);
 
   return (
-    <div className="rounded-xl border bg-background p-4 space-y-3 hover:shadow-md transition-shadow">
+    <div className="rounded-xl border bg-background p-4 space-y-3 hover:shadow-raised transition-shadow">
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
