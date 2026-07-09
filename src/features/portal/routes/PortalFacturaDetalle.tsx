@@ -40,7 +40,7 @@ export default function PortalFacturaDetalle() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Factura no encontrada.</p>
-        <Button variant="link" onClick={() => navigate("/portal/facturas")}>
+        <Button variant="link" onClick={() => navigate(ROUTES.PORTAL_FACTURAS)}>
           Volver a facturas
         </Button>
       </div>
@@ -54,7 +54,7 @@ export default function PortalFacturaDetalle() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => navigate("/portal/facturas")}
+        onClick={() => navigate(ROUTES.PORTAL_FACTURAS)}
         className="-ml-2 mb-1"
       >
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver
