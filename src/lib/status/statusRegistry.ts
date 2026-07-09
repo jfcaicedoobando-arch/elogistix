@@ -134,6 +134,8 @@ const EXTRA: Record<string, EstadoVisual["badge"]> = {
   Vigente: "bg-success/15 text-success border border-success/30",
   "Por vencer": "bg-warning/15 text-warning border border-warning/30",
   "Sin saldo": "bg-muted text-muted-foreground border border-border",
+  // Pagada: estado terminal — se muestra en muted para distinguirlo de "Vigente".
+  Pagada: "bg-muted text-muted-foreground border border-border",
   // Comisión
   Devengada: "bg-warning/15 text-warning border border-warning/30",
   Liquidada: "bg-success/15 text-success border border-success/30",
