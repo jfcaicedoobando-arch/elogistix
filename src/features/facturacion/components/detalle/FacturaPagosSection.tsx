@@ -3,23 +3,21 @@
  * (registrar pago / eliminar pago). Reusa `usePagosFactura` y los hooks
  * de mutación ya existentes. El cálculo de saldo replica al del diálogo
  * de registrar pago: `total − Σ monto_aplicado_factura`.
+ *
+ * v13.232.0 · Confirmación de eliminar pago migrada a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
-import { Loader2, Trash2, CheckCircle2, Clock } from "lucide-react";
+import { Trash2, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad, useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { PagoRepCell } from "./PagoRepCell";
 
@@ -165,26 +163,16 @@ export function FacturaPagosSection({
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!pagoAEliminar} onOpenChange={(o) => !o && setPagoAEliminar(null)}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar pago</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro? Esto recalculará el estado de la factura.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={eliminar.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={eliminar.isPending}
-              onClick={(e) => { e.preventDefault(); handleEliminar(); }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {eliminar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Eliminar"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={!!pagoAEliminar}
+        onOpenChange={(o) => { if (!o) setPagoAEliminar(null); }}
+        title="Eliminar pago"
+        variant="destructive"
+        confirmLabel="Eliminar"
+        isPending={eliminar.isPending}
+        onConfirm={handleEliminar}
+        description="¿Estás seguro? Esto recalculará el estado de la factura."
+      />
 
       <DialogPreviewCfdiPdf
         open={!!previewRep}

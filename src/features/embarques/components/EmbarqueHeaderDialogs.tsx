@@ -3,15 +3,12 @@
  *   - Soft warning de cierre sin proforma.
  *   - Soft warning de avance con docs faltantes (estados tempranos).
  *   - Hard block de avance con docs faltantes (estados avanzados).
+ *   - Hard block de avance sin fecha de llegada real.
  *
- * Extraído de `EmbarqueDetalleHeader.tsx` para respetar el límite de 200 líneas.
+ * v13.232.0 · Migrado a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { AlertTriangle, FileWarning, CalendarClock } from "lucide-react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 interface Props {
   siguienteEstado: string | null;
@@ -43,86 +40,73 @@ export function EmbarqueHeaderDialogs({
   onConfirmarAvanceConDocsPendientes, onIrADocumentos,
   blockFechaLlegadaOpen, onBlockFechaLlegadaOpenChange, onIrATracking,
 }: Props) {
-
   return (
     <>
-      <AlertDialog open={warnCierreOpen} onOpenChange={onWarnCierreOpenChange}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hay conceptos sin facturar</AlertDialogTitle>
-            <AlertDialogDescription>
-              Este embarque tiene <strong>{conceptosSinProforma}</strong> concepto(s) de venta sin proforma generada. Si lo cierras ahora tendrás que pedirle a un administrador que lo reabra para poder facturar. ¿Cerrar de todas formas?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={onConfirmarCierreSinProforma}>Cerrar de todas formas</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={warnCierreOpen}
+        onOpenChange={onWarnCierreOpenChange}
+        title="Hay conceptos sin facturar"
+        confirmLabel="Cerrar de todas formas"
+        onConfirm={onConfirmarCierreSinProforma}
+        description={
+          <>
+            Este embarque tiene <strong>{conceptosSinProforma}</strong> concepto(s) de venta sin proforma generada. Si lo cierras ahora tendrás que pedirle a un administrador que lo reabra para poder facturar. ¿Cerrar de todas formas?
+          </>
+        }
+      />
 
-      <AlertDialog open={warnDocsOpen} onOpenChange={onWarnDocsOpenChange}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" /> Faltan documentos
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>Aún no se han cargado los siguientes documentos para pasar a <strong>{siguienteEstado}</strong>:</p>
-                <ul className="list-disc list-inside text-sm">
-                  {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
-                </ul>
-                <p>Puedes continuar y subirlos más tarde. ¿Avanzar de todos modos?</p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={onConfirmarAvanceConDocsPendientes}>Avanzar de todos modos</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={warnDocsOpen}
+        onOpenChange={onWarnDocsOpenChange}
+        title="Faltan documentos"
+        titleIcon={<AlertTriangle className="h-5 w-5 text-warning" aria-hidden />}
+        confirmLabel="Avanzar de todos modos"
+        onConfirm={onConfirmarAvanceConDocsPendientes}
+        description={
+          <div className="space-y-2">
+            <p>Aún no se han cargado los siguientes documentos para pasar a <strong>{siguienteEstado}</strong>:</p>
+            <ul className="list-disc list-inside text-sm">
+              {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
+            </ul>
+            <p>Puedes continuar y subirlos más tarde. ¿Avanzar de todos modos?</p>
+          </div>
+        }
+      />
 
-      <AlertDialog open={blockDocsOpen} onOpenChange={onBlockDocsOpenChange}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <FileWarning className="h-5 w-5 text-destructive" /> No se puede avanzar
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>Para pasar a <strong>{siguienteEstado}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
-                <ul className="list-disc list-inside text-sm">
-                  {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
-                </ul>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cerrar</AlertDialogCancel>
-            <AlertDialogAction onClick={onIrADocumentos}>Ir a Documentos</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={blockDocsOpen}
+        onOpenChange={onBlockDocsOpenChange}
+        title="No se puede avanzar"
+        titleIcon={<FileWarning className="h-5 w-5 text-destructive" aria-hidden />}
+        titleDestructive
+        confirmLabel="Ir a Documentos"
+        cancelLabel="Cerrar"
+        onConfirm={onIrADocumentos}
+        description={
+          <div className="space-y-2">
+            <p>Para pasar a <strong>{siguienteEstado}</strong> es obligatorio tener cargados (o marcados como "No aplica") estos documentos:</p>
+            <ul className="list-disc list-inside text-sm">
+              {docsFaltantes.map((d) => <li key={d}>{d}</li>)}
+            </ul>
+          </div>
+        }
+      />
 
-      <AlertDialog open={blockFechaLlegadaOpen} onOpenChange={onBlockFechaLlegadaOpenChange}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-destructive" /> Registra primero la llegada real
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Para pasar a <strong>Arribo</strong> debes capturar la fecha de llegada real desde el tab <strong>Tracking</strong> (botón "Marcar Llegada real"). Este dato es obligatorio para calcular puntualidad y demoras.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cerrar</AlertDialogCancel>
-            <AlertDialogAction onClick={onIrATracking}>Ir a Tracking</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={blockFechaLlegadaOpen}
+        onOpenChange={onBlockFechaLlegadaOpenChange}
+        title="Registra primero la llegada real"
+        titleIcon={<CalendarClock className="h-5 w-5 text-destructive" aria-hidden />}
+        titleDestructive
+        confirmLabel="Ir a Tracking"
+        cancelLabel="Cerrar"
+        onConfirm={onIrATracking}
+        description={
+          <>
+            Para pasar a <strong>Arribo</strong> debes capturar la fecha de llegada real desde el tab <strong>Tracking</strong> (botón "Marcar Llegada real"). Este dato es obligatorio para calcular puntualidad y demoras.
+          </>
+        }
+      />
     </>
   );
 }
-

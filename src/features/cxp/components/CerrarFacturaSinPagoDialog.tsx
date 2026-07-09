@@ -10,19 +10,11 @@
  * Doble confirmación: motivo obligatorio (select) + escribir "CERRAR".
  *
  * v13.204.0 · Ola A · A4
+ * v13.232.0 · Migrado a `ConfirmActionDialog` (Lote 7d.2).
  */
 import { useState } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertTriangle } from "lucide-react";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -55,8 +47,7 @@ export function CerrarFacturaSinPagoDialog({
   const [comentario, setComentario] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const descripcionMotivo = MOTIVOS_CIERRE_SIN_PAGO.find((m) => m.value === motivo)?.descripcion;
-  const puedeConfirmar =
-    motivo !== "" && confirmText.trim().toUpperCase() === "CERRAR" && !isPending;
+  const puedeConfirmar = motivo !== "" && confirmText.trim().toUpperCase() === "CERRAR";
 
   const handleOpenChange = (o: boolean) => {
     if (!o) { setMotivo(""); setComentario(""); setConfirmText(""); }
@@ -64,102 +55,87 @@ export function CerrarFacturaSinPagoDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-warning" />
-            Cerrar factura sin pago
-          </AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-2 text-sm">
-              <p>
-                Vas a saldar la factura <strong>{factura?.folio_proveedor}</strong> de{" "}
-                <strong>{factura?.proveedor_nombre}</strong> por un saldo de{" "}
-                <strong>{factura ? formatCurrency(factura.saldo, factura.moneda) : "—"}</strong>{" "}
-                sin registrar un pago real de dinero.
-              </p>
-              <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-1">
-                <li>Se creará un ajuste tipificado en el histórico de pagos (marcado como ajuste, no como pago).</li>
-                <li>La factura quedará marcada como <strong>Pagada</strong> y desaparecerá del aging.</li>
-                <li>La acción queda registrada en la bitácora con tu usuario y el motivo.</li>
-                <li>Requiere que la factura esté aprobada.</li>
-              </ul>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        <div className="space-y-3 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="cxp-cerrar-motivo" className="text-xs">
-              Motivo <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={motivo}
-              onValueChange={(v) => setMotivo(v as MotivoCierreSinPago)}
-              disabled={isPending}
-            >
-              <SelectTrigger id="cxp-cerrar-motivo">
-                <SelectValue placeholder="Selecciona un motivo" />
-              </SelectTrigger>
-              <SelectContent>
-                {MOTIVOS_CIERRE_SIN_PAGO.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {descripcionMotivo && (
-              <p className="text-[11px] text-muted-foreground pt-0.5">{descripcionMotivo}</p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="cxp-cerrar-comentario" className="text-xs">
-              Comentario adicional (opcional)
-            </Label>
-            <Textarea
-              id="cxp-cerrar-comentario"
-              value={comentario}
-              onChange={(e) => setComentario(e.target.value)}
-              placeholder="Ej: se aplicó la NC-1234 emitida el 15/06 contra este folio."
-              rows={2}
-              maxLength={500}
-              disabled={isPending}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="cxp-cerrar-confirm" className="text-xs">
-              Escribe <span className="font-mono font-semibold">CERRAR</span> para confirmar
-            </Label>
-            <Input
-              id="cxp-cerrar-confirm"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              autoComplete="off"
-              disabled={isPending}
-            />
-          </div>
+    <ConfirmActionDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      size="md"
+      title="Cerrar factura sin pago"
+      titleIcon={<AlertTriangle className="h-5 w-5 text-warning" aria-hidden />}
+      confirmLabel="Cerrar factura"
+      cancelLabel="Volver"
+      confirmDisabled={!puedeConfirmar}
+      isPending={isPending}
+      onConfirm={() => {
+        if (motivo === "") return;
+        return onConfirm({ motivo, comentario: comentario.trim() || undefined });
+      }}
+      description={
+        <div className="space-y-2 text-sm">
+          <p>
+            Vas a saldar la factura <strong>{factura?.folio_proveedor}</strong> de{" "}
+            <strong>{factura?.proveedor_nombre}</strong> por un saldo de{" "}
+            <strong>{factura ? formatCurrency(factura.saldo, factura.moneda) : "—"}</strong>{" "}
+            sin registrar un pago real de dinero.
+          </p>
+          <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-1">
+            <li>Se creará un ajuste tipificado en el histórico de pagos (marcado como ajuste, no como pago).</li>
+            <li>La factura quedará marcada como <strong>Pagada</strong> y desaparecerá del aging.</li>
+            <li>La acción queda registrada en la bitácora con tu usuario y el motivo.</li>
+            <li>Requiere que la factura esté aprobada.</li>
+          </ul>
         </div>
+      }
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="cxp-cerrar-motivo" className="text-xs">
+          Motivo <span className="text-destructive">*</span>
+        </Label>
+        <Select
+          value={motivo}
+          onValueChange={(v) => setMotivo(v as MotivoCierreSinPago)}
+          disabled={isPending}
+        >
+          <SelectTrigger id="cxp-cerrar-motivo">
+            <SelectValue placeholder="Selecciona un motivo" />
+          </SelectTrigger>
+          <SelectContent>
+            {MOTIVOS_CIERRE_SIN_PAGO.map((m) => (
+              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {descripcionMotivo && (
+          <p className="text-[11px] text-muted-foreground pt-0.5">{descripcionMotivo}</p>
+        )}
+      </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Volver</AlertDialogCancel>
-          <AlertDialogAction
-            disabled={!puedeConfirmar}
-            onClick={(e) => {
-              e.preventDefault();
-              if (motivo === "") return;
-              void onConfirm({
-                motivo,
-                comentario: comentario.trim() || undefined,
-              });
-            }}
-          >
-            {isPending && <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />}
-            Cerrar factura
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <div className="space-y-1.5">
+        <Label htmlFor="cxp-cerrar-comentario" className="text-xs">
+          Comentario adicional (opcional)
+        </Label>
+        <Textarea
+          id="cxp-cerrar-comentario"
+          value={comentario}
+          onChange={(e) => setComentario(e.target.value)}
+          placeholder="Ej: se aplicó la NC-1234 emitida el 15/06 contra este folio."
+          rows={2}
+          maxLength={500}
+          disabled={isPending}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="cxp-cerrar-confirm" className="text-xs">
+          Escribe <span className="font-mono font-semibold">CERRAR</span> para confirmar
+        </Label>
+        <Input
+          id="cxp-cerrar-confirm"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          autoComplete="off"
+          disabled={isPending}
+        />
+      </div>
+    </ConfirmActionDialog>
   );
 }
