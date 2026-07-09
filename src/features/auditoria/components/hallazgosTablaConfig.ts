@@ -22,6 +22,8 @@ export const reglaLabel: Record<ReglaAuditoria, string> = {
   cxc_vencida: "CXC vencida",
   cxp_por_capturar_estancada: "CXP por capturar",
   cxp_vencida: "CXP vencida",
+  contenedor_datos_incompletos: "Contenedor sin peso/volumen",
+  contenedor_fechas_incompletas: "Contenedor sin fechas",
 };
 
 export const reglaToTab: Record<ReglaAuditoria, string> = {
@@ -43,6 +45,8 @@ export const reglaToTab: Record<ReglaAuditoria, string> = {
   cxc_vencida: "facturacion",
   cxp_por_capturar_estancada: "facturacion",
   cxp_vencida: "facturacion",
+  contenedor_datos_incompletos: "resumen",
+  contenedor_fechas_incompletas: "resumen",
 };
 
 export const severidadConfig: Record<
