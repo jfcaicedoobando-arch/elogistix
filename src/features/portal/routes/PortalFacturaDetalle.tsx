@@ -8,6 +8,7 @@ import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lu
 import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
+import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { openFacturaInNewTab } from "@/services/storage";
 import { toast } from "@/hooks/shared";
