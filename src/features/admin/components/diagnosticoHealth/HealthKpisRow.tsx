@@ -4,6 +4,7 @@
  */
 import { Activity, AlertTriangle, Bug, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatNumber } from "@/lib/formatters";
 
 interface KpiCardProps {
   icon: React.ReactNode;
@@ -50,26 +51,26 @@ export default function HealthKpisRow({
       <KpiCard
         icon={<Activity className="h-4 w-4" />}
         label="Eventos"
-        value={totalEvents.toLocaleString("es-MX")}
+        value={formatNumber(totalEvents)}
         hint={`${activeFns} funciones activas`}
       />
       <KpiCard
         icon={<Bug className="h-4 w-4" />}
         label="Errores"
-        value={totalErrors.toLocaleString("es-MX")}
+        value={formatNumber(totalErrors)}
         hint={`${errorRatePct.toFixed(2)}% del total`}
         tone={totalErrors > 0 ? "error" : "default"}
       />
       <KpiCard
         icon={<AlertTriangle className="h-4 w-4" />}
         label="Advertencias"
-        value={totalWarns.toLocaleString("es-MX")}
+        value={formatNumber(totalWarns)}
         tone={totalWarns > 0 ? "warn" : "default"}
       />
       <KpiCard
         icon={<Clock className="h-4 w-4" />}
         label="Funciones con error"
-        value={affectedFns.toLocaleString("es-MX")}
+        value={formatNumber(affectedFns)}
         hint={`en ${rangeLabel.toLowerCase()}`}
         tone={affectedFns > 0 ? "error" : "default"}
       />
