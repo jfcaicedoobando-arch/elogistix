@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { useAgenteContext, useAgenteTarifas, useAgenteEmbarques } from "@/features/portal-agente/hooks";
+import { ROUTES } from "@/constants/routes";
 
 export default function AgenteInicio() {
   const { data: ctx } = useAgenteContext();
@@ -44,7 +45,7 @@ export default function AgenteInicio() {
         <Card className="p-4 border-destructive/40 bg-destructive/5 space-y-2">
           <p className="text-sm">
             Tienes <strong>{rechazadas}</strong> tarifa(s) rechazada(s) por operaciones.
-            <Link to="/agente/tarifas" className="text-accent ml-1 underline">Revisarlas</Link>
+            <Link to={ROUTES.AGENTE_TARIFAS} className="text-accent ml-1 underline">Revisarlas</Link>
           </p>
           <ul className="text-xs space-y-1 list-disc pl-5">
             {tarifas
@@ -61,9 +62,9 @@ export default function AgenteInicio() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <QuickLink to="/agente/tarifas" icon={<FileText className="h-5 w-5" />} title="Mis tarifas" desc="Captura o actualiza tus tarifas marítimas. Quedan en borrador hasta que operaciones las aprueba." />
-        <QuickLink to="/agente/garantias" icon={<ShieldCheck className="h-5 w-5" />} title="Carta garantía" desc="Sube tu carta garantía y mantén el tabulador de demoras actualizado." />
-        <QuickLink to="/agente/embarques" icon={<Ship className="h-5 w-5" />} title="Mis embarques" desc="Consulta los embarques donde estás asignado como agente." />
+        <QuickLink to={ROUTES.AGENTE_TARIFAS} icon={<FileText className="h-5 w-5" />} title="Mis tarifas" desc="Captura o actualiza tus tarifas marítimas. Quedan en borrador hasta que operaciones las aprueba." />
+        <QuickLink to={ROUTES.AGENTE_GARANTIAS} icon={<ShieldCheck className="h-5 w-5" />} title="Carta garantía" desc="Sube tu carta garantía y mantén el tabulador de demoras actualizado." />
+        <QuickLink to={ROUTES.AGENTE_EMBARQUES} icon={<Ship className="h-5 w-5" />} title="Mis embarques" desc="Consulta los embarques donde estás asignado como agente." />
       </div>
     </div>
   );

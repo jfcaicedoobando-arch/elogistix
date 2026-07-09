@@ -10,6 +10,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocument";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
+import { ROUTES } from "@/constants/routes";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
@@ -50,13 +51,13 @@ export default function Tesoreria() {
               <FileText className="h-4 w-4 mr-2" /> Reporte PDF
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/tesoreria/cuentas"><Wallet className="h-4 w-4 mr-2" /> Cuentas</Link>
+              <Link to={ROUTES.TESORERIA_CUENTAS}><Wallet className="h-4 w-4 mr-2" /> Cuentas</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/tesoreria/flujo"><TrendingUp className="h-4 w-4 mr-2" /> Flujo 90 días</Link>
+              <Link to={ROUTES.TESORERIA_FLUJO}><TrendingUp className="h-4 w-4 mr-2" /> Flujo 90 días</Link>
             </Button>
             <Button asChild>
-              <Link to="/tesoreria/conciliacion">Conciliación <ArrowRight className="h-4 w-4 ml-2" /></Link>
+              <Link to={ROUTES.TESORERIA_CONCILIACION}>Conciliación <ArrowRight className="h-4 w-4 ml-2" /></Link>
             </Button>
           </div>
         }
@@ -70,7 +71,7 @@ export default function Tesoreria() {
             <h3 className="text-sm font-semibold mb-2 text-muted-foreground">Saldos en bancos</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {data.cuentas.length === 0 ? (
-                <Card><CardContent density="compact" className="text-sm text-muted-foreground">Sin cuentas. <Link to="/tesoreria/cuentas" className="text-accent underline">Da de alta una</Link>.</CardContent></Card>
+                <Card><CardContent density="compact" className="text-sm text-muted-foreground">Sin cuentas. <Link to={ROUTES.TESORERIA_CUENTAS} className="text-accent underline">Da de alta una</Link>.</CardContent></Card>
               ) : data.cuentas.map((c) => (
                 <Card key={c.id}>
                   <CardContent density="tight">

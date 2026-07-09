@@ -2,6 +2,7 @@ import { Seo } from "@/components/shared/Seo";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck, Lock, Users, Activity, DatabaseBackup, Mail } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";
+import { ROUTES } from "@/constants/routes";
 
 /**
  * Página de confianza, seguridad y privacidad mantenida por Libre Carga.
@@ -18,8 +19,8 @@ export default function Seguridad() {
 
       <header className="border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <Link to="/" aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>
-          <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <Link to={ROUTES.LANDING} aria-label="Libre Carga"><BrandLockup variant="horizontal" size="sm" /></Link>
+          <Link to={ROUTES.LANDING} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Volver
           </Link>
         </div>
@@ -63,7 +64,7 @@ export default function Seguridad() {
             Recabamos los datos necesarios para operar la plataforma: información de la cuenta
             (nombre, correo, organización) y los datos operativos que cada agencia captura
             (clientes, embarques, cotizaciones, facturas). Consulta nuestro{" "}
-            <Link to="/legal/privacidad" className="text-accent hover:underline">Aviso de privacidad</Link>{" "}
+            <Link to={ROUTES.LEGAL_PRIVACIDAD} className="text-accent hover:underline">Aviso de privacidad</Link>{" "}
             para el detalle completo.
           </p>
 

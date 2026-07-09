@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Globe } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
 import {
   URL,
   INCOTERMS,
@@ -41,7 +42,7 @@ export default function GuiaIncoterms2020() {
         <header className="border-b border-border bg-muted/30 py-16 sm:py-20">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
             <nav aria-label="Migas de pan" className="mb-4 text-sm text-muted-foreground">
-              <Link to="/" className="hover:text-foreground">Inicio</Link>
+              <Link to={ROUTES.LANDING} className="hover:text-foreground">Inicio</Link>
               <span className="mx-2">/</span>
               <span>Recursos</span>
               <span className="mx-2">/</span>
@@ -167,12 +168,12 @@ export default function GuiaIncoterms2020() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button asChild size="lg">
-                <Link to="/login?tab=signup">
+                <Link to={ROUTES.LOGIN_SIGNUP}>
                   Crear cuenta gratis <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/recursos/guia-carta-porte-3">Ver Guía Carta Porte 3.0</Link>
+                <Link to={ROUTES.RECURSOS_GUIA_CARTA_PORTE}>Ver Guía Carta Porte 3.0</Link>
               </Button>
             </div>
           </aside>
