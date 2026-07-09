@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
 function KPICard({
-  label, value, count, tone = "default",
+  label, value, secondary, count, tone = "default",
 }: {
-  label: string; value: string; count?: number;
+  label: string; value: string; secondary?: string; count?: number;
   tone?: "default" | "warn" | "danger";
 }) {
   const toneCls = tone === "danger" ? "text-destructive"
@@ -25,7 +25,10 @@ function KPICard({
             </span>
           )}
         </p>
-        <p className={cn("text-lg font-semibold tabular-nums", toneCls)}>{value}</p>
+        <p className={cn("text-lg font-semibold tabular-nums leading-tight", toneCls)}>{value}</p>
+        {secondary && (
+          <p className={cn("text-xs tabular-nums leading-tight", toneCls, "opacity-80")}>{secondary}</p>
+        )}
       </CardContent>
     </Card>
   );
