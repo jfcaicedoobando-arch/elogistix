@@ -19,7 +19,7 @@ import {
   type FacturaFormValues, type CategoriaPresupuestoLite,
 } from "./facturaFormPrimitives";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
-import { formatFechaEs } from "@/features/cxp/hooks/useTcDofPorFecha";
+import { TcOrigenHint } from "./FacturaProveedorFormFields.hint";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -196,15 +196,4 @@ export function FacturaProveedorFormFields({
   );
 }
 
-function TcOrigenHint({ origen, fechaAplicada }: { origen: TcOrigen; fechaAplicada?: string }) {
-  if (origen === "vacio") return null;
-  const fecha = formatFechaEs(fechaAplicada);
-  const text =
-    origen === "dof"
-      ? `DOF ${fecha || "—"} · Banxico SF43718`
-      : origen === "cfdi"
-        ? "Del CFDI del proveedor"
-        : "Capturado manualmente";
-  return <p className="text-[11px] text-muted-foreground">{text}</p>;
-}
 

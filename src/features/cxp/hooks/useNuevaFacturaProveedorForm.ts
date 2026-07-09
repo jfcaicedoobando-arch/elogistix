@@ -3,29 +3,26 @@
  * Orquesta estado del formulario, parseo CFDI, validación y submit.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toggleVinculoReducer, setVinculoMontoReducer, aplicarSugerenciasReducer, type VinculosState } from "./useNuevaFacturaProveedorForm.vinculos";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import {
-  type CfdiParsedResponse, type ConceptoCostoAbierto,
-  existeFacturaDuplicada,
-} from "@/features/cxp/services";
+import type { CfdiParsedResponse, ConceptoCostoAbierto } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
-import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { uploadCfdiSafe, vincularSafe, buildFacturaSuccessDescription } from "./useNuevaFacturaProveedorForm.sideEffects";
 import {
-  type PendingCfdi, type VinculoLinea,
-  addDays, initialValues, calcularTotal, validateFactura, buildPayload,
+  type PendingCfdi,
+  addDays, initialValues, calcularTotal, validateFactura,
 } from "./useNuevaFacturaProveedorForm.helpers";
 import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
+import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
 
-type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
+
 
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
@@ -119,38 +116,17 @@ export function useNuevaFacturaProveedorForm(
   };
 
   const toggleVinculo = (c: ConceptoCostoAbierto, checked: boolean) => {
-    setVinculos((prev) => {
-      const next = { ...prev };
-      if (!checked) { delete next[c.id]; return next; }
-      next[c.id] = {
-        embarqueId: c.embarque_id,
-        descripcion: c.concepto,
-        monto: c.monto,
-        montoOriginal: c.monto,
-      };
-      return next;
-    });
+    setVinculos((prev) => toggleVinculoReducer(prev, c, checked));
   };
 
   const setVinculoMonto = (conceptoId: string, monto: number) => {
-    setVinculos((prev) => prev[conceptoId]
-      ? { ...prev, [conceptoId]: { ...prev[conceptoId], monto } }
-      : prev);
+    setVinculos((prev) => setVinculoMontoReducer(prev, conceptoId, monto));
   };
-  // Reemplaza vínculos por las sugerencias del matcher.
+
   const aplicarSugerencias = (sugs: ReadonlyArray<{
     conceptoId: string; concepto: string; monto: number; embarque_id: string;
   }>) => {
-    setVinculos(() => {
-      const next: VinculosState = {};
-      for (const s of sugs) {
-        next[s.conceptoId] = {
-          embarqueId: s.embarque_id, descripcion: s.concepto,
-          monto: s.monto, montoOriginal: s.monto,
-        };
-      }
-      return next;
-    });
+    setVinculos(() => aplicarSugerenciasReducer(sugs));
   };
 
   const reset = () => {
@@ -193,54 +169,18 @@ export function useNuevaFacturaProveedorForm(
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmitError = (e: unknown) => {
-    const err = e as { message?: string; code?: string };
-    if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
-      notifyError(toast, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
-    } else {
-      notifyError(toast, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
-    }
-  };
-
   const submit = async () => {
     if (!validate()) {
       notifyError(toast, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
       return;
     }
-    // Bloqueo de duplicados: mismo proveedor + folio + fecha emisión.
-    try {
-      const dup = await existeFacturaDuplicada(values.provId, values.folio, values.emision);
-      if (dup) {
-        setErrors((e) => ({ ...e, folio: "Ya existe una factura con este folio para este proveedor en esta fecha." }));
-        notifyError(toast, {
-          title: "Factura duplicada",
-          description: `Ya capturaste el folio ${values.folio.trim()} de este proveedor el ${values.emision}.`,
-          method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP",
-        });
-        return;
-      }
-    } catch {
-      // Si la verificación falla (red, RLS), continuamos: el UNIQUE de UUID fiscal sigue protegiendo.
-    }
-    try {
-      const created = await crear.mutateAsync(
-        buildPayload({ values, total, userId: user?.id, pendingCfdi, vinculos }),
-      );
-      let sideResult = {};
-      if (created?.id) {
-        await uploadCfdiSafe({ facturaId: created.id, organizationId, pendingCfdi });
-        sideResult = await vincularSafe({
-          facturaId: created.id, organizationId, values, total, vinculos, embarqueAdHoc,
-        });
-      }
-      toast.success("Factura de proveedor capturada", {
-        description: buildFacturaSuccessDescription(sideResult),
-      });
-      reset();
-      onDone();
-    } catch (e) {
-      handleSubmitError(e);
-    }
+    const ok = await runSubmit({
+      values, total, userId: user?.id, organizationId,
+      pendingCfdi, vinculos, embarqueAdHoc,
+      crearMutateAsync: crear.mutateAsync,
+      setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura con este folio para este proveedor en esta fecha." })),
+    });
+    if (ok) { reset(); onDone(); }
   };
 
   return {
