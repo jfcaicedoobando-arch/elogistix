@@ -42,10 +42,6 @@ export function UsuariosInternosTab() {
     }
   }, [users, isLoading, toast]);
 
-  useEffect(() => {
-    const t = setTimeout(() => setBusquedaDebounced(busqueda.trim().toLowerCase()), 200);
-    return () => clearTimeout(t);
-  }, [busqueda]);
 
   const confirmRoleChange = async () => {
     if (!pendingRole) return;
