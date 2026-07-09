@@ -94,7 +94,7 @@ export function BandejaTabs() {
                       <span className="flex items-center gap-1.5">
                         {d.label}
                         {typeof count === "number" && count > 0 && (
-                          <span className={`text-[10px] font-semibold rounded-full px-1.5 py-0.5 tabular-nums ${badgeClass(d.tone)}`}>
+                          <span className={`text-2xs font-semibold rounded-full px-1.5 py-0.5 tabular-nums ${badgeClass(d.tone)}`}>
                             {count}
                           </span>
                         )}
