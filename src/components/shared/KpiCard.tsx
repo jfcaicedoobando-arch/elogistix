@@ -54,7 +54,7 @@ export function KpiCard({
       className={cn(
         "transition-shadow",
         variantStyles[variant],
-        onClick && "cursor-pointer hover:shadow-md",
+        onClick && "cursor-pointer hover:shadow-raised",
         className,
       )}
       onClick={onClick}
