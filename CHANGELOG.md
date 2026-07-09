@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.236.0] - 2026-07-09
+- **Refactor · Ola P1+P2 auditoría · Power-of-10 y limpieza de exports muertos**:
+  - **P1 (Power-of-10):** `supabase/functions/user-management/handlers.ts` (304 líneas, único archivo productivo fuera del límite) se partió en cuatro archivos: `types.ts` (interfaces + catálogos `VALID_ROLES` / `ASSIGNABLE_BY_ORG_ADMIN`), `createHandler.ts` (`validateCreatePayload`, `handleCreate`, `resolveTargetOrgId`), `deleteHandler.ts` (`handleDelete`) y `listHandler.ts` (`resolveOrgScope`, `handleList`). El propio `handlers.ts` queda como barrel de re-exports para conservar la API pública consumida por `index.ts`, `clientHandlers.ts`, `agenteHandlers.ts`, `portalEmailsHandler.ts` y `validate_test.ts`; ningún consumidor cambia.
+  - **P2 (dead exports):** se eliminaron 5 exports huérfanos detectados por `knip` con severidad HIGH: `buildRoute` y `RouteKey` en `src/constants/routes.ts` (ningún componente los usaba: todos los `\`/embarques/${id}\`` viven inline), `TIPOS_EVENTO_TRACKING` en `useEventosEmbarque.ts` (no referenciado), `useProformasPendientes` en `useProformas.ts` (los componentes usan directamente `fetchProformasPendientes` o `useProformasTodas`) y `EventoTrackingFormValues` en `mutationSchemas.ts`. Con esto queda 0 exports huérfanos HIGH en el reporte.
+  - **Baseline arquitectónico:** `oversized` productivos vuelven a 0 (allowlist Auth + `OVERSIZED_BASELINE` sin cambios).
+
 ## [13.235.0] - 2026-07-09
 - **Backend · AUD-1 · Auditoría de embarques ahora consulta `embarque_contenedores`**: la RPC `auditoria_embarques_org` incorpora dos reglas nuevas que leen directamente la tabla de contenedores (fuente de verdad) en lugar de depender de las columnas legacy `peso_kg`/`volumen_m3`/`piezas` mantenidas por trigger sobre `embarques`.
   - **`contenedor_datos_incompletos`** (severidad `alto`): embarques marítimos con `tipo_carga` FCL en estados avanzados (En Tránsito, En Aduana, Llegada, Arribo, Entregado) que tienen contenedores sin peso o volumen capturado.

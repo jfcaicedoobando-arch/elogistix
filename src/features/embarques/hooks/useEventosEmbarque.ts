@@ -17,20 +17,6 @@ export interface EventoEmbarque {
   created_at: string;
 }
 
-export const TIPOS_EVENTO_TRACKING = [
-  "Zarpe",
-  "Transbordo",
-  "Arribo a Puerto",
-  "Descarga",
-  "Despacho Aduanal",
-  "Liberación",
-  "En Ruta Terrestre",
-  "Entrega",
-  "Demora",
-  "Inspección",
-  "Cambio de ETA",
-  "Otro",
-] as const;
 
 export function useEventosEmbarque(embarqueId: string | undefined) {
   return useQuery({

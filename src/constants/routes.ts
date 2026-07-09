@@ -7,7 +7,6 @@
  *
  * REGLAS:
  *   - `ROUTES.*` son rutas estáticas (string const).
- *   - `buildRoute.*` son funciones para rutas parametrizadas (`/:id`, etc.).
  *   - Los `path=` en `src/routes/appRoutes.tsx` (definición del router) siguen
  *     siendo literales — este archivo es para consumidores, no definiciones.
  *   - Al añadir una ruta nueva: registrarla aquí primero y consumir desde aquí.
@@ -127,25 +126,3 @@ export const ROUTES = {
   RECURSOS_GUIA_INCOTERMS: "/recursos/guia-incoterms-2020",
   RECURSOS_GUIA_PUERTOS: "/recursos/guia-puertos-mexico",
 } as const;
-
-/**
- * Builders para rutas con parámetros. Nombres cortos porque se usan mucho
- * (`buildRoute.embarque(id)` en lugar de `\`/embarques/${id}\``).
- */
-export const buildRoute = {
-  embarque: (id: string) => `/embarques/${id}`,
-  embarqueEditar: (id: string) => `/embarques/${id}/editar`,
-  cotizacion: (id: string) => `/cotizaciones/${id}`,
-  cotizacionEditar: (id: string) => `/cotizaciones/${id}/editar`,
-  cliente: (id: string) => `/clientes/${id}`,
-  factura: (id: string) => `/facturacion/${id}`,
-  proforma: (id: string) => `/proformas/${id}`,
-  proveedor: (id: string) => `/compras/proveedores/${id}`,
-  crmLead: (id: string) => `/crm/leads/${id}`,
-  crmOportunidad: (id: string) => `/crm/oportunidades/${id}`,
-  portalEmbarque: (id: string) => `/portal/embarques/${id}`,
-  portalCotizacion: (id: string) => `/portal/cotizaciones/${id}`,
-  portalFactura: (id: string) => `/portal/facturas/${id}`,
-} as const;
-
-export type RouteKey = keyof typeof ROUTES;

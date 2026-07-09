@@ -11,7 +11,7 @@ import {
   eliminarProforma as svcEliminar,
   fetchProformasTodas,
   fetchProformasEmbarque,
-  fetchProformasPendientes,
+  
   type CrearProformaParams,
   type EliminarProformaParams,
   type ProformaConFactura,
@@ -50,15 +50,6 @@ export function useProformas() {
   });
 }
 
-export function useProformasPendientes() {
-  const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: queryKeys.proformas.pendientes(organizationId),
-    enabled: !!organizationId,
-    queryFn: () => fetchProformasPendientes(organizationId!),
-    staleTime: 30_000,
-  });
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mutations
