@@ -18,10 +18,11 @@ import {
   EntidadesFields, RutaTipoFields, NumerosFields, VigenciaFields,
 } from "./TarifaFormFields";
 import {
-  buildInitialForm, calcularTotal, esFormValido, usdFormatter,
+  buildInitialForm, calcularTotal, esFormValido,
   calcularErrores, camposFaltantes, computeGuardarLabel,
   computeValido, getTituloModal,
 } from "./TarifaForm.helpers";
+import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "./useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 
@@ -112,7 +113,7 @@ export function TarifaForm({ open, onOpenChange, initial, tarifaId, agenteIdFijo
       headerAside={
         <div className="text-right">
           <div className="text-2xs uppercase tracking-wide text-muted-foreground">Total comparable</div>
-          <div className="text-lg font-semibold text-foreground tabular-nums">{usdFormatter(total)}</div>
+          <div className="text-lg font-semibold text-foreground tabular-nums">{formatUSD(total)}</div>
         </div>
       }
       footer={

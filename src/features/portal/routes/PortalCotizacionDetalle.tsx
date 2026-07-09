@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DetailSkeleton } from "@/components/shared/skeletons";
@@ -39,7 +40,7 @@ export default function PortalCotizacionDetalle() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Cotización no encontrada.</p>
-        <Button variant="link" onClick={() => navigate("/portal/cotizaciones")}>
+        <Button variant="link" onClick={() => navigate(ROUTES.PORTAL_COTIZACIONES)}>
           Volver a cotizaciones
         </Button>
       </div>
@@ -56,7 +57,7 @@ export default function PortalCotizacionDetalle() {
         folio={cot.folio}
         estado={cot.estado}
         clienteNombre={cot.cliente_nombre}
-        onBack={() => navigate("/portal/cotizaciones")}
+        onBack={() => navigate(ROUTES.PORTAL_COTIZACIONES)}
         onAceptar={() => setConfirmAction("Aceptada")}
         onRechazar={() => setConfirmAction("Rechazada")}
       />

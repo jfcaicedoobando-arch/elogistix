@@ -3,6 +3,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate } from "@/lib/formatters";
 import { differenceInCalendarDays, parseISO } from "date-fns";
@@ -45,7 +46,7 @@ export function PortalProximosArribosCard({ items }: Props) {
             <Calendar className="h-4 w-4 text-accent" />
             Próximos Arribos
           </CardTitle>
-          <Link to="/portal/embarques">
+          <Link to={ROUTES.PORTAL_EMBARQUES}>
             <Button variant="ghost" size="sm" className="text-xs h-7">
               Ver todos <ArrowRight className="h-3 w-3 ml-1" />
             </Button>

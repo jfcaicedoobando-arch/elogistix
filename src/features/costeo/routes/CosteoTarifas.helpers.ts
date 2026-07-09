@@ -1,10 +1,8 @@
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
-import { formatCurrency } from "@/lib/formatters";
+import { formatUSD } from "@/lib/formatters";
 
-/** DRY: wrapper sobre `formatCurrency` para no duplicar `new Intl.NumberFormat`. */
-export const usd = (n: number): string => formatCurrency(n, "USD");
-/** Compat: se conserva para call-sites históricos que consumen `.format`. */
-export const usdFormatter = { format: usd } as const;
+/** Re-export para call-sites históricos (`usd(n)`). Delega en el canónico `formatUSD`. */
+export const usd = formatUSD;
 
 export type EstadoFiltro = "vigente" | "vencida" | "reemplazada" | "todas";
 export type AprobacionFiltro = "todas" | "borrador" | "vigente" | "rechazada";

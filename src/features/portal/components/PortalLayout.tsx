@@ -8,6 +8,7 @@ import { PortalBreadcrumbsBar } from "./layout/PortalBreadcrumbsBar";
 import { PortalBottomNav } from "./layout/PortalBottomNav";
 import { usePortalBreadcrumbs } from "./layout/usePortalBreadcrumbs";
 import { getActiveSectionLabel } from "./layout/portalNav";
+import { ROUTES } from "@/constants/routes";
 
 export default function PortalLayout() {
   const { signOut, user } = useAuth();
@@ -21,7 +22,7 @@ export default function PortalLayout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/portal/login");
+    navigate(ROUTES.PORTAL_LOGIN);
   };
 
   const initials = clienteName

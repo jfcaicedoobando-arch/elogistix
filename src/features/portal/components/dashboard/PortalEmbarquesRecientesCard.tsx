@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
@@ -41,7 +42,7 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
             <Ship className="h-4 w-4 text-accent" />
             Embarques Recientes
           </CardTitle>
-          <Link to="/portal/embarques">
+          <Link to={ROUTES.PORTAL_EMBARQUES}>
             <Button variant="ghost" size="sm" className="text-xs h-7">
               Ver todos <ArrowRight className="h-3 w-3 ml-1" />
             </Button>
