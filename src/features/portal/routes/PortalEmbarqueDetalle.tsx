@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 import { ArrowLeft, Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +45,7 @@ export default function PortalEmbarqueDetalle() {
       <div className="text-center py-20">
         <Ship className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
         <p className="text-muted-foreground font-medium">Embarque no encontrado</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate("/portal/embarques")}>Volver</Button>
+        <Button variant="outline" className="mt-4" onClick={() => navigate(ROUTES.PORTAL_EMBARQUES)}>Volver</Button>
       </div>
     );
   }
@@ -54,7 +55,7 @@ export default function PortalEmbarqueDetalle() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => navigate("/portal/embarques")}
+        onClick={() => navigate(ROUTES.PORTAL_EMBARQUES)}
         className="-ml-2 mb-1"
       >
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver
