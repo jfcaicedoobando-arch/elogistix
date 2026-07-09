@@ -10,6 +10,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/shared";
+import { useDebouncedValue } from "@/lib/hooks";
 
 type SearchResult = GlobalSearchResult;
 
