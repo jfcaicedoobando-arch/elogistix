@@ -21,7 +21,7 @@ export function UsuariosInternosTab() {
   const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
   const [pendingRole, setPendingRole] = useState<PendingRoleChange | null>(null);
   const [busqueda, setBusqueda] = useState("");
-  const [busquedaDebounced, setBusquedaDebounced] = useState("");
+  const busquedaDebounced = useDebouncedValue(busqueda.trim().toLowerCase(), 200);
   const [filtroRol, setFiltroRol] = useState<string>(TODOS);
   const { toast } = useToast();
   const { user } = useAuth();
