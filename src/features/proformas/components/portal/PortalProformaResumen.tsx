@@ -2,12 +2,13 @@
  * Resumen visual de conceptos y totales de una proforma en el portal público.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/formatters";
 import type { PortalProformaConcepto, PortalProformaData } from "@/features/proformas/services/portalPublico";
 
 function fmtDinero(v: number | null | undefined, moneda: string | null | undefined): string {
   if (v == null) return "—";
   try {
-    return new Intl.NumberFormat("es-MX", { style: "currency", currency: moneda || "MXN" }).format(v);
+    return formatCurrency(v, moneda || "MXN");
   } catch {
     return `${v} ${moneda ?? ""}`;
   }
