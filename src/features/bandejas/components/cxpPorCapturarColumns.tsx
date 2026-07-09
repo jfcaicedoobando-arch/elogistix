@@ -26,11 +26,12 @@ function AvanceBadge({ row }: { row: RowData }) {
 
 interface BuildOpts {
   onCapturar: (row: RowData) => void;
+  hideEstatus?: boolean;
 }
 
 export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, unknown>[] {
-  const { onCapturar } = opts;
-  return defineColumns<RowData>([
+  const { onCapturar, hideEstatus = false } = opts;
+  const all: (ColumnDef<RowData, unknown> | null)[] = [
     {
       id: "expediente",
       header: "Expediente",
