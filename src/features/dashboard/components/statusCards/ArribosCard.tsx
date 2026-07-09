@@ -115,7 +115,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
               {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
                 <span className="text-xl font-bold text-foreground tabular-nums">{arribosEsteMes.total}</span>
               )}
-              <p className="text-[11px] text-muted-foreground font-medium">Total</p>
+              <p className="text-2xs text-muted-foreground font-medium">Total</p>
             </div>
 
             <div className="text-center">
@@ -125,7 +125,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
                   <span className="text-xl font-bold text-success tabular-nums">{arribosEsteMes.yaLlegaron}</span>
                 </div>
               )}
-              <p className="text-[11px] text-muted-foreground font-medium">Ya llegaron</p>
+              <p className="text-2xs text-muted-foreground font-medium">Ya llegaron</p>
             </div>
 
             <div className="text-center">
@@ -135,7 +135,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
                   <span className="text-xl font-bold text-warning tabular-nums">{arribosEsteMes.enCamino}</span>
                 </div>
               )}
-              <p className="text-[11px] text-muted-foreground font-medium">En camino</p>
+              <p className="text-2xs text-muted-foreground font-medium">En camino</p>
             </div>
 
             {!hideFinancials && (
@@ -155,7 +155,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
                     content={<ProfitTooltipContent data={arribosEsteMes} />}
                   />
                 )}
-                <p className="text-[11px] text-muted-foreground font-medium">Profit MXN proyectado</p>
+                <p className="text-2xs text-muted-foreground font-medium">Profit MXN proyectado</p>
               </div>
             )}
           </div>
