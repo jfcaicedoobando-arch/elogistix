@@ -26,6 +26,8 @@ interface ConceptoSnapshot {
   importe?: number;
   total?: number;
   tipo_iva?: TipoIvaConcepto | null;
+  embarque_id?: string | null;
+  embarque_expediente?: string | null;
   /** Snapshot Facturapi: `product.taxes: [{ type, rate, factor }]` */
   product?: {
     taxes?: Array<{ type?: string; rate?: number; factor?: string }>;
