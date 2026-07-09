@@ -24,6 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, AlertCircle, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { ROUTES } from "@/constants/routes";
 
 const MONEDAS = [
   { value: "MXN", label: "Peso mexicano (MXN)" },
@@ -49,8 +50,8 @@ export default function Onboarding() {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace />;
-  if (organization?.onboarding_completado) return <Navigate to="/inicio" replace />;
+  if (!user) return <Navigate to={ROUTES.LOGIN} replace />;
+  if (organization?.onboarding_completado) return <Navigate to={ROUTES.INICIO} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +75,7 @@ export default function Onboarding() {
       await completeOnboarding({ rfc: rfcClean, direccion: dirClean, moneda });
       await refreshProfile();
       toast({ title: "¡Listo!", description: "Configuración inicial completada." });
-      navigate("/inicio", { replace: true });
+      navigate(ROUTES.INICIO, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "No pudimos guardar los datos.";
       setError(msg);

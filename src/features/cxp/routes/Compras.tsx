@@ -20,6 +20,7 @@ import { usePermissions } from "@/hooks/shared";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { TopProveedoresCard, UltimasFacturasCard } from "./_sections/ComprasDashboardCards";
 import { KpiCard, QuickLink } from "./_sections/ComprasDashboardTiles";
+import { ROUTES } from "@/constants/routes";
 
 export default function Compras() {
   const { canEdit } = usePermissions();
@@ -117,42 +118,42 @@ export default function Compras() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <QuickLink
-          to="/compras/por-aprobar"
+          to={ROUTES.COMPRAS_POR_APROBAR}
           icon={<ShieldCheck className="h-5 w-5" />}
           title="Revisar por aprobar"
           description="Facturas a la espera de validación contable."
           kpi={`${pendientesAprob} pendiente${pendientesAprob === 1 ? "" : "s"}`}
         />
         <QuickLink
-          to="/compras/aging"
+          to={ROUTES.COMPRAS_AGING}
           icon={<LayoutList className="h-5 w-5" />}
           title="Revisar antigüedad"
           description="Cubetas de saldos vencidos por proveedor."
           kpi={vencidoMas30 > 0 ? `${formatCurrencyCompact(vencidoMas30, "MXN")} > 30 días` : "Sin vencidos > 30 días"}
         />
         <QuickLink
-          to="/compras/por-pagar"
+          to={ROUTES.COMPRAS_POR_PAGAR}
           icon={<Landmark className="h-5 w-5" />}
           title="Por pagar"
           description="Programa y registra pagos a proveedores."
           kpi={`${metrics.facturasConSaldo} con saldo`}
         />
         <QuickLink
-          to="/compras/proveedores"
+          to={ROUTES.COMPRAS_PROVEEDORES}
           icon={<Truck className="h-5 w-5" />}
           title="Proveedores"
           description="Catálogo de proveedores logísticos y de gastos."
           kpi="Ir al catálogo"
         />
         <QuickLink
-          to="/compras/por-capturar"
+          to={ROUTES.COMPRAS_POR_CAPTURAR}
           icon={<Inbox className="h-5 w-5" />}
           title="Por capturar"
           description="Embarques con presupuesto sin factura."
           kpi={`${metrics.embarquesPorCapturar} pendiente${metrics.embarquesPorCapturar === 1 ? "" : "s"}`}
         />
         <QuickLink
-          to="/compras/facturas"
+          to={ROUTES.COMPRAS_FACTURAS}
           icon={<Receipt className="h-5 w-5" />}
           title="Facturas"
           description="Listado y captura de facturas recibidas."

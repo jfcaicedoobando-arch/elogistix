@@ -25,6 +25,7 @@ import LeadDatosCard from "@/features/crm/components/leadDetalle/LeadDatosCard";
 import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderActions";
 import { useActualizarLead, useEliminarLead, useLead } from "@/features/crm/hooks";
 import { useLeadEditForm } from "@/features/crm/hooks";
+import { ROUTES } from "@/constants/routes";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -60,7 +61,7 @@ export default function LeadDetalle() {
     try {
       await eliminar.mutateAsync(id);
       crmToast.success("Lead eliminado");
-      navigate("/crm/leads");
+      navigate(ROUTES.CRM_LEADS);
     } catch (e) {
       notifyError(toast, {
         title: "No se pudo eliminar",
@@ -78,7 +79,7 @@ export default function LeadDetalle() {
   if (!lead) {
     return (
       <PageContainer>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/crm/leads")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.CRM_LEADS)}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Volver
         </Button>
         <ErrorState
@@ -92,7 +93,7 @@ export default function LeadDetalle() {
   return (
     <PageContainer>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/crm/leads")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.CRM_LEADS)}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Leads
         </Button>
       </div>

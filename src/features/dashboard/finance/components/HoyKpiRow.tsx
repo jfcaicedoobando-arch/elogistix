@@ -1,6 +1,7 @@
 import { FileText, Banknote, AlertCircle, Inbox } from "lucide-react";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiTile } from "./KpiTile";
+import { ROUTES } from "@/constants/routes";
 
 interface Props {
   porFacturar: number;
@@ -28,7 +29,7 @@ export function HoyKpiRow({
         label="Por facturar"
         value={porFacturar}
         sublabel="Embarques con hueco"
-        to="/facturacion"
+        to={ROUTES.FACTURACION}
         tone={porFacturar > 0 ? "warning" : "default"}
         loading={loading}
       />
@@ -39,7 +40,7 @@ export function HoyKpiRow({
         sublabel={
           porPagarUsd > 0 ? `+ ${formatCurrency(porPagarUsd, "USD")}` : "Facturas proveedor"
         }
-        to="/compras/por-pagar"
+        to={ROUTES.COMPRAS_POR_PAGAR}
         loading={loading}
       />
       <KpiTile
@@ -47,7 +48,7 @@ export function HoyKpiRow({
         label="Vencido (cartera)"
         value={formatCurrencyCompact(vencidoMxn, "MXN")}
         sublabel={vencidoUsd > 0 ? `+ ${formatCurrency(vencidoUsd, "USD")}` : "Cobranza"}
-        to="/cartera"
+        to={ROUTES.CARTERA}
         tone={vencidoMxn > 0 || vencidoUsd > 0 ? "danger" : "success"}
         loading={loading}
       />
@@ -56,7 +57,7 @@ export function HoyKpiRow({
         label="Por capturar (CxP)"
         value={porCapturar}
         sublabel="Conceptos sin factura"
-        to="/compras/por-capturar"
+        to={ROUTES.COMPRAS_POR_CAPTURAR}
         tone={porCapturar > 0 ? "warning" : "default"}
         loading={loading}
       />

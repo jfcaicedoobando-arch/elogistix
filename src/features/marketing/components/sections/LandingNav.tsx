@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButton";
+import { ROUTES } from "@/constants/routes";
 
 const links = [
   { href: "#demo", label: "Demo" },
@@ -19,7 +20,7 @@ export function LandingNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Libre Carga">
+        <Link to={ROUTES.LANDING} className="flex shrink-0 items-center gap-2.5" aria-label="Libre Carga">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 ring-1 ring-border/40 shadow-sm">
             <img src="/librecarga-logo.png" alt="" className="h-full w-full object-contain" />
           </span>
@@ -43,11 +44,11 @@ export function LandingNav() {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Button asChild variant="ghost" size="sm">
-            <Link to="/login">Iniciar sesión</Link>
+            <Link to={ROUTES.LOGIN}>Iniciar sesión</Link>
           </Button>
           <ProbarDemoButton size="sm" variant="outline" />
           <Button asChild size="sm">
-            <Link to="/login?tab=signup">Crear cuenta gratis</Link>
+            <Link to={ROUTES.LOGIN_SIGNUP}>Crear cuenta gratis</Link>
           </Button>
         </div>
 
@@ -79,10 +80,10 @@ export function LandingNav() {
             ))}
             <div className="mt-2 grid grid-cols-2 gap-2">
               <Button asChild variant="outline" size="sm">
-                <Link to="/login">Iniciar sesión</Link>
+                <Link to={ROUTES.LOGIN}>Iniciar sesión</Link>
               </Button>
               <Button asChild size="sm">
-                <Link to="/login?tab=signup">Crear cuenta</Link>
+                <Link to={ROUTES.LOGIN_SIGNUP}>Crear cuenta</Link>
               </Button>
               <ProbarDemoButton size="sm" variant="secondary" className="col-span-2" />
             </div>

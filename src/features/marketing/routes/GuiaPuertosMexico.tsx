@@ -9,6 +9,7 @@ import { LandingNav } from "../components/sections/LandingNav";
 import { LandingFooter } from "../components/sections/LandingFooter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Anchor } from "lucide-react";
+import { ROUTES } from "@/constants/routes";
 import {
   URL,
   SECCIONES,
@@ -37,7 +38,7 @@ export default function GuiaPuertosMexico() {
         <header className="border-b border-border bg-muted/30 py-16 sm:py-20">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
             <nav aria-label="Migas de pan" className="mb-4 text-sm text-muted-foreground">
-              <Link to="/" className="hover:text-foreground">Inicio</Link>
+              <Link to={ROUTES.LANDING} className="hover:text-foreground">Inicio</Link>
               <span className="mx-2">/</span>
               <span>Recursos</span>
               <span className="mx-2">/</span>
@@ -100,12 +101,12 @@ export default function GuiaPuertosMexico() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button asChild size="lg">
-                <Link to="/login?tab=signup">
+                <Link to={ROUTES.LOGIN_SIGNUP}>
                   Crear cuenta gratis <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/">Ver la plataforma</Link>
+                <Link to={ROUTES.LANDING}>Ver la plataforma</Link>
               </Button>
             </div>
           </aside>
