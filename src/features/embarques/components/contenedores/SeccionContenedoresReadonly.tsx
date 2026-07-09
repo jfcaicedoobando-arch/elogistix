@@ -79,8 +79,8 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                         : <span className="text-muted-foreground">—</span>}
                     </td>
                     <td className="py-2 px-2">{c.bl_house || <span className="text-muted-foreground">—</span>}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{Number(c.peso_kg).toLocaleString("es-MX")}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{Number(c.volumen_m3).toLocaleString("es-MX")}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{formatNumber(Number(c.peso_kg))}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{formatNumber(Number(c.volumen_m3))}</td>
                     <td className="py-2 px-2 text-right tabular-nums">{c.piezas}</td>
                   </tr>
                 ))}
