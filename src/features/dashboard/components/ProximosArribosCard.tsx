@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { CalendarClock, Clock } from "lucide-react";
+import { CalendarClock, Clock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,11 @@ function formatDiasRestantes(dias: number): string {
   return `${dias} día${dias > 1 ? "s" : ""}`;
 }
 
+/**
+ * v13.223.0 · Capa 3 Tranche A · 1.3:
+ * Chevron `ArrowRight` a la derecha (misma affordance que `AlertasDemoraCard`).
+ * `ModoIcon` movido al subtítulo como identificador informativo, no como CTA.
+ */
 export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, isLoading }: Props) {
   const navigate = useNavigate();
 
@@ -45,11 +50,14 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
           <p className="text-sm font-medium truncate">
             {e.expediente} — {toTitleCase(e.cliente_nombre)}
           </p>
-          <p className="text-xs text-muted-foreground">
-            ETA: {formatDate(e.eta!)} · {formatDiasRestantes(e.diasRestantes)}
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <ModoIcon modo={e.modo} size={12} />
+            <span className="truncate">
+              ETA: {formatDate(e.eta!)} · {formatDiasRestantes(e.diasRestantes)}
+            </span>
           </p>
         </div>
-        <ModoIcon modo={e.modo} size={18} circle />
+        <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
       </div>
     ));
   }
