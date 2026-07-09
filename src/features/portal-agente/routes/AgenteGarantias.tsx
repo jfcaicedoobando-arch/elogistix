@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings2, FileSignature, Info } from "lucide-react";
+import { Settings2, FileSignature, Info, ShieldCheck } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
