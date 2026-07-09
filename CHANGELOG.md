@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.222.0] - 2026-07-09
+- **UI · Auditoría Lote 3 (C1.1) · `ModoAltaTabs` migrado a `ToggleGroup` canónico**: el segmented control "Captura manual / Subir CSF (PDF)" del modal de Nuevo Cliente estaba hecho a mano con `<button>` + clases artesanales (`bg-background shadow-sm`, `rounded-[5px]`). Se reemplazó por `ToggleGroup` + `ToggleGroupItem` del UI kit (`@/components/ui/toggle-group`), respetando accesibilidad Radix (`aria-label`, estados `data-[state=on]`) y sin cambiar el look ni el contrato del componente. Con esto, la auditoría de Capa 2 queda en `0` violaciones. Archivo: `src/features/cliente/components/NuevoClienteFormPieces.tsx`.
+- Analogía: antes teníamos un interruptor hecho en casa con cinta adhesiva y pintura; ahora usamos el interruptor oficial del catálogo — enciende y apaga igual, pero cualquiera que cambie un foco entiende cómo funciona.
+
 ## [13.221.0] - 2026-07-09
 - **UI · Auditoría visual Lote 2 · unificación del UI kit**: segundo lote de la auditoría UI/UX (ver `docs/ui-audit/02-componentes.md`). Se homologaron sombras, radios y microtipografías fuera del kit:
   1. **Sombras hover en cards (8 archivos)**: `hover:shadow-sm|md` → `hover:shadow-raised` en portales, KpiTile, KpiCard, AdminDashboard, OperadorCard, EmbarqueCard, PortalKpiGrid, PortalFacturas, PortalCotizaciones.
