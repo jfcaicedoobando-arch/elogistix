@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.231.0] - 2026-07-09
+- **Refactor · DRY Lote 7d.1 · Extensión de `ConfirmActionDialog` + primera tanda de migración**: se amplió la API del canónico con `children` (slot de formulario), `confirmDisabled` (gating por form), `size` ("sm"|"md"), `titleIcon` y `titleDestructive`. Migrados 3 diálogos de la lista pendiente del Lote 7c a la nueva API: `PortalCotizacionConfirmDialog` (Textarea con Label + id), `ConfirmSinDesgloseDialog` (Checkbox con id/Label — fix a11y del audit), `CancelarFacturaProveedorDialog` (Textarea + Input CANCELAR). Los tres conservan su API pública y comportamiento; se elimina duplicación de `AlertDialog*` inline y se cumple `aria-describedby` + labels asociados. Quedan 15 diálogos en la lista para tandas siguientes (7d.2–7d.4).
+
 ## [13.230.0] - 2026-07-09
 - **Refactor · DRY Lote 7c · Consolidación de AlertDialog en canónicos**: se centralizó la lógica de confirmación destructiva/simple en `ConfirmActionDialog` y `DoubleConfirmDeleteDialog`. Cambios:
   - **Fix crítico (seguridad UX)**: `src/features/embarques/components/DialogEliminarEmbarque.tsx` ahora usa `DoubleConfirmDeleteDialog` — antes tenía doble confirmación **sin exigir tipear ELIMINAR** (violaba el estándar `mem://features/data-safety-confirmations`). La rama "bloqueado por dependencias financieras" y el placeholder de "verificando dependencias…" siguen inline por ser flujos informativos, no destructivos.
