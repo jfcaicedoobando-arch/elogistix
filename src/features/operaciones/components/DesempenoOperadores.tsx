@@ -39,7 +39,7 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
 
   if (operadores.length === 0) {
     return (
-      <Card className="rounded-2xl shadow-sm border-0 bg-card">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
