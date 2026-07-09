@@ -24,6 +24,8 @@ export const REGLA_SHORT_LABELS: Record<ReglaAuditoria, string> = {
   cxc_vencida: "CXC vencida",
   cxp_por_capturar_estancada: "CXP por capturar",
   cxp_vencida: "CXP vencida",
+  contenedor_datos_incompletos: "Contenedor sin peso/volumen",
+  contenedor_fechas_incompletas: "Contenedor sin fechas",
 };
 
 export function reglaShortLabel(regla: ReglaAuditoria): string {
