@@ -16,6 +16,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   cotizaciones: "Cotizaciones",
   clientes: "Clientes",
   proveedores: "Proveedores",
+  compras: "Compras",
+  agentes: "Agentes",
   facturacion: "Facturación",
   proformas: "Proformas",
   cartera: "Cartera",
@@ -79,8 +81,18 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /**
  * Trunca segmentos largos (uuids, expedientes) para que el breadcrumb
  * no rompa el layout. Mantiene los primeros 14 caracteres.
+ * Aplica Title Case a segmentos alfabéticos (p.ej. "compras" → "Compras")
+ * para homogeneizar con `SEGMENT_LABELS`. Deja intactos códigos con dígitos
+ * o guiones porque suelen ser identificadores (expedientes, refs).
  */
 function formatDynamicSegment(seg: string): string {
+  const hasDigits = /\d/.test(seg);
+  const looksAlpha = /^[a-záéíóúñü-]+$/i.test(seg);
+  if (looksAlpha && !hasDigits) {
+    // Title Case simple respetando guiones ("mi-dia" → "Mi-Dia" no aplica; sólo tokens alfa puros).
+    const lower = seg.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
   if (seg.length <= 18) return seg;
   return `${seg.slice(0, 14)}…`;
 }
