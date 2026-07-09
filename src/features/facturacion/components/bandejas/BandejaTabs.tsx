@@ -21,7 +21,7 @@ type GroupId = "preparar" | "cobrar" | "historico";
 interface Def {
   id: BandejaId;
   label: string;
-  hint: string;
+  hint?: string;
   tone: "default" | "warn" | "danger";
   group: GroupId;
 }
@@ -32,16 +32,18 @@ const GROUP_LABELS: Record<GroupId, string> = {
   historico: "Histórico",
 };
 
+// Sólo mantenemos tooltip en los tabs con criterio técnico no evidente.
+// El resto usa un label auto-descriptivo (ley de Miller: menos ruido cognitivo).
 const DEFS: Def[] = [
   { id: "embarques-sin-factura", label: "Embarques sin factura", hint: "Embarques cuyo contenedor ya llegó (ETA ≤ hoy) y aún no tienen CFDI. Necesitan factura para tener la papelería completa al cruzar aduana. Puede que falte generar la proforma o convertirla a factura.", tone: "warn", group: "preparar" },
-  { id: "proformas-listas", label: "Proformas listas", hint: "Proformas aprobadas internamente (estado 'aprobada') que aún no se han convertido a factura borrador. Acción: 'Convertir a factura' de un clic.", tone: "warn", group: "preparar" },
+  { id: "proformas-listas", label: "Proformas listas", tone: "warn", group: "preparar" },
   { id: "por-timbrar", label: "Por timbrar", hint: "Facturas en Borrador creadas en el sistema, pendientes de enviar a FacturApi (timbrado CFDI).", tone: "warn", group: "preparar" },
-  { id: "por-enviar", label: "Por enviar", hint: "CFDI ya timbrados que no se han mandado por correo al cliente.", tone: "warn", group: "preparar" },
-  { id: "por-cobrar", label: "Por cobrar", hint: "Facturas vigentes con saldo pendiente, aún no vencidas.", tone: "default", group: "cobrar" },
-  { id: "vencidas", label: "Vencidas", hint: "Facturas con vencimiento pasado y saldo > 0.", tone: "danger", group: "cobrar" },
+  { id: "por-enviar", label: "Por enviar", tone: "warn", group: "preparar" },
+  { id: "por-cobrar", label: "Por cobrar", tone: "default", group: "cobrar" },
+  { id: "vencidas", label: "Vencidas", tone: "danger", group: "cobrar" },
   { id: "rep-pendientes", label: "REP pendientes", hint: "Complementos de Pago (REP) para facturas PPD que faltan por timbrar.", tone: "danger", group: "cobrar" },
-  { id: "emitidas", label: "Emitidas", hint: "Historial completo de facturas emitidas.", tone: "default", group: "historico" },
-  { id: "notas", label: "Notas de crédito", hint: "Historial de notas de crédito.", tone: "default", group: "historico" },
+  { id: "emitidas", label: "Emitidas", tone: "default", group: "historico" },
+  { id: "notas", label: "Notas de crédito", tone: "default", group: "historico" },
 ];
 
 function badgeClass(tone: Def["tone"]): string {
@@ -98,27 +100,29 @@ export function BandejaTabs() {
                             {count}
                           </span>
                         )}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              aria-label={`Info: ${d.label}`}
-                              onClick={(e) => e.stopPropagation()}
-                              onKeyDown={(e) => e.stopPropagation()}
-                              className="inline-flex"
+                        {d.hint && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                aria-label={`Info: ${d.label}`}
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                                className="inline-flex"
+                              >
+                                <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              collisionPadding={12}
+                              className="max-w-sm text-xs leading-relaxed whitespace-normal"
                             >
-                              <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            collisionPadding={12}
-                            className="max-w-sm text-xs leading-relaxed whitespace-normal"
-                          >
-                            {d.hint}
-                          </TooltipContent>
-                        </Tooltip>
+                              {d.hint}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </span>
                     </TabsTrigger>
                   );

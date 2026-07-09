@@ -77,64 +77,58 @@ export function DashboardEjecutivoFacturacion() {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <Card>
-        <CardContent className="p-3">
-          {/*
-            5 KPIs (Listas para facturar, Facturado, Cobrado, Por cobrar,
-            Vencido) + tendencia. Desktop xl: 6 columnas.
-          */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
+      <div className="space-y-2">
+        <Card>
+          <CardContent className="p-3">
+            {/* 5 KPIs ejecutivos alineados en el strip principal. */}
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
+              <Kpi
+                label="Listas para facturar"
+                value={proformasListas === 1 ? "1 proforma" : `${proformasListas} proformas`}
+                tone={listasTone}
+                hint="Proformas aceptadas por el cliente y sin factura emitida — listas para timbrar. Se convierten desde la bandeja 'Proformas listas'."
+              />
+              <Kpi
+                label={facturado.label}
+                value={formatCurrencyCompact(facturadoMes, "MXN")}
+                tone={facturado.tone}
+                hint={facturado.hint}
+              />
+              <Kpi label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} tone="success" />
+              <Kpi label="Por cobrar" value={formatCurrencyCompact(porCobrar, "MXN")} />
+              <Kpi
+                label={`Vencido (${cob.facturas_vencidas})`}
+                value={formatCurrencyCompact(vencido, "MXN")}
+                tone="danger"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-
-            <Kpi
-              label="Listas para facturar"
-              value={proformasListas.toString()}
-              tone={listasTone}
-              hint="Proformas aceptadas por el cliente y sin factura emitida — listas para timbrar. Se convierten desde la bandeja 'Proformas listas'."
-            />
-
-            <Kpi
-              label={facturado.label}
-              value={formatCurrencyCompact(facturadoMes, "MXN")}
-              tone={facturado.tone}
-              hint={facturado.hint}
-            />
-
-            <Kpi label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} tone="success" />
-            <Kpi label="Por cobrar" value={formatCurrencyCompact(porCobrar, "MXN")} />
-            <Kpi
-              label={`Vencido (${cob.facturas_vencidas})`}
-              value={formatCurrencyCompact(vencido, "MXN")}
-              tone="danger"
-            />
-
-
-
-
-            {tendencia.length > 0 && (
-              <div className="col-span-2 md:col-span-3 xl:col-span-1 px-3 py-2 xl:border-l border-border border-t xl:border-t-0 mt-1 xl:mt-0 pt-2 xl:pt-2">
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">
-                  Últimos 6 meses · MXN
-                </p>
-                <div className="flex items-start gap-4">
-                  <MiniSerie
-                    titulo="Facturado"
-                    data={facturadoArr}
-                    meses={meses}
-                    colorClass="bg-primary/70"
-                  />
-                  <MiniSerie
-                    titulo="Cobrado"
-                    data={cobradoArr}
-                    meses={meses}
-                    colorClass="bg-success/70"
-                  />
-                </div>
+        {tendencia.length > 0 && (
+          <Card>
+            <CardContent className="p-3">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-2">
+                Tendencia · Últimos 6 meses (MXN)
+              </p>
+              <div className="flex items-start gap-6">
+                <MiniSerie
+                  titulo="Facturado"
+                  data={facturadoArr}
+                  meses={meses}
+                  colorClass="bg-primary/70"
+                />
+                <MiniSerie
+                  titulo="Cobrado"
+                  data={cobradoArr}
+                  meses={meses}
+                  colorClass="bg-success/70"
+                />
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </TooltipProvider>
   );
 }

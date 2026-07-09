@@ -20,6 +20,8 @@ interface Props {
   onEstatusChange: (v: EstatusCxP | "todos") => void;
   moneda: "todas" | "MXN" | "USD" | "EUR";
   onMonedaChange: (v: "todas" | "MXN" | "USD" | "EUR") => void;
+  aprobacion: "todos" | "pendiente" | "aprobada" | "rechazada";
+  onAprobacionChange: (v: "todos" | "pendiente" | "aprobada" | "rechazada") => void;
   proveedorId: string;
   onProveedorChange: (v: string) => void;
   categoriaPresupuestoId: string;
@@ -59,6 +61,21 @@ export function CxpFiltrosSheetFields(props: Props) {
                 <SelectItem value="MXN">MXN</SelectItem>
                 <SelectItem value="USD">USD</SelectItem>
                 <SelectItem value="EUR">EUR</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Aprobación</Label>
+            <Select
+              value={props.aprobacion}
+              onValueChange={(v) => props.onAprobacionChange(v as Props["aprobacion"])}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas</SelectItem>
+                <SelectItem value="pendiente">Por aprobar</SelectItem>
+                <SelectItem value="aprobada">Aprobadas</SelectItem>
+                <SelectItem value="rechazada">Rechazadas</SelectItem>
               </SelectContent>
             </Select>
           </div>

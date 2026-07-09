@@ -64,7 +64,11 @@ export default function CxpPorCapturar() {
     });
   };
 
-  const columns = useMemo(() => buildCxpPorCapturarColumns({ onCapturar: handleCapturar }), []);
+  const hideEstatus = filters.state.estatus === "sin";
+  const columns = useMemo(
+    () => buildCxpPorCapturarColumns({ onCapturar: handleCapturar, hideEstatus }),
+    [hideEstatus],
+  );
 
   const controlledSort = {
     key: SORT_TO_COL[filters.state.ordenarPor] || null,
@@ -91,7 +95,7 @@ export default function CxpPorCapturar() {
     <PageContainer>
       <PageHeader
         icon={<Package className="h-6 w-6 text-accent" />}
-        title="CxP — Por capturar"
+        title={`CxP — Por capturar${data.length > 0 ? ` · ${data.length}` : ""}`}
         description="Embarques con costos presupuestados. Captura las facturas de proveedor y concílialas contra el embarque."
       />
 

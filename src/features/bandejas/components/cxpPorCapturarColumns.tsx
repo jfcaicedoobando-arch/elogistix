@@ -26,11 +26,12 @@ function AvanceBadge({ row }: { row: RowData }) {
 
 interface BuildOpts {
   onCapturar: (row: RowData) => void;
+  hideEstatus?: boolean;
 }
 
 export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, unknown>[] {
-  const { onCapturar } = opts;
-  return defineColumns<RowData>([
+  const { onCapturar, hideEstatus = false } = opts;
+  const all: (ColumnDef<RowData, unknown> | null)[] = [
     {
       id: "expediente",
       header: "Expediente",
@@ -83,7 +84,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
         );
       },
     },
-    {
+    hideEstatus ? null : {
       id: "estatus",
       header: "Estatus",
       meta: { width: "w-[110px]", align: "center" },
@@ -143,5 +144,6 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
         </div>
       ),
     },
-  ]);
+  ];
+  return defineColumns<RowData>(all.filter((c): c is ColumnDef<RowData, unknown> => c !== null));
 }

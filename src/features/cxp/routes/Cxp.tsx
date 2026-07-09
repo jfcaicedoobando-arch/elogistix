@@ -77,8 +77,8 @@ export default function Cxp() {
   return (
     <PageContainer>
       <PageHeader
-        title="Cuentas por Pagar"
-        description="Facturas recibidas de proveedores y su saldo pendiente"
+        title="Facturas de proveedor"
+        description="Cuentas por Pagar — facturas recibidas y su saldo pendiente"
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={handlePdf}>
