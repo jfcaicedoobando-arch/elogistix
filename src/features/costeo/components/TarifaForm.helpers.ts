@@ -3,9 +3,10 @@
  * Extraídos para mantener `TarifaForm.tsx` ≤200 líneas (Power-of-10).
  */
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
+import { formatCurrency } from "@/lib/formatters";
 
-export const usdFormatter = (n: number) =>
-  new Intl.NumberFormat("es-MX", { style: "currency", currency: "USD" }).format(n);
+/** DRY: wrapper sobre `formatCurrency` para no duplicar `new Intl.NumberFormat`. */
+export const usdFormatter = (n: number): string => formatCurrency(n, "USD");
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
