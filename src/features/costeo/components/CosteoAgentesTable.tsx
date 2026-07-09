@@ -1,14 +1,24 @@
 /**
  * Tabla de Agentes de costeo — extraída de CosteoAgentes.tsx.
  * v13.172.17: migrado a `DataTable` (Fase 4 homologación).
+ * v13.225.0 (Lote 5): nombres a Title Case, acciones consolidadas en
+ * DropdownMenu (kebab) y navegación por fila → editar.
  */
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
-import { Trash2, Pencil, UserPlus } from "lucide-react";
+import { Trash2, Pencil, UserPlus, MoreHorizontal } from "lucide-react";
+import { toTitleCase } from "@/lib/formatters";
 
 export interface AgenteRow {
   id: string;
@@ -39,7 +49,7 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         sortingFn: sortByString((a) => a.nombre),
         enableSorting: true,
         meta: { sticky: true, className: "font-medium" },
-        cell: ({ row }) => row.original.nombre,
+        cell: ({ row }) => toTitleCase(row.original.nombre) || "—",
       },
       {
         id: "pais",
@@ -62,7 +72,7 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         id: "contacto",
         header: "Contacto",
         accessorFn: (a) => a.contacto_tarifario ?? "",
-        cell: ({ row }) => row.original.contacto_tarifario ?? "—",
+        cell: ({ row }) => toTitleCase(row.original.contacto_tarifario ?? "") || "—",
       },
       {
         id: "email",
@@ -78,37 +88,39 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
       }),
       {
         id: "acciones",
-        header: "Acciones",
-        meta: { width: "w-24", align: "right" },
+        header: "",
+        meta: { width: "w-12", align: "right" },
         cell: ({ row }) => {
           const a = row.original;
           return (
-            <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onInvitarPortal(a)}
-                aria-label={`Invitar al portal del agente ${a.nombre}`}
-                title="Invitar al portal del agente"
-              >
-                <UserPlus className="size-4 text-accent" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onEditar(a)}
-                aria-label={`Editar agente ${a.nombre}`}
-              >
-                <Pencil className="size-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onEliminar({ id: a.id, nombre: a.nombre })}
-                aria-label={`Eliminar agente ${a.nombre}`}
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
+            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Acciones para ${a.nombre}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={() => onEditar(a)}>
+                    <Pencil className="size-4 mr-2" />Editar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onInvitarPortal(a)}>
+                    <UserPlus className="size-4 mr-2" />Invitar al portal
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onEliminar({ id: a.id, nombre: a.nombre })}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="size-4 mr-2" />Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           );
         },
@@ -125,6 +137,7 @@ export function CosteoAgentesTable({ agentes, isLoading, onEditar, onEliminar, o
         rowKey={(a) => a.id}
         isLoading={isLoading}
         emptyMessage="Sin agentes registrados."
+        onRowClick={onEditar}
       />
     </Card>
   );

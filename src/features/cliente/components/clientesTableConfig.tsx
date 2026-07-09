@@ -44,21 +44,31 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       enableSorting: true,
       sortingFn: sortByString<ClienteRow>((c) => c.ciudad),
       meta: { width: "w-[150px]", className: "text-xs" },
-      cell: ({ row }) =>
-        `${correctSpanishPlace(row.original.ciudad)}, ${correctSpanishPlace(row.original.estado)}`,
+      cell: ({ row }) => {
+        const ciudad = correctSpanishPlace(row.original.ciudad);
+        const estado = correctSpanishPlace(row.original.estado);
+        if (!ciudad && !estado) return <span className="text-muted-foreground">—</span>;
+        return [ciudad, estado].filter(Boolean).join(", ");
+      },
     },
     {
       id: "contacto",
       header: "Contacto",
       // Oculto en tableta (<xl) para evitar overflow horizontal.
       meta: { width: "w-[140px]", className: "text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => toTitleCase(row.original.contacto),
+      cell: ({ row }) => {
+        const v = toTitleCase(row.original.contacto);
+        return v ? v : <span className="text-muted-foreground">—</span>;
+      },
     },
     {
       id: "telefono",
       header: "Teléfono",
       meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => formatPhoneMx(row.original.telefono),
+      cell: ({ row }) => {
+        const v = formatPhoneMx(row.original.telefono);
+        return v ? v : <span className="text-muted-foreground">—</span>;
+      },
     },
   ];
 }
