@@ -43,7 +43,12 @@ export default function PortalPerfil() {
 
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
-      <PageHeader title="Mi Perfil" description="Datos de tu cuenta y empresa." />
+      <PageHeader
+        icon={<UserIcon className="h-6 w-6 text-accent" />}
+        title="Mi Perfil"
+        description="Datos de tu cuenta y empresa."
+      />
+
 
 
       <Card>

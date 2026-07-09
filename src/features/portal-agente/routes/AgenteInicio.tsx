@@ -1,10 +1,12 @@
 /**
  * Página de inicio del Portal del Agente. Muestra KPIs simples y atajos.
+ * v13.226.0 (Lote 6): migrado a `KpiCard` compartido + Title Case + icon en PageHeader.
  */
 import { Card } from "@/components/ui/card";
-import { FileText, ShieldCheck, Ship, ClipboardCheck, Clock } from "lucide-react";
+import { FileText, ShieldCheck, Ship, ClipboardCheck, Clock, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { useAgenteContext, useAgenteTarifas, useAgenteEmbarques } from "@/features/portal-agente/hooks";
 
 export default function AgenteInicio() {
@@ -26,15 +28,16 @@ export default function AgenteInicio() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Bienvenido, ${ctx?.agenteNombre ?? "agente"}`}
-        description="Desde aquí puedes mantener tus tarifas marítimas y tu carta garantía siempre al día."
+        icon={<LayoutDashboard className="h-6 w-6 text-accent" />}
+        title="Inicio"
+        description={`Bienvenido, ${ctx?.agenteNombre ?? "agente"}. Desde aquí puedes mantener tus tarifas marítimas y tu carta garantía siempre al día.`}
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={<ClipboardCheck className="h-4 w-4" />} label="Tarifas vigentes" value={vigentes} />
-        <KpiCard icon={<FileText className="h-4 w-4" />} label="Borradores pendientes" value={borradores} accent={borradores > 0 ? "warning" : undefined} />
-        <KpiCard icon={<Clock className="h-4 w-4" />} label="Vencen en 30 días" value={en30} accent={en30 > 0 ? "warning" : undefined} />
-        <KpiCard icon={<Ship className="h-4 w-4" />} label="Embarques activos" value={embarques.length} />
+        <KpiCard icon={ClipboardCheck} label="Tarifas vigentes" value={vigentes} />
+        <KpiCard icon={FileText} label="Borradores pendientes" value={borradores} variant={borradores > 0 ? "warning" : "default"} />
+        <KpiCard icon={Clock} label="Vencen en 30 días" value={en30} variant={en30 > 0 ? "warning" : "default"} />
+        <KpiCard icon={Ship} label="Embarques activos" value={embarques.length} />
       </div>
 
       {rechazadas > 0 && (
@@ -63,17 +66,6 @@ export default function AgenteInicio() {
         <QuickLink to="/agente/embarques" icon={<Ship className="h-5 w-5" />} title="Mis embarques" desc="Consulta los embarques donde estás asignado como agente." />
       </div>
     </div>
-  );
-}
-
-function KpiCard({
-  icon, label, value, accent,
-}: { icon: React.ReactNode; label: string; value: number; accent?: "warning" }) {
-  return (
-    <Card className={`p-3 ${accent === "warning" ? "border-warning/40 bg-warning/5" : ""}`}>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">{icon}{label}</div>
-      <p className="text-2xl font-semibold tabular-nums mt-1">{value}</p>
-    </Card>
   );
 }
 

@@ -45,9 +45,11 @@ export default function PortalFacturas() {
   return (
     <div className="space-y-5">
       <PageHeader
+        icon={<Receipt className="h-6 w-6 text-accent" />}
         title="Mis Facturas"
         actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {facturas.length}</span>}
       />
+
 
       <PortalFiltersBar
         search={search}
@@ -94,7 +96,7 @@ export default function PortalFacturas() {
               >
                 <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <Badge className={`${getEstadoColor(f.estado)} text-[11px] shrink-0`}>
+                    <Badge className={`${getEstadoColor(f.estado)} text-xs shrink-0`}>
                       {f.estado}
                     </Badge>
                     <div className="min-w-0">

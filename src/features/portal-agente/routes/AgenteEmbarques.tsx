@@ -4,11 +4,11 @@
  * v13.172.17: migrado a `DataTable` (Fase 4 homologación).
  */
 import { useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { Ship } from "lucide-react";
 import { useAgenteEmbarques } from "@/features/portal-agente/hooks";
 
 type EmbarqueAgente = ReturnType<typeof useAgenteEmbarques>["data"] extends readonly (infer U)[] | undefined ? U : never;
@@ -78,19 +78,19 @@ export default function AgenteEmbarques() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Mis embarques"
+        icon={<Ship className="h-6 w-6 text-accent" />}
+        title="Mis Embarques"
         description="Embarques donde figuras como agente de carga. Sólo lectura — sin datos comerciales del cliente final."
       />
 
-      <Card>
-        <DataTable<EmbarqueAgente>
-          columns={columns}
-          data={embarques}
-          rowKey={(e) => e.id}
-          isLoading={isLoading}
-          emptyMessage="Aún no hay embarques asignados a tu agente."
-        />
-      </Card>
+      <DataTable<EmbarqueAgente>
+        columns={columns}
+        data={embarques}
+        rowKey={(e) => e.id}
+        isLoading={isLoading}
+        emptyMessage="Aún no hay embarques asignados a tu agente."
+      />
+
     </div>
   );
 }

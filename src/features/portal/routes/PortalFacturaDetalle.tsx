@@ -2,7 +2,9 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DetailSkeleton } from "@/components/shared/skeletons";
-import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { ArrowLeft, FileText, FileCode2, Ship, AlertTriangle, Receipt } from "lucide-react";
+
 import { usePortalFactura } from "@/features/portal/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { formatCurrency } from "@/lib/formatters";
@@ -52,29 +54,35 @@ export default function PortalFacturaDetalle() {
         variant="ghost"
         size="sm"
         onClick={() => navigate("/portal/facturas")}
-        className="-ml-2"
+        className="-ml-2 mb-1"
       >
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver
       </Button>
 
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div className="min-w-0">
+      <PageHeader
+        icon={<Receipt className="h-6 w-6 text-accent" />}
+        title={<span className="font-mono tabular-nums">{factura.numero}</span>}
+        description={
+          <>
+            {factura.cliente_nombre} • Exp: <span className="font-mono">{factura.expediente}</span>
+          </>
+        }
+        subHeader={
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold font-mono tabular-nums">{factura.numero}</h1>
             <Badge className={`${getEstadoColor(factura.estado)} text-xs`}>{factura.estado}</Badge>
             {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {factura.cliente_nombre} • Exp: <span className="font-mono">{factura.expediente}</span>
-          </p>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-2xl font-bold tabular-nums text-accent">
-            {formatCurrency(factura.total, factura.moneda)}
-          </p>
-        </div>
-      </div>
+        }
+        actions={
+          <div className="text-right shrink-0">
+            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-2xl font-bold tabular-nums text-accent">
+              {formatCurrency(factura.total, factura.moneda)}
+            </p>
+          </div>
+        }
+      />
+
 
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
         {factura.factura_pdf_url && (
