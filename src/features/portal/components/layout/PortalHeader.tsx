@@ -27,7 +27,7 @@ export function PortalHeader({
 }: Props) {
   return (
     <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between h-14 sm:h-16 gap-2">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14 sm:h-16 gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Link to="/portal" className="flex items-center min-w-0">
             <span className="hidden md:flex">
