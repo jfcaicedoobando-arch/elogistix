@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialog, AlertDialogAction, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
@@ -15,6 +15,7 @@ import {
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { Ban, Loader2 } from "lucide-react";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import DialogEliminarEmbarqueBloqueado from "./DialogEliminarEmbarqueBloqueado";
 
 interface Props {
@@ -28,7 +29,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
   const navigate = useNavigate();
   const eliminarEmbarque = useEliminarEmbarque();
   const registrarActividad = useRegistrarActividad();
-  const [paso2, setPaso2] = useState(false);
+  const [dependenciasVerificadas, setDependenciasVerificadas] = useState(false);
 
   const { data: deps, isLoading: depsLoading, error: depsError } =
     useEmbarqueDependenciasFinancieras(embarque.id, open);
@@ -43,7 +44,6 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
         method: "HANDLE_ELIMINAR_BLOQUEADO",
       });
       onOpenChange(false);
-      setPaso2(false);
       return;
     }
     try {
@@ -61,17 +61,17 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
       notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err), error: err, method: "HANDLE_ELIMINAR" });
     } finally {
       onOpenChange(false);
-      setPaso2(false);
     }
   };
 
-  if (open && bloqueado && !paso2 && deps) {
+  // Rama especial: bloqueado por dependencias financieras (sólo informativo).
+  if (open && bloqueado && deps) {
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <Ban className="h-5 w-5" />
+              <Ban className="h-5 w-5" aria-hidden />
               No se puede eliminar el embarque
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -86,25 +86,28 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
     );
   }
 
-
-  return (
-    <>
-      {/* Paso 1 */}
-      <AlertDialog open={open && !paso2} onOpenChange={onOpenChange}>
+  // Mientras se verifican dependencias, mostramos un placeholder ligero para
+  // evitar abrir el doble-confirm antes de saber si está bloqueado.
+  if (open && (depsLoading || depsError) && !dependenciasVerificadas) {
+    // Habilitamos el flujo canónico una vez que la query resuelve sin bloqueo.
+    if (!depsLoading && !depsError && !bloqueado) {
+      setDependenciasVerificadas(true);
+    }
+    return (
+      <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent className={dialogSize.sm}>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar embarque {embarque.expediente}?</AlertDialogTitle>
+            <AlertDialogTitle>Verificando dependencias…</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>¿Estás seguro de que deseas eliminar este embarque? Esta acción no se puede deshacer.</p>
+              <div className="space-y-2 text-sm">
                 {depsLoading && (
-                  <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                  <p className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
                     Verificando documentos financieros asociados…
                   </p>
                 )}
                 {depsError && (
-                  <p className="text-xs text-destructive">
+                  <p className="text-destructive">
                     No se pudo verificar dependencias financieras. Intenta nuevamente.
                   </p>
                 )}
@@ -112,39 +115,31 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => setPaso2(true)}
-              disabled={depsLoading || Boolean(depsError)}
-            >
-              Sí, eliminar
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => onOpenChange(false)}>Cerrar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    );
+  }
 
-      {/* Paso 2 */}
-      <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) { setPaso2(false); onOpenChange(false); } }}>
-        <AlertDialogContent className={dialogSize.sm}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>⚠️ Confirmación final</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente todos los documentos, costos, conceptos de venta y notas asociados al embarque <strong>{embarque.expediente}</strong>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleEliminar}
-              disabled={eliminarEmbarque.isPending}
-            >
-              {eliminarEmbarque.isPending ? 'Eliminando...' : 'Eliminar permanentemente'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+  return (
+    <DoubleConfirmDeleteDialog
+      open={open && !bloqueado}
+      onOpenChange={(v) => {
+        if (!v) setDependenciasVerificadas(false);
+        onOpenChange(v);
+      }}
+      entityName={`embarque ${embarque.expediente}`}
+      description={
+        <p>¿Estás seguro de que deseas eliminar este embarque? Esta acción no se puede deshacer.</p>
+      }
+      finalDescription={
+        <>
+          Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente todos los documentos, costos, conceptos de venta y notas asociados al embarque <strong>{embarque.expediente}</strong>.
+        </>
+      }
+      isPending={eliminarEmbarque.isPending}
+      onConfirm={handleEliminar}
+    />
   );
 }
