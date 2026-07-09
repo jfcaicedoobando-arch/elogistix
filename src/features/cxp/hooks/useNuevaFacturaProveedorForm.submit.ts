@@ -1,0 +1,72 @@
+/**
+ * Orquestación del submit de captura de factura de proveedor.
+ * Extraído para respetar Power-of-10 (≤200 líneas por archivo).
+ */
+import { toast } from "sonner";
+import { existeFacturaDuplicada } from "@/features/cxp/services";
+import { notifyError } from "@/components/shared/utils/appFeedback";
+import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
+import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
+import { buildPayload, type PendingCfdi, type VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
+import {
+  uploadCfdiSafe, vincularSafe, buildFacturaSuccessDescription,
+} from "./useNuevaFacturaProveedorForm.sideEffects";
+
+export function handleSubmitError(e: unknown) {
+  const err = e as { message?: string; code?: string };
+  if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
+    notifyError(toast, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
+  } else {
+    notifyError(toast, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
+  }
+}
+
+interface RunSubmitParams {
+  values: FacturaFormValues;
+  total: number;
+  userId: string | undefined;
+  organizationId: string | null;
+  pendingCfdi: PendingCfdi | null;
+  vinculos: Record<string, VinculoLinea>;
+  embarqueAdHoc: EmbarqueSeleccionado | null;
+  crearMutateAsync: (payload: ReturnType<typeof buildPayload>) => Promise<{ id?: string } | null | undefined>;
+  setFolioError: () => void;
+}
+
+/** Devuelve true si la operación fue exitosa. */
+export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
+  try {
+    const dup = await existeFacturaDuplicada(p.values.provId, p.values.folio, p.values.emision);
+    if (dup) {
+      p.setFolioError();
+      notifyError(toast, {
+        title: "Factura duplicada",
+        description: `Ya capturaste el folio ${p.values.folio.trim()} de este proveedor el ${p.values.emision}.`,
+        method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP",
+      });
+      return false;
+    }
+  } catch {
+    // Si la verificación falla (red, RLS), continuamos: el UNIQUE de UUID fiscal sigue protegiendo.
+  }
+  try {
+    const created = await p.crearMutateAsync(
+      buildPayload({ values: p.values, total: p.total, userId: p.userId, pendingCfdi: p.pendingCfdi, vinculos: p.vinculos }),
+    );
+    let sideResult = {};
+    if (created?.id) {
+      await uploadCfdiSafe({ facturaId: created.id, organizationId: p.organizationId, pendingCfdi: p.pendingCfdi });
+      sideResult = await vincularSafe({
+        facturaId: created.id, organizationId: p.organizationId,
+        values: p.values, total: p.total, vinculos: p.vinculos, embarqueAdHoc: p.embarqueAdHoc,
+      });
+    }
+    toast.success("Factura de proveedor capturada", {
+      description: buildFacturaSuccessDescription(sideResult),
+    });
+    return true;
+  } catch (e) {
+    handleSubmitError(e);
+    return false;
+  }
+}
