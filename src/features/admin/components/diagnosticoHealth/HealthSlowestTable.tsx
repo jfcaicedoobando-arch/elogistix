@@ -52,7 +52,7 @@ export default function HealthSlowestTable({ loading, data }: Props) {
                   <td className="py-2 font-mono">{r.fn}</td>
                   <td className="py-2 text-right">{formatMs(r.p50_ms)}</td>
                   <td className="py-2 text-right font-medium">{formatMs(r.p95_ms)}</td>
-                  <td className="py-2 text-right">{r.total.toLocaleString("es-MX")}</td>
+                  <td className="py-2 text-right">{formatNumber(r.total)}</td>
                 </tr>
               ))}
             </tbody>
