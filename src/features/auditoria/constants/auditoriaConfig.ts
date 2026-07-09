@@ -17,6 +17,8 @@ import {
   Banknote,
   HandCoins,
   AlertOctagon,
+  Container,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
