@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/hooks/shared";
+import { useDebouncedValue } from "@/lib/hooks";
 import { DataTable } from "@/components/shared/DataTable";
 import {
   useUsuarios,
@@ -20,7 +21,7 @@ export function UsuariosInternosTab() {
   const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
   const [pendingRole, setPendingRole] = useState<PendingRoleChange | null>(null);
   const [busqueda, setBusqueda] = useState("");
-  const [busquedaDebounced, setBusquedaDebounced] = useState("");
+  const busquedaDebounced = useDebouncedValue(busqueda.trim().toLowerCase(), 200);
   const [filtroRol, setFiltroRol] = useState<string>(TODOS);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -41,10 +42,6 @@ export function UsuariosInternosTab() {
     }
   }, [users, isLoading, toast]);
 
-  useEffect(() => {
-    const t = setTimeout(() => setBusquedaDebounced(busqueda.trim().toLowerCase()), 200);
-    return () => clearTimeout(t);
-  }, [busqueda]);
 
   const confirmRoleChange = async () => {
     if (!pendingRole) return;

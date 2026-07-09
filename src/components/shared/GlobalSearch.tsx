@@ -10,6 +10,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/shared";
+import { useDebouncedValue } from "@/lib/hooks";
 
 type SearchResult = GlobalSearchResult;
 
@@ -56,10 +57,11 @@ export function GlobalSearch() {
     setResults(items);
   }, [search]);
 
+  const debouncedQuery = useDebouncedValue(query, 300);
   useEffect(() => {
-    const timer = setTimeout(() => buscar(query), 300);
-    return () => clearTimeout(timer);
-  }, [query, buscar]);
+    buscar(debouncedQuery);
+  }, [debouncedQuery, buscar]);
+
 
   const handleSelect = (url: string) => {
     setOpen(false);
