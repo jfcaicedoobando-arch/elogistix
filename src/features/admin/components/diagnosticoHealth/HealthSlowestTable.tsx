@@ -4,6 +4,7 @@
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { formatNumber } from "@/lib/formatters";
 
 interface Row {
   fn: string;
