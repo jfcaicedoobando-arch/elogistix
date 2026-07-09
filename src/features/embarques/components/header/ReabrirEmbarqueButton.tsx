@@ -1,10 +1,7 @@
+import { useState } from "react";
 import { Unlock } from "lucide-react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 
 interface Props {
   expediente: string;
@@ -13,25 +10,33 @@ interface Props {
 }
 
 export function ReabrirEmbarqueButton({ expediente, reabriendoEstado, onReabrir }: Props) {
+  const [open, setOpen] = useState(false);
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={reabriendoEstado}>
-          <Unlock className="h-4 w-4 mr-1" /> Reabrir
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className={dialogSize.sm}>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Reabrir embarque cerrado</AlertDialogTitle>
-          <AlertDialogDescription>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={reabriendoEstado}
+        onClick={() => setOpen(true)}
+      >
+        <Unlock className="h-4 w-4 mr-1" /> Reabrir
+      </Button>
+      <ConfirmActionDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Reabrir embarque cerrado"
+        description={
+          <>
             El embarque <strong>{expediente}</strong> regresará al estado <strong>Entregado</strong> para poder generar la proforma o ajustar facturación. La acción se registrará en la bitácora y en el tracking.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onReabrir}>Reabrir</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </>
+        }
+        confirmLabel="Reabrir"
+        isPending={reabriendoEstado}
+        onConfirm={() => {
+          onReabrir();
+          setOpen(false);
+        }}
+      />
+    </>
   );
 }
