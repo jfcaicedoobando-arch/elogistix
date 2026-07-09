@@ -25,27 +25,29 @@ type TileDef = {
   color: string;
 };
 
+// v13.223.0 · Capa 3 Tranche A · 2.1: colores unificados a tokens semánticos
+// (`warning` / `destructive`) en vez de escalas Tailwind hardcodeadas.
 const TILES: readonly TileDef[] = [
   {
     key: "demora",
     titulo: "Demoras",
     descripcion: "Embarques en puerto con +7 días sin liberación.",
     Icon: Clock,
-    color: "text-warning bg-warning/10 dark:bg-warning/30",
+    color: "text-warning bg-warning/15",
   },
   {
     key: "garantia",
     titulo: "Garantías atoradas",
     descripcion: "Depósitos de contenedor con +30 días sin liberar.",
     Icon: ShieldAlert,
-    color: "text-orange-600 bg-orange-50 dark:bg-orange-950/30",
+    color: "text-warning bg-warning/15",
   },
   {
     key: "admin_pendiente",
     titulo: "Cierre administrativo",
     descripcion: "Entregado / EIR con CxC, CxP, docs o facturación pendientes.",
     Icon: FileWarning,
-    color: "text-rose-600 bg-rose-50 dark:bg-rose-950/30",
+    color: "text-destructive bg-destructive/10",
   },
 ];
 
@@ -58,7 +60,7 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
           <h2 className="text-sm font-semibold">Alertas activas</h2>
-          <Badge variant="secondary" className="text-[11px]">
+          <Badge variant="secondary" className="text-2xs">
             {resumen.total}
           </Badge>
         </div>
@@ -78,6 +80,10 @@ export function EmbarquesAlertasPanel({ resumen, activeAlerta, onSelect }: Props
         {TILES.map(({ key, titulo, descripcion, Icon, color }) => {
           const count = resumen[key].size;
           const active = activeAlerta === key;
+          // v13.223.0 · Capa 3 Tranche A · 2.2: ocultar tiles con count = 0
+          // salvo cuando el usuario los eligió activamente (para no dejar la
+          // vista vacía si limpian el filtro).
+          if (count === 0 && !active) return null;
           return (
             <button
               key={key}

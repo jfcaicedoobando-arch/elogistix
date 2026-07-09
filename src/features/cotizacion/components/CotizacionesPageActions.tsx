@@ -23,11 +23,8 @@ export function CotizacionesPageActions({
       <Button variant="outline" onClick={onExportar} className="hidden sm:inline-flex">
         <Download className="h-4 w-4 mr-2" /> Exportar CSV
       </Button>
-      {canEdit && (
-        <Button onClick={onNueva} className="hidden sm:inline-flex">
-          <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
-        </Button>
-      )}
+      {/* v13.223.0 · Capa 3 Tranche A · 3.2: acciones secundarias primero,
+          primary (`Nueva Cotización`) pegado al borde derecho (Fitts's law). */}
       {canEdit && (
         <Button
           variant="outline"
@@ -35,6 +32,11 @@ export function CotizacionesPageActions({
           className="hidden sm:inline-flex"
         >
           <Plus className="h-4 w-4 mr-2" /> Nuevo Tarifario
+        </Button>
+      )}
+      {canEdit && (
+        <Button onClick={onNueva} className="hidden sm:inline-flex">
+          <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
         </Button>
       )}
       <DropdownMenu>

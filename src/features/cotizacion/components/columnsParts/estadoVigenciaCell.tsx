@@ -11,17 +11,24 @@ import type { CotizacionListItem } from "@/features/cotizacion/hooks";
 function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
   const fechaStr = formatDate(fechaVigencia);
   const esEnviada = estado.toLowerCase() === "enviada";
-  if (!esEnviada) {
-    return <span className="text-muted-foreground">Vence {fechaStr}</span>;
-  }
   const fecha = new Date(fechaVigencia);
   const diffDias = Math.ceil((fecha.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+  // v13.223.0 · Capa 3 Tranche A · 3.3: la fila de "Vence" ya no aparece
+  // siempre. Sólo se muestra si la cotización está en proceso ("enviada")
+  // o si el vencimiento está próximo/expirado (≤ 7 días). Reduce densidad
+  // visual en la tabla sin ocultar los casos que requieren acción.
+  if (!esEnviada && diffDias > 7) return null;
+
   if (diffDias < 0) {
     return <span className="text-destructive font-medium">Vencida · {fechaStr}</span>;
   }
   if (diffDias <= 3) {
     const txt = diffDias === 0 ? "Vence hoy" : `Vence en ${diffDias}d`;
     return <span className="text-warning font-medium">{txt} · {fechaStr}</span>;
+  }
+  if (diffDias <= 7) {
+    return <span className="text-warning">Vence en {diffDias}d · {fechaStr}</span>;
   }
   return <span className="text-muted-foreground">Vence {fechaStr}</span>;
 }
