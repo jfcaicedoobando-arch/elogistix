@@ -1,23 +1,8 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { dialogSize, scrollableDialog } from "@/components/shared/utils/dialogTokens";
 
 type ConfirmAction = "Aceptada" | "Rechazada" | null;
-
-function getCtaLabel(isPending: boolean, isAceptar: boolean): string {
-  if (isPending) return "Procesando...";
-  return isAceptar ? "Sí, aceptar" : "Sí, rechazar";
-}
 
 interface PortalCotizacionConfirmDialogProps {
   confirmAction: ConfirmAction;
@@ -39,39 +24,34 @@ export default function PortalCotizacionConfirmDialog({
 }: PortalCotizacionConfirmDialogProps) {
   const isAceptar = confirmAction === "Aceptada";
   return (
-    <AlertDialog open={!!confirmAction} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={cn(dialogSize.md, scrollableDialog)}>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {isAceptar ? "¿Aceptar esta cotización?" : "¿Rechazar esta cotización?"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {isAceptar
-              ? "Al aceptar, el equipo de operaciones será notificado para proceder con el embarque. Esta acción no se puede deshacer."
-              : "Al rechazar, la cotización quedará cerrada. Si necesitas cambios, contacta al equipo de operaciones."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+    <ConfirmActionDialog
+      open={!!confirmAction}
+      onOpenChange={onOpenChange}
+      size="md"
+      title={isAceptar ? "¿Aceptar esta cotización?" : "¿Rechazar esta cotización?"}
+      description={
+        isAceptar
+          ? "Al aceptar, el equipo de operaciones será notificado para proceder con el embarque. Esta acción no se puede deshacer."
+          : "Al rechazar, la cotización quedará cerrada. Si necesitas cambios, contacta al equipo de operaciones."
+      }
+      variant={isAceptar ? "default" : "destructive"}
+      confirmLabel={isAceptar ? "Sí, aceptar" : "Sí, rechazar"}
+      isPending={isPending}
+      onConfirm={onConfirm}
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="portal-cotizacion-comentario" className="text-xs">
+          {isAceptar ? "¿Algún comentario? (opcional)" : "¿Motivo del rechazo? (opcional)"}
+        </Label>
         <Textarea
-          placeholder={isAceptar ? "¿Algún comentario? (opcional)" : "¿Motivo del rechazo? (opcional)"}
+          id="portal-cotizacion-comentario"
+          placeholder={isAceptar ? "Escribe un comentario…" : "Describe el motivo…"}
           value={comentario}
           onChange={(e) => onCommentChange(e.target.value)}
           className="min-h-[80px]"
+          disabled={isPending}
         />
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            disabled={isPending}
-            className={
-              !isAceptar
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : ""
-            }
-          >
-            {getCtaLabel(isPending, isAceptar)}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      </div>
+    </ConfirmActionDialog>
   );
 }
