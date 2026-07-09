@@ -18,10 +18,11 @@ import {
   EntidadesFields, RutaTipoFields, NumerosFields, VigenciaFields,
 } from "./TarifaFormFields";
 import {
-  buildInitialForm, calcularTotal, esFormValido, usdFormatter,
+  buildInitialForm, calcularTotal, esFormValido,
   calcularErrores, camposFaltantes, computeGuardarLabel,
   computeValido, getTituloModal,
 } from "./TarifaForm.helpers";
+import { formatUSD } from "@/lib/formatters";
 import { useTarifaSubmit } from "./useTarifaSubmit";
 import type { TarifaInput, TarifaRecargoInput } from "@/features/costeo/services/tarifas";
 
