@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/errors";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { formatNumber } from "@/lib/formatters";
 
 interface Props {
   embarqueId: string;
