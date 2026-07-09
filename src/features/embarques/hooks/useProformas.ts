@@ -11,7 +11,7 @@ import {
   eliminarProforma as svcEliminar,
   fetchProformasTodas,
   fetchProformasEmbarque,
-  fetchProformasPendientes,
+  
   type CrearProformaParams,
   type EliminarProformaParams,
   type ProformaConFactura,
