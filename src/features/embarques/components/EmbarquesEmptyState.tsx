@@ -9,7 +9,7 @@ interface Props {
 
 export function EmbarquesEmptyState({ canEdit, onCreate }: Props) {
   return (
-    <Card className="shadow-md">
+    <Card>
       <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
         <div
           aria-hidden="true"

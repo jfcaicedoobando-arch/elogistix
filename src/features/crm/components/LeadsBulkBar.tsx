@@ -64,7 +64,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
   if (ids.length === 0) return null;
 
   return (
-    <div className="sticky top-0 z-10 bg-primary text-primary-foreground rounded-md shadow-lg p-3 flex flex-wrap items-center gap-3">
+    <div className="sticky top-0 z-10 bg-primary text-primary-foreground rounded-lg shadow-raised p-3 flex flex-wrap items-center gap-3">
       <span className="font-medium text-sm">{ids.length} seleccionado{ids.length === 1 ? "" : "s"}</span>
 
       <Select onValueChange={(v) => handleEstado(v as CrmLeadEstado)}>

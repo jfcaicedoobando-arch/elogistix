@@ -6,6 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.221.0] - 2026-07-09
+- **UI · Auditoría visual Lote 2 · unificación del UI kit**: segundo lote de la auditoría UI/UX (ver `docs/ui-audit/02-componentes.md`). Se homologaron sombras, radios y microtipografías fuera del kit:
+  1. **Sombras hover en cards (8 archivos)**: `hover:shadow-sm|md` → `hover:shadow-raised` en portales, KpiTile, KpiCard, AdminDashboard, OperadorCard, EmbarqueCard, PortalKpiGrid, PortalFacturas, PortalCotizaciones.
+  2. **Headers sticky (2 archivos)**: `shadow-sm` → `shadow-card` en `PortalHeader` y `AgenteLayout`.
+  3. **Cards custom en `DesempenoOperadores` (3 líneas)**: se removió `rounded-2xl shadow-sm border-0 bg-card` para dejar `<Card>` puro y alinearse con el resto del dashboard.
+  4. **Skeleton de KPI**: `rounded-2xl` → `rounded-lg` para evitar salto visual al terminar de cargar.
+  5. **Tooltip flotante del sidebar colapsado**: `shadow-xl` → `shadow-overlay`.
+  6. **Elementos con `shadow-sm/md` redundante**: se quitó del botón submit en diálogos CxP, del badge ganador en `TarifaResultCardParts` y del `Card` vacío en `EmbarquesEmptyState`.
+  7. **Barra sticky de acciones (`LeadsBulkBar`)**: `rounded-md shadow-lg` → `rounded-lg shadow-raised`.
+  8. **DemoModeBanner** y **hover del timeline** homologados a tokens del sistema (`shadow-card` / `shadow-raised`).
+  9. **Microtipografía en `BandejaTabs`**: `text-[10px]` → `text-2xs` (token existente).
+- Analogía: si el Lote 1 estandarizó el ancho de los pasillos, este Lote iguala los picaportes y los marcos de las puertas — antes cada ala tenía picaportes distintos (unos redondos, unos cuadrados, sombras diferentes); ahora todas las puertas de la oficina usan el mismo herraje del catálogo del sistema.
+
 ## [13.220.0] - 2026-07-09
 - **UI · Auditoría visual Lote 1 · cohesión a 1920×1080**: primer lote de la auditoría UI/UX global (ver `docs/ui-audit/00-baseline.md` y `01-transversal.md`). Dos correcciones transversales de bajo riesgo:
   1. **Ancho canónico en portales**: los layouts del **Portal Cliente** y **Portal Agente** usaban `max-w-7xl` (1280px), lo que dejaba bandas vacías de ~320px a cada lado en monitores Full HD. Se unificaron a `max-w-screen-2xl` (1536px) —el mismo ancho que usa `PageContainer` en la app interna— y se eliminó el breakpoint extra `lg:px-8` para dejar el mismo `px-4 sm:px-6` que la app interna. Archivos: `portal/components/PortalLayout.tsx`, `portal/components/layout/PortalHeader.tsx`, `portal/components/layout/PortalBreadcrumbsBar.tsx`, `portal-agente/components/AgenteLayout.tsx` (7 ocurrencias en 4 archivos).

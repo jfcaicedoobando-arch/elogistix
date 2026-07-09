@@ -65,7 +65,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname }: Props) {
                     tooltip={{
                       children: item.title,
                       className:
-                        "bg-sidebar text-sidebar-foreground border-sidebar-border shadow-xl font-medium",
+                        "bg-sidebar text-sidebar-foreground border-sidebar-border shadow-overlay font-medium",
                       sideOffset: 8,
                     }}
                     className={cn(

@@ -135,7 +135,7 @@ export function DialogEditarFacturaProveedor({ factura, onOpenChange }: Props) {
       </div>
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>Cancelar</Button>
-        <Button onClick={ctl.submit} disabled={ctl.isPending || !ctl.hayCambios || !ctl.values} className="shadow-sm">
+        <Button onClick={ctl.submit} disabled={ctl.isPending || !ctl.hayCambios || !ctl.values}>
           {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           {ctl.isPending ? "Guardando…" : "Guardar cambios"}
         </Button>
