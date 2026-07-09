@@ -1,5 +1,6 @@
 import { Receipt, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import { formatCurrency } from "@/lib/formatters";
@@ -12,7 +13,7 @@ interface Props {
 }
 
 export function PortalFacturacionPendienteCard({ monto, total, vencidas, className }: Props) {
-  const drilldownHref = total > 0 ? "/portal/facturas" : null;
+  const drilldownHref = total > 0 ? ROUTES.PORTAL_FACTURAS : null;
   return (
     <DrilldownRow
       href={drilldownHref}
