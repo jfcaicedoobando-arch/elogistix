@@ -3,6 +3,7 @@
  * de Auditoría. Antes vivían inline en AuditoriaEjecutivoTab.
  */
 import { cn } from "@/lib/utils";
+import { formatNumber } from "@/lib/formatters";
 
 export function DrillKpi({
   label,
