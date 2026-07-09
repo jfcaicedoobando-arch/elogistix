@@ -86,7 +86,7 @@ export default function PortalFacturas() {
       ) : (
         <div className="grid gap-3">
           {facturas.length > 0 && filtered.map((f) => (
-            <Card key={f.id} className="transition-all hover:shadow-sm hover:border-accent/40 focus-within:ring-2 focus-within:ring-accent/40">
+            <Card key={f.id} className="transition-all hover:shadow-raised hover:border-accent/40 focus-within:ring-2 focus-within:ring-accent/40">
               <Link
                 to={`/portal/facturas/${f.id}`}
                 aria-label={`Ver factura ${f.numero}`}
