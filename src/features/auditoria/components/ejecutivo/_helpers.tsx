@@ -27,7 +27,7 @@ export function DrillKpi({
       )}
     >
       <div className={cn("text-2xl font-bold tabular-nums", tone)}>
-        {value.toLocaleString("es-MX")}
+        {formatNumber(value)}
       </div>
       <div className="text-[11px] text-muted-foreground uppercase tracking-wider">
         {label}
