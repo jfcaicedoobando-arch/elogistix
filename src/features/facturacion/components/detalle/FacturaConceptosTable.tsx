@@ -134,6 +134,14 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
                   <p className="text-sm font-medium">{descripcion}</p>
                   <IvaCell tipo={tipoIva} />
                 </div>
+                {c.embarque_expediente && c.embarque_id && (
+                  <Link
+                    to={`/embarques/${c.embarque_id}`}
+                    className="mt-1 inline-block text-xs text-accent hover:underline"
+                  >
+                    {c.embarque_expediente}
+                  </Link>
+                )}
                 <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                   <span>Cant: {c.cantidad ?? 1}</span>
                   <span className="font-bold text-foreground tabular-nums">
