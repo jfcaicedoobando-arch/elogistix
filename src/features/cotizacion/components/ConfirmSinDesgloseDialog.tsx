@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertTriangle } from "lucide-react";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertTriangle, Loader2 } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -24,51 +20,47 @@ export function ConfirmSinDesgloseDialog({ open, onOpenChange, onConfirm, isPend
   useEffect(() => { if (!open) setAcepta(false); }, [open]);
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={dialogSize.md}>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-            <AlertTriangle className="h-5 w-5" aria-hidden />
-            ¿Cotizar sin cargar costos?
-          </AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-3 text-sm">
-              <p>
-                Estás por crear una cotización <strong>sin desglose interno de costos</strong>.
-                Esta práctica se desaconseja porque:
-              </p>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>No se calcula margen ni P&amp;L.</li>
-                <li>El embarque derivado quedará <strong>bloqueado</strong> hasta cargar los costos.</li>
-                <li>El detalle interno de la operación queda incompleto.</li>
-              </ul>
-              <label className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/5 cursor-pointer">
-                <Checkbox
-                  checked={acepta}
-                  onCheckedChange={(v) => setAcepta(v === true)}
-                  className="mt-0.5"
-                />
-                <span className="text-xs leading-relaxed">
-                  Entiendo que esta cotización no tiene costos cargados y el embarque
-                  no podrá iniciarse hasta completarlos.
-                </span>
-              </label>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            disabled={!acepta || isPending}
-            onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {isPending
-              ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Procesando…</>
-              : "Sí, cotizar sin desglose"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmActionDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      size="md"
+      title="¿Cotizar sin cargar costos?"
+      titleIcon={<AlertTriangle className="h-5 w-5" aria-hidden />}
+      titleDestructive
+      variant="destructive"
+      confirmLabel="Sí, cotizar sin desglose"
+      confirmDisabled={!acepta}
+      isPending={isPending}
+      onConfirm={onConfirm}
+      description={
+        <div className="space-y-3 text-sm">
+          <p>
+            Estás por crear una cotización <strong>sin desglose interno de costos</strong>.
+            Esta práctica se desaconseja porque:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+            <li>No se calcula margen ni P&amp;L.</li>
+            <li>El embarque derivado quedará <strong>bloqueado</strong> hasta cargar los costos.</li>
+            <li>El detalle interno de la operación queda incompleto.</li>
+          </ul>
+        </div>
+      }
+    >
+      <label
+        htmlFor="cotizar-sin-desglose-acepta"
+        className="flex items-start gap-2 p-3 rounded-md border border-destructive/30 bg-destructive/5 cursor-pointer"
+      >
+        <Checkbox
+          id="cotizar-sin-desglose-acepta"
+          checked={acepta}
+          onCheckedChange={(v) => setAcepta(v === true)}
+          className="mt-0.5"
+        />
+        <span className="text-xs leading-relaxed">
+          Entiendo que esta cotización no tiene costos cargados y el embarque
+          no podrá iniciarse hasta completarlos.
+        </span>
+      </label>
+    </ConfirmActionDialog>
   );
 }

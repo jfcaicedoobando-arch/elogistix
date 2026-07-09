@@ -26,10 +26,20 @@ export interface ConfirmActionDialogProps {
   title: string;
   /** String o ReactNode; usa ReactNode para incluir <strong>, listas o spinners. */
   description?: React.ReactNode;
+  /** Contenido adicional (inputs, textarea, checkbox, radio) entre descripción y footer. */
+  children?: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "default" | "destructive";
   isPending?: boolean;
+  /** Deshabilita el botón de confirmar (además de `isPending`). Útil para gating por form. */
+  confirmDisabled?: boolean;
+  /** Tamaño del contenido. Default `sm`; usa `md` cuando hay `children` con inputs. */
+  size?: "sm" | "md";
+  /** Icono opcional junto al título (p. ej. <AlertTriangle />). */
+  titleIcon?: React.ReactNode;
+  /** Aplica text-destructive al título. Útil para destructive con icono. */
+  titleDestructive?: boolean;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -38,17 +48,30 @@ export function ConfirmActionDialog({
   onOpenChange,
   title,
   description,
+  children,
   confirmLabel = "Confirmar",
   cancelLabel = "Cancelar",
   variant = "default",
   isPending = false,
+  confirmDisabled = false,
+  size = "sm",
+  titleIcon,
+  titleDestructive = false,
   onConfirm,
 }: ConfirmActionDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className={dialogSize.sm}>
+      <AlertDialogContent className={dialogSize[size]}>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogTitle
+            className={cn(
+              titleIcon && "flex items-center gap-2",
+              titleDestructive && "text-destructive",
+            )}
+          >
+            {titleIcon}
+            {title}
+          </AlertDialogTitle>
           {description ? (
             typeof description === "string" ? (
               <AlertDialogDescription>{description}</AlertDialogDescription>
@@ -59,6 +82,7 @@ export function ConfirmActionDialog({
             )
           ) : null}
         </AlertDialogHeader>
+        {children ? <div className="space-y-3 py-2">{children}</div> : null}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
@@ -66,7 +90,7 @@ export function ConfirmActionDialog({
               variant === "destructive" &&
                 "bg-destructive text-destructive-foreground hover:bg-destructive/90",
             )}
-            disabled={isPending}
+            disabled={isPending || confirmDisabled}
             onClick={async (e) => {
               e.preventDefault();
               await onConfirm();
