@@ -47,7 +47,7 @@ export function PortalUserMenu({ initials, clienteName, email, onSignOut }: Prop
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/portal/perfil">
+          <Link to={ROUTES.PORTAL_PERFIL}>
             <UserIcon className="h-4 w-4 mr-2" /> Mi perfil
           </Link>
         </DropdownMenuItem>
