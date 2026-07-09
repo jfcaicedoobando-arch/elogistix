@@ -23,7 +23,7 @@ import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
 
-type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
+
 
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
