@@ -144,5 +144,6 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
         </div>
       ),
     },
-  ]);
+  ];
+  return defineColumns<RowData>(all.filter((c): c is ColumnDef<RowData, unknown> => c !== null));
 }
