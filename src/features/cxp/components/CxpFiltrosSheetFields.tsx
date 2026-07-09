@@ -64,6 +64,21 @@ export function CxpFiltrosSheetFields(props: Props) {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1">
+            <Label>Aprobación</Label>
+            <Select
+              value={props.aprobacion}
+              onValueChange={(v) => props.onAprobacionChange(v as Props["aprobacion"])}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas</SelectItem>
+                <SelectItem value="pendiente">Por aprobar</SelectItem>
+                <SelectItem value="aprobada">Aprobadas</SelectItem>
+                <SelectItem value="rechazada">Rechazadas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </>
       )}
       <div className="space-y-1">
