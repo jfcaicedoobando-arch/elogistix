@@ -11,11 +11,10 @@ import type { CfdiParsedResponse, ConceptoCostoAbierto } from "@/features/cxp/se
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
-import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
-  type PendingCfdi, type VinculoLinea,
+  type PendingCfdi,
   addDays, initialValues, calcularTotal, validateFactura,
 } from "./useNuevaFacturaProveedorForm.helpers";
 import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
