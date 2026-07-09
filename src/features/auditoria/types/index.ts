@@ -23,7 +23,10 @@ export type ReglaAuditoria =
   // Fase 2B — Cobranza (CXC) y Compras (CXP)
   | "cxc_vencida"
   | "cxp_por_capturar_estancada"
-  | "cxp_vencida";
+  | "cxp_vencida"
+  // AUD-1 (v13.235.0) — Reglas basadas en `embarque_contenedores`
+  | "contenedor_datos_incompletos"
+  | "contenedor_fechas_incompletas";
 
 export type SeveridadAuditoria = "critico" | "alto" | "medio";
 
