@@ -1,11 +1,7 @@
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import type { UserRow } from "@/features/admin/hooks/usuario";
 import type { AppRole } from "@/types/appRole";
 import { obtenerEtiquetaRol } from "@/lib/ui/uiMappings";
-import { dialogSize } from "@/components/shared/utils/dialogTokens";
 
 export interface PendingRoleChange {
   user: UserRow;
@@ -21,27 +17,22 @@ interface Props {
 
 export function RoleChangeAlertDialog({ pendingRole, isPending, onConfirm, onCancel }: Props) {
   return (
-    <AlertDialog open={!!pendingRole} onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <AlertDialogContent className={dialogSize.sm}>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Cambiar rol del usuario?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {pendingRole && (
-              <>
-                Vas a cambiar el rol de <strong>{pendingRole.user.email}</strong> de{" "}
-                <strong>{obtenerEtiquetaRol(pendingRole.user.role)}</strong> a{" "}
-                <strong>{obtenerEtiquetaRol(pendingRole.newRole)}</strong>. Esto modifica los permisos del usuario inmediatamente.
-              </>
-            )}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} disabled={isPending}>
-            {isPending ? "Cambiando..." : "Confirmar"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmActionDialog
+      open={!!pendingRole}
+      onOpenChange={(open) => { if (!open) onCancel(); }}
+      title="¿Cambiar rol del usuario?"
+      description={
+        pendingRole ? (
+          <>
+            Vas a cambiar el rol de <strong>{pendingRole.user.email}</strong> de{" "}
+            <strong>{obtenerEtiquetaRol(pendingRole.user.role)}</strong> a{" "}
+            <strong>{obtenerEtiquetaRol(pendingRole.newRole)}</strong>. Esto modifica los permisos del usuario inmediatamente.
+          </>
+        ) : undefined
+      }
+      confirmLabel="Confirmar"
+      isPending={isPending}
+      onConfirm={onConfirm}
+    />
   );
 }
