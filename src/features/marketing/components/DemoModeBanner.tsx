@@ -12,7 +12,7 @@ export function DemoModeBanner() {
   return (
     <div
       role="status"
-      className="sticky top-0 z-[60] flex items-center justify-center gap-2 bg-accent px-4 py-2 text-center text-xs font-medium text-accent-foreground shadow-sm sm:text-sm"
+      className="sticky top-0 z-[60] flex items-center justify-center gap-2 bg-accent px-4 py-2 text-center text-xs font-medium text-accent-foreground shadow-card sm:text-sm"
     >
       <Sparkles className="h-4 w-4" aria-hidden="true" />
       <span>
