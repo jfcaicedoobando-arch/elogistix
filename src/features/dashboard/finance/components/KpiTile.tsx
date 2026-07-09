@@ -32,7 +32,7 @@ export function KpiTile({
   const inner = (
     <Card
       className={cn(
-        "p-3 transition-shadow hover:shadow-md h-full",
+        "p-3 transition-shadow hover:shadow-raised h-full",
         TONE_STYLES[tone],
       )}
     >
