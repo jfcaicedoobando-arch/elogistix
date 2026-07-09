@@ -77,12 +77,11 @@ export function ModoAltaTabs({ modo, onChange }: ModoTabsProps) {
   return (
     <ToggleGroup
       type="single"
-      size="sm"
       value={modo}
       onValueChange={(v) => {
         if (v === "manual" || v === "csf") onChange(v);
       }}
-      className="inline-flex rounded-md border bg-muted/40 p-0.5"
+      className="bg-muted/40"
     >
       <ToggleGroupItem
         value="manual"
