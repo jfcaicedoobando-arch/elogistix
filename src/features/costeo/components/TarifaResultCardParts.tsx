@@ -86,7 +86,7 @@ export function FechaVigencia({ vigenteHasta, vencePronto }: { vigenteHasta: str
 export function WinnerBadge() {
   return (
     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-      <Badge className="bg-success text-success-foreground border-success gap-1 shadow-sm">
+      <Badge className="bg-success text-success-foreground border-success gap-1">
         <Trophy className="size-3" /> Mejor opción
       </Badge>
     </div>
