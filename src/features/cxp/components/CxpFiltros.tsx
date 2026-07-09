@@ -119,12 +119,12 @@ export function CxpFiltros(props: Props) {
             <SheetTitle>Filtros de CxP</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="md:hidden">
-              <CxpFiltrosSheetFields includePrimary {...props} proveedoresOpts={proveedoresOpts} categoriasOpts={categoriasOpts} />
-            </div>
-            <div className="hidden md:block">
-              <CxpFiltrosSheetFields includePrimary={false} {...props} proveedoresOpts={proveedoresOpts} categoriasOpts={categoriasOpts} />
-            </div>
+            <CxpFiltrosSheetFields
+              includePrimary
+              {...props}
+              proveedoresOpts={proveedoresOpts}
+              categoriasOpts={categoriasOpts}
+            />
           </div>
           <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between">
             <Button variant="ghost" onClick={clearAll} disabled={totalActive === 0} className="gap-2">
