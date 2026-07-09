@@ -83,14 +83,7 @@ export default function AgenteLayout() {
   };
 
   const nombreParaIniciales = ctx?.agenteNombre ?? user?.email ?? "";
-  const initials =
-    nombreParaIniciales
-      .split(" ")
-      .map((w) => w[0])
-      .filter(Boolean)
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "?";
+  const initials = computeInitials(nombreParaIniciales);
 
   const orgName = ctx?.organizacionNombre ?? null;
 
