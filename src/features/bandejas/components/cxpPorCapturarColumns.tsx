@@ -84,7 +84,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
         );
       },
     },
-    {
+    hideEstatus ? null : {
       id: "estatus",
       header: "Estatus",
       meta: { width: "w-[110px]", align: "center" },
