@@ -8,15 +8,12 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import SearchInput from "@/components/shared/SearchInput";
 import { useProveedoresLite } from "@/features/proveedor/hooks";
 import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import type { EstatusCxP } from "@/features/cxp/services";
 import { CxpFiltrosChips } from "./CxpFiltrosChips";
-import { CxpFiltrosSheetFields, ESTATUS } from "./CxpFiltrosSheetFields";
+import { CxpFiltrosSheetFields } from "./CxpFiltrosSheetFields";
 import { mobileFilterSheet } from "@/components/shared/utils/dialogTokens";
 
 interface Props {
