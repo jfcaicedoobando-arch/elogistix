@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.234.0] - 2026-07-09
+- **Refactor · DRY Lote 7f · `useDebouncedValue` canónico en `@/lib/hooks` (DRY-7)**: se movió la lógica de debounce a `src/lib/hooks/useDebouncedValue.ts` con su barrel `@/lib/hooks`. El histórico `useDebounce` de `@/hooks/shared/useDebounce.ts` ahora es un alias delgado que re-exporta `useDebouncedValue`, así los ~12 call-sites existentes no cambian. Se migraron los dos `useEffect + setTimeout` inline restantes: `src/components/shared/GlobalSearch.tsx` (debounce de query de búsqueda global, 300 ms) y `src/features/admin/routes/admin-org/UsuariosInternosTab.tsx` (debounce de búsqueda de usuarios, 200 ms; ahora debouncea directamente `busqueda.trim().toLowerCase()`). Se añadieron 4 tests para el canónico (`src/lib/hooks/__tests__/useDebouncedValue.test.tsx`) y se conservan los 3 tests del alias `useDebounce`. Con esto queda una sola implementación oficial de debounce en el codebase.
+
 ## [13.233.0] - 2026-07-09
 - **Refactor · DRY Lote 7e · Bundle formatters + rutas del portal (DRY-3/4/5/6)**: cierre del bloque "cleanup pequeño" del backlog en una sola versión menor, sin cambios funcionales.
   - **DRY-3 · `usdFormatter` unificado en costeo**: se añadió el helper canónico `formatUSD(n)` en `src/lib/formatters/numbers.ts` (wrapper sobre `formatCurrency(n, "USD")`) y se removieron las 2 implementaciones locales. `CosteoTarifas.helpers.ts` y `TarifaForm.helpers.ts` ahora re-exportan el canónico; `TarifaForm.tsx` importa `formatUSD` directo de `@/lib/formatters`.
