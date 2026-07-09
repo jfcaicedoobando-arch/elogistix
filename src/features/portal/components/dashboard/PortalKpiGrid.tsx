@@ -30,7 +30,7 @@ export function PortalKpiGrid({ values }: Props) {
       {KPIS.map((kpi) => (
         <Link key={kpi.key} to={kpi.href}>
           {/* Mobile: compact card. Desktop: full card with icon + label + arrow. */}
-          <Card className="hover:shadow-md transition-all hover:border-accent/30 cursor-pointer group h-full">
+          <Card className="hover:shadow-raised transition-all hover:border-accent/30 cursor-pointer group h-full">
             <CardContent className="flex flex-col sm:flex-row items-center sm:gap-4 gap-1 p-3 sm:p-5 text-center sm:text-left">
               <div className={`rounded-xl p-2 sm:p-3 ${kpi.bg} transition-colors`}>
                 <kpi.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${kpi.color}`} />
