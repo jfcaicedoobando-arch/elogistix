@@ -22,7 +22,7 @@ export default function PortalLayout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/portal/login");
+    navigate(ROUTES.PORTAL_LOGIN);
   };
 
   const initials = clienteName
