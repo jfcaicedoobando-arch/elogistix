@@ -89,7 +89,7 @@ export default function AgenteGarantias() {
         cell: ({ row }) => (
           <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
             <Button size="sm" variant="outline" onClick={() => setSeleccion(row.original)}>
-              <Settings2 className="size-4 mr-1" /> Configurar
+              <Settings2 className="h-4 w-4 mr-1" /> Configurar
             </Button>
           </div>
         ),
@@ -101,7 +101,8 @@ export default function AgenteGarantias() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Carta garantía y demoras"
+        icon={<ShieldCheck className="h-6 w-6 text-accent" />}
+        title="Carta Garantía y Demoras"
         description="Mantén actualizada tu carta garantía y el tabulador escalonado de demoras por naviera."
       />
 
@@ -115,17 +116,16 @@ export default function AgenteGarantias() {
         </p>
       </Card>
 
-      <Card>
-        <DataTable<FilaNaviera>
-          columns={columns}
-          data={filas}
-          rowKey={(f) => f.naviera_id}
-          isLoading={loadingNav || loadingCond}
-          onRowClick={(f) => setSeleccion(f)}
-          rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
-          emptyMessage="Sin navieras configuradas."
-        />
-      </Card>
+      <DataTable<FilaNaviera>
+        columns={columns}
+        data={filas}
+        rowKey={(f) => f.naviera_id}
+        isLoading={loadingNav || loadingCond}
+        onRowClick={(f) => setSeleccion(f)}
+        rowClassName={(f) => (seleccion?.naviera_id === f.naviera_id ? "bg-accent/40" : "")}
+        emptyMessage="Sin navieras configuradas."
+      />
+
 
       <FormDialogShell
         open={!!seleccion}

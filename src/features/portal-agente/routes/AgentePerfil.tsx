@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
@@ -34,7 +35,12 @@ export default function AgentePerfil() {
 
   return (
     <div className="space-y-4 max-w-xl">
-      <PageHeader title="Mi perfil" description="Datos de tu cuenta de agente y cambio de contraseña." />
+      <PageHeader
+        icon={<UserIcon className="h-6 w-6 text-accent" />}
+        title="Mi Perfil"
+        description="Datos de tu cuenta de agente y cambio de contraseña."
+      />
+
 
       <Card className="p-4 space-y-3">
         <div className="grid grid-cols-2 gap-3 text-sm">
