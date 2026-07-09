@@ -94,8 +94,11 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
         precio_unitario: c.precio_unitario,
         importe: c.total,
         tipo_iva: c.tipo_iva,
+        embarque_id: c.embarque_id ?? null,
+        embarque_expediente: c.embarque_expediente ?? null,
       }))
     : parseConceptos(snapshot);
+  const mostrarEmbarque = conceptos.some((c) => c.embarque_expediente);
 
   if (conceptos.length === 0) {
     return (
