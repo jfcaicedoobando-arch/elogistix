@@ -1,92 +1,46 @@
-# Auditoría "App como Lego": Candidatos a npm o paquete interno
+## Problema
 
-**Analogía:** hoy la app tiene muchas piezas que fabricamos a mano; algunas se pueden reemplazar por piezas de Lego oficiales (npm público), y otras conviene guardarlas en una caja marcada "Libre Carga" (paquete interno) para reutilizarlas en futuras apps.
+El timeline del Dashboard sólo muestra 5 estados (Confirmado, En Tránsito, Arribo, En Aduana, Entregado). Los embarques en **EIR** y **Cerrado** existen en el sistema pero no aparecen, así que el resumen se ve incompleto.
 
-## Lo que dejamos intocado (dominio Libre Carga)
+Decisión (confirmada): mostrar los 5 activos actuales **+ EIR + Cerrado** = 7 nodos. Se omite `Borrador` (trabajo en curso) y `Cancelado`.
 
-Estas piezas son el "ADN" del producto — no existen en ninguna librería y migrarlas costaría más de lo que ahorra:
+## Cambios
 
-- Roles multi-tenant (`roleHierarchy`) y RLS.
-- Reglas SAT: tasas IVA, RFC, CURP, régimen fiscal, CP.
-- Costos marítimos: DAP, THC, seguros, tarifas por kg/m³.
-- Integración FacturAPI, referencias de embarque, incoterms.
-- Scrub PII de Sentry con validaciones MX.
-- Formateo tipográfico con siglas MX (S.A. de C.V., CFDI, etc.).
-- Idempotencia `useStableRequestId` acoplada a RPCs.
+### 1. Backend — nueva migración de `dashboard_summary`
+Archivo: `supabase/migrations/<timestamp>_dashboard_summary_eir_cerrado.sql`
+- `CREATE OR REPLACE FUNCTION public.dashboard_summary()` (mismo cuerpo, sólo cambia el CTE `conteo`):
+  - Contar sobre `embarques_base` (no sobre `activos`) para incluir EIR y Cerrado.
+  - Añadir dos claves al `jsonb_build_object`: `'EIR'` y `'Cerrado'`.
+- `totalActivos`, `arribosEsteMes` y `resumenMesSiguiente` **no cambian** (siguen excluyendo EIR/Cerrado/Cancelado). Sólo el conteo del timeline se amplía.
 
-## Migración a npm público (piezas Lego estándar)
+### 2. Frontend — tipo y contrato
+Archivo: `src/features/dashboard/domain/parsers/dashboardTypes.ts`
+- Crear `const ESTADOS_TIMELINE = [...ESTADOS_ACTIVOS, 'EIR', 'Cerrado'] as const;`
+- `ESTADOS_FILTRO = ESTADOS_TIMELINE` (re-export mantiene la API pública del hook).
+- Extender `EMPTY_CONTEO` con `EIR: 0, Cerrado: 0`.
 
-Cambios directos, bajo riesgo, ~260 LOC menos:
+### 3. Scope "mios" en el controller
+Archivo: `src/features/dashboard/hooks/useDashboardController.ts`
+- Ya recorre `ESTADOS_FILTRO` para construir `conteo`, así que hereda EIR/Cerrado automáticamente.
+- Verificar que las listas fuente (`alertasDemora`, `proximosArribos`, `profitArribosEsteMes`, `embarquesMesSiguiente`) contienen embarques EIR/Cerrado — si no, el conteo scoped mostrará 0 en esos nodos. Ese es el comportamiento aceptable para "mis embarques" (los cerrados no aparecen en KPIs operativos activos). No se modifican las listas.
 
+### 4. Preservar "Cargas Activas por Cliente"
+Archivo: `src/features/dashboard/components/CargasActivasClienteCard.tsx`
+- Su `ESTADOS_ORDEN` local ya lista sólo los 5 activos y no debe cambiar (la tarjeta habla de "activas"). Cambiar el tipo de `Record<EstadoFiltro, number>` a `Partial<Record<EstadoFiltro, number>>` para que TS no exija EIR/Cerrado.
 
-| #   | Reemplaza                              | Con                                       | LOC |
-| --- | -------------------------------------- | ----------------------------------------- | --- |
-| A1  | `useDebouncedValue` + `useDebounce`    | `use-debounce`                            | ~32 |
-| A2  | `useIsMobile`                          | `usehooks-ts` → `useMediaQuery`           | ~30 |
-| A3  | `fetchWithRetry`                       | `ky` (retry + timeout nativos)            | ~92 |
-| A4  | `passwords/generator.ts`               | `generate-password` + `@zxcvbn-ts/core`   | ~84 |
-| A5  | `formatters/dates.ts` (thin wrappers)  | `date-fns` + `date-fns/locale/es` directo | ~35 |
-| A6  | `csv/serializeCsv.ts`                  | `papaparse.unparse()` directo             | ~15 |
-| A7  | `financialUtils` — wrappers no-dominio | `currency.js` directo                     | ~60 |
-
-
-## Extracción a paquete interno (caja "Libre Carga")
-
-Piezas propias reutilizables entre apps del mismo equipo. Se quedan en el repo pero organizadas para poder publicarse a un registry privado más tarde:
-
-**P1 · `@librecarga/supabase-utils**` (~230 LOC)
-
-- `unwrap` / `unwrapOr` / `run` de `lib/supabase/response.ts`
-- `useMutationWithFeedback`
-- `createCatalogHooks`
-
-**P2 · `@librecarga/pdf-components**` (~400 LOC)
-
-- `BrandHeader`, `Footer`, `KeyValueGrid`, `TotalesBox`, `DataTable` PDF
-- Los documentos de negocio (cotización, proforma, EERR) importan desde aquí.
-
-**P3 · `@librecarga/data-table**` (~470 LOC)
-
-- Wrapper de `@tanstack/react-table` con densidad, sticky, sort server/client, empty state, row href accesible.
-
-## Plan de ejecución por lotes (independientes, mergeable)
-
-Cada lote termina con lint + typecheck + tests verdes, bump `APP_VERSION` y entrada en `CHANGELOG.md`.
-
-**Lote 9a — Reemplazos npm de bajo riesgo** (~200 LOC menos)
-
-1. `bun add use-debounce usehooks-ts` → migrar `useDebouncedValue`, `useDebounce`, `useIsMobile`.
-2. Eliminar `csv/serializeCsv.ts` → `papaparse.unparse()`.
-3. Adelgazar `formatters/dates.ts`: dejar sólo constantes de locale, reexportar `format`/`parseISO` con default.
-
-**Lote 9b — Reemplazos npm de riesgo medio** (~180 LOC menos)
-4. `bun add ky` → migrar `fetchWithRetry` (verificar edge functions + servicios de importación).
-5. `bun add generate-password @zxcvbn-ts/core @zxcvbn-ts/language-common @zxcvbn-ts/language-es-es` → migrar generator + evaluator, revisar UI de creación de usuarios.
-
-**Lote 9c — Adelgazar `financialUtils**` (~60 LOC menos, riesgo medio)
-6. Marcar como `@deprecated` los thin wrappers (`sumarMontos`, `calcularIVA` cuando no lleva reglas SAT).
-7. Barrer call-sites uno a uno para usar `currency.js` directo.
-8. Mantener intactas `resolverTasaConcepto`, `TASAS_IVA_MX`, `calcularMargen` (dominio).
-
-**Lote 9d — Paquetes internos vía path alias** (0 LOC menos; prepara reutilización)
-9. Crear estructura `packages/supabase-utils/`, `packages/pdf-components/`, `packages/data-table/` en el mismo repo (monorepo ligero con `tsconfig` paths).
-10. Mover los archivos actuales sin renombrar imports (usar re-exports desde `@/lib/...` a `@librecarga/...`).
-11. Documentar en `README.md` de cada paquete su superficie pública.
-12. Preparado para publicar a un registry privado más tarde sin más refactor.
-
-## Métricas objetivo
-
-- Líneas propias eliminadas: **~1,400 LOC** (Lotes 9a-9c).
-- Piezas empaquetadas para reutilización: **~1,100 LOC** en 3 paquetes internos (Lote 9d).
-- Dependencias nuevas: 5 (`use-debounce`, `usehooks-ts`, `ky`, `generate-password`, `@zxcvbn-ts/core` + locales). Impacto en bundle: `<25 KB` gzipped total.
+### 5. Housekeeping
+- `CHANGELOG.md` + bump `APP_VERSION` (`13.251.1` → `13.252.0`).
+- Ajustar el test `dashboard.test.ts` / `dashboard.extra.test.ts` para el nuevo shape de `EMPTY_CONTEO` (7 claves).
 
 ## Detalles técnicos
 
-- `ky`: preferido sobre `axios` porque usa `fetch` nativo, ~5 KB gzip, retry + timeout built-in. Alternativa considerada: dejar `fetch` puro + `p-retry`, pero doble dependencia.
-- `usehooks-ts`: tree-shakeable, tipado estricto. Alternativa: `react-use` (bundle mayor, menos tipado).
-- `@zxcvbn-ts/core`: fork moderno con TS nativo. Alternativa clásica: `zxcvbn` (untyped, 400 KB si no se hace code-split).
-- Los paquetes internos se ubican en `packages/*` con `workspaces` de bun; NO se publican todavía a npm — sólo estructura preparada para hacerlo si aparece un segundo proyecto que los necesite.
+```text
+Timeline (nuevo): Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado
+```
 
----
+- El `TimelineEstadosCard` ya mapea `ESTADOS_FILTRO` con `ESTADO_CONFIG` de `src/lib/ui/estadoConfig.ts`; verificaré que ambas claves `EIR` y `Cerrado` existan ahí (si falta alguna icon/gradient, se añade en el mismo archivo).
+- El overflow horizontal del card ya está previsto (`overflow-x-auto min-w-[480px]`), así que 7 nodos caben en desktop y hacen scroll en mobile.
+- El link `onClick` navega a `/embarques?estado=<estado>`; ese filtro ya acepta EIR/Cerrado (son valores de la columna `estado`), no hay cambio ahí.
 
-**Pregunta antes de ejecutar:** ¿Ejecutamos los 4 lotes en orden (9a → 9d), o prefieres empezar sólo con **Lote 9a** (reemplazos npm de bajo riesgo, ROI inmediato ~200 LOC menos, ~1 hora de trabajo)? hacemos todos los lotes
+## Riesgo
+Bajo. El RPC amplía el JSON (retro-compatible), el frontend suma dos nodos y los consumidores puntuales están controlados.
