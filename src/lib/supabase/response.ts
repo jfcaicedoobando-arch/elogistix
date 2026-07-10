@@ -27,7 +27,7 @@ import type {
   PostgrestSingleResponse,
   PostgrestMaybeSingleResponse,
   PostgrestResponse,
-} from "@supabase/postgrest-js";
+} from "@supabase/supabase-js";
 
 /** Extrae `data` y re-lanza si hay error. Overloads permiten a TS elegir la
  *  variante correcta (single → T, maybeSingle → T|null, select → T[]|null)
