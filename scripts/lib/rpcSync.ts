@@ -92,8 +92,6 @@ export function scoreFinding(signals: RpcFinding["signals"]): Severity | null {
   if (insertNoAppend && (capturePriorIds || deleteByComplement)) return "HIGH";
   return null;
 }
-  return null;
-}
 
 export function auditSql(file: string, sql: string): RpcFinding[] {
   const findings: RpcFinding[] = [];
