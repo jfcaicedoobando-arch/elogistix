@@ -57,6 +57,7 @@ export async function fetchOportunidadCotsLineage(
       .order("created_at", { ascending: false }),
     [],
   );
+  // SAFE-CAST: el select explícito coincide 1:1 con LineageCotRow.
   return data as unknown as LineageCotRow[];
 }
 
