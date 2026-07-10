@@ -81,3 +81,29 @@ export async function checkAdminAccess(
   }
   return { isGlobalAdmin: false, orgId: orgData.organization_id };
 }
+
+/**
+ * Verifica que `userId` pertenezca a la organización `organizationId`.
+ * Retorna true si es super_admin/admin global (acceso cross-org) o si es
+ * miembro directo. Usar con `adminClient` (service_role) para evitar RLS.
+ */
+export async function authorizeOrgMembership(
+  adminClient: SupabaseClient,
+  userId: string,
+  organizationId: string,
+): Promise<boolean> {
+  const { data: superRole } = await adminClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["super_admin", "admin"])
+    .maybeSingle();
+  if (superRole) return true;
+  const { data: member } = await adminClient
+    .from("organization_members")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  return !!member;
+}
