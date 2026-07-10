@@ -2,7 +2,7 @@
  * Tests unitarios del detector de patrón "auto-borrado" en RPCs.
  */
 import { describe, it, expect } from "vitest";
-import { auditSql, analyzeBody, scoreFinding } from "../rpcSync";
+import { auditSql, analyzeBody, scoreFinding } from "../../scripts/lib/rpcSync";
 
 const VULNERABLE = `
 CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_payload jsonb)
