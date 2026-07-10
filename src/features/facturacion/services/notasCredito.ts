@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { getCurrentUser } from "@/features/auth/services";
+import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
 
 export type NotaCredito = Tables<"factura_notas_credito">;
 export type EstadoNotaCredito = NotaCredito["estado"];
@@ -39,14 +40,15 @@ export interface CrearNotaCreditoInput {
 
 
 export async function listarNotasCreditoPorFactura(facturaId: string): Promise<NotaCredito[]> {
-  const { data, error } = await supabase
-    .from("factura_notas_credito")
-    .select("*")
-    .eq("factura_id", facturaId)
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("factura_notas_credito")
+      .select("*")
+      .eq("factura_id", facturaId)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    [],
+  );
 }
 
 export interface NotaCreditoConFactura extends NotaCredito {
@@ -81,12 +83,10 @@ export async function listarNotasCreditoRecientes(
   if (filtros.cliente_id) query = query.eq("facturas.cliente_id", filtros.cliente_id);
   if (filtros.estado && filtros.estado !== "todos") query = query.eq("estado", filtros.estado);
 
-  const { data, error } = await query;
-  if (error) throw error;
+  const data = await unwrapOr(query, []);
   // SAFE-CAST: el join embebido `facturas!inner` viene como objeto anidado.
   type RawRow = NotaCredito & { facturas: { numero: string; cliente_id: string; cliente_nombre: string } | null };
-  return ((data as unknown as RawRow[] | null) ?? []).map((row) => { // SAFE-CAST: join embebido validado arriba
-
+  return (data as unknown as RawRow[]).map((row) => {
     const { facturas, ...nota } = row;
     return {
       ...nota,
@@ -112,13 +112,9 @@ export async function crearNotaCredito(input: CrearNotaCreditoInput): Promise<No
     created_by: user.id,
     estado: "Borrador",
   };
-  const { data, error } = await supabase
-    .from("factura_notas_credito")
-    .insert(payload)
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase.from("factura_notas_credito").insert(payload).select("*").single(),
+  );
 }
 
 
@@ -147,6 +143,5 @@ export async function cambiarEstadoNotaCredito(
     patch.aprobada_por = user.id;
     patch.aprobada_at = new Date().toISOString();
   }
-  const { error } = await supabase.from("factura_notas_credito").update(patch).eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("factura_notas_credito").update(patch).eq("id", id));
 }

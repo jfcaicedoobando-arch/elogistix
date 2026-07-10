@@ -2,6 +2,7 @@
  * Servicio CRM — Plantillas de mensajes (email / WhatsApp).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { run, unwrapOr } from "@/lib/supabase/response";
 
 export type PlantillaCanal = "email" | "whatsapp";
 
@@ -34,37 +35,36 @@ export async function fetchPlantillasMensaje(
   let q = supabase.from("crm_plantillas_mensaje").select(COLS).order("nombre");
   if (canal) q = q.eq("canal", canal);
   if (soloActivas) q = q.eq("activa", true);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as PlantillaMensajeRow[];
+  const data = await unwrapOr(q, []);
+  return data as unknown as PlantillaMensajeRow[];
 }
 
 export async function crearPlantilla(input: PlantillaInput): Promise<void> {
-  const { error } = await supabase.from("crm_plantillas_mensaje").insert({
-    nombre: input.nombre,
-    canal: input.canal,
-    asunto: input.asunto ?? "",
-    cuerpo: input.cuerpo,
-    activa: input.activa ?? true,
-  });
-  if (error) throw error;
+  await run(
+    supabase.from("crm_plantillas_mensaje").insert({
+      nombre: input.nombre,
+      canal: input.canal,
+      asunto: input.asunto ?? "",
+      cuerpo: input.cuerpo,
+      activa: input.activa ?? true,
+    }),
+  );
 }
 
 export async function actualizarPlantilla(input: {
   id: string;
   patch: Partial<PlantillaInput>;
 }): Promise<void> {
-  const { error } = await supabase
-    .from("crm_plantillas_mensaje")
-    .update(input.patch)
-    .eq("id", input.id);
-  if (error) throw error;
+  await run(
+    supabase.from("crm_plantillas_mensaje").update(input.patch).eq("id", input.id),
+  );
 }
 
 export async function eliminarPlantilla(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("crm_plantillas_mensaje")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("crm_plantillas_mensaje")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id),
+  );
 }

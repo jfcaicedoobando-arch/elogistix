@@ -11,6 +11,7 @@
  * Terrestre depende del vínculo correcto al embarque.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrapOr } from "@/lib/supabase/response";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import {
   buildEstadoResultados,
@@ -38,21 +39,25 @@ interface Params {
 
 async function loadEmbarquesPorIds(ids: string[]): Promise<EmbarqueER[]> {
   if (ids.length === 0) return [];
-  const { data, error } = await supabase
-    .from("embarques")
-    .select("id, modo, tipo_cambio_usd, tipo_cambio_eur")
-    .in("id", ids);
-  if (error) throw error;
+  const data = await unwrapOr(
+    supabase
+      .from("embarques")
+      .select("id, modo, tipo_cambio_usd, tipo_cambio_eur")
+      .in("id", ids),
+    [],
+  );
   return mapEmbarqueERRows(data);
 }
 
 async function loadEmbarquesPorExpedientes(exps: string[]): Promise<Map<string, EmbarqueER>> {
   if (exps.length === 0) return new Map();
-  const { data, error } = await supabase
-    .from("embarques")
-    .select("id, modo, tipo_cambio_usd, tipo_cambio_eur, expediente")
-    .in("expediente", exps);
-  if (error) throw error;
+  const data = await unwrapOr(
+    supabase
+      .from("embarques")
+      .select("id, modo, tipo_cambio_usd, tipo_cambio_eur, expediente")
+      .in("expediente", exps),
+    [],
+  );
   const map = new Map<string, EmbarqueER>();
   for (const e of mapEmbarqueERConExpediente(data)) {
     if (e.expediente) map.set(e.expediente, e);
@@ -70,9 +75,7 @@ async function fetchFacturasMes(orgId: string | null, desde: string, hasta: stri
     .lte("fecha_emision", hasta)
     .neq("estado", "Cancelada");
   if (orgId) q = q.eq("organization_id", orgId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return mapFacturaRows(data);
+  return mapFacturaRows(await unwrapOr(q, []));
 }
 
 async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: string): Promise<NotaCreditoRow[]> {
@@ -84,9 +87,7 @@ async function fetchNotasCreditoMes(orgId: string | null, desde: string, hasta: 
     .lte("updated_at", `${hasta}T23:59:59`)
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return mapNotaCreditoRows(data);
+  return mapNotaCreditoRows(await unwrapOr(q, []));
 }
 
 async function fetchProveedorFacturasMes(orgId: string | null, desde: string, hasta: string): Promise<ProveedorFacturaRow[]> {
@@ -98,9 +99,7 @@ async function fetchProveedorFacturasMes(orgId: string | null, desde: string, ha
     .neq("estado", "Cancelada")
     .is("deleted_at", null);
   if (orgId) q = q.eq("organization_id", orgId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return mapProveedorFacturaRows(data);
+  return mapProveedorFacturaRows(await unwrapOr(q, []));
 }
 
 function ingresosDeFacturas(
