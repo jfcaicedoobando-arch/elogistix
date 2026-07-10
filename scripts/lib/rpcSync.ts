@@ -46,10 +46,13 @@ export function extractFunctions(sql: string): Array<{ name: string; body: strin
 }
 
 export function analyzeBody(body: string): RpcFinding["signals"] {
-  // Señal 1: array de ids capturado desde payload antes del loop.
-  const capturePriorIds =
-    /(?:array_agg|SELECT\s+array_agg)\s*\(/i.test(body) &&
-    /\b(v_[a-z_]*(?:incoming|keep|existing|input|payload)[a-z_]*_ids?)\b/i.test(body);
+  // Señal 1: array de ids capturado desde payload antes del loop, ya sea
+  // vía `array_agg(...)` o `ARRAY(SELECT ...)`. Buscamos también la
+  // convención de nombres para acotar falsos positivos.
+  const capturesFromPayload =
+    /(?:array_agg\s*\(|ARRAY\s*\(\s*SELECT)/i.test(body);
+  const hasIdsVar = /\b(v_[a-z_]*(?:incoming|keep|existing|input|payload)[a-z_]*_ids?)\b/i.test(body);
+  const capturePriorIds = capturesFromPayload && hasIdsVar;
 
   // Señal 2: INSERT ... RETURNING id INTO <var>.
   const insertRe = /INSERT\s+INTO[\s\S]{0,400}?RETURNING\s+id\s+INTO\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi;
