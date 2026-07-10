@@ -23,6 +23,7 @@ import {
 } from "./helpers.ts";
 import { respaldarXmlEmitido } from "./respaldarXml.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -33,21 +34,14 @@ void resolveFacturapiKey;
 
 interface ReqBody { factura_id?: string }
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
 
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -55,10 +49,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   });
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.factura_id) return json({ error: "factura_id_required" }, 400);
+  if (!body.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
 
   // Cargar factura + cliente + conceptos
   const { data: factura, error: fErr } = await supabase
@@ -66,11 +60,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl")
     .eq("id", body.factura_id)
     .maybeSingle();
-  if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
-  if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
+  if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
+  if (factura.facturapi_id) return jsonResponse({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
   if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
-    return json({ error: "forbidden" }, 403);
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   // v13.171.0 — Guard: facturas en moneda extranjera requieren TC capturado
@@ -78,7 +72,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const monedaFactura = factura.moneda ?? "MXN";
   const tcFactura = factura.tipo_cambio == null ? null : Number(factura.tipo_cambio);
   if (monedaFactura !== "MXN" && (tcFactura == null || !Number.isFinite(tcFactura) || tcFactura <= 0)) {
-    return json({
+    return jsonResponse({
       error: "tipo_cambio_requerido",
       message: `Captura el tipo de cambio del día (DOF) antes de timbrar la factura en ${monedaFactura}.`,
     }, 422);
@@ -89,14 +83,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (factura.sustituye_a) {
     const { data: prev } = await supabase
       .from("facturas").select("uuid_fiscal").eq("id", factura.sustituye_a).maybeSingle();
-    if (!prev?.uuid_fiscal) return json({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422);
+    if (!prev?.uuid_fiscal) return jsonResponse({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422);
     sustituyeUuid = prev.uuid_fiscal as string;
   }
 
 
   // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
-  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
 
@@ -106,20 +100,20 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
     .eq("id", factura.cliente_id)
     .maybeSingle();
-  if (cErr || !cliente) return json({ error: "cliente_not_found", detail: cErr?.message }, 404);
+  if (cErr || !cliente) return jsonResponse({ error: "cliente_not_found", detail: cErr?.message }, 404);
 
   const { data: conceptos, error: conErr } = await supabase
     .from("conceptos_factura")
     .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
     .eq("factura_id", body.factura_id);
-  if (conErr) return json({ error: "conceptos_query_failed", detail: conErr.message }, 500);
+  if (conErr) return jsonResponse({ error: "conceptos_query_failed", detail: conErr.message }, 500);
 
   // α.1 — Validación estricta de claves SAT: no permitir timbrar con clave vacía.
   // Antes había fallback silencioso a "81141601" que hacía que todos los CFDIs
   // salieran con clave incorrecta sin avisar al usuario.
   const conceptosSinClave = (conceptos ?? []).filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
   if (conceptosSinClave.length > 0) {
-    return json({
+    return jsonResponse({
       error: "clave_sat_faltante",
       message: `Hay ${conceptosSinClave.length} concepto(s) sin clave SAT (c_ClaveProdServ). Asigna la clave correcta antes de timbrar.`,
     }, 422);
@@ -189,7 +183,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
 
   const issues = validateContext(ctx);
-  if (issues.length > 0) return json({ error: "validation_failed", issues }, 422);
+  if (issues.length > 0) return jsonResponse({ error: "validation_failed", issues }, 422);
 
   const payload = buildFacturapiPayload(ctx);
 
@@ -211,7 +205,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    return json({ error: "facturapi_error", status, detail, message }, 502);
+    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
   }
   const fapiJson = invoice;
 
@@ -251,7 +245,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       timbrado_por: userData.user.id,
     })
     .eq("id", body.factura_id);
-  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: factura.organization_id,
@@ -267,7 +261,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     },
   });
 
-  return json({
+  return jsonResponse({
     uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
     pdf_url: pdfUrl, xml_url: xmlUrl,
     xml_backup: respaldo,

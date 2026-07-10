@@ -17,24 +17,18 @@ import {
   type FacturapiWebhookEvent,
 } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-function json(b: unknown, s = 200) {
-  return new Response(JSON.stringify(b), {
-    status: s,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
   const url = new URL(req.url);
   const orgId = url.searchParams.get("org");
-  if (!orgId) return json({ error: "missing_org_param" }, 400);
+  if (!orgId) return jsonResponse({ error: "missing_org_param" }, 400);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
@@ -43,17 +37,17 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     .select("webhook_secret")
     .eq("organization_id", orgId)
     .maybeSingle();
-  if (!cred?.webhook_secret) return json({ error: "webhook_not_configured" }, 412);
+  if (!cred?.webhook_secret) return jsonResponse({ error: "webhook_not_configured" }, 412);
 
   const rawBody = await req.text();
   const signature = req.headers.get("facturapi-signature") ?? "";
   const expected = await computeSignature(rawBody, cred.webhook_secret);
   if (!signature || !safeEqual(signature, expected)) {
-    return json({ error: "invalid_signature" }, 401);
+    return jsonResponse({ error: "invalid_signature" }, 401);
   }
 
   let event: FacturapiWebhookEvent;
-  try { event = JSON.parse(rawBody); } catch { return json({ error: "invalid_json" }, 400); }
+  try { event = JSON.parse(rawBody); } catch { return jsonResponse({ error: "invalid_json" }, 400); }
 
   // Eventos de REP (`receipt.*`) → tabla `pagos_factura`.
   const receipt = mapEventToReceiptPatch(event);
@@ -64,13 +58,13 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
       .eq("facturapi_rep_id", receipt.facturapi_rep_id)
       .eq("organization_id", orgId)
       .maybeSingle();
-    if (!pago) return json({ ok: true, ignored: "pago_not_found" });
+    if (!pago) return jsonResponse({ ok: true, ignored: "pago_not_found" });
 
     const { error: updErr } = await supabase
       .from("pagos_factura")
       .update(receipt.patch)
       .eq("id", pago.id);
-    if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+    if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
     await registrarBitacoraEdge(supabase, {
       organizationId: orgId,
@@ -80,12 +74,12 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
       entidadId: pago.id,
       detalles: { event_type: event.type, patch: receipt.patch },
     });
-    return json({ ok: true, target: "pagos_factura" });
+    return jsonResponse({ ok: true, target: "pagos_factura" });
   }
 
   // Eventos de factura (`invoice.*`) → tabla `facturas`.
   const mapped = mapEventToFacturaPatch(event);
-  if (!mapped) return json({ ok: true, ignored: true });
+  if (!mapped) return jsonResponse({ ok: true, ignored: true });
 
   const { data: factura } = await supabase
     .from("facturas")
@@ -93,13 +87,13 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     .eq("facturapi_id", mapped.facturapi_id)
     .eq("organization_id", orgId)
     .maybeSingle();
-  if (!factura) return json({ ok: true, ignored: "factura_not_found" });
+  if (!factura) return jsonResponse({ ok: true, ignored: "factura_not_found" });
 
   const { error: updErr } = await supabase
     .from("facturas")
     .update(mapped.patch)
     .eq("id", factura.id);
-  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: orgId,
@@ -110,5 +104,5 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     detalles: { event_type: event.type, patch: mapped.patch },
   });
 
-  return json({ ok: true });
+  return jsonResponse({ ok: true });
 }));

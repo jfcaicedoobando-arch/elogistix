@@ -21,16 +21,10 @@ import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { fetchOrgSlug } from "../_shared/orgSlug.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
 
 interface ReqBody {
   tipo?: "pdf" | "xml";
@@ -111,33 +105,33 @@ async function resolveTarget(
 
 Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   const tipo = body.tipo;
   if (tipo !== "pdf" && tipo !== "xml") {
-    return json({ error: "tipo_invalido", message: "tipo debe ser 'pdf' o 'xml'" }, 400);
+    return jsonResponse({ error: "tipo_invalido", message: "tipo debe ser 'pdf' o 'xml'" }, 400);
   }
 
   const target = await resolveTarget(supabase, body);
-  if (!target.ok) return json(target.body, target.status);
+  if (!target.ok) return jsonResponse(target.body, target.status);
   if (!(await authorizeOrgMembership(supabase, userData.user.id, target.data.organizationId))) {
-    return json({ error: "forbidden" }, 403);
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   const resolved = await resolveFacturapiKey(supabase, target.data.organizationId);
   if (!resolved.ok) {
-    return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+    return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   }
 
   // FacturApi: tanto facturas como REP usan /invoices/<id>/{pdf,xml}
@@ -149,7 +143,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   if (!fapiRes.ok) {
     const detail = await fapiRes.text().catch(() => "");
     const message = extractFacturapiMessage(detail, fapiRes.status);
-    return json({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
+    return jsonResponse({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
   }
 
   const contentType = tipo === "pdf" ? "application/pdf" : "application/xml";

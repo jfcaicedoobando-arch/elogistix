@@ -5,14 +5,8 @@ import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
 const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
 
-function json(cors: Record<string, string>, data: Record<string, unknown>, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...cors, 'Content-Type': 'application/json' },
-  });
-}
-
 import { isEmail } from './emailValidation.ts';
+import { jsonResponse } from "../_shared/response.ts";
 export { isEmail };
 
 export async function handlePrepare(
@@ -24,9 +18,9 @@ export async function handlePrepare(
     .storage.from('cotizaciones-pdf')
     .createSignedUploadUrl(pdfPath);
   if (upErr || !upload) {
-    return json(cors, { error: 'No se pudo preparar la subida', detail: upErr?.message }, 500);
+    return jsonResponse(cors, { error: 'No se pudo preparar la subida', detail: upErr?.message }, 500);
   }
-  return json(cors, { upload_url: upload.signedUrl, upload_token: upload.token, path: pdfPath });
+  return jsonResponse(cors, { upload_url: upload.signedUrl, upload_token: upload.token, path: pdfPath });
 }
 
 interface Destinatario { email: string; nombre?: string }
@@ -198,8 +192,8 @@ export async function handleSend(params: SendParams): Promise<Response> {
   const { admin, supabaseUrl, supabaseServiceKey, cot, userId, userEmail, body, timestamp, cors } = params;
 
   const parsed = parseSendBody(body);
-  if (parsed.validRecipients.length === 0) return json(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
-  if (!parsed.pdfStoragePath) return json(cors, { error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
+  if (parsed.validRecipients.length === 0) return jsonResponse(cors, { error: 'Al menos un destinatario válido es requerido' }, 400);
+  if (!parsed.pdfStoragePath) return jsonResponse(cors, { error: 'pdf_path requerido (sube el PDF primero con action=prepare)' }, 400);
 
   const safeFolio = (cot.folio ?? 'cotizacion').replace(/[^A-Za-z0-9._-]+/g, '_');
   const orgSlug = await fetchOrgSlug(admin, cot.organization_id);
@@ -208,7 +202,7 @@ export async function handleSend(params: SendParams): Promise<Response> {
     .createSignedUrl(parsed.pdfStoragePath, SIGNED_URL_TTL, {
       download: `${orgSlug}_Cotizacion-${safeFolio}.pdf`,
     });
-  if (signErr || !signed) return json(cors, { error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
+  if (signErr || !signed) return jsonResponse(cors, { error: 'No se pudo generar link al PDF', detail: signErr?.message }, 500);
 
   const pdfLink = signed.signedUrl;
   const enlacePortal = `${APP_URL}/cotizaciones/${cot.id}`;
@@ -232,5 +226,5 @@ export async function handleSend(params: SendParams): Promise<Response> {
 
   await updateCotizacionEstado(admin, cot, anyOk, parsed.marcarEnviada);
 
-  return json(cors, { success: anyOk, estado: estadoEnvio, envio_id: envioId, resultados, pdf_link: pdfLink });
+  return jsonResponse(cors, { success: anyOk, estado: estadoEnvio, envio_id: envioId, resultados, pdf_link: pdfLink });
 }

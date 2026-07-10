@@ -17,6 +17,7 @@ import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapi
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -26,22 +27,15 @@ void resolveFacturapiKey;
 
 interface ReqBody { pago_id?: string }
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 // eslint-disable-next-line complexity
 Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
 
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -49,10 +43,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   });
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.pago_id) return json({ error: "pago_id_required" }, 400);
+  if (!body.pago_id) return jsonResponse({ error: "pago_id_required" }, 400);
 
   // 1) Pago
   const { data: pago, error: pErr } = await supabase
@@ -60,15 +54,15 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .select("id, factura_id, organization_id, fecha_pago, monto, moneda, tipo_cambio, forma_pago, referencia, estado_rep, facturapi_rep_id, monto_aplicado_factura")
     .eq("id", body.pago_id)
     .maybeSingle();
-  if (pErr || !pago) return json({ error: "pago_not_found", detail: pErr?.message }, 404);
-  if (pago.facturapi_rep_id) return json({ error: "ya_timbrado_rep", message: "Este pago ya tiene REP timbrado." }, 409);
+  if (pErr || !pago) return jsonResponse({ error: "pago_not_found", detail: pErr?.message }, 404);
+  if (pago.facturapi_rep_id) return jsonResponse({ error: "ya_timbrado_rep", message: "Este pago ya tiene REP timbrado." }, 409);
   if (!(await authorizeOrgMembership(supabase, userData.user.id, pago.organization_id))) {
-    return json({ error: "forbidden" }, 403);
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
   const resolved = await getFacturapiClient(supabase, pago.organization_id);
-  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
 
@@ -78,9 +72,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .select("id, numero, serie, total, subtotal, iva, moneda, tipo_cambio, metodo_pago, uuid_fiscal, folio_fiscal, cliente_id, rfc_cliente, embarque_id, expediente, referencia_bl")
     .eq("id", pago.factura_id)
     .maybeSingle();
-  if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
-  if (!factura.uuid_fiscal) return json({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
-  if (factura.metodo_pago !== "PPD") return json({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
+  if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
+  if (!factura.uuid_fiscal) return jsonResponse({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
+  if (factura.metodo_pago !== "PPD") return jsonResponse({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
 
   // α.1 — Tasa IVA efectiva de la factura original (antes hardcoded 0.16).
   // SAT rechazaba REPs de facturas de exportación con IVA 0% porque el
@@ -100,7 +94,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .select("id, nombre, rfc, codigo_postal, regimen_fiscal")
     .eq("id", factura.cliente_id)
     .maybeSingle();
-  if (cErr || !cliente) return json({ error: "cliente_not_found", detail: cErr?.message }, 404);
+  if (cErr || !cliente) return jsonResponse({ error: "cliente_not_found", detail: cErr?.message }, 404);
 
   const { data: contactoData } = await supabase
     .from("contactos_cliente")
@@ -117,7 +111,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .is("deleted_at", null)
     .order("fecha_pago", { ascending: true })
     .order("created_at", { ascending: true });
-  if (ppErr) return json({ error: "pagos_query_failed", detail: ppErr.message }, 500);
+  if (ppErr) return jsonResponse({ error: "pagos_query_failed", detail: ppErr.message }, 500);
 
   const totalFactura = Number(factura.total ?? 0);
   let acumuladoAntes = 0;
@@ -189,7 +183,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     await supabase.from("pagos_factura")
       .update({ estado_rep: "Error", rep_error: issues.map((i) => i.message).join("; ") })
       .eq("id", pago.id);
-    return json({ error: "validation_failed", issues }, 422);
+    return jsonResponse({ error: "validation_failed", issues }, 422);
   }
 
   const payload = buildRepPayload(ctx);
@@ -216,7 +210,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    return json({ error: "facturapi_error", status, detail, message }, 502);
+    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
   }
   const fapiJson = invoice;
 
@@ -254,7 +248,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       rep_error: null,
     })
     .eq("id", pago.id);
-  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: pago.organization_id,
@@ -269,7 +263,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     },
   });
 
-  return json({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
+  return jsonResponse({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
 }));
 
 function round2(n: number): number {

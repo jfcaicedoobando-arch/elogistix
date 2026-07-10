@@ -19,6 +19,7 @@ import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -26,23 +27,19 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 void Deno.env.get("FACTURAPI_KEY");
 void resolveFacturapiKey;
 
-function json(b: unknown, s = 200) {
-  return new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-}
-
 Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
   const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & {
     sustituida_por_factura_id?: string;
@@ -54,7 +51,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   // formato PDF (además del XML). Aquí lo streameamos como binario al
   // navegador sin guardarlo en BD (el XML sigue siendo la fuente de verdad).
   if (rawBody.solo_descargar_acuse_pdf === true) {
-    if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
+    if (!rawBody.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
     return await handleDescargarAcusePdf(supabase, userData.user.id, rawBody.factura_id);
   }
 
@@ -62,7 +59,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   // necesitamos volver a preguntarle al SAT por el acuse (útil cuando la
   // primera cancelación quedó con `acuse_cancelacion_status = 'pending'`).
   if (rawBody.solo_descargar_acuse === true) {
-    if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
+    if (!rawBody.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
     return await handleDescargarAcuseXml(supabase, userData.user.id, rawBody.factura_id);
   }
 
@@ -76,7 +73,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     const { data: nueva } = await supabase
       .from("facturas").select("id, uuid_fiscal, facturapi_id").eq("id", sustituidaPorFacturaId).maybeSingle();
     if (!nueva?.uuid_fiscal || !nueva.facturapi_id) {
-      return json({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
+      return jsonResponse({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
     }
     sustituyeUuidResuelto = nueva.uuid_fiscal as string;
     sustituyeFacturapiId = nueva.facturapi_id as string;
@@ -84,7 +81,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
 
   const validated = validateCancelacionInput({ ...rawBody, sustituye_uuid: sustituyeUuidResuelto });
   if (!validated.ok) {
-    return json({ error: validated.error, ...(validated.message ? { message: validated.message } : {}) }, 400);
+    return jsonResponse({ error: validated.error, ...(validated.message ? { message: validated.message } : {}) }, 400);
   }
   const { factura_id, motivo, sustituye_uuid } = validated.data;
 
@@ -93,14 +90,14 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .select("id, facturapi_id, organization_id, estado")
     .eq("id", factura_id)
     .maybeSingle();
-  if (fErr || !factura) return json({ error: "factura_not_found" }, 404);
-  if (!factura.facturapi_id) return json({ error: "no_timbrada" }, 409);
+  if (fErr || !factura) return jsonResponse({ error: "factura_not_found" }, 404);
+  if (!factura.facturapi_id) return jsonResponse({ error: "no_timbrada" }, 409);
   if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
-    return json({ error: "forbidden" }, 403);
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
-  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
   interface FapiCancelResponse { status?: string }
@@ -125,7 +122,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       detalles: { status, response: detail },
     });
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    return json({ error: "facturapi_error", status, detail, message }, 502);
+    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
   }
   const fapiJson = cancelResp;
 
@@ -151,7 +148,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .from("facturas")
     .update(updatePayload)
     .eq("id", factura_id);
-  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
   // Revertir proformas ligadas a esta factura para que puedan volver a facturarse.
   // Si la proforma originó 2 facturas (venta + demoras), sólo limpiamos el campo
@@ -196,7 +193,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     },
   });
 
-  return json({
+  return jsonResponse({
     ok: true,
     status: fapiJson.status ?? "canceled",
     sustituida: esSustitucion,

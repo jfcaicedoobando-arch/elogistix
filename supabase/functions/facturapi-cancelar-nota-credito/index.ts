@@ -11,6 +11,7 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -25,21 +26,14 @@ interface ReqBody {
   sustituye_uuid?: string;
 }
 
-function json(b: unknown, s = 200) {
-  return new Response(JSON.stringify(b), {
-    status: s,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 function validateRequest(req: Request, body: ReqBody): Response | null {
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!body.nota_credito_id) return json({ error: "nota_credito_id_required" }, 400);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  if (!body.nota_credito_id) return jsonResponse({ error: "nota_credito_id_required" }, 400);
   if (!body.motivo || !MOTIVOS_VALIDOS.has(body.motivo)) {
-    return json({ error: "motivo_invalido", message: "Motivo SAT requerido (01-04)." }, 400);
+    return jsonResponse({ error: "motivo_invalido", message: "Motivo SAT requerido (01-04)." }, 400);
   }
   if (body.motivo === "01" && !body.sustituye_uuid) {
-    return json({ error: "sustituye_uuid_required", message: "El motivo 01 requiere UUID de sustitución." }, 400);
+    return jsonResponse({ error: "sustituye_uuid_required", message: "El motivo 01 requiere UUID de sustitución." }, 400);
   }
   return null;
 }
@@ -48,14 +42,14 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   const invalid = validateRequest(req, body);
@@ -67,14 +61,14 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
     .select("id, organization_id, facturapi_id, estado")
     .eq("id", body.nota_credito_id)
     .maybeSingle();
-  if (ncErr || !nc) return json({ error: "nota_credito_not_found" }, 404);
-  if (!nc.facturapi_id) return json({ error: "no_timbrada" }, 409);
+  if (ncErr || !nc) return jsonResponse({ error: "nota_credito_not_found" }, 404);
+  if (!nc.facturapi_id) return jsonResponse({ error: "no_timbrada" }, 409);
   if (!(await authorizeOrgMembership(supabase, userData.user.id, nc.organization_id))) {
-    return json({ error: "forbidden" }, 403);
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
-  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
   interface FapiCancelResponse { status?: string }
@@ -96,7 +90,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
       detalles: { status, response: detail },
     });
     const message = extractFacturapiMessage(detail, status);
-    return json({ error: "facturapi_error", status, detail, message }, 502);
+    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
   }
 
   const { error: updErr } = await supabase
@@ -107,7 +101,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
       cancelado_en: new Date().toISOString(),
     })
     .eq("id", body.nota_credito_id);
-  if (updErr) return json({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: nc.organization_id,
@@ -119,5 +113,5 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
     detalles: { motivo: body.motivo, sustituye_uuid: body.sustituye_uuid ?? null },
   });
 
-  return json({ ok: true, status: cancelResp.status ?? "canceled" });
+  return jsonResponse({ ok: true, status: cancelResp.status ?? "canceled" });
 }));

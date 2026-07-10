@@ -5,12 +5,13 @@
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { wrapEdgeHandler, captureEdgeException } from '../_shared/sentry.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
+import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
+
+// Alias local con firma (cors, data, status) para conservar los callsites de este handler.
+const jsonResponse = (cors: Record<string, string>, data: unknown, status = 200) =>
+  _jsonResponse(data, status, cors);
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
-
-function json(cors: Record<string, string>, data: Record<string, unknown>, status = 200): Response {
-  return new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
-}
 
 interface Destinatario { email: string; nombre?: string }
 
@@ -221,37 +222,37 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   if (preflight) return preflight;
 
   const cors = buildCors(req);
-  if (req.method !== 'POST') return json(cors, { error: 'Method not allowed' }, 405);
+  if (req.method !== 'POST') return jsonResponse(cors, { error: 'Method not allowed' }, 405);
 
   const env = leerEntorno();
-  if (!env) return json(cors, { error: 'Server configuration error' }, 500);
+  if (!env) return jsonResponse(cors, { error: 'Server configuration error' }, 500);
 
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.toLowerCase().startsWith('bearer ')) {
-    return json(cors, { error: 'Missing authorization' }, 401);
+    return jsonResponse(cors, { error: 'Missing authorization' }, 401);
   }
   const user = await autenticarUsuario(env, authHeader);
-  if (!user) return json(cors, { error: 'Unauthorized' }, 401);
+  if (!user) return jsonResponse(cors, { error: 'Unauthorized' }, 401);
 
   const admin = createClient(env.url, env.service, { auth: { persistSession: false } });
 
   let body: Record<string, unknown>;
-  try { body = await req.json(); } catch { return json(cors, { error: 'Invalid JSON' }, 400); }
+  try { body = await req.json(); } catch { return jsonResponse(cors, { error: 'Invalid JSON' }, 400); }
 
   const entrada = validarEntrada(body);
-  if ('error' in entrada) return json(cors, { error: entrada.error }, 400);
+  if ('error' in entrada) return jsonResponse(cors, { error: entrada.error }, 400);
 
   const prof = await cargarProforma(admin, entrada.proformaId);
-  if (!prof) return json(cors, { error: 'Proforma no encontrada' }, 404);
+  if (!prof) return jsonResponse(cors, { error: 'Proforma no encontrada' }, 404);
 
   if (!(await usuarioTieneAcceso(admin, prof.organization_id, user.id))) {
-    return json(cors, { error: 'No tienes acceso a esta proforma' }, 403);
+    return jsonResponse(cors, { error: 'No tienes acceso a esta proforma' }, 403);
   }
 
   const tokenResult = await asegurarToken(
     admin, entrada.proformaId, prof.token_publico, prof.token_expira_at, entrada.diasVigencia,
   );
-  if ('error' in tokenResult) return json(cors, { error: 'No se pudo generar token', detail: tokenResult.error }, 500);
+  if ('error' in tokenResult) return jsonResponse(cors, { error: 'No se pudo generar token', detail: tokenResult.error }, 500);
   const { token, expira: tokenExpira } = tokenResult;
 
   const enlacePortal = `${APP_URL}/portal/proformas/${token}`;
@@ -276,7 +277,7 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
     enlacePortal, estado, anyOk, anyFail, resultados,
   });
 
-  return json(cors, {
+  return jsonResponse(cors, {
     success: anyOk,
     estado,
     envio_id: envioId,
