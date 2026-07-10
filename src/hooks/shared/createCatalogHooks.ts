@@ -17,8 +17,8 @@ const HALF_HOUR = 30 * 60 * 1000;
 const ONE_MINUTE = 60 * 1000;
 
 export interface CatalogHooksConfig<TRow, TInsert> {
-  /** Query keys: `all` engloba el resto; `activos`/`todos` son variantes. */
-  keys: { all: QueryKey; activos: QueryKey; todos: QueryKey };
+  /** Query keys: `invalidate` engloba el resto; `active` y `all` son variantes. */
+  keys: { invalidate: QueryKey; active: QueryKey; all: QueryKey };
   /** Fetcher; recibe `incluirInactivos` (para diferenciar activos vs todos). */
   fetch: (incluirInactivos: boolean) => Promise<TRow[]>;
   insert: (input: TInsert) => Promise<unknown>;
