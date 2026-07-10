@@ -67,10 +67,7 @@ export default function FacturapiCredencialesCard() {
   if (!orgId) return null;
 
   const copiar = (texto: string) => {
-    navigator.clipboard.writeText(texto).then(
-      () => toast.success("Copiado"),
-      () => notifyError(undefined, { title: "No se pudo copiar", method: "FacturapiCredencialesCard.copiar" }),
-    );
+    void copy(texto, { errorTitle: "No se pudo copiar", method: "FacturapiCredencialesCard.copiar" });
   };
 
   const onGuardar = async () => {
