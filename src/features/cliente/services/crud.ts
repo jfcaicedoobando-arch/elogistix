@@ -50,13 +50,16 @@ export async function fetchClientesPaginados({
   // Bloque 2.4 — RPC `clientes_listado` con agregados (embarques, cotizaciones, deuda)
   // para eliminar N+1 desde la UI.
   const offset = page * pageSize;
-  const { data, error } = await supabase.rpc("clientes_listado", {
-    p_organization_id: organizationId ?? undefined,
-    p_search: search || undefined,
-    p_offset: offset,
-    p_limit: pageSize,
-  });
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.rpc("clientes_listado", {
+      p_organization_id: organizationId ?? undefined,
+      p_search: search || undefined,
+      p_offset: offset,
+      p_limit: pageSize,
+    }),
+  );
+
+
 
   const rows = (data ?? []) as Array<{
     id: string;
