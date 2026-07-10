@@ -6,7 +6,25 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.249.0] - 2026-07-10
+- **Refactor · DRY Lote 8a.2d — barrido masivo services (`unwrap`/`unwrapOr`/`run`)**:
+  - Migrados 12 services/componentes al helper `@/lib/supabase/response` (elimina `if (error) throw error` boilerplate):
+    - `src/features/cliente/services/crud.ts` (5 sitios)
+    - `src/features/configuracion/components/CatalogoClavesSATCard.tsx` (4 sitios)
+    - `src/features/reportes/services/index.ts` (reescrito)
+    - `src/features/portal/services/perfil.ts` + `portal/services/notificaciones.ts`
+    - `src/features/notificaciones/services/index.ts`
+    - `src/features/facturacion/services/pagos/index.ts` + `facturasCrud.ts`
+    - `src/features/costeo/services/demorasVenta.ts` + `aprobacion.ts`
+    - `src/features/comisiones/services/liquidaciones.ts`
+    - `src/features/cxp/services/proveedorFacturas.crud.ts`
+    - `src/features/crm/services/leads/mutations.ts`
+    - `src/features/embarques/services/contenedores/crud.ts`
+  - Firmas públicas intactas; comportamiento equivalente. Impacto neto ≈ 70 líneas menos.
+  - Verificado: `bun run lint` limpio, `tsgo --noEmit` limpio.
+
 ## [13.248.0] - 2026-07-10
+
 - **Refactor · DRY Lote 8b (cierre) — KpiCard unificada en Dashboard principal**:
   - `src/components/shared/KpiCard.tsx`: agregadas dos capacidades para reemplazar todos los `KpiTile` locales sin perder features:
     - `to?: string` → envuelve la card en `<Link>` de react-router (misma A11y: focus ring + hover shadow).
