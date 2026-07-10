@@ -6,14 +6,24 @@ recién generados. Es el patrón del bug ELIMP00245.
 
 - **CRITICAL** (3 señales): 0
 - **HIGH** (2 señales, revisión manual): 0
+- **Live catalog** (funciones vivas con patrón sin `array_append`): 0
+- **Filas huérfanas detectadas** (`created_at ≈ deleted_at`): 0
 
-## CRITICAL
+## Migraciones — CRITICAL
+
+_Ninguna._
+
+## Migraciones — HIGH
 
 _Ninguna._
 
-## HIGH
+## Catálogo vivo (pg_proc)
 
-_Ninguna._
+_psql no disponible — sección omitida._
+
+## Filas huérfanas
+
+_No inspeccionado._
 
 ## Cómo se corrige el patrón
 
