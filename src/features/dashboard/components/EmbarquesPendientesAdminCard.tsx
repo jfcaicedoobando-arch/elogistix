@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { PackageCheck, Anchor, ChevronRight } from "lucide-react";
 import { useEmbarquesPendientesAdmin } from "@/features/dashboard/hooks/useEmbarquesPendientesAdmin";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
@@ -25,21 +25,24 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <KpiTile
-            icon={<PackageCheck className="h-4 w-4 text-success" />}
+          <KpiCard
+            icon={PackageCheck}
             label="Entregados"
             sublabel="Esperan cierre"
             value={entregados}
+            variant="success"
             loading={isLoading}
           />
-          <KpiTile
-            icon={<Anchor className="h-4 w-4 text-orange-600" />}
+          <KpiCard
+            icon={Anchor}
             label="En EIR"
             sublabel="Último paso marítimo"
             value={eir}
+            variant="warning"
             loading={isLoading}
           />
         </div>
+
 
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">
