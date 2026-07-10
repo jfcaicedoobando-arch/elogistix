@@ -4,18 +4,16 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { captureEdgeException } from "../_shared/sentry.ts";
+import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE, basicAuthHeader } from '../_shared/facturapiAuth.ts';
 import { fetchOrgSlug } from '../_shared/orgSlug.ts';
 
 export const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function json(cors: Record<string, string>, data: Record<string, unknown>, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...cors, 'Content-Type': 'application/json' },
-  });
-}
+// Alias local con firma (cors, data, status) para conservar callsites de este handler.
+export const json = (cors: Record<string, string>, data: Record<string, unknown>, status = 200): Response =>
+  _jsonResponse(data, status, cors);
 
 export interface Destinatario { email: string; nombre?: string }
 
