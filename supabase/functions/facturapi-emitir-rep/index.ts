@@ -62,6 +62,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .maybeSingle();
   if (pErr || !pago) return json({ error: "pago_not_found", detail: pErr?.message }, 404);
   if (pago.facturapi_rep_id) return json({ error: "ya_timbrado_rep", message: "Este pago ya tiene REP timbrado." }, 409);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, pago.organization_id))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
   const resolved = await getFacturapiClient(supabase, pago.organization_id);
