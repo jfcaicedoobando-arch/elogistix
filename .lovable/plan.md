@@ -1,76 +1,61 @@
-# Auditoría DRY — Estimación consolidada
+## Lote 8a.2d — Barrido masivo de services restantes
 
-Tres sub-agentes auditaron capas independientes. Total estimado: **~1,547 líneas eliminables** en 17 grupos de duplicación.
+**Objetivo**: reducir los 222 sitios con `if (error) throw error` distribuidos en 130 archivos, migrándolos al helper `unwrap`/`unwrapOr`/`run` ya existente en `src/lib/supabase/response.ts`.
 
-## Estimación agregada
+### Alcance de este lote
 
+Migrar los **20 archivos con mayor densidad** de boilerplate (aprox. 65-75 sitios, ~65-75 líneas netas eliminadas):
 
-| Capa                       | Grupos | Líneas eliminables |
-| -------------------------- | ------ | ------------------ |
-| Hooks & Services (datos)   | 4      | ~870               |
-| Components & Pages (UI)    | 5      | ~484               |
-| Lib / PDF / Edge Functions | 8      | ~193               |
-| **TOTAL**                  | **17** | **~1,547**         |
+| # | Archivo | Sitios |
+|---|---------|--------|
+| 1 | `src/features/cliente/services/crud.ts` | 6 |
+| 2 | `src/features/configuracion/components/CatalogoClavesSATCard.tsx` | 4 |
+| 3 | `src/features/reportes/services/index.ts` | 3 |
+| 4 | `src/features/portal/services/perfil.ts` | 3 |
+| 5 | `src/features/portal/services/notificaciones.ts` | 3 |
+| 6 | `src/features/notificaciones/services/index.ts` | 3 |
+| 7 | `src/features/facturacion/services/pagos/index.ts` | 3 |
+| 8 | `src/features/facturacion/services/facturasCrud.ts` | 3 |
+| 9 | `src/features/embarques/services/documentos.ts` | 3 |
+| 10 | `src/features/embarques/services/contenedores/crud.ts` | 3 |
+| 11 | `src/features/dashboard/direccion/services/loaders.ts` | 3 |
+| 12 | `src/features/cxp/services/proveedorFacturas.crud.ts` | 3 |
+| 13 | `src/features/cxp/services/pagosProveedor.ts` | 3 |
+| 14 | `src/features/crm/services/leads/mutations.ts` | 3 |
+| 15 | `src/features/crm/services/leads/convertir.ts` | 3 |
+| 16 | `src/features/crm/services/leads/bulk.ts` | 3 |
+| 17 | `src/features/cotizacion/services/conversiones/embarques.ts` | 3 |
+| 18 | `src/features/costeo/services/demorasVenta.ts` | 3 |
+| 19 | `src/features/costeo/services/aprobacion.ts` | 3 |
+| 20 | `src/features/comisiones/services/liquidaciones.ts` | 3 |
 
+Los archivos restantes (110 archivos con 1-2 sitios cada uno) quedan para un **8a.2e** posterior si decides continuar; el ROI baja porque el ahorro por archivo es menor.
 
-> Analogía: es como reemplazar 17 recetas de cocina casi idénticas por 17 plantillas reutilizables — el sabor final no cambia, pero el recetario pesa menos y es más fácil de mantener.
+### Regla de migración
 
-## Hallazgos por lote
+- `.select().single()` con throw → `unwrap(await supabase.from(...)...)`
+- `.select()` con throw (múltiples filas) → `unwrap(await supabase.from(...)...)` (retorna arreglo)
+- `.insert/.update/.delete` con throw sin retorno → `run(await supabase.from(...)...)`
+- Si el llamador ya maneja `null` como caso válido → `unwrapOr(response, fallback)`
+- **No cambiar firmas públicas** de las funciones migradas (mismo retorno, mismo shape). Cambio invisible para consumidores.
 
-### Lote 8a — Hooks y Services (~870 líneas, mayor impacto)
+### Verificación
 
-1. **G1 · Mutaciones con toast+invalidate repetidos** (~350 líneas). >30 ocurrencias con el mismo `onSuccess`/`onError`. Abstracción: `useMutationWithFeedback` en `src/hooks/shared/`.
-  - `useNavieras.ts`, `usePuertos.ts`, `useOportunidades.ts`, `useTesoreriaMovimientos.ts`, `useOrgMembersMutations.ts`, `useUsuarioMutations.ts`, entre otros.
-2. **G3 · Boilerplate `if (error) throw error` en services** (~220 líneas). Helper `handleSupabaseResponse()` o `throwOnError()`.
-3. **G2 · Catálogos simples con misma tríada `use / useAll / useAdmin**` (~180 líneas). Hook genérico `useSimpleCatalog(entityKey, services)`.
-4. **G4 · Listados paginados manuales** (~120 líneas). Migrar a `useServerPagedList` existente (`useOportunidades`, `leads/queries`, `useAppLogs`, `useBitacora`).
+1. `bun run lint` sin nuevos warnings.
+2. `bunx tsgo --noEmit` limpio.
+3. Correr tests existentes que tocan los archivos migrados: `bunx vitest run src/features/cliente src/features/crm src/features/cxp src/features/facturacion` (los que tengan tests).
+4. Muestra de humo en preview: abrir Cartera, CxP, un lead CRM y un embarque para confirmar que las queries siguen respondiendo.
 
-### Lote 8b — Components y Pages (~484 líneas)
+### Detalles técnicos
 
-5. **KpiCard duplicado** en `operaciones/` y `embarques/pnl/` (~111 líneas). Fusionar en `src/components/shared/KpiCard.tsx` (incluir tipografía adaptativa).
-6. **Filtros mobile del portal casi idénticos** (~150 líneas). Consolidar vía `MobileFiltersSheet` con `children`.
-7. **Bloques fiscales RFC/CP/Régimen/Dirección** en cliente, proveedor y factura manual (~120 líneas). Crear `FiscalAddressFields` + `RegimenFiscalSelect` en `src/features/fiscal/components/`.
-8. **Wrappers innecesarios sobre ConfirmActionDialog** y `AlertDialog` manual en `DialogEliminarEmbarque` (~58 líneas).
-9. **Columnas Folio/Expediente/Cliente reconstruidas manualmente** (~45 líneas). Extender `columnBuilders.tsx`.
+- Helper canónico ya existe: `src/lib/supabase/response.ts` (exports `unwrap`, `unwrapOr`, `run`).
+- Ahorro esperado: **~65 líneas netas** en este lote (se elimina la línea `if (error) throw error;` y en muchos casos también la desestructuración `const { data, error } = ...` se colapsa a una sola línea).
+- Impacto acumulado DRY tras 8a.2d: **~1,397 líneas** desde el inicio de la auditoría.
+- Version bump: `APP_VERSION` → `13.249.0`. CHANGELOG con lista de archivos tocados.
 
-### Lote 8c — Lib, PDF y Edge Functions (~193 líneas)
+### Fuera de alcance
 
-10. **Edge functions con `corsHeaders`/`OPTIONS`/`new Response(JSON…)` inline** (~85 líneas). Migrar a `_shared/response.ts` + `_shared/cors.ts`.
-11. **Headers de reportes PDF** (`Cartera`, `EERR`, `Ejecutivo`, `Tesorería`, `Presupuesto`) (~35 líneas). Crear `ReportHeader` en `src/pdf/components/`.
-12. **Schemas CSV redefinen validación de cliente/proveedor** (~40 líneas). Reutilizar `clienteInsertSchema` / `proveedorInsertSchema`.
-13. **Colores/fuentes hardcoded en `estadoCuentaPdf` y `ReporteEERRDocument**` (~18 líneas). Usar `tokens.ts`.
-14. **Constantes literales dispersas** (`SYSTEM_USER_ID`, código RLS `42501`, `corsHeaders` local en `client-error-log`) (~15 líneas).
-
-## Ejecución propuesta
-
-Por lotes secuenciales para mantener estabilidad (Balanceado, mismo commit + tests):
-
-```text
-Lote 8a  → 8a.1 useMutationWithFeedback + migración de 6 hooks piloto
-         → 8a.2 handleSupabaseResponse + barrido services
-         → 8a.3 useSimpleCatalog + catálogos
-         → 8a.4 migración a useServerPagedList
-Lote 8b  → 8b.1 KpiCard unificado
-         → 8b.2 MobileFiltersSheet
-         → 8b.3 FiscalAddressFields + RegimenFiscalSelect
-         → 8b.4 columnBuilders + limpieza de dialogs
-Lote 8c  → 8c.1 Edge functions a _shared/*
-         → 8c.2 ReportHeader PDF + tokens
-         → 8c.3 CSV schemas + constantes
-```
-
-Cada sub-lote: cambio + tests unitarios cuando el patrón lo permita + `tsgo` + `bun run lint` + bump de `APP_VERSION` + entrada en `CHANGELOG.md`.
-
-## Detalles técnicos
-
-- **Nota:** las estimaciones son conservadoras (por instancia, no cuentan reducción de imports). El total real tras eliminar imports huérfanos suele ser 10-15% mayor.
-- **Riesgos:** `useMutationWithFeedback` toca >30 hooks — hacerlo compatible con `onSuccess` personalizado (que reciba data/variables) para no romper flujos con navegación post-mutación.
-- **Regla del proyecto:** todo archivo nuevo debe respetar Power of 10 (≤200 líneas).
-- **Validación:** correr `bun run audit:arch` al cierre de cada lote para confirmar que ningún archivo nuevo supera el límite.
-
-## ¿Qué quieres hacer?
-
-1. Ejecutar los 3 lotes en orden (recomendado). Esto!
-  &nbsp;
-2. Solo Lote 8a (mayor ROI, ~870 líneas).
-3. Ajustar prioridades/alcance antes de ejecutar.
+- No se tocan los 110 archivos con 1-2 sitios cada uno (candidatos para 8a.2e).
+- No se refactorizan firmas ni se cambia el shape de respuesta.
+- No se toca lógica de negocio ni RLS.
+- Los warnings de seguridad del panel actual (backup tables, catálogos globales) siguen fuera del scope de la auditoría DRY.
