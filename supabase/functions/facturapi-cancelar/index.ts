@@ -159,6 +159,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found" }, 404);
   if (!factura.facturapi_id) return json({ error: "no_timbrada" }, 409);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
