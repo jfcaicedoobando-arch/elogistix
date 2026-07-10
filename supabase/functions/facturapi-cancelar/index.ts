@@ -16,10 +16,9 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
-import { descargarAcuseCancelacionPdf } from "./descargarAcusePdf.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { fetchOrgSlug } from "../_shared/orgSlug.ts";
+import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -56,41 +55,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   // navegador sin guardarlo en BD (el XML sigue siendo la fuente de verdad).
   if (rawBody.solo_descargar_acuse_pdf === true) {
     if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
-    const { data: facp, error: facpErr } = await supabase
-      .from("facturas")
-      .select("id, facturapi_id, organization_id, estado, numero")
-      .eq("id", rawBody.factura_id)
-      .maybeSingle();
-    if (facpErr || !facp) return json({ error: "factura_not_found" }, 404);
-    if (!facp.facturapi_id) return json({ error: "no_timbrada" }, 409);
-    if (!(await authorizeOrgMembership(supabase, userData.user.id, facp.organization_id))) {
-      return json({ error: "forbidden" }, 403);
-    }
-    if (facp.estado !== "Cancelada" && facp.estado !== "Sustituida") {
-      return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
-    }
-    const clip = await getFacturapiClient(supabase, facp.organization_id);
-    if (!clip.ok) return json({ error: clip.data.error, message: clip.data.message }, clip.data.status);
-    const pdfRes = await descargarAcuseCancelacionPdf(facp.facturapi_id, clip.data.apiKey);
-    if (!pdfRes.ok) {
-      if (pdfRes.reason === "not_ready") {
-        return json({
-          error: "acuse_pdf_no_disponible",
-          message: "El SAT aún no ha emitido el acuse en PDF. Intenta más tarde o usa 'Reintentar acuse'.",
-        }, 404);
-      }
-      return json({ error: "facturapi_error", status: pdfRes.status }, 502);
-    }
-    const orgSlug = await fetchOrgSlug(supabase, facp.organization_id);
-    const filename = `${orgSlug}_acuse-cancelacion-${(facp.numero ?? facp.id).replace(/[^A-Za-z0-9._-]+/g, "_")}.pdf`;
-    return new Response(pdfRes.pdf, {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-      },
-    });
+    return await handleDescargarAcusePdf(supabase, userData.user.id, rawBody.factura_id);
   }
 
   // Modo "solo descargar acuse": la factura ya se canceló antes y sólo
@@ -98,36 +63,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   // primera cancelación quedó con `acuse_cancelacion_status = 'pending'`).
   if (rawBody.solo_descargar_acuse === true) {
     if (!rawBody.factura_id) return json({ error: "factura_id_required" }, 400);
-    const { data: fac, error: facErr } = await supabase
-      .from("facturas")
-      .select("id, facturapi_id, organization_id, estado")
-      .eq("id", rawBody.factura_id)
-      .maybeSingle();
-    if (facErr || !fac) return json({ error: "factura_not_found" }, 404);
-    if (!fac.facturapi_id) return json({ error: "no_timbrada" }, 409);
-    if (fac.estado !== "Cancelada" && fac.estado !== "Sustituida") {
-      return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
-    }
-    if (!(await authorizeOrgMembership(supabase, userData.user.id, fac.organization_id))) {
-      return json({ error: "forbidden" }, 403);
-    }
-    const cli = await getFacturapiClient(supabase, fac.organization_id);
-    if (!cli.ok) return json({ error: cli.data.error, message: cli.data.message }, cli.data.status);
-    const acuseSolo = await descargarAcuseCancelacion(fac.facturapi_id, cli.data.apiKey);
-    const { error: updErr2 } = await supabase
-      .from("facturas")
-      .update({
-        acuse_cancelacion_xml: acuseSolo.xml ?? null,
-        acuse_cancelacion_fecha: acuseSolo.xml ? new Date().toISOString() : null,
-        acuse_cancelacion_status: acuseSolo.status,
-      })
-      .eq("id", fac.id);
-    if (updErr2) return json({ error: "db_update_failed", detail: updErr2.message }, 500);
-    return json({
-      ok: true,
-      acuse_status: acuseSolo.status,
-      acuse_guardado: !!acuseSolo.xml,
-    });
+    return await handleDescargarAcuseXml(supabase, userData.user.id, rawBody.factura_id);
   }
 
   // Si viene `sustituida_por_factura_id`, resolver su UUID SAT y su facturapi_id.
