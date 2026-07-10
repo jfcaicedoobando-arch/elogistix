@@ -3,8 +3,7 @@
  */
 import { Copy, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/shared";
-import { notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useCopyText } from "@/hooks/shared";
 import PlantillaSelector from "@/features/crm/components/PlantillaSelector";
 
 interface PlantillaCtx {
@@ -20,10 +19,10 @@ interface Props {
 }
 
 export default function ContactActions({ email, telefono, plantillaCtx }: Props) {
-  const { toast } = useToast();
+  const copyText = useCopyText();
   const copy = (v: string, label: string) => {
     if (!v) return;
-    navigator.clipboard.writeText(v).then(() => notifySuccess(toast, { title: `${label} copiado` }));
+    void copyText(v, { successMessage: `${label} copiado`, method: "ContactActions.copy" });
   };
 
   return (
