@@ -145,6 +145,9 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
 
   const target = await resolveTarget(supabase, body);
   if (!target.ok) return json(target.body, target.status);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, target.data.organizationId))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const email = await resolveEmail(supabase, target.data.clienteId, body.email);
   if (!email) return json({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);
