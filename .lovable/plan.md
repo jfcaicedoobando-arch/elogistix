@@ -1,67 +1,79 @@
-## Diagnóstico
+# Auditoría: detectar bugs tipo "auto-borrado" en RPCs
 
-Alan editó el embarque **ELIMP00245** tres veces (20:37, 20:38, 20:39). Cada intento agregó un concepto de **Demoras** (venta 360 USD / costo 320 USD). La bitácora dice "agregado" cada vez, pero al volver a abrir el embarque los nuevos conceptos no aparecen.
+## Contexto
 
-Consultando la BD sin filtros:
+El bug de ELIMP00245 no fue un typo: fue un **patrón peligroso** repetido. La receta del error es siempre igual:
 
-```
-conceptos_venta  Demoras 360  created_at = 20:37:16.778  deleted_at = 20:37:16.778
-conceptos_venta  Demoras 360  created_at = 20:38:16.437  deleted_at = 20:38:16.437
-conceptos_venta  Demoras 360  created_at = 20:39:49.245  deleted_at = 20:39:49.245
-conceptos_costo  Demoras 320  created_at = 20:37:16.778  deleted_at = 20:37:16.778
-... (mismo patrón)
-```
+1. Un RPC recibe un payload con una lista de hijos (conceptos, documentos, contactos, líneas, etc.).
+2. Al inicio arma un array `v_incoming_ids` con los `id` que vienen en el payload.
+3. Recorre el payload haciendo `UPDATE` a los existentes e `INSERT` a los nuevos (que generan un id fresco).
+4. Al final hace un soft-delete o `DELETE` con `WHERE NOT (id = ANY(v_incoming_ids))`.
+5. Los recién insertados nunca se agregan a `v_incoming_ids` → se auto-borran.
 
-`created_at == deleted_at` en cada fila: el mismo RPC que las inserta las marca como borradas en la misma llamada.
+Analogía: la lista de invitados se cierra antes de que lleguen los invitados nuevos, así que el guardia los echa apenas entran. Este mismo patrón puede estar en cualquier RPC que "sincronice" una tabla hija desde un payload.
 
-## Causa raíz
+## Alcance de la auditoría
 
-RPC `public.actualizar_embarque_completo`:
+Sólo lectura. No modifica código. Produce un reporte en `reports/rpc-sync-audit.md` con findings clasificados por severidad.
 
-1. Arma `v_incoming_venta_ids` / `v_incoming_costo_ids` **solo con los `id` que vienen en el payload**.
-2. Recorre el payload: los conceptos con `id` se hacen UPDATE; los que no traen `id` (nuevos) se INSERT y guardan su id en `v_new_id`.
-3. Al final ejecuta un soft-delete: `UPDATE ... SET deleted_at = now() WHERE ... AND NOT (id = ANY(v_incoming_venta_ids))`.
+## Qué revisa el auditor
 
-Como el `id` recién generado por el INSERT **nunca se agrega a `v_incoming_*_ids`**, el soft-delete al final lo alcanza y lo mata en la misma transacción. Analogía: firmas un contrato nuevo y en el último párrafo dice "cualquier contrato que no esté en esta lista queda cancelado" — pero la lista se hizo antes de firmar, así que tu propio contrato queda cancelado.
+### A. Escaneo estático de migraciones SQL
 
-Los conceptos "Flete Marítimo" y "Cargos en Destino" originales sí sobreviven porque están facturados (`estado_facturacion='facturado'`, `proforma_id` no nulo) y el soft-delete solo toca los `pendiente` sin proforma. Por eso el bug pasó desapercibido: solo se manifiesta al **agregar conceptos nuevos** (que es exactamente lo que hacía Alan con Demoras).
+Recorre `supabase/migrations/**/*.sql` buscando funciones (`CREATE OR REPLACE FUNCTION`) que combinen las tres señales del patrón:
 
-## Cambios
+- **Señal 1 — Captura previa de ids**: declaración de un array (`uuid[]`, `bigint[]`) tipo `v_incoming_*`, `v_keep_*`, `v_existing_*`, poblado con `array_agg(...->>'id')` o `SELECT array_agg` sobre el payload JSON antes del loop.
+- **Señal 2 — Insert con id nuevo**: dentro del cuerpo aparece `INSERT INTO ... RETURNING id INTO v_new_id` (o equivalente) sin un `array_append(v_incoming_*, v_new_id)` inmediatamente después.
+- **Señal 3 — Borrado por complemento**: `UPDATE ... SET deleted_at = now() WHERE ... NOT (id = ANY(v_incoming_*))` o `DELETE FROM ... WHERE ... NOT IN (...)`.
 
-### 1. Migración: parchar el RPC
+Una función que cumple las 3 señales = **CRITICAL**. Cumple 2 = **HIGH** (revisión manual). Cumple 1 = ignorar.
 
-Reescribir `actualizar_embarque_completo` para que el INSERT de conceptos nuevos agregue el id generado al array de "sobrevivientes" antes del soft-delete. En pseudo-SQL:
+### B. Escaneo del catálogo vivo
+
+Usa `supabase--read_query` sobre `pg_proc` para listar funciones `SECURITY DEFINER` en `public` cuyo cuerpo (`prosrc`) contenga a la vez `array_agg` + `RETURNING id` + (`deleted_at = now()` o `DELETE FROM`). Esto captura funciones que existen en producción aunque su migración original ya no sea legible (parches sucesivos).
+
+### C. Contraste con datos
+
+Para cada función sospechosa, query de verificación sobre las tablas hijas que toca:
 
 ```sql
--- rama INSERT venta
-INSERT INTO conceptos_venta (...) VALUES (...) RETURNING id INTO v_new_id;
-v_incoming_venta_ids := array_append(v_incoming_venta_ids, v_new_id);
-
--- rama INSERT costo (equivalente)
-INSERT INTO conceptos_costo (...) VALUES (...) RETURNING id INTO v_new_id;
-v_incoming_costo_ids := array_append(v_incoming_costo_ids, v_new_id);
+SELECT count(*) FROM <tabla_hija>
+WHERE deleted_at IS NOT NULL
+  AND deleted_at - created_at < interval '1 second';
 ```
 
-El resto del RPC queda intacto. Al ser SECURITY DEFINER + idempotency_claim, no hay riesgo de re-ejecutar migraciones anteriores.
+`created_at ≈ deleted_at` = huella exacta del bug. Si el conteo > 0, el finding sube a **CONFIRMED** y el reporte lista los `id` afectados para posible rescate.
 
-### 2. Rescatar los conceptos "Demoras" perdidos de ELIMP00245
+### D. Canario de regresión (pgtap)
 
-Alan hizo 3 intentos idénticos. Restaurar **solo el último** (20:39:49) poniendo `deleted_at = NULL` en las 2 filas de esa marca de tiempo (una en `conceptos_venta`, una en `conceptos_costo`). Descartar los 2 duplicados anteriores.
+Propone (no crea) un test genérico en `supabase/tests/rls/` que para cada RPC de sincronización:
+1. Cree una fila padre.
+2. Llame al RPC con un hijo sin `id`.
+3. Verifique `deleted_at IS NULL` en el hijo recién creado.
 
-### 3. CHANGELOG + APP_VERSION
+Este canario, una vez añadido, evita que el patrón vuelva por descuido.
 
-- Bump a `13.252.2` (patch).
-- Entrada breve: "Fix: nuevos conceptos de venta/costo agregados al editar un embarque se guardan correctamente (el RPC los borraba en la misma transacción)."
+## Entregable
 
-### 4. Test (opcional pero recomendado)
+`reports/rpc-sync-audit.md` con:
 
-Agregar un test SQL en `supabase/tests/rls/` o pgtap equivalente que:
-1. Cree un embarque.
-2. Llame `actualizar_embarque_completo` con un concepto sin `id`.
-3. Verifique que el concepto queda con `deleted_at IS NULL`.
+- Tabla de funciones auditadas (nombre, archivo, señales detectadas, severidad).
+- Sección **CONFIRMED** con filas huérfanas por tabla + snippets SQL de rescate.
+- Sección **HIGH** con funciones a revisar manualmente y por qué el heurístico no está 100% seguro.
+- Recomendación de patrón correcto (append al array tras cada INSERT) con un ejemplo tomado del fix de `actualizar_embarque_completo`.
 
-Esto es el "canario" que evita que el bug vuelva.
+## Fuera de alcance
+
+- No modifica RPCs (eso se decide después, viendo el reporte).
+- No restaura datos automáticamente (cada rescate se aprueba caso por caso).
+- No cubre bugs de concurrencia/locking; sólo el patrón de "lista cerrada antes de tiempo".
+
+## Detalles técnicos
+
+- Script nuevo: `scripts/audit-rpc-sync.ts` (CLI, sólo lectura). Reutiliza `scripts/lib/walk.ts` para recorrer migraciones.
+- Sin dependencias nuevas; regex + parseo ligero.
+- Corre local con `bun run audit:rpc-sync`. Opcional: agregar job en `.github/workflows` para que corra semanal (cron) — decidible después de ver el ruido.
 
 ## Resumen para el usuario
 
-El sistema tenía un error tipo "lista de invitados": al guardar el embarque, primero apuntaba qué conceptos debían quedarse (los que ya tenían identificador), luego creaba los nuevos, y al final borraba "todo lo que no estaba en la lista" — pero los recién creados nunca se agregaron a esa lista, así que se auto-borraban. Se corrige agregando cada concepto nuevo a la lista de sobrevivientes justo después de crearlo, y se restaura manualmente el último "Demoras" que Alan intentó guardar en el embarque 245.
+Igual que tenemos `audit:arch` y `audit:casts` que revisan estructura y tipos, este añadiría `audit:rpc-sync` que revisa una **receta específica de bug de base de datos**: RPCs que reciben una lista de hijos, insertan los nuevos, y al final borran "todo lo que no está en la lista" — olvidando que los recién creados tampoco están. El auditor busca esa receta en todas las migraciones y funciones vivas, y contrasta con datos reales (`created_at ≈ deleted_at`) para decir no sólo "esto se ve raro" sino "aquí hay 3 filas ya afectadas". El resultado es un reporte, no un cambio: tú decides qué parchar.
