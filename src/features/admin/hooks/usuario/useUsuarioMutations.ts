@@ -1,21 +1,16 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   createUserViaEdgeFunction,
   type CreateUserParams,
 } from "@/features/admin/services/usuario";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
 
 export function useCreateUser() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: (params: CreateUserParams) => createUserViaEdgeFunction(params),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
-      notifySuccess(undefined, { title: "Usuario creado e invitación enviada" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear usuario: ${error.message}`, error, method: "CREATE_USER" });
-    },
+    invalidate: queryKeys.usuarios.all,
+    successTitle: "Usuario creado e invitación enviada",
+    errorTitle: "Error al crear usuario",
+    errorMethod: "CREATE_USER",
   });
 }
