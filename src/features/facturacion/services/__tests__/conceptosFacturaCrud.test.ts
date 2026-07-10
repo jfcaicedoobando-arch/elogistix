@@ -24,7 +24,7 @@ describe("conceptosFacturaCrud", () => {
     const rows = [{ id: "c1", factura_id: "f1", descripcion: "X", cantidad: 1, precio_unitario: 100, total: 100, clave_sat: "81141601", moneda: "MXN", tipo_iva: "gravado_16", tasa_iva_aplicada: 0.16 }];
     mock.setTableResult("conceptos_factura", { data: rows, error: null });
     const out = await fetchConceptosFactura("f1");
-    expect(out).toEqual(rows);
+    expect(out).toEqual(rows.map((r) => ({ ...r, embarque_expediente: null })));
     const call = mock.tableCalls.find((c) => c.table === "conceptos_factura")!;
     expect(call.ops).toContain("select");
     expect(call.opArgs[call.ops.indexOf("eq")]).toEqual(["factura_id", "f1"]);
