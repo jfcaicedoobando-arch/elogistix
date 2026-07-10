@@ -4,6 +4,7 @@
  * actualización pre-timbrado del componente `DialogTimbrarFactura`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, run } from "@/lib/supabase/response";
 
 export interface ClienteFiscalRow {
   rfc: string | null;
@@ -13,13 +14,13 @@ export interface ClienteFiscalRow {
 }
 
 export async function fetchClienteFiscal(clienteId: string): Promise<ClienteFiscalRow | null> {
-  const { data, error } = await supabase
-    .from("clientes")
-    .select("rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
-    .eq("id", clienteId)
-    .maybeSingle();
-  if (error) throw error;
-  return (data ?? null) as ClienteFiscalRow | null;
+  return unwrap(
+    supabase
+      .from("clientes")
+      .select("rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
+      .eq("id", clienteId)
+      .maybeSingle(),
+  ) as Promise<ClienteFiscalRow | null>;
 }
 
 export interface DatosTimbradoPatch {
@@ -37,8 +38,7 @@ export async function actualizarDatosTimbradoFactura(
   facturaId: string,
   patch: DatosTimbradoPatch,
 ): Promise<void> {
-  const { error } = await supabase.from("facturas").update(patch).eq("id", facturaId);
-  if (error) throw error;
+  await run(supabase.from("facturas").update(patch).eq("id", facturaId));
 }
 
 /**
@@ -59,10 +59,9 @@ export interface DefaultsFacturacionCliente {
 export async function fetchDefaultsFacturacionCliente(
   clienteId: string,
 ): Promise<DefaultsFacturacionCliente | null> {
-  const { data, error } = await supabase.rpc("obtener_defaults_facturacion_cliente", {
-    p_cliente_id: clienteId,
-  });
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.rpc("obtener_defaults_facturacion_cliente", { p_cliente_id: clienteId }),
+  );
   const row = Array.isArray(data) ? data[0] : data;
   return (row ?? null) as DefaultsFacturacionCliente | null;
 }
@@ -76,19 +75,16 @@ export async function guardarDefaultsTimbradoCliente(
   clienteId: string,
   patch: { uso_cfdi_default?: string; forma_pago_default?: string; metodo_pago_default?: string },
 ): Promise<void> {
-  const { error } = await supabase.from("clientes").update(patch).eq("id", clienteId);
-  if (error) throw error;
+  await run(supabase.from("clientes").update(patch).eq("id", clienteId));
 }
 
 export async function guardarDefaultsCcCliente(
   clienteId: string,
   ccEmails: string[],
 ): Promise<void> {
-  const { error } = await supabase
-    .from("clientes")
-    .update({ email_cc_default: ccEmails })
-    .eq("id", clienteId);
-  if (error) throw error;
+  await run(
+    supabase.from("clientes").update({ email_cc_default: ccEmails }).eq("id", clienteId),
+  );
 }
 
 /**
@@ -99,9 +95,10 @@ export async function guardarDefaultsDestinatariosCliente(
   clienteId: string,
   emails: string[],
 ): Promise<void> {
-  const { error } = await supabase
-    .from("clientes")
-    .update({ email_destinatarios_default: emails })
-    .eq("id", clienteId);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("clientes")
+      .update({ email_destinatarios_default: emails })
+      .eq("id", clienteId),
+  );
 }

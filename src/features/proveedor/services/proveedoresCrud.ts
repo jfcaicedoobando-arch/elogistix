@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { fromDb } from "@/lib/supabase/cast";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import { ProveedorDuplicadoError, findProveedorByRfcEnOrg } from "./duplicadoRfc";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
@@ -98,36 +99,26 @@ export async function fetchProveedoresPaginados(
 export interface ProveedorLite { id: string; nombre: string }
 
 export async function fetchProveedoresLite(organizationId?: string | null): Promise<ProveedorLite[]> {
-  let query = supabase
-    .from("proveedores")
-    .select("id, nombre");
+  let query = supabase.from("proveedores").select("id, nombre");
   if (organizationId) query = query.eq("organization_id", organizationId);
-
-  const { data, error } = await query
-    .order("nombre", { ascending: true })
-    .limit(500);
-  if (error) throw error;
-  return (data ?? []) as ProveedorLite[];
+  return unwrapOr(query.order("nombre", { ascending: true }).limit(500), []) as Promise<ProveedorLite[]>;
 }
 
 export async function findProveedorByRfc(rfc: string): Promise<{ id: string; nombre: string } | null> {
   if (!rfc) return null;
-  const { data, error } = await supabase
-    .from("proveedores")
-    .select("id, nombre")
-    .eq("rfc", rfc.trim().toUpperCase())
-    .maybeSingle();
-  if (error) throw error;
-  return data ?? null;
+  return unwrap(
+    supabase
+      .from("proveedores")
+      .select("id, nombre")
+      .eq("rfc", rfc.trim().toUpperCase())
+      .maybeSingle(),
+  ) as Promise<{ id: string; nombre: string } | null>;
 }
 
 export async function fetchProveedor(id: string): Promise<Proveedor | null> {
-  const { data, error } = await supabase
-    .from("proveedores")
-    .select(PROVEEDOR_DETAIL_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.from("proveedores").select(PROVEEDOR_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
+  );
   return fromDb<Proveedor | null>(data);
 }
 
@@ -148,11 +139,9 @@ export async function updateProveedor(
   id: string,
   changes: TablesUpdate<"proveedores">,
 ): Promise<void> {
-  const { error } = await supabase.from("proveedores").update(changes).eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("proveedores").update(changes).eq("id", id));
 }
 
 export async function deleteProveedor(id: string): Promise<void> {
-  const { error } = await supabase.from("proveedores").delete().eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("proveedores").delete().eq("id", id));
 }

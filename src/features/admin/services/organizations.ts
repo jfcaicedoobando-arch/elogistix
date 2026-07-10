@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 
 export interface OrgRow {
   id: string;
@@ -14,53 +15,36 @@ export interface OrgRow {
 }
 
 export async function fetchAdminOrganizations(): Promise<OrgRow[]> {
-  const { data, error } = await supabase
-    .from("organizations")
-    .select("*")
-    .order("nombre");
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.from("organizations").select("*").order("nombre"),
+  );
   return fromDb<OrgRow[]>(data);
 }
 
 export async function fetchOrganizationsList() {
-  const { data, error } = await supabase
-    .from("organizations")
-    .select("id, nombre")
-    .order("nombre");
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase.from("organizations").select("id, nombre").order("nombre"),
+    [],
+  );
 }
 
 export async function createOrganization(input: { nombre: string; rfc: string }): Promise<void> {
-  const { error } = await supabase.from("organizations").insert(input);
-  if (error) throw error;
+  await run(supabase.from("organizations").insert(input));
 }
 
 export async function fetchAdminOrganization(id: string) {
-  const { data, error } = await supabase
-    .from("organizations")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase.from("organizations").select("*").eq("id", id).single(),
+  );
 }
 
 export async function updateAdminOrganization(
   id: string,
   payload: { nombre: string; rfc: string; plan: string },
 ): Promise<void> {
-  const { error } = await supabase
-    .from("organizations")
-    .update(payload)
-    .eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("organizations").update(payload).eq("id", id));
 }
 
 export async function establecerOrganizacionActiva(id: string, activo: boolean): Promise<void> {
-  const { error } = await supabase
-    .from("organizations")
-    .update({ activo })
-    .eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("organizations").update({ activo }).eq("id", id));
 }

@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.240.0] - 2026-07-10
+- **Refactor · DRY Lote 8a.2b — Barrido de services con `unwrap/unwrapOr/run`**:
+  - Services migrados: `proveedor/proveedoresCrud` (10 sitios), `facturacion/datosFiscalesCliente` (6), `embarques/mutations` (7), `crm/oportunidades` (6), `crm/etapas` (6), `cotizacion/services/queries` (6), `comisiones/vendedoras` (6), `cliente/services/crud` (6), `admin/services/organizations` (6), `presupuesto/services/categorias` (5), `costeo/services/agentes` (5), `admin/services/members` (5).
+  - Total: **~78 sitios adicionales** de boilerplate `if (error) throw error` colapsados. ~150 líneas eliminadas en este slice; acumulado del Lote 8a.2 ~240 líneas.
+  - Sin cambios funcionales: se preserva la lógica especial de `insertProveedor` (código `23505` → `ProveedorDuplicadoError`) y las validaciones `parseOrThrow` de cliente/embarque.
+
 ## [13.239.0] - 2026-07-10
 - **Refactor · DRY Lote 8a.2 — `handleSupabaseResponse` helpers**:
   - Nuevo módulo `src/lib/supabase/response.ts` con `unwrap`, `unwrapOr` y `run`. Colapsa el patrón `const { data, error } = await ...; if (error) throw error; return data` (aparece ~400 veces en `src/features`).

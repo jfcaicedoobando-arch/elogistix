@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 
 export type CategoriaPresupuesto = Tables<"presupuesto_categorias">;
 
@@ -13,39 +14,29 @@ export async function fetchCategorias(activas = true): Promise<CategoriaPresupue
     .order("orden", { ascending: true })
     .order("nombre", { ascending: true });
   if (activas) q = q.eq("activa", true);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as CategoriaPresupuesto[];
+  return unwrapOr(q, []) as Promise<CategoriaPresupuesto[]>;
 }
 
 export async function crearCategoria(payload: TablesInsert<"presupuesto_categorias">) {
-  const { data, error } = await supabase
-    .from("presupuesto_categorias")
-    .insert(payload)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase.from("presupuesto_categorias").insert(payload).select().single(),
+  );
 }
 
 export async function actualizarCategoria(
   id: string, patch: TablesUpdate<"presupuesto_categorias">,
 ) {
-  const { data, error } = await supabase
-    .from("presupuesto_categorias")
-    .update(patch).eq("id", id).select().single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase.from("presupuesto_categorias").update(patch).eq("id", id).select().single(),
+  );
 }
 
 export async function eliminarCategoria(id: string) {
-  const { error } = await supabase.from("presupuesto_categorias").delete().eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("presupuesto_categorias").delete().eq("id", id));
 }
 
 export async function seedCategoriasDefault(organizationId: string): Promise<void> {
-  const { error } = await supabase.rpc("seed_presupuesto_categorias", {
-    p_organization_id: organizationId,
-  });
-  if (error) throw error;
+  await run(
+    supabase.rpc("seed_presupuesto_categorias", { p_organization_id: organizationId }),
+  );
 }

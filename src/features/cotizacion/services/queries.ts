@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { fromDb } from "@/lib/supabase/cast";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 // ─── Columnas reutilizables ─────────────────────────────────────────────────
 // `cotizacion_costos(count)` agrega el conteo de filas relacionadas, que
@@ -19,15 +20,17 @@ export const COTIZACION_ACEPTADA_COLUMNS =
 export async function generarFolioCotizacion(): Promise<string> {
   const anio = new Date().getFullYear();
   const prefijo = `COT-${anio}-`;
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select("folio")
-    .like("folio", `${prefijo}%`)
-    .order("folio", { ascending: false })
-    .limit(1);
-  if (error) throw error;
+  const data = await unwrapOr(
+    supabase
+      .from("cotizaciones")
+      .select("folio")
+      .like("folio", `${prefijo}%`)
+      .order("folio", { ascending: false })
+      .limit(1),
+    [] as Array<{ folio: string }>,
+  );
   let siguiente = 1;
-  if (data && data.length > 0) {
+  if (data.length > 0) {
     const numero = parseInt(data[0].folio.replace(prefijo, ""), 10);
     if (!isNaN(numero)) siguiente = numero + 1;
   }
@@ -41,8 +44,7 @@ export async function fetchCotizaciones(organizationId: string | null) {
     .select(COTIZACION_LIST_COLUMNS)
     .order("created_at", { ascending: false });
   if (organizationId) query = query.eq("organization_id", organizationId);
-  const { data, error } = await query;
-  if (error) throw error;
+  const data = await unwrap(query);
   // Aplanamos `cotizacion_costos: [{count: N}]` → `cotizacion_costos_count: N`
   // para consumir más cómodo en el listado.
   type RawRow = Record<string, unknown> & {
@@ -67,39 +69,32 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
     .eq("estado", "Aceptada")
     .order("created_at", { ascending: false });
   if (organizationId) query = query.eq("organization_id", organizationId);
-  const { data, error } = await query;
-  if (error) throw error;
+  const data = await unwrap(query);
   return fromDb<CotizacionRow[]>(data);
 }
 
 export async function fetchCotizacionById(id: string): Promise<CotizacionRow> {
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select("*")
-    .eq("id", id)
-    .single();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.from("cotizaciones").select("*").eq("id", id).single(),
+  );
   return fromDb<CotizacionRow>(data);
 }
 
 export async function fetchEmbarquesVinculados(cotizacionId: string) {
-  const { data, error } = await supabase
-    .from("embarques")
-    .select("id, expediente, estado, created_at")
-    .eq("cotizacion_id", cotizacionId)
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("embarques")
+      .select("id, expediente, estado, created_at")
+      .eq("cotizacion_id", cotizacionId)
+      .order("created_at", { ascending: true }),
+    [],
+  );
 }
 
 /** Folio liviano de una cotización (para chips/links en otras vistas). */
 export async function fetchCotizacionFolio(cotizacionId: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select("folio")
-    .eq("id", cotizacionId)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.folio ?? null;
+  const data = await unwrap(
+    supabase.from("cotizaciones").select("folio").eq("id", cotizacionId).maybeSingle(),
+  );
+  return (data as { folio: string } | null)?.folio ?? null;
 }
-

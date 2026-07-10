@@ -2,6 +2,7 @@
  * Servicio: condiciones por naviera y tabulador escalonado de demoras.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type {
   CosteoNavieraCondicion,
   DemorasTramo,
@@ -18,16 +19,18 @@ export interface NavieraCondicionConNombre extends CosteoNavieraCondicion {
 export async function fetchCondicionesNaviera(
   organizationId: string,
 ): Promise<NavieraCondicionConNombre[]> {
-  const { data, error } = await supabase
-    .from("costeo_navieras_condiciones")
-    .select("*, naviera:navieras(name, code), proveedor:proveedores(nombre)")
-    .eq("organization_id", organizationId);
-  if (error) throw error;
   type Row = CosteoNavieraCondicion & {
     naviera: { name: string; code: string } | null;
     proveedor: { nombre: string } | null;
   };
-  return ((data ?? []) as Row[]).map((r) => ({
+  const data = await unwrapOr(
+    supabase
+      .from("costeo_navieras_condiciones")
+      .select("*, naviera:navieras(name, code), proveedor:proveedores(nombre)")
+      .eq("organization_id", organizationId),
+    [] as Row[],
+  );
+  return (data as Row[]).map((r) => ({
     ...r,
     naviera_nombre: r.naviera?.name ?? "",
     naviera_code: r.naviera?.code ?? "",
@@ -54,41 +57,28 @@ export async function upsertCondicionNaviera(
     moneda_demoras: input.moneda_demoras,
     notas: input.notas,
   };
-  if (id) {
-    const { data, error } = await supabase
-      .from("costeo_navieras_condiciones")
-      .update(payload)
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) throw error;
-    return data as CosteoNavieraCondicion;
-  }
-  const { data, error } = await supabase
-    .from("costeo_navieras_condiciones")
-    .insert(payload)
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data as CosteoNavieraCondicion;
+  const builder = id
+    ? supabase.from("costeo_navieras_condiciones").update(payload).eq("id", id).select("*").single()
+    : supabase.from("costeo_navieras_condiciones").insert(payload).select("*").single();
+  return unwrap(builder) as Promise<CosteoNavieraCondicion>;
 }
 
 export async function deleteCondicionNaviera(id: string): Promise<void> {
-  const { error } = await supabase.from("costeo_navieras_condiciones").delete().eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("costeo_navieras_condiciones").delete().eq("id", id));
 }
 
 export async function fetchDemorasTramos(
   navieraCondicionId: string,
 ): Promise<DemorasTramo[]> {
-  const { data, error } = await supabase
-    .from("costeo_naviera_demoras_tarifa")
-    .select("*")
-    .eq("naviera_condicion_id", navieraCondicionId)
-    .order("tipo_contenedor_id")
-    .order("desde_dia");
-  if (error) throw error;
-  return (data ?? []) as DemorasTramo[];
+  return unwrapOr(
+    supabase
+      .from("costeo_naviera_demoras_tarifa")
+      .select("*")
+      .eq("naviera_condicion_id", navieraCondicionId)
+      .order("tipo_contenedor_id")
+      .order("desde_dia"),
+    [] as DemorasTramo[],
+  ) as Promise<DemorasTramo[]>;
 }
 
 /**
@@ -102,12 +92,13 @@ export async function replaceDemorasTramos(
   tipoContenedorId: string,
   tramos: DemorasTramoInput[],
 ): Promise<void> {
-  const { error: delErr } = await supabase
-    .from("costeo_naviera_demoras_tarifa")
-    .delete()
-    .eq("naviera_condicion_id", navieraCondicionId)
-    .eq("tipo_contenedor_id", tipoContenedorId);
-  if (delErr) throw delErr;
+  await run(
+    supabase
+      .from("costeo_naviera_demoras_tarifa")
+      .delete()
+      .eq("naviera_condicion_id", navieraCondicionId)
+      .eq("tipo_contenedor_id", tipoContenedorId),
+  );
   if (tramos.length === 0) return;
   const rows = tramos.map((t) => ({
     naviera_condicion_id: navieraCondicionId,
@@ -117,8 +108,7 @@ export async function replaceDemorasTramos(
     monto_por_dia: t.monto_por_dia,
     moneda: t.moneda,
   }));
-  const { error } = await supabase.from("costeo_naviera_demoras_tarifa").insert(rows);
-  if (error) throw error;
+  await run(supabase.from("costeo_naviera_demoras_tarifa").insert(rows));
 }
 
 export interface TipoContenedorOpcion {
@@ -131,21 +121,19 @@ export interface TipoContenedorOpcion {
 const CODES_DEMORAS = ["20DRY", "40DRY", "40HC", "20RF", "40HCRF"];
 
 export async function fetchTiposContenedorParaDemoras(): Promise<TipoContenedorOpcion[]> {
-  const { data, error } = await supabase
-    .from("tipos_contenedor")
-    .select("id, code, name")
-    .in("code", CODES_DEMORAS)
-    .order("code");
-  if (error) throw error;
-  return (data ?? []) as TipoContenedorOpcion[];
+  return unwrapOr(
+    supabase
+      .from("tipos_contenedor")
+      .select("id, code, name")
+      .in("code", CODES_DEMORAS)
+      .order("code"),
+    [] as TipoContenedorOpcion[],
+  ) as Promise<TipoContenedorOpcion[]>;
 }
 
 export async function fetchNavierasCatalogo(): Promise<{ id: string; name: string; code: string }[]> {
-  const { data, error } = await supabase
-    .from("navieras")
-    .select("id, name, code")
-    .eq("activo", true)
-    .order("name");
-  if (error) throw error;
-  return (data ?? []) as { id: string; name: string; code: string }[];
+  return unwrapOr(
+    supabase.from("navieras").select("id, name, code").eq("activo", true).order("name"),
+    [] as { id: string; name: string; code: string }[],
+  ) as Promise<{ id: string; name: string; code: string }[]>;
 }

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import {
   PORTAL_EMBARQUE_LIST_COLUMNS,
   PORTAL_EMBARQUE_DETAIL_COLUMNS,
@@ -23,46 +24,49 @@ const PORTAL_RELATED_MAX = 200;
 
 export async function fetchPortalEmbarques(clienteIds: string[]) {
   if (!clienteIds.length) return [];
-  const { data, error } = await supabase
-    .from("embarques")
-    .select(PORTAL_EMBARQUE_LIST_COLUMNS)
-    .in("cliente_id", clienteIds)
-    .order("created_at", { ascending: false })
-    .limit(PORTAL_LIST_MAX);
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("embarques")
+      .select(PORTAL_EMBARQUE_LIST_COLUMNS)
+      .in("cliente_id", clienteIds)
+      .order("created_at", { ascending: false })
+      .limit(PORTAL_LIST_MAX),
+    [],
+  );
 }
 
 export async function fetchPortalEmbarque(id: string) {
-  const { data, error } = await supabase
-    .from("embarques")
-    .select(PORTAL_EMBARQUE_DETAIL_COLUMNS)
-    .eq("id", id)
-    .single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase
+      .from("embarques")
+      .select(PORTAL_EMBARQUE_DETAIL_COLUMNS)
+      .eq("id", id)
+      .single(),
+  );
 }
 
 export async function fetchPortalEventos(embarqueId: string) {
-  const { data, error } = await supabase
-    .from("eventos_embarque")
-    .select(PORTAL_EVENTO_COLUMNS)
-    .eq("embarque_id", embarqueId)
-    .order("fecha", { ascending: false })
-    .limit(PORTAL_RELATED_MAX);
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("eventos_embarque")
+      .select(PORTAL_EVENTO_COLUMNS)
+      .eq("embarque_id", embarqueId)
+      .order("fecha", { ascending: false })
+      .limit(PORTAL_RELATED_MAX),
+    [],
+  );
 }
 
 export async function fetchPortalDocumentos(embarqueId: string) {
-  const { data, error } = await supabase
-    .from("documentos_embarque")
-    .select(PORTAL_DOCUMENTO_COLUMNS)
-    .eq("embarque_id", embarqueId)
-    .order("created_at", { ascending: true })
-    .limit(PORTAL_RELATED_MAX);
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("documentos_embarque")
+      .select(PORTAL_DOCUMENTO_COLUMNS)
+      .eq("embarque_id", embarqueId)
+      .order("created_at", { ascending: true })
+      .limit(PORTAL_RELATED_MAX),
+    [],
+  );
 }
 
 // Estados visibles para clientes en el portal. Borrador, Vencida y Cancelada se
@@ -71,15 +75,16 @@ const PORTAL_COTIZACION_ESTADOS_VISIBLES = ["Enviada", "Aceptada", "Rechazada", 
 
 export async function fetchPortalCotizaciones(clienteIds: string[]) {
   if (!clienteIds.length) return [];
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select(PORTAL_COTIZACION_LIST_COLUMNS)
-    .in("cliente_id", clienteIds)
-    .in("estado", PORTAL_COTIZACION_ESTADOS_VISIBLES)
-    .order("created_at", { ascending: false })
-    .limit(PORTAL_LIST_MAX);
-  if (error) throw error;
-  const cotizaciones = data ?? [];
+  const cotizaciones = await unwrapOr(
+    supabase
+      .from("cotizaciones")
+      .select(PORTAL_COTIZACION_LIST_COLUMNS)
+      .in("cliente_id", clienteIds)
+      .in("estado", PORTAL_COTIZACION_ESTADOS_VISIBLES)
+      .order("created_at", { ascending: false })
+      .limit(PORTAL_LIST_MAX),
+    [],
+  );
 
   // Resolver expediente del embarque vinculado (cuando exista) en una segunda query batch.
   const embarqueIds = cotizaciones
@@ -88,12 +93,11 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
   if (embarqueIds.length === 0) {
     return cotizaciones.map((c) => ({ ...c, embarque_expediente: null as string | null }));
   }
-  const { data: embs, error: errEmb } = await supabase
-    .from("embarques")
-    .select("id, expediente")
-    .in("id", embarqueIds);
-  if (errEmb) throw errEmb;
-  const expById = new Map((embs ?? []).map((e) => [e.id, e.expediente]));
+  const embs = await unwrapOr(
+    supabase.from("embarques").select("id, expediente").in("id", embarqueIds),
+    [],
+  );
+  const expById = new Map(embs.map((e) => [e.id, e.expediente]));
   return cotizaciones.map((c) => ({
     ...c,
     embarque_expediente: c.embarque_id ? expById.get(c.embarque_id) ?? null : null,
@@ -104,12 +108,9 @@ export async function fetchPortalCotizacion(id: string) {
   // Fetch principal sin join embebido — un join a embarques con RLS distinta
   // puede hacer que PostgREST devuelva 0 filas y .single() lance PGRST116,
   // mostrando "Cotización no encontrada" aunque el cliente sí tenga acceso.
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.from("cotizaciones").select("*").eq("id", id).maybeSingle(),
+  );
   if (!data) return null;
 
   // Expediente del embarque vinculado (opcional, tolera fallo de RLS).
@@ -127,53 +128,54 @@ export async function fetchPortalCotizacion(id: string) {
 
 export async function fetchPortalFacturas(clienteIds: string[]) {
   if (!clienteIds.length) return [];
-  const { data, error } = await supabase
-    .from("facturas")
-    .select(PORTAL_FACTURA_LIST_COLUMNS)
-    .in("cliente_id", clienteIds)
-    .order("fecha_emision", { ascending: false })
-    .limit(PORTAL_LIST_MAX);
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("facturas")
+      .select(PORTAL_FACTURA_LIST_COLUMNS)
+      .in("cliente_id", clienteIds)
+      .order("fecha_emision", { ascending: false })
+      .limit(PORTAL_LIST_MAX),
+    [],
+  );
 }
 
 export async function fetchPortalFactura(id: string) {
-  const { data, error } = await supabase
-    .from("facturas")
-    .select(PORTAL_FACTURA_DETAIL_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase
+      .from("facturas")
+      .select(PORTAL_FACTURA_DETAIL_COLUMNS)
+      .eq("id", id)
+      .maybeSingle(),
+  );
 }
 
 export async function fetchPortalPagosFactura(facturaId: string) {
-  const { data, error } = await supabase
-    .from("pagos_factura")
-    .select(PORTAL_PAGO_FACTURA_COLUMNS)
-    .eq("factura_id", facturaId)
-    .order("fecha_pago", { ascending: false })
-    .limit(PORTAL_RELATED_MAX);
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("pagos_factura")
+      .select(PORTAL_PAGO_FACTURA_COLUMNS)
+      .eq("factura_id", facturaId)
+      .order("fecha_pago", { ascending: false })
+      .limit(PORTAL_RELATED_MAX),
+    [],
+  );
 }
 
 export async function fetchPortalClientUsers() {
-  const { data, error } = await supabase.from("client_users").select("*").limit(PORTAL_LIST_MAX);
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(supabase.from("client_users").select("*").limit(PORTAL_LIST_MAX), []);
 }
 
 export async function fetchPortalClienteName(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data, error } = await supabase
-    .from("client_users")
-    .select("cliente_id, clientes(nombre)")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("client_users")
+      .select("cliente_id, clientes(nombre)")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle(),
+  );
   nombreNullableSchema.parse(data?.clientes ?? null); // valida shape en runtime
   const clientes = fromDb<{ nombre: string } | null>(data?.clientes);
   return clientes?.nombre ?? null;
@@ -182,13 +184,14 @@ export async function fetchPortalClienteName(): Promise<string | null> {
 export async function fetchPortalOrgName(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data, error } = await supabase
-    .from("client_users")
-    .select("organizations(nombre)")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("client_users")
+      .select("organizations(nombre)")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle(),
+  );
   nombreNullableSchema.parse(data?.organizations ?? null); // valida shape en runtime
   const org = fromDb<{ nombre: string } | null>(data?.organizations);
   return org?.nombre ?? null;
