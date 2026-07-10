@@ -1,114 +1,76 @@
-## Objetivo
+# Auditoría DRY — Estimación consolidada
 
-Cerrar los 3 huecos de trazabilidad y propagación cuando **N proformas de distintos embarques del mismo cliente** se fusionan en una sola factura:
+Tres sub-agentes auditaron capas independientes. Total estimado: **~1,547 líneas eliminables** en 17 grupos de duplicación.
 
-1. **Trazabilidad línea → embarque** en la factura.
-2. **Cabecera multi-embarque** (todos los embarques ligados, no solo el primero).
-3. **Propagación de pago** de la factura hacia cada embarque involucrado.
+## Estimación agregada
 
-Sin romper el flujo actual (proforma única sigue funcionando igual).
 
----
+| Capa                       | Grupos | Líneas eliminables |
+| -------------------------- | ------ | ------------------ |
+| Hooks & Services (datos)   | 4      | ~870               |
+| Components & Pages (UI)    | 5      | ~484               |
+| Lib / PDF / Edge Functions | 8      | ~193               |
+| **TOTAL**                  | **17** | **~1,547**         |
 
-## Cambios de base de datos (una sola migración)
 
-### A. Trazabilidad línea → embarque
-Agregar a `public.conceptos_factura`:
-- `embarque_id uuid REFERENCES embarques(id)` — opcional (NULL para conceptos manuales o consolidados MXN sin embarque puntual).
-- `proforma_id_origen uuid REFERENCES proformas(id) ON DELETE SET NULL` — proforma de la que salió la línea.
-- Índice `(factura_id, embarque_id)`.
+> Analogía: es como reemplazar 17 recetas de cocina casi idénticas por 17 plantillas reutilizables — el sabor final no cambia, pero el recetario pesa menos y es más fácil de mantener.
 
-### B. Cabecera multi-embarque
-Nueva tabla puente `public.factura_embarques`:
-- `factura_id uuid NOT NULL REFERENCES facturas(id) ON DELETE CASCADE`
-- `embarque_id uuid NOT NULL REFERENCES embarques(id)`
-- `organization_id uuid NOT NULL`
-- PK compuesto `(factura_id, embarque_id)`.
-- RLS + GRANTs estándar (authenticated CRUD via `has_org_access`, service_role ALL).
-- Conservamos `facturas.embarque_id` como "embarque principal" (retrocompatibilidad con listados y filtros existentes).
+## Hallazgos por lote
 
-### C. Propagación de pago
-Nueva columna en `public.embarques`:
-- `cobro_cliente_status text NOT NULL DEFAULT 'pendiente'` con CHECK en `('pendiente','parcial','pagado')`.
-- `cobro_cliente_actualizado_at timestamptz`.
+### Lote 8a — Hooks y Services (~870 líneas, mayor impacto)
 
-**No** tocamos el enum `estado_embarque` (es operativo: En Tránsito, Entregado, EIR…). El cobro es una dimensión independiente y así lo mantenemos.
+1. **G1 · Mutaciones con toast+invalidate repetidos** (~350 líneas). >30 ocurrencias con el mismo `onSuccess`/`onError`. Abstracción: `useMutationWithFeedback` en `src/hooks/shared/`.
+  - `useNavieras.ts`, `usePuertos.ts`, `useOportunidades.ts`, `useTesoreriaMovimientos.ts`, `useOrgMembersMutations.ts`, `useUsuarioMutations.ts`, entre otros.
+2. **G3 · Boilerplate `if (error) throw error` en services** (~220 líneas). Helper `handleSupabaseResponse()` o `throwOnError()`.
+3. **G2 · Catálogos simples con misma tríada `use / useAll / useAdmin**` (~180 líneas). Hook genérico `useSimpleCatalog(entityKey, services)`.
+4. **G4 · Listados paginados manuales** (~120 líneas). Migrar a `useServerPagedList` existente (`useOportunidades`, `leads/queries`, `useAppLogs`, `useBitacora`).
 
-### D. Trigger `trg_facturas_estado_a_embarques`
-Trigger `AFTER UPDATE OF estado ON facturas`:
-- Cuando `NEW.estado IN ('Pagada','Parcialmente pagada','Cancelada')` y cambió, recalcula el estado de cobro de cada embarque de `factura_embarques` así:
-  - Para cada embarque, mira **todas sus facturas no canceladas** vía `factura_embarques`.
-  - Si todas están `Pagada` → `pagado`.
-  - Si alguna está `Pagada` o `Parcialmente pagada` → `parcial`.
-  - Si ninguna → `pendiente`.
-- Actualiza `cobro_cliente_status` + timestamp.
+### Lote 8b — Components y Pages (~484 líneas)
 
-### E. RPC `convertir_proformas_a_factura` (actualización)
-- Al hacer `INSERT INTO conceptos_factura`, poblar `embarque_id` y `proforma_id_origen` desde la proforma origen de cada línea (join a `conceptos_venta.proforma_id → proformas.embarque_id`).
-- Para proformas **consolidadas** (`proforma_conceptos_consolidados`), guardar `embarque_id = NULL` pero sí `proforma_id_origen`.
-- Después del `INSERT` de la factura, poblar `factura_embarques` con el `DISTINCT embarque_id` de las proformas seleccionadas.
-- La cabecera `facturas.embarque_id` sigue guardando `v_first.embarque_id` como principal.
+5. **KpiCard duplicado** en `operaciones/` y `embarques/pnl/` (~111 líneas). Fusionar en `src/components/shared/KpiCard.tsx` (incluir tipografía adaptativa).
+6. **Filtros mobile del portal casi idénticos** (~150 líneas). Consolidar vía `MobileFiltersSheet` con `children`.
+7. **Bloques fiscales RFC/CP/Régimen/Dirección** en cliente, proveedor y factura manual (~120 líneas). Crear `FiscalAddressFields` + `RegimenFiscalSelect` en `src/features/fiscal/components/`.
+8. **Wrappers innecesarios sobre ConfirmActionDialog** y `AlertDialog` manual en `DialogEliminarEmbarque` (~58 líneas).
+9. **Columnas Folio/Expediente/Cliente reconstruidas manualmente** (~45 líneas). Extender `columnBuilders.tsx`.
 
-### F. Backfill
-En la misma migración: poblar `factura_embarques` con `(id, embarque_id)` de facturas existentes que tengan `embarque_id NOT NULL`, para que la propagación funcione retroactivamente.
+### Lote 8c — Lib, PDF y Edge Functions (~193 líneas)
 
----
+10. **Edge functions con `corsHeaders`/`OPTIONS`/`new Response(JSON…)` inline** (~85 líneas). Migrar a `_shared/response.ts` + `_shared/cors.ts`.
+11. **Headers de reportes PDF** (`Cartera`, `EERR`, `Ejecutivo`, `Tesorería`, `Presupuesto`) (~35 líneas). Crear `ReportHeader` en `src/pdf/components/`.
+12. **Schemas CSV redefinen validación de cliente/proveedor** (~40 líneas). Reutilizar `clienteInsertSchema` / `proveedorInsertSchema`.
+13. **Colores/fuentes hardcoded en `estadoCuentaPdf` y `ReporteEERRDocument**` (~18 líneas). Usar `tokens.ts`.
+14. **Constantes literales dispersas** (`SYSTEM_USER_ID`, código RLS `42501`, `corsHeaders` local en `client-error-log`) (~15 líneas).
 
-## Cambios de frontend (mínimos, presentación)
+## Ejecución propuesta
 
-### 1. Detalle de factura (`FacturaDetallePage` / equivalente)
-- En la tabla de conceptos, agregar columna **"Embarque"** con el `expediente` / `bl_master` cuando `embarque_id != NULL`. Enlace a `/embarques/:id`.
-- Encabezado: en vez de "Embarque: EXP-123", mostrar chips con todos los embarques (query a `factura_embarques → embarques`) cuando hay >1.
+Por lotes secuenciales para mantener estabilidad (Balanceado, mismo commit + tests):
 
-### 2. Detalle de embarque
-- Badge nuevo **"Cobro: Pendiente / Parcial / Pagado"** al lado del estado operativo, leyendo `cobro_cliente_status`.
-- En la sección financiera, listar facturas ligadas vía `factura_embarques` (hoy solo se ve una).
-
-### 3. Portal cliente factura
-- Misma columna "Embarque" en el desglose (`PortalFacturaConceptosTable.tsx`) cuando el snapshot lo incluya.
-
-**No hay cambios de lógica de negocio**: el estado se calcula server-side vía trigger.
-
----
-
-## Verificación
-
-- Tests unitarios del RPC (`convertirAFactura.test.ts`) extendidos con caso multi-embarque asertando `factura_embarques` y `conceptos_factura.embarque_id`.
-- Test del trigger con `pg_tap` en `supabase/tests/rls/` (o script directo):
-  - factura Pagada → embarques marcados `pagado`.
-  - 2 facturas del mismo embarque, una Pagada → `parcial`.
-  - factura Cancelada no cuenta.
-- E2E `08-flujo-fiscal.spec.ts` extendido: registrar pago total → asertar badge de cobro en detalle de embarque.
-- `tsgo` + `bun test` verdes.
-
----
-
-## Detalles técnicos (para revisión de dev)
-
-**Orden de la migración**:
-```
-1. ALTER TABLE conceptos_factura ADD embarque_id, proforma_id_origen
-2. CREATE TABLE factura_embarques (+ GRANT + RLS + policies)
-3. ALTER TABLE embarques ADD cobro_cliente_status, cobro_cliente_actualizado_at
-4. CREATE OR REPLACE FUNCTION recalcular_cobro_embarques(embarque_ids uuid[])
-5. CREATE TRIGGER trg_facturas_estado_a_embarques
-6. CREATE OR REPLACE convertir_proformas_a_factura (versión nueva)
-7. Backfill factura_embarques
+```text
+Lote 8a  → 8a.1 useMutationWithFeedback + migración de 6 hooks piloto
+         → 8a.2 handleSupabaseResponse + barrido services
+         → 8a.3 useSimpleCatalog + catálogos
+         → 8a.4 migración a useServerPagedList
+Lote 8b  → 8b.1 KpiCard unificado
+         → 8b.2 MobileFiltersSheet
+         → 8b.3 FiscalAddressFields + RegimenFiscalSelect
+         → 8b.4 columnBuilders + limpieza de dialogs
+Lote 8c  → 8c.1 Edge functions a _shared/*
+         → 8c.2 ReportHeader PDF + tokens
+         → 8c.3 CSV schemas + constantes
 ```
 
-**Retrocompatibilidad**:
-- `facturas.embarque_id` se mantiene (evita reescribir filtros existentes en listados). Es el "principal" y sigue apuntando al primer embarque.
-- Reportes existentes que agrupan por `embarque_id` en la cabecera siguen funcionando; los nuevos (línea a línea) usan `conceptos_factura.embarque_id`.
+Cada sub-lote: cambio + tests unitarios cuando el patrón lo permita + `tsgo` + `bun run lint` + bump de `APP_VERSION` + entrada en `CHANGELOG.md`.
 
-**Riesgos**:
-- El trigger dispara en cada UPDATE de `facturas.estado` → mitigado con `WHEN (OLD.estado IS DISTINCT FROM NEW.estado)`.
-- Facturas legacy sin `factura_embarques` → cubierto por el backfill.
+## Detalles técnicos
 
-## Archivos afectados (estimado)
+- **Nota:** las estimaciones son conservadoras (por instancia, no cuentan reducción de imports). El total real tras eliminar imports huérfanos suele ser 10-15% mayor.
+- **Riesgos:** `useMutationWithFeedback` toca >30 hooks — hacerlo compatible con `onSuccess` personalizado (que reciba data/variables) para no romper flujos con navegación post-mutación.
+- **Regla del proyecto:** todo archivo nuevo debe respetar Power of 10 (≤200 líneas).
+- **Validación:** correr `bun run audit:arch` al cierre de cada lote para confirmar que ningún archivo nuevo supera el límite.
 
-- `supabase/migrations/<timestamp>_multi_embarque_factura.sql` (nuevo, ~200 líneas)
-- `src/features/facturacion/components/*` — columna Embarque en tabla de conceptos (2-3 archivos)
-- `src/features/embarques/components/*` — badge de cobro + lista de facturas (2 archivos)
-- `src/features/portal/components/factura/PortalFacturaConceptosTable.tsx` — columna Embarque
-- `src/features/proformas/services/__tests__/convertirAFactura.test.ts` — nuevo caso
-- `CHANGELOG.md` + `appVersion.ts` bump
+## ¿Qué quieres hacer?
+
+1. Ejecutar los 3 lotes en orden (recomendado). Esto!
+  &nbsp;
+2. Solo Lote 8a (mayor ROI, ~870 líneas).
+3. Ajustar prioridades/alcance antes de ejecutar.
