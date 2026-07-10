@@ -71,6 +71,7 @@ export async function fetchEmbarquesByIds(ids: string[]): Promise<LineageEmbRow[
       .is("deleted_at", null),
     [],
   );
+  // SAFE-CAST: el select explícito coincide 1:1 con LineageEmbRow.
   return data as unknown as LineageEmbRow[];
 }
 
