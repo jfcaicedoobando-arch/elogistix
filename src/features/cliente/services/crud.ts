@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 import {
   clienteInsertSchema,
@@ -12,6 +13,7 @@ export type Cliente = Tables<"clientes">;
 
 export const CLIENTE_DETAIL_COLUMNS =
   "id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, regimen_fiscal, uso_cfdi_default, organization_id, created_at, updated_at" as const;
+
 
 // ============================================================
 // Listados / búsqueda
