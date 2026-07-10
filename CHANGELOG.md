@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.253.1] - 2026-07-10
+- **Fix operativo · ELIMP00263**: la proforma `PRO-2026-0341` (Elogistix) quedó marcada como `estado_proforma='facturada'` desde una versión anterior aunque nunca se emitió factura (`factura_id IS NULL`, sin filas en `factura_embarques`). Se hizo soft-delete de la proforma y se liberaron sus 2 conceptos de venta (Cargos en Destino 125 USD y Flete Marítimo 4,615 USD) devolviéndolos a `estado_facturacion='pendiente'` con `proforma_id=NULL`, para que puedan re-proformarse.
+
 ## [13.253.0] - 2026-07-10
 - **Auditoría · RPC sync**: nuevo auditor `bun run audit:rpc-sync` que busca en las 437 migraciones y en `pg_proc` el patrón "borra lo que no está en la lista" (bug ELIMP00245): funciones que capturan ids del payload antes del loop, insertan hijos nuevos con `RETURNING id` y al final borran por complemento sin agregar los ids recién generados. Genera `reports/rpc-sync-audit.md` con findings CRITICAL/HIGH, catálogo vivo y conteo de filas huérfanas (`created_at ≈ deleted_at`) por tabla. Baseline actual: 0 CRITICAL, 0 HIGH, 0 funciones vivas con el patrón; 12 filas huérfanas históricas en `conceptos_venta` y `conceptos_costo` (previas al fix 13.252.2, listadas para rescate manual). Tests en `src/__tests__/audit-rpc-sync.test.ts`.
 
