@@ -2,6 +2,7 @@
  * CRUD de embarque_contenedores (Fase B del refactor 1 embarque ↔ N).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrapOr, run } from "@/lib/supabase/response";
 import type {
   ContenedorBorrador,
   EmbarqueContenedor,
@@ -11,14 +12,15 @@ import type {
 export async function listarPorEmbarque(
   embarqueId: string,
 ): Promise<EmbarqueContenedor[]> {
-  const { data, error } = await supabase
-    .from("embarque_contenedores")
-    .select("*")
-    .eq("embarque_id", embarqueId)
-    .order("orden", { ascending: true })
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("embarque_contenedores")
+      .select("*")
+      .eq("embarque_id", embarqueId)
+      .order("orden", { ascending: true })
+      .order("created_at", { ascending: true }),
+    [],
+  );
 }
 
 export async function crearMuchos(
@@ -36,12 +38,10 @@ export async function crearMuchos(
     piezas: b.piezas,
     orden: b.orden || i + 1,
   }));
-  const { data, error } = await supabase
-    .from("embarque_contenedores")
-    .insert(rows)
-    .select();
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase.from("embarque_contenedores").insert(rows).select(),
+    [],
+  );
 }
 
 /**
@@ -54,12 +54,13 @@ export async function reemplazarTodos(
   embarqueId: string,
   borradores: ContenedorBorrador[],
 ): Promise<EmbarqueContenedor[]> {
-  const { error: delError } = await supabase
-    .from("embarque_contenedores")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("embarque_id", embarqueId)
-    .is("deleted_at", null);
-  if (delError) throw delError;
+  await run(
+    supabase
+      .from("embarque_contenedores")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("embarque_id", embarqueId)
+      .is("deleted_at", null),
+  );
   return crearMuchos(embarqueId, borradores);
 }
 
@@ -82,11 +83,12 @@ export async function sincronizarContenedores(
     orden: b.orden || i + 1,
   }));
 
-  const { data, error } = await supabase.rpc("sincronizar_contenedores_embarque", {
-    p_embarque_id: embarqueId,
-    // SAFE-CAST: jsonb param tipado en supabase types como Json
-    p_contenedores: payload as never,
-  });
-  if (error) throw error;
-  return (data ?? []) as EmbarqueContenedor[];
+  return unwrapOr(
+    supabase.rpc("sincronizar_contenedores_embarque", {
+      p_embarque_id: embarqueId,
+      // SAFE-CAST: jsonb param tipado en supabase types como Json
+      p_contenedores: payload as never,
+    }),
+    [],
+  ) as Promise<EmbarqueContenedor[]>;
 }
