@@ -1,61 +1,92 @@
-## Lote 8a.2d — Barrido masivo de services restantes
+# Auditoría "App como Lego": Candidatos a npm o paquete interno
 
-**Objetivo**: reducir los 222 sitios con `if (error) throw error` distribuidos en 130 archivos, migrándolos al helper `unwrap`/`unwrapOr`/`run` ya existente en `src/lib/supabase/response.ts`.
+**Analogía:** hoy la app tiene muchas piezas que fabricamos a mano; algunas se pueden reemplazar por piezas de Lego oficiales (npm público), y otras conviene guardarlas en una caja marcada "Libre Carga" (paquete interno) para reutilizarlas en futuras apps.
 
-### Alcance de este lote
+## Lo que dejamos intocado (dominio Libre Carga)
 
-Migrar los **20 archivos con mayor densidad** de boilerplate (aprox. 65-75 sitios, ~65-75 líneas netas eliminadas):
+Estas piezas son el "ADN" del producto — no existen en ninguna librería y migrarlas costaría más de lo que ahorra:
 
-| # | Archivo | Sitios |
-|---|---------|--------|
-| 1 | `src/features/cliente/services/crud.ts` | 6 |
-| 2 | `src/features/configuracion/components/CatalogoClavesSATCard.tsx` | 4 |
-| 3 | `src/features/reportes/services/index.ts` | 3 |
-| 4 | `src/features/portal/services/perfil.ts` | 3 |
-| 5 | `src/features/portal/services/notificaciones.ts` | 3 |
-| 6 | `src/features/notificaciones/services/index.ts` | 3 |
-| 7 | `src/features/facturacion/services/pagos/index.ts` | 3 |
-| 8 | `src/features/facturacion/services/facturasCrud.ts` | 3 |
-| 9 | `src/features/embarques/services/documentos.ts` | 3 |
-| 10 | `src/features/embarques/services/contenedores/crud.ts` | 3 |
-| 11 | `src/features/dashboard/direccion/services/loaders.ts` | 3 |
-| 12 | `src/features/cxp/services/proveedorFacturas.crud.ts` | 3 |
-| 13 | `src/features/cxp/services/pagosProveedor.ts` | 3 |
-| 14 | `src/features/crm/services/leads/mutations.ts` | 3 |
-| 15 | `src/features/crm/services/leads/convertir.ts` | 3 |
-| 16 | `src/features/crm/services/leads/bulk.ts` | 3 |
-| 17 | `src/features/cotizacion/services/conversiones/embarques.ts` | 3 |
-| 18 | `src/features/costeo/services/demorasVenta.ts` | 3 |
-| 19 | `src/features/costeo/services/aprobacion.ts` | 3 |
-| 20 | `src/features/comisiones/services/liquidaciones.ts` | 3 |
+- Roles multi-tenant (`roleHierarchy`) y RLS.
+- Reglas SAT: tasas IVA, RFC, CURP, régimen fiscal, CP.
+- Costos marítimos: DAP, THC, seguros, tarifas por kg/m³.
+- Integración FacturAPI, referencias de embarque, incoterms.
+- Scrub PII de Sentry con validaciones MX.
+- Formateo tipográfico con siglas MX (S.A. de C.V., CFDI, etc.).
+- Idempotencia `useStableRequestId` acoplada a RPCs.
 
-Los archivos restantes (110 archivos con 1-2 sitios cada uno) quedan para un **8a.2e** posterior si decides continuar; el ROI baja porque el ahorro por archivo es menor.
+## Migración a npm público (piezas Lego estándar)
 
-### Regla de migración
+Cambios directos, bajo riesgo, ~260 LOC menos:
 
-- `.select().single()` con throw → `unwrap(await supabase.from(...)...)`
-- `.select()` con throw (múltiples filas) → `unwrap(await supabase.from(...)...)` (retorna arreglo)
-- `.insert/.update/.delete` con throw sin retorno → `run(await supabase.from(...)...)`
-- Si el llamador ya maneja `null` como caso válido → `unwrapOr(response, fallback)`
-- **No cambiar firmas públicas** de las funciones migradas (mismo retorno, mismo shape). Cambio invisible para consumidores.
 
-### Verificación
+| #   | Reemplaza                              | Con                                       | LOC |
+| --- | -------------------------------------- | ----------------------------------------- | --- |
+| A1  | `useDebouncedValue` + `useDebounce`    | `use-debounce`                            | ~32 |
+| A2  | `useIsMobile`                          | `usehooks-ts` → `useMediaQuery`           | ~30 |
+| A3  | `fetchWithRetry`                       | `ky` (retry + timeout nativos)            | ~92 |
+| A4  | `passwords/generator.ts`               | `generate-password` + `@zxcvbn-ts/core`   | ~84 |
+| A5  | `formatters/dates.ts` (thin wrappers)  | `date-fns` + `date-fns/locale/es` directo | ~35 |
+| A6  | `csv/serializeCsv.ts`                  | `papaparse.unparse()` directo             | ~15 |
+| A7  | `financialUtils` — wrappers no-dominio | `currency.js` directo                     | ~60 |
 
-1. `bun run lint` sin nuevos warnings.
-2. `bunx tsgo --noEmit` limpio.
-3. Correr tests existentes que tocan los archivos migrados: `bunx vitest run src/features/cliente src/features/crm src/features/cxp src/features/facturacion` (los que tengan tests).
-4. Muestra de humo en preview: abrir Cartera, CxP, un lead CRM y un embarque para confirmar que las queries siguen respondiendo.
 
-### Detalles técnicos
+## Extracción a paquete interno (caja "Libre Carga")
 
-- Helper canónico ya existe: `src/lib/supabase/response.ts` (exports `unwrap`, `unwrapOr`, `run`).
-- Ahorro esperado: **~65 líneas netas** en este lote (se elimina la línea `if (error) throw error;` y en muchos casos también la desestructuración `const { data, error } = ...` se colapsa a una sola línea).
-- Impacto acumulado DRY tras 8a.2d: **~1,397 líneas** desde el inicio de la auditoría.
-- Version bump: `APP_VERSION` → `13.249.0`. CHANGELOG con lista de archivos tocados.
+Piezas propias reutilizables entre apps del mismo equipo. Se quedan en el repo pero organizadas para poder publicarse a un registry privado más tarde:
 
-### Fuera de alcance
+**P1 · `@librecarga/supabase-utils**` (~230 LOC)
 
-- No se tocan los 110 archivos con 1-2 sitios cada uno (candidatos para 8a.2e).
-- No se refactorizan firmas ni se cambia el shape de respuesta.
-- No se toca lógica de negocio ni RLS.
-- Los warnings de seguridad del panel actual (backup tables, catálogos globales) siguen fuera del scope de la auditoría DRY.
+- `unwrap` / `unwrapOr` / `run` de `lib/supabase/response.ts`
+- `useMutationWithFeedback`
+- `createCatalogHooks`
+
+**P2 · `@librecarga/pdf-components**` (~400 LOC)
+
+- `BrandHeader`, `Footer`, `KeyValueGrid`, `TotalesBox`, `DataTable` PDF
+- Los documentos de negocio (cotización, proforma, EERR) importan desde aquí.
+
+**P3 · `@librecarga/data-table**` (~470 LOC)
+
+- Wrapper de `@tanstack/react-table` con densidad, sticky, sort server/client, empty state, row href accesible.
+
+## Plan de ejecución por lotes (independientes, mergeable)
+
+Cada lote termina con lint + typecheck + tests verdes, bump `APP_VERSION` y entrada en `CHANGELOG.md`.
+
+**Lote 9a — Reemplazos npm de bajo riesgo** (~200 LOC menos)
+
+1. `bun add use-debounce usehooks-ts` → migrar `useDebouncedValue`, `useDebounce`, `useIsMobile`.
+2. Eliminar `csv/serializeCsv.ts` → `papaparse.unparse()`.
+3. Adelgazar `formatters/dates.ts`: dejar sólo constantes de locale, reexportar `format`/`parseISO` con default.
+
+**Lote 9b — Reemplazos npm de riesgo medio** (~180 LOC menos)
+4. `bun add ky` → migrar `fetchWithRetry` (verificar edge functions + servicios de importación).
+5. `bun add generate-password @zxcvbn-ts/core @zxcvbn-ts/language-common @zxcvbn-ts/language-es-es` → migrar generator + evaluator, revisar UI de creación de usuarios.
+
+**Lote 9c — Adelgazar `financialUtils**` (~60 LOC menos, riesgo medio)
+6. Marcar como `@deprecated` los thin wrappers (`sumarMontos`, `calcularIVA` cuando no lleva reglas SAT).
+7. Barrer call-sites uno a uno para usar `currency.js` directo.
+8. Mantener intactas `resolverTasaConcepto`, `TASAS_IVA_MX`, `calcularMargen` (dominio).
+
+**Lote 9d — Paquetes internos vía path alias** (0 LOC menos; prepara reutilización)
+9. Crear estructura `packages/supabase-utils/`, `packages/pdf-components/`, `packages/data-table/` en el mismo repo (monorepo ligero con `tsconfig` paths).
+10. Mover los archivos actuales sin renombrar imports (usar re-exports desde `@/lib/...` a `@librecarga/...`).
+11. Documentar en `README.md` de cada paquete su superficie pública.
+12. Preparado para publicar a un registry privado más tarde sin más refactor.
+
+## Métricas objetivo
+
+- Líneas propias eliminadas: **~1,400 LOC** (Lotes 9a-9c).
+- Piezas empaquetadas para reutilización: **~1,100 LOC** en 3 paquetes internos (Lote 9d).
+- Dependencias nuevas: 5 (`use-debounce`, `usehooks-ts`, `ky`, `generate-password`, `@zxcvbn-ts/core` + locales). Impacto en bundle: `<25 KB` gzipped total.
+
+## Detalles técnicos
+
+- `ky`: preferido sobre `axios` porque usa `fetch` nativo, ~5 KB gzip, retry + timeout built-in. Alternativa considerada: dejar `fetch` puro + `p-retry`, pero doble dependencia.
+- `usehooks-ts`: tree-shakeable, tipado estricto. Alternativa: `react-use` (bundle mayor, menos tipado).
+- `@zxcvbn-ts/core`: fork moderno con TS nativo. Alternativa clásica: `zxcvbn` (untyped, 400 KB si no se hace code-split).
+- Los paquetes internos se ubican en `packages/*` con `workspaces` de bun; NO se publican todavía a npm — sólo estructura preparada para hacerlo si aparece un segundo proyecto que los necesite.
+
+---
+
+**Pregunta antes de ejecutar:** ¿Ejecutamos los 4 lotes en orden (9a → 9d), o prefieres empezar sólo con **Lote 9a** (reemplazos npm de bajo riesgo, ROI inmediato ~200 LOC menos, ~1 hora de trabajo)? hacemos todos los lotes
