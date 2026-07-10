@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.247.0] - 2026-07-10
+- **Fix · CI verde tras DRY 8a/8b/8c**:
+  - `src/lib/supabase/response.ts`: imports de tipos ahora vienen de `@supabase/supabase-js` (elimina falso positivo Knip de `@supabase/postgrest-js` como dep no usada).
+  - `src/features/proformas/services/queries.ts` (214 → 166 líneas): tipos de detalle full (`ProformaClienteFull`, `ProformaEmbarqueFull`, `ProformaFacturaAsociada`, `ProformaDetalleFull`) movidos a `types.ts`; `queries.helpers.ts` importa desde `./types`. Cumple regla "Power of 10" (≤200 líneas).
+  - Marcadores `// SAFE-CAST:` (adyacentes al cast, contiguos como `//`) agregados a 12 casts introducidos en la migración a `handleSupabaseResponse` / `run` / RPCs sin tipos generados: `useMutationWithFeedback.ts`, `auditoria/services/revisiones.ts`, `crm/services/lineage.ts` (×3), `crm/services/plantillas.ts`, `embarques/services/mutations.ts`, `embarques/services/seguros.ts` (×2), `facturacion/services/notasCredito.ts`, `portal-agente/services/index.ts` (×2).
+  - Tests: `src/lib/__tests__/architecture.test.ts` (7/7) verdes; lint y tsgo limpios.
+
 ## [13.246.0] - 2026-07-10
 - **Refactor · DRY Lote 8c.2 — cierre de helpers `json` locales restantes**:
   - `enviar-factura-email/helpers.ts`: `export function json(cors, data, status)` reemplazada por alias `export const json = (cors, data, status) => _jsonResponse(data, status, cors)` que delega en `_shared/response.ts::jsonResponse`. Preserva los 8 callsites en `index.ts` y la firma exportada (compatible con `persist.ts`).

@@ -131,6 +131,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
       puerto_destino?: { name?: string } | null;
     } | null;
   };
+  // SAFE-CAST: alias de relaciones — el cliente generado infiere never en joins anidados.
   return (data as unknown as Raw[]).map((r) => ({
     id: r.id,
     ruta_id: r.ruta_id,
@@ -173,5 +174,6 @@ export async function fetchAgenteEmbarques(): Promise<AgenteEmbarqueRow[]> {
       .limit(200),
     [],
   );
+  // SAFE-CAST: select explícito coincide 1:1 con AgenteEmbarqueRow.
   return data as unknown as AgenteEmbarqueRow[];
 }

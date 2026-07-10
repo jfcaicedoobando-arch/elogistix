@@ -75,6 +75,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       userOnSuccess?.(data, variables, onMutateResult, context);
     },
     onError: (error, variables, onMutateResult, context) => {
+      // SAFE-CAST: react-query tipa el error como `unknown`; sólo usamos `.message` para el toast.
       const err = error as unknown as Error;
       notifyError(undefined, {
         title: errorTitle,

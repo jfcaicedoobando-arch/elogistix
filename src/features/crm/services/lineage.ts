@@ -41,6 +41,7 @@ export async function fetchLeadLineage(leadId: string): Promise<LeadOportunidadR
       .order("created_at", { ascending: false }),
     [],
   );
+  // SAFE-CAST: el select explícito coincide 1:1 con LeadOportunidadRow.
   return data as unknown as LeadOportunidadRow[];
 }
 
@@ -56,6 +57,7 @@ export async function fetchOportunidadCotsLineage(
       .order("created_at", { ascending: false }),
     [],
   );
+  // SAFE-CAST: el select explícito coincide 1:1 con LineageCotRow.
   return data as unknown as LineageCotRow[];
 }
 
@@ -69,6 +71,7 @@ export async function fetchEmbarquesByIds(ids: string[]): Promise<LineageEmbRow[
       .is("deleted_at", null),
     [],
   );
+  // SAFE-CAST: el select explícito coincide 1:1 con LineageEmbRow.
   return data as unknown as LineageEmbRow[];
 }
 

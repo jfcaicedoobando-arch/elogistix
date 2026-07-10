@@ -1,4 +1,4 @@
-import type { ProformaDetalleFull, ProformaFacturaAsociada } from "./queries";
+import type { ProformaDetalleFull, ProformaFacturaAsociada } from "./types";
 
 type RawAsociada = ProformaFacturaAsociada & { deleted_at: string | null; created_at: string };
 
