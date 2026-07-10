@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.246.0] - 2026-07-10
+- **Refactor · DRY Lote 8c.2 — cierre de helpers `json` locales restantes**:
+  - `enviar-factura-email/helpers.ts`: `export function json(cors, data, status)` reemplazada por alias `export const json = (cors, data, status) => _jsonResponse(data, status, cors)` que delega en `_shared/response.ts::jsonResponse`. Preserva los 8 callsites en `index.ts` y la firma exportada (compatible con `persist.ts`).
+  - `verificar-uuid-sat/index.ts`: `function json(cors, body, status)` local reemplazada por el mismo alias `const json = ...`; preserva los 12 callsites (`json(cors, {...}, 4xx/5xx)`).
+  - Restantes con `new Response(JSON.stringify(...))` inline (sin helper local extraíble) quedan fuera del alcance de este lote — son 20+ sitios distribuidos en 10 handlers donde el ahorro por sitio sería ≤1 línea y comprometería la lectura.
+  - **~12 líneas eliminadas** (2 helpers × ~6 líneas), imports agregados ~2 líneas → ahorro neto **~10 líneas**.
+  - Sin cambios de contrato: mismos headers CORS, mismo `Content-Type: application/json`, mismos status codes.
+
 ## [13.245.0] - 2026-07-10
 - **Refactor · DRY Lote 8c — `jsonResponse` compartido en edge functions**:
   - 14 edge functions migradas a `_shared/response.ts::jsonResponse` (elimina helper local `function json(body, status)` de 6-7 líneas por archivo): `facturapi-enviar-email`, `facturapi-emitir`, `facturapi-emitir-rep`, `facturapi-emitir-nota-credito`, `facturapi-cancelar`, `facturapi-cancelar/acuseHandlers`, `facturapi-cancelar-rep`, `facturapi-cancelar-nota-credito`, `facturapi-descargar`, `facturapi-webhook`, `facturapi-test-conexion`, `rep-retry-nocturno`, `enviar-cotizacion-email/handlers`, `enviar-proforma-email` (con alias local `(cors, data, status)` para preservar callsites).

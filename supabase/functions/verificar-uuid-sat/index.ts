@@ -16,17 +16,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
+import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SAT_ENDPOINT = "https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaCFDIService.svc";
 
-function json(cors: HeadersInit, body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...cors, "Content-Type": "application/json" },
-  });
-}
+// Alias local con firma (cors, body, status) para conservar los callsites de este handler.
+const json = (cors: Record<string, string>, body: unknown, status = 200): Response =>
+  _jsonResponse(body, status, cors);
 
 function buildSoapEnvelope(rfcEmisor: string, rfcReceptor: string, total: number, uuid: string) {
   // Formato oficial SAT — total con 6 decimales, string escape básico.
