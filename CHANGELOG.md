@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.250.0] - 2026-07-10
+- **Refactor · Lote 9a — Reemplazo de hooks propios con librerías npm estándar**:
+  - `useDebouncedValue` ahora es un thin wrapper sobre `use-debounce` (npm). Firma preservada; 24 → 11 LOC.
+  - `useIsMobile` ahora es un thin wrapper sobre `usehooks-ts` (`useMediaQuery`). Firma preservada; 22 → 9 LOC.
+  - `toCsv` (`src/lib/csv/serializeCsv.ts`) delega en `Papa.unparse` (papaparse ya instalado); 15 → 11 LOC.
+  - Nuevas deps: `use-debounce`, `usehooks-ts` (~3 KB gzip total). Cero cambios en call-sites.
+- **Nota — Lotes 9b/9c/9d evaluados y diferidos**:
+  - `fetchWithRetry` (92 LOC) y `passwords/generator.ts` (84 LOC): domain-tuned, sin duplicación en el repo; migrar a `ky`/`@zxcvbn-ts` añadiría bundle sin ahorro real. Se mantienen.
+  - `financialUtils` thin wrappers: barrida de ~40 call-sites con riesgo medio; se propone abordar como sprint dedicado si se detecta churn.
+  - Paquetes internos (`packages/*`): infraestructura sin ahorro inmediato; ejecutar cuando aparezca un segundo consumidor.
+
 ## [13.249.0] - 2026-07-10
 - **Refactor · DRY Lote 8a.2d — barrido masivo services (`unwrap`/`unwrapOr`/`run`)**:
   - Migrados 12 services/componentes al helper `@/lib/supabase/response` (elimina `if (error) throw error` boilerplate):
