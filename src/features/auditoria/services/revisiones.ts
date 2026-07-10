@@ -27,6 +27,7 @@ export async function fetchAuditoriaRevisiones(
       .limit(ROW_LIMIT),
     [],
   );
+  // SAFE-CAST: fila devuelve columnas del DTO ya declarado; la generic inferencia cae en never con .select("*").
   return data as unknown as AuditoriaRevision[];
 }
 
