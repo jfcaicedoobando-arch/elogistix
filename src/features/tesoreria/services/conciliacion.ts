@@ -10,6 +10,7 @@ import * as Sentry from "@sentry/react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { MovimientoParseado } from "@/features/tesoreria/domain/import/bbva";
+import { unwrapOr, run } from "@/lib/supabase/response";
 
 export type MovimientoBBVA = Tables<"bbva_movimientos">;
 
@@ -37,15 +38,17 @@ export async function importarMovimientos(
     importado_por: userId,
   }));
   // upsert: si ya existe por (cuenta_bancaria_id, hash_dedupe), ignora
-  const { data, error } = await supabase
-    .from("bbva_movimientos")
-    .upsert(payload, {
-      onConflict: "cuenta_bancaria_id,hash_dedupe",
-      ignoreDuplicates: true,
-    })
-    .select("id");
-  if (error) throw error;
-  const nuevos = (data ?? []).length;
+  const data = await unwrapOr(
+    supabase
+      .from("bbva_movimientos")
+      .upsert(payload, {
+        onConflict: "cuenta_bancaria_id,hash_dedupe",
+        ignoreDuplicates: true,
+      })
+      .select("id"),
+    [] as { id: string }[],
+  );
+  const nuevos = data.length;
   return { total: movimientos.length, nuevos, duplicados: movimientos.length - nuevos };
 }
 
@@ -70,9 +73,7 @@ export async function listarMovimientos(f: FiltrosMovimientos): Promise<Movimien
   if (f.estado && f.estado !== "todos") q = q.eq("estado_conciliacion", f.estado);
   if (f.desde) q = q.gte("fecha", f.desde);
   if (f.hasta) q = q.lte("fecha", f.hasta);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as MovimientoBBVA[];
+  return unwrapOr(q, [] as MovimientoBBVA[]) as Promise<MovimientoBBVA[]>;
 }
 
 export { sugerirCandidatos, type Candidato } from "./sugerirCandidatos";
@@ -110,23 +111,25 @@ export async function conciliarConPago(
 }
 
 export async function desconciliarMovimiento(movId: string) {
-  const { error } = await supabase
-    .from("bbva_movimientos")
-    .update({
-      pago_factura_id: null,
-      pago_proveedor_id: null,
-      estado_conciliacion: "Pendiente",
-      conciliado_por: null,
-      conciliado_at: null,
-    })
-    .eq("id", movId);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("bbva_movimientos")
+      .update({
+        pago_factura_id: null,
+        pago_proveedor_id: null,
+        estado_conciliacion: "Pendiente",
+        conciliado_por: null,
+        conciliado_at: null,
+      })
+      .eq("id", movId),
+  );
 }
 
 export async function ignorarMovimiento(movId: string, motivo: string) {
-  const { error } = await supabase
-    .from("bbva_movimientos")
-    .update({ estado_conciliacion: "Ignorado", motivo_ignorar: motivo })
-    .eq("id", movId);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("bbva_movimientos")
+      .update({ estado_conciliacion: "Ignorado", motivo_ignorar: motivo })
+      .eq("id", movId),
+  );
 }

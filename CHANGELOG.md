@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.239.0] - 2026-07-10
+- **Refactor · DRY Lote 8a.2 — `handleSupabaseResponse` helpers**:
+  - Nuevo módulo `src/lib/supabase/response.ts` con `unwrap`, `unwrapOr` y `run`. Colapsa el patrón `const { data, error } = await ...; if (error) throw error; return data` (aparece ~400 veces en `src/features`).
+  - Services migrados como piloto: `catalogos/services/index.ts` (12 sitios), `configuracion/services/index.ts` (3), `configuracion/services/facturapiCredenciales.ts` (4), `tesoreria/services/cuentas.ts` (4), `tesoreria/services/conciliacion.ts` (5 sitios triviales — se preserva el bloque Sentry en `conciliarConPago`).
+  - **~90 líneas eliminadas** en el slice piloto. Base lista para colapsar los ~350 sitios restantes.
+  - Sin cambios de comportamiento: mismos errores propagados, misma semántica `data ?? fallback`.
+
 ## [13.238.0] - 2026-07-10
 - **Refactor · DRY Lote 8a.1 — `useMutationWithFeedback`**:
   - Nuevo hook compartido en `src/hooks/shared/useMutationWithFeedback.ts` que estandariza el patrón `mutationFn + invalidate + notifySuccess/notifyError` repetido en >30 hooks.

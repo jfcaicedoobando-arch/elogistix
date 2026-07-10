@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
+import { run, unwrap } from "@/lib/supabase/response";
 
 export type FacturapiAmbiente = "sandbox" | "live";
 
@@ -42,12 +43,13 @@ export interface FacturapiCredencialesInput {
 export async function fetchFacturapiCredenciales(
   orgId: string,
 ): Promise<FacturapiCredencialesRow | null> {
-  const { data, error } = await supabase
-    .from("facturapi_credenciales")
-    .select("*")
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("facturapi_credenciales")
+      .select("*")
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+  );
   return data ? fromDb<FacturapiCredencialesRow>(data) : null;
 }
 
@@ -55,13 +57,14 @@ export async function upsertFacturapiCredenciales(
   orgId: string,
   input: FacturapiCredencialesInput,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("facturapi_credenciales")
-    .upsert(
-      { organization_id: orgId, ...input },
-      { onConflict: "organization_id" },
-    );
-  if (error) throw error;
+  await run(
+    supabase
+      .from("facturapi_credenciales")
+      .upsert(
+        { organization_id: orgId, ...input },
+        { onConflict: "organization_id" },
+      ),
+  );
 }
 
 
@@ -76,12 +79,13 @@ export async function setFacturapiApiKey(
   apiKey: string,
 ): Promise<void> {
   // SAFE-CAST: RPC tipada en supabase/types.ts no se ha regenerado todavía.
-  const { error } = await supabase.rpc("set_facturapi_api_key" as never, {
-    p_org_id: orgId,
-    p_ambiente: ambiente,
-    p_api_key: apiKey,
-  } as never);
-  if (error) throw error;
+  await run(
+    supabase.rpc("set_facturapi_api_key" as never, {
+      p_org_id: orgId,
+      p_ambiente: ambiente,
+      p_api_key: apiKey,
+    } as never),
+  );
 }
 
 export async function clearFacturapiApiKey(
@@ -89,11 +93,12 @@ export async function clearFacturapiApiKey(
   ambiente: FacturapiAmbiente,
 ): Promise<void> {
   // SAFE-CAST: RPC nueva, types.ts pendiente de regenerar.
-  const { error } = await supabase.rpc("clear_facturapi_api_key" as never, {
-    p_org_id: orgId,
-    p_ambiente: ambiente,
-  } as never);
-  if (error) throw error;
+  await run(
+    supabase.rpc("clear_facturapi_api_key" as never, {
+      p_org_id: orgId,
+      p_ambiente: ambiente,
+    } as never),
+  );
 }
 
 export interface ProbarConexionResult {
@@ -124,4 +129,3 @@ export async function probarFacturapiConexion(
   }
   return data ?? { ok: false, error: "empty_response" };
 }
-
