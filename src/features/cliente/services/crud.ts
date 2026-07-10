@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import { unwrap, unwrapOr } from "@/lib/supabase/response";
+
 import {
   clienteInsertSchema,
   clienteUpdateSchema,
