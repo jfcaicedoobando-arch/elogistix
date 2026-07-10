@@ -58,14 +58,24 @@ describe("rpcSync auditor", () => {
     expect(auditSql("mig.sql", BENIGN)).toHaveLength(0);
   });
 
-  it("scoreFinding devuelve HIGH con 2 señales de riesgo", () => {
+  it("scoreFinding devuelve HIGH con insert-sin-append + otra señal", () => {
     const sev = scoreFinding({
-      capturePriorIds: true,
-      insertReturningId: false,
+      capturePriorIds: false,
+      insertReturningId: true,
       appendAfterInsert: false,
       deleteByComplement: true,
     });
     expect(sev).toBe("HIGH");
+  });
+
+  it("scoreFinding ignora captura + delete sin insert-sin-append", () => {
+    const sev = scoreFinding({
+      capturePriorIds: true,
+      insertReturningId: true,
+      appendAfterInsert: true,
+      deleteByComplement: true,
+    });
+    expect(sev).toBeNull();
   });
 
   it("analyzeBody detecta insert sin append como señal cruda", () => {
