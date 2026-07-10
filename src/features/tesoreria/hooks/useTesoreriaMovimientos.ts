@@ -3,6 +3,7 @@
  * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
  */
 import { useQuery } from "@tanstack/react-query";
+import { toast as sonnerToast } from "sonner";
 import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
@@ -31,10 +32,7 @@ export function useImportarMovimientos() {
     errorTitle: "Error al importar movimientos",
     errorMethod: "IMPORT_MOVIMIENTOS",
     onSuccess: (_data, vars) => {
-      // Título dinámico basado en el resultado.
-      import("sonner").then(({ toast }) =>
-        toast.success(`${vars.movimientos.length} movimientos importados`),
-      );
+      sonnerToast.success(`${vars.movimientos.length} movimientos importados`);
     },
   });
 }
