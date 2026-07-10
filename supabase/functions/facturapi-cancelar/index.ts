@@ -63,6 +63,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       .maybeSingle();
     if (facpErr || !facp) return json({ error: "factura_not_found" }, 404);
     if (!facp.facturapi_id) return json({ error: "no_timbrada" }, 409);
+    if (!(await authorizeOrgMembership(supabase, userData.user.id, facp.organization_id))) {
+      return json({ error: "forbidden" }, 403);
+    }
     if (facp.estado !== "Cancelada" && facp.estado !== "Sustituida") {
       return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
     }
