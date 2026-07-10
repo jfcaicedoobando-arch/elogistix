@@ -34,6 +34,8 @@ const ALLOWLIST: readonly string[] = [
   "src/features/cotizacion/components/TablaConceptosGenerico.tsx",
   "src/features/cotizacion/components/TablaCostosDetalle.tsx",
   "src/features/facturacion/components/detalle/FacturaConceptosTable.tsx",
+  // Sub-vistas extraídas de FacturaConceptosTable para respetar límite 200 líneas.
+  "src/features/facturacion/components/detalle/FacturaConceptosRows.tsx",
   "src/features/portal/components/factura/PortalFacturaConceptosTable.tsx",
   "src/features/costeo/components/DemorasTarifaEditor.tsx",
   // Sub-tablas read-only estáticas (sin sort/paginación).
