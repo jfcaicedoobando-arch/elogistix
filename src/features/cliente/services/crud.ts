@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 import {
   clienteInsertSchema,
@@ -12,6 +13,7 @@ export type Cliente = Tables<"clientes">;
 
 export const CLIENTE_DETAIL_COLUMNS =
   "id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, regimen_fiscal, uso_cfdi_default, organization_id, created_at, updated_at" as const;
+
 
 // ============================================================
 // Listados / búsqueda
@@ -48,13 +50,16 @@ export async function fetchClientesPaginados({
   // Bloque 2.4 — RPC `clientes_listado` con agregados (embarques, cotizaciones, deuda)
   // para eliminar N+1 desde la UI.
   const offset = page * pageSize;
-  const { data, error } = await supabase.rpc("clientes_listado", {
-    p_organization_id: organizationId ?? undefined,
-    p_search: search || undefined,
-    p_offset: offset,
-    p_limit: pageSize,
-  });
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.rpc("clientes_listado", {
+      p_organization_id: organizationId ?? undefined,
+      p_search: search || undefined,
+      p_offset: offset,
+      p_limit: pageSize,
+    }),
+  );
+
+
 
   const rows = (data ?? []) as Array<{
     id: string;
@@ -109,9 +114,7 @@ export async function fetchClientesForSelect(organizationId: string | null) {
     .select("id, nombre")
     .order("nombre");
   if (organizationId) query = query.eq("organization_id", organizationId);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(query, []);
 }
 
 // ============================================================
@@ -119,25 +122,22 @@ export async function fetchClientesForSelect(organizationId: string | null) {
 // ============================================================
 
 export async function fetchCliente(id: string) {
-  const { data, error } = await supabase
-    .from("clientes")
-    .select(CLIENTE_DETAIL_COLUMNS)
-    .eq("id", id)
-    .single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase.from("clientes").select(CLIENTE_DETAIL_COLUMNS).eq("id", id).single(),
+  );
 }
 
 /** Días de crédito por defecto del cliente (para precargar el diálogo de proforma). */
 export async function fetchDiasCreditoCliente(
   clienteId: string,
 ): Promise<number | null> {
-  const { data, error } = await supabase
-    .from("clientes")
-    .select("dias_credito")
-    .eq("id", clienteId)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("clientes")
+      .select("dias_credito")
+      .eq("id", clienteId)
+      .maybeSingle(),
+  );
   return data?.dias_credito ?? null;
 }
 
@@ -147,13 +147,9 @@ export async function fetchDiasCreditoCliente(
 
 export async function createCliente(cliente: TablesInsert<"clientes">) {
   parseOrThrow(clienteInsertSchema, cliente, "Cliente");
-  const { data, error } = await supabase
-    .from("clientes")
-    .insert(cliente)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase.from("clientes").insert(cliente).select().single(),
+  );
 }
 
 export async function updateCliente(
@@ -161,12 +157,8 @@ export async function updateCliente(
   updates: Partial<Cliente>,
 ): Promise<Cliente> {
   parseOrThrow(clienteUpdateSchema, updates, "Cliente");
-  const { data, error } = await supabase
-    .from("clientes")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  return unwrap(
+    supabase.from("clientes").update(updates).eq("id", id).select().single(),
+  );
 }
+

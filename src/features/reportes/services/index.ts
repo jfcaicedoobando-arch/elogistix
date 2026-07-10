@@ -1,12 +1,9 @@
 /**
  * Servicio de reportes: alertas para sidebar, profit por embarque/cliente y
  * catálogo de operadores distintos. Todos los cálculos se hacen vía RPC en BD.
- *
- * v8.173.0 (Ola B.4): `fetchReportesResumen` consume el RPC `reportes_resumen`
- * que devuelve la rentabilidad por cliente + KPIs agregados (revenue, profit,
- * margenProm, totalClientes) en una sola llamada con cálculos hechos en DB.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 export interface SidebarAlertCounts {
   embarquesDemora: number;
@@ -15,8 +12,7 @@ export interface SidebarAlertCounts {
 }
 
 export async function fetchSidebarAlertCounts(): Promise<SidebarAlertCounts> {
-  const { data, error } = await supabase.rpc("sidebar_alert_counts");
-  if (error) throw error;
+  const data = await unwrap(supabase.rpc("sidebar_alert_counts"));
   const row = data?.[0] ?? { embarques_demora: 0, facturas_vencidas: 0, garantias_atoradas: 0 };
   return {
     embarquesDemora: Number(row.embarques_demora),
@@ -56,12 +52,13 @@ export interface ReportesResumen {
 }
 
 export async function fetchReportesResumen(filtros: RentabilidadFiltros): Promise<ReportesResumen> {
-  const { data, error } = await supabase.rpc("reportes_resumen", {
-    p_fecha_desde: filtros.fechaDesde ?? undefined,
-    p_fecha_hasta: filtros.fechaHasta ?? undefined,
-    p_modo: filtros.modo ?? undefined,
-  });
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.rpc("reportes_resumen", {
+      p_fecha_desde: filtros.fechaDesde ?? undefined,
+      p_fecha_hasta: filtros.fechaHasta ?? undefined,
+      p_modo: filtros.modo ?? undefined,
+    }),
+  );
   const raw = (data ?? { clientes: [], kpis: { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 } }) as {
     clientes?: Array<{
       cliente_id: string; cliente_nombre: string;
@@ -93,7 +90,6 @@ export async function fetchReportesResumen(filtros: RentabilidadFiltros): Promis
 }
 
 export async function fetchOperadoresDistintos(): Promise<string[]> {
-  const { data, error } = await supabase.rpc("operadores_distintos");
-  if (error) throw error;
-  return (data ?? []).map((r: { operador: string }) => r.operador);
+  const rows = await unwrapOr(supabase.rpc("operadores_distintos"), []);
+  return (rows as Array<{ operador: string }>).map((r) => r.operador);
 }
