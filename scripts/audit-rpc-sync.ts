@@ -75,7 +75,7 @@ function dedupeLatest(findings: RpcFinding[]): RpcFinding[] {
   return [...byFn.values()];
 }
 
-function render(findings: RpcFinding[]): string {
+function render(findings: RpcFinding[], live: LiveResult): string {
   const critical = findings.filter((f) => f.severity === "CRITICAL");
   const high = findings.filter((f) => f.severity === "HIGH");
   const date = new Date().toISOString().slice(0, 10);
@@ -90,27 +90,51 @@ function render(findings: RpcFinding[]): string {
   );
   lines.push(`- **CRITICAL** (3 señales): ${critical.length}`);
   lines.push(`- **HIGH** (2 señales, revisión manual): ${high.length}`);
+  lines.push(`- **Live catalog** (funciones vivas con patrón sin \`array_append\`): ${live.suspiciousFns.length}`);
+  const orphanTotal = live.orphans.reduce((a, o) => a + o.count, 0);
+  lines.push(`- **Filas huérfanas detectadas** (\`created_at ≈ deleted_at\`): ${orphanTotal}`);
   lines.push("");
-  lines.push("## CRITICAL");
+  lines.push("## Migraciones — CRITICAL");
   lines.push("");
   if (critical.length === 0) lines.push("_Ninguna._");
   else {
     lines.push("| Función | Migración | Motivo |");
     lines.push("|---|---|---|");
-    for (const f of critical) {
+    for (const f of critical)
       lines.push(`| \`${f.functionName}\` | \`${relative(ROOT, f.file)}\` | ${f.reason} |`);
-    }
   }
   lines.push("");
-  lines.push("## HIGH");
+  lines.push("## Migraciones — HIGH");
   lines.push("");
   if (high.length === 0) lines.push("_Ninguna._");
   else {
     lines.push("| Función | Migración | Motivo |");
     lines.push("|---|---|---|");
-    for (const f of high) {
+    for (const f of high)
       lines.push(`| \`${f.functionName}\` | \`${relative(ROOT, f.file)}\` | ${f.reason} |`);
-    }
+  }
+  lines.push("");
+  lines.push("## Catálogo vivo (pg_proc)");
+  lines.push("");
+  if (live.error) lines.push(`_${live.error} — sección omitida._`);
+  else if (live.suspiciousFns.length === 0) lines.push("_Sin funciones vivas con el patrón._");
+  else {
+    lines.push("Funciones que combinan `array_agg` + `RETURNING id INTO` + borrado, y NO usan `array_append`:");
+    lines.push("");
+    for (const fn of live.suspiciousFns) lines.push(`- \`${fn}\``);
+  }
+  lines.push("");
+  lines.push("## Filas huérfanas");
+  lines.push("");
+  if (live.orphans.length === 0) lines.push("_No inspeccionado._");
+  else {
+    lines.push("| Tabla | Filas con `created_at ≈ deleted_at` |");
+    lines.push("|---|---:|");
+    for (const o of live.orphans) lines.push(`| \`${o.table}\` | ${o.count} |`);
+    lines.push("");
+    lines.push(
+      "> Un conteo > 0 no garantiza el bug (podría ser un borrado inmediato legítimo), pero es la huella exacta del patrón. Revisar caso por caso antes de rescatar.",
+    );
   }
   lines.push("");
   lines.push("## Cómo se corrige el patrón");
@@ -121,9 +145,7 @@ function render(findings: RpcFinding[]): string {
   lines.push("v_incoming_ids := array_append(v_incoming_ids, v_new_id);");
   lines.push("```");
   lines.push("");
-  lines.push(
-    "Referencia: fix aplicado a `actualizar_embarque_completo` (versión 13.252.2).",
-  );
+  lines.push("Referencia: fix aplicado a `actualizar_embarque_completo` (versión 13.252.2).");
   return lines.join("\n") + "\n";
 }
 
@@ -135,12 +157,16 @@ function main() {
     all.push(...auditSql(f, sql));
   }
   const latest = dedupeLatest(all);
+  const live = inspectLive();
   mkdirSync(join(ROOT, "reports"), { recursive: true });
-  writeFileSync(OUT, render(latest), "utf8");
+  writeFileSync(OUT, render(latest, live), "utf8");
   const c = latest.filter((f) => f.severity === "CRITICAL").length;
   const h = latest.filter((f) => f.severity === "HIGH").length;
-  console.log(`✔ ${files.length} migraciones, ${latest.length} funciones sospechosas (${c} CRITICAL, ${h} HIGH)`);
+  console.log(
+    `✔ ${files.length} migraciones · ${latest.length} sospechosas (${c} CRITICAL, ${h} HIGH) · ${live.suspiciousFns.length} en catálogo vivo`,
+  );
   console.log(`  → ${relative(ROOT, OUT)}`);
 }
 
 main();
+
