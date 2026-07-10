@@ -83,16 +83,15 @@ export function analyzeBody(body: string): RpcFinding["signals"] {
 
 export function scoreFinding(signals: RpcFinding["signals"]): Severity | null {
   const { capturePriorIds, insertReturningId, appendAfterInsert, deleteByComplement } = signals;
-  // Patrón exacto: captura previa + insert-sin-append + delete complemento.
-  const criticalHit =
-    capturePriorIds && insertReturningId && !appendAfterInsert && deleteByComplement;
-  if (criticalHit) return "CRITICAL";
+  const insertNoAppend = insertReturningId && !appendAfterInsert;
 
-  // Dos de tres señales de riesgo.
-  const risky = [capturePriorIds, insertReturningId && !appendAfterInsert, deleteByComplement].filter(
-    Boolean,
-  ).length;
-  if (risky >= 2) return "HIGH";
+  // Patrón exacto: captura previa + insert-sin-append + delete complemento.
+  if (capturePriorIds && insertNoAppend && deleteByComplement) return "CRITICAL";
+
+  // HIGH sólo si hay insert-sin-append + otra señal (revisión manual).
+  if (insertNoAppend && (capturePriorIds || deleteByComplement)) return "HIGH";
+  return null;
+}
   return null;
 }
 
