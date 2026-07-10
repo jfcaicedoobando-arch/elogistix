@@ -35,14 +35,16 @@ export function CatalogoClavesSATCard() {
   const { data: rows = [], isLoading } = useQuery<Row[]>({
     queryKey: ["catalogo_claves_sat", organizationId],
     enabled: !!organizationId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("catalogo_claves_sat")
-        .select("id, organization_id, patron, clave_sat, activo, tipo_iva, clave_unidad_sat, nombre_unidad")
-        .order("patron", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as Row[];
-    },
+    queryFn: async () =>
+      (await unwrapOr(
+        supabase
+          .from("catalogo_claves_sat")
+          .select(
+            "id, organization_id, patron, clave_sat, activo, tipo_iva, clave_unidad_sat, nombre_unidad",
+          )
+          .order("patron", { ascending: true }),
+        [],
+      )) as Row[],
   });
 
   const invalidate = () => {
@@ -65,11 +67,11 @@ export function CatalogoClavesSATCard() {
   const addMut = useMutation({
     mutationFn: async (d: Draft) => {
       if (!organizationId) throw new Error("Sin organización");
-      const { error } = await supabase.from("catalogo_claves_sat").insert({
-        organization_id: organizationId,
-        ...buildPayload(d),
-      });
-      if (error) throw error;
+      await run(
+        supabase
+          .from("catalogo_claves_sat")
+          .insert({ organization_id: organizationId, ...buildPayload(d) }),
+      );
     },
     onSuccess: () => { invalidate(); setShowNew(false); setDraft(EMPTY_DRAFT); toast.success("Producto agregado"); },
     onError,
@@ -77,11 +79,12 @@ export function CatalogoClavesSATCard() {
 
   const updateMut = useMutation({
     mutationFn: async (vars: { id: string; d: Draft }) => {
-      const { error } = await supabase
-        .from("catalogo_claves_sat")
-        .update(buildPayload(vars.d))
-        .eq("id", vars.id);
-      if (error) throw error;
+      await run(
+        supabase
+          .from("catalogo_claves_sat")
+          .update(buildPayload(vars.d))
+          .eq("id", vars.id),
+      );
     },
     onSuccess: () => { invalidate(); setEditingId(null); toast.success("Producto actualizado"); },
     onError,
@@ -89,12 +92,12 @@ export function CatalogoClavesSATCard() {
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("catalogo_claves_sat").delete().eq("id", id);
-      if (error) throw error;
+      await run(supabase.from("catalogo_claves_sat").delete().eq("id", id));
     },
     onSuccess: () => { invalidate(); toast.success("Producto eliminado"); },
     onError,
   });
+
 
   const busy = addMut.isPending || updateMut.isPending || deleteMut.isPending;
 
