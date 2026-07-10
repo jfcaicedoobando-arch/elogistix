@@ -44,6 +44,7 @@ export async function fetchSegurosEmbarque(embarqueId: string): Promise<SeguroEm
       .order("vigencia_desde", { ascending: false }),
     [],
   );
+  // SAFE-CAST: COLUMNS lista explícita mapea 1:1 a SeguroEmbarque.
   return data as unknown as SeguroEmbarque[];
 }
 
