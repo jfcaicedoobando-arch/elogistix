@@ -16,10 +16,9 @@ import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
-import { descargarAcuseCancelacionPdf } from "./descargarAcusePdf.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
-import { fetchOrgSlug } from "../_shared/orgSlug.ts";
+import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
