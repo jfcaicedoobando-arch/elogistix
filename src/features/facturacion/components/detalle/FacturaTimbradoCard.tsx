@@ -3,11 +3,10 @@
  * fecha de emisión) con botón para copiar el UUID. Se muestra solo cuando
  * la factura ya está timbrada (`uuid_fiscal` no nulo).
  */
-import { toast } from "sonner";
 import { Copy, FileCheck2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { useCopyText } from "@/hooks/shared";
 import { formatDate } from "@/lib/formatters";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
 
@@ -20,14 +19,13 @@ interface Props {
 }
 
 export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmision, ambiente }: Props) {
-  const copiarUuid = async () => {
-    try {
-      await navigator.clipboard.writeText(uuidFiscal);
-      toast.success("UUID copiado");
-    } catch (err) {
-      notifyError(toast, { title: "No se pudo copiar", error: err, method: "FACTURA_UUID_COPY" });
-    }
-  };
+  const copy = useCopyText();
+  const copiarUuid = () =>
+    void copy(uuidFiscal, {
+      successMessage: "UUID copiado",
+      errorTitle: "No se pudo copiar",
+      method: "FACTURA_UUID_COPY",
+    });
 
   return (
     <Card>

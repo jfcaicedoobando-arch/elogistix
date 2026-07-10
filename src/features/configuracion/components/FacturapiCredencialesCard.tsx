@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Receipt, AlertTriangle, CheckCircle2, Wand2 } from "lucide-react";
-import { toast } from "sonner";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useCopyText } from "@/hooks/shared";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   useFacturapiCredenciales,
@@ -43,6 +43,7 @@ function HeaderBadges({ configurado, ambiente }: { configurado: boolean; ambient
 
 export default function FacturapiCredencialesCard() {
   const { organization } = useOrganization();
+  const copy = useCopyText();
   const orgId = organization?.id ?? null;
   const { data, isLoading } = useFacturapiCredenciales(orgId);
   const upsert = useUpsertFacturapiCredenciales(orgId);
@@ -66,10 +67,7 @@ export default function FacturapiCredencialesCard() {
   if (!orgId) return null;
 
   const copiar = (texto: string) => {
-    navigator.clipboard.writeText(texto).then(
-      () => toast.success("Copiado"),
-      () => notifyError(undefined, { title: "No se pudo copiar", method: "FacturapiCredencialesCard.copiar" }),
-    );
+    void copy(texto, { errorTitle: "No se pudo copiar", method: "FacturapiCredencialesCard.copiar" });
   };
 
   const onGuardar = async () => {

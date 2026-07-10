@@ -14,3 +14,4 @@ export * from './useRadixPointerEventsRescue';
 export * from './useColumnVisibility';
 export * from './useMutationWithFeedback';
 export * from './createCatalogHooks';
+export * from './useCopyText';

@@ -1,11 +1,10 @@
 import { memo } from "react";
 import { Building2, Copy } from "lucide-react";
-import { toast } from "sonner";
-import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
+import { useCopyText } from "@/hooks/shared";
 
 /**
  * Tarjeta read-only que muestra los datos de identificación de la
@@ -16,13 +15,15 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext";
  */
 function OrgInfoCardBase() {
   const { organization } = useOrganization();
+  const copy = useCopyText();
   if (!organization) return null;
 
   const copiarId = () => {
-    navigator.clipboard.writeText(organization.id).then(
-      () => toast.success("ID de organización copiado"),
-      () => notifyError(undefined, { title: "No se pudo copiar el ID", method: "OrgInfoCard.copiarId" }),
-    );
+    void copy(organization.id, {
+      successMessage: "ID de organización copiado",
+      errorTitle: "No se pudo copiar el ID",
+      method: "OrgInfoCard.copiarId",
+    });
   };
 
   return (

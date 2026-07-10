@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.251.0] - 2026-07-10
+- **DRY · Lote 9a.2 — Copy-to-clipboard unificado con `usehooks-ts`**:
+  - Nuevo hook `useCopyText` en `src/hooks/shared/useCopyText.ts` envuelve `useCopyToClipboard` de `usehooks-ts` con toast estándar (`sonner.success` + `notifyError`).
+  - Migrados 4 call-sites: `OrgInfoCard`, `FacturapiCredencialesCard`, `ContactActions`, `FacturaTimbradoCard` (eliminan boilerplate de `navigator.clipboard.writeText().then(...)`).
+  - Cobertura: `src/hooks/shared/__tests__/useCopyText.test.tsx` (3 casos: default, custom message, error).
+  - Sitios con lógica especial (fallback iframe, estado `copied` animado) se dejan intactos: `TrackingNavieraActions`, `ErrorDetailsDialog`.
+
 ## [13.250.0] - 2026-07-10
 - **Refactor · Lote 9a — Reemplazo de hooks propios con librerías npm estándar**:
   - `useDebouncedValue` ahora es un thin wrapper sobre `use-debounce` (npm). Firma preservada; 24 → 11 LOC.
