@@ -36,6 +36,7 @@ export async function fetchPlantillasMensaje(
   if (canal) q = q.eq("canal", canal);
   if (soloActivas) q = q.eq("activa", true);
   const data = await unwrapOr(q, []);
+  // SAFE-CAST: COLS lista explícita mapea 1:1 a PlantillaMensajeRow.
   return data as unknown as PlantillaMensajeRow[];
 }
 
