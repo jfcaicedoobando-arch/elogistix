@@ -108,6 +108,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     if (fac.estado !== "Cancelada" && fac.estado !== "Sustituida") {
       return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
     }
+    if (!(await authorizeOrgMembership(supabase, userData.user.id, fac.organization_id))) {
+      return json({ error: "forbidden" }, 403);
+    }
     const cli = await getFacturapiClient(supabase, fac.organization_id);
     if (!cli.ok) return json({ error: cli.data.error, message: cli.data.message }, cli.data.status);
     const acuseSolo = await descargarAcuseCancelacion(fac.facturapi_id, cli.data.apiKey);
