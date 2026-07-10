@@ -357,8 +357,7 @@ export default tseslint.config(
       "src/features/cotizacion/components/SeccionMercanciaMaritimaLCL.tsx",
       "src/features/cotizacion/components/TablaConceptosGenerico.tsx",
       "src/features/cotizacion/components/TablaCostosDetalle.tsx",
-      "src/features/facturacion/components/detalle/FacturaConceptosTable.tsx",
-      // Sub-vistas extraídas de FacturaConceptosTable para respetar límite 200 líneas.
+      // Sub-vistas read-only extraídas de FacturaConceptosTable (límite 200 líneas).
       "src/features/facturacion/components/detalle/FacturaConceptosRows.tsx",
       "src/features/portal/components/factura/PortalFacturaConceptosTable.tsx",
       "src/features/costeo/components/DemorasTarifaEditor.tsx",
