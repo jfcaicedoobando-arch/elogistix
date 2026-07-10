@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.253.0] - 2026-07-10
+- **Auditoría · RPC sync**: nuevo auditor `bun run audit:rpc-sync` que busca en las 437 migraciones y en `pg_proc` el patrón "borra lo que no está en la lista" (bug ELIMP00245): funciones que capturan ids del payload antes del loop, insertan hijos nuevos con `RETURNING id` y al final borran por complemento sin agregar los ids recién generados. Genera `reports/rpc-sync-audit.md` con findings CRITICAL/HIGH, catálogo vivo y conteo de filas huérfanas (`created_at ≈ deleted_at`) por tabla. Baseline actual: 0 CRITICAL, 0 HIGH, 0 funciones vivas con el patrón; 12 filas huérfanas históricas en `conceptos_venta` y `conceptos_costo` (previas al fix 13.252.2, listadas para rescate manual). Tests en `src/__tests__/audit-rpc-sync.test.ts`.
+
 ## [13.252.2] - 2026-07-10
 - **Fix · Editar Embarque**: al guardar cambios en un embarque, los conceptos de venta o costo **recién agregados** (sin `id`) ya no se auto-borran. El RPC `actualizar_embarque_completo` insertaba la fila y luego, en el soft-delete final, la marcaba como borrada porque su nuevo `id` no estaba en el array de "sobrevivientes". Ahora cada `INSERT` hace `array_append(v_incoming_*_ids, v_new_id)` antes del `UPDATE ... SET deleted_at`. Detectado en ELIMP00245 (INDIMEX / Elogistix); se rescató manualmente el último "Demoras" perdido.
 
