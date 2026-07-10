@@ -6,6 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.248.0] - 2026-07-10
+- **Refactor · DRY Lote 8b (cierre) — KpiCard unificada en Dashboard principal**:
+  - `src/components/shared/KpiCard.tsx`: agregadas dos capacidades para reemplazar todos los `KpiTile` locales sin perder features:
+    - `to?: string` → envuelve la card en `<Link>` de react-router (misma A11y: focus ring + hover shadow).
+    - `loading?: boolean` → renderiza `<Skeleton>` en lugar del valor.
+    - Tipografía adaptativa del valor (`text-2xl`/`text-xl`/`text-lg` según longitud) para evitar truncados con montos largos (`MXN 1,234,567.89`).
+    - Refactor interno en subcomponente `KpiBody` + helpers `valueSize`/`deltaClass` para pasar el linter (complexity ≤16).
+  - `src/features/dashboard/finance/components/HoyKpiRow.tsx`: 4 tiles migrados a `KpiCard`. Mapeo de tonos: `warning→warning`, `danger→destructive`, `success→success`, default `info` en "Por pagar". Iconos ahora heredan color de la variante.
+  - `src/features/dashboard/components/EmbarquesPendientesAdminCard.tsx`: 2 tiles migrados a `KpiCard` (`variant="success"` Entregados, `variant="warning"` En EIR). Eliminado el `KpiTile` local (~24 líneas).
+  - Eliminado `src/features/dashboard/finance/components/KpiTile.tsx` (75 líneas, ya sin consumidores).
+  - **Ahorro neto: ~90 líneas**. Tests `KpiCard.test.tsx` (5/5) verdes, lint/tsgo limpios.
+  - **Impacto DRY acumulado (8a+8b+8c): ~1,332 líneas eliminadas** desde el inicio de la auditoría.
+
 ## [13.247.0] - 2026-07-10
 - **Fix · CI verde tras DRY 8a/8b/8c**:
   - `src/lib/supabase/response.ts`: imports de tipos ahora vienen de `@supabase/supabase-js` (elimina falso positivo Knip de `@supabase/postgrest-js` como dep no usada).
