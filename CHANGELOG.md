@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.241.0] - 2026-07-10
+- **Refactor · DRY Lote 8a.2c — Barrido de services (segunda tanda)**:
+  - `src/lib/supabase/response.ts`: `unwrap`/`unwrapOr` reescritos con overloads por tipo de respuesta (`PostgrestSingleResponse` / `MaybeSingle` / `Response`) para preservar inferencia de `T`. La versión anterior (unión estructural) colapsaba `T` a `never` en algunos joins y `.single()`.
+  - Services migrados: `profit/estadoResultadosDevengado` (5 sitios), `facturacion/conceptosFacturaCrud` (5), `portal-agente/services/index` (4), `facturacion/notasCredito` (4), `embarques/seguros` (4), `embarques/embarqueDirectMutations` (4), `cxp/proveedorNotasCredito` (4), `crm/plantillas` (4), `crm/lineage` (4), `costeo/tarifas/mutations` (4), `cliente/services/contactos` (4), `auditoria/services/revisiones` (4).
+  - Total: **~50 sitios adicionales** colapsados. **~120 líneas eliminadas** en este slice; acumulado Lote 8a.2 ~360 líneas.
+  - Sin cambios funcionales: se preserva Sentry en `estadoResultados`, transiciones de estado de NC, joins anidados con SAFE-CAST, y triggers BD para recálculo de totales.
+
 ## [13.240.0] - 2026-07-10
 - **Refactor · DRY Lote 8a.2b — Barrido de services con `unwrap/unwrapOr/run`**:
   - Services migrados: `proveedor/proveedoresCrud` (10 sitios), `facturacion/datosFiscalesCliente` (6), `embarques/mutations` (7), `crm/oportunidades` (6), `crm/etapas` (6), `cotizacion/services/queries` (6), `comisiones/vendedoras` (6), `cliente/services/crud` (6), `admin/services/organizations` (6), `presupuesto/services/categorias` (5), `costeo/services/agentes` (5), `admin/services/members` (5).

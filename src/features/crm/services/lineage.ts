@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 export interface LeadOportunidadRow {
   id: string;
@@ -32,45 +33,52 @@ export interface LineageLead {
 }
 
 export async function fetchLeadLineage(leadId: string): Promise<LeadOportunidadRow[]> {
-  const { data, error } = await supabase
-    .from("crm_oportunidades")
-    .select("id, nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre")
-    .eq("lead_id", leadId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as LeadOportunidadRow[];
+  const data = await unwrapOr(
+    supabase
+      .from("crm_oportunidades")
+      .select("id, nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre")
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false }),
+    [],
+  );
+  return data as unknown as LeadOportunidadRow[];
 }
 
 export async function fetchOportunidadCotsLineage(
   oportunidadId: string,
 ): Promise<LineageCotRow[]> {
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .select("id, folio, estado, modo, embarque_id, created_at")
-    .eq("oportunidad_id", oportunidadId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as LineageCotRow[];
+  const data = await unwrapOr(
+    supabase
+      .from("cotizaciones")
+      .select("id, folio, estado, modo, embarque_id, created_at")
+      .eq("oportunidad_id", oportunidadId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    [],
+  );
+  return data as unknown as LineageCotRow[];
 }
 
 export async function fetchEmbarquesByIds(ids: string[]): Promise<LineageEmbRow[]> {
   if (ids.length === 0) return [];
-  const { data, error } = await supabase
-    .from("embarques")
-    .select("id, expediente, estado, modo")
-    .in("id", ids)
-    .is("deleted_at", null);
-  if (error) throw error;
-  return (data ?? []) as LineageEmbRow[];
+  const data = await unwrapOr(
+    supabase
+      .from("embarques")
+      .select("id, expediente, estado, modo")
+      .in("id", ids)
+      .is("deleted_at", null),
+    [],
+  );
+  return data as unknown as LineageEmbRow[];
 }
 
 export async function fetchLeadResumen(leadId: string): Promise<LineageLead | null> {
-  const { data, error } = await supabase
-    .from("crm_leads")
-    .select("id, empresa, estado")
-    .eq("id", leadId)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("crm_leads")
+      .select("id, empresa, estado")
+      .eq("id", leadId)
+      .maybeSingle(),
+  );
   return (data ?? null) as LineageLead | null;
 }

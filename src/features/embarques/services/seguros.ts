@@ -3,6 +3,7 @@
  * CRUD contra `public.seguros_embarque`. RLS aísla por organización.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
 
 export type MonedaSeguro = "MXN" | "USD" | "EUR";
 
@@ -35,50 +36,54 @@ const COLUMNS =
   "id, embarque_id, organization_id, aseguradora, numero_poliza, certificado_url, cobertura_descripcion, suma_asegurada, deducible, prima, moneda, vigencia_desde, vigencia_hasta, contacto, notas, created_at, updated_at";
 
 export async function fetchSegurosEmbarque(embarqueId: string): Promise<SeguroEmbarque[]> {
-  const { data, error } = await supabase
-    .from("seguros_embarque")
-    .select(COLUMNS)
-    .eq("embarque_id", embarqueId)
-    .order("vigencia_desde", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as SeguroEmbarque[];
+  const data = await unwrapOr(
+    supabase
+      .from("seguros_embarque")
+      .select(COLUMNS)
+      .eq("embarque_id", embarqueId)
+      .order("vigencia_desde", { ascending: false }),
+    [],
+  );
+  return data as unknown as SeguroEmbarque[];
 }
 
 export async function createSeguroEmbarque(input: SeguroEmbarqueInput): Promise<SeguroEmbarque> {
   // organization_id se hereda del embarque si no se pasa.
   let orgId = input.organization_id;
   if (!orgId) {
-    const { data: emb, error: embErr } = await supabase
-      .from("embarques")
-      .select("organization_id")
-      .eq("id", input.embarque_id)
-      .maybeSingle();
-    if (embErr) throw embErr;
+    const emb = await unwrap(
+      supabase
+        .from("embarques")
+        .select("organization_id")
+        .eq("id", input.embarque_id)
+        .maybeSingle(),
+    );
     if (!emb?.organization_id) throw new Error("Embarque sin organización");
     orgId = emb.organization_id;
   }
 
-  const { data, error } = await supabase
-    .from("seguros_embarque")
-    .insert({ ...input, organization_id: orgId })
-    .select(COLUMNS)
-    .single();
-  if (error) throw error;
-  return data as SeguroEmbarque;
+  const data = await unwrap(
+    supabase
+      .from("seguros_embarque")
+      .insert({ ...input, organization_id: orgId })
+      .select(COLUMNS)
+      .single(),
+  );
+  return data as unknown as SeguroEmbarque;
 }
 
 export async function updateSeguroEmbarque(
   id: string,
   patch: Partial<SeguroEmbarqueInput>,
 ): Promise<void> {
-  const { error } = await supabase.from("seguros_embarque").update(patch).eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("seguros_embarque").update(patch).eq("id", id));
 }
 
 export async function deleteSeguroEmbarque(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("seguros_embarque")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("seguros_embarque")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id),
+  );
 }

@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoTarifa } from "@/features/costeo/types";
+import { run, unwrap } from "@/lib/supabase/response";
 
 export interface TarifaRecargoInput {
   concepto: string;
@@ -44,22 +45,22 @@ export async function insertTarifaConRecargos(
   input: TarifaInput,
 ): Promise<CosteoTarifa> {
   const { recargos, ...tarifa } = input;
-  const { data, error } = await supabase
-    .from("costeo_tarifas")
-    .insert({
-      ...tarifa,
-      moneda: "USD",
-      estado: "vigente",
-      organization_id: organizationId,
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("costeo_tarifas")
+      .insert({
+        ...tarifa,
+        moneda: "USD",
+        estado: "vigente",
+        organization_id: organizationId,
+      })
+      .select("*")
+      .single(),
+  );
 
   const rows = buildRecargoRows(data.id, recargos);
   if (rows.length > 0) {
-    const { error: errRec } = await supabase.from("costeo_tarifa_recargos").insert(rows);
-    if (errRec) throw errRec;
+    await run(supabase.from("costeo_tarifa_recargos").insert(rows));
   }
   return data as CosteoTarifa;
 }
@@ -69,35 +70,23 @@ export async function updateTarifaConRecargos(
   input: TarifaInput,
 ): Promise<void> {
   const { recargos, ...tarifa } = input;
-  const { error } = await supabase
-    .from("costeo_tarifas")
-    .update({ ...tarifa, moneda: "USD" })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase.from("costeo_tarifas").update({ ...tarifa, moneda: "USD" }).eq("id", id),
+  );
 
   // Sincronizar recargos: borrar todos los existentes y reinsertar los nuevos.
-  const { error: errDel } = await supabase
-    .from("costeo_tarifa_recargos")
-    .delete()
-    .eq("tarifa_id", id);
-  if (errDel) throw errDel;
+  await run(supabase.from("costeo_tarifa_recargos").delete().eq("tarifa_id", id));
 
   const rows = buildRecargoRows(id, recargos);
   if (rows.length > 0) {
-    const { error: errRec } = await supabase.from("costeo_tarifa_recargos").insert(rows);
-    if (errRec) throw errRec;
+    await run(supabase.from("costeo_tarifa_recargos").insert(rows));
   }
 }
 
 export async function marcarTarifaReemplazada(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("costeo_tarifas")
-    .update({ estado: "reemplazada" })
-    .eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("costeo_tarifas").update({ estado: "reemplazada" }).eq("id", id));
 }
 
 export async function deleteTarifa(id: string): Promise<void> {
-  const { error } = await supabase.from("costeo_tarifas").delete().eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("costeo_tarifas").delete().eq("id", id));
 }

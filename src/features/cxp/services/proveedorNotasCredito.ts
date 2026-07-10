@@ -5,30 +5,29 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/lib/domain/bitacora/registrar";
+import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
 
 export type NotaCreditoProveedor = Tables<"proveedor_notas_credito">;
 
 export async function fetchNotasCreditoFactura(
   facturaId: string,
 ): Promise<NotaCreditoProveedor[]> {
-  const { data, error } = await supabase
-    .from("proveedor_notas_credito")
-    .select("*")
-    .eq("proveedor_factura_id", facturaId)
-    .order("fecha", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  return unwrapOr(
+    supabase
+      .from("proveedor_notas_credito")
+      .select("*")
+      .eq("proveedor_factura_id", facturaId)
+      .order("fecha", { ascending: false }),
+    [],
+  );
 }
 
 export async function crearNotaCreditoProveedor(
   payload: TablesInsert<"proveedor_notas_credito">,
 ): Promise<NotaCreditoProveedor> {
-  const { data, error } = await supabase
-    .from("proveedor_notas_credito")
-    .insert(payload)
-    .select()
-    .single();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.from("proveedor_notas_credito").insert(payload).select().single(),
+  );
   await registrarActividad({
     modulo: "cxp",
     accion: "crear_nota_credito",
@@ -40,11 +39,9 @@ export async function crearNotaCreditoProveedor(
 }
 
 export async function aplicarNotaCredito(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("proveedor_notas_credito")
-    .update({ estado: "Aplicada" })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase.from("proveedor_notas_credito").update({ estado: "Aplicada" }).eq("id", id),
+  );
   await registrarActividad({
     modulo: "cxp",
     accion: "aplicar_nota_credito",
@@ -53,11 +50,9 @@ export async function aplicarNotaCredito(id: string): Promise<void> {
 }
 
 export async function cancelarNotaCredito(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("proveedor_notas_credito")
-    .update({ estado: "Cancelada" })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase.from("proveedor_notas_credito").update({ estado: "Cancelada" }).eq("id", id),
+  );
   await registrarActividad({
     modulo: "cxp",
     accion: "cancelar_nota_credito",

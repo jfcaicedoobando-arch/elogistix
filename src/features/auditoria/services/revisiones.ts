@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
+import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
 
 /** Ventana por defecto para listar revisiones (días). Cubre snooze máx (30d) +
  *  ventana de auditoría reciente. Configurable vía `desdeIso`. */
@@ -17,14 +18,16 @@ export async function fetchAuditoriaRevisiones(
   const desdeIso =
     opts.desdeIso ??
     new Date(Date.now() - DEFAULT_VENTANA_DIAS * 86_400_000).toISOString();
-  const { data, error } = await supabase
-    .from("auditoria_revisiones")
-    .select("*")
-    .gte("created_at", desdeIso)
-    .order("created_at", { ascending: false })
-    .limit(ROW_LIMIT);
-  if (error) throw error;
-  return (data ?? []) as AuditoriaRevision[];
+  const data = await unwrapOr(
+    supabase
+      .from("auditoria_revisiones")
+      .select("*")
+      .gte("created_at", desdeIso)
+      .order("created_at", { ascending: false })
+      .limit(ROW_LIMIT),
+    [],
+  );
+  return data as unknown as AuditoriaRevision[];
 }
 
 export interface UpsertRevisionInput {
@@ -44,19 +47,20 @@ export async function upsertAuditoriaRevision(
   if (!input.organization_id) {
     throw new Error("organization_id requerido para upsert de revisión");
   }
-  const { data, error } = await supabase
-    .from("auditoria_revisiones")
-    .upsert(
-      {
-        ...input,
-        estado_revision: "revisado",
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "organization_id,embarque_id,regla,detalle_hash" },
-    )
-    .select()
-    .single();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("auditoria_revisiones")
+      .upsert(
+        {
+          ...input,
+          estado_revision: "revisado",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "organization_id,embarque_id,regla,detalle_hash" },
+      )
+      .select()
+      .single(),
+  );
   return data as AuditoriaRevision;
 }
 
@@ -99,21 +103,18 @@ export async function asignarResponsableHallazgo(
     fecha_limite: input.fecha_limite,
     estado_revision: input.estado_revision ?? "pendiente",
   };
-  const { data, error } = await supabase
-    .from("auditoria_revisiones")
-    .upsert(payload, {
-      onConflict: "organization_id,embarque_id,regla,detalle_hash",
-    })
-    .select()
-    .single();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("auditoria_revisiones")
+      .upsert(payload, {
+        onConflict: "organization_id,embarque_id,regla,detalle_hash",
+      })
+      .select()
+      .single(),
+  );
   return data as AuditoriaRevision;
 }
 
 export async function deleteAuditoriaRevision(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("auditoria_revisiones")
-    .delete()
-    .eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("auditoria_revisiones").delete().eq("id", id));
 }

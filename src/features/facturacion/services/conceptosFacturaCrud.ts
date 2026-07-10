@@ -15,6 +15,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
+import { run, unwrapOr } from "@/lib/supabase/response";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -92,13 +93,14 @@ export async function agregarConceptoFactura(params: {
   input: ConceptoFacturaInput;
 }): Promise<void> {
   const linea = normalizarLinea(params.input);
-  const { error } = await supabase.from("conceptos_factura").insert({
-    factura_id: params.facturaId,
-    organization_id: params.organizationId,
-    moneda: params.moneda,
-    ...linea,
-  });
-  if (error) throw error;
+  await run(
+    supabase.from("conceptos_factura").insert({
+      factura_id: params.facturaId,
+      organization_id: params.organizationId,
+      moneda: params.moneda,
+      ...linea,
+    }),
+  );
   await recalcularTotalesFactura(params.facturaId);
 }
 
@@ -108,11 +110,9 @@ export async function actualizarConceptoFactura(params: {
   input: ConceptoFacturaInput;
 }): Promise<void> {
   const linea = normalizarLinea(params.input);
-  const { error } = await supabase
-    .from("conceptos_factura")
-    .update(linea)
-    .eq("id", params.conceptoId);
-  if (error) throw error;
+  await run(
+    supabase.from("conceptos_factura").update(linea).eq("id", params.conceptoId),
+  );
   await recalcularTotalesFactura(params.facturaId);
 }
 
@@ -120,11 +120,7 @@ export async function eliminarConceptoFactura(params: {
   conceptoId: string;
   facturaId: string;
 }): Promise<void> {
-  const { error } = await supabase
-    .from("conceptos_factura")
-    .delete()
-    .eq("id", params.conceptoId);
-  if (error) throw error;
+  await run(supabase.from("conceptos_factura").delete().eq("id", params.conceptoId));
   await recalcularTotalesFactura(params.facturaId);
 }
 
@@ -134,18 +130,20 @@ export async function eliminarConceptoFactura(params: {
  * mantiene la reconciliación inmediata para el cliente.
  */
 export async function recalcularTotalesFactura(facturaId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from("conceptos_factura")
-    .select("cantidad, precio_unitario, tasa_iva_aplicada, tipo_iva, tasa_ret_isr, tasa_ret_iva")
-    .eq("factura_id", facturaId)
-    .is("deleted_at", null);
-  if (error) throw error;
+  const data = await unwrapOr(
+    supabase
+      .from("conceptos_factura")
+      .select("cantidad, precio_unitario, tasa_iva_aplicada, tipo_iva, tasa_ret_isr, tasa_ret_iva")
+      .eq("factura_id", facturaId)
+      .is("deleted_at", null),
+    [],
+  );
 
   let subtotal = 0;
   let iva = 0;
   let retIsr = 0;
   let retIva = 0;
-  for (const c of data ?? []) {
+  for (const c of data) {
     const importe = Number(c.cantidad) * Number(c.precio_unitario);
     subtotal += importe;
     let tasa: number;
@@ -166,29 +164,32 @@ export async function recalcularTotalesFactura(facturaId: string): Promise<void>
   const retIvaR = r(retIva);
   const totalR = r(subtotalR + ivaR - retIsrR - retIvaR);
 
-  const { error: uErr } = await supabase
-    .from("facturas")
-    .update({
-      subtotal: subtotalR,
-      iva: ivaR,
-      ret_isr: retIsrR,
-      ret_iva: retIvaR,
-      total: totalR,
-    })
-    .eq("id", facturaId);
-  if (uErr) throw uErr;
+  await run(
+    supabase
+      .from("facturas")
+      .update({
+        subtotal: subtotalR,
+        iva: ivaR,
+        ret_isr: retIsrR,
+        ret_iva: retIvaR,
+        total: totalR,
+      })
+      .eq("id", facturaId),
+  );
 }
 
 export async function fetchConceptosFactura(facturaId: string): Promise<ConceptoFacturaRow[]> {
-  const { data, error } = await supabase
-    .from("conceptos_factura")
-    .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, monto_ret_isr, monto_ret_iva, embarque_id, proforma_id_origen, embarques:embarque_id(expediente)")
-    .eq("factura_id", facturaId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: true });
-  if (error) throw error;
+  const data = await unwrapOr(
+    supabase
+      .from("conceptos_factura")
+      .select("id, factura_id, descripcion, cantidad, precio_unitario, clave_sat, total, moneda, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva, monto_ret_isr, monto_ret_iva, embarque_id, proforma_id_origen, embarques:embarque_id(expediente)")
+      .eq("factura_id", facturaId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true }),
+    [],
+  );
   // SAFE-CAST: aplanamos el join anidado a `embarque_expediente` para consumo UI.
-  return (data ?? []).map((row) => {
+  return data.map((row) => {
     const emb = (row as { embarques?: { expediente?: string | null } | null }).embarques;
     return {
       ...(row as Omit<ConceptoFacturaRow, "embarque_expediente">),

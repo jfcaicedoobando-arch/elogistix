@@ -29,26 +29,31 @@ import type {
   PostgrestResponse,
 } from "@supabase/postgrest-js";
 
-type AnyResponse<T> =
-  | PostgrestSingleResponse<T>
-  | PostgrestMaybeSingleResponse<T>
-  | PostgrestResponse<T>;
-
-/** Extrae `data` y re-lanza si hay error. `data` puede ser `null` para maybeSingle. */
-export async function unwrap<T>(builder: PromiseLike<AnyResponse<T>>): Promise<T> {
+/** Extrae `data` y re-lanza si hay error. Overloads permiten a TS elegir la
+ *  variante correcta (single → T, maybeSingle → T|null, select → T[]|null)
+ *  antes de caer al fallback estructural. */
+export async function unwrap<T>(builder: PromiseLike<PostgrestSingleResponse<T>>): Promise<T>;
+export async function unwrap<T>(builder: PromiseLike<PostgrestMaybeSingleResponse<T>>): Promise<T | null>;
+export async function unwrap<T>(builder: PromiseLike<PostgrestResponse<T>>): Promise<T[] | null>;
+export async function unwrap<T>(builder: PromiseLike<{ data: T | null; error: unknown }>): Promise<T>;
+export async function unwrap(builder: PromiseLike<{ data: unknown; error: unknown }>): Promise<unknown> {
   const { data, error } = await builder;
   if (error) throw error;
-  return data as T;
+  return data;
 }
 
 /** Extrae `data ?? fallback` y re-lanza si hay error. */
-export async function unwrapOr<T>(
-  builder: PromiseLike<AnyResponse<T>>,
-  fallback: T,
-): Promise<T> {
+export async function unwrapOr<T>(builder: PromiseLike<PostgrestSingleResponse<T>>, fallback: T): Promise<T>;
+export async function unwrapOr<T>(builder: PromiseLike<PostgrestMaybeSingleResponse<T>>, fallback: T): Promise<T>;
+export async function unwrapOr<T>(builder: PromiseLike<PostgrestResponse<T>>, fallback: T[]): Promise<T[]>;
+export async function unwrapOr<T>(builder: PromiseLike<{ data: T | null; error: unknown }>, fallback: T): Promise<T>;
+export async function unwrapOr(
+  builder: PromiseLike<{ data: unknown; error: unknown }>,
+  fallback: unknown,
+): Promise<unknown> {
   const { data, error } = await builder;
   if (error) throw error;
-  return (data ?? fallback) as T;
+  return data ?? fallback;
 }
 
 /** Ejecuta la operación y re-lanza si hay error. Ignora `data`. */

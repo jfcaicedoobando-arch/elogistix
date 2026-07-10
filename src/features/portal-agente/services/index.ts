@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 export interface AgenteContext {
   agenteId: string;
@@ -22,8 +23,7 @@ export async function fetchAgenteContext(): Promise<AgenteContext> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error(AUTH_ERROR_MESSAGES.notAuthenticated);
 
-  const { data, error } = await supabase.rpc("get_current_agente_context");
-  if (error) throw error;
+  const data = await unwrap(supabase.rpc("get_current_agente_context"));
 
   // SAFE-CAST: la RPC devuelve SETOF con una sola fila o vacío.
   const row = Array.isArray(data) ? data[0] : data;
@@ -58,10 +58,9 @@ export interface AgenteRutaRow {
 /** Lista las rutas activas de la organización del agente vía RPC SECURITY DEFINER
  *  (el agente no tiene SELECT directo sobre `costeo_rutas` por RLS). */
 export async function fetchAgenteRutas(): Promise<AgenteRutaRow[]> {
-  const { data, error } = await supabase.rpc("get_agente_rutas");
-  if (error) throw error;
+  const data = await unwrapOr(supabase.rpc("get_agente_rutas"), []);
   // SAFE-CAST: la RPC devuelve SETOF con el shape declarado por la función.
-  const rows = (data ?? []) as Array<{
+  const rows = data as Array<{
     id: string;
     organization_id: string;
     activa: boolean;
@@ -99,9 +98,10 @@ export interface AgenteTarifaRow {
 
 /** Lista todas las tarifas del agente autenticado (cualquier estado_aprobacion). */
 export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
-  const { data, error } = await supabase
-    .from("costeo_tarifas")
-    .select(`
+  const data = await unwrapOr(
+    supabase
+      .from("costeo_tarifas")
+      .select(`
       id, ruta_id, naviera_id, tipo_contenedor_id, moneda, flete_base,
       vigente_desde, vigente_hasta, estado, estado_aprobacion,
       motivo_rechazo, aprobada_en,
@@ -113,9 +113,10 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
         puerto_destino:puertos!costeo_rutas_puerto_destino_id_fkey(name)
       )
     `)
-    .order("vigente_desde", { ascending: false })
-    .limit(500);
-  if (error) throw error;
+      .order("vigente_desde", { ascending: false })
+      .limit(500),
+    [],
+  );
   // SAFE-CAST: alias de relaciones — el cliente generado infiere never en joins anidados.
   type Raw = {
     id: string; ruta_id: string; naviera_id: string; tipo_contenedor_id: string;
@@ -130,10 +131,7 @@ export async function fetchAgenteTarifas(): Promise<AgenteTarifaRow[]> {
       puerto_destino?: { name?: string } | null;
     } | null;
   };
-  // SAFE-CAST: `data` viene del cliente Supabase con tipos generados (joins
-  // anidados resueltos al shape `Raw` declarado arriba). El cast aplana
-  // únicamente la unión `null | Raw[]` a `Raw[]` para iterar.
-  return ((data ?? []) as unknown as Raw[]).map((r) => ({
+  return (data as unknown as Raw[]).map((r) => ({
     id: r.id,
     ruta_id: r.ruta_id,
     naviera_id: r.naviera_id,
@@ -167,11 +165,13 @@ export interface AgenteEmbarqueRow {
 }
 
 export async function fetchAgenteEmbarques(): Promise<AgenteEmbarqueRow[]> {
-  const { data, error } = await supabase
-    .from("embarques")
-    .select("id, expediente, modo, estado, bl_master, puerto_origen, puerto_destino, etd, eta")
-    .order("etd", { ascending: false, nullsFirst: false })
-    .limit(200);
-  if (error) throw error;
-  return (data ?? []) as AgenteEmbarqueRow[];
+  const data = await unwrapOr(
+    supabase
+      .from("embarques")
+      .select("id, expediente, modo, estado, bl_master, puerto_origen, puerto_destino, etd, eta")
+      .order("etd", { ascending: false, nullsFirst: false })
+      .limit(200),
+    [],
+  );
+  return data as unknown as AgenteEmbarqueRow[];
 }
