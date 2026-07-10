@@ -18,11 +18,12 @@ interface LiveResult {
 
 function runPsql(sql: string): string | null {
   try {
-    return execSync(`psql -t -A -F'|' -c ${JSON.stringify(sql)}`, {
+    return execSync(`psql -t -A -F"|" -c ${JSON.stringify(sql)}`, {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     }).trim();
-  } catch {
+  } catch (e) {
+    console.error("[audit:rpc-sync] psql falló:", (e as Error).message);
     return null;
   }
 }
