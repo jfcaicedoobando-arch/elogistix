@@ -36,16 +36,17 @@ export interface FacturasListadoResult {
 export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<FacturasListadoResult> {
   const page = f.page ?? 0;
   const pageSize = f.pageSize ?? 50;
-  const { data, error } = await supabase.rpc("facturas_listado", {
-    p_organization_id: f.organizationId ?? undefined,
-    p_search: f.search || undefined,
-    p_estado: f.estado && f.estado !== "todos" ? f.estado : undefined,
-    p_fecha_desde: f.fechaDesde || undefined,
-    p_fecha_hasta: f.fechaHasta || undefined,
-    p_offset: page * pageSize,
-    p_limit: pageSize,
-  });
-  if (error) throw error;
+  const data = await unwrap(
+    supabase.rpc("facturas_listado", {
+      p_organization_id: f.organizationId ?? undefined,
+      p_search: f.search || undefined,
+      p_estado: f.estado && f.estado !== "todos" ? f.estado : undefined,
+      p_fecha_desde: f.fechaDesde || undefined,
+      p_fecha_hasta: f.fechaHasta || undefined,
+      p_offset: page * pageSize,
+      p_limit: pageSize,
+    }),
+  );
   const rows = (data ?? []) as Array<{
     id: string; numero: string; cliente_nombre: string; expediente: string;
     total: number; moneda: FacturaRow["moneda"]; fecha_emision: string;
@@ -86,24 +87,27 @@ export async function fetchFacturas(organizationId: string | null): Promise<Fact
 }
 
 export async function marcarCostoPagado(input: { id: string; referenciaPago?: string }): Promise<void> {
-  const { error } = await supabase
-    .from("conceptos_costo")
-    .update({
-      estado_liquidacion: "Pagado",
-      fecha_pago: new Date().toISOString().split("T")[0],
-      referencia_pago: input.referenciaPago || null,
-    })
-    .eq("id", input.id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("conceptos_costo")
+      .update({
+        estado_liquidacion: "Pagado",
+        fecha_pago: new Date().toISOString().split("T")[0],
+        referencia_pago: input.referenciaPago || null,
+      })
+      .eq("id", input.id),
+  );
 }
 
 export async function fetchGastosPendientes() {
-  const { data, error } = await supabase
-    .from("conceptos_costo")
-    .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)")
-    .eq("estado_liquidacion", "Pendiente")
-    .order("fecha_vencimiento", { ascending: true })
-    .limit(2000); // defensivo: pendientes de liquidación por org
-  if (error) throw error;
-  return data;
+  return unwrapOr(
+    supabase
+      .from("conceptos_costo")
+      .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)")
+      .eq("estado_liquidacion", "Pendiente")
+      .order("fecha_vencimiento", { ascending: true })
+      .limit(2000),
+    [],
+  );
 }
+
