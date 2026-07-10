@@ -69,6 +69,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar-nota-credito", async (req) => {
     .maybeSingle();
   if (ncErr || !nc) return json({ error: "nota_credito_not_found" }, 404);
   if (!nc.facturapi_id) return json({ error: "no_timbrada" }, 409);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, nc.organization_id))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
