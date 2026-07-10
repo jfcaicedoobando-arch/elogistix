@@ -174,5 +174,6 @@ export async function fetchAgenteEmbarques(): Promise<AgenteEmbarqueRow[]> {
       .limit(200),
     [],
   );
+  // SAFE-CAST: select explícito coincide 1:1 con AgenteEmbarqueRow.
   return data as unknown as AgenteEmbarqueRow[];
 }
