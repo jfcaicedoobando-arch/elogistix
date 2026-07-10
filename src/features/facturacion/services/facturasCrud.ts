@@ -3,7 +3,9 @@
  * Extraído de `index.ts` (Auditoría Paso 2: purga de barrels).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Tables } from "@/integrations/supabase/types";
+
 
 export type FacturaRow = Tables<"facturas">;
 
