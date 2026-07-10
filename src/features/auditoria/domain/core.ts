@@ -98,7 +98,11 @@ export function agruparPorRegla(
     },
     {} as Record<ReglaAuditoria, HallazgoAuditoria[]>,
   );
-  for (const h of hallazgos) map[h.regla].push(h);
+  for (const h of hallazgos) {
+    // Regla desconocida (p.ej. backfill agregó una nueva): inicializa on-demand.
+    if (!map[h.regla]) map[h.regla] = [];
+    map[h.regla].push(h);
+  }
   return map;
 }
 
