@@ -45,7 +45,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   const { data: userData, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
-  const body = (await req.jsonResponse().catch(() => ({}))) as ReqBody;
+  const body = (await req.json().catch(() => ({}))) as ReqBody;
   if (!body.pago_id) return jsonResponse({ error: "pago_id_required" }, 400);
 
   // 1) Pago

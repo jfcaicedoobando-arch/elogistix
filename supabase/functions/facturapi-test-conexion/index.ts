@@ -17,7 +17,7 @@ interface Body {
 
 async function parseBody(req: Request): Promise<Body | null> {
   try {
-    const body = (await req.jsonResponse()) as Body;
+    const body = (await req.json()) as Body;
     if (!body?.organization_id) return null;
     if (body.ambiente !== "sandbox" && body.ambiente !== "live") return null;
     return body;
@@ -106,7 +106,7 @@ async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null):
     throw toFacturapiError(res, detail);
   }
 
-  return await res.jsonResponse() as FacturapiOrg;
+  return await res.json() as FacturapiOrg;
 }
 
 /**

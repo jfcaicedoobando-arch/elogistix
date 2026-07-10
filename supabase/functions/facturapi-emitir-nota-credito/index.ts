@@ -69,7 +69,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   const { data: userData, error: uErr } = await supabase.auth.getUser();
   if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
-  const body = (await req.jsonResponse().catch(() => ({}))) as ReqBody;
+  const body = (await req.json().catch(() => ({}))) as ReqBody;
   if (!body.nota_credito_id) return jsonResponse({ error: "nota_credito_id_required" }, 400);
 
   const pre = await preloadNcContext(supabase, body.nota_credito_id);

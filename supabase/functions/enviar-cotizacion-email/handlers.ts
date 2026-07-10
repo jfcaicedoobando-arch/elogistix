@@ -57,7 +57,7 @@ async function sendEmailsToRecipients(
           templateData: { ...templateData, contacto: r.nombre },
         }),
       });
-      const out = await resp.jsonResponse().catch(() => ({}));
+      const out = await resp.json().catch(() => ({}));
       const ok = resp.ok && (out?.success !== false || out?.queued === true);
       resultados.push({ email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) });
     } catch (e) {

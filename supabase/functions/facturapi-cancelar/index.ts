@@ -41,7 +41,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   const { data: userData, error: uErr } = await supabase.auth.getUser();
   if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
-  const rawBody = (await req.jsonResponse().catch(() => ({}))) as CancelacionInput & {
+  const rawBody = (await req.json().catch(() => ({}))) as CancelacionInput & {
     sustituida_por_factura_id?: string;
     solo_descargar_acuse?: boolean;
     solo_descargar_acuse_pdf?: boolean;

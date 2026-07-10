@@ -117,7 +117,7 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   const { data: userData, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
-  const body = (await req.jsonResponse().catch(() => ({}))) as ReqBody;
+  const body = (await req.json().catch(() => ({}))) as ReqBody;
   const tipo = body.tipo;
   if (tipo !== "pdf" && tipo !== "xml") {
     return jsonResponse({ error: "tipo_invalido", message: "tipo debe ser 'pdf' o 'xml'" }, 400);

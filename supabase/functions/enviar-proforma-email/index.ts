@@ -76,7 +76,7 @@ async function enviarDestinatario(ctx: EnvioContexto, r: Recipient): Promise<Env
         templateData: { ...ctx.templateData, contacto: r.nombre },
       }),
     });
-    const out = await resp.jsonResponse().catch(() => ({}));
+    const out = await resp.json().catch(() => ({}));
     const ok = resp.ok && (out?.success !== false || out?.queued === true);
     return { email: r.email, tipo: r.tipo, ok, error: ok ? undefined : (out?.error ?? `HTTP ${resp.status}`) };
   } catch (e) {
@@ -233,7 +233,7 @@ Deno.serve(wrapEdgeHandler('enviar-proforma-email', async (req) => {
   const admin = createClient(env.url, env.service, { auth: { persistSession: false } });
 
   let body: Record<string, unknown>;
-  try { body = await req.jsonResponse(); } catch { return jsonResponse(cors, { error: 'Invalid JSON' }, 400); }
+  try { body = await req.json(); } catch { return jsonResponse(cors, { error: 'Invalid JSON' }, 400); }
 
   const entrada = validarEntrada(body);
   if ('error' in entrada) return jsonResponse(cors, { error: entrada.error }, 400);

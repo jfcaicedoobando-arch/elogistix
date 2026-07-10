@@ -135,7 +135,7 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
   const { data: userData, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
-  const body = (await req.jsonResponse().catch(() => ({}))) as ReqBody;
+  const body = (await req.json().catch(() => ({}))) as ReqBody;
 
   const target = await resolveTarget(supabase, body);
   if (!target.ok) return jsonResponse(target.body, target.status);
