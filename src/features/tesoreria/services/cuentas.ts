@@ -17,12 +17,12 @@ export async function listarCuentas(activas = true): Promise<CuentaBancaria[]> {
   return unwrapOr(q, [] as CuentaBancaria[]) as Promise<CuentaBancaria[]>;
 }
 
-export async function crearCuenta(payload: TablesInsert<"cuentas_bancarias">) {
-  return unwrap(supabase.from("cuentas_bancarias").insert(payload).select().single());
+export async function crearCuenta(payload: TablesInsert<"cuentas_bancarias">): Promise<CuentaBancaria> {
+  return unwrap(supabase.from("cuentas_bancarias").insert(payload).select().single()) as Promise<CuentaBancaria>;
 }
 
-export async function actualizarCuenta(id: string, patch: TablesUpdate<"cuentas_bancarias">) {
-  return unwrap(supabase.from("cuentas_bancarias").update(patch).eq("id", id).select().single());
+export async function actualizarCuenta(id: string, patch: TablesUpdate<"cuentas_bancarias">): Promise<CuentaBancaria> {
+  return unwrap(supabase.from("cuentas_bancarias").update(patch).eq("id", id).select().single()) as Promise<CuentaBancaria>;
 }
 
 export async function eliminarCuenta(id: string, userId: string | null) {
