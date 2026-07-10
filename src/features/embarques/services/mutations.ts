@@ -105,8 +105,8 @@ export interface ReabrirEmbarqueInput {
  * pueden ejecutarla; el backend valida rol y estado actual.
  */
 export async function reabrirEmbarqueRpc(input: ReabrirEmbarqueInput): Promise<void> {
-  // SAFE-CAST: la RPC nueva aún no aparece en el types.ts regenerado; suprimimos el cast.
   await run(
+    // SAFE-CAST: la RPC nueva aún no aparece en el types.ts regenerado; suprimimos el cast.
     (supabase.rpc as unknown as (
       fn: string,
       args: Record<string, unknown>,
