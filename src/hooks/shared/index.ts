@@ -12,3 +12,4 @@ export * from './useToast';
 export * from './useIsMobile';
 export * from './useRadixPointerEventsRescue';
 export * from './useColumnVisibility';
+export * from './useMutationWithFeedback';

@@ -1,6 +1,4 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
+import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchNavieras,
@@ -9,7 +7,7 @@ import {
   deleteNaviera,
   type Naviera,
 } from "@/features/catalogos/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
 
 export type { Naviera };
 
@@ -32,38 +30,26 @@ export function useAllNavieras() {
 }
 
 export function useAdminNavieras() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.navieras.all });
+  const invalidate = queryKeys.navieras.all;
 
-  const agregarNaviera = useMutation({
+  const agregarNaviera = useMutationWithFeedback({
     mutationFn: (input: { code: string; name: string }) => insertNaviera(input),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess(toast, { title: "Naviera agregada" });
-    },
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al agregar naviera", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    successTitle: "Naviera agregada",
+    errorTitle: "Error al agregar naviera",
   });
 
-  const toggleActivo = useMutation({
+  const toggleActivo = useMutationWithFeedback({
     mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setNavieraActivo(id, activo),
-    onSuccess: () => invalidate(),
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    errorTitle: "Error al actualizar",
   });
 
-  const eliminarNaviera = useMutation({
+  const eliminarNaviera = useMutationWithFeedback({
     mutationFn: (id: string) => deleteNaviera(id),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess(toast, { title: "Naviera eliminada" });
-    },
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al eliminar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    successTitle: "Naviera eliminada",
+    errorTitle: "Error al eliminar",
   });
 
   return { agregarNaviera, toggleActivo, eliminarNaviera };

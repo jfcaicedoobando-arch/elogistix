@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.238.0] - 2026-07-10
+- **Refactor · DRY Lote 8a.1 — `useMutationWithFeedback`**:
+  - Nuevo hook compartido en `src/hooks/shared/useMutationWithFeedback.ts` que estandariza el patrón `mutationFn + invalidate + notifySuccess/notifyError` repetido en >30 hooks.
+  - Migrados hooks piloto: `useNavieras`, `usePuertos`, `useTiposContenedor`, `useCreateOrgMember`, `useCreateUser` y los 5 hooks de `useTesoreriaMovimientos` (`useImportarMovimientos`, `useConciliarPago`, `useDesconciliar`, `useIgnorarMovimiento`).
+  - Reducción neta ~120 líneas en los 6 archivos migrados. Boilerplate de `onSuccess/onError` colapsa a props declarativas.
+  - Sin cambios de comportamiento visible: mismos toasts, mismas invalidaciones. `onSuccess` extra sigue disponible para lógica dependiente de `variables` (ej. `orgMembers` que necesita `organizationId`).
+
 ## [13.237.0] - 2026-07-09
 - **Feat · Trazabilidad línea→embarque en factura + badge de cobro**:
   - `fetchConceptosFactura` ahora hace join a `embarques(expediente)` y aplana el resultado en `embarque_expediente`, exponiendo también `embarque_id` y `proforma_id_origen`.

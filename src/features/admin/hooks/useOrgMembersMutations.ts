@@ -5,22 +5,21 @@
  * Por eso NO exponemos un flujo para "agregar" usuarios existentes —
  * el alta crea un usuario nuevo vía servicio `createOrgMember`.
  */
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { createOrgMember } from "@/features/admin/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
 
 export function useCreateOrgMember() {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: createOrgMember,
+    successTitle: "Miembro creado en la organización",
+    errorTitle: "Error al crear miembro",
+    errorMethod: "CREATE_ORG_MEMBER",
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(variables.organizationId) });
       qc.invalidateQueries({ queryKey: queryKeys.admin.orgCountMembers(variables.organizationId) });
-      notifySuccess(undefined, { title: "Miembro creado en la organización" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear miembro: ${error.message}`, error, method: "CREATE_ORG_MEMBER" });
     },
   });
 }

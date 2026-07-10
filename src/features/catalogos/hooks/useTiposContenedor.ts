@@ -1,6 +1,4 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
+import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchTiposContenedor,
@@ -9,7 +7,7 @@ import {
   deleteTipoContenedor,
   type TipoContenedor,
 } from "@/features/catalogos/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
 
 export type { TipoContenedor };
 
@@ -32,40 +30,27 @@ export function useAllTiposContenedor() {
 }
 
 export function useAdminTiposContenedor() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.tiposContenedor.all });
+  const invalidate = queryKeys.tiposContenedor.all;
 
-  const agregarTipo = useMutation({
+  const agregarTipo = useMutationWithFeedback({
     mutationFn: (input: { code: string; name: string }) => insertTipoContenedor(input),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess(toast, { title: "Tipo de contenedor agregado" });
-    },
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al agregar tipo", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    successTitle: "Tipo de contenedor agregado",
+    errorTitle: "Error al agregar tipo",
   });
 
-  const toggleActivo = useMutation({
+  const toggleActivo = useMutationWithFeedback({
     mutationFn: ({ id, activo }: { id: string; activo: boolean }) =>
       setTipoContenedorActivo(id, activo),
-    onSuccess: () => invalidate(),
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    errorTitle: "Error al actualizar",
   });
 
-  const eliminarTipo = useMutation({
+  const eliminarTipo = useMutationWithFeedback({
     mutationFn: (id: string) => deleteTipoContenedor(id),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess(toast, { title: "Tipo de contenedor eliminado" });
-    },
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al eliminar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    successTitle: "Tipo de contenedor eliminado",
+    errorTitle: "Error al eliminar",
   });
 
   return { agregarTipo, toggleActivo, eliminarTipo };
