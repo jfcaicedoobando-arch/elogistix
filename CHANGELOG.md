@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.252.2] - 2026-07-10
+- **Fix · Editar Embarque**: al guardar cambios en un embarque, los conceptos de venta o costo **recién agregados** (sin `id`) ya no se auto-borran. El RPC `actualizar_embarque_completo` insertaba la fila y luego, en el soft-delete final, la marcaba como borrada porque su nuevo `id` no estaba en el array de "sobrevivientes". Ahora cada `INSERT` hace `array_append(v_incoming_*_ids, v_new_id)` antes del `UPDATE ... SET deleted_at`. Detectado en ELIMP00245 (INDIMEX / Elogistix); se rescató manualmente el último "Demoras" perdido.
+
 ## [13.252.1] - 2026-07-10
 - **Refine · Dashboard**: se quitó `Cerrado` del timeline "Resumen por estado" (ruido operativo). Queda con 6 nodos: Confirmado → En Tránsito → Arribo → En Aduana → Entregado → **EIR**. Se ajustó el RPC `dashboard_summary`, `ESTADOS_FILTRO`, `EMPTY_CONTEO` y el parser correspondiente.
 
