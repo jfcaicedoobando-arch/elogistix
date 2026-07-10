@@ -43,6 +43,7 @@ function HeaderBadges({ configurado, ambiente }: { configurado: boolean; ambient
 
 export default function FacturapiCredencialesCard() {
   const { organization } = useOrganization();
+  const copy = useCopyText();
   const orgId = organization?.id ?? null;
   const { data, isLoading } = useFacturapiCredenciales(orgId);
   const upsert = useUpsertFacturapiCredenciales(orgId);
