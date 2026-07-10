@@ -69,6 +69,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (fErr || !factura) return json({ error: "factura_not_found", detail: fErr?.message }, 404);
   if (factura.facturapi_id) return json({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
+    return json({ error: "forbidden" }, 403);
+  }
+
   // v13.171.0 — Guard: facturas en moneda extranjera requieren TC capturado
   // (bloqueo también aplicado en UI vía checklist + banner). Defensa en profundidad.
   const monedaFactura = factura.moneda ?? "MXN";
