@@ -70,6 +70,7 @@ export async function createSeguroEmbarque(input: SeguroEmbarqueInput): Promise<
       .select(COLUMNS)
       .single(),
   );
+  // SAFE-CAST: COLUMNS lista explícita mapea 1:1 a SeguroEmbarque.
   return data as unknown as SeguroEmbarque;
 }
 
