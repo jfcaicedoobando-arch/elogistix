@@ -13,3 +13,4 @@ export * from './useIsMobile';
 export * from './useRadixPointerEventsRescue';
 export * from './useColumnVisibility';
 export * from './useMutationWithFeedback';
+export * from './createCatalogHooks';
