@@ -17,13 +17,14 @@ interface LiveResult {
 }
 
 function runPsql(sql: string): string | null {
+  const oneLine = sql.replace(/\s+/g, " ").trim();
   try {
-    return execSync(`psql -t -A -F"|" -c ${JSON.stringify(sql)}`, {
+    return execSync(`psql -t -A -F"|" -c ${JSON.stringify(oneLine)}`, {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     }).trim();
   } catch (e) {
-    console.error("[audit:rpc-sync] psql falló:", (e as Error).message);
+    console.error("[audit:rpc-sync] psql falló:", (e as Error).message.split("\n")[0]);
     return null;
   }
 }
