@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Receipt, AlertTriangle, CheckCircle2, Wand2 } from "lucide-react";
-import { toast } from "sonner";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useCopyText } from "@/hooks/shared";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import {
   useFacturapiCredenciales,
