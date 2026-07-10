@@ -6,6 +6,7 @@
  * con consumidores existentes (`useOrgMembersMutations`, tests).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { AppRole } from "@/types/appRole";
 import { fetchAvailableUsers, type UserOption } from "@/features/admin/services/usuario/availableUsers";
 
@@ -27,29 +28,29 @@ export interface OrgMemberRow {
 }
 
 export async function fetchAdminGlobalUsers(): Promise<GlobalUserRow[]> {
-  const { data: members, error } = await supabase
-    .from("organization_members")
-    .select("user_id, role, organization_id")
-    .order("user_id");
-  if (error) throw error;
+  const members = (await unwrap(
+    supabase
+      .from("organization_members")
+      .select("user_id, role, organization_id")
+      .order("user_id"),
+  )) as Array<{ user_id: string; role: string; organization_id: string }>;
 
-  const { data: orgs } = await supabase.from("organizations").select("id, nombre");
+  const orgs = (await unwrapOr(
+    supabase.from("organizations").select("id, nombre"),
+    [],
+  )) as Array<{ id: string; nombre: string }>;
   const orgMap: Record<string, string> = {};
-  (orgs ?? []).forEach((o) => {
-    orgMap[o.id] = o.nombre;
-  });
+  orgs.forEach((o) => { orgMap[o.id] = o.nombre; });
 
   const emailMap: Record<string, string> = {};
   try {
     const users = await fetchAvailableUsers();
-    users.forEach((u) => {
-      emailMap[u.id] = u.email;
-    });
+    users.forEach((u) => { emailMap[u.id] = u.email; });
   } catch {
     /* edge function may not be available */
   }
 
-  return (members ?? []).map((m) => ({
+  return members.map((m) => ({
     user_id: m.user_id,
     email: emailMap[m.user_id] || m.user_id,
     org_nombre: orgMap[m.organization_id] || m.organization_id,
@@ -58,12 +59,14 @@ export async function fetchAdminGlobalUsers(): Promise<GlobalUserRow[]> {
 }
 
 export async function fetchOrgMembers(orgId: string): Promise<OrgMemberRow[]> {
-  const { data, error } = await supabase
-    .from("organization_members")
-    .select("id, user_id, role")
-    .eq("organization_id", orgId)
-    .order("created_at");
-  if (error) throw error;
+  const data = (await unwrapOr(
+    supabase
+      .from("organization_members")
+      .select("id, user_id, role")
+      .eq("organization_id", orgId)
+      .order("created_at"),
+    [],
+  )) as Array<{ id: string; user_id: string; role: AppRole }>;
 
   const emailMap: Record<string, string> = {};
   try {
@@ -71,26 +74,18 @@ export async function fetchOrgMembers(orgId: string): Promise<OrgMemberRow[]> {
     users.forEach((u) => { emailMap[u.id] = u.email; });
   } catch { /* edge function may be unavailable */ }
 
-  return (data ?? []).map((m) => ({
+  return data.map((m) => ({
     ...m,
     email: emailMap[m.user_id] || m.user_id,
-  })) as OrgMemberRow[];
+  }));
 }
 
 export async function updateOrgMemberRole(memberId: string, role: AppRole): Promise<void> {
-  const { error } = await supabase
-    .from("organization_members")
-    .update({ role })
-    .eq("id", memberId);
-  if (error) throw error;
+  await run(supabase.from("organization_members").update({ role }).eq("id", memberId));
 }
 
 export async function removeOrgMember(memberId: string): Promise<void> {
-  const { error } = await supabase
-    .from("organization_members")
-    .delete()
-    .eq("id", memberId);
-  if (error) throw error;
+  await run(supabase.from("organization_members").delete().eq("id", memberId));
 }
 
 /**
