@@ -7,7 +7,7 @@ recién generados. Es el patrón del bug ELIMP00245.
 - **CRITICAL** (3 señales): 0
 - **HIGH** (2 señales, revisión manual): 0
 - **Live catalog** (funciones vivas con patrón sin `array_append`): 0
-- **Filas huérfanas detectadas** (`created_at ≈ deleted_at`): 0
+- **Filas huérfanas detectadas** (`created_at ≈ deleted_at`): 12
 
 ## Migraciones — CRITICAL
 
@@ -19,11 +19,19 @@ _Ninguna._
 
 ## Catálogo vivo (pg_proc)
 
-_psql no disponible — sección omitida._
+_Sin funciones vivas con el patrón._
 
 ## Filas huérfanas
 
-_No inspeccionado._
+| Tabla | Filas con `created_at ≈ deleted_at` |
+|---|---:|
+| `conceptos_venta` | 6 |
+| `conceptos_costo` | 6 |
+| `embarque_contenedores` | 0 |
+| `documentos_embarque` | 0 |
+| `conceptos_factura` | 0 |
+
+> Un conteo > 0 no garantiza el bug (podría ser un borrado inmediato legítimo), pero es la huella exacta del patrón. Revisar caso por caso antes de rescatar.
 
 ## Cómo se corrige el patrón
 
