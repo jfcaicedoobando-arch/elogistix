@@ -3,6 +3,7 @@
  * para respetar Power-of-10 (≤200 líneas por archivo).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/lib/domain/bitacora/registrar";
 
@@ -11,12 +12,13 @@ export type NuevaFacturaProveedorPayload =
   Omit<TablesInsert<"proveedor_facturas">, "folio_interno"> & { folio_interno?: string };
 
 export async function crearFacturaProveedor(payload: NuevaFacturaProveedorPayload) {
-  const { data, error } = await supabase
-    .from("proveedor_facturas")
-    .insert(payload as TablesInsert<"proveedor_facturas">)
-    .select()
-    .single();
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("proveedor_facturas")
+      .insert(payload as TablesInsert<"proveedor_facturas">)
+      .select()
+      .single(),
+  );
   await registrarActividad({
     modulo: "cxp",
     accion: "crear",
@@ -53,17 +55,17 @@ export async function existeFacturaDuplicada(
     .is("deleted_at", null)
     .limit(1);
   if (excluirId) q = q.neq("id", excluirId);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []).length > 0;
+  const data = await unwrapOr(q, []);
+  return data.length > 0;
 }
 
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
-  const { error } = await supabase
-    .from("proveedor_facturas")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("proveedor_facturas")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+      .eq("id", id),
+  );
   await registrarActividad({
     modulo: "cxp",
     accion: "eliminar",
