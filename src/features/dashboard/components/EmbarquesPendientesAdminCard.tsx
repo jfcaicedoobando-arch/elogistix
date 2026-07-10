@@ -93,28 +93,3 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
     </Card>
   );
 }
-
-interface KpiTileProps {
-  icon: React.ReactNode;
-  label: string;
-  sublabel: string;
-  value: number;
-  loading: boolean;
-}
-
-function KpiTile({ icon, label, sublabel, value, loading }: KpiTileProps) {
-  return (
-    <div className="rounded-md border p-3">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {icon}
-        <span>{label}</span>
-      </div>
-      {loading ? (
-        <Skeleton className="h-7 w-12 mt-1" />
-      ) : (
-        <p className="text-2xl font-semibold tabular-nums mt-1">{value}</p>
-      )}
-      <p className="text-xs text-muted-foreground">{sublabel}</p>
-    </div>
-  );
-}
