@@ -1,4 +1,6 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -13,6 +15,10 @@ interface KpiCardProps {
   variant?: KpiVariant;
   sublabel?: string;
   onClick?: () => void;
+  /** Si se pasa, la card se envuelve en un `<Link to={...}>` (react-router). */
+  to?: string;
+  /** Renderiza un skeleton en lugar del valor mientras carga. */
+  loading?: boolean;
   className?: string;
 }
 
@@ -47,21 +53,34 @@ export function KpiCard({
   variant = "default",
   sublabel,
   onClick,
+  to,
+  loading = false,
   className,
 }: KpiCardProps) {
-  return (
+  // v13.96.0: tipografía adaptativa para evitar "MXN 1,53…" truncado en pantallas angostas.
+  const valueStr = String(value ?? "");
+  const valueSizeClass =
+    valueStr.length <= 8
+      ? "text-2xl"
+      : valueStr.length <= 13
+        ? "text-xl"
+        : "text-lg";
+
+  const interactive = Boolean(onClick) && !to;
+
+  const card = (
     <Card
       className={cn(
-        "transition-shadow",
+        "transition-shadow h-full",
         variantStyles[variant],
-        onClick && "cursor-pointer hover:shadow-raised",
+        (onClick || to) && "cursor-pointer hover:shadow-raised",
         className,
       )}
-      onClick={onClick}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
+      onClick={interactive ? onClick : undefined}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
       onKeyDown={(e) => {
-        if (onClick && (e.key === "Enter" || e.key === " ")) {
+        if (interactive && onClick && (e.key === "Enter" || e.key === " ")) {
           e.preventDefault();
           onClick();
         }
@@ -71,7 +90,16 @@ export function KpiCard({
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 min-w-0">
             <p className="text-xs text-muted-foreground truncate">{label}</p>
-            <p className="text-xl font-semibold tabular-nums truncate">{value}</p>
+            {loading ? (
+              <Skeleton className="h-7 w-20" />
+            ) : (
+              <p
+                className={cn(valueSizeClass, "font-semibold tabular-nums truncate")}
+                title={valueStr}
+              >
+                {value}
+              </p>
+            )}
             {delta && (
               <p
                 className={cn(
@@ -93,4 +121,16 @@ export function KpiCard({
       </CardContent>
     </Card>
   );
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className="block focus:outline-none focus:ring-2 focus:ring-ring rounded-lg"
+      >
+        {card}
+      </Link>
+    );
+  }
+  return card;
 }
