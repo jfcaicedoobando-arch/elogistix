@@ -16,7 +16,6 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
       supabase
         .from("proformas")
         .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
-        .eq("organization_id", embarqueId ? undefined as never : "" as never)
         .eq("embarque_id", embarqueId)
         .order("created_at", { ascending: false }),
       [],
