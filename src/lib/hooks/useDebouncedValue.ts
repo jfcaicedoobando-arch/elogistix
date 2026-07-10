@@ -1,24 +1,12 @@
 /**
- * Hook canónico para debouncing de valores.
- *
- * DRY (Lote 7e · DRY-7): fuente única para cualquier `useEffect + setTimeout`
- * repetido en el codebase. Reemplaza el patrón `[state, setState]` +
- * `setTimeout` inline y también el `useDebounce` histórico de `@/hooks/shared`
- * (que ahora es un re-export de este módulo).
- *
- * @param value  Valor a debouncear.
- * @param delay  Retraso en ms antes de propagar el último valor (default 300).
- * @returns      El último valor estable después de `delay` ms sin cambios.
+ * `useDebouncedValue` — thin wrapper sobre `use-debounce` (npm).
+ * Se mantiene la firma histórica `(value, delay=300) => debouncedValue`
+ * para no tocar los ~40 call-sites del proyecto.
+ * Lote 9a — DRY vs npm.
  */
-import { useState, useEffect } from "react";
+import { useDebounce as useDebouncedFromLib } from "use-debounce";
 
 export function useDebouncedValue<T>(value: T, delay: number = 300): T {
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
+  const [debounced] = useDebouncedFromLib(value, delay);
   return debounced;
 }
