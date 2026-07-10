@@ -11,7 +11,7 @@ import {
 export type { Naviera };
 
 const hooks = createCatalogHooks<Naviera, { code: string; name: string }>({
-  keys: queryKeys.navieras,
+  keys: { invalidate: queryKeys.navieras.all, active: queryKeys.navieras.activas, all: queryKeys.navieras.todas },
   fetch: fetchNavieras,
   insert: insertNaviera,
   setActivo: setNavieraActivo,
