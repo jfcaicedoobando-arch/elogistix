@@ -38,6 +38,8 @@ export function parseConteoPorEstado(stats: DashboardStats): Record<EstadoFiltro
     Arribo: Number(raw["Arribo"] ?? 0),
     "En Aduana": Number(raw["En Aduana"] ?? 0),
     Entregado: Number(raw["Entregado"] ?? 0),
+    EIR: Number(raw["EIR"] ?? 0),
+    Cerrado: Number(raw["Cerrado"] ?? 0),
   };
 }
 

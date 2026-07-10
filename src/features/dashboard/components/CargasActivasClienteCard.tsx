@@ -12,7 +12,7 @@ export interface CargaCliente {
   clienteId: string;
   clienteNombre: string;
   total: number;
-  desglose: Record<EstadoFiltro, number>;
+  desglose: Partial<Record<EstadoFiltro, number>>;
 }
 
 interface Props {

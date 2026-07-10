@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.252.0] - 2026-07-10
+- **Feature · Dashboard**: el timeline "Resumen por estado" ahora muestra 7 nodos (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → **EIR** → **Cerrado**). Se amplió el RPC `dashboard_summary` para contar EIR/Cerrado sobre `embarques_base` (retro-compatible), `EMPTY_CONTEO`/`ESTADOS_FILTRO` incluyen las nuevas claves, y `CargasActivasClienteCard` mantiene su desglose limitado a los 5 activos vía `Partial<Record<EstadoFiltro, number>>`.
+
 ## [13.251.1] - 2026-07-10
 - **Fix · Auditoría operativa**: `agruparPorRegla` inicializa el bucket on-demand cuando el backend devuelve una `regla` que aún no está en el catálogo `REGLAS_AUDITORIA`, evitando `TypeError: Cannot read properties of undefined (reading 'push')` al abrir `/auditoria`.
 
