@@ -44,6 +44,69 @@ const iconStyles: Record<KpiVariant, string> = {
  * Reemplaza las implementaciones locales de KpiCard/KpiTile en dashboards,
  * detalles y catálogos para unificar el design language.
  */
+function valueSize(valueStr: string) {
+  if (valueStr.length <= 8) return "text-2xl";
+  if (valueStr.length <= 13) return "text-xl";
+  return "text-lg";
+}
+
+function deltaClass(deltaVariant: NonNullable<KpiCardProps["deltaVariant"]>) {
+  if (deltaVariant === "positive") return "text-success";
+  if (deltaVariant === "negative") return "text-destructive";
+  return "text-muted-foreground";
+}
+
+interface KpiBodyProps {
+  label: string;
+  value: string | number;
+  valueStr: string;
+  loading: boolean;
+  delta?: string;
+  deltaVariant: NonNullable<KpiCardProps["deltaVariant"]>;
+  sublabel?: string;
+  Icon?: LucideIcon;
+  variant: KpiVariant;
+}
+
+function KpiBody({
+  label,
+  value,
+  valueStr,
+  loading,
+  delta,
+  deltaVariant,
+  sublabel,
+  Icon,
+  variant,
+}: KpiBodyProps) {
+  return (
+    <CardContent className="p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 min-w-0">
+          <p className="text-xs text-muted-foreground truncate">{label}</p>
+          {loading ? (
+            <Skeleton className="h-7 w-20" />
+          ) : (
+            <p
+              className={cn(valueSize(valueStr), "font-semibold tabular-nums truncate")}
+              title={valueStr}
+            >
+              {value}
+            </p>
+          )}
+          {delta && (
+            <p className={cn("text-xs tabular-nums", deltaClass(deltaVariant))}>{delta}</p>
+          )}
+          {sublabel && !delta && (
+            <p className="text-xs text-muted-foreground truncate">{sublabel}</p>
+          )}
+        </div>
+        {Icon && <Icon className={cn("h-5 w-5 shrink-0", iconStyles[variant])} />}
+      </div>
+    </CardContent>
+  );
+}
+
 export function KpiCard({
   label,
   value,
@@ -57,15 +120,7 @@ export function KpiCard({
   loading = false,
   className,
 }: KpiCardProps) {
-  // v13.96.0: tipografía adaptativa para evitar "MXN 1,53…" truncado en pantallas angostas.
   const valueStr = String(value ?? "");
-  const valueSizeClass =
-    valueStr.length <= 8
-      ? "text-2xl"
-      : valueStr.length <= 13
-        ? "text-xl"
-        : "text-lg";
-
   const interactive = Boolean(onClick) && !to;
 
   const card = (
@@ -86,39 +141,17 @@ export function KpiCard({
         }
       }}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1 min-w-0">
-            <p className="text-xs text-muted-foreground truncate">{label}</p>
-            {loading ? (
-              <Skeleton className="h-7 w-20" />
-            ) : (
-              <p
-                className={cn(valueSizeClass, "font-semibold tabular-nums truncate")}
-                title={valueStr}
-              >
-                {value}
-              </p>
-            )}
-            {delta && (
-              <p
-                className={cn(
-                  "text-xs tabular-nums",
-                  deltaVariant === "positive" && "text-success",
-                  deltaVariant === "negative" && "text-destructive",
-                  deltaVariant === "neutral" && "text-muted-foreground",
-                )}
-              >
-                {delta}
-              </p>
-            )}
-            {sublabel && !delta && (
-              <p className="text-xs text-muted-foreground truncate">{sublabel}</p>
-            )}
-          </div>
-          {Icon && <Icon className={cn("h-5 w-5 shrink-0", iconStyles[variant])} />}
-        </div>
-      </CardContent>
+      <KpiBody
+        label={label}
+        value={value}
+        valueStr={valueStr}
+        loading={loading}
+        delta={delta}
+        deltaVariant={deltaVariant}
+        sublabel={sublabel}
+        Icon={Icon}
+        variant={variant}
+      />
     </Card>
   );
 
@@ -134,3 +167,4 @@ export function KpiCard({
   }
   return card;
 }
+
