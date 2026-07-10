@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, run } from "@/lib/supabase/response";
 import { AUTH_ERROR_MESSAGES } from "@/constants/authMessages";
 
 export interface PortalPerfilData {
@@ -21,16 +22,16 @@ export async function fetchPortalPerfil(): Promise<PortalPerfilData> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error(AUTH_ERROR_MESSAGES.notAuthenticated);
 
-  const { data, error } = await supabase
-    .from("client_users")
-    .select(
-      "clientes(id, nombre, rfc, direccion, ciudad, estado, cp, contacto, email, telefono)",
-    )
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw error;
+  const data = await unwrap(
+    supabase
+      .from("client_users")
+      .select(
+        "clientes(id, nombre, rfc, direccion, ciudad, estado, cp, contacto, email, telefono)",
+      )
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle(),
+  );
 
   return {
     email: user.email ?? "",
@@ -42,11 +43,12 @@ export async function actualizarContactoPortal(input: {
   nombre: string;
   telefono: string;
 }) {
-  const { error } = await supabase.rpc("portal_update_contacto", {
-    _nombre: input.nombre,
-    _telefono: input.telefono,
-  });
-  if (error) throw error;
+  await run(
+    supabase.rpc("portal_update_contacto", {
+      _nombre: input.nombre,
+      _telefono: input.telefono,
+    }),
+  );
 }
 
 export async function cambiarPasswordPortal(newPassword: string) {
