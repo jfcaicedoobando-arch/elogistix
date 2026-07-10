@@ -6,6 +6,7 @@ import type {
   ConceptoVentaRow,
   ProformaConFactura,
   ProformaConceptoConsolidadoRow,
+  ProformaDetalleFull,
   ProformaPendienteConEmbarque,
 } from "./types";
 
@@ -15,60 +16,13 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
       supabase
         .from("proformas")
         .select("*, facturas:factura_id(factura_pdf_url, factura_xml_url)")
+        .eq("organization_id", embarqueId ? undefined as never : "" as never)
         .eq("embarque_id", embarqueId)
         .order("created_at", { ascending: false }),
       [],
     ),
   );
 }
-
-export type ProformaClienteFull = {
-  nombre: string | null;
-  rfc: string | null;
-  direccion: string | null;
-  ciudad: string | null;
-  estado: string | null;
-  cp: string | null;
-};
-
-export type ProformaEmbarqueFull = {
-  modo: string | null;
-  tipo: string | null;
-  incoterm: string | null;
-  bl_house: string | null;
-  puerto_origen: string | null;
-  puerto_destino: string | null;
-  aeropuerto_origen: string | null;
-  aeropuerto_destino: string | null;
-  ciudad_origen: string | null;
-  ciudad_destino: string | null;
-  descripcion_mercancia: string | null;
-  contenedores: Array<{ numero_contenedor: string; tipo_contenedor: string | null }> | null;
-};
-
-export type ProformaFacturaAsociada = {
-  id: string;
-  numero: string | null;
-  estado: string;
-  total: number;
-  moneda: string;
-  fecha_emision: string | null;
-  uuid_fiscal: string | null;
-  factura_pdf_url: string | null;
-  factura_xml_url: string | null;
-};
-
-export type ProformaDetalleFull = ProformaConFactura & {
-  /**
-   * Factura(s) generadas a partir de esta proforma. Se resuelve vía la FK
-   * inversa `facturas.proforma_id → proformas.id` porque el flujo de
-   * conversión "un clic" puede producir varias facturas (una por moneda —
-   * el SAT no permite CFDI multi-moneda) y ya no llena `proformas.factura_id`.
-   */
-  facturas_asociadas: ProformaFacturaAsociada[];
-  cliente_full: ProformaClienteFull | null;
-  embarque_full: ProformaEmbarqueFull | null;
-};
 
 export async function fetchProformaPorId(id: string): Promise<ProformaDetalleFull | null> {
   const data = await unwrap(
