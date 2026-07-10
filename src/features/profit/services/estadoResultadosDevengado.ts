@@ -11,6 +11,7 @@
  * Terrestre depende del vínculo correcto al embarque.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrapOr } from "@/lib/supabase/response";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
 import {
   buildEstadoResultados,
