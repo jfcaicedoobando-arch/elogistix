@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.243.0] - 2026-07-10
+- **Refactor · DRY Lote 8b (inicio) — `MobileFilterSheet` compartido**:
+  - Nuevo shell `src/components/shared/MobileFilterSheet.tsx`: encapsula el patrón `<Input search>` + botón `Filtros` con badge + `<Sheet>` lateral con header/body/footer (Limpiar/Aplicar). Los campos concretos van como `children`.
+  - Migrados: `PortalFacturasMobileFilters` (90→48), `PortalCotizacionesMobileFilters` (91→48), `PortalEmbarquesMobileFilters` (112→69). **~128 líneas eliminadas** en los 3 consumers; costo del shell ~85 líneas → ahorro neto **~43 líneas**. El break-even ya se paga y cada filtro mobile nuevo cuesta ~30 líneas (vs ~90).
+  - Eliminado alias muerto `src/features/dashboardEjecutivo/components/KpiCard.tsx` (6 líneas, re-export sin importadores). Único consumer real (`BandaKPIs`) ahora importa directo desde `@/components/shared/KpiCard`.
+  - Tests: nuevo `src/components/shared/__tests__/MobileFilterSheet.test.tsx` (4 casos: render, propagación de search, badge de conteo, placeholder custom).
+  - Sin cambios visuales: mismos tokens (`mobileFilterSheet`), mismos textos, mismo comportamiento de `Limpiar` (disabled si `activeCount === 0`).
+
 ## [13.242.0] - 2026-07-10
 - **Refactor · DRY Lote 8a.3 — `createCatalogHooks` + tests de `response`**:
   - Nueva fábrica `src/hooks/shared/createCatalogHooks.ts`: colapsa el trío `useList / useListAll / useAdmin` (agregar/toggleActivo/eliminar) que se repetía en cada catálogo simple.
