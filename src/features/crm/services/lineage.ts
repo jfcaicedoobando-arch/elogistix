@@ -41,6 +41,7 @@ export async function fetchLeadLineage(leadId: string): Promise<LeadOportunidadR
       .order("created_at", { ascending: false }),
     [],
   );
+  // SAFE-CAST: el select explícito coincide 1:1 con LeadOportunidadRow.
   return data as unknown as LeadOportunidadRow[];
 }
 
