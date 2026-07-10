@@ -5,7 +5,11 @@
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { wrapEdgeHandler, captureEdgeException } from '../_shared/sentry.ts';
 import { buildCors, handlePreflightStrict } from '../_shared/cors.ts';
-import { jsonResponse } from "../_shared/response.ts";
+import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
+
+// Alias local con firma (cors, data, status) para conservar los callsites de este handler.
+const jsonResponse = (cors: Record<string, string>, data: unknown, status = 200) =>
+  _jsonResponse(data, status, cors);
 
 const APP_URL = Deno.env.get('APP_PUBLIC_URL') ?? 'https://elogistix.lovable.app';
 
