@@ -92,7 +92,7 @@ export interface ArribosEsteMes {
   gastosOperativosMXN: number;
 }
 
-export const ESTADOS_FILTRO = [...ESTADOS_ACTIVOS, "EIR", "Cerrado"] as const;
+export const ESTADOS_FILTRO = [...ESTADOS_ACTIVOS, "EIR"] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
 export const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
@@ -102,7 +102,6 @@ export const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
   "En Aduana": 0,
   Entregado: 0,
   EIR: 0,
-  Cerrado: 0,
 };
 
 export const EMPTY_ARRIBOS: ArribosEsteMes = {
