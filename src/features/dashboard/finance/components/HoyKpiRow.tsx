@@ -1,6 +1,6 @@
 import { FileText, Banknote, AlertCircle, Inbox } from "lucide-react";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-import { KpiTile } from "./KpiTile";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { ROUTES } from "@/constants/routes";
 
 interface Props {
@@ -22,43 +22,43 @@ export function HoyKpiRow({
   porCapturar,
   loading,
 }: Props) {
+  const vencidoTotal = vencidoMxn > 0 || vencidoUsd > 0;
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <KpiTile
-        icon={<FileText className="h-4 w-4 text-blue-600" />}
+      <KpiCard
+        icon={FileText}
         label="Por facturar"
         value={porFacturar}
         sublabel="Embarques con hueco"
         to={ROUTES.FACTURACION}
-        tone={porFacturar > 0 ? "warning" : "default"}
+        variant={porFacturar > 0 ? "warning" : "default"}
         loading={loading}
       />
-      <KpiTile
-        icon={<Banknote className="h-4 w-4 text-indigo-600" />}
+      <KpiCard
+        icon={Banknote}
         label="Por pagar"
         value={formatCurrencyCompact(porPagarMxn, "MXN")}
-        sublabel={
-          porPagarUsd > 0 ? `+ ${formatCurrency(porPagarUsd, "USD")}` : "Facturas proveedor"
-        }
+        sublabel={porPagarUsd > 0 ? `+ ${formatCurrency(porPagarUsd, "USD")}` : "Facturas proveedor"}
         to={ROUTES.COMPRAS_POR_PAGAR}
+        variant="info"
         loading={loading}
       />
-      <KpiTile
-        icon={<AlertCircle className="h-4 w-4 text-red-600" />}
+      <KpiCard
+        icon={AlertCircle}
         label="Vencido (cartera)"
         value={formatCurrencyCompact(vencidoMxn, "MXN")}
         sublabel={vencidoUsd > 0 ? `+ ${formatCurrency(vencidoUsd, "USD")}` : "Cobranza"}
         to={ROUTES.CARTERA}
-        tone={vencidoMxn > 0 || vencidoUsd > 0 ? "danger" : "success"}
+        variant={vencidoTotal ? "destructive" : "success"}
         loading={loading}
       />
-      <KpiTile
-        icon={<Inbox className="h-4 w-4 text-success" />}
+      <KpiCard
+        icon={Inbox}
         label="Por capturar (CxP)"
         value={porCapturar}
         sublabel="Conceptos sin factura"
         to={ROUTES.COMPRAS_POR_CAPTURAR}
-        tone={porCapturar > 0 ? "warning" : "default"}
+        variant={porCapturar > 0 ? "warning" : "default"}
         loading={loading}
       />
     </div>
