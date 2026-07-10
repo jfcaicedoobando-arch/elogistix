@@ -6,8 +6,53 @@
  * Uso: `bun run audit:rpc-sync`.
  */
 import { readFileSync, readdirSync, mkdirSync, writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { join, relative } from "node:path";
 import { auditSql, type RpcFinding } from "./lib/rpcSync";
+
+interface LiveResult {
+  suspiciousFns: string[];
+  orphans: Array<{ table: string; count: number }>;
+  error?: string;
+}
+
+function runPsql(sql: string): string | null {
+  try {
+    return execSync(`psql -t -A -F'|' -c ${JSON.stringify(sql)}`, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function inspectLive(): LiveResult {
+  if (!process.env.PGHOST) return { suspiciousFns: [], orphans: [], error: "PGHOST no configurado" };
+  const fnsRaw = runPsql(
+    `SELECT p.proname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+     WHERE n.nspname='public'
+       AND p.prosrc ~* 'array_agg' AND p.prosrc ~* 'RETURNING\\s+id\\s+INTO'
+       AND (p.prosrc ~* 'deleted_at\\s*=\\s*now' OR p.prosrc ~* 'DELETE\\s+FROM')
+       AND p.prosrc !~* 'array_append'
+     ORDER BY 1`,
+  );
+  if (fnsRaw === null) return { suspiciousFns: [], orphans: [], error: "psql no disponible" };
+  const suspiciousFns = fnsRaw ? fnsRaw.split("\n").filter(Boolean) : [];
+
+  // Tablas con soft-delete a auditar.
+  const softDeleteTables = ["conceptos_venta", "conceptos_costo", "embarque_contenedores", "documentos_embarque", "conceptos_factura"];
+  const orphans: LiveResult["orphans"] = [];
+  for (const t of softDeleteTables) {
+    const raw = runPsql(
+      `SELECT count(*) FROM public.${t} WHERE deleted_at IS NOT NULL AND deleted_at - created_at < interval '1 second'`,
+    );
+    if (raw === null) continue;
+    orphans.push({ table: t, count: Number(raw) || 0 });
+  }
+  return { suspiciousFns, orphans };
+}
+
 
 const ROOT = process.cwd();
 const MIGRATIONS_DIR = join(ROOT, "supabase", "migrations");
