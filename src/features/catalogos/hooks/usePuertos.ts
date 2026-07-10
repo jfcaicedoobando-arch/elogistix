@@ -1,6 +1,4 @@
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/shared";
+import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchPuertos,
@@ -9,7 +7,7 @@ import {
   deletePuerto,
   type Puerto,
 } from "@/features/catalogos/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
 
 export type { Puerto };
 
@@ -32,38 +30,26 @@ export function useAllPuertos() {
 }
 
 export function useAdminPuertos() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.puertos.all });
+  const invalidate = queryKeys.puertos.all;
 
-  const agregarPuerto = useMutation({
-    mutationFn: (puerto: { code: string; name: string; country: string }) => insertPuerto(puerto),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess(toast, { title: "Puerto agregado" });
-    },
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al agregar puerto", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+  const agregarPuerto = useMutationWithFeedback({
+    mutationFn: (p: { code: string; name: string; country: string }) => insertPuerto(p),
+    invalidate,
+    successTitle: "Puerto agregado",
+    errorTitle: "Error al agregar puerto",
   });
 
-  const toggleActivo = useMutation({
+  const toggleActivo = useMutationWithFeedback({
     mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setPuertoActivo(id, activo),
-    onSuccess: () => invalidate(),
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    errorTitle: "Error al actualizar",
   });
 
-  const eliminarPuerto = useMutation({
+  const eliminarPuerto = useMutationWithFeedback({
     mutationFn: (id: string) => deletePuerto(id),
-    onSuccess: () => {
-      invalidate();
-      notifySuccess(toast, { title: "Puerto eliminado" });
-    },
-    onError: (e: Error) => {
-      notifyError(toast, { title: "Error al eliminar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
-    },
+    invalidate,
+    successTitle: "Puerto eliminado",
+    errorTitle: "Error al eliminar",
   });
 
   return { agregarPuerto, toggleActivo, eliminarPuerto };
