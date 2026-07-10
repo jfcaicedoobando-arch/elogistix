@@ -131,6 +131,9 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
 
   const target = await resolveTarget(supabase, body);
   if (!target.ok) return json(target.body, target.status);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, target.data.organizationId))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const resolved = await resolveFacturapiKey(supabase, target.data.organizationId);
   if (!resolved.ok) {
