@@ -84,8 +84,8 @@ export async function listarNotasCreditoRecientes(
   if (filtros.estado && filtros.estado !== "todos") query = query.eq("estado", filtros.estado);
 
   const data = await unwrapOr(query, []);
-  // SAFE-CAST: el join embebido `facturas!inner` viene como objeto anidado.
   type RawRow = NotaCredito & { facturas: { numero: string; cliente_id: string; cliente_nombre: string } | null };
+  // SAFE-CAST: el join embebido `facturas!inner` viene como objeto anidado.
   return (data as unknown as RawRow[]).map((row) => {
     const { facturas, ...nota } = row;
     return {
