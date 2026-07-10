@@ -37,20 +37,20 @@ export interface CatalogHooksConfig<TRow, TInsert> {
 export function createCatalogHooks<TRow, TInsert>(cfg: CatalogHooksConfig<TRow, TInsert>) {
   const useList = () =>
     useQuery<TRow[]>({
-      queryKey: cfg.keys.activos,
+      queryKey: cfg.keys.active,
       queryFn: () => cfg.fetch(false),
       staleTime: HALF_HOUR,
     });
 
   const useListAll = () =>
     useQuery<TRow[]>({
-      queryKey: cfg.keys.todos,
+      queryKey: cfg.keys.all,
       queryFn: () => cfg.fetch(true),
       staleTime: ONE_MINUTE,
     });
 
   const useAdmin = () => {
-    const invalidate = cfg.keys.all;
+    const invalidate = cfg.keys.invalidate;
     const agregar = useMutationWithFeedback({
       mutationFn: (input: TInsert) => cfg.insert(input),
       invalidate,
