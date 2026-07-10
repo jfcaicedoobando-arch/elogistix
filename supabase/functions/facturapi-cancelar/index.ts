@@ -13,6 +13,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
 import { descargarAcuseCancelacionPdf } from "./descargarAcusePdf.ts";
@@ -62,6 +63,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       .maybeSingle();
     if (facpErr || !facp) return json({ error: "factura_not_found" }, 404);
     if (!facp.facturapi_id) return json({ error: "no_timbrada" }, 409);
+    if (!(await authorizeOrgMembership(supabase, userData.user.id, facp.organization_id))) {
+      return json({ error: "forbidden" }, 403);
+    }
     if (facp.estado !== "Cancelada" && facp.estado !== "Sustituida") {
       return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
     }
@@ -103,6 +107,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     if (!fac.facturapi_id) return json({ error: "no_timbrada" }, 409);
     if (fac.estado !== "Cancelada" && fac.estado !== "Sustituida") {
       return json({ error: "no_cancelada", message: "La factura aún no está cancelada." }, 409);
+    }
+    if (!(await authorizeOrgMembership(supabase, userData.user.id, fac.organization_id))) {
+      return json({ error: "forbidden" }, 403);
     }
     const cli = await getFacturapiClient(supabase, fac.organization_id);
     if (!cli.ok) return json({ error: cli.data.error, message: cli.data.message }, cli.data.status);
@@ -152,6 +159,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .maybeSingle();
   if (fErr || !factura) return json({ error: "factura_not_found" }, 404);
   if (!factura.facturapi_id) return json({ error: "no_timbrada" }, 409);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);

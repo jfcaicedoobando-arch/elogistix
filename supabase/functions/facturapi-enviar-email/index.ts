@@ -11,6 +11,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -144,6 +145,9 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
 
   const target = await resolveTarget(supabase, body);
   if (!target.ok) return json(target.body, target.status);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, target.data.organizationId))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const email = await resolveEmail(supabase, target.data.clienteId, body.email);
   if (!email) return json({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);

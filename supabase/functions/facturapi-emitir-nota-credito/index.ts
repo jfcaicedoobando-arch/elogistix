@@ -9,6 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError, extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { buildNcPayload, validateNcContext } from "./helpers.ts";
 import { preloadNcContext, buildNcContextFromRows } from "./data.ts";
@@ -80,6 +81,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   const pre = await preloadNcContext(supabase, body.nota_credito_id);
   if (!pre.ok) return json(pre.body, pre.status);
   const { nc, factura, cliente, email, referencias } = pre;
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, nc.organization_id))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
   if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);

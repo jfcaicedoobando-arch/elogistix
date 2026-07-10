@@ -18,6 +18,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
+import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
 import { fetchOrgSlug } from "../_shared/orgSlug.ts";
 
@@ -130,6 +131,9 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
 
   const target = await resolveTarget(supabase, body);
   if (!target.ok) return json(target.body, target.status);
+  if (!(await authorizeOrgMembership(supabase, userData.user.id, target.data.organizationId))) {
+    return json({ error: "forbidden" }, 403);
+  }
 
   const resolved = await resolveFacturapiKey(supabase, target.data.organizationId);
   if (!resolved.ok) {
