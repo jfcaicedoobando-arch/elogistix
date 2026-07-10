@@ -5,5 +5,6 @@
 import Papa from "papaparse";
 
 export function toCsv(headers: string[], rows: string[][], delimiter: "," | ";" = ","): string {
-  return Papa.unparse({ fields: headers, data: rows }, { delimiter, newline: "\n" });
+  const out = Papa.unparse({ fields: headers, data: rows }, { delimiter, newline: "\n" });
+  return out.replace(/\n+$/, "");
 }
