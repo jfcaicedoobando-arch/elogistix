@@ -13,16 +13,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
 
 interface PagoPendiente {
   pago_id: string | null;
@@ -53,7 +47,7 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
     .select("pago_id, factura_id, factura_numero, factura_serie, organization_id, dias_restantes, fecha_limite_rep, monto_aplicado_factura, moneda")
     .lte("dias_restantes", 7);
 
-  if (error) return json({ error: "query_failed", detail: error.message }, 500);
+  if (error) return jsonResponse({ error: "query_failed", detail: error.message }, 500);
 
   const rows = (pendientes ?? []) as PagoPendiente[];
   const alertas = rows
@@ -81,7 +75,7 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
       };
     });
 
-  if (alertas.length === 0) return json({ ok: true, revisados: rows.length, alertas: 0 });
+  if (alertas.length === 0) return jsonResponse({ ok: true, revisados: rows.length, alertas: 0 });
 
   // El índice único de dedupe_key es parcial (WHERE acknowledged_at IS NULL) —
   // filtramos manualmente para no duplicar alertas ya abiertas.
@@ -93,10 +87,10 @@ Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
     .is("acknowledged_at", null);
   const abiertos = new Set((existentes ?? []).map((e) => e.dedupe_key));
   const nuevas = alertas.filter((a) => !abiertos.has(a.dedupe_key));
-  if (nuevas.length === 0) return json({ ok: true, revisados: rows.length, alertas: 0, reabiertas: 0 });
+  if (nuevas.length === 0) return jsonResponse({ ok: true, revisados: rows.length, alertas: 0, reabiertas: 0 });
 
   const { error: upErr } = await admin.from("alertas_sistema").insert(nuevas);
-  if (upErr) return json({ error: "insert_failed", detail: upErr.message }, 500);
+  if (upErr) return jsonResponse({ error: "insert_failed", detail: upErr.message }, 500);
 
-  return json({ ok: true, revisados: rows.length, alertas: nuevas.length });
+  return jsonResponse({ ok: true, revisados: rows.length, alertas: nuevas.length });
 }));

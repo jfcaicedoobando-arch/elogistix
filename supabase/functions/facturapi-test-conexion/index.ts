@@ -8,22 +8,16 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { basicAuthHeader, FACTURAPI_BASE, resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 interface Body {
   organization_id: string;
   ambiente: "sandbox" | "live";
 }
 
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 async function parseBody(req: Request): Promise<Body | null> {
   try {
-    const body = (await req.json()) as Body;
+    const body = (await req.jsonResponse()) as Body;
     if (!body?.organization_id) return null;
     if (body.ambiente !== "sandbox" && body.ambiente !== "live") return null;
     return body;
@@ -112,7 +106,7 @@ async function fetchFacturapiOrg(apiKey: string, facturapiOrgId: string | null):
     throw toFacturapiError(res, detail);
   }
 
-  return await res.json() as FacturapiOrg;
+  return await res.jsonResponse() as FacturapiOrg;
 }
 
 /**
@@ -168,7 +162,7 @@ function errorResponse(err: unknown) {
   const isTimeout = (err as Error)?.message === "facturapi_timeout";
   console.error("[facturapi-test-conexion] facturapi-call-error", { status, isTimeout });
   const isAuthError = status === 401 || status === 403;
-  return json({
+  return jsonResponse({
     ok: false,
     status: isTimeout ? 504 : status,
     detail: isTimeout ? { message: "Tiempo de espera agotado al contactar FacturApi (15s)." } : detail,
@@ -178,11 +172,11 @@ function errorResponse(err: unknown) {
 
 async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
   const cred = await loadCredentials(sbAdmin, body.organization_id);
-  if (!cred) return json({ error: "org_facturapi_not_configured", message: "Aún no has cargado credenciales." }, 412);
+  if (!cred) return jsonResponse({ error: "org_facturapi_not_configured", message: "Aún no has cargado credenciales." }, 412);
 
   const sbForHelper = buildSupabaseLike(sbAdmin, cred, body.ambiente);
   const resolved = await resolveFacturapiKey(sbForHelper, body.organization_id);
-  if (!resolved.ok) return json(resolved.data, resolved.data.status);
+  if (!resolved.ok) return jsonResponse(resolved.data, resolved.data.status);
   console.log("[facturapi-test-conexion] key-resolved");
 
   try {
@@ -193,7 +187,7 @@ async function runTest(body: Body, sbAdmin: ReturnType<typeof createClient>) {
     );
     console.log("[facturapi-test-conexion] facturapi-call-ok", { id: me?.id });
     await persistOrgId(sbAdmin, body.organization_id, me?.id, resolved.data.facturapiOrgId);
-    return json({
+    return jsonResponse({
       ok: true,
       ambiente: body.ambiente,
       facturapi_org_id: me?.id ?? null,
@@ -212,12 +206,12 @@ Deno.serve(async (req) => {
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
   const body = await parseBody(req);
-  if (!body) return json({ error: "invalid_body" }, 400);
+  if (!body) return jsonResponse({ error: "invalid_body" }, 400);
 
   console.log("[facturapi-test-conexion] start", { org: body.organization_id, ambiente: body.ambiente });
 
   const auth = await authorizeRequest(req, url, anon, body.organization_id);
-  if (!auth.ok) return json({ error: auth.error }, auth.status);
+  if (!auth.ok) return jsonResponse({ error: auth.error }, auth.status);
   console.log("[facturapi-test-conexion] auth-ok");
 
   const sbAdmin = createClient(url, service);

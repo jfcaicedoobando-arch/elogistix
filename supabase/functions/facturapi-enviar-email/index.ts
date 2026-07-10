@@ -13,16 +13,10 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
 
 interface ReqBody {
   factura_id?: string;
@@ -129,32 +123,32 @@ function isValidEmail(e: string): boolean {
 
 Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
   });
   const { data: userData, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (userErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
-  const body = (await req.json().catch(() => ({}))) as ReqBody;
+  const body = (await req.jsonResponse().catch(() => ({}))) as ReqBody;
 
   const target = await resolveTarget(supabase, body);
-  if (!target.ok) return json(target.body, target.status);
+  if (!target.ok) return jsonResponse(target.body, target.status);
   if (!(await authorizeOrgMembership(supabase, userData.user.id, target.data.organizationId))) {
-    return json({ error: "forbidden" }, 403);
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   const email = await resolveEmail(supabase, target.data.clienteId, body.email);
-  if (!email) return json({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);
-  if (!isValidEmail(email)) return json({ error: "invalid_email", message: "Email inválido." }, 400);
+  if (!email) return jsonResponse({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);
+  if (!isValidEmail(email)) return jsonResponse({ error: "invalid_email", message: "Email inválido." }, 400);
 
   const resolved = await resolveFacturapiKey(supabase, target.data.organizationId);
-  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
   // FacturApi: tanto facturas como REP usan /invoices/<id>/email
   const url = `${FACTURAPI_BASE}/invoices/${target.data.facturapiId}/email`;
@@ -181,7 +175,7 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     const message = fapiRes.status === 404
       ? "CFDI no encontrado en FacturApi (puede estar cancelado)."
       : `FacturApi rechazó el envío (${fapiRes.status}).`;
-    return json({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
+    return jsonResponse({ error: "facturapi_error", status: fapiRes.status, detail, message }, 502);
   }
 
   await registrarBitacoraEdge(supabase, {
@@ -194,5 +188,5 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     detalles: { email, tipo: target.data.tipo },
   });
 
-  return json({ ok: true, enviado_a: email });
+  return jsonResponse({ ok: true, enviado_a: email });
 }));

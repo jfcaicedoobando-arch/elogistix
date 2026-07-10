@@ -15,6 +15,7 @@ import { buildNcPayload, validateNcContext } from "./helpers.ts";
 import { preloadNcContext, buildNcContextFromRows } from "./data.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { jsonResponse } from "../_shared/response.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -25,13 +26,6 @@ void resolveFacturapiKey;
 const FACTURAPI_BASE = "https://www.facturapi.io/v2";
 
 interface ReqBody { nota_credito_id?: string }
-
-function json(b: unknown, s = 200) {
-  return new Response(JSON.stringify(b), {
-    status: s,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
 
 interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
 
@@ -62,10 +56,10 @@ async function createNcInvoice(
 
 Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "unauthorized" }, 401);
+  if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -73,24 +67,24 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
   });
 
   const { data: userData, error: uErr } = await supabase.auth.getUser();
-  if (uErr || !userData.user) return json({ error: "unauthorized" }, 401);
+  if (uErr || !userData.user) return jsonResponse({ error: "unauthorized" }, 401);
 
-  const body = (await req.json().catch(() => ({}))) as ReqBody;
-  if (!body.nota_credito_id) return json({ error: "nota_credito_id_required" }, 400);
+  const body = (await req.jsonResponse().catch(() => ({}))) as ReqBody;
+  if (!body.nota_credito_id) return jsonResponse({ error: "nota_credito_id_required" }, 400);
 
   const pre = await preloadNcContext(supabase, body.nota_credito_id);
-  if (!pre.ok) return json(pre.body, pre.status);
+  if (!pre.ok) return jsonResponse(pre.body, pre.status);
   const { nc, factura, cliente, email, referencias } = pre;
   if (!(await authorizeOrgMembership(supabase, userData.user.id, nc.organization_id))) {
-    return json({ error: "forbidden" }, 403);
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   const resolved = await getFacturapiClient(supabase, nc.organization_id);
-  if (!resolved.ok) return json({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
   const ctx = buildNcContextFromRows(nc, factura, cliente, email, referencias);
   const issues = validateNcContext(ctx);
-  if (issues.length > 0) return json({ error: "validation_failed", issues }, 422);
+  if (issues.length > 0) return jsonResponse({ error: "validation_failed", issues }, 422);
 
   const created = await createNcInvoice(supabase, resolved.data.client, buildNcPayload(ctx), {
     organizationId: nc.organization_id,
@@ -98,7 +92,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     userEmail: userData.user.email,
     notaCreditoId: body.nota_credito_id,
   });
-  if (!created.ok) return json(created.body, created.status);
+  if (!created.ok) return jsonResponse(created.body, created.status);
 
   const persisted = await persistTimbradoNc({
     supabase,
@@ -111,8 +105,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-nota-credito", async (req) => {
     userId: userData.user.id,
     userEmail: userData.user.email,
   });
-  if (!persisted.ok) return json(persisted.body, persisted.status);
-  return json(persisted.body);
+  if (!persisted.ok) return jsonResponse(persisted.body, persisted.status);
+  return jsonResponse(persisted.body);
 }));
 
 interface PersistNcArgs {
