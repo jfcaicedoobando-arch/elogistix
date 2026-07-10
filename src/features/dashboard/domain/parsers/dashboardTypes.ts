@@ -72,7 +72,7 @@ export interface CargaPorCliente {
   clienteId: string;
   clienteNombre: string;
   total: number;
-  desglose: Record<EstadoFiltro, number>;
+  desglose: Partial<Record<EstadoFiltro, number>>;
 }
 
 export interface ArribosEsteMes {
