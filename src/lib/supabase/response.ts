@@ -29,13 +29,19 @@ import type {
   PostgrestResponse,
 } from "@supabase/postgrest-js";
 
-type AnyResponse<T> =
-  | PostgrestSingleResponse<T>
-  | PostgrestMaybeSingleResponse<T>
-  | PostgrestResponse<T>;
+/**
+ * Shape mínimo aceptado: `{ data, error }`. Compatible con:
+ *  - `.select()` → `data: T[] | null`
+ *  - `.single()` → `data: T | null`
+ *  - `.maybeSingle()` → `data: T | null`
+ *  - `.rpc()` → `data: T | null`
+ * TS infiere T según el builder concreto; usar una unión de tipos de respuesta
+ * hacía que TS colapsara T a `never`.
+ */
+type Response<T> = { data: T | null; error: unknown };
 
 /** Extrae `data` y re-lanza si hay error. `data` puede ser `null` para maybeSingle. */
-export async function unwrap<T>(builder: PromiseLike<AnyResponse<T>>): Promise<T> {
+export async function unwrap<T>(builder: PromiseLike<Response<T>>): Promise<T> {
   const { data, error } = await builder;
   if (error) throw error;
   return data as T;
@@ -43,7 +49,7 @@ export async function unwrap<T>(builder: PromiseLike<AnyResponse<T>>): Promise<T
 
 /** Extrae `data ?? fallback` y re-lanza si hay error. */
 export async function unwrapOr<T>(
-  builder: PromiseLike<AnyResponse<T>>,
+  builder: PromiseLike<Response<T>>,
   fallback: T,
 ): Promise<T> {
   const { data, error } = await builder;
