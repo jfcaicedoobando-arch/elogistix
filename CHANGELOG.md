@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.251.1] - 2026-07-10
+- **Fix · Auditoría operativa**: `agruparPorRegla` inicializa el bucket on-demand cuando el backend devuelve una `regla` que aún no está en el catálogo `REGLAS_AUDITORIA`, evitando `TypeError: Cannot read properties of undefined (reading 'push')` al abrir `/auditoria`.
+
 ## [13.251.0] - 2026-07-10
 - **DRY · Lote 9a.2 — Copy-to-clipboard unificado con `usehooks-ts`**:
   - Nuevo hook `useCopyText` en `src/hooks/shared/useCopyText.ts` envuelve `useCopyToClipboard` de `usehooks-ts` con toast estándar (`sonner.success` + `notifyError`).
