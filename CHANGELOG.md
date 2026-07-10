@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.244.0] - 2026-07-10
+- **Refactor · DRY Lote 8b (cont.) — `DireccionFiscalFields` compartido (proveedor)**:
+  - Nuevo `src/features/proveedor/components/DireccionFiscalFields.tsx`: bloque genérico `<CP + Régimen SAT + Dirección + Ciudad + Estado>` tipado con `F extends FormShape`. Prop `regimenRequired` para mostrar el asterisco (alta = requerido, edición = no).
+  - Migrados: `NuevoProveedorStep1FiscalFields.DireccionFiscalGastoFields` (43→1 línea) y `EditarProveedorGastoFiscalFields` (69→11 líneas). **~99 líneas eliminadas** en consumers; costo del shell 82 líneas → ahorro neto **~17 líneas** y ~55 líneas duplicadas fuera del repo.
+  - Tests: nuevo `__tests__/DireccionFiscalFields.test.tsx` (5 casos: render, `regimenRequired`, filtro numérico del CP, tolerancia a `null`/`undefined`).
+  - Sin cambios visuales: mismos grids `grid-cols-2 gap-3`, mismos placeholders, mismo comportamiento de filtrado del CP y mismo listado `REGIMENES_FISCALES_SAT`.
+
 ## [13.243.0] - 2026-07-10
 - **Refactor · DRY Lote 8b (inicio) — `MobileFilterSheet` compartido**:
   - Nuevo shell `src/components/shared/MobileFilterSheet.tsx`: encapsula el patrón `<Input search>` + botón `Filtros` con badge + `<Sheet>` lateral con header/body/footer (Limpiar/Aplicar). Los campos concretos van como `children`.
