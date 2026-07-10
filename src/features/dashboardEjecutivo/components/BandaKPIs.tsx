@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { DollarSign, TrendingUp, Landmark, AlertTriangle, Receipt, Target } from "lucide-react";
-import { KpiCard } from "./KpiCard";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { KPIsEjecutivos } from "@/features/dashboardEjecutivo/services";
 import { KpiStrip } from "@/components/shared/KpiStrip";
