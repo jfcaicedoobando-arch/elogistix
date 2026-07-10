@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { createCatalogHooks } from "@/hooks/shared/createCatalogHooks";
 import { queryKeys } from "@/lib/query";
 import {
   fetchPuertos,
@@ -7,50 +7,30 @@ import {
   deletePuerto,
   type Puerto,
 } from "@/features/catalogos/services";
-import { useMutationWithFeedback } from "@/hooks/shared";
 
 export type { Puerto };
 
-/** Puertos activos ordenados por país → nombre */
-export function usePuertos() {
-  return useQuery<Puerto[]>({
-    queryKey: queryKeys.puertos.activos,
-    queryFn: () => fetchPuertos(false),
-    staleTime: 30 * 60 * 1000,
-  });
-}
+const hooks = createCatalogHooks<Puerto, { code: string; name: string; country: string }>({
+  keys: { invalidate: queryKeys.puertos.all, active: queryKeys.puertos.activos, all: queryKeys.puertos.todos },
+  fetch: fetchPuertos,
+  insert: insertPuerto,
+  setActivo: setPuertoActivo,
+  remove: deletePuerto,
+  labels: {
+    agregarSuccess: "Puerto agregado",
+    agregarError: "Error al agregar puerto",
+    toggleError: "Error al actualizar",
+    eliminarSuccess: "Puerto eliminado",
+    eliminarError: "Error al eliminar",
+  },
+});
 
+/** Puertos activos ordenados por país → nombre */
+export const usePuertos = hooks.useList;
 /** Todos los puertos (incluye inactivos) para admin */
-export function useAllPuertos() {
-  return useQuery<Puerto[]>({
-    queryKey: queryKeys.puertos.todos,
-    queryFn: () => fetchPuertos(true),
-    staleTime: 60 * 1000,
-  });
-}
+export const useAllPuertos = hooks.useListAll;
 
 export function useAdminPuertos() {
-  const invalidate = queryKeys.puertos.all;
-
-  const agregarPuerto = useMutationWithFeedback({
-    mutationFn: (p: { code: string; name: string; country: string }) => insertPuerto(p),
-    invalidate,
-    successTitle: "Puerto agregado",
-    errorTitle: "Error al agregar puerto",
-  });
-
-  const toggleActivo = useMutationWithFeedback({
-    mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setPuertoActivo(id, activo),
-    invalidate,
-    errorTitle: "Error al actualizar",
-  });
-
-  const eliminarPuerto = useMutationWithFeedback({
-    mutationFn: (id: string) => deletePuerto(id),
-    invalidate,
-    successTitle: "Puerto eliminado",
-    errorTitle: "Error al eliminar",
-  });
-
-  return { agregarPuerto, toggleActivo, eliminarPuerto };
+  const { agregar, toggleActivo, eliminar } = hooks.useAdmin();
+  return { agregarPuerto: agregar, toggleActivo, eliminarPuerto: eliminar };
 }

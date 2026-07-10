@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { createCatalogHooks } from "@/hooks/shared/createCatalogHooks";
 import { queryKeys } from "@/lib/query";
 import {
   fetchNavieras,
@@ -7,50 +7,30 @@ import {
   deleteNaviera,
   type Naviera,
 } from "@/features/catalogos/services";
-import { useMutationWithFeedback } from "@/hooks/shared";
 
 export type { Naviera };
 
-/** Navieras activas ordenadas por nombre */
-export function useNavieras() {
-  return useQuery<Naviera[]>({
-    queryKey: queryKeys.navieras.activas,
-    queryFn: () => fetchNavieras(false),
-    staleTime: 30 * 60 * 1000,
-  });
-}
+const hooks = createCatalogHooks<Naviera, { code: string; name: string }>({
+  keys: { invalidate: queryKeys.navieras.all, active: queryKeys.navieras.activas, all: queryKeys.navieras.todas },
+  fetch: fetchNavieras,
+  insert: insertNaviera,
+  setActivo: setNavieraActivo,
+  remove: deleteNaviera,
+  labels: {
+    agregarSuccess: "Naviera agregada",
+    agregarError: "Error al agregar naviera",
+    toggleError: "Error al actualizar",
+    eliminarSuccess: "Naviera eliminada",
+    eliminarError: "Error al eliminar",
+  },
+});
 
+/** Navieras activas ordenadas por nombre */
+export const useNavieras = hooks.useList;
 /** Todas las navieras (incluye inactivas) para admin */
-export function useAllNavieras() {
-  return useQuery<Naviera[]>({
-    queryKey: queryKeys.navieras.todas,
-    queryFn: () => fetchNavieras(true),
-    staleTime: 60 * 1000,
-  });
-}
+export const useAllNavieras = hooks.useListAll;
 
 export function useAdminNavieras() {
-  const invalidate = queryKeys.navieras.all;
-
-  const agregarNaviera = useMutationWithFeedback({
-    mutationFn: (input: { code: string; name: string }) => insertNaviera(input),
-    invalidate,
-    successTitle: "Naviera agregada",
-    errorTitle: "Error al agregar naviera",
-  });
-
-  const toggleActivo = useMutationWithFeedback({
-    mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setNavieraActivo(id, activo),
-    invalidate,
-    errorTitle: "Error al actualizar",
-  });
-
-  const eliminarNaviera = useMutationWithFeedback({
-    mutationFn: (id: string) => deleteNaviera(id),
-    invalidate,
-    successTitle: "Naviera eliminada",
-    errorTitle: "Error al eliminar",
-  });
-
-  return { agregarNaviera, toggleActivo, eliminarNaviera };
+  const { agregar, toggleActivo, eliminar } = hooks.useAdmin();
+  return { agregarNaviera: agregar, toggleActivo, eliminarNaviera: eliminar };
 }

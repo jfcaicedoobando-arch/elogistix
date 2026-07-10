@@ -11,7 +11,8 @@ vi.mock("@/features/catalogos/services", () => ({
   deleteTipoContenedor: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-vi.mock("@/hooks/shared", () => ({
+vi.mock("@/hooks/shared", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/hooks/shared")>()),
   useToast: vi.fn(() => ({ toast: vi.fn() })),
 }));
 

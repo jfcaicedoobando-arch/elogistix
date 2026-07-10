@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.242.0] - 2026-07-10
+- **Refactor · DRY Lote 8a.3 — `createCatalogHooks` + tests de `response`**:
+  - Nueva fábrica `src/hooks/shared/createCatalogHooks.ts`: colapsa el trío `useList / useListAll / useAdmin` (agregar/toggleActivo/eliminar) que se repetía en cada catálogo simple.
+  - Migrados: `useNavieras` (56→36 líneas), `usePuertos` (56→36), `useTiposContenedor` (57→40). Se preservan los nombres públicos (`useNavieras`, `useAdminNavieras`, `agregarNaviera`, etc.) mediante alias delgados — cero cambios en consumers (`TabNavieras`, `NavieraSelect`, etc.).
+  - Break-even: cada catálogo nuevo cuesta ahora ~15 líneas (vs ~55). Ahorro real llega al agregar el 4º/5º catálogo; hoy queda como infra + limpieza.
+  - Tests: nuevo `src/lib/supabase/__tests__/response.test.ts` (8 casos cubriendo `unwrap` / `unwrapOr` / `run` para éxito, `null`/`maybeSingle`, error propagado y fallback). Ajustados los mocks de `@/hooks/shared` en `useNavieras.test.tsx`, `usePuertos.test.tsx`, `useTiposContenedor.test.tsx` para usar `importOriginal` (necesitan `useMutationWithFeedback` real, no mock).
+  - Sin cambios de comportamiento: mismos toasts, mismas invalidaciones, mismas queryKeys (`activas`/`todas` vs `activos`/`todos` se resuelven en el config por catálogo).
+
 ## [13.241.0] - 2026-07-10
 - **Refactor · DRY Lote 8a.2c — Barrido de services (segunda tanda)**:
   - `src/lib/supabase/response.ts`: `unwrap`/`unwrapOr` reescritos con overloads por tipo de respuesta (`PostgrestSingleResponse` / `MaybeSingle` / `Response`) para preservar inferencia de `T`. La versión anterior (unión estructural) colapsaba `T` a `never` en algunos joins y `.single()`.
