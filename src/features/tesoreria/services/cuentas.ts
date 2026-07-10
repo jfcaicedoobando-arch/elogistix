@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 
 export type CuentaBancaria = Tables<"cuentas_bancarias">;
 
@@ -13,27 +14,22 @@ const CUENTA_BANCARIA_COLUMNS =
 export async function listarCuentas(activas = true): Promise<CuentaBancaria[]> {
   let q = supabase.from("cuentas_bancarias").select(CUENTA_BANCARIA_COLUMNS).order("alias", { ascending: true });
   if (activas) q = q.eq("activa", true);
-  const { data, error } = await q;
-  if (error) throw error;
-  return (data ?? []) as CuentaBancaria[];
+  return unwrapOr(q, [] as CuentaBancaria[]) as Promise<CuentaBancaria[]>;
 }
 
 export async function crearCuenta(payload: TablesInsert<"cuentas_bancarias">) {
-  const { data, error } = await supabase.from("cuentas_bancarias").insert(payload).select().single();
-  if (error) throw error;
-  return data;
+  return unwrap(supabase.from("cuentas_bancarias").insert(payload).select().single());
 }
 
 export async function actualizarCuenta(id: string, patch: TablesUpdate<"cuentas_bancarias">) {
-  const { data, error } = await supabase.from("cuentas_bancarias").update(patch).eq("id", id).select().single();
-  if (error) throw error;
-  return data;
+  return unwrap(supabase.from("cuentas_bancarias").update(patch).eq("id", id).select().single());
 }
 
 export async function eliminarCuenta(id: string, userId: string | null) {
-  const { error } = await supabase
-    .from("cuentas_bancarias")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: userId, activa: false })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("cuentas_bancarias")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: userId, activa: false })
+      .eq("id", id),
+  );
 }

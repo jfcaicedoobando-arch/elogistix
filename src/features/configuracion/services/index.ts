@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { fromDb } from "@/lib/supabase/cast";
+import { unwrapOr } from "@/lib/supabase/response";
 
 export interface ConfigItem {
   id: string;
@@ -17,25 +18,27 @@ export interface ConfigItem {
 
 // ── Configuración por organización (usada por panel de admin de ORG) ───────
 export async function fetchConfiguracionByOrg(orgId: string): Promise<ConfigItem[]> {
-  const { data, error } = await supabase
-    .from("configuracion")
-    .select("*")
-    .eq("organization_id", orgId)
-    .order("categoria")
-    .order("clave");
-  if (error) throw error;
-  return fromDb<ConfigItem[]>(data ?? []);
+  return fromDb<ConfigItem[]>(
+    await unwrapOr(
+      supabase
+        .from("configuracion")
+        .select("*")
+        .eq("organization_id", orgId)
+        .order("categoria")
+        .order("clave"),
+      [],
+    ),
+  );
 }
 
 // ── Configuración (todas las orgs según RLS — usada por hook useConfiguracion) ─
 export async function fetchConfiguracion(): Promise<ConfigItem[]> {
-  const { data, error } = await supabase
-    .from("configuracion")
-    .select("*")
-    .order("categoria")
-    .order("clave");
-  if (error) throw error;
-  return fromDb<ConfigItem[]>(data ?? []);
+  return fromDb<ConfigItem[]>(
+    await unwrapOr(
+      supabase.from("configuracion").select("*").order("categoria").order("clave"),
+      [],
+    ),
+  );
 }
 
 type ConfigTable = "configuracion" | "configuracion_global";
@@ -78,13 +81,16 @@ export interface ConfigGlobalItem {
 }
 
 export async function fetchConfiguracionGlobal(): Promise<ConfigGlobalItem[]> {
-  const { data, error } = await supabase
-    .from("configuracion_global")
-    .select("*")
-    .order("categoria")
-    .order("clave");
-  if (error) throw error;
-  return fromDb<ConfigGlobalItem[]>(data ?? []);
+  return fromDb<ConfigGlobalItem[]>(
+    await unwrapOr(
+      supabase
+        .from("configuracion_global")
+        .select("*")
+        .order("categoria")
+        .order("clave"),
+      [],
+    ),
+  );
 }
 
 export async function updateConfiguracionGlobalItems(
