@@ -35,9 +35,9 @@ describe("dashboardParsers", () => {
 
     it("parsea correctamente todos los estados", () => {
       const result = parseConteoPorEstado({
-        conteoPorEstado: { Confirmado: 5, "En Tránsito": 3, Arribo: 1, "En Aduana": 2, Entregado: 7, EIR: 4, Cerrado: 9 },
+        conteoPorEstado: { Confirmado: 5, "En Tránsito": 3, Arribo: 1, "En Aduana": 2, Entregado: 7, EIR: 4 },
       });
-      expect(result).toEqual({ Confirmado: 5, "En Tránsito": 3, Arribo: 1, "En Aduana": 2, Entregado: 7, EIR: 4, Cerrado: 9 });
+      expect(result).toEqual({ Confirmado: 5, "En Tránsito": 3, Arribo: 1, "En Aduana": 2, Entregado: 7, EIR: 4 });
     });
 
     it("usa 0 como default para estados ausentes", () => {
