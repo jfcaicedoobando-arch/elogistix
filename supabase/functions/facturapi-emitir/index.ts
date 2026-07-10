@@ -15,6 +15,7 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 // el test arquitectónico lo detecte; la API key real se inyecta al SDK vía
 // `getFacturapiClient`.
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
+import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import {
   FACTURAPI_BASE, buildFacturapiPayload, validateContext,
