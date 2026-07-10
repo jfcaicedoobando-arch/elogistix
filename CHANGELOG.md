@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.245.0] - 2026-07-10
+- **Refactor · DRY Lote 8c — `jsonResponse` compartido en edge functions**:
+  - 14 edge functions migradas a `_shared/response.ts::jsonResponse` (elimina helper local `function json(body, status)` de 6-7 líneas por archivo): `facturapi-enviar-email`, `facturapi-emitir`, `facturapi-emitir-rep`, `facturapi-emitir-nota-credito`, `facturapi-cancelar`, `facturapi-cancelar/acuseHandlers`, `facturapi-cancelar-rep`, `facturapi-cancelar-nota-credito`, `facturapi-descargar`, `facturapi-webhook`, `facturapi-test-conexion`, `rep-retry-nocturno`, `enviar-cotizacion-email/handlers`, `enviar-proforma-email` (con alias local `(cors, data, status)` para preservar callsites).
+  - **~86 líneas eliminadas** entre los 14 handlers; costo de imports agregados ~14 líneas → ahorro neto **~72 líneas**.
+  - `corsHeaders` sigue importándose solo donde se usa para preflight (`OPTIONS`) o para respuestas binarias (PDF/XML pass-through en `facturapi-descargar`).
+  - Tests: nuevo `supabase/functions/_shared/response_test.ts` (5 casos Deno: status default 200, status custom, override de CORS strict, `errorResponse` con `{ error }`, status custom en error).
+  - Sin cambios funcionales: mismo `Content-Type: application/json`, mismos headers CORS, mismos códigos HTTP y payloads. Bug de sed corregido: la sustitución `json(` → `jsonResponse(` también afectaba `req.json()` / `res.json()`; ya restaurado con `sed 's/\.jsonResponse(/.json(/g'`.
+
 ## [13.244.0] - 2026-07-10
 - **Refactor · DRY Lote 8b (cont.) — `DireccionFiscalFields` compartido (proveedor)**:
   - Nuevo `src/features/proveedor/components/DireccionFiscalFields.tsx`: bloque genérico `<CP + Régimen SAT + Dirección + Ciudad + Estado>` tipado con `F extends FormShape`. Prop `regimenRequired` para mostrar el asterisco (alta = requerido, edición = no).
