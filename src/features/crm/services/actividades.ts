@@ -2,6 +2,7 @@
  * Servicio CRM — Actividades. Capa de I/O para `crm_actividades`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Database } from "@/integrations/supabase/types";
 
 export type CrmActividadRow = Database["public"]["Tables"]["crm_actividades"]["Row"];
@@ -28,6 +29,8 @@ export interface ListActividadesParams {
 }
 
 export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
+  // Retiene el patrón manual: PostgREST devuelve `count` fuera de `data`,
+  // así que `unwrap`/`unwrapOr` (que sólo mapean data) no aplica.
   const sortKey = p.sortKey ?? "fecha_programada";
   const sortDir = p.sortDir ?? "asc";
   let q = supabase
@@ -63,28 +66,29 @@ export async function crearActividad(
   input: CrearActividadInput,
   user: { id?: string; email?: string } | null,
 ): Promise<{ id: string }> {
-  const { data, error } = await supabase
-    .from("crm_actividades")
-    .insert({
-      ...input,
-      descripcion: input.descripcion ?? "",
-      resultado: input.resultado ?? "",
-      responsable_id: user?.id ?? null,
-      responsable_email: user?.email ?? "",
-      created_by: user?.id ?? null,
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  return data as { id: string };
+  return unwrap(
+    supabase
+      .from("crm_actividades")
+      .insert({
+        ...input,
+        descripcion: input.descripcion ?? "",
+        resultado: input.resultado ?? "",
+        responsable_id: user?.id ?? null,
+        responsable_email: user?.email ?? "",
+        created_by: user?.id ?? null,
+      })
+      .select("id")
+      .single(),
+  ) as Promise<{ id: string }>;
 }
 
 export async function completarActividad(input: { id: string; resultado?: string }): Promise<void> {
-  const { error } = await supabase
-    .from("crm_actividades")
-    .update({ fecha_completada: new Date().toISOString(), resultado: input.resultado ?? "" })
-    .eq("id", input.id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("crm_actividades")
+      .update({ fecha_completada: new Date().toISOString(), resultado: input.resultado ?? "" })
+      .eq("id", input.id),
+  );
 }
 
 export async function posponerActividad(input: {
@@ -94,24 +98,27 @@ export async function posponerActividad(input: {
 }): Promise<void> {
   const base = input.fechaProgramada ? new Date(input.fechaProgramada) : new Date();
   base.setDate(base.getDate() + input.dias);
-  const { error } = await supabase
-    .from("crm_actividades")
-    .update({ fecha_programada: base.toISOString() })
-    .eq("id", input.id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("crm_actividades")
+      .update({ fecha_programada: base.toISOString() })
+      .eq("id", input.id),
+  );
 }
 
 
 export async function actualizarActividadNotas(input: { id: string; resultado: string }): Promise<void> {
-  const { error } = await supabase
-    .from("crm_actividades")
-    .update({ resultado: input.resultado })
-    .eq("id", input.id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("crm_actividades")
+      .update({ resultado: input.resultado })
+      .eq("id", input.id),
+  );
 }
 
 
 export async function countActividadesVencidas(userId: string): Promise<number> {
+  // `count` va fuera de `data` — mantenemos el patrón manual.
   const { count, error } = await supabase
     .from("crm_actividades")
     .select("id", { count: "exact", head: true })
@@ -132,14 +139,15 @@ export type ActividadVencida = {
 };
 
 export async function listActividadesVencidas(userId: string, limit: number): Promise<ActividadVencida[]> {
-  const { data, error } = await supabase
-    .from("crm_actividades")
-    .select(CRM_ACTIVIDADES_COLUMNS_MIN)
-    .is("fecha_completada", null)
-    .lt("fecha_programada", new Date().toISOString())
-    .eq("responsable_id", userId)
-    .order("fecha_programada", { ascending: true })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []) as ActividadVencida[];
+  return unwrapOr(
+    supabase
+      .from("crm_actividades")
+      .select(CRM_ACTIVIDADES_COLUMNS_MIN)
+      .is("fecha_completada", null)
+      .lt("fecha_programada", new Date().toISOString())
+      .eq("responsable_id", userId)
+      .order("fecha_programada", { ascending: true })
+      .limit(limit),
+    [] as ActividadVencida[],
+  ) as Promise<ActividadVencida[]>;
 }

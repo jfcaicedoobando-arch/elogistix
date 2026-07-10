@@ -2,6 +2,7 @@
  * Servicio CRM — Oportunidades. Capa de I/O para `crm_oportunidades`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { unwrap, run } from "@/lib/supabase/response";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 export type { CrmOportunidadRow, Moneda, OportunidadInput } from "@/features/crm/types/oportunidades";
 import type { CrmOportunidadRow, OportunidadInput } from "@/features/crm/types/oportunidades";
@@ -36,39 +37,26 @@ export async function listOportunidades(p: ListOportunidadesParams): Promise<{ d
 }
 
 export async function getOportunidad(id: string): Promise<CrmOportunidadRow | null> {
-  const { data, error } = await supabase
-    .from("crm_oportunidades")
-    .select(COLS)
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  return (data ?? null) as CrmOportunidadRow | null;
+  return unwrap(
+    supabase.from("crm_oportunidades").select(COLS).eq("id", id).maybeSingle(),
+  ) as Promise<CrmOportunidadRow | null>;
 }
-
 
 export async function crearOportunidad(
   input: OportunidadInput,
   user: { id?: string; email?: string } | null,
 ): Promise<{ id: string }> {
   const payload = buildOportunidadInsertPayload(input, user);
-  const { data, error } = await supabase
-    .from("crm_oportunidades")
-    .insert(payload)
-    .select("id")
-    .single();
-  if (error) throw error;
-  return data as { id: string };
+  return unwrap(
+    supabase.from("crm_oportunidades").insert(payload).select("id").single(),
+  ) as Promise<{ id: string }>;
 }
 
 export async function actualizarOportunidad(input: {
   id: string;
   patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }>;
 }): Promise<void> {
-  const { error } = await supabase
-    .from("crm_oportunidades")
-    .update(input.patch)
-    .eq("id", input.id);
-  if (error) throw error;
+  await run(supabase.from("crm_oportunidades").update(input.patch).eq("id", input.id));
 }
 
 export async function moverEtapaOportunidad(input: {
@@ -78,17 +66,14 @@ export async function moverEtapaOportunidad(input: {
 }): Promise<void> {
   const patch: { etapa_id: string; probabilidad?: number } = { etapa_id: input.etapa_id };
   if (typeof input.probabilidad === "number") patch.probabilidad = input.probabilidad;
-  const { error } = await supabase
-    .from("crm_oportunidades")
-    .update(patch)
-    .eq("id", input.id);
-  if (error) throw error;
+  await run(supabase.from("crm_oportunidades").update(patch).eq("id", input.id));
 }
 
 export async function eliminarOportunidad(id: string, userId: string | null): Promise<void> {
-  const { error } = await supabase
-    .from("crm_oportunidades")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-    .eq("id", id);
-  if (error) throw error;
+  await run(
+    supabase
+      .from("crm_oportunidades")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+      .eq("id", id),
+  );
 }

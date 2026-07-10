@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { unwrapOr, run } from "@/lib/supabase/response";
 import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 
@@ -35,13 +36,14 @@ const VENDEDORA_CONFIG_COLUMNS =
   "id, organization_id, user_id, porcentaje_default, activa, fecha_alta, created_at, updated_at";
 
 export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
-  const { data, error } = await supabase
-    .from("vendedora_config")
-    .select(VENDEDORA_CONFIG_COLUMNS)
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) throw error;
-  const configs = (data ?? []) as VendedoraConfigRow[];
+  const configs = (await unwrapOr(
+    supabase
+      .from("vendedora_config")
+      .select(VENDEDORA_CONFIG_COLUMNS)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    [],
+  )) as VendedoraConfigRow[];
   const map = await buildEmailMap(configs.map((c) => c.user_id));
   return configs.map((c) => ({
     ...c,
@@ -53,27 +55,27 @@ export async function fetchVendedorasConfig(): Promise<VendedoraConfig[]> {
 export async function upsertVendedoraConfig(
   config: TablesInsert<"vendedora_config">,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("vendedora_config")
-    .upsert(config, { onConflict: "organization_id,user_id" });
-  if (error) throw error;
+  await run(
+    supabase
+      .from("vendedora_config")
+      .upsert(config, { onConflict: "organization_id,user_id" }),
+  );
 }
 
 export async function updateVendedoraConfig(
   id: string,
   changes: TablesUpdate<"vendedora_config">,
 ): Promise<void> {
-  const { error } = await supabase.from("vendedora_config").update(changes).eq("id", id);
-  if (error) throw error;
+  await run(supabase.from("vendedora_config").update(changes).eq("id", id));
 }
 
 /** Usuarios de la org con rol vendedor o admin (candidatos a vendedora). */
 export async function fetchUsuariosVendedores(): Promise<UsuarioVendedor[]> {
-  const { data, error } = await supabase
-    .from("organization_members")
-    .select("user_id, role");
-  if (error) throw error;
-  const rows = ((data ?? []) as Array<{ user_id: string; role: string }>)
+  const data = await unwrapOr(
+    supabase.from("organization_members").select("user_id, role"),
+    [],
+  );
+  const rows = (data as Array<{ user_id: string; role: string }>)
     .filter((r) => r.role === "vendedor" || r.role === "admin");
   const ids = Array.from(new Set(rows.map((r) => r.user_id)));
   const map = await buildEmailMap(ids);
@@ -92,15 +94,17 @@ export interface EmbarqueSinVendedora {
 }
 
 export async function fetchEmbarquesSinVendedora(): Promise<EmbarqueSinVendedora[]> {
-  const { data, error } = await supabase
-    .from("embarques")
-    .select("id, expediente, cliente_nombre, created_at")
-    .is("vendedora_id", null)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) throw error;
-  return ((data ?? []) as Array<{
+  const data = await unwrapOr(
+    supabase
+      .from("embarques")
+      .select("id, expediente, cliente_nombre, created_at")
+      .is("vendedora_id", null)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    [],
+  );
+  return (data as Array<{
     id: string; expediente: string; cliente_nombre: string; created_at: string;
   }>).map((e) => ({
     id: e.id,
@@ -114,9 +118,7 @@ export async function asignarVendedoraEmbarque(
   embarqueId: string,
   vendedoraId: string,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("embarques")
-    .update({ vendedora_id: vendedoraId })
-    .eq("id", embarqueId);
-  if (error) throw error;
+  await run(
+    supabase.from("embarques").update({ vendedora_id: vendedoraId }).eq("id", embarqueId),
+  );
 }
