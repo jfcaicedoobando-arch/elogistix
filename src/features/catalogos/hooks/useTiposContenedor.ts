@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { createCatalogHooks } from "@/hooks/shared/createCatalogHooks";
 import { queryKeys } from "@/lib/query";
 import {
   fetchTiposContenedor,
@@ -7,51 +7,34 @@ import {
   deleteTipoContenedor,
   type TipoContenedor,
 } from "@/features/catalogos/services";
-import { useMutationWithFeedback } from "@/hooks/shared";
 
 export type { TipoContenedor };
 
-/** Tipos de contenedor activos ordenados por nombre */
-export function useTiposContenedor() {
-  return useQuery<TipoContenedor[]>({
-    queryKey: queryKeys.tiposContenedor.activos,
-    queryFn: () => fetchTiposContenedor(false),
-    staleTime: 30 * 60 * 1000,
-  });
-}
+const hooks = createCatalogHooks<TipoContenedor, { code: string; name: string }>({
+  keys: {
+    invalidate: queryKeys.tiposContenedor.all,
+    active: queryKeys.tiposContenedor.activos,
+    all: queryKeys.tiposContenedor.todos,
+  },
+  fetch: fetchTiposContenedor,
+  insert: insertTipoContenedor,
+  setActivo: setTipoContenedorActivo,
+  remove: deleteTipoContenedor,
+  labels: {
+    agregarSuccess: "Tipo de contenedor agregado",
+    agregarError: "Error al agregar tipo",
+    toggleError: "Error al actualizar",
+    eliminarSuccess: "Tipo de contenedor eliminado",
+    eliminarError: "Error al eliminar",
+  },
+});
 
+/** Tipos de contenedor activos ordenados por nombre */
+export const useTiposContenedor = hooks.useList;
 /** Todos los tipos de contenedor (incluye inactivos) para admin */
-export function useAllTiposContenedor() {
-  return useQuery<TipoContenedor[]>({
-    queryKey: queryKeys.tiposContenedor.todos,
-    queryFn: () => fetchTiposContenedor(true),
-    staleTime: 60 * 1000,
-  });
-}
+export const useAllTiposContenedor = hooks.useListAll;
 
 export function useAdminTiposContenedor() {
-  const invalidate = queryKeys.tiposContenedor.all;
-
-  const agregarTipo = useMutationWithFeedback({
-    mutationFn: (input: { code: string; name: string }) => insertTipoContenedor(input),
-    invalidate,
-    successTitle: "Tipo de contenedor agregado",
-    errorTitle: "Error al agregar tipo",
-  });
-
-  const toggleActivo = useMutationWithFeedback({
-    mutationFn: ({ id, activo }: { id: string; activo: boolean }) =>
-      setTipoContenedorActivo(id, activo),
-    invalidate,
-    errorTitle: "Error al actualizar",
-  });
-
-  const eliminarTipo = useMutationWithFeedback({
-    mutationFn: (id: string) => deleteTipoContenedor(id),
-    invalidate,
-    successTitle: "Tipo de contenedor eliminado",
-    errorTitle: "Error al eliminar",
-  });
-
-  return { agregarTipo, toggleActivo, eliminarTipo };
+  const { agregar, toggleActivo, eliminar } = hooks.useAdmin();
+  return { agregarTipo: agregar, toggleActivo, eliminarTipo: eliminar };
 }
