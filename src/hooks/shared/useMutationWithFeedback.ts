@@ -65,16 +65,16 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
 
   return useMutation<TData, TError, TVariables, TContext>({
     ...rest,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       for (const key of toKeyArray(invalidate)) {
         qc.invalidateQueries({ queryKey: key });
       }
       if (successTitle) {
         notifySuccess(undefined, { title: successTitle, description: successDescription });
       }
-      userOnSuccess?.(data, variables, context);
+      userOnSuccess?.(data, variables, onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, onMutateResult, context) => {
       const err = error as unknown as Error;
       notifyError(undefined, {
         title: errorTitle,
@@ -83,7 +83,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
         method: errorMethod,
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
-      userOnError?.(error, variables, context);
+      userOnError?.(error, variables, onMutateResult, context);
     },
   });
 }
