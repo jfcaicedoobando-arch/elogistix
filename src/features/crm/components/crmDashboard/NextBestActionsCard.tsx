@@ -1,14 +1,14 @@
-import { ArrowRight, Sparkles, UserPlus, FileText, Target, AlarmClock, ClipboardList } from "lucide-react";
+import { ArrowRight, Sparkles, UserPlus, Target, AlarmClock, ClipboardList, ListChecks } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { NbaIcono, NbaItem } from "@/features/crm/domain/nextBestActions";
 
 const ICONS: Record<NbaIcono, typeof UserPlus> = {
   lead: UserPlus,
-  cotizacion: FileText,
+  cotizacion: ClipboardList,
   cierre: Target,
   stale: AlarmClock,
-  actividad: ClipboardList,
+  actividad: ListChecks,
 };
 
 interface Props {

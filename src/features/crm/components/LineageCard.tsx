@@ -4,7 +4,7 @@
  *  - OportunidadLineageCard: Oportunidad → Lead origen + Cotizaciones + Embarques
  * 11.13.0: las queries se mueven a `useLineage` (servicio CRM).
  */
-import { ExternalLink, FileText, Ship, Target, UserPlus } from "lucide-react";
+import { ExternalLink, ClipboardList, Ship, Target, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
@@ -87,7 +87,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
 
         <div>
           <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-            <FileText className="h-3 w-3" /> Cotizaciones <Badge variant="outline" className="ml-1">{cots.length}</Badge>
+            <ClipboardList className="h-3 w-3" /> Cotizaciones <Badge variant="outline" className="ml-1">{cots.length}</Badge>
           </div>
           {isLoadingCots && <p className="text-xs text-muted-foreground">Cargando…</p>}
           {!isLoadingCots && cots.length === 0 && <Empty text="Aún no hay cotizaciones vinculadas." />}

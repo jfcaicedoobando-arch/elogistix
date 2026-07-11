@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Ship, Users, Truck, FileText, ClipboardList, Receipt } from "lucide-react";
+import { Search, Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -18,10 +18,10 @@ const typeIcons = {
   embarque: Ship,
   cliente: Users,
   proveedor: Truck,
-  factura: FileText,
+  factura: Receipt,
   factura_proveedor: Receipt,
   cotizacion: ClipboardList,
-  proforma: Receipt,
+  proforma: FileSpreadsheet,
 };
 
 const typeLabels = {

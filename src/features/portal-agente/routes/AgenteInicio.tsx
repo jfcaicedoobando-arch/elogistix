@@ -3,7 +3,7 @@
  * v13.226.0 (Lote 6): migrado a `KpiCard` compartido + Title Case + icon en PageHeader.
  */
 import { Card } from "@/components/ui/card";
-import { FileText, ShieldCheck, Ship, ClipboardCheck, Clock, LayoutDashboard } from "lucide-react";
+import { FileSpreadsheet, ShieldCheck, Ship, ClipboardCheck, Clock, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
@@ -36,7 +36,7 @@ export default function AgenteInicio() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard icon={ClipboardCheck} label="Tarifas vigentes" value={vigentes} />
-        <KpiCard icon={FileText} label="Borradores pendientes" value={borradores} variant={borradores > 0 ? "warning" : "default"} />
+        <KpiCard icon={FileSpreadsheet} label="Borradores pendientes" value={borradores} variant={borradores > 0 ? "warning" : "default"} />
         <KpiCard icon={Clock} label="Vencen en 30 días" value={en30} variant={en30 > 0 ? "warning" : "default"} />
         <KpiCard icon={Ship} label="Embarques activos" value={embarques.length} />
       </div>
@@ -62,7 +62,7 @@ export default function AgenteInicio() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <QuickLink to={ROUTES.AGENTE_TARIFAS} icon={<FileText className="h-5 w-5" />} title="Mis tarifas" desc="Captura o actualiza tus tarifas marítimas. Quedan en borrador hasta que operaciones las aprueba." />
+        <QuickLink to={ROUTES.AGENTE_TARIFAS} icon={<FileSpreadsheet className="h-5 w-5" />} title="Mis tarifas" desc="Captura o actualiza tus tarifas marítimas. Quedan en borrador hasta que operaciones las aprueba." />
         <QuickLink to={ROUTES.AGENTE_GARANTIAS} icon={<ShieldCheck className="h-5 w-5" />} title="Carta garantía" desc="Sube tu carta garantía y mantén el tabulador de demoras actualizado." />
         <QuickLink to={ROUTES.AGENTE_EMBARQUES} icon={<Ship className="h-5 w-5" />} title="Mis embarques" desc="Consulta los embarques donde estás asignado como agente." />
       </div>

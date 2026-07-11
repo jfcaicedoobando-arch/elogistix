@@ -2,7 +2,7 @@
  * Stepper visual del flujo de facturación de un embarque:
  * Conceptos → Proformas → Facturas. Sólo presentacional.
  */
-import { Check, FileText, Receipt, ScrollText } from "lucide-react";
+import { Check, FileSpreadsheet, Receipt, ScrollText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -116,7 +116,7 @@ export function FlujoFacturacionStepper({
     <div className="flex items-center gap-2 md:gap-0 rounded-lg border bg-card px-4 py-3">
       <Paso numero={1} titulo="Conceptos"  detalle={det1} estado={e1} icon={ScrollText} />
       <Conector activo={e1 === "completo"} />
-      <Paso numero={2} titulo="Proformas"  detalle={det2} estado={e2} icon={FileText} />
+      <Paso numero={2} titulo="Proformas"  detalle={det2} estado={e2} icon={FileSpreadsheet} />
       <Conector activo={e2 === "completo"} />
       <Paso numero={3} titulo="Facturas"   detalle={det3} estado={e3} icon={Receipt} />
     </div>

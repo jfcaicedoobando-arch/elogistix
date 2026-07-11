@@ -3,7 +3,7 @@
  * 11.13.0: la query se mueve a `useOportunidadCotizaciones`.
  */
 import { useNavigate } from "react-router-dom";
-import { FileText, Ship } from "lucide-react";
+import { ClipboardList, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
@@ -21,7 +21,7 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
-          <FileText className="h-4 w-4" /> Cotizaciones vinculadas ({data.length})
+          <ClipboardList className="h-4 w-4" /> Cotizaciones vinculadas ({data.length})
         </CardTitle>
       </CardHeader>
       <CardContent>

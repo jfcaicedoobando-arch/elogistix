@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { FileText, Receipt } from "lucide-react";
+import { FileSpreadsheet, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,7 +98,7 @@ export function ResumenConceptosVenta({
         </CardTitle>
         {canEdit && conceptosPendientes.length > 0 && (
           <Button size="sm" onClick={onGenerarProforma}>
-            <FileText className="h-4 w-4 mr-1" /> Generar Proforma
+            <FileSpreadsheet className="h-4 w-4 mr-1" /> Generar Proforma
             <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-primary-foreground border-0">
               {conceptosPendientes.length}
             </Badge>

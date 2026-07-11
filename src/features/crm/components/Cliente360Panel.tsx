@@ -3,7 +3,7 @@
  * cotización, último embarque y timeline de actividades.
  */
 import { useNavigate } from "react-router-dom";
-import { Briefcase, FileText, Ship } from "lucide-react";
+import { Briefcase, ClipboardList, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,7 +76,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4" /> Última cotización</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Última cotización</CardTitle>
           </CardHeader>
           <CardContent>
             {d.ultimaCotizacion ? (

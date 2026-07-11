@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { useAgenteTarifas } from "@/features/portal-agente/hooks";
 import { AgenteTarifaForm } from "@/features/portal-agente/components/AgenteTarifaForm";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileSpreadsheet } from "lucide-react";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
 import {
@@ -50,7 +50,7 @@ export default function AgenteTarifas() {
   return (
     <div className="space-y-4">
       <PageHeader
-        icon={<FileText className="h-6 w-6 text-accent" />}
+        icon={<FileSpreadsheet className="h-6 w-6 text-accent" />}
         title="Mis Tarifas Marítimas"
         description="Tarifas que has subido para tus rutas marítimas. Las nuevas tarifas quedan en borrador hasta que operaciones las aprueba."
         actions={

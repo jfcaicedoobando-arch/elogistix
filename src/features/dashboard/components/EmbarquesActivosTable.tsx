@@ -9,7 +9,7 @@ import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/features/dashboard/hooks";
 
-import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
+import { CalendarDays, DollarSign, TrendingUp, FileCheck, Ship } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface Props {
@@ -126,7 +126,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading, hideFinan
         {/* Resumen de facturación */}
         <div className={`grid gap-3 ${hideFinancials ? "grid-cols-1" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-            <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Ship className="h-4 w-4 text-muted-foreground shrink-0" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-foreground">{resumen.totalEmbarques}</p>
               <p className="text-2xs text-muted-foreground">Embarques</p>

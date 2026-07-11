@@ -4,7 +4,7 @@
  * Recibe los campos ya normalizados por `resolveProformaTimelineFields`
  * para mantener este componente sin casts.
  */
-import { Check, Send, FileCheck2, X, FileText } from "lucide-react";
+import { Check, Send, FileCheck2, X, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import type { ProformaTimelineFields } from "@/features/proformas/domain/proformaClienteEstado";
@@ -30,7 +30,7 @@ function buildHitos(fechaEmision: string, operador: string | null | undefined, t
     ? { key: "rechazada", label: "Rechazada", icon: X, fecha: t.rechazadaAt, tone: "danger" }
     : { key: "aceptada", label: "Aceptada", icon: Check, fecha: t.aceptadaAt, actor: t.aceptadaPor, tone: "success" };
   return [
-    { key: "emitida", label: "Emitida", icon: FileText, fecha: fechaEmision, actor: operador, tone: "default" },
+    { key: "emitida", label: "Emitida", icon: FileSpreadsheet, fecha: fechaEmision, actor: operador, tone: "default" },
     { key: "enviada", label: "Enviada", icon: Send, fecha: t.enviadaAt, actor: t.enviadaPor, tone: "default" },
     hitoFinal,
     { key: "facturada", label: "Facturada", icon: FileCheck2, fecha: t.fechaFacturacion, tone: "success" },

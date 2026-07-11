@@ -5,7 +5,7 @@
  */
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import { Ship, FileText, ShieldCheck, LayoutDashboard, User, Building2 } from "lucide-react";
+import { Ship, FileSpreadsheet, ShieldCheck, LayoutDashboard, User, Building2 } from "lucide-react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { BrandLockup } from "@/components/layout/BrandLockup";
@@ -19,7 +19,7 @@ import { useBreadcrumbLabels } from "@/lib/contexts/BreadcrumbContext";
 
 const NAV = [
   { label: "Inicio", href: "/agente", icon: LayoutDashboard },
-  { label: "Tarifas", href: "/agente/tarifas", icon: FileText },
+  { label: "Tarifas", href: "/agente/tarifas", icon: FileSpreadsheet },
   { label: "Garantías", href: "/agente/garantias", icon: ShieldCheck },
   { label: "Embarques", href: "/agente/embarques", icon: Ship },
   { label: "Perfil", href: "/agente/perfil", icon: User },

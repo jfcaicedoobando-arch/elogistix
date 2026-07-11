@@ -1,4 +1,4 @@
-import { Ship, FileText, Receipt, ArrowRight, type LucideIcon } from "lucide-react";
+import { Ship, ClipboardList, Receipt, ArrowRight, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
@@ -17,7 +17,7 @@ interface KpiDef {
 
 const KPIS: KpiDef[] = [
   { key: "embarques", label: "Embarques Activos", shortLabel: "Embarques", icon: Ship, href: ROUTES.PORTAL_EMBARQUES, color: "text-accent", bg: "bg-accent/10" },
-  { key: "cotizaciones", label: "Cotizaciones Pendientes", shortLabel: "Cotizaciones", icon: FileText, href: ROUTES.PORTAL_COTIZACIONES, color: "text-[hsl(var(--state-en-proceso))]", bg: "bg-[hsl(var(--state-en-proceso)/0.1)]" },
+  { key: "cotizaciones", label: "Cotizaciones Pendientes", shortLabel: "Cotizaciones", icon: ClipboardList, href: ROUTES.PORTAL_COTIZACIONES, color: "text-[hsl(var(--state-en-proceso))]", bg: "bg-[hsl(var(--state-en-proceso)/0.1)]" },
   { key: "facturas", label: "Facturas Pendientes", shortLabel: "Facturas", icon: Receipt, href: ROUTES.PORTAL_FACTURAS, color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
 ];
 

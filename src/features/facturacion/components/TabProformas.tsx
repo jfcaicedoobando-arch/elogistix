@@ -1,4 +1,4 @@
-import { Download, FileText, Loader2, X } from "lucide-react";
+import { Download, Receipt, Loader2, X } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
             >
               {convirtiendo
                 ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                : <FileText className="h-4 w-4 mr-1" />}
+                : <Receipt className="h-4 w-4 mr-1" />}
               {seleccionados === 1 ? "Convertir a factura" : `Fusionar ${seleccionados} en una factura`}
             </Button>
           </CardContent>
