@@ -3,7 +3,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ReceiptText, Download, Wallet, Coins, ListFilter } from "lucide-react";
+import { ReceiptText, Download, Banknote, Coins, ListFilter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,7 +105,7 @@ export default function ComprasNotasCredito() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard label="NC en el período" value={String(rows.length)} icon={ListFilter} />
-        <KpiCard label="Aplicadas MXN" value={formatCurrency(totalMxn, "MXN")} icon={Wallet} variant="success" />
+        <KpiCard label="Aplicadas MXN" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} variant="success" />
         <KpiCard label="Aplicadas USD" value={formatCurrency(totalUsd, "USD")} icon={Coins} variant="success" />
       </div>
 
