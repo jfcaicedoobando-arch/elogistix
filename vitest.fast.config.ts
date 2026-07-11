@@ -10,16 +10,13 @@ export default mergeConfig(
   baseConfig,
   defineConfig({
     test: {
+      pool: "forks",
+      singleFork: false,
+      maxForks: 4,
+      minForks: 2,
+      isolate: true,
+      execArgv: ["--max-old-space-size=8192", "--expose-gc"],
       fileParallelism: true,
-      poolOptions: {
-        forks: {
-          singleFork: false,
-          maxForks: 4,
-          minForks: 2,
-          isolate: true,
-          execArgv: ["--max-old-space-size=8192", "--expose-gc"],
-        },
-      },
     },
   })
 );
