@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Calendar as CalendarIcon, X } from "lucide-react";
+import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -86,7 +87,9 @@ export function DateTimePickerMx({
           selected={date}
           onSelect={(d) => emit(d ?? undefined, time)}
           autoFocus
+          locale={es}
         />
+
         <div className="border-t p-3 flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Hora</span>
           <Input
