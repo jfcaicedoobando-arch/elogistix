@@ -2,7 +2,7 @@
  * Efectos de hidratación para EditarEmbarque. Extraído de useEditarEmbarqueWizard
  * para mantener el controller bajo el límite Power of 10 (<200 líneas).
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { UseFormReturn, FieldValues } from "react-hook-form";
 import { rowAContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { resolverValorContactoDesdeTexto } from "@/features/cliente/domain/contacto";
