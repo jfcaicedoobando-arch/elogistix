@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.256.0] - 2026-07-11
+- **Onboarding · Modo "Configurar después"**: RFC y dirección fiscal son ahora **opcionales** en `/onboarding`. Se agregó botón secundario "Configurar después" junto a "Guardar y continuar" para que el nuevo admin pueda entrar a explorar la app sin fricción y completar los datos fiscales luego desde Configuración. RPC `complete_onboarding` migrado: si `_rfc`/`_direccion` vienen vacíos ya no falla; si vienen con contenido se sigue validando longitud (12–13 / 5–500). La organización se guarda con `rfc`/`direccion` en `NULL` cuando el usuario omite el paso, pero `onboarding_completado = true` para que el `resolveProtectedRouteRedirect` deje pasar. Copy actualizado en la card para reflejar que los campos son opcionales.
+
 ## [13.255.0] - 2026-07-11
 - **Marketing · Captura de leads antes del demo**: el botón "Probar demo" en la landing ahora abre un diálogo que pide nombre, empresa, email de trabajo y teléfono (validado con `libphonenumber-js`) antes de provisionar la cuenta demo compartida. Nueva tabla `demo_leads` con RLS (INSERT público desde `anon`, SELECT/DELETE sólo `super_admin`) que guarda además `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `referrer`, `landing_path` y `user_agent` para atribución de campañas. Nuevo hook `useCaptureUtmParams` persiste UTMs en `sessionStorage` al aterrizar en la landing. Nueva ruta admin `/admin/demo-leads` (super_admin) con listado y exportación CSV, agregada al AdminSidebar. Signup normal (`SignupForm`) ahora incluye campo teléfono opcional (persistido en `user_metadata.phone`). Nuevo documento `docs/pre-ads-checklist.md` con el semáforo pre-ads (bloqueadores: GA4 + Meta Pixel + confirmación de email transaccional).
 
