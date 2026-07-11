@@ -53,18 +53,19 @@ export default function Onboarding() {
   if (!user) return <Navigate to={ROUTES.LOGIN} replace />;
   if (organization?.onboarding_completado) return <Navigate to={ROUTES.INICIO} replace />;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (opts: { skipFiscal: boolean }) => {
     setError(null);
-    const rfcClean = rfc.trim().toUpperCase();
-    const dirClean = direccion.trim();
-    if (rfcClean.length < 12 || rfcClean.length > 13) {
-      setError("El RFC debe tener 12 caracteres (persona moral) o 13 (persona física).");
-      return;
-    }
-    if (dirClean.length < 5 || dirClean.length > 500) {
-      setError("La dirección debe tener entre 5 y 500 caracteres.");
-      return;
+    const rfcClean = opts.skipFiscal ? "" : rfc.trim().toUpperCase();
+    const dirClean = opts.skipFiscal ? "" : direccion.trim();
+    if (!opts.skipFiscal) {
+      if (rfcClean !== "" && (rfcClean.length < 12 || rfcClean.length > 13)) {
+        setError("El RFC debe tener 12 caracteres (persona moral) o 13 (persona física).");
+        return;
+      }
+      if (dirClean !== "" && (dirClean.length < 5 || dirClean.length > 500)) {
+        setError("La dirección debe tener entre 5 y 500 caracteres.");
+        return;
+      }
     }
     if (!["MXN", "USD", "EUR"].includes(moneda)) {
       setError("Selecciona una moneda válida.");
@@ -74,7 +75,12 @@ export default function Onboarding() {
     try {
       await completeOnboarding({ rfc: rfcClean, direccion: dirClean, moneda });
       await refreshProfile();
-      toast({ title: "¡Listo!", description: "Configuración inicial completada." });
+      toast({
+        title: opts.skipFiscal ? "¡Bienvenido!" : "¡Listo!",
+        description: opts.skipFiscal
+          ? "Puedes completar tus datos fiscales después en Configuración."
+          : "Configuración inicial completada.",
+      });
       navigate(ROUTES.INICIO, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "No pudimos guardar los datos.";
@@ -88,6 +94,15 @@ export default function Onboarding() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submit({ skipFiscal: false });
+  };
+
+  const handleSkip = () => {
+    void submit({ skipFiscal: true });
   };
 
   return (
