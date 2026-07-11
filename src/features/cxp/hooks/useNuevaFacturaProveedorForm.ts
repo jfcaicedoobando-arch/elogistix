@@ -21,9 +21,6 @@ import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
-
-
-
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
@@ -46,7 +43,6 @@ export function useNuevaFacturaProveedorForm(
   // auto-fetch la sobreescriba en el próximo cambio de fecha.
   const manualTcRef = useRef(false);
 
-
   // Mutación que consulta el TC DOF vigente para la fecha de emisión.
   const tcDof = useTcDofPorFecha((r) => {
     setValues((p) => ({ ...p, tc: String(r.tipoCambio) }));
@@ -57,21 +53,29 @@ export function useNuevaFacturaProveedorForm(
 
   const total = useMemo(() => calcularTotal(values), [values]);
 
+  // Refs a `tcDof` (mutation) y `tcOrigen` para que el auto-fetch sólo
+  // se re-suscriba al cambiar moneda/emisión, no cuando el origen o el
+  // objeto de mutación cambian de identidad.
+  const tcDofRef = useRef(tcDof);
+  const tcOrigenRef = useRef(tcOrigen);
+  tcDofRef.current = tcDof;
+  tcOrigenRef.current = tcOrigen;
+
   // Auto-fetch del TC DOF cuando hay moneda ≠ MXN + fecha emisión válida.
   // Se dispara al cambiar moneda o emisión; NO pisa un TC manual ni uno del CFDI.
   useEffect(() => {
     if (values.moneda === "MXN") return;
     if (!isFechaEmisionValida(values.emision)) return;
-    if (tcOrigen === "manual" || tcOrigen === "cfdi") return;
+    const origen = tcOrigenRef.current;
+    if (origen === "manual" || origen === "cfdi") return;
     const t = setTimeout(() => {
-      tcDof.mutate({
+      tcDofRef.current.mutate({
         moneda: values.moneda as MonedaTc,
         fecha: values.emision,
         silent: true,
       });
     }, 250);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.moneda, values.emision]);
 
   const handleChange = <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => {

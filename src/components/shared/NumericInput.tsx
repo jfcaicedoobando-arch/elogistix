@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -23,12 +23,16 @@ const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
   ({ value, onChange, decimals = false, className, disabled, placeholder, ...rest }, ref) => {
     const toText = (n: number): string => (n === 0 ? "" : String(n));
     const [text, setText] = useState<string>(toText(value));
+    // Ref al último `text` para leer el valor actual dentro del efecto sin
+    // volver a dispararlo (evita loop: efecto → setText → efecto).
+    const textRef = useRef(text);
+    textRef.current = text;
 
     // Sincronizar cuando el valor cambia externamente (no por el propio input).
     useEffect(() => {
-      const current = text === "" || text === "." ? 0 : Number(text);
+      const t = textRef.current;
+      const current = t === "" || t === "." ? 0 : Number(t);
       if (current !== value) setText(toText(value));
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
     const regex = decimals ? /^\d*\.?\d*$/ : /^\d*$/;

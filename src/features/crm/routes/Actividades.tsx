@@ -7,7 +7,7 @@
  *   - Soporta el shortcut `?filtro=vencidas` que preconfigura pendientes+mías
  *     y filtra en cliente por `fecha_programada < now` sobre la página server.
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +34,6 @@ import {
 import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-
 const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
   { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
@@ -96,12 +95,13 @@ export default function Actividades() {
   });
 
   // Shortcut `?filtro=vencidas`: preconfigura pendientes + mías la primera vez.
+  const setFilterRef = useRef(list.setFilter);
+  setFilterRef.current = list.setFilter;
   useEffect(() => {
     if (vencidasOnly) {
-      list.setFilter("estado", "pendientes");
-      list.setFilter("responsable", "mias");
+      setFilterRef.current("estado", "pendientes");
+      setFilterRef.current("responsable", "mias");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vencidasOnly]);
 
   const now = Date.now();

@@ -11,7 +11,7 @@
  *   - Preselección del contacto principal / prioridad cliente.
  *   - Toggles, CC, emails manuales, memoria de sesión (asunto/mensaje).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
@@ -20,7 +20,6 @@ import {
   CLIENTE_PRINCIPAL_ID,
   type ContactoClienteEmail,
 } from "@/features/cotizacion/services/envios";
-
 export type Contacto = ContactoClienteEmail;
 
 const EMPTY_CONTACTOS: readonly Contacto[] = Object.freeze([]);
@@ -89,22 +88,31 @@ export function useEnvioDocumentoForm(
   const ccInicialKey = (ccInicial ?? []).join(",");
   const destInicialKey = (destinatariosManualesInicial ?? []).join(",");
 
+  // Refs a callbacks/arrays cuyo contenido se cubre con las keys de arriba.
+  const buildAsuntoInicialRef = useRef(buildAsuntoInicial);
+  const ccInicialRef = useRef(ccInicial);
+  const destInicialRef = useRef(destinatariosManualesInicial);
+  const userEmail = user?.email;
+  buildAsuntoInicialRef.current = buildAsuntoInicial;
+  ccInicialRef.current = ccInicial;
+  destInicialRef.current = destinatariosManualesInicial;
+
   useEffect(() => {
     if (!open) return;
-    setAsunto(buildAsuntoInicial());
+    setAsunto(buildAsuntoInicialRef.current());
     setMensaje("");
     setEmailManual("");
     // Precargamos CC con los correos heredados (última factura / preferencia
     // del cliente), excluyendo al usuario logueado (que ya se agrega solo).
-    const userEmailLc = user?.email?.toLowerCase();
-    const precargaCc = (ccInicial ?? [])
+    const userEmailLc = userEmail?.toLowerCase();
+    const precargaCc = (ccInicialRef.current ?? [])
       .map((e) => e.trim())
       .filter((e) => EMAIL_RE.test(e) && e.toLowerCase() !== userEmailLc);
     setCcManual(precargaCc.join(", "));
     // Precargamos destinatarios manuales heredados, evitando duplicar los
     // emails que ya vengan de los contactos del cliente.
     const contactoEmails = new Set(contactos.map((c) => c.email.toLowerCase()));
-    const precargaDest = (destinatariosManualesInicial ?? [])
+    const precargaDest = (destInicialRef.current ?? [])
       .map((e) => e.trim())
       .filter((e) => EMAIL_RE.test(e) && !contactoEmails.has(e.toLowerCase()));
     // Dedupe manteniendo orden
@@ -123,8 +131,7 @@ export function useEnvioDocumentoForm(
     if (principal) pre[principal.id] = true;
     else if (prioridad) pre[prioridad.id] = true;
     setSeleccionados(pre);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, contactos, ccInicialKey, destInicialKey]);
+  }, [open, contactos, ccInicialKey, destInicialKey, userEmail]);
 
   const agregarManual = () => {
     const v = emailManual.trim();

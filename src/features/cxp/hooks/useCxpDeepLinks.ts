@@ -8,7 +8,7 @@
  * En ambos casos, tras aplicar el efecto se limpia el query param con
  * `replace: true` para no ensuciar el historial.
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { FacturaCxP } from "@/features/cxp/services";
 
@@ -45,11 +45,20 @@ export function useCxpDeepLinks({
     );
   }, [searchParams, data, isLoading, onOpenDetalle, setSearchParams]);
 
+  // Efecto de mount-only: aplica el chip inicial de aprobación desde el query
+  // param una sola vez. Refs para leer valores actuales sin re-suscribir.
+  const onSetAprobacionRef = useRef(onSetAprobacion);
+  const setSearchParamsRef = useRef(setSearchParams);
+  const searchParamsRef = useRef(searchParams);
+  onSetAprobacionRef.current = onSetAprobacion;
+  setSearchParamsRef.current = setSearchParams;
+  searchParamsRef.current = searchParams;
+
   useEffect(() => {
-    const ap = searchParams.get("aprobacion");
+    const ap = searchParamsRef.current.get("aprobacion");
     if (ap === "pendiente" || ap === "aprobada" || ap === "rechazada") {
-      onSetAprobacion(ap);
-      setSearchParams(
+      onSetAprobacionRef.current(ap);
+      setSearchParamsRef.current(
         (sp) => {
           const next = new URLSearchParams(sp);
           next.delete("aprobacion");
@@ -58,6 +67,5 @@ export function useCxpDeepLinks({
         { replace: true },
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
