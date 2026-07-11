@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.261.0] - 2026-07-11
+- **UX · Íconos semánticos**: audit + fix de 15 duplicados/mal elegidos. Sidebar: Cobranza `HandCoins`, Cartera `Wallet`, Facturación `Receipt`, Proformas `FileSpreadsheet`, Tarifa demoras `Timer`, Operaciones `Workflow`, Usuarios `Users`, Por aprobar `ClipboardCheck`, Por pagar `Banknote`, Pagos `ArrowRightLeft`, CRM `Handshake`, Clientes `Building2`. Auditoría: `margen_negativo` → `TrendingDown`, `margen_bajo` → `Scale`, `venta_sin_costo`/`costo_sin_venta` → `FileX2`, `proforma_vencida` → `CalendarClock`, `proforma_borrador_abandonada` → `FileClock`, `proforma_inconsistente` → `FileSpreadsheet` (libera `Receipt` de 7 reglas a 1). Estados de embarque: `EIR` → `ClipboardCheck` (deja de colisionar con el fallback `FileCheck`), `Cerrado` → `Archive` (deja de confundirse con `CheckCircle2` de éxito genérico).
+
 ## [13.260.0] - 2026-07-11
 - **UI · lucide-react 0.462 → 1.24**: bump mayor de la librería de íconos (19 meses de bugfixes, tipados y nuevos íconos). Sin cambios de API en `size`/`color`/`strokeWidth`; typecheck + `test:fast` (647 archivos, 4538 tests) verdes.
 - **UI · Wrapper `<Icon />` estándar**: nuevo `src/components/ui/icon.tsx` con defaults del design system (`size=16`, `strokeWidth=2`), `aria-label` opcional (con fallback `aria-hidden` para íconos decorativos) y `shrink-0`. Uso incremental — no forzamos migración.
