@@ -1,3 +1,4 @@
+"use memo";
 import { useDeferredValue } from "react";
 import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
