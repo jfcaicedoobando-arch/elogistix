@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
-import { resumirCartera, type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
+import { resumirCartera, matchesUrgencia, type SaldosPorMonedaCartera, type UrgenciaCartera } from "@/features/bandejas/domain/aggregates";
 import { equivalenteMxn } from "@/features/bandejas/domain/carteraFx";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -30,10 +30,10 @@ import { CarteraMobileList } from "./_sections/CarteraMobileList";
 
 interface CarteraFilters extends Record<string, string> {
   moneda: string;
-  vencidas: string; // "todas" | "si" | "no"
+  urgencia: string; // UrgenciaCartera
 }
 
-const DEFAULTS: CarteraFilters = { moneda: "todas", vencidas: "todas" };
+const DEFAULTS: CarteraFilters = { moneda: "todas", urgencia: "accionable" };
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
@@ -50,9 +50,6 @@ export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
   const { data: rates } = useExchangeRates();
   const tcUsdMxn = rates?.usdMxn ?? 0;
-  const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(data);
-  const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
-  const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
 
   const monedas = useMemo(
     () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
@@ -63,14 +60,13 @@ export default function Cartera() {
     data,
     isLoading,
     defaultFilters: DEFAULTS,
-    filterLabels: { moneda: "Moneda", vencidas: "Vencidas" },
+    filterLabels: { moneda: "Moneda", urgencia: "Urgencia" },
     defaultSort: { key: "dias", dir: "desc" },
     searchAccessor: (r) =>
       `${r.numero ?? ""} ${r.cliente_nombre ?? ""} ${r.expediente ?? ""}`,
     filterPredicate: (r, ff) => {
       if (ff.moneda !== "todas" && r.moneda !== ff.moneda) return false;
-      if (ff.vencidas === "si" && r.dias_vencido <= 0) return false;
-      if (ff.vencidas === "no" && r.dias_vencido > 0) return false;
+      if (!matchesUrgencia(r.dias_vencido, ff.urgencia as UrgenciaCartera)) return false;
       return true;
     },
     dateAccessor: (r) => r.fecha_vencimiento,
@@ -84,19 +80,34 @@ export default function Cartera() {
     },
   });
 
+  // KPIs sobre el subconjunto filtrado por urgencia + moneda (ignora búsqueda/rango
+  // de fechas: los cards resumen "lo que muestra el módulo con estos filtros").
+  const scoped = useMemo(
+    () =>
+      data.filter(
+        (r) =>
+          matchesUrgencia(r.dias_vencido, (paged.filters.urgencia ?? "accionable") as UrgenciaCartera) &&
+          (paged.filters.moneda === "todas" || r.moneda === paged.filters.moneda),
+      ),
+    [data, paged.filters.urgencia, paged.filters.moneda],
+  );
+  const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(scoped);
+  const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
+  const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
+
   const columns = useMemo(() => buildCarteraColumns(), []);
 
   return (
     <PageContainer>
       <PageHeader
         title="Cartera"
-        description="Facturas emitidas con saldo pendiente. Da seguimiento a cobranza, registra promesas y cobros."
+        description="Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Facturas con saldo</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{data.length}</CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Facturas en foco</CardTitle></CardHeader>
+          <CardContent className="text-2xl font-semibold">{scoped.length}</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
@@ -132,14 +143,15 @@ export default function Cartera() {
         searchPlaceholder="Buscar folio, cliente o expediente…"
         primary={
           <>
-            <Select value={paged.filters.vencidas} onValueChange={(v) => paged.setFilter("vencidas", v)}>
-              <SelectTrigger className="w-[160px]" aria-label="Vencidas">
-                <SelectValue placeholder="Vencidas" />
+            <Select value={paged.filters.urgencia} onValueChange={(v) => paged.setFilter("urgencia", v)}>
+              <SelectTrigger className="w-[200px]" aria-label="Urgencia">
+                <SelectValue placeholder="Urgencia" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todas">Todas</SelectItem>
-                <SelectItem value="si">Solo vencidas</SelectItem>
-                <SelectItem value="no">No vencidas</SelectItem>
+                <SelectItem value="accionable">Accionable (≤7d o vencidas)</SelectItem>
+                <SelectItem value="vencidas">Solo vencidas</SelectItem>
+                <SelectItem value="por_vencer">Por vencer (≤7 días)</SelectItem>
+                <SelectItem value="todas">Todas con saldo</SelectItem>
               </SelectContent>
             </Select>
             <Select value={paged.filters.moneda} onValueChange={(v) => paged.setFilter("moneda", v)}>

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.253.3] - 2026-07-11
+- **Cobranza · Cartera enfocada**: `/cartera` ya no lista todas las facturas con saldo. Nuevo filtro **Urgencia** con default `Accionable` (vencidas + por vencer en ≤7 días); opciones `Solo vencidas`, `Por vencer (≤7d)` y `Todas con saldo` para consulta puntual. Los KPIs "Facturas en foco", "Saldo total" y "Vencido" se recalculan sobre el subconjunto filtrado por urgencia + moneda. Badge de la columna Días diferencia visualmente `Vencida Xd` (destructive) vs `Por vencer Xd` (secondary). Nuevo helper puro `matchesUrgencia` con tests (5 casos: +10 / 0 / -3 / -7 / -30 días).
+
 ## [13.253.2] - 2026-07-10
 - **Fix cobranza · Cartera**: los KPIs "Saldo total" y "Vencido" en `/cartera` sumaban MXN y USD como si fueran la misma moneda y mostraban el resultado etiquetado como MXN (1 USD contado como 1 MXN). Ahora `resumirCartera` devuelve totales nativos separados (`saldosNativos.MXN`, `USD`, `otras`) y la UI muestra la línea principal como "$X MXN · $Y USD" con el equivalente consolidado en MXN debajo (usa TC vigente de `useExchangeRates`). Nuevo helper puro `equivalenteMxn` en `carteraFx.ts` con tests. No se convierten monedas sin TC — se listan como `(N sin TC)` en tooltip.
 

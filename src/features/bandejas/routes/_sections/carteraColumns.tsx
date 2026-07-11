@@ -53,12 +53,13 @@ export function buildCarteraColumns(): ColumnDef<CarteraRow, unknown>[] {
       header: "Días vencido",
       accessorFn: (r) => r.dias_vencido,
       enableSorting: true,
-      meta: { width: "w-[110px]", align: "center", className: "whitespace-nowrap" },
-      cell: ({ row }) => (
-        <Badge variant={row.original.dias_vencido > 0 ? "destructive" : "secondary"}>
-          {row.original.dias_vencido}d
-        </Badge>
-      ),
+      meta: { width: "w-[130px]", align: "center", className: "whitespace-nowrap" },
+      cell: ({ row }) => {
+        const d = row.original.dias_vencido;
+        if (d > 0) return <Badge variant="destructive">Vencida {d}d</Badge>;
+        if (d >= -7) return <Badge variant="secondary">Por vencer {Math.abs(d)}d</Badge>;
+        return <Badge variant="outline">{d}d</Badge>;
+      },
     },
     {
       ...moneyColumn<CarteraRow>({

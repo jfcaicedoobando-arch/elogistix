@@ -1,65 +1,37 @@
-## Problema
+## Objetivo
 
-En `/cartera`, las tarjetas "Saldo total" y "Vencido" suman todos los saldos como si fueran la misma moneda y muestran el resultado con etiqueta MXN. Un saldo de 1,000 USD se cuenta como 1,000 MXN — la cifra está inflada al revés (subestimada) según el mix real de facturas.
-
-La causa está en `src/features/bandejas/domain/aggregates.ts → resumirCartera()`: acumula `totalSaldo` y `vencidoSaldo` sin distinguir `moneda`. La pantalla `/cartera` es la única que consume esa función; el resto del módulo de cobranza (`cobranzaAggregates.ts`, bandeja "Por cobrar") ya separa por moneda correctamente.
-
-## Solución
-
-Reescribir `resumirCartera` para devolver totales **nativos por moneda** (MXN, USD, otras) más un **equivalente en MXN** usando el tipo de cambio vigente. Las 3 tarjetas de `/cartera` se rediseñan para mostrar en la línea principal los totales nativos ("$X MXN · $Y USD") y, debajo en texto pequeño y muted, el equivalente consolidado en MXN. Si alguna factura USD no puede convertirse (falta TC), se indica con un aviso discreto.
+El módulo `/cartera` hoy muestra **todas** las facturas con saldo > 0 (vigentes lejanas, por vencer, vencidas). Vamos a enfocarlo en cobranza accionable: **sólo vencidas + por vencer en ≤7 días**, con posibilidad de ampliar el rango si el usuario lo necesita.
 
 ## Cambios
 
-1. **`src/features/bandejas/domain/aggregates.ts`**
-   - `CarteraSummary` pasa a exponer:
-     ```
-     total, saldosNativos: { MXN, USD, otras: Record<string, number> },
-     vencidasCount, vencidoNativo: { MXN, USD, otras: Record<string, number> }
-     ```
-   - Sin conversión de FX aquí (función pura, sin dependencias de red).
-   - Reutiliza `sumarMontos` de `financialUtils` para evitar drift de punto flotante.
+### 1. Filtro por defecto en la UI (`Cartera.tsx`)
+- Reemplazar el filtro binario `vencidas: "todas" | "si" | "no"` por `urgencia`, con 4 opciones:
+  - **"accionable"** (por defecto): vencidas + por vencer en ≤7 días.
+  - `"vencidas"`: sólo `dias_vencido > 0`.
+  - `"por_vencer"`: `-7 ≤ dias_vencido ≤ 0`.
+  - `"todas"`: comportamiento anterior (para consultas puntuales).
+- Ajustar `filterPredicate` acorde. `dias_vencido` ya viene del RPC (positivo = vencidas, negativo = días restantes para vencer).
+- Actualizar los KPIs para reflejar el subset filtrado, manteniendo "Vencido" como sub-KPI de lo vencido puro.
+- Agregar un chip visual "Por vencer ≤7d" además de "Vencida" en la columna de estado.
 
-2. **Nuevo helper** `src/features/bandejas/domain/carteraFx.ts` (puro, testeable):
-   - `equivalenteMxn(nativos, tcUsdMxn) → { totalMxn, facturasSinTc }`.
-   - Convierte USD × TC; MXN tal cual; monedas ajenas se reportan como "sin TC" (no se mezclan).
+### 2. RPC `cartera_pendiente` — sin cambios
+El RPC ya filtra por `saldo > 0`, así que las pagadas siguen ocultas (respuesta a la 2ª pregunta). El filtro de urgencia se aplica en cliente para conservar flexibilidad del toggle.
 
-3. **`src/features/bandejas/routes/Cartera.tsx`**
-   - Consumir `useExchangeRates()` (ya existente) para obtener `usdMxn`.
-   - Rediseñar las 3 tarjetas:
-     - **Facturas con saldo**: sin cambio (es un conteo).
-     - **Saldo total**: línea 1 → `$X MXN · $Y USD` (omite monedas en cero); línea 2 (muted, pequeña) → `≈ $Z MXN equivalente`. Si `facturasSinTc > 0`, mostrar `(N sin TC)` en tooltip.
-     - **Vencido (N)**: mismo patrón, con color `text-destructive` sólo en la línea principal.
-   - Usar `formatCurrency` de `@/lib/formatters` con la moneda correcta por segmento — nunca hardcodear MXN cuando el número es USD.
+### 3. Descripción del módulo
+- Actualizar el `description` del header a algo como: "Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
 
-4. **Tests**
-   - `src/features/bandejas/domain/__tests__/aggregates.test.ts`: agregar casos con mix MXN+USD y con monedas ajenas para verificar que los buckets no se contaminan.
-   - `src/features/bandejas/domain/__tests__/carteraFx.test.ts` (nuevo): equivalente MXN con TC válido, con TC=0 (reporta `facturasSinTc`), y con moneda desconocida.
+### 4. Tests
+- Extender `aggregates.test.ts` (o crear `carteraFilter.test.ts`) para cubrir el nuevo predicado con casos: vencida (+10d), por vencer (-3d), lejana (-30d), justo hoy (0d).
 
-5. **Bitácora**
-   - `CHANGELOG.md`: nueva entrada `## [13.253.2]` con nota "Cartera: KPIs de saldo separan MXN/USD nativos y muestran equivalente MXN".
-   - Bump `APP_VERSION` a `13.253.2` en `src/constants/appVersion.ts`.
+### 5. Housekeeping
+- `APP_VERSION` → `13.253.3`.
+- Entrada en `CHANGELOG.md`.
 
 ## Fuera de alcance
+- Notificaciones automáticas por facturas próximas a vencer.
+- Cambios en el RPC o en la lógica de KPIs del Dashboard principal.
+- Separar en dos pestañas Cobranza/Cartera (se descartó a favor del filtro de urgencia).
 
-- No se toca `cobranzaAggregates.ts` ni la bandeja "Por cobrar" (ya separan por moneda).
-- No se cambia la tabla de `/cartera`, solo las 3 tarjetas superiores.
-- No se agregan conversiones EUR — hoy `cartera_pendiente` sólo devuelve MXN/USD; si aparece otra moneda se lista aparte sin mezclarse.
+## Analogía
 
-## Detalle técnico
-
-Diagrama de dependencia final:
-
-```text
-Cartera.tsx
-  ├─ useCarteraPendiente()      → filas con {saldo, moneda}
-  ├─ useExchangeRates()         → {usdMxn}
-  ├─ resumirCartera(filas)      → nativos por moneda (puro)
-  └─ equivalenteMxn(nativos, tc) → total MXN + facturasSinTc (puro)
-```
-
-Contrato de `equivalenteMxn`:
-- `MXN` → suma directa.
-- `USD` → suma × `tcUsdMxn` si `tcUsdMxn > 1`; si no, cuenta como `facturasSinTc`.
-- Otras monedas → siempre `facturasSinTc`.
-
-Riesgo bajo: cambio localizado a una pantalla + una función pura; los tests de `aggregates` existentes se actualizan.
+Antes: el buzón de cobranza era como una bandeja de entrada sin filtro — te salían correos de hace 2 años junto con los urgentes de hoy. Ahora, por defecto sólo ves lo que vence esta semana o ya venció, y hay un botón por si quieres ver todo el archivo.

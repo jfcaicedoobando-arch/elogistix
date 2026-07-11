@@ -4,6 +4,7 @@ import {
   resumirCxpPorPagar,
   resumirCxpPorCapturar,
   variantDiasParaVencer,
+  matchesUrgencia,
 } from "../aggregates";
 
 describe("bandejas/domain/aggregates", () => {
@@ -65,6 +66,38 @@ describe("bandejas/domain/aggregates", () => {
       totalPresupuestadoMxn: 1500,
       totalPresupuestadoUsd: 200,
       facturasCapturadas: 2,
+    });
+  });
+
+  describe("matchesUrgencia", () => {
+    // Recordatorio: dias_vencido > 0 = ya venció; ≤ 0 = aún le quedan días.
+    const casos = [
+      { label: "vencida (+10)", d: 10 },
+      { label: "vence hoy (0)", d: 0 },
+      { label: "por vencer cercano (-3)", d: -3 },
+      { label: "por vencer límite (-7)", d: -7 },
+      { label: "lejana (-30)", d: -30 },
+    ];
+
+    it("'accionable' incluye vencidas y por vencer ≤7d, excluye lejanas", () => {
+      const r = casos.map((c) => matchesUrgencia(c.d, "accionable"));
+      expect(r).toEqual([true, true, true, true, false]);
+    });
+
+    it("'vencidas' solo días positivos", () => {
+      expect(casos.map((c) => matchesUrgencia(c.d, "vencidas"))).toEqual([
+        true, false, false, false, false,
+      ]);
+    });
+
+    it("'por_vencer' entre -7 y 0 inclusivo", () => {
+      expect(casos.map((c) => matchesUrgencia(c.d, "por_vencer"))).toEqual([
+        false, true, true, true, false,
+      ]);
+    });
+
+    it("'todas' no filtra nada", () => {
+      expect(casos.every((c) => matchesUrgencia(c.d, "todas"))).toBe(true);
     });
   });
 });
