@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useId } from "react";
 import { Calendar as CalendarIcon, X } from "lucide-react";
+import { es } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover, PopoverContent, PopoverTrigger,
