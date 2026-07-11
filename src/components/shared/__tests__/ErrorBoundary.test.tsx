@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
-import "react";
+import * as React from "react";
 
 const mocks = vi.hoisted(() => {
   const setTag = vi.fn();
@@ -37,7 +37,7 @@ vi.mock("@/services/observability", () => ({ logClientError: mocks.logClientErro
 
 import { ErrorBoundary } from "../ErrorBoundary";
 
-function Boom(): JSX.Element {
+function Boom(): React.JSX.Element {
   throw new Error("ui-explota");
 }
 

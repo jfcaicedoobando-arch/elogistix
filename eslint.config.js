@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import reactCompiler from "eslint-plugin-react-compiler";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -16,9 +17,15 @@ export default tseslint.config(
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      "react-compiler": reactCompiler,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Fase 3 — React Compiler en modo `annotation`. La regla se ejecuta
+      // sobre TODOS los componentes/hooks para señalar violaciones de las
+      // "rules of react" que romperían la compilación cuando un archivo
+      // hace opt-in con `"use memo"`. Warning para no bloquear CI.
+      "react-compiler/react-compiler": "warn",
       // Power of 10 §5 — dependencias completas en hooks evitan stale closures.
       "react-hooks/exhaustive-deps": "error",
       // 13.138.3 — eslint-plugin-react-hooks v7 trae reglas estilo React

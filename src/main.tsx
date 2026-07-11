@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import App from "./App.tsx";
@@ -89,11 +90,13 @@ scheduleIdle(() => {
 });
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider>
-    <AuthProvider>
-      <OrganizationProvider>
-        <App />
-      </OrganizationProvider>
-    </AuthProvider>
-  </ThemeProvider>
+  <StrictMode>
+    <ThemeProvider>
+      <AuthProvider>
+        <OrganizationProvider>
+          <App />
+        </OrganizationProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </StrictMode>
 );
