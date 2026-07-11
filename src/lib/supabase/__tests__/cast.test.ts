@@ -10,7 +10,7 @@ describe("fromDb", () => {
 
   it("validates and returns parsed data when a schema is provided", () => {
     const schema = z.object({ id: z.string().uuid() });
-    const uuid = "11111111-1111-1111-1111-111111111111";
+    const uuid = "11111111-1111-4111-8111-111111111111";
     const result = fromDb({ id: uuid }, schema);
     expect(result.id).toBe(uuid);
   });
