@@ -1,27 +1,11 @@
-/**
- * Configuración compartida de las reglas de Auditoría:
- * label corto, descripción larga, icono y orden canónico de presentación.
- *
- * Antes esta configuración estaba duplicada entre `pages/Auditoria.tsx`
- * (versión completa con descripción + icono) y `AuditoriaEjecutivoTab.tsx`
- * (versión corta solo con label). Centralizar evita drift.
- */
+/** Config compartida de reglas de Auditoría: label, descripción, icono y orden canónico. */
 import {
-  Clock,
-  FileWarning,
-  FileX,
-  Receipt,
-  FileCheck,
-  Stamp,
-  Ban,
-  Banknote,
-  HandCoins,
-  AlertOctagon,
-  Container,
-  CalendarClock,
-  type LucideIcon,
+  Clock, FileWarning, FileX, FileX2, Receipt, FileCheck, FileSpreadsheet, FileClock,
+  Scale, Stamp, Ban, Banknote, HandCoins, AlertOctagon, Container, CalendarClock,
+  TrendingDown, type LucideIcon,
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
+
 
 export { reglaShortLabel } from "@/features/auditoria/domain/reglaLabels";
 
@@ -66,46 +50,46 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
     shortLabel: "Margen negativo",
     label: "Embarques con margen negativo",
     description: "Embarques cuya utilidad en MXN es menor a cero (pérdida).",
-    icon: Receipt,
+    icon: TrendingDown,
   },
   margen_bajo: {
     shortLabel: "Margen bajo",
     label: "Embarques con margen bajo",
     description: "Margen positivo pero por debajo del mínimo configurado para la organización.",
-    icon: Receipt,
+    icon: Scale,
   },
   venta_sin_costo: {
     shortLabel: "Venta sin costo",
     label: "Ventas sin costos cargados",
     description: "Embarques con conceptos de venta pero sin un solo costo registrado.",
-    icon: Receipt,
+    icon: FileX2,
   },
   costo_sin_venta: {
     shortLabel: "Costo sin venta",
     label: "Costos sin venta facturable",
     description: "Embarques cerrados o entregados con costos cargados pero sin venta.",
-    icon: Receipt,
+    icon: FileX2,
   },
   proforma_vencida: {
     shortLabel: "Proforma vencida",
     label: "Proformas vencidas sin factura",
     description:
       "Proformas emitidas con más días que el umbral configurado y aún sin factura.",
-    icon: Receipt,
+    icon: CalendarClock,
   },
   proforma_borrador_abandonada: {
     shortLabel: "Borrador abandonado",
     label: "Borrador de proforma abandonada",
     description:
       "Proformas en estado borrador con total cero o sin conceptos vinculados desde hace más del umbral configurado.",
-    icon: Receipt,
+    icon: FileClock,
   },
   proforma_inconsistente: {
     shortLabel: "Proforma inconsistente",
     label: "Proforma inconsistente con conceptos pendientes",
     description:
       "Borrador de proforma vacío vinculado al mismo embarque donde existen conceptos de venta pendientes sin asignar.",
-    icon: Receipt,
+    icon: FileSpreadsheet,
   },
   embarque_huerfano: {
     shortLabel: "Embarque huérfano",
