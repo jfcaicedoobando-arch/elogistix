@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Calendar as CalendarIcon, X } from "lucide-react";
+import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
