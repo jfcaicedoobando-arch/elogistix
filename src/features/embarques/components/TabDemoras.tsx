@@ -57,31 +57,30 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
     onError: (err: Error) => notifyError(toast, { title: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
   });
 
-  const setDraft = (id: string, patch: DraftPatch) => {
+  const setDraft = useCallback((id: string, patch: DraftPatch) => {
     setDrafts((d) => ({ ...d, [id]: { ...d[id], ...patch } }));
-  };
+  }, []);
 
-  const valorActual = <K extends keyof DraftPatch>(
+  const valorActual = useCallback(<K extends keyof DraftPatch>(
     row: EditableRow,
     field: K,
   ): DraftPatch[K] => {
     const draft = drafts[row.id];
     if (draft && field in draft) return draft[field];
     return row[field] as DraftPatch[K];
-  };
+  }, [drafts]);
 
-  const guardar = (id: string) => {
+  const guardar = useCallback((id: string) => {
     const patch = drafts[id];
     if (!patch) return;
     updateMut.mutate({ id, patch });
-  };
+  }, [drafts, updateMut]);
 
   const columns = useMemo(
     () => buildDemorasColumns({
       canEdit, drafts, isPending: updateMut.isPending, valorActual, setDraft, guardar,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canEdit, drafts, updateMut.isPending],
+    [canEdit, drafts, updateMut.isPending, valorActual, setDraft, guardar],
   );
 
   if (isLoading) return <div className="text-sm text-muted-foreground p-6">Cargando contenedores…</div>;
