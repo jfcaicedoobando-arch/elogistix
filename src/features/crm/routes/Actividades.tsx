@@ -7,7 +7,7 @@
  *   - Soporta el shortcut `?filtro=vencidas` que preconfigura pendientes+mías
  *     y filtra en cliente por `fecha_programada < now` sobre la página server.
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
