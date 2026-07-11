@@ -177,10 +177,24 @@ export default function Onboarding() {
               </p>
             </div>
 
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Guardar y continuar
-            </Button>
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row-reverse">
+              <Button type="submit" className="flex-1" disabled={submitting}>
+                {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Guardar y continuar
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={handleSkip}
+                disabled={submitting}
+              >
+                Configurar después
+              </Button>
+            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              Puedes explorar la app y completar tus datos fiscales cuando quieras.
+            </p>
           </form>
         </CardContent>
       </Card>
