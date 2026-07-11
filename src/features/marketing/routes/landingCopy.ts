@@ -11,18 +11,25 @@ export const HERO = {
   secondaryCta: "Ver demo en 60 segundos",
 } as const;
 
-// Logos / sistemas con los que opera el forwarder mexicano día a día.
-export const PROOF_TITLE = "Compatible con los actores con los que ya trabajas";
-export const PROOF_LOGOS = [
-  "Maersk", "MSC", "Hapag-Lloyd", "CMA CGM", "APM Terminals",
-  "SAT · CFDI 4.0", "UN/LOCODE", "Banxico DOF",
+// Prueba social honesta: reencuadramos "logos" como navieras que rastreamos
+// (no partners) y estándares regulatorios/técnicos que sí cumplimos.
+export const PROOF_TITLE = "Rastreamos embarques de las principales navieras y cumplimos con los estándares mexicanos";
+export const PROOF_NAVIERAS = [
+  "Maersk", "MSC", "Hapag-Lloyd", "CMA CGM", "ONE", "COSCO", "Evergreen", "APM Terminals",
 ] as const;
+export const PROOF_ESTANDARES = [
+  "SAT · CFDI 4.0", "UN/LOCODE", "Banxico DOF", "Facturapi",
+] as const;
+export const PROOF_DISCLAIMER = "Libre Carga no es partner oficial de ninguna naviera. Sólo rastreamos sus embarques.";
+/** @deprecated usar PROOF_NAVIERAS + PROOF_ESTANDARES. Se mantiene por compatibilidad. */
+export const PROOF_LOGOS = [...PROOF_NAVIERAS, ...PROOF_ESTANDARES] as const;
 
 export const KPIS = [
-  { value: "−70%", label: "tiempo en cotizar" },
-  { value: "100%", label: "trazabilidad de embarques" },
-  { value: "0", label: "hojas de Excel" },
+  { value: "Minutos", label: "para armar una cotización profesional" },
+  { value: "11", label: "módulos integrados en una sola plataforma" },
+  { value: "CFDI 4.0", label: "con IVA dinámico y complementos SAT" },
 ] as const;
+
 
 export const MODULOS = [
   {
