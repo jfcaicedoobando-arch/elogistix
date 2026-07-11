@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.265.0] - 2026-07-11
+- **UX · Íconos semánticos (fase 3, cierre)**: `InfoFacturaSection` (CxP) XML adjunto usa `FileCode2` (canónico técnico) alineado con `FacturaDownloadButton`/`PortalFacturaDetalle`. `ComprasNotasCredito` KPI "Aplicadas MXN" pasa de `Wallet` (cartera) a `Banknote` (egreso). Con esto se cierra el inventario exhaustivo: ~325 archivos revisados, resto del sistema alineado al diccionario canónico.
+
+## [13.264.0] - 2026-07-11
+- **UX · Íconos semánticos (fase 2)**: `DialogDetallePagosProveedor` "Registrar pago" pasa de `DollarSign` a `Banknote` (consistente con `HistorialFacturaSection`). KPIs "Total MXN" de `ComprasPagos` y `ComprasReportes` y modal `DialogGenerarLiquidacion` pasan de `Wallet` (cartera) a `Banknote` (egreso). Bandeja `CxpPorCapturar` y `SeccionCierreCotizacion` reemplazan `Package` (bulto) por `Ship` (embarque). Listado `Clientes` usa `Building2` (empresa) en el header en vez de `Users` (personas).
+
 ## [13.261.0] - 2026-07-11
 - **UX · Íconos semánticos**: audit + fix de 15 duplicados/mal elegidos. Sidebar: Cobranza `HandCoins`, Cartera `Wallet`, Facturación `Receipt`, Proformas `FileSpreadsheet`, Tarifa demoras `Timer`, Operaciones `Workflow`, Usuarios `Users`, Por aprobar `ClipboardCheck`, Por pagar `Banknote`, Pagos `ArrowRightLeft`, CRM `Handshake`, Clientes `Building2`. Auditoría: `margen_negativo` → `TrendingDown`, `margen_bajo` → `Scale`, `venta_sin_costo`/`costo_sin_venta` → `FileX2`, `proforma_vencida` → `CalendarClock`, `proforma_borrador_abandonada` → `FileClock`, `proforma_inconsistente` → `FileSpreadsheet` (libera `Receipt` de 7 reglas a 1). Estados de embarque: `EIR` → `ClipboardCheck` (deja de colisionar con el fallback `FileCheck`), `Cerrado` → `Archive` (deja de confundirse con `CheckCircle2` de éxito genérico).
 
