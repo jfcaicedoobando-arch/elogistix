@@ -11,7 +11,7 @@
  *   - Preselección del contacto principal / prioridad cliente.
  *   - Toggles, CC, emails manuales, memoria de sesión (asunto/mensaje).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
