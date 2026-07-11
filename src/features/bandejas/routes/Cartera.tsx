@@ -16,7 +16,9 @@ import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
-import { resumirCartera } from "@/features/bandejas/domain/aggregates";
+import { resumirCartera, type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
+import { equivalenteMxn } from "@/features/bandejas/domain/carteraFx";
+import { useExchangeRates } from "@/features/catalogos/hooks";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
@@ -33,10 +35,24 @@ interface CarteraFilters extends Record<string, string> {
 
 const DEFAULTS: CarteraFilters = { moneda: "todas", vencidas: "todas" };
 
+/** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
+function formatNativos(b: SaldosPorMonedaCartera): string {
+  const parts: string[] = [];
+  if (b.MXN > 0) parts.push(formatCurrency(b.MXN, "MXN"));
+  if (b.USD > 0) parts.push(formatCurrency(b.USD, "USD"));
+  for (const [cod, monto] of Object.entries(b.otras)) {
+    if (monto > 0) parts.push(formatCurrency(monto, cod));
+  }
+  return parts.length > 0 ? parts.join(" · ") : formatCurrency(0, "MXN");
+}
 
 export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
-  const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
+  const { data: rates } = useExchangeRates();
+  const tcUsdMxn = rates?.usdMxn ?? 0;
+  const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(data);
+  const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
+  const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
 
   const monedas = useMemo(
     () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
@@ -84,11 +100,29 @@ export default function Cartera() {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{formatCurrency(totalSaldo, "MXN")}</CardContent>
+          <CardContent>
+            <div className="text-2xl font-semibold tabular-nums">{formatNativos(saldosNativos)}</div>
+            <div
+              className="text-xs text-muted-foreground mt-1"
+              title={eqTotal.facturasSinTc > 0 ? `${eqTotal.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
+            >
+              ≈ {formatCurrency(eqTotal.totalMxn, "MXN")} equivalente
+              {eqTotal.facturasSinTc > 0 && <span className="ml-1">({eqTotal.facturasSinTc} sin TC)</span>}
+            </div>
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Vencido ({vencidas})</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold text-destructive">{formatCurrency(vencidoSaldo, "MXN")}</CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Vencido ({vencidasCount})</CardTitle></CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold text-destructive tabular-nums">{formatNativos(vencidoNativo)}</div>
+            <div
+              className="text-xs text-muted-foreground mt-1"
+              title={eqVencido.facturasSinTc > 0 ? `${eqVencido.facturasSinTc} moneda(s) sin tipo de cambio` : undefined}
+            >
+              ≈ {formatCurrency(eqVencido.totalMxn, "MXN")} equivalente
+              {eqVencido.facturasSinTc > 0 && <span className="ml-1">({eqVencido.facturasSinTc} sin TC)</span>}
+            </div>
+          </CardContent>
         </Card>
       </div>
 

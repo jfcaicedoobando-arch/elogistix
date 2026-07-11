@@ -1,0 +1,46 @@
+/**
+ * Helpers puros para convertir los totales nativos de Cartera (por moneda) a
+ * un equivalente único en MXN, sin mezclar buckets internamente.
+ *
+ * Contrato:
+ *  - `MXN` suma directa.
+ *  - `USD` suma × tcUsdMxn si tcUsdMxn > 1 (1 USD nunca es 1 MXN); si no,
+ *    cuenta como `facturasSinTc`.
+ *  - Otras monedas siempre `facturasSinTc` (no se convierten aquí).
+ *
+ * `facturasSinTc` es una **estimación por moneda** (cuenta 1 por cada bucket
+ * no convertible con saldo > 0), no por factura individual: la UI lo usa como
+ * indicador cualitativo ("hay saldo sin convertir"), no como conteo exacto.
+ */
+
+export interface SaldosNativos {
+  MXN: number;
+  USD: number;
+  otras: Record<string, number>;
+}
+
+export interface EquivalenteMxnResult {
+  totalMxn: number;
+  facturasSinTc: number;
+}
+
+const money = (n: number): number => Math.round(n * 100) / 100;
+
+export function equivalenteMxn(
+  nativos: SaldosNativos,
+  tcUsdMxn: number,
+): EquivalenteMxnResult {
+  let totalMxn = money(nativos.MXN || 0);
+  let facturasSinTc = 0;
+
+  if ((nativos.USD || 0) > 0) {
+    if (tcUsdMxn > 1) totalMxn = money(totalMxn + nativos.USD * tcUsdMxn);
+    else facturasSinTc += 1;
+  }
+
+  for (const [, monto] of Object.entries(nativos.otras || {})) {
+    if ((monto || 0) > 0) facturasSinTc += 1;
+  }
+
+  return { totalMxn, facturasSinTc };
+}

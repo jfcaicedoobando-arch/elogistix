@@ -1,41 +1,65 @@
-## Contexto
+## Problema
 
-Proforma **PRO-2026-0341** (id `06840f08…627d7f`) del embarque **ELIMP00263** (org Elogistix) está marcada como `estado_proforma = 'facturada'` pero `factura_id IS NULL` y no existe ninguna fila en `factura_embarques` que la respalde. Es un residuo de una versión anterior: nunca se facturó realmente.
+En `/cartera`, las tarjetas "Saldo total" y "Vencido" suman todos los saldos como si fueran la misma moneda y muestran el resultado con etiqueta MXN. Un saldo de 1,000 USD se cuenta como 1,000 MXN — la cifra está inflada al revés (subestimada) según el mix real de facturas.
 
-Sus 2 conceptos de venta quedaron "congelados":
+La causa está en `src/features/bandejas/domain/aggregates.ts → resumirCartera()`: acumula `totalSaldo` y `vencidoSaldo` sin distinguir `moneda`. La pantalla `/cartera` es la única que consume esa función; el resto del módulo de cobranza (`cobranzaAggregates.ts`, bandeja "Por cobrar") ya separa por moneda correctamente.
 
-| Concepto | Total | estado_facturacion |
-|---|---|---|
-| Cargos en Destino | 125 USD | facturado |
-| Flete Marítimo | 4,615 USD | facturado |
+## Solución
 
-No hay envíos, ni consolidaciones, ni proformas hijas que dependan de ella (verificado). Es seguro liberar.
+Reescribir `resumirCartera` para devolver totales **nativos por moneda** (MXN, USD, otras) más un **equivalente en MXN** usando el tipo de cambio vigente. Las 3 tarjetas de `/cartera` se rediseñan para mostrar en la línea principal los totales nativos ("$X MXN · $Y USD") y, debajo en texto pequeño y muted, el equivalente consolidado en MXN. Si alguna factura USD no puede convertirse (falta TC), se indica con un aviso discreto.
 
-## Plan
+## Cambios
 
-Un solo cambio de datos (tool `supabase--insert`, que también corre UPDATE/DELETE), en una sola transacción:
+1. **`src/features/bandejas/domain/aggregates.ts`**
+   - `CarteraSummary` pasa a exponer:
+     ```
+     total, saldosNativos: { MXN, USD, otras: Record<string, number> },
+     vencidasCount, vencidoNativo: { MXN, USD, otras: Record<string, number> }
+     ```
+   - Sin conversión de FX aquí (función pura, sin dependencias de red).
+   - Reutiliza `sumarMontos` de `financialUtils` para evitar drift de punto flotante.
 
-1. **Liberar los 2 conceptos de venta** del embarque 263:
-   - `estado_facturacion` → `'pendiente'`
-   - `proforma_id` → `NULL`
-2. **Soft-delete de la proforma 341**:
-   - `deleted_at = now()`
-   - `deleted_by = NULL` (limpieza operativa, no hay `auth.uid()` en la sesión de servicio)
-   - Se conserva la fila para auditoría; deja de aparecer en listados porque todas las queries filtran `deleted_at IS NULL`.
+2. **Nuevo helper** `src/features/bandejas/domain/carteraFx.ts` (puro, testeable):
+   - `equivalenteMxn(nativos, tcUsdMxn) → { totalMxn, facturasSinTc }`.
+   - Convierte USD × TC; MXN tal cual; monedas ajenas se reportan como "sin TC" (no se mezclan).
 
-No se toca `factura_embarques` (ya estaba vacía) ni ninguna factura (no existe).
+3. **`src/features/bandejas/routes/Cartera.tsx`**
+   - Consumir `useExchangeRates()` (ya existente) para obtener `usdMxn`.
+   - Rediseñar las 3 tarjetas:
+     - **Facturas con saldo**: sin cambio (es un conteo).
+     - **Saldo total**: línea 1 → `$X MXN · $Y USD` (omite monedas en cero); línea 2 (muted, pequeña) → `≈ $Z MXN equivalente`. Si `facturasSinTc > 0`, mostrar `(N sin TC)` en tooltip.
+     - **Vencido (N)**: mismo patrón, con color `text-destructive` sólo en la línea principal.
+   - Usar `formatCurrency` de `@/lib/formatters` con la moneda correcta por segmento — nunca hardcodear MXN cuando el número es USD.
 
-## Verificación post-cambio
+4. **Tests**
+   - `src/features/bandejas/domain/__tests__/aggregates.test.ts`: agregar casos con mix MXN+USD y con monedas ajenas para verificar que los buckets no se contaminan.
+   - `src/features/bandejas/domain/__tests__/carteraFx.test.ts` (nuevo): equivalente MXN con TC válido, con TC=0 (reporta `facturasSinTc`), y con moneda desconocida.
 
-- `conceptos_venta` del embarque 263 vuelven a mostrarse como pendientes en la pestaña Financiero y quedan disponibles para incluirse en una proforma nueva.
-- `PRO-2026-0341` desaparece del listado de proformas.
-- Registro en `CHANGELOG.md` + bump de `APP_VERSION` a `13.252.3` (fix operativo puntual, no hay cambio de código de app).
+5. **Bitácora**
+   - `CHANGELOG.md`: nueva entrada `## [13.253.2]` con nota "Cartera: KPIs de saldo separan MXN/USD nativos y muestran equivalente MXN".
+   - Bump `APP_VERSION` a `13.253.2` en `src/constants/appVersion.ts`.
 
 ## Fuera de alcance
 
-- No se investiga el bug histórico que dejó la proforma en ese estado inconsistente (versión antigua ya reemplazada; el auditor `audit:rpc-sync` ya vigila el patrón vigente).
-- No se crea una factura nueva; si Alan quiere facturar esos conceptos, lo hará desde el flujo normal una vez liberados.
+- No se toca `cobranzaAggregates.ts` ni la bandeja "Por cobrar" (ya separan por moneda).
+- No se cambia la tabla de `/cartera`, solo las 3 tarjetas superiores.
+- No se agregan conversiones EUR — hoy `cartera_pendiente` sólo devuelve MXN/USD; si aparece otra moneda se lista aparte sin mezclarse.
 
-## Analogía
+## Detalle técnico
 
-La proforma 341 es como un ticket de "PAGADO" pegado a una cuenta que nunca cobraste: mientras esté ahí, los platillos (conceptos) siguen marcados como cobrados y no puedes volver a ponerlos en otra cuenta. Vamos a despegar el ticket (soft-delete de la proforma) y a marcar los platillos como "por cobrar" otra vez.
+Diagrama de dependencia final:
+
+```text
+Cartera.tsx
+  ├─ useCarteraPendiente()      → filas con {saldo, moneda}
+  ├─ useExchangeRates()         → {usdMxn}
+  ├─ resumirCartera(filas)      → nativos por moneda (puro)
+  └─ equivalenteMxn(nativos, tc) → total MXN + facturasSinTc (puro)
+```
+
+Contrato de `equivalenteMxn`:
+- `MXN` → suma directa.
+- `USD` → suma × `tcUsdMxn` si `tcUsdMxn > 1`; si no, cuenta como `facturasSinTc`.
+- Otras monedas → siempre `facturasSinTc`.
+
+Riesgo bajo: cambio localizado a una pantalla + una función pura; los tests de `aggregates` existentes se actualizan.

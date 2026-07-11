@@ -7,16 +7,25 @@ import {
 } from "../aggregates";
 
 describe("bandejas/domain/aggregates", () => {
-  it("resumirCartera agrega saldos y separa vencidas", () => {
+  it("resumirCartera separa saldos por moneda nativa y cuenta vencidas", () => {
     const r = resumirCartera([
       // @ts-expect-error fixture parcial
-      { saldo: 100, dias_vencido: 0 },
+      { saldo: 100, moneda: "MXN", dias_vencido: 0 },
       // @ts-expect-error fixture parcial
-      { saldo: 200, dias_vencido: 5 },
-      // @ts-expect-error fixture parcial
-      { saldo: "50", dias_vencido: 10 },
+      { saldo: 200, moneda: "USD", dias_vencido: 5 },
+      // @ts-expect-error fixture parcial - saldo string + vencida
+      { saldo: "50", moneda: "MXN", dias_vencido: 10 },
+      // @ts-expect-error fixture parcial - moneda ajena
+      { saldo: 30, moneda: "EUR", dias_vencido: 2 },
     ]);
-    expect(r).toEqual({ total: 3, totalSaldo: 350, vencidas: 2, vencidoSaldo: 250 });
+    expect(r.total).toBe(4);
+    expect(r.saldosNativos).toEqual({ MXN: 150, USD: 200, otras: { EUR: 30 } });
+    expect(r.vencidasCount).toBe(3);
+    expect(r.vencidoNativo).toEqual({ MXN: 50, USD: 200, otras: { EUR: 30 } });
+    // Legacy mirrors (compat crudo)
+    expect(r.totalSaldo).toBe(380);
+    expect(r.vencidoSaldo).toBe(280);
+    expect(r.vencidas).toBe(3);
   });
 
   it("resumirCxpPorPagar homologa a MXN usando TC y reporta faltantes", () => {

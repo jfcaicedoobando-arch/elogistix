@@ -11,26 +11,69 @@ import type {
 const num = (v: number | string | null | undefined): number => Number(v ?? 0) || 0;
 
 // ===== Cartera =====
+/**
+ * Saldos separados por moneda nativa (sin conversión FX). Los buckets MXN/USD
+ * son canónicos; cualquier otra moneda se acumula en `otras` para no
+ * contaminar los totales oficiales.
+ */
+export interface SaldosPorMonedaCartera {
+  MXN: number;
+  USD: number;
+  otras: Record<string, number>;
+}
+
 export interface CarteraSummary {
   total: number;
+  saldosNativos: SaldosPorMonedaCartera;
+  vencidasCount: number;
+  vencidoNativo: SaldosPorMonedaCartera;
+  /** @deprecated usar `saldosNativos` — suma cruda MXN+USD (compat). */
   totalSaldo: number;
+  /** @deprecated usar `vencidasCount`. */
   vencidas: number;
+  /** @deprecated usar `vencidoNativo` — suma cruda MXN+USD (compat). */
   vencidoSaldo: number;
 }
 
+function bucketVacio(): SaldosPorMonedaCartera {
+  return { MXN: 0, USD: 0, otras: {} };
+}
+
+function acumular(bucket: SaldosPorMonedaCartera, moneda: string, s: number): void {
+  const m = (moneda || "MXN").toUpperCase();
+  if (m === "MXN") bucket.MXN += s;
+  else if (m === "USD") bucket.USD += s;
+  else bucket.otras[m] = (bucket.otras[m] ?? 0) + s;
+}
+
 export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
+  const saldosNativos = bucketVacio();
+  const vencidoNativo = bucketVacio();
   let totalSaldo = 0;
-  let vencidas = 0;
+  let vencidasCount = 0;
   let vencidoSaldo = 0;
+
   for (const r of rows) {
     const s = num(r.saldo);
+    const moneda = (r as { moneda?: string }).moneda ?? "MXN";
+    acumular(saldosNativos, moneda, s);
     totalSaldo += s;
     if (r.dias_vencido > 0) {
-      vencidas += 1;
+      vencidasCount += 1;
       vencidoSaldo += s;
+      acumular(vencidoNativo, moneda, s);
     }
   }
-  return { total: rows.length, totalSaldo, vencidas, vencidoSaldo };
+
+  return {
+    total: rows.length,
+    saldosNativos,
+    vencidasCount,
+    vencidoNativo,
+    totalSaldo,
+    vencidas: vencidasCount,
+    vencidoSaldo,
+  };
 }
 
 // ===== CxP por pagar =====
