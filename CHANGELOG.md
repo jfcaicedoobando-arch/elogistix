@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.253.2] - 2026-07-10
+- **Fix cobranza · Cartera**: los KPIs "Saldo total" y "Vencido" en `/cartera` sumaban MXN y USD como si fueran la misma moneda y mostraban el resultado etiquetado como MXN (1 USD contado como 1 MXN). Ahora `resumirCartera` devuelve totales nativos separados (`saldosNativos.MXN`, `USD`, `otras`) y la UI muestra la línea principal como "$X MXN · $Y USD" con el equivalente consolidado en MXN debajo (usa TC vigente de `useExchangeRates`). Nuevo helper puro `equivalenteMxn` en `carteraFx.ts` con tests. No se convierten monedas sin TC — se listan como `(N sin TC)` en tooltip.
+
 ## [13.253.1] - 2026-07-10
 - **Fix operativo · ELIMP00263**: la proforma `PRO-2026-0341` (Elogistix) quedó marcada como `estado_proforma='facturada'` desde una versión anterior aunque nunca se emitió factura (`factura_id IS NULL`, sin filas en `factura_embarques`). Se hizo soft-delete de la proforma y se liberaron sus 2 conceptos de venta (Cargos en Destino 125 USD y Flete Marítimo 4,615 USD) devolviéndolos a `estado_facturacion='pendiente'` con `proforma_id=NULL`, para que puedan re-proformarse.
 
