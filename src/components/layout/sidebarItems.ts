@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Ship,
-  FileText,
   FileSpreadsheet,
   Truck,
   Workflow,
