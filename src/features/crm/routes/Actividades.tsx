@@ -96,12 +96,13 @@ export default function Actividades() {
   });
 
   // Shortcut `?filtro=vencidas`: preconfigura pendientes + mías la primera vez.
+  const setFilterRef = useRef(list.setFilter);
+  setFilterRef.current = list.setFilter;
   useEffect(() => {
     if (vencidasOnly) {
-      list.setFilter("estado", "pendientes");
-      list.setFilter("responsable", "mias");
+      setFilterRef.current("estado", "pendientes");
+      setFilterRef.current("responsable", "mias");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vencidasOnly]);
 
   const now = Date.now();
