@@ -128,33 +128,33 @@ export default function Onboarding() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="onb-rfc">RFC</Label>
+              <Label htmlFor="onb-rfc">
+                RFC <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+              </Label>
               <Input
                 id="onb-rfc"
                 value={rfc}
                 onChange={(e) => setRfc(e.target.value.toUpperCase())}
                 placeholder="XAXX010101000"
-                minLength={12}
                 maxLength={13}
-                required
                 autoComplete="off"
               />
               <p className="text-xs text-muted-foreground">
-                12 caracteres para persona moral, 13 para persona física.
+                12 caracteres para persona moral, 13 para persona física. Requerido para emitir facturas.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="onb-direccion">Dirección fiscal</Label>
+              <Label htmlFor="onb-direccion">
+                Dirección fiscal <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+              </Label>
               <Textarea
                 id="onb-direccion"
                 value={direccion}
                 onChange={(e) => setDireccion(e.target.value)}
                 placeholder="Calle, número, colonia, ciudad, estado, código postal"
                 rows={3}
-                minLength={5}
                 maxLength={500}
-                required
               />
             </div>
 
