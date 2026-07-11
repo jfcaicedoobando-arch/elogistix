@@ -58,7 +58,7 @@ export interface SignUpInput {
  * `company_name` para crear la organización y la membresía admin.
  * Lanza si Supabase devuelve error.
  */
-export async function signUpWithEmail(input: SignUpInput): Promise<void> {
+export async function signUpWithEmail(input: SignUpInput & { phone?: string }): Promise<void> {
   const { error } = await supabase.auth.signUp({
     email: input.email,
     password: input.password,
@@ -66,6 +66,7 @@ export async function signUpWithEmail(input: SignUpInput): Promise<void> {
       data: {
         full_name: input.fullName,
         company_name: input.companyName,
+        ...(input.phone ? { phone: input.phone } : {}),
       },
       emailRedirectTo: input.redirectTo,
     },

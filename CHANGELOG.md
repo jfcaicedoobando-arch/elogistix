@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.255.0] - 2026-07-11
+- **Marketing · Captura de leads antes del demo**: el botón "Probar demo" en la landing ahora abre un diálogo que pide nombre, empresa, email de trabajo y teléfono (validado con `libphonenumber-js`) antes de provisionar la cuenta demo compartida. Nueva tabla `demo_leads` con RLS (INSERT público desde `anon`, SELECT/DELETE sólo `super_admin`) que guarda además `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `referrer`, `landing_path` y `user_agent` para atribución de campañas. Nuevo hook `useCaptureUtmParams` persiste UTMs en `sessionStorage` al aterrizar en la landing. Nueva ruta admin `/admin/demo-leads` (super_admin) con listado y exportación CSV, agregada al AdminSidebar. Signup normal (`SignupForm`) ahora incluye campo teléfono opcional (persistido en `user_metadata.phone`). Nuevo documento `docs/pre-ads-checklist.md` con el semáforo pre-ads (bloqueadores: GA4 + Meta Pixel + confirmación de email transaccional).
+
 ## [13.254.0] - 2026-07-11
 - **Deps · Migración react-day-picker 10 y Zod 4**: reescrito `calendar.tsx` para la API v10 (`classNames`, `Chevron`, `month_caption`, `month_grid`, `day_button`). Reemplazado `initialFocus` por `autoFocus` en 7 consumidores de date picker. Migradas validaciones y tests a Zod 4: `error` en lugar de `required_error`/`invalid_type_error`, arrays mutables en `.enum()`, `errorMap` → `error`, defaults de objeto como función factory y UUIDs v4 válidos en fixtures. Typecheck, lint, build y suite de tests en verde.
 

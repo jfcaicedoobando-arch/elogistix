@@ -13,6 +13,7 @@ export function SignupForm() {
   const { toast } = useToast();
   const [signupName, setSignupName] = useState("");
   const [signupCompany, setSignupCompany] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupPassword2, setSignupPassword2] = useState("");
@@ -44,6 +45,7 @@ export function SignupForm() {
         password: signupPassword,
         fullName: signupName,
         companyName,
+        phone: signupPhone.trim() || undefined,
         redirectTo: `${window.location.origin}/onboarding`,
       });
       setSignupDone(true);
@@ -82,6 +84,10 @@ export function SignupForm() {
       <div className="space-y-2">
         <Label htmlFor="signup-company">Nombre de empresa</Label>
         <Input id="signup-company" type="text" placeholder="Mi Agencia Aduanal S.A. de C.V." value={signupCompany} onChange={(e) => setSignupCompany(e.target.value)} required minLength={2} maxLength={120} autoComplete="organization" />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="signup-phone">Teléfono <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+        <Input id="signup-phone" type="tel" placeholder="55 1234 5678" value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} autoComplete="tel" inputMode="tel" />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-email">Email de trabajo</Label>

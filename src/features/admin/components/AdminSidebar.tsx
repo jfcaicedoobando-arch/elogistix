@@ -7,6 +7,7 @@ import {
   User,
   Activity,
   ShieldCheck,
+  Users2,
 } from "lucide-react";
 import { NavLink } from "@/components/layout/NavLink";
 import { useLocation } from "react-router-dom";
@@ -41,6 +42,7 @@ const adminGroups: { label: string; items: { title: string; url: string; icon: t
       { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
       { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
       { title: "Auditoría plataforma", url: "/admin/auditoria", icon: ShieldCheck },
+      { title: "Leads demo", url: "/admin/demo-leads", icon: Users2 },
       { title: "Diagnóstico", url: "/admin/diagnostico", icon: Activity },
     ],
   },

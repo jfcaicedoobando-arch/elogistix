@@ -3579,6 +3579,57 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_leads: {
+        Row: {
+          created_at: string
+          email: string
+          empresa: string
+          id: string
+          landing_path: string | null
+          nombre: string
+          referrer: string | null
+          telefono_e164: string
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          empresa: string
+          id?: string
+          landing_path?: string | null
+          nombre: string
+          referrer?: string | null
+          telefono_e164: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          empresa?: string
+          id?: string
+          landing_path?: string | null
+          nombre?: string
+          referrer?: string | null
+          telefono_e164?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       documentos_embarque: {
         Row: {
           archivo: string | null

@@ -14,6 +14,7 @@ const AdminOrgDetalle = lazy(() => import("@/features/admin/routes/AdminOrgDetal
 const AdminConfiguracion = lazy(() => import("@/features/admin/routes/AdminConfiguracion"));
 const AdminDiagnostico = lazy(() => import("@/features/admin/routes/Diagnostico"));
 const AdminAuditoriaPlataforma = lazy(() => import("@/features/admin/routes/AdminAuditoriaPlataforma"));
+const AdminDemoLeads = lazy(() => import("@/features/admin/routes/AdminDemoLeads"));
 
 export const adminRoutes = (
   <Route
@@ -28,6 +29,7 @@ export const adminRoutes = (
     <Route path="/admin/organizaciones/:id" element={<AdminOrgDetalle />} />
     
     <Route path="/admin/auditoria" element={<AdminAuditoriaPlataforma />} />
+    <Route path="/admin/demo-leads" element={<AdminDemoLeads />} />
     <Route path="/admin/configuracion" element={<AdminConfiguracion />} />
     <Route path="/admin/diagnostico" element={<AdminDiagnostico />} />
   </Route>

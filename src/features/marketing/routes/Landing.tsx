@@ -18,6 +18,7 @@ import { LandingCtaFinal } from "../components/sections/LandingCtaFinal";
 import { LandingFooter } from "../components/sections/LandingFooter";
 import { MobileStickyCta } from "../components/sections/MobileStickyCta";
 import { FAQ } from "./landingCopy";
+import { useCaptureUtmParams } from "../hooks/useUtmParams";
 
 const FAQ_JSONLD = {
   "@context": "https://schema.org",
@@ -30,6 +31,7 @@ const FAQ_JSONLD = {
 };
 
 export default function Landing() {
+  useCaptureUtmParams();
   return (
     <div className="landing-scope min-h-screen bg-background text-foreground">
       <Seo canonical="https://librecarga.com/" ogUrl="https://librecarga.com/" jsonLd={FAQ_JSONLD} />
