@@ -7,7 +7,7 @@
  * permite capturar esos valores; un trigger AFTER UPDATE recalcula
  * automáticamente al guardar.
  */
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
