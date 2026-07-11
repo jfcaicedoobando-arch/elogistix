@@ -1,70 +1,39 @@
-# Estado: auditoría de íconos completada
+# Orden recomendado frente a la migración a React 19
 
-Sí. Se cerró el inventario exhaustivo en 3 fases y ~52 cambios aplicados. No hay pendientes.
+**Corta:** haz **Fase A + B ahora**, **pospón Fase C** hasta después de React 19.
 
-## Cobertura por fase
+## Por qué
 
-**Fase 1 (v13.261.0)** — 15 cambios en navegación y configuración
-- `sidebarItems.ts`, `auditoriaConfig.ts`, `estadoConfig.ts`
+Piensa en cada fase como un ladrillo:
 
-**Fase 2 (v13.262.0 – 13.264.0)** — ~30 cambios en entidades de negocio
-- Cotización → `ClipboardList` (GlobalSearch, CRM, Portal)
-- Proforma → `FileSpreadsheet` (listados, dialogs, steppers)
-- Factura/CFDI → `Receipt` (finanzas, portal, configuración)
-- Embarque → `Ship` (bandejas, wizard, tarjetas)
-- Cliente → `Building2` (listado principal)
-- Pago/egreso → `Banknote` (CxP, compras, comisiones)
-- Cobranza → `HandCoins` (acción registrar pago)
-- Proveedor → `Truck` (dialogs CFDI)
-- Contacto individual → `User` (dialogs)
+- **Fase A (concurrencia)** y **Fase B (cleanup de effects)** son *ladrillos que sirven en las dos casas* — funcionan igual en React 18 y en 19. Cada día que esperas, es un día más de UI lenta y de posibles leaks. No hay trabajo tirado.
+- **Fase C (memoización manual de filas)** es *un ladrillo que reemplaza el que trae la casa nueva gratis*. El compiler de React 19 memoiza automáticamente. Si lo haces a mano hoy, cuando migres tendrás que quitar `React.memo` para no duplicar trabajo. Es esfuerzo desechable.
 
-**Fase 3 (v13.265.0, cierre)** — 2 hallazgos finales
-- `InfoFacturaSection` XML → `FileCode2`
-- `ComprasNotasCredito` KPI MXN → `Banknote`
+## Matriz de compatibilidad
 
-## Verificación final del subagente fase 3
+| Fase | Beneficio en React 18 | Requiere retoque tras subir a 19 | Recomendación |
+|---|---|---|---|
+| A · `useDeferredValue` / `useTransition` en filtros y tabs | Alto (latencia percibida) | No | **Hacer ahora** |
+| B · Auditar cleanup de 104 effects | Alto (menos leaks) | No | **Hacer ahora** |
+| C · `React.memo` en filas de tabla | Medio | Sí — el compiler lo vuelve redundante | **Esperar a React 19** |
 
-Revisó los ~325 archivos con imports de `lucide-react` no cubiertos previamente. Módulos confirmados limpios:
+## Bonus: qué migración a 19 te desbloquea automáticamente
 
-- `components/layout/**`, `components/shared/**`, `components/ui/**`
-- `features/admin/**`, `features/auth/**`, `features/crm/**`
-- `features/costeo/**`, `features/dashboard*/**`, `features/marketing/**`
-- `features/operaciones/**`, `features/proveedor/**`, `features/reportes/**`
-- `features/tesoreria/**`, `features/legal/**`, `features/onboarding/**`
-- `features/presupuesto/**`, `features/profit/**`, `features/catalogos/**`
-- `lib/ui/**`
+- **Compiler**: memoización automática — hace la Fase C sola.
+- **`ref` como prop**: los 116 `forwardRef` de shadcn se pueden simplificar.
+- **Actions y `useOptimistic`**: reemplazan patrones actuales de mutaciones + `isPending` manuales en react-query, útil en formularios de embarques/cotizaciones.
+- **`use()` para promises**: simplifica algunos patrones de Suspense.
 
-## Diccionario canónico vigente
+## Plan concreto que propongo ejecutar
 
-| Dominio | Ícono |
-|---|---|
-| Embarque | `Ship` |
-| Bulto/mercancía | `Package` |
-| Cotización | `ClipboardList` |
-| Proforma | `FileSpreadsheet` |
-| Factura/CFDI | `Receipt` |
-| XML técnico | `FileCode2` |
-| Cliente/empresa | `Building2` |
-| Persona / Colectivo | `User` / `Users` |
-| Proveedor/transportista | `Truck` |
-| Pago/egreso | `Banknote` |
-| Cartera por cobrar | `Wallet` |
-| Cobranza (registrar pago) | `HandCoins` |
-| USD/moneda extranjera | `Coins` |
-| Auditoría/checklist | `ClipboardCheck` |
-| Comparativos | `GitCompare` |
-| Tiempo/plazo | `Timer` |
-| Recurrente | `RefreshCw` |
-| Archivar | `Archive` |
-| OK/aprobado | `CheckCircle2` |
-| Seguridad | `ShieldCheck` |
-
-## Recomendación
-
-No hay siguiente fase. Para mantener la consistencia a futuro, el próximo paso opcional sería agregar una regla ESLint que restrinja íconos ambiguos (`DollarSign`, `Wallet` fuera de cartera, `Package` fuera de bultos) — lo dejamos como propuesta separada si te interesa.
+1. **Ahora — Fase A**: aplicar `useDeferredValue` en filtros de GlobalSearch, listado de embarques, listado de cotizaciones y listado de clientes. `useTransition` en cambios de tab pesados.
+2. **Ahora — Fase B**: subagente inventaría los 104 archivos con `useEffect`, filtra los que crean canales Supabase / listeners / timers sin cleanup, y aplico fixes en lote.
+3. **Después de React 19 (fase separada)**: revisar tablas y decidir si el compiler ya cubre C; si no, memoizar filas puntualmente. En el mismo turno, migrar `forwardRef` → `ref` prop en shadcn y probar Actions en un formulario piloto.
 
 ## Detalles técnicos
 
-- Tests: 4538/4538 pasando tras cada fase.
-- Versión actual: `13.265.0`.
-- No quedan archivos con imports de `lucide-react` sin revisar.
+- Fase A y B no tocan `package.json` ni versiones — sólo código de aplicación. Son 100% forward-compatible con React 19.
+- Fase C sí conflictúa con el compiler de 19 (no rompe, pero duplica trabajo).
+- Cuando Lovable habilite React 19, migrar es: bump de `react`/`react-dom`/`@types/react` + habilitar `babel-plugin-react-compiler` (o el equivalente SWC) + typecheck. Fases A y B no requieren retoque.
+
+¿Ejecuto **Fase A + B** ahora? Confirma y arranco.
