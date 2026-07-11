@@ -115,7 +115,7 @@ export default function Onboarding() {
           <CardTitle>Completa los datos de tu agencia</CardTitle>
           <CardDescription>
             {organization?.nombre ? `Configuremos ${organization.nombre} ` : "Configuremos tu organización "}
-            antes de continuar. Podrás editarlo después en Configuración.
+            antes de continuar. El RFC y la dirección son opcionales: puedes llenarlos ahora o dejarlo para después desde Configuración.
           </CardDescription>
         </CardHeader>
         <CardContent>
