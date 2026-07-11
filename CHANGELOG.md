@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.267.0] - 2026-07-11
+- **Stack · Migración a React 19**: `react` y `react-dom` de `18.3.1` → `19.2.7`. `@types/react` `18.3.31` → `19.2.17`, `@types/react-dom` `18.3.7` → `19.2.3`. Sin cambios en business logic. Verificación completa: `typecheck` ✅, `test:fast` 4538/4538 ✅, `build` ✅, preview de Lovable renderiza dashboard sin errores de hidratación ni warnings de `ref`. `forwardRef` sigue soportado (soft-deprecated en 19), por lo que los 33 wrappers de `src/components/ui/*` se dejan intactos — el codemod a `ref` como prop nativa queda como fase de limpieza opcional posterior sin bloquear valor. Fase A+B previas ya habían dejado el código React-19-ready (concurrencia + cleanup de effects auditado).
+- **Memoria · Pin de plataforma**: se retira React del pin `lovable-stack-pins` con evidencia de que el preview de Lovable acepta React 19.2 en apps Vite existentes. El resto del pin (Vite 5, Tailwind 3, TS 5, router 6) se mantiene.
+
 ## [13.266.0] - 2026-07-11
 - **Perf · React concurrente (Fase A)**: `useDeferredValue` en `GlobalSearch` (lista agrupada de resultados), `Embarques` (filas de `ResponsiveDataTable`) y `Cotizaciones` (filas paginadas). React ahora prioriza el tecleo/click y difiere el re-render pesado de la tabla, mejorando la latencia percibida al cambiar filtros o página. Forward-compatible con React 19 (no requiere retoque tras migración).
 - **Perf · Auditoría de cleanup en `useEffect` (Fase B)**: subagente revisó los 104 archivos con `useEffect`. **0 hallazgos**: todos los recursos externos (auth listeners, timers, listeners de eventos, `IntersectionObserver`, `MutationObserver`, `AbortController`) tienen su cleanup correspondiente. La regla core del proyecto está siendo respetada al 100%.
