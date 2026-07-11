@@ -143,14 +143,15 @@ export default function Cartera() {
         searchPlaceholder="Buscar folio, cliente o expediente…"
         primary={
           <>
-            <Select value={paged.filters.vencidas} onValueChange={(v) => paged.setFilter("vencidas", v)}>
-              <SelectTrigger className="w-[160px]" aria-label="Vencidas">
-                <SelectValue placeholder="Vencidas" />
+            <Select value={paged.filters.urgencia} onValueChange={(v) => paged.setFilter("urgencia", v)}>
+              <SelectTrigger className="w-[200px]" aria-label="Urgencia">
+                <SelectValue placeholder="Urgencia" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todas">Todas</SelectItem>
-                <SelectItem value="si">Solo vencidas</SelectItem>
-                <SelectItem value="no">No vencidas</SelectItem>
+                <SelectItem value="accionable">Accionable (≤7d o vencidas)</SelectItem>
+                <SelectItem value="vencidas">Solo vencidas</SelectItem>
+                <SelectItem value="por_vencer">Por vencer (≤7 días)</SelectItem>
+                <SelectItem value="todas">Todas con saldo</SelectItem>
               </SelectContent>
             </Select>
             <Select value={paged.filters.moneda} onValueChange={(v) => paged.setFilter("moneda", v)}>
