@@ -38,20 +38,23 @@ export function useOportunidadForm(
   // perder el valor más reciente.
   const etapasRef = useRef(etapas);
   const userRef = useRef(user);
+  const oportunidadRef = useRef(oportunidad);
   etapasRef.current = etapas;
   userRef.current = user;
+  oportunidadRef.current = oportunidad;
 
   const oportunidadId = oportunidad?.id ?? null;
 
   useEffect(() => {
-    if (oportunidad) {
-      setForm(buildFromOportunidad(oportunidad));
+    const current = oportunidadRef.current;
+    if (current) {
+      setForm(buildFromOportunidad(current));
     } else if (open) {
       setForm(buildEmptyForNueva(etapasRef.current, userRef.current));
     }
-    // `oportunidad` se usa como objeto pero la dependencia es el id; si el
-    // backend devuelve una nueva referencia con el mismo id, no recalculamos.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // La dependencia real es la *identidad* del registro (oportunidadId) y
+    // `open`; el objeto se lee vía ref para evitar loops cuando el backend
+    // devuelve una referencia nueva con el mismo id.
   }, [oportunidadId, open]);
 
   const set = <K extends keyof OportunidadFormState>(k: K, v: OportunidadFormState[K]) =>
