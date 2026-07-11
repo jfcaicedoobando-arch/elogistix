@@ -1,5 +1,5 @@
 
-import { Users, Plus, Upload } from "lucide-react";
+import { Building2, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useClientesPaginados } from "@/features/cliente/hooks";
@@ -72,7 +72,7 @@ export default function Clientes() {
   return (
     <PageContainer className="pb-24 md:pb-6">
       <PageHeader
-        icon={<Users className="h-6 w-6 text-accent" />}
+        icon={<Building2 className="h-6 w-6 text-accent" />}
         title="Clientes"
         description={`${totalCount} clientes registrados`}
         actions={

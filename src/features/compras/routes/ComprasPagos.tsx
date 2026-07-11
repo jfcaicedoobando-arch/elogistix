@@ -7,7 +7,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Landmark, Download, Wallet, Coins, ListFilter } from "lucide-react";
+import { Landmark, Download, Banknote, Coins, ListFilter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,7 +109,7 @@ export default function ComprasPagos() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard label="Pagos en el período" value={String(rows.length)} icon={ListFilter} />
-        <KpiCard label="Total MXN" value={formatCurrency(totalMxn, "MXN")} icon={Wallet} />
+        <KpiCard label="Total MXN" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
         <KpiCard label="Total USD" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
       </div>
 

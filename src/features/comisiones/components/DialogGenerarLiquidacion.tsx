@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Wallet } from "lucide-react";
+import { Loader2, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -33,7 +33,7 @@ export function DialogGenerarLiquidacion({
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
-      icon={Wallet}
+      icon={Banknote}
       title="Generar liquidación de comisiones"
       description="Genera la liquidación de comisiones para los agentes en el período indicado."
       size="md"

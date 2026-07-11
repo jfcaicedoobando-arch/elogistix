@@ -6,7 +6,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BarChart3, Download, TrendingUp, Wallet, Coins, Building2,
+  BarChart3, Download, TrendingUp, Banknote, Coins, Building2,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer,
@@ -115,7 +115,7 @@ export default function ComprasReportes() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard label="Facturas en el período" value={String(numFacturas)} icon={TrendingUp} />
-        <KpiCard label="Total MXN" value={formatCurrency(totalMxn, "MXN")} icon={Wallet} />
+        <KpiCard label="Total MXN" value={formatCurrency(totalMxn, "MXN")} icon={Banknote} />
         <KpiCard label="Total USD" value={formatCurrency(totalUsd, "USD")} icon={Coins} />
       </div>
 
