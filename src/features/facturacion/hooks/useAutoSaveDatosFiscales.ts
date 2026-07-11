@@ -33,6 +33,10 @@ export function useAutoSaveDatosFiscales(
   const primeraRender = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const enVueloRef = useRef<AbortController | null>(null);
+  // Ref al último `values` — se depende de campos primitivos abajo; el ref
+  // permite leer el objeto completo al momento de guardar sin re-suscribir.
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
 
   useEffect(() => {
     if (primeraRender.current) {
@@ -45,7 +49,7 @@ export function useAutoSaveDatosFiscales(
       enVueloRef.current?.abort();
       const ctrl = new AbortController();
       enVueloRef.current = ctrl;
-      const patch: DatosTimbradoPatch = buildDatosTimbradoPatch(values, moneda);
+      const patch: DatosTimbradoPatch = buildDatosTimbradoPatch(valuesRef.current, moneda);
       setEstado("saving");
       try {
         await actualizarDatosTimbradoFactura(facturaId, patch);
@@ -67,8 +71,8 @@ export function useAutoSaveDatosFiscales(
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    qc,
     facturaId,
     moneda,
     values.usoCfdi,
