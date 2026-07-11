@@ -87,7 +87,9 @@ export function DateTimePickerMx({
           selected={date}
           onSelect={(d) => emit(d ?? undefined, time)}
           autoFocus
+          locale={es}
         />
+
         <div className="border-t p-3 flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Hora</span>
           <Input
