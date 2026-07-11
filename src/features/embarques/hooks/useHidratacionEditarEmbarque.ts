@@ -47,10 +47,21 @@ interface Params<TForm extends FieldValues> {
 }
 
 export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Params<TForm>) {
+  // Refs a los setters/inicializadores para no re-suscribir los efectos de
+  // hidratación cuando el padre recrea las callbacks en cada render.
+  const inicializarVentaRef = useRef(p.inicializarVenta);
+  const inicializarCostoRef = useRef(p.inicializarCosto);
+  const setHidratoVentaRef = useRef(p.setHidratoVenta);
+  const setHidratoCostoRef = useRef(p.setHidratoCosto);
+  inicializarVentaRef.current = p.inicializarVenta;
+  inicializarCostoRef.current = p.inicializarCosto;
+  setHidratoVentaRef.current = p.setHidratoVenta;
+  setHidratoCostoRef.current = p.setHidratoCosto;
+
   // Conceptos venta — hidratar UNA sola vez; después el estado local manda.
   useEffect(() => {
     if (!p.initialized || p.hidratoVenta || p.conceptosVentaDb.length === 0) return;
-    p.inicializarVenta(p.conceptosVentaDb.map((v, i) => ({
+    inicializarVentaRef.current(p.conceptosVentaDb.map((v, i) => ({
       id: i + 1,
       dbId: v.id, // v13.207.0 — preservamos UUID para merge en RPC
       concepto: v.descripcion,
@@ -59,14 +70,13 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       moneda: v.moneda,
       contenedorId: v.contenedor_id ?? null,
     })));
-    p.setHidratoVenta(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setHidratoVentaRef.current(true);
   }, [p.initialized, p.hidratoVenta, p.conceptosVentaDb]);
 
   // Conceptos costo — hidratar UNA sola vez.
   useEffect(() => {
     if (!p.initialized || p.hidratoCosto || p.conceptosCostoDb.length === 0) return;
-    p.inicializarCosto(p.conceptosCostoDb.map((c, i) => ({
+    inicializarCostoRef.current(p.conceptosCostoDb.map((c, i) => ({
       id: i + 1,
       dbId: c.id, // v13.207.0 — preservamos UUID para merge en RPC
       proveedorId: c.proveedor_id ?? "",
@@ -75,8 +85,7 @@ export function useHidratacionEditarEmbarque<TForm extends FieldValues>(p: Param
       moneda: c.moneda,
       contenedorId: c.contenedor_id ?? null,
     })));
-    p.setHidratoCosto(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setHidratoCostoRef.current(true);
   }, [p.initialized, p.hidratoCosto, p.conceptosCostoDb]);
 
   // Contactos shipper/consignatario
