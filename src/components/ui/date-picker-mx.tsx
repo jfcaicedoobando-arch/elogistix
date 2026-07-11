@@ -147,6 +147,7 @@ export function DatePickerMx({
               setOpen(false);
             }}
             autoFocus
+            locale={es}
             className={cn("p-3 pointer-events-auto")}
           />
         </PopoverContent>
