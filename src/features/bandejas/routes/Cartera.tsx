@@ -50,9 +50,6 @@ export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
   const { data: rates } = useExchangeRates();
   const tcUsdMxn = rates?.usdMxn ?? 0;
-  const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(data);
-  const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
-  const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
 
   const monedas = useMemo(
     () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
@@ -63,14 +60,13 @@ export default function Cartera() {
     data,
     isLoading,
     defaultFilters: DEFAULTS,
-    filterLabels: { moneda: "Moneda", vencidas: "Vencidas" },
+    filterLabels: { moneda: "Moneda", urgencia: "Urgencia" },
     defaultSort: { key: "dias", dir: "desc" },
     searchAccessor: (r) =>
       `${r.numero ?? ""} ${r.cliente_nombre ?? ""} ${r.expediente ?? ""}`,
     filterPredicate: (r, ff) => {
       if (ff.moneda !== "todas" && r.moneda !== ff.moneda) return false;
-      if (ff.vencidas === "si" && r.dias_vencido <= 0) return false;
-      if (ff.vencidas === "no" && r.dias_vencido > 0) return false;
+      if (!matchesUrgencia(r.dias_vencido, ff.urgencia as UrgenciaCartera)) return false;
       return true;
     },
     dateAccessor: (r) => r.fecha_vencimiento,
@@ -83,6 +79,21 @@ export default function Cartera() {
       saldo: (a, b) => Number(a.saldo) - Number(b.saldo),
     },
   });
+
+  // KPIs sobre el subconjunto filtrado por urgencia + moneda (ignora búsqueda/rango
+  // de fechas: los cards resumen "lo que muestra el módulo con estos filtros").
+  const scoped = useMemo(
+    () =>
+      data.filter(
+        (r) =>
+          matchesUrgencia(r.dias_vencido, (paged.filters.urgencia ?? "accionable") as UrgenciaCartera) &&
+          (paged.filters.moneda === "todas" || r.moneda === paged.filters.moneda),
+      ),
+    [data, paged.filters.urgencia, paged.filters.moneda],
+  );
+  const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(scoped);
+  const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
+  const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
 
   const columns = useMemo(() => buildCarteraColumns(), []);
 
