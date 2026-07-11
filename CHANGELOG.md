@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.258.0] - 2026-07-11
+- **Marketing · Video demo 60s**: nuevo creativo de motion graphics para ads y landing. 1920×1080 @ 30fps, 60.0s exactos, ~5.4 MB. Generado con Remotion (proyecto en `remotion/`, escenas en `remotion/src/scenes/`: Hook → BrandReveal → Modules → Kpis → Route → Cta). Paleta y tipografía oficiales (Inter, `#1B2B4B`, `#2563EB`). Guion en español mexicano, sin voz en off (mudo, listo para agregar música/VO externo). Archivo final: `/mnt/documents/libre-carga-demo-60s.mp4` — descargable desde el artifact del chat. Re-render disponible con `cd remotion && PUPPETEER_EXECUTABLE_PATH=/bin/chromium node scripts/render-remotion.mjs`.
+
 ## [13.257.0] - 2026-07-11
 - **Marketing · Prueba social honesta**: reencuadrada la franja de "logos" en el hero de la landing. Antes sugería partnership con Maersk/MSC/Hapag-Lloyd/CMA/APM; ahora se separa en dos filas etiquetadas — "Navieras que rastreamos" (Maersk, MSC, Hapag-Lloyd, CMA CGM, ONE, COSCO, Evergreen, APM Terminals) y "Estándares que cumplimos" (SAT · CFDI 4.0, UN/LOCODE, Banxico DOF, Facturapi) — con disclaimer explícito: "Libre Carga no es partner oficial de ninguna naviera. Sólo rastreamos sus embarques." Nuevas constantes `PROOF_NAVIERAS`, `PROOF_ESTANDARES`, `PROOF_DISCLAIMER` en `landingCopy.ts`; `PROOF_LOGOS` se mantiene deprecado por compatibilidad. KPIs reemplazados por 1 beneficio + 2 hechos verificables ("Minutos para armar una cotización profesional", "11 módulos integrados", "CFDI 4.0 con IVA dinámico y complementos SAT"), eliminando los porcentajes inventados (−70% / 100% / 0).
 
