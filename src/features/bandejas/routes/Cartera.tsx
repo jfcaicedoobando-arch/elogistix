@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
-import { resumirCartera, type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
+import { resumirCartera, matchesUrgencia, type SaldosPorMonedaCartera, type UrgenciaCartera } from "@/features/bandejas/domain/aggregates";
 import { equivalenteMxn } from "@/features/bandejas/domain/carteraFx";
 import { useExchangeRates } from "@/features/catalogos/hooks";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -30,10 +30,10 @@ import { CarteraMobileList } from "./_sections/CarteraMobileList";
 
 interface CarteraFilters extends Record<string, string> {
   moneda: string;
-  vencidas: string; // "todas" | "si" | "no"
+  urgencia: string; // UrgenciaCartera
 }
 
-const DEFAULTS: CarteraFilters = { moneda: "todas", vencidas: "todas" };
+const DEFAULTS: CarteraFilters = { moneda: "todas", urgencia: "accionable" };
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
