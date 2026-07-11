@@ -125,7 +125,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
       : <VenceBadge fechaLimite={row.original.fecha_limite_devolucion} />
     },
     { id: 'fLib', header: 'F. Liberación', cell: ({ row }) => row.original.fecha_liberacion ? formatDate(row.original.fecha_liberacion) : '—' },
-  ]), [canEdit, editing, fechaLlegadaReal, updateMut.isPending]); // eslint-disable-line react-hooks/exhaustive-deps
+  ]), [canEdit, editing, handleChangeEstado, handleSaveMonto, handleSaveReferencia]);
 
   return { columns };
 }
