@@ -101,13 +101,13 @@ export default function Cartera() {
     <PageContainer>
       <PageHeader
         title="Cartera"
-        description="Facturas emitidas con saldo pendiente. Da seguimiento a cobranza, registra promesas y cobros."
+        description="Facturas vencidas y por vencer en los próximos 7 días. Cambia el filtro de urgencia para ver toda la cartera."
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Facturas con saldo</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-semibold">{data.length}</CardContent>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Facturas en foco</CardTitle></CardHeader>
+          <CardContent className="text-2xl font-semibold">{scoped.length}</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Saldo total</CardTitle></CardHeader>
