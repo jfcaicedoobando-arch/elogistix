@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Package, StickyNote, Check } from "lucide-react";
+import { Ship, StickyNote, Check } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
 interface Props {
@@ -24,7 +24,7 @@ export default function SeccionCierreCotizacion({ form, complete }: Props) {
         <AccordionItem value="num-embarques">
           <AccordionTrigger className="text-base font-semibold hover:no-underline">
             <span className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
+              <Ship className="h-5 w-5 text-primary" />
               Número de Embarques
               {complete && (
                 <span

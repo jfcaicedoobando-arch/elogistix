@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Inbox, Package, Coins, FileStack } from "lucide-react";
+import { Inbox, Ship, Coins, FileStack } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, type SortDir } from "@/components/shared/DataTable";
@@ -94,7 +94,7 @@ export default function CxpPorCapturar() {
   return (
     <PageContainer>
       <PageHeader
-        icon={<Package className="h-6 w-6 text-accent" />}
+        icon={<Ship className="h-6 w-6 text-accent" />}
         title={`CxP — Por capturar${data.length > 0 ? ` · ${data.length}` : ""}`}
         description="Embarques con costos presupuestados. Captura las facturas de proveedor y concílialas contra el embarque."
       />
@@ -104,7 +104,7 @@ export default function CxpPorCapturar() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <KPICard
-          icon={<Package className="h-3.5 w-3.5" />}
+          icon={<Ship className="h-3.5 w-3.5" />}
           label="Embarques pendientes"
           value={data.length}
         />

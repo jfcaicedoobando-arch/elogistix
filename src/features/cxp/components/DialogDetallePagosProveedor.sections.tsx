@@ -2,7 +2,7 @@
  * Sub-componentes presentacionales extraídos de DialogDetallePagosProveedor
  * para mantener su complejidad ciclomática ≤ 16 y tamaño ≤ 200 líneas.
  */
-import { DollarSign, Pencil, Trash2, FileCheck2 } from "lucide-react";
+import { Banknote, Pencil, Trash2, FileCheck2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -36,7 +36,7 @@ export function FacturaToolbar({ factura: f, canEdit, flags, onPagar, onEditar, 
           <TooltipTrigger asChild>
             <span>
               <Button size="sm" onClick={() => onPagar(f)} disabled={!flags.aprobada}>
-                <DollarSign className="h-3.5 w-3.5 mr-1" /> Registrar pago
+                <Banknote className="h-3.5 w-3.5 mr-1" /> Registrar pago
               </Button>
             </span>
           </TooltipTrigger>
