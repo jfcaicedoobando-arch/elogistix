@@ -24,14 +24,12 @@ export function useTabsParam<T extends string>(
 
   // Si vino un valor legacy, normalizar la URL para no exponer el id viejo.
   useEffect(() => {
-    if (legacyTarget) {
-      const next = new URLSearchParams(searchParams);
-      if (legacyTarget === defaultTab) next.delete(paramName);
-      else next.set(paramName, legacyTarget);
-      setSearchParams(next, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [legacyTarget]);
+    if (!legacyTarget) return;
+    const next = new URLSearchParams(searchParams);
+    if (legacyTarget === defaultTab) next.delete(paramName);
+    else next.set(paramName, legacyTarget);
+    setSearchParams(next, { replace: true });
+  }, [legacyTarget, searchParams, setSearchParams, defaultTab, paramName]);
 
   const setActiveTab = useCallback(
     (v: string) => {
