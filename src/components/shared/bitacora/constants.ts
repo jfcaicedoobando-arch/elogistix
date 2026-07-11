@@ -1,4 +1,4 @@
-import { Plus, Edit, Trash2, RefreshCw, Upload, LogIn, FileText, MessageSquare, FileX } from "lucide-react";
+import { Plus, Edit, Trash2, RefreshCw, Upload, LogIn, Receipt, MessageSquare, FileX } from "lucide-react";
 
 export const ICONOS_ACCION: Record<string, typeof Plus> = {
   crear: Plus,
@@ -10,7 +10,7 @@ export const ICONOS_ACCION: Record<string, typeof Plus> = {
   cambiar_estado: RefreshCw,
   subir_documento: Upload,
   login: LogIn,
-  factura: FileText,
+  factura: Receipt,
   agregar_nota: MessageSquare,
 };
 

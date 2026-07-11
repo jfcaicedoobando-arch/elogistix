@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, Users } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +51,7 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
-      icon={Users}
+      icon={User}
       title={contacto ? 'Editar Contacto' : 'Nuevo Contacto'}
       description="Proveedor, exportador o importador asociado a este cliente."
       size="lg"

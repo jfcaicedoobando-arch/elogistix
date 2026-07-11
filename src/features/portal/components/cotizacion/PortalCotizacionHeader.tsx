@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, XCircle, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, ClipboardList } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
@@ -43,7 +43,7 @@ export default function PortalCotizacionHeader({
       </Button>
 
       <PageHeader
-        icon={<FileText className="h-6 w-6 text-accent" />}
+        icon={<ClipboardList className="h-6 w-6 text-accent" />}
         title={<span className="font-mono tabular-nums">{folio}</span>}
         description={toTitleCase(clienteNombre)}
         subHeader={

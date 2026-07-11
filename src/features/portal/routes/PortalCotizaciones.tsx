@@ -4,7 +4,7 @@ import { PageSkeleton } from "@/components/shared/skeletons";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/features/portal/hooks";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { FileText, Ship } from "lucide-react";
+import { ClipboardList, Ship } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PortalFiltersBar } from "@/components/shared/PortalFiltersBar";
@@ -47,7 +47,7 @@ export default function PortalCotizaciones() {
   return (
     <div className="space-y-5">
       <PageHeader
-        icon={<FileText className="h-6 w-6 text-accent" />}
+        icon={<ClipboardList className="h-6 w-6 text-accent" />}
         title="Mis Cotizaciones"
         actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>}
       />
@@ -77,7 +77,7 @@ export default function PortalCotizaciones() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={FileText}
+          icon={ClipboardList}
           title="No se encontraron cotizaciones"
           description="Ajusta los filtros o busca con otro término."
           primaryAction={search || filtroEstado !== "todos" ? {
