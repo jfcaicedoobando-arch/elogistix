@@ -21,12 +21,6 @@ import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
-
-
-
-
-
-
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
