@@ -31,7 +31,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
   const updateMut = useUpdateGarantia(embarqueId);
   const [editing, setEditing] = useState<Record<string, { monto?: string; referencia?: string }>>({});
 
-  const handleChangeEstado = (id: string, estado: EstadoGarantia) => {
+  const handleChangeEstado = useCallback((id: string, estado: EstadoGarantia) => {
     const patch: Parameters<typeof updateMut.mutate>[0] = { id, estado };
     const hoy = new Date().toISOString().slice(0, 10);
     if (estado === 'depositado') {
@@ -41,23 +41,23 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
     }
     if (estado === 'liberado') patch.fecha_liberacion = hoy;
     updateMut.mutate(patch);
-  };
+  }, [updateMut, fechaLlegadaReal]);
 
-  const handleSaveMonto = (id: string) => {
+  const handleSaveMonto = useCallback((id: string) => {
     const draft = editing[id];
     if (!draft || draft.monto === undefined) return;
     const monto = Number(draft.monto);
     if (Number.isNaN(monto) || monto < 0) return;
     updateMut.mutate({ id, monto_deposito_usd: monto });
     setEditing(prev => { const n = { ...prev }; delete n[id].monto; return n; });
-  };
+  }, [editing, updateMut]);
 
-  const handleSaveReferencia = (id: string) => {
+  const handleSaveReferencia = useCallback((id: string) => {
     const draft = editing[id];
     if (!draft || draft.referencia === undefined) return;
     updateMut.mutate({ id, referencia_deposito: draft.referencia.trim() || null });
     setEditing(prev => { const n = { ...prev }; delete n[id].referencia; return n; });
-  };
+  }, [editing, updateMut]);
 
   const columns = useMemo<ColumnDef<Row, unknown>[]>(() => defineColumns<Row>([
     { id: 'cont', header: 'Contenedor', cell: ({ row }) => (
