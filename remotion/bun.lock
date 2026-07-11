@@ -22,7 +22,7 @@
         "@types/react-dom": "^19.2.3",
       },
       "peerDependencies": {
-        "typescript": "^7.0.2",
+        "typescript": "5",
       },
     },
   },
