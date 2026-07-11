@@ -46,7 +46,7 @@ export function DemoAccessDialog({ open, onOpenChange }: Props) {
     e.preventDefault();
     setError(null);
 
-    const parsed = schema.safeParse({ nombre, empresa, email, telefono });
+    const parsed = demoAccessSchema.safeParse({ nombre, empresa, email, telefono });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Revisa los campos.");
       return;
