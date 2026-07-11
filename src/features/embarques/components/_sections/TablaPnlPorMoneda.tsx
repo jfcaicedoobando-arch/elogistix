@@ -83,8 +83,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
         cell: ({ row }) => pct(row.original.margenPct),
       },
     ]),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [moneda],
+    [fmt],
   );
 
   return (
