@@ -1,3 +1,4 @@
+import { useDeferredValue } from "react";
 import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,10 @@ export default function Embarques() {
 
   const goNuevo = () => navigate("/embarques/nuevo");
   const headerDescription = buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
+
+  // Diferimos las filas visibles del listado para que al cambiar filtros/página
+  // el re-render pesado de la tabla no bloquee inputs ni interacciones (React 18).
+  const deferredFiltered = useDeferredValue(filtered);
 
   return (
     // pb-24 md:pb-0: evita que el FAB tape la última fila en mobile.
@@ -111,7 +116,7 @@ export default function Embarques() {
               />
               <ResponsiveDataTable
                 columns={columns}
-                data={filtered}
+                data={deferredFiltered}
                 isLoading={isLoading}
                 emptyMessage="No se encontraron embarques"
                 getRowHref={(e) => `/embarques/${e.id}`}

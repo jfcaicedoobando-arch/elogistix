@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useDeferredValue, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Ship, Users, Truck, FileSpreadsheet, ClipboardList, Receipt } from "lucide-react";
 import {
@@ -69,10 +69,17 @@ export function GlobalSearch() {
     navigate(url);
   };
 
-  const grouped = results.reduce<Record<string, SearchResult[]>>((acc, resultado) => {
-    (acc[resultado.type] = acc[resultado.type] || []).push(resultado);
-    return acc;
-  }, {});
+  // useDeferredValue mantiene el input responsivo cuando la lista de resultados
+  // (agrupada y renderizada con iconos por tipo) recibe muchas actualizaciones
+  // seguidas. React puede priorizar el tecleo por encima del re-render de la lista.
+  const deferredResults = useDeferredValue(results);
+  const grouped = useMemo(
+    () => deferredResults.reduce<Record<string, SearchResult[]>>((acc, resultado) => {
+      (acc[resultado.type] = acc[resultado.type] || []).push(resultado);
+      return acc;
+    }, {}),
+    [deferredResults],
+  );
 
   return (
     <>

@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.266.0] - 2026-07-11
+- **Perf · React concurrente (Fase A)**: `useDeferredValue` en `GlobalSearch` (lista agrupada de resultados), `Embarques` (filas de `ResponsiveDataTable`) y `Cotizaciones` (filas paginadas). React ahora prioriza el tecleo/click y difiere el re-render pesado de la tabla, mejorando la latencia percibida al cambiar filtros o página. Forward-compatible con React 19 (no requiere retoque tras migración).
+- **Perf · Auditoría de cleanup en `useEffect` (Fase B)**: subagente revisó los 104 archivos con `useEffect`. **0 hallazgos**: todos los recursos externos (auth listeners, timers, listeners de eventos, `IntersectionObserver`, `MutationObserver`, `AbortController`) tienen su cleanup correspondiente. La regla core del proyecto está siendo respetada al 100%.
+
 ## [13.265.0] - 2026-07-11
 - **UX · Íconos semánticos (fase 3, cierre)**: `InfoFacturaSection` (CxP) XML adjunto usa `FileCode2` (canónico técnico) alineado con `FacturaDownloadButton`/`PortalFacturaDetalle`. `ComprasNotasCredito` KPI "Aplicadas MXN" pasa de `Wallet` (cartera) a `Banknote` (egreso). Con esto se cierra el inventario exhaustivo: ~325 archivos revisados, resto del sistema alineado al diccionario canónico.
 

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useDeferredValue } from "react";
 import { Plus, TrendingUp, CheckCircle, XCircle, BarChart3, AlertTriangle, Archive } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
@@ -18,6 +18,10 @@ import { CotizacionesPageActions } from "@/features/cotizacion/components/Cotiza
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
+
+  // Diferimos las filas visibles: al cambiar filtros/paginación, el re-render
+  // pesado de la tabla queda en background y no bloquea el input de búsqueda.
+  const deferredPaginated = useDeferredValue(c.paginated);
 
   const columns = useMemo(
     () =>
@@ -106,7 +110,7 @@ export default function Cotizaciones() {
         <CardContent className="p-0">
           <ResponsiveDataTable
             columns={columns}
-            data={c.paginated}
+            data={deferredPaginated}
             isLoading={c.isLoading}
             emptyMessage="No se encontraron cotizaciones"
             getRowHref={(r) => `/cotizaciones/${r.id}`}
