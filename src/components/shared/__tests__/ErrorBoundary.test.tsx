@@ -37,7 +37,7 @@ vi.mock("@/services/observability", () => ({ logClientError: mocks.logClientErro
 
 import { ErrorBoundary } from "../ErrorBoundary";
 
-function Boom(): JSX.Element {
+function Boom(): React.JSX.Element {
   throw new Error("ui-explota");
 }
 
