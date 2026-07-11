@@ -53,16 +53,16 @@ const proveedorRowSchema = z
   .object({
     nombre: z.string().trim().min(1, "Nombre: requerido.").max(200),
     categoria: z
-      .enum(CATEGORIAS, { errorMap: () => ({ message: "Categoría: Logistico o GastoOperativo." }) })
+      .enum([...CATEGORIAS], { error: () => ({ message: "Categoría: Logistico o GastoOperativo." }) })
       .optional(),
     tipo: z
-      .enum(TIPOS_PROVEEDOR, {
-        errorMap: () => ({ message: `Tipo: debe ser uno de ${TIPOS_PROVEEDOR.join(", ")}.` }),
+      .enum([...TIPOS_PROVEEDOR], {
+        error: () => ({ message: `Tipo: debe ser uno de ${TIPOS_PROVEEDOR.join(", ")}.` }),
       })
       .optional(),
     subtipo_gasto: z
-      .enum(SUBTIPOS_GASTO, {
-        errorMap: () => ({ message: `Subtipo de gasto: ${SUBTIPOS_GASTO.join(", ")}.` }),
+      .enum([...SUBTIPOS_GASTO], {
+        error: () => ({ message: `Subtipo de gasto: ${SUBTIPOS_GASTO.join(", ")}.` }),
       })
       .optional(),
     rfc: z.string().trim().max(20).optional(),
@@ -76,7 +76,7 @@ const proveedorRowSchema = z
       .optional()
       .or(z.literal("")),
     moneda_preferida: z
-      .enum(MONEDAS, { errorMap: () => ({ message: "Moneda: MXN, USD o EUR." }) })
+      .enum([...MONEDAS], { error: () => ({ message: "Moneda: MXN, USD o EUR." }) })
       .optional(),
     pais: z.string().trim().max(120).optional(),
   })

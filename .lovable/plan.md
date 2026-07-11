@@ -1,93 +1,87 @@
-OBJETIVO
-Actualizar las dependencias que tienen versiones seguras de parche/menor y evaluar, uno por uno, los cambios de versión mayor que no están bloqueados por las reglas del stack de Lovable.
+## Objetivo
 
-ANÁLOGO
-La app es como un carro: los cambios de parche/menor son mantenimiento (aceite y filtros); los cambios de versión mayor son cambios de motor; y algunos motores están sellados por el taller Lovable, así que no los tocamos.
+Migrar dos majors no bloqueadas por Lovable: **react-day-picker 8 → 10** y **zod 3 → 4**, dejando lint/typecheck/build/tests en verde y `APP_VERSION` bumpeada con entrada en `CHANGELOG.md`.
 
-HALLAZGOS
-- 0 vulnerabilidades altas/críticas.
-- 0 dependencias sin usar (knip).
-- 37 dependencias con actualizaciones de parche/menor seguras.
-- 7 majors no bloqueados que requieren revisión manual.
-- 10 majors bloqueadas por la memoria del stack de Lovable.
+Analogía: es como cambiar dos electrodomésticos que comparten el mismo enchufe — hay que revisar cada cable que sale (usos en la app) y ajustar el interruptor (tests) antes de volver a encender la casa.
 
-LOTE A - ACTUALIZACIONES SEGURAS (parche/menor)
-Aplicar con `bun update`. Se mantienen en la misma versión mayor, así que el riesgo de romper funcionalidad es bajo.
+---
 
-| Grupo | Paquetes | De | A |
-|---|---|---|---|
-| Radix UI (17 componentes) | accordion, alert-dialog, avatar, checkbox, collapsible, dialog, dropdown-menu, label, popover, progress, radio-group, select, separator, switch, tabs, toggle-group, tooltip | 1.1.x / 1.2.x / 1.3.x / 2.1.x | último parche/menor |
-| Sentry | @sentry/react | 10.62.0 | 10.65.0 |
-| Sentry | @sentry/vite-plugin (dev) | 5.3.0 | 5.4.0 |
-| Tanstack | @tanstack/react-query | 5.101.1 | 5.101.2 |
-| Tanstack | @tanstack/react-query-persist-client | 5.101.1 | 5.101.2 |
-| Tanstack | @tanstack/query-sync-storage-persister | 5.101.1 | 5.101.2 |
-| Tanstack | @tanstack/react-virtual | 3.14.4 | 3.14.5 |
-| Supabase | @supabase/supabase-js | 2.108.2 | 2.110.2 |
-| Formularios | react-hook-form | 7.80.0 | 7.81.0 |
-| Utilidades | nuqs | 2.8.9 | 2.9.0 |
-| Utilidades | libphonenumber-js | 1.13.7 | 1.13.8 |
-| Utilidades | terser | 5.48.0 | 5.49.0 |
-| Dev tooling | @types/node | 26.0.1 | 26.1.1 |
-| Dev tooling | @vitest/coverage-v8 | 4.1.9 | 4.1.10 |
-| Dev tooling | eslint | 10.6.0 | 10.7.0 |
-| Dev tooling | knip | 6.22.0 | 6.26.0 |
-| Dev tooling | lovable-tagger | 1.3.0 | 1.3.1 |
-| Dev tooling | postcss | 8.5.15 | 8.5.16 |
-| Dev tooling | tsx | 4.22.4 | 4.23.0 |
-| Dev tooling | typescript-eslint | 8.62.0 | 8.63.0 |
-| Dev tooling | vitest | 4.1.9 | 4.1.10 |
+## Paso 1 — Rama de trabajo y baseline
 
-Pasos para Lote A:
-1. `bun update` (actualiza lockfile y package.json dentro de los rangos actuales).
-2. `bun install`.
-3. `bun run lint -- --max-warnings 0`.
-4. `bun run typecheck`.
-5. `bun run test:fast` (excluye canarios y tests de performance).
-6. `bun run build`.
-7. Si todo pasa, bumpear `APP_VERSION` y agregar entrada a `CHANGELOG.md`.
+1. Confirmar verde actual: `bun run lint`, `bun run typecheck`, `bun run test:fast`, `bun run build`.
+2. Guardar el resultado como referencia para comparar al final.
 
-LOTE B - MAJORS NO BLOQUEADOS (riesgo medio/alto)
-Se actualizarán de forma individual, revisando changelog y migrando APIs rotas.
+## Paso 2 — react-day-picker 10
 
-| Paquete | Actual | Disponible | Riesgo | Notas |
-|---|---|---|---|---|
-| @hookform/resolvers | 3.10.0 | 5.4.0 | Medio | Validación de formularios; revisar compatibilidad con react-hook-form y zod |
-| date-fns | 3.6.0 | 4.4.0 | Medio | Fechas en toda la app; revisar imports y locales |
-| lucide-react | 0.462.0 | 1.24.0 | Medio | Iconos; posibles cambios de nombres |
-| react-day-picker | 8.10.2 | 10.0.1 | Alto | Calendarios; API cambia significativamente |
-| sonner | 1.7.4 | 2.0.7 | Medio | Toasts; revisar props |
-| zod | 3.25.76 | 4.4.3 | Alto | Validaciones en todo el proyecto |
-| recharts | 2.15.4 | 3.9.2 | Medio | Gráficos del dashboard |
+**Instalar**
+```
+bun add react-day-picker@^10
+```
 
-Pasos para Lote B (uno por paquete):
-1. Revisar changelog y guía de migración oficial.
-2. Actualizar la versión en package.json.
-3. Corregir imports y APIs rotos en el código.
-4. Agregar o ajustar tests si cambian contratos.
-5. `bun run lint`, `bun run typecheck`, `bun run test:fast`, `bun run build`.
-6. Bumpear `APP_VERSION` y agregar entrada a `CHANGELOG.md` por cada paquete migrado.
+**2.1 Reescribir `src/components/ui/calendar.tsx`** para la API v9/v10:
+- `classNames`: renombrar claves — `caption` → `month_caption`, `caption_label` → `caption_label` (igual), `nav_button*` → usar `button_previous` / `button_next` y `nav`, `head_row` → `weekdays`, `head_cell` → `weekday`, `row` → `week`, `cell` → `day`, `day` → `day_button`, `day_selected` → `selected`, `day_today` → `today`, `day_outside` → `outside`, `day_disabled` → `disabled`, `day_hidden` → `hidden`, `day_range_middle` → `range_middle`, `day_range_end` → `range_end`.
+- `components`: reemplazar `IconLeft` / `IconRight` por `Chevron` (recibe `{ orientation }` y devuelve el ícono correcto).
+- Verificar visualmente con captura Playwright de un `Popover` con calendario abierto.
 
-LOTE C - NO TOCAR (bloqueadas por reglas del proyecto)
-| Paquete | Actual | Disponible | Regla |
-|---|---|---|---|
-| react | 18.3.1 | 19.2.7 | Stack Lovable fijado |
-| react-dom | 18.3.1 | 19.2.7 | Stack Lovable fijado |
-| react-router-dom | 6.30.4 | 7.18.1 | Router 7 prohibido |
-| vite | 5.4.21 | 8.1.4 | Vite 8 prohibido |
-| tailwindcss | 3.4.19 | 4.3.2 | Tailwind 4 prohibido |
-| typescript | 5.9.3 | 7.0.2 | TS 6/7 prohibido |
-| @vitejs/plugin-react-swc | 3.11.0 | 4.3.1 | SWC plugin 4 prohibido |
-| tailwind-merge | 2.6.1 | 3.6.0 | Tailwind-merge 3 prohibido |
-| @types/react | 18.3.31 | 19.2.17 | Tipos React 19 prohibidos |
-| @types/react-dom | 18.3.7 | 19.2.3 | Tipos React 19 prohibidos |
+**2.2 Eliminar prop `initialFocus`** (removida en v9) en 7 archivos:
+- `src/components/ui/date-picker-mx.tsx`
+- `src/components/ui/date-time-picker-mx.tsx`
+- `src/features/auditoria/components/asignarResponsable/FechaLimitePicker.tsx`
+- `src/features/auditoria/components/HallazgosFiltros.parts.tsx` (2 usos)
+- `src/features/cotizacion/components/seccionRuta/NoMaritimoFields.tsx`
+- `src/features/cotizacion/components/SeccionCondicionesComerciales.tsx`
 
-RIESGOS Y MITIGACIONES
-- Regresiones visuales: Radix/Sonner pueden cambiar estilos internos. Mitigar con tests de UI y revisión visual en preview.
-- Validaciones rotas: Zod y react-hook-form/resolvers son críticos. Mitigar con tests de formularios.
-- Build roto: ESLint/Vitest/Tailwind deben pasar antes de mergear.
-- Pinned majors: nunca se tocan sin aprobación explícita de migración de stack.
+Sustituir por `autoFocus` (equivalente v10) donde el foco al abrir sea deseado.
 
-CRITERIOS DE ÉXITO
-- Lote A: lint 0 warnings, typecheck 0 errores, test:fast pasa, build pasa.
-- Lote B: cada paquete migrado con tests actualizados y 0 regresiones.
+**2.3 Verificar**: `bun run typecheck` — debe compilar sin referencias a los tipos removidos. Playwright de un flujo con fecha (wizard embarque paso 2) para validar que abrir/seleccionar funciona.
+
+## Paso 3 — zod 4
+
+**Instalar**
+```
+bun add zod@^4
+```
+
+**3.1 Cambios de API en código productivo**
+- Revisar cualquier uso de `.errors` en `ZodError` → ahora es `.issues` (ya usamos `issues` en `classifyError` y `firstZodMessage`, revisar el resto con `rg "\.errors\b" src`).
+- Revisar `z.string().email()` — en v4 sigue existiendo pero los mensajes cambiaron; confirmar que no dependemos del texto exacto salvo en tests.
+- Revisar `.default(...)` sobre objetos: en v4, `parse({})` con schema `z.object({...}).default({})` requiere que el objeto interior tenga defaults completos (esto rompió `crear.test.ts` antes). Auditar `src/lib/validation/mutationSchemas.ts` y `configSchemas.ts` — añadir `.default()` explícitos por campo donde falte.
+- `z.preprocess` sigue existiendo; validar los schemas del dashboard.
+
+**3.2 Ajustar tests que dependen del texto de error**
+- `src/features/cotizacion/services/mutations/__tests__/crear.test.ts`: los mensajes esperados (`/mínimo 1/`, `/máximo 365/`, `/Subtotal/`, `/Modo/`, `/Cotización/`) provienen de `parseOrThrow` en `src/lib/validation/mutationSchemas.ts`. Confirmar que los mensajes custom se preservan; si zod 4 cambia el prefijo del path, actualizar `parseOrThrow` para seguir emitiendo el contexto `"Cotización: <campo> — <razón>"`.
+- `src/features/dashboard/domain/parsers/__tests__/dashboardSchemas.test.ts`: los casos con `"no-numero"` deben seguir fallando (safeParse → success:false). Si zod 4 cambia `z.coerce.number()` para hacer coerce laxo, cambiar por `z.number()` con `preprocess` custom que rechace strings no numéricos.
+- `src/lib/validation/__tests__/mutationSchemas.test.ts` y `src/lib/observability/__tests__/classifyError.test.ts`: correr y ajustar si algún mensaje cambia.
+
+**3.3 Suite completa**
+- `bun run test:fast` primero (rápido), luego `bun run test` si es necesario.
+- Ajustar snapshots que dependan de mensajes de zod.
+
+## Paso 4 — Verificación final
+
+En orden:
+1. `bun run lint -- --max-warnings 0`
+2. `bun run typecheck`
+3. `bun run test:fast`
+4. `bun run build`
+5. Playwright manual: abrir un date-picker en el wizard de embarques y crear una cotización mínima para validar el flujo real.
+
+## Paso 5 — Versionado
+
+- `APP_VERSION` → `13.254.0` (major-bump interno por dos majors de dependencias).
+- Añadir entrada en `CHANGELOG.md` root:
+  ```
+  ## [13.254.0] - 2026-07-11
+  - Migración react-day-picker 8 → 10 (calendar classNames v9, Chevron component, autoFocus).
+  - Migración zod 3 → 4 (issues API, defaults explícitos, mensajes preservados vía parseOrThrow).
+  ```
+
+## Riesgos y mitigación
+
+- **Regresión visual del calendario**: mitigar con captura Playwright antes/después.
+- **Mensajes de zod distintos**: los tests que hoy hacen `toThrow(/regex/)` se apoyan en `parseOrThrow` para el prefijo; si zod 4 cambia el mensaje base, ajustamos el catálogo, no el test.
+- **`z.coerce.number()` demasiado permisivo**: si `"no-numero"` deja de fallar, reemplazamos por `z.number()` + `preprocess` que rechace explícitamente.
+
+## Rollback
+
+Si algún paso queda rojo y no se resuelve en el turno: revertir `package.json`/`bun.lockb` a la versión previa (react-day-picker 8, zod 3), no bumpear `APP_VERSION`, dejar notas en `CHANGELOG.md`.

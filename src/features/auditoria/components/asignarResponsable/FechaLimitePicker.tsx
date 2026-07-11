@@ -37,7 +37,7 @@ export function FechaLimitePicker({ fechaLimite, onChange }: Props) {
             mode="single"
             selected={fechaLimite}
             onSelect={onChange}
-            initialFocus
+            autoFocus
             locale={es}
           />
           {fechaLimite && (

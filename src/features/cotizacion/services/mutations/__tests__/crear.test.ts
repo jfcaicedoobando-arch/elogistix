@@ -19,7 +19,7 @@ import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 const baseInput: CreateCotizacionInput = {
   cliente_nombre: "Acme SA",
   es_prospecto: false,
-  cliente_id: "00000000-0000-0000-0000-000000000001",
+  cliente_id: "11111111-1111-4111-8111-111111111111",
   modo: "Marítimo",
   tipo: "Importación",
   incoterm: "FOB",
