@@ -4,6 +4,7 @@ import {
   resumirCxpPorPagar,
   resumirCxpPorCapturar,
   variantDiasParaVencer,
+  matchesUrgencia,
 } from "../aggregates";
 
 describe("bandejas/domain/aggregates", () => {
