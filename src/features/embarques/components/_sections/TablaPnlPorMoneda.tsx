@@ -2,7 +2,7 @@
  * Sub-componente `TablaPorMoneda` para `TabPnlContenedor` — extraído en
  * v13.182.0 (Wave 2 splits). Sin cambios de comportamiento.
  */
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
@@ -20,7 +20,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
   const utilidad = total?.utilidad ?? 0;
   const margen = total?.margenPct ?? 0;
 
-  const fmt = (n: number) => formatCurrency(n, moneda);
+  const fmt = useCallback((n: number) => formatCurrency(n, moneda), [moneda]);
   const pct = (n: number) => `${n.toFixed(1)}%`;
 
   const columns = useMemo<ColumnDef<FilaPnlContenedor, unknown>[]>(
