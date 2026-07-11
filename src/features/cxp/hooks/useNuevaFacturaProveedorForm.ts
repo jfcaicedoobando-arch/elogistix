@@ -43,7 +43,6 @@ export function useNuevaFacturaProveedorForm(
   // auto-fetch la sobreescriba en el próximo cambio de fecha.
   const manualTcRef = useRef(false);
 
-
   // Mutación que consulta el TC DOF vigente para la fecha de emisión.
   const tcDof = useTcDofPorFecha((r) => {
     setValues((p) => ({ ...p, tc: String(r.tipoCambio) }));

@@ -20,7 +20,6 @@ import {
   CLIENTE_PRINCIPAL_ID,
   type ContactoClienteEmail,
 } from "@/features/cotizacion/services/envios";
-
 export type Contacto = ContactoClienteEmail;
 
 const EMPTY_CONTACTOS: readonly Contacto[] = Object.freeze([]);

@@ -34,7 +34,6 @@ import {
 import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-
 const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
   { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
