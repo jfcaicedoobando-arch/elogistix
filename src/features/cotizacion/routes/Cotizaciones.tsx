@@ -1,3 +1,4 @@
+"use memo";
 import { useMemo, useDeferredValue } from "react";
 import { Plus, TrendingUp, CheckCircle, XCircle, BarChart3, AlertTriangle, Archive } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
