@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.257.0] - 2026-07-11
+- **Marketing · Prueba social honesta**: reencuadrada la franja de "logos" en el hero de la landing. Antes sugería partnership con Maersk/MSC/Hapag-Lloyd/CMA/APM; ahora se separa en dos filas etiquetadas — "Navieras que rastreamos" (Maersk, MSC, Hapag-Lloyd, CMA CGM, ONE, COSCO, Evergreen, APM Terminals) y "Estándares que cumplimos" (SAT · CFDI 4.0, UN/LOCODE, Banxico DOF, Facturapi) — con disclaimer explícito: "Libre Carga no es partner oficial de ninguna naviera. Sólo rastreamos sus embarques." Nuevas constantes `PROOF_NAVIERAS`, `PROOF_ESTANDARES`, `PROOF_DISCLAIMER` en `landingCopy.ts`; `PROOF_LOGOS` se mantiene deprecado por compatibilidad. KPIs reemplazados por 1 beneficio + 2 hechos verificables ("Minutos para armar una cotización profesional", "11 módulos integrados", "CFDI 4.0 con IVA dinámico y complementos SAT"), eliminando los porcentajes inventados (−70% / 100% / 0).
+
 ## [13.256.0] - 2026-07-11
 - **Onboarding · Modo "Configurar después"**: RFC y dirección fiscal son ahora **opcionales** en `/onboarding`. Se agregó botón secundario "Configurar después" junto a "Guardar y continuar" para que el nuevo admin pueda entrar a explorar la app sin fricción y completar los datos fiscales luego desde Configuración. RPC `complete_onboarding` migrado: si `_rfc`/`_direccion` vienen vacíos ya no falla; si vienen con contenido se sigue validando longitud (12–13 / 5–500). La organización se guarda con `rfc`/`direccion` en `NULL` cuando el usuario omite el paso, pero `onboarding_completado = true` para que el `resolveProtectedRouteRedirect` deje pasar. Copy actualizado en la card para reflejar que los campos son opcionales.
 

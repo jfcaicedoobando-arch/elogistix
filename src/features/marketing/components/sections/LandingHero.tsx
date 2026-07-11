@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Ship, Container, FileText, Clock } from "lucide-react";
-import { HERO, PROOF_TITLE, PROOF_LOGOS, KPIS } from "../../routes/landingCopy";
+import { HERO, PROOF_TITLE, PROOF_NAVIERAS, PROOF_ESTANDARES, PROOF_DISCLAIMER, KPIS } from "../../routes/landingCopy";
 import { ProbarDemoButton } from "@/features/marketing/components/ProbarDemoButton";
 
 export function LandingHero() {
@@ -129,22 +129,44 @@ export function LandingHero() {
         </div>
       </div>
 
-      {/* Prueba social: sistemas / actores */}
+      {/* Prueba social: navieras rastreables + estándares cumplidos */}
       <div className="relative border-t border-primary-foreground/10 bg-primary/95">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <p className="mb-4 text-center text-xs font-medium uppercase tracking-wider text-primary-foreground/75">
+          <p className="mb-5 text-center text-xs font-medium uppercase tracking-wider text-primary-foreground/75">
             {PROOF_TITLE}
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-            {PROOF_LOGOS.map((l) => (
-              <span
-                key={l}
-                className="text-sm font-semibold tracking-tight text-primary-foreground/70"
-              >
-                {l}
+
+          <div className="space-y-4">
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-6">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/55 sm:w-40 sm:shrink-0 sm:text-right">
+                Navieras que rastreamos
               </span>
-            ))}
+              <div className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-2">
+                {PROOF_NAVIERAS.map((l) => (
+                  <span key={l} className="text-sm font-semibold tracking-tight text-primary-foreground/70">
+                    {l}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-6">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/55 sm:w-40 sm:shrink-0 sm:text-right">
+                Estándares que cumplimos
+              </span>
+              <div className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-2">
+                {PROOF_ESTANDARES.map((l) => (
+                  <span key={l} className="text-sm font-semibold tracking-tight text-primary-foreground/70">
+                    {l}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
+
+          <p className="mt-5 text-center text-[10px] text-primary-foreground/50">
+            {PROOF_DISCLAIMER}
+          </p>
         </div>
       </div>
 
@@ -154,8 +176,8 @@ export function LandingHero() {
           <div className="grid grid-cols-3 gap-4 text-center">
             {KPIS.map((k) => (
               <div key={k.label}>
-                <p className="text-3xl font-bold text-primary-foreground sm:text-4xl">{k.value}</p>
-                <p className="text-xs text-primary-foreground/75 sm:text-sm">{k.label}</p>
+                <p className="text-2xl font-bold text-primary-foreground sm:text-3xl">{k.value}</p>
+                <p className="mt-1 text-xs leading-snug text-primary-foreground/75 sm:text-sm">{k.label}</p>
               </div>
             ))}
           </div>
