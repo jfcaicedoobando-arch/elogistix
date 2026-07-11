@@ -2,12 +2,12 @@ import {
   LayoutDashboard,
   Ship,
   FileText,
-  UserCheck,
+  FileSpreadsheet,
   Truck,
-  Activity,
+  Workflow,
   ClipboardList,
+  ClipboardCheck,
   ScrollText,
-  ShieldCheck,
   Settings,
   BarChart3,
   Building2,
@@ -16,13 +16,14 @@ import {
   Repeat2,
   HelpCircle,
   Bug,
-  Target,
+  Handshake,
   TrendingUp,
   PiggyBank,
   Receipt,
   Landmark,
   Percent,
   Calculator,
+  Timer,
   Route,
   Users,
   Anchor,
@@ -30,10 +31,13 @@ import {
   Calendar,
   ShoppingCart,
   Inbox,
-  ShieldCheck as ShieldApprove,
   LayoutList,
   ReceiptText,
   GitCompare,
+  HandCoins,
+  Wallet,
+  Banknote,
+  ArrowRightLeft,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -46,7 +50,7 @@ export const SIDEBAR_PROFIT_ITEMS: SidebarItem[] = [
 
 export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
-  { title: "Operaciones", url: "/operaciones", icon: Activity },
+  { title: "Operaciones", url: "/operaciones", icon: Workflow },
 ];
 
 // v13.175.0 — Se removieron "Facturas de proveedor" (`/cxp`) — ahora vive
@@ -54,9 +58,9 @@ export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
 export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
-  { title: "Facturación", url: "/facturacion", icon: FileText },
-  { title: "Proformas", url: "/proformas", icon: FileText },
-  { title: "Cobranza", url: "/cartera", icon: PiggyBank },
+  { title: "Facturación", url: "/facturacion", icon: Receipt },
+  { title: "Proformas", url: "/proformas", icon: FileSpreadsheet },
+  { title: "Cobranza", url: "/cartera", icon: HandCoins },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
 ];
@@ -67,12 +71,12 @@ export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
-  { title: "CRM", url: "/crm", icon: Target },
+  { title: "CRM", url: "/crm", icon: Handshake },
 ];
 
 // v13.175.0 — Proveedores migra al módulo Compras (`/compras/proveedores`).
 export const SIDEBAR_DIRECTORIO_ITEMS: SidebarItem[] = [
-  { title: "Clientes", url: "/clientes", icon: UserCheck },
+  { title: "Clientes", url: "/clientes", icon: Building2 },
 ];
 
 export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
@@ -83,7 +87,7 @@ export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_ADMIN_ITEMS: SidebarItem[] = [
-  { title: "Usuarios", url: "/usuarios", icon: ShieldCheck },
+  { title: "Usuarios", url: "/usuarios", icon: Users },
   { title: "Papelera", url: "/papelera", icon: Trash2 },
   { title: "Idempotencia", url: "/idempotencia", icon: Repeat2 },
   { title: "Configuración", url: "/configuracion", icon: Settings },
@@ -98,13 +102,13 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
   { title: "Tarifas marítimas", url: "/costeo/tarifas", icon: Calculator },
   { title: "Rutas CN → MX", url: "/costeo/rutas", icon: Route },
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
- { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
- { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Calculator },
+  { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
+  { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Timer },
 ];
 
 // v13.175.0 — Cartera (CxC) es la única bandeja que no vive bajo /compras.
 export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
-  { title: "Cartera", url: "/cartera", icon: PiggyBank },
+  { title: "Cartera", url: "/cartera", icon: Wallet },
 ];
 
 
@@ -118,13 +122,16 @@ export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
 export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
   { title: "Dashboard", url: "/compras", icon: ShoppingCart },
   { title: "Por capturar", url: "/compras/por-capturar", icon: Inbox },
-  { title: "Por aprobar", url: "/compras/por-aprobar", icon: ShieldApprove },
-  { title: "Por pagar", url: "/compras/por-pagar", icon: Landmark },
+  { title: "Por aprobar", url: "/compras/por-aprobar", icon: ClipboardCheck },
+  { title: "Por pagar", url: "/compras/por-pagar", icon: Banknote },
   { title: "Facturas", url: "/compras/facturas", icon: Receipt },
-  { title: "Pagos", url: "/compras/pagos", icon: Landmark },
+  { title: "Pagos", url: "/compras/pagos", icon: ArrowRightLeft },
   { title: "Notas de crédito", url: "/compras/notas-credito", icon: ReceiptText },
   { title: "Proveedores", url: "/compras/proveedores", icon: Truck },
   { title: "Conciliación", url: "/compras/conciliacion", icon: GitCompare },
   { title: "Antigüedad", url: "/compras/aging", icon: LayoutList },
   { title: "Reportes", url: "/compras/reportes", icon: BarChart3 },
 ];
+
+// Referencia interna (legacy import): FileText mantenido para retrocompatibilidad.
+void FileText;

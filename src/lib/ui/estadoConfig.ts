@@ -17,8 +17,9 @@ import {
   Warehouse,
   PackageCheck,
   FileCheck,
+  ClipboardCheck,
+  Archive,
   XCircle,
-  CheckCircle2,
 } from "lucide-react";
 
 export interface EstadoVisual {
@@ -107,7 +108,7 @@ export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
     badge: "bg-orange-500/15 text-orange-600 border border-orange-500/30",
     borderLeft: "border-l-orange-500",
     bar: "bg-orange-500",
-    icon: FileCheck,
+    icon: ClipboardCheck,
     gradient: "from-orange-500 to-orange-500/80",
     border: "border-orange-500",
     text: "text-orange-600",
@@ -115,7 +116,7 @@ export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
   },
   Cerrado: {
     ...DEFAULT_VISUAL,
-    icon: CheckCircle2,
+    icon: Archive,
   },
   Cancelado: {
     badge: "bg-destructive/15 text-destructive border border-destructive/30",
