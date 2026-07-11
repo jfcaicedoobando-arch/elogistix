@@ -29,6 +29,7 @@ export const adminRoutes = (
     <Route path="/admin/organizaciones/:id" element={<AdminOrgDetalle />} />
     
     <Route path="/admin/auditoria" element={<AdminAuditoriaPlataforma />} />
+    <Route path="/admin/demo-leads" element={<AdminDemoLeads />} />
     <Route path="/admin/configuracion" element={<AdminConfiguracion />} />
     <Route path="/admin/diagnostico" element={<AdminDiagnostico />} />
   </Route>
