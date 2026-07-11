@@ -89,8 +89,7 @@ export function useEnvioDocumentoForm(
   const ccInicialKey = (ccInicial ?? []).join(",");
   const destInicialKey = (destinatariosManualesInicial ?? []).join(",");
 
-  // Refs a callbacks/arrays cuyo *contenido* se cubre con las keys de arriba;
-  // los leemos vía ref para no re-suscribir el efecto por cambios de identidad.
+  // Refs a callbacks/arrays cuyo contenido se cubre con las keys de arriba.
   const buildAsuntoInicialRef = useRef(buildAsuntoInicial);
   const ccInicialRef = useRef(ccInicial);
   const destInicialRef = useRef(destinatariosManualesInicial);
