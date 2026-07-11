@@ -76,6 +76,28 @@ export function resumirCartera(rows: CarteraPendienteRow[]): CarteraSummary {
   };
 }
 
+/**
+ * Filtro de urgencia para el módulo de Cartera / cobranza.
+ * - `accionable` (default UI): vencidas + por vencer en ≤7 días (`dias_vencido ≥ -7`).
+ * - `vencidas`: sólo `dias_vencido > 0`.
+ * - `por_vencer`: `-7 ≤ dias_vencido ≤ 0` (aún no vence, pero está cerca).
+ * - `todas`: sin filtro.
+ *
+ * `dias_vencido` viene del RPC como (hoy − vencimiento): positivo = ya venció,
+ * cero = vence hoy, negativo = aún le quedan días.
+ */
+export type UrgenciaCartera = "accionable" | "vencidas" | "por_vencer" | "todas";
+
+export function matchesUrgencia(diasVencido: number, urgencia: UrgenciaCartera): boolean {
+  const d = Number(diasVencido) || 0;
+  switch (urgencia) {
+    case "vencidas": return d > 0;
+    case "por_vencer": return d <= 0 && d >= -7;
+    case "accionable": return d >= -7;
+    case "todas": return true;
+  }
+}
+
 // ===== CxP por pagar =====
 export interface CxpPagarSummary {
   total: number;
