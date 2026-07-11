@@ -72,7 +72,13 @@ export const cargaPorClienteSchema = z
     clienteNombre: strOrEmpty.optional(),
     cliente_nombre: strOrEmpty.optional(),
     total: numOrCoerce,
-    desglose: desgloseSchema.optional().default({}),
+    desglose: desgloseSchema.optional().default(() => ({
+      Confirmado: 0,
+      "En Tránsito": 0,
+      Arribo: 0,
+      "En Aduana": 0,
+      Entregado: 0,
+    })),
   })
   .passthrough();
 

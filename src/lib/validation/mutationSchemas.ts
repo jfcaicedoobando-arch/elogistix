@@ -31,7 +31,7 @@ export function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown, contexto: 
 
 const nonEmpty = (label: string, max = 200) =>
   z
-    .string({ required_error: `${label}: requerido.`, invalid_type_error: `${label}: requerido.` })
+    .string({ error: `${label}: requerido.` })
     .trim()
     .min(1, `${label}: requerido.`)
     .max(max, `${label}: máximo ${max} caracteres.`);

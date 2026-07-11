@@ -116,7 +116,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
                   setValue("validezPropuesta", d, { shouldValidate: true, shouldDirty: true })
                 }
                 disabled={(date) => date < hoy || (!!tarifaHasta && date > tarifaHasta)}
-                initialFocus
+                autoFocus
                 className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
