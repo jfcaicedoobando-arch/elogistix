@@ -67,10 +67,20 @@ export default tseslint.config(
             group: ["@/services/*/*"],
             message: "Importa desde el barrel del dominio: '@/services/<dominio>' en lugar de archivos internos. Ver ARCHITECTURE.md §5.",
           },
+          {
+            group: ["lucide-react/dist", "lucide-react/dist/*"],
+            message: "Importa lucide-react por named import (`import { X } from 'lucide-react'`). Los subpaths /dist/* no forman parte de la API pública.",
+          },
         ],
         // NOTA: la restricción sobre `@/components/ui/table` vive en su propio
         // bloque `no-raw-table` al final del archivo — inmune al override que
         // apaga `no-restricted-imports` en `src/features/**`.
+      }],
+      // Guardrail lucide-react — prohibir `import * as Icons from "lucide-react"`
+      // (rompería tree-shaking y traería los ~1,400 íconos al bundle).
+      "no-restricted-syntax": ["error", {
+        selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
+        message: "No uses `import * as ... from 'lucide-react'`. Usa named imports para preservar tree-shaking.",
       }],
     },
   },

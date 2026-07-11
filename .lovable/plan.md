@@ -1,62 +1,71 @@
-## Contexto
 
-El CI falla en el step **Lint, typecheck, unused code & build** por 3 reglas de auditoría arquitectónica introducidas en los cambios recientes de captación de leads (DemoAccessDialog, useUtmParams, demoLeads, Onboarding):
+# Auditoría de `lucide-react`
 
-1. **Power of 10 #4 — archivos > 200 líneas** (fuera de allowlist):
-   - `src/features/onboarding/routes/Onboarding.tsx` → 203 líneas
-   - `src/features/marketing/components/DemoAccessDialog.tsx` → 201 líneas
-2. **Jerarquía de capas** — `features/*/services` no puede importar de `hooks/`:
-   - `src/features/marketing/services/demoLeads.ts` importa `getAttribution` desde `@/features/marketing/hooks/useUtmParams`.
-3. **Casts baseline (0 HIGH / 0 CRITICAL)** — 1 CRITICAL introducido:
-   - `src/features/marketing/hooks/useUtmParams.ts:58` usa `JSON.parse(raw) as Partial<Attribution>`.
+## Estado actual
 
-Tres archivos de tests validan estas baselines y ahora rompen (`architecture.test.ts`, `architecture-baseline.test.ts`, `audit-report.test.ts`). El resto del CI (unit shards, edge functions, lint, typecheck, build) pasa.
+| Métrica | Valor |
+|---|---|
+| Versión instalada | **0.462.0** (nov 2024) |
+| Última en npm | **1.24.0** (jul 2026) |
+| Archivos que importan lucide | **578** |
+| Íconos únicos usados | **190** |
+| Import statements totales | **582** |
+| Uso de `DynamicIcon` / barrel dinámico | **0** (bien) |
+| Imports desde `lucide-react/dist/...` | **0** (bien) |
 
-## Plan (build mode)
+## Diagnóstico
 
-### 1. Separar utilidad pura del hook (arregla #2 y prepara #3)
+**Lo que ya está bien (top-of-the-line):**
+- 100% named imports (`import { X } from 'lucide-react'`) → tree-shaking óptimo con Vite.
+- Cero imports desde rutas internas (`/dist`), cero `import * as`.
+- Cero `DynamicIcon` innecesario (que forzaría cargar todo el paquete).
+- Los íconos están centralizados por dominio (`uiMappings.ts`, `estadoConfig.ts`, `sidebarItems.ts`), no dispersos con strings mágicos.
+- Uso consistente vía componentes (nunca SVG inline duplicados).
 
-Crear `src/features/marketing/lib/attribution.ts`:
-- Mover `Attribution`, `EMPTY`, `STORAGE_KEY` y `getAttribution()` desde `useUtmParams.ts`.
-- Reemplazar el cast CRITICAL por parseo defensivo: leer con `JSON.parse` sin cast, validar que sea objeto, y proyectar sólo las llaves conocidas (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `referrer`, `landing_path`) haciendo `typeof x === "string" ? x : null`. Sin `as`.
+**Lo mejorable:**
+1. **Versión muy atrasada.** Estamos ~19 meses detrás. Entre 0.462 → 1.24 hay: nuevos íconos, bugfixes de stroke, mejor tipado TS, soporte de `Icon` para `lucide-lab`, y sub-path exports optimizados. No es un major "React 19" ni parte del pin de plataforma (React 18 / Vite 5 / TS 5 / Tailwind 3), así que el bump es seguro.
+2. **190 íconos únicos** en 578 archivos → algunos son casi duplicados semánticos (p.ej. varios "check", "alerta"). Se puede consolidar vía `uiMappings.ts`.
+3. No hay un **wrapper `<Icon />`** propio que estandarice `size`, `strokeWidth` y `aria-label`. Hoy cada archivo pasa `className="h-4 w-4"` a mano (inconsistencias 3/4/5/6).
+4. No hay **lint rule** que impida `import * as Icons from 'lucide-react'` o `lucide-react/dist/...` en el futuro.
 
-Reducir `useUtmParams.ts` a sólo el hook `useCaptureUtmParams` (importa constantes desde `lib/attribution`).
+## Plan de mejora (en orden, todo opcional/incremental)
 
-Actualizar imports:
-- `demoLeads.ts` → `import { getAttribution } from "@/features/marketing/lib/attribution"`.
-- Cualquier otro consumidor de `getAttribution` (verificaré con `rg`) apunta a `lib/attribution`.
+### Fase 1 — Bump de versión (bajo riesgo)
+- Actualizar `package.json`: `"lucide-react": "^1.24.0"`.
+- `bun install`.
+- Smoke test: `bun run test:fast`, `bun run build`, revisar visualmente sidebar + dashboard (donde viven los 30+ íconos de `sidebarItems.ts`).
+- Riesgo: bajísimo. La API `<Icon size color strokeWidth />` no cambió. Sólo se renombraron/agregaron íconos; si alguno explota, TS lo marca en build.
 
-### 2. Bajar `Onboarding.tsx` de 203 a ≤ 200 líneas
+### Fase 2 — Wrapper `<Icon />` de proyecto
+- Crear `src/components/ui/icon.tsx` con:
+  - `size` default 16, `strokeWidth` default 2.
+  - Prop `label?: string` → si existe pone `aria-label` y quita `aria-hidden`; si no, `aria-hidden="true"`.
+  - Recibe el componente lucide como prop `as`.
+- Migración **no forzada**: usarlo en código nuevo; codemod opcional después.
 
-Extraer el bloque de validación de RFC/dirección + botón "Configurar después" a un helper pequeño en `src/features/onboarding/lib/onboardingValidation.ts` (función pura que recibe los campos y devuelve `{ ok: true } | { ok: false, message: string }`). Deja el componente a ~180 líneas sin cambiar UX.
+### Fase 3 — Consolidar catálogo
+- Ampliar `src/lib/ui/uiMappings.ts` como fuente única para "ícono de estado X", "ícono de módulo Y".
+- Reducir 190 → ~150 íconos únicos.
 
-### 3. Bajar `DemoAccessDialog.tsx` de 201 a ≤ 200 líneas
+### Fase 4 — Guardrails
+- Añadir regla ESLint `no-restricted-imports` que prohíba:
+  - `lucide-react/dist/*`
+  - `import * as ... from 'lucide-react'`
+- Agrega test de arquitectura tipo "ningún archivo importa >15 íconos de lucide-react" (indicador de god-file).
 
-Extraer el schema Zod del formulario y el tipo `DemoAccessFormValues` a `src/features/marketing/lib/demoAccessSchema.ts`. El componente sólo importa el schema/tipo. Baja ~20 líneas.
-
-### 4. Verificación
-
-Ejecutar localmente los mismos comandos que rompieron el CI:
-- `bun run audit:arch` (script `scripts/audit-architecture.ts`) — 0 archivos > 200 líneas.
-- `bun run audit:casts` — regenera `docs/cast-audit.md` con 0 HIGH / 0 CRITICAL.
-- `bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts` — 4 archivos verdes.
-- `bun run test:fast` para confirmar que no se rompió nada de marketing/onboarding.
-- `bun run build` como sanity final.
-
-### 5. Housekeeping
-
-- Bump `APP_VERSION` a `13.259.0` en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md` describiendo el fix de baselines (arquitectura + casts + longitud).
+### Verificación final
+- `bun run test:fast`, `bun run lint`, `bun run build`.
+- Bump `APP_VERSION` a `13.260.0` + entrada en `CHANGELOG.md`.
 
 ## Detalles técnicos
 
-- No cambia comportamiento: la extracción es sólo reorganización de módulos. `getAttribution` conserva firma (`() => Attribution`) y semántica (silenciosa ante `sessionStorage` bloqueado o JSON inválido).
-- El nuevo parser reemplaza `JSON.parse(raw) as Partial<Attribution>` por algo tipo:
-  ```ts
-  const parsed: unknown = JSON.parse(raw);
-  if (!parsed || typeof parsed !== "object") return EMPTY;
-  const rec = parsed as Record<string, unknown>; // SAFE-CAST: narrowed above
-  const pick = (k: string) => (typeof rec[k] === "string" ? (rec[k] as string) : null);
-  ```
-  El único `as` restante queda cubierto por el marcador `// SAFE-CAST:` (ver `mem://principles/safe-cast`) y baja severidad a SAFE en el clasificador.
-- El helper de `Onboarding` sólo mueve lógica, no toca la RPC `complete_onboarding` ni el estado del formulario.
+- No requiere tocar el pin de plataforma (React 18 / Vite 5 / Tailwind 3 / TS 5) — `lucide-react` no está en la lista de versiones prohibidas.
+- Tree-shaking: Vite 5 + ESM named imports ya elimina los ~1,400 íconos no usados. El bundle sólo incluye los 190 en uso.
+- `DynamicIcon` sólo se justificaría si los nombres vinieran de una API/CMS — no es nuestro caso, no lo introducimos.
+
+## Respuesta rápida a tus preguntas
+
+- **¿Está limpia?** Sí, en patrón de import y organización.
+- **¿Top-of-the-line?** En patrón sí; en versión **no**, estamos 19 meses atrás.
+- **¿Se puede mejorar?** Sí: bump a 1.x, wrapper `<Icon />`, ESLint guardrail.
+- **¿Es la versión más nueva?** No. 0.462.0 vs 1.24.0.

@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.260.0] - 2026-07-11
+- **UI · lucide-react 0.462 → 1.24**: bump mayor de la librería de íconos (19 meses de bugfixes, tipados y nuevos íconos). Sin cambios de API en `size`/`color`/`strokeWidth`; typecheck + `test:fast` (647 archivos, 4538 tests) verdes.
+- **UI · Wrapper `<Icon />` estándar**: nuevo `src/components/ui/icon.tsx` con defaults del design system (`size=16`, `strokeWidth=2`), `aria-label` opcional (con fallback `aria-hidden` para íconos decorativos) y `shrink-0`. Uso incremental — no forzamos migración.
+- **CI · Guardrails de lucide-react**: nuevas reglas ESLint en `eslint.config.js` — bloqueo de imports desde `lucide-react/dist/*` (API interna) y de `import * as ... from 'lucide-react'` (rompe tree-shaking, sumaría ~1,400 íconos al bundle). `bun run lint` pasa sin warnings.
+
 ## [13.259.0] - 2026-07-11
 - **CI · Baselines de auditoría verdes de nuevo**: fix de las 3 reglas que rompió el step "Lint, typecheck, unused code & build" tras los cambios de captación de leads. (1) Jerarquía Pages→Hooks→Services→Lib: `getAttribution` y `Attribution` se movieron a nuevo módulo `src/features/marketing/lib/attribution.ts`; `useUtmParams.ts` queda como hook puro; `demoLeads.ts` importa desde `lib` (no de `hooks`). (2) Cast baseline (0 HIGH / 0 CRITICAL): eliminado `JSON.parse(raw) as Partial<Attribution>` — ahora se parsea a `unknown`, se valida `typeof === "object"` y se proyectan sólo las llaves conocidas con `typeof === "string"`. (3) Power of 10 #4 (≤200 líneas): `Onboarding.tsx` (203→193) extrayendo la validación pura a `src/features/onboarding/lib/onboardingValidation.ts`; `DemoAccessDialog.tsx` (201→194) extrayendo el schema Zod a `src/features/marketing/lib/demoAccessSchema.ts`. Sin cambios de UX ni de contrato de RPC.
 
