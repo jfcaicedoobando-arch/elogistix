@@ -16,7 +16,9 @@ import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
-import { resumirCartera } from "@/features/bandejas/domain/aggregates";
+import { resumirCartera, type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
+import { equivalenteMxn } from "@/features/bandejas/domain/carteraFx";
+import { useExchangeRates } from "@/features/catalogos/hooks";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
@@ -33,10 +35,24 @@ interface CarteraFilters extends Record<string, string> {
 
 const DEFAULTS: CarteraFilters = { moneda: "todas", vencidas: "todas" };
 
+/** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
+function formatNativos(b: SaldosPorMonedaCartera): string {
+  const parts: string[] = [];
+  if (b.MXN > 0) parts.push(formatCurrency(b.MXN, "MXN"));
+  if (b.USD > 0) parts.push(formatCurrency(b.USD, "USD"));
+  for (const [cod, monto] of Object.entries(b.otras)) {
+    if (monto > 0) parts.push(formatCurrency(monto, cod));
+  }
+  return parts.length > 0 ? parts.join(" · ") : formatCurrency(0, "MXN");
+}
 
 export default function Cartera() {
   const { data = [], isLoading } = useCarteraPendiente();
-  const { totalSaldo, vencidas, vencidoSaldo } = resumirCartera(data);
+  const { data: rates } = useExchangeRates();
+  const tcUsdMxn = rates?.usdMxn ?? 0;
+  const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(data);
+  const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
+  const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
 
   const monedas = useMemo(
     () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
