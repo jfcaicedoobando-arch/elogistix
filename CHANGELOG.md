@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.254.0] - 2026-07-11
+- **Deps · Migración react-day-picker 10 y Zod 4**: reescrito `calendar.tsx` para la API v10 (`classNames`, `Chevron`, `month_caption`, `month_grid`, `day_button`). Reemplazado `initialFocus` por `autoFocus` en 7 consumidores de date picker. Migradas validaciones y tests a Zod 4: `error` en lugar de `required_error`/`invalid_type_error`, arrays mutables en `.enum()`, `errorMap` → `error`, defaults de objeto como función factory y UUIDs v4 válidos en fixtures. Typecheck, lint, build y suite de tests en verde.
+
 ## [13.253.4] - 2026-07-11
 - **Deps · Lote A (seguras)**: `bun update` de ~37 dependencias patch/minor, incluyendo Radix UI, Sentry, Tanstack Query, Supabase-js, react-hook-form y herramientas de desarrollo. Migrada configuración de Vitest 4: `poolOptions` ya no existe; se movieron `singleFork`, `maxForks`, `minForks`, `isolate` y `execArgv` al nivel `test` en `vitest.config.ts` y `vitest.fast.config.ts`. Refactor menor en `Cartera.tsx` (extracción a `useCarteraPage.ts`) para mantener la regla de 200 líneas tras las actualizaciones.
 
