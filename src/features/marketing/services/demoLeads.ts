@@ -5,7 +5,7 @@
  * dentro de la demo.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { getAttribution } from "@/features/marketing/hooks/useUtmParams";
+import { getAttribution } from "@/features/marketing/lib/attribution";
 
 export interface DemoLeadInput {
   nombre: string;

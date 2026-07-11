@@ -5,7 +5,6 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { z } from "zod";
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import {
   Dialog,
@@ -24,19 +23,13 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { createDemoLead } from "@/features/marketing/services/demoLeads";
 import { enterDemoMode } from "@/features/marketing/services/demoAccess";
+import { demoAccessSchema } from "@/features/marketing/lib/demoAccessSchema";
 import { ROUTES } from "@/constants/routes";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const schema = z.object({
-  nombre: z.string().trim().min(2, "Ingresa tu nombre completo.").max(120),
-  empresa: z.string().trim().min(2, "Ingresa el nombre de tu empresa.").max(120),
-  email: z.string().trim().email("Email inválido.").max(255),
-  telefono: z.string().trim().min(8, "Ingresa un teléfono válido."),
-});
 
 export function DemoAccessDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
