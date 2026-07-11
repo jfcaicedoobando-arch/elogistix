@@ -1,17 +1,17 @@
-# Cast Audit — generado 2026-07-07
+# Cast Audit — generado 2026-07-11
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **2089**
+Total de `as` casts detectados: **2127**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 570     | 27.3% |
-| LOW       | 1 | 72      | 3.4% |
-| MEDIUM    | 2 | 1447   | 69.3% |
+| SAFE      | 0 | 571     | 26.8% |
+| LOW       | 1 | 81      | 3.8% |
+| MEDIUM    | 2 | 1475   | 69.3% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -38,12 +38,12 @@ Total de `as` casts detectados: **2089**
 | 7 | `src/features/cxp/services/__tests__/proveedorFacturas.helpers.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 8 | `src/features/embarques/domain/mappers/__tests__/embarqueCotizacionDesvincular.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
 | 9 | `src/features/portal/services/__tests__/queries.test.ts` | 9 | 18 | 0 | 0 | 9 | 0 | 0 |
-| 10 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 11 | `src/features/cotizacion/services/revalidacion/index.ts` | 10 | 16 | 0 | 4 | 6 | 0 | 0 |
-| 12 | `src/features/crm/services/__tests__/cotizacionDesdeOportunidad.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 13 | `src/features/crm/services/leads/__tests__/convertir.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 14 | `src/features/dashboard/direccion/services/loaders.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
-| 15 | `src/features/facturacion/services/huecoFacturacion/__tests__/buildFilas.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 10 | `src/features/costeo/services/navieraCondiciones.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 11 | `src/features/cotizacion/services/conversiones/__tests__/embarquesHelpers.integration.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 12 | `src/features/cotizacion/services/revalidacion/index.ts` | 10 | 16 | 0 | 4 | 6 | 0 | 0 |
+| 13 | `src/features/crm/services/__tests__/cotizacionDesdeOportunidad.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 14 | `src/features/crm/services/leads/__tests__/convertir.test.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
+| 15 | `src/features/dashboard/direccion/services/loaders.ts` | 8 | 16 | 0 | 0 | 8 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 

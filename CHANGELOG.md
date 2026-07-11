@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.259.0] - 2026-07-11
+- **CI · Baselines de auditoría verdes de nuevo**: fix de las 3 reglas que rompió el step "Lint, typecheck, unused code & build" tras los cambios de captación de leads. (1) Jerarquía Pages→Hooks→Services→Lib: `getAttribution` y `Attribution` se movieron a nuevo módulo `src/features/marketing/lib/attribution.ts`; `useUtmParams.ts` queda como hook puro; `demoLeads.ts` importa desde `lib` (no de `hooks`). (2) Cast baseline (0 HIGH / 0 CRITICAL): eliminado `JSON.parse(raw) as Partial<Attribution>` — ahora se parsea a `unknown`, se valida `typeof === "object"` y se proyectan sólo las llaves conocidas con `typeof === "string"`. (3) Power of 10 #4 (≤200 líneas): `Onboarding.tsx` (203→193) extrayendo la validación pura a `src/features/onboarding/lib/onboardingValidation.ts`; `DemoAccessDialog.tsx` (201→194) extrayendo el schema Zod a `src/features/marketing/lib/demoAccessSchema.ts`. Sin cambios de UX ni de contrato de RPC.
+
 ## [13.258.0] - 2026-07-11
 - **Marketing · Video demo 60s**: nuevo creativo de motion graphics para ads y landing. 1920×1080 @ 30fps, 60.0s exactos, ~5.4 MB. Generado con Remotion (proyecto en `remotion/`, escenas en `remotion/src/scenes/`: Hook → BrandReveal → Modules → Kpis → Route → Cta). Paleta y tipografía oficiales (Inter, `#1B2B4B`, `#2563EB`). Guion en español mexicano, sin voz en off (mudo, listo para agregar música/VO externo). Archivo final: `/mnt/documents/libre-carga-demo-60s.mp4` — descargable desde el artifact del chat. Re-render disponible con `cd remotion && PUPPETEER_EXECUTABLE_PATH=/bin/chromium node scripts/render-remotion.mjs`.
 

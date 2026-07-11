@@ -25,6 +25,7 @@ import { Loader2, AlertCircle, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ROUTES } from "@/constants/routes";
+import { validateOnboarding } from "@/features/onboarding/lib/onboardingValidation";
 
 const MONEDAS = [
   { value: "MXN", label: "Peso mexicano (MXN)" },
@@ -55,25 +56,14 @@ export default function Onboarding() {
 
   const submit = async (opts: { skipFiscal: boolean }) => {
     setError(null);
-    const rfcClean = opts.skipFiscal ? "" : rfc.trim().toUpperCase();
-    const dirClean = opts.skipFiscal ? "" : direccion.trim();
-    if (!opts.skipFiscal) {
-      if (rfcClean !== "" && (rfcClean.length < 12 || rfcClean.length > 13)) {
-        setError("El RFC debe tener 12 caracteres (persona moral) o 13 (persona física).");
-        return;
-      }
-      if (dirClean !== "" && (dirClean.length < 5 || dirClean.length > 500)) {
-        setError("La dirección debe tener entre 5 y 500 caracteres.");
-        return;
-      }
-    }
-    if (!["MXN", "USD", "EUR"].includes(moneda)) {
-      setError("Selecciona una moneda válida.");
+    const v = validateOnboarding({ rfc, direccion, moneda, skipFiscal: opts.skipFiscal });
+    if (!v.ok) {
+      setError(v.message);
       return;
     }
     setSubmitting(true);
     try {
-      await completeOnboarding({ rfc: rfcClean, direccion: dirClean, moneda });
+      await completeOnboarding({ rfc: v.rfc, direccion: v.direccion, moneda: v.moneda });
       await refreshProfile();
       toast({
         title: opts.skipFiscal ? "¡Bienvenido!" : "¡Listo!",

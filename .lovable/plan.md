@@ -1,82 +1,62 @@
-# Plan: Video demo de 60 segundos de Libre Carga
+## Contexto
 
-## Objetivo
-Crear un video motion-graphics de 60 segundos (1920x1080, 30fps = 1800 frames) que sirva como creativo principal para ads (Meta/LinkedIn/YouTube) y para embeber en la landing. Renderizado con Remotion en el sandbox y entregado como MP4 en `/mnt/documents/`.
+El CI falla en el step **Lint, typecheck, unused code & build** por 3 reglas de auditoría arquitectónica introducidas en los cambios recientes de captación de leads (DemoAccessDialog, useUtmParams, demoLeads, Onboarding):
 
-## Dirección creativa
+1. **Power of 10 #4 — archivos > 200 líneas** (fuera de allowlist):
+   - `src/features/onboarding/routes/Onboarding.tsx` → 203 líneas
+   - `src/features/marketing/components/DemoAccessDialog.tsx` → 201 líneas
+2. **Jerarquía de capas** — `features/*/services` no puede importar de `hooks/`:
+   - `src/features/marketing/services/demoLeads.ts` importa `getAttribution` desde `@/features/marketing/hooks/useUtmParams`.
+3. **Casts baseline (0 HIGH / 0 CRITICAL)** — 1 CRITICAL introducido:
+   - `src/features/marketing/hooks/useUtmParams.ts:58` usa `JSON.parse(raw) as Partial<Attribution>`.
 
-**Marca:** Libre Carga — plataforma multi-tenant para forwarders en México.
+Tres archivos de tests validan estas baselines y ahora rompen (`architecture.test.ts`, `architecture-baseline.test.ts`, `audit-report.test.ts`). El resto del CI (unit shards, edge functions, lint, typecheck, build) pasa.
 
-**Paleta (memoria del proyecto):**
-- Primario `#1B2B4B` (azul marino corporativo)
-- Acento `#2563EB` (azul eléctrico)
-- Fondo `#F8FAFC` (casi blanco)
-- Neutros: `#0F172A` texto, `#94A3B8` secundario
+## Plan (build mode)
 
-**Tipografía:** Inter (display + body, ya es la tipografía oficial).
+### 1. Separar utilidad pura del hook (arregla #2 y prepara #3)
 
-**Estilo:** *Tech Product / Editorial* — geométrico, grid limpio inspirado en dashboards, transiciones snappy con springs, motion horizontal tipo "riel logístico" (metáfora sensorial: contenedor deslizándose sobre rieles).
+Crear `src/features/marketing/lib/attribution.ts`:
+- Mover `Attribution`, `EMPTY`, `STORAGE_KEY` y `getAttribution()` desde `useUtmParams.ts`.
+- Reemplazar el cast CRITICAL por parseo defensivo: leer con `JSON.parse` sin cast, validar que sea objeto, y proyectar sólo las llaves conocidas (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `referrer`, `landing_path`) haciendo `typeof x === "string" ? x : null`. Sin `as`.
 
-**Motivos visuales recurrentes:**
-1. Líneas horizontales que simulan trayectos marítimos.
-2. "Cards" de dashboard que aparecen con clip-path reveal.
-3. Contador numérico animado para KPIs.
+Reducir `useUtmParams.ts` a sólo el hook `useCaptureUtmParams` (importa constantes desde `lib/attribution`).
 
-## Guion (60s / 1800 frames)
+Actualizar imports:
+- `demoLeads.ts` → `import { getAttribution } from "@/features/marketing/lib/attribution"`.
+- Cualquier otro consumidor de `getAttribution` (verificaré con `rg`) apunta a `lib/attribution`.
 
-```text
-Escena 1 (0–6s / 180f)   Hook: "El forwarding en México se hace en Excel."
-                         Grid de celdas caóticas → colapsa.
-Escena 2 (6–14s / 240f)  Reveal marca: logo + tagline "Un sistema. Todo el forwarding."
-Escena 3 (14–26s / 360f) Módulos: Cotizaciones → Embarques → Bitácora → CxC/CxP
-                         (4 mockups de dashboard con clip-path reveal, stagger).
-Escena 4 (26–38s / 360f) KPIs animados: "Minutos para cotizar", "11 módulos",
-                         "CFDI 4.0", "SAT + Banxico + UN/LOCODE".
-Escena 5 (38–50s / 360f) Trayecto: mapa esquemático CN → MX con timeline
-                         auto-generado (metáfora del tracking real).
-Escena 6 (50–60s / 300f) Cierre + CTA visual: "librecarga.com / Prueba el demo".
-```
+### 2. Bajar `Onboarding.tsx` de 203 a ≤ 200 líneas
 
-Total: 1800 frames exactos.
+Extraer el bloque de validación de RFC/dirección + botón "Configurar después" a un helper pequeño en `src/features/onboarding/lib/onboardingValidation.ts` (función pura que recibe los campos y devuelve `{ ok: true } | { ok: false, message: string }`). Deja el componente a ~180 líneas sin cambiar UX.
 
-## Trabajo técnico
+### 3. Bajar `DemoAccessDialog.tsx` de 201 a ≤ 200 líneas
 
-### Estructura
-```
-remotion/
-  package.json, tsconfig.json, bun.lockb
-  scripts/render-remotion.mjs
-  src/
-    index.ts, Root.tsx, MainVideo.tsx
-    scenes/{Hook,BrandReveal,Modules,Kpis,Route,Cta}.tsx
-    components/{PersistentBg,DashboardCard,AnimatedCounter,RouteLine}.tsx
-  public/
-    images/logo.svg  (copiado desde src/assets si existe)
-```
+Extraer el schema Zod del formulario y el tipo `DemoAccessFormValues` a `src/features/marketing/lib/demoAccessSchema.ts`. El componente sólo importa el schema/tipo. Baja ~20 líneas.
 
-### Pasos
-1. **Scaffold Remotion en `remotion/`** con `bun init` + deps (`remotion`, `@remotion/cli`, `@remotion/renderer`, `@remotion/bundler`, `@remotion/transitions`, `@remotion/google-fonts`, `@remotion/compositor-linux-x64-musl`, react/react-dom, ts).
-2. **Parchar compositor gnu → musl** y symlinks a ffmpeg/ffprobe (obligatorio en NixOS).
-3. **`tsconfig.json`** con `jsx: "react-jsx"`, `module: "Preserve"`.
-4. **Cargar Inter** vía `@remotion/google-fonts/Inter` a nivel módulo.
-5. **Copiar logo** desde `src/assets/` (si existe SVG/PNG) a `remotion/public/images/`.
-6. **Construir capas persistentes**: fondo con gradient sutil `#F8FAFC → #E2E8F0` + líneas horizontales flotantes.
-7. **Construir 6 escenas** en archivos separados, cada una autocontenida usando `useCurrentFrame()` + `interpolate/spring`. Sin CSS animations, sin `backdropFilter`.
-8. **Wire con `<TransitionSeries>`** usando `slide`/`wipe` de `@remotion/transitions` (springTiming ~20f). Ajustar duraciones para compensar overlaps y sumar 1800f.
-9. **Textos en español mexicano** (regla del proyecto).
-10. **QA de frames clave** con `bunx remotion still` en frames 60, 300, 720, 1080, 1440, 1740; ver PNGs con `code--view` y corregir layout/overflow.
-11. **Render final** con `node scripts/render-remotion.mjs` → `/mnt/documents/libre-carga-demo-60s.mp4` (`muted: true`, `chromeMode: "chrome-for-testing"`, `concurrency: 1`).
-12. **Verificar** con `ffprobe` que el MP4 dure 60.0s, 1920x1080, 30fps.
-13. **Actualizar changelog** (`APP_VERSION` bump + entrada en `CHANGELOG.md`) mencionando el asset y su ruta.
-14. **Emitir `<presentation-artifact>`** apuntando al MP4 para que puedas descargarlo.
+### 4. Verificación
 
-## Fuera de alcance (no lo hago en este turno)
-- Voz en off / música (video mudo; puedes agregar audio después en un editor).
-- Subir el video al bucket de Supabase o incrustarlo en la landing (te aviso cuando esté listo y lo hacemos en un turno separado).
-- Versiones 9:16 (reel) y 1:1 (feed) — te las puedo generar después si validamos que esta versión te gusta.
+Ejecutar localmente los mismos comandos que rompieron el CI:
+- `bun run audit:arch` (script `scripts/audit-architecture.ts`) — 0 archivos > 200 líneas.
+- `bun run audit:casts` — regenera `docs/cast-audit.md` con 0 HIGH / 0 CRITICAL.
+- `bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts` — 4 archivos verdes.
+- `bun run test:fast` para confirmar que no se rompió nada de marketing/onboarding.
+- `bun run build` como sanity final.
 
-## Notas / preguntas menores
-- Si tienes un logo específico (SVG) que quieras usar, dímelo o confirmo que use el que ya está en `src/assets/`.
-- Si prefieres otro tagline al de la landing ("Un sistema. Todo el forwarding."), dímelo antes de que arranque.
+### 5. Housekeeping
 
-Si te parece bien, apruébalo y lo genero.
+- Bump `APP_VERSION` a `13.259.0` en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md` describiendo el fix de baselines (arquitectura + casts + longitud).
+
+## Detalles técnicos
+
+- No cambia comportamiento: la extracción es sólo reorganización de módulos. `getAttribution` conserva firma (`() => Attribution`) y semántica (silenciosa ante `sessionStorage` bloqueado o JSON inválido).
+- El nuevo parser reemplaza `JSON.parse(raw) as Partial<Attribution>` por algo tipo:
+  ```ts
+  const parsed: unknown = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object") return EMPTY;
+  const rec = parsed as Record<string, unknown>; // SAFE-CAST: narrowed above
+  const pick = (k: string) => (typeof rec[k] === "string" ? (rec[k] as string) : null);
+  ```
+  El único `as` restante queda cubierto por el marcador `// SAFE-CAST:` (ver `mem://principles/safe-cast`) y baja severidad a SAFE en el clasificador.
+- El helper de `Onboarding` sólo mueve lógica, no toca la RPC `complete_onboarding` ni el estado del formulario.
