@@ -1,32 +1,11 @@
-/**
- * Configuración compartida de las reglas de Auditoría:
- * label corto, descripción larga, icono y orden canónico de presentación.
- *
- * Antes esta configuración estaba duplicada entre `pages/Auditoria.tsx`
- * (versión completa con descripción + icono) y `AuditoriaEjecutivoTab.tsx`
- * (versión corta solo con label). Centralizar evita drift.
- */
+/** Config compartida de reglas de Auditoría: label, descripción, icono y orden canónico. */
 import {
-  Clock,
-  FileWarning,
-  FileX,
-  FileX2,
-  Receipt,
-  FileCheck,
-  FileSpreadsheet,
-  FileClock,
-  Scale,
-  Stamp,
-  Ban,
-  Banknote,
-  HandCoins,
-  AlertOctagon,
-  Container,
-  CalendarClock,
-  TrendingDown,
-  type LucideIcon,
+  Clock, FileWarning, FileX, FileX2, Receipt, FileCheck, FileSpreadsheet, FileClock,
+  Scale, Stamp, Ban, Banknote, HandCoins, AlertOctagon, Container, CalendarClock,
+  TrendingDown, type LucideIcon,
 } from "lucide-react";
 import type { ReglaAuditoria } from "@/features/auditoria/types";
+
 
 export { reglaShortLabel } from "@/features/auditoria/domain/reglaLabels";
 
