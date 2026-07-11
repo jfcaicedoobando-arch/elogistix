@@ -4,7 +4,7 @@
  * Migrado a `FormDialogShell` (v13.120.0).
  */
 import { useState } from "react";
-import { Loader2, Building2 } from "lucide-react";
+import { Loader2, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,7 +75,7 @@ export function CrearProveedorDesdeCfdiDialog({
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
-      icon={Building2}
+      icon={Truck}
       title="Crear proveedor desde CFDI"
       description="El RFC del emisor no existe en tu catálogo. Crea el proveedor para vincular la factura."
       size="md"

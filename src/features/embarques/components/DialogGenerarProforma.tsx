@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, ArrowLeft, ArrowRight } from "lucide-react";
+import { Loader2, FileSpreadsheet, ArrowLeft, ArrowRight } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useDialogGenerarProformaController } from "@/features/embarques/hooks";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
@@ -31,7 +31,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
     <FormDialogShell
       open={open}
       onOpenChange={onOpenChange}
-      icon={FileText}
+      icon={FileSpreadsheet}
       title={isSeleccion ? "Generar Proforma" : "Confirmar Proforma"}
       description={
         isSeleccion
@@ -59,7 +59,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
               {c.isPending ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</>
               ) : (
-                <><FileText className="h-4 w-4 mr-2" /> Confirmar y Generar</>
+                <><FileSpreadsheet className="h-4 w-4 mr-2" /> Confirmar y Generar</>
               )}
             </Button>
           </>

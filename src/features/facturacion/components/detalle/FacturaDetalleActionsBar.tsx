@@ -13,7 +13,7 @@
  */
 import {
   Stamp, Mail, FileText, FileCode2, Ship, Trash2, Replace, Ban,
-  FileArchive, RefreshCw, DollarSign,
+  FileArchive, RefreshCw, HandCoins,
 } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
@@ -53,7 +53,7 @@ function buildPrimary(props: Props): DetalleActionItem | null {
     };
   }
   if (canEdit && flags.puedeRegistrarPago) {
-    return { id: "cobrar", label: "Registrar pago", icon: DollarSign, onClick: props.onRegistrarPago };
+    return { id: "cobrar", label: "Registrar pago", icon: HandCoins, onClick: props.onRegistrarPago };
   }
   if (!flags.sinTimbrar && !flags.estaCancelada) {
     return { id: "enviar", label: "Enviar por email", icon: Mail, onClick: props.onEnviarEmail };
