@@ -45,7 +45,9 @@ export const Cta: React.FC = () => {
           marginBottom: 40,
         }}
       >
-        <Img src={staticFile("images/logo.png")} style={{ height: 120, width: 120, objectFit: "contain", filter: "brightness(0) invert(1)" }} />
+        <div style={{ height: 120, width: 120, background: "#FFFFFF", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 30px rgba(37,99,235,0.35)" }}>
+          <Img src={staticFile("images/logo.png")} style={{ height: 100, width: 100, objectFit: "contain" }} />
+        </div>
         <div style={{ fontSize: 108, fontWeight: 800, color: "#FFFFFF", letterSpacing: -3, lineHeight: 1 }}>
           Libre Carga
         </div>

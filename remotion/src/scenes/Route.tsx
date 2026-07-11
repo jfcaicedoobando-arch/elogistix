@@ -4,11 +4,11 @@ import { colors, fontFamily } from "../theme";
 
 // 360 frames — CN → MX route with timeline events
 const EVENTS = [
-  { at: 0.12, label: "Booking confirmado", city: "Shanghai", flag: "🇨🇳" },
-  { at: 0.28, label: "Zarpe", city: "Shanghai", flag: "🇨🇳" },
-  { at: 0.52, label: "En tránsito", city: "Pacífico", flag: "🌊" },
-  { at: 0.74, label: "Arribo a puerto", city: "Manzanillo", flag: "🇲🇽" },
-  { at: 0.92, label: "Entregado", city: "Guadalajara", flag: "🇲🇽" },
+  { at: 0.12, label: "Booking confirmado", city: "Shanghai", tag: "CN" },
+  { at: 0.28, label: "Zarpe", city: "Shanghai", tag: "CN" },
+  { at: 0.52, label: "En tránsito", city: "Pacífico", tag: "MAR" },
+  { at: 0.74, label: "Arribo a puerto", city: "Manzanillo", tag: "MX" },
+  { at: 0.92, label: "Entregado", city: "Guadalajara", tag: "MX" },
 ];
 
 export const RouteScene: React.FC = () => {
@@ -115,8 +115,8 @@ export const RouteScene: React.FC = () => {
                 transform: `translateY(${y}px)`,
               }}
             >
-              <div style={{ fontSize: 14, color: colors.muted, letterSpacing: 2, textTransform: "uppercase", fontWeight: 600 }}>
-                {e.flag} {e.city}
+              <div style={{ fontSize: 14, color: colors.accent, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700 }}>
+                {e.tag} · {e.city}
               </div>
               <div style={{ fontSize: 22, color: colors.primary, fontWeight: 700, marginTop: 2 }}>{e.label}</div>
             </div>
