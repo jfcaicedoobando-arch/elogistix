@@ -18,6 +18,7 @@ import { LandingCtaFinal } from "../components/sections/LandingCtaFinal";
 import { LandingFooter } from "../components/sections/LandingFooter";
 import { MobileStickyCta } from "../components/sections/MobileStickyCta";
 import { FAQ } from "./landingCopy";
+import { useCaptureUtmParams } from "../hooks/useUtmParams";
 
 const FAQ_JSONLD = {
   "@context": "https://schema.org",
