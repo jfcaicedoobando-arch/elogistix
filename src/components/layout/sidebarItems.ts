@@ -131,6 +131,3 @@ export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
   { title: "Antigüedad", url: "/compras/aging", icon: LayoutList },
   { title: "Reportes", url: "/compras/reportes", icon: BarChart3 },
 ];
-
-// Referencia interna (legacy import): FileText mantenido para retrocompatibilidad.
-void FileText;
