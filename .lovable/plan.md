@@ -1,71 +1,98 @@
+# Auditoría exhaustiva de íconos — Plan
 
-# Auditoría de `lucide-react`
+Analogía: la primera pasada arregló los "letreros duplicados del centro de la ciudad" (sidebar, auditoría, estados). Ahora vamos calle por calle en cada colonia (módulo) para asegurar que ningún cartel esté mal puesto y que la señalética sea coherente en toda la app.
 
-## Estado actual
+## Alcance
 
-| Métrica | Valor |
-|---|---|
-| Versión instalada | **0.462.0** (nov 2024) |
-| Última en npm | **1.24.0** (jul 2026) |
-| Archivos que importan lucide | **578** |
-| Íconos únicos usados | **190** |
-| Import statements totales | **582** |
-| Uso de `DynamicIcon` / barrel dinámico | **0** (bien) |
-| Imports desde `lucide-react/dist/...` | **0** (bien) |
+~579 usos de `lucide-react` en producción, agrupados por módulo. Criterios:
+1. **Duplicados semánticos** — mismo ícono, conceptos distintos en la misma vista.
+2. **Genérico vs específico** — reemplazar `FileText`/`Circle`/`Square`/`Info` por íconos del dominio logístico cuando exista un mejor match.
+3. **Consistencia de familia** — el mismo concepto usa el mismo ícono en toda la app (ej. "pagar" siempre `Banknote`, "cliente" siempre `Building2`, "documento fiscal" siempre `Receipt`).
 
-## Diagnóstico
+Fuera de alcance: cambios de tamaño, color, `strokeWidth`, o migración masiva al wrapper `<Icon />` (esa migración va aparte).
 
-**Lo que ya está bien (top-of-the-line):**
-- 100% named imports (`import { X } from 'lucide-react'`) → tree-shaking óptimo con Vite.
-- Cero imports desde rutas internas (`/dist`), cero `import * as`.
-- Cero `DynamicIcon` innecesario (que forzaría cargar todo el paquete).
-- Los íconos están centralizados por dominio (`uiMappings.ts`, `estadoConfig.ts`, `sidebarItems.ts`), no dispersos con strings mágicos.
-- Uso consistente vía componentes (nunca SVG inline duplicados).
+## Fase 1 — Inventario y catálogo canónico (1 turno)
 
-**Lo mejorable:**
-1. **Versión muy atrasada.** Estamos ~19 meses detrás. Entre 0.462 → 1.24 hay: nuevos íconos, bugfixes de stroke, mejor tipado TS, soporte de `Icon` para `lucide-lab`, y sub-path exports optimizados. No es un major "React 19" ni parte del pin de plataforma (React 18 / Vite 5 / TS 5 / Tailwind 3), así que el bump es seguro.
-2. **190 íconos únicos** en 578 archivos → algunos son casi duplicados semánticos (p.ej. varios "check", "alerta"). Se puede consolidar vía `uiMappings.ts`.
-3. No hay un **wrapper `<Icon />`** propio que estandarice `size`, `strokeWidth` y `aria-label`. Hoy cada archivo pasa `className="h-4 w-4"` a mano (inconsistencias 3/4/5/6).
-4. No hay **lint rule** que impida `import * as Icons from 'lucide-react'` o `lucide-react/dist/...` en el futuro.
+Spawn de un subagente `capable` con lectura de todo `src/features/**` + `src/components/**` + `src/pages/**`. Produce:
 
-## Plan de mejora (en orden, todo opcional/incremental)
+- **Inventario CSV-like**: `archivo:línea | ícono | contexto (label/aria/tooltip cercano) | módulo`.
+- **Diccionario canónico propuesto** — un solo ícono por concepto recurrente:
 
-### Fase 1 — Bump de versión (bajo riesgo)
-- Actualizar `package.json`: `"lucide-react": "^1.24.0"`.
-- `bun install`.
-- Smoke test: `bun run test:fast`, `bun run build`, revisar visualmente sidebar + dashboard (donde viven los 30+ íconos de `sidebarItems.ts`).
-- Riesgo: bajísimo. La API `<Icon size color strokeWidth />` no cambió. Sólo se renombraron/agregaron íconos; si alguno explota, TS lo marca en build.
+```text
+cliente (empresa)      → Building2
+proveedor              → Truck
+usuario (persona)      → Users / User
+factura (fiscal)       → Receipt
+proforma / cotización  → FileSpreadsheet / ClipboardList
+documento genérico     → FileText
+pago (salida)          → Banknote / ArrowRightLeft
+cobro (entrada)        → HandCoins
+tesorería / banco      → Landmark
+embarque marítimo      → Ship
+contenedor             → Container
+aduana / bodega        → Warehouse
+tiempo / demora        → Timer / Clock
+flujo operativo        → Workflow
+aprobación             → ClipboardCheck
+alerta seguridad       → ShieldAlert
+archivado / cerrado    → Archive
+```
 
-### Fase 2 — Wrapper `<Icon />` de proyecto
-- Crear `src/components/ui/icon.tsx` con:
-  - `size` default 16, `strokeWidth` default 2.
-  - Prop `label?: string` → si existe pone `aria-label` y quita `aria-hidden`; si no, `aria-hidden="true"`.
-  - Recibe el componente lucide como prop `as`.
-- Migración **no forzada**: usarlo en código nuevo; codemod opcional después.
+Entregable: `docs/icon-catalog.md` (nuevo) — lo consumimos manualmente y como referencia para futuras PRs.
 
-### Fase 3 — Consolidar catálogo
-- Ampliar `src/lib/ui/uiMappings.ts` como fuente única para "ícono de estado X", "ícono de módulo Y".
-- Reducir 190 → ~150 íconos únicos.
+## Fase 2 — Reporte por módulo (1 turno, mismo subagente)
 
-### Fase 4 — Guardrails
-- Añadir regla ESLint `no-restricted-imports` que prohíba:
-  - `lucide-react/dist/*`
-  - `import * as ... from 'lucide-react'`
-- Agrega test de arquitectura tipo "ningún archivo importa >15 íconos de lucide-react" (indicador de god-file).
+Para cada módulo, tabla con: `Ícono actual · Contexto · Problema (duplicado/genérico/inconsistente) · Ícono sugerido · Severidad`.
 
-### Verificación final
-- `bun run test:fast`, `bun run lint`, `bun run build`.
-- Bump `APP_VERSION` a `13.260.0` + entrada en `CHANGELOG.md`.
+Módulos a cubrir:
+
+```text
+embarques         cotizaciones    facturacion     proformas
+compras           cartera         tesoreria       comisiones
+crm               clientes        directorio      costeo
+auditoria         reportes        profit          admin
+onboarding        marketing       dashboard       shared/layout
+```
+
+Severidad:
+- **Alta**: duplicado en misma vista, o rompe familia establecida.
+- **Media**: genérico donde hay específico obvio.
+- **Baja**: sugerencia estilística.
+
+## Fase 3 — Aplicación en lotes (3 turnos)
+
+Un lote por severidad, con commit + bump + CHANGELOG separado:
+
+1. **Lote A — Severidad Alta** (bump `13.262.0`): fix duplicados y rupturas de familia.
+2. **Lote B — Severidad Media** (bump `13.263.0`): genérico→específico.
+3. **Lote C — Severidad Baja** (bump `13.264.0`, opcional): pulido final.
+
+Cada lote pasa por: `bun run tsgo --noEmit` + `bun run test:fast` + baseline arquitectural (Power of 10).
+
+## Fase 4 — Guardrail (mismo turno que Lote A)
+
+Nuevo test arquitectural `src/__tests__/architecture/icon-canonical.test.ts` que verifique el diccionario canónico contra grep del código:
+- `Receipt` sólo en contextos fiscales (facturas, CFDI).
+- `Building2` sólo para clientes/empresas.
+- `PiggyBank` no aparece en contextos de cobranza.
+
+Esto previene regresiones futuras sin bloquear casos legítimos (allowlist explícita por archivo).
+
+## Verificación final
+
+- `bun run tsgo --noEmit` verde.
+- `bun run test:fast` 4538+ tests verdes.
+- Screenshot Playwright de sidebar completo, módulo Compras, Auditoría y Embarques para confirmar visual.
+- Actualizar `mem://style/ui-visual-standards` con el diccionario canónico para que futuras sesiones lo respeten.
 
 ## Detalles técnicos
 
-- No requiere tocar el pin de plataforma (React 18 / Vite 5 / Tailwind 3 / TS 5) — `lucide-react` no está en la lista de versiones prohibidas.
-- Tree-shaking: Vite 5 + ESM named imports ya elimina los ~1,400 íconos no usados. El bundle sólo incluye los 190 en uso.
-- `DynamicIcon` sólo se justificaría si los nombres vinieran de una API/CMS — no es nuestro caso, no lo introducimos.
+- **Tamaño estimado**: ~30-60 archivos tocados en total (mayoría cambios de 1 línea: `import { X } from "lucide-react"` + JSX).
+- **Riesgo**: bajo. Todos los íconos existen en `lucide-react@1.24.0`. No hay cambios de comportamiento, sólo visual.
+- **Rollback**: cada lote es un commit independiente, revertible aislado.
+- **No tocar**: `remotion/` (video demo), `docs/`, tests que hardcodean iconos (revisar caso por caso).
 
-## Respuesta rápida a tus preguntas
+## Preguntas abiertas (decidibles después de Fase 1)
 
-- **¿Está limpia?** Sí, en patrón de import y organización.
-- **¿Top-of-the-line?** En patrón sí; en versión **no**, estamos 19 meses atrás.
-- **¿Se puede mejorar?** Sí: bump a 1.x, wrapper `<Icon />`, ESLint guardrail.
-- **¿Es la versión más nueva?** No. 0.462.0 vs 1.24.0.
+- ¿Queremos unificar íconos del dashboard ejecutivo (`Profit`) con los de reportes operativos, o mantenerlos distintos como señal visual de "vista ejecutiva vs operativa"?
+- ¿Aplicamos el diccionario canónico al portal de cliente (`/portal/*`) o lo tratamos como sistema visualmente separado?
