@@ -6,7 +6,6 @@
  * de vencimiento, orden y paginación sincronizados con la URL vía `nuqs`, y
  * barra `<UnifiedFiltersBar />` compartida con Facturación/Embarques.
  */
-import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -15,25 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas";
-import { resumirCartera, matchesUrgencia, type SaldosPorMonedaCartera, type UrgenciaCartera } from "@/features/bandejas/domain/aggregates";
-import { equivalenteMxn } from "@/features/bandejas/domain/carteraFx";
-import { useExchangeRates } from "@/features/catalogos/hooks";
+import { useCarteraPage } from "@/features/bandejas/hooks/useCarteraPage";
+import { type SaldosPorMonedaCartera } from "@/features/bandejas/domain/aggregates";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
-
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
-import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
-import { buildCarteraColumns, type CarteraRow } from "./_sections/carteraColumns";
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
-
-interface CarteraFilters extends Record<string, string> {
-  moneda: string;
-  urgencia: string; // UrgenciaCartera
-}
-
-const DEFAULTS: CarteraFilters = { moneda: "todas", urgencia: "accionable" };
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
@@ -47,55 +34,18 @@ function formatNativos(b: SaldosPorMonedaCartera): string {
 }
 
 export default function Cartera() {
-  const { data = [], isLoading } = useCarteraPendiente();
-  const { data: rates } = useExchangeRates();
-  const tcUsdMxn = rates?.usdMxn ?? 0;
-
-  const monedas = useMemo(
-    () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
-    [data],
-  );
-
-  const paged = useClientPagedList<CarteraRow, CarteraFilters>({
-    data,
+  const {
+    paged,
+    monedas,
+    scoped,
+    saldosNativos,
+    vencidasCount,
+    vencidoNativo,
+    eqTotal,
+    eqVencido,
     isLoading,
-    defaultFilters: DEFAULTS,
-    filterLabels: { moneda: "Moneda", urgencia: "Urgencia" },
-    defaultSort: { key: "dias", dir: "desc" },
-    searchAccessor: (r) =>
-      `${r.numero ?? ""} ${r.cliente_nombre ?? ""} ${r.expediente ?? ""}`,
-    filterPredicate: (r, ff) => {
-      if (ff.moneda !== "todas" && r.moneda !== ff.moneda) return false;
-      if (!matchesUrgencia(r.dias_vencido, ff.urgencia as UrgenciaCartera)) return false;
-      return true;
-    },
-    dateAccessor: (r) => r.fecha_vencimiento,
-    sorters: {
-      numero: (a, b) => (a.numero ?? "").localeCompare(b.numero ?? ""),
-      cliente: (a, b) => (a.cliente_nombre ?? "").localeCompare(b.cliente_nombre ?? ""),
-      vencimiento: (a, b) => (a.fecha_vencimiento ?? "").localeCompare(b.fecha_vencimiento ?? ""),
-      dias: (a, b) => a.dias_vencido - b.dias_vencido,
-      total: (a, b) => Number(a.total) - Number(b.total),
-      saldo: (a, b) => Number(a.saldo) - Number(b.saldo),
-    },
-  });
-
-  // KPIs sobre el subconjunto filtrado por urgencia + moneda (ignora búsqueda/rango
-  // de fechas: los cards resumen "lo que muestra el módulo con estos filtros").
-  const scoped = useMemo(
-    () =>
-      data.filter(
-        (r) =>
-          matchesUrgencia(r.dias_vencido, (paged.filters.urgencia ?? "accionable") as UrgenciaCartera) &&
-          (paged.filters.moneda === "todas" || r.moneda === paged.filters.moneda),
-      ),
-    [data, paged.filters.urgencia, paged.filters.moneda],
-  );
-  const { saldosNativos, vencidasCount, vencidoNativo } = resumirCartera(scoped);
-  const eqTotal = equivalenteMxn(saldosNativos, tcUsdMxn);
-  const eqVencido = equivalenteMxn(vencidoNativo, tcUsdMxn);
-
-  const columns = useMemo(() => buildCarteraColumns(), []);
+    columns,
+  } = useCarteraPage();
 
   return (
     <PageContainer>
@@ -200,7 +150,7 @@ export default function Cartera() {
       {/* Desktop / tablet: DataTable unificada con orden + paginación server-tagged. */}
       <Card className="hidden sm:block">
         <CardContent className="p-0">
-          <DataTable<CarteraRow>
+          <DataTable
             columns={columns}
             data={paged.rows}
             rowKey={(r) => r.factura_id}

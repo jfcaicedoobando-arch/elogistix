@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.253.4] - 2026-07-11
+- **Deps · Lote A (seguras)**: `bun update` de ~37 dependencias patch/minor, incluyendo Radix UI, Sentry, Tanstack Query, Supabase-js, react-hook-form y herramientas de desarrollo. Migrada configuración de Vitest 4: `poolOptions` ya no existe; se movieron `singleFork`, `maxForks`, `minForks`, `isolate` y `execArgv` al nivel `test` en `vitest.config.ts` y `vitest.fast.config.ts`. Refactor menor en `Cartera.tsx` (extracción a `useCarteraPage.ts`) para mantener la regla de 200 líneas tras las actualizaciones.
+
 ## [13.253.3] - 2026-07-11
 - **Cobranza · Cartera enfocada**: `/cartera` ya no lista todas las facturas con saldo. Nuevo filtro **Urgencia** con default `Accionable` (vencidas + por vencer en ≤7 días); opciones `Solo vencidas`, `Por vencer (≤7d)` y `Todas con saldo` para consulta puntual. Los KPIs "Facturas en foco", "Saldo total" y "Vencido" se recalculan sobre el subconjunto filtrado por urgencia + moneda. Badge de la columna Días diferencia visualmente `Vencida Xd` (destructive) vs `Por vencer Xd` (secondary). Nuevo helper puro `matchesUrgencia` con tests (5 casos: +10 / 0 / -3 / -7 / -30 días).
 

@@ -37,15 +37,11 @@ export default defineConfig({
     // de OOM. Subir a 3-4 forks requirió heap ≤4 GB y disparó OOM en archivos
     // PDF pesados; 2 forks @ 8 GB es el punto óptimo verificado.
     pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
-        maxForks: 1,
-        minForks: 1,
-        isolate: true,
-        execArgv: ["--max-old-space-size=8192", "--expose-gc"],
-      },
-    },
+    singleFork: true,
+    maxForks: 1,
+    minForks: 1,
+    isolate: true,
+    execArgv: ["--max-old-space-size=8192", "--expose-gc"],
     fileParallelism: false,
     isolate: true,
     sequence: { shuffle: false },
