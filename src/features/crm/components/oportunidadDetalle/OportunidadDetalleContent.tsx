@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, FileText, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, ClipboardList, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -66,7 +66,7 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
         actions={canEdit ? (
           <div className="flex gap-2">
             <Button variant="outline" onClick={actions.crearCotizacion} disabled={actions.crearCotPending}>
-              {actions.crearCotPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
+              {actions.crearCotPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ClipboardList className="h-4 w-4 mr-1" />}
               Crear cotización
             </Button>
             <Button variant="outline" onClick={() => setEditOpen(true)}>

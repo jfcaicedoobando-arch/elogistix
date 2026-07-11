@@ -1,4 +1,4 @@
-import { FileText, Banknote, AlertCircle, Inbox } from "lucide-react";
+import { Receipt, Banknote, AlertCircle, Inbox } from "lucide-react";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { ROUTES } from "@/constants/routes";
@@ -26,7 +26,7 @@ export function HoyKpiRow({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <KpiCard
-        icon={FileText}
+        icon={Receipt}
         label="Por facturar"
         value={porFacturar}
         sublabel="Embarques con hueco"

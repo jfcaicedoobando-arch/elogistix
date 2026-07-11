@@ -1,4 +1,4 @@
-import { Ship, FileText, Receipt, LayoutDashboard, User, type LucideIcon } from "lucide-react";
+import { Ship, ClipboardList, Receipt, LayoutDashboard, User, type LucideIcon } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 
 export interface PortalNavItem {
@@ -10,7 +10,7 @@ export interface PortalNavItem {
 export const PORTAL_NAV_ITEMS: PortalNavItem[] = [
   { label: "Inicio", href: ROUTES.PORTAL, icon: LayoutDashboard },
   { label: "Embarques", href: ROUTES.PORTAL_EMBARQUES, icon: Ship },
-  { label: "Cotizaciones", href: ROUTES.PORTAL_COTIZACIONES, icon: FileText },
+  { label: "Cotizaciones", href: ROUTES.PORTAL_COTIZACIONES, icon: ClipboardList },
   { label: "Facturas", href: ROUTES.PORTAL_FACTURAS, icon: Receipt },
   { label: "Perfil", href: ROUTES.PORTAL_PERFIL, icon: User },
 ];

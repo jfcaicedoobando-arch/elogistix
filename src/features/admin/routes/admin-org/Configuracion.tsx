@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { Save, Building2, FileText, Anchor, Wrench, Scale } from "lucide-react";
+import { Save, Building2, Receipt, Anchor, Wrench, Scale } from "lucide-react";
 import { useConfiguracionState } from "@/features/configuracion/hooks";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import TabEmpresa from "@/features/configuracion/components/TabEmpresa";
@@ -57,7 +57,7 @@ export default function Configuracion() {
           {!esContador && (
             <TabsTrigger value="empresa" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Empresa</TabsTrigger>
           )}
-          <TabsTrigger value="facturacion" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> Facturación</TabsTrigger>
+          <TabsTrigger value="facturacion" className="gap-1.5"><Receipt className="h-3.5 w-3.5" /> Facturación</TabsTrigger>
           {!esContador && (
             <>
               <TabsTrigger value="catalogos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Catálogos</TabsTrigger>

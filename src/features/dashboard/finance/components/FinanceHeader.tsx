@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/shared/PageHeader";
-import { AlertCircle, Banknote, FileText } from "lucide-react";
+import { AlertCircle, Banknote, Receipt } from "lucide-react";
 import { formatCurrencyCompact } from "@/lib/formatters";
 
 interface Props {
@@ -53,7 +53,7 @@ export function FinanceHeader({
       : null,
     porTimbrar > 0
       ? {
-          icon: <FileText className="h-3.5 w-3.5" />,
+          icon: <Receipt className="h-3.5 w-3.5" />,
           label: `${porTimbrar} por timbrar`,
           className: "border-blue-300/50 bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300",
         }

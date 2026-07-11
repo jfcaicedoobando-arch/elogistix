@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Users, Ship, UserCheck, FileText } from "lucide-react";
+import { Users, Ship, UserCheck, ClipboardList } from "lucide-react";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
 import CrearMiembroOrgDialog from "@/features/admin/components/CrearMiembroOrgDialog";
 import { OrgHeader } from "@/features/admin/components/orgDetalle/OrgHeader";
@@ -48,7 +48,7 @@ export default function AdminOrgDetalle() {
         <KpiCard titulo="Miembros" valor={memberCount} icono={Users} color="blue" />
         <KpiCard titulo="Embarques" valor={embarqueCount} icono={Ship} color="violet" />
         <KpiCard titulo="Clientes" valor={clienteCount} icono={UserCheck} color="emerald" />
-        <KpiCard titulo="Cotizaciones" valor={cotizacionCount} icono={FileText} color="red" />
+        <KpiCard titulo="Cotizaciones" valor={cotizacionCount} icono={ClipboardList} color="red" />
       </div>
 
       <OrgInfoCard

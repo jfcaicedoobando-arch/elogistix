@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Package } from "lucide-react";
+import { Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -159,7 +159,7 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Ship className="h-4 w-4 text-muted-foreground" />
             Cargas activas por cliente
           </CardTitle>
           <p className="text-xs text-muted-foreground leading-snug">

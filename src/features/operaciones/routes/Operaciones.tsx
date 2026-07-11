@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
-import { TrendingUp, AlertTriangle, Package, Container, Ship, RefreshCw } from "lucide-react";
+import { TrendingUp, AlertTriangle, Container, Ship, RefreshCw } from "lucide-react";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
@@ -59,7 +59,7 @@ export default function Operaciones() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="info" loading={isLoading} />
+        <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Ship} color="info" loading={isLoading} />
         <KpiCard titulo="Contenedores (TEU)" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
           {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>

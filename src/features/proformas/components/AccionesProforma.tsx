@@ -10,7 +10,7 @@
  */
 import { useState } from "react";
 import {
-  Download, Ship, FileText, Mail, CheckCircle2, XCircle,
+  Download, Ship, Receipt, Mail, CheckCircle2, XCircle,
 } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
@@ -72,7 +72,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
   });
 
   const primary: DetalleActionItem | null = puedeConvertir
-    ? { id: "convertir", label: "Convertir a factura", icon: FileText, onClick: onConvertir, loading: convirtiendo }
+    ? { id: "convertir", label: "Convertir a factura", icon: Receipt, onClick: onConvertir, loading: convirtiendo }
     : null;
 
   const secondary: DetalleActionItem[] = [
