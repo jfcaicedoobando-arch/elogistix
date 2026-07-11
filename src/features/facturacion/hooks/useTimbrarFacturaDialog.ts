@@ -88,17 +88,27 @@ export function useTimbrarFacturaDialog(
   const [enviarEmail, setEnviarEmail] = useState(true);
   const [modoExpandido, setModoExpandido] = useState(false);
 
+  const facturaId = factura?.id;
+  const facturaUsoCfdi = factura?.uso_cfdi;
+  const facturaFormaPago = factura?.forma_pago;
+  const facturaMetodoPago = factura?.metodo_pago;
+  const clienteUsoCfdi = cliente?.uso_cfdi_default;
+  const defaultsUsoCfdi = defaults?.uso_cfdi;
+  const defaultsFormaPago = defaults?.forma_pago;
+  const defaultsMetodoPago = defaults?.metodo_pago;
+
   useEffect(() => {
-    if (!factura) return;
-    const next = resolverDefaults(factura, cliente, defaults);
-    setUsoCfdi(next.usoCfdi);
-    setFormaPago(next.formaPago);
-    setMetodoPago(next.metodoPago);
+    if (!facturaId) return;
+    const usoCfdi = facturaUsoCfdi ?? defaultsUsoCfdi ?? clienteUsoCfdi ?? "G03";
+    const formaPago = facturaFormaPago ?? defaultsFormaPago ?? "99";
+    const metodoPago = facturaMetodoPago ?? defaultsMetodoPago ?? "PPD";
+    setUsoCfdi(usoCfdi);
+    setFormaPago(formaPago);
+    setMetodoPago(metodoPago);
     setModoExpandido(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    factura?.id, factura?.uso_cfdi, factura?.forma_pago, factura?.metodo_pago,
-    cliente?.uso_cfdi_default, defaults?.uso_cfdi, defaults?.forma_pago, defaults?.metodo_pago,
+    facturaId, facturaUsoCfdi, facturaFormaPago, facturaMetodoPago,
+    clienteUsoCfdi, defaultsUsoCfdi, defaultsFormaPago, defaultsMetodoPago,
   ]);
 
   const onConfirm = async () => {
