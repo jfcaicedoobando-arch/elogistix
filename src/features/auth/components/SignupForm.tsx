@@ -13,6 +13,7 @@ export function SignupForm() {
   const { toast } = useToast();
   const [signupName, setSignupName] = useState("");
   const [signupCompany, setSignupCompany] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupPassword2, setSignupPassword2] = useState("");
