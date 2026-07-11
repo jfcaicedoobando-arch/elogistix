@@ -110,7 +110,7 @@ export function HallazgosFiltrosFechas({ etaDesde, etaHasta, setEtaDesde, setEta
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar mode="single" selected={etaDesde} onSelect={setEtaDesde} locale={es}
-            initialFocus className={cn("p-3 pointer-events-auto")} />
+            autoFocus className={cn("p-3 pointer-events-auto")} />
         </PopoverContent>
       </Popover>
 
