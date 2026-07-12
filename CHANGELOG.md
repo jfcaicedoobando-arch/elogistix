@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.278.0] - 2026-07-12
+- **Embarques · migración a `useMutationWithFeedback` optimista**: `useActualizarEta`, `useActualizarFechaLlegadaReal` y `useSyncEstadoEmbarque` ahora escriben el detalle en caché (detail + full) antes de que responda el servidor, con rollback automático si falla. UX percibida: el cambio se ve instantáneo en el tab de Tracking / kanban.
+- Añadida opción `silent` a `useMutationWithFeedback` para casos donde el caller clasifica sus propios toasts (ej. `docs_faltantes`). Rollback e invalidaciones siguen activas aunque los toasts estén silenciados.
+- Refactor: reemplazados 3 `useMutation` a mano por el wrapper estandarizado.
+- Typecheck ✓.
+
 ## [13.277.0] - 2026-07-12
 - **TanStack Query · Fase 3 (optimistic UI)**: `useMutationWithFeedback` ahora acepta `optimistic: { queryKey, updater }` (o array para varias queries). El wrapper orquesta el flujo completo: `cancelQueries` → snapshot → `setQueryData` optimista → rollback automático si falla → `invalidateQueries` en `onSettled` para reconciliar con el servidor. Preserva `onMutate`/`onSuccess`/`onError`/`onSettled` del consumer.
 - `queryKey` puede ser estática o función `(variables) => QueryKey` — útil cuando el id vive dentro de las variables (`vars => queryKeys.embarques.detail(vars.id)`).
