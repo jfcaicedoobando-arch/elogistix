@@ -11,6 +11,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { fetchReferenciasEmbarque } from "@/features/facturacion/services/referenciasEmbarque";
+import { queryKeys } from "@/lib/query";
 
 export interface ReferenciasEmbarqueFactura {
   expediente: string | null;
@@ -53,7 +54,7 @@ export function formatearPrefijoReferencias(ref: ReferenciasEmbarqueFactura | nu
 export function useReferenciasEmbarqueFactura(factura: FacturaInput | null | undefined) {
   const embarqueId = factura?.embarque_id ?? null;
   return useQuery<ReferenciasEmbarqueFactura>({
-    queryKey: ["referencias_embarque_factura", embarqueId, factura?.expediente ?? "", factura?.referencia_bl ?? ""],
+    queryKey: queryKeys.facturacion.referenciasEmbarque(embarqueId, factura?.expediente ?? "", factura?.referencia_bl ?? ""),
     enabled: !!factura,
     staleTime: 60_000,
     queryFn: async () => {

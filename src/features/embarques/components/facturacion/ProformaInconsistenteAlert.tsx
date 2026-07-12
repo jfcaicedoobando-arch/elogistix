@@ -15,6 +15,7 @@ import type { ProformaConFactura } from "@/features/proformas/services";
 import type { Tables } from "@/types/db";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 interface Props {
   proformaBorrador: ProformaConFactura;
   conceptosPendientes: Tables<"conceptos_venta">[];
@@ -38,9 +39,9 @@ export function ProformaInconsistenteAlert({
     },
     onSuccess: () => {
       toast.success(`Conceptos asignados a ${proformaBorrador.numero}`);
-      qc.invalidateQueries({ queryKey: ["proformas-embarque", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["conceptos-venta", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["embarque", embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.proformasEmbarque(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Error desconocido";

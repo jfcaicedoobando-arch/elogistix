@@ -10,6 +10,7 @@ import {
 import { emitirFacturapi } from "@/features/facturacion/services/facturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;
@@ -19,7 +20,7 @@ export interface CrearFacturaManualVars {
 export function useCrearFacturaManual() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["fiscal", "factura-manual"],
+    mutationKey: queryKeys.facturacion.facturaManual,
     mutationFn: async (vars: CrearFacturaManualVars) => {
       const facturaId = await crearFacturaManual(vars.input);
       if (vars.timbrarAlGuardar) {

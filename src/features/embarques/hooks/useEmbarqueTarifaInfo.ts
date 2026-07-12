@@ -8,12 +8,13 @@ import {
   obtenerEmbarqueTarifaInfo,
   type EmbarqueTarifaInfo,
 } from "@/features/embarques/services/tarifaInfo";
+import { queryKeys } from "@/lib/query";
 
 export type { EmbarqueTarifaInfo } from "@/features/embarques/services/tarifaInfo";
 
 export function useEmbarqueTarifaInfo(embarqueId: string | undefined) {
   return useQuery<EmbarqueTarifaInfo | null>({
-    queryKey: ["embarques", "tarifa-info", embarqueId],
+    queryKey: queryKeys.embarques.tarifaInfo(embarqueId),
     enabled: Boolean(embarqueId),
     staleTime: 30_000,
     queryFn: () => obtenerEmbarqueTarifaInfo(embarqueId as string),

@@ -9,8 +9,9 @@ import {
   type SeguroEmbarque,
   type SeguroEmbarqueInput,
 } from "@/features/embarques/services/seguros";
+import { queryKeys } from "@/lib/query";
 
-const KEY = (embarqueId?: string) => ["embarque", embarqueId, "seguros"] as const;
+const KEY = queryKeys.embarques.seguros;
 
 export function useSegurosEmbarque(embarqueId: string | undefined) {
   return useQuery<SeguroEmbarque[]>({
@@ -23,7 +24,7 @@ export function useSegurosEmbarque(embarqueId: string | undefined) {
 
 function invalidatePnl(qc: ReturnType<typeof useQueryClient>, embarqueId?: string) {
   qc.invalidateQueries({ queryKey: KEY(embarqueId) });
-  qc.invalidateQueries({ queryKey: ["embarque", embarqueId, "pnl-financiero"] });
+  qc.invalidateQueries({ queryKey: queryKeys.embarques.pnlFinanciero(embarqueId) });
 }
 
 export function useCreateSeguro(embarqueId: string) {

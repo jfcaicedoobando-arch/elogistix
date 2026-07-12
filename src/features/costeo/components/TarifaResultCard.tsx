@@ -4,6 +4,7 @@
  * para cumplir Power of 10 (≤200 líneas) tras el refactor de complejidad.
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { Card } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
@@ -32,7 +33,7 @@ interface Props {
 
 export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", meta }: Props) {
   const { data: recargos = [] } = useQuery({
-    queryKey: ["costeo", "tarifa-recargos", row.id],
+    queryKey: queryKeys.costeo.tarifas.recargos(row.id),
     queryFn: () => fetchRecargosDeTarifa(row.id),
     staleTime: 60 * 1000,
   });

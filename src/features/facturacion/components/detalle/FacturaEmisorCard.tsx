@@ -8,10 +8,11 @@ import { Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldGridSkeleton } from "@/components/shared/skeletons";
 import { fetchEmisorEmpresa } from "@/features/configuracion/services";
+import { queryKeys } from "@/lib/query";
 
 export function FacturaEmisorCard() {
   const { data: emisor, isLoading } = useQuery({
-    queryKey: ["emisor-empresa"],
+    queryKey: queryKeys.facturacion.emisorEmpresa,
     queryFn: fetchEmisorEmpresa,
     staleTime: 5 * 60 * 1000,
   });

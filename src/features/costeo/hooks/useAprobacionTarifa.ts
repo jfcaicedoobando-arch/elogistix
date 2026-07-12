@@ -2,6 +2,7 @@
  * Hook: mutaciones de aprobación/rechazo/reactivación de tarifas para operaciones.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { toast } from "sonner";
 import { aprobarTarifa, rechazarTarifa, reactivarTarifa } from "@/features/costeo/services/aprobacion";
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -15,8 +16,8 @@ function describeError(e: unknown): string {
 export function useAprobacionTarifa() {
   const qc = useQueryClient();
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["costeo-tarifas"] });
-    qc.invalidateQueries({ queryKey: ["portal-agente", "tarifas"] });
+    qc.invalidateQueries({ queryKey: queryKeys.costeo.tarifas.all });
+    qc.invalidateQueries({ queryKey: queryKeys.portalAgente.tarifas() });
   };
 
   const aprobar = useMutation({

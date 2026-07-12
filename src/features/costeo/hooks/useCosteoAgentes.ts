@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 import {
   fetchCosteoAgentes,
   insertCosteoAgente,
@@ -10,12 +11,10 @@ import {
   type CosteoAgenteInput,
 } from "@/features/costeo/services/agentes";
 
-const KEY = ["costeo", "agentes"] as const;
-
 export function useCosteoAgentes() {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [...KEY, organizationId],
+    queryKey: queryKeys.costeo.agentes.list(organizationId),
     queryFn: () => fetchCosteoAgentes(organizationId!),
     enabled: !!organizationId,
     staleTime: 5 * 60 * 1000,
@@ -26,7 +25,7 @@ export function useCosteoAgenteMutations() {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
   const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: KEY });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.costeo.agentes.all });
 
   const crear = useMutation({
     mutationFn: (input: CosteoAgenteInput) => insertCosteoAgente(organizationId!, input),

@@ -21,6 +21,7 @@ import { useAutoSaveDatosFiscales } from "@/features/facturacion/hooks/useAutoSa
 import { inicialesDatosFiscales } from "@/features/facturacion/domain/datosFiscalesForm";
 import { DatosFiscalesForm } from "./DatosFiscalesForm";
 import { AutoSaveIndicator } from "./AutoSaveIndicator";
+import { queryKeys } from "@/lib/query";
 
 interface Props {
   factura: FacturaDetalle;
@@ -28,7 +29,7 @@ interface Props {
 
 export function FacturaDatosFiscalesCard({ factura }: Props) {
   const { data: cliente } = useQuery<ClienteFiscalRow | null>({
-    queryKey: ["cliente_fiscal", factura.cliente_id],
+    queryKey: queryKeys.facturacion.clienteFiscal(factura.cliente_id),
     enabled: !!factura.cliente_id,
     queryFn: () => fetchClienteFiscal(factura.cliente_id!),
   });

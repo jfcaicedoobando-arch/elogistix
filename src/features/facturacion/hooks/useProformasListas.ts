@@ -4,6 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { useOrgFilter } from "@/hooks/shared";
+import { queryKeys } from "@/lib/query";
 import {
   fetchProformasListas,
   fetchProformasListasCount,
@@ -17,7 +18,7 @@ const STALE = 60_000;
 export function useProformasListas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["facturacion", "bandeja", "proformas-listas", organizationId],
+    queryKey: queryKeys.facturacion.bandejaProformasListas(organizationId),
     queryFn: () => fetchProformasListas(organizationId!),
     enabled: !!organizationId,
     staleTime: STALE,
@@ -27,7 +28,7 @@ export function useProformasListas() {
 export function useProformasListasCount() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["facturacion", "bandeja", "proformas-listas", "count", organizationId],
+    queryKey: queryKeys.facturacion.bandejaProformasListasCount(organizationId),
     queryFn: () => fetchProformasListasCount(organizationId!),
     enabled: !!organizationId,
     staleTime: STALE,

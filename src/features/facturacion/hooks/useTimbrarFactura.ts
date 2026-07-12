@@ -4,10 +4,11 @@ import { emitirFacturapi, cancelarFacturapi, type MotivoCancelacionSat } from "@
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 export function useTimbrarFactura() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["fiscal", "emitir-factura"],
+    mutationKey: queryKeys.facturacion.emitirFactura,
     mutationFn: (facturaId: string) => emitirFacturapi(facturaId),
     onSuccess: (res) => {
       toast.success(`Factura timbrada · UUID ${res.uuid.slice(0, 8)}…`);
@@ -20,7 +21,7 @@ export function useTimbrarFactura() {
 export function useCancelarFactura() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["fiscal", "cancelar-factura"],
+    mutationKey: queryKeys.facturacion.cancelarFactura,
     mutationFn: (vars: {
       facturaId: string;
       motivo: MotivoCancelacionSat;

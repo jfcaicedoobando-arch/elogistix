@@ -3,9 +3,10 @@ import { toast } from "sonner";
 import { fetchGarantiasEmbarque, updateGarantia, type UpdateGarantiaInput } from "../services/garantias";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 export function useGarantiasContenedor(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: ["garantias-embarque", embarqueId],
+    queryKey: queryKeys.embarques.garantias(embarqueId),
     queryFn: () => fetchGarantiasEmbarque(embarqueId!),
     enabled: !!embarqueId,
   });
@@ -16,7 +17,7 @@ export function useUpdateGarantia(embarqueId: string | undefined) {
   return useMutation({
     mutationFn: (input: UpdateGarantiaInput) => updateGarantia(input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["garantias-embarque", embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.garantias(embarqueId) });
       toast.success("Garantía actualizada");
     },
     onError: (e: unknown) => {

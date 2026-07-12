@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
 import {
@@ -14,12 +15,11 @@ import { fetchProveedoresPorTipo } from "@/features/costeo/services/agentes";
 import type { NavieraCondicionInput, DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
-const KEY = ["costeo", "navieras_condiciones"] as const;
 
 export function useCondicionesNaviera() {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [...KEY, organizationId],
+    queryKey: queryKeys.costeo.navieras.condiciones.list(organizationId),
     queryFn: () => fetchCondicionesNaviera(organizationId!),
     enabled: !!organizationId,
     staleTime: 5 * 60 * 1000,
@@ -30,7 +30,7 @@ export function useCondicionNavieraMutations() {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
   const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: KEY });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.costeo.navieras.condiciones.all });
 
   const guardar = useMutation({
     mutationFn: (params: { input: NavieraCondicionInput; id?: string }) =>
@@ -58,7 +58,7 @@ export function useCondicionNavieraMutations() {
 
 export function useDemorasTramos(navieraCondicionId: string | null) {
   return useQuery({
-    queryKey: ["costeo", "demoras_tramos", navieraCondicionId],
+    queryKey: queryKeys.costeo.navieras.demorasTramos.list(navieraCondicionId),
     queryFn: () => fetchDemorasTramos(navieraCondicionId!),
     enabled: !!navieraCondicionId,
     staleTime: 5 * 60 * 1000,
@@ -77,7 +77,7 @@ export function useReemplazarTramos() {
       replaceDemorasTramos(params.navieraCondicionId, params.tipoContenedorId, params.tramos),
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({
-        queryKey: ["costeo", "demoras_tramos", vars.navieraCondicionId],
+        queryKey: queryKeys.costeo.navieras.demorasTramos.list(vars.navieraCondicionId),
       });
       toast({ title: "Tabulador actualizado" });
     },
@@ -88,7 +88,7 @@ export function useReemplazarTramos() {
 
 export function useTiposContenedorDemoras() {
   return useQuery({
-    queryKey: ["costeo", "tipos_contenedor_demoras"],
+    queryKey: queryKeys.costeo.navieras.tiposContenedor(),
     queryFn: fetchTiposContenedorParaDemoras,
     staleTime: 60 * 60 * 1000,
   });
@@ -96,7 +96,7 @@ export function useTiposContenedorDemoras() {
 
 export function useNavierasCatalogo() {
   return useQuery({
-    queryKey: ["costeo", "navieras_catalogo"],
+    queryKey: queryKeys.costeo.navieras.catalogo(),
     queryFn: fetchNavierasCatalogo,
     staleTime: 60 * 60 * 1000,
   });
@@ -104,7 +104,7 @@ export function useNavierasCatalogo() {
 
 export function useProveedoresNaviera() {
   return useQuery({
-    queryKey: ["costeo", "proveedores", "Naviera"],
+    queryKey: queryKeys.costeo.proveedores.porTipo("Naviera"),
     queryFn: () => fetchProveedoresPorTipo("Naviera"),
     staleTime: 5 * 60 * 1000,
   });
@@ -112,7 +112,7 @@ export function useProveedoresNaviera() {
 
 export function useProveedoresAgente() {
   return useQuery({
-    queryKey: ["costeo", "proveedores", "Agente de Carga"],
+    queryKey: queryKeys.costeo.proveedores.porTipo("Agente de Carga"),
     queryFn: () => fetchProveedoresPorTipo("Agente de Carga"),
     staleTime: 5 * 60 * 1000,
   });

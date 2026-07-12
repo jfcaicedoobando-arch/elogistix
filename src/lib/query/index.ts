@@ -35,8 +35,12 @@ import { tesoreria } from "@/features/tesoreria/queryKeys";
 import { comisiones } from "@/features/comisiones/queryKeys";
 import { presupuesto } from "@/features/presupuesto/queryKeys";
 import { dashboardEjecutivo } from "@/features/dashboardEjecutivo/queryKeys";
+import { costeo } from "@/features/costeo/queryKeys";
+import { portalAgente } from "@/features/portal-agente/queryKeys";
 
 export const queryKeys = {
+  costeo,
+  portalAgente,
   embarques,
   proformas,
   cotizaciones,

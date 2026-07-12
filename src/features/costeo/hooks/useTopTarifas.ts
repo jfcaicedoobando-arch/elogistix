@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchTopTarifas, type TopTarifasParams } from "@/features/costeo/services/topTarifas";
 
@@ -11,15 +12,13 @@ export function useTopTarifas(p: Partial<TopTarifasParams>) {
     organizationId && p.puertoOrigenId && p.puertoDestinoId && p.tipoContenedorId
   );
   return useQuery({
-    queryKey: [
-      "costeo",
-      "top-tarifas",
+    queryKey: queryKeys.costeo.tarifas.top({
       organizationId,
-      p.puertoOrigenId,
-      p.puertoDestinoId,
-      p.tipoContenedorId,
-      fecha ?? null,
-    ],
+      puertoOrigenId: p.puertoOrigenId,
+      puertoDestinoId: p.puertoDestinoId,
+      tipoContenedorId: p.tipoContenedorId,
+      fecha,
+    }),
     queryFn: () =>
       fetchTopTarifas({
         puertoOrigenId: p.puertoOrigenId!,

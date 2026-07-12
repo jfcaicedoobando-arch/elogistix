@@ -18,6 +18,7 @@ import { actualizarDemorasContenedor } from "@/features/embarques/services/conte
 import { toast } from "sonner";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 import {
   buildDemorasColumns,
   type DraftPatch,
@@ -50,9 +51,9 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
         delete next[vars.id];
         return next;
       });
-      qc.invalidateQueries({ queryKey: ["embarque_contenedores", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["conceptos_costo", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["conceptos_venta", embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.contenedoresLegacy(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueId) });
     },
     onError: (err: Error) => notifyError(toast, { title: err.message, error: err, method: "FEATURES_EMBARQUES_COMPONENTS_TABDEMORAS_1" }),
   });

@@ -28,7 +28,7 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
   const qc = useQueryClient();
 
   const reintentar = useMutation({
-    mutationKey: ["factura", "acuse-reintentar", factura?.id],
+    mutationKey: queryKeys.facturacion.acuseReintentar(factura?.id),
     mutationFn: () => reintentarAcuseCancelacion(factura!.id),
     onSuccess: (res) => {
       if (res.acuse_guardado) {

@@ -12,15 +12,14 @@ import {
   type ContenedoresInfo,
   type ContenedoresInfoMap,
 } from "@/features/embarques/services/contenedores/fetchInfoMap";
+import { queryKeys } from "@/lib/query";
 
 export type { ContenedoresInfo, ContenedoresInfoMap };
-
-const QUERY_KEY = "embarque-contenedores-info-map" as const;
 
 export function useContenedoresInfoMap(embarqueIds: string[]) {
   const ids = [...embarqueIds].sort();
   return useQuery<ContenedoresInfoMap, Error>({
-    queryKey: [QUERY_KEY, ids],
+    queryKey: queryKeys.embarques.contenedoresInfoMap(ids),
     enabled: ids.length > 0,
     staleTime: 30_000,
     queryFn: () => fetchContenedoresInfoMap(ids),

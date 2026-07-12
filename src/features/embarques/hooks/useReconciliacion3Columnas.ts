@@ -7,13 +7,14 @@ import {
   type ResultadoReconciliacion3C,
 } from "@/features/embarques/services/reconciliacion3Columnas";
 import type { UmbralesVarianza } from "@/features/cotizacion/domain/versionadoCotizacion";
+import { queryKeys } from "@/lib/query";
 
 export function useReconciliacion3Columnas(
   embarqueId: string | undefined,
   umbrales?: UmbralesVarianza,
 ) {
   return useQuery<ResultadoReconciliacion3C>({
-    queryKey: ["embarques", "reconciliacion3c", embarqueId, umbrales],
+    queryKey: queryKeys.embarques.reconciliacion3Columnas(embarqueId, umbrales),
     queryFn: () => obtenerReconciliacion3Columnas(embarqueId as string, umbrales),
     enabled: Boolean(embarqueId),
     staleTime: 15_000,

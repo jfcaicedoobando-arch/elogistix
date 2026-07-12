@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import {
   fetchAgenteContext,
   fetchAgenteTarifas,
@@ -7,7 +8,7 @@ import {
 
 export function useAgenteContext() {
   return useQuery({
-    queryKey: ["portal-agente", "context"],
+    queryKey: queryKeys.portalAgente.context(),
     queryFn: fetchAgenteContext,
     staleTime: 5 * 60 * 1000,
   });
@@ -15,7 +16,7 @@ export function useAgenteContext() {
 
 export function useAgenteTarifas() {
   return useQuery({
-    queryKey: ["portal-agente", "tarifas"],
+    queryKey: queryKeys.portalAgente.tarifas(),
     queryFn: fetchAgenteTarifas,
     staleTime: 60 * 1000,
   });
@@ -23,7 +24,7 @@ export function useAgenteTarifas() {
 
 export function useAgenteEmbarques() {
   return useQuery({
-    queryKey: ["portal-agente", "embarques"],
+    queryKey: queryKeys.portalAgente.embarques(),
     queryFn: fetchAgenteEmbarques,
     staleTime: 60 * 1000,
   });

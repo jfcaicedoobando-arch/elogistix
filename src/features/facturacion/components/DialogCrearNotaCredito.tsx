@@ -108,7 +108,7 @@ export function DialogCrearNotaCredito({
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(facturaId) });
-      qc.invalidateQueries({ queryKey: ["factura_notas_credito", "recientes"] });
+      qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
     },
   });
 

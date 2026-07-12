@@ -9,6 +9,7 @@ import {
   fetchEmbarquesAlertasResumen,
   type EmbarquesAlertasResumen,
 } from "@/features/embarques/services/alertas";
+import { queryKeys } from "@/lib/query";
 
 const EMPTY: EmbarquesAlertasResumen = {
   demora: new Set<string>(),
@@ -19,7 +20,7 @@ const EMPTY: EmbarquesAlertasResumen = {
 
 export function useEmbarquesAlertasResumen() {
   const query = useQuery({
-    queryKey: ["embarques", "alertas-ids"],
+    queryKey: queryKeys.embarques.alertasResumen(),
     queryFn: fetchEmbarquesAlertasResumen,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,

@@ -6,12 +6,13 @@ import {
   fetchReconciliacionEmbarque,
   type FilaReconciliacion,
 } from "@/features/embarques/services/reconciliacionCostos";
+import { queryKeys } from "@/lib/query";
 
 export type { FilaReconciliacion };
 
 export function useReconciliacionEmbarque(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: ["embarques", "reconciliacion", embarqueId] as const,
+    queryKey: queryKeys.embarques.reconciliacion(embarqueId),
     queryFn: () => fetchReconciliacionEmbarque(embarqueId!),
     enabled: !!embarqueId,
     staleTime: 30_000,

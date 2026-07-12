@@ -5,6 +5,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { fetchDocsFaltantesParaEstado } from "@/features/embarques/services/docsFaltantes";
+import { queryKeys } from "@/lib/query";
 
 /** Estados en los que faltar documentos BLOQUEA el avance (hard). */
 const ESTADOS_BLOQUEANTES = new Set<string>([
@@ -27,7 +28,7 @@ export function useDocsFaltantesParaEstado(
 ): DocsFaltantesParaEstado {
   const enabled = !!embarqueId && !!estadoDestino;
   const { data, isLoading } = useQuery({
-    queryKey: ["embarque_docs_faltantes", embarqueId, estadoDestino],
+    queryKey: queryKeys.embarques.docsFaltantes(embarqueId, estadoDestino),
     queryFn: () => fetchDocsFaltantesParaEstado(embarqueId!, estadoDestino!),
     enabled,
     staleTime: 30_000,
