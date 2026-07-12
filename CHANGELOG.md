@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.287.1] - 2026-07-12
+- **refactor(export)**: `src/features/admin/services/exportOrg.ts` se divide en tres módulos (`exportOrg.tables.ts` catálogo + `exportOrg.manifest.ts` tipos/manifest + `exportOrg.ts` orquestador) para respetar la baseline Power-of-10 (≤200 líneas). API público sin cambios; re-exports conservan los imports existentes. Desbloquea CI (shard 1/20 y audit-report).
+
 ## [13.287.0] - 2026-07-12
 - **feat(export)**: la herramienta "Exportar datos de la organización" (`/configuracion` → Herramientas) pasa de **18** a **55** tablas. Se agrupan por dominio en `EXPORT_GROUPS` (Maestros, Operación, Cotizaciones/Proformas, Facturación y cobranza, Tesorería, Costeo, CRM, Comisiones/Presupuesto, Auditoría, Configuración). Nuevas incluidas: `proveedor_facturas`+conceptos+notas_credito, `pagos_factura`/`pagos_proveedor`, `factura_notas_credito`/series/embarques/envios/recordatorios, `proforma_envios`, `cobranza_seguimiento`, `bbva_movimientos`, `cuentas_bancarias`, `embarque_contenedores`/`_garantias_contenedor`, `seguros_embarque`, `tracking_externo`, `cierre_embarque_log`, `costeo_*` (7 tablas), `crm_*` (9 tablas), `comisiones_devengadas`, `liquidaciones_comision`, `presupuesto_*`, `auditoria_*` (3 tablas), `vendedora_config`, `cotizacion_envios`.
 - **feat(export/manifest)**: `manifest.json` ahora incluye `app_version`, `groups`, `rows_by_table` y `warnings` (tablas que fallaron con RLS suave). El fetch ya no aborta ante `PGRST205`/`42501`/`42P01` o "permission denied" — degrada a warning y continúa.
