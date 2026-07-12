@@ -4,15 +4,16 @@ import {
   fetchCxpPorPagar,
   fetchCarteraPendiente,
 } from "../services/bandejas";
+import { bandejas } from "../queryKeys";
 
 const STALE = 30_000;
 
 export const useCxpPorCapturar = () =>
-  useQuery({ queryKey: ["bandeja", "cxp-por-capturar"], queryFn: fetchCxpPorCapturar, staleTime: STALE });
+  useQuery({ queryKey: bandejas.cxpPorCapturar, queryFn: fetchCxpPorCapturar, staleTime: STALE });
 
 export const useCxpPorPagar = () =>
-  useQuery({ queryKey: ["bandeja", "cxp-por-pagar"], queryFn: fetchCxpPorPagar, staleTime: STALE });
+  useQuery({ queryKey: bandejas.cxpPorPagar, queryFn: fetchCxpPorPagar, staleTime: STALE });
 
 export const useCarteraPendiente = () =>
-  useQuery({ queryKey: ["bandeja", "cartera-pendiente"], queryFn: fetchCarteraPendiente, staleTime: STALE });
+  useQuery({ queryKey: bandejas.carteraPendiente, queryFn: fetchCarteraPendiente, staleTime: STALE });
 
