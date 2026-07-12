@@ -81,6 +81,14 @@ export function useTimbrarFacturaDialog(
       actualizarDatosTimbradoFactura(v.facturaId, {
         uso_cfdi: v.uso_cfdi, forma_pago: v.forma_pago, metodo_pago: v.metodo_pago,
       }),
+    onError: (err) => {
+      notifyError(toast, {
+        title: "No se pudieron guardar los datos fiscales",
+        description: getErrorMessage(err),
+        method: "ON_ERROR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+    },
   });
 
   // Mutación 2 — guarda defaults del cliente. Best-effort: no bloquea el flujo.

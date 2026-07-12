@@ -1,86 +1,51 @@
-# Auditoría TanStack — Libre Carga
 
-## Diagnóstico corto
+## Diagnóstico
 
-**Versiones (todas ~3 patches atrás del último release, ninguna con APIs rotas):**
+El pipeline `Coverage merge & report` marcó rojo por **dos causas** independientes:
 
-- `@tanstack/react-query` **5.101.2** → último 5.104+
-- `@tanstack/react-table` **8.21.3** → al día
-- `@tanstack/react-virtual` **3.14.5** → al día
-- `query-sync-storage-persister` + `react-query-persist-client` **5.101.2**
+**A. 5 tests de arquitectura/unit fallan (regresiones de nuestras últimas fases)**
 
-**Veredicto:** implementación **sólida y por encima del promedio**, pero **no "top of the line" todavía**. Fortalezas claras: `QueryClient` centralizado con Sentry, persistencia inteligente por whitelist, `DataTable`/`VirtualDataTable` compartidos, migración v5 correcta (`placeholderData: keepPreviousData`), 0 anti-patrones removidos en v5. Debilidades: 181 query keys inline fuera de las factories, 0 uso del helper moderno `queryOptions()`, 0 devtools, `useMutation` optimista casi inexistente, y features `bandejas` + `compras` sin `queryKeys.ts`.
+1. `src/lib/__tests__/architecture-baseline.test.ts` y `src/__tests__/audit-report.test.ts` — Power-of-10: **2 archivos > 200 líneas** fuera de la allowlist:
+   - `src/features/crm/routes/Actividades.tsx` (201)
+   - `src/hooks/emails/useEnvioDocumentoForm.ts` (201)
+2. `src/lib/__tests__/architecture.test.ts` y `src/__tests__/architecture/safe-casts-services.test.ts` — 3 `as unknown as` sin marcador `// SAFE-CAST:`:
+   - `src/hooks/shared/useMutationWithFeedback.ts:150` y `:163` (introducidos en el refactor optimista)
+   - `src/features/embarques/queries.ts:25` (introducido al migrar a `queryOptions`)
+3. `src/__tests__/architecture/mutations-have-onerror.test.ts` — `src/features/facturacion/hooks/useTimbrarFacturaDialog.ts:78` tiene `useMutation` (mutación `actualizarDatos`) sin `onError`.
+4. `src/features/facturacion/hooks/__tests__/useNotaCreditoFacturapi.test.tsx` — El test espera que se invalide `["factura_notas_credito", "recientes"]` inline, pero al migrar a `queryKeys` el hook ahora invalida con la factory. Hay que alinear el test con la key centralizada.
 
----
+**B. Cobertura global cayó por debajo del umbral** (statements 30.08 % / requerido 38 %). La memoria `coverage-threshold` prohíbe bajar el umbral; hay que **escribir tests** o **acotar el `include` de cobertura** si se están contando archivos que antes no se contaban.
 
-## Fase 1 · Higiene inmediata (baja fricción, gran retorno)
+## Cambios propuestos
 
-1. **Bump TanStack a último patch**
-  - RQ `5.101.2` → `5.104.x`, persister igual. Sin breaking changes esperados.
-2. **Devtools sólo en dev**
-  - `bun add -D @tanstack/react-query-devtools`
-  - Montar `<ReactQueryDevtools />` en `App.tsx` bajo `if (import.meta.env.DEV)`.
-  - Objetivo: visibilidad de cache / staleTime / invalidaciones al depurar.
-3. `**queryKeys.ts` para features sin factory**
-  - Crear `src/features/bandejas/queryKeys.ts` y `src/features/compras/queryKeys.ts`.
-  - Migrar los ~15 keys inline detectados (`ComprasConciliacion`, `ComprasNotasCredito`, `ComprasPagos`, `ComprasReportes`, `ConciliacionDetalleSheet`, `useBandejas`, etc.).
-  - Beneficio: evita typos en `invalidateQueries` (bug latente).
+### Fix A — Fallos de arquitectura y unit (una tanda)
 
-## Fase 2 · Adoptar `queryOptions()` (patrón moderno v5)
+1. **Reducir a ≤200 líneas** ambos archivos, extrayendo helpers puros a módulos vecinos:
+   - `Actividades.tsx` → mover columnas / filtros a `Actividades.helpers.ts` (o `.columns.ts`).
+   - `useEnvioDocumentoForm.ts` → mover validaciones/mapeos a `useEnvioDocumentoForm.helpers.ts`.
+2. **Añadir `// SAFE-CAST:`** con justificación breve encima de cada cast:
+   - `useMutationWithFeedback.ts:150,163` (react-query tipa el `error` como `unknown`; sólo leemos `.message`).
+   - `embarques/queries.ts:25` (react-query key acepta `Record<string, unknown>`; los filters son un DTO plano).
+3. **`useTimbrarFacturaDialog.ts`** — Añadir `onError: (e) => notifyError(...)` a la mutación `actualizarDatos` (y verificar `guardarDefaults`, que es best-effort: si el linter la marca, añadir `onError` no-op documentado).
+4. **`useNotaCreditoFacturapi.test.tsx`** — Reemplazar la key inline por `facturasKeys.notasCreditoRecientes()` (o la factory ya registrada) para que el test verifique lo que hoy invalida el hook. Si esa factory no existe todavía, crearla en `queryKeys` y usarla tanto en hook como test.
 
-Es el patrón "top-of-the-line" de RQ v5: define **una sola vez** la tupla `(queryKey, queryFn, staleTime)` y la reutilizas en `useQuery`, `prefetchQuery`, `ensureQueryData`, `setQueryData` con tipos automáticos.
+### Fix B — Cobertura
 
-- Piloto en 2 features de alto tráfico: `cotizacion` y `embarques` (ya prefetchean).
-- Reemplazar los archivos `useCotizacionQueries.ts` / `useEmbarqueQueries.ts` por objetos `queryOptions()` colocalizados con la key factory.
-- Aprender del piloto y luego expandir a `dashboard`, `crm`, `facturacion`.
+Antes de escribir tests a ciegas: **auditar el delta**. Ejecutar `bun run test:coverage` local y comparar el reporte con el último verde para identificar si:
 
-## Fase 3 · Optimistic UI selectivo (`onMutate` + rollback)
+- (a) archivos nuevos sin tests son los culpables (agregar tests focalizados), o
+- (b) el `coverage.include` de `vitest.config.ts` está sumando código muerto/generado (ajustar el patrón, sin tocar el umbral).
 
-Hoy el patrón es "mutación → invalidar → refetch" (correcto pero perceptiblemente lento). Elegir 3 mutaciones "calientes" donde el optimismo se nota:
-
-- Cambio de estado de embarque en el kanban / detalle.
-- Marcar tarea de bitácora como completada.
-- Toggle de checkboxes en tablas (ej. selección de proformas).
-
-Extender `useMutationWithFeedback` con soporte de `optimisticUpdate({ queryKey, updater })` que ya prepara el snapshot + rollback, sin ensuciar cada hook.
-
-## Fase 4 · Barandales de disciplina
-
-1. **Regla ESLint custom / `no-restricted-syntax**` para prohibir `queryKey: [` en archivos que no terminen en `queryKeys.ts` — fuerza el uso de factories.
-2. **Audit puntual de los 98/173 archivos con `useQuery` sin `enabled:**` — spot-check de queries que dependen de `organizationId`/`clienteId` que pueden ser `undefined` en primer render.
-3. **Confirmar el único `setQueryData` del proyecto** — asegurar tipado correcto (o migrarlo a `queryOptions().queryKey`).
-4. **Evaluar `refetchInterval` de 60 s** en `useAlertasSistema`, `useAppLogsHealth`, `useNotificacionesCliente`: valorar mover a Supabase Realtime (0 costo de polling).
-
----
+En cualquier caso: **no bajar el umbral** (regla de la memoria). Reportar hallazgos al usuario y proponer 1–2 tandas concretas de tests.
 
 ## Detalles técnicos
 
-- `**queryOptions()` ejemplo:**
-  ```ts
-  // src/features/cotizacion/queries.ts
-  export const cotizacionByIdOptions = (id: string) => queryOptions({
-    queryKey: queryKeys.cotizacion.byId(id),
-    queryFn: () => fetchCotizacion(id),
-    staleTime: 30_000,
-    enabled: !!id,
-  });
-  // Uso: useQuery(cotizacionByIdOptions(id))
-  //      queryClient.prefetchQuery(cotizacionByIdOptions(id))
-  ```
-- **Suspense Query (opcional futuro Fase 5):** con React 19 + Compiler ya podemos evaluar `useSuspenseQuery` en rutas con `<Suspense>` granulares — encaja con la Fase 5 del plan React previo.
+- `useMutationWithFeedback.ts` líneas 150 y 163 — cast `error as unknown as Error` — añadir comentario `// SAFE-CAST: react-query tipa error como unknown; sólo se lee .message`.
+- `embarques/queries.ts:25` — `filters as unknown as Record<string, unknown>` — comentario análogo.
+- La regla del test `mutations-have-onerror.test.ts:95` recorre `useMutation({...})` y exige propiedad `onError`. `onError: () => {}` con comentario cuenta como "manejado" — se usará para casos best-effort.
+- La factory `facturasKeys.notasCreditoRecientes()` debe vivir en `src/features/facturacion/queryKeys.ts`; registrar en `src/lib/query/index.ts` si aplica.
 
-## Fuera de alcance
+## Fuera de alcance de este plan
 
-- Migrar a v6 (aún no existe estable).
-- Adoptar TanStack Router / Start (usamos React Router 6, no lo cambiamos aquí).
-- Rehacer `DataTable` — hoy está bien encapsulado.
-
-## Entregable por fase
-
-Cada fase termina con: bump `APP_VERSION` + entrada en `CHANGELOG.md`, `typecheck` + `build` + `test:fast` en verde.
-
-## Pregunta
-
-¿Arrancamos por **Fase 1** (higiene: bump + devtools + queryKeys faltantes) o quieres saltar directo a **Fase 2** (piloto `queryOptions()` en cotización/embarques) que es donde está la mejora arquitectónica real? Vamos en orden 
-
-&nbsp;
+- Warnings de React Router v7 future flags (ruido en logs, no bloquea).
+- Ajustes de UI/UX derivados del `/inicio`.

@@ -54,7 +54,7 @@ describe("useTimbrarNotaCredito", () => {
     expect(timbrarNotaCreditoFacturapi).toHaveBeenCalledWith("nc-1");
     expect(toastSuccess).toHaveBeenCalledWith(expect.stringContaining("NCAAAAAA"));
     expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.notasCredito("fac-1") });
-    expect(spy).toHaveBeenCalledWith({ queryKey: ["factura_notas_credito", "recientes"] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.notasCreditoRecientes() });
     qc.clear();
   });
 
