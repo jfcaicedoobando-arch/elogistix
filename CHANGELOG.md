@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.286.0] - 2026-07-12
+- **feat(datatable)**: Fase 1 de la auditoría de `@tanstack/react-table` — dos brechas cerradas.
+  - **Selección nativa TanStack**: `useRowSelection` ahora respalda su estado con `RowSelectionState` (`Record<string,boolean>`) y expone `rowSelection` + `onRowSelectionChange` para pasarlos directo al `<DataTable>`. `useTableInstance` acepta los tres nuevos props (`rowSelection`, `onRowSelectionChange`, `enableRowSelection`) y los cablea a `useReactTable`. `buildSelectionColumn<T>()` ya no recibe `sel`/`getId`/`pageRowIds`: usa `row.getIsSelected/toggleSelected` y `table.getIsAllPageRowsSelected/toggleAllPageRowsSelected`. Se conserva la API legacy (`selectedIds` como `Set<string>`, `toggle`, `toggleAll`, `clear`) sobre el mismo estado, así que `FacturasMasivasToolbar` sigue funcionando sin cambios. Eliminado `SelectionCell.tsx` (los checkboxes viven dentro del column def). Único call-site externo actualizado: `TabFacturasEmitidas.tsx`.
+  - **A11y en headers ordenables**: `DataTableHeaderRow.tsx` agrega `scope="col"` a todos los headers y `aria-sort="ascending|descending|none"` en los ordenables. Antes el estado de sort solo se comunicaba visualmente (icono) — invisible para lectores de pantalla. Test nuevo en `DataTable.e2e.test.tsx`.
+
 ## [13.285.2] - 2026-07-12
 - **fix(tests)**: shard 14 de CI se colgaba en `useNuevoProveedorController.test.tsx` (timeout 20 min). El hook usa `useQuery` para verificar RFC duplicado, pero `renderHook` no envolvía en `QueryClientProvider` → error "No QueryClient set" en cada test; con `--retry=2` la combinación quedaba wedged en el runner. Fix: wrapper local con `QueryClient` + reemplazo del test con fake timers por un `waitFor(timeout: 2000)` sobre timers reales (más robusto con React Query).
 
