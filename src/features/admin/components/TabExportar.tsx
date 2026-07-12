@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Download, Loader2, FileArchive } from "lucide-react";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { exportOrganizationZip, EXPORT_TABLES, type ExportProgress } from "@/features/admin/services";
+import {
+  exportOrganizationZip,
+  EXPORT_TABLES,
+  EXPORT_GROUPS,
+  type ExportProgress,
+} from "@/features/admin/services";
 import { toast } from "sonner";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -47,10 +52,25 @@ export default function TabExportar() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-lg border bg-muted/30 p-4 text-sm">
-          <p className="font-medium mb-2">Incluye {EXPORT_TABLES.length} tablas:</p>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {EXPORT_TABLES.join(", ")}
+        <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-3">
+          <p className="font-medium">
+            Incluye {EXPORT_TABLES.length} tablas agrupadas por dominio:
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {Object.entries(EXPORT_GROUPS).map(([grupo, tablas]) => (
+              <div key={grupo} className="space-y-1">
+                <p className="text-xs font-semibold text-foreground">
+                  {grupo}{" "}
+                  <span className="text-muted-foreground font-normal">({tablas.length})</span>
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed font-mono break-words">
+                  {tablas.join(", ")}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground pt-1 border-t">
+            Se excluyen credenciales fiscales, control de acceso y logs internos.
           </p>
         </div>
 
