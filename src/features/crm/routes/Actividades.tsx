@@ -58,11 +58,7 @@ const actionColumn: ColumnDef<CrmActividadRow, unknown> = {
   cell: ({ row }) => <ActividadRowActions actividad={row.original} />,
 };
 
-interface ActividadesFilters extends Record<string, string> {
-  tipo: string;
-  estado: string;
-  responsable: string;
-}
+type ActividadesFilters = { tipo: string; estado: string; responsable: string } & Record<string, string>;
 const DEFAULTS: ActividadesFilters = { tipo: "todos", estado: "pendientes", responsable: "todos" };
 
 export default function Actividades() {
