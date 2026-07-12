@@ -71,6 +71,12 @@ export interface UseMutationWithFeedbackOptions<TData, TError, TVariables, TCont
    * la invalidación final las orquesta el wrapper.
    */
   optimistic?: OptimisticUpdate<TVariables> | OptimisticUpdate<TVariables>[];
+  /**
+   * Si es true, suprime ambos toasts (éxito y error). Útil cuando el caller
+   * maneja las notificaciones (ej. clasificar errores docs_faltantes).
+   * El rollback optimista y las invalidaciones siguen funcionando.
+   */
+  silent?: boolean;
   /** Callback extra tras éxito (se ejecuta después del toast + invalidate). */
   onSuccess?: UseMutationOptions<TData, TError, TVariables, TContext>["onSuccess"];
   /** Callback extra tras error (se ejecuta después del toast + rollback). */
