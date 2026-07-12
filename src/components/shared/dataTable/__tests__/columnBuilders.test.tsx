@@ -1,3 +1,4 @@
+import * as React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import {
@@ -30,7 +31,7 @@ const ROW: Row = {
 function renderCell(colDef: ReturnType<typeof statusColumn<Row>>, row: Row) {
   const cell = colDef.cell as (ctx: {
     row: { original: Row };
-  }) => JSX.Element;
+  }) => React.JSX.Element;
   return render(<>{cell({ row: { original: row } })}</>);
 }
 
@@ -72,7 +73,7 @@ describe("columnBuilders", () => {
     const col = actionsColumn<Row>({ items: () => [] });
     const cell = col.cell as (ctx: {
       row: { original: Row };
-    }) => JSX.Element | null;
+    }) => React.JSX.Element | null;
     const { container } = render(<>{cell({ row: { original: ROW } })}</>);
     expect(container.textContent).toBe("");
   });

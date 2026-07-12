@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.270.0] - 2026-07-12
+- **CI · React Compiler determinístico**: `@babel/core@7.29.0` se agrega como `devDependency` explícita. Antes se resolvía por transitividad de otras deps (no lo declara `babel-plugin-react-compiler`), lo que podía romper el build en CI de forma intermitente si esa cadena cambiaba. Verificado: `bun run typecheck` y `bun run build` pasan con el plugin activo procesando los 2 archivos con `"use memo"` (Embarques + Cotizaciones).
+- **Fix TS React 19**: `ProfitBadge.tsx` y `columnBuilders.test.tsx` referenciaban el namespace global `JSX` (eliminado en `@types/react@19`); ahora usan `React.JSX.Element`. `useVirtualTableState.parentRef` tipado como `RefObject<HTMLDivElement | null>` para casar con el `useRef` de React 19.
+
 ## [13.269.0] - 2026-07-11
 - **React Query · Estandarización de 2 dialogs**: `EnviarProformaDialog` y `DialogTimbrarFactura` (vía `useTimbrarFacturaDialog`) migran sus llamadas imperativas a `useMutation`. En Proforma, `handleEnviar` deja de manejar `useState(loading)` + try/catch y usa una mutación con `mutationKey: ["proformas","enviar-email", proforma.id]`, `onSuccess` que invalida `["proformas"]` y `onError` que dispara `notifyError`. En Timbrado, los 3 side-effects (actualizar datos fiscales antes del CFDI, persistir defaults del cliente, enviar CFDI por email) viven ahora como 3 `useMutation` con `mutationKey` estable; `guardar-defaults` invalida `["cliente_defaults_facturacion", clienteId]` en éxito y degrada errores a `console.warn` (best-effort) para no romper el flujo del timbrado. `timbrarPending` incluye ahora la actualización de datos previa para deshabilitar el botón durante toda la operación compuesta.
 

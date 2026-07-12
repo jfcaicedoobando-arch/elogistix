@@ -32,7 +32,7 @@ interface Args<T> {
   data: T[];
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   rowKey: (item: T) => string;
-  parentRef: RefObject<HTMLDivElement>;
+  parentRef: RefObject<HTMLDivElement | null>;
   estimateRowHeight: number;
   overscan: number;
 }
