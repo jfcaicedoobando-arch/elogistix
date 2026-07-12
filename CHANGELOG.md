@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.283.0] - 2026-07-12
+- **CI fixes**: 5 regresiones de la ola TanStack Fase 5 corregidas.
+  - Power of 10: `Actividades.tsx` y `useEnvioDocumentoForm.ts` reducidos a ≤200 líneas.
+  - SAFE-CAST agregado en `useMutationWithFeedback.ts` (líneas 150 y 163) y `embarques/queries.ts:25`.
+  - `useTimbrarFacturaDialog.ts`: `useMutation` de `actualizarDatos` ahora tiene `onError` con `notifyError`.
+  - Test `useNotaCreditoFacturapi.test.tsx`: alineado con la factory `facturasKeys.notasCreditoRecientes()` en vez de la key inline legacy.
+- Cobertura global bajo umbral (statements 30.08 % vs. 38 % requerido) queda pendiente para una siguiente tanda de tests (regla `coverage-threshold`: no bajar el umbral).
+
 ## [13.282.0] - 2026-07-12
 - **TanStack Query · Fase 5 (cierre allowlist)**: los últimos 32 archivos con `queryKey`/`mutationKey` inline migraron a factories de `@/lib/query`. La allowlist `inline-query-keys-legacy` queda vacía.
 - Extendidos los catálogos de queryKeys: `cotizaciones.pendientesReaprobacion`, `cotizaciones.tarifaVinculada`, nuevos `productosCatalogo`, `dashboard.direccion`, `dashboard.dashboardOperador`, `dashboard.embarquesPendientesAdmin`, `admin.alertasSistema`, `admin.demoLeads`, `tesoreria.cuentas/saldos/candidatos`, `presupuesto`, `profit`, `auditoria.snapshots`, `catalogos.configuracion.catalogoClavesSat`, y nuevos dominios `notificaciones` y `marketing` registrados en `src/lib/query/index.ts`.
