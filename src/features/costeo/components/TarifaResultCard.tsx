@@ -4,6 +4,7 @@
  * para cumplir Power of 10 (≤200 líneas) tras el refactor de complejidad.
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { Card } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { fetchRecargosDeTarifa } from "@/features/costeo/services/topTarifas";
