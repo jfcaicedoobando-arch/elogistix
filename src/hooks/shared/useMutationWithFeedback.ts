@@ -153,7 +153,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       for (const key of toKeyArray(invalidate)) {
         qc.invalidateQueries({ queryKey: key });
       }
-      if (successTitle) {
+      if (successTitle && !silent) {
         notifySuccess(undefined, { title: successTitle, description: successDescription });
       }
       userOnSuccess?.(data, variables, onMutateResult, context);
