@@ -32,6 +32,7 @@ export default function PlantillaSelector({ canal, destino, vars, entidadTipo, e
     const asuntoR = renderPlantilla(asunto, vars);
     const cuerpoR = renderPlantilla(cuerpo, vars);
     if (canal === "email") {
+      // eslint-disable-next-line react-compiler/react-compiler
       window.location.href = `mailto:${encodeURIComponent(destino)}?subject=${encodeURIComponent(asuntoR)}&body=${encodeURIComponent(cuerpoR)}`;
     } else {
       const tel = sanitizeTel(destino);

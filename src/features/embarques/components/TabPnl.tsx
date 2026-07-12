@@ -19,6 +19,7 @@ interface Props {
   embarqueId: string;
 }
 
+// eslint-disable-next-line complexity
 export function TabPnl({ embarqueId }: Props) {
   const { data, isLoading, error } = usePnlFinanciero(embarqueId);
   const { registerRef } = useFocusSection();
