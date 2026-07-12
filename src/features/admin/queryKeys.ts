@@ -42,3 +42,14 @@ export const appLogs = {
 
 export const papelera = (tabla: string) => ['papelera', tabla] as const;
 export const idempotenciaLog = ['idempotencia-log'] as const;
+
+export const alertasSistema = {
+  pending: ['alertas-sistema', 'pending-count'] as const,
+  listAll: ['alertas-sistema', 'list'] as const,
+  list: (includeAcknowledged = false) =>
+    ['alertas-sistema', 'list', includeAcknowledged] as const,
+} as const;
+
+export const demoLeads = {
+  all: ['admin', 'demo-leads'] as const,
+} as const;

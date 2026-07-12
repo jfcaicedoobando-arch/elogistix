@@ -18,6 +18,7 @@ import {
   actualizarEstadoClienteProforma,
   type RespuestaCliente,
 } from "@/features/proformas/services/respuestaCliente";
+import { queryKeys } from "@/lib/query";
 
 interface Props {
   open: boolean;
@@ -54,7 +55,7 @@ export function RespuestaClienteManualDialog({
           ? `Proforma ${numero} marcada como aceptada`
           : `Proforma ${numero} marcada como rechazada`,
       });
-      await qc.invalidateQueries({ queryKey: ["proformas"] });
+      await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
       onOpenChange(false);
       setMotivo("");
     } catch (e) {

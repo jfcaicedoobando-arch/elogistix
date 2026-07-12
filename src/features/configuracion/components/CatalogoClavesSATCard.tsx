@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr, run } from "@/lib/supabase/response";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ export function CatalogoClavesSATCard() {
   const [showNew, setShowNew] = useState(false);
 
   const { data: rows = [], isLoading } = useQuery<Row[]>({
-    queryKey: ["catalogo_claves_sat", organizationId],
+    queryKey: queryKeys.configuracion.catalogoClavesSat(organizationId),
     enabled: !!organizationId,
     queryFn: async () =>
       (await unwrapOr(
@@ -48,8 +49,8 @@ export function CatalogoClavesSATCard() {
   });
 
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["catalogo_claves_sat", organizationId] });
-    qc.invalidateQueries({ queryKey: ["productos_catalogo", organizationId] });
+    qc.invalidateQueries({ queryKey: queryKeys.configuracion.catalogoClavesSat(organizationId) });
+    qc.invalidateQueries({ queryKey: queryKeys.productosCatalogo(organizationId) });
   };
 
   const onError = (err: unknown) =>

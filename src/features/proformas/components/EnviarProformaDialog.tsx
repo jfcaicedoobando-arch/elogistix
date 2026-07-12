@@ -21,6 +21,7 @@ import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
 import { DestinatariosRecientesChips } from "./DestinatariosRecientesChips";
 import { EnvioProformaExitoso } from "./EnvioProformaExitoso";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
+import { queryKeys } from "@/lib/query";
 
 interface Props {
   open: boolean;
@@ -81,7 +82,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   }
 
   const enviarMut = useMutation({
-    mutationKey: ["proformas", "enviar-email", proforma.id],
+    mutationKey: queryKeys.proformas.enviarEmail(proforma.id),
     mutationFn: async ({ to, ccList, asunto, mensaje }: EnviarVars) => {
       const { data, error } = await supabase.functions.invoke<{
         success: boolean; enlace_portal: string; estado: string; error?: string;
@@ -96,7 +97,7 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
       setEnviado(res);
       restaurarVarios([...vars.to.map((t) => t.email), ...vars.ccList]);
       toast({ title: "Correo enviado", description: `Estado: ${res.estado}` });
-      await qc.invalidateQueries({ queryKey: ["proformas"] });
+      await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
     },
     onError: (e: Error) => {
       notifyError(toast, {

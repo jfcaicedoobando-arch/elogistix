@@ -8,7 +8,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 
 export function usePresupuestoCategorias(activas = true) {
   return useQuery({
-    queryKey: [...queryKeys.presupuesto.categorias(), activas] as const,
+    queryKey: queryKeys.presupuesto.categorias(activas),
     queryFn: () => fetchCategorias(activas),
     staleTime: 60_000,
   });

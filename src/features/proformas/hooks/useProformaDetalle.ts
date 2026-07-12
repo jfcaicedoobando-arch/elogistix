@@ -12,6 +12,7 @@ import {
   type ConceptoVentaRow,
   type ProformaConceptoConsolidadoRow,
 } from "@/features/proformas/services";
+import { queryKeys } from "@/lib/query";
 
 export interface ProformaDetalleData {
   proforma: ProformaDetalleFull;
@@ -21,7 +22,7 @@ export interface ProformaDetalleData {
 
 export function useProformaDetalle(id: string | undefined) {
   return useQuery<ProformaDetalleData | null>({
-    queryKey: ["proformas", "detalle", id],
+    queryKey: queryKeys.proformas.detalle(id),
     enabled: !!id,
     staleTime: 30_000,
     queryFn: async () => {

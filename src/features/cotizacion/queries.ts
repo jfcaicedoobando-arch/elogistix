@@ -56,7 +56,7 @@ export const cotizacionQueries = {
   /** Folio (chip/link). Cambia poco → LONG. */
   folio: (cotizacionId: string) =>
     queryOptions<string | null>({
-      queryKey: ["cotizaciones", "folio", cotizacionId] as const,
+      queryKey: queryKeys.cotizaciones.folio(cotizacionId),
       queryFn: () => fetchCotizacionFolio(cotizacionId),
       staleTime: staleTimes.LONG,
     }),

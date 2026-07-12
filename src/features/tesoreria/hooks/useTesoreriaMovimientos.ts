@@ -39,7 +39,7 @@ export function useImportarMovimientos() {
 
 export function useSugerirCandidatos(mov: MovimientoBBVA | null) {
   return useQuery({
-    queryKey: ["tesoreria", "candidatos", mov?.id],
+    queryKey: queryKeys.tesoreria.candidatos(mov?.id ?? null),
     queryFn: () => sugerirCandidatos(mov!),
     enabled: !!mov,
     staleTime: 30_000,

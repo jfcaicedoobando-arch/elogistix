@@ -9,10 +9,9 @@ import {
   type NotificacionInterna,
 } from "@/features/notificaciones/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 
 export type { NotificacionInterna };
-
-const QUERY_KEY = ["notificaciones-internas"] as const;
 
 export function useNotificacionesInternas() {
   const qc = useQueryClient();
@@ -20,7 +19,7 @@ export function useNotificacionesInternas() {
   const userId = user?.id ?? null;
 
   const query = useQuery({
-    queryKey: [...QUERY_KEY, userId],
+    queryKey: queryKeys.notificaciones.internas(userId),
     queryFn: () => (userId ? fetchNotificaciones(userId) : Promise.resolve([])),
     enabled: !!userId,
     staleTime: 30_000,
@@ -30,14 +29,14 @@ export function useNotificacionesInternas() {
   useEffect(() => {
     if (!userId) return;
     const unsubscribe = subscribeNotificaciones(userId, () => {
-      qc.invalidateQueries({ queryKey: [...QUERY_KEY, userId] });
+      qc.invalidateQueries({ queryKey: queryKeys.notificaciones.internas(userId) });
     });
     return unsubscribe;
   }, [qc, userId]);
 
   const marcarLeidaMut = useMutation({
     mutationFn: svcMarcarLeida,
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...QUERY_KEY, userId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notificaciones.internas(userId) }),
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al marcar notificación: ${error.message}`, error, method: "MARK_INTERNAL_NOTIF_READ" });
     },
@@ -45,7 +44,7 @@ export function useNotificacionesInternas() {
 
   const marcarTodasMut = useMutation({
     mutationFn: () => (userId ? svcMarcarTodas(userId) : Promise.resolve()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...QUERY_KEY, userId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notificaciones.internas(userId) }),
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al marcar notificaciones: ${error.message}`, error, method: "MARK_ALL_INTERNAL_NOTIF_READ" });
     },

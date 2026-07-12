@@ -112,18 +112,24 @@ export function useServerPagedList<
     pageSize: filtersState.pageSize,
   };
 
+  // Composición genérica de la key base (provista por el caller vía factory
+  // de su dominio) con el estado de filtros/orden/paginación. Se calcula en
+  // variable para que el `Property` de `queryKey` sea un Identifier y no un
+  // ArrayExpression inline (guardrail `no-restricted-syntax`).
+  const fullQueryKey: QueryKey = [
+    ...queryKey,
+    filtersState.search,
+    filtersState.filters,
+    filtersState.dateFrom,
+    filtersState.dateTo,
+    sortKey,
+    sortDir,
+    filtersState.page,
+    filtersState.pageSize,
+  ];
+
   const query = useQuery({
-    queryKey: [
-      ...queryKey,
-      filtersState.search,
-      filtersState.filters,
-      filtersState.dateFrom,
-      filtersState.dateTo,
-      sortKey,
-      sortDir,
-      filtersState.page,
-      filtersState.pageSize,
-    ] as QueryKey,
+    queryKey: fullQueryKey,
     queryFn: () => fetcher(fetchArgs),
     staleTime,
     enabled,

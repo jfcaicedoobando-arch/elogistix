@@ -13,7 +13,7 @@ export function useSidebarAlerts() {
 
   // v13.89.0 — conteo de embarques con pendientes administrativos (Entregado/EIR).
   const { data: adminPendientes = 0 } = useQuery({
-    queryKey: ['sidebar', 'embarques-admin-pendientes'],
+    queryKey: queryKeys.sidebar.adminPendientes,
     queryFn: fetchAdminPendientesCount,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,

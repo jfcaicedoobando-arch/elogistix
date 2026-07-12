@@ -16,6 +16,7 @@ import {
   fetchProductosCatalogo,
   type ProductoCatalogo,
 } from "@/features/cotizacion/services/productosCatalogoService";
+import { queryKeys } from "@/lib/query";
 
 export type { ProductoCatalogo };
 
@@ -27,7 +28,7 @@ export function tasaDesdeTipoIva(tipo: ProductoCatalogo["tipo_iva"]): number {
 
 export function useProductosCatalogo(organizationId: string | null | undefined) {
   const query = useQuery<ProductoCatalogo[]>({
-    queryKey: ["productos_catalogo", organizationId],
+    queryKey: queryKeys.productosCatalogo(organizationId),
     enabled: !!organizationId,
     staleTime: 5 * 60 * 1000,
     queryFn: () => fetchProductosCatalogo(organizationId as string),

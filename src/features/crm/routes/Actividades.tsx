@@ -34,6 +34,7 @@ import {
 import ActividadRowActions from "@/features/crm/components/ActividadRowActions";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { queryKeys } from "@/lib/query";
 const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
   { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
@@ -72,7 +73,7 @@ export default function Actividades() {
   const vencidasOnly = filtroParam === "vencidas";
 
   const list = useServerPagedList<CrmActividadRow, ActividadesFilters>({
-    queryKey: ["crm", "actividades", "paged", user?.id],
+    queryKey: queryKeys.crm.actividades.paged(user?.id),
     defaultFilters: DEFAULTS,
     filterLabels: { tipo: "Tipo", estado: "Estado", responsable: "Responsable" },
     defaultPageSize: 100,

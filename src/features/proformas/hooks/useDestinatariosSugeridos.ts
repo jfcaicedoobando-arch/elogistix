@@ -12,6 +12,7 @@ import {
   fetchEnviosDestinatariosPorCliente,
   fetchContactosEmailPorCliente,
 } from "@/features/proformas/services";
+import { queryKeys } from "@/lib/query";
 
 
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -83,7 +84,7 @@ async function fetchSugerencias(clienteId: string): Promise<DestinatariosSugerid
 
 export function useDestinatariosSugeridos(clienteId: string | null | undefined) {
   return useQuery({
-    queryKey: ["proformas", "destinatarios-sugeridos", clienteId],
+    queryKey: queryKeys.proformas.destinatariosSugeridos(clienteId),
     enabled: !!clienteId,
     staleTime: 60_000,
     queryFn: () => fetchSugerencias(clienteId!),

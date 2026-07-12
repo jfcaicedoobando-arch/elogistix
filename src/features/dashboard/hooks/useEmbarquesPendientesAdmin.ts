@@ -4,12 +4,13 @@ import {
   type EmbarquePendienteAdminItem,
   type EmbarquesPendientesAdminData,
 } from "@/features/dashboard/services/embarquesPendientesAdmin";
+import { queryKeys } from "@/lib/query";
 
 export type { EmbarquePendienteAdminItem, EmbarquesPendientesAdminData };
 
 export function useEmbarquesPendientesAdmin(enabled: boolean) {
   return useQuery({
-    queryKey: ["dashboard", "embarques-pendientes-admin"],
+    queryKey: queryKeys.embarquesPendientesAdmin.all,
     queryFn: fetchEmbarquesPendientesAdmin,
     enabled,
     staleTime: 5 * 60_000,

@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 export type { EnvioRow } from "@/features/cotizacion/services/envios";
 
 export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
@@ -25,10 +26,10 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
         notifyError(toast, { title: "No se pudo enviar el correo", method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_1" });
       }
       if (cotizacionId) {
-        qc.invalidateQueries({ queryKey: ["cotizacion", cotizacionId] });
-        qc.invalidateQueries({ queryKey: ["cotizacion-envios", cotizacionId] });
+        qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacionId) });
+        qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.envios(cotizacionId) });
       }
-      qc.invalidateQueries({ queryKey: ["cotizaciones"] });
+      qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
     },
     onError: (e: Error) => notifyError(toast, { title: e.message, error: e, method: "FEATURES_COTIZACION_HOOKS_MUTATIONS_USEENVIARCOTIZACIONEMAIL_2" }),
   });
@@ -36,7 +37,7 @@ export function useEnviarCotizacionEmail(cotizacionId: string | undefined) {
 
 export function useHistorialEnviosCotizacion(cotizacionId: string | undefined) {
   return useQuery<EnvioRow[]>({
-    queryKey: ["cotizacion-envios", cotizacionId],
+    queryKey: queryKeys.cotizaciones.envios(cotizacionId),
     enabled: !!cotizacionId,
     queryFn: () => fetchHistorialEnviosCotizacion(cotizacionId!),
   });
