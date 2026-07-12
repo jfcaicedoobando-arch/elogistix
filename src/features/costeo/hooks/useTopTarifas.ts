@@ -12,15 +12,13 @@ export function useTopTarifas(p: Partial<TopTarifasParams>) {
     organizationId && p.puertoOrigenId && p.puertoDestinoId && p.tipoContenedorId
   );
   return useQuery({
-    queryKey: [
-      "costeo",
-      "top-tarifas",
+    queryKey: queryKeys.costeo.tarifas.top({
       organizationId,
-      p.puertoOrigenId,
-      p.puertoDestinoId,
-      p.tipoContenedorId,
-      fecha ?? null,
-    ],
+      puertoOrigenId: p.puertoOrigenId,
+      puertoDestinoId: p.puertoDestinoId,
+      tipoContenedorId: p.tipoContenedorId,
+      fecha,
+    }),
     queryFn: () =>
       fetchTopTarifas({
         puertoOrigenId: p.puertoOrigenId!,
