@@ -35,9 +35,18 @@ export function DataTableHeaderRow<T>({ table, striped, bordered, stickyHeader =
             const canSort = header.column.getCanSort();
             const sortDir = header.column.getIsSorted(); // false | "asc" | "desc"
             const toggle = header.column.getToggleSortingHandler();
+            const ariaSort: "ascending" | "descending" | "none" | undefined = canSort
+              ? sortDir === "asc"
+                ? "ascending"
+                : sortDir === "desc"
+                  ? "descending"
+                  : "none"
+              : undefined;
             return (
               <TableHead
                 key={header.id}
+                scope="col"
+                aria-sort={ariaSort}
                 className={cn(
                   meta.width,
                   ALIGN_CLASS[align],
