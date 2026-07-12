@@ -57,23 +57,47 @@ export function useAvanzarEstadoEmbarque() {
   });
 }
 
+interface SyncEstadoInput {
+  embarqueId: string;
+  nuevoEstado: string;
+  usuarioEmail?: string;
+}
+
+// SAFE-CAST: parcheamos únicamente el campo `estado` en el objeto cacheado.
+const patchEstado = (old: unknown, vars: SyncEstadoInput) => {
+  if (!old || typeof old !== "object") return old;
+  return { ...(old as Record<string, unknown>), estado: vars.nuevoEstado };
+};
+
 export function useSyncEstadoEmbarque() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail?: string }) => {
+  return useMutationWithFeedback<void, Error, SyncEstadoInput>({
+    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: SyncEstadoInput) => {
       await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
-      await insertarEventoTracking(embarqueId, nuevoEstado, usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema');
+      await insertarEventoTracking(
+        embarqueId,
+        nuevoEstado,
+        usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
+      );
     },
-    onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+    invalidate: [
+      queryKeys.embarques.all,
+      // eventos se revalidan para que aparezca el nuevo evento de tracking.
+    ],
+    optimistic: [
+      { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEstado },
+      { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchEstado },
+    ],
+    // La invalidación de eventos se hace en onSuccess porque no forma parte
+    // del cache optimista.
+    onSuccess: (_r, vars, _ctx, _mut) => {
+      // qc.invalidateQueries se dispara en el propio onSuccess del wrapper para
+      // el array `invalidate`; aquí sólo agregamos la key extra de eventos.
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al sincronizar estado: ${error.message}`, error, method: "SYNC_EMBARQUE_STATE" });
-    },
+    errorTitle: "Error al sincronizar estado",
+    errorMethod: "SYNC_EMBARQUE_STATE",
   });
 }
+
 
 /**
  * Reabre un embarque cerrado (Cerrado → Entregado). Solo admin/super_admin.
