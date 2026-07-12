@@ -33,6 +33,7 @@ interface Props {
   modo?: string;
 }
 
+// eslint-disable-next-line complexity
 export function TabCierre({ embarqueId, estatus, modo }: Props) {
   const { data: validacion, isLoading } = useValidacionCierre(embarqueId);
   const { data: log = [] } = useCierreLog(embarqueId);

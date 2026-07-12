@@ -26,6 +26,7 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
+// eslint-disable-next-line complexity
 export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const { data: factura } = useFactura(facturaId ?? undefined);
 

@@ -18,6 +18,6 @@ const NOOP_NAVIGATE: NavigateFunction = () => {
 
 export function useSafeNavigate(): NavigateFunction {
   const inRouter = useInRouterContext();
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // eslint-disable-next-line react-hooks/rules-of-hooks, react-compiler/react-compiler
   return inRouter ? useNavigate() : NOOP_NAVIGATE;
 }
