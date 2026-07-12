@@ -43,12 +43,27 @@ function resolverDefaults(
 }
 
 
+interface ActualizarDatosVars {
+  facturaId: string;
+  uso_cfdi: string;
+  forma_pago: string;
+  metodo_pago: string;
+}
+
+interface GuardarDefaultsVars {
+  clienteId: string;
+  uso_cfdi_default: string;
+  forma_pago_default: string;
+  metodo_pago_default: string;
+}
+
 export function useTimbrarFacturaDialog(
   factura: FacturaLike | null | undefined,
   cliente: ClienteFiscalRow | null | undefined,
   defaults: DefaultsFacturacionCliente | null | undefined,
   onClose: () => void,
 ) {
+  const qc = useQueryClient();
   const timbrar = useTimbrarFactura();
   const { toast } = useToast();
   const initial = resolverDefaults(factura, cliente, defaults);
@@ -57,6 +72,50 @@ export function useTimbrarFacturaDialog(
   const [metodoPago, setMetodoPago] = useState(initial.metodoPago);
   const [enviarEmail, setEnviarEmail] = useState(true);
   const [modoExpandido, setModoExpandido] = useState(false);
+
+  // Mutación 1 — persiste los datos fiscales elegidos antes del timbrado.
+  const actualizarDatos = useMutation({
+    mutationKey: ["fiscal", "actualizar-datos-timbrado"],
+    mutationFn: (v: ActualizarDatosVars) =>
+      actualizarDatosTimbradoFactura(v.facturaId, {
+        uso_cfdi: v.uso_cfdi, forma_pago: v.forma_pago, metodo_pago: v.metodo_pago,
+      }),
+  });
+
+  // Mutación 2 — guarda defaults del cliente. Best-effort: no bloquea el flujo.
+  const guardarDefaults = useMutation({
+    mutationKey: ["fiscal", "guardar-defaults-cliente"],
+    mutationFn: (v: GuardarDefaultsVars) =>
+      guardarDefaultsTimbradoCliente(v.clienteId, {
+        uso_cfdi_default: v.uso_cfdi_default,
+        forma_pago_default: v.forma_pago_default,
+        metodo_pago_default: v.metodo_pago_default,
+      }),
+    onSuccess: (_r, v) => {
+      qc.invalidateQueries({ queryKey: ["cliente_defaults_facturacion", v.clienteId] });
+    },
+    onError: (err) => {
+      // best-effort: sólo warning, no rompe el timbrado ya exitoso.
+      console.warn("[timbrado] no se guardaron los defaults del cliente:", err);
+    },
+  });
+
+  // Mutación 3 — envío del CFDI por email tras timbrado exitoso.
+  const enviarCfdi = useMutation({
+    mutationKey: ["fiscal", "enviar-cfdi-email"],
+    mutationFn: (facturaId: string) => enviarCfdiFactura(facturaId),
+    onSuccess: (r) => {
+      toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
+    },
+    onError: (err) => {
+      notifyError(toast, {
+        title: "Factura timbrada, pero no se envió el email",
+        description: getErrorMessage(err),
+        method: "ON_ERROR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
+      });
+    },
+  });
 
   const facturaId = factura?.id;
   const facturaUsoCfdi = factura?.uso_cfdi;
@@ -83,13 +142,22 @@ export function useTimbrarFacturaDialog(
 
   const onConfirm = async () => {
     if (!factura) return;
-    await actualizarDatosTimbradoFactura(factura.id, {
-      uso_cfdi: usoCfdi, forma_pago: formaPago, metodo_pago: metodoPago,
+    await actualizarDatos.mutateAsync({
+      facturaId: factura.id, uso_cfdi: usoCfdi, forma_pago: formaPago, metodo_pago: metodoPago,
     });
     timbrar.mutate(factura.id, {
       onSuccess: async () => {
-        await guardarDefaultsSiClienteExiste(factura.cliente_id, usoCfdi, formaPago, metodoPago);
-        await enviarCfdiSiHabilitado(factura.id, enviarEmail, toast);
+        if (factura.cliente_id) {
+          await guardarDefaults.mutateAsync({
+            clienteId: factura.cliente_id,
+            uso_cfdi_default: usoCfdi,
+            forma_pago_default: formaPago,
+            metodo_pago_default: metodoPago,
+          }).catch(() => undefined);
+        }
+        if (enviarEmail) {
+          await enviarCfdi.mutateAsync(factura.id).catch(() => undefined);
+        }
         onClose();
       },
     });
@@ -101,8 +169,9 @@ export function useTimbrarFacturaDialog(
     metodoPago, setMetodoPago,
     enviarEmail, setEnviarEmail,
     modoExpandido, setModoExpandido,
-    timbrarPending: timbrar.isPending,
+    timbrarPending: timbrar.isPending || actualizarDatos.isPending,
     onConfirm,
   };
 }
+
 
