@@ -18,6 +18,7 @@ import {
   useReactTable,
   type ColumnDef,
   type OnChangeFn,
+  type RowSelectionState,
   type SortingState,
   type Updater,
   type VisibilityState,
@@ -46,6 +47,11 @@ interface Args<T> {
   /** Visibilidad de columnas controlada (persistida por el caller). */
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+  /** Selección de filas controlada (v13.286.0). El caller la mantiene con
+   *  `useRowSelection`. Cuando se omite, TanStack no habilita selección. */
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  enableRowSelection?: boolean;
 }
 
 function fromControlled(sort: ControlledSort | undefined): SortingState {
@@ -68,6 +74,9 @@ export function useTableInstance<T>({
   initialSort,
   columnVisibility,
   onColumnVisibilityChange,
+  rowSelection,
+  onRowSelectionChange,
+  enableRowSelection,
 }: Args<T>) {
   const isServer = sortMode === "server";
 
@@ -104,15 +113,23 @@ export function useTableInstance<T>({
     ? (handleSortingChange as OnChangeFn<SortingState>)
     : setInternalSorting;
 
+  const selectionEnabled = enableRowSelection ?? Boolean(onRowSelectionChange);
+
   return useReactTable<T>({
     data,
     columns: columnDefs,
     getRowId,
     enableSorting,
     manualSorting: isServer,
-    state: { sorting, ...(columnVisibility ? { columnVisibility } : {}) },
+    enableRowSelection: selectionEnabled,
+    state: {
+      sorting,
+      ...(columnVisibility ? { columnVisibility } : {}),
+      ...(selectionEnabled ? { rowSelection: rowSelection ?? {} } : {}),
+    },
     onSortingChange,
     onColumnVisibilityChange,
+    onRowSelectionChange: selectionEnabled ? onRowSelectionChange : undefined,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting && !isServer ? getSortedRowModel() : undefined,
   });
