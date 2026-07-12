@@ -18,7 +18,10 @@
     "src/features/crm/domain/index.ts"
   ],
   "ignoreDependencies": [
-    "react-helmet-async"
+    "react-helmet-async",
+    "@babel/core",
+    "@types/babel__core",
+    "babel-plugin-react-compiler"
   ],
   "ignoreExportsUsedInFile": true,
   "rules": {
