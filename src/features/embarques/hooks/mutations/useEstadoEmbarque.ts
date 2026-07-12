@@ -16,7 +16,7 @@ import {
   descripcionEventoCambioEstado,
 } from '@/features/embarques/domain/embarque';
 import { newRequestId } from '@/lib/idempotency';
-import { notifyError } from '@/components/shared/utils/appFeedback';
+
 import { useMutationWithFeedback } from '@/hooks/shared/useMutationWithFeedback';
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
