@@ -162,6 +162,9 @@ Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
     ? await loadFacturaCxc(admin, facturaId)
     : await loadFacturaCxp(admin, facturaId);
   if (fErr || !fact) return json(cors, { error: "factura_not_found", detail: (fErr as { message?: string })?.message }, 404);
+  if (!fact.organization_id) return json(cors, { error: "factura_sin_organizacion" }, 422);
+  const allowed = await authorizeOrgMembership(admin, auth.user!.id, fact.organization_id);
+  if (!allowed) return json(cors, { error: "forbidden" }, 403);
   if (!fact.uuid_fiscal) return json(cors, { error: "uuid_fiscal_missing" }, 422);
   if (!fact.rfc_emisor) return json(cors, { error: "rfc_emisor_missing" }, 422);
   if (!fact.rfc_receptor) return json(cors, { error: "rfc_receptor_missing" }, 422);
