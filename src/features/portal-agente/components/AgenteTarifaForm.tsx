@@ -5,6 +5,7 @@
  * El trigger en BD fuerza estado_aprobacion='borrador'.
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { TarifaForm } from "@/features/costeo/components/TarifaForm";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
 import { fetchAgenteRutas } from "@/features/portal-agente/services";
@@ -28,7 +29,7 @@ export function AgenteTarifaForm({ open, onOpenChange, initial, tarifaId, modo }
   const { data: ctx } = useAgenteContext();
 
   const { data: rutas = [] } = useQuery({
-    queryKey: ["portal-agente", "rutas", ctx?.organizationId],
+    queryKey: queryKeys.portalAgente.rutas(ctx?.organizationId),
     queryFn: () => fetchAgenteRutas(),
     enabled: !!ctx?.organizationId && open,
     staleTime: 5 * 60 * 1000,
