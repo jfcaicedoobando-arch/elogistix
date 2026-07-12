@@ -143,27 +143,19 @@ async function parseBody(req: Request, cors: HeadersInit): Promise<{ id?: string
   return { id: body.factura_id, tipo };
 }
 
-Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
-  const preflight = handlePreflightStrict(req);
-  if (preflight) return preflight;
-  const cors = buildCors(req);
-  if (req.method !== "POST") return json(cors, { error: "method_not_allowed" }, 405);
-
-  const auth = await authenticate(req, cors);
-  if (auth.error) return auth.error;
-
-  const parsed = await parseBody(req, cors);
-  if (parsed.error) return parsed.error;
-  const facturaId = parsed.id!;
-  const tipo = parsed.tipo!;
-
+async function processVerification(
+  cors: HeadersInit,
+  userId: string,
+  facturaId: string,
+  tipo: Tipo,
+): Promise<Response> {
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const { data: fact, error: fErr } = tipo === "cxc"
     ? await loadFacturaCxc(admin, facturaId)
     : await loadFacturaCxp(admin, facturaId);
   if (fErr || !fact) return json(cors, { error: "factura_not_found", detail: (fErr as { message?: string })?.message }, 404);
   if (!fact.organization_id) return json(cors, { error: "factura_sin_organizacion" }, 422);
-  const allowed = await authorizeOrgMembership(admin, auth.user!.id, fact.organization_id);
+  const allowed = await authorizeOrgMembership(admin, userId, fact.organization_id);
   if (!allowed) return json(cors, { error: "forbidden" }, 403);
   if (!fact.uuid_fiscal) return json(cors, { error: "uuid_fiscal_missing" }, 422);
   if (!fact.rfc_emisor) return json(cors, { error: "rfc_emisor_missing" }, 422);
@@ -194,4 +186,19 @@ Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
   if (uErr) return json(cors, { error: "update_failed", detail: uErr.message }, 500);
 
   return json(cors, { estatus: result.estatus, raw: result.raw });
+}
+
+Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
+  const preflight = handlePreflightStrict(req);
+  if (preflight) return preflight;
+  const cors = buildCors(req);
+  if (req.method !== "POST") return json(cors, { error: "method_not_allowed" }, 405);
+
+  const auth = await authenticate(req, cors);
+  if (auth.error) return auth.error;
+
+  const parsed = await parseBody(req, cors);
+  if (parsed.error) return parsed.error;
+
+  return processVerification(cors, auth.user!.id, parsed.id!, parsed.tipo!);
 }));
