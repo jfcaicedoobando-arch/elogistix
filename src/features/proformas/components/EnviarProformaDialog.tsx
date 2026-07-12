@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/shared";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
@@ -49,7 +49,6 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const [cc, setCc] = useState("");
   const [asunto, setAsunto] = useState("");
   const [mensaje, setMensaje] = useState("");
-  const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState<EnvioOk | null>(null);
   const { data: memoria } = useDestinatariosSugeridos(proforma.cliente_id);
   const { ocultos, isOculto, ocultar, restaurar, restaurarVarios } = useEmailsOcultos(proforma.cliente_id);
@@ -74,38 +73,52 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
     setter(current ? `${current.replace(/[,;\s]+$/, "")}, ${email}` : email);
   }
 
+  interface EnviarVars {
+    to: { email: string }[];
+    ccList: string[];
+    asunto: string;
+    mensaje: string;
+  }
 
-  async function handleEnviar() {
+  const enviarMut = useMutation({
+    mutationKey: ["proformas", "enviar-email", proforma.id],
+    mutationFn: async ({ to, ccList, asunto, mensaje }: EnviarVars) => {
+      const { data, error } = await supabase.functions.invoke<{
+        success: boolean; enlace_portal: string; estado: string; error?: string;
+      }>("enviar-proforma-email", {
+        body: { proforma_id: proforma.id, destinatarios: to, cc: ccList, asunto, mensaje },
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error ?? "El envío no se completó.");
+      return { enlace_portal: data.enlace_portal, estado: data.estado };
+    },
+    onSuccess: async (res, vars) => {
+      setEnviado(res);
+      restaurarVarios([...vars.to.map((t) => t.email), ...vars.ccList]);
+      toast({ title: "Correo enviado", description: `Estado: ${res.estado}` });
+      await qc.invalidateQueries({ queryKey: ["proformas"] });
+    },
+    onError: (e: Error) => {
+      notifyError(toast, {
+        title: "No se pudo enviar",
+        description: e.message,
+        error: e,
+        method: "PROFORMAS_ENVIAR_EMAIL",
+      });
+    },
+  });
+
+  function handleEnviar() {
     const to = destinatarios.split(/[,;\s]+/).filter(Boolean).map((email) => ({ email }));
     const ccList = cc.split(/[,;\s]+/).filter(Boolean);
     if (to.length === 0) {
       notifyError(toast, { title: "Ingresa al menos un destinatario", method: "PROFORMAS_ENVIAR_VALIDACION" });
       return;
     }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke<{ success: boolean; enlace_portal: string; estado: string; error?: string }>(
-        "enviar-proforma-email",
-        { body: { proforma_id: proforma.id, destinatarios: to, cc: ccList, asunto, mensaje } },
-      );
-      if (error) throw new Error(error.message);
-      if (!data?.success) throw new Error(data?.error ?? "El envío no se completó.");
-      setEnviado({ enlace_portal: data.enlace_portal, estado: data.estado });
-      // Reactivar sugerencias para los correos que el usuario acabó usando.
-      restaurarVarios([...to.map((t) => t.email), ...ccList]);
-      toast({ title: "Correo enviado", description: `Estado: ${data.estado}` });
-      await qc.invalidateQueries({ queryKey: ["proformas"] });
-    } catch (e) {
-      notifyError(toast, {
-        title: "No se pudo enviar",
-        description: (e as Error).message,
-        error: e,
-        method: "PROFORMAS_ENVIAR_EMAIL",
-      });
-    } finally {
-      setLoading(false);
-    }
+    enviarMut.mutate({ to, ccList, asunto, mensaje });
   }
+
+  const loading = enviarMut.isPending;
 
   async function copiar(link: string) {
     try {
