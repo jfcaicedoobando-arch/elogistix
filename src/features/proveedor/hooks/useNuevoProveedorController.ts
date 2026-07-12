@@ -37,12 +37,25 @@ export function useNuevoProveedorController(
 ) {
   const { organizationId } = useOrgFilter();
   const [form, setForm] = useState<NuevoProveedorForm>({ ...EMPTY_PROVEEDOR_FORM });
-  const [rfcDuplicado, setRfcDuplicado] = useState<{ id: string; nombre: string } | null>(null);
   const [saving, setSaving] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
   const [csfLoading, setCsfLoading] = useState(false);
+
+  // Verificación de RFC duplicado con debounce + React Query.
+  // El debounce evita disparar la query en cada tecla; React Query cachea el
+  // resultado por (org, rfc) para no repetir el fetch si el usuario borra y
+  // reescribe el mismo RFC.
+  const rfcTrimmed = form.rfc.trim();
+  const debouncedRfc = useDebouncedValue(rfcTrimmed, 300);
+  const rfcCheckQuery = useQuery({
+    queryKey: proveedoresKeys.rfcCheck(debouncedRfc, organizationId),
+    queryFn: () => findProveedorByRfcEnOrg(debouncedRfc, organizationId as string),
+    enabled: !!debouncedRfc && !!organizationId,
+    staleTime: 30_000,
+    retry: false,
+  });
+  const rfcDuplicado = rfcCheckQuery.data ?? null;
   const isLogistico = form.categoria === "Logistico";
   const isGasto = form.categoria === "GastoOperativo";
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
