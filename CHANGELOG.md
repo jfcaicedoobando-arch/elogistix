@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.276.0] - 2026-07-12
+- **TanStack Query · Fase 2 (piloto `queryOptions()`)**: introducidos factories tipados en `src/features/cotizacion/queries.ts` (5 opciones: `list`, `aceptadas`, `detail`, `embarquesVinculados`, `folio`) y `src/features/embarques/queries.ts` (7 opciones: `list`, `detail`, `conceptosVenta`, `conceptosCosto`, `expedientesCliente`, `proveedoresSelect`). Cada factory encapsula `queryKey` + `queryFn` + `staleTime`, reutilizable con `useQuery`, `prefetchQuery`, `ensureQueryData` y `useSuspenseQuery`.
+- **Tiers estandarizados de `staleTime`** en `src/lib/query/staleTimes.ts` (SHORT 30s, MEDIUM 60s, LONG 5min, VERY_LONG 30min). Elimina valores mágicos regados en hooks.
+- **Hooks refactorizados** en `useCotizacionQueries.ts` y `useEmbarqueQueries.ts` para consumir los factories vía spread + `enabled` — 0 duplicación de queryFn/staleTime.
+- Typecheck ✓ · build sin cambios de bundle.
+
 ## [13.275.0] - 2026-07-12
 - **TanStack Query · Fase 1 (higiene)**: instalado `@tanstack/react-query-devtools@5.101.2` como devDependency y montado en `src/App.tsx` con `lazy()` + `import.meta.env.DEV` (0 KB en el bundle de producción). Ya estábamos en el último release estable de RQ (5.101.2), no hubo bump.
 - **Factories `queryKeys.ts` nuevas** para features que las tenían faltantes: `src/features/bandejas/queryKeys.ts` (preserva prefijo `["bandeja"]` porque hay invalidaciones externas en `cxp/useAprobarFacturasLote` y `cxp/useCerrarFacturaSinPago`) y `src/features/compras/queryKeys.ts` (6 tuplas con filtros tipados: `ConciliacionFiltros`, `NotasCreditoFiltros`, `PagosFiltros`, `ReportesFiltros`).
