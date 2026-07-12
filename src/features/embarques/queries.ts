@@ -22,6 +22,7 @@ export const embarqueQueries = {
   /** Listado paginado + filtros. `placeholderData` se aplica en el hook. */
   list: (filters: EmbarquesPaginadosFilters) =>
     queryOptions({
+      // SAFE-CAST: la factory acepta un DTO plano; sólo se usa como parte del queryKey.
       queryKey: queryKeys.embarques.list(filters as unknown as Record<string, unknown>),
       queryFn: () => fetchEmbarquesPaginados(filters),
       staleTime: staleTimes.MEDIUM,
