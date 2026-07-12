@@ -120,18 +120,7 @@ export default tseslint.config(
       //    Excepciones: los propios `queryKeys.ts`, `src/lib/query/**`,
       //    tests y una allowlist LEGACY de hooks que se migrarán en olas.
       "no-restricted-syntax": ["error",
-        {
-          selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
-          message: "No uses `import * as ... from 'lucide-react'`. Usa named imports para preservar tree-shaking.",
-        },
-        {
-          selector: "CallExpression[callee.name='useEffect'] MemberExpression[object.name='supabase']",
-          message: "React 19 · No llames a `supabase` dentro de `useEffect`. Usa `useQuery`/`useMutation` de @tanstack/react-query (ver mem://principles/power-of-10 §5).",
-        },
-        {
-          selector: "CallExpression[callee.name='useEffect'] CallExpression[callee.name='fetch']",
-          message: "React 19 · No uses `fetch()` imperativo dentro de `useEffect`. Envuélvelo en `useQuery` para obtener cache, retry y cleanup automáticos.",
-        },
+        ...NO_RESTRICTED_SYNTAX_BASE,
         {
           selector: "Property[key.name='queryKey'] > ArrayExpression",
           message: "No definas `queryKey` inline. Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`) para mantener una sola fuente de verdad y evitar cachés fragmentados.",
