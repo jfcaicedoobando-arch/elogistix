@@ -5,6 +5,25 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import reactCompiler from "eslint-plugin-react-compiler";
 import tseslint from "typescript-eslint";
 
+// Selectores base de `no-restricted-syntax` compartidos por toda la config
+// (existentes desde React 19). El bloque de query keys inline se agrega
+// aparte para poder eximir la allowlist LEGACY sin perder estas 3 reglas.
+const NO_RESTRICTED_SYNTAX_BASE = [
+  {
+    selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
+    message: "No uses `import * as ... from 'lucide-react'`. Usa named imports para preservar tree-shaking.",
+  },
+  {
+    selector: "CallExpression[callee.name='useEffect'] MemberExpression[object.name='supabase']",
+    message: "React 19 · No llames a `supabase` dentro de `useEffect`. Usa `useQuery`/`useMutation` de @tanstack/react-query (ver mem://principles/power-of-10 §5).",
+  },
+  {
+    selector: "CallExpression[callee.name='useEffect'] CallExpression[callee.name='fetch']",
+    message: "React 19 · No uses `fetch()` imperativo dentro de `useEffect`. Envuélvelo en `useQuery` para obtener cache, retry y cleanup automáticos.",
+  },
+];
+
+
 export default tseslint.config(
   { ignores: ["dist", "coverage"] },
   {
