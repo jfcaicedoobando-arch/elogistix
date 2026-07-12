@@ -1,38 +1,48 @@
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { SelectionCell, SelectionHeader } from "./SelectionCell";
-import type { RowSelectionApi } from "./useRowSelection";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * buildSelectionColumn — agrega una columna de checkbox (id `__select`) al
- * inicio de tus columnas. El consumidor maneja el estado vía `useRowSelection`
- * y le pasa el id resolver de la fila.
+ * inicio de tus columnas. La selección se maneja con el estado nativo de
+ * TanStack (`state.rowSelection`) — el caller usa `useRowSelection` y pasa
+ * `rowSelection` + `onRowSelectionChange` al `<DataTable>`.
  *
  * Uso:
  *   const sel = useRowSelection();
- *   const cols = [buildSelectionColumn(sel, (r) => r.id, pageIds), ...otras];
+ *   const cols = [buildSelectionColumn<Row>(), ...otras];
+ *   <DataTable
+ *     rowSelection={sel.rowSelection}
+ *     onRowSelectionChange={sel.onRowSelectionChange}
+ *     ...
+ *   />
  */
-export function buildSelectionColumn<T>(
-  sel: RowSelectionApi,
-  getId: (row: T) => string,
-  pageRowIds: string[],
-): ColumnDef<T, unknown> {
-  const allSelected = pageRowIds.length > 0 && pageRowIds.every((id) => sel.selectedIds.has(id));
-  const someSelected = !allSelected && pageRowIds.some((id) => sel.selectedIds.has(id));
+export function buildSelectionColumn<T>(): ColumnDef<T, unknown> {
   return defineColumns<T>([
     {
       id: "__select",
-      header: () => (
-        <SelectionHeader
-          checked={allSelected}
-          indeterminate={someSelected}
-          onToggle={() => sel.toggleAll(pageRowIds)}
-        />
-      ),
-      meta: { width: "w-[40px]", align: "center", className: "p-0" },
-      cell: ({ row }) => {
-        const id = getId(row.original);
-        return <SelectionCell checked={sel.isSelected(id)} onToggle={() => sel.toggle(id)} />;
+      header: ({ table }) => {
+        const all = table.getIsAllPageRowsSelected();
+        const some = table.getIsSomePageRowsSelected();
+        return (
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+            <Checkbox
+              checked={some ? "indeterminate" : all}
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label="Seleccionar todas las filas visibles"
+            />
+          </div>
+        );
       },
+      meta: { width: "w-[40px]", align: "center", className: "p-0" },
+      cell: ({ row }) => (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Seleccionar fila"
+          />
+        </div>
+      ),
       enableSorting: false,
     },
   ])[0];

@@ -1,5 +1,5 @@
 import React from "react";
-import type { ColumnDef, OnChangeFn, VisibilityState } from "@tanstack/react-table";
+import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import type { LucideIcon } from "lucide-react";
 import { Table, TableFooter } from "@/components/ui/table";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -57,6 +57,12 @@ interface DataTableProps<T> {
   /** Visibilidad de columnas controlada (persistida por el caller vía `useColumnVisibility`). */
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+  /** Selección de filas (v13.286.0). Fuente de verdad: TanStack. El caller
+   *  mantiene el estado con `useRowSelection` y pasa aquí `rowSelection` y
+   *  `onRowSelectionChange`. Si se omite, la selección queda deshabilitada. */
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  enableRowSelection?: boolean;
 }
 
 function DataTableInner<T>({
@@ -88,6 +94,9 @@ function DataTableInner<T>({
   stickyHeader = false,
   columnVisibility,
   onColumnVisibilityChange,
+  rowSelection,
+  onRowSelectionChange,
+  enableRowSelection,
 }: DataTableProps<T>) {
   const table = useTableInstance<T>({
     data,
@@ -99,6 +108,9 @@ function DataTableInner<T>({
     getRowId: (row, index) => rowKey(row) ?? String(index),
     columnVisibility,
     onColumnVisibilityChange,
+    rowSelection,
+    onRowSelectionChange,
+    enableRowSelection,
   });
 
   // Footer recibe el set ya ordenado/visible según TanStack.

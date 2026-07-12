@@ -172,6 +172,22 @@ describe("DataTable E2E — filtro + orden + paginación", () => {
   });
 });
 
+describe("DataTable — accesibilidad de headers ordenables", () => {
+  it("expone aria-sort en el header activo y none en los demás sortables", () => {
+    render(<EmbarquesHarness />);
+    const cliente = screen.getByRole("columnheader", { name: /Cliente/ });
+    const numero = screen.getByRole("columnheader", { name: /Número/ });
+    expect(cliente.getAttribute("aria-sort")).toBe("none");
+    expect(numero.getAttribute("aria-sort")).toBe("none");
+    fireEvent.click(cliente);
+    expect(cliente.getAttribute("aria-sort")).toBe("ascending");
+    fireEvent.click(cliente);
+    expect(cliente.getAttribute("aria-sort")).toBe("descending");
+    // scope="col" en headers
+    expect(cliente.getAttribute("scope")).toBe("col");
+  });
+});
+
 describe("DataTable E2E — empty / loading", () => {
   it("filtro sin coincidencias muestra empty state", () => {
     render(<EmbarquesHarness />);

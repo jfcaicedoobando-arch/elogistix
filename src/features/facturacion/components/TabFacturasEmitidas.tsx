@@ -56,10 +56,9 @@ interface Props {
 
 export function TabFacturasEmitidas(p: Props) {
   const selection = useRowSelection();
-  const pageIds = useMemo(() => p.data.map((f) => f.id), [p.data]);
   const columnsConSeleccion = useMemo(
-    () => [buildSelectionColumn<Factura>(selection, (f) => f.id, pageIds), ...p.columns],
-    [selection, pageIds, p.columns],
+    () => [buildSelectionColumn<Factura>(), ...p.columns],
+    [p.columns],
   );
 
   const chips = useMemo<ChipItem[]>(() => {
@@ -165,6 +164,8 @@ export function TabFacturasEmitidas(p: Props) {
             rowKey={(f) => f.id}
             density="comfortable"
             getRowHref={(f) => `/facturacion/${f.id}`}
+            rowSelection={selection.rowSelection}
+            onRowSelectionChange={selection.onRowSelectionChange}
             pagination={{
               page: p.page,
               totalPages: p.totalPages,
