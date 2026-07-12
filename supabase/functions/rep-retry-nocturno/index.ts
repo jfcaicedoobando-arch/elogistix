@@ -17,6 +17,7 @@ import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const CRON_SECRET = Deno.env.get("CRON_SECRET");
 
 interface PagoPendiente {
   pago_id: string | null;
@@ -39,6 +40,11 @@ function severityFor(dias: number | null): "info" | "warning" | "critical" {
 
 Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Cron-only endpoint: exigimos X-Cron-Secret (mismo patrón que auditoria-snapshot-daily).
+  if (!CRON_SECRET || req.headers.get("X-Cron-Secret") !== CRON_SECRET) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 

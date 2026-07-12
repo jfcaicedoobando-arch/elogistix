@@ -17,6 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { wrapEdgeHandler, captureEdgeException } from "../_shared/sentry.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
+import { authorizeOrgMembership } from "../_shared/auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -78,6 +79,7 @@ interface CfdiParaVerificar {
   rfc_emisor: string;
   rfc_receptor: string;
   total: number;
+  organization_id: string | null;
 }
 
 async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
@@ -87,13 +89,14 @@ async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId:
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { data: null, error };
-  const row = data as { uuid_fiscal: string | null; rfc_proveedor: string | null; total: number; organizations?: { rfc?: string } | null };
+  const row = data as { uuid_fiscal: string | null; rfc_proveedor: string | null; total: number; organization_id: string | null; organizations?: { rfc?: string } | null };
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
       rfc_emisor: (row.rfc_proveedor ?? "").trim().toUpperCase(),
       rfc_receptor: (row.organizations?.rfc ?? "").trim().toUpperCase(),
       total: Number(row.total ?? 0),
+      organization_id: row.organization_id,
     },
     error: null,
   };
@@ -107,13 +110,14 @@ async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId:
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { data: null, error };
-  const row = data as { uuid_fiscal: string | null; rfc_cliente: string | null; total: number; organizations?: { rfc?: string } | null };
+  const row = data as { uuid_fiscal: string | null; rfc_cliente: string | null; total: number; organization_id: string | null; organizations?: { rfc?: string } | null };
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
       rfc_emisor: (row.organizations?.rfc ?? "").trim().toUpperCase(),
       rfc_receptor: (row.rfc_cliente ?? "").trim().toUpperCase(),
       total: Number(row.total ?? 0),
+      organization_id: row.organization_id,
     },
     error: null,
   };
@@ -158,6 +162,9 @@ Deno.serve(wrapEdgeHandler("verificar-uuid-sat", async (req) => {
     ? await loadFacturaCxc(admin, facturaId)
     : await loadFacturaCxp(admin, facturaId);
   if (fErr || !fact) return json(cors, { error: "factura_not_found", detail: (fErr as { message?: string })?.message }, 404);
+  if (!fact.organization_id) return json(cors, { error: "factura_sin_organizacion" }, 422);
+  const allowed = await authorizeOrgMembership(admin, auth.user!.id, fact.organization_id);
+  if (!allowed) return json(cors, { error: "forbidden" }, 403);
   if (!fact.uuid_fiscal) return json(cors, { error: "uuid_fiscal_missing" }, 422);
   if (!fact.rfc_emisor) return json(cors, { error: "rfc_emisor_missing" }, 422);
   if (!fact.rfc_receptor) return json(cors, { error: "rfc_receptor_missing" }, 422);
