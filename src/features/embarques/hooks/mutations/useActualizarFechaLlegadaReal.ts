@@ -1,12 +1,12 @@
 /**
  * Mutation: actualizar la fecha de llegada real del embarque desde el
- * formulario de tracking. Extraído de `TrackingNuevoEventoForm` (12.51.15)
- * para sacar el acceso a Supabase del componente.
+ * formulario de tracking.
+ * v13.278.0 · Fase 3 optimista: escribe fecha_llegada_real en caché del
+ * detalle antes de que el servidor confirme, con rollback si falla.
  */
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { actualizarFechaLlegadaRealEmbarque } from "@/features/embarques/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared/useMutationWithFeedback";
 
 interface Input {
   embarqueId: string;
@@ -18,21 +18,25 @@ interface Options {
   silent?: boolean;
 }
 
+// SAFE-CAST: parcheamos un solo campo en el objeto cacheado del detalle.
+const patchFecha = (old: unknown, vars: Input) => {
+  if (!old || typeof old !== "object") return old;
+  return { ...(old as Record<string, unknown>), fecha_llegada_real: vars.fechaIso };
+};
+
 export function useActualizarFechaLlegadaReal(options: Options = {}) {
   const { silent = false } = options;
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback<unknown, Error, Input>({
     mutationFn: ({ embarqueId, fechaIso }: Input) =>
       actualizarFechaLlegadaRealEmbarque(embarqueId, fechaIso),
-    onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.full(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
-      if (!silent) notifySuccess(undefined, { title: "Fecha de llegada actualizada" });
-    },
-    onError: (error: Error) => {
-      if (silent) return;
-      notifyError(undefined, { title: `Error al actualizar fecha: ${error.message}`, error, method: "UPDATE_FECHA_LLEGADA_REAL" });
-    },
+    invalidate: [queryKeys.embarques.all],
+    optimistic: [
+      { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchFecha },
+      { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchFecha },
+    ],
+    successTitle: "Fecha de llegada actualizada",
+    errorTitle: "Error al actualizar fecha",
+    errorMethod: "UPDATE_FECHA_LLEGADA_REAL",
+    silent,
   });
 }
