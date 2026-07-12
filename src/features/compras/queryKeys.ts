@@ -32,9 +32,9 @@ export const compras = {
   all: ["compras"] as const,
   conciliacionEmbarques: (filtros: ConciliacionFiltros) =>
     ["compras", "conciliacion-embarques", filtros] as const,
-  conciliacionDetalle: (embarqueId: string) =>
+  conciliacionDetalle: (embarqueId: string | null) =>
     ["compras", "conciliacion-detalle", embarqueId] as const,
-  conciliacionHuerfanas: (embarqueId: string) =>
+  conciliacionHuerfanas: (embarqueId: string | null) =>
     ["compras", "conciliacion-huerfanas", embarqueId] as const,
   notasCreditoGlobal: (filtros: NotasCreditoFiltros) =>
     ["compras", "notas-credito-global", filtros] as const,

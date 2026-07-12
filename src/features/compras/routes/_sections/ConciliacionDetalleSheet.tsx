@@ -35,7 +35,7 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
   });
 
   const { data: huerfanas = 0 } = useQuery({
-    queryKey: ["compras", "conciliacion-huerfanas", embarqueId],
+    queryKey: compras.conciliacionHuerfanas(embarqueId),
     queryFn: () => fetchPartidasHuerfanasCount(embarqueId as string),
     enabled: Boolean(embarqueId),
     staleTime: 30_000,
