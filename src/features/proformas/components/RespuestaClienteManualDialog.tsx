@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
+import { queryKeys } from "@/lib/query";
   actualizarEstadoClienteProforma,
   type RespuestaCliente,
 } from "@/features/proformas/services/respuestaCliente";
@@ -54,7 +55,7 @@ export function RespuestaClienteManualDialog({
           ? `Proforma ${numero} marcada como aceptada`
           : `Proforma ${numero} marcada como rechazada`,
       });
-      await qc.invalidateQueries({ queryKey: ["proformas"] });
+      await qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
       onOpenChange(false);
       setMotivo("");
     } catch (e) {

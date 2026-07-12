@@ -5,6 +5,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import {
+import { queryKeys } from "@/lib/query";
   fetchProformaPorId,
   fetchConceptosProforma,
   fetchConceptosConsolidados,
@@ -21,7 +22,7 @@ export interface ProformaDetalleData {
 
 export function useProformaDetalle(id: string | undefined) {
   return useQuery<ProformaDetalleData | null>({
-    queryKey: ["proformas", "detalle", id],
+    queryKey: queryKeys.proformas.detalle(id),
     enabled: !!id,
     staleTime: 30_000,
     queryFn: async () => {

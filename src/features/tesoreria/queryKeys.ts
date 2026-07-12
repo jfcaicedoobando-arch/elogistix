@@ -1,6 +1,8 @@
 export const tesoreria = {
   all: ["tesoreria"] as const,
-  cuentas: ["tesoreria", "cuentas"] as const,
+  cuentas: (activas?: boolean) => ["tesoreria", "cuentas", activas] as const,
+  saldosCuentas: ["tesoreria", "saldos-cuentas"] as const,
+  candidatos: (movId?: string | null) => ["tesoreria", "candidatos", movId] as const,
   movimientos: (cuentaId: string | null, filtros?: unknown) =>
     ["tesoreria", "movimientos", cuentaId, filtros ?? null] as const,
   resumen: (organizationId?: string | null) =>

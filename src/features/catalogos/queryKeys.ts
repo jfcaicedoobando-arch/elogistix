@@ -1,5 +1,7 @@
 export const configuracion = {
   all: ['configuracion'] as const,
+  catalogoClavesSat: (organizationId?: string | null) =>
+    ['catalogo_claves_sat', organizationId] as const,
 } as const;
 
 export const puertos = {

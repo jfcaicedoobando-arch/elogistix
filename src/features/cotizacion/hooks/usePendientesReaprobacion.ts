@@ -8,13 +8,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
+import { queryKeys } from "@/lib/query";
   contarCotizacionesPendientesReaprobacion,
   contarMisCotizacionesPendientesReaprobacion,
 } from "@/features/cotizacion/services/pendientesReaprobacion";
 
 export function useCotizacionesPendientesReaprobacion() {
   return useQuery<number>({
-    queryKey: ["cotizaciones", "pendientes-reaprobacion", "all"],
+    queryKey: queryKeys.cotizaciones.pendientesReaprobacion.all,
     staleTime: 60_000,
     queryFn: () => contarCotizacionesPendientesReaprobacion(),
   });
@@ -24,7 +25,7 @@ export function useMisCotizacionesPendientesReaprobacion() {
   const { user } = useAuth();
   const email = user?.email ?? null;
   return useQuery<number>({
-    queryKey: ["cotizaciones", "pendientes-reaprobacion", "mias", email],
+    queryKey: queryKeys.cotizaciones.pendientesReaprobacion.mias(email),
     enabled: Boolean(email),
     staleTime: 60_000,
     queryFn: () => contarMisCotizacionesPendientesReaprobacion(email as string),

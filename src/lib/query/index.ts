@@ -8,7 +8,7 @@
  */
 import { embarques, trackingLinks, trackingPublico } from "@/features/embarques/queryKeys";
 import { proformas } from "@/features/proformas/queryKeys";
-import { cotizaciones, pdfPreviewCotizacion } from "@/features/cotizacion/queryKeys";
+import { cotizaciones, pdfPreviewCotizacion, productosCatalogo } from "@/features/cotizacion/queryKeys";
 import { clientes, clienteFinancials } from "@/features/cliente/queryKeys";
 
 import { proveedores } from "@/features/proveedor/queryKeys";
@@ -16,10 +16,14 @@ import {
   configuracion, puertos, exchangeRates, navieras, tiposContenedor,
   configuracionGlobal, configuracionOrg,
 } from "@/features/catalogos/queryKeys";
-import { bitacora, dashboard, operadores, operaciones, reportes, sidebar } from "@/features/dashboard/queryKeys";
+import {
+  bitacora, dashboard, operadores, operaciones, reportes, sidebar,
+  direccion, dashboardOperador, embarquesPendientesAdmin,
+} from "@/features/dashboard/queryKeys";
 import {
   usuarios, usuariosPortalCliente, usuariosPortalAgente,
   planes, admin, appLogs, papelera, idempotenciaLog,
+  alertasSistema, demoLeads,
 } from "@/features/admin/queryKeys";
 import { crm } from "@/features/crm/queryKeys";
 import { portal } from "@/features/portal/queryKeys";
@@ -37,6 +41,8 @@ import { presupuesto } from "@/features/presupuesto/queryKeys";
 import { dashboardEjecutivo } from "@/features/dashboardEjecutivo/queryKeys";
 import { costeo } from "@/features/costeo/queryKeys";
 import { portalAgente } from "@/features/portal-agente/queryKeys";
+import { notificaciones } from "@/features/notificaciones/queryKeys";
+import { marketing } from "@/features/marketing/queryKeys";
 
 export const queryKeys = {
   costeo,
@@ -88,5 +94,6 @@ export const queryKeys = {
   papelera,
   idempotenciaLog,
   pdfPreviewCotizacion,
+  productosCatalogo,
   trackingPublico,
 } as const;

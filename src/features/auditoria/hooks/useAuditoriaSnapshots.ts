@@ -18,7 +18,7 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext";
 export function useAuditoriaSnapshots(dias = 30) {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [...queryKeys.auditoria.snapshots(dias), organizationId ?? "global"],
+    queryKey: queryKeys.auditoria.snapshots(dias, organizationId),
     queryFn: (): Promise<AuditoriaSnapshot[]> =>
       fetchAuditoriaSnapshots({ dias, organizationId }),
     staleTime: 5 * 60_000,

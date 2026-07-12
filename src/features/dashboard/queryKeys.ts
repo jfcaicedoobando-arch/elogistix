@@ -31,4 +31,21 @@ export const reportes = {
 
 export const sidebar = {
   alertCounts: ['sidebar-alert-counts'] as const,
+  adminPendientes: ['sidebar', 'embarques-admin-pendientes'] as const,
+} as const;
+
+export const direccion = {
+  kpis: (organizationId?: string | null, fallbackTc?: number) =>
+    ['dashboard', 'direccion', organizationId, fallbackTc] as const,
+} as const;
+
+export const dashboardOperador = {
+  docsFaltantes: (email?: string | null) =>
+    ['dashboard-operador', 'docs-faltantes', email] as const,
+  sinTracking: (email?: string | null) =>
+    ['dashboard-operador', 'sin-tracking', email] as const,
+} as const;
+
+export const embarquesPendientesAdmin = {
+  all: ['dashboard', 'embarques-pendientes-admin'] as const,
 } as const;

@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatPhoneMx } from "@/lib/formatters/phone";
 import { useToast } from "@/hooks/shared";
+import { queryKeys } from "@/lib/query";
 
 interface DemoLead {
   id: string;
@@ -70,7 +71,7 @@ function toCsv(rows: DemoLead[]): string {
 
 export default function AdminDemoLeads() {
   const { toast } = useToast();
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "demo-leads"], queryFn: fetchDemoLeads });
+  const { data, isLoading } = useQuery({ queryKey: queryKeys.demoLeads.all, queryFn: fetchDemoLeads });
   const rows = data ?? [];
 
   const handleExport = () => {

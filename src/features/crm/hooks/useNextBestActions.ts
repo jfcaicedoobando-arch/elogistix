@@ -10,11 +10,12 @@ import { useActividadesVencidasList } from "./useCrmDashboard";
 import { useCotizacionesSinRespuesta } from "./useCotizacionesSinRespuesta";
 import { computeNextBestActions, type NbaItem } from "@/features/crm/domain/nextBestActions";
 import { fetchNbaSignals, type NbaSignals } from "@/features/crm/services/nbaSignals";
+import { queryKeys } from "@/lib/query";
 
 function useNbaSignals() {
   const { user } = useAuth();
   return useQuery<NbaSignals>({
-    queryKey: ["crm", "nba-signals", user?.id],
+    queryKey: queryKeys.crm.nbaSignals(user?.id),
     enabled: !!user?.id,
     staleTime: 60_000,
     queryFn: () => fetchNbaSignals(),

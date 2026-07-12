@@ -20,6 +20,7 @@ import {
   CLIENTE_PRINCIPAL_ID,
   type ContactoClienteEmail,
 } from "@/features/cotizacion/services/envios";
+import { queryKeys } from "@/lib/query";
 export type Contacto = ContactoClienteEmail;
 
 const EMPTY_CONTACTOS: readonly Contacto[] = Object.freeze([]);
@@ -69,7 +70,7 @@ export function useEnvioDocumentoForm(
   const { user } = useAuth();
 
   const { data, isLoading: loadingContactos } = useQuery({
-    queryKey: ["contactos-cliente", clienteId],
+    queryKey: queryKeys.clientes.contactos(clienteId ?? "_none_"),
     enabled: !!clienteId && open,
     queryFn: () => fetchContactosClienteConEmail(clienteId!),
   });

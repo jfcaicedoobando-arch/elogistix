@@ -8,11 +8,11 @@ import {
   reconocerAlerta,
   type AlertaSistema,
 } from "@/features/admin/services";
+import { queryKeys } from "@/lib/query";
 
 export type { AlertaSistema };
 
-const QK_PENDING = ["alertas-sistema", "pending-count"] as const;
-const QK_LIST = ["alertas-sistema", "list"] as const;
+const QK_PENDING = queryKeys.alertasSistema.pending;
 
 /** Conteo de alertas no reconocidas. Solo significativo para super_admin. */
 export function useAlertasPendingCount() {
@@ -36,7 +36,7 @@ export function useAlertasSistemaList(includeAcknowledged = false) {
   const enabled = role === "super_admin";
 
   return useQuery({
-    queryKey: [...QK_LIST, includeAcknowledged],
+    queryKey: queryKeys.alertasSistema.list(includeAcknowledged),
     queryFn: () => fetchAlertasSistema(includeAcknowledged),
     enabled,
     staleTime: 30_000,
@@ -53,8 +53,8 @@ export function useAcknowledgeAlerta() {
   return useMutation({
     mutationFn: (id: string) => reconocerAlerta({ id, userId: user?.id ?? null }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: QK_PENDING });
-      qc.invalidateQueries({ queryKey: QK_LIST });
+      qc.invalidateQueries({ queryKey: queryKeys.alertasSistema.pending });
+      qc.invalidateQueries({ queryKey: queryKeys.alertasSistema.listAll });
     },
     onError: (err: Error) => {
       notifyError(toast, { title: "No se pudo reconocer la alerta", description: err.message, error: err, method: "FEATURES_ADMIN_HOOKS_USEALERTASSISTEMA_1" });

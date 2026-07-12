@@ -9,6 +9,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import {
+import { queryKeys } from "@/lib/query";
   fetchEnviosDestinatariosPorCliente,
   fetchContactosEmailPorCliente,
 } from "@/features/proformas/services";
@@ -83,7 +84,7 @@ async function fetchSugerencias(clienteId: string): Promise<DestinatariosSugerid
 
 export function useDestinatariosSugeridos(clienteId: string | null | undefined) {
   return useQuery({
-    queryKey: ["proformas", "destinatarios-sugeridos", clienteId],
+    queryKey: queryKeys.proformas.destinatariosSugeridos(clienteId),
     enabled: !!clienteId,
     staleTime: 60_000,
     queryFn: () => fetchSugerencias(clienteId!),

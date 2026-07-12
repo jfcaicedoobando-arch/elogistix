@@ -13,7 +13,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 
 export function useCuentasBancarias(activas = true) {
   return useQuery({
-    queryKey: [...queryKeys.tesoreria.cuentas, activas],
+    queryKey: queryKeys.tesoreria.cuentas(activas),
     queryFn: () => listarCuentas(activas),
     staleTime: 60_000,
   });
@@ -51,7 +51,7 @@ export function useEliminarCuenta() {
 /** Saldos por cuenta (sin lectura de facturas). Reutilizable. */
 export function useSaldosCuentas() {
   return useQuery({
-    queryKey: ["tesoreria", "saldos-cuentas"] as const,
+    queryKey: queryKeys.tesoreria.saldosCuentas,
     queryFn: fetchSaldosCuentas,
     staleTime: 60_000,
   });

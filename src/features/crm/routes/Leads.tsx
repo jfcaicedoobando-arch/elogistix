@@ -30,6 +30,7 @@ import { makeLeadsColumns } from "./leadsColumns";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { queryKeys } from "@/lib/query";
 
 interface LeadsFilters extends Record<string, string> {
   estado: string;
@@ -42,7 +43,7 @@ export default function Leads() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const list = useServerPagedList<CrmLeadRow, LeadsFilters>({
-    queryKey: ["crm", "leads", "paged"],
+    queryKey: queryKeys.crm.leads.paged,
     defaultFilters: DEFAULTS,
     filterLabels: { estado: "Estado", fuente: "Fuente" },
     defaultPageSize: 50,

@@ -59,7 +59,7 @@ export function useEstadoResultados() {
   }, [indiceMes, mesesDisponibles, setMesKey]);
 
   const { data, isLoading } = useQuery({
-    queryKey: [...queryKeys.profit.estadoResultados(organizationId, mesActual.key), fuente],
+    queryKey: queryKeys.profit.estadoResultados(organizationId, mesActual.key, fuente),
     queryFn: () => {
       const p = { organizationId: organizationId ?? null, year: mesActual.year, month: mesActual.month };
       return fuente === "facturas"

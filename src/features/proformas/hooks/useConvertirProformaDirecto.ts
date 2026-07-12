@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/shared/useToast";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
+import { queryKeys } from "@/lib/query";
   convertirProformaAFactura,
   fetchPrimeraSerieActiva,
 } from "@/features/proformas/services/convertirAFactura";
@@ -24,7 +25,7 @@ export function useConvertirProformaDirecto() {
   const qc = useQueryClient();
 
   const mutation = useMutation({
-    mutationKey: ["fiscal", "proforma-a-factura", "directo"],
+    mutationKey: queryKeys.proformas.convertirDirecto,
     mutationFn: async (input: ConvertirDirectoInput) => {
       if (!input.proformaIds.length) {
         throw new Error("Selecciona al menos una proforma");
@@ -60,9 +61,8 @@ export function useConvertirProformaDirecto() {
           description: `Borrador ${r.facturaNumero.startsWith("BORRADOR-") ? "sin folio" : r.facturaNumero} (${r.moneda}) listo. El folio interno se asignará al timbrar.`,
         });
       }
-      qc.invalidateQueries({ queryKey: ["proformas"] });
-      qc.invalidateQueries({ queryKey: ["proforma-detalle"] });
-      qc.invalidateQueries({ queryKey: ["facturas"] });
+      qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+      qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
     onError: (err) =>
       notifyError(undefined, { error: err, title: "Convertir proforma a factura" }),

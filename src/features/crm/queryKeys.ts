@@ -9,17 +9,24 @@ export const crm = {
   cliente360: (clienteId: string) => ['crm', 'cliente-360', clienteId] as const,
   proximasActividades: (entidadTipo: string, ids: string[]) =>
     ['crm', 'proximas-actividades', entidadTipo, ids] as const,
+  cotizacionesSinRespuesta: (diasUmbral: number, limit: number) =>
+    ['crm', 'cotizaciones-sin-respuesta', diasUmbral, limit] as const,
+  prospectoSearch: (term: string) => ['crm', 'prospecto-search', term] as const,
+  search: (term: string) => ['crm', 'search', term] as const,
+  nbaSignals: (uid?: string) => ['crm', 'nba-signals', uid] as const,
   actividades: {
     all: ['crm', 'actividades'] as const,
     list: (filters: Record<string, unknown>) => ['crm', 'actividades', filters] as const,
     vencidasCount: (uid?: string) => ['crm', 'actividades', 'vencidas-count', uid] as const,
     vencidasList: (uid?: string, limit?: number) =>
       ['crm', 'actividades', 'vencidas-list', uid, limit] as const,
+    paged: (uid?: string) => ['crm', 'actividades', 'paged', uid] as const,
   },
   leads: {
     all: ['crm', 'leads'] as const,
     list: (filters: Record<string, unknown>) => ['crm', 'leads', filters] as const,
     detail: (id: string) => ['crm', 'leads', 'detail', id] as const,
+    paged: ['crm', 'leads', 'paged'] as const,
   },
   oportunidades: {
     all: ['crm', 'oportunidades'] as const,
