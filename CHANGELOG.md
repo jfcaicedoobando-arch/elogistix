@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.274.0] - 2026-07-12
+- **Lint · Estándares React 19 en CI**: nuevas reglas `no-restricted-syntax` en `eslint.config.js` que prohíben `supabase.*` y `fetch()` dentro de `useEffect` (obliga a envolver todo fetch en `useQuery`/`useMutation`). Se conservan `react-hooks/exhaustive-deps: error` y `react-compiler/react-compiler: warn`. CI (`bun run lint -- --max-warnings 0`) trata warnings como errores, así que cualquier regresión rompe el pipeline. Verificado con un archivo probe: ambas reglas disparan.
+- Comentario documental en `.github/workflows/ci.yml` describiendo la disciplina React 19 que garantiza el step de ESLint.
+- Se deja preparado el bloque de las 7 reglas `eslint-plugin-react-hooks` v7 (Rules of React) — hoy `off` por 84 hits históricos, pero listas para activarse por dominio conforme se refactorice.
+
 ## [13.273.0] - 2026-07-12
 - **React 19 · Fase 3 (forwardRef legacy eliminado)**: 27 componentes shadcn en `src/components/ui/` y 103 sitios de `React.forwardRef` migrados al patrón nativo de React 19 (`ref` como prop regular tipada con `React.Ref<T>`). Se conserva `displayName` para preservar los nombres en DevTools y en los selectores de Radix. Beneficios: menos indirección, mejor inferencia del compiler y alineación con la guía oficial de React 19. Typecheck + `bun run build` verdes.
 
