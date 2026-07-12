@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { fetchTopTarifas, type TopTarifasParams } from "@/features/costeo/services/topTarifas";
 
