@@ -22,9 +22,7 @@ import {
 } from "@/features/cotizacion/services/envios";
 import { queryKeys } from "@/lib/query";
 export type Contacto = ContactoClienteEmail;
-
 const EMPTY_CONTACTOS: readonly Contacto[] = Object.freeze([]);
-
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface EnvioFormState {
