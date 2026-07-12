@@ -18,7 +18,7 @@ const KEY = ["costeo", "tarifas"] as const;
 export function useCosteoTarifas(filters: FetchTarifasFilters = {}) {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [...KEY, organizationId, filters],
+    queryKey: queryKeys.costeo.tarifas.list(organizationId, filters),
     queryFn: () => fetchCosteoTarifas(organizationId!, filters),
     enabled: !!organizationId,
     staleTime: 60 * 1000,
@@ -29,7 +29,7 @@ export function useCosteoTarifaMutations() {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
   const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: KEY });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.costeo.tarifas.all });
 
   const crear = useMutation({
     mutationFn: (input: TarifaInput) => insertTarifaConRecargos(organizationId!, input),

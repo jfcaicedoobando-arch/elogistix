@@ -19,7 +19,7 @@ const KEY = ["costeo", "navieras_condiciones"] as const;
 export function useCondicionesNaviera() {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [...KEY, organizationId],
+    queryKey: queryKeys.costeo.navieras.condiciones.list(organizationId),
     queryFn: () => fetchCondicionesNaviera(organizationId!),
     enabled: !!organizationId,
     staleTime: 5 * 60 * 1000,
@@ -30,7 +30,7 @@ export function useCondicionNavieraMutations() {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
   const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: KEY });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.costeo.navieras.condiciones.all });
 
   const guardar = useMutation({
     mutationFn: (params: { input: NavieraCondicionInput; id?: string }) =>

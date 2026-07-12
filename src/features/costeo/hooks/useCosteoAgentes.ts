@@ -14,7 +14,7 @@ import {
 export function useCosteoAgentes() {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [...KEY, organizationId],
+    queryKey: queryKeys.costeo.agentes.list(organizationId),
     queryFn: () => fetchCosteoAgentes(organizationId!),
     enabled: !!organizationId,
     staleTime: 5 * 60 * 1000,
@@ -25,7 +25,7 @@ export function useCosteoAgenteMutations() {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
   const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: KEY });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.costeo.agentes.all });
 
   const crear = useMutation({
     mutationFn: (input: CosteoAgenteInput) => insertCosteoAgente(organizationId!, input),
