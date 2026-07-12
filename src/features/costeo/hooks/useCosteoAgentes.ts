@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 import {
   fetchCosteoAgentes,
   insertCosteoAgente,
@@ -9,8 +10,6 @@ import {
   deleteCosteoAgente,
   type CosteoAgenteInput,
 } from "@/features/costeo/services/agentes";
-
-const KEY = ["costeo", "agentes"] as const;
 
 export function useCosteoAgentes() {
   const { organizationId } = useOrganization();
