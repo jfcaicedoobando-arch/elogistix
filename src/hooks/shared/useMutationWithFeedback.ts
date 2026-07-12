@@ -118,6 +118,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
     errorTitle = "Error",
     errorMethod = "ON_ERROR",
     optimistic,
+    silent = false,
     onSuccess: userOnSuccess,
     onError: userOnError,
     onMutate: userOnMutate,
