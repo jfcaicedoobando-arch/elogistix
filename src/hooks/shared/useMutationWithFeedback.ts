@@ -147,6 +147,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
         ...(userCtx && typeof userCtx === "object" ? (userCtx as Record<string, unknown>) : {}),
         __snapshots: snapshots,
       };
+      // SAFE-CAST: unificamos snapshots + ctx del usuario en el tipo TContext genérico.
       return merged as unknown as TContext;
     },
     onSuccess: (data, variables, onMutateResult, context) => {
