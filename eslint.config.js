@@ -416,7 +416,7 @@ export default tseslint.config(
       "src/features/admin/routes/AdminDemoLeads.tsx",
       "src/features/auditoria/hooks/useAuditoriaSnapshots.ts",
       "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
-      "src/features/costeo/hooks/useCosteoAlertas.ts",
+      
       "src/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail.ts",
       "src/features/cotizacion/hooks/usePendientesReaprobacion.ts",
       "src/features/cotizacion/hooks/useProductosCatalogo.ts",
