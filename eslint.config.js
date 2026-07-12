@@ -5,6 +5,25 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import reactCompiler from "eslint-plugin-react-compiler";
 import tseslint from "typescript-eslint";
 
+// Selectores base de `no-restricted-syntax` compartidos por toda la config
+// (existentes desde React 19). El bloque de query keys inline se agrega
+// aparte para poder eximir la allowlist LEGACY sin perder estas 3 reglas.
+const NO_RESTRICTED_SYNTAX_BASE = [
+  {
+    selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
+    message: "No uses `import * as ... from 'lucide-react'`. Usa named imports para preservar tree-shaking.",
+  },
+  {
+    selector: "CallExpression[callee.name='useEffect'] MemberExpression[object.name='supabase']",
+    message: "React 19 · No llames a `supabase` dentro de `useEffect`. Usa `useQuery`/`useMutation` de @tanstack/react-query (ver mem://principles/power-of-10 §5).",
+  },
+  {
+    selector: "CallExpression[callee.name='useEffect'] CallExpression[callee.name='fetch']",
+    message: "React 19 · No uses `fetch()` imperativo dentro de `useEffect`. Envuélvelo en `useQuery` para obtener cache, retry y cleanup automáticos.",
+  },
+];
+
+
 export default tseslint.config(
   { ignores: ["dist", "coverage"] },
   {
@@ -94,18 +113,21 @@ export default tseslint.config(
       //    sincronización de estado local o efectos secundarios no-fetch.
       //    Si necesitas un caso puntual (auth listeners, timers), agrega el
       //    disable con justificación: `// eslint-disable-next-line no-restricted-syntax -- <razón>`.
+      // 3) Prohibir query keys inline fuera del catálogo central (`queryKeys.ts`).
+      //    Toda `queryKey`/`mutationKey` debe usar el builder de
+      //    `src/features/<dominio>/queryKeys.ts` para evitar cachés
+      //    fragmentados e invalidaciones que no matchean.
+      //    Excepciones: los propios `queryKeys.ts`, `src/lib/query/**`,
+      //    tests y una allowlist LEGACY de hooks que se migrarán en olas.
       "no-restricted-syntax": ["error",
+        ...NO_RESTRICTED_SYNTAX_BASE,
         {
-          selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
-          message: "No uses `import * as ... from 'lucide-react'`. Usa named imports para preservar tree-shaking.",
+          selector: "Property[key.name='queryKey'] > ArrayExpression",
+          message: "No definas `queryKey` inline. Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`) para mantener una sola fuente de verdad y evitar cachés fragmentados.",
         },
         {
-          selector: "CallExpression[callee.name='useEffect'] MemberExpression[object.name='supabase']",
-          message: "React 19 · No llames a `supabase` dentro de `useEffect`. Usa `useQuery`/`useMutation` de @tanstack/react-query (ver mem://principles/power-of-10 §5).",
-        },
-        {
-          selector: "CallExpression[callee.name='useEffect'] CallExpression[callee.name='fetch']",
-          message: "React 19 · No uses `fetch()` imperativo dentro de `useEffect`. Envuélvelo en `useQuery` para obtener cache, retry y cleanup automáticos.",
+          selector: "Property[key.name='mutationKey'] > ArrayExpression",
+          message: "No definas `mutationKey` inline. Declara la key en `queryKeys.ts` del dominio para poder referenciarla desde `useIsMutating`/DevTools.",
         },
       ],
 
@@ -145,6 +167,10 @@ export default tseslint.config(
       "no-console": "off",
       "no-control-regex": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      // Tests declaran fixtures de queryKey/mutationKey inline para validar
+      // integración con TanStack Query. Mantenemos sólo los selectores base
+      // aquí (el catálogo central sólo aplica a código de producción).
+      "no-restricted-syntax": ["error", ...NO_RESTRICTED_SYNTAX_BASE],
     },
   },
   {
@@ -365,6 +391,121 @@ export default tseslint.config(
           },
         ],
       }],
+    },
+  },
+  {
+    // ─────────────────────────────────────────────────────────────────────
+    // Guardrail `inline-query-keys` — allowlist LEGACY (13.279.0).
+    //
+    // Los archivos abajo aún declaran `queryKey`/`mutationKey` inline. Se
+    // migrarán en olas al catálogo central `src/features/<dominio>/queryKeys.ts`.
+    // Al migrar un archivo: quítalo de esta lista. NO agregues archivos
+    // nuevos aquí — el guardrail existe para bloquear regresiones.
+    //
+    // Este bloque redefine `no-restricted-syntax` con SÓLO los selectores
+    // base (lucide-namespace + useEffect+supabase/fetch), omitiendo los
+    // selectores `queryKey`/`mutationKey`. En ESLint flat-config el último
+    // bloque coincidente gana para esa regla.
+    // ─────────────────────────────────────────────────────────────────────
+    name: "inline-query-keys-legacy",
+    files: [
+      "src/hooks/emails/useEnvioDocumentoForm.ts",
+      "src/hooks/layout/useSidebarAlerts.ts",
+      "src/hooks/shared/useServerPagedList.ts",
+      "src/features/admin/hooks/useAlertasSistema.ts",
+      "src/features/admin/routes/AdminDemoLeads.tsx",
+      "src/features/auditoria/hooks/useAuditoriaSnapshots.ts",
+      "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
+      "src/features/costeo/components/TarifaResultCard.tsx",
+      "src/features/costeo/hooks/useAprobacionTarifa.ts",
+      "src/features/costeo/hooks/useCosteoAgentes.ts",
+      "src/features/costeo/hooks/useCosteoRutas.ts",
+      "src/features/costeo/hooks/useCosteoTarifas.ts",
+      "src/features/costeo/hooks/useNavieraCondiciones.ts",
+      "src/features/costeo/hooks/useTarifasResumen.ts",
+      "src/features/costeo/hooks/useTopTarifas.ts",
+      "src/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail.ts",
+      "src/features/cotizacion/hooks/usePendientesReaprobacion.ts",
+      "src/features/cotizacion/hooks/useProductosCatalogo.ts",
+      "src/features/cotizacion/hooks/useTarifaVinculada.ts",
+      "src/features/cotizacion/queries.ts",
+      "src/features/crm/hooks/useCotizacionesSinRespuesta.ts",
+      "src/features/crm/hooks/useCrmProspectoSearch.ts",
+      "src/features/crm/hooks/useCrmSearch.ts",
+      "src/features/crm/hooks/useNextBestActions.ts",
+      "src/features/crm/routes/Actividades.tsx",
+      "src/features/crm/routes/Leads.tsx",
+      "src/features/cxp/components/ConciliacionPagoCell.tsx",
+      "src/features/cxp/hooks/useAprobarFactura.ts",
+      "src/features/cxp/hooks/useAprobarFacturasLote.ts",
+      "src/features/cxp/hooks/useCancelarFacturaProveedor.ts",
+      "src/features/cxp/hooks/useCerrarFacturaSinPago.ts",
+      "src/features/cxp/hooks/useConceptosCostoAbiertos.ts",
+      "src/features/cxp/hooks/useCxpAging.ts",
+      "src/features/cxp/hooks/useCxpPendientesAprobacion.ts",
+      "src/features/cxp/hooks/useEditarFacturaProveedorForm.ts",
+      "src/features/cxp/hooks/useFacturaProveedorMutations.ts",
+      "src/features/cxp/hooks/useHistorialFactura.ts",
+      "src/features/cxp/hooks/useProgramarPagoProveedor.ts",
+      "src/features/cxp/hooks/useProveedorSalud.ts",
+      "src/features/cxp/hooks/useSugerirEmbarques.ts",
+      "src/features/cxp/hooks/useVerificarUuidSat.ts",
+      "src/features/dashboard/direccion/hooks/useDireccionKpis.ts",
+      "src/features/dashboard/hooks/useDashboardOperador.ts",
+      "src/features/dashboard/hooks/useEmbarquesPendientesAdmin.ts",
+      "src/features/embarques/components/TabDemoras.tsx",
+      "src/features/embarques/components/facturacion/ProformaInconsistenteAlert.tsx",
+      "src/features/embarques/hooks/mutations/useUpdateEmbarque.ts",
+      "src/features/embarques/hooks/useActividadEmbarque.ts",
+      "src/features/embarques/hooks/useAdminPendienteResumen.ts",
+      "src/features/embarques/hooks/useCierreEmbarque.ts",
+      "src/features/embarques/hooks/useContenedoresEmbarque.ts",
+      "src/features/embarques/hooks/useContenedoresInfoMap.ts",
+      "src/features/embarques/hooks/useDemorasEmbarque.ts",
+      "src/features/embarques/hooks/useDocsFaltantesParaEstado.ts",
+      "src/features/embarques/hooks/useEmbarqueDependenciasFinancieras.ts",
+      "src/features/embarques/hooks/useEmbarqueTarifaInfo.ts",
+      "src/features/embarques/hooks/useEmbarquesAlertasResumen.ts",
+      "src/features/embarques/hooks/useGarantiasContenedor.ts",
+      "src/features/embarques/hooks/usePnlFinanciero.ts",
+      "src/features/embarques/hooks/useReconciliacion3Columnas.ts",
+      "src/features/embarques/hooks/useReconciliacionEmbarque.ts",
+      "src/features/embarques/hooks/useSegurosEmbarque.ts",
+      "src/features/facturacion/components/DialogCrearNotaCredito.tsx",
+      "src/features/facturacion/components/DialogEnviarFacturaBranded.tsx",
+      "src/features/facturacion/components/DialogNuevaFacturaManual.tsx",
+      "src/features/facturacion/components/DialogTimbrarFactura.tsx",
+      "src/features/facturacion/components/detalle/FacturaDatosFiscalesCard.tsx",
+      "src/features/facturacion/components/detalle/FacturaEmisorCard.tsx",
+      "src/features/facturacion/components/detalle/FacturaReceptorCard.tsx",
+      "src/features/facturacion/hooks/mutations/useEnviarFacturaEmail.ts",
+      "src/features/facturacion/hooks/useAcuseCancelacion.tsx",
+      "src/features/facturacion/hooks/useBandejas.ts",
+      "src/features/facturacion/hooks/useCrearFacturaManual.ts",
+      "src/features/facturacion/hooks/useDashboardEjecutivoFacturacion.ts",
+      "src/features/facturacion/hooks/useEliminarBorradorFactura.ts",
+      "src/features/facturacion/hooks/useNotaCreditoFacturapi.ts",
+      "src/features/facturacion/hooks/useProformasListas.ts",
+      "src/features/facturacion/hooks/useReferenciasEmbarqueFactura.ts",
+      "src/features/facturacion/hooks/useTimbrarFactura.ts",
+      "src/features/facturacion/hooks/useTimbrarFacturaDialog.ts",
+      "src/features/facturacion/hooks/useTimbrarRep.ts",
+      "src/features/marketing/hooks/useIsDemoUser.ts",
+      "src/features/notificaciones/hooks/useNotificacionesInternas.ts",
+      "src/features/portal-agente/components/AgenteTarifaForm.tsx",
+      "src/features/portal-agente/hooks/index.ts",
+      "src/features/presupuesto/hooks/usePresupuestoCategorias.ts",
+      "src/features/profit/hooks/useEstadoResultados.ts",
+      "src/features/proformas/components/EnviarProformaDialog.tsx",
+      "src/features/proformas/components/RespuestaClienteManualDialog.tsx",
+      "src/features/proformas/hooks/useConvertirProformaDirecto.ts",
+      "src/features/proformas/hooks/useDestinatariosSugeridos.ts",
+      "src/features/proformas/hooks/useProformaDetalle.ts",
+      "src/features/tesoreria/hooks/useTesoreriaCuentas.ts",
+      "src/features/tesoreria/hooks/useTesoreriaMovimientos.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...NO_RESTRICTED_SYNTAX_BASE],
     },
   },
   {
