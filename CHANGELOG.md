@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.277.0] - 2026-07-12
+- **TanStack Query · Fase 3 (optimistic UI)**: `useMutationWithFeedback` ahora acepta `optimistic: { queryKey, updater }` (o array para varias queries). El wrapper orquesta el flujo completo: `cancelQueries` → snapshot → `setQueryData` optimista → rollback automático si falla → `invalidateQueries` en `onSettled` para reconciliar con el servidor. Preserva `onMutate`/`onSuccess`/`onError`/`onSettled` del consumer.
+- `queryKey` puede ser estática o función `(variables) => QueryKey` — útil cuando el id vive dentro de las variables (`vars => queryKeys.embarques.detail(vars.id)`).
+- Tests nuevos en `src/hooks/shared/__tests__/useMutationWithFeedback.optimistic.test.tsx` cubren happy-path (write optimista visible en `mutationFn`) y rollback tras error.
+- Typecheck ✓ · sin breaking changes en los consumers existentes (feature opt-in).
+
 ## [13.276.0] - 2026-07-12
 - **TanStack Query · Fase 2 (piloto `queryOptions()`)**: introducidos factories tipados en `src/features/cotizacion/queries.ts` (5 opciones: `list`, `aceptadas`, `detail`, `embarquesVinculados`, `folio`) y `src/features/embarques/queries.ts` (7 opciones: `list`, `detail`, `conceptosVenta`, `conceptosCosto`, `expedientesCliente`, `proveedoresSelect`). Cada factory encapsula `queryKey` + `queryFn` + `staleTime`, reutilizable con `useQuery`, `prefetchQuery`, `ensureQueryData` y `useSuspenseQuery`.
 - **Tiers estandarizados de `staleTime`** en `src/lib/query/staleTimes.ts` (SHORT 30s, MEDIUM 60s, LONG 5min, VERY_LONG 30min). Elimina valores mágicos regados en hooks.
