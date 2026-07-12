@@ -1,9 +1,15 @@
 /**
  * useTimbrarFacturaDialog — extrae el estado + efecto + handler de
  * `DialogTimbrarFactura` para mantener el componente por debajo de las
- * 200 líneas (Power of 10). No cambia la lógica: sólo la encapsula.
+ * 200 líneas (Power of 10).
+ *
+ * v13.269.0: migrado a React Query para estandarizar mutaciones. Los tres
+ * side-effects imperativos (actualizar datos fiscales previo al timbrado,
+ * persistir defaults del cliente, enviar CFDI por email) viven ahora como
+ * `useMutation` con `mutationKey` estable e invalidación de caches.
  */
 import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   actualizarDatosTimbradoFactura,
   guardarDefaultsTimbradoCliente,
@@ -36,42 +42,6 @@ function resolverDefaults(
   return { usoCfdi, formaPago, metodoPago };
 }
 
-async function guardarDefaultsSiClienteExiste(
-  clienteId: string | null,
-  usoCfdi: string,
-  formaPago: string,
-  metodoPago: string,
-) {
-  if (!clienteId) return;
-  try {
-    await guardarDefaultsTimbradoCliente(clienteId, {
-      uso_cfdi_default: usoCfdi,
-      forma_pago_default: formaPago,
-      metodo_pago_default: metodoPago,
-    });
-  } catch (err) {
-    console.warn("[timbrado] no se guardaron los defaults del cliente:", err);
-  }
-}
-
-async function enviarCfdiSiHabilitado(
-  facturaId: string,
-  habilitado: boolean,
-  toast: ReturnType<typeof useToast>["toast"],
-) {
-  if (!habilitado) return;
-  try {
-    const r = await enviarCfdiFactura(facturaId);
-    toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });
-  } catch (err) {
-    notifyError(toast, {
-      title: "Factura timbrada, pero no se envió el email",
-      description: getErrorMessage(err),
-      method: "ON_ERROR",
-      errorCode: ERROR_CODES.VALIDATION_FAILED,
-    });
-  }
-}
 
 export function useTimbrarFacturaDialog(
   factura: FacturaLike | null | undefined,
