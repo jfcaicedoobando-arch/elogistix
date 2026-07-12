@@ -134,7 +134,8 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       }
 
       // Combinamos el contexto del usuario con nuestros snapshots.
-      const userCtx = (await userOnMutate?.(variables)) as unknown;
+      // SAFE-CAST: la firma tipada exige (vars, mutation) pero sólo necesitamos vars.
+      const userCtx = (await (userOnMutate as unknown as (v: TVariables) => unknown)?.(variables)) as unknown;
       const merged: OptimisticContext & Record<string, unknown> = {
         ...(userCtx && typeof userCtx === "object" ? (userCtx as Record<string, unknown>) : {}),
         __snapshots: snapshots,
