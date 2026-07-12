@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.273.0] - 2026-07-12
+- **React 19 · Fase 3 (forwardRef legacy eliminado)**: 27 componentes shadcn en `src/components/ui/` y 103 sitios de `React.forwardRef` migrados al patrón nativo de React 19 (`ref` como prop regular tipada con `React.Ref<T>`). Se conserva `displayName` para preservar los nombres en DevTools y en los selectores de Radix. Beneficios: menos indirección, mejor inferencia del compiler y alineación con la guía oficial de React 19. Typecheck + `bun run build` verdes.
+
 ## [13.272.0] - 2026-07-12
 - **Auditoría de `useEffect` imperativos**: revisados los 9 candidatos abiertos. 8 resultaron ser sincronizaciones de form-state (no fetches) o suscripciones legítimas (auth) — se documentan como patrón correcto y no se migran. Único fetch real (`useNuevoProveedorController`: RFC duplicado en org) migrado a `useQuery` con `useDebouncedValue` de 300 ms. Beneficios: se elimina el `useRef`+`setTimeout` manual, se cachea por `(orgId, rfc)` con `staleTime` de 30 s (borrar/reescribir el mismo RFC ya no repite fetch) y se agrega `retry: false` para no reintentar validaciones fallidas.
 - Nueva key en `features/proveedor/queryKeys.ts`: `proveedores.rfcCheck(rfc, organizationId)`.
