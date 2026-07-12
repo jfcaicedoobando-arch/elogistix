@@ -41,6 +41,11 @@ function severityFor(dias: number | null): "info" | "warning" | "critical" {
 Deno.serve(wrapEdgeHandler("rep-retry-nocturno", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // Cron-only endpoint: exigimos X-Cron-Secret (mismo patrón que auditoria-snapshot-daily).
+  if (!CRON_SECRET || req.headers.get("X-Cron-Secret") !== CRON_SECRET) {
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
   const { data: pendientes, error } = await admin
