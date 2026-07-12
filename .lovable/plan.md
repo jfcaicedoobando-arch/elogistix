@@ -1,51 +1,52 @@
-
 ## Diagnóstico
 
-El pipeline `Coverage merge & report` marcó rojo por **dos causas** independientes:
+CI del último run: **588 archivos de test / 4128 tests — todos pasan**. Lo único que rompe el pipeline es el umbral de cobertura de **branches**:
 
-**A. 5 tests de arquitectura/unit fallan (regresiones de nuestras últimas fases)**
+```
+Statements : 39.48% (10071/25507)  ✓ (umbral 34)
+Branches   : 33.93% (7166/21115)   ✗ (umbral 34) — faltan solo 14 branches
+Functions  : 30.09%                ✓
+Lines      : 39.95%                ✓
+```
 
-1. `src/lib/__tests__/architecture-baseline.test.ts` y `src/__tests__/audit-report.test.ts` — Power-of-10: **2 archivos > 200 líneas** fuera de la allowlist:
-   - `src/features/crm/routes/Actividades.tsx` (201)
-   - `src/hooks/emails/useEnvioDocumentoForm.ts` (201)
-2. `src/lib/__tests__/architecture.test.ts` y `src/__tests__/architecture/safe-casts-services.test.ts` — 3 `as unknown as` sin marcador `// SAFE-CAST:`:
-   - `src/hooks/shared/useMutationWithFeedback.ts:150` y `:163` (introducidos en el refactor optimista)
-   - `src/features/embarques/queries.ts:25` (introducido al migrar a `queryOptions`)
-3. `src/__tests__/architecture/mutations-have-onerror.test.ts` — `src/features/facturacion/hooks/useTimbrarFacturaDialog.ts:78` tiene `useMutation` (mutación `actualizarDatos`) sin `onError`.
-4. `src/features/facturacion/hooks/__tests__/useNotaCreditoFacturapi.test.tsx` — El test espera que se invalide `["factura_notas_credito", "recientes"]` inline, pero al migrar a `queryKeys` el hook ahora invalida con la factory. Hay que alinear el test con la key centralizada.
+Necesitamos **+14 branches cubiertos** (0.07%) para pasar. La memoria prohíbe bajar el umbral, así que se escriben tests focalizados.
 
-**B. Cobertura global cayó por debajo del umbral** (statements 30.08 % / requerido 38 %). La memoria `coverage-threshold` prohíbe bajar el umbral; hay que **escribir tests** o **acotar el `include` de cobertura** si se están contando archivos que antes no se contaban.
+## Objetivo
 
-## Cambios propuestos
+Añadir tests que cubran ramas hoy no ejercidas en los archivos que más se movieron en las últimas migraciones TanStack. Con ~20 branches nuevos cubiertos dejamos margen (~34.03%) sin acercarnos al filo.
 
-### Fix A — Fallos de arquitectura y unit (una tanda)
+## Archivos objetivo (ricos en ramas sin cubrir)
 
-1. **Reducir a ≤200 líneas** ambos archivos, extrayendo helpers puros a módulos vecinos:
-   - `Actividades.tsx` → mover columnas / filtros a `Actividades.helpers.ts` (o `.columns.ts`).
-   - `useEnvioDocumentoForm.ts` → mover validaciones/mapeos a `useEnvioDocumentoForm.helpers.ts`.
-2. **Añadir `// SAFE-CAST:`** con justificación breve encima de cada cast:
-   - `useMutationWithFeedback.ts:150,163` (react-query tipa el `error` como `unknown`; sólo leemos `.message`).
-   - `embarques/queries.ts:25` (react-query key acepta `Record<string, unknown>`; los filters son un DTO plano).
-3. **`useTimbrarFacturaDialog.ts`** — Añadir `onError: (e) => notifyError(...)` a la mutación `actualizarDatos` (y verificar `guardarDefaults`, que es best-effort: si el linter la marca, añadir `onError` no-op documentado).
-4. **`useNotaCreditoFacturapi.test.tsx`** — Reemplazar la key inline por `facturasKeys.notasCreditoRecientes()` (o la factory ya registrada) para que el test verifique lo que hoy invalida el hook. Si esa factory no existe todavía, crearla en `queryKeys` y usarla tanto en hook como test.
+1. **`src/hooks/shared/useMutationWithFeedback.ts`** — optimistic path recién añadido. Ramas sin tocar:
+   - `silent: true` (no toast al éxito/error)
+   - `optimisticUpdate` sin `snapshotKeys` (no rollback)
+   - `onError` con rollback ejecutándose (fallback cuando la mutación rechaza)
+   - `successMessage` como función vs string
 
-### Fix B — Cobertura
+2. **`src/features/embarques/queries.ts`** — factory `expedientesCliente` con `organizationId` **null/undefined**, y `proveedoresSelect` con `organizationId` **definido**. Hoy sólo se prueba un lado de cada `??`.
 
-Antes de escribir tests a ciegas: **auditar el delta**. Ejecutar `bun run test:coverage` local y comparar el reporte con el último verde para identificar si:
+3. **`src/features/facturacion/hooks/useTimbrarFacturaDialog.ts`** — nuevo `onError` de `actualizarDatos`, rama de "envío deshabilitado", y precedencia `defaults ?? props ?? initial`.
 
-- (a) archivos nuevos sin tests son los culpables (agregar tests focalizados), o
-- (b) el `coverage.include` de `vitest.config.ts` está sumando código muerto/generado (ajustar el patrón, sin tocar el umbral).
+4. **`src/features/embarques/hooks/useActualizarEta.ts`** y **`useActualizarFechaLlegadaReal.ts`** — migradas a optimista; agregar 1-2 tests que verifiquen rollback en error.
 
-En cualquier caso: **no bajar el umbral** (regla de la memoria). Reportar hallazgos al usuario y proponer 1–2 tandas concretas de tests.
+## Entregable
+
+- 4 archivos de test nuevos/ampliados (~15-20 assertions, ~20-25 branches nuevos cubiertos).
+- Correr `bun run test:coverage:shard` local sobre esos archivos y verificar que branches sube ≥ 34.1%.
+- Actualizar `CHANGELOG.md` + `APP_VERSION` → `13.285.0`.
+- Sin tocar código de producción; solo tests.
 
 ## Detalles técnicos
 
-- `useMutationWithFeedback.ts` líneas 150 y 163 — cast `error as unknown as Error` — añadir comentario `// SAFE-CAST: react-query tipa error como unknown; sólo se lee .message`.
-- `embarques/queries.ts:25` — `filters as unknown as Record<string, unknown>` — comentario análogo.
-- La regla del test `mutations-have-onerror.test.ts:95` recorre `useMutation({...})` y exige propiedad `onError`. `onError: () => {}` con comentario cuenta como "manejado" — se usará para casos best-effort.
-- La factory `facturasKeys.notasCreditoRecientes()` debe vivir en `src/features/facturacion/queryKeys.ts`; registrar en `src/lib/query/index.ts` si aplica.
+- Los mocks de Supabase siguen el patrón `_supabaseChainMock.ts` (regla `mem://technical/testing-mock-patterns`).
+- Cleanup vía `afterEach` global (regla `mem://technical/testing-cleanup-protocol`).
+- Cada test envuelto en `queryWrapper` para `useQuery`/`useMutation`.
+- `notifyError` mockeado para verificar que `silent: true` **no** lo llama.
 
-## Fuera de alcance de este plan
+## Verificación final
 
-- Warnings de React Router v7 future flags (ruido en logs, no bloquea).
-- Ajustes de UI/UX derivados del `/inicio`.
+1. `bunx vitest run <los 4 archivos>` → verde.
+2. `bun run test:coverage:shard -- --shard=1/1 <archivos>` → confirma branches locales suben.
+3. `bunx tsgo --noEmit` + `bun run lint` → limpio.
+
+Si tras esto CI sigue por debajo del umbral, iterar con 1-2 archivos más (candidatos preparados: `useEnvioDocumentoForm`, `useIsDemoUser`).

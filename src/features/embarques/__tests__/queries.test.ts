@@ -66,4 +66,22 @@ describe("embarqueQueries factories", () => {
     await (opts.queryFn as () => Promise<unknown>)();
     expect(svc.fetchProveedoresForSelect).toHaveBeenCalledWith(null);
   });
+
+  it("proveedoresSelect: pasa organizationId cuando viene definido", async () => {
+    const opts = embarqueQueries.proveedoresSelect("org-42");
+    await (opts.queryFn as () => Promise<unknown>)();
+    expect(svc.fetchProveedoresForSelect).toHaveBeenCalledWith("org-42");
+  });
+
+  it("expedientesCliente: acepta organizationId undefined y delega", async () => {
+    const opts = embarqueQueries.expedientesCliente("cli-2");
+    await (opts.queryFn as () => Promise<unknown>)();
+    expect(svc.fetchExpedientesCliente).toHaveBeenCalledWith("cli-2");
+    expect(opts.queryKey).toEqual(queryKeys.embarques.expedientesCliente("cli-2", undefined));
+  });
+
+  it("expedientesCliente: acepta organizationId null y lo incluye en la key", () => {
+    const opts = embarqueQueries.expedientesCliente("cli-3", null);
+    expect(opts.queryKey).toEqual(queryKeys.embarques.expedientesCliente("cli-3", null));
+  });
 });
