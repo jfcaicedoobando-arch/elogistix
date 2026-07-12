@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -10,7 +11,6 @@ import {
   type CosteoRutaInput,
 } from "@/features/costeo/services/rutas";
 
-const KEY = ["costeo", "rutas"] as const;
 
 export function useCosteoRutas() {
   const { organizationId } = useOrganization();
