@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { findProveedorByRfcEnOrg, ProveedorDuplicadoError } from "@/features/proveedor/services";
+import { proveedores as proveedoresKeys } from "@/features/proveedor/queryKeys";
 import { useOrgFilter } from "@/hooks/shared";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import {
   DOCS_EXTRANJERO,
   DOCS_NACIONAL,
