@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.285.2] - 2026-07-12
+- **fix(tests)**: shard 14 de CI se colgaba en `useNuevoProveedorController.test.tsx` (timeout 20 min). El hook usa `useQuery` para verificar RFC duplicado, pero `renderHook` no envolvía en `QueryClientProvider` → error "No QueryClient set" en cada test; con `--retry=2` la combinación quedaba wedged en el runner. Fix: wrapper local con `QueryClient` + reemplazo del test con fake timers por un `waitFor(timeout: 2000)` sobre timers reales (más robusto con React Query).
+
 ## [13.285.1] - 2026-07-12
 - **lint:unused (knip)**: CI falló con 3 devDeps + 3 exports + 2 tipos sin usar. Fix:
   - `knip.json`: `@babel/core`, `@types/babel__core`, `babel-plugin-react-compiler` a `ignoreDependencies` (se cargan vía `await import()` dinámico en `vite-plugins/reactCompilerPlugin.ts`, knip no detecta imports dinámicos).
