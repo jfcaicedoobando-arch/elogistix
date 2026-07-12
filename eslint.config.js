@@ -83,12 +83,29 @@ export default tseslint.config(
         // bloque `no-raw-table` al final del archivo — inmune al override que
         // apaga `no-restricted-imports` en `src/features/**`.
       }],
-      // Guardrail lucide-react — prohibir `import * as Icons from "lucide-react"`
-      // (rompería tree-shaking y traería los ~1,400 íconos al bundle).
-      "no-restricted-syntax": ["error", {
-        selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
-        message: "No uses `import * as ... from 'lucide-react'`. Usa named imports para preservar tree-shaking.",
-      }],
+      // Guardrails para React 19 (13.274.0):
+      // 1) Ban `import * as Icons from "lucide-react"` (rompe tree-shaking).
+      // 2) Prohibir data-fetching imperativo dentro de `useEffect` — en React 19
+      //    con TanStack Query, cada fetch debe vivir en un hook `useQuery` /
+      //    `useMutation`. Los `useEffect` sólo son válidos para suscripciones,
+      //    sincronización de estado local o efectos secundarios no-fetch.
+      //    Si necesitas un caso puntual (auth listeners, timers), agrega el
+      //    disable con justificación: `// eslint-disable-next-line no-restricted-syntax -- <razón>`.
+      "no-restricted-syntax": ["error",
+        {
+          selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
+          message: "No uses `import * as ... from 'lucide-react'`. Usa named imports para preservar tree-shaking.",
+        },
+        {
+          selector: "CallExpression[callee.name='useEffect'] MemberExpression[object.name='supabase']",
+          message: "React 19 · No llames a `supabase` dentro de `useEffect`. Usa `useQuery`/`useMutation` de @tanstack/react-query (ver mem://principles/power-of-10 §5).",
+        },
+        {
+          selector: "CallExpression[callee.name='useEffect'] CallExpression[callee.name='fetch']",
+          message: "React 19 · No uses `fetch()` imperativo dentro de `useEffect`. Envuélvelo en `useQuery` para obtener cache, retry y cleanup automáticos.",
+        },
+      ],
+
     },
   },
   {
