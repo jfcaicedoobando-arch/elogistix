@@ -1,4 +1,4 @@
-import { forwardRef, type ComponentType, type SVGProps } from "react";
+import { type ComponentType, type SVGProps } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,10 +40,7 @@ export interface IconProps extends Omit<LucideLikeProps, "ref"> {
  * <Icon as={Truck} className="text-primary" /> // decorativo
  * ```
  */
-export const Icon = forwardRef<SVGSVGElement, IconProps>(function Icon(
-  { as: Component, label, size = 16, strokeWidth = 2, className, ...rest },
-  ref,
-) {
+export const Icon = function Icon({ ref, as: Component, label, size = 16, strokeWidth = 2, className, ...rest }: IconProps & { ref?: React.Ref<SVGSVGElement> }) {
   const a11yProps = label
     ? { role: "img" as const, "aria-label": label }
     : { "aria-hidden": true as const, focusable: false as const };
@@ -57,4 +54,4 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(function Icon(
       {...rest}
     />
   );
-});
+};

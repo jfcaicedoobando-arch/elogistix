@@ -7,10 +7,7 @@ import { cn } from "@/lib/utils";
  * Uso intencional: filtro inline (ej. Todas/Pendientes/Facturadas) cuando
  * existe un `Tabs` principal y queremos diferenciarlo visualmente.
  */
-const ToggleGroup = React.forwardRef<
-  React.ElementRef<typeof ToggleGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root>
->(({ className, ...props }, ref) => (
+const ToggleGroup = ({ ref, className, ...props }: React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & { ref?: React.Ref<React.ElementRef<typeof ToggleGroupPrimitive.Root>> }) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
     className={cn(
@@ -19,13 +16,10 @@ const ToggleGroup = React.forwardRef<
     )}
     {...props}
   />
-));
+);
 ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName;
 
-const ToggleGroupItem = React.forwardRef<
-  React.ElementRef<typeof ToggleGroupPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item>
->(({ className, ...props }, ref) => (
+const ToggleGroupItem = ({ ref, className, ...props }: React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> & { ref?: React.Ref<React.ElementRef<typeof ToggleGroupPrimitive.Item>> }) => (
   <ToggleGroupPrimitive.Item
     ref={ref}
     className={cn(
@@ -38,7 +32,7 @@ const ToggleGroupItem = React.forwardRef<
     )}
     {...props}
   />
-));
+);
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName;
 
 export { ToggleGroup, ToggleGroupItem };
