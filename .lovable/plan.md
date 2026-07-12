@@ -1,115 +1,86 @@
-# Auditoría de la implementación de React
+# Auditoría TanStack — Libre Carga
 
-## Estado actual (lo que ya está top-of-the-line)
+## Diagnóstico corto
 
-| Área | Estado |
-|---|---|
-| React | 19.0.2 (mayor actual). Types 19.0.10. |
-| Vite / TS | Vite 5.4, TS 5.9 (los pins de plataforma). |
-| StrictMode | Activo en `main.tsx`. |
-| React Compiler | Instalado en modo `annotation` con plugin Vite propio. |
-| ErrorBoundary raíz | Cubriendo router + providers. |
-| Auto-recovery de chunks stale | Implementado (vite:preloadError + unhandledrejection + error). |
-| Sentry + Query persister | Lazy fuera del critical path. |
-| Higiene TS | 0 `any`, 0 `React.FC`, 0 `PropTypes`, 0 `eslint-disable`, 0 `exhaustive-deps` disabled. |
-| Data fetching | 109 `useQuery`, mutations via React Query. |
-| Memoización manual | 306 `useMemo` + 172 `useCallback` + 16 `React.memo`. |
+**Versiones (todas ~3 patches atrás del último release, ninguna con APIs rotas):**
 
-**Diagnóstico**: es una implementación limpia y disciplinada. Los "olores" restantes son de segunda derivada — no hay bugs, hay oportunidades de modernización que React 19 abrió y que aún no aprovechamos.
+- `@tanstack/react-query` **5.101.2** → último 5.104+
+- `@tanstack/react-table` **8.21.3** → al día
+- `@tanstack/react-virtual` **3.14.5** → al día
+- `query-sync-storage-persister` + `react-query-persist-client` **5.101.2**
 
-## Brechas frente al estándar React 19 "top of the line"
-
-1. **`forwardRef` legacy en 33 archivos** — todos los primitives de `components/ui/*`. React 19 acepta `ref` como prop normal; `forwardRef` está deprecado (funciona, pero es ruido).
-2. **APIs React 19 sin usar**: `use()` (0), `useOptimistic` (0), `useActionState` (0), `useFormStatus` (0). `useTransition`/`useDeferredValue` sólo en 3 archivos.
-3. **React Compiler sub-utilizado**: sólo 2 archivos con `"use memo"` (`Embarques`, `Cotizaciones`). El compiler puede reemplazar la mayoría de esos 306 `useMemo` + 172 `useCallback` manuales si se activa en más rutas calientes.
-4. **12 archivos con patrón imperativo `useState` + `useEffect` + `supabase`** — deberían ser `useQuery`.
-5. **Sin `queryOptions()` factories** (React Query 5) — 109 `useQuery` con keys inline pierden tipado end-to-end y facilitan invalidaciones inconsistentes.
-6. **Granularidad Suspense/ErrorBoundary baja**: 1 Suspense global + 4 ErrorBoundaries. Una caída en una ruta puede bajar toda la sección autenticada.
-7. **React 19.1/19.2 disponibles** — no bloqueante, pero traen `<Activity>` y mejoras del compiler.
+**Veredicto:** implementación **sólida y por encima del promedio**, pero **no "top of the line" todavía**. Fortalezas claras: `QueryClient` centralizado con Sentry, persistencia inteligente por whitelist, `DataTable`/`VirtualDataTable` compartidos, migración v5 correcta (`placeholderData: keepPreviousData`), 0 anti-patrones removidos en v5. Debilidades: 181 query keys inline fuera de las factories, 0 uso del helper moderno `queryOptions()`, 0 devtools, `useMutation` optimista casi inexistente, y features `bandejas` + `compras` sin `queryKeys.ts`.
 
 ---
 
-## Plan de 5 fases
+## Fase 1 · Higiene inmediata (baja fricción, gran retorno)
 
-Cada fase es autónoma y verificable con `typecheck + build + tests`. Se puede pausar entre fases.
+1. **Bump TanStack a último patch**
+  - RQ `5.101.2` → `5.104.x`, persister igual. Sin breaking changes esperados.
+2. **Devtools sólo en dev**
+  - `bun add -D @tanstack/react-query-devtools`
+  - Montar `<ReactQueryDevtools />` en `App.tsx` bajo `if (import.meta.env.DEV)`.
+  - Objetivo: visibilidad de cache / staleTime / invalidaciones al depurar.
+3. `**queryKeys.ts` para features sin factory**
+  - Crear `src/features/bandejas/queryKeys.ts` y `src/features/compras/queryKeys.ts`.
+  - Migrar los ~15 keys inline detectados (`ComprasConciliacion`, `ComprasNotasCredito`, `ComprasPagos`, `ComprasReportes`, `ConciliacionDetalleSheet`, `useBandejas`, etc.).
+  - Beneficio: evita typos en `invalidateQueries` (bug latente).
 
-### Fase 1 — Data fetching disciplinado (riesgo bajo)
-- Auditar los 12 archivos que mezclan `useState`+`useEffect`+`supabase` y migrarlos a `useQuery` (elimina memory leaks potenciales y estados intermedios inconsistentes).
-- Introducir el patrón `queryOptions()` de React Query 5: un factory tipado por dominio (`embarquesQueries.ts`, `cotizacionesQueries.ts`, etc.) que expone `list()`, `byId(id)`, `dashboard()`, con keys estables. Refactorizar incrementalmente los 109 `useQuery` para consumirlo.
-- Bump a **React 19.2** (última estable) y `@types/react` correspondiente.
+## Fase 2 · Adoptar `queryOptions()` (patrón moderno v5)
 
-### Fase 2 — Expandir React Compiler a rutas calientes
-- Agregar `"use memo"` a los 8-10 componentes-ruta con más re-renders: `Dashboard`, `Facturacion`, `CotizacionDetalle`, `EmbarqueDetalle`, `Oportunidades`, `Cxp`, `Configuracion`, `AuditoriaPage`.
-- Activar `eslint-plugin-react-compiler` en modo `error` (hoy es `warn`) para los archivos anotados, así se garantiza que las "rules of react" no se rompen en ese subset.
-- Medir: comparar cantidad de `useMemo`/`useCallback` manuales en esos archivos y remover los que el compiler ya cubre (opcional, no urgente).
+Es el patrón "top-of-the-line" de RQ v5: define **una sola vez** la tupla `(queryKey, queryFn, staleTime)` y la reutilizas en `useQuery`, `prefetchQuery`, `ensureQueryData`, `setQueryData` con tipos automáticos.
 
-### Fase 3 — Modernizar primitives (mecánico, opt-in por archivo)
-- Migrar los 33 `components/ui/*.tsx` de `forwardRef((props, ref) => ...)` a `({ref, ...props}: Props & {ref?: Ref<...>}) => ...` (patrón oficial React 19).
-- No romper la API pública de shadcn (los consumidores siguen pasando `ref={...}` igual).
-- Un archivo por PR conceptual; empezar por los menos usados (Alert, Badge, Progress) y terminar por los críticos (Button, Dialog, Select).
+- Piloto en 2 features de alto tráfico: `cotizacion` y `embarques` (ya prefetchean).
+- Reemplazar los archivos `useCotizacionQueries.ts` / `useEmbarqueQueries.ts` por objetos `queryOptions()` colocalizados con la key factory.
+- Aprender del piloto y luego expandir a `dashboard`, `crm`, `facturacion`.
 
-### Fase 4 — Adoptar APIs React 19 donde aportan valor
-- **`useOptimistic`**: en listas con delete/toggle (facturas, cotizaciones, oportunidades) para respuesta instantánea antes del round-trip.
-- **`useTransition`**: envolver cambios de tab, filtros de tablas grandes y navegaciones lazy para evitar bloqueo del hilo.
-- **`useDeferredValue`**: extender de 3 → todas las `DataTable` con filtros de texto (embarques, cotizaciones, facturas, clientes, proveedores).
-- **`use()`**: candidato claro sólo si migramos algún context leído condicionalmente; **no** para reemplazar `useQuery`.
-- **`useActionState` / `<form action>`**: **descartado** — RHF cubre todos los formularios con validación Zod. Mantener consistencia gana sobre novedad.
+## Fase 3 · Optimistic UI selectivo (`onMutate` + rollback)
 
-### Fase 5 — Granularidad de Suspense y ErrorBoundary
-- ErrorBoundary por módulo de feature (embarques, cotización, facturación, cxp, configuración) para que un crash aisle la sección y muestre CTA de recarga en vez de tumbar toda la app autenticada.
-- `<Suspense>` por ruta con skeletons específicos (hoy hay un fallback global genérico). El chunk load de `AuditoriaPage` (205 KB) o `EmbarqueDetalle` (210 KB) merece skeleton propio.
-- Evaluar `<Activity mode="hidden">` (React 19.2) para pre-renderizar rutas frecuentes (Dashboard ↔ Embarques) sin costo visible.
+Hoy el patrón es "mutación → invalidar → refetch" (correcto pero perceptiblemente lento). Elegir 3 mutaciones "calientes" donde el optimismo se nota:
 
----
+- Cambio de estado de embarque en el kanban / detalle.
+- Marcar tarea de bitácora como completada.
+- Toggle de checkboxes en tablas (ej. selección de proformas).
 
-## Sección técnica (referencia)
+Extender `useMutationWithFeedback` con soporte de `optimisticUpdate({ queryKey, updater })` que ya prepara el snapshot + rollback, sin ensuciar cada hook.
 
-### Ejemplo `queryOptions` factory (fase 1)
-```ts
-// features/embarques/api/embarquesQueries.ts
-import { queryOptions } from "@tanstack/react-query";
-export const embarquesQueries = {
-  all: () => ["embarques"] as const,
-  list: (filters: EmbarqueFilters) =>
-    queryOptions({
-      queryKey: [...embarquesQueries.all(), "list", filters],
-      queryFn: () => fetchEmbarques(filters),
-    }),
-  byId: (id: string) =>
-    queryOptions({
-      queryKey: [...embarquesQueries.all(), "detail", id],
-      queryFn: () => fetchEmbarque(id),
-    }),
-};
-```
+## Fase 4 · Barandales de disciplina
 
-### Ejemplo migración forwardRef (fase 3)
-```tsx
-// Antes
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>((props, ref) => (
-  <div ref={ref} {...props} />
-));
-
-// Después (React 19)
-type AlertProps = React.HTMLAttributes<HTMLDivElement> & {
-  ref?: React.Ref<HTMLDivElement>;
-};
-function Alert({ ref, ...props }: AlertProps) {
-  return <div ref={ref} {...props} />;
-}
-```
-
-### Verificación por fase
-Cada fase termina con:
-- `bun run typecheck && bun run lint && bun run build`
-- `bun run test:fast` sobre los archivos tocados
-- Bump `APP_VERSION` + entrada en `CHANGELOG.md`
-
-### Fuera de alcance
-- Migrar formularios de RHF → `useActionState` (rompe consistencia, sin ganancia clara).
-- Introducir Server Components (no aplica a un SPA Vite).
-- Cambiar React Query por otro data-layer.
+1. **Regla ESLint custom / `no-restricted-syntax**` para prohibir `queryKey: [` en archivos que no terminen en `queryKeys.ts` — fuerza el uso de factories.
+2. **Audit puntual de los 98/173 archivos con `useQuery` sin `enabled:**` — spot-check de queries que dependen de `organizationId`/`clienteId` que pueden ser `undefined` en primer render.
+3. **Confirmar el único `setQueryData` del proyecto** — asegurar tipado correcto (o migrarlo a `queryOptions().queryKey`).
+4. **Evaluar `refetchInterval` de 60 s** en `useAlertasSistema`, `useAppLogsHealth`, `useNotificacionesCliente`: valorar mover a Supabase Realtime (0 costo de polling).
 
 ---
 
-**¿Arrancamos por la Fase 1 o prefieres invertir el orden (Fase 2 primero para ver ganancia visible del compiler antes de tocar data)?**
+## Detalles técnicos
+
+- `**queryOptions()` ejemplo:**
+  ```ts
+  // src/features/cotizacion/queries.ts
+  export const cotizacionByIdOptions = (id: string) => queryOptions({
+    queryKey: queryKeys.cotizacion.byId(id),
+    queryFn: () => fetchCotizacion(id),
+    staleTime: 30_000,
+    enabled: !!id,
+  });
+  // Uso: useQuery(cotizacionByIdOptions(id))
+  //      queryClient.prefetchQuery(cotizacionByIdOptions(id))
+  ```
+- **Suspense Query (opcional futuro Fase 5):** con React 19 + Compiler ya podemos evaluar `useSuspenseQuery` en rutas con `<Suspense>` granulares — encaja con la Fase 5 del plan React previo.
+
+## Fuera de alcance
+
+- Migrar a v6 (aún no existe estable).
+- Adoptar TanStack Router / Start (usamos React Router 6, no lo cambiamos aquí).
+- Rehacer `DataTable` — hoy está bien encapsulado.
+
+## Entregable por fase
+
+Cada fase termina con: bump `APP_VERSION` + entrada en `CHANGELOG.md`, `typecheck` + `build` + `test:fast` en verde.
+
+## Pregunta
+
+¿Arrancamos por **Fase 1** (higiene: bump + devtools + queryKeys faltantes) o quieres saltar directo a **Fase 2** (piloto `queryOptions()` en cotización/embarques) que es donde está la mejora arquitectónica real? Vamos en orden 
+
+&nbsp;
