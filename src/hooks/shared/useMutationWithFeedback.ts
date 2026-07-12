@@ -181,7 +181,8 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
         }
       }
       // Delegamos al onSettled del usuario si lo pasó vía `...rest`.
-      rest.onSettled?.(data, error, variables, onMutateResult);
+      // SAFE-CAST: la firma tipada exige un 5° arg (mutation), no lo propagamos.
+      (rest.onSettled as unknown as ((d: TData | undefined, e: TError | null, v: TVariables, c: TContext | undefined) => void) | undefined)?.(data, error, variables, onMutateResult);
     },
   });
 }
