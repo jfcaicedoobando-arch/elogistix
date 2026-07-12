@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { compras } from "../../queryKeys";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   calcularResumen,
@@ -27,14 +28,14 @@ export function ConciliacionDetalleSheet({ embarque, onClose }: Props) {
   const embarqueId = embarque?.embarque_id ?? null;
 
   const { data: filas = [], isLoading } = useQuery({
-    queryKey: ["compras", "conciliacion-detalle", embarqueId],
+    queryKey: compras.conciliacionDetalle(embarqueId),
     queryFn: () => fetchReconciliacionEmbarque(embarqueId as string),
     enabled: Boolean(embarqueId),
     staleTime: 30_000,
   });
 
   const { data: huerfanas = 0 } = useQuery({
-    queryKey: ["compras", "conciliacion-huerfanas", embarqueId],
+    queryKey: compras.conciliacionHuerfanas(embarqueId),
     queryFn: () => fetchPartidasHuerfanasCount(embarqueId as string),
     enabled: Boolean(embarqueId),
     staleTime: 30_000,

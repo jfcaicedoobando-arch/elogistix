@@ -7,6 +7,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { compras } from "../queryKeys";
 import { Landmark, Download, Banknote, Coins, ListFilter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export default function ComprasPagos() {
   const [search, setSearch] = useState("");
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["compras", "pagos-global", { desde, hasta, moneda, metodoPago, search }],
+    queryKey: compras.pagosGlobal({ desde, hasta, moneda, metodoPago, search }),
     queryFn: () =>
       listarPagosProveedorGlobal({
         desde,

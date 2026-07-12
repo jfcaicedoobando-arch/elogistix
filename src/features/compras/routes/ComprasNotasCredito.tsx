@@ -3,6 +3,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { compras } from "../queryKeys";
 import { ReceiptText, Download, Banknote, Coins, ListFilter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export default function ComprasNotasCredito() {
   const [search, setSearch] = useState("");
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["compras", "notas-credito-global", { desde, hasta, moneda, estado, search }],
+    queryKey: compras.notasCreditoGlobal({ desde, hasta, moneda, estado, search }),
     queryFn: () =>
       listarNotasCreditoGlobal({
         desde,

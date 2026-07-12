@@ -8,6 +8,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { compras } from "../queryKeys";
 import { GitCompare, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,7 +38,7 @@ export default function ComprasConciliacion() {
   const [detalle, setDetalle] = useState<EmbarqueConciliacion | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["compras", "conciliacion-embarques", { estado, moneda, search }],
+    queryKey: compras.conciliacionEmbarques({ estado, moneda, search }),
     queryFn: () =>
       listarConciliacionEmbarques({
         estado: estado === "todos" ? "todos" : estado,

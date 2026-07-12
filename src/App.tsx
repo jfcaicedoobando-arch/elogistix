@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { ErrorDetailsDialog } from "@/components/ui/ErrorDetailsDialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +13,15 @@ import { DemoModeBanner } from "@/features/marketing/components/DemoModeBanner";
 import { useRadixPointerEventsRescue } from "@/hooks/shared";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { useSyncSentryErrorContext } from "@/lib/observability/hooks/useSyncSentryErrorContext";
+
+// 13.275.0 — Devtools de TanStack Query sólo en dev (lazy → 0 KB en prod).
+const ReactQueryDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import("@tanstack/react-query-devtools").then((m) => ({
+        default: m.ReactQueryDevtools,
+      })),
+    )
+  : null;
 
 const SentryErrorContextSync = () => {
   useSyncSentryErrorContext();
@@ -43,6 +52,11 @@ const App = () => {
           </NuqsAdapter>
         </BrowserRouter>
       </TooltipProvider>
+      {ReactQueryDevtools ? (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+        </Suspense>
+      ) : null}
     </QueryClientProvider>
   </ErrorBoundary>
   );
