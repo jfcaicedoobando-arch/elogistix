@@ -71,6 +71,12 @@ export interface UseMutationWithFeedbackOptions<TData, TError, TVariables, TCont
    * la invalidación final las orquesta el wrapper.
    */
   optimistic?: OptimisticUpdate<TVariables> | OptimisticUpdate<TVariables>[];
+  /**
+   * Si es true, suprime ambos toasts (éxito y error). Útil cuando el caller
+   * maneja las notificaciones (ej. clasificar errores docs_faltantes).
+   * El rollback optimista y las invalidaciones siguen funcionando.
+   */
+  silent?: boolean;
   /** Callback extra tras éxito (se ejecuta después del toast + invalidate). */
   onSuccess?: UseMutationOptions<TData, TError, TVariables, TContext>["onSuccess"];
   /** Callback extra tras error (se ejecuta después del toast + rollback). */
@@ -112,6 +118,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
     errorTitle = "Error",
     errorMethod = "ON_ERROR",
     optimistic,
+    silent = false,
     onSuccess: userOnSuccess,
     onError: userOnError,
     onMutate: userOnMutate,
@@ -146,7 +153,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       for (const key of toKeyArray(invalidate)) {
         qc.invalidateQueries({ queryKey: key });
       }
-      if (successTitle) {
+      if (successTitle && !silent) {
         notifySuccess(undefined, { title: successTitle, description: successDescription });
       }
       userOnSuccess?.(data, variables, onMutateResult, context);
@@ -161,13 +168,15 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
 
       // SAFE-CAST: react-query tipa el error como `unknown`; sólo usamos `.message` para el toast.
       const err = error as unknown as Error;
-      notifyError(undefined, {
-        title: errorTitle,
-        description: err?.message,
-        error,
-        method: errorMethod,
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-      });
+      if (!silent) {
+        notifyError(undefined, {
+          title: errorTitle,
+          description: err?.message,
+          error,
+          method: errorMethod,
+          errorCode: ERROR_CODES.VALIDATION_FAILED,
+        });
+      }
       userOnError?.(error, variables, onMutateResult, context);
     },
     onSettled: (data, error, variables, onMutateResult) => {

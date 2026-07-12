@@ -1,5 +1,7 @@
 /**
  * Mutations de cambio de estado del embarque: avanzar, sync directo y reabrir.
+ * v13.278.0 · `useSyncEstadoEmbarque` ahora escribe el estado en caché de forma
+ * optimista (detail + full) con rollback automático si la mutación falla.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
@@ -14,7 +16,8 @@ import {
   descripcionEventoCambioEstado,
 } from '@/features/embarques/domain/embarque';
 import { newRequestId } from '@/lib/idempotency';
-import { notifyError } from '@/components/shared/utils/appFeedback';
+
+import { useMutationWithFeedback } from '@/hooks/shared/useMutationWithFeedback';
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
   await insertEventoEmbarque({
@@ -54,23 +57,45 @@ export function useAvanzarEstadoEmbarque() {
   });
 }
 
+interface SyncEstadoInput {
+  embarqueId: string;
+  nuevoEstado: string;
+  usuarioEmail?: string;
+}
+
+// SAFE-CAST: parcheamos únicamente el campo `estado` en el objeto cacheado.
+const patchEstado = (old: unknown, vars: SyncEstadoInput) => {
+  if (!old || typeof old !== "object") return old;
+  return { ...(old as Record<string, unknown>), estado: vars.nuevoEstado };
+};
+
 export function useSyncEstadoEmbarque() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail?: string }) => {
+  return useMutationWithFeedback<void, Error, SyncEstadoInput>({
+    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: SyncEstadoInput) => {
       await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
-      await insertarEventoTracking(embarqueId, nuevoEstado, usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema');
+      await insertarEventoTracking(
+        embarqueId,
+        nuevoEstado,
+        usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
+      );
     },
+    invalidate: [queryKeys.embarques.all],
+    optimistic: [
+      { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEstado },
+      { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchEstado },
+    ],
+    // Eventos no forman parte del cache optimista; los invalidamos aquí para
+    // que el nuevo evento de tracking se pinte tras la escritura real.
     onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al sincronizar estado: ${error.message}`, error, method: "SYNC_EMBARQUE_STATE" });
-    },
+    errorTitle: "Error al sincronizar estado",
+    errorMethod: "SYNC_EMBARQUE_STATE",
   });
 }
+
+
 
 /**
  * Reabre un embarque cerrado (Cerrado → Entregado). Solo admin/super_admin.
