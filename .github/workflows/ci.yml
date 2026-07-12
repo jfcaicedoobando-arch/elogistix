@@ -33,6 +33,14 @@ jobs:
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
 
+      # 13.274.0 — ESLint enforce React 19 discipline:
+      #  · `react-hooks/exhaustive-deps` (error) — no stale closures.
+      #  · `no-restricted-syntax` — prohíbe `supabase.*` / `fetch()` dentro
+      #    de `useEffect` (obliga a usar `useQuery`/`useMutation`).
+      #  · `react-compiler/react-compiler` (warn) — Rules of React que
+      #    romperían el opt-in de `"use memo"`.
+      #  · Fail-fast con `--max-warnings 0` (los warnings de `react-compiler`
+      #    cuentan como errores en CI).
       - name: ESLint (max-warnings 0)
         run: bun run lint -- --max-warnings 0
 
