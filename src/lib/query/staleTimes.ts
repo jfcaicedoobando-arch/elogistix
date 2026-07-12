@@ -17,4 +17,4 @@ export const staleTimes = {
   VERY_LONG: 30 * 60_000,
 } as const;
 
-export type StaleTimeTier = keyof typeof staleTimes;
+
