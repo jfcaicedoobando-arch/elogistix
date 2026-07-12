@@ -17,6 +17,7 @@ import { jsonResponse } from "../_shared/response.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const CRON_SECRET = Deno.env.get("CRON_SECRET");
 
 interface PagoPendiente {
   pago_id: string | null;
