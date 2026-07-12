@@ -5,6 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { compras } from "../queryKeys";
 import {
   BarChart3, Download, TrendingUp, Banknote, Coins, Building2,
 } from "lucide-react";
@@ -34,7 +35,7 @@ export default function ComprasReportes() {
   const [hasta, setHasta] = useState<string>(today());
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["compras", "reportes", { desde, hasta }],
+    queryKey: compras.reportes({ desde, hasta }),
     queryFn: () => fetchFacturasReporte(desde, hasta),
   });
 
