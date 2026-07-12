@@ -171,15 +171,13 @@ describe("useNuevoProveedorController — handleNext y documentos", () => {
 
 describe("useNuevoProveedorController — RFC duplicado debounced", () => {
   it("consulta duplicado tras 300ms y setea rfcDuplicado", async () => {
-    vi.useFakeTimers();
     findProveedorByRfcEnOrg.mockResolvedValue({ id: "pv-9", nombre: "Existente" });
     const { result } = renderHook(() => useNuevoProveedorController(vi.fn(), vi.fn()));
     act(() => result.current.setField("rfc", "RFCDUP"));
-    await act(async () => {
-      vi.advanceTimersByTime(310);
-    });
-    vi.useRealTimers();
-    await waitFor(() => expect(result.current.rfcDuplicado).toEqual({ id: "pv-9", nombre: "Existente" }));
+    await waitFor(
+      () => expect(result.current.rfcDuplicado).toEqual({ id: "pv-9", nombre: "Existente" }),
+      { timeout: 2000 },
+    );
   });
 
   it("limpia rfcDuplicado cuando rfc queda vacío", () => {
