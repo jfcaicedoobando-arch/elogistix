@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { verificarUuidSat, type EstatusSat } from "@/features/cxp/services/verificarUuidSat";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 
 /**
  * Hook para verificar el UUID de una factura de proveedor contra el SAT.
@@ -11,7 +12,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 export function useVerificarUuidSat() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["cxp", "verificar-uuid-sat"],
+    mutationKey: queryKeys.cxp.all,
     mutationFn: (facturaId: string) => verificarUuidSat(facturaId),
     onSuccess: (res: { estatus: EstatusSat }) => {
       if (res.estatus === "Vigente") toast.success("CFDI Vigente en SAT");
@@ -26,8 +27,8 @@ export function useVerificarUuidSat() {
           title: "SAT no devolvió un estatus válido",
           method: "FEATURES_CXP_HOOKS_USEVERIFICARUUIDSAT",
         });
-      qc.invalidateQueries({ queryKey: ["cxp"] });
-      qc.invalidateQueries({ queryKey: ["proveedor-facturas"] });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
     },
     onError: (err: Error) =>
       notifyError(toast, {

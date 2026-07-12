@@ -18,6 +18,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { sugerirMovsParaPagoProveedor } from "@/features/cxp/services/conciliacionBancaria";
 import { conciliarConPago, desconciliarMovimiento } from "@/features/tesoreria/services/conciliacion";
+import { queryKeys } from "@/lib/query";
 
 interface MovimientoVinculado {
   id: string;
@@ -44,7 +45,7 @@ export function ConciliacionPagoCell({
   const { user } = useAuth();
 
   const candidatos = useQuery({
-    queryKey: ["cxp", "conciliacion-candidatos", pagoId],
+    queryKey: queryKeys.cxp.conciliacionCandidatos(pagoId),
     queryFn: () => sugerirMovsParaPagoProveedor({
       id: pagoId, fecha_pago: fechaPago, monto, cuenta_bancaria_id: cuentaBancariaId,
     }),
@@ -56,9 +57,9 @@ export function ConciliacionPagoCell({
     mutationFn: (movId: string) => conciliarConPago(movId, "cxp", pagoId, user?.id ?? null),
     onSuccess: () => {
       notifySuccess(toast, { title: "Movimiento vinculado al pago" });
-      qc.invalidateQueries({ queryKey: ["pagos-proveedor"] });
-      qc.invalidateQueries({ queryKey: ["cxp"] });
-      qc.invalidateQueries({ queryKey: ["bbva-movimientos"] });
+      qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: queryKeys.bbvaMovimientos.all });
       setOpen(false);
     },
     onError: (err: Error) => notifyError(toast, {
@@ -71,9 +72,9 @@ export function ConciliacionPagoCell({
     mutationFn: (movId: string) => desconciliarMovimiento(movId),
     onSuccess: () => {
       notifySuccess(toast, { title: "Movimiento desvinculado" });
-      qc.invalidateQueries({ queryKey: ["pagos-proveedor"] });
-      qc.invalidateQueries({ queryKey: ["cxp"] });
-      qc.invalidateQueries({ queryKey: ["bbva-movimientos"] });
+      qc.invalidateQueries({ queryKey: queryKeys.pagosProveedor.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: queryKeys.bbvaMovimientos.all });
       setOpen(false);
     },
     onError: (err: Error) => notifyError(toast, {

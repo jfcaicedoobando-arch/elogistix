@@ -5,6 +5,7 @@ import {
   type MotivoCierreSinPago,
 } from "@/features/cxp/services/cerrarFacturaSinPago";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 
 /**
  * Hook para cerrar una factura de proveedor sin pago real (compensación, quita,
@@ -15,7 +16,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 export function useCerrarFacturaProveedorSinPago() {
   const qc = useQueryClient();
   return useMutation({
-    mutationKey: ["cxp", "cerrar-sin-pago"],
+    mutationKey: queryKeys.cxp.all,
     mutationFn: (p: {
       facturaId: string;
       motivo: MotivoCierreSinPago;
@@ -27,10 +28,10 @@ export function useCerrarFacturaProveedorSinPago() {
         description:
           "Se registró un ajuste y la factura quedó marcada como pagada. Aparece en el histórico con el motivo indicado.",
       });
-      qc.invalidateQueries({ queryKey: ["cxp"] });
-      qc.invalidateQueries({ queryKey: ["proveedor-facturas"] });
-      qc.invalidateQueries({ queryKey: ["cxp-aging"] });
-      qc.invalidateQueries({ queryKey: ["bandeja"] });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.aging() });
+      qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
     },
     onError: (err: Error) =>
       notifyError(toast, {

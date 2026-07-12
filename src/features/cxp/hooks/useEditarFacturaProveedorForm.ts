@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import { useActualizarFacturaProveedor } from "@/features/cxp/hooks";
 import {
   fetchFacturaParaEdicion,
@@ -62,7 +63,7 @@ interface UseEditarParams {
 export function useEditarFacturaProveedorForm({ factura, onDone }: UseEditarParams) {
   const actualizar = useActualizarFacturaProveedor();
   const { data: row, isLoading: isLoadingRow, isError: isErrorRow } = useQuery({
-    queryKey: ["cxp", "factura-edit-row", factura?.id ?? null] as const,
+    queryKey: queryKeys.cxp.facturaEditRow(factura?.id ?? null),
     queryFn: () => fetchFacturaParaEdicion(factura!.id),
     enabled: !!factura?.id,
     staleTime: 10_000,

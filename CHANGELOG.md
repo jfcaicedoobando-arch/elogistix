@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.280.0] - 2026-07-12
+- **TanStack Query · Fase 5 (migración CxP)**: 15 archivos del dominio Cuentas por Pagar dejan de usar `queryKey`/`mutationKey` inline y consumen el catálogo `queryKeys.cxp` (más `queryKeys.bandejas`, `queryKeys.proveedorFacturas`, `queryKeys.pagosProveedor`, `queryKeys.bbvaMovimientos`, `queryKeys.tesoreria`, `queryKeys.embarques`).
+- Expandido `src/features/cxp/queryKeys.ts` con factorías `factura`, `facturaEditRow`, `historial`, `aging`, `pendientesAprobacionCount`, `conceptosCostoAbiertos`, `sugerirEmbarques`, `buscarEmbarques` y `conciliacionCandidatos`; se agregan namespaces adyacentes reutilizables.
+- Corregido `useFacturaProveedorMutations`: la invalidación stale `["bandejas", "cxp"]` (nunca coincidía con la clave real `["bandeja"]`) ahora usa `queryKeys.bandejas.all`.
+- Eliminados los 15 archivos de CxP de la allowlist `inline-query-keys-legacy` del ESLint. `bun run lint` y `bunx tsgo --noEmit` limpios.
+
 ## [13.279.0] - 2026-07-12
+
 - **TanStack Query · Fase 4 (linter de query keys)**: nuevo guardrail en `eslint.config.js` que prohíbe declarar `queryKey`/`mutationKey` inline (`{ queryKey: ["foo", id] }`) fuera del catálogo central `src/features/<dominio>/queryKeys.ts` y `src/lib/query/**`.
 - Analogía: antes cada hook podía inventar su propio nombre para el cajón del caché ("cotizaciones-list", "cotiz_list", "cotizacionesList")… y las invalidaciones no matcheaban. Ahora el linter obliga a usar SIEMPRE la misma etiqueta desde `queryKeys.ts` — como un directorio telefónico único para toda la app.
 - Implementación: selectores AST `Property[key.name='queryKey'] > ArrayExpression` (y `mutationKey`) en `no-restricted-syntax`. Selectores base extraídos a la constante `NO_RESTRICTED_SYNTAX_BASE` para poder eximir tests y allowlist LEGACY sin perder los otros guardrails (lucide-namespace, useEffect+supabase/fetch).

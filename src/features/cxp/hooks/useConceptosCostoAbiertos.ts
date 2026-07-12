@@ -4,6 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { fetchConceptosCostoAbiertosDeProveedor, type ConceptoCostoAbierto } from "@/features/cxp/services";
+import { queryKeys } from "@/lib/query";
 
 export type { ConceptoCostoAbierto };
 
@@ -12,7 +13,7 @@ export function useConceptosCostoAbiertos(
   organizationId: string | null,
 ) {
   return useQuery({
-    queryKey: ["cxp", "conceptos_costo_abiertos", proveedorId, organizationId] as const,
+    queryKey: queryKeys.cxp.conceptosCostoAbiertos(proveedorId, organizationId),
     queryFn: () => fetchConceptosCostoAbiertosDeProveedor(proveedorId ?? "", organizationId),
     enabled: !!proveedorId,
     staleTime: 30_000,

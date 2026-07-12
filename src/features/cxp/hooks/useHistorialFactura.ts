@@ -3,12 +3,13 @@ import {
   fetchHistorialFactura,
   type EventoHistorialFactura,
 } from "@/features/cxp/services/historialFactura";
+import { queryKeys } from "@/lib/query";
 
 export type { EventoHistorialFactura };
 
 export function useHistorialFactura(facturaId: string | undefined, enabled = true) {
   return useQuery({
-    queryKey: ["cxp", "historial", facturaId ?? null] as const,
+    queryKey: queryKeys.cxp.historial(facturaId),
     queryFn: () => fetchHistorialFactura(facturaId as string),
     enabled: !!facturaId && enabled,
     staleTime: 30_000,
