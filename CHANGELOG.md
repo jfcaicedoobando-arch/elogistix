@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.271.0] - 2026-07-12
+- **React 19.2 · Fase 1 de auditoría**: bump `react`/`react-dom` `19.0.2 → 19.2.7` y `@types/react`/`react-dom` a `19.2.x`. Habilita mejoras del compiler y `<Activity>` para fases posteriores.
+- **React Compiler expandido a 6 rutas calientes**: `Dashboard`, `Facturacion`, `Oportunidades`, `CrmDashboard`, `EmbarqueDetalle`, `ClienteDetalle` reciben la directiva `"use memo"`. Antes sólo `Embarques` y `Cotizaciones` estaban opt-in; ahora el compiler cubre 8 rutas de alto tráfico y puede eliminar la mayor parte de los `useMemo`/`useCallback` manuales en esos árboles.
+- **useIsDemoUser → useQuery**: reescrito el hook para leer `userId` de `useAuth()` y consultar `is_demo_user` vía `useQuery` con `staleTime` de 5 min. Elimina el patrón imperativo `useState + useEffect + subscribeAuthUserId` (memory-leak safe por diseño de React Query) y comparte cache entre todos los consumidores del hook.
+
 ## [13.270.0] - 2026-07-12
 - **CI · React Compiler determinístico**: `@babel/core@7.29.0` se agrega como `devDependency` explícita. Antes se resolvía por transitividad de otras deps (no lo declara `babel-plugin-react-compiler`), lo que podía romper el build en CI de forma intermitente si esa cadena cambiaba. Verificado: `bun run typecheck` y `bun run build` pasan con el plugin activo procesando los 2 archivos con `"use memo"` (Embarques + Cotizaciones).
 - **Fix TS React 19**: `ProfitBadge.tsx` y `columnBuilders.test.tsx` referenciaban el namespace global `JSX` (eliminado en `@types/react@19`); ahora usan `React.JSX.Element`. `useVirtualTableState.parentRef` tipado como `RefObject<HTMLDivElement | null>` para casar con el `useRef` de React 19.

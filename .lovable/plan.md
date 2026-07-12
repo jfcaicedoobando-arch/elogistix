@@ -1,101 +1,115 @@
-## Migración a React 19 — plan de ejecución
+# Auditoría de la implementación de React
 
-### Contexto y riesgo
+## Estado actual (lo que ya está top-of-the-line)
 
-- **Pin de Lovable**: el system prompt de la plataforma declara React 18 como stack oficial. Docs no confirman soporte para React 19. Migrar es viable técnicamente (react-day-picker 10, react-hook-form 7.81, TanStack Query 5, Radix, Sonner 1.7 y Sentry 10 ya son compatibles), pero el preview de Lovable puede requerir configuración extra o fallar. Vamos con red de rollback lista.
-- **Superficie afectada**: 33 archivos usan `forwardRef` (todos son wrappers UI shadcn). El resto del codebase ya está React-19-ready gracias a Fase A+B.
-- **Versión objetivo**: `react@19.0.2` + `react-dom@19.0.2` (última estable menor conservadora). `@types/react@19` y `@vitejs/plugin-react-swc@3.11+` ya soportan 19.
+| Área | Estado |
+|---|---|
+| React | 19.0.2 (mayor actual). Types 19.0.10. |
+| Vite / TS | Vite 5.4, TS 5.9 (los pins de plataforma). |
+| StrictMode | Activo en `main.tsx`. |
+| React Compiler | Instalado en modo `annotation` con plugin Vite propio. |
+| ErrorBoundary raíz | Cubriendo router + providers. |
+| Auto-recovery de chunks stale | Implementado (vite:preloadError + unhandledrejection + error). |
+| Sentry + Query persister | Lazy fuera del critical path. |
+| Higiene TS | 0 `any`, 0 `React.FC`, 0 `PropTypes`, 0 `eslint-disable`, 0 `exhaustive-deps` disabled. |
+| Data fetching | 109 `useQuery`, mutations via React Query. |
+| Memoización manual | 306 `useMemo` + 172 `useCallback` + 16 `React.memo`. |
 
----
+**Diagnóstico**: es una implementación limpia y disciplinada. Los "olores" restantes son de segunda derivada — no hay bugs, hay oportunidades de modernización que React 19 abrió y que aún no aprovechamos.
 
-### Fase 0 — Snapshot y baseline (10 min)
+## Brechas frente al estándar React 19 "top of the line"
 
-1. Confirmar rama limpia y correr `bun run test:fast` + `bun run typecheck` para tener baseline verde.
-2. Documentar el commit actual como punto de rollback (el usuario puede usar History si algo truena).
-
-### Fase 1 — Bump de dependencias (20 min)
-
-Actualizar `package.json`:
-
-```text
-react: ^18.3.1 → ^19.0.2
-react-dom: ^18.3.1 → ^19.0.2
-@types/react: ^18.3.31 → ^19.0.10
-@types/react-dom: ^18.3.7 → ^19.0.4
-@testing-library/react: ^16.3.2 → ^16.3.2 (ya soporta 19)
-@vitejs/plugin-react-swc: ^3.11.0 → ^3.11.0 (ya soporta 19, verificar)
-```
-
-Instalar y correr `bun run typecheck` para atrapar breaks tempranos.
-
-### Fase 2 — Codemod `forwardRef` → `ref` como prop (2 h)
-
-React 19 permite `ref` como prop nativa en function components (`forwardRef` sigue funcionando pero está soft-deprecated). Refactor archivo por archivo, todos son wrappers shadcn con la misma forma:
-
-```text
-Antes:  const X = React.forwardRef<HTMLDivElement, Props>(({...}, ref) => <div ref={ref} .../>)
-Ahora:  const X = ({ ref, ...props }: Props & { ref?: React.Ref<HTMLDivElement> }) => <div ref={ref} .../>
-```
-
-Orden (33 archivos, batch de 8):
-1. `src/components/ui/*.tsx` (28 archivos)
-2. `src/components/layout/{NavLink,AppSidebar}.tsx`
-3. `src/components/shared/NumericInput.tsx`
-4. Los 2 usos restantes fuera de UI
-
-Después de cada batch: `bun run typecheck`.
-
-### Fase 3 — Chequeos de compatibilidad puntuales (1 h)
-
-- **StrictMode double-effects**: React 19 mantiene el comportamiento; nuestra Fase B ya confirmó 0 fugas en 104 `useEffect`.
-- **`useRef` sin argumento inicial**: TS 19 lo marca error. Buscar `useRef<T>()` sin default y agregar `null`.
-- **`ReactElement.props` deprecated en tipos**: revisar helpers que hagan `element.props` directo.
-- **`propTypes` / `defaultProps` en function components**: buscar y eliminar (no debería haber, pero verificar).
-- **Sonner 1.7.4**: pin verificado, funciona en 19. Si truena, subir a 1.8+.
-- **react-helmet-async 3.0.0**: verificar que no tenga peer conflict con React 19; si sí, evaluar `@dr.pogodin/react-helmet` como reemplazo.
-
-### Fase 4 — Verificación funcional (1 h)
-
-1. `bun run typecheck` — 0 errores.
-2. `bun run lint` — 0 errores.
-3. `bun run test:fast` — 4538/4538 verdes.
-4. `bun run build` — bundle producido sin warnings críticos.
-5. Playwright headless contra `localhost:8080`:
-   - Login con credenciales de auditoría (`mem://reference/audit-login`).
-   - Abrir Dashboard, Cotizaciones, Embarques, Facturación.
-   - Abrir un DatePicker (react-day-picker 10 sobre React 19).
-   - Confirmar que no hay warnings de `ref` en consola.
-
-### Fase 5 — Verificación del preview de Lovable (crítico)
-
-Este es el punto de riesgo real. Después del bump:
-
-1. Recargar el preview iframe.
-2. Si carga y funciona → seguimos.
-3. Si truena (pantalla en blanco, errores de hidratación, plugin de Lovable incompatible) → **rollback inmediato** vía History y reportamos hallazgo. Actualizamos `mem://constraint/lovable-stack-pins` con la evidencia.
-
-### Fase 6 — Bookkeeping (10 min)
-
-- Bump `APP_VERSION` a `13.267.0`.
-- Entrada en `CHANGELOG.md` describiendo bump, refactor de forwardRef y validaciones.
-- Actualizar `mem://constraint/lovable-stack-pins` removiendo React del pin (si Lovable aguantó) o reforzándolo (si hubo que revertir).
+1. **`forwardRef` legacy en 33 archivos** — todos los primitives de `components/ui/*`. React 19 acepta `ref` como prop normal; `forwardRef` está deprecado (funciona, pero es ruido).
+2. **APIs React 19 sin usar**: `use()` (0), `useOptimistic` (0), `useActionState` (0), `useFormStatus` (0). `useTransition`/`useDeferredValue` sólo en 3 archivos.
+3. **React Compiler sub-utilizado**: sólo 2 archivos con `"use memo"` (`Embarques`, `Cotizaciones`). El compiler puede reemplazar la mayoría de esos 306 `useMemo` + 172 `useCallback` manuales si se activa en más rutas calientes.
+4. **12 archivos con patrón imperativo `useState` + `useEffect` + `supabase`** — deberían ser `useQuery`.
+5. **Sin `queryOptions()` factories** (React Query 5) — 109 `useQuery` con keys inline pierden tipado end-to-end y facilitan invalidaciones inconsistentes.
+6. **Granularidad Suspense/ErrorBoundary baja**: 1 Suspense global + 4 ErrorBoundaries. Una caída en una ruta puede bajar toda la sección autenticada.
+7. **React 19.1/19.2 disponibles** — no bloqueante, pero traen `<Activity>` y mejoras del compiler.
 
 ---
 
-### Criterios de éxito
+## Plan de 5 fases
 
-- `typecheck`, `lint`, `test:fast`, `build` verdes.
-- Preview de Lovable carga sin errores de consola.
-- Playwright confirma flujos críticos: login, tabla con virtualización, DatePicker, formularios RHF.
-- 0 warnings de React 19 en consola de dev.
+Cada fase es autónoma y verificable con `typecheck + build + tests`. Se puede pausar entre fases.
 
-### Plan de rollback
+### Fase 1 — Data fetching disciplinado (riesgo bajo)
+- Auditar los 12 archivos que mezclan `useState`+`useEffect`+`supabase` y migrarlos a `useQuery` (elimina memory leaks potenciales y estados intermedios inconsistentes).
+- Introducir el patrón `queryOptions()` de React Query 5: un factory tipado por dominio (`embarquesQueries.ts`, `cotizacionesQueries.ts`, etc.) que expone `list()`, `byId(id)`, `dashboard()`, con keys estables. Refactorizar incrementalmente los 109 `useQuery` para consumirlo.
+- Bump a **React 19.2** (última estable) y `@types/react` correspondiente.
 
-Si Fase 5 falla: el usuario usa "View History" para revertir al mensaje previo al bump. Bump de `APP_VERSION` a `13.266.1` documentando el intento fallido. No dejamos código huérfano en main.
+### Fase 2 — Expandir React Compiler a rutas calientes
+- Agregar `"use memo"` a los 8-10 componentes-ruta con más re-renders: `Dashboard`, `Facturacion`, `CotizacionDetalle`, `EmbarqueDetalle`, `Oportunidades`, `Cxp`, `Configuracion`, `AuditoriaPage`.
+- Activar `eslint-plugin-react-compiler` en modo `error` (hoy es `warn`) para los archivos anotados, así se garantiza que las "rules of react" no se rompen en ese subset.
+- Medir: comparar cantidad de `useMemo`/`useCallback` manuales en esos archivos y remover los que el compiler ya cubre (opcional, no urgente).
 
-### Detalles técnicos
+### Fase 3 — Modernizar primitives (mecánico, opt-in por archivo)
+- Migrar los 33 `components/ui/*.tsx` de `forwardRef((props, ref) => ...)` a `({ref, ...props}: Props & {ref?: Ref<...>}) => ...` (patrón oficial React 19).
+- No romper la API pública de shadcn (los consumidores siguen pasando `ref={...}` igual).
+- Un archivo por PR conceptual; empezar por los menos usados (Alert, Badge, Progress) y terminar por los críticos (Button, Dialog, Select).
 
-- **No hay dependency de React 18 en runtime**: verificado — `@react-pdf/renderer@4.5.1` soporta 19, `@dnd-kit/core@6.3.1` soporta 19, `recharts@2.15.4` soporta 19.
-- **Compiler**: NO habilitamos el React Compiler en esta migración (fase separada). Sólo subimos runtime + types.
-- **forwardRef sigue vivo**: no es un breaking change, sólo estamos limpiando para aprovechar la API nueva. Si el codemod da problemas en algún archivo, lo dejamos con `forwardRef` sin bloquear la fase.
-- **Sin cambios de business logic**: sólo runtime + wrappers UI + tipos.
+### Fase 4 — Adoptar APIs React 19 donde aportan valor
+- **`useOptimistic`**: en listas con delete/toggle (facturas, cotizaciones, oportunidades) para respuesta instantánea antes del round-trip.
+- **`useTransition`**: envolver cambios de tab, filtros de tablas grandes y navegaciones lazy para evitar bloqueo del hilo.
+- **`useDeferredValue`**: extender de 3 → todas las `DataTable` con filtros de texto (embarques, cotizaciones, facturas, clientes, proveedores).
+- **`use()`**: candidato claro sólo si migramos algún context leído condicionalmente; **no** para reemplazar `useQuery`.
+- **`useActionState` / `<form action>`**: **descartado** — RHF cubre todos los formularios con validación Zod. Mantener consistencia gana sobre novedad.
+
+### Fase 5 — Granularidad de Suspense y ErrorBoundary
+- ErrorBoundary por módulo de feature (embarques, cotización, facturación, cxp, configuración) para que un crash aisle la sección y muestre CTA de recarga en vez de tumbar toda la app autenticada.
+- `<Suspense>` por ruta con skeletons específicos (hoy hay un fallback global genérico). El chunk load de `AuditoriaPage` (205 KB) o `EmbarqueDetalle` (210 KB) merece skeleton propio.
+- Evaluar `<Activity mode="hidden">` (React 19.2) para pre-renderizar rutas frecuentes (Dashboard ↔ Embarques) sin costo visible.
+
+---
+
+## Sección técnica (referencia)
+
+### Ejemplo `queryOptions` factory (fase 1)
+```ts
+// features/embarques/api/embarquesQueries.ts
+import { queryOptions } from "@tanstack/react-query";
+export const embarquesQueries = {
+  all: () => ["embarques"] as const,
+  list: (filters: EmbarqueFilters) =>
+    queryOptions({
+      queryKey: [...embarquesQueries.all(), "list", filters],
+      queryFn: () => fetchEmbarques(filters),
+    }),
+  byId: (id: string) =>
+    queryOptions({
+      queryKey: [...embarquesQueries.all(), "detail", id],
+      queryFn: () => fetchEmbarque(id),
+    }),
+};
+```
+
+### Ejemplo migración forwardRef (fase 3)
+```tsx
+// Antes
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>((props, ref) => (
+  <div ref={ref} {...props} />
+));
+
+// Después (React 19)
+type AlertProps = React.HTMLAttributes<HTMLDivElement> & {
+  ref?: React.Ref<HTMLDivElement>;
+};
+function Alert({ ref, ...props }: AlertProps) {
+  return <div ref={ref} {...props} />;
+}
+```
+
+### Verificación por fase
+Cada fase termina con:
+- `bun run typecheck && bun run lint && bun run build`
+- `bun run test:fast` sobre los archivos tocados
+- Bump `APP_VERSION` + entrada en `CHANGELOG.md`
+
+### Fuera de alcance
+- Migrar formularios de RHF → `useActionState` (rompe consistencia, sin ganancia clara).
+- Introducir Server Components (no aplica a un SPA Vite).
+- Cambiar React Query por otro data-layer.
+
+---
+
+**¿Arrancamos por la Fase 1 o prefieres invertir el orden (Fase 2 primero para ver ganancia visible del compiler antes de tocar data)?**

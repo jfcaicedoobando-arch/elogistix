@@ -1,3 +1,4 @@
+"use memo";
 /**
  * Cockpit de Facturación (Fase 2 — bandejas de trabajo estilo ERP).
  *
