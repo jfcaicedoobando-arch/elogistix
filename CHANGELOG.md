@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.281.0] - 2026-07-12
+- **TanStack Query · Fase 5 (migración Costeo + Portal Agente + Embarques + Facturación)**: 47 archivos abandonan `queryKey`/`mutationKey` inline y consumen los factories de `@/lib/query`.
+- Añadidos `src/features/costeo/queryKeys.ts` y `src/features/portal-agente/queryKeys.ts` (registrados en `src/lib/query/index.ts` como `queryKeys.costeo` y `queryKeys.portalAgente`).
+- Extendidos `src/features/embarques/queryKeys.ts` y `src/features/facturacion/queryKeys.ts` con los helpers que faltaban (respetando las firmas existentes).
+- **Bug fix**: `useAprobacionTarifa` invalidaba `["costeo-tarifas"]`, una clave inexistente (la real es `["costeo","tarifas"]`). Ahora usa `queryKeys.costeo.tarifas.all` + `queryKeys.portalAgente.tarifas()`, y las aprobaciones/rechazos refrescan la lista real.
+- **Bug fix**: `useCierreEmbarque` invalidaba `["comisiones"]` inline (sin garantía de sincronía con la factoría real). Ahora usa `queryKeys.comisiones.all`.
+- Eliminados los 47 archivos de la allowlist `inline-query-keys-legacy` del ESLint. `bunx tsgo --noEmit` y `bun run lint` limpios.
+
 ## [13.280.0] - 2026-07-12
 - **TanStack Query · Fase 5 (migración CxP)**: 15 archivos del dominio Cuentas por Pagar dejan de usar `queryKey`/`mutationKey` inline y consumen el catálogo `queryKeys.cxp` (más `queryKeys.bandejas`, `queryKeys.proveedorFacturas`, `queryKeys.pagosProveedor`, `queryKeys.bbvaMovimientos`, `queryKeys.tesoreria`, `queryKeys.embarques`).
 - Expandido `src/features/cxp/queryKeys.ts` con factorías `factura`, `facturaEditRow`, `historial`, `aging`, `pendientesAprobacionCount`, `conceptosCostoAbiertos`, `sugerirEmbarques`, `buscarEmbarques` y `conciliacionCandidatos`; se agregan namespaces adyacentes reutilizables.
