@@ -79,6 +79,7 @@ interface CfdiParaVerificar {
   rfc_emisor: string;
   rfc_receptor: string;
   total: number;
+  organization_id: string | null;
 }
 
 async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
@@ -88,13 +89,14 @@ async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId:
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { data: null, error };
-  const row = data as { uuid_fiscal: string | null; rfc_proveedor: string | null; total: number; organizations?: { rfc?: string } | null };
+  const row = data as { uuid_fiscal: string | null; rfc_proveedor: string | null; total: number; organization_id: string | null; organizations?: { rfc?: string } | null };
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
       rfc_emisor: (row.rfc_proveedor ?? "").trim().toUpperCase(),
       rfc_receptor: (row.organizations?.rfc ?? "").trim().toUpperCase(),
       total: Number(row.total ?? 0),
+      organization_id: row.organization_id,
     },
     error: null,
   };
@@ -108,13 +110,14 @@ async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId:
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { data: null, error };
-  const row = data as { uuid_fiscal: string | null; rfc_cliente: string | null; total: number; organizations?: { rfc?: string } | null };
+  const row = data as { uuid_fiscal: string | null; rfc_cliente: string | null; total: number; organization_id: string | null; organizations?: { rfc?: string } | null };
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
       rfc_emisor: (row.organizations?.rfc ?? "").trim().toUpperCase(),
       rfc_receptor: (row.rfc_cliente ?? "").trim().toUpperCase(),
       total: Number(row.total ?? 0),
+      organization_id: row.organization_id,
     },
     error: null,
   };
