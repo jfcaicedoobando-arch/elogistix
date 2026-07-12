@@ -18,33 +18,27 @@ interface Options {
   silent?: boolean;
 }
 
+// SAFE-CAST: el detalle en caché es un objeto plano `Record<string, unknown>`;
+// aquí parcheamos un solo campo respetando el resto.
+const patchEta = (field: "eta_actual") =>
+  (old: unknown, vars: Input) => {
+    if (!old || typeof old !== "object") return old;
+    return { ...(old as Record<string, unknown>), [field]: vars.nuevaEta };
+  };
+
 export function useActualizarEta(options: Options = {}) {
   const { silent = false } = options;
   return useMutationWithFeedback<unknown, Error, Input>({
     mutationFn: ({ embarqueId, nuevaEta }: Input) =>
       actualizarEtaEmbarque(embarqueId, nuevaEta),
-    invalidate: [
-      queryKeys.embarques.all,
-    ],
+    invalidate: [queryKeys.embarques.all],
     optimistic: [
-      {
-        queryKey: (vars) => queryKeys.embarques.detail(vars.embarqueId),
-        // SAFE-CAST: el detalle en caché es un objeto plano; parcheamos eta_actual.
-        updater: (old, vars) => {
-          if (!old || typeof old !== "object") return old;
-          return { ...(old as Record<string, unknown>), eta_actual: vars.nuevaEta };
-        },
-      },
-      {
-        queryKey: (vars) => queryKeys.embarques.full(vars.embarqueId),
-        updater: (old, vars) => {
-          if (!old || typeof old !== "object") return old;
-          return { ...(old as Record<string, unknown>), eta_actual: vars.nuevaEta };
-        },
-      },
+      { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEta("eta_actual") },
+      { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchEta("eta_actual") },
     ],
-    successTitle: silent ? undefined : "ETA actualizada",
-    errorTitle: silent ? undefined : "Error al actualizar ETA",
+    successTitle: "ETA actualizada",
+    errorTitle: "Error al actualizar ETA",
     errorMethod: "UPDATE_ETA_EMBARQUE",
+    silent,
   });
 }
