@@ -94,6 +94,12 @@ export default tseslint.config(
       //    sincronización de estado local o efectos secundarios no-fetch.
       //    Si necesitas un caso puntual (auth listeners, timers), agrega el
       //    disable con justificación: `// eslint-disable-next-line no-restricted-syntax -- <razón>`.
+      // 3) Prohibir query keys inline fuera del catálogo central (`queryKeys.ts`).
+      //    Toda `queryKey`/`mutationKey` debe usar el builder de
+      //    `src/features/<dominio>/queryKeys.ts` para evitar cachés
+      //    fragmentados e invalidaciones que no matchean.
+      //    Excepciones: los propios `queryKeys.ts`, `src/lib/query/**`,
+      //    tests y una allowlist LEGACY de hooks que se migrarán en olas.
       "no-restricted-syntax": ["error",
         {
           selector: "ImportDeclaration[source.value='lucide-react'] > ImportNamespaceSpecifier",
@@ -106,6 +112,14 @@ export default tseslint.config(
         {
           selector: "CallExpression[callee.name='useEffect'] CallExpression[callee.name='fetch']",
           message: "React 19 · No uses `fetch()` imperativo dentro de `useEffect`. Envuélvelo en `useQuery` para obtener cache, retry y cleanup automáticos.",
+        },
+        {
+          selector: "Property[key.name='queryKey'] > ArrayExpression",
+          message: "No definas `queryKey` inline. Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`) para mantener una sola fuente de verdad y evitar cachés fragmentados.",
+        },
+        {
+          selector: "Property[key.name='mutationKey'] > ArrayExpression",
+          message: "No definas `mutationKey` inline. Declara la key en `queryKeys.ts` del dominio para poder referenciarla desde `useIsMutating`/DevTools.",
         },
       ],
 
