@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-import { queryKeys } from "@/lib/query";
   fetchCotizacionesSinRespuesta,
   type CotizacionSinRespuestaRow,
 } from "@/features/crm/services/cotizacionesSinRespuesta";
+import { queryKeys } from "@/lib/query";
 
 export type { CotizacionSinRespuestaRow };
 

@@ -15,10 +15,10 @@ import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import {
-import { queryKeys } from "@/lib/query";
   actualizarEstadoClienteProforma,
   type RespuestaCliente,
 } from "@/features/proformas/services/respuestaCliente";
+import { queryKeys } from "@/lib/query";
 
 interface Props {
   open: boolean;

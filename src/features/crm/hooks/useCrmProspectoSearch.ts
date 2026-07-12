@@ -4,10 +4,10 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import {
-import { queryKeys } from "@/lib/query";
   buscarProspectos,
   type ProspectoMatch,
 } from "@/features/crm/services/prospectoSearch";
+import { queryKeys } from "@/lib/query";
 
 export type { ProspectoMatch };
 

@@ -13,10 +13,10 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-import { queryKeys } from "@/lib/query";
   fetchProductosCatalogo,
   type ProductoCatalogo,
 } from "@/features/cotizacion/services/productosCatalogoService";
+import { queryKeys } from "@/lib/query";
 
 export type { ProductoCatalogo };
 

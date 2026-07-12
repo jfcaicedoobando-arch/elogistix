@@ -5,7 +5,6 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import {
-import { queryKeys } from "@/lib/query";
   fetchProformaPorId,
   fetchConceptosProforma,
   fetchConceptosConsolidados,
@@ -13,6 +12,7 @@ import { queryKeys } from "@/lib/query";
   type ConceptoVentaRow,
   type ProformaConceptoConsolidadoRow,
 } from "@/features/proformas/services";
+import { queryKeys } from "@/lib/query";
 
 export interface ProformaDetalleData {
   proforma: ProformaDetalleFull;
