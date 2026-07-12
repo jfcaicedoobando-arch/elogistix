@@ -26,7 +26,11 @@ import { portal } from "@/features/portal/queryKeys";
 import { auditoria } from "@/features/auditoria/queryKeys";
 import { facturacion, facturas } from "@/features/facturacion/queryKeys";
 import { profit } from "@/features/profit/queryKeys";
-import { cxp } from "@/features/cxp/queryKeys";
+import {
+  cxp, proveedorFacturas, proveedorNotasCredito, pagosProveedor,
+  bbvaMovimientos, proveedorSalud, conceptosCosto,
+} from "@/features/cxp/queryKeys";
+import { bandejas } from "@/features/bandejas/queryKeys";
 import { tesoreria } from "@/features/tesoreria/queryKeys";
 import { comisiones } from "@/features/comisiones/queryKeys";
 import { presupuesto } from "@/features/presupuesto/queryKeys";
@@ -66,6 +70,13 @@ export const queryKeys = {
   facturacion,
   profit,
   cxp,
+  proveedorFacturas,
+  proveedorNotasCredito,
+  pagosProveedor,
+  bbvaMovimientos,
+  proveedorSalud,
+  conceptosCosto,
+  bandejas,
   tesoreria,
   comisiones,
   presupuesto,

@@ -22,7 +22,7 @@ export function useAprobarFactura() {
       aprobarFacturaProveedor(id, aprobar, motivo),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
-      qc.invalidateQueries({ queryKey: ["cxp", "pendientes-aprobacion-count"] });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.pendientesAprobacionCount });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(vars.id) });
 
       const ctx = [vars.folio, vars.proveedor].filter(Boolean).join(" · ");

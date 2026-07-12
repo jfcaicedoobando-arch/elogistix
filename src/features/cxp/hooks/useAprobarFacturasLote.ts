@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { aprobarFacturaProveedor } from "@/features/cxp/services/aprobacionFactura";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 
 export interface ResultadoLote {
   exitos: string[];
@@ -42,9 +43,9 @@ export function useAprobarFacturasLote() {
       }
 
       // Invalida una sola vez al final.
-      qc.invalidateQueries({ queryKey: ["cxp"] });
-      qc.invalidateQueries({ queryKey: ["proveedor-facturas"] });
-      qc.invalidateQueries({ queryKey: ["bandeja"] });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+      qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
+      qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
 
       if (fallos.length === 0) {
         notifySuccess(toast, {

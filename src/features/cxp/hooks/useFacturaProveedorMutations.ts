@@ -50,8 +50,8 @@ export function useActualizarFacturaProveedor() {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(vars.id) });
-      qc.invalidateQueries({ queryKey: ["cxp", "historial", vars.id] });
-      qc.invalidateQueries({ queryKey: ["bandejas", "cxp"] });
+      qc.invalidateQueries({ queryKey: queryKeys.cxp.historial(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
       notifySuccess(undefined, { title: "Factura de proveedor actualizada" });
     },
     onError: (error: Error) => {

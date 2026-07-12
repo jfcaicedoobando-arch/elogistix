@@ -8,6 +8,7 @@ import {
   buscarEmbarquesPorTexto,
   type EmbarqueSugerido,
 } from "@/features/cxp/services/sugerirEmbarques";
+import { queryKeys } from "@/lib/query";
 
 export type { EmbarqueSugerido };
 
@@ -16,7 +17,7 @@ export function useSugerirEmbarquesProveedor(
   organizationId: string | null,
 ) {
   return useQuery({
-    queryKey: ["cxp", "sugerir_embarques", proveedorId, organizationId] as const,
+    queryKey: queryKeys.cxp.sugerirEmbarques(proveedorId, organizationId),
     queryFn: () => sugerirEmbarquesParaProveedor(proveedorId ?? "", organizationId, 10),
     enabled: !!proveedorId && !!organizationId,
     staleTime: 30_000,
@@ -29,7 +30,7 @@ export function useBuscarEmbarquesPorTexto(
   enabled: boolean,
 ) {
   return useQuery({
-    queryKey: ["cxp", "buscar_embarques", term, organizationId] as const,
+    queryKey: queryKeys.cxp.buscarEmbarques(term, organizationId),
     queryFn: () => buscarEmbarquesPorTexto(term, organizationId, 8),
     enabled: enabled && term.trim().length >= 2 && !!organizationId,
     staleTime: 10_000,
