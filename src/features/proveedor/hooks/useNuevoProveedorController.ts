@@ -143,23 +143,6 @@ export function useNuevoProveedorController(
     onClose();
   };
 
-  // Verifica suavemente si el RFC ya existe en la organización (debounced 300ms).
-  useEffect(() => {
-    const rfc = form.rfc.trim();
-    if (!rfc || !organizationId) {
-      setRfcDuplicado(null);
-      return;
-    }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      findProveedorByRfcEnOrg(rfc, organizationId)
-        .then((existente) => setRfcDuplicado(existente))
-        .catch(() => setRfcDuplicado(null));
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [form.rfc, organizationId]);
 
   const handleSave = async () => {
     const validacion = preparePayload(form);
