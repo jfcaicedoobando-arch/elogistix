@@ -21,25 +21,24 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // Fase 3 — React Compiler en modo `annotation`. La regla se ejecuta
-      // sobre TODOS los componentes/hooks para señalar violaciones de las
-      // "rules of react" que romperían la compilación cuando un archivo
-      // hace opt-in con `"use memo"`. Warning para no bloquear CI.
-      "react-compiler/react-compiler": "warn",
+      // 13.274.0 — Estándares React 19 (con Compiler habilitado):
+      // El proyecto corre React 19.2 + React Compiler opt-in (`"use memo"`),
+      // así que las reglas de `eslint-plugin-react-hooks` v7 que enforz las
+      // "Rules of React" aplican al 100%. Se elevan a error para bloquear
+      // regresiones (patrones que el compiler no puede optimizar).
+      "react-compiler/react-compiler": "error",
       // Power of 10 §5 — dependencias completas en hooks evitan stale closures.
       "react-hooks/exhaustive-deps": "error",
-      // 13.138.3 — eslint-plugin-react-hooks v7 trae reglas estilo React
-      // Compiler activas en `recommended`. El proyecto está pineado a React 18
-      // SIN Compiler (ver mem://constraint/lovable-stack-pins), por lo que
-      // son falsos positivos para nuestro stack: el código funciona en runtime.
-      // Las apagamos para no bloquear `--max-warnings 0` en CI.
-      "react-hooks/set-state-in-effect": "off",
-      "react-hooks/purity": "off",
-      "react-hooks/refs": "off",
-      "react-hooks/static-components": "off",
-      "react-hooks/immutability": "off",
-      "react-hooks/incompatible-library": "off",
-      "react-hooks/preserve-manual-memoization": "off",
+      // Reglas React 19 activas (fallan CI con `--max-warnings 0`).
+      // Casos legítimos requieren disable inline con justificación.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/incompatible-library": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+
       // ESLint 10 — `no-useless-assignment` nuevo en recomendado. Genera ruido
       // en patrones legítimos (asignaciones de fallback antes de un branch).
       "no-useless-assignment": "off",
