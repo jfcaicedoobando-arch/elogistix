@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.272.0] - 2026-07-12
+- **Auditoría de `useEffect` imperativos**: revisados los 9 candidatos abiertos. 8 resultaron ser sincronizaciones de form-state (no fetches) o suscripciones legítimas (auth) — se documentan como patrón correcto y no se migran. Único fetch real (`useNuevoProveedorController`: RFC duplicado en org) migrado a `useQuery` con `useDebouncedValue` de 300 ms. Beneficios: se elimina el `useRef`+`setTimeout` manual, se cachea por `(orgId, rfc)` con `staleTime` de 30 s (borrar/reescribir el mismo RFC ya no repite fetch) y se agrega `retry: false` para no reintentar validaciones fallidas.
+- Nueva key en `features/proveedor/queryKeys.ts`: `proveedores.rfcCheck(rfc, organizationId)`.
+
 ## [13.271.0] - 2026-07-12
 - **React 19.2 · Fase 1 de auditoría**: bump `react`/`react-dom` `19.0.2 → 19.2.7` y `@types/react`/`react-dom` a `19.2.x`. Habilita mejoras del compiler y `<Activity>` para fases posteriores.
 - **React Compiler expandido a 6 rutas calientes**: `Dashboard`, `Facturacion`, `Oportunidades`, `CrmDashboard`, `EmbarqueDetalle`, `ClienteDetalle` reciben la directiva `"use memo"`. Antes sólo `Embarques` y `Cotizaciones` estaban opt-in; ahora el compiler cubre 8 rutas de alto tráfico y puede eliminar la mayor parte de los `useMemo`/`useCallback` manuales en esos árboles.
