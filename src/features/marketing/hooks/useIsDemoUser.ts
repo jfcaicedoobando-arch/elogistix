@@ -1,37 +1,26 @@
 /**
  * Suscribe al estado auth y expone si el usuario actual está en la org demo.
- * Toda interacción con supabase/client se hace vía services/demoMode.
+ * Fase 1 (13.271.0): migrado a `useQuery` — el estado del check se comparte
+ * entre componentes que consumen el hook (cache por userId), y respeta el
+ * ciclo `enabled` para evitar el RPC cuando no hay usuario.
  */
-import { useEffect, useState } from "react";
-import {
-  fetchIsDemoUser,
-  getCurrentUserId,
-  subscribeAuthUserId,
-} from "@/features/marketing/services/demoMode";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { fetchIsDemoUser } from "@/features/marketing/services/demoMode";
+
+const STALE_TIME_MS = 5 * 60 * 1000; // 5 min — flag rara vez cambia dentro de una sesión.
 
 export function useIsDemoUser(): boolean {
-  const [isDemo, setIsDemo] = useState(false);
+  const { user } = useAuth();
+  const userId = user?.id;
 
-  useEffect(() => {
-    let cancelled = false;
+  const { data } = useQuery({
+    queryKey: ["is_demo_user", userId ?? "anon"] as const,
+    queryFn: () => fetchIsDemoUser(userId!),
+    enabled: Boolean(userId),
+    staleTime: STALE_TIME_MS,
+    gcTime: STALE_TIME_MS,
+  });
 
-    const check = async (userId: string | undefined) => {
-      if (!userId) {
-        if (!cancelled) setIsDemo(false);
-        return;
-      }
-      const result = await fetchIsDemoUser(userId);
-      if (!cancelled) setIsDemo(result);
-    };
-
-    getCurrentUserId().then(check);
-    const unsubscribe = subscribeAuthUserId(check);
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, []);
-
-  return isDemo;
+  return Boolean(data);
 }
