@@ -167,6 +167,10 @@ export default tseslint.config(
       "no-console": "off",
       "no-control-regex": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      // Tests declaran fixtures de queryKey/mutationKey inline para validar
+      // integración con TanStack Query. Mantenemos sólo los selectores base
+      // aquí (el catálogo central sólo aplica a código de producción).
+      "no-restricted-syntax": ["error", ...NO_RESTRICTED_SYNTAX_BASE],
     },
   },
   {
