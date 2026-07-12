@@ -25,7 +25,7 @@ export const cotizacionQueries = {
   list: (organizationId?: string | null) =>
     queryOptions({
       queryKey: queryKeys.cotizaciones.byOrg(organizationId),
-      queryFn: () => fetchCotizaciones(organizationId),
+      queryFn: () => fetchCotizaciones(organizationId ?? null),
       staleTime: staleTimes.MEDIUM,
     }),
 
@@ -33,7 +33,7 @@ export const cotizacionQueries = {
   aceptadas: (organizationId?: string | null) =>
     queryOptions({
       queryKey: queryKeys.cotizaciones.aceptadas(organizationId),
-      queryFn: () => fetchCotizacionesAceptadas(organizationId),
+      queryFn: () => fetchCotizacionesAceptadas(organizationId ?? null),
       staleTime: staleTimes.MEDIUM,
     }),
 
