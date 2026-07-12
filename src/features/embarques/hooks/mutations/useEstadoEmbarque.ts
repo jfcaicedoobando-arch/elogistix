@@ -70,6 +70,7 @@ const patchEstado = (old: unknown, vars: SyncEstadoInput) => {
 };
 
 export function useSyncEstadoEmbarque() {
+  const queryClient = useQueryClient();
   return useMutationWithFeedback<void, Error, SyncEstadoInput>({
     mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: SyncEstadoInput) => {
       await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
@@ -79,24 +80,21 @@ export function useSyncEstadoEmbarque() {
         usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
       );
     },
-    invalidate: [
-      queryKeys.embarques.all,
-      // eventos se revalidan para que aparezca el nuevo evento de tracking.
-    ],
+    invalidate: [queryKeys.embarques.all],
     optimistic: [
       { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEstado },
       { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchEstado },
     ],
-    // La invalidación de eventos se hace en onSuccess porque no forma parte
-    // del cache optimista.
-    onSuccess: (_r, vars, _ctx, _mut) => {
-      // qc.invalidateQueries se dispara en el propio onSuccess del wrapper para
-      // el array `invalidate`; aquí sólo agregamos la key extra de eventos.
+    // Eventos no forman parte del cache optimista; los invalidamos aquí para
+    // que el nuevo evento de tracking se pinte tras la escritura real.
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
     errorTitle: "Error al sincronizar estado",
     errorMethod: "SYNC_EMBARQUE_STATE",
   });
 }
+
 
 
 /**
