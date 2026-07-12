@@ -17,6 +17,11 @@ const EXPECTED_DOMAINS = [
   "papelera", "idempotenciaLog", "pdfPreviewCotizacion", "trackingPublico",
   "cxp", "tesoreria", "comisiones", "presupuesto", "dashboardEjecutivo",
   "usuariosPortalCliente", "usuariosPortalAgente",
+  "costeo", "portalAgente", "proveedorFacturas", "proveedorNotasCredito",
+  "pagosProveedor", "bbvaMovimientos", "proveedorSalud", "conceptosCosto",
+  "bandejas", "productosCatalogo", "direccion", "dashboardOperador",
+  "embarquesPendientesAdmin", "alertasSistema", "demoLeads", "notificaciones",
+  "marketing",
 ] as const;
 
 describe("queryKeys shape", () => {
