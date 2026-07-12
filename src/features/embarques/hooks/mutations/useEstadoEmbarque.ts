@@ -1,5 +1,7 @@
 /**
  * Mutations de cambio de estado del embarque: avanzar, sync directo y reabrir.
+ * v13.278.0 · `useSyncEstadoEmbarque` ahora escribe el estado en caché de forma
+ * optimista (detail + full) con rollback automático si la mutación falla.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
@@ -15,6 +17,7 @@ import {
 } from '@/features/embarques/domain/embarque';
 import { newRequestId } from '@/lib/idempotency';
 import { notifyError } from '@/components/shared/utils/appFeedback';
+import { useMutationWithFeedback } from '@/hooks/shared/useMutationWithFeedback';
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
   await insertEventoEmbarque({
