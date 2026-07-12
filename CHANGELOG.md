@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.275.0] - 2026-07-12
+- **TanStack Query · Fase 1 (higiene)**: instalado `@tanstack/react-query-devtools@5.101.2` como devDependency y montado en `src/App.tsx` con `lazy()` + `import.meta.env.DEV` (0 KB en el bundle de producción). Ya estábamos en el último release estable de RQ (5.101.2), no hubo bump.
+- **Factories `queryKeys.ts` nuevas** para features que las tenían faltantes: `src/features/bandejas/queryKeys.ts` (preserva prefijo `["bandeja"]` porque hay invalidaciones externas en `cxp/useAprobarFacturasLote` y `cxp/useCerrarFacturaSinPago`) y `src/features/compras/queryKeys.ts` (6 tuplas con filtros tipados: `ConciliacionFiltros`, `NotasCreditoFiltros`, `PagosFiltros`, `ReportesFiltros`).
+- **Migrados 9 query keys inline** a las factories: `useBandejas` (3), `ComprasConciliacion`, `ComprasNotasCredito`, `ComprasPagos`, `ComprasReportes`, `ConciliacionDetalleSheet` (2). Elimina riesgo de typo silencioso entre `queryKey` y futuros `invalidateQueries`.
+
 ## [13.274.0] - 2026-07-12
 - **Lint · Estándares React 19 en CI**: nuevas reglas `no-restricted-syntax` en `eslint.config.js` que prohíben `supabase.*` y `fetch()` dentro de `useEffect` (obliga a envolver todo fetch en `useQuery`/`useMutation`). Se conservan `react-hooks/exhaustive-deps: error` y `react-compiler/react-compiler: warn`. CI (`bun run lint -- --max-warnings 0`) trata warnings como errores, así que cualquier regresión rompe el pipeline. Verificado con un archivo probe: ambas reglas disparan.
 - Comentario documental en `.github/workflows/ci.yml` describiendo la disciplina React 19 que garantiza el step de ESLint.
