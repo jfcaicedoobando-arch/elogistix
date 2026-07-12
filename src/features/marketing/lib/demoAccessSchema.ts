@@ -12,4 +12,4 @@ export const demoAccessSchema = z.object({
   telefono: z.string().trim().min(8, "Ingresa un teléfono válido."),
 });
 
-export type DemoAccessFormValues = z.infer<typeof demoAccessSchema>;
+

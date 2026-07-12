@@ -10,14 +10,3 @@ export async function fetchIsDemoUser(userId: string): Promise<boolean> {
   return Boolean(data);
 }
 
-export async function getCurrentUserId(): Promise<string | undefined> {
-  const { data } = await supabase.auth.getUser();
-  return data.user?.id;
-}
-
-export function subscribeAuthUserId(cb: (userId: string | undefined) => void): () => void {
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    cb(session?.user?.id);
-  });
-  return () => data.subscription.unsubscribe();
-}

@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.285.1] - 2026-07-12
+- **lint:unused (knip)**: CI falló con 3 devDeps + 3 exports + 2 tipos sin usar. Fix:
+  - `knip.json`: `@babel/core`, `@types/babel__core`, `babel-plugin-react-compiler` a `ignoreDependencies` (se cargan vía `await import()` dinámico en `vite-plugins/reactCompilerPlugin.ts`, knip no detecta imports dinámicos).
+  - Eliminados exports muertos: `PROOF_LOGOS` (deprecated), `getCurrentUserId`, `subscribeAuthUserId` (reemplazados por `useAuth` + `useQuery`), tipos `DemoAccessFormValues` y `StaleTimeTier`.
+- `bun run lint:unused` verde local.
+
 ## [13.285.0] - 2026-07-12
 - **Cobertura de branches**: CI del último push falló por 0.07% en `branches` (33.93% vs 34%). Sumar tests focalizados sobre wrappers/factories con muchas ramas sin ejercer (regla `coverage-threshold`).
   - `src/hooks/shared/__tests__/useMutationWithFeedback.branches.test.tsx` (9 tests): `silent=true` suprime toasts en éxito y error, `notifySuccess`/`notifyError` disparados sólo cuando corresponde, `invalidate` acepta una `QueryKey` o array de keys, `optimistic.queryKey` como función se resuelve con las variables, y propagación de `onSuccess`/`onError` del consumidor.

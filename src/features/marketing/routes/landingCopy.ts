@@ -21,8 +21,6 @@ export const PROOF_ESTANDARES = [
   "SAT · CFDI 4.0", "UN/LOCODE", "Banxico DOF", "Facturapi",
 ] as const;
 export const PROOF_DISCLAIMER = "Libre Carga no es partner oficial de ninguna naviera. Sólo rastreamos sus embarques.";
-/** @deprecated usar PROOF_NAVIERAS + PROOF_ESTANDARES. Se mantiene por compatibilidad. */
-export const PROOF_LOGOS = [...PROOF_NAVIERAS, ...PROOF_ESTANDARES] as const;
 
 export const KPIS = [
   { value: "Minutos", label: "para armar una cotización profesional" },
