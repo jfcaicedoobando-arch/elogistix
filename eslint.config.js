@@ -470,8 +470,6 @@ export default tseslint.config(
       "src/features/facturacion/hooks/useTimbrarRep.ts",
       "src/features/marketing/hooks/useIsDemoUser.ts",
       "src/features/notificaciones/hooks/useNotificacionesInternas.ts",
-      "src/features/portal-agente/components/AgenteTarifaForm.tsx",
-      "src/features/portal-agente/hooks/index.ts",
       "src/features/presupuesto/hooks/usePresupuestoCategorias.ts",
       "src/features/profit/hooks/useEstadoResultados.ts",
       "src/features/proformas/components/EnviarProformaDialog.tsx",
