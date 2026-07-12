@@ -1,35 +1,21 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query';
 import type { CotizacionRow } from '@/features/cotizacion/types';
 import { useOrgFilter } from '@/hooks/shared/useOrgFilter';
-import {
-  fetchCotizaciones,
-  fetchCotizacionesAceptadas,
-  fetchCotizacionById,
-  fetchEmbarquesVinculados,
-  fetchCotizacionFolio,
-} from '@/features/cotizacion/services';
+import { cotizacionQueries } from '@/features/cotizacion/queries';
 
 export function useCotizacionesAceptadas() {
   const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: queryKeys.cotizaciones.aceptadas(organizationId),
-    queryFn: () => fetchCotizacionesAceptadas(organizationId),
-  });
+  return useQuery(cotizacionQueries.aceptadas(organizationId));
 }
 
 export function useCotizaciones() {
   const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: queryKeys.cotizaciones.byOrg(organizationId),
-    queryFn: () => fetchCotizaciones(organizationId),
-  });
+  return useQuery(cotizacionQueries.list(organizationId));
 }
 
 export function useCotizacion(id: string | undefined) {
   return useQuery<CotizacionRow>({
-    queryKey: queryKeys.cotizaciones.detail(id!),
-    queryFn: () => fetchCotizacionById(id!),
+    ...cotizacionQueries.detail(id ?? ''),
     enabled: !!id,
   });
 }
@@ -38,19 +24,14 @@ export function useCotizacion(id: string | undefined) {
 export function usePrefetchCotizacion() {
   const queryClient = useQueryClient();
   return (id: string) => {
-    queryClient.prefetchQuery({
-      queryKey: queryKeys.cotizaciones.detail(id),
-      queryFn: () => fetchCotizacionById(id),
-      staleTime: 30_000,
-    });
+    queryClient.prefetchQuery(cotizacionQueries.detail(id));
   };
 }
 
 /** Embarques vinculados a una cotización */
 export function useEmbarquesVinculados(cotizacionId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.cotizaciones.embarquesVinculados(cotizacionId!),
-    queryFn: () => fetchEmbarquesVinculados(cotizacionId!),
+    ...cotizacionQueries.embarquesVinculados(cotizacionId ?? ''),
     enabled: !!cotizacionId,
   });
 }
@@ -58,9 +39,7 @@ export function useEmbarquesVinculados(cotizacionId: string | undefined) {
 /** Folio de una cotización (consulta liviana para chips/links). */
 export function useCotizacionFolio(cotizacionId: string | null | undefined) {
   return useQuery<string | null>({
-    queryKey: ['cotizaciones', 'folio', cotizacionId ?? ''] as const,
-    queryFn: () => fetchCotizacionFolio(cotizacionId!),
+    ...cotizacionQueries.folio(cotizacionId ?? ''),
     enabled: !!cotizacionId,
-    staleTime: 5 * 60 * 1000,
   });
 }
