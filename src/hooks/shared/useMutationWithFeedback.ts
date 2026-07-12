@@ -161,6 +161,7 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
     },
     onError: (error, variables, onMutateResult, context) => {
       // Rollback: restauramos cada snapshot capturado en onMutate.
+      // SAFE-CAST: recuperamos el contexto interno que inyectamos en onMutate.
       const ctx = onMutateResult as unknown as OptimisticContext | undefined;
       const snapshots = ctx?.__snapshots ?? [];
       for (const snap of snapshots) {
