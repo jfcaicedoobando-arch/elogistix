@@ -5,7 +5,24 @@
  * happy path, ProveedorDuplicadoError), reset/close y CSF upload (patch merge).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook as rhRaw, act, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+
+function makeWrapper() {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity, staleTime: Infinity },
+      mutations: { retry: false },
+    },
+  });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+}
+
+const renderHook: typeof rhRaw = ((cb: Parameters<typeof rhRaw>[0]) =>
+  rhRaw(cb, { wrapper: makeWrapper() })) as typeof rhRaw;
 
 const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError, ProveedorDuplicadoError } = vi.hoisted(() => {
   class ProveedorDuplicadoError extends Error {
@@ -154,15 +171,13 @@ describe("useNuevoProveedorController — handleNext y documentos", () => {
 
 describe("useNuevoProveedorController — RFC duplicado debounced", () => {
   it("consulta duplicado tras 300ms y setea rfcDuplicado", async () => {
-    vi.useFakeTimers();
     findProveedorByRfcEnOrg.mockResolvedValue({ id: "pv-9", nombre: "Existente" });
     const { result } = renderHook(() => useNuevoProveedorController(vi.fn(), vi.fn()));
     act(() => result.current.setField("rfc", "RFCDUP"));
-    await act(async () => {
-      vi.advanceTimersByTime(310);
-    });
-    vi.useRealTimers();
-    await waitFor(() => expect(result.current.rfcDuplicado).toEqual({ id: "pv-9", nombre: "Existente" }));
+    await waitFor(
+      () => expect(result.current.rfcDuplicado).toEqual({ id: "pv-9", nombre: "Existente" }),
+      { timeout: 2000 },
+    );
   });
 
   it("limpia rfcDuplicado cuando rfc queda vacío", () => {
