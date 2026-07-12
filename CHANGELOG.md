@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.282.0] - 2026-07-12
+- **TanStack Query · Fase 5 (cierre allowlist)**: los últimos 32 archivos con `queryKey`/`mutationKey` inline migraron a factories de `@/lib/query`. La allowlist `inline-query-keys-legacy` queda vacía.
+- Extendidos los catálogos de queryKeys: `cotizaciones.pendientesReaprobacion`, `cotizaciones.tarifaVinculada`, nuevos `productosCatalogo`, `dashboard.direccion`, `dashboard.dashboardOperador`, `dashboard.embarquesPendientesAdmin`, `admin.alertasSistema`, `admin.demoLeads`, `tesoreria.cuentas/saldos/candidatos`, `presupuesto`, `profit`, `auditoria.snapshots`, `catalogos.configuracion.catalogoClavesSat`, y nuevos dominios `notificaciones` y `marketing` registrados en `src/lib/query/index.ts`.
+- **Bug fix**: `useEnvioDocumentoForm` usaba `["contactos-cliente", clienteId]` mientras las mutaciones de `useClientes` invalidaban `["contactos_cliente", id]` (guiones vs. underscores). Los contactos en diálogos de envío nunca refrescaban; ahora ambos consumen `queryKeys.clientes.contactos(id)`.
+- `bunx tsgo --noEmit` y `bun run lint` limpios (0 errors, 6 warnings preexistentes de complexity/react-compiler).
+
 ## [13.281.0] - 2026-07-12
 - **TanStack Query · Fase 5 (migración Costeo + Portal Agente + Embarques + Facturación)**: 47 archivos abandonan `queryKey`/`mutationKey` inline y consumen los factories de `@/lib/query`.
 - Añadidos `src/features/costeo/queryKeys.ts` y `src/features/portal-agente/queryKeys.ts` (registrados en `src/lib/query/index.ts` como `queryKeys.costeo` y `queryKeys.portalAgente`).
