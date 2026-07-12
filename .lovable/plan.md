@@ -1,63 +1,52 @@
-# Ampliar exportación de datos de la organización
+## Problema
 
-Hoy el ZIP incluye 18 tablas. La base de datos tiene ~70 tablas con `organization_id`. Agregamos ~37 tablas relevantes agrupadas por dominio y excluimos explícitamente las que no deben exportarse.
+El CI falla en shard 1/20 y en el job de audit por la regla Power-of-10 de arquitectura:
 
-## Tablas a agregar (por dominio)
+```
+FAIL src/lib/__tests__/architecture-baseline.test.ts
+FAIL src/__tests__/audit-report.test.ts
+Hay archivos productivos > 200 líneas fuera de allowlist:
+  - src/features/admin/services/exportOrg.ts (266 líneas)
+```
 
-**Facturación y cobranza (12)**
-`proveedor_facturas`, `proveedor_facturas_conceptos`, `proveedor_notas_credito`, `factura_notas_credito`, `pagos_factura`, `pagos_proveedor`, `factura_series`, `factura_embarques`, `factura_envios`, `factura_recordatorios`, `proforma_envios`, `cobranza_seguimiento`
+Al ampliar el export de 18 a 55 tablas (v13.287.0) el servicio quedó en 265 líneas y rompió la baseline arquitectónica. Todos los demás shards, lint, typecheck y build pasan; es el único bloqueo.
 
-**Tesorería (2)**
-`bbva_movimientos`, `cuentas_bancarias`
+## Fix propuesto: dividir `exportOrg.ts` en 3 módulos
 
-**Operación de embarques (5)**
-`embarque_contenedores`, `embarque_garantias_contenedor`, `seguros_embarque`, `tracking_externo`, `cierre_embarque_log`
+Separar el catálogo de tablas y el manifest del orquestador para dejar cada archivo por debajo de 200 líneas, sin cambiar el comportamiento ni el API público.
 
-**Costeo / tarifas (6)**
-`costeo_tarifas`, `costeo_tarifa_recargos`, `costeo_rutas`, `costeo_agentes`, `costeo_navieras_condiciones`, `costeo_naviera_demoras_tarifa`, `costeo_demoras_venta_tarifa`
+### Paso 1 — Extraer catálogo de tablas
+Crear `src/features/admin/services/exportOrg.tables.ts` con:
+- `EXPORT_GROUPS`, `EXPORT_TABLES`, `FORBIDDEN_EXPORT_TABLES`, tipo `ExportTable`.
 
-**CRM (9)**
-`crm_leads`, `crm_oportunidades`, `crm_actividades`, `crm_comentarios_oportunidad`, `crm_etapas_pipeline`, `crm_motivos_perdida`, `crm_plantillas_mensaje`, `crm_cuotas_vendedor`, `crm_notificaciones`
+### Paso 2 — Extraer manifest y tipos
+Crear `src/features/admin/services/exportOrg.manifest.ts` con:
+- Interfaces `ExportProgress`, `ProgressCallback`, `ExportTableResult`, `ExportManifestInput`.
+- Función `buildExportManifest`.
+- Constante `SOFT_ERROR_CODES` y helper `isSoftError`.
 
-**Comisiones y presupuesto (4)**
-`comisiones_devengadas`, `liquidaciones_comision`, `presupuesto_categorias`, `presupuesto_mensual`
+### Paso 3 — Adelgazar `exportOrg.ts`
+Dejar solo:
+- Re-exports de tipos/constantes para no romper imports existentes (`EXPORT_TABLES`, `EXPORT_GROUPS`, `FORBIDDEN_EXPORT_TABLES`, `buildExportManifest`, tipos).
+- `fetchOrganizationExport` y `exportOrganizationZip`.
 
-**Auditoría interna (3)**
-`auditoria_revisiones`, `auditoria_snapshots`, `auditoria_comentarios`
+Objetivo: archivo final ≤ 150 líneas.
 
-**Otros (2)**
-`cotizacion_envios`, `vendedora_config`
+### Paso 4 — Verificar imports
+- `TabExportar.tsx` y `exportOrg.test.ts` siguen importando desde `@/features/admin/services/exportOrg` (los re-exports cubren esto).
+- No tocar tests.
 
-## Tablas que **NO** se exportan (y por qué)
+### Paso 5 — Verificación
+- `bun run test src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/features/admin/services/__tests__/exportOrg.test.ts`
+- `bun run lint -- --max-warnings 0`
+- `tsgo` typecheck.
 
-- `facturapi_credenciales` — secretos de PAC.
-- `organization_members`, `agente_users`, `client_users` — control de acceso, no datos del negocio.
-- `tracking_intentos`, `tracking_links`, `tracking_webhook_log` — ruido de infra tracking (opcional a futuro).
-- `app_logs`, `idempotency_keys`, `folio_secuencias`, `notificaciones_internas`, `cotizacion_costos_historico`, `catalogo_claves_sat` — logs/estado interno o catálogos globales; inflan el ZIP sin valor de respaldo.
-- `_backup_*` — snapshots administrativos.
-- Vistas `v_*` — derivadas de tablas ya incluidas.
+### Paso 6 — Versionado
+- Bump `APP_VERSION` a `13.287.1`.
+- Entrada en `CHANGELOG.md`: fix de arquitectura (split de módulo, sin cambio funcional).
 
-## Cambios técnicos
+## Notas técnicas
 
-1. **`src/features/admin/services/exportOrg.ts`**
-   - Reorganizar `EXPORT_TABLES` en secciones comentadas por dominio para mantenimiento claro.
-   - Endurecer el loop: si una tabla falla con permiso RLS o no existe (`PGRST205`/`42501`), registrar warning en el manifest y continuar en lugar de abortar todo el export.
-   - `buildExportManifest` ahora incluye: cuenta de filas por tabla, lista de tablas con warnings y versión de la app (`APP_VERSION`).
-   - Mantener paginación de 1000 filas y firma pública (`fetchOrganizationExport`, `exportOrganizationZip`) — sin romper call-sites.
-
-2. **`src/features/admin/components/TabExportar.tsx`**
-   - Agrupar visualmente el listado por dominio (Facturación, Operación, CRM, etc.) en lugar de un blob de texto.
-   - Aviso: "Se excluyen credenciales, control de acceso y logs internos".
-
-3. **Tests**
-   - `exportOrg.test.ts`: agregar caso de tabla que devuelve error RLS para verificar el flujo "warning + continuar".
-   - Test de smoke que asegure que `EXPORT_TABLES` no contiene las tablas prohibidas (`facturapi_credenciales`, `organization_members`, etc.).
-
-4. **Changelog + versión**
-   - Bump `APP_VERSION` a `13.287.0` y agregar entrada en `CHANGELOG.md`.
-
-## Verificación final
-
-- `bun run lint --max-warnings 0`
-- `bunx vitest run src/features/admin/services/__tests__/exportOrg.test.ts`
-- Prueba manual en `/configuracion → Herramientas → Descargar ZIP` con Playwright: confirmar que el ZIP contiene los ~55 CSVs y que `manifest.json` lista conteos por tabla.
+- No se altera el output del ZIP ni el shape del manifest; los tests existentes de `exportOrg.test.ts` (9/9) deben seguir verdes sin modificar.
+- El SAFE-CAST del cliente Supabase se queda en `exportOrg.ts` (donde vive el fetch), respetando la regla del proyecto.
+- No se toca la allowlist de tamaños; el objetivo es sacar el archivo de la lista de infractores, no añadirlo.
