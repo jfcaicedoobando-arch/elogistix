@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.279.0] - 2026-07-12
+- **TanStack Query · Fase 4 (linter de query keys)**: nuevo guardrail en `eslint.config.js` que prohíbe declarar `queryKey`/`mutationKey` inline (`{ queryKey: ["foo", id] }`) fuera del catálogo central `src/features/<dominio>/queryKeys.ts` y `src/lib/query/**`.
+- Analogía: antes cada hook podía inventar su propio nombre para el cajón del caché ("cotizaciones-list", "cotiz_list", "cotizacionesList")… y las invalidaciones no matcheaban. Ahora el linter obliga a usar SIEMPRE la misma etiqueta desde `queryKeys.ts` — como un directorio telefónico único para toda la app.
+- Implementación: selectores AST `Property[key.name='queryKey'] > ArrayExpression` (y `mutationKey`) en `no-restricted-syntax`. Selectores base extraídos a la constante `NO_RESTRICTED_SYNTAX_BASE` para poder eximir tests y allowlist LEGACY sin perder los otros guardrails (lucide-namespace, useEffect+supabase/fetch).
+- Allowlist LEGACY: 92 hooks/componentes con keys inline pre-existentes están listados en el bloque `inline-query-keys-legacy` de `eslint.config.js`. Se migrarán en olas al catálogo central; al migrar un archivo se elimina de la lista. **No agregar archivos nuevos** — el guardrail existe para bloquear regresiones.
+- Tests exentos (`**/*.test.{ts,tsx}` + `src/test/**`): las fixtures de TanStack Query normalmente declaran keys inline.
+- Lint verde ✓ (0 errores, 3 warnings históricos de `react-compiler`).
+
 ## [13.278.0] - 2026-07-12
 - **Embarques · migración a `useMutationWithFeedback` optimista**: `useActualizarEta`, `useActualizarFechaLlegadaReal` y `useSyncEstadoEmbarque` ahora escriben el detalle en caché (detail + full) antes de que responda el servidor, con rollback automático si falla. UX percibida: el cambio se ve instantáneo en el tab de Tracking / kanban.
 - Añadida opción `silent` a `useMutationWithFeedback` para casos donde el caller clasifica sus propios toasts (ej. `docs_faltantes`). Rollback e invalidaciones siguen activas aunque los toasts estén silenciados.
