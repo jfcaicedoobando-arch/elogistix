@@ -5,7 +5,24 @@
  * happy path, ProveedorDuplicadoError), reset/close y CSF upload (patch merge).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook as rhRaw, act, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+
+function makeWrapper() {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity, staleTime: Infinity },
+      mutations: { retry: false },
+    },
+  });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+}
+
+const renderHook: typeof rhRaw = ((cb: Parameters<typeof rhRaw>[0]) =>
+  rhRaw(cb, { wrapper: makeWrapper() })) as typeof rhRaw;
 
 const { findProveedorByRfcEnOrg, procesarCsfUpload, notifyError, ProveedorDuplicadoError } = vi.hoisted(() => {
   class ProveedorDuplicadoError extends Error {
