@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors/index";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { queryKeys } from "@/lib/query";
 
 interface FacturaLike {
   id: string;
@@ -75,7 +76,7 @@ export function useTimbrarFacturaDialog(
 
   // Mutación 1 — persiste los datos fiscales elegidos antes del timbrado.
   const actualizarDatos = useMutation({
-    mutationKey: ["fiscal", "actualizar-datos-timbrado"],
+    mutationKey: queryKeys.facturacion.actualizarDatosTimbrado,
     mutationFn: (v: ActualizarDatosVars) =>
       actualizarDatosTimbradoFactura(v.facturaId, {
         uso_cfdi: v.uso_cfdi, forma_pago: v.forma_pago, metodo_pago: v.metodo_pago,
@@ -84,7 +85,7 @@ export function useTimbrarFacturaDialog(
 
   // Mutación 2 — guarda defaults del cliente. Best-effort: no bloquea el flujo.
   const guardarDefaults = useMutation({
-    mutationKey: ["fiscal", "guardar-defaults-cliente"],
+    mutationKey: queryKeys.facturacion.guardarDefaultsCliente,
     mutationFn: (v: GuardarDefaultsVars) =>
       guardarDefaultsTimbradoCliente(v.clienteId, {
         uso_cfdi_default: v.uso_cfdi_default,
@@ -92,7 +93,7 @@ export function useTimbrarFacturaDialog(
         metodo_pago_default: v.metodo_pago_default,
       }),
     onSuccess: (_r, v) => {
-      qc.invalidateQueries({ queryKey: ["cliente_defaults_facturacion", v.clienteId] });
+      qc.invalidateQueries({ queryKey: queryKeys.facturacion.clienteDefaults(v.clienteId) });
     },
     onError: (err) => {
       // best-effort: sólo warning, no rompe el timbrado ya exitoso.
@@ -102,7 +103,7 @@ export function useTimbrarFacturaDialog(
 
   // Mutación 3 — envío del CFDI por email tras timbrado exitoso.
   const enviarCfdi = useMutation({
-    mutationKey: ["fiscal", "enviar-cfdi-email"],
+    mutationKey: queryKeys.facturacion.enviarCfdiEmail,
     mutationFn: (facturaId: string) => enviarCfdiFactura(facturaId),
     onSuccess: (r) => {
       toast({ title: "CFDI enviado", description: `Enviado a ${r.enviado_a}.` });

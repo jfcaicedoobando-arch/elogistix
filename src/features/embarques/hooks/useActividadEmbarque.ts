@@ -5,6 +5,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBitacoraEmbarque } from "@/features/embarques/services";
+import { queryKeys } from "@/lib/query";
 import type { EntradaBitacora } from "@/types/bitacora";
 import type { EventoEmbarque, NotaEmbarqueRow } from "@/features/embarques/hooks";
 
@@ -32,7 +33,7 @@ interface Params {
 
 export function useActividadEmbarque({ embarqueId, expediente, notas, eventos, creadoPor, creadoEn }: Params) {
   const bitacoraQ = useQuery<EntradaBitacora[]>({
-    queryKey: ["embarques", "bitacora", embarqueId, expediente ?? ""],
+    queryKey: queryKeys.embarques.bitacora(embarqueId, expediente ?? ""),
     queryFn: () => fetchBitacoraEmbarque(embarqueId!, expediente),
     enabled: !!embarqueId,
     staleTime: 30_000,

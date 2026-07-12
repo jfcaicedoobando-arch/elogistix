@@ -21,6 +21,7 @@ import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFact
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import { FacturaManualDatosFiscales, type DatosFiscalesValue } from "./FacturaManualDatosFiscales";
 import { FacturaManualConceptosTable } from "./FacturaManualConceptosTable";
+import { queryKeys } from "@/lib/query";
 
 interface Props {
   open: boolean;
@@ -53,7 +54,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
   const crear = useCrearFacturaManual();
 
   const { data: clientes = [] } = useQuery<ClienteOpt[]>({
-    queryKey: ["clientes_fiscal_opts", organizationId],
+    queryKey: queryKeys.facturacion.clientesFiscalOpts(organizationId),
     enabled: open && !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase

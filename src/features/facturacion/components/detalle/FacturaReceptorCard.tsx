@@ -18,6 +18,7 @@ import {
 import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
 import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
 import { toTitleCase } from "@/lib/formatters";
+import { queryKeys } from "@/lib/query";
 
 interface Props {
   clienteId: string;
@@ -55,7 +56,7 @@ function Row({ label, ok, value, missingLabel }: { label: string; ok: boolean; v
 
 export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Props) {
   const { data: cliente, isLoading } = useQuery<ClienteFiscalRow | null>({
-    queryKey: ["cliente_fiscal", clienteId],
+    queryKey: queryKeys.facturacion.clienteFiscal(clienteId),
     queryFn: () => fetchClienteFiscal(clienteId),
     staleTime: 60 * 1000,
   });

@@ -8,22 +8,23 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/shared/useToast";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { eliminarFacturaBorrador } from "@/features/facturacion/services/eliminarBorrador";
+import { queryKeys } from "@/lib/query";
 
 export function useEliminarBorradorFactura() {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   const mutation = useMutation({
-    mutationKey: ["fiscal", "eliminar-borrador"],
+    mutationKey: queryKeys.facturacion.eliminarBorrador,
     mutationFn: (facturaId: string) => eliminarFacturaBorrador(facturaId),
     onSuccess: () => {
       toast({
         title: "Borrador eliminado",
         description: "La proforma volvió a estar disponible para convertir.",
       });
-      qc.invalidateQueries({ queryKey: ["facturas"] });
-      qc.invalidateQueries({ queryKey: ["proformas"] });
-      qc.invalidateQueries({ queryKey: ["proforma-detalle"] });
+      qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
+      qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+      qc.invalidateQueries({ queryKey: queryKeys.facturacion.proformaDetalleAll });
       navigate("/facturacion");
     },
     onError: (err) =>

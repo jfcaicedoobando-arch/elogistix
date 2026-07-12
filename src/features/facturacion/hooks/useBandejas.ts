@@ -8,6 +8,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useOrgFilter } from "@/hooks/shared";
 import {
+import { queryKeys } from "@/lib/query";
   fetchFacturasPorTimbrar,
   fetchFacturasPorEnviar,
   fetchPagosRepPendientes,
@@ -25,7 +26,7 @@ const STALE = 60_000;
 export function useFacturasPorTimbrar() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["facturacion", "bandeja", "por-timbrar", organizationId],
+    queryKey: queryKeys.facturacion.bandejaPorTimbrar(organizationId),
     queryFn: () => fetchFacturasPorTimbrar(organizationId!),
     enabled: !!organizationId,
     staleTime: STALE,
@@ -35,7 +36,7 @@ export function useFacturasPorTimbrar() {
 export function useFacturasPorEnviar() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["facturacion", "bandeja", "por-enviar", organizationId],
+    queryKey: queryKeys.facturacion.bandejaPorEnviar(organizationId),
     queryFn: () => fetchFacturasPorEnviar(organizationId!),
     enabled: !!organizationId,
     staleTime: STALE,
@@ -45,7 +46,7 @@ export function useFacturasPorEnviar() {
 export function usePagosRepPendientes() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["facturacion", "bandeja", "rep-pendientes", organizationId],
+    queryKey: queryKeys.facturacion.bandejaRepPendientes(organizationId),
     queryFn: () => fetchPagosRepPendientes(organizationId!),
     enabled: !!organizationId,
     staleTime: STALE,
@@ -55,7 +56,7 @@ export function usePagosRepPendientes() {
 export function useBandejaConteos() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["facturacion", "bandeja", "conteos", organizationId],
+    queryKey: queryKeys.facturacion.bandejaConteos(organizationId),
     queryFn: () => fetchBandejaConteos(organizationId!),
     enabled: !!organizationId,
     staleTime: STALE,

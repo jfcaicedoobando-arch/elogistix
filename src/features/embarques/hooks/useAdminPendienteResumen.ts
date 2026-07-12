@@ -10,10 +10,11 @@ import {
   fetchAdminPendientesResumen,
   type AdminPendientesResumen,
 } from "@/features/embarques/services/cierre";
+import { queryKeys } from "@/lib/query";
 
 export function useAdminPendienteResumen(embarqueId: string | undefined, enabled = true) {
   return useQuery<AdminPendientesResumen>({
-    queryKey: ["embarque", embarqueId, "admin-pendientes"],
+    queryKey: queryKeys.embarques.adminPendientes(embarqueId),
     queryFn: () => fetchAdminPendientesResumen(embarqueId as string),
     enabled: Boolean(embarqueId) && enabled,
     staleTime: 30_000,

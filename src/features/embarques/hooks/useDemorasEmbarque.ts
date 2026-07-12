@@ -3,14 +3,15 @@ import { toast } from "sonner";
 import { calcularDemorasEmbarque, eliminarDemorasAuto } from "../services/demorasEmbarque";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { queryKeys } from "@/lib/query";
 export function useRecalcularDemoras(embarqueId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => calcularDemorasEmbarque(embarqueId!),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["embarque-detalle", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["conceptos-venta", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["conceptos-costo", embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.detalle(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCostoDash(embarqueId) });
       if (data.sin_eventos) {
         toast.warning("Faltan eventos de Descarga o Entrega en el timeline");
       } else if (data.dias_excedidos === 0) {
@@ -31,9 +32,9 @@ export function useEliminarDemorasAuto(embarqueId: string | undefined) {
   return useMutation({
     mutationFn: () => eliminarDemorasAuto(embarqueId!),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["embarque-detalle", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["conceptos-venta", embarqueId] });
-      qc.invalidateQueries({ queryKey: ["conceptos-costo", embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.detalle(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVentaDash(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCostoDash(embarqueId) });
       toast.success("Demoras automáticas eliminadas");
     },
     onError: (e: unknown) => {

@@ -19,6 +19,7 @@ import {
   guardarDefaultsDestinatariosCliente,
 } from "@/features/facturacion/services";
 import type { Tables } from "@/integrations/supabase/types";
+import { queryKeys } from "@/lib/query";
 
 type FacturaLite = Pick<
   Tables<"facturas">,
@@ -37,7 +38,7 @@ export function DialogEnviarFacturaBranded({ open, onOpenChange, factura, esReen
   const mutation = useEnviarFacturaEmail(factura.id);
 
   const { data: defaults } = useQuery({
-    queryKey: ["cliente_defaults_facturacion", factura.cliente_id],
+    queryKey: queryKeys.facturacion.clienteDefaults(factura.cliente_id),
     enabled: !!factura.cliente_id && open,
     queryFn: () => fetchDefaultsFacturacionCliente(factura.cliente_id!),
     staleTime: 30_000,

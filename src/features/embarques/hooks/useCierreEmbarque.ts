@@ -9,10 +9,11 @@ import {
   type CierreLogEntry,
   type CierreValidacion,
 } from "@/features/embarques/services/cierre";
+import { queryKeys } from "@/lib/query";
 
 const KEYS = {
-  validacion: (id?: string) => ["embarque", id, "cierre-validacion"] as const,
-  log: (id?: string) => ["embarque", id, "cierre-log"] as const,
+  validacion: queryKeys.embarques.cierreValidacion,
+  log: queryKeys.embarques.cierreLog,
 };
 
 export function useValidacionCierre(embarqueId: string | undefined) {
@@ -36,8 +37,8 @@ export function useCierreLog(embarqueId: string | undefined) {
 function invalidarTodo(qc: ReturnType<typeof useQueryClient>, embarqueId: string) {
   qc.invalidateQueries({ queryKey: KEYS.validacion(embarqueId) });
   qc.invalidateQueries({ queryKey: KEYS.log(embarqueId) });
-  qc.invalidateQueries({ queryKey: ["embarque", embarqueId] });
-  qc.invalidateQueries({ queryKey: ["embarques"] });
+  qc.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
+  qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
   qc.invalidateQueries({ queryKey: ["comisiones"] });
 }
 

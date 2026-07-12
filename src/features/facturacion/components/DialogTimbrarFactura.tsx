@@ -18,6 +18,7 @@ import { buildChecksTimbrado } from "@/features/facturacion/utils/validarDatosTi
 import { useTimbrarFacturaDialog } from "@/features/facturacion/hooks/useTimbrarFacturaDialog";
 import { TimbrarCompacto, TimbrarCompleto } from "./DialogTimbrarFactura.parts";
 import { ReferenciasEmbarquePreview } from "./ReferenciasEmbarquePreview";
+import { queryKeys } from "@/lib/query";
 
 interface Props {
   facturaId: string | null;
@@ -29,13 +30,13 @@ export function DialogTimbrarFactura({ facturaId, open, onOpenChange }: Props) {
   const { data: factura } = useFactura(facturaId ?? undefined);
 
   const { data: cliente } = useQuery<ClienteFiscalRow | null>({
-    queryKey: ["cliente_fiscal", factura?.cliente_id],
+    queryKey: queryKeys.facturacion.clienteFiscal(factura?.cliente_id),
     enabled: !!factura?.cliente_id,
     queryFn: () => fetchClienteFiscal(factura!.cliente_id),
   });
 
   const { data: defaults } = useQuery<DefaultsFacturacionCliente | null>({
-    queryKey: ["cliente_defaults_facturacion", factura?.cliente_id],
+    queryKey: queryKeys.facturacion.clienteDefaults(factura?.cliente_id),
     enabled: !!factura?.cliente_id,
     queryFn: () => fetchDefaultsFacturacionCliente(factura!.cliente_id),
     staleTime: 30_000,
