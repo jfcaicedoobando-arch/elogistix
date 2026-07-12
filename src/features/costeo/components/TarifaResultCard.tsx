@@ -32,7 +32,7 @@ interface Props {
 
 export function TarifaResultCard({ row, rank, onElegir, selectLabel = "Elegir", meta }: Props) {
   const { data: recargos = [] } = useQuery({
-    queryKey: ["costeo", "tarifa-recargos", row.id],
+    queryKey: queryKeys.costeo.tarifas.recargos(row.id),
     queryFn: () => fetchRecargosDeTarifa(row.id),
     staleTime: 60 * 1000,
   });
