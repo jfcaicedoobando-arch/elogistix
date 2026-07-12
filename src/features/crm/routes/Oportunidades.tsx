@@ -1,3 +1,4 @@
+"use memo";
 /**
  * /crm/oportunidades — Pipeline con vista Kanban (DnD) y tabla.
  * Filtros avanzados colapsables para ganar espacio vertical.
