@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.284.0] - 2026-07-12
+- **Cobertura**: tests focalizados en los módulos que cambiaron en la ola TanStack Fase 5, sin bajar el umbral (regla `coverage-threshold`).
+  - `src/features/embarques/__tests__/queries.test.ts` (5 tests): valida las 6 factories `queryOptions()` de embarques — queryKey, `staleTime` y delegación al servicio.
+  - `src/features/marketing/hooks/__tests__/useIsDemoUser.test.tsx` (3 tests): cubre el hook migrado a `useQuery`, incluyendo el gating `enabled` sin usuario.
+  - `src/features/facturacion/hooks/__tests__/useTimbrarFacturaDialog.test.tsx` (6 tests): precedencia de defaults, flujo feliz de las 3 mutaciones encadenadas, corte en fallo de `actualizarDatos` (nuevo `onError`) y bypass de email cuando `enviarEmail=false`.
+- 14 nuevos tests, todos pasando localmente.
+
 ## [13.283.0] - 2026-07-12
 - **CI fixes**: 5 regresiones de la ola TanStack Fase 5 corregidas.
   - Power of 10: `Actividades.tsx` y `useEnvioDocumentoForm.ts` reducidos a ≤200 líneas.
