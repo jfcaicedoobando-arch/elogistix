@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.285.0] - 2026-07-12
+- **Cobertura de branches**: CI del último push falló por 0.07% en `branches` (33.93% vs 34%). Sumar tests focalizados sobre wrappers/factories con muchas ramas sin ejercer (regla `coverage-threshold`).
+  - `src/hooks/shared/__tests__/useMutationWithFeedback.branches.test.tsx` (9 tests): `silent=true` suprime toasts en éxito y error, `notifySuccess`/`notifyError` disparados sólo cuando corresponde, `invalidate` acepta una `QueryKey` o array de keys, `optimistic.queryKey` como función se resuelve con las variables, y propagación de `onSuccess`/`onError` del consumidor.
+  - `src/features/embarques/__tests__/queries.test.ts` (+3 tests): `proveedoresSelect` con `organizationId` definido, `expedientesCliente` con `organizationId` undefined y null.
+  - `src/features/embarques/hooks/mutations/__tests__/useActualizarEta.test.tsx` (4 tests): parche optimista sobre `detail` y `full` durante la mutación, rollback al valor previo al fallar, `silent=true` no dispara toasts, y updater no rompe con cache vacío.
+- 16 tests nuevos, todos verdes localmente (21/21 en el subset).
+
 ## [13.284.0] - 2026-07-12
 - **Cobertura**: tests focalizados en los módulos que cambiaron en la ola TanStack Fase 5, sin bajar el umbral (regla `coverage-threshold`).
   - `src/features/embarques/__tests__/queries.test.ts` (5 tests): valida las 6 factories `queryOptions()` de embarques — queryKey, `staleTime` y delegación al servicio.
