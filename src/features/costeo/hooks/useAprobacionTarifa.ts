@@ -16,8 +16,8 @@ function describeError(e: unknown): string {
 export function useAprobacionTarifa() {
   const qc = useQueryClient();
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["costeo-tarifas"] });
-    qc.invalidateQueries({ queryKey: ["portal-agente", "tarifas"] });
+    qc.invalidateQueries({ queryKey: queryKeys.costeo.tarifas.all });
+    qc.invalidateQueries({ queryKey: queryKeys.portalAgente.tarifas() });
   };
 
   const aprobar = useMutation({
