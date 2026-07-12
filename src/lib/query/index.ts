@@ -96,4 +96,11 @@ export const queryKeys = {
   pdfPreviewCotizacion,
   productosCatalogo,
   trackingPublico,
+  direccion,
+  dashboardOperador,
+  embarquesPendientesAdmin,
+  alertasSistema,
+  demoLeads,
+  notificaciones,
+  marketing,
 } as const;
