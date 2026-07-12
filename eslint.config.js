@@ -405,8 +405,7 @@ export default tseslint.config(
     // bloque coincidente gana para esa regla.
     // ─────────────────────────────────────────────────────────────────────
     name: "inline-query-keys-legacy",
-    files: [
-    ],
+    files: ["src/__never_match__.ts"],
     rules: {
       "no-restricted-syntax": ["error", ...NO_RESTRICTED_SYNTAX_BASE],
     },
