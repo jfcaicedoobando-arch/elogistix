@@ -11,7 +11,6 @@ import {
 import { queryKeys } from "@/lib/query";
 
 export type { EmbarqueTarifaInfo } from "@/features/embarques/services/tarifaInfo";
-import { queryKeys } from "@/lib/query";
 
 export function useEmbarqueTarifaInfo(embarqueId: string | undefined) {
   return useQuery<EmbarqueTarifaInfo | null>({
