@@ -193,5 +193,13 @@ export function useActualizarPlantilla() {
     onSuccess: (_v, input) => {
       void qc.invalidateQueries({ queryKey: keys.byOrg(input.organizationId) });
     },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo actualizar la plantilla",
+        description: getErrorMessage(error),
+        error,
+        method: "COTIZACION_PLANTILLA_ACTUALIZAR",
+      });
+    },
   });
 }
