@@ -7,6 +7,28 @@ import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "./co
 
 export type ProspectoVinculacionModo = "vincular" | "nuevo";
 
+/**
+ * Captura manual de flete LCL cuando el ejecutivo no vincula una tarifa.
+ * Se persiste en columnas `lcl_*` de `cotizaciones`.
+ */
+export interface LclFleteManual {
+  /** Tarifa USD por W/M (peso o volumen, el mayor). */
+  tarifaWM: number;
+  /** Mínimo de flete en USD (piso). */
+  minimo: number;
+  /** Días libres de almacenaje en destino (LCL). */
+  diasLibresAlmacenaje: number;
+  /** Consolidador / agente LCL (proveedor). */
+  consolidadorId: string | null;
+}
+
+export const DEFAULT_LCL_FLETE_MANUAL: LclFleteManual = {
+  tarifaWM: 0,
+  minimo: 0,
+  diasLibresAlmacenaje: 0,
+  consolidadorId: null,
+};
+
 export interface CotizacionFormValues {
   esProspecto: boolean;
   clienteId: string;
