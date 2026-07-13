@@ -162,7 +162,7 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
         id: p.id,
         fecha_pago: p.fecha_pago,
         monto_aplicado: Number(p.monto_aplicado_factura),
-        monto_no_aplicado: Number(p.monto_no_aplicado ?? 0),
+        monto_no_aplicado: Math.max(0, Number(p.monto) - Number(p.monto_aplicado_factura)),
         forma_pago: p.forma_pago,
         referencia: p.referencia,
       })),
