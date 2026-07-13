@@ -85,7 +85,7 @@ function partesRuta(v: CotizacionFormValues) {
     tiempo_transito_dias: v.tiempoTransitoDias ?? null,
     frecuencia: v.frecuencia,
     ruta_texto: v.rutaTexto,
-    validez_propuesta: v.validezPropuesta ? v.validezPropuesta.toISOString().split('T')[0] : null,
+    validez_propuesta: toIsoDateString(v.validezPropuesta),
     tipo_movimiento: esTerrestre ? "" : v.tipoMovimiento,
     seguro: v.seguro,
     valor_seguro_usd: v.seguro ? Number(v.valorSeguroUsd) || 0 : 0,
