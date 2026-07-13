@@ -2752,6 +2752,59 @@ export type Database = {
           },
         ]
       }
+      cotizacion_plantillas: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          descripcion: string | null
+          id: string
+          nombre: string
+          organization_id: string
+          payload: Json
+          ultima_uso_at: string | null
+          updated_at: string
+          usuario_id: string | null
+          veces_usada: number
+          visibilidad: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          organization_id: string
+          payload: Json
+          ultima_uso_at?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+          veces_usada?: number
+          visibilidad?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          organization_id?: string
+          payload?: Json
+          ultima_uso_at?: string | null
+          updated_at?: string
+          usuario_id?: string | null
+          veces_usada?: number
+          visibilidad?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_plantillas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           aceptada_en: string | null
@@ -7006,6 +7059,10 @@ export type Database = {
             Returns: undefined
           }
       alertas_sistema_pending_count: { Args: never; Returns: number }
+      aplicar_plantilla_cotizacion: {
+        Args: { _plantilla_id: string }
+        Returns: Json
+      }
       app_logs_health_summary: {
         Args: { p_hours?: number }
         Returns: {
