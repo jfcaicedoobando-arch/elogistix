@@ -55,7 +55,7 @@ export function validateMaritimo(v: CotizacionFormValues): string | null {
   // LCL no exige tarifa vinculada: valida captura manual de flete.
   if (v.tipoEmbarque === "LCL") {
     const tarifaWM = Number(v.lclFleteManual?.tarifaWM ?? 0);
-    const consolidador = v.lclFleteManual?.consolidadorProveedorId?.trim() ?? "";
+    const consolidador = v.lclFleteManual?.consolidadorId?.trim() ?? "";
     if (tarifaWM > 0 && consolidador) return null;
     return "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).";
   }
