@@ -98,13 +98,21 @@ describe("conceptosFacturaCrud", () => {
     expect(update.opArgs[update.ops.indexOf("eq")]).toEqual(["id", "c1"]);
   });
 
-  it("eliminarConceptoFactura borra por id y recalcula", async () => {
+  it("eliminarConceptoFactura invoca soft_delete_record y recalcula", async () => {
+    // v13.290.0 — el borrado ahora pasa por el RPC soft_delete_record; no hay
+    // más DELETE físico contra `conceptos_factura`.
     mock.setTableResult("conceptos_factura", { data: [], error: null });
     mock.setTableResult("facturas", { data: null, error: null });
+    mock.setRpcResult("soft_delete_record", { data: null, error: null });
     await eliminarConceptoFactura({ conceptoId: "c1", facturaId: "f1" });
-    const del = mock.tableCalls.find((c) => c.table === "conceptos_factura" && c.ops.includes("delete"))!;
-    expect(del.opArgs[del.ops.indexOf("eq")]).toEqual(["id", "c1"]);
+    const rpc = mock.rpcCalls.find((c) => c.fn === "soft_delete_record");
+    expect(rpc).toBeDefined();
+    expect(rpc!.args).toEqual({ _table: "conceptos_factura", _id: "c1" });
+    // El recálculo posterior debe golpear `facturas` con update.
+    const updates = mock.tableCalls.filter((c) => c.table === "facturas" && c.ops.includes("update"));
+    expect(updates.length).toBe(1);
   });
+
 
   it("recalcularTotalesFactura con lista vacía => totales en 0", async () => {
     mock.setTableResult("conceptos_factura", { data: [], error: null });
