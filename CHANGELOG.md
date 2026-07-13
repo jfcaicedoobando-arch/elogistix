@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.297.3] - 2026-07-13
+- **feat(búsqueda global)**: el Ctrl+K ahora encuentra embarques por **BL Master** y **BL House**, además de expediente. La RPC `busqueda_global` extiende el `WHERE` de la rama de embarques a `bl_master ILIKE …` y `bl_house ILIKE …`; el sublabel muestra el BL matcheado (`BL/M …` o `BL/H …`) para confirmación visual. Placeholder del input actualizado a "Buscar por expediente, BL, cliente, factura…".
+
 ## [13.297.2] - 2026-07-13
 - **fix(cotización/plantillas — CI guardrail)**: agregado `onError` a las 4 mutaciones de `useCotizacionPlantillas.ts` (guardar, aplicar, eliminar, actualizar). Cada `onError` llama a `notifyError` con `title` específico, `description: getErrorMessage(error)` y `method` estandarizado (`COTIZACION_PLANTILLA_{ACCIÓN}`). Cierra el fallo del test de arquitectura `mutations-have-onerror` en CI (shard 15/20) y evita que errores de RLS/red en el módulo de plantillas queden silenciosos ante el usuario.
 

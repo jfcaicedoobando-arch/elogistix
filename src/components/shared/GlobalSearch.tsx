@@ -96,7 +96,7 @@ export function GlobalSearch() {
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
-          placeholder="Buscar embarques, clientes, proveedores, facturas..."
+          placeholder="Buscar por expediente, BL, cliente, factura…"
           value={query}
           onValueChange={setQuery}
         />
