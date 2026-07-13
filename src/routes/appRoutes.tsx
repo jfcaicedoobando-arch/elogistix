@@ -22,7 +22,7 @@ import {
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
   Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, CotizacionPlantillas, PdfPreviewCotizacion,
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
-  Facturacion, FacturaDetalle, ProformaDetalle, ProformasListado,
+  Facturacion, FacturaDetalle, EstadoCuentaInterno, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Compras, CxpAging, CxpPorCapturar, CxpPorPagar, Cartera,
   ComprasPagos, ComprasNotasCredito, ComprasReportes, ComprasPorAprobar, ComprasConciliacion,
