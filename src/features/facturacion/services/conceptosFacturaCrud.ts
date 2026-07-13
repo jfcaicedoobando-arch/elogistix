@@ -120,7 +120,13 @@ export async function eliminarConceptoFactura(params: {
   conceptoId: string;
   facturaId: string;
 }): Promise<void> {
-  await run(supabase.from("conceptos_factura").delete().eq("id", params.conceptoId));
+  // v13.290.0 (Papelera Fase 3): soft-delete vía RPC en lugar de DELETE
+  // físico, para que el concepto pueda restaurarse desde /papelera.
+  const { error } = await supabase.rpc("soft_delete_record", {
+    _table: "conceptos_factura",
+    _id: params.conceptoId,
+  });
+  if (error) throw error;
   await recalcularTotalesFactura(params.facturaId);
 }
 

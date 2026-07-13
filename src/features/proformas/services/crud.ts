@@ -80,10 +80,12 @@ export async function eliminarProforma(params: EliminarProformaParams): Promise<
     .eq("proforma_id", params.proformaId);
   if (errUpd) throw errUpd;
 
-  const { error: errDel } = await supabase
-    .from("proformas")
-    .delete()
-    .eq("id", params.proformaId);
+  // v13.290.0 (Papelera Fase 3): soft-delete vía RPC para que la proforma
+  // sea recuperable desde `/admin/papelera`.
+  const { error: errDel } = await supabase.rpc("soft_delete_record", {
+    _table: "proformas",
+    _id: params.proformaId,
+  });
   if (errDel) throw errDel;
 
   // B-3: NO actualizar embarques.tiene_proforma desde el cliente.
