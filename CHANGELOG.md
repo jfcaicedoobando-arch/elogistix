@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.3] - 2026-07-13
+- **fix(auditoria)**: la tabla principal de Hallazgos ahora usa el mismo render deduplicado que el resumen. Si el detalle ya trae la lista de documentos después de dos puntos, se muestra sólo el encabezado y los documentos quedan agrupados una sola vez como badges.
+
 ## [13.288.2] - 2026-07-13
 - **fix(auditoria)**: columna "Detalle" de la tabla ya no repite la lista de documentos. Cuando el hallazgo trae `documentos_faltantes`, sólo se muestra el prefijo del texto (p. ej. `"Documentos faltantes para estado Confirmado:"`) y los documentos aparecen únicamente como badges debajo.
 
