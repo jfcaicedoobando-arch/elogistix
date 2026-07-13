@@ -134,6 +134,8 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
     await expect(
       act(async () => { await result.current.mutateAsync("plantilla-1"); })
     ).rejects.toBeTruthy();
+  });
+
 
   it("useActualizarPlantilla envía patch y invalida la lista de la org", async () => {
     state.insertData = null;
