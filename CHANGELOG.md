@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.290.2] - 2026-07-13
+- **fix(tests/auditoria)**: el test `REGLAS_AUDITORIA cubre el tipo ReglaAuditoria` fallaba en CI (shard 5/20) porque la lista `expected` estaba desactualizada respecto al tipo `ReglaAuditoria` — faltaban `contenedor_datos_incompletos`, `contenedor_fechas_incompletas` y `tipo_cambio_faltante` (agregadas en versiones previas AUD-1 y AUD-2). Se sincroniza el array `expected` del test con el tipo, desbloqueando el pipeline.
+
 ## [13.290.1] - 2026-07-13
 - **fix(ci/migraciones)**: la migración `20260713165742` asumía que la secuencia `public.embarque_consecutivo_seq` ya existía y fallaba el job "Prepare RLS database snapshot" con `relation "public.embarque_consecutivo_seq" does not exist` en CI (que aplica migraciones desde cero). Se agrega migración idempotente que hace `CREATE SEQUENCE IF NOT EXISTS` y realinea el contador con el máximo `expediente` real. No-op en producción, desbloquea el pipeline de pruebas RLS.
 
