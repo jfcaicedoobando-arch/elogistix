@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Sparkles } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
