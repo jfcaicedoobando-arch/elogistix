@@ -25,17 +25,25 @@ export function seccionParaErrorPaso1(mensaje: string): string {
  */
 export function scrollAndFocusSection(sectionId: string): void {
   if (typeof document === "undefined") return;
-  const el = document.getElementById(sectionId);
-  if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
-  // Focus al primer control interactivo (setTimeout para dar espacio al scroll).
-  setTimeout(() => {
-    const focusable = el.querySelector<HTMLElement>(
-      "input:not([type='hidden']):not([disabled]), select:not([disabled]), textarea:not([disabled]), [role='combobox']:not([disabled])",
-    );
-    focusable?.focus();
-    // Efecto visual sutil: pulse durante 1.5s.
-    el.classList.add("ring-2", "ring-primary/60", "rounded-md", "transition");
-    setTimeout(() => el.classList.remove("ring-2", "ring-primary/60"), 1500);
-  }, 320);
+  try {
+    const el = document.getElementById(sectionId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Focus al primer control interactivo (setTimeout para dar espacio al scroll).
+    setTimeout(() => {
+      try {
+        const focusable = el.querySelector<HTMLElement>(
+          "input:not([type='hidden']):not([disabled]), select:not([disabled]), textarea:not([disabled]), [role='combobox']:not([disabled])",
+        );
+        focusable?.focus();
+        // Efecto visual sutil: pulse durante 1.5s.
+        el.classList.add("ring-2", "ring-primary/60", "rounded-md", "transition");
+        setTimeout(() => el.classList.remove("ring-2", "ring-primary/60"), 1500);
+      } catch {
+        // JSDOM u orígenes hostiles con querySelector limitado.
+      }
+    }, 320);
+  } catch {
+    // sectionId malformado (SSR + strings del usuario).
+  }
 }

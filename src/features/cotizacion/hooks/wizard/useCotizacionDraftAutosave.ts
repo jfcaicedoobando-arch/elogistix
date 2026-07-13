@@ -2,9 +2,10 @@
  * Autoguardado de borrador del wizard de cotización (P0 — v13.293.0).
  *
  * - Persiste los valores del formulario en localStorage con debounce 800 ms.
- * - TTL 24 h: cualquier borrador más viejo se descarta.
- * - Sólo se activa para el flujo "Nueva Cotización" (isEditMode=false).
- * - No guarda si el usuario no ha tocado ningún campo (form.formState.isDirty).
+ * - TTL 24 h: cualquier borrador más viejo se descarta al leerlo.
+ * - El gating de "modo edición" o "ya avanzó a paso 2+" lo hace `enabled`
+ *   desde el consumidor (`NuevaCotizacion`); dentro del hook siempre se
+ *   escribe mientras `enabled=true` (React Hook Form ya deduplica watches).
  *
  * Consumido por `NuevaCotizacion` + `DraftRestoreBanner`.
  */
