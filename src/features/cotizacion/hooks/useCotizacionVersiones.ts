@@ -22,7 +22,12 @@ export function useDuplicarCotizacion() {
       qc.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       toast.success("Cotización duplicada. Se abrió el borrador nuevo.");
     },
-    onError: (e) => toast.error(e.message || "No se pudo duplicar la cotización"),
+    onError: (e) =>
+      notifyError(undefined, {
+        title: "No se pudo duplicar la cotización",
+        error: e,
+        method: "useDuplicarCotizacion",
+      }),
   });
 }
 
