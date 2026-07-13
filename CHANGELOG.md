@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.5] - 2026-07-13
+- **chore(CI · calidad)**: se corrigen bloqueos del pipeline detectados en `logs_79275067023`. (1) `EstadoCuentaTable.tsx` añadido a la allowlist `no-raw-table` (ESLint + test de arquitectura) por usar sub-rows expandibles no soportadas por `DataTable`. (2) `useEstadoCuenta` migra a `queryKey` centralizado (`estadoCuenta.list` en `queryKeys.ts`) para evitar `no-inline-queryKey`. (3) 5 call-sites en cotización (`useCotizacionVersiones`, `PlantillaSelectorPaso1`, `GuardarPlantillaDialog`, `EditarPlantillaDialog`, `CotizacionPlantillas`) sustituyen `toast.error(...)` directo por `notifyError({title, error, method})` (test arquitectural de feedback). (4) `useCotizacionDraftAutosave.loadDraft` valida el shape del JSON antes de tipar, eliminando el `JSON.parse(...) as StoredDraft` (CRITICAL en `audit-casts`); baseline vuelve a `0 HIGH / 0 CRITICAL`. (5) 3 `rejects.toBeTruthy()` en `useCotizacionPlantillas.test.tsx` cambian a `rejects.toThrow(/mensaje/)`.
+
 ## [13.299.4] - 2026-07-13
 - **fix(cotización LCL · avance de paso 1)**: el wizard bloqueaba el paso a "Vincula o crea una tarifa marítima…" aunque el embarque fuera LCL (que ya no usa tarifa vinculada). `validateMaritimo` ahora, cuando `tipoEmbarque === "LCL"`, valida el flete manual (`tarifaWM > 0` + `consolidadorId`) en lugar de exigir `tarifaId`. FCL conserva la validación previa. Analogía: el guardia ya no le pide "boleto de tarifa" al LCL; le pide su "recibo de flete manual" (W/M + consolidador).
 
