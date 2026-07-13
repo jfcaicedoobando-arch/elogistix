@@ -1,5 +1,7 @@
 "use memo";
 import { useMemo, useDeferredValue } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
 import { Plus, TrendingUp, CheckCircle, XCircle, BarChart3, AlertTriangle, Archive } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
