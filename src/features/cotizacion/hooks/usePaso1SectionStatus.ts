@@ -1,5 +1,6 @@
 import { useFormContext, useWatch } from "react-hook-form";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
+import type { DimensionAerea, DimensionLCL } from "@/features/cotizacion/types/core";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 
 export interface Paso1SectionStatus {
@@ -29,6 +30,8 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
       "modo", "tipo", "incoterm",
       "origen", "destino",
       "tipoCarga", "pesoKg", "piezas",
+      "tipoEmbarque", "tipoContenedor",
+      "dimensionesAereas", "dimensionesLCL",
       "tarifaId",
       "rutaTexto", "validezPropuesta",
       "numContenedores",
@@ -40,6 +43,8 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     modo, tipo, incoterm,
     origen, destino,
     tipoCarga, pesoKg, piezas,
+    tipoEmbarque, tipoContenedor,
+    dimensionesAereas, dimensionesLCL,
     tarifaId,
     rutaTexto, validezPropuesta,
     numContenedores,
@@ -48,12 +53,16 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     string, string, string,
     string, string,
     string, number, number,
+    string, string,
+    DimensionAerea[] | undefined, DimensionLCL[] | undefined,
     string | null,
     string, Date | undefined,
     number,
   ];
 
-  const esMaritimo = (modo || "").toLowerCase().startsWith("mar");
+  const modoLower = (modo || "").toLowerCase();
+  const esMaritimo = modoLower.startsWith("mar");
+  const esAereo = modoLower.startsWith("aér") || modoLower.startsWith("aer");
   // CIF/CFR/CIP/DAP/DDP marítimo: no se vincula tarifa ni hay condiciones
   // comerciales propias (las pone el shipper origen). No bloquear el paso.
   const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
@@ -62,7 +71,12 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     cliente: clienteOk(esProspecto, prospectoEmpresa, clienteId),
     operacion: !!modo && !!tipo && !!incoterm,
     ruta: !!origen?.trim() && !!destino?.trim(),
-    mercancia: mercanciaOk(tipoCarga, pesoKg, piezas),
+    mercancia: mercanciaOk({
+      tipoCarga, pesoKg, piezas,
+      esMaritimo, esAereo,
+      tipoEmbarque, tipoContenedor, numContenedores,
+      dimensionesAereas, dimensionesLCL,
+    }),
     tarifa: esMaritimo && !sinFleteVenta ? !!tarifaId : true,
     condiciones: sinFleteVenta ? true : condicionesOk(esMaritimo, rutaTexto, validezPropuesta),
     cierre: (numContenedores ?? 0) >= 1,
@@ -73,8 +87,43 @@ function clienteOk(esProspecto: boolean, prospectoEmpresa: string, clienteId: st
   return esProspecto ? !!prospectoEmpresa?.trim() : !!clienteId;
 }
 
-function mercanciaOk(tipoCarga: string, pesoKg: number, piezas: number): boolean {
-  return !!tipoCarga && ((pesoKg ?? 0) > 0 || (piezas ?? 0) > 0);
+interface MercanciaArgs {
+  tipoCarga: string;
+  pesoKg: number;
+  piezas: number;
+  esMaritimo: boolean;
+  esAereo: boolean;
+  tipoEmbarque: string;
+  tipoContenedor: string;
+  numContenedores: number;
+  dimensionesAereas: DimensionAerea[] | undefined;
+  dimensionesLCL: DimensionLCL[] | undefined;
+}
+
+function mercanciaOk(a: MercanciaArgs): boolean {
+  if (!a.tipoCarga) return false;
+
+  // Marítimo FCL: se define por contenedor(es).
+  if (a.esMaritimo && a.tipoEmbarque === "FCL") {
+    return !!a.tipoContenedor && (a.numContenedores ?? 0) >= 1;
+  }
+
+  // Marítimo LCL: al menos una fila con piezas y dimensiones/volumen válidos.
+  if (a.esMaritimo && a.tipoEmbarque === "LCL") {
+    return (a.dimensionesLCL ?? []).some(
+      (d) => (d.piezas ?? 0) > 0 && ((d.volumen_m3 ?? 0) > 0 || ((d.alto_cm ?? 0) > 0 && (d.largo_cm ?? 0) > 0 && (d.ancho_cm ?? 0) > 0)),
+    );
+  }
+
+  // Aéreo: al menos una fila con piezas y peso volumétrico/dimensiones válidas.
+  if (a.esAereo) {
+    return (a.dimensionesAereas ?? []).some(
+      (d) => (d.piezas ?? 0) > 0 && ((d.peso_volumetrico_kg ?? 0) > 0 || ((d.alto_cm ?? 0) > 0 && (d.largo_cm ?? 0) > 0 && (d.ancho_cm ?? 0) > 0)),
+    );
+  }
+
+  // Terrestre / default: campos planos.
+  return (a.pesoKg ?? 0) > 0 || (a.piezas ?? 0) > 0;
 }
 
 function condicionesOk(esMaritimo: boolean, rutaTexto: string, validezPropuesta: Date | undefined): boolean {
