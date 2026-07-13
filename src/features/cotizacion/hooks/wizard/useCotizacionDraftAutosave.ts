@@ -29,8 +29,17 @@ export function loadDraft(userId: string): StoredDraft | null {
   const raw = safeLocalStorage.getItem(draftKey(userId));
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as StoredDraft;
-    if (!parsed || parsed.version !== 1 || typeof parsed.savedAt !== "number") return null;
+    const parsedUnknown: unknown = JSON.parse(raw);
+    if (
+      !parsedUnknown ||
+      typeof parsedUnknown !== "object" ||
+      (parsedUnknown as { version?: unknown }).version !== 1 ||
+      typeof (parsedUnknown as { savedAt?: unknown }).savedAt !== "number"
+    ) {
+      return null;
+    }
+    // SAFE-CAST: validado shape mínimo (version + savedAt numérico) antes de aceptar.
+    const parsed = parsedUnknown as StoredDraft;
     if (Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
       safeLocalStorage.removeItem(draftKey(userId));
       return null;
