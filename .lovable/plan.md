@@ -1,47 +1,47 @@
-## Unificar paso 2 del wizard contra `catalogo_claves_sat`
+## Contexto
 
-### Contexto
+El job **"Prepare RLS database snapshot"** falla en CI al replayar migraciones sobre un Postgres limpio:
 
-- **Paso 3** (`ConceptoDescripcionSelector` → `ProductoServicioSelect`) es combobox **estricto** contra `catalogo_claves_sat` y autocompleta: descripción, `aplica_iva`, `tasa_iva_aplicada` y `clave_unidad_sat`.
-- **Paso 2** (`TablaCostosLocal`) usa un `<Select>` con dos arrays hardcoded (`CONCEPTOS_COSTO_USD` / `CONCEPTOS_COSTO_MXN`) y para unidad usa `UNIDADES_MEDIDA = ['BL','W/M','Documento',...]`, también hardcoded.
-- Consecuencia: (1) los "conceptos" del paso 2 pueden no existir en el catálogo maestro y llegan al paso 3 como legacy con banner ámbar, (2) desalineación con clave SAT/IVA/unidad, (3) mantenimiento en dos lugares.
+```
+ERROR:  relation "public.embarque_consecutivo_seq" does not exist
+QUERY:  SELECT last_value FROM public.embarque_consecutivo_seq
+en migración: 20260713165742_20aea6c0-...sql
+```
 
-### Objetivo
+Como el error interrumpe el replay, la suite RLS queda `skipped` y `0_RLS tests result` falla con exit 1.
 
-El paso 2 sólo permite conceptos del catálogo maestro (mismo origen que el paso 3), heredando además clave SAT, unidad SAT e IVA sugerido.
+## Causa
 
-### Alcance
+La secuencia `public.embarque_consecutivo_seq` existe en producción desde hace mucho (migración pre-historial), pero **nunca aparece con `CREATE SEQUENCE`** en el repositorio. Las migraciones antiguas solo la usan con `nextval(...)` dentro de cuerpos de función (que no se resuelve hasta que se llama a la función, así que no rompen el replay).
 
-1. **`TablaCostosLocal.tsx`** — reemplazar el `<Select>` de concepto por `ProductoServicioSelect`. Al seleccionar producto:
-   - `concepto` ← `producto.nombre`.
-   - `unidad_medida` ← `producto.clave_unidad_sat` (si viene) y sólo si la fila no tiene un valor manual explícito.
-   - `aplica_iva` ← `producto.tipo_iva === 'gravado_16'`.
-   - Guardar `clave_sat` en la fila (nuevo campo opcional en `FilaCostoLocal`) para que viaje al paso 3 sin recalcular.
-2. **`FilaCostoLocal`** — agregar campos opcionales `clave_sat?: string`, `tasa_iva_aplicada?: number` para propagar el match del catálogo.
-3. **`UNIDADES_MEDIDA` en `TablaCostosLocal`** — sustituir por `UnidadMedidaSelect` ya existente (o dejar el select actual pero alimentado por el catálogo de claves de unidad SAT). Se elige la variante `UnidadMedidaSelect` para consistencia con paso 3.
-4. **`buildCostosDesdeTarifa.ts`** — al precargar desde una tarifa, intentar matchear el `concepto` generado contra el catálogo (por `porNombre` o helper nuevo `matchProductoPorNombre`) para heredar `clave_sat` / `unidad`. Si no matchea, deja el concepto como está (fila "legacy" que el usuario deberá corregir manualmente antes de avanzar). Se hace fuera del hook (helper puro que recibe la lista de productos) para no romper la firma actual.
-5. **`SeccionCostosInternosPLLocal.tsx`** — pasa la lista de productos del catálogo al llamado de `buildCostosDesdeTarifa` para el match.
-6. **`useCotizacionWizardSteps` / `buildConceptosFromCostos`** — hoy mapea `costo → concepto_venta` por nombre. Ahora, si la fila trae `clave_sat`/`tasa_iva_aplicada`, se propagan al concepto de venta directamente en vez de re-buscar en el catálogo. Beneficio: cero desalineación entre pasos y menos trabajo del combobox del paso 3.
-7. **Constantes legacy** — dejar `CONCEPTOS_COSTO_USD` / `CONCEPTOS_COSTO_MXN` en `cotizacionConstants.ts` con `@deprecated`, y buscar otros usos para migrarlos o retirarlos.
-8. **Migración de datos (opcional, pequeña)** — no toca tablas. `catalogo_claves_sat` ya está poblado; sólo se verifica que los patrones más usados de las viejas constantes existan como registros activos. Si falta alguno (p. ej. "Flete Marítimo LCL"), se propone un migration seed **read-only en el plan** para agregarlos como activos por organización (o global si el catálogo es global — pendiente confirmar en implementación).
-9. **Tests**:
-   - `TablaCostosLocal.test.tsx`: seleccionar producto propaga concepto + unidad + `aplica_iva`.
-   - `buildCostosDesdeTarifa.test.ts`: cuando se pasa la lista de productos, hereda `clave_sat` al match; si no matchea, fila queda sin `clave_sat` y no rompe.
-   - Test de integración wizard: paso 2 → paso 3 mantiene `clave_sat` sin que el paso 3 tenga que re-buscar.
-10. **Changelog + bump** a `13.292.0` explicando la unificación y el impacto (los conceptos legacy que estén guardados como texto libre siguen funcionando pero se marcan como legacy en el combobox del paso 2, igual que ya pasa en paso 3).
+La migración `20260713165742_...sql` (agregada esta sesión al arreglar `generar_expediente` multi-tenant) hace `SELECT last_value FROM public.embarque_consecutivo_seq` **dentro de un `DO $$ ... $$` que sí se ejecuta al momento del replay** → error inmediato en CI.
 
-### Fuera de alcance
+Ya existe una migración posterior (`20260713190941_...sql`) con `CREATE SEQUENCE IF NOT EXISTS`, pero corre **después** de la que falla, así que no ayuda al snapshot.
 
-- Editor del catálogo maestro (ya existe en `/configuracion`).
-- Migración masiva de cotizaciones históricas: se dejan como legacy; el warning ámbar del combobox guía al usuario.
-- Cambios de esquema en `cotizacion_costos` (no se persiste `clave_sat` a BD en esta fase; sólo viaja en memoria del wizard).
+## Fix
 
-### Riesgos
+Editar `supabase/migrations/20260713165742_20aea6c0-6aec-423b-b0a2-41ac714ec50e.sql` para anteponer, antes del bloque `DO`:
 
-- Cotizaciones en edición cuyos costos tienen nombres que no existen en el catálogo: el combobox del paso 2 los mostrará como legacy (banner ámbar) y bloqueará el guardado sólo si el usuario los toca. Comportamiento igual al paso 3 actual.
-- Si el catálogo está vacío en una organización recién creada, el paso 2 queda sin opciones; se maneja con estado "catálogo vacío" reutilizado de `ProductoServicioSelect` que sugiere ir a Configuración → Catálogo.
+```sql
+-- Guard idempotente: la secuencia existe en prod desde el pre-historial,
+-- pero en un replay limpio (CI RLS snapshot) todavía no ha sido creada.
+CREATE SEQUENCE IF NOT EXISTS public.embarque_consecutivo_seq;
+```
 
-### Verificación
+Es idempotente y seguro en producción (no-op si ya existe).
 
-- `bunx vitest run` de los archivos tocados + suites del wizard.
-- QA manual en `COT-2026-0123` (LCL): editar costos y confirmar que paso 3 recibe clave SAT y unidad correctas sin banner ámbar.
+## Verificación
+
+- Typecheck no aplica (solo SQL).
+- El siguiente `Prepare RLS database snapshot` en CI debe pasar de `165742 → 165828 → 190941` sin abortar.
+- No tocar la migración `20260713190941` (queda como red de seguridad).
+
+## Entregables
+
+1. Editar `supabase/migrations/20260713165742_20aea6c0-6aec-423b-b0a2-41ac714ec50e.sql`: insertar `CREATE SEQUENCE IF NOT EXISTS` al inicio.
+2. Bump `APP_VERSION` a `13.292.1`.
+3. Entrada en `CHANGELOG.md` describiendo el hotfix.
+
+## Analogía (para principiantes)
+
+Imagina que tienes una receta que dice "toma la sal del frasco" pero nunca dijo cuándo comprar el frasco. En tu cocina real ya hay uno, así que funciona. Pero cuando un amigo intenta cocinar en una cocina vacía, se atora. La corrección es agregar al inicio: "si no tienes frasco, compra uno" — no rompe nada si ya lo tenías.
