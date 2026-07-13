@@ -75,16 +75,30 @@ export function CotizacionWizardFooter({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-        <Button
-          disabled={busy}
-          onClick={() => { if (currentStep < 4) onNext(); else onSave(); }}
-        >
-          {busy
-            ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> {currentStep === 4 ? "Guardando..." : "Procesando..."}</>
-            : currentStep === 4
-              ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>
-              : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
-        </Button>
+        <TooltipProvider delayDuration={400}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                disabled={busy}
+                onClick={() => { if (currentStep < 4) onNext(); else onSave(); }}
+              >
+                {busy
+                  ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> {currentStep === 4 ? "Guardando..." : "Procesando..."}</>
+                  : currentStep === 4
+                    ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>
+                    : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              <span className="font-medium">
+                {currentStep === 4 ? "Guardar" : "Siguiente"}
+              </span>
+              <kbd className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono">Ctrl</kbd>
+              <span className="mx-0.5 text-[10px]">+</span>
+              <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono">↵</kbd>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
