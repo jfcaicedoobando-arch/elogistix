@@ -54,12 +54,33 @@ interface Params {
 
 export function useCotizacionDraftAutosave({ form, userId, enabled }: Params): {
   clear: () => void;
+  flush: () => void;
 } {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clear = useCallback(() => {
     clearDraft(userId);
   }, [userId]);
+
+  // v13.294.1 (P1) — Guardado inmediato saltándose el debounce.
+  // Se dispara desde `Ctrl/Cmd + S`. No-op cuando `enabled=false`.
+  const flush = useCallback(() => {
+    if (!enabled) return;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    try {
+      const payload: StoredDraft = {
+        version: 1,
+        savedAt: Date.now(),
+        values: form.getValues(),
+      };
+      safeLocalStorage.setItem(draftKey(userId), JSON.stringify(payload));
+    } catch {
+      // safeLocalStorage ya loguea.
+    }
+  }, [enabled, form, userId]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -84,5 +105,5 @@ export function useCotizacionDraftAutosave({ form, userId, enabled }: Params): {
     };
   }, [enabled, form, userId]);
 
-  return { clear };
+  return { clear, flush };
 }

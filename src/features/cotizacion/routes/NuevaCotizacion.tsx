@@ -46,7 +46,7 @@ export default function NuevaCotizacion() {
 
   // P0 — Autoguardado de borrador. Sólo mientras estamos en el paso 1
   // (aún no hay cotizacionId persistido en BD).
-  useCotizacionDraftAutosave({
+  const { flush: flushDraft } = useCotizacionDraftAutosave({
     form: w.form,
     userId,
     enabled: !w.cotizacionId,
@@ -95,6 +95,7 @@ export default function NuevaCotizacion() {
         subtitle="Completa los datos para crear una cotización"
         onBack={() => navigate("/cotizaciones")}
         saveLabel="Guardar Cotización"
+        onFlushDraft={flushDraft}
       />
 
       <CotizacionSuccessDialog
