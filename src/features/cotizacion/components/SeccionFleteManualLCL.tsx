@@ -43,7 +43,7 @@ export default function SeccionFleteManualLCL({ complete }: Props = {}) {
   const { totalPesoKg, totalVolumenM3, wmFacturable } = calcularTotalesLcl(dimensionesLCL, pesoKg);
   const ventaFlete = calcularFleteVentaLCL(wmFacturable, manual?.tarifaWM, manual?.minimo);
 
-  const setField = <K extends keyof typeof manual>(key: K, value: (typeof manual)[K]) => {
+  const setField = <K extends keyof LclFleteManual>(key: K, value: LclFleteManual[K]) => {
     setValue("lclFleteManual", { ...manual, [key]: value }, OPTS);
   };
 
