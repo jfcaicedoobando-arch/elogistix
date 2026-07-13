@@ -14,7 +14,7 @@ vi.mock("@/features/cotizacion/components/conceptos/ProductoServicioSelect", () 
       id: string;
       nombre: string;
       nombre_unidad: string | null;
-      tipo_iva: "iva_16" | "iva_0" | "exento";
+      tipo_iva: "gravado_16" | "tasa_0" | "exento";
     }) => void;
   }) => (
     <button
