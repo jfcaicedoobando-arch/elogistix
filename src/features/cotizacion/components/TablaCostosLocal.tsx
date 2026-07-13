@@ -50,7 +50,6 @@ interface Props {
 
 export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, icon, totales, onUpdate, onAdd, onRemove }: Props) {
   const [editingQty, setEditingQty] = useState<{ idx: number; raw: string } | null>(null);
-  const catalogo: readonly string[] = moneda === "USD" ? CONCEPTOS_COSTO_USD : CONCEPTOS_COSTO_MXN;
 
   return (
     <Card>
@@ -75,30 +74,36 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
             const profit = calcularUtilidad(ventaTotal, costoTotal);
             const pct = calcularMargen(ventaTotal, costoTotal);
             const gi = getGlobalIndex(filas, moneda, idx);
-            const conceptOptions = [...catalogo];
-            if (fila.concepto && !conceptOptions.includes(fila.concepto)) {
-              conceptOptions.unshift(fila.concepto);
-            }
 
             return (
               <div key={idx} className="border-b border-slate-100 last:border-b-0 py-3 px-3 space-y-1">
                 <div className="flex items-center gap-2">
-                  <Select value={fila.concepto || "sin_concepto"} onValueChange={v => onUpdate(gi, "concepto", v === "sin_concepto" ? "" : v)}>
-                    <SelectTrigger className="h-8 text-sm min-w-[180px] flex-1"><SelectValue placeholder="Concepto" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sin_concepto">— Seleccionar —</SelectItem>
-                      {conceptOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-8 text-sm w-[120px]" placeholder="Proveedor" />
-                  <Select value={fila.unidad_medida || "sin_unidad"} onValueChange={v => onUpdate(gi, "unidad_medida", v === "sin_unidad" ? "" : v)}>
-                    <SelectTrigger className="h-8 text-sm w-[110px]"><SelectValue placeholder="Unidad" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sin_unidad">—</SelectItem>
-                      {UNIDADES_MEDIDA.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="min-w-[220px] flex-1">
+                    {/* Combobox estricto contra `catalogo_claves_sat` — mismo origen que el paso 3. */}
+                    <ProductoServicioSelect
+                      value={fila.concepto}
+                      onSelect={(p) => {
+                        onUpdate(gi, "concepto", p.nombre);
+                        onUpdate(gi, "clave_sat", p.clave_sat);
+                        onUpdate(gi, "aplica_iva", p.tipo_iva === "gravado_16");
+                        onUpdate(gi, "tasa_iva_aplicada", tasaDesdeTipoIva(p.tipo_iva));
+                        // Sólo pre-llena unidad si la fila no tenía una elegida a mano.
+                        if (p.clave_unidad_sat && !fila.unidad_medida) {
+                          onUpdate(gi, "unidad_medida", p.clave_unidad_sat);
+                        }
+                      }}
+                      placeholder="Selecciona concepto"
+                    />
+                  </div>
+                  <Input value={fila.proveedor} onChange={e => onUpdate(gi, "proveedor", e.target.value)} className="h-9 text-sm w-[120px]" placeholder="Proveedor" />
+                  <div className="w-[130px]">
+                    <UnidadMedidaSelect
+                      value={fila.unidad_medida}
+                      onChange={(v) => onUpdate(gi, "unidad_medida", v)}
+                    />
+                  </div>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-muted-foreground">Cant.</span>
