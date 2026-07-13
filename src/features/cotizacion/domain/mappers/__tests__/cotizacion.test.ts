@@ -132,6 +132,14 @@ describe("buildPaso1Data — vigencia y meta", () => {
     expect(r.validez_propuesta).toBe("2030-12-25");
   });
 
+  it("acepta validezPropuesta como string ISO (borrador rehidratado desde JSON)", () => {
+    // Regresión v13.299.6: el draft de localStorage pasa por JSON.stringify,
+    // que convierte Date → string. El mapper debe ser defensivo.
+    const isoString = "2030-12-25T10:00:00.000Z" as unknown as Date;
+    const r = buildPaso1Data(values({ validezPropuesta: isoString }), CLIENTES, "op@x");
+    expect(r.validez_propuesta).toBe("2030-12-25");
+  });
+
   it("incluye moneda USD, subtotal 0 y operador", () => {
     const r = buildPaso1Data(values(), CLIENTES, "vendor@x.com");
     expect(r.moneda).toBe("USD");
