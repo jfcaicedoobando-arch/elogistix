@@ -11,6 +11,8 @@ import { useQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/r
 import { supabase } from "@/integrations/supabase/client";
 import { cotizacionPlantillas as keys } from "@/features/cotizacion/queryKeys";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+import { notifyError } from "@/components/shared/utils/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type PlantillaVisibilidad = "yo" | "org";
 
