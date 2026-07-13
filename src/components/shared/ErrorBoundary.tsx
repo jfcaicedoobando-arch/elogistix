@@ -148,11 +148,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 <Button onClick={() => { window.location.href = "/"; }}>
                   Ir al inicio
                 </Button>
-                {this.state.eventId && (
-                  <Button variant="secondary" onClick={this.handleReportFeedback}>
-                    <MessageSquarePlus className="h-4 w-4 mr-1" /> Reportar
-                  </Button>
-                )}
+                <Button variant="secondary" onClick={this.handleReportFeedback}>
+                  <MessageSquarePlus className="h-4 w-4 mr-1" /> Reportar
+                </Button>
               </div>
             </CardContent>
           </Card>
