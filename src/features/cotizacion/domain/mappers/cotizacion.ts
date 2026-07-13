@@ -43,9 +43,16 @@ function calcularPesoVolumenPiezas(v: CotizacionFormValues): PesoVolumen {
   return { peso: v.pesoKg, volumen: v.volumenM3, piezas: v.piezas };
 }
 
+function coerceDate(v: unknown): Date | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v as string);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 function vigenciaDias(validez?: Date): number {
-  if (!validez) return 15;
-  return Math.max(1, Math.ceil((validez.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  const d = coerceDate(validez);
+  if (!d) return 15;
+  return Math.max(1, Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 }
 
 function partesCliente(v: CotizacionFormValues, clientes: { id: string; nombre: string }[]) {
