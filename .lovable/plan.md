@@ -1,86 +1,88 @@
-# Auditoría UX/UI — Wizard de Cotización
+## Auditoría de la Fase P0 (v13.293.0)
 
-Me puse en los zapatos del asesor comercial que cotiza 10-30 embarques al día. Lo bueno primero: el wizard **ya es funcional** (4 pasos, sidebar de progreso, tarifa-first en marítimo, atajo "sin desglose", validación por sección, guardado optimista). No está roto y podría salir a producción, pero hay fricciones claras que erosionan la velocidad y la confianza. Lo dejaría en producción **después** de aplicar al menos las mejoras P0.
+Los 4 artefactos nuevos están limpios y compilan, pero **ninguno tiene tests**. Antes de arrancar P1 hay que blindarlos, sobre todo el autoguardado y el mapeo de errores (son puro dominio y fáciles de romper sin darse cuenta).
 
-## Diagnóstico rápido (lo que se siente al usarlo)
+### Hallazgos menores durante la revisión
 
-**Paso 1 — Datos generales**
+1. `useCotizacionDraftAutosave` — comentario dice "no guarda si `isDirty=false`" pero el código sí guarda en cada `watch`. Alineamos el comentario con la implementación (guardamos siempre; el gating de "borrador vacío" lo hace `enabled`). No cambia comportamiento.
+2. `scrollToErrorSection` — el `setTimeout` interno queda sin limpiar si el usuario cambia de ruta en <320ms. Riesgo mínimo, pero envolvemos en un `try/catch` defensivo por si `document.getElementById` recibe un id malformado en tests JSDOM.
+3. `NuevaCotizacion` — usa `loadDraft` una sola vez con `useMemo` (correcto), pero si el `userId` llega tarde (async auth), el banner nunca aparece. Cambiamos a re-detectar cuando `userId` cambia de `""` a un valor real.
 
-- Muchas secciones apiladas en una sola columna larga (Cliente → Operación → Ruta → Mercancía → Tarifa → Condiciones → Cierre). Con LCL y marítimo el usuario hace scroll de 4-5 pantallas.
-- El sidebar de progreso está bien, pero desaparece en <lg. En tablet (donde vive medio equipo comercial) no hay ancla visual.
-- No hay atajos de teclado (Enter para siguiente, Cmd+S para guardar). Se pierde tiempo con el ratón.
-- El botón "Cotizar sin desglose" convive con "Siguiente" en el mismo footer y es rojo → parece un error crítico, no un atajo. Genera duda cada vez.
+---
 
-**Paso 2 — Costos & P&L**
+## Fase 1 — Tests unitarios de P0
 
-- La tabla de costos internos no da feedback en vivo del margen mientras se captura. El P&L vive en el paso 4. El usuario captura a ciegas y regresa a corregir.
-- No hay indicador de "auto-cargado desde tarifa" a nivel fila (sólo un banner global). Cuesta saber qué es editable vs. heredado.
+### 1.1 `useCotizacionDraftAutosave.test.tsx`
+- `loadDraft` devuelve `null` cuando no hay nada guardado.
+- `loadDraft` devuelve `null` y limpia storage cuando el borrador tiene >24h.
+- `loadDraft` devuelve `null` si el JSON está corrupto o `version !== 1`.
+- El hook persiste tras `DEBOUNCE_MS` (usando `vi.useFakeTimers()` + `form.setValue`).
+- El hook NO persiste cuando `enabled=false`.
+- `clearDraft` remueve la clave.
+- Cleanup: el timer se cancela en `unmount`.
 
-**Paso 3 — Cotización cliente**
+### 1.2 `scrollToErrorSection.test.ts`
+- `seccionParaErrorPaso1` mapea correctamente para "cliente", "prospecto", "modalidad", "tarifa" y fallback.
+- `scrollAndFocusSection` hace no-op cuando el id no existe.
+- `scrollAndFocusSection` hace focus al primer input (mockear `scrollIntoView`).
 
-- Dos tarjetas separadas USD / MXN. Correcto conceptualmente, pero al agregar filas nuevas siempre hay que elegir moneda de nuevo → el flujo natural sería "agregar concepto" y que el sistema lo ponga en el bucket correcto.
-- Los warnings de "filas mixtas" son texto denso. Un usuario nuevo no entiende qué hacer.
-- Totales viven al pie de cada tabla + un bloque final. Redundante y confuso cuando hay muchas filas (el pie queda fuera de vista).
+### 1.3 `CotizacionSuccessDialog.test.tsx`
+- Renderiza folio cuando llega y muestra "¿Qué sigue?" cuando no.
+- Los 5 handlers se disparan al click (Enviar proforma / Crear embarque / Duplicar / Ver listado / Ver detalle).
+- `onOpenChange(false)` al cerrar.
 
-**Paso 4 — Resumen**
+### 1.4 `DraftRestoreBanner.test.tsx`
+- `formatRelative` cubre los 4 rangos (segundos, min, hrs, >1d).
+- `onRestore` y `onDiscard` se disparan.
 
-- Muestra P&L y datos de embarque, pero no un preview de cómo se verá la proforma para el cliente. El usuario "confía" que el output está bien.
-- No hay CTA claro post-guardado (¿enviar proforma? ¿duplicar? ¿crear embarque?). Se guarda y el usuario queda huérfano.
+### 1.5 Fix menores (mismo commit)
+- Alineación de comentario en `useCotizacionDraftAutosave`.
+- `try/catch` defensivo en `scrollAndFocusSection`.
+- Re-detección de draft cuando `userId` cambia en `NuevaCotizacion`.
 
-**Transversal**
+---
 
-- No hay indicador de "autoguardado / borrador". Si el navegador se cierra, se pierde todo. Riesgo real con formularios de 15+ campos.
-- No hay skeleton al cargar catálogos (clientes, puertos, tarifas) → el select aparece vacío por 300-800ms.
-- Los toasts de error de validación son genéricos ("Completa los campos requeridos") en vez de saltar al primer campo inválido.
-- Mobile: el footer no es sticky en algunos viewports, cuesta llegar a "Siguiente".
+## Fase 2 — Arranque de P1 (UX del wizard)
 
-## Prioridades
+Prioridad final: los 4 items de P1 en orden de impacto/costo.
 
-### P0 — Bloqueantes antes de anuncios de producción
+### 2.1 Barra flotante de totales (P&L en vivo) — pasos 2 y 3
+Componente `WizardTotalsBar` sticky en el fondo del `CotizacionWizardLayout`. Muestra en tiempo real:
+- **Costo total** (USD + MXN convertido)
+- **Venta total** (USD + MXN)
+- **Margen** (absoluto y %)
+- Badge de color: verde si margen ≥ 15%, ámbar 5–15%, rojo <5%.
 
-1. **Autoguardado de borrador** (localStorage con TTL 24h + banner "restaurar borrador"). El wizard es largo; perder captura mata la confianza.
-2. **Errores navegables**: al fallar validación, hacer scroll+focus al primer campo inválido y resaltar la sección. Reemplazar toast genérico.
-3. **CTA post-guardado**: al terminar el paso 4, abrir un dialog "¿Qué sigue?" con acciones: Enviar proforma, Duplicar cotización, Crear embarque, Volver al listado.
-4. **Rediseñar "Cotizar sin desglose"**: sacarlo del footer principal, moverlo a un menú "⋯ Más acciones" con confirmación explícita. Deja de competir visualmente con "Siguiente".
+Consume los totales que ya calcula `useCotizacionWizardForm` (no duplicamos matemática, es sólo un consumidor). Se oculta en paso 1 y paso 4.
 
-### P1 — Alta prioridad (semana 1 post-lanzamiento)
+### 2.2 Atajos de teclado
+Hook `useCotizacionKeyboardShortcuts`:
+- `Ctrl/Cmd + Enter` → Siguiente / Guardar (según paso).
+- `Ctrl/Cmd + ←` → Anterior.
+- `Ctrl/Cmd + S` → Guardar borrador manual (fuerza flush del autosave).
+- `Esc` → confirmar salida si hay cambios sin guardar.
 
-5. **P&L en vivo en Paso 2 y 3**: sticky pill con margen % y USD/MXN mientras se editan filas. Elimina el ida-y-vuelta al paso 4.
-6. **Preview de proforma en Paso 4**: iframe/dialog con render real (misma plantilla que se envía al cliente). Aumenta confianza dramáticamente.
-7. **Sidebar de progreso en tablet** (md+): usar drawer colapsable o breadcrumb pegajoso.
-8. **Atajos de teclado**: Enter = Siguiente, Shift+Enter = Anterior, Cmd/Ctrl+S = Guardar. Documentar en tooltip.
-9. **Indicador de fila heredada** en Paso 2: badge "Auto" gris a la izquierda de filas que vienen de tarifa; al editarlas cambian a "Editado".
+Se muestra un tooltip discreto "⌘↵" junto al botón "Siguiente".
 
-### P2 — Refinamiento visual/UX
+### 2.3 Preview de proforma en paso 4
+Panel colapsable a la derecha en paso 4 con una miniatura HTML de la proforma (reutiliza el template ya existente). En desktop se ve al lado; en tablet/móvil queda como acordeón.
 
-10. **Unificar botón "Agregar concepto"** en Paso 3: un solo botón con selector de moneda inline, o inferir moneda desde el catálogo SAT del concepto.
-11. **Warnings de filas mixtas**: reemplazar por chip inline en la fila afectada con acción "Mover a bucket MXN".
-12. **Totales flotantes**: reemplazar los 3 bloques de totales por una barra sticky inferior única con desglose expandible.
-13. **Skeletons** en selects de cliente, puerto, tarifa mientras cargan catálogos.
-14. **Footer sticky** garantizado en todos los viewports; agregar shadow al hacer scroll para separar del contenido.
-15. **Micro-copy**: cambiar "Cotización Cliente" → "Precio al cliente", "Costos & P&L" → "Tus costos". Lenguaje más directo para asesores nuevos.
+### 2.4 Sidebar progresivo (tablet)
+`CotizacionWizardSteps` sidebar cambia de "solo iconos" (mobile) → "iconos + label corto" (tablet ≥768px) → "completo" (desktop ≥1024px). Puro Tailwind responsivo, sin JS.
 
-### P3 — Nice-to-have
+---
 
-16. **Plantillas de cotización**: guardar combinaciones frecuentes (ej. "LCL Shanghai-Manzanillo estándar") y precargar en 1 click.
-17. **Comparador de tarifas** en Paso 1 marítimo: mostrar top 3 tarifas lado a lado en vez de una selección lineal (ya existe el ranking, exponerlo visualmente).
-18. **Historial de cambios** dentro del wizard para cotizaciones existentes (quién editó qué campo).
-19. **Modo compacto/experto**: toggle que colapsa descripciones y aumenta densidad para power users.
+## Detalles técnicos
 
-## Recomendación
+- **Tests**: siguen el patrón del proyecto (`vitest` + `@testing-library/react` + mocks de Supabase existentes en `src/test/setup.ts`). Cada archivo <100 líneas; sin snapshots.
+- **`useFakeTimers`**: se usa sólo dentro de los tests de debounce; se restauran en `afterEach`.
+- **`WizardTotalsBar`**: consume props ya calculados por el hook orquestador; no llama a Supabase.
+- **Atajos**: registrados en el `useCotizacionWizardForm` con cleanup obligatorio (regla core del proyecto).
+- **Versionado**: bump a `13.293.1` para los tests + fixes, y `13.294.0` para P1.
+- **Changelog**: dos entradas separadas.
 
-**No lo dejaría como está.** Es un flujo diario y crítico para el negocio, y las fricciones P0 (pérdida de borrador, errores no navegables, CTA post-guardado ausente) se van a traducir en soporte y en cotizaciones perdidas. Con **P0 + P1 (≈4-5 días de trabajo)** el wizard queda a nivel producción de forwarder mexicano premium. P2/P3 se pueden iterar con feedback real de usuarios.
+## Fuera de alcance
 
-## Notas técnicas (para el implementador)
-
-- El wizard vive en `CotizacionWizardLayout.tsx` (95 líneas) + `CotizacionWizardSteps.tsx` (99 líneas). Bien modularizado, cabe la mejora sin refactor mayor.
-- Autoguardado: usar `browserStorage` wrapper (ver `mem://technical/browser-storage`) con key `cotizacion:draft:{userId}` y expiración 24h. Hook `useDraftAutosave(formValues)` con debounce 800ms.
-- Errores navegables: `form.formState.errors` + `document.getElementById(seccion).scrollIntoView` + `setFocus(firstErrorField)`.
-- P&L en vivo: extraer `useTotalesPL` a un hook y montarlo en una `<StickyPLBar />` visible en Pasos 2-3.
-- Preview proforma: reutilizar el generador Remotion/PDF ya existente en `src/generators/cotizacion/` renderizado en modal.
-- CTA post-guardado: nuevo componente `<CotizacionSuccessDialog />` disparado por `handleGuardar` al resolver la mutación.
-- Bump `APP_VERSION` y CHANGELOG por cada fase (P0, P1, P2).
-
-## Siguiente paso propuesto
-
-Confirmar el alcance de P0 (los 4 puntos) y arrancar con ellos como fase 1. ¿Le entramos así, o prefieres que incluya P1 en la primera fase? vamos por fases
+- P2/P3 de la auditoría original (unificar "Agregar concepto", warnings inline, templates de cotización). Se queda para la siguiente fase.
+- Cambios en el motor de cálculo del P&L (ya está estable).
+- Migración a shortcuts globales de la app (sólo scope wizard).

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
 import { useClientesForSelect } from "@/features/cliente/hooks";
@@ -52,9 +52,12 @@ export default function NuevaCotizacion() {
     enabled: !w.cotizacionId,
   });
 
-  // P0 — Detectar borrador existente al montar (memoized: 1 lectura).
+  // P0 — Detectar borrador existente (re-evalúa cuando el userId async llega).
   const draftDetectado = useMemo(() => (userId ? loadDraft(userId) : null), [userId]);
-  const [banderaBorrador, setBanderaBorrador] = useState(!!draftDetectado);
+  const [banderaBorrador, setBanderaBorrador] = useState(false);
+  useEffect(() => {
+    if (draftDetectado) setBanderaBorrador(true);
+  }, [draftDetectado]);
 
   const handleRestore = useCallback(() => {
     if (draftDetectado) {

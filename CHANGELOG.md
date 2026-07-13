@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.294.0] - 2026-07-13
+- **feat(cotización/wizard UX P1)**: segunda fase de la auditoría UX. Dos entregables + refuerzo de P0:
+  1. **Barra flotante de totales (P&L en vivo)** — nuevo `WizardTotalsBar` (`sticky bottom-0`) visible en pasos 2 y 3 que muestra Costo/Venta MXN (+ USD entre paréntesis si aplica) y el Margen consolidado con color semántico: verde ≥15%, ámbar 5-15%, rojo <5%. Consume `plUSD` / `plMXN` / `totalMXN` del orquestador `useCotizacionWizardForm` — sin duplicar matemática.
+  2. **Atajos de teclado** — nuevo hook `useCotizacionKeyboardShortcuts` con cleanup obligatorio: `Ctrl/Cmd + Enter` avanza (o guarda en paso 4), `Ctrl/Cmd + ArrowLeft` retrocede, `Ctrl/Cmd + S` fuerza flush del autosave. Ignora atajos cuando el foco está en `<textarea>` o `contenteditable` para no romper edición.
+  3. **Tests de la Fase P0** (v13.293.1 consolidada aquí): 23 tests nuevos que cubren `useCotizacionDraftAutosave` (TTL, versionado, corrupción, debounce, cleanup), `scrollToErrorSection` (mapeo por sección + pulse visual), `CotizacionSuccessDialog` (5 handlers, folio opcional) y `DraftRestoreBanner` (formato relativo, callbacks). + 11 tests para P1 (`WizardTotalsBar` en 3 rangos de margen + prioridad USD/MXN; `useCotizacionKeyboardShortcuts` en 7 escenarios incluyendo textarea + cleanup en unmount). Total 34/34 tests verdes.
+- **fix(P0)**:
+  - `useCotizacionDraftAutosave` — alineado el JSDoc con la implementación (el gating de "modo edición" lo hace el consumidor vía `enabled`, no el hook).
+  - `scrollAndFocusSection` — envuelto en `try/catch` defensivo para JSDOM/SSR y IDs malformados.
+  - `NuevaCotizacion` — el banner de "Tienes un borrador sin terminar" ahora aparece incluso si el `userId` del contexto de auth llega tarde (async), gracias a un `useEffect` sobre `draftDetectado` en vez de inicializar `useState` con un valor que sólo se lee una vez.
+
 ## [13.293.0] - 2026-07-13
 - **feat(cotización/wizard UX P0)**: primera fase de la auditoría UX del wizard. Cuatro mejoras:
   1. **Autoguardado de borrador** — nuevo hook `useCotizacionDraftAutosave` que persiste los valores del `useForm` en `localStorage` (`lc:cotizacion:draft:<userId>`, TTL 24h, debounce 800ms) mientras el usuario está en el paso 1 (`!cotizacionId`). Al montar `NuevaCotizacion` se muestra `DraftRestoreBanner` si existe un borrador válido, con acciones "Restaurar" (llena el form con `form.reset`) y "Descartar". Al guardar la cotización se limpia automáticamente.
