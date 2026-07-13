@@ -16,7 +16,19 @@ export interface FilaCostoLocal {
   unidad_medida: string;
   aplica_iva?: boolean;
   notas?: string;
+  /**
+   * Clave SAT del producto/servicio (viene de `catalogo_claves_sat`) al elegir
+   * un ítem del catálogo maestro en el paso 2. Se propaga al paso 3 para evitar
+   * re-búsqueda por nombre. `undefined` = fila legacy escrita a mano.
+   */
+  clave_sat?: string;
+  /**
+   * Tasa IVA a aplicar en el concepto de venta cuando la fila viene del
+   * catálogo (0.16 / 0 / exento). Prevalece sobre la heurística por nombre.
+   */
+  tasa_iva_aplicada?: number;
 }
+
 
 export interface FilaCostoDetalle {
   concepto: string;
