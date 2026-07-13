@@ -1,9 +1,6 @@
 import { ArrowLeft, Pencil, FileText, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
-import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
 
 interface Cliente {
   id: string;
@@ -22,7 +19,7 @@ interface Props {
 }
 
 export function ClienteDetalleHeader({ cliente, canEdit, onBack, onEdit }: Props) {
-  const { toast } = useToast();
+  const navigate = useNavigate();
   return (
     <div className="flex items-center gap-4">
       <Button variant="ghost" size="icon" onClick={onBack} aria-label="Volver a clientes">
@@ -35,20 +32,7 @@ export function ClienteDetalleHeader({ cliente, canEdit, onBack, onEdit }: Props
       <Button
         variant="outline"
         size="sm"
-        onClick={async () => {
-          try {
-            await generarEstadoCuentaPdf({
-              id: cliente.id,
-              nombre: cliente.nombre,
-              rfc: cliente.rfc,
-              direccion: cliente.direccion,
-              ciudad: cliente.ciudad,
-              estado: cliente.estado,
-            });
-          } catch (err) {
-            notifyError(toast, { title: "No se pudo generar el estado de cuenta", description: getErrorMessage(err), error: err, method: "CLIENTE_DETALLE_HEADER" });
-          }
-        }}
+        onClick={() => navigate(`/clientes/${cliente.id}/estado-de-cuenta`)}
       >
         <FileText className="h-4 w-4 mr-1" /> Estado de cuenta
       </Button>
