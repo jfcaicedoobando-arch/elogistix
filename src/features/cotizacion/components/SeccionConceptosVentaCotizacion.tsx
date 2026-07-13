@@ -7,6 +7,7 @@ import { useTasaIVA } from "@/features/catalogos/hooks";
 import { sumarSubtotales } from "@/lib/financial/financialUtils";
 import { detectarFilasMixtas } from "@/lib/financial/costosUSD";
 import { ConceptoRowUSD, ConceptoRowMXN } from "./conceptos/ConceptoRows";
+import { AgregarConceptoInline } from "./wizard/AgregarConceptoInline";
 
 interface Props {
   conceptosUSD: ConceptoVentaCotizacion[];
@@ -15,6 +16,8 @@ interface Props {
   actualizarConceptoMXN: (index: number, campo: string, valor: string | number | boolean) => void;
   agregarConceptoUSD: () => void;
   agregarConceptoMXN: () => void;
+  /** P2 cierre (v13.296.0) — inserta con datos precargados desde el popover. */
+  agregarConceptoPrefill?: (moneda: "USD" | "MXN", prefill: Partial<ConceptoVentaCotizacion>) => void;
   eliminarConceptoUSD: (index: number) => void;
   eliminarConceptoMXN: (index: number) => void;
   totalUSD: number;
@@ -26,7 +29,7 @@ interface Props {
 export default function SeccionConceptosVentaCotizacion({
   conceptosUSD, conceptosMXN,
   actualizarConceptoUSD, actualizarConceptoMXN,
-  agregarConceptoUSD, agregarConceptoMXN,
+  agregarConceptoUSD, agregarConceptoMXN, agregarConceptoPrefill,
   eliminarConceptoUSD, eliminarConceptoMXN,
   totalUSD, subtotalMXN, ivaMXN, totalMXN,
 }: Props) {
