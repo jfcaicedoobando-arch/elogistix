@@ -6,6 +6,24 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.295.0] - 2026-07-13
+- **feat(cotización/wizard P2 — Plantillas)**: arranque de la Fase P2 con **Plantillas de cotización** reutilizables. Cierre del ciclo "cotizar → guardar como plantilla → aplicar en la siguiente":
+  1. **BD**: nueva tabla `public.cotizacion_plantillas` (organization_id + usuario_id + nombre + descripción + visibilidad `yo|org` + payload JSONB + contador `veces_usada` + soft-delete). Índices por org/uso y por usuario. RLS multi-tenant (`organization_members`): SELECT ve las propias + las compartidas de la org; INSERT sólo a nombre propio dentro de la org; UPDATE/DELETE sólo el autor o roles `admin` / `admin_org` / `gerente_comercial`. Trigger `updated_at`. GRANTs a `authenticated` y `service_role`.
+  2. **RPC `aplicar_plantilla_cotizacion(_plantilla_id)`** (`SECURITY DEFINER`, `search_path = public`): incrementa atómicamente `veces_usada` + setea `ultima_uso_at` y devuelve el `payload`. Valida tenancy antes de tocar la fila. `EXECUTE` sólo a `authenticated`.
+  3. **Hooks (React Query)**: `useCotizacionPlantillas` (queryOptions con `staleTime: 60s`, `enabled: !!organizationId`), `useGuardarPlantilla` (insert + `invalidateQueries` de la lista), `useAplicarPlantilla` (RPC + invalida todas las listas por el contador), `useEliminarPlantilla` (soft-delete). Query keys centralizadas en `cotizacionPlantillas` dentro de `queryKeys.ts`.
+  4. **UI — Guardar**: nuevo botón "Guardar como plantilla" (opcional) en `CotizacionSuccessDialog`. Al hacer clic abre `GuardarPlantillaDialog` con nombre requerido (≥3 chars), descripción opcional y radio de visibilidad (yo / toda la organización). Antes de persistir, `limpiarValues()` remueve folios, IDs y fechas para dejar sólo el esqueleto reutilizable.
+  5. **UI — Aplicar**: nuevo `PlantillaSelectorPaso1` — banner discreto en el Paso 1 del wizard (sólo si hay plantillas en la org y aún no hay `cotizacionId`) con Combobox "Elegir plantilla". Aplica el payload vía `form.reset({...current, ...values}, { keepDefaultValues: true }) + trigger()` para respetar la regla core de RHF, muestra contador de usos y ordena por más usadas.
+  6. **Tests**: 6 tests nuevos para los 3 hooks (`useCotizacionPlantillas.test.tsx`) con mock encadenable de Supabase (state module-level). Cubre: query deshabilitada sin org, éxito, propagación de errores, invalidación de cache post-guardar, RPC de aplicar con payload y con error. Todos verdes.
+  - **Analogía**: antes cada cotización se armaba desde cero como escribir una carta con la máquina de escribir. Ahora las plantillas son plantillas de Word — abres una, ajustas 2 campos, y listas.
+  - **Pendiente P2** (siguiente turno): página de administración `/cotizaciones/plantillas` (listado + edición + borrado con confirmación), y unificar el flujo "Agregar concepto" en pasos 2/3.
+
+## [13.294.1] - 2026-07-13
+
+- **fix(cotización/wizard P1)**: cierre de la auditoría de la Fase P1. Tres huecos detectados y sellados:
+  1. **`Ctrl/Cmd + S` ahora sí guarda el borrador.** `useCotizacionDraftAutosave` expone `flush()` que persiste inmediato saltándose el debounce y cancela el timer pendiente. `NuevaCotizacion` lo propaga al `CotizacionWizardLayout` vía `onFlushDraft`, y el layout muestra `toast.success("Borrador guardado")` al dispararse.
+  2. **Descubribilidad de atajos.** El botón "Siguiente"/"Guardar" del `CotizacionWizardFooter` ahora tiene un `Tooltip` que muestra el atajo (`Ctrl + ↵`) con `<kbd>` styling, para que un usuario nuevo lo descubra sin leer docs.
+  3. **Tests nuevos** (3 casos) para `flush()`: persistencia inmediata, no-op cuando `enabled=false`, y cancelación del timer pendiente al flushear. Total suite wizard: **31/31 verdes**.
+
 ## [13.294.0] - 2026-07-13
 - **feat(cotización/wizard UX P1)**: segunda fase de la auditoría UX. Dos entregables + refuerzo de P0:
   1. **Barra flotante de totales (P&L en vivo)** — nuevo `WizardTotalsBar` (`sticky bottom-0`) visible en pasos 2 y 3 que muestra Costo/Venta MXN (+ USD entre paréntesis si aplica) y el Margen consolidado con color semántico: verde ≥15%, ámbar 5-15%, rojo <5%. Consume `plUSD` / `plMXN` / `totalMXN` del orquestador `useCotizacionWizardForm` — sin duplicar matemática.

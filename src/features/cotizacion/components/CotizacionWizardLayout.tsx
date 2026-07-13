@@ -26,6 +26,8 @@ interface CotizacionWizardLayoutProps {
   subtitle?: string;
   onBack: () => void;
   saveLabel: string;
+  /** P1 (v13.294.1): flush del autosave para atajo Ctrl/Cmd+S. */
+  onFlushDraft?: () => void;
 }
 
 export default function CotizacionWizardLayout({
@@ -35,6 +37,7 @@ export default function CotizacionWizardLayout({
   subtitle,
   onBack,
   saveLabel,
+  onFlushDraft,
 }: CotizacionWizardLayoutProps) {
   const { form, handleSiguiente, handleGuardar, handleBack: wHandleBack, handleCotizarSinDesglose, isPending } = w;
   const [isProcessing, setIsProcessing] = useState(false);
@@ -79,11 +82,17 @@ export default function CotizacionWizardLayout({
   const mostrarTotales = w.currentStep === 2 || w.currentStep === 3;
 
   // P1 (v13.294.0) — atajos de teclado del wizard.
+  const handleFlushDraft = useCallback(() => {
+    if (!onFlushDraft) return;
+    onFlushDraft();
+    toast.success("Borrador guardado");
+  }, [onFlushDraft]);
   useCotizacionKeyboardShortcuts({
     currentStep: w.currentStep,
     onNext: handleNext,
     onSave: handleSave,
     onBack: handleBack,
+    onFlushDraft: onFlushDraft ? handleFlushDraft : undefined,
   });
 
   return (

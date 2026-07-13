@@ -113,7 +113,58 @@ describe("useCotizacionDraftAutosave hook", () => {
     act(() => {
       vi.advanceTimersByTime(2000);
     });
-    // El timer se canceló, no se persistió nada.
     expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
   });
 });
+
+describe("useCotizacionDraftAutosave flush (P1 — v13.294.1)", () => {
+  function renderWithFlush(enabled: boolean) {
+    return renderHook(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const form = useForm<any>({ defaultValues: { cliente_id: "seed" } });
+      const api = useCotizacionDraftAutosave({ form, userId: USER, enabled });
+      return { form, api };
+    });
+  }
+
+  it("persiste inmediatamente saltándose el debounce", () => {
+    vi.useFakeTimers();
+    const { result } = renderWithFlush(true);
+    act(() => {
+      result.current.form.setValue("cliente_id", "c-flush");
+      result.current.api.flush();
+    });
+    const raw = window.localStorage.getItem(draftKey(USER));
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.values.cliente_id).toBe("c-flush");
+  });
+
+  it("es no-op cuando enabled=false", () => {
+    const { result } = renderWithFlush(false);
+    act(() => {
+      result.current.api.flush();
+    });
+    expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
+  });
+
+  it("cancela el timer pendiente al flushear", () => {
+    vi.useFakeTimers();
+    const { result } = renderWithFlush(true);
+    act(() => {
+      result.current.form.setValue("cliente_id", "c-1");
+    });
+    // Timer pendiente. Flush ahora fuerza el escribir con último valor.
+    act(() => {
+      result.current.api.flush();
+    });
+    const primerRaw = window.localStorage.getItem(draftKey(USER));
+    expect(primerRaw).not.toBeNull();
+    // Avanzar el reloj no debe sobrescribir (el timer fue cancelado).
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(window.localStorage.getItem(draftKey(USER))).toBe(primerRaw);
+  });
+});
+

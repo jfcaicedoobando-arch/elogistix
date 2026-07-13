@@ -15,13 +15,21 @@ import {
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
+import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
+import { PlantillaSelectorPaso1 } from "@/features/cotizacion/components/wizard/PlantillaSelectorPaso1";
+
+
 
 export default function NuevaCotizacion() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const { data: clientes = [] } = useClientesForSelect();
   const userId = user?.id ?? "";
+
+  // P2 (v13.295.0) — Guardar como plantilla desde el success dialog.
+  const [guardarPlantillaOpen, setGuardarPlantillaOpen] = useState(false);
+
 
   // P0 — Success dialog post-guardado.
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -46,7 +54,7 @@ export default function NuevaCotizacion() {
 
   // P0 — Autoguardado de borrador. Sólo mientras estamos en el paso 1
   // (aún no hay cotizacionId persistido en BD).
-  useCotizacionDraftAutosave({
+  const { flush: flushDraft } = useCotizacionDraftAutosave({
     form: w.form,
     userId,
     enabled: !w.cotizacionId,
@@ -88,6 +96,16 @@ export default function NuevaCotizacion() {
         </div>
       )}
 
+      {/* P2 (v13.295.0) — Empezar desde plantilla (sólo paso 1, sin cotización guardada). */}
+      {w.currentStep === 1 && !w.cotizacionId && (
+        <PlantillaSelectorPaso1
+          organizationId={organizationId}
+          form={w.form}
+        />
+      )}
+
+
+
       <CotizacionWizardLayout
         w={w}
         clientes={clientes}
@@ -95,6 +113,7 @@ export default function NuevaCotizacion() {
         subtitle="Completa los datos para crear una cotización"
         onBack={() => navigate("/cotizaciones")}
         saveLabel="Guardar Cotización"
+        onFlushDraft={flushDraft}
       />
 
       <CotizacionSuccessDialog
@@ -106,7 +125,18 @@ export default function NuevaCotizacion() {
         onDuplicar={() => savedId && closeSuccessAndGoTo(`/cotizaciones/nueva?duplicar=${savedId}`)}
         onIrAlListado={() => closeSuccessAndGoTo("/cotizaciones")}
         onVerDetalle={() => savedId && closeSuccessAndGoTo(`/cotizaciones/${savedId}`)}
+        onGuardarComoPlantilla={() => setGuardarPlantillaOpen(true)}
       />
+
+      <GuardarPlantillaDialog
+        open={guardarPlantillaOpen}
+        onOpenChange={setGuardarPlantillaOpen}
+        organizationId={organizationId}
+        usuarioId={userId || null}
+        values={w.form.getValues()}
+      />
+
+
     </>
   );
 }

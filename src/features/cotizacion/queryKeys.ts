@@ -18,3 +18,11 @@ export const productosCatalogo = (organizationId?: string | null) =>
   ['productos_catalogo', organizationId] as const;
 
 export const pdfPreviewCotizacion = (id: string) => ['pdf-preview-cotizacion', id] as const;
+
+// P2 (v13.295.0): Plantillas de cotización.
+export const cotizacionPlantillas = {
+  all: ['cotizacion_plantillas'] as const,
+  byOrg: (organizationId?: string | null) => ['cotizacion_plantillas', organizationId] as const,
+  detail: (id: string) => ['cotizacion_plantillas', 'detail', id] as const,
+} as const;
+
