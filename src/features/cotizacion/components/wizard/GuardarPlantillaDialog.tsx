@@ -106,7 +106,7 @@ export function GuardarPlantillaDialog({
         </>
       }
     >
-      <FormDialogSection title="Identificación">
+      <FormDialogSection title="Identificación" cols={1}>
         <div className="space-y-1.5">
           <Label htmlFor="pl-nombre">
             Nombre <span className="text-destructive">*</span>
@@ -135,7 +135,7 @@ export function GuardarPlantillaDialog({
         </div>
       </FormDialogSection>
 
-      <FormDialogSection title="Visibilidad">
+      <FormDialogSection title="Visibilidad" flat>
         <RadioGroup value={visibilidad} onValueChange={(v) => setVisibilidad(v as PlantillaVisibilidad)}>
           <div className="flex items-start gap-2">
             <RadioGroupItem value="yo" id="vis-yo" className="mt-1" />
