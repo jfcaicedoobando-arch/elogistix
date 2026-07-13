@@ -26,6 +26,7 @@ const reglaToTab: Record<ReglaAuditoria, string> = {
   cxp_vencida: "facturacion",
   contenedor_datos_incompletos: "resumen",
   contenedor_fechas_incompletas: "resumen",
+  tipo_cambio_faltante: "financiero",
 };
 
 interface Props {
