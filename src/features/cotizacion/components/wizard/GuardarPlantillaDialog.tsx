@@ -1,23 +1,17 @@
 /**
- * Dialog para guardar la cotización actual como plantilla (P2 — v13.295.0).
- * Se invoca desde `CotizacionSuccessDialog` justo después de guardar.
+ * Dialog para guardar la cotización actual como plantilla (P2 cierre — v13.296.0).
+ * Migrado a FormDialogShell (regla core "modales tipo formulario").
  */
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BookmarkPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2 } from "lucide-react";
+import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useGuardarPlantilla, type PlantillaVisibilidad } from "@/features/cotizacion/hooks/useCotizacionPlantillas";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 
@@ -32,19 +26,24 @@ interface Props {
 }
 
 /**
- * Limpia el payload antes de persistirlo: elimina campos que se
- * regeneran al aplicar (folios, IDs, fechas de emisión, tarifa vinculada).
+ * Campos regenerados en cada aplicación de plantilla — no deben persistirse.
+ * Tipado explícito para cumplir Power of 10 (sin `any`).
  */
-function limpiarValues(values: Partial<CotizacionFormValues>): Partial<CotizacionFormValues> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const v: any = { ...values };
-  delete v.id;
-  delete v.folio;
-  delete v.fecha_cotizacion;
-  delete v.fecha_vencimiento;
-  delete v.tarifa_id;
-  delete v.tarifa_snapshot;
-  return v as Partial<CotizacionFormValues>;
+const CAMPOS_TRANSITORIOS = [
+  "id",
+  "folio",
+  "fecha_cotizacion",
+  "fecha_vencimiento",
+  "tarifa_id",
+  "tarifa_snapshot",
+] as const;
+
+export function limpiarValues(values: Partial<CotizacionFormValues>): Partial<CotizacionFormValues> {
+  const clon: Partial<CotizacionFormValues> & Record<string, unknown> = { ...values };
+  for (const campo of CAMPOS_TRANSITORIOS) {
+    delete clon[campo as keyof typeof clon];
+  }
+  return clon;
 }
 
 export function GuardarPlantillaDialog({
@@ -88,63 +87,15 @@ export function GuardarPlantillaDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Guardar como plantilla</DialogTitle>
-          <DialogDescription>
-            Reutiliza esta cotización como base para cotizaciones futuras. Se
-            guarda la ruta, cliente, incoterms y conceptos base (no folios ni fechas).
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="pl-nombre">Nombre <span className="text-destructive">*</span></Label>
-            <Input
-              id="pl-nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Shanghái → Manzanillo 40'HC"
-              maxLength={80}
-              autoFocus
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="pl-desc">Descripción</Label>
-            <Textarea
-              id="pl-desc"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              placeholder="Opcional — cuándo usar esta plantilla"
-              rows={2}
-              maxLength={200}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Visibilidad</Label>
-            <RadioGroup value={visibilidad} onValueChange={(v) => setVisibilidad(v as PlantillaVisibilidad)}>
-              <div className="flex items-start gap-2">
-                <RadioGroupItem value="yo" id="vis-yo" className="mt-1" />
-                <Label htmlFor="vis-yo" className="font-normal cursor-pointer">
-                  <span className="font-medium">Sólo yo</span>
-                  <span className="block text-xs text-muted-foreground">Sólo tú verás esta plantilla.</span>
-                </Label>
-              </div>
-              <div className="flex items-start gap-2">
-                <RadioGroupItem value="org" id="vis-org" className="mt-1" />
-                <Label htmlFor="vis-org" className="font-normal cursor-pointer">
-                  <span className="font-medium">Toda la organización</span>
-                  <span className="block text-xs text-muted-foreground">Todo el equipo podrá usarla.</span>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </div>
-
-        <DialogFooter>
+    <FormDialogShell
+      open={open}
+      onOpenChange={handleClose}
+      icon={BookmarkPlus}
+      title="Guardar como plantilla"
+      description="Reutiliza esta cotización como base para cotizaciones futuras. Se guarda ruta, cliente, incoterms y conceptos base (no folios ni fechas)."
+      size="md"
+      footer={
+        <>
           <Button variant="outline" onClick={() => handleClose(false)} disabled={guardar.isPending}>
             Cancelar
           </Button>
@@ -152,8 +103,56 @@ export function GuardarPlantillaDialog({
             {guardar.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
             Guardar plantilla
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <FormDialogSection title="Identificación">
+        <div className="space-y-1.5">
+          <Label htmlFor="pl-nombre">
+            Nombre <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="pl-nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Shanghái → Manzanillo 40'HC"
+            maxLength={80}
+            autoFocus
+          />
+          <p className="text-xs text-muted-foreground">Mínimo 3 caracteres.</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="pl-desc">Descripción</Label>
+          <Textarea
+            id="pl-desc"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            placeholder="Opcional — cuándo usar esta plantilla"
+            rows={2}
+            maxLength={200}
+          />
+        </div>
+      </FormDialogSection>
+
+      <FormDialogSection title="Visibilidad">
+        <RadioGroup value={visibilidad} onValueChange={(v) => setVisibilidad(v as PlantillaVisibilidad)}>
+          <div className="flex items-start gap-2">
+            <RadioGroupItem value="yo" id="vis-yo" className="mt-1" />
+            <Label htmlFor="vis-yo" className="font-normal cursor-pointer">
+              <span className="font-medium">Sólo yo</span>
+              <span className="block text-xs text-muted-foreground">Sólo tú verás esta plantilla.</span>
+            </Label>
+          </div>
+          <div className="flex items-start gap-2">
+            <RadioGroupItem value="org" id="vis-org" className="mt-1" />
+            <Label htmlFor="vis-org" className="font-normal cursor-pointer">
+              <span className="font-medium">Toda la organización</span>
+              <span className="block text-xs text-muted-foreground">Todo el equipo podrá usarla.</span>
+            </Label>
+          </div>
+        </RadioGroup>
+      </FormDialogSection>
+    </FormDialogShell>
   );
 }
