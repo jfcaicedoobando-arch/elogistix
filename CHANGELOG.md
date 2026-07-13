@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.293.0] - 2026-07-13
+- **feat(cotización/wizard UX P0)**: primera fase de la auditoría UX del wizard. Cuatro mejoras:
+  1. **Autoguardado de borrador** — nuevo hook `useCotizacionDraftAutosave` que persiste los valores del `useForm` en `localStorage` (`lc:cotizacion:draft:<userId>`, TTL 24h, debounce 800ms) mientras el usuario está en el paso 1 (`!cotizacionId`). Al montar `NuevaCotizacion` se muestra `DraftRestoreBanner` si existe un borrador válido, con acciones "Restaurar" (llena el form con `form.reset`) y "Descartar". Al guardar la cotización se limpia automáticamente.
+  2. **Errores navegables** — `usePaso1Handlers` ahora, al fallar `validatePaso1`, mapea el mensaje a la sección (`seccionParaErrorPaso1`) y hace `scrollIntoView` + focus al primer control interactivo con un pulse visual de 1.5s (`scrollAndFocusSection`). Se acaba el "toast + no sé dónde está el error".
+  3. **CTA post-guardado** — nuevo `CotizacionSuccessDialog` con 4 accesos claros: Enviar proforma, Crear embarque, Duplicar, Ver listado (+ ir al detalle). Se dispara vía el nuevo callback opcional `onFinalized` del `useCotizacionWizardForm`, que reemplaza el `navigate(/cotizaciones/:id)` cuando está presente. `EditarCotizacion` conserva el comportamiento original (no pasa `onFinalized`).
+  4. **"Cotizar sin desglose" fuera del camino feliz** — el botón rojo que competía visualmente con "Siguiente" en el footer se movió a un menú `⋯` (`DropdownMenu`) con la descripción del riesgo. Reduce clicks accidentales sin quitar la funcionalidad para roles autorizados.
+
 ## [13.292.2] - 2026-07-13
 - **fix(ci/tests · conceptosFacturaCrud)**: el test `eliminarConceptoFactura` seguía esperando la cadena `.delete().eq("id", ...)` contra `conceptos_factura`, pero desde v13.290.0 el servicio usa el RPC `soft_delete_record` (Papelera Fase 3). Se reescribió el caso para verificar `mock.rpcCalls` con `{ _table: "conceptos_factura", _id: "c1" }` y el recálculo posterior en `facturas`.
 - **refactor(arch · Power of 10)**: `Papelera.tsx` (216 → 114 líneas) se dividió en `routes/papelera/tablas.ts` (catálogo + formatter `dtf`) y `routes/papelera/columns.tsx` (fábrica `buildPapeleraColumns`). `conceptosFacturaCrud.ts` (206 → 145 líneas) extrajo `recalcularTotalesFactura.ts` y `conceptosFacturaShared.ts` (`resolverTasa` + `TipoIvaConcepto`). Contrato público intacto vía re-exports.
