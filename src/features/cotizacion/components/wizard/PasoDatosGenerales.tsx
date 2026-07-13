@@ -98,13 +98,18 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
   );
 
   const tarifaBlock = w.esMaritimo && !sinFleteVenta ? (
-    <div id="seccion-tarifa" className="scroll-mt-4">
+    <div id="seccion-tarifa" className="scroll-mt-4 space-y-4">
       <TarifaVinculadaPanel
         complete={status.tarifa}
         onAutocargaCostos={handleAutocargaCostos}
         markup={markup}
         cantidad={numContenedores}
       />
+      {/* v13.299.0: en LCL la tarifa vinculada es opcional. Se muestra
+          siempre el bloque de flete manual como alternativa/complemento. */}
+      {tipoEmbarque === "LCL" ? (
+        <SeccionFleteManualLCL complete={status.tarifa} />
+      ) : null}
     </div>
   ) : null;
 
