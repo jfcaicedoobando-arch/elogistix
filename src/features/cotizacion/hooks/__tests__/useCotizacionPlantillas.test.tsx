@@ -207,4 +207,4 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
     ).rejects.toBeTruthy();
   });
 });
-});
+
