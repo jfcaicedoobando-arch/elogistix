@@ -13,11 +13,12 @@ import {
   dateColumn,
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
-import { Trash2 } from "lucide-react";
+import { Trash2, Copy } from "lucide-react";
 
 export interface BuildParams {
   canEdit: boolean;
   onEliminar: (id: string) => void;
+  onDuplicar?: (id: string) => void;
 }
 
 export function buildCotizacionesColumns(params: BuildParams): ColumnDef<CotizacionListItem, unknown>[] {
@@ -104,16 +105,26 @@ export function buildCotizacionesColumns(params: BuildParams): ColumnDef<Cotizac
     cols.push(
       actionsColumn<CotizacionListItem>({
         items: () => [
+          ...(params.onDuplicar
+            ? [
+                {
+                  label: "Duplicar",
+                  icon: <Copy className="h-4 w-4" />,
+                  onSelect: (row: CotizacionListItem) => params.onDuplicar?.(row.id),
+                },
+              ]
+            : []),
           {
             label: "Eliminar",
             icon: <Trash2 className="h-4 w-4" />,
-            variant: "destructive",
-            onSelect: (row) => params.onEliminar(row.id),
+            variant: "destructive" as const,
+            onSelect: (row: CotizacionListItem) => params.onEliminar(row.id),
           },
         ],
       }),
     );
   }
+
 
   return cols;
 }

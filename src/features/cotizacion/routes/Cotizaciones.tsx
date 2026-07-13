@@ -1,5 +1,7 @@
 "use memo";
 import { useMemo, useDeferredValue } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
 import { Plus, TrendingUp, CheckCircle, XCircle, BarChart3, AlertTriangle, Archive } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/features/operaciones/components/KpiCard";
@@ -19,6 +21,8 @@ import { CotizacionesPageActions } from "@/features/cotizacion/components/Cotiza
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
+  const navigate = useNavigate();
+  const duplicar = useDuplicarCotizacion();
 
   // Diferimos las filas visibles: al cambiar filtros/paginación, el re-render
   // pesado de la tabla queda en background y no bloquea el input de búsqueda.
@@ -29,8 +33,12 @@ export default function Cotizaciones() {
       buildCotizacionesColumns({
         canEdit: c.canEdit,
         onEliminar: c.setCotizacionAEliminar,
+        onDuplicar: (id: string) =>
+          duplicar.mutate(id, {
+            onSuccess: (newId) => navigate(`/cotizaciones/${newId}/editar`),
+          }),
       }),
-    [c.canEdit, c.setCotizacionAEliminar],
+    [c.canEdit, c.setCotizacionAEliminar, duplicar, navigate],
   );
 
   const primaryFilters = (

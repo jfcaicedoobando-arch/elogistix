@@ -12,6 +12,8 @@ export const cotizaciones = {
     all: ['cotizaciones', 'pendientes-reaprobacion', 'all'] as const,
     mias: (email: string | null) => ['cotizaciones', 'pendientes-reaprobacion', 'mias', email] as const,
   },
+  // P3 (v13.297.0): Versiones (snapshots inmutables) por cotización.
+  versiones: (cotizacionId: string) => ['cotizacion_versiones', cotizacionId] as const,
 } as const;
 
 export const productosCatalogo = (organizationId?: string | null) =>
