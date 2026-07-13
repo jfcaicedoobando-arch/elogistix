@@ -47,8 +47,10 @@ export function EditarPlantillaDialog({ plantilla, organizationId, open, onOpenC
       toast.success("Plantilla actualizada");
       onOpenChange(false);
     } catch (err) {
-      toast.error("No se pudo actualizar", {
-        description: err instanceof Error ? err.message : undefined,
+      notifyError(undefined, {
+        title: "No se pudo actualizar",
+        error: err,
+        method: "EditarPlantillaDialog.submit",
       });
     }
   };
