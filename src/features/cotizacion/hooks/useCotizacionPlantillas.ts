@@ -127,6 +127,14 @@ export function useAplicarPlantilla() {
       // Invalida todas las listas — el contador de uso cambió.
       void qc.invalidateQueries({ queryKey: keys.all });
     },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo aplicar la plantilla",
+        description: getErrorMessage(error),
+        error,
+        method: "COTIZACION_PLANTILLA_APLICAR",
+      });
+    },
   });
 }
 
