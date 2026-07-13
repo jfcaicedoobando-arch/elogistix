@@ -10,51 +10,46 @@ import {
   useGuardarPlantilla,
   useAplicarPlantilla,
 } from "@/features/cotizacion/hooks/useCotizacionPlantillas";
+import { supabase } from "@/integrations/supabase/client";
+
+interface MockState {
+  selectData: unknown[];
+  selectError: unknown;
+  insertData: unknown;
+  insertError: unknown;
+  rpcData: unknown;
+  rpcError: unknown;
+}
+
+const state: MockState = {
+  selectData: [],
+  selectError: null,
+  insertData: null,
+  insertError: null,
+  rpcData: null,
+  rpcError: null,
+};
 
 vi.mock("@/integrations/supabase/client", () => {
-  const state = {
-    selectData: [] as unknown[],
-    selectError: null as unknown,
-    insertData: null as unknown,
-    insertError: null as unknown,
-    rpcData: null as unknown,
-    rpcError: null as unknown,
-  };
-
-  const supabase = {
-    from: vi.fn(() => {
-      const chain = {
-        select: vi.fn(() => chain),
-        eq: vi.fn(() => chain),
-        is: vi.fn(() => chain),
-        order: vi.fn(() => chain),
-        limit: vi.fn(() => Promise.resolve({ data: state.selectData, error: state.selectError })),
-        insert: vi.fn(() => chain),
-        single: vi.fn(() => Promise.resolve({ data: state.insertData, error: state.insertError })),
-      };
-      return chain;
-    }),
-    rpc: vi.fn(() => Promise.resolve({ data: state.rpcData, error: state.rpcError })),
-    __state: state,
-  };
-  return { supabase };
+  const from = vi.fn(() => {
+    const chain: Record<string, unknown> = {};
+    chain.select = vi.fn(() => chain);
+    chain.eq = vi.fn(() => chain);
+    chain.is = vi.fn(() => chain);
+    chain.order = vi.fn(() => chain);
+    chain.limit = vi.fn(() => Promise.resolve({ data: state.selectData, error: state.selectError }));
+    chain.insert = vi.fn(() => chain);
+    chain.update = vi.fn(() => chain);
+    chain.single = vi.fn(() => Promise.resolve({ data: state.insertData, error: state.insertError }));
+    return chain;
+  });
+  const rpc = vi.fn(() => Promise.resolve({ data: state.rpcData, error: state.rpcError }));
+  return { supabase: { from, rpc } };
 });
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { supabase } = require("@/integrations/supabase/client") as {
-  supabase: {
-    from: ReturnType<typeof vi.fn>;
-    rpc: ReturnType<typeof vi.fn>;
-    __state: {
-      selectData: unknown[];
-      selectError: unknown;
-      insertData: unknown;
-      insertError: unknown;
-      rpcData: unknown;
-      rpcError: unknown;
-    };
-  };
-};
+const mockFrom = supabase.from as unknown as ReturnType<typeof vi.fn>;
+const mockRpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
+
 
 function wrapper(qc: QueryClient) {
   return ({ children }: { children: ReactNode }) => (
