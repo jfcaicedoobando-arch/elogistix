@@ -82,7 +82,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     try {
       const feedback = Sentry.getFeedback?.();
       if (feedback) {
-        const form = await feedback.createForm({ eventId });
+        const form = await feedback.createForm();
         form.appendToDom();
         form.open();
         if (eventId) {
