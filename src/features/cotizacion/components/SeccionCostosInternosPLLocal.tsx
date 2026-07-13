@@ -96,6 +96,15 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
 
   return (
     <div className="space-y-4">
+      {mostrarAvisoLclFcl && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <AlertTriangle className="size-4 mt-0.5 shrink-0" />
+          <span>
+            La tarifa vinculada está capturada para contenedor (<strong>{tarifa?.tipo_contenedor_nombre}</strong>), pero esta cotización es <strong>LCL</strong>.
+            Los costos se precargan en <strong>m³</strong>; revisa cantidades y unidades antes de continuar.
+          </span>
+        </div>
+      )}
       {tarifa && (
         <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
           <Link2 className="size-4 text-primary" />
@@ -105,6 +114,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
           </span>
         </div>
       )}
+
       <TablaCostosLocal
         filas={filas} filasMoneda={filasUSD} moneda="USD"
         title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-violet-500" />}
