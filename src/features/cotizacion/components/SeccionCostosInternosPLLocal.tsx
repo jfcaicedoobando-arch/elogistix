@@ -26,6 +26,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   const { watch } = useFormContext<CotizacionFormValues>();
   const tarifaId = watch("tarifaId");
   const numContenedores = watch("numContenedores") ?? 1;
+  const tipoEmbarque = watch("tipoEmbarque");
   const { data: tarifa } = useTarifaVinculada(tarifaId);
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
@@ -33,6 +34,13 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
 
   const precargadaRef = useRef<string | null>(null);
+
+  // Detecta desajuste tarifa (FCL) ↔ cotización (LCL): la tabla `costeo_tarifas`
+  // está modelada para contenedor; una tarifa con `tipo_contenedor_nombre` en una
+  // cotización LCL genera unidades inconsistentes si no se convierte a m³.
+  const tarifaEsFcl = !!tarifa?.tipo_contenedor_nombre;
+  const cotizacionEsLcl = tipoEmbarque === "LCL";
+  const mostrarAvisoLclFcl = tarifaEsFcl && cotizacionEsLcl;
 
   useEffect(() => {
     if (!tarifaId) return;
@@ -44,12 +52,19 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
       if (cancelado || !row) return;
       const recargos = await fetchRecargosDeTarifa(row.id);
       if (cancelado) return;
-      const nuevas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad: Math.max(1, numContenedores || 1) });
+      const nuevas = buildCostosDesdeTarifa({
+        tarifa: row,
+        recargos,
+        markup,
+        cantidad: Math.max(1, numContenedores || 1),
+        tipoEmbarque,
+      });
       setFilas(prev => (prev.length > 0 ? prev : nuevas));
       precargadaRef.current = tarifaId;
     })();
     return () => { cancelado = true; };
-  }, [tarifaId, filas.length, setFilas, markup, numContenedores]);
+  }, [tarifaId, filas.length, setFilas, markup, numContenedores, tipoEmbarque]);
+
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
     setFilas(prev => {
