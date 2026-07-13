@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.298.3] - 2026-07-13
+- **fix(wizard cotización · sidebar progreso)**: la sección "Mercancía" del `Paso1ProgressSidebar` nunca se marcaba como completa en Aéreo, Marítimo FCL ni Marítimo LCL. `usePaso1SectionStatus.mercanciaOk` sólo miraba los campos planos `pesoKg`/`piezas`, que únicamente se llenan en el sub-form terrestre (`SeccionMercanciaGeneral`); los demás modos guardan los datos en `dimensionesAereas[]`, `dimensionesLCL[]` o en `tipoContenedor`+`numContenedores`. Se hizo la verificación mode-aware: FCL requiere `tipoContenedor` + `numContenedores≥1`; LCL exige ≥1 fila con piezas y volumen/dimensiones; Aéreo exige ≥1 fila con piezas y peso volumétrico/dimensiones; terrestre conserva el comportamiento previo.
+
 ## [13.298.2] - 2026-07-13
 - **fix(estado de cuenta)**: la consulta a `facturas` en `fetchEstadoCuenta` fallaba con HTTP 400 (`column pagos_factura_1.monto_no_aplicado does not exist`), lo que dejaba KPIs y tabla en cero para clientes con facturas reales (reportado en el portal de INDIMEX TRADING). Se corrigió el `select()` embebido: `pagos_factura` ahora pide `monto` en lugar del inexistente `monto_no_aplicado`, y `factura_notas_credito` deja de pedir `monto_aplicado` / `saldo_disponible`. El "no aplicado" (anticipo) se deriva en JS como `max(0, monto − monto_aplicado_factura)`. Contrato público `FacturaEstadoCuenta` / `PagoDetalle` sin cambios.
 
