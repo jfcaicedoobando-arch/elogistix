@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.8] - 2026-07-13
+- **fix(auditoria/por-regla)**: crash `TypeError: Cannot read properties of undefined (reading 'length')` en la pestaña "Por regla" de `/auditoria` (Sentry `JAVASCRIPT-REACT-2A`). `REGLAS_ORDEN` incluía `contenedor_datos_incompletos` y `contenedor_fechas_incompletas`, pero `REGLAS_AUDITORIA` — la lista que siembra el objeto `porRegla` en `agruparPorRegla` — no las tenía, así que al iterar `REGLAS_ORDEN` el `items` de esas dos reglas quedaba `undefined` y reventaba en `items.length`. Se sincronizan ambas listas y se blinda el render con `?? []` para que futuras reglas nuevas no puedan volver a tirar la vista aunque falte la siembra. Issue cerrado en Sentry.
+
 ## [13.288.7] - 2026-07-13
 - **fix(errorboundary/reportar)**: el botón "Reportar" del ErrorBoundary quedaba sin efecto cuando `Sentry.getFeedback()` no estaba disponible (dev mode o integración de feedback aún no registrada) porque el `catch` silencioso descartaba el fallo. Ahora hay una cadena de fallbacks: 1) widget de feedback de Sentry, 2) `Sentry.showReportDialog({ eventId })`, 3) `mailto:` a soporte con el `eventId`, ruta y mensaje prellenados. El botón se muestra siempre (aunque no haya `eventId`), para que el usuario nunca quede atrapado sin ruta de reporte.
 

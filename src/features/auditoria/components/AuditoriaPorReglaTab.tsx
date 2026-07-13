@@ -20,7 +20,7 @@ export function AuditoriaPorReglaTab({ c }: Props) {
     <Accordion type="multiple" defaultValue={REGLAS_ORDEN} className="space-y-2">
       {REGLAS_ORDEN.map((regla) => {
         const cfg = REGLA_INFO[regla];
-        const items = c.porRegla[regla];
+        const items = c.porRegla[regla] ?? [];
         const Icon = cfg.icon;
         return (
           <AccordionItem key={regla} value={regla} className="border rounded-md px-4">
