@@ -94,7 +94,7 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
   return {
     conceptosUSD, conceptosMXN,
     setConceptosUSD, setConceptosMXN,
-    actualizarConcepto, agregarConcepto, eliminarConcepto,
+    actualizarConcepto, agregarConcepto, agregarConceptoPrefill, eliminarConcepto,
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
     tasaIva,
   };
