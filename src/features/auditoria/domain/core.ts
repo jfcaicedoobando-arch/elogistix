@@ -35,6 +35,8 @@ export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
   "cxc_vencida",
   "cxp_por_capturar_estancada",
   "cxp_vencida",
+  "contenedor_datos_incompletos",
+  "contenedor_fechas_incompletas",
   "tipo_cambio_faltante",
 ];
 
