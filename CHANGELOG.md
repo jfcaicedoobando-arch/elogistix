@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.298.0] - 2026-07-13
+- **feat(estado de cuenta cliente)**: nuevo módulo compartido `EstadoCuentaModule` montado en dos rutas espejo:
+  - `/portal/estado-de-cuenta` — cliente autenticado ve su propio estado (nueva entrada en `PORTAL_NAV_ITEMS` con ícono `Wallet`, resuelve `cliente_id`s vía `usePortalClientUsers`).
+  - `/clientes/:clienteId/estado-de-cuenta` — cobranza interna (guardada por `FINANCE_READ_ROLES`).
+  - **3 KPI Cards semánticas** (`KpiCard` canónico): Saldo Total Adeudado (`warning`), Saldo Vencido (`destructive` cuando > 0, `success` cuando al corriente), Saldo a Favor / Anticipos (`success`). Formato dual MXN/USD sin mezclar divisas.
+  - **Tabla de movimientos colapsable**: fila principal por factura con columnas Fecha / Folio / Concepto / Cargo / Abono / Saldo insoluto / Estatus. Al expandir se muestran pagos aplicados y notas de crédito aplicadas anidadas. Filas vencidas se tiñen `bg-destructive/5`.
+  - **Filtros inteligentes**: chips de preset (Últimos 30 días default, Este mes, Trimestre, Este año, Histórico) sincronizados a querystring vía `useEstadoCuentaDateRange`, switch "Sólo con saldo pendiente" (default `on` en portal), select de moneda (MXN/USD/Todas).
+  - **Preparación para exportación**: `ExportActions` renderiza botones PDF / Excel deshabilitados con tooltip "Próximamente" — layout listo para conectar generación real sin refactor.
+  - **Reuso**: `KpiCard`, `PageContainer`, `PageHeader`, `formatCurrency`/`formatDate` de `@/lib/formatters`, `sumarMontos` de `financialUtils`, `<Table>` de shadcn. Cero formateo manual en celdas.
+  - **Servicios/hook nuevos**: `services/estadoCuenta.ts` (join único a `facturas` + `pagos_factura` + `factura_notas_credito`, con `// SAFE-CAST:` para el join embebido), `services/estadoCuentaAggregates.ts` (puros, testeables), `hooks/useEstadoCuenta.ts`, `hooks/useEstadoCuentaDateRange.ts`. Sin cambios de BD ni RLS — se apoya en las políticas existentes de `facturas`/`pagos_factura`/`factura_notas_credito`.
+
 ## [13.297.4] - 2026-07-13
 - **fix(CI shard 13/20 — arquitectura + lint)**: refactor para desbloquear los shards que fallaban tras P3.
   - Nuevos servicios `features/cotizacion/services/plantillas.ts` y `versiones.ts` que centralizan el I/O contra Supabase; los hooks `useCotizacionPlantillas` y `useCotizacionVersiones` ya no importan el cliente directamente (cumple jerarquía Pages → Hooks → Services → Lib) y los `as unknown as` sensibles quedan aislados con marcador `// SAFE-CAST:` en la línea correcta.
