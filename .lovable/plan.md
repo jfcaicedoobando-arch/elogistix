@@ -1,86 +1,47 @@
-# Bug: conceptos del paso 2 no llegan al paso 3 en cotización LCL
+## Unificar paso 2 del wizard contra `catalogo_claves_sat`
 
-## Qué está pasando (analogía)
+### Contexto
 
-El wizard tiene **dos libretas separadas**:
+- **Paso 3** (`ConceptoDescripcionSelector` → `ProductoServicioSelect`) es combobox **estricto** contra `catalogo_claves_sat` y autocompleta: descripción, `aplica_iva`, `tasa_iva_aplicada` y `clave_unidad_sat`.
+- **Paso 2** (`TablaCostosLocal`) usa un `<Select>` con dos arrays hardcoded (`CONCEPTOS_COSTO_USD` / `CONCEPTOS_COSTO_MXN`) y para unidad usa `UNIDADES_MEDIDA = ['BL','W/M','Documento',...]`, también hardcoded.
+- Consecuencia: (1) los "conceptos" del paso 2 pueden no existir en el catálogo maestro y llegan al paso 3 como legacy con banner ámbar, (2) desalineación con clave SAT/IVA/unidad, (3) mantenimiento en dos lugares.
 
-- **Libreta A (paso 2)** — "Costos internos y P&L": aquí vives cuando armas costos por proveedor (flete marítimo, cargos en destino, flete terrestre, etc.).
-- **Libreta B (paso 3)** — "Conceptos para el cliente": lo que verá el cliente en la cotización.
+### Objetivo
 
-Cuando pasas del paso 2 al 3, el sistema hace **una única fotocopia** de la libreta A a la B. Si la fotocopia se toma en el mal momento (o ya se tomó una vez y editas después), la libreta B queda vacía o desactualizada.
+El paso 2 sólo permite conceptos del catálogo maestro (mismo origen que el paso 3), heredando además clave SAT, unidad SAT e IVA sugerido.
 
-## Evidencia en `COT-2026-0123` (LCL)
+### Alcance
 
-Confirmado en BD:
+1. **`TablaCostosLocal.tsx`** — reemplazar el `<Select>` de concepto por `ProductoServicioSelect`. Al seleccionar producto:
+   - `concepto` ← `producto.nombre`.
+   - `unidad_medida` ← `producto.clave_unidad_sat` (si viene) y sólo si la fila no tiene un valor manual explícito.
+   - `aplica_iva` ← `producto.tipo_iva === 'gravado_16'`.
+   - Guardar `clave_sat` en la fila (nuevo campo opcional en `FilaCostoLocal`) para que viaje al paso 3 sin recalcular.
+2. **`FilaCostoLocal`** — agregar campos opcionales `clave_sat?: string`, `tasa_iva_aplicada?: number` para propagar el match del catálogo.
+3. **`UNIDADES_MEDIDA` en `TablaCostosLocal`** — sustituir por `UnidadMedidaSelect` ya existente (o dejar el select actual pero alimentado por el catálogo de claves de unidad SAT). Se elige la variante `UnidadMedidaSelect` para consistencia con paso 3.
+4. **`buildCostosDesdeTarifa.ts`** — al precargar desde una tarifa, intentar matchear el `concepto` generado contra el catálogo (por `porNombre` o helper nuevo `matchProductoPorNombre`) para heredar `clave_sat` / `unidad`. Si no matchea, deja el concepto como está (fila "legacy" que el usuario deberá corregir manualmente antes de avanzar). Se hace fuera del hook (helper puro que recibe la lista de productos) para no romper la firma actual.
+5. **`SeccionCostosInternosPLLocal.tsx`** — pasa la lista de productos del catálogo al llamado de `buildCostosDesdeTarifa` para el match.
+6. **`useCotizacionWizardSteps` / `buildConceptosFromCostos`** — hoy mapea `costo → concepto_venta` por nombre. Ahora, si la fila trae `clave_sat`/`tasa_iva_aplicada`, se propagan al concepto de venta directamente en vez de re-buscar en el catálogo. Beneficio: cero desalineación entre pasos y menos trabajo del combobox del paso 3.
+7. **Constantes legacy** — dejar `CONCEPTOS_COSTO_USD` / `CONCEPTOS_COSTO_MXN` en `cotizacionConstants.ts` con `@deprecated`, y buscar otros usos para migrarlos o retirarlos.
+8. **Migración de datos (opcional, pequeña)** — no toca tablas. `catalogo_claves_sat` ya está poblado; sólo se verifica que los patrones más usados de las viejas constantes existan como registros activos. Si falta alguno (p. ej. "Flete Marítimo LCL"), se propone un migration seed **read-only en el plan** para agregarlos como activos por organización (o global si el catálogo es global — pendiente confirmar en implementación).
+9. **Tests**:
+   - `TablaCostosLocal.test.tsx`: seleccionar producto propaga concepto + unidad + `aplica_iva`.
+   - `buildCostosDesdeTarifa.test.ts`: cuando se pasa la lista de productos, hereda `clave_sat` al match; si no matchea, fila queda sin `clave_sat` y no rompe.
+   - Test de integración wizard: paso 2 → paso 3 mantiene `clave_sat` sin que el paso 3 tenga que re-buscar.
+10. **Changelog + bump** a `13.292.0` explicando la unificación y el impacto (los conceptos legacy que estén guardados como texto libre siguen funcionando pero se marcan como legacy en el combobox del paso 2, igual que ya pasa en paso 3).
 
-| Campo | Valor |
-|---|---|
-| `tipo_embarque` | `LCL` |
-| `tipo_contenedor` | `null` |
-| `tarifa_id` | apunta a una tarifa **20DRY (FCL)** |
-| `cotizacion_costos` (paso 2) | 3 filas: Flete Marítimo, Cargos en Destino, Flete Terrestre |
-| `cotizaciones.conceptos_venta` (paso 3) | `[]` vacío |
-| `tarifa_override` | `{}` vacío |
+### Fuera de alcance
 
-Es decir: el paso 2 sí guardó, pero el paso 3 se quedó sin conceptos. Los pasos 2 y 3 son **dos arrays de React separados** que solo se sincronizan una vez en `handlePaso2` (`useCotizacionWizardSteps.ts:73-94`), y esa sincronización está protegida por un flag `costosPreLlenados` que, una vez `true`, ya no se vuelve a activar.
+- Editor del catálogo maestro (ya existe en `/configuracion`).
+- Migración masiva de cotizaciones históricas: se dejan como legacy; el warning ámbar del combobox guía al usuario.
+- Cambios de esquema en `cotizacion_costos` (no se persiste `clave_sat` a BD en esta fase; sólo viaja en memoria del wizard).
 
-## Causas raíz (dos, se refuerzan en LCL)
+### Riesgos
 
-1. **Guard de una sola pasada**: `handlePaso2` solo sincroniza `costosInternos → conceptosUSD/MXN` si `!costosPreLlenados && costosInternos.length > 0`. Después nunca refresca, aunque cambies los costos.
-2. **Race con la precarga por tarifa en LCL**: `SeccionCostosInternosPLLocal` precarga los costos con `buildCostosDesdeTarifa`, pero ese builder está pensado para contenedor (`unidad_medida="contenedor"`, usa `tipo_contenedor_nombre`) — en LCL genera filas inconsistentes o vacías. Si el usuario le da "Siguiente" antes de que la precarga termine (o edita a mano y vuelve atrás), `costosInternos` puede estar vacío en el momento del salto → nada se copia, y como el flag solo se marca cuando SÍ hubo copia, el estado queda en un limbo donde la copia nunca se retomará en pasadas siguientes al paso 2.
+- Cotizaciones en edición cuyos costos tienen nombres que no existen en el catálogo: el combobox del paso 2 los mostrará como legacy (banner ámbar) y bloqueará el guardado sólo si el usuario los toca. Comportamiento igual al paso 3 actual.
+- Si el catálogo está vacío en una organización recién creada, el paso 2 queda sin opciones; se maneja con estado "catálogo vacío" reutilizado de `ProductoServicioSelect` que sugiere ir a Configuración → Catálogo.
 
-## Fix propuesto
+### Verificación
 
-### 1. Refactor de la sincronización paso 2 → paso 3 (`useCotizacionWizardSteps.ts`)
-
-- Eliminar el guard `costosPreLlenados` como bandera de "una sola vez". Cambiarlo por una sincronización **derivada e idempotente**: cada vez que se avanza al paso 3, reconstruir `conceptosUSD/MXN` desde `costosInternos` con `buildConceptosFromCostos`, respetando ediciones manuales del usuario en el paso 3.
-- Estrategia recomendada (mínimo intrusiva):
-  - Mantener `costosPreLlenados`, pero **también** re-sincronizar si `costosInternos` cambió respecto al último snapshot (guardar un hash/`JSON.stringify` firmado del último input procesado).
-  - Si el usuario ya editó manualmente en paso 3 (detectable por un flag `conceptosEditadosManualmente`), advertir con un `AlertDialog` en español antes de sobreescribir ("Los costos del paso 2 cambiaron. ¿Regenerar los conceptos del paso 3? Se perderán tus ediciones manuales").
-
-### 2. Adaptar `buildCostosDesdeTarifa` para LCL (`seccionRuta/buildCostosDesdeTarifa.ts`)
-
-- Detectar cuando la tarifa/cotización es LCL (`tipo_embarque === 'LCL'`) y:
-  - Cambiar `unidad_medida` a `"m³"` (o `"W/M"` si aplica).
-  - No inyectar el nombre del contenedor en el concepto (o etiquetarlo como "Flete LCL").
-  - Usar `dias_libres_almacenaje_lcl` de la tarifa donde hoy usa `dias_libres_demoras`.
-- Blindaje: si la tarifa vinculada no es compatible con LCL (ej. `tipo_contenedor_id` presente en tarifa pero cotización es LCL), mostrar un `Alert` amarillo en el paso 1/2: "La tarifa seleccionada es para contenedor; revisa las unidades antes de continuar."
-
-### 3. Validación al salir del paso 2
-
-- Antes de permitir `nextStep()` en paso 2, validar que `costosInternos.length > 0`. Si no, mostrar un toast en español: "Agrega al menos un costo interno antes de continuar."
-- Esto elimina el race donde el usuario avanza antes de que se llenen los costos.
-
-### 4. Migración de datos existentes (opcional, solo `COT-2026-0123`)
-
-- Recuperar la cotización afectada: regenerar `cotizaciones.conceptos_venta` desde `cotizacion_costos` vía `buildConceptosFromCostos` en un script SQL/RPC de una sola vez.
-- Confirmar con el usuario antes de correr.
-
-### 5. Test de regresión
-
-- Nuevo test en `src/features/cotizacion/hooks/__tests__/useCotizacionWizardSteps.test.tsx`:
-  - **Caso A**: paso 2 con 3 costos → paso 3 → volver a paso 2 → editar un costo → paso 3 → `conceptosUSD` refleja el cambio.
-  - **Caso B (LCL)**: cotización LCL con tarifa, `costosInternos` inicialmente vacío por race → click "Siguiente" muestra toast de validación y no avanza.
-  - **Caso C**: `buildCostosDesdeTarifa` con `tipoEmbarque='LCL'` devuelve filas con `unidad_medida='m³'`.
-
-## Verificación final
-
-- `bun run test src/features/cotizacion` verde.
-- Playwright E2E: crear cotización LCL, capturar costos, avanzar a paso 3, confirmar que los conceptos aparecen. Volver atrás, editar, avanzar de nuevo, confirmar propagación.
-- Bump `APP_VERSION` a `13.291.0` + entrada en `CHANGELOG.md`.
-
-## Fuera de alcance
-
-- Rediseño amplio de la relación `cotizacion_costos` ↔ `cotizaciones.conceptos_venta` (fusionar tablas). Se documenta como deuda técnica para plan futuro.
-- Soporte de tarifas LCL nativas en tabla `costeo_tarifas` (hoy la tabla está modelada para contenedor). Solo se blinda la asimetría; el modelo completo se aborda aparte.
-
-## Detalles técnicos (para el equipo)
-
-| Archivo | Cambio |
-|---|---|
-| `src/features/cotizacion/hooks/wizard/useCotizacionWizardSteps.ts:73-94` | Reemplazar guard booleano por hash de `costosInternos`; agregar `conceptosEditadosManualmente` |
-| `src/features/cotizacion/domain/cotizacion.ts` (`buildConceptosFromCostos`) | Aceptar hint `tipoEmbarque` para unidad de medida en LCL |
-| `src/features/cotizacion/components/SeccionCostosInternosPLLocal.tsx:36-51` | Bloquear precarga por tarifa incompatible; toast informativo |
-| `src/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa.ts:34-82` | Rama LCL (unidad, sin `tipo_contenedor_nombre`, `dias_libres_almacenaje_lcl`) |
-| `src/features/cotizacion/hooks/wizard/*` | Validación `costosInternos.length > 0` en `nextStep` desde paso 2 |
-| Tests nuevos | Regresión paso 2 → 3 (edición, LCL, race) |
+- `bunx vitest run` de los archivos tocados + suites del wizard.
+- QA manual en `COT-2026-0123` (LCL): editar costos y confirmar que paso 3 recibe clave SAT y unidad correctas sin banner ámbar.
