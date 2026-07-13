@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.298.1] - 2026-07-13
+- **fix(cliente detalle)**: el botón "Estado de cuenta" en la ficha del cliente ahora navega al módulo nuevo (`/clientes/:clienteId/estado-de-cuenta`) en lugar de disparar el PDF legacy que abría el diálogo de impresión del navegador. Se removieron los imports de `generarEstadoCuentaPdf` y utilidades de toast asociadas en `ClienteDetalleHeader.tsx`.
+
 ## [13.298.0] - 2026-07-13
 - **feat(estado de cuenta cliente)**: nuevo módulo compartido `EstadoCuentaModule` montado en dos rutas espejo:
   - `/portal/estado-de-cuenta` — cliente autenticado ve su propio estado (nueva entrada en `PORTAL_NAV_ITEMS` con ícono `Wallet`, resuelve `cliente_id`s vía `usePortalClientUsers`).
