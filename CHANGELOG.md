@@ -6,6 +6,19 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.297.0] - 2026-07-13
+- **feat(cotización/wizard P3 — Duplicar & Versionar)**: arranque de la Fase P3. Decisiones del usuario: snapshot **sólo al pasar a "Enviada"**, duplicación como **Borrador con folio COT-YYYY-XXXX nuevo**, alcance UI **mínima**.
+  1. **Migración BD** (`cotizacion_versiones` + linaje + trigger + RPC):
+     - Nueva tabla `public.cotizacion_versiones` (snapshot inmutable por versión: `version_num`, `folio`, `estado_al_snapshot`, `snapshot jsonb`, `costos_snapshot jsonb`, `created_by`). RLS por org + rol (`admin`/`operador`/`viewer` en SELECT, `admin`/`operador` en INSERT), UNIQUE `(cotizacion_id, version_num)`, índices en `(cotizacion_id, version_num DESC)` y `(organization_id, created_at DESC)`. GRANTs `SELECT, INSERT` a `authenticated` + `ALL` a `service_role`.
+     - Nueva columna `cotizaciones.duplicada_de_id uuid` (FK a la cotización origen, `ON DELETE SET NULL`) + índice parcial `WHERE duplicada_de_id IS NOT NULL` para trazar linaje sin costo en filas normales.
+     - Trigger `snapshot_cotizacion_al_enviar` (AFTER UPDATE OF `estado` en `cotizaciones`): cuando el estado transita a `Enviada` desde otro estado, genera un snapshot automático con `version_num = MAX+1`, incluye la fila completa como `to_jsonb(NEW)` y agrega los `cotizacion_costos` vigentes como `jsonb_agg`.
+     - RPC `duplicar_cotizacion(p_id uuid) → uuid` (`SECURITY DEFINER`): valida que la cotización origen pertenezca a la org del usuario y que sea `admin`/`operador`, calcula el siguiente folio `COT-YYYY-XXXX` del año en curso (con fallback a `0001` si el último folio tiene un sufijo no numérico), inserta una copia en estado `Borrador` (limpiando `fecha_vigencia`, `embarque_id` y timestamps), setea `duplicada_de_id = p_id` y replica todos los `cotizacion_costos`. Devuelve el UUID de la nueva cotización. `GRANT EXECUTE ... TO authenticated`.
+  2. **Frontend — hooks + acciones**:
+     - Nuevo hook `useCotizacionVersiones.ts` con `useDuplicarCotizacion` (mutación que invoca la RPC, invalida `queryKeys.cotizaciones.all`, redirige al borrador nuevo con `toast` de éxito) y `useVersionesCotizacion(cotizacionId)` (query que lista los snapshots ordenados descendente). Casts marcados con `SAFE-CAST` porque los tipos generados aún no incluyen la tabla/RPC.
+     - `queryKeys.cotizaciones.versiones(cotizacionId)` agregada al factory central.
+     - `cotizacionesColumns.tsx`: nueva acción "Duplicar" (ícono `Copy`) en el dropdown del listado, sólo cuando `canEdit` y se pasa `onDuplicar`. `Cotizaciones.tsx` la conecta a `useDuplicarCotizacion` + `useNavigate` para abrir el borrador nuevo en `/cotizaciones/:id/editar`.
+     - Nuevo componente `VersionesCotizacionCard.tsx` integrado en `CotizacionDetalle` después del historial de envíos: line-list con `v{n}` + folio congelado + estado + fecha; se auto-oculta si no hay versiones (evita ruido en cotizaciones que nunca se enviaron).
+
 ## [13.296.1] - 2026-07-13
 - **test(cotización/wizard P2 — auditoría cierre)**: cobertura post-hoc para los componentes agregados en `13.296.0`.
   - `useCotizacionPlantillas.test.tsx`: 5 tests nuevos para `useActualizarPlantilla` y `useEliminarPlantilla` (mock chain `.update().eq()` thenable). 11/11 pasan.
