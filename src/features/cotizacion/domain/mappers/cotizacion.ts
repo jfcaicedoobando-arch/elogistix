@@ -6,6 +6,18 @@ import type { CotizacionFormValues } from '@/features/cotizacion/types';
  * Función pura sin dependencias de React.
  */
 
+/**
+ * Normaliza a `YYYY-MM-DD`. Acepta `Date` o string ISO — el draft autosave
+ * pasa por `JSON.stringify`, así que al rehidratar un borrador guardado en
+ * localStorage los `Date` llegan como string. Defensivo en el boundary.
+ */
+function toIsoDateString(v: unknown): string | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v as string);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().split("T")[0];
+}
+
 interface PesoVolumen { peso: number; volumen: number; piezas: number }
 
 function calcularPesoVolumenPiezas(v: CotizacionFormValues): PesoVolumen {
