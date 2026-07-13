@@ -1,32 +1,64 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Trash2, RotateCcw, X } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  SelectGroup, SelectLabel,
+} from "@/components/ui/select";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePermissions } from "@/hooks/shared";
 import { Navigate } from "react-router-dom";
 import { usePapelera, type SoftTable, type TrashRow } from "@/features/admin/hooks";
 
-const TABLAS: { value: SoftTable; label: string }[] = [
-  { value: "embarques", label: "Embarques" },
-  { value: "cotizaciones", label: "Cotizaciones" },
-  { value: "clientes", label: "Clientes" },
-  { value: "contactos_cliente", label: "Contactos de cliente" },
-  { value: "documentos_embarque", label: "Documentos de embarque" },
-  { value: "eventos_embarque", label: "Eventos de embarque" },
-  { value: "notas_embarque", label: "Notas de embarque" },
-  { value: "facturas", label: "Facturas" },
-  { value: "conceptos_factura", label: "Conceptos de factura" },
-  { value: "cotizacion_costos", label: "Costos de cotización" },
-  { value: "proformas", label: "Proformas" },
-  { value: "proforma_conceptos_consolidados", label: "Conceptos de proforma" },
-  { value: "conceptos_costo", label: "Costos directos del embarque" },
-  { value: "conceptos_venta", label: "Conceptos de venta" },
+interface TablaMeta {
+  value: SoftTable;
+  label: string;
+  grupo: "Operaciones" | "Comercial" | "Facturación" | "CxP / Tesorería" | "CRM" | "Catálogos";
+}
+
+const TABLAS: TablaMeta[] = [
+  // Operaciones
+  { value: "embarques", label: "Embarques", grupo: "Operaciones" },
+  { value: "embarque_contenedores", label: "Contenedores de embarque", grupo: "Operaciones" },
+  { value: "documentos_embarque", label: "Documentos de embarque", grupo: "Operaciones" },
+  { value: "eventos_embarque", label: "Eventos de embarque", grupo: "Operaciones" },
+  { value: "notas_embarque", label: "Notas de embarque", grupo: "Operaciones" },
+  { value: "seguros_embarque", label: "Seguros de embarque", grupo: "Operaciones" },
+  { value: "conceptos_costo", label: "Costos directos del embarque", grupo: "Operaciones" },
+  { value: "conceptos_venta", label: "Conceptos de venta", grupo: "Operaciones" },
+  // Comercial
+  { value: "clientes", label: "Clientes", grupo: "Comercial" },
+  { value: "contactos_cliente", label: "Contactos de cliente", grupo: "Comercial" },
+  { value: "cotizaciones", label: "Cotizaciones", grupo: "Comercial" },
+  { value: "cotizacion_costos", label: "Costos de cotización", grupo: "Comercial" },
+  // Facturación
+  { value: "facturas", label: "Facturas", grupo: "Facturación" },
+  { value: "conceptos_factura", label: "Conceptos de factura", grupo: "Facturación" },
+  { value: "factura_notas_credito", label: "Notas de crédito (cliente)", grupo: "Facturación" },
+  { value: "pagos_factura", label: "Pagos de factura", grupo: "Facturación" },
+  { value: "proformas", label: "Proformas", grupo: "Facturación" },
+  { value: "proforma_conceptos_consolidados", label: "Conceptos de proforma", grupo: "Facturación" },
+  // CxP / Tesorería
+  { value: "proveedor_facturas", label: "Facturas de proveedor", grupo: "CxP / Tesorería" },
+  { value: "proveedor_notas_credito", label: "Notas de crédito (proveedor)", grupo: "CxP / Tesorería" },
+  { value: "pagos_proveedor", label: "Pagos a proveedor", grupo: "CxP / Tesorería" },
+  { value: "cuentas_bancarias", label: "Cuentas bancarias", grupo: "CxP / Tesorería" },
+  // CRM
+  { value: "crm_leads", label: "Leads", grupo: "CRM" },
+  { value: "crm_oportunidades", label: "Oportunidades", grupo: "CRM" },
+  { value: "crm_actividades", label: "Actividades CRM", grupo: "CRM" },
+  { value: "crm_comentarios_oportunidad", label: "Comentarios de oportunidad", grupo: "CRM" },
+  { value: "crm_etapas_pipeline", label: "Etapas de pipeline", grupo: "Catálogos" },
+  { value: "crm_motivos_perdida", label: "Motivos de pérdida", grupo: "Catálogos" },
+  { value: "crm_plantillas_mensaje", label: "Plantillas de mensaje", grupo: "Catálogos" },
 ];
+
+const GRUPOS = ["Operaciones", "Comercial", "Facturación", "CxP / Tesorería", "CRM", "Catálogos"] as const;
 
 const dtf = new Intl.DateTimeFormat("es-MX", {
   day: "2-digit",
@@ -38,8 +70,19 @@ const dtf = new Intl.DateTimeFormat("es-MX", {
 
 export default function Papelera() {
   const { isAdmin } = usePermissions();
-  const { tabla, setTabla, rows, isLoading, restore, purge } = usePapelera(isAdmin);
+  const { tabla, setTabla, rows, isLoading, counts, restore, purge } = usePapelera(isAdmin);
   const [purgeTarget, setPurgeTarget] = useState<TrashRow | null>(null);
+
+  const countByTable = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of counts) map.set(c.tabla, Number(c.total ?? 0));
+    return map;
+  }, [counts]);
+
+  const totalPapelera = useMemo(
+    () => counts.reduce((acc, c) => acc + Number(c.total ?? 0), 0),
+    [counts],
+  );
 
   if (!isAdmin) return <Navigate to="/" replace />;
 
@@ -101,24 +144,44 @@ export default function Papelera() {
       <PageHeader
         icon={<Trash2 className="h-6 w-6" />}
         title="Papelera"
-        description="Registros eliminados (soft delete). Restaura o purga definitivamente."
+        description="Registros eliminados (soft delete). Restaura o purga definitivamente. Al restaurar un embarque, sus contenedores, documentos, notas, eventos, facturas, seguros y conceptos se recuperan juntos."
       />
 
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={tabla} onValueChange={(v) => setTabla(v as SoftTable)}>
-          <SelectTrigger className="w-[260px]">
+          <SelectTrigger className="w-[320px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {TABLAS.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.label}
-              </SelectItem>
-            ))}
+            {GRUPOS.map((g) => {
+              const items = TABLAS.filter((t) => t.grupo === g);
+              if (items.length === 0) return null;
+              return (
+                <SelectGroup key={g}>
+                  <SelectLabel>{g}</SelectLabel>
+                  {items.map((t) => {
+                    const n = countByTable.get(t.value) ?? 0;
+                    return (
+                      <SelectItem key={t.value} value={t.value}>
+                        <span className="flex items-center justify-between gap-3 w-full">
+                          <span>{t.label}</span>
+                          {n > 0 && (
+                            <Badge variant="secondary" className="ml-auto">{n}</Badge>
+                          )}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              );
+            })}
           </SelectContent>
         </Select>
+        <span className="text-xs text-muted-foreground">
+          {rows.length} {rows.length === 1 ? "registro" : "registros"} en esta tabla
+        </span>
         <span className="text-xs text-muted-foreground ml-auto">
-          {rows.length} {rows.length === 1 ? "registro" : "registros"}
+          Total en papelera: <strong>{totalPapelera}</strong>
         </span>
       </div>
 
