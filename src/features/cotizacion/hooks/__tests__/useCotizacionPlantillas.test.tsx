@@ -47,8 +47,6 @@ vi.mock("@/integrations/supabase/client", () => {
   return { supabase: { from, rpc } };
 });
 
-const mockFrom = supabase.from as unknown as ReturnType<typeof vi.fn>;
-const mockRpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
 
 
 function wrapper(qc: QueryClient) {
@@ -59,12 +57,12 @@ function wrapper(qc: QueryClient) {
 
 describe("useCotizacionPlantillas hooks (P2)", () => {
   beforeEach(() => {
-    supabase.__state.selectData = [];
-    supabase.__state.selectError = null;
-    supabase.__state.insertData = null;
-    supabase.__state.insertError = null;
-    supabase.__state.rpcData = null;
-    supabase.__state.rpcError = null;
+    state.selectData = [];
+    state.selectError = null;
+    state.insertData = null;
+    state.insertError = null;
+    state.rpcData = null;
+    state.rpcError = null;
     vi.clearAllMocks();
   });
 
@@ -75,7 +73,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
   });
 
   it("devuelve la lista de plantillas de la organización", async () => {
-    supabase.__state.selectData = [
+    state.selectData = [
       { id: "p1", nombre: "Shanghái → MZLO", veces_usada: 5 },
       { id: "p2", nombre: "Nueva plantilla", veces_usada: 0 },
     ];
@@ -87,14 +85,14 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
   });
 
   it("propaga error de Supabase", async () => {
-    supabase.__state.selectError = { message: "boom" };
+    state.selectError = { message: "boom" };
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { result } = renderHook(() => useCotizacionPlantillas("org-1"), { wrapper: wrapper(qc) });
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
 
   it("guarda plantilla e invalida cache de la org", async () => {
-    supabase.__state.insertData = { id: "new-p", nombre: "test" };
+    state.insertData = { id: "new-p", nombre: "test" };
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const spy = vi.spyOn(qc, "invalidateQueries");
     const { result } = renderHook(() => useGuardarPlantilla(), { wrapper: wrapper(qc) });
@@ -113,7 +111,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
   });
 
   it("aplica plantilla vía RPC y devuelve payload", async () => {
-    supabase.__state.rpcData = { version: 1, values: { ruta: "MX" } };
+    state.rpcData = { version: 1, values: { ruta: "MX" } };
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { result } = renderHook(() => useAplicarPlantilla(), { wrapper: wrapper(qc) });
     let payload: unknown;
@@ -125,7 +123,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
   });
 
   it("propaga errores del RPC aplicar_plantilla", async () => {
-    supabase.__state.rpcError = { message: "Sin acceso a esta plantilla" };
+    state.rpcError = { message: "Sin acceso a esta plantilla" };
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { result } = renderHook(() => useAplicarPlantilla(), { wrapper: wrapper(qc) });
     await expect(
