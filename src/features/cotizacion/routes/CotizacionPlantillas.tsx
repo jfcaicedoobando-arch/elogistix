@@ -79,7 +79,7 @@ export default function CotizacionPlantillas() {
       <PageHeader
         title="Plantillas de cotización"
         description="Reutiliza cotizaciones frecuentes. Las plantillas se aplican desde el Paso 1 del wizard."
-        icon={Sparkles}
+        icon={<Sparkles className="h-5 w-5" />}
         actions={
           <Button onClick={() => navigate("/cotizaciones/nueva")}>
             Nueva cotización
