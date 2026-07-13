@@ -8141,6 +8141,10 @@ export type Database = {
           total_operaciones: number
         }[]
       }
+      purgar_embarque_cascade: {
+        Args: { p_embarque_id: string }
+        Returns: undefined
+      }
       purge_app_logs_old: { Args: never; Returns: number }
       purge_record: {
         Args: { _id: string; _table: string }
@@ -8234,6 +8238,10 @@ export type Database = {
       }
       resolver_reaprobacion_tarifa: {
         Args: { p_cotizacion_id: string; p_decision: string }
+        Returns: undefined
+      }
+      restaurar_embarque_cascade: {
+        Args: { p_embarque_id: string }
         Returns: undefined
       }
       restore_record: {
