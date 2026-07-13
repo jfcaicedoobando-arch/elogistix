@@ -46,7 +46,7 @@ function makeForm() {
     getValues: vi.fn(() => ({ ruta: "" })),
     reset: vi.fn(),
     trigger: vi.fn(() => Promise.resolve(true)),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
   } as any;
 }
 
