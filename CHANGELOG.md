@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.6] - 2026-07-13
+- **fix(cotización · borrador · fecha de validez)**: al reanudar un borrador desde localStorage el wizard truena con `v.validezPropuesta.toISOString is not a function`. `JSON.stringify` convierte `Date` → string y al rehidratar RHF recibía un string. Se aplican dos defensas: (1) `useCotizacionDraftAutosave.loadDraft` ahora revive campos Date (`validezPropuesta`) antes de devolver el draft. (2) `mappers/cotizacion.ts` normaliza defensivamente en el boundary (`toIsoDateString` y `coerceDate` aceptan `Date` o string ISO). Test de regresión añadido. Analogía: el draft se guarda como postal (texto); al abrirla, ahora la "convertimos de vuelta a reloj" antes de usarla.
+
 ## [13.299.5] - 2026-07-13
 - **chore(CI · calidad)**: se corrigen bloqueos del pipeline detectados en `logs_79275067023`. (1) `EstadoCuentaTable.tsx` añadido a la allowlist `no-raw-table` (ESLint + test de arquitectura) por usar sub-rows expandibles no soportadas por `DataTable`. (2) `useEstadoCuenta` migra a `queryKey` centralizado (`estadoCuenta.list` en `queryKeys.ts`) para evitar `no-inline-queryKey`. (3) 5 call-sites en cotización (`useCotizacionVersiones`, `PlantillaSelectorPaso1`, `GuardarPlantillaDialog`, `EditarPlantillaDialog`, `CotizacionPlantillas`) sustituyen `toast.error(...)` directo por `notifyError({title, error, method})` (test arquitectural de feedback). (4) `useCotizacionDraftAutosave.loadDraft` valida el shape del JSON antes de tipar, eliminando el `JSON.parse(...) as StoredDraft` (CRITICAL en `audit-casts`); baseline vuelve a `0 HIGH / 0 CRITICAL`. (5) 3 `rejects.toBeTruthy()` en `useCotizacionPlantillas.test.tsx` cambian a `rejects.toThrow(/mensaje/)`.
 
