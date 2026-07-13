@@ -142,3 +142,12 @@ BEGIN
     CREATE PUBLICATION supabase_realtime;
   END IF;
 END $$;
+
+-- ---------------------------------------------------------------------------
+-- public.embarque_consecutivo_seq
+-- Secuencia creada manualmente en prod pre-historial. Migraciones antiguas
+-- solo la usan vía nextval() dentro de cuerpos de función (lazy). La migración
+-- 20260713165742 la referencia en un DO $$ ... SELECT last_value FROM ... $$
+-- que se ejecuta al momento del replay → error en CI limpio. Guard idempotente.
+-- ---------------------------------------------------------------------------
+CREATE SEQUENCE IF NOT EXISTS public.embarque_consecutivo_seq;
