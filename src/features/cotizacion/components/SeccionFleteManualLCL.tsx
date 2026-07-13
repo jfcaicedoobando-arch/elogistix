@@ -12,7 +12,7 @@
  * v13.299.0
  */
 import { useFormContext } from "react-hook-form";
-import { AlertCircle, Package } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import { NumericInput } from "@/components/shared/NumericInput";
 import { FormField } from "@/components/shared/FormField";
