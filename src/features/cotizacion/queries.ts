@@ -39,7 +39,7 @@ export const cotizacionQueries = {
 
   /** Detalle de una cotización por id. */
   detail: (id: string) =>
-    queryOptions<CotizacionRow>({
+    queryOptions<CotizacionRow | null>({
       queryKey: queryKeys.cotizaciones.detail(id),
       queryFn: () => fetchCotizacionById(id),
       staleTime: staleTimes.SHORT,
