@@ -1,50 +1,92 @@
+
+# Prevenir folios de embarque duplicados
+
 ## Diagnóstico
 
-El hallazgo NO es un falso positivo del código — es un problema de datos que el UI oculta:
+Auditoría del flujo actual de generación de `expediente`:
 
-En la base de datos existen **dos embarques distintos con el mismo expediente `ELIMP00150`** (BL Masters diferentes: `034G519792` y `034G522071`, creados con 1 min de diferencia el 08/04/2026):
+1. **`generar_expediente(tipo_op)`** toma `nextval('embarque_consecutivo_seq')` y arma `EL<PREFIJO><5 dígitos>`. La secuencia es atómica, así que **por sí sola no puede producir duplicados**.
+2. **`resolver_expediente_por_bl(_bl_master, _tipo_op)`** — usada al crear embarque desde documentos — busca cualquier embarque con el mismo `bl_master` y **reusa** su expediente. Tiene **dos bugs**:
+   - No filtra por `organization_id` → si dos organizaciones usan el mismo BL Master (algo común con navieras globales), la segunda hereda el folio de la primera. Multi-tenant roto.
+   - No filtra por `deleted_at IS NULL` → puede resucitar folios de embarques eliminados.
+3. **Estado actual de la secuencia**: `embarque_consecutivo_seq.last_value = 316`, pero al reasignar los duplicados ya existen `ELIMP00317` y `ELIMP00318`. El próximo `nextval` devolvería 317 → colisiona contra el índice único que agregamos en 13.288.4 y **falla al crear el siguiente embarque**. Hay que sincronizar la secuencia ya.
+4. **Los duplicados originales** (`ELIMP00150`, `ELIMP00304`) fueron creados el mismo minuto de abril 2026 por el mismo usuario — muy probablemente por un backfill/seed histórico que insertó filas sin pasar por la RPC. No es un bug reproducible del flujo actual, pero el índice único que ya agregamos lo bloquea permanentemente.
 
-```text
-id                                    | expediente | bl_master   | docs
-c33a14e2-3670-...-e020bd9f06f4       | ELIMP00150 | 034G519792  | 6 (todos OK / No aplica)
-f71683b9-5858-...-292da4745a49       | ELIMP00150 | 034G522071  | 0 (sin documentos)
+## Plan de cambios
+
+### 1. Migración SQL (una sola)
+
+**a. Sincronizar la secuencia** al máximo consecutivo real observado en la tabla, para no chocar con `ELIMP00317` / `ELIMP00318`:
+
+```sql
+SELECT setval(
+  'embarque_consecutivo_seq',
+  GREATEST(
+    (SELECT COALESCE(MAX(NULLIF(regexp_replace(expediente, '\D', '', 'g'), '')::bigint), 0)
+       FROM public.embarques),
+    nextval('embarque_consecutivo_seq') - 1
+  ),
+  true
+);
 ```
 
-La auditoría recorre por `id` y marca al segundo como "docs faltantes". Cuando abres "embarque 150" en la UI, ves solo uno de los dos (el que sí tiene docs), por eso parece un error. Existe otro caso idéntico: `ELIMP00304` también está duplicado.
+**b. Arreglar `resolver_expediente_por_bl`** para que sea multi-tenant y respete soft-delete:
 
-## Plan
+```sql
+CREATE OR REPLACE FUNCTION public.resolver_expediente_por_bl(_bl_master text, _tipo_op text)
+RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_org uuid := public.current_org_id();  -- o el helper equivalente
+  v_exp text;
+BEGIN
+  SELECT expediente INTO v_exp
+  FROM public.embarques
+  WHERE bl_master = _bl_master
+    AND organization_id = v_org
+    AND deleted_at IS NULL
+  LIMIT 1;
 
-### 1. Limpieza de datos (una migración)
-- Investigar los 2 pares duplicados (`ELIMP00150`, `ELIMP00304`) para decidir cuál conservar. Criterio propuesto: conservar el que tenga documentos, proforma, factura o eventos; soft-delete al otro con motivo `duplicado_expediente` en `deleted_at`.
+  IF v_exp IS NOT NULL THEN
+    RETURN v_exp;
+  END IF;
 
-### 2. Prevención (misma migración)
-- Añadir índice único parcial:
-  ```text
-  CREATE UNIQUE INDEX embarques_expediente_org_unico
-    ON embarques (organization_id, expediente)
-    WHERE deleted_at IS NULL;
-  ```
-- Bloquea futuros duplicados a nivel BD (el generador de folios ya usa una secuencia, esto sella el borde).
+  RETURN public.generar_expediente(_tipo_op);
+END;
+$$;
+```
 
-### 3. Nueva regla de auditoría `expediente_duplicado`
-- Severidad: `alto`.
-- Detecta expedientes con >1 fila viva en la misma org (defensa en profundidad si alguna vía bypasea el índice).
+**c. (Defensa en profundidad)** Cambiar `generar_expediente(text)` para que, si por carrera de secuencia el folio armado colisiona con un `expediente` ya existente en la misma organización, itere hasta el siguiente `nextval` libre en vez de devolver un valor que luego rompe el insert:
 
-### 4. Mejorar identificación en la tabla de hallazgos
-- En `HallazgoTabla.tsx`, cuando el expediente tenga colisión, añadir sufijo con los últimos 8 chars del `embarque_id` y el `bl_master`/`hawb` para que el usuario distinga cuál es el que falla.
+```sql
+LOOP
+  consecutivo := nextval('embarque_consecutivo_seq');
+  v_exp := 'EL' || prefijo || lpad(consecutivo::text, 5, '0');
+  EXIT WHEN NOT EXISTS (
+    SELECT 1 FROM public.embarques
+    WHERE expediente = v_exp AND deleted_at IS NULL
+  );
+END LOOP;
+RETURN v_exp;
+```
 
-### 5. Verificación final
-- Correr auditoría → confirmar que `ELIMP00150` y `ELIMP00304` desaparecen de "docs faltantes".
-- Typecheck + lint.
-- CHANGELOG + bump a `13.288.4`.
+### 2. Verificación
+
+- `SELECT last_value FROM embarque_consecutivo_seq;` ≥ 318.
+- Query de sanidad: sin duplicados en `(organization_id, expediente)` con `deleted_at IS NULL` (ya lo garantiza el índice único agregado en 13.288.4).
+- Test SQL rápido: llamar dos veces `resolver_expediente_por_bl('BL-DEMO','Importación')` desde dos orgs distintas debe devolver **dos folios distintos**.
+
+### 3. Documentación
+
+- Nota en `CHANGELOG.md` bajo nueva versión `13.288.5` explicando los tres candados (secuencia sincronizada, RPC multi-tenant, generador auto-recuperable) y por qué existían.
+- Actualizar `mem://technical/shipment-identification-logic` con la regla: "`resolver_expediente_por_bl` filtra por `organization_id` y `deleted_at IS NULL`; la secuencia global se auto-corrige ante colisiones".
+
+## Fuera de alcance
+
+- No se toca la UI ni los servicios de frontend — la firma de ambas RPCs se mantiene.
+- No se auditan otras tablas con folio (proformas, facturas) en este cambio; si quieres, lo hago después en un plan aparte.
 
 ## Detalles técnicos
 
-- Migración SQL: soft-delete condicionado + `CREATE UNIQUE INDEX ... WHERE deleted_at IS NULL` + `_docs_requeridos_por_estado` sin cambios.
-- Regla nueva se añade dentro de `auditoria_embarques_org(uuid)` como CTE adicional que emite `jsonb_build_object(..., 'regla','expediente_duplicado', ...)`.
-- Tipos frontend: agregar `'expediente_duplicado'` a `ReglaAuditoria` y su label en `auditoriaConfig.ts`.
-- No se toca el resto de la lógica de auditoría de documentos — ya es correcta.
-
-## Preguntas antes de ejecutar
-
-1. ¿Para los duplicados existentes prefieres que decida yo con el criterio "conserva el que tiene más datos vinculados" y soft-delete al otro, o me detengo tras el paso 2 y te muestro un reporte para que tú elijas cuál eliminar?
+- Archivos a crear: 1 migración nueva en `supabase/migrations/` con los tres statements idempotentes (`CREATE OR REPLACE` + `setval`).
+- Archivos a tocar: `CHANGELOG.md`, `src/constants/appVersion.ts`, memoria `mem://technical/shipment-identification-logic`.
+- Riesgo: bajo. `setval` es idempotente y las funciones se reemplazan sin cambiar firma; los call-sites (`documentos.ts`, `crear_embarque_borrador_desde_cotizacion`) siguen funcionando igual.

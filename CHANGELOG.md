@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.5] - 2026-07-13
+- **fix(embarques/folio)**: blindaje de la generación de expedientes contra duplicados. Tres candados:
+  1. **`resolver_expediente_por_bl` ahora es multi-tenant**: antes buscaba cualquier embarque con el mismo BL Master sin filtrar organización, así que dos organizaciones con la misma naviera podían terminar con el mismo folio. Ahora filtra por `organization_id = current_user_org_id()` y por `deleted_at IS NULL`.
+  2. **`generar_expediente(text)` auto-recuperable**: si el folio candidato ya existe (por reasignaciones manuales o carreras), la función itera `nextval` hasta encontrar uno libre en lugar de devolver un valor que rompe el insert contra el índice único `embarques_expediente_org_unico`.
+  3. **Secuencia sincronizada**: se corre `setval(embarque_consecutivo_seq, MAX(consecutivo real de folios ELXXX#####))` para que el próximo folio generado no colisione con los folios `ELIMP00317`/`ELIMP00318` que se reasignaron en 13.288.4. Los folios legacy `DEMO-YYYY-###` se excluyen del cálculo.
+
 ## [13.288.4] - 2026-07-13
 - **fix(auditoria/embarques)**: el hallazgo de "documentos faltantes" en el embarque ELIMP00150 era real, pero apuntaba a un segundo embarque distinto que compartía el mismo folio (BL Master `034G522071`). Se reasignaron los expedientes duplicados detectados: `ELIMP00150` → `ELIMP00317` y `ELIMP00304` → `ELIMP00318` (se conserva el registro más antiguo con su folio original).
 - **db**: nuevo índice único parcial `embarques_expediente_org_unico` sobre `(organization_id, expediente) WHERE deleted_at IS NULL` para impedir a nivel base de datos que dos embarques vivos compartan expediente dentro de la misma organización.
