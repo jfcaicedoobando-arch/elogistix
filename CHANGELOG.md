@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.4] - 2026-07-13
+- **fix(auditoria/embarques)**: el hallazgo de "documentos faltantes" en el embarque ELIMP00150 era real, pero apuntaba a un segundo embarque distinto que compartía el mismo folio (BL Master `034G522071`). Se reasignaron los expedientes duplicados detectados: `ELIMP00150` → `ELIMP00317` y `ELIMP00304` → `ELIMP00318` (se conserva el registro más antiguo con su folio original).
+- **db**: nuevo índice único parcial `embarques_expediente_org_unico` sobre `(organization_id, expediente) WHERE deleted_at IS NULL` para impedir a nivel base de datos que dos embarques vivos compartan expediente dentro de la misma organización.
+
 ## [13.288.3] - 2026-07-13
 - **fix(auditoria)**: la tabla principal de Hallazgos ahora usa el mismo render deduplicado que el resumen. Si el detalle ya trae la lista de documentos después de dos puntos, se muestra sólo el encabezado y los documentos quedan agrupados una sola vez como badges.
 
