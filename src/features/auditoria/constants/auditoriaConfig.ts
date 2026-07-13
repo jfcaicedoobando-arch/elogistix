@@ -154,6 +154,13 @@ export const REGLA_INFO: Record<ReglaAuditoria, ReglaInfo> = {
       "Embarques Entregado o Cerrado con contenedores cuya fecha de descarga o devolución no ha sido capturada.",
     icon: CalendarClock,
   },
+  tipo_cambio_faltante: {
+    shortLabel: "Tipo de cambio faltante",
+    label: "Embarques sin tipo de cambio capturado",
+    description:
+      "Embarques con conceptos en USD o EUR que no tienen tipo de cambio capturado. El margen no se calcula hasta corregir el TC.",
+    icon: Scale,
+  },
 };
 
 /** Orden canónico de presentación (mayor severidad operativa primero). */
