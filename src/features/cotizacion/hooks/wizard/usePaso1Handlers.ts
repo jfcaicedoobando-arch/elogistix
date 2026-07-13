@@ -12,6 +12,7 @@ import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
+import { scrollAndFocusSection, seccionParaErrorPaso1 } from "./scrollToErrorSection";
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
@@ -43,7 +44,7 @@ export function usePaso1Handlers({
   const handlePaso1 = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); return; }
+    if (err) { notifyError(toast, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
     const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
@@ -70,7 +71,7 @@ export function usePaso1Handlers({
   const handleCotizarSinDesglose = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); return; }
+    if (err) { notifyError(toast, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
     const esNueva = !cotizacionId;
     try {

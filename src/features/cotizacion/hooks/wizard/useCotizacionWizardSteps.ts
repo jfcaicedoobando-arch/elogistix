@@ -61,6 +61,8 @@ interface Deps {
   tasaIva: number;
   buildPaso1Data: () => Record<string, unknown>;
   mutations: StepMutations;
+  /** v13.293.0 (P0): si se pasa, se llama en lugar de navegar tras guardar. */
+  onFinalized?: (cotizacionId: string) => void;
 }
 
 /**
@@ -74,7 +76,7 @@ export function useCotizacionWizardSteps({
   cotizacionId, setCotizacionId, currentStep, setCurrentStep,
   msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
   conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
-  totalUSD, tasaIva, buildPaso1Data, mutations,
+  totalUSD, tasaIva, buildPaso1Data, mutations, onFinalized,
 }: Deps) {
   const { updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
@@ -169,7 +171,11 @@ export function useCotizacionWizardSteps({
         registrarActividad: registrarActividad.mutate,
       });
       notifySuccess(toast, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
-      navigate(`/cotizaciones/${cotizacionId}`);
+      if (onFinalized) {
+        onFinalized(cotizacionId);
+      } else {
+        navigate(`/cotizaciones/${cotizacionId}`);
+      }
     } catch (err: unknown) {
       notifyError(toast, {
         title: "Error al finalizar cotización",
@@ -179,7 +185,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, isEditMode },
       });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode, onFinalized]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);

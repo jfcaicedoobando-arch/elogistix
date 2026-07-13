@@ -1,47 +1,86 @@
-## Fallos detectados en el CI (run 79231484551)
+# Auditoría UX/UI — Wizard de Cotización
 
-**Job "Tests (shard 20/20)"**: 1 test fallando en `conceptosFacturaCrud.test.ts`.
-- `eliminarConceptoFactura borra por id y recalcula` → `TypeError: Cannot read properties of undefined (reading 'opArgs')`.
-- Causa: en Papelera Fase 3 (v13.290.0) `eliminarConceptoFactura` pasó de `supabase.from("conceptos_factura").delete().eq("id", ...)` a `supabase.rpc("soft_delete_record", { _table, _id })`. El test sigue buscando la cadena `delete().eq()` en `mock.tableCalls`, que ya no existe → `.find(...)` devuelve `undefined`.
+Me puse en los zapatos del asesor comercial que cotiza 10-30 embarques al día. Lo bueno primero: el wizard **ya es funcional** (4 pasos, sidebar de progreso, tarifa-first en marítimo, atajo "sin desglose", validación por sección, guardado optimista). No está roto y podría salir a producción, pero hay fricciones claras que erosionan la velocidad y la confianza. Lo dejaría en producción **después** de aplicar al menos las mejoras P0.
 
-**Jobs "Tests (shard 8/20)" y "Tests (shard 1/20)"**: `audit-report.test.ts` y `architecture-baseline.test.ts` fallan con la misma regla Power of 10:
-- `src/features/admin/routes/Papelera.tsx` → 216 líneas
-- `src/features/facturacion/services/conceptosFacturaCrud.ts` → 206 líneas
+## Diagnóstico rápido (lo que se siente al usarlo)
 
-Ambos entraron con las fases de Papelera y hay que dividirlos (política del proyecto: nunca ampliar `OVERSIZED_BASELINE` ni bajar umbrales, escribir/dividir código nuevo).
+**Paso 1 — Datos generales**
 
-Ningún otro shard falla. Los aggregators reportan `failure` sólo porque estos 3 shards fallaron.
+- Muchas secciones apiladas en una sola columna larga (Cliente → Operación → Ruta → Mercancía → Tarifa → Condiciones → Cierre). Con LCL y marítimo el usuario hace scroll de 4-5 pantallas.
+- El sidebar de progreso está bien, pero desaparece en <lg. En tablet (donde vive medio equipo comercial) no hay ancla visual.
+- No hay atajos de teclado (Enter para siguiente, Cmd+S para guardar). Se pierde tiempo con el ratón.
+- El botón "Cotizar sin desglose" convive con "Siguiente" en el mismo footer y es rojo → parece un error crítico, no un atajo. Genera duda cada vez.
 
-## Plan
+**Paso 2 — Costos & P&L**
 
-### 1. Dividir `Papelera.tsx` (< 200 líneas)
-- Crear `src/features/admin/routes/papelera/tablas.ts` con `TablaMeta`, `TABLAS`, `GRUPOS` y el formatter `dtf`. Sin cambios funcionales.
-- Crear `src/features/admin/routes/papelera/columns.tsx` con la fábrica `buildColumns({ restore, purge, onPurgeTarget })` que devuelve `ColumnDef<TrashRow>[]`.
-- `Papelera.tsx` queda como composición delgada (~110 líneas): importa las constantes y llama a `buildColumns`.
+- La tabla de costos internos no da feedback en vivo del margen mientras se captura. El P&L vive en el paso 4. El usuario captura a ciegas y regresa a corregir.
+- No hay indicador de "auto-cargado desde tarifa" a nivel fila (sólo un banner global). Cuesta saber qué es editable vs. heredado.
 
-### 2. Dividir `conceptosFacturaCrud.ts` (< 200 líneas)
-- Extraer `recalcularTotalesFactura` (y sus helpers `resolverTasa`/lectura de renglones) a `src/features/facturacion/services/recalcularTotalesFactura.ts`.
-- `conceptosFacturaCrud.ts` re-exporta `recalcularTotalesFactura` para no romper call-sites y conserva `insertar / actualizar / eliminarConceptoFactura`.
-- Ajuste puramente estructural: cero cambios de lógica, cero cambios de firma pública.
+**Paso 3 — Cotización cliente**
 
-### 3. Actualizar el test `eliminarConceptoFactura borra por id y recalcula`
-Reescribir el caso para reflejar el contrato actual (RPC soft-delete):
-- Espiar `supabase.rpc` y verificar que se llama con `("soft_delete_record", { _table: "conceptos_factura", _id: "c1" })`.
-- Verificar que después se dispara el recálculo (llamada a `facturas` con `update`), tal como hacen los otros tests del archivo.
-- No se toca lógica del servicio; sólo se alinea la prueba con el comportamiento post-Papelera.
+- Dos tarjetas separadas USD / MXN. Correcto conceptualmente, pero al agregar filas nuevas siempre hay que elegir moneda de nuevo → el flujo natural sería "agregar concepto" y que el sistema lo ponga en el bucket correcto.
+- Los warnings de "filas mixtas" son texto denso. Un usuario nuevo no entiende qué hacer.
+- Totales viven al pie de cada tabla + un bloque final. Redundante y confuso cuando hay muchas filas (el pie queda fuera de vista).
 
-### 4. Verificación
-- Ejecutar los 3 shards afectados: `bun run test:coverage:shard -- --shard=1/20`, `--shard=8/20`, `--shard=20/20`.
-- Confirmar que `OVERSIZED_BASELINE` sigue vacío (no la ampliamos).
-- No hace falta typecheck/build manual: los ejecuta el harness al mergear.
+**Paso 4 — Resumen**
 
-### 5. Changelog / versión
-- Bump `APP_VERSION` a `13.292.2`.
-- Entrada en `CHANGELOG.md`:
-  - fix(ci/tests): actualizado `conceptosFacturaCrud.test.ts` para el nuevo RPC `soft_delete_record` introducido en v13.290.0.
-  - refactor(arch): `Papelera.tsx` y `conceptosFacturaCrud.ts` divididos para respetar el límite Power of 10 (≤200 líneas).
+- Muestra P&L y datos de embarque, pero no un preview de cómo se verá la proforma para el cliente. El usuario "confía" que el output está bien.
+- No hay CTA claro post-guardado (¿enviar proforma? ¿duplicar? ¿crear embarque?). Se guarda y el usuario queda huérfano.
 
-## Notas técnicas
-- No se crean tablas ni migraciones.
-- No se cambia el contrato público de `eliminarConceptoFactura`; el fix es puramente de test + reorganización de archivos.
-- Los nombres de export públicos (`recalcularTotalesFactura`, `eliminarConceptoFactura`, etc.) se conservan mediante re-export desde `conceptosFacturaCrud.ts` para no propagar cambios de imports por la app.
+**Transversal**
+
+- No hay indicador de "autoguardado / borrador". Si el navegador se cierra, se pierde todo. Riesgo real con formularios de 15+ campos.
+- No hay skeleton al cargar catálogos (clientes, puertos, tarifas) → el select aparece vacío por 300-800ms.
+- Los toasts de error de validación son genéricos ("Completa los campos requeridos") en vez de saltar al primer campo inválido.
+- Mobile: el footer no es sticky en algunos viewports, cuesta llegar a "Siguiente".
+
+## Prioridades
+
+### P0 — Bloqueantes antes de anuncios de producción
+
+1. **Autoguardado de borrador** (localStorage con TTL 24h + banner "restaurar borrador"). El wizard es largo; perder captura mata la confianza.
+2. **Errores navegables**: al fallar validación, hacer scroll+focus al primer campo inválido y resaltar la sección. Reemplazar toast genérico.
+3. **CTA post-guardado**: al terminar el paso 4, abrir un dialog "¿Qué sigue?" con acciones: Enviar proforma, Duplicar cotización, Crear embarque, Volver al listado.
+4. **Rediseñar "Cotizar sin desglose"**: sacarlo del footer principal, moverlo a un menú "⋯ Más acciones" con confirmación explícita. Deja de competir visualmente con "Siguiente".
+
+### P1 — Alta prioridad (semana 1 post-lanzamiento)
+
+5. **P&L en vivo en Paso 2 y 3**: sticky pill con margen % y USD/MXN mientras se editan filas. Elimina el ida-y-vuelta al paso 4.
+6. **Preview de proforma en Paso 4**: iframe/dialog con render real (misma plantilla que se envía al cliente). Aumenta confianza dramáticamente.
+7. **Sidebar de progreso en tablet** (md+): usar drawer colapsable o breadcrumb pegajoso.
+8. **Atajos de teclado**: Enter = Siguiente, Shift+Enter = Anterior, Cmd/Ctrl+S = Guardar. Documentar en tooltip.
+9. **Indicador de fila heredada** en Paso 2: badge "Auto" gris a la izquierda de filas que vienen de tarifa; al editarlas cambian a "Editado".
+
+### P2 — Refinamiento visual/UX
+
+10. **Unificar botón "Agregar concepto"** en Paso 3: un solo botón con selector de moneda inline, o inferir moneda desde el catálogo SAT del concepto.
+11. **Warnings de filas mixtas**: reemplazar por chip inline en la fila afectada con acción "Mover a bucket MXN".
+12. **Totales flotantes**: reemplazar los 3 bloques de totales por una barra sticky inferior única con desglose expandible.
+13. **Skeletons** en selects de cliente, puerto, tarifa mientras cargan catálogos.
+14. **Footer sticky** garantizado en todos los viewports; agregar shadow al hacer scroll para separar del contenido.
+15. **Micro-copy**: cambiar "Cotización Cliente" → "Precio al cliente", "Costos & P&L" → "Tus costos". Lenguaje más directo para asesores nuevos.
+
+### P3 — Nice-to-have
+
+16. **Plantillas de cotización**: guardar combinaciones frecuentes (ej. "LCL Shanghai-Manzanillo estándar") y precargar en 1 click.
+17. **Comparador de tarifas** en Paso 1 marítimo: mostrar top 3 tarifas lado a lado en vez de una selección lineal (ya existe el ranking, exponerlo visualmente).
+18. **Historial de cambios** dentro del wizard para cotizaciones existentes (quién editó qué campo).
+19. **Modo compacto/experto**: toggle que colapsa descripciones y aumenta densidad para power users.
+
+## Recomendación
+
+**No lo dejaría como está.** Es un flujo diario y crítico para el negocio, y las fricciones P0 (pérdida de borrador, errores no navegables, CTA post-guardado ausente) se van a traducir en soporte y en cotizaciones perdidas. Con **P0 + P1 (≈4-5 días de trabajo)** el wizard queda a nivel producción de forwarder mexicano premium. P2/P3 se pueden iterar con feedback real de usuarios.
+
+## Notas técnicas (para el implementador)
+
+- El wizard vive en `CotizacionWizardLayout.tsx` (95 líneas) + `CotizacionWizardSteps.tsx` (99 líneas). Bien modularizado, cabe la mejora sin refactor mayor.
+- Autoguardado: usar `browserStorage` wrapper (ver `mem://technical/browser-storage`) con key `cotizacion:draft:{userId}` y expiración 24h. Hook `useDraftAutosave(formValues)` con debounce 800ms.
+- Errores navegables: `form.formState.errors` + `document.getElementById(seccion).scrollIntoView` + `setFocus(firstErrorField)`.
+- P&L en vivo: extraer `useTotalesPL` a un hook y montarlo en una `<StickyPLBar />` visible en Pasos 2-3.
+- Preview proforma: reutilizar el generador Remotion/PDF ya existente en `src/generators/cotizacion/` renderizado en modal.
+- CTA post-guardado: nuevo componente `<CotizacionSuccessDialog />` disparado por `handleGuardar` al resolver la mutación.
+- Bump `APP_VERSION` y CHANGELOG por cada fase (P0, P1, P2).
+
+## Siguiente paso propuesto
+
+Confirmar el alcance de P0 (los 4 puntos) y arrancar con ellos como fase 1. ¿Le entramos así, o prefieres que incluya P1 en la primera fase? vamos por fases
