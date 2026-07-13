@@ -134,5 +134,75 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
     await expect(
       act(async () => { await result.current.mutateAsync("plantilla-1"); })
     ).rejects.toBeTruthy();
+
+  it("useActualizarPlantilla envía patch y invalida la lista de la org", async () => {
+    state.insertData = null;
+    state.insertError = null;
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useActualizarPlantilla(), { wrapper: wrapper(qc) });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        id: "p1",
+        organizationId: "org-1",
+        nombre: "  Nuevo nombre  ",
+        descripcion: "",
+        visibilidad: "org",
+      });
+    });
+
+    expect(supabase.from).toHaveBeenCalledWith("cotizacion_plantillas");
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["cotizacion_plantillas", "org-1"] });
   });
+
+  it("useActualizarPlantilla no llama a Supabase si no hay campos que actualizar", async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { result } = renderHook(() => useActualizarPlantilla(), { wrapper: wrapper(qc) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ id: "p1", organizationId: "org-1" });
+    });
+
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it("useActualizarPlantilla propaga error de Supabase", async () => {
+    state.insertError = { message: "denegado" };
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { result } = renderHook(() => useActualizarPlantilla(), { wrapper: wrapper(qc) });
+
+    await expect(
+      act(async () => {
+        await result.current.mutateAsync({ id: "p1", organizationId: "org-1", nombre: "x" });
+      }),
+    ).rejects.toBeTruthy();
+  });
+
+  it("useEliminarPlantilla marca deleted_at e invalida la lista", async () => {
+    state.insertError = null;
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const spy = vi.spyOn(qc, "invalidateQueries");
+    const { result } = renderHook(() => useEliminarPlantilla(), { wrapper: wrapper(qc) });
+
+    await act(async () => {
+      await result.current.mutateAsync({ id: "p1", organizationId: "org-1" });
+    });
+
+    expect(supabase.from).toHaveBeenCalledWith("cotizacion_plantillas");
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["cotizacion_plantillas", "org-1"] });
+  });
+
+  it("useEliminarPlantilla propaga error de Supabase", async () => {
+    state.insertError = { message: "no permitido" };
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { result } = renderHook(() => useEliminarPlantilla(), { wrapper: wrapper(qc) });
+
+    await expect(
+      act(async () => {
+        await result.current.mutateAsync({ id: "p1", organizationId: "org-1" });
+      }),
+    ).rejects.toBeTruthy();
+  });
+});
 });
