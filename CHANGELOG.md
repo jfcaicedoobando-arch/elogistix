@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.296.1] - 2026-07-13
+- **test(cotización/wizard P2 — auditoría cierre)**: cobertura post-hoc para los componentes agregados en `13.296.0`.
+  - `useCotizacionPlantillas.test.tsx`: 5 tests nuevos para `useActualizarPlantilla` y `useEliminarPlantilla` (mock chain `.update().eq()` thenable). 11/11 pasan.
+  - `AgregarConceptoInline.test.tsx` (nuevo, 4 tests): validación de que el botón "Agregar" queda bloqueado hasta seleccionar producto, que se propagan moneda + `clave_sat` + `unidad_medida` + descripción del catálogo al confirmar, que el toggle USD/MXN cambia la divisa emitida y que `monedaFija` oculta el toggle.
+  - `GuardarPlantillaDialog.test.tsx` (nuevo, 3 tests): validación mínima de nombre (≥ 3 chars), payload limpio (sin folios/IDs/fechas/tarifa_snapshot) y visibilidad "org" correctamente serializada al insertar. Se exporta `limpiarValues` para poder testearlo directo.
+  - `PlantillaSelectorPaso1.test.tsx` (nuevo, 3 tests): no renderiza sin `organizationId`, colapsa cuando la lista viene vacía, y al aplicar plantilla llama `form.reset(values, { keepDefaultValues: true })` + `form.trigger()` + `onApplied()`.
+  - `CotizacionPlantillas.test.tsx` (nuevo, 3 tests): render de filas, filtro por visibilidad "sólo mías" y búsqueda por nombre.
+- **feat(cotización/plantillas — discovery)**: `CotizacionesPageActions` gana un botón secundario `Plantillas` (ícono `Sparkles`, `asChild` con `<Link>`) en desktop y una entrada equivalente dentro del `DropdownMenu` mobile — atajo para llegar a `/cotizaciones/plantillas` desde el listado principal, resolviendo el hallazgo de auditoría "página huérfana".
+
 ## [13.296.0] - 2026-07-13
 - **feat(cotización/wizard P2 — cierre)**: cierre de la Fase P2 (Plantillas) tras auditoría:
   1. **`GuardarPlantillaDialog` estandarizado**: refactor a `FormDialogShell` + `FormDialogSection` (icon-tile, secciones con `cols={1}`/`flat`, footer sticky) para cumplir la regla core de modales tipo formulario. Se elimina el `any` de `limpiarValues` tipando explícitamente los campos transitorios (folios, IDs, fechas) que se remueven del payload reutilizable.

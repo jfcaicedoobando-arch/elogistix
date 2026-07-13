@@ -1,4 +1,5 @@
-import { Plus, MoreHorizontal, Download } from "lucide-react";
+import { Plus, MoreHorizontal, Download, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,6 +21,11 @@ export function CotizacionesPageActions({
 }: CotizacionesPageActionsProps) {
   return (
     <>
+      <Button variant="outline" asChild className="hidden md:inline-flex">
+        <Link to="/cotizaciones/plantillas">
+          <Sparkles className="h-4 w-4 mr-2" /> Plantillas
+        </Link>
+      </Button>
       <Button variant="outline" onClick={onExportar} className="hidden sm:inline-flex">
         <Download className="h-4 w-4 mr-2" /> Exportar CSV
       </Button>
@@ -46,6 +52,11 @@ export function CotizacionesPageActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link to="/cotizaciones/plantillas">
+              <Sparkles className="mr-2 h-4 w-4" /> Plantillas
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={onExportar}>
             <Download className="mr-2 h-4 w-4" /> Exportar CSV
           </DropdownMenuItem>
@@ -54,3 +65,4 @@ export function CotizacionesPageActions({
     </>
   );
 }
+
