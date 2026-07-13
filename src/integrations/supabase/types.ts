@@ -7973,6 +7973,13 @@ export type Database = {
           organization_id: string
         }[]
       }
+      list_trash_counts: {
+        Args: never
+        Returns: {
+          tabla: string
+          total: number
+        }[]
+      }
       log_client_error_v1: {
         Args: {
           p_app_version?: string
