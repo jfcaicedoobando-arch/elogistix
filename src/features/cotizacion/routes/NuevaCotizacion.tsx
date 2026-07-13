@@ -124,7 +124,7 @@ export default function NuevaCotizacion() {
         values={w.form.getValues()}
       />
 
-      />
+
     </>
   );
 }
