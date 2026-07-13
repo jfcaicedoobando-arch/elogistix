@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.2] - 2026-07-13
+- **fix(auditoria)**: columna "Detalle" de la tabla ya no repite la lista de documentos. Cuando el hallazgo trae `documentos_faltantes`, sólo se muestra el prefijo del texto (p. ej. `"Documentos faltantes para estado Confirmado:"`) y los documentos aparecen únicamente como badges debajo.
+
 ## [13.288.1] - 2026-07-13
 - **fix(auditoria)**: `_docs_requeridos_por_estado` ya no exige Factura Comercial ni Packing List en estado `Confirmado`. Un embarque recién booked no tiene mercancía cargada, por lo que estos documentos no aplican todavía; se empiezan a exigir desde `En Tránsito`. Corrige el falso positivo reportado en el embarque 206 y en todos los embarques Confirmados, y desbloquea el avance Confirmado→En Tránsito cuando el candado de avance dependía de esos documentos.
 

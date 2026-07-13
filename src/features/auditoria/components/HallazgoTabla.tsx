@@ -61,12 +61,17 @@ export function HallazgoTabla({ hallazgos }: Props) {
     { id: "detalle", header: "Detalle", meta: { className: "text-sm" },
       cell: ({ row }) => {
         const h = row.original;
+        const tieneBadges = !!h.documentos_faltantes && h.documentos_faltantes.length > 0;
+        const idx = h.detalle.indexOf(":");
+        const textoDetalle = tieneBadges && idx > -1
+          ? h.detalle.slice(0, idx + 1)
+          : h.detalle;
         return (
           <>
-            <div>{h.detalle}</div>
-            {h.documentos_faltantes && h.documentos_faltantes.length > 0 && (
+            <div>{textoDetalle}</div>
+            {tieneBadges && (
               <div className="mt-1 flex flex-wrap gap-1">
-                {h.documentos_faltantes.map((doc) => (
+                {h.documentos_faltantes!.map((doc) => (
                   <Badge key={doc} variant="secondary" className="text-2xs font-normal">{doc}</Badge>
                 ))}
               </div>
