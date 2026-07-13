@@ -15,13 +15,19 @@ import {
 } from "@/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave";
 import { DraftRestoreBanner } from "@/features/cotizacion/components/wizard/DraftRestoreBanner";
 import { CotizacionSuccessDialog } from "@/features/cotizacion/components/wizard/CotizacionSuccessDialog";
+import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
+
 
 export default function NuevaCotizacion() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const { data: clientes = [] } = useClientesForSelect();
   const userId = user?.id ?? "";
+
+  // P2 (v13.295.0) — Guardar como plantilla desde el success dialog.
+  const [guardarPlantillaOpen, setGuardarPlantillaOpen] = useState(false);
+
 
   // P0 — Success dialog post-guardado.
   const [savedId, setSavedId] = useState<string | null>(null);
