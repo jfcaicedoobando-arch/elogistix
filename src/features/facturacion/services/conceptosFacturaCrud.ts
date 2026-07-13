@@ -1,6 +1,5 @@
 /**
- * CRUD de conceptos de una factura (tabla `conceptos_factura`) + recálculo
- * de totales de la factura padre. Se usa desde el editor de borrador.
+ * CRUD de conceptos de una factura (tabla `conceptos_factura`).
  *
  * Cada renglón lleva su propio régimen de IVA (`tipo_iva`):
  *   - `gravado_16` → tasa vigente (TASA_IVA global)
@@ -8,18 +7,19 @@
  *   - `exento`    → no aporta IVA (base gravable 0)
  *
  * Además puede llevar retenciones ISR / IVA por renglón (Ola 3 · Item 1).
- * El trigger BD recalcula `facturas.ret_isr`/`ret_iva` y ajusta `total`,
- * pero también reflejamos el cálculo aquí para mantener consistencia
- * inmediata sin depender exclusivamente del round-trip a BD.
+ * El recálculo agregado a `facturas` vive en `./recalcularTotalesFactura`.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { run, unwrapOr } from "@/lib/supabase/response";
+import { resolverTasa, type TipoIvaConcepto } from "./conceptosFacturaShared";
+import { recalcularTotalesFactura } from "./recalcularTotalesFactura";
+
+// Re-export para no romper call-sites externos que importan desde este archivo.
+export { recalcularTotalesFactura };
+export type { TipoIvaConcepto };
 
 type Moneda = Database["public"]["Enums"]["moneda"];
-
-export type TipoIvaConcepto = "gravado_16" | "tasa_0" | "exento";
 
 export interface ConceptoFacturaInput {
   descripcion: string;
@@ -52,12 +52,6 @@ export interface ConceptoFacturaRow {
   proforma_id_origen: string | null;
   /** Expediente del embarque origen (join). Null si el concepto no está ligado. */
   embarque_expediente: string | null;
-}
-
-function resolverTasa(tipo: TipoIvaConcepto): number | null {
-  if (tipo === "gravado_16") return TASA_IVA;
-  if (tipo === "tasa_0") return 0;
-  return null; // exento
 }
 
 function normalizarLinea(input: ConceptoFacturaInput) {
@@ -128,60 +122,6 @@ export async function eliminarConceptoFactura(params: {
   });
   if (error) throw error;
   await recalcularTotalesFactura(params.facturaId);
-}
-
-/**
- * Suma renglones vigentes y actualiza `subtotal`, `iva`, `ret_isr`, `ret_iva`
- * y `total` en `facturas`. El trigger BD ya hace lo mismo; esta función
- * mantiene la reconciliación inmediata para el cliente.
- */
-export async function recalcularTotalesFactura(facturaId: string): Promise<void> {
-  const data = await unwrapOr(
-    supabase
-      .from("conceptos_factura")
-      .select("cantidad, precio_unitario, tasa_iva_aplicada, tipo_iva, tasa_ret_isr, tasa_ret_iva")
-      .eq("factura_id", facturaId)
-      .is("deleted_at", null),
-    [],
-  );
-
-  let subtotal = 0;
-  let iva = 0;
-  let retIsr = 0;
-  let retIva = 0;
-  for (const c of data) {
-    const importe = Number(c.cantidad) * Number(c.precio_unitario);
-    subtotal += importe;
-    let tasa: number;
-    if (c.tasa_iva_aplicada != null) {
-      tasa = Number(c.tasa_iva_aplicada);
-    } else {
-      const tipo = c.tipo_iva as TipoIvaConcepto | null | undefined;
-      tasa = tipo ? (resolverTasa(tipo) ?? 0) : 0;
-    }
-    iva += importe * tasa;
-    retIsr += importe * Number(c.tasa_ret_isr ?? 0);
-    retIva += importe * Number(c.tasa_ret_iva ?? 0);
-  }
-  const r = (n: number) => Math.round(n * 100) / 100;
-  const subtotalR = r(subtotal);
-  const ivaR = r(iva);
-  const retIsrR = r(retIsr);
-  const retIvaR = r(retIva);
-  const totalR = r(subtotalR + ivaR - retIsrR - retIvaR);
-
-  await run(
-    supabase
-      .from("facturas")
-      .update({
-        subtotal: subtotalR,
-        iva: ivaR,
-        ret_isr: retIsrR,
-        ret_iva: retIvaR,
-        total: totalR,
-      })
-      .eq("id", facturaId),
-  );
 }
 
 export async function fetchConceptosFactura(facturaId: string): Promise<ConceptoFacturaRow[]> {
