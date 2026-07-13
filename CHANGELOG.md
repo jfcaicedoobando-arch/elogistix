@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.298.2] - 2026-07-13
+- **fix(estado de cuenta)**: la consulta a `facturas` en `fetchEstadoCuenta` fallaba con HTTP 400 (`column pagos_factura_1.monto_no_aplicado does not exist`), lo que dejaba KPIs y tabla en cero para clientes con facturas reales (reportado en el portal de INDIMEX TRADING). Se corrigió el `select()` embebido: `pagos_factura` ahora pide `monto` en lugar del inexistente `monto_no_aplicado`, y `factura_notas_credito` deja de pedir `monto_aplicado` / `saldo_disponible`. El "no aplicado" (anticipo) se deriva en JS como `max(0, monto − monto_aplicado_factura)`. Contrato público `FacturaEstadoCuenta` / `PagoDetalle` sin cambios.
+
 ## [13.298.1] - 2026-07-13
 - **fix(cliente detalle)**: el botón "Estado de cuenta" en la ficha del cliente ahora navega al módulo nuevo (`/clientes/:clienteId/estado-de-cuenta`) en lugar de disparar el PDF legacy que abría el diálogo de impresión del navegador. Se removieron los imports de `generarEstadoCuentaPdf` y utilidades de toast asociadas en `ClienteDetalleHeader.tsx`.
 
