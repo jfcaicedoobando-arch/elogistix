@@ -92,7 +92,13 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     form.setValue("tipoPeso", "Peso Normal", opts);
     form.setValue("dimensionesLCL", [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }], opts);
     form.setValue("tipoCarga", "Carga General", opts);
-    void form.trigger(["tipoEmbarque", "tipoContenedor", "tipoPeso", "dimensionesLCL", "tipoCarga"]);
+    // v13.299.1: al pasar a LCL se elimina la tarifa marítima vinculada
+    // (LCL captura flete manual). Evita estado huérfano heredado de FCL.
+    if (nuevoTipo === "LCL") {
+      form.setValue("tarifaId", null, opts);
+      form.setValue("tarifaOverride", {}, opts);
+    }
+    void form.trigger(["tipoEmbarque", "tipoContenedor", "tipoPeso", "dimensionesLCL", "tipoCarga", "tarifaId"]);
     setMsdsFile(null);
   }, [form]);
 
