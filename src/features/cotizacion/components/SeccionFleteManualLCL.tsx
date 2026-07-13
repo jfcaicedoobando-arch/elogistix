@@ -50,7 +50,6 @@ export default function SeccionFleteManualLCL({ complete }: Props = {}) {
   return (
     <WizardSection
       title="Flete LCL (captura manual)"
-      icon={<Package className="size-4 text-primary" />}
       complete={complete}
     >
       <div className="space-y-4">
