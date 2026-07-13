@@ -3,7 +3,7 @@
  * Presenta al usuario 4 acciones claras después de crear/actualizar una
  * cotización, en vez de dejarlo huérfano en la pantalla de detalle.
  */
-import { CheckCircle2, Send, Copy, Truck, List } from "lucide-react";
+import { CheckCircle2, Send, Copy, Truck, List, BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +22,10 @@ interface Props {
   onCrearEmbarque: () => void;
   onIrAlListado: () => void;
   onVerDetalle: () => void;
+  /** P2 (v13.295.0) — opcional; si se pasa, muestra "Guardar como plantilla". */
+  onGuardarComoPlantilla?: () => void;
 }
+
 
 export function CotizacionSuccessDialog({
   open, onOpenChange, folio,
