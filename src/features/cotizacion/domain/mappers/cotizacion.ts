@@ -6,6 +6,18 @@ import type { CotizacionFormValues } from '@/features/cotizacion/types';
  * Función pura sin dependencias de React.
  */
 
+/**
+ * Normaliza a `YYYY-MM-DD`. Acepta `Date` o string ISO — el draft autosave
+ * pasa por `JSON.stringify`, así que al rehidratar un borrador guardado en
+ * localStorage los `Date` llegan como string. Defensivo en el boundary.
+ */
+function toIsoDateString(v: unknown): string | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v as string);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().split("T")[0];
+}
+
 interface PesoVolumen { peso: number; volumen: number; piezas: number }
 
 function calcularPesoVolumenPiezas(v: CotizacionFormValues): PesoVolumen {
@@ -31,9 +43,16 @@ function calcularPesoVolumenPiezas(v: CotizacionFormValues): PesoVolumen {
   return { peso: v.pesoKg, volumen: v.volumenM3, piezas: v.piezas };
 }
 
+function coerceDate(v: unknown): Date | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v as string);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 function vigenciaDias(validez?: Date): number {
-  if (!validez) return 15;
-  return Math.max(1, Math.ceil((validez.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  const d = coerceDate(validez);
+  if (!d) return 15;
+  return Math.max(1, Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 }
 
 function partesCliente(v: CotizacionFormValues, clientes: { id: string; nombre: string }[]) {
@@ -85,7 +104,7 @@ function partesRuta(v: CotizacionFormValues) {
     tiempo_transito_dias: v.tiempoTransitoDias ?? null,
     frecuencia: v.frecuencia,
     ruta_texto: v.rutaTexto,
-    validez_propuesta: v.validezPropuesta ? v.validezPropuesta.toISOString().split('T')[0] : null,
+    validez_propuesta: toIsoDateString(v.validezPropuesta),
     tipo_movimiento: esTerrestre ? "" : v.tipoMovimiento,
     seguro: v.seguro,
     valor_seguro_usd: v.seguro ? Number(v.valorSeguroUsd) || 0 : 0,

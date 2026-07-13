@@ -25,6 +25,21 @@ interface StoredDraft {
   values: CotizacionFormValues;
 }
 
+/** Campos `Date` del form que se pierden al pasar por JSON.stringify. */
+const DATE_FIELDS: readonly (keyof CotizacionFormValues)[] = ["validezPropuesta"];
+
+function reviveDateFields(values: CotizacionFormValues): void {
+  const bag = values as unknown as Record<string, unknown>;
+  for (const key of DATE_FIELDS) {
+    const raw = bag[key as string];
+    if (typeof raw === "string") {
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime())) bag[key as string] = d;
+    }
+  }
+}
+
+
 export function loadDraft(userId: string): StoredDraft | null {
   const raw = safeLocalStorage.getItem(draftKey(userId));
   if (!raw) return null;
@@ -44,6 +59,9 @@ export function loadDraft(userId: string): StoredDraft | null {
       safeLocalStorage.removeItem(draftKey(userId));
       return null;
     }
+    // JSON.stringify convierte Date → string ISO; revivimos los campos Date
+    // conocidos del form para que RHF y los mappers reciban `Date` reales.
+    reviveDateFields(parsed.values);
     return parsed;
   } catch {
     return null;

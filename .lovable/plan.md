@@ -1,46 +1,35 @@
-## Errores de CI a resolver
+## Problema
 
-Los logs muestran que el pipeline falla en **lint**, **arquitectura** y **auditoría** por archivos que introduje en los últimos sprints (estado de cuenta, plantillas/versiones de cotización y utilidades LCL). Los fallos son:
+`buildPaso1Data → partesRuta` llama `v.validezPropuesta.toISOString()`, pero `validezPropuesta` en tiempo de ejecución es un **string**, no un `Date`. El tipo dice `Date | undefined`, así que TS no lo detecta.
 
-1. **Lint (2 errores)**
-   - `EstadoCuentaTable.tsx` importa `@/components/ui/table` (regla `no-raw-table`).
-   - `useEstadoCuenta.ts` define `queryKey` inline (regla `inline-query-keys`).
-2. **Test `no-raw-table`** — mismo archivo que arriba, sin entrada en `ALLOWLIST`.
-3. **Test `error-toasts-use-notifyError`** — 5 archivos de cotización llaman `toast.error(...)` directo en lugar de `notifyError(...)`:
-   `useCotizacionVersiones.ts`, `CotizacionPlantillas.tsx`, `EditarPlantillaDialog.tsx`, `GuardarPlantillaDialog.tsx`, `PlantillaSelectorPaso1.tsx`.
-4. **Test `safe-casts-services` (auditoría global)** — 1 cast HIGH en `src/features/facturacion/estadoCuenta/services/estadoCuenta.ts:134` (`as unknown as RawFactura[]` sin marcador `// SAFE-CAST:`).
-5. **Test `audit-report → test hygiene`** — 4 violaciones:
-   - 3× `.rejects.toBeTruthy()` en `useCotizacionPlantillas.test.tsx` (líneas 136, 181, 207) — regla `weak-rejects-assertion` pide `.rejects.toThrow(...)`.
-   - 1× título `"redondea a 2 decimales"` duplicado entre `calcularWMLcl.test.ts:49` y `pnlPorContenedor.helpers.test.ts:11` — regla `duplicate-title`.
-6. **Warnings de complejidad (no bloquean, pero conviene bajar)** — `buildPaso1Data` (17) y `partesExtras` (20).
+## Causa raíz
 
-## Plan de corrección
+El draft del wizard se persiste en `localStorage` vía `useCotizacionDraftAutosave` (`JSON.stringify(values)`). Al pasar por JSON, `Date` → string ISO. Al recargar la página, `loadDraft` devuelve el objeto tal cual y `form.reset(draft.values)` mete un string en `validezPropuesta`. Al guardar el Paso 1, el mapper explota.
 
-### A. Estado de Cuenta (2 errores lint + 1 test)
-- **`useEstadoCuenta.ts`**: extraer un builder de queryKey a `src/features/facturacion/queryKeys.ts` (`estadoCuenta.list(filters)`) y consumirlo.
-- **`EstadoCuentaTable.tsx`**: agregarlo a la `ALLOWLIST` de `src/__tests__/architecture/no-raw-table.test.ts` **y** al bloque `no-raw-table` de `eslint.config.js` con comentario "sub-rows expandibles no soportadas por DataTable". Es la salida legítima que ya usan otras tablas con render row complejo.
-- **`estadoCuenta.ts:134`**: agregar comentario `// SAFE-CAST:` explicando que la RPC devuelve el shape que valida el mapper. Deja el cast en LOW.
+Analogía: guardaste la fecha en una postal (JSON) y al llegar sólo tienes el texto de la fecha impreso; ya no es un reloj con manecillas (`Date`) al que puedas pedirle "dame tu ISO".
 
-### B. Toasts de cotización (1 test)
-Reemplazar `toast.error(...)` por `notifyError(toast, { title, description, error, method })` en:
-- `src/features/cotizacion/hooks/useCotizacionVersiones.ts`
-- `src/features/cotizacion/routes/CotizacionPlantillas.tsx`
-- `src/features/cotizacion/components/plantillas/EditarPlantillaDialog.tsx`
-- `src/features/cotizacion/components/wizard/GuardarPlantillaDialog.tsx`
-- `src/features/cotizacion/components/wizard/PlantillaSelectorPaso1.tsx`
+## Fix propuesto
 
-### C. Higiene de tests (1 test)
-- En `useCotizacionPlantillas.test.tsx` (líneas 136, 181, 207): cambiar `.rejects.toBeTruthy()` por `.rejects.toThrow(/mensaje esperado/)`.
-- En `src/features/cotizacion/utils/__tests__/calcularWMLcl.test.ts:49`: renombrar el `it("redondea a 2 decimales", …)` a un título único (ej. `"redondea W/M a 2 decimales"`) para eliminar la colisión con el test de PnL.
+Dos capas — defensa y origen — para que no vuelva a pasar:
 
-### D. Complejidad (warnings)
-- `partesExtras` (`cotizacionForm.ts`) y `buildPaso1Data` (`cotizacion.ts`): extraer 1-2 sub-helpers puros (por ejemplo `buildLclManualPart` y `buildFinancieraPart`) para bajar el ciclomático bajo 16. Sin cambio de comportamiento.
+1. **`domain/mappers/cotizacion.ts` — defensivo en el boundary**
+   Normalizar `validezPropuesta` con un helper local `toDate(x)`:
+   - `Date` válida → misma
+   - `string` → `new Date(string)` (si NaN → null)
+   - otro → null
+   Reemplazar la línea 88 para usar el helper y evitar el crash.
 
-### E. Versionado
-- Bump `APP_VERSION` a `13.299.5`.
-- Entrada en `CHANGELOG.md` describiendo el fix de CI (analogía: "el mecánico pasó por todas las revisiones que reprobaron y aprobó").
+2. **`hooks/wizard/useCotizacionDraftAutosave.ts` — revivir Date al cargar**
+   En `loadDraft`, después de validar el shape, revivir campos `Date` conocidos del draft (`values.validezPropuesta`, y por precaución `values.tarifaHasta` si existiera en el estado). Función `reviveDates(values)` que convierte strings ISO en `Date`.
 
-## Fuera de alcance
+## Archivos a modificar
 
-- No se cambia funcionalidad de estado de cuenta, plantillas ni wizard LCL.
-- No se toca la infraestructura de tests ni las reglas de lint (solo se pobla la allowlist ya prevista para tablas con sub-filas).
+- `src/features/cotizacion/domain/mappers/cotizacion.ts` — helper `toDate` + usarlo en línea 88.
+- `src/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave.ts` — revivir `validezPropuesta` (y otros campos Date del form) al cargar.
+- `src/features/cotizacion/domain/mappers/__tests__/cotizacion.test.ts` — un test que pase un string ISO en `validezPropuesta` y verifique que `buildPaso1Data` no truena y produce el `validez_propuesta` correcto.
+- `CHANGELOG.md` + `APP_VERSION` → `13.299.6`.
+
+## Verificación
+
+- `bunx vitest run src/features/cotizacion/domain/mappers/__tests__/cotizacion.test.ts`
+- Recargar `/cotizaciones/nueva` con un draft persistido y avanzar Paso 1.
