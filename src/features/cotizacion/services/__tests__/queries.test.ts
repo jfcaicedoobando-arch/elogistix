@@ -83,7 +83,14 @@ describe("services/cotizacion/queries", () => {
   it("fetchCotizacionById devuelve cotización", async () => {
     mock.setTableResult("cotizaciones", { data: { id: "c1", folio: "X" }, error: null });
     const r = await fetchCotizacionById("c1");
-    expect(r.id).toBe("c1");
+    expect(r?.id).toBe("c1");
+  });
+
+  it("fetchCotizacionById devuelve null cuando no existe (PGRST116)", async () => {
+    // 13.297.1 — .maybeSingle() no lanza en 0 rows; devuelve null.
+    mock.setTableResult("cotizaciones", { data: null, error: null });
+    const r = await fetchCotizacionById("c1");
+    expect(r).toBeNull();
   });
 
   it("fetchCotizacionById propaga error", async () => {
