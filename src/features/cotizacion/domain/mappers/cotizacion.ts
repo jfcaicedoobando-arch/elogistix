@@ -12,7 +12,9 @@ function calcularPesoVolumenPiezas(v: CotizacionFormValues): PesoVolumen {
   if (v.modo === "Marítimo") {
     if (v.tipoEmbarque === "LCL") {
       return {
-        peso: 0,
+        // v13.299.0: LCL persiste peso total capturado (antes se guardaba 0),
+        // necesario para calcular W/M al reabrir la cotización.
+        peso: Number(v.pesoKg) || 0,
         volumen: v.dimensionesLCL.reduce((s, d) => s + d.volumen_m3, 0),
         piezas: v.dimensionesLCL.reduce((s, d) => s + d.piezas, 0),
       };
