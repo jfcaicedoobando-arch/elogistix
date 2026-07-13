@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.292.0] - 2026-07-13
+- **feat(cotización/paso 2 unificado con catálogo SAT)**: el paso 2 del wizard ya no usa listas hardcodeadas (`CONCEPTOS_COSTO_USD/MXN`) ni un select de unidades libre. Ahora reutiliza `ProductoServicioSelect` (mismo componente del paso 3, con búsqueda contra `catalogo_claves_sat`) y `UnidadMedidaSelect`. Al elegir un producto, la fila hereda `clave_sat`, `tipo_iva → aplica_iva`, `tasa_iva_aplicada` y `clave_unidad_sat` (si la fila aún no tenía unidad). El tipo `FilaCostoLocal` gana los campos opcionales `clave_sat` y `tasa_iva_aplicada`; `buildConceptosFromCostos` respeta la tasa del catálogo cuando existe (0.16 / 0 / exento) y cae al comportamiento legacy (`CONCEPTOS_CON_IVA_USD` + IVA general MXN) cuando la fila no trae metadata. Beneficio: al pasar a paso 3, los conceptos ya llegan con la clave SAT y el tipo de IVA correctos — se elimina la doble captura y la desincronización paso 2 ↔ paso 3.
+
 ## [13.291.0] - 2026-07-13
+
 - **fix(cotización/wizard LCL)**: el paso 2 → paso 3 no propagaba los costos como conceptos de venta cuando la cotización era LCL o cuando el usuario regresaba a editar costos. Causas: (1) el guard `costosPreLlenados` era una sola vez, así que edits posteriores se perdían; (2) el helper `buildCostosDesdeTarifa` estaba clavado en unidad `contenedor` (FCL) y (3) el wizard permitía avanzar aunque `costosInternos` estuviera vacío por una race condition con la precarga. Solución: (a) `useCotizacionWizardSteps` ahora usa una firma (hash) de `costosInternos` y regenera conceptos siempre que cambien, con un `useRef` interno; (b) `buildCostosDesdeTarifa` recibe `tipoEmbarque` — en LCL usa `m³` y label "Flete marítimo LCL"; (c) el paso 2 bloquea el avance con toast si no hay costos; (d) `SeccionCostosInternosPLLocal` muestra aviso ámbar cuando la tarifa vinculada es FCL pero la cotización es LCL. Incluye backfill de `conceptos_venta` para `COT-2026-0123` reconstruidos desde `cotizacion_costos`. Tests nuevos: regresión de propagación LCL y de re-sincronización tras edición.
 
 ## [13.290.2] - 2026-07-13
