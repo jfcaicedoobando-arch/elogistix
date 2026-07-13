@@ -24,7 +24,7 @@ vi.mock("@/features/cotizacion/components/conceptos/ProductoServicioSelect", () 
           id: "sat-1",
           nombre: "Flete marítimo",
           nombre_unidad: "SER",
-          tipo_iva: "iva_16",
+          tipo_iva: "gravado_16",
         })
       }
       data-testid="mock-sat-select"
