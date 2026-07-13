@@ -6,6 +6,7 @@
  */
 import { useState } from "react";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -56,8 +57,10 @@ export function PlantillaSelectorPaso1({ organizationId, form, onApplied }: Prop
       toast.success(`Plantilla "${nombre}" aplicada`);
       onApplied?.();
     } catch (err) {
-      toast.error("No se pudo aplicar la plantilla", {
-        description: err instanceof Error ? err.message : undefined,
+      notifyError(undefined, {
+        title: "No se pudo aplicar la plantilla",
+        error: err,
+        method: "PlantillaSelectorPaso1.aplicar",
       });
     }
   };

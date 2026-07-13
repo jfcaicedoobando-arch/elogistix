@@ -133,7 +133,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
     const { result } = renderHook(() => useAplicarPlantilla(), { wrapper: wrapper(qc) });
     await expect(
       act(async () => { await result.current.mutateAsync("plantilla-1"); })
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/Sin acceso/);
   });
 
 
@@ -178,7 +178,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
       act(async () => {
         await result.current.mutateAsync({ id: "p1", organizationId: "org-1", nombre: "x" });
       }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/denegado/);
   });
 
   it("useEliminarPlantilla marca deleted_at e invalida la lista", async () => {
@@ -204,7 +204,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
       act(async () => {
         await result.current.mutateAsync({ id: "p1", organizationId: "org-1" });
       }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/no permitido/);
   });
 });
 

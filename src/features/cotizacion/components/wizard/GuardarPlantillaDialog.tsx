@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { BookmarkPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,8 +61,10 @@ export function GuardarPlantillaDialog({
       onSaved?.();
       handleClose(false);
     } catch (err) {
-      toast.error("No se pudo guardar la plantilla", {
-        description: err instanceof Error ? err.message : undefined,
+      notifyError(undefined, {
+        title: "No se pudo guardar la plantilla",
+        error: err,
+        method: "GuardarPlantillaDialog.submit",
       });
     }
   };

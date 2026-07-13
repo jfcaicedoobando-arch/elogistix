@@ -447,6 +447,9 @@ export default tseslint.config(
       "src/features/embarques/components/tabResumen/EmbarquesRelacionadosCard.tsx",
       "src/features/embarques/components/pnl/PnlProveedoresTable.tsx",
       "src/features/embarques/components/pnl/PnlComparativaTable.tsx",
+      // Estado de cuenta: filas expandibles con sub-rows (pagos + notas de crédito),
+      // patrón no soportado nativamente por DataTable.
+      "src/features/facturacion/estadoCuenta/components/EstadoCuentaTable.tsx",
       // Catálogos con toggles inline por fila (patrón switch-per-row).
       "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
       "src/features/configuracion/components/CatalogoClavesSATCard.parts.tsx",

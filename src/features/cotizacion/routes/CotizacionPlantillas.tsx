@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Sparkles } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -56,8 +57,10 @@ export default function CotizacionPlantillas() {
       toast.success("Plantilla eliminada");
       setAEliminar(null);
     } catch (err) {
-      toast.error("No se pudo eliminar", {
-        description: err instanceof Error ? err.message : undefined,
+      notifyError(undefined, {
+        title: "No se pudo eliminar",
+        error: err,
+        method: "CotizacionPlantillas.eliminar",
       });
     }
   };

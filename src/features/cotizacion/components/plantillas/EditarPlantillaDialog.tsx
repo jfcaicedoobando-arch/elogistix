@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,8 +47,10 @@ export function EditarPlantillaDialog({ plantilla, organizationId, open, onOpenC
       toast.success("Plantilla actualizada");
       onOpenChange(false);
     } catch (err) {
-      toast.error("No se pudo actualizar", {
-        description: err instanceof Error ? err.message : undefined,
+      notifyError(undefined, {
+        title: "No se pudo actualizar",
+        error: err,
+        method: "EditarPlantillaDialog.submit",
       });
     }
   };

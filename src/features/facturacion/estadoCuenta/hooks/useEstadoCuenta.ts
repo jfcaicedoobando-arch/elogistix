@@ -6,17 +6,11 @@ import {
   type FacturaEstadoCuenta,
 } from "../services/estadoCuenta";
 import { calcularKpisEstadoCuenta } from "../services/estadoCuentaAggregates";
+import { estadoCuenta as estadoCuentaKeys } from "@/features/facturacion/queryKeys";
 
 export function useEstadoCuenta(filters: EstadoCuentaFilters) {
   const query = useQuery({
-    queryKey: [
-      "estado-cuenta",
-      [...filters.clienteIds].sort(),
-      filters.desde ?? null,
-      filters.hasta ?? null,
-      filters.moneda ?? "todas",
-      filters.soloConSaldo ?? false,
-    ],
+    queryKey: estadoCuentaKeys.list(filters),
     queryFn: () => fetchEstadoCuenta(filters),
     enabled: filters.clienteIds.length > 0,
     staleTime: 30_000,
