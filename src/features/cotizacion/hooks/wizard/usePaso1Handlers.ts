@@ -44,7 +44,7 @@ export function usePaso1Handlers({
   const handlePaso1 = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); return; }
+    if (err) { notifyError(toast, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
     const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
@@ -71,7 +71,7 @@ export function usePaso1Handlers({
   const handleCotizarSinDesglose = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); return; }
+    if (err) { notifyError(toast, { title: err }); scrollAndFocusSection(seccionParaErrorPaso1(err)); return; }
     form.setValue("sinDesgloseCostos", true, { shouldDirty: true });
     const esNueva = !cotizacionId;
     try {
