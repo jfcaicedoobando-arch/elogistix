@@ -126,6 +126,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   tarifaId: null,
   tarifaOverride: {},
   sinDesgloseCostos: false,
+  lclFleteManual: DEFAULT_LCL_FLETE_MANUAL,
 };
 
 export interface CotizacionInitialData {
