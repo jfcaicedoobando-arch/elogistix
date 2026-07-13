@@ -40,13 +40,15 @@ interface HookDeps {
   mutations: Mutations;
   initialData?: CotizacionInitialData;
   initialCostos?: CotizacionInitialCosto[];
+  /** v13.293.0 (P0): callback opcional para mostrar success dialog en vez de navegar. */
+  onFinalized?: (cotizacionId: string) => void;
 }
 
 /**
  * Orquestador del wizard de cotización.
  * Combina form-state + cálculos + handlers de pasos (delegados a useCotizacionWizardSteps).
  */
-export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos }: HookDeps) {
+export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos, onFinalized }: HookDeps) {
   const { crearCotizacion, updateCotizacion, upsertCostos } = mutations;
   const isEditMode = !!initialData;
 
