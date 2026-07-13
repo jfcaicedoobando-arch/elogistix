@@ -10,6 +10,7 @@ import SeccionMercanciaMaritimaLCL from "@/features/cotizacion/components/Seccio
 import SeccionMercanciaGeneral from "@/features/cotizacion/components/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/features/cotizacion/components/SeccionMercanciaAerea";
 import TarifaVinculadaPanel from "@/features/cotizacion/components/TarifaVinculadaPanel";
+import SeccionFleteManualLCL from "@/features/cotizacion/components/SeccionFleteManualLCL";
 import SeccionCondicionesComerciales from "@/features/cotizacion/components/SeccionCondicionesComerciales";
 import AvisoIncotermCIF from "@/features/cotizacion/components/wizard/AvisoIncotermCIF";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
