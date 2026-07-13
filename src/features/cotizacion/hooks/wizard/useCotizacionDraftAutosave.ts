@@ -44,6 +44,9 @@ export function loadDraft(userId: string): StoredDraft | null {
       safeLocalStorage.removeItem(draftKey(userId));
       return null;
     }
+    // JSON.stringify convierte Date → string ISO; revivimos los campos Date
+    // conocidos del form para que RHF y los mappers reciban `Date` reales.
+    reviveDateFields(parsed.values);
     return parsed;
   } catch {
     return null;
