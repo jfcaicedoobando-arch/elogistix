@@ -1,18 +1,27 @@
 ## Problema
-En "Condiciones comerciales" del wizard de cotización, el `Popover` de "Validez de la propuesta" no se cierra al elegir fecha en el calendario. Radix `Popover` no cierra automáticamente al hacer click dentro de su contenido; hay que controlarlo.
 
-## Solución
-Convertir el `Popover` en controlado con `useState<boolean>` local (`openValidez`) en `SeccionCondicionesComerciales.tsx` y cerrarlo dentro del `onSelect` del `Calendar` después de guardar la fecha en RHF.
+En v13.299.1 quitamos el panel "Tarifa marítima vinculada" para LCL y agregamos flete manual, pero el validador del Paso 1 (`validateMaritimo` en `handlePaso1Crm.ts`) sigue exigiendo `tarifaId` para todo modo Marítimo. Por eso el wizard bloquea con:
 
-## Cambio puntual
-- `src/features/cotizacion/components/SeccionCondicionesComerciales.tsx`:
-  - Añadir `const [openValidez, setOpenValidez] = useState(false)`.
-  - `<Popover open={openValidez} onOpenChange={setOpenValidez}>`.
-  - En `Calendar onSelect`: setear el valor con `setValue(..., { shouldValidate, shouldDirty })` y luego `setOpenValidez(false)` (sólo si `d` está definida).
-- Bump `APP_VERSION` a `13.299.3` + entrada en `CHANGELOG.md`.
+> "Vincula o crea una tarifa marítima antes de continuar (Paso 1 → Tarifa marítima vinculada)."
 
-## Fuera de alcance
-Otros date pickers del proyecto (sólo se toca el de validez de propuesta que reportó el usuario).
+## Cambio propuesto
+
+Un único archivo: `src/features/cotizacion/hooks/wizard/handlePaso1Crm.ts`
+
+En `validateMaritimo(v)`:
+- Si `v.tipoEmbarque === "LCL"`, no exigir tarifa vinculada. En su lugar, validar que el flete manual esté capturado:
+  - `v.lclFleteManual.tarifaWM > 0`
+  - `v.lclFleteManual.consolidadorProveedorId` no vacío
+- Si falta algo, devolver mensaje claro: *"Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar."*
+- Si está completo, devolver `null` (permite avanzar).
+- FCL sigue igual: requiere `tarifaId` salvo Incoterm sin flete de venta.
+
+También bump `APP_VERSION` a `13.299.4` y una línea en `CHANGELOG.md`.
 
 ## Analogía
-El calendario es como un cajón: hoy metes el papel y lo dejas abierto; el fix es cerrarlo automáticamente al soltar el papel.
+
+Antes el guardia de la puerta pedía "boleto de tarifa" a todos los marítimos. Ahora los LCL entran con "recibo de flete manual" (W/M + consolidador); los FCL siguen mostrando su boleto de tarifa.
+
+## Fuera de alcance
+
+No se toca UI ni otros pasos; sólo la regla de validación del Paso 1.

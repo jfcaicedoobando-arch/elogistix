@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.4] - 2026-07-13
+- **fix(cotización LCL · avance de paso 1)**: el wizard bloqueaba el paso a "Vincula o crea una tarifa marítima…" aunque el embarque fuera LCL (que ya no usa tarifa vinculada). `validateMaritimo` ahora, cuando `tipoEmbarque === "LCL"`, valida el flete manual (`tarifaWM > 0` + `consolidadorId`) en lugar de exigir `tarifaId`. FCL conserva la validación previa. Analogía: el guardia ya no le pide "boleto de tarifa" al LCL; le pide su "recibo de flete manual" (W/M + consolidador).
+
 ## [13.299.3] - 2026-07-13
 - **fix(cotización · validez de propuesta)**: el popover del calendario "Validez de la propuesta" no se cerraba al elegir fecha. Ahora es controlado (`useState`) y se cierra automáticamente al seleccionar un día. Analogía: el cajón ya se cierra solo al soltar el papel.
 
