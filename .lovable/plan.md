@@ -1,68 +1,133 @@
-# Fix CI — logs `79259840118` (build v13.297.3)
+# Estado de Cuenta — Portal cliente + ERP interno (v13.298.0)
 
-Tres jobs rojos (quality + tests + coverage), todos por regresiones dejadas por las fases P2/P3 de plantillas/versiones y por el `--max-warnings 0` del lint.
+Nuevo módulo de "Estado de Cuenta" con KPIs, tabla de facturas colapsables (pagos + notas de crédito anidados), filtros de rango de fecha y flag "sólo con saldo", montado en **dos rutas espejo** que comparten un único componente `<EstadoCuentaModule>`.
 
-## Diagnóstico
+## Rutas
 
-### 1. `Tests` (shard 13/20) — arquitectura
-- `hooks y contexts no importan @/integrations/supabase/client directamente` falla por:
-  - `src/features/cotizacion/hooks/useCotizacionPlantillas.ts`
-  - `src/features/cotizacion/hooks/useCotizacionVersiones.ts`
-- `no hay 'as unknown as' sin marcador SAFE-CAST fuera de src/lib y src/test` falla por:
-  - `useCotizacionVersiones.ts:40` y `:64` (el comentario SAFE-CAST está separado por código).
+- `/portal/estado-de-cuenta` — cliente autenticado, resuelve `cliente_id`s vía `usePortalClientUsers()`.
+- `/facturacion/clientes/:clienteId/estado-de-cuenta` — cobranza interna, un cliente específico. Enlace añadido desde `ClienteDetalle` y `BandejaVencidas`.
 
-### 2. `Lint` — `--max-warnings 0` (10 warnings)
-- `react-refresh/only-export-components` en `HallazgoDetalleCell.tsx:38` (export de `getHallazgoDetalleParts` conviviendo con el componente) y `GuardarPlantillaDialog.tsx:41` (export de `limpiarValues` + `CAMPOS_TRANSITORIOS`).
-- 7 `Unused eslint-disable directive` en 3 tests (`GuardarPlantillaDialog.test.tsx`, `PlantillaSelectorPaso1.test.tsx`, `useCotizacionDraftAutosave.test.tsx`).
-- `max-lines` en `src/features/cotizacion/routes/CotizacionPlantillas.tsx` (321 líneas / máx 250).
+## Arquitectura de componentes
 
-### 3. `Coverage merge & report` — cae en cascada porque el shard 13 no emite el blob esperado. Se arregla solo al reparar los tests.
+```text
+features/facturacion/estadoCuenta/
+├── routes/
+│   └── EstadoCuentaInterno.tsx        (page, ~80 líneas)
+├── components/
+│   ├── EstadoCuentaModule.tsx         (shell reutilizado por ambas rutas, ~120 líneas)
+│   ├── EstadoCuentaKpiCards.tsx       (3 KpiCard: adeudado, vencido, a favor)
+│   ├── EstadoCuentaFilters.tsx        (rango + toggle "sólo con saldo")
+│   ├── EstadoCuentaTable.tsx          (DataTable con filas expandibles)
+│   ├── EstadoCuentaRowExpanded.tsx    (detalle pagos + notas de una factura)
+│   └── ExportActions.tsx              (placeholder disabled, listo para PDF/XLSX)
+├── hooks/
+│   ├── useEstadoCuenta.ts             (orquestador: cliente_ids + filtros → datos)
+│   └── useEstadoCuentaDateRange.ts    (patrón useFacturacionDateRange, con presets)
+└── services/
+    ├── estadoCuenta.ts                (fetchEstadoCuenta: facturas + pagos + NC embebidos)
+    └── estadoCuentaAggregates.ts      (calcularKpisEstadoCuenta: adeudado/vencido/a favor)
 
-## Cambios
+features/portal/routes/
+└── PortalEstadoCuenta.tsx             (wraps <EstadoCuentaModule modo="portal"/>)
+```
 
-### A. Mover I/O de plantillas a servicio
-Nuevo `src/features/cotizacion/services/plantillas.ts` con:
-- `fetchPlantillas(orgId)` — SELECT actual con `is('deleted_at', null)` + `order/limit`.
-- `insertPlantilla(input)` — INSERT + `.single()`.
-- `aplicarPlantillaRpc(id)` — `supabase.rpc('aplicar_plantilla_cotizacion', …)`.
-- `softDeletePlantilla(id)` — UPDATE `deleted_at`.
-- `updatePlantillaMeta(id, patch)` — UPDATE metadatos.
+## Reuso del sistema de diseño (cero componentes duplicados)
 
-`useCotizacionPlantillas.ts` pasa a importar sólo del servicio. Cero import de `@/integrations/supabase/client`. Ya no requiere las 4 líneas `eslint-disable @typescript-eslint/no-explicit-any` — los tipos vivirán en el servicio con casts `SAFE-CAST` cuando aplique.
+| Necesidad | Se reusa |
+|---|---|
+| Layout de página | `PageContainer` + `PageHeader` (portal usa `PortalPageHeader`) |
+| KPIs | `KpiCard` con `variant="destructive"` (vencido), `variant="default"` (adeudado), `variant="success"` (a favor) |
+| Tabla | `DataTable` + `defineColumns<MovimientoRow>()` con paginación cliente, densidad compacta, striped, `renderSubRow` para expandido |
+| Filas expandibles | `expanded` state nativo de TanStack Table ya soportado por `DataTable` |
+| Rango de fecha | Nuevo hook `useEstadoCuentaDateRange` calcado sobre `useFacturacionDateRange` (mismo patrón `?desde=&hasta=`) + presets `Últimos 30d / Este mes / Este año / Histórico` |
+| Formato moneda | `formatCurrency` / `formatUSD` de `@/lib/formatters` — **prohibido `toLocaleString` inline en celdas** |
+| Formato fecha | `formatDate` de `@/lib/formatters` |
+| Aritmética | `sumarMontos` de `financialUtils` (currency.js, sin drift) |
+| Query segura portal | Extiende `services/queries.ts` con `fetchPortalEstadoCuenta(clienteIds)` — mismas RLS que ya protegen `fetchPortalFacturas` |
 
-### B. Mover I/O de versiones/duplicado a servicio
-Nuevo `src/features/cotizacion/services/versiones.ts` con:
-- `duplicarCotizacionRpc(id): Promise<string>` — encapsula el `rpc('duplicar_cotizacion', …)` con los `as never` (ahí sí lleva el marcador `// SAFE-CAST:` en la línea inmediata anterior).
-- `fetchVersiones(cotizacionId): Promise<CotizacionVersionRow[]>` — encapsula el `.from('cotizacion_versiones' as never)`.
+## KPIs (tarjetas superiores)
 
-`useCotizacionVersiones.ts` queda como puros hooks React Query que consumen el servicio. Sin `as unknown as` en su archivo.
+Cálculo puro en `estadoCuentaAggregates.ts`, agrupado por moneda (MXN/USD lado a lado):
 
-### C. Extraer utilidades de componentes (react-refresh)
-- `src/features/auditoria/components/HallazgoDetalleCell.tsx` → mover `DOCUMENT_RULES`, `normalizeDocName`, `uniqueDocuments`, `suffixRepeatsDocuments` y `getHallazgoDetalleParts` a `HallazgoDetalleCell.utils.ts` (sibling). El componente sólo re-exporta / consume; ningún consumidor externo debería romperse porque los que importan `getHallazgoDetalleParts` migrarán al nuevo módulo (grep confirmará y ajustaré imports).
-- `src/features/cotizacion/components/wizard/GuardarPlantillaDialog.tsx` → mover `CAMPOS_TRANSITORIOS` + `limpiarValues` a `guardarPlantillaHelpers.ts`. El test `GuardarPlantillaDialog.test.tsx` cambia el import de `limpiarValues` a la nueva ruta.
+- **Saldo Total Adeudado** = Σ `saldo` de facturas con `saldo > 0` y estatus ∈ (`Vigente`, `Por vencer`, `Vencida`). Variant `default` si 0, `warning` si > 0.
+- **Saldo Vencido** = Σ `saldo` con `estatus = 'Vencida'`. Variant `destructive` si > 0, `success` si 0. Sublabel: `N facturas vencidas`.
+- **Saldo a Favor / Anticipos** = Σ pagos con `monto_no_aplicado > 0` + notas de crédito con `saldo_disponible > 0`. Variant `success` cuando > 0.
 
-### D. Limpiar eslint-disable innecesarios
-Quitar los `// eslint-disable-next-line @typescript-eslint/no-explicit-any` que ESLint marca como "unused directive" en:
-- `GuardarPlantillaDialog.test.tsx` líneas 39, 47, 63, 66.
-- `PlantillaSelectorPaso1.test.tsx` línea 49.
-- `useCotizacionDraftAutosave.test.tsx` líneas 69, 123.
+## Tabla de movimientos (facturas colapsables)
 
-### E. Reducir `CotizacionPlantillas.tsx` (321 → ≤250)
-Extraer a componentes sibling:
-- `CotizacionPlantillas.PlantillaCard.tsx` — la tarjeta individual con menú acciones.
-- `CotizacionPlantillas.EditarDialog.tsx` — dialog de editar metadatos.
-El archivo route se limita a estado, hooks, layout y wire de callbacks.
+Columnas (fila principal = factura):
 
-### F. Housekeeping
-- Bump `APP_VERSION` → `13.297.4`.
-- Entrada en `CHANGELOG.md` describiendo el fix de CI (guardrails de arquitectura, `--max-warnings 0`, react-refresh, max-lines).
+| Col | Formato | Ordenable |
+|---|---|---|
+| Fecha | `formatDate(fecha_emision)` | sí |
+| Folio | Link a detalle factura | sí |
+| Concepto | "Factura {serie}-{folio}" o "Nota de cargo …" | – |
+| Cargo | `formatCurrency(total, moneda)` clase `text-foreground` | sí |
+| Abono | `formatCurrency(pagado + nc_aplicada, moneda)` clase `text-success` | sí |
+| Saldo insoluto | `formatCurrency(saldo, moneda)` bold, rojo si vencida | sí |
+| Estatus | `<Badge>` con color semántico | sí |
+| ▸ | Toggle expandir |
 
-## Verificación
-- Grep post-cambio: `rg "from ['\"]@/integrations/supabase/client" src/features/cotizacion/hooks` debe quedar vacío.
-- Grep: `rg "as unknown as" src/features/cotizacion` sólo dentro de `services/` y con marcador SAFE-CAST.
-- Los tests que usan `limpiarValues` seguirán pasando por import de la nueva ruta.
+**Sub-fila expandida** (`EstadoCuentaRowExpanded`): tabla ligera con pagos aplicados (fecha, método, referencia, monto) + notas de crédito aplicadas (fecha, folio NC, monto). Estado colapsado por default; sólo se abre bajo demanda.
 
-## Notas
-- No toco `src/integrations/supabase/client.ts` ni `types.ts`.
-- Sin cambios de BD ni de RLS.
-- Los `SAFE-CAST` de las RPC nuevas se pueden quitar cuando se regeneren los tipos generados; mientras tanto, viven aislados en el servicio.
+Diferenciación visual cargos vs abonos por color de columna + icono en Fecha (`ArrowUpCircle` verde para pagos/NC en sub-fila, `FileText` neutro para factura en fila principal).
+
+## Filtros
+
+`EstadoCuentaFilters.tsx`:
+
+- **Presets de rango** (chips): `Últimos 30 días` (default), `Este mes`, `Trimestre actual`, `Este año`, `Histórico completo`. Sincronizados a querystring vía `useEstadoCuentaDateRange`.
+- **Rango custom**: `DateRangePicker` shadcn cuando el usuario elige "Personalizado".
+- **Toggle "Sólo con saldo pendiente"**: `Switch` que filtra `saldo > 0`. Encendido por default en portal; apagado en modo interno.
+- **Moneda**: `Select` MXN | USD | Todas (default Todas).
+
+## Datos
+
+`fetchEstadoCuenta({ clienteIds, desde, hasta, moneda, soloConSaldo })`:
+
+```sql
+select facturas.*, 
+       pagos_factura(id, fecha_pago, metodo_pago, referencia, monto_aplicado_factura, monto_no_aplicado, deleted_at),
+       factura_notas_credito(id, folio, fecha_emision, monto, monto_aplicado, saldo_disponible, estado, deleted_at)
+  from facturas
+ where cliente_id in :clienteIds
+   and fecha_emision between :desde and :hasta
+   and estado != 'cancelada'
+ order by fecha_emision desc
+ limit 2000;
+```
+
+Mismo shape que `fetchCobranza` — extiende sus tipos para no duplicar el mapeo de `estatus_cobranza`. En modo portal se llama vía `services/portal/queries.ts` para respetar RLS del portal.
+
+## Preparación para exportación
+
+`ExportActions.tsx` renderiza 2 botones (`FileDown` PDF / `Sheet` Excel) **disabled con tooltip "Próximamente"**. El módulo queda estructurado para que cuando llegue la implementación real:
+
+1. Los datos ya vienen normalizados desde `useEstadoCuenta` (una fuente de verdad).
+2. Los formateadores son puros y reutilizables server-side.
+3. Ver `ExportActions.tsx` — comentario `// TODO(v13.299): generar PDF via jsPDF-autotable con misma columna spec`.
+
+## Detalles técnicos
+
+- **Sin cambios de BD**: se usan tablas existentes (`facturas`, `pagos_factura`, `factura_notas_credito`).
+- **RLS portal**: se apoya en policies ya vigentes para `fetchPortalFacturas`. Si `factura_notas_credito` no está expuesta al rol `authenticated` con la misma política, se abrirá vía `GRANT SELECT` + policy `EXISTS (select 1 from facturas f where f.id = factura_notas_credito.factura_id and f.cliente_id in (client_users_del_usuario))` en migración separada (fuera de este PR si no aplica).
+- **Cleanup**: los hooks siguen `queryOptions` de tanstack query — sin `useEffect` con canales realtime.
+- **Tests** (Power of 10 + coverage):
+  - `estadoCuentaAggregates.test.ts`: KPIs con mix MXN/USD, con y sin saldo a favor.
+  - `useEstadoCuentaDateRange.test.ts`: presets cambian querystring correctamente.
+  - `EstadoCuentaTable.test.tsx`: expandir/colapsar sub-fila, filas se pintan rojas cuando vencidas.
+- **Sin `any`**, todos los archivos ≤ 200 líneas, componentes ≤ 200 líneas.
+- **Cambios en rutas**:
+  - `src/routes.tsx`: registrar `/facturacion/clientes/:clienteId/estado-de-cuenta`.
+  - `src/routes/portalRoutes.tsx`: registrar `/portal/estado-de-cuenta` + link en `PortalNavigation`.
+  - `ClienteDetalle`: botón "Ver estado de cuenta".
+  - `BandejaVencidas`: enlace por fila.
+- **Versión**: bump `APP_VERSION` a `13.298.0` + entrada `CHANGELOG.md`.
+
+## Entregables al terminar
+
+1. Página interna funcional en `/facturacion/clientes/:clienteId/estado-de-cuenta`.
+2. Página portal en `/portal/estado-de-cuenta` con las mismas KPIs, tabla y filtros.
+3. Componente `EstadoCuentaModule` compartido — una sola fuente de UI.
+4. Servicios y agregados puros con tests unitarios.
+5. Botones de exportación presentes y desactivados, listos para conectar en el siguiente sprint.

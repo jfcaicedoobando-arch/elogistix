@@ -14,6 +14,7 @@ const PortalCotizaciones = lazy(() => import("@/features/portal/routes/PortalCot
 const PortalCotizacionDetalle = lazy(() => import("@/features/portal/routes/PortalCotizacionDetalle"));
 const PortalFacturas = lazy(() => import("@/features/portal/routes/PortalFacturas"));
 const PortalFacturaDetalle = lazy(() => import("@/features/portal/routes/PortalFacturaDetalle"));
+const PortalEstadoCuenta = lazy(() => import("@/features/portal/routes/PortalEstadoCuenta"));
 const PortalPerfil = lazy(() => import("@/features/portal/routes/PortalPerfil"));
 
 export const portalRoutes = (
@@ -31,6 +32,7 @@ export const portalRoutes = (
     <Route path="/portal/cotizaciones/:id" element={<PortalCotizacionDetalle />} />
     <Route path="/portal/facturas" element={<PortalFacturas />} />
     <Route path="/portal/facturas/:id" element={<PortalFacturaDetalle />} />
+    <Route path="/portal/estado-de-cuenta" element={<PortalEstadoCuenta />} />
     <Route path="/portal/perfil" element={<PortalPerfil />} />
   </Route>
 );

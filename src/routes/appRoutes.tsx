@@ -22,7 +22,7 @@ import {
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
   Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, CotizacionPlantillas, PdfPreviewCotizacion,
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
-  Facturacion, FacturaDetalle, ProformaDetalle, ProformasListado,
+  Facturacion, FacturaDetalle, EstadoCuentaInterno, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
   Cxp, Compras, CxpAging, CxpPorCapturar, CxpPorPagar, Cartera,
   ComprasPagos, ComprasNotasCredito, ComprasReportes, ComprasPorAprobar, ComprasConciliacion,
@@ -121,6 +121,7 @@ export const appRoutes = (
 
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
+    <Route path="/clientes/:clienteId/estado-de-cuenta" element={guarded(FINANCE_READ_ROLES, <EstadoCuentaInterno />)} />
     <Route path="/cotizaciones" element={<Cotizaciones />} />
     <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
     <Route path="/cotizaciones/plantillas" element={<CotizacionPlantillas />} />

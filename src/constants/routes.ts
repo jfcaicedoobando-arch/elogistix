@@ -103,6 +103,7 @@ export const ROUTES = {
   PORTAL_EMBARQUES: "/portal/embarques",
   PORTAL_COTIZACIONES: "/portal/cotizaciones",
   PORTAL_FACTURAS: "/portal/facturas",
+  PORTAL_ESTADO_CUENTA: "/portal/estado-de-cuenta",
   PORTAL_PERFIL: "/portal/perfil",
 
   // Portal agente
