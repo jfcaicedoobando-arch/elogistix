@@ -135,3 +135,37 @@ export function useEliminarPlantilla() {
     },
   });
 }
+
+// P2 cierre (v13.296.0): edición de metadatos.
+interface ActualizarInput {
+  id: string;
+  organizationId: string;
+  nombre?: string;
+  descripcion?: string | null;
+  visibilidad?: PlantillaVisibilidad;
+}
+
+export function useActualizarPlantilla() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: ActualizarInput): Promise<void> => {
+      const patch: {
+        nombre?: string;
+        descripcion?: string | null;
+        visibilidad?: PlantillaVisibilidad;
+      } = {};
+      if (input.nombre !== undefined) patch.nombre = input.nombre.trim();
+      if (input.descripcion !== undefined) patch.descripcion = input.descripcion?.trim() || null;
+      if (input.visibilidad !== undefined) patch.visibilidad = input.visibilidad;
+      if (Object.keys(patch).length === 0) return;
+      const { error } = await supabase
+        .from("cotizacion_plantillas")
+        .update(patch)
+        .eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: (_v, input) => {
+      void qc.invalidateQueries({ queryKey: keys.byOrg(input.organizationId) });
+    },
+  });
+}

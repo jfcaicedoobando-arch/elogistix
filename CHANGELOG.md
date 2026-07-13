@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.296.0] - 2026-07-13
+- **feat(cotización/wizard P2 — cierre)**: cierre de la Fase P2 (Plantillas) tras auditoría:
+  1. **`GuardarPlantillaDialog` estandarizado**: refactor a `FormDialogShell` + `FormDialogSection` (icon-tile, secciones con `cols={1}`/`flat`, footer sticky) para cumplir la regla core de modales tipo formulario. Se elimina el `any` de `limpiarValues` tipando explícitamente los campos transitorios (folios, IDs, fechas) que se remueven del payload reutilizable.
+  2. **Hook nuevo `useActualizarPlantilla`**: mutation con `invalidateQueries` de `cotizacionPlantillas.list(org)`. Permite editar nombre, descripción y visibilidad sin re-crear la plantilla.
+  3. **Página de gestión `/cotizaciones/plantillas`** (`CotizacionPlantillas.tsx`): listado con búsqueda por nombre/descripción, filtro por visibilidad (todas / sólo mías / organización), tabla con badge de visibilidad, contador de usos y fecha de actualización. Dropdown por fila (Editar / Usar / Eliminar) con `e.stopPropagation()` según la regla core. Edición inline vía `EditarPlantillaDialog` (`FormDialogShell`). Eliminación con `DeleteConfirmDialog` (doble confirmación tipable "ELIMINAR"). Registrada como ruta lazy en `appRoutes`.
+  4. **Concept picker unificado en el wizard**: nuevo `AgregarConceptoInline` — Popover con `ProductoServicioSelect` (catálogo SAT), toggle de divisa USD/MXN, cantidad y precio unitario. Se integra en `SeccionConceptosVentaCotizacion` como método primario de alta de concepto en Paso 3 (buckets USD y MXN). Al confirmar, se llama al nuevo helper `agregarConceptoPrefill` del hook `useConceptosVentaCotizacion`, que crea la fila con clave SAT + unidad + descripción del catálogo ya llenas (elimina el flujo "agregar vacío → editar 4 campos").
+  5. **`agregarConceptoPrefill` propagado**: expuesto por `useCotizacionWizardForm` y consumido por `CotizacionWizardSteps` para que Paso 3 herede el mismo picker.
+- **chore(version)**: bump `APP_VERSION` → `13.296.0`.
+
 ## [13.295.0] - 2026-07-13
 - **feat(cotización/wizard P2 — Plantillas)**: arranque de la Fase P2 con **Plantillas de cotización** reutilizables. Cierre del ciclo "cotizar → guardar como plantilla → aplicar en la siguiente":
   1. **BD**: nueva tabla `public.cotizacion_plantillas` (organization_id + usuario_id + nombre + descripción + visibilidad `yo|org` + payload JSONB + contador `veces_usada` + soft-delete). Índices por org/uso y por usuario. RLS multi-tenant (`organization_members`): SELECT ve las propias + las compartidas de la org; INSERT sólo a nombre propio dentro de la org; UPDATE/DELETE sólo el autor o roles `admin` / `admin_org` / `gerente_comercial`. Trigger `updated_at`. GRANTs a `authenticated` y `service_role`.

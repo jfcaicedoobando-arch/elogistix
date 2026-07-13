@@ -55,6 +55,23 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
     setter(prev => [...prev, moneda === "USD" ? emptyUSD() : emptyMXN(tasaIva)]);
   }, [tasaIva]);
 
+  /**
+   * P2 cierre (v13.296.0) — inserta un concepto con datos precargados desde
+   * `AgregarConceptoInline`. Calcula total con IVA en el momento.
+   */
+  const agregarConceptoPrefill = useCallback(
+    (moneda: "USD" | "MXN", prefill: Partial<ConceptoVentaCotizacion>) => {
+      const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
+      const base = moneda === "USD" ? emptyUSD() : emptyMXN(tasaIva);
+      const merged: ConceptoVentaCotizacion = { ...base, ...prefill, moneda };
+      const sub = merged.cantidad * merged.precio_unitario;
+      const tasaFila = resolverTasaConcepto(merged, tasaIva);
+      merged.total = calcularTotalConIVA(sub, tasaFila);
+      setter(prev => [...prev, merged]);
+    },
+    [tasaIva],
+  );
+
   const eliminarConcepto = useCallback((moneda: "USD" | "MXN", index: number) => {
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
     setter(prev => {
@@ -77,7 +94,7 @@ export function useConceptosVentaCotizacion(options: Options = {}) {
   return {
     conceptosUSD, conceptosMXN,
     setConceptosUSD, setConceptosMXN,
-    actualizarConcepto, agregarConcepto, eliminarConcepto,
+    actualizarConcepto, agregarConcepto, agregarConceptoPrefill, eliminarConcepto,
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
     tasaIva,
   };

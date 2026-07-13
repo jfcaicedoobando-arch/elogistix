@@ -26,6 +26,7 @@ export const NuevaCotizacion = lazy(() => import("@/features/cotizacion/routes/N
 export const NuevaCotizacionInformativa = lazy(() => import("@/features/cotizacion/routes/NuevaCotizacionInformativa"));
 export const CotizacionDetalle = lazy(() => import("@/features/cotizacion/routes/CotizacionDetalle"));
 export const EditarCotizacion = lazy(() => import("@/features/cotizacion/routes/EditarCotizacion"));
+export const CotizacionPlantillas = lazy(() => import("@/features/cotizacion/routes/CotizacionPlantillas"));
 export const PdfPreviewCotizacion = lazy(() => import("@/features/dev/routes/PdfPreviewCotizacion"));
 
 export const Clientes = lazy(() => import("@/features/cliente/routes/Clientes"));

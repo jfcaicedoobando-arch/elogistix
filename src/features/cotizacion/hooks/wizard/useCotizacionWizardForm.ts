@@ -71,7 +71,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const conceptos = useConceptosVentaCotizacion({ initialUSD, initialMXN });
   const {
     conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
-    actualizarConcepto, agregarConcepto, eliminarConcepto,
+    actualizarConcepto, agregarConcepto, agregarConceptoPrefill, eliminarConcepto,
     totalUSD, subtotalMXN, ivaMXN, totalMXN, tasaIva,
   } = conceptos;
 
@@ -121,7 +121,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     esMaritimo, esAereo, clienteSeleccionado,
     handleCambiarTipoEmbarque,
     conceptosUSD, conceptosMXN,
-    actualizarConcepto, agregarConcepto, eliminarConcepto,
+    actualizarConcepto, agregarConcepto, agregarConceptoPrefill, eliminarConcepto,
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
     plUSD, plMXN,
     costosUSD: costosUSDFiltered,
