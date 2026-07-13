@@ -2805,6 +2805,60 @@ export type Database = {
           },
         ]
       }
+      cotizacion_versiones: {
+        Row: {
+          costos_snapshot: Json
+          cotizacion_id: string
+          created_at: string
+          created_by: string | null
+          estado_al_snapshot: string
+          folio: string
+          id: string
+          organization_id: string
+          snapshot: Json
+          version_num: number
+        }
+        Insert: {
+          costos_snapshot?: Json
+          cotizacion_id: string
+          created_at?: string
+          created_by?: string | null
+          estado_al_snapshot: string
+          folio: string
+          id?: string
+          organization_id: string
+          snapshot: Json
+          version_num: number
+        }
+        Update: {
+          costos_snapshot?: Json
+          cotizacion_id?: string
+          created_at?: string
+          created_by?: string | null
+          estado_al_snapshot?: string
+          folio?: string
+          id?: string
+          organization_id?: string
+          snapshot?: Json
+          version_num?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_versiones_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizacion_versiones_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           aceptada_en: string | null
@@ -2824,6 +2878,7 @@ export type Database = {
           dias_libres_destino: number
           dimensiones_aereas: Json
           dimensiones_lcl: Json
+          duplicada_de_id: string | null
           embarque_id: string | null
           es_prospecto: boolean
           estado: Database["public"]["Enums"]["estado_cotizacion"]
@@ -2904,6 +2959,7 @@ export type Database = {
           dias_libres_destino?: number
           dimensiones_aereas?: Json
           dimensiones_lcl?: Json
+          duplicada_de_id?: string | null
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
@@ -2984,6 +3040,7 @@ export type Database = {
           dias_libres_destino?: number
           dimensiones_aereas?: Json
           dimensiones_lcl?: Json
+          duplicada_de_id?: string | null
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
@@ -3052,6 +3109,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_duplicada_de_id_fkey"
+            columns: ["duplicada_de_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
             referencedColumns: ["id"]
           },
           {
@@ -7692,6 +7756,7 @@ export type Database = {
         Returns: boolean
       }
       detectar_alertas_app_logs: { Args: never; Returns: number }
+      duplicar_cotizacion: { Args: { p_id: string }; Returns: string }
       duplicar_embarque_completo: {
         Args: {
           p_copias: Json
