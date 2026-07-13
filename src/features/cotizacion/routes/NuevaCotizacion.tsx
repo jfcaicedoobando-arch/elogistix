@@ -113,6 +113,17 @@ export default function NuevaCotizacion() {
         onDuplicar={() => savedId && closeSuccessAndGoTo(`/cotizaciones/nueva?duplicar=${savedId}`)}
         onIrAlListado={() => closeSuccessAndGoTo("/cotizaciones")}
         onVerDetalle={() => savedId && closeSuccessAndGoTo(`/cotizaciones/${savedId}`)}
+        onGuardarComoPlantilla={() => setGuardarPlantillaOpen(true)}
+      />
+
+      <GuardarPlantillaDialog
+        open={guardarPlantillaOpen}
+        onOpenChange={setGuardarPlantillaOpen}
+        organizationId={organizationId}
+        usuarioId={userId || null}
+        values={w.form.getValues()}
+      />
+
       />
     </>
   );
