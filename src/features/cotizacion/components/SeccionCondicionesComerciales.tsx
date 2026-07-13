@@ -69,7 +69,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
 
   return (
     <WizardSection title="Condiciones comerciales" complete={complete}>
-      {!tieneTarifa && (
+      {!camposHabilitados && (
         <div className="flex items-start gap-2 rounded-md border border-muted bg-muted/30 p-3 text-sm text-muted-foreground">
           <Lock className="size-4 mt-0.5 shrink-0" />
           <span>
@@ -81,7 +81,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
       <div
         className={cn(
           "grid grid-cols-1 md:grid-cols-2 gap-4",
-          !tieneTarifa && "opacity-60 pointer-events-none",
+          !camposHabilitados && "opacity-60 pointer-events-none",
         )}
       >
         <FormField label="Ruta del barco" span={2}>
@@ -89,7 +89,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
             value={rutaTexto}
             onChange={(e) => setValue("rutaTexto", e.target.value, { shouldValidate: true, shouldDirty: true })}
             placeholder="Ej. Shanghai → Manzanillo (directo)"
-            disabled={!tieneTarifa}
+            disabled={!camposHabilitados}
           />
           {tieneTarifa && (
             <p className="text-xs text-muted-foreground mt-1">
