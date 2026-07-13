@@ -40,8 +40,13 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
   const validezPropuesta = watch("validezPropuesta");
   const seguro = watch("seguro");
   const rutaTexto = watch("rutaTexto");
+  const tipoEmbarque = watch("tipoEmbarque");
 
+  // v13.299.2: en LCL no hay tarifa vinculada (el flete se captura manual),
+  // así que las condiciones comerciales deben quedar habilitadas de todos modos.
+  const esLcl = tipoEmbarque === "LCL";
   const tieneTarifa = !!tarifaId;
+  const camposHabilitados = tieneTarifa || esLcl;
   const { data: tarifaVinc } = useTarifaVinculada(tarifaId);
   const tarifaHasta = useMemo(
     () => parseVigenteHasta(tarifaVinc?.vigente_hasta ?? null),
