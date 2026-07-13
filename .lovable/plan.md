@@ -1,67 +1,50 @@
-## Fase 1 — Auditoría P2 cierre y tests faltantes
 
-**Hallazgos de la auditoría (v13.296.0):**
+## Contexto
 
-| # | Componente / Hook | Tests | Riesgo |
-|---|---|---|---|
-| 1 | `useActualizarPlantilla` | ❌ ninguno | Mutation nueva sin cobertura |
-| 2 | `useEliminarPlantilla` | ❌ ninguno | Soft-delete sin cobertura |
-| 3 | `GuardarPlantillaDialog` (refactor `FormDialogShell`) | ❌ | Regresión de UI/validación |
-| 4 | `PlantillaSelectorPaso1` | ❌ | Aplica payload al form — crítico |
-| 5 | `AgregarConceptoInline` | ❌ | Alta de concepto con prefill SAT |
-| 6 | `CotizacionPlantillas` (página nueva) | ❌ | Búsqueda + filtros + eliminar |
-| 7 | `agregarConceptoPrefill` en `useConceptosVentaCotizacion` | ❌ | Helper nuevo |
+Sólo hay **un** issue sin resolver en Sentry (elogistix, últimos 7 días):
 
-Otros hallazgos menores:
-- `EditarPlantillaDialog` inline dentro de la página (aceptable, <200 líneas totales).
-- Falta un vínculo a `/cotizaciones/plantillas` desde la lista de cotizaciones (chip o botón secundario) para descubrimiento.
+- **JAVASCRIPT-REACT-1M** — `xZ` / `captureException` disparado por React Query.
+- 55 ocurrencias, 8 usuarios, regresión.
+- `queryKey: ["cotizaciones", "c5a10ecc-..."]`
+- Extra: `{ code: "PGRST116", details: "The result contains 0 rows", message: "Cannot coerce the result to a single JSON object" }`
+- URL: `/cotizaciones/{id}` con un ID que ya no existe (probablemente soft-delete reciente o link viejo).
 
-**Acciones Fase 1:**
+**Causa raíz:** `fetchCotizacionById` en `src/features/cotizacion/services/queries.ts:76-81` usa `.single()`, que lanza PGRST116 cuando no hay filas. El error se propaga a React Query → `MutationCache`/`QueryCache` → Sentry, pese a que la UI ya sabe manejar "no encontrada" (`CotizacionDetalle.tsx:56-58` muestra el empty state cuando `cotizacion` es `null`).
 
-1. **Tests de hooks** (extender `useCotizacionPlantillas.test.tsx`):
-   - `useActualizarPlantilla`: happy path + invalidación de `cotizacionPlantillas.list(org)`.
-   - `useEliminarPlantilla`: soft-delete llama `.update({deleted_at})` y filtra por `id`+`organization_id`.
-   - `agregarConceptoPrefill`: nuevo test unitario en `useConceptosVentaCotizacion.test.tsx` (o crear si no existe) verificando que la fila queda con `clave_sat`, `unidad`, `descripcion`, `cantidad`, `precioUnitario` correctos en el bucket indicado.
+Analogía: es como pedir "el" libro con cierto ISBN a la biblioteca; si no está, `.single()` grita alarma, cuando lo correcto es devolver "no hay libro" en silencio (`.maybeSingle()`).
 
-2. **Tests de componentes** (`__tests__/`):
-   - `GuardarPlantillaDialog.test.tsx`: render, validación de nombre <3 chars deshabilita submit, cambia visibilidad, dispara `onGuardar` con payload limpio (sin `folio`/`id`/fechas).
-   - `PlantillaSelectorPaso1.test.tsx`: se oculta si no hay plantillas; al seleccionar dispara `form.reset` + `trigger`; ordena por `veces_usada`.
-   - `AgregarConceptoInline.test.tsx`: seleccionar clave SAT llena descripción/unidad; toggle USD/MXN; botón confirmar invoca `agregarConceptoPrefill` con la moneda correcta y cierra popover.
-   - `CotizacionPlantillas.test.tsx`: renderiza filas, filtro por visibilidad, búsqueda, abre `DeleteConfirmDialog` desde dropdown.
+## Cambios
 
-3. **Descubrimiento**: agregar entrada "Plantillas" en `CotizacionesPageActions` (link a `/cotizaciones/plantillas`).
+### 1. `src/features/cotizacion/services/queries.ts`
+- Cambiar `fetchCotizacionById(id)` de `.single()` a `.maybeSingle()`.
+- Firma nueva: `Promise<CotizacionRow | null>`.
+- Devolver `null` cuando no haya fila (sin lanzar).
 
-## Fase 2 — P3: Duplicar cotización & historial de versiones
+### 2. Ajustar consumidores para el tipo `CotizacionRow | null`
+Revisar y adaptar (probablemente ya toleran null porque la UI muestra empty state, pero hay que hacer explícito el tipo):
+- `src/features/cotizacion/queries.ts` (queryOptions `detail`).
+- `src/features/cotizacion/hooks/useCotizacionDetalleState.ts`.
+- `src/features/cotizacion/hooks/usePdfPreviewCotizacionPage.ts`.
+- `src/features/cotizacion/routes/EditarCotizacion.tsx` — si asume no-null, agregar guard que redirija a `/cotizaciones` con toast "Cotización no encontrada".
 
-Con Plantillas cerrado, el siguiente cuello de botella del wizard (identificado en la auditoría original) es **iteración de una cotización viva**: hoy el usuario que quiere variar precios/ruta/incoterm sobre una cotización enviada, o comparar dos escenarios, tiene que crear una nueva desde cero.
+### 3. Tests
+- Actualizar `src/features/cotizacion/services/__tests__/queries.test.ts` para cubrir el caso "0 rows → null".
+- Ajustar `usePdfPreviewCotizacionPage.test.tsx` si el mock devuelve throws.
 
-**Alcance P3:**
+### 4. Versionado
+- Bump `APP_VERSION` a `13.297.1` en `src/constants/appVersion.ts`.
+- Entrada en `CHANGELOG.md`: `Fixes JAVASCRIPT-REACT-1M — PGRST116 al abrir cotización inexistente`.
 
-1. **Duplicar cotización** (una acción, cero fricción):
-   - Botón "Duplicar" en `CotizacionDetalle` y en el menú de fila de `Cotizaciones`.
-   - RPC `duplicar_cotizacion(_id)` `SECURITY DEFINER`: copia paso 1 + costos internos + conceptos venta, regenera folio, deja en estado `Borrador`, sin fechas de envío/aprobación. Requiere pertenecer a la misma org.
-   - Al duplicar, redirige a `/cotizaciones/:nuevo/editar` con toast "Duplicada desde COT-XXXX".
+### 5. Cerrar issue en Sentry
+- `update_issue` a `resolved` referenciando la versión, según regla `mem://preferences/sentry-resolve`.
 
-2. **Historial de versiones ligero** (sin sobre-ingeniería):
-   - Nueva tabla `cotizacion_versiones` (organization_id, cotizacion_id, version_num, snapshot JSONB, motivo, creada_por, created_at). RLS por org.
-   - Trigger `on_cotizacion_update` que guarda snapshot cuando el usuario "Guarda cambios" en una cotización **enviada** (no en borradores, para no ensuciar).
-   - Panel "Historial" en `CotizacionDetalle` (Sheet lateral) con línea de tiempo, badge de versión y botón "Ver esta versión" (read-only) + "Restaurar" (con doble confirmación).
+## Verificación
 
-3. **Comparador de escenarios A/B** (opcional dentro de la fase — decidir al inicio):
-   - Vista `/cotizaciones/:a/vs/:b` con tabla lado a lado de totales, márgenes, conceptos. Útil para vendedores que mandan 2 opciones al cliente.
+- `bun run typecheck` limpio.
+- Tests de `queries.test.ts` y consumidores en verde.
+- Manual: navegar a `/cotizaciones/<uuid-inexistente>` debe mostrar "Cotización no encontrada" **sin** reportar a Sentry.
 
-**Entregables P3 mínimos (obligatorios):**
-- Migración BD: `cotizacion_versiones` + RPC `duplicar_cotizacion` + trigger de snapshot.
-- Hooks: `useDuplicarCotizacion`, `useHistorialCotizacion`, `useRestaurarVersion`.
-- UI: botón Duplicar, Sheet de historial.
-- Tests unitarios de los 3 hooks + tests de la RPC (Deno) para tenancy.
+## Fuera de alcance
 
-## Detalles técnicos
-
-- Todos los tests siguen el patrón thenable existente para Supabase (`mem://technical/testing-mock-patterns`).
-- `duplicar_cotizacion` debe reasignar `usuario_id = auth.uid()`, regenerar `folio` con la secuencia existente y **NO** copiar `firma_cliente_at`, `enviada_at`, `expira_at`.
-- El trigger de snapshot usa `pg_notify` no; sólo `INSERT` en `cotizacion_versiones`. Índice `(cotizacion_id, version_num DESC)`.
-- Restaurar versión = `UPDATE cotizaciones SET ... = snapshot->>...` dentro de una transacción con doble confirmación tipable (regla core).
-- Bump de versión: `13.297.0` (fin Fase 1) → `13.298.0` (RPC + tests P3) → `13.299.0` (UI historial + duplicar) → `13.300.0` (comparador si entra).
-
-**Decisión pendiente**: ¿el **Comparador A/B** entra en P3 o lo dejamos para P4? Si dices "entra", planifico ambos; si dices "P4", cierro P3 con duplicar + historial y arrancamos comparador aparte.
+- No se toca lógica de negocio de cotizaciones.
+- No se cambia la política de reporting global de React Query (`errorHandler`); el fix es a nivel de fuente para no ensuciar los reportes futuros.
