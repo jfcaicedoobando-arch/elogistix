@@ -103,7 +103,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                disabled={!tieneTarifa}
+                disabled={!camposHabilitados}
                 className={cn(
                   "w-full justify-start text-left font-normal",
                   !validezPropuesta && "text-muted-foreground",
