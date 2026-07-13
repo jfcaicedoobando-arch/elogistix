@@ -21,6 +21,8 @@ import { CotizacionesPageActions } from "@/features/cotizacion/components/Cotiza
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
+  const navigate = useNavigate();
+  const duplicar = useDuplicarCotizacion();
 
   // Diferimos las filas visibles: al cambiar filtros/paginación, el re-render
   // pesado de la tabla queda en background y no bloquea el input de búsqueda.
@@ -31,8 +33,12 @@ export default function Cotizaciones() {
       buildCotizacionesColumns({
         canEdit: c.canEdit,
         onEliminar: c.setCotizacionAEliminar,
+        onDuplicar: (id: string) =>
+          duplicar.mutate(id, {
+            onSuccess: (newId) => navigate(`/cotizaciones/${newId}/editar`),
+          }),
       }),
-    [c.canEdit, c.setCotizacionAEliminar],
+    [c.canEdit, c.setCotizacionAEliminar, duplicar, navigate],
   );
 
   const primaryFilters = (
