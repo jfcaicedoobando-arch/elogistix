@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.294.1] - 2026-07-13
+- **fix(cotización/wizard P1)**: cierre de la auditoría de la Fase P1. Tres huecos detectados y sellados:
+  1. **`Ctrl/Cmd + S` ahora sí guarda el borrador.** `useCotizacionDraftAutosave` expone `flush()` que persiste inmediato saltándose el debounce y cancela el timer pendiente. `NuevaCotizacion` lo propaga al `CotizacionWizardLayout` vía `onFlushDraft`, y el layout muestra `toast.success("Borrador guardado")` al dispararse.
+  2. **Descubribilidad de atajos.** El botón "Siguiente"/"Guardar" del `CotizacionWizardFooter` ahora tiene un `Tooltip` que muestra el atajo (`Ctrl + ↵`) con `<kbd>` styling, para que un usuario nuevo lo descubra sin leer docs.
+  3. **Tests nuevos** (3 casos) para `flush()`: persistencia inmediata, no-op cuando `enabled=false`, y cancelación del timer pendiente al flushear. Total suite wizard: **31/31 verdes**.
+
 ## [13.294.0] - 2026-07-13
 - **feat(cotización/wizard UX P1)**: segunda fase de la auditoría UX. Dos entregables + refuerzo de P0:
   1. **Barra flotante de totales (P&L en vivo)** — nuevo `WizardTotalsBar` (`sticky bottom-0`) visible en pasos 2 y 3 que muestra Costo/Venta MXN (+ USD entre paréntesis si aplica) y el Margen consolidado con color semántico: verde ≥15%, ámbar 5-15%, rojo <5%. Consume `plUSD` / `plMXN` / `totalMXN` del orquestador `useCotizacionWizardForm` — sin duplicar matemática.
