@@ -65,8 +65,8 @@ export interface EstadoCuentaFilters {
 type RawPago = {
   id: string;
   fecha_pago: string;
+  monto: number;
   monto_aplicado_factura: number;
-  monto_no_aplicado: number | null;
   forma_pago: string | null;
   referencia: string | null;
   deleted_at: string | null;
@@ -77,8 +77,6 @@ type RawNota = {
   folio: string | null;
   fecha_emision: string;
   monto: number;
-  monto_aplicado: number | null;
-  saldo_disponible: number | null;
   estado: string;
   deleted_at: string | null;
 };
