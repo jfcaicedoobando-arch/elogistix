@@ -175,6 +175,10 @@ export interface CotizacionInitialData {
   tarifa_id?: string | null;
   tarifa_override?: unknown;
   sin_desglose_costos?: boolean;
+  lcl_tarifa_wm?: number | null;
+  lcl_minimo_flete?: number | null;
+  lcl_dias_libres_almacenaje?: number | null;
+  lcl_consolidador_id?: string | null;
 }
 
 export interface CotizacionInitialCosto {
