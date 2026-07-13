@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
 import type { CostoCotizacion } from "@/features/cotizacion/hooks/useCotizacionCostos";
@@ -10,6 +10,24 @@ import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
 import { usePaso1Handlers } from "./usePaso1Handlers";
+
+/**
+ * Firma estable de las filas de costos internos usadas para decidir cuándo
+ * regenerar los conceptos de venta del paso 3. Solo campos que impactan el
+ * output de `buildConceptosFromCostos`.
+ */
+function firmaCostos(costos: FilaCostoLocal[]): string {
+  return JSON.stringify(
+    costos.map(c => ({
+      c: c.concepto,
+      m: c.moneda,
+      u: c.unidad_medida,
+      q: c.cantidad,
+      p: c.precio_venta,
+    })),
+  );
+}
+
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
