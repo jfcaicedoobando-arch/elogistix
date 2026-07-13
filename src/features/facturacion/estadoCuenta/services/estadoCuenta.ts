@@ -65,8 +65,8 @@ export interface EstadoCuentaFilters {
 type RawPago = {
   id: string;
   fecha_pago: string;
+  monto: number;
   monto_aplicado_factura: number;
-  monto_no_aplicado: number | null;
   forma_pago: string | null;
   referencia: string | null;
   deleted_at: string | null;
@@ -77,8 +77,6 @@ type RawNota = {
   folio: string | null;
   fecha_emision: string;
   monto: number;
-  monto_aplicado: number | null;
-  saldo_disponible: number | null;
   estado: string;
   deleted_at: string | null;
 };
@@ -117,8 +115,8 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
     .select(`
       id, numero, cliente_id, cliente_nombre, expediente,
       moneda, total, fecha_emision, fecha_vencimiento, estado,
-      pagos_factura(id, fecha_pago, monto_aplicado_factura, monto_no_aplicado, forma_pago, referencia, deleted_at),
-      factura_notas_credito(id, folio, fecha_emision, monto, monto_aplicado, saldo_disponible, estado, deleted_at)
+      pagos_factura(id, fecha_pago, monto, monto_aplicado_factura, forma_pago, referencia, deleted_at),
+      factura_notas_credito(id, folio, fecha_emision, monto, estado, deleted_at)
     `)
     .in("cliente_id", filters.clienteIds)
     .in("estado", [...ESTADOS_ACTIVOS])
@@ -164,7 +162,7 @@ export async function fetchEstadoCuenta(filters: EstadoCuentaFilters): Promise<F
         id: p.id,
         fecha_pago: p.fecha_pago,
         monto_aplicado: Number(p.monto_aplicado_factura),
-        monto_no_aplicado: Number(p.monto_no_aplicado ?? 0),
+        monto_no_aplicado: Math.max(0, Number(p.monto) - Number(p.monto_aplicado_factura)),
         forma_pago: p.forma_pago,
         referencia: p.referencia,
       })),
