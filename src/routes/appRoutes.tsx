@@ -123,6 +123,7 @@ export const appRoutes = (
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
     <Route path="/cotizaciones" element={<Cotizaciones />} />
     <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
+    <Route path="/cotizaciones/plantillas" element={<CotizacionPlantillas />} />
     <Route path="/cotizaciones/nueva/tarifario" element={<NuevaCotizacionInformativa />} />
     <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
     <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
