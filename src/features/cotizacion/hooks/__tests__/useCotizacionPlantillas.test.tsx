@@ -133,7 +133,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
     const { result } = renderHook(() => useAplicarPlantilla(), { wrapper: wrapper(qc) });
     await expect(
       act(async () => { await result.current.mutateAsync("plantilla-1"); })
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/Sin acceso/);
   });
 
 
