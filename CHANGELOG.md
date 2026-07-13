@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.297.2] - 2026-07-13
+- **fix(cotización/plantillas — CI guardrail)**: agregado `onError` a las 4 mutaciones de `useCotizacionPlantillas.ts` (guardar, aplicar, eliminar, actualizar). Cada `onError` llama a `notifyError` con `title` específico, `description: getErrorMessage(error)` y `method` estandarizado (`COTIZACION_PLANTILLA_{ACCIÓN}`). Cierra el fallo del test de arquitectura `mutations-have-onerror` en CI (shard 15/20) y evita que errores de RLS/red en el módulo de plantillas queden silenciosos ante el usuario.
+
 ## [13.297.1] - 2026-07-13
 - **fix(cotización/detalle)**: `fetchCotizacionById` ahora usa `.maybeSingle()` y devuelve `null` cuando la cotización no existe, en lugar de lanzar PGRST116. La UI de `CotizacionDetalle` y `EditarCotizacion` ya manejaba el caso vacío. Elimina ruido de reportes en Sentry al abrir un link viejo o de una cotización borrada. Test nuevo: "devuelve null cuando no existe (PGRST116)". Fixes Sentry `JAVASCRIPT-REACT-1M` (55 ocurrencias, 8 usuarios).
 

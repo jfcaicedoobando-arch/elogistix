@@ -11,6 +11,8 @@ import { useQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/r
 import { supabase } from "@/integrations/supabase/client";
 import { cotizacionPlantillas as keys } from "@/features/cotizacion/queryKeys";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+import { notifyError } from "@/components/shared/utils/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 export type PlantillaVisibilidad = "yo" | "org";
 
@@ -99,6 +101,14 @@ export function useGuardarPlantilla() {
     onSuccess: (_row, input) => {
       void qc.invalidateQueries({ queryKey: keys.byOrg(input.organizationId) });
     },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo guardar la plantilla",
+        description: getErrorMessage(error),
+        error,
+        method: "COTIZACION_PLANTILLA_GUARDAR",
+      });
+    },
   });
 }
 
@@ -117,6 +127,14 @@ export function useAplicarPlantilla() {
       // Invalida todas las listas — el contador de uso cambió.
       void qc.invalidateQueries({ queryKey: keys.all });
     },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo aplicar la plantilla",
+        description: getErrorMessage(error),
+        error,
+        method: "COTIZACION_PLANTILLA_APLICAR",
+      });
+    },
   });
 }
 
@@ -132,6 +150,14 @@ export function useEliminarPlantilla() {
     },
     onSuccess: (_v, input) => {
       void qc.invalidateQueries({ queryKey: keys.byOrg(input.organizationId) });
+    },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo eliminar la plantilla",
+        description: getErrorMessage(error),
+        error,
+        method: "COTIZACION_PLANTILLA_ELIMINAR",
+      });
     },
   });
 }
@@ -166,6 +192,14 @@ export function useActualizarPlantilla() {
     },
     onSuccess: (_v, input) => {
       void qc.invalidateQueries({ queryKey: keys.byOrg(input.organizationId) });
+    },
+    onError: (error) => {
+      notifyError(undefined, {
+        title: "No se pudo actualizar la plantilla",
+        description: getErrorMessage(error),
+        error,
+        method: "COTIZACION_PLANTILLA_ACTUALIZAR",
+      });
     },
   });
 }
