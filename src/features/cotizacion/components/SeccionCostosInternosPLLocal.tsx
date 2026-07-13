@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
-import { DollarSign, Banknote, Link2 } from "lucide-react";
+import { DollarSign, Banknote, Link2, AlertTriangle } from "lucide-react";
 import ResumenPL from "./ResumenPL";
 import TablaCostosLocal from "./TablaCostosLocal";
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
@@ -10,6 +10,7 @@ import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVincula
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
+
 
 interface Props {
   filas: FilaCostoLocal[];
