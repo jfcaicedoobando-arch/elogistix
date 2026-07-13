@@ -104,7 +104,16 @@ describe("useCotizacionDraftAutosave hook", () => {
   });
 
   it("cancela el timer en unmount", () => {
-    // dummy — placeholder overwritten below
+    vi.useFakeTimers();
+    const { result, unmount } = renderWithForm(true);
+    act(() => {
+      result.current.setValue("cliente_id", "c-x");
+    });
+    unmount();
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(window.localStorage.getItem(draftKey(USER))).toBeNull();
   });
 });
 
