@@ -204,7 +204,7 @@ describe("useCotizacionPlantillas hooks (P2)", () => {
       act(async () => {
         await result.current.mutateAsync({ id: "p1", organizationId: "org-1" });
       }),
-    ).rejects.toBeTruthy();
+    ).rejects.toThrow(/no permitido/);
   });
 });
 
