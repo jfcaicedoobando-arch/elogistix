@@ -9,6 +9,8 @@ import {
   useCotizacionPlantillas,
   useGuardarPlantilla,
   useAplicarPlantilla,
+  useActualizarPlantilla,
+  useEliminarPlantilla,
 } from "@/features/cotizacion/hooks/useCotizacionPlantillas";
 import { supabase } from "@/integrations/supabase/client";
 
