@@ -2894,6 +2894,10 @@ export type Database = {
           frecuencia: string
           id: string
           incoterm: Database["public"]["Enums"]["incoterm"]
+          lcl_consolidador_id: string | null
+          lcl_dias_libres_almacenaje: number | null
+          lcl_minimo_flete: number | null
+          lcl_tarifa_wm: number | null
           modalidad_equipo: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda: Database["public"]["Enums"]["moneda"]
@@ -2975,6 +2979,10 @@ export type Database = {
           frecuencia?: string
           id?: string
           incoterm?: Database["public"]["Enums"]["incoterm"]
+          lcl_consolidador_id?: string | null
+          lcl_dias_libres_almacenaje?: number | null
+          lcl_minimo_flete?: number | null
+          lcl_tarifa_wm?: number | null
           modalidad_equipo?: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -3056,6 +3064,10 @@ export type Database = {
           frecuencia?: string
           id?: string
           incoterm?: Database["public"]["Enums"]["incoterm"]
+          lcl_consolidador_id?: string | null
+          lcl_dias_libres_almacenaje?: number | null
+          lcl_minimo_flete?: number | null
+          lcl_tarifa_wm?: number | null
           modalidad_equipo?: string | null
           modo?: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
@@ -3123,6 +3135,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_lcl_consolidador_id_fkey"
+            columns: ["lcl_consolidador_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
             referencedColumns: ["id"]
           },
           {
