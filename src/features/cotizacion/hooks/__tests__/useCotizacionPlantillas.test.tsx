@@ -43,6 +43,9 @@ vi.mock("@/integrations/supabase/client", () => {
     chain.insert = vi.fn(() => chain);
     chain.update = vi.fn(() => chain);
     chain.single = vi.fn(() => Promise.resolve({ data: state.insertData, error: state.insertError }));
+    // Thenable para awaits sobre update().eq() sin .single()
+    chain.then = (resolve: (v: unknown) => void) =>
+      Promise.resolve({ data: state.insertData, error: state.insertError }).then(resolve);
     return chain;
   });
   const rpc = vi.fn(() => Promise.resolve({ data: state.rpcData, error: state.rpcError }));
