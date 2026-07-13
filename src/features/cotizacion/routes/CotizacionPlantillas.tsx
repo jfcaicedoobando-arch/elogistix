@@ -1,40 +1,28 @@
 /**
  * CotizacionPlantillas — Gestión de plantillas de cotización (P2 cierre v13.296.0).
- *
- * - Listado con búsqueda, filtro por visibilidad.
- * - Editar metadatos (nombre/descripción/visibilidad).
- * - Eliminar con doble confirmación tipable "ELIMINAR".
+ * Refactor v13.297.4: tabla y dialog extraídos a `components/plantillas/*`.
  */
 "use memo";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Sparkles, MoreVertical, Pencil, Trash2, ArrowUpRight } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DeleteConfirmDialog } from "@/components/shared/dialogs/DeleteConfirmDialog";
-import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { formatDate } from "@/lib/formatters";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   useCotizacionPlantillas,
-  useActualizarPlantilla,
   useEliminarPlantilla,
   type CotizacionPlantilla,
   type PlantillaVisibilidad,
 } from "@/features/cotizacion/hooks/useCotizacionPlantillas";
+import { EditarPlantillaDialog } from "@/features/cotizacion/components/plantillas/EditarPlantillaDialog";
+import { PlantillasTabla } from "@/features/cotizacion/components/plantillas/PlantillasTabla";
 
 type FiltroVis = "todos" | PlantillaVisibilidad;
 
@@ -128,75 +116,12 @@ export default function CotizacionPlantillas() {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-xs uppercase text-muted-foreground border-b">
-                  <tr>
-                    <th className="text-left py-2 px-2">Nombre</th>
-                    <th className="text-left py-2 px-2">Descripción</th>
-                    <th className="text-left py-2 px-2">Visibilidad</th>
-                    <th className="text-right py-2 px-2">Usos</th>
-                    <th className="text-left py-2 px-2">Actualizada</th>
-                    <th className="w-10" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtradas.map((p, i) => (
-                    <tr
-                      key={p.id}
-                      className={i % 2 === 0 ? "bg-background" : "bg-muted/20"}
-                      data-testid={`plantilla-row-${p.id}`}
-                    >
-                      <td className="py-2 px-2 font-medium">{p.nombre}</td>
-                      <td className="py-2 px-2 text-muted-foreground max-w-[280px] truncate">
-                        {p.descripcion ?? "—"}
-                      </td>
-                      <td className="py-2 px-2">
-                        <Badge variant={p.visibilidad === "org" ? "default" : "secondary"}>
-                          {p.visibilidad === "org" ? "Organización" : "Sólo yo"}
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-2 text-right tabular-nums">{p.veces_usada}</td>
-                      <td className="py-2 px-2 text-muted-foreground">
-                        {formatDate(p.updated_at)}
-                      </td>
-                      <td className="py-2 px-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => e.stopPropagation()}
-                              aria-label={`Acciones ${p.nombre}`}
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={(e) => { e.stopPropagation(); setEditando(p); }}
-                            >
-                              <Pencil className="h-4 w-4 mr-2" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => { e.stopPropagation(); navigate("/cotizaciones/nueva"); }}
-                            >
-                              <ArrowUpRight className="h-4 w-4 mr-2" /> Usar en cotización
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={(e) => { e.stopPropagation(); setAEliminar(p); }}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <PlantillasTabla
+              plantillas={filtradas}
+              onEditar={setEditando}
+              onEliminar={setAEliminar}
+              onUsar={() => navigate("/cotizaciones/nueva")}
+            />
           )}
         </CardContent>
       </Card>
@@ -219,103 +144,5 @@ export default function CotizacionPlantillas() {
         isPending={eliminar.isPending}
       />
     </PageContainer>
-  );
-}
-
-// ─── EditarPlantillaDialog ────────────────────────────────────────────────
-
-interface EditProps {
-  plantilla: CotizacionPlantilla;
-  organizationId: string | null;
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-}
-
-function EditarPlantillaDialog({ plantilla, organizationId, open, onOpenChange }: EditProps) {
-  const [nombre, setNombre] = useState(plantilla.nombre);
-  const [descripcion, setDescripcion] = useState(plantilla.descripcion ?? "");
-  const [visibilidad, setVisibilidad] = useState<PlantillaVisibilidad>(plantilla.visibilidad);
-  const actualizar = useActualizarPlantilla();
-
-  const puede = !!organizationId && nombre.trim().length >= 3;
-
-  const handleGuardar = async () => {
-    if (!puede || !organizationId) return;
-    try {
-      await actualizar.mutateAsync({
-        id: plantilla.id,
-        organizationId,
-        nombre,
-        descripcion,
-        visibilidad,
-      });
-      toast.success("Plantilla actualizada");
-      onOpenChange(false);
-    } catch (err) {
-      toast.error("No se pudo actualizar", {
-        description: err instanceof Error ? err.message : undefined,
-      });
-    }
-  };
-
-  return (
-    <FormDialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      icon={Pencil}
-      title="Editar plantilla"
-      description="Actualiza el nombre, la descripción o la visibilidad. El contenido de la cotización base se preserva."
-      size="md"
-      footer={
-        <>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={actualizar.isPending}>
-            Cancelar
-          </Button>
-          <Button onClick={handleGuardar} disabled={!puede || actualizar.isPending}>
-            Guardar cambios
-          </Button>
-        </>
-      }
-    >
-      <FormDialogSection title="Identificación" cols={1}>
-        <div className="space-y-1.5">
-          <Label htmlFor="ep-nombre">Nombre <span className="text-destructive">*</span></Label>
-          <Input
-            id="ep-nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            maxLength={80}
-            autoFocus
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="ep-desc">Descripción</Label>
-          <Textarea
-            id="ep-desc"
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            rows={2}
-            maxLength={200}
-          />
-        </div>
-      </FormDialogSection>
-
-      <FormDialogSection title="Visibilidad" flat>
-        <RadioGroup value={visibilidad} onValueChange={(v) => setVisibilidad(v as PlantillaVisibilidad)}>
-          <div className="flex items-start gap-2">
-            <RadioGroupItem value="yo" id="ep-vis-yo" className="mt-1" />
-            <Label htmlFor="ep-vis-yo" className="font-normal cursor-pointer">
-              <span className="font-medium">Sólo yo</span>
-            </Label>
-          </div>
-          <div className="flex items-start gap-2">
-            <RadioGroupItem value="org" id="ep-vis-org" className="mt-1" />
-            <Label htmlFor="ep-vis-org" className="font-normal cursor-pointer">
-              <span className="font-medium">Toda la organización</span>
-            </Label>
-          </div>
-        </RadioGroup>
-      </FormDialogSection>
-    </FormDialogShell>
   );
 }
