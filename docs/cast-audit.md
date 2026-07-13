@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **2340**
+Total de `as` casts detectados: **2343**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 714     | 30.5% |
+| SAFE      | 0 | 716     | 30.6% |
 | LOW       | 1 | 96      | 4.1% |
-| MEDIUM    | 2 | 1529   | 65.3% |
+| MEDIUM    | 2 | 1531   | 65.3% |
 | HIGH      | 3 | 0     | 0.0% |
-| CRITICAL  | 4 | 1 | 0.0% |
+| CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,12 +47,7 @@ Total de `as` casts detectados: **2340**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [CRITICAL] `src/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave.ts:32`
-
-```ts
-const parsed = JSON.parse(raw) as StoredDraft;
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
