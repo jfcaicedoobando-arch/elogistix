@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.3] - 2026-07-13
+- **fix(cotización · validez de propuesta)**: el popover del calendario "Validez de la propuesta" no se cerraba al elegir fecha. Ahora es controlado (`useState`) y se cierra automáticamente al seleccionar un día. Analogía: el cajón ya se cierra solo al soltar el papel.
+
 ## [13.299.2] - 2026-07-13
 - **fix(cotización LCL · condiciones comerciales)**: la sección "Condiciones comerciales" quedaba bloqueada en LCL porque exigía tarifa vinculada, pero LCL captura el flete manualmente. Ahora se habilita si hay tarifa vinculada **o** el embarque es LCL. Analogía: antes la puerta pedía la "llave" de la tarifa; en LCL esa llave no existe, así que ahora la puerta también abre con el candado del flete manual.
 
