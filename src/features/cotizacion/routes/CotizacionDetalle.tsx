@@ -140,6 +140,9 @@ export default function CotizacionDetalle() {
 
       <HistorialEnviosCard envios={envios} />
 
+      <VersionesCotizacionCard cotizacionId={cotizacion.id} />
+
+
       <DialogConvertirProspecto
         open={showConvertir}
         onOpenChange={setShowConvertir}
