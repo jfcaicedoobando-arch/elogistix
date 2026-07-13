@@ -185,4 +185,5 @@ export const REGLAS_ORDEN: ReglaAuditoria[] = [
   "embarque_huerfano",
   "docs_faltantes",
   "fechas",
+  "tipo_cambio_faltante",
 ];
