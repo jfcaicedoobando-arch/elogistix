@@ -1,40 +1,50 @@
 ## Diagnóstico
 
-La página `/portal/estado-de-cuenta` muestra todo en 0 porque la consulta a Supabase falla con **HTTP 400**:
+En el wizard `/cotizaciones/nueva` el sidebar de progreso (`Paso1ProgressSidebar`) toma el estado de la sección Mercancía de `usePaso1SectionStatus.ts:65,76-78`:
 
+```ts
+mercancia: !!tipoCarga && ((pesoKg ?? 0) > 0 || (piezas ?? 0) > 0)
 ```
-column pagos_factura_1.monto_no_aplicado does not exist
-```
 
-`fetchEstadoCuenta` (en `src/features/facturacion/estadoCuenta/services/estadoCuenta.ts`) pide columnas que no existen en la BD:
+Sólo revisa los campos "planos" `pesoKg` y `piezas`, pero cada modo captura la mercancía en un lugar distinto:
 
-- `pagos_factura.monto_no_aplicado` → **no existe**. La tabla tiene `monto` (pago total) y `monto_aplicado_factura` (aplicado a esta factura). El "no aplicado" (anticipo) se deriva como `monto − monto_aplicado_factura`.
-- `factura_notas_credito.monto_aplicado` y `saldo_disponible` → **no existen**. La tabla sólo tiene `monto` + `estado`.
+| Modo | Componente | ¿Escribe `pesoKg`/`piezas`? |
+|---|---|---|
+| Terrestre | `SeccionMercanciaGeneral` | ✅ sí |
+| Aéreo | `SeccionMercanciaAerea` | ❌ guarda en `dimensionesAereas[]` |
+| Marítimo LCL | `SeccionMercanciaMaritimaLCL` | ❌ guarda en `dimensionesLCL[]` |
+| Marítimo FCL | `SeccionMercanciaMaritimaFCL` | ❌ sólo `tipoContenedor` / `tipoPeso` |
 
-Como el request falla, `useEstadoCuenta` devuelve `rows = []` → KPIs = 0 y tabla vacía.
+Resultado: en Aéreo, FCL y LCL el check verde de Mercancía nunca prende aunque el usuario haya llenado toda la carta.
+
+**Analogía:** el sidebar preguntaba "¿ya pesaste el bulto?" mirando una báscula (los campos planos `pesoKg`/`piezas`) que sólo se usa en modo terrestre. En aéreo/marítimo la mercancía se pesa por filas de dimensiones o por contenedor, así que el sensor miraba una báscula vacía y siempre reportaba "aún no".
 
 ## Cambios
 
-**Un solo archivo:** `src/features/facturacion/estadoCuenta/services/estadoCuenta.ts`
+**Un solo archivo:** `src/features/cotizacion/hooks/usePaso1SectionStatus.ts`
 
-1. En el `select()` embebido:
-   - `pagos_factura(...)`: pedir `monto` en lugar de `monto_no_aplicado`.
-   - `factura_notas_credito(...)`: quitar `monto_aplicado` y `saldo_disponible`.
-2. En los tipos `RawPago` / `RawNota`: reflejar las columnas reales.
-3. En el `map(...)`: calcular `monto_no_aplicado = max(0, monto − monto_aplicado_factura)` en JS y exponerlo en `PagoDetalle` (contrato público sin cambios).
+1. Ampliar el `useWatch` para incluir los campos por modo:
+   - `dimensionesAereas` (para Aéreo)
+   - `dimensionesLCL` (para Marítimo LCL)
+   - `tipoContenedor`, `numContenedores` (para Marítimo FCL)
+2. Reescribir `mercanciaOk` como función mode-aware:
+   - **Terrestre / default:** requiere `tipoCarga` + (`pesoKg>0` ∨ `piezas>0`) — comportamiento actual.
+   - **Aéreo:** requiere `tipoCarga` + al menos una fila en `dimensionesAereas` con `piezas>0` y `pesoKg>0`.
+   - **Marítimo LCL:** requiere `tipoCarga` + al menos una fila en `dimensionesLCL` con `piezas>0` y (`pesoKg>0` ∨ dims válidas).
+   - **Marítimo FCL:** requiere `tipoCarga` + `tipoContenedor` no vacío + `numContenedores>0`.
+3. Determinar el modo por `modo` (ya está en `useWatch`) y `tipo_servicio`/inferencia FCL vs LCL — reutilizar la misma bandera `esMaritimo` y agregar detección FCL/LCL vía el campo existente (revisar cuál usa el form; probablemente `tipoServicio` o presencia de `tipoContenedor`). Si no hay campo explícito, tratar como FCL cuando existe `tipoContenedor` y como LCL cuando existe cualquier fila de `dimensionesLCL`.
 
-Sin cambios en UI, KPIs, filtros ni tests — el contrato `FacturaEstadoCuenta` / `PagoDetalle` se mantiene idéntico.
+Sin cambios en UI, tipos exportados, ni tests. La firma pública de `usePaso1SectionStatus` no cambia.
 
 ## Verificación
 
 - `tsgo --noEmit` para tipos.
-- Revisar la red en `/portal/estado-de-cuenta`: el mismo GET debe responder **200** con las facturas de INDIMEX (31 emitidas en USD).
-- KPI "Saldo Total Adeudado" debe mostrar el total USD; "Saldo a Favor" debe reflejar anticipos si existen.
+- Recorrido manual en `/cotizaciones/nueva`:
+  - Aéreo con 1 fila de dimensiones llenas → Mercancía verde.
+  - Marítimo FCL con `tipoContenedor` y `numContenedores≥1` → Mercancía verde.
+  - Marítimo LCL con 1 fila LCL llena → Mercancía verde.
+  - Terrestre con `pesoKg` o `piezas` → sigue verde (regresión).
 
 ## Versionado
 
-Bump `APP_VERSION` a `13.298.1` + entrada en `CHANGELOG.md` (bugfix).
-
-## Analogía
-
-El módulo estaba pidiendo al almacén tres cajas por nombre, pero dos de esas cajas tienen otra etiqueta. El almacén respondía "no las tengo" y el mostrador se quedaba vacío. Vamos a pedir sólo las cajas que sí existen y calcular la tercera con los datos que ya vienen dentro.
+Bump `APP_VERSION` a `13.298.3` + entrada en `CHANGELOG.md` (bugfix wizard cotización).
