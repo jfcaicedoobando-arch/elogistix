@@ -88,16 +88,35 @@ export function useCotizacionWizardSteps({
     },
   });
 
+  // Firma del último snapshot de `costosInternos` que produjo conceptos de venta.
+  // Se compara en cada avance al paso 3 para re-sincronizar si el usuario editó
+  // costos y volvió a avanzar (fix del guard "una sola vez" — LCL bug COT-2026-0123).
+  const lastCostosHash = useRef<string | null>(costosPreLlenados ? firmaCostos(costosInternos) : null);
+
   const handlePaso2 = useCallback(async () => {
+    // Race-fix: si el usuario avanza antes de que se llenen los costos internos
+    // (típico en LCL con precarga por tarifa aún pendiente), bloqueamos con toast
+    // en vez de saltar a paso 3 con `conceptos_venta = []`.
+    if (costosInternos.length === 0) {
+      notifyError(toast, {
+        title: "Agrega al menos un costo interno antes de continuar",
+        description: "El paso 3 usa los costos del paso 2 para generar los conceptos de venta.",
+      });
+      return;
+    }
     try {
-      if (costosInternos.length > 0 && cotizacionId) {
+      if (cotizacionId) {
         await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
       }
-      if (!costosPreLlenados && costosInternos.length > 0) {
+      // Re-sincronización idempotente: si la firma cambió respecto al último snapshot
+      // procesado (o si nunca hemos sincronizado), regeneramos conceptos.
+      const hashActual = firmaCostos(costosInternos);
+      if (hashActual !== lastCostosHash.current) {
         const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
         if (usd.length > 0) setConceptosUSD(usd);
         if (mxn.length > 0) setConceptosMXN(mxn);
-        setCostosPreLlenados(true);
+        lastCostosHash.current = hashActual;
+        if (!costosPreLlenados) setCostosPreLlenados(true);
       }
       setCurrentStep(3);
     } catch (e: unknown) {
@@ -110,6 +129,7 @@ export function useCotizacionWizardSteps({
       });
     }
   }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, toast]);
+
 
   const handlePaso3 = useCallback(async () => {
     const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
