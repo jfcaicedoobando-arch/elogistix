@@ -97,19 +97,22 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
     </div>
   );
 
+  // v13.299.1: en Marítimo LCL se elimina por completo el panel de "Tarifa
+  // marítima vinculada" (y sus sugerencias). LCL usa captura manual de flete
+  // — consolidador + tarifa W/M + mínimo — mediante `SeccionFleteManualLCL`.
+  const esLcl = w.esMaritimo && tipoEmbarque === "LCL";
   const tarifaBlock = w.esMaritimo && !sinFleteVenta ? (
     <div id="seccion-tarifa" className="scroll-mt-4 space-y-4">
-      <TarifaVinculadaPanel
-        complete={status.tarifa}
-        onAutocargaCostos={handleAutocargaCostos}
-        markup={markup}
-        cantidad={numContenedores}
-      />
-      {/* v13.299.0: en LCL la tarifa vinculada es opcional. Se muestra
-          siempre el bloque de flete manual como alternativa/complemento. */}
-      {tipoEmbarque === "LCL" ? (
+      {esLcl ? (
         <SeccionFleteManualLCL complete={status.tarifa} />
-      ) : null}
+      ) : (
+        <TarifaVinculadaPanel
+          complete={status.tarifa}
+          onAutocargaCostos={handleAutocargaCostos}
+          markup={markup}
+          cantidad={numContenedores}
+        />
+      )}
     </div>
   ) : null;
 
