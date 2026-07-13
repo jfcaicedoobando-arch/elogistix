@@ -1,79 +1,67 @@
-# Auditoría P2 y cierre de fase
+## Fase 1 — Auditoría P2 cierre y tests faltantes
 
-## 1) Auditoría de lo construido en el turno anterior
+**Hallazgos de la auditoría (v13.296.0):**
 
-### Verde ✅
-- **Migración** `cotizacion_plantillas`: RLS multi-tenant correcta (autor + `visibilidad='org'` + roles `admin/admin_org/gerente_comercial`), RPC `aplicar_plantilla_cotizacion` atómica con incremento `veces_usada`, GRANTs y trigger `updated_at` presentes.
-- **Hooks** (`useCotizacionPlantillas.ts`): `queryOptions`, `staleTime`, invalidación explícita, orden por `veces_usada desc, updated_at desc`, tipado limpio. 6/6 tests verdes.
-- **Integraciones**: `CotizacionSuccessDialog` (botón "Guardar como plantilla") y `NuevaCotizacion.tsx` (banner en Paso 1) cableadas correctamente. `form.reset({...current, ...values}, { keepDefaultValues: true }) + trigger()` cumple la regla RHF del core.
+| # | Componente / Hook | Tests | Riesgo |
+|---|---|---|---|
+| 1 | `useActualizarPlantilla` | ❌ ninguno | Mutation nueva sin cobertura |
+| 2 | `useEliminarPlantilla` | ❌ ninguno | Soft-delete sin cobertura |
+| 3 | `GuardarPlantillaDialog` (refactor `FormDialogShell`) | ❌ | Regresión de UI/validación |
+| 4 | `PlantillaSelectorPaso1` | ❌ | Aplica payload al form — crítico |
+| 5 | `AgregarConceptoInline` | ❌ | Alta de concepto con prefill SAT |
+| 6 | `CotizacionPlantillas` (página nueva) | ❌ | Búsqueda + filtros + eliminar |
+| 7 | `agregarConceptoPrefill` en `useConceptosVentaCotizacion` | ❌ | Helper nuevo |
 
-### Rojo/Ámbar 🟡
-1. **Tests faltantes** para dos componentes nuevos:
-   - `GuardarPlantillaDialog` — validación `nombre ≥ 3`, limpieza de folios/fechas en `limpiarValues`, cierre + reset al guardar OK, toast de error.
-   - `PlantillaSelectorPaso1` — no renderiza si `organizationId=null` o lista vacía, aplica con `form.reset+trigger`, dispara `onApplied`, muestra badge `Nx` vs `Nueva`.
-2. **Cumplimiento `FormDialogShell`** (regla core "Modales tipo formulario…"): `GuardarPlantillaDialog` usa `Dialog` plano. Migrar a `FormDialogShell` + `FormDialogSection` para alinearse al estándar del proyecto.
-3. **Tipado**: `limpiarValues` usa `any`. Reemplazar por un `Omit<Partial<CotizacionFormValues>, 'id'|'folio'|...>` con destructuring tipado (Power of 10: prohibido `any` implícito).
+Otros hallazgos menores:
+- `EditarPlantillaDialog` inline dentro de la página (aceptable, <200 líneas totales).
+- Falta un vínculo a `/cotizaciones/plantillas` desde la lista de cotizaciones (chip o botón secundario) para descubrimiento.
 
-### Acciones de la auditoría (correcciones + tests)
-- Migrar `GuardarPlantillaDialog` a `FormDialogShell` + `FormDialogSection` (icon-tile, secciones, footer sticky).
-- Tipar `limpiarValues` sin `any`.
-- Crear `GuardarPlantillaDialog.test.tsx` (≥4 casos) y `PlantillaSelectorPaso1.test.tsx` (≥4 casos).
+**Acciones Fase 1:**
 
-## 2) Cierre de Fase P2 — pendientes anunciados
+1. **Tests de hooks** (extender `useCotizacionPlantillas.test.tsx`):
+   - `useActualizarPlantilla`: happy path + invalidación de `cotizacionPlantillas.list(org)`.
+   - `useEliminarPlantilla`: soft-delete llama `.update({deleted_at})` y filtra por `id`+`organization_id`.
+   - `agregarConceptoPrefill`: nuevo test unitario en `useConceptosVentaCotizacion.test.tsx` (o crear si no existe) verificando que la fila queda con `clave_sat`, `unidad`, `descripcion`, `cantidad`, `precioUnitario` correctos en el bucket indicado.
 
-### 2A. Página `/cotizaciones/plantillas` (gestión)
-- **Ruta**: `src/routes/cotizaciones/plantillas.tsx` (lazy) registrada en el router de cotizaciones + entrada en menú "Cotizaciones → Plantillas".
-- **UI**: `DataTable` estándar con columnas *Nombre · Descripción · Visibilidad · Usos · Última actualización · Autor · Acciones* (menu con `e.stopPropagation()` en la fila).
-- **Acciones**:
-  - **Editar metadatos** (nombre / descripción / visibilidad) → nuevo hook `useActualizarPlantilla` (update directo, RLS ya lo protege) con optimistic update via `useMutationWithFeedback`.
-  - **Eliminar** con doble confirmación tipable "ELIMINAR" (regla data-safety) → reusa `useEliminarPlantilla` existente.
-  - **Duplicar** (opcional pequeño): copia payload con nombre "… (copia)".
-- **Filtros**: por visibilidad (yo/org) y búsqueda por nombre. Server-side vía `.ilike` + `.range()` (paginación estándar del proyecto).
-- **Empty state**: CTA "Guarda tu primera plantilla desde el wizard".
-- **Tests**: 1 test de integración del listado + 1 por acción (editar / eliminar).
+2. **Tests de componentes** (`__tests__/`):
+   - `GuardarPlantillaDialog.test.tsx`: render, validación de nombre <3 chars deshabilita submit, cambia visibilidad, dispara `onGuardar` con payload limpio (sin `folio`/`id`/fechas).
+   - `PlantillaSelectorPaso1.test.tsx`: se oculta si no hay plantillas; al seleccionar dispara `form.reset` + `trigger`; ordena por `veces_usada`.
+   - `AgregarConceptoInline.test.tsx`: seleccionar clave SAT llena descripción/unidad; toggle USD/MXN; botón confirmar invoca `agregarConceptoPrefill` con la moneda correcta y cierra popover.
+   - `CotizacionPlantillas.test.tsx`: renderiza filas, filtro por visibilidad, búsqueda, abre `DeleteConfirmDialog` desde dropdown.
 
-### 2B. Unificar "Agregar concepto" en pasos 2/3
-Estado actual: `SeccionConceptosVentaCotizacion` tiene **dos botones separados** ("Agregar" USD y "Agregar" MXN) → fricción reportada en la auditoría inicial del wizard.
+3. **Descubrimiento**: agregar entrada "Plantillas" en `CotizacionesPageActions` (link a `/cotizaciones/plantillas`).
 
-- **Nuevo componente** `AgregarConceptoInline.tsx`: un solo botón "Agregar concepto" que abre un `Popover` con:
-  - `ProductoServicioSelect` (catálogo SAT) — reutiliza el existente.
-  - Toggle **Moneda: USD / MXN** (segmented) — determina en qué tabla se inserta.
-  - Descripción libre opcional, unidad (`UnidadMedidaSelect`) y cantidad prefill 1.
-  - Botón "Agregar" → llama a `agregarConceptoUSD` o `agregarConceptoMXN` inyectando `clave_sat` + `descripcion` + `unidad`.
-- **Reutilización paso 2/3**: el mismo componente se monta tanto en `SeccionConceptosVentaCotizacion` (paso 3 — venta) como en `SeccionCostosInternosPLLocal` / `SeccionCostosInternosPLUnificado` (paso 2 — costos). Se pasa un prop `variante: "venta" | "costo"` que ajusta el label del toggle y los callbacks.
-- **Compatibilidad**: se mantienen `agregarConceptoUSD` / `agregarConceptoMXN` — el nuevo componente sólo los orquesta. Sin cambios en el store del wizard.
-- **Tests**: 3 casos — abre popover, selecciona SAT+USD y llama al callback correcto, valida cantidad > 0.
+## Fase 2 — P3: Duplicar cotización & historial de versiones
 
-## 3) Versionado y changelog
-- Bump `APP_VERSION` → `13.296.0`.
-- Entrada `CHANGELOG.md`: "P2 cierre — Gestión de plantillas + Agregar concepto unificado".
+Con Plantillas cerrado, el siguiente cuello de botella del wizard (identificado en la auditoría original) es **iteración de una cotización viva**: hoy el usuario que quiere variar precios/ruta/incoterm sobre una cotización enviada, o comparar dos escenarios, tiene que crear una nueva desde cero.
 
-## 4) Verificación final
-- `bun run tsgo` (typecheck).
-- `bunx vitest run` sobre los archivos nuevos/tocados (hooks + 5 componentes).
-- Recorrido manual Playwright: crear plantilla desde success dialog → verla en `/cotizaciones/plantillas` → aplicarla en nuevo wizard → agregar concepto USD con `AgregarConceptoInline`.
+**Alcance P3:**
+
+1. **Duplicar cotización** (una acción, cero fricción):
+   - Botón "Duplicar" en `CotizacionDetalle` y en el menú de fila de `Cotizaciones`.
+   - RPC `duplicar_cotizacion(_id)` `SECURITY DEFINER`: copia paso 1 + costos internos + conceptos venta, regenera folio, deja en estado `Borrador`, sin fechas de envío/aprobación. Requiere pertenecer a la misma org.
+   - Al duplicar, redirige a `/cotizaciones/:nuevo/editar` con toast "Duplicada desde COT-XXXX".
+
+2. **Historial de versiones ligero** (sin sobre-ingeniería):
+   - Nueva tabla `cotizacion_versiones` (organization_id, cotizacion_id, version_num, snapshot JSONB, motivo, creada_por, created_at). RLS por org.
+   - Trigger `on_cotizacion_update` que guarda snapshot cuando el usuario "Guarda cambios" en una cotización **enviada** (no en borradores, para no ensuciar).
+   - Panel "Historial" en `CotizacionDetalle` (Sheet lateral) con línea de tiempo, badge de versión y botón "Ver esta versión" (read-only) + "Restaurar" (con doble confirmación).
+
+3. **Comparador de escenarios A/B** (opcional dentro de la fase — decidir al inicio):
+   - Vista `/cotizaciones/:a/vs/:b` con tabla lado a lado de totales, márgenes, conceptos. Útil para vendedores que mandan 2 opciones al cliente.
+
+**Entregables P3 mínimos (obligatorios):**
+- Migración BD: `cotizacion_versiones` + RPC `duplicar_cotizacion` + trigger de snapshot.
+- Hooks: `useDuplicarCotizacion`, `useHistorialCotizacion`, `useRestaurarVersion`.
+- UI: botón Duplicar, Sheet de historial.
+- Tests unitarios de los 3 hooks + tests de la RPC (Deno) para tenancy.
 
 ## Detalles técnicos
 
-```text
-src/
-├── features/cotizacion/
-│   ├── hooks/
-│   │   ├── useCotizacionPlantillas.ts        (+useActualizarPlantilla)
-│   │   └── __tests__/useCotizacionPlantillas.test.tsx  (+update tests)
-│   └── components/
-│       ├── wizard/
-│       │   ├── GuardarPlantillaDialog.tsx     (→ FormDialogShell, sin any)
-│       │   ├── PlantillaSelectorPaso1.tsx     (sin cambios funcionales)
-│       │   ├── AgregarConceptoInline.tsx      (NUEVO)
-│       │   └── __tests__/
-│       │       ├── GuardarPlantillaDialog.test.tsx    (NUEVO)
-│       │       ├── PlantillaSelectorPaso1.test.tsx    (NUEVO)
-│       │       └── AgregarConceptoInline.test.tsx     (NUEVO)
-│       └── SeccionConceptosVentaCotizacion.tsx  (usa AgregarConceptoInline)
-├── routes/cotizaciones/
-│   └── plantillas.tsx                         (NUEVO — página gestión)
-└── constants/appVersion.ts                    (13.296.0)
-```
+- Todos los tests siguen el patrón thenable existente para Supabase (`mem://technical/testing-mock-patterns`).
+- `duplicar_cotizacion` debe reasignar `usuario_id = auth.uid()`, regenerar `folio` con la secuencia existente y **NO** copiar `firma_cliente_at`, `enviada_at`, `expira_at`.
+- El trigger de snapshot usa `pg_notify` no; sólo `INSERT` en `cotizacion_versiones`. Índice `(cotizacion_id, version_num DESC)`.
+- Restaurar versión = `UPDATE cotizaciones SET ... = snapshot->>...` dentro de una transacción con doble confirmación tipable (regla core).
+- Bump de versión: `13.297.0` (fin Fase 1) → `13.298.0` (RPC + tests P3) → `13.299.0` (UI historial + duplicar) → `13.300.0` (comparador si entra).
 
-Sin cambios de BD adicionales (la tabla y RPC ya existen). `useActualizarPlantilla` es un `UPDATE` directo con `.eq('id', ...)` — la RLS de update ya está limitada a autor/admin en la migración previa.
+**Decisión pendiente**: ¿el **Comparador A/B** entra en P3 o lo dejamos para P4? Si dices "entra", planifico ambos; si dices "P4", cierro P3 con duplicar + historial y arrancamos comparador aparte.
