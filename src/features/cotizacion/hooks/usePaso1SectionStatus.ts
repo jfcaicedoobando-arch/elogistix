@@ -1,5 +1,5 @@
 import { useFormContext, useWatch } from "react-hook-form";
-import type { CotizacionFormValues } from "@/features/cotizacion/types";
+import type { CotizacionFormValues, LclFleteManual } from "@/features/cotizacion/types";
 import type { DimensionAerea, DimensionLCL } from "@/features/cotizacion/types/core";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 
