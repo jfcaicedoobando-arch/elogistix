@@ -17,6 +17,7 @@ import {
   severidadConfig,
 } from "./hallazgosTablaConfig";
 import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
+import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
 
 interface Props {
@@ -81,19 +82,7 @@ export function HallazgosTabla(props: Props) {
     { id: "eta", header: "ETA", meta: { width: "w-[100px]", className: "text-xs tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
     { id: "detalle", header: "Detalle", meta: { className: "text-xs" },
       cell: ({ row }) => {
-        const h = row.original;
-        return (
-          <>
-            <div>{h.detalle}</div>
-            {h.documentos_faltantes && h.documentos_faltantes.length > 0 && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {h.documentos_faltantes.map((doc) => (
-                  <Badge key={doc} variant="secondary" className="text-2xs font-normal">{doc}</Badge>
-                ))}
-              </div>
-            )}
-          </>
-        );
+        return <HallazgoDetalleCell hallazgo={row.original} />;
       } },
     { id: "resp", header: "Responsable", meta: { width: "w-[170px]", className: "text-xs" },
       cell: ({ row }) => {

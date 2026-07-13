@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/features/auditoria/types";
 import { cn } from "@/lib/utils";
+import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 
 const reglaToTab: Record<ReglaAuditoria, string> = {
   docs_faltantes: "documentos",
@@ -60,24 +61,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
     { id: "eta", header: "ETA", meta: { width: "w-[110px]", className: "text-xs tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
     { id: "detalle", header: "Detalle", meta: { className: "text-sm" },
       cell: ({ row }) => {
-        const h = row.original;
-        const tieneBadges = !!h.documentos_faltantes && h.documentos_faltantes.length > 0;
-        const idx = h.detalle.indexOf(":");
-        const textoDetalle = tieneBadges && idx > -1
-          ? h.detalle.slice(0, idx + 1)
-          : h.detalle;
-        return (
-          <>
-            <div>{textoDetalle}</div>
-            {tieneBadges && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {h.documentos_faltantes!.map((doc) => (
-                  <Badge key={doc} variant="secondary" className="text-2xs font-normal">{doc}</Badge>
-                ))}
-              </div>
-            )}
-          </>
-        );
+        return <HallazgoDetalleCell hallazgo={row.original} />;
       } },
     { id: "acc", header: "", meta: { width: "w-[90px]" },
       cell: ({ row }) => {
