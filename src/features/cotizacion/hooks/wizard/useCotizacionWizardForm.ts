@@ -108,7 +108,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
     conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
     totalUSD, tasaIva, buildPaso1Data,
-    mutations,
+    mutations, onFinalized,
   });
 
   const isPending = crearCotizacion.isPending || updateCotizacion.isPending || upsertCostos.isPending;
