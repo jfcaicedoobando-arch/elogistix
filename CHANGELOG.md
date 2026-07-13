@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.0] - 2026-07-13
+- **feat(cotización LCL · flete manual + W/M)**: la tarifa vinculada ahora es **opcional** en Marítimo LCL. Se agregó captura manual del flete cuando no hay una tarifa vinculada (o como alternativa a ella): consolidador/agente (proveedor), tarifa USD por W/M, mínimo de flete y días libres de almacenaje.
+  - Nueva sección `SeccionFleteManualLCL` (renderizada bajo `TarifaVinculadaPanel` sólo en LCL), con KPIs en vivo: peso total, volumen total, **W/M facturable** = `max(peso_kg/1000, volumen_m3)`, y venta calculada = `max(WM × tarifa, mínimo)`.
+  - En `SeccionMercanciaMaritimaLCL` se añadió el input "Peso total (kg)" y el indicador W/M al pie de la tabla de dimensiones (antes LCL sólo capturaba volumen).
+  - `usePaso1SectionStatus`: la validación de la sección "Tarifa/Flete" ahora acepta LCL con captura manual (tarifa W/M > 0 + consolidador). Se relajó `cierre` para LCL (no exige contenedores). Los demás modos conservan su lógica.
+  - Persistencia: nueva columna `cotizaciones.lcl_tarifa_wm`, `lcl_minimo_flete`, `lcl_dias_libres_almacenaje`, `lcl_consolidador_id` (migración aplicada). Los mappers `buildPaso1Data` / `buildCotizacionDefaultValues` conservan y restauran estos valores.
+  - Utilidad pura `calcularWMLcl.ts` + suite Vitest con casos: W/M por volumen, W/M por peso, mínimo aplicado, entradas inválidas.
+  - Analogía: antes LCL era como pedir taxi con tarifa fija de "carro completo"; ahora también permite el modo real de LCL — pagar por lo que ocupas (peso o volumen, el mayor), con un piso mínimo.
+
 ## [13.298.3] - 2026-07-13
 - **fix(wizard cotización · sidebar progreso)**: la sección "Mercancía" del `Paso1ProgressSidebar` nunca se marcaba como completa en Aéreo, Marítimo FCL ni Marítimo LCL. `usePaso1SectionStatus.mercanciaOk` sólo miraba los campos planos `pesoKg`/`piezas`, que únicamente se llenan en el sub-form terrestre (`SeccionMercanciaGeneral`); los demás modos guardan los datos en `dimensionesAereas[]`, `dimensionesLCL[]` o en `tipoContenedor`+`numContenedores`. Se hizo la verificación mode-aware: FCL requiere `tipoContenedor` + `numContenedores≥1`; LCL exige ≥1 fila con piezas y volumen/dimensiones; Aéreo exige ≥1 fila con piezas y peso volumétrico/dimensiones; terrestre conserva el comportamiento previo.
 
