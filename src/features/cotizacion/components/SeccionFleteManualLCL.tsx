@@ -18,9 +18,9 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { FormField } from "@/components/shared/FormField";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useProveedoresLite } from "@/features/proveedor/hooks";
-import { formatCurrency } from "@/lib/formatters";
-import type { CotizacionFormValues } from "@/features/cotizacion/types";
+import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
+import { formatCurrency } from "@/lib/formatters/numbers";
+import type { CotizacionFormValues, LclFleteManual } from "@/features/cotizacion/types";
 import {
   calcularTotalesLcl,
   calcularFleteVentaLCL,
