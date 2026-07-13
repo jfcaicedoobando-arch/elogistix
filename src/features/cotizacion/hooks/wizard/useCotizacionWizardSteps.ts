@@ -61,6 +61,8 @@ interface Deps {
   tasaIva: number;
   buildPaso1Data: () => Record<string, unknown>;
   mutations: StepMutations;
+  /** v13.293.0 (P0): si se pasa, se llama en lugar de navegar tras guardar. */
+  onFinalized?: (cotizacionId: string) => void;
 }
 
 /**
@@ -74,7 +76,7 @@ export function useCotizacionWizardSteps({
   cotizacionId, setCotizacionId, currentStep, setCurrentStep,
   msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
   conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
-  totalUSD, tasaIva, buildPaso1Data, mutations,
+  totalUSD, tasaIva, buildPaso1Data, mutations, onFinalized,
 }: Deps) {
   const { updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
