@@ -40,7 +40,10 @@ export const appLogs = {
     ['app_logs_health_timeline', hours, buckets] as const,
 } as const;
 
-export const papelera = (tabla: string) => ['papelera', tabla] as const;
+export const papelera = Object.assign(
+  (tabla: string) => ['papelera', tabla] as const,
+  { counts: ['papelera', 'counts'] as const },
+);
 export const idempotenciaLog = ['idempotencia-log'] as const;
 
 export const alertasSistema = {
