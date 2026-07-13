@@ -5,10 +5,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import {
-  GuardarPlantillaDialog,
-  limpiarValues,
-} from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
+import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
+import { limpiarValues } from "@/features/cotizacion/components/wizard/guardarPlantillaHelpers";
 
 const insertMock = vi.fn();
 
