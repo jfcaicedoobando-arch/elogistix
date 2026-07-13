@@ -171,7 +171,11 @@ export function useCotizacionWizardSteps({
         registrarActividad: registrarActividad.mutate,
       });
       notifySuccess(toast, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
-      navigate(`/cotizaciones/${cotizacionId}`);
+      if (onFinalized) {
+        onFinalized(cotizacionId);
+      } else {
+        navigate(`/cotizaciones/${cotizacionId}`);
+      }
     } catch (err: unknown) {
       notifyError(toast, {
         title: "Error al finalizar cotización",
@@ -181,7 +185,7 @@ export function useCotizacionWizardSteps({
         context: { cotizacionId, isEditMode },
       });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode, onFinalized]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);
