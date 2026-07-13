@@ -12,6 +12,7 @@ import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
+import { scrollAndFocusSection, seccionParaErrorPaso1 } from "./scrollToErrorSection";
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
