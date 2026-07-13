@@ -61,8 +61,10 @@ export function GuardarPlantillaDialog({
       onSaved?.();
       handleClose(false);
     } catch (err) {
-      toast.error("No se pudo guardar la plantilla", {
-        description: err instanceof Error ? err.message : undefined,
+      notifyError(undefined, {
+        title: "No se pudo guardar la plantilla",
+        error: err,
+        method: "GuardarPlantillaDialog.submit",
       });
     }
   };
