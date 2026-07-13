@@ -99,7 +99,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
         </FormField>
 
         <FormField label="Validez de la propuesta">
-          <Popover>
+          <Popover open={openValidez} onOpenChange={setOpenValidez}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -117,9 +117,10 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
               <Calendar
                 mode="single"
                 selected={validezPropuesta}
-                onSelect={(d) =>
-                  setValue("validezPropuesta", d, { shouldValidate: true, shouldDirty: true })
-                }
+                onSelect={(d) => {
+                  setValue("validezPropuesta", d, { shouldValidate: true, shouldDirty: true });
+                  if (d) setOpenValidez(false);
+                }}
                 disabled={(date) => date < hoy || (!!tarifaHasta && date > tarifaHasta)}
                 autoFocus
                 className={cn("p-3 pointer-events-auto")}
