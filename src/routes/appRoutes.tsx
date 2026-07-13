@@ -20,7 +20,7 @@ import {
   Dashboard, Operaciones, Reportes, CierreMensual, Bitacora, Ayuda,
   Papelera, Idempotencia, Auditoria, SentryDiagnostico,
   Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque,
-  Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, PdfPreviewCotizacion,
+  Cotizaciones, NuevaCotizacion, NuevaCotizacionInformativa, CotizacionDetalle, EditarCotizacion, CotizacionPlantillas, PdfPreviewCotizacion,
   Clientes, ClienteDetalle, Proveedores, ProveedorDetalle,
   Facturacion, FacturaDetalle, ProformaDetalle, ProformasListado,
   ProfitProyeccion, ProfitEstadoResultados, ProfitPresupuesto, ProfitDashboardEjecutivo,
