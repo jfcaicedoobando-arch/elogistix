@@ -77,19 +77,47 @@ export class ErrorBoundary extends React.Component<Props, State> {
   };
 
   handleReportFeedback = async () => {
-    const feedback = Sentry.getFeedback();
-    if (!feedback) return;
+    const eventId = this.state.eventId ?? undefined;
+    // 1) Intentar widget de feedback (Sentry Feedback integration).
     try {
-      const form = await feedback.createForm();
-      form.appendToDom();
-      form.open();
-      // Asocia el feedback con el evento exacto que rompió la UI, si lo tenemos.
-      if (this.state.eventId) {
-        Sentry.getCurrentScope().setTag("crash_event_id", this.state.eventId);
+      const feedback = Sentry.getFeedback?.();
+      if (feedback) {
+        const form = await feedback.createForm();
+        form.appendToDom();
+        form.open();
+        if (eventId) {
+          Sentry.getCurrentScope().setTag("crash_event_id", eventId);
+        }
+        return;
       }
-    } catch {
-      // best-effort: si el widget falla, el usuario aún puede usar Reintentar.
+    } catch (err) {
+      logger.warn("ErrorBoundary.feedback.widgetFailed", { err: String(err) });
     }
+    // 2) Fallback: diálogo clásico de reporte (sólo requiere eventId + DSN).
+    try {
+      if (eventId && typeof Sentry.showReportDialog === "function") {
+        Sentry.showReportDialog({ eventId });
+        return;
+      }
+    } catch (err) {
+      logger.warn("ErrorBoundary.feedback.dialogFailed", { err: String(err) });
+    }
+    // 3) Último recurso: abrir correo con el eventId prellenado.
+    const subject = encodeURIComponent(
+      `Reporte de error en Libre Carga${eventId ? ` (${eventId})` : ""}`,
+    );
+    const body = encodeURIComponent(
+      [
+        "Describe lo que estabas haciendo cuando ocurrió el error:",
+        "",
+        "",
+        "---",
+        `ID del evento: ${eventId ?? "(sin ID)"}`,
+        `Ruta: ${typeof window !== "undefined" ? window.location.pathname : ""}`,
+        `Mensaje: ${this.state.error?.message ?? ""}`,
+      ].join("\n"),
+    );
+    window.location.href = `mailto:soporte@librecarga.com?subject=${subject}&body=${body}`;
   };
 
   render() {
@@ -120,11 +148,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 <Button onClick={() => { window.location.href = "/"; }}>
                   Ir al inicio
                 </Button>
-                {this.state.eventId && (
-                  <Button variant="secondary" onClick={this.handleReportFeedback}>
-                    <MessageSquarePlus className="h-4 w-4 mr-1" /> Reportar
-                  </Button>
-                )}
+                <Button variant="secondary" onClick={this.handleReportFeedback}>
+                  <MessageSquarePlus className="h-4 w-4 mr-1" /> Reportar
+                </Button>
               </div>
             </CardContent>
           </Card>

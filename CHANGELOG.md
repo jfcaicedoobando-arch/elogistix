@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.7] - 2026-07-13
+- **fix(errorboundary/reportar)**: el botón "Reportar" del ErrorBoundary quedaba sin efecto cuando `Sentry.getFeedback()` no estaba disponible (dev mode o integración de feedback aún no registrada) porque el `catch` silencioso descartaba el fallo. Ahora hay una cadena de fallbacks: 1) widget de feedback de Sentry, 2) `Sentry.showReportDialog({ eventId })`, 3) `mailto:` a soporte con el `eventId`, ruta y mensaje prellenados. El botón se muestra siempre (aunque no haya `eventId`), para que el usuario nunca quede atrapado sin ruta de reporte.
+
 ## [13.288.6] - 2026-07-13
 - **fix(auditoria/docs)**: la matriz `_docs_requeridos_por_estado` marcaba como faltantes "Certificado de Origen" y "Ficha Técnica" en embarques Aéreos/Marítimos aunque la vista de detalle del embarque no los pedía (sólo mostraba AWB/Packing/Factura para Aéreo). Esto generaba falsos positivos como el reportado en `ELIMP00158`. Se alinea la matriz de auditoría con `getDocsForMode`: sólo se exigen los documentos base por modo (Aéreo: Factura + Packing + AWB; Marítimo: Factura + Packing + BL Master + BL House). Los documentos opcionales (Certificado de Origen, Ficha Técnica) siguen disponibles en el módulo, pero no disparan hallazgo por sí solos.
 
