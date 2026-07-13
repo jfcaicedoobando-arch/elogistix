@@ -12,7 +12,9 @@ function calcularPesoVolumenPiezas(v: CotizacionFormValues): PesoVolumen {
   if (v.modo === "Marítimo") {
     if (v.tipoEmbarque === "LCL") {
       return {
-        peso: 0,
+        // v13.299.0: LCL persiste peso total capturado (antes se guardaba 0),
+        // necesario para calcular W/M al reabrir la cotización.
+        peso: Number(v.pesoKg) || 0,
         volumen: v.dimensionesLCL.reduce((s, d) => s + d.volumen_m3, 0),
         piezas: v.dimensionesLCL.reduce((s, d) => s + d.piezas, 0),
       };
@@ -98,6 +100,8 @@ export function buildPaso1Data(
   userEmail: string,
 ): Record<string, unknown> {
   const { peso, volumen, piezas } = calcularPesoVolumenPiezas(values);
+  const esLcl = values.modo === "Marítimo" && values.tipoEmbarque === "LCL";
+  const lclManual = values.lclFleteManual;
   return {
     ...partesCliente(values, clientes),
     ...partesMercancia(values),
@@ -114,5 +118,12 @@ export function buildPaso1Data(
     tarifa_id: values.tarifaId ?? null,
     tarifa_override: values.tarifaOverride ?? {},
     sin_desglose_costos: values.sinDesgloseCostos ?? false,
+    // v13.299.0: campos LCL manuales (nulos fuera de LCL o cuando no aplica).
+    lcl_tarifa_wm: esLcl ? (Number(lclManual?.tarifaWM) || null) : null,
+    lcl_minimo_flete: esLcl ? (Number(lclManual?.minimo) || null) : null,
+    lcl_dias_libres_almacenaje: esLcl
+      ? (Number(lclManual?.diasLibresAlmacenaje) || null)
+      : null,
+    lcl_consolidador_id: esLcl ? (lclManual?.consolidadorId ?? null) : null,
   };
 }
