@@ -1,50 +1,51 @@
-## Diagnóstico
+# Plan — Mejoras al flujo de cotización LCL
 
-En el wizard `/cotizaciones/nueva` el sidebar de progreso (`Paso1ProgressSidebar`) toma el estado de la sección Mercancía de `usePaso1SectionStatus.ts:65,76-78`:
+## Objetivo
+Adaptar el wizard de cotización marítimo LCL a la realidad operativa: el flete LCL se cotiza por **W/M (peso o volumen, el mayor)** contra un consolidador, y las tarifas cambian por embarque. Hoy el paso obliga a vincular una tarifa como si fuera FCL.
 
-```ts
-mercancia: !!tipoCarga && ((pesoKg ?? 0) > 0 || (piezas ?? 0) > 0)
-```
+## Cambios funcionales
 
-Sólo revisa los campos "planos" `pesoKg` y `piezas`, pero cada modo captura la mercancía en un lugar distinto:
+### 1. Tarifa opcional en LCL
+- En LCL, la sección de tarifa pasa a ser **sugerencia**, no requisito.
+- Si existe una tarifa vigente para la ruta se muestra y se puede vincular (para heredar recargos, condiciones y días libres almacenaje LCL).
+- Si no hay tarifa o el ejecutivo prefiere capturar manual, el paso "Tarifa" queda en verde y se abre un bloque de captura manual.
+- FCL sigue igual (tarifa obligatoria).
 
-| Modo | Componente | ¿Escribe `pesoKg`/`piezas`? |
-|---|---|---|
-| Terrestre | `SeccionMercanciaGeneral` | ✅ sí |
-| Aéreo | `SeccionMercanciaAerea` | ❌ guarda en `dimensionesAereas[]` |
-| Marítimo LCL | `SeccionMercanciaMaritimaLCL` | ❌ guarda en `dimensionesLCL[]` |
-| Marítimo FCL | `SeccionMercanciaMaritimaFCL` | ❌ sólo `tipoContenedor` / `tipoPeso` |
+### 2. Bloque de flete manual LCL (cuando no hay tarifa)
+Nuevos campos en el paso, sólo visibles en LCL sin tarifa vinculada:
+- **Tarifa W/M** (USD por W/M).
+- **Mínimo de flete** (USD).
+- **Consolidador / Agente LCL**: selector desde `proveedores` filtrado por tipo agente/consolidador.
+- **Días libres almacenaje LCL** (numérico, hoy sólo viene de tarifa).
 
-Resultado: en Aéreo, FCL y LCL el check verde de Mercancía nunca prende aunque el usuario haya llenado toda la carta.
+### 3. Cálculo automático W/M en Mercancía
+- Con las filas de `DimensionesLCL` calcular por fila `chargeable = max(peso_kg, volumen_m3 × 1000)` y sumar.
+- Mostrar un KPI arriba de la tabla LCL: **Peso total / Volumen total / W/M facturable**.
+- Ese W/M alimenta la venta: `venta_flete = max(W/M × tarifa_wm, minimo)`.
 
-**Analogía:** el sidebar preguntaba "¿ya pesaste el bulto?" mirando una báscula (los campos planos `pesoKg`/`piezas`) que sólo se usa en modo terrestre. En aéreo/marítimo la mercancía se pesa por filas de dimensiones o por contenedor, así que el sensor miraba una báscula vacía y siempre reportaba "aún no".
+### 4. Validación del paso
+En `usePaso1SectionStatus`:
+- `tarifa: esMaritimo && !esLCL && !sinFleteVenta ? !!tarifaId : true`.
+- Para LCL agregar validación de "flete listo": tarifa vinculada **o** (tarifa W/M > 0 y consolidador elegido).
 
-## Cambios
+## Cambios técnicos
 
-**Un solo archivo:** `src/features/cotizacion/hooks/usePaso1SectionStatus.ts`
+- **Form (`types/form.ts`)**: añadir `lclFleteManual: { tarifaWM, minimo, diasLibresAlmacenaje, consolidadorId } | null`.
+- **Hook `usePaso1SectionStatus.ts`**: nueva rama LCL para `tarifa` y helpers `fleteLCLOk`.
+- **`SeccionMercanciaMaritimaLCL.tsx`**: KPI de W/M (utilidad pura `calcularWMLcl` con tests).
+- **`TarifaFields.tsx` / `seccionRuta`**: renderizar bloque manual cuando `tipoEmbarque === "LCL" && !tarifaId`.
+- **`buildCostosDesdeTarifa.ts`**: cuando no hay tarifa en LCL, construir concepto de flete desde captura manual (`max(WM × tarifaWM, minimo)`) apuntando al consolidador elegido como proveedor del costo.
+- **Mappers `cotizacionForm.ts` / `cotizacion.ts`**: persistir campos nuevos en `cotizaciones` (columnas nuevas: `lcl_tarifa_wm`, `lcl_minimo_flete`, `lcl_dias_libres_almacenaje`, `lcl_consolidador_id`).
+- **Migración**: agregar esas cuatro columnas nullable a `cotizaciones` (sin romper filas existentes).
+- **Detalle de cotización** (`CotizacionDatosGeneralesCard`, `TarifaResumenHeredado*`): mostrar el flete manual cuando aplique.
+- **Tests**: unitarios para `calcularWMLcl`, `fleteLCLOk`, y branches nuevos en `buildCostosDesdeTarifa`.
+- **Changelog + bump `APP_VERSION`** a la siguiente minor (13.299.0).
 
-1. Ampliar el `useWatch` para incluir los campos por modo:
-   - `dimensionesAereas` (para Aéreo)
-   - `dimensionesLCL` (para Marítimo LCL)
-   - `tipoContenedor`, `numContenedores` (para Marítimo FCL)
-2. Reescribir `mercanciaOk` como función mode-aware:
-   - **Terrestre / default:** requiere `tipoCarga` + (`pesoKg>0` ∨ `piezas>0`) — comportamiento actual.
-   - **Aéreo:** requiere `tipoCarga` + al menos una fila en `dimensionesAereas` con `piezas>0` y `pesoKg>0`.
-   - **Marítimo LCL:** requiere `tipoCarga` + al menos una fila en `dimensionesLCL` con `piezas>0` y (`pesoKg>0` ∨ dims válidas).
-   - **Marítimo FCL:** requiere `tipoCarga` + `tipoContenedor` no vacío + `numContenedores>0`.
-3. Determinar el modo por `modo` (ya está en `useWatch`) y `tipo_servicio`/inferencia FCL vs LCL — reutilizar la misma bandera `esMaritimo` y agregar detección FCL/LCL vía el campo existente (revisar cuál usa el form; probablemente `tipoServicio` o presencia de `tipoContenedor`). Si no hay campo explícito, tratar como FCL cuando existe `tipoContenedor` y como LCL cuando existe cualquier fila de `dimensionesLCL`.
+## Fuera de alcance
+- Migrar tarifas LCL existentes (siguen funcionando).
+- Cambios en FCL, aéreo o terrestre.
+- Facturación / proforma más allá del concepto de flete generado.
 
-Sin cambios en UI, tipos exportados, ni tests. La firma pública de `usePaso1SectionStatus` no cambia.
-
-## Verificación
-
-- `tsgo --noEmit` para tipos.
-- Recorrido manual en `/cotizaciones/nueva`:
-  - Aéreo con 1 fila de dimensiones llenas → Mercancía verde.
-  - Marítimo FCL con `tipoContenedor` y `numContenedores≥1` → Mercancía verde.
-  - Marítimo LCL con 1 fila LCL llena → Mercancía verde.
-  - Terrestre con `pesoKg` o `piezas` → sigue verde (regresión).
-
-## Versionado
-
-Bump `APP_VERSION` a `13.298.3` + entrada en `CHANGELOG.md` (bugfix wizard cotización).
+## Notas
+- El consolidador se guarda como `proveedor_id` en el concepto de costo de flete, así el módulo de compras (CXP) y liquidación siguen funcionando sin cambios.
+- El mínimo se aplica en centavos con `currency.js` respetando el estándar financiero del proyecto.
