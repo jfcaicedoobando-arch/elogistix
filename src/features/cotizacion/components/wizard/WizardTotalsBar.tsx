@@ -10,7 +10,7 @@
  *  - Rojo   <5%
  */
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { formatoDinero, formatoPorcentaje } from "@/lib/localizacion";
+import { formatCurrency } from "@/lib/formatters/numbers";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
 
 interface Props {
@@ -46,10 +46,10 @@ export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
           <Icon className="h-4 w-4" aria-hidden />
           <span>
             Margen {monedaConsolidada}:{" "}
-            {formatoDinero(consolidado.profit, monedaConsolidada)}
+            {formatCurrency(consolidado.profit, monedaConsolidada)}
           </span>
           <span className="rounded-md px-2 py-0.5 bg-current/10 text-xs">
-            {formatoPorcentaje(consolidado.porcentaje / 100, 1)}
+            {consolidado.porcentaje.toFixed(1)}%
           </span>
         </div>
       </div>
@@ -62,10 +62,10 @@ function Metric({ label, mxn, usd }: { label: string; mxn: number; usd: number }
     <div className="flex flex-col leading-tight">
       <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="font-medium tabular-nums">{formatoDinero(mxn, "MXN")}</span>
+        <span className="font-medium tabular-nums">{formatCurrency(mxn, "MXN")}</span>
         {usd > 0 && (
           <span className="text-xs text-muted-foreground tabular-nums">
-            ({formatoDinero(usd, "USD")})
+            ({formatCurrency(usd, "USD")})
           </span>
         )}
       </div>
