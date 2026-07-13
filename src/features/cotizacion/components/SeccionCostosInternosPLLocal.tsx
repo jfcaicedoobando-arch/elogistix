@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
-import { DollarSign, Banknote, Link2 } from "lucide-react";
+import { DollarSign, Banknote, Link2, AlertTriangle } from "lucide-react";
 import ResumenPL from "./ResumenPL";
 import TablaCostosLocal from "./TablaCostosLocal";
 import { calcTotalsPL, type FilaCostoLocal } from "./costosPLTypes";
@@ -10,6 +10,7 @@ import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVincula
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
+
 
 interface Props {
   filas: FilaCostoLocal[];
@@ -25,6 +26,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   const { watch } = useFormContext<CotizacionFormValues>();
   const tarifaId = watch("tarifaId");
   const numContenedores = watch("numContenedores") ?? 1;
+  const tipoEmbarque = watch("tipoEmbarque");
   const { data: tarifa } = useTarifaVinculada(tarifaId);
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
@@ -32,6 +34,13 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
 
   const precargadaRef = useRef<string | null>(null);
+
+  // Detecta desajuste tarifa (FCL) ↔ cotización (LCL): la tabla `costeo_tarifas`
+  // está modelada para contenedor; una tarifa con `tipo_contenedor_nombre` en una
+  // cotización LCL genera unidades inconsistentes si no se convierte a m³.
+  const tarifaEsFcl = !!tarifa?.tipo_contenedor_nombre;
+  const cotizacionEsLcl = tipoEmbarque === "LCL";
+  const mostrarAvisoLclFcl = tarifaEsFcl && cotizacionEsLcl;
 
   useEffect(() => {
     if (!tarifaId) return;
@@ -43,12 +52,19 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
       if (cancelado || !row) return;
       const recargos = await fetchRecargosDeTarifa(row.id);
       if (cancelado) return;
-      const nuevas = buildCostosDesdeTarifa({ tarifa: row, recargos, markup, cantidad: Math.max(1, numContenedores || 1) });
+      const nuevas = buildCostosDesdeTarifa({
+        tarifa: row,
+        recargos,
+        markup,
+        cantidad: Math.max(1, numContenedores || 1),
+        tipoEmbarque,
+      });
       setFilas(prev => (prev.length > 0 ? prev : nuevas));
       precargadaRef.current = tarifaId;
     })();
     return () => { cancelado = true; };
-  }, [tarifaId, filas.length, setFilas, markup, numContenedores]);
+  }, [tarifaId, filas.length, setFilas, markup, numContenedores, tipoEmbarque]);
+
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
     setFilas(prev => {
@@ -80,6 +96,15 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
 
   return (
     <div className="space-y-4">
+      {mostrarAvisoLclFcl && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <AlertTriangle className="size-4 mt-0.5 shrink-0" />
+          <span>
+            La tarifa vinculada está capturada para contenedor (<strong>{tarifa?.tipo_contenedor_nombre}</strong>), pero esta cotización es <strong>LCL</strong>.
+            Los costos se precargan en <strong>m³</strong>; revisa cantidades y unidades antes de continuar.
+          </span>
+        </div>
+      )}
       {tarifa && (
         <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
           <Link2 className="size-4 text-primary" />
@@ -89,6 +114,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
           </span>
         </div>
       )}
+
       <TablaCostosLocal
         filas={filas} filasMoneda={filasUSD} moneda="USD"
         title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-violet-500" />}

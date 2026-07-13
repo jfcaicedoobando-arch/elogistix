@@ -103,6 +103,44 @@ describe("useCotizacionWizardSteps", () => {
     expect(refs.setCurrentStep).toHaveBeenCalledWith(3);
   });
 
+  it("handleSiguiente paso 2: sin costos internos bloquea con notifyError (fix race LCL)", async () => {
+    const { deps, refs } = makeDeps({
+      currentStep: 2, cotizacionId: "cot-1", costosInternos: [],
+    });
+    const { result } = renderHook(() => useCotizacionWizardSteps(deps));
+    await act(async () => { await result.current.handleSiguiente(); });
+    expect(notifyError).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ title: expect.stringMatching(/costo interno/i) }),
+    );
+    expect(savePaso2).not.toHaveBeenCalled();
+    expect(refs.setCurrentStep).not.toHaveBeenCalled();
+  });
+
+  it("handleSiguiente paso 2: re-sincroniza conceptos si `costosInternos` cambió aunque `costosPreLlenados` sea true (fix guard una-sola-vez)", async () => {
+    // Simula: usuario avanzó a paso 3 (costosPreLlenados=true), regresó a paso 2,
+    // editó costos, y vuelve a avanzar. La firma nueva difiere de la inicial → regenerar.
+    const initial = makeDeps({
+      currentStep: 2, cotizacionId: "cot-1", costosPreLlenados: true,
+      costosInternos: [{ concepto: "Flete", moneda: "USD", cantidad: 1, precio_venta: 100 } as never],
+    });
+    const { result, rerender } = renderHook((deps) => useCotizacionWizardSteps(deps), { initialProps: initial.deps });
+    const editados = makeDeps({
+      currentStep: 2, cotizacionId: "cot-1", costosPreLlenados: true,
+      costosInternos: [{ concepto: "Flete", moneda: "USD", cantidad: 1, precio_venta: 250 } as never],
+    });
+    // Reutilizamos los refs originales para verificar setters
+    (editados.deps as unknown as { setConceptosUSD: unknown }).setConceptosUSD = initial.refs.setConceptosUSD;
+    (editados.deps as unknown as { setConceptosMXN: unknown }).setConceptosMXN = initial.refs.setConceptosMXN;
+    (editados.deps as unknown as { setCurrentStep: unknown }).setCurrentStep = initial.refs.setCurrentStep;
+    rerender(editados.deps);
+    await act(async () => { await result.current.handleSiguiente(); });
+    expect(initial.refs.setConceptosUSD).toHaveBeenCalledWith([{ descripcion: "Flete", monto: 100 }]);
+    expect(initial.refs.setConceptosMXN).toHaveBeenCalledWith([{ descripcion: "Despacho", monto: 200 }]);
+    expect(initial.refs.setCurrentStep).toHaveBeenCalledWith(3);
+  });
+
+
   it("handleSiguiente paso 3: sin conceptos válidos bloquea con notifyError", async () => {
     const { deps } = makeDeps({ currentStep: 3, cotizacionId: "cot-1" });
     const { result } = renderHook(() => useCotizacionWizardSteps(deps));
@@ -110,6 +148,7 @@ describe("useCotizacionWizardSteps", () => {
     expect(notifyError).toHaveBeenCalledWith(expect.anything(), { title: "Agrega al menos un concepto de venta" });
     expect(savePaso3).not.toHaveBeenCalled();
   });
+
 
   it("handleGuardar: éxito navega a /cotizaciones/:id y notifySuccess", async () => {
     const { deps, refs } = makeDeps({ cotizacionId: "cot-1" });

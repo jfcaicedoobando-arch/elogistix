@@ -60,4 +60,17 @@ describe("buildCostosDesdeTarifa", () => {
     const filasNeg = buildCostosDesdeTarifa({ tarifa, recargos, markup: 0, cantidad: -3 });
     for (const f of filasNeg) expect(f.cantidad).toBe(1);
   });
+
+  it("LCL: cambia unidad_medida a 'm³' y omite tipo_contenedor del label", () => {
+    const filas = buildCostosDesdeTarifa({ tarifa, recargos, markup: 0, tipoEmbarque: "LCL" });
+    expect(filas[0].concepto).toBe("Flete marítimo LCL");
+    expect(filas[0].unidad_medida).toBe("m³");
+    expect(filas[1].unidad_medida).toBe("m³");
+  });
+
+  it("FCL (default): conserva unidad 'contenedor' y menciona tipo_contenedor", () => {
+    const filas = buildCostosDesdeTarifa({ tarifa, recargos, markup: 0 });
+    expect(filas[0].concepto).toContain("40HC");
+    expect(filas[0].unidad_medida).toBe("contenedor");
+  });
 });

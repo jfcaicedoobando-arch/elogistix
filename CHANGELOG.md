@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.291.0] - 2026-07-13
+- **fix(cotización/wizard LCL)**: el paso 2 → paso 3 no propagaba los costos como conceptos de venta cuando la cotización era LCL o cuando el usuario regresaba a editar costos. Causas: (1) el guard `costosPreLlenados` era una sola vez, así que edits posteriores se perdían; (2) el helper `buildCostosDesdeTarifa` estaba clavado en unidad `contenedor` (FCL) y (3) el wizard permitía avanzar aunque `costosInternos` estuviera vacío por una race condition con la precarga. Solución: (a) `useCotizacionWizardSteps` ahora usa una firma (hash) de `costosInternos` y regenera conceptos siempre que cambien, con un `useRef` interno; (b) `buildCostosDesdeTarifa` recibe `tipoEmbarque` — en LCL usa `m³` y label "Flete marítimo LCL"; (c) el paso 2 bloquea el avance con toast si no hay costos; (d) `SeccionCostosInternosPLLocal` muestra aviso ámbar cuando la tarifa vinculada es FCL pero la cotización es LCL. Incluye backfill de `conceptos_venta` para `COT-2026-0123` reconstruidos desde `cotizacion_costos`. Tests nuevos: regresión de propagación LCL y de re-sincronización tras edición.
+
 ## [13.290.2] - 2026-07-13
+
 - **fix(tests/auditoria)**: el test `REGLAS_AUDITORIA cubre el tipo ReglaAuditoria` fallaba en CI (shard 5/20) porque la lista `expected` estaba desactualizada respecto al tipo `ReglaAuditoria` — faltaban `contenedor_datos_incompletos`, `contenedor_fechas_incompletas` y `tipo_cambio_faltante` (agregadas en versiones previas AUD-1 y AUD-2). Se sincroniza el array `expected` del test con el tipo, desbloqueando el pipeline.
 
 ## [13.290.1] - 2026-07-13

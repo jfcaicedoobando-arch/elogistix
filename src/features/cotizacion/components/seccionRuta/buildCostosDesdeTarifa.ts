@@ -23,6 +23,8 @@ export interface BuildCostosDesdeTarifaArgs {
   markup: number;
   /** Cantidad por defecto, normalmente número de contenedores. */
   cantidad?: number;
+  /** Tipo de embarque de la cotización (FCL/LCL). Cambia unidad de medida y label del flete. */
+  tipoEmbarque?: "FCL" | "LCL" | string | null;
 }
 
 const aplicarMarkup = (costo: number, markup: number): number => {
@@ -36,10 +38,13 @@ export function buildCostosDesdeTarifa({
   recargos,
   markup,
   cantidad = 1,
+  tipoEmbarque,
 }: BuildCostosDesdeTarifaArgs): FilaCostoLocal[] {
   const filas: FilaCostoLocal[] = [];
   const proveedor = tarifa.naviera_nombre ?? "";
-  const unidad = "contenedor";
+  const esLcl = tipoEmbarque === "LCL";
+  // LCL cotiza por volumen (m³ o W/M). FCL por contenedor. Blindaje AUD-LCL-1.
+  const unidad = esLcl ? "m³" : "contenedor";
 
   // 13.142.8: la BD tiene un check `cotizacion_costos_cantidad_pos` que exige
   // `cantidad > 0`. Cuando el wizard aún no captura contenedores llega 0 y la
@@ -48,8 +53,13 @@ export function buildCostosDesdeTarifa({
 
   const fleteBase = Number(tarifa.flete_base ?? 0);
   if (fleteBase > 0) {
+    // En LCL evitamos filtrar el nombre del contenedor (la tarifa hoy está
+    // modelada para FCL y trae, p. ej., "20DRY", que confunde en un embarque LCL).
+    const conceptoFlete = esLcl
+      ? "Flete marítimo LCL"
+      : `Flete marítimo (${tarifa.tipo_contenedor_nombre ?? ""})`.trim();
     filas.push({
-      concepto: `Flete marítimo (${tarifa.tipo_contenedor_nombre ?? ""})`.trim(),
+      concepto: conceptoFlete,
       moneda: "USD",
       proveedor,
       cantidad: qty,
@@ -80,3 +90,4 @@ export function buildCostosDesdeTarifa({
 
   return filas;
 }
+
