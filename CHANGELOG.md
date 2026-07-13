@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.292.1] - 2026-07-13
+- **fix(ci/RLS snapshot)**: el job "Prepare RLS database snapshot" abortaba con `relation "public.embarque_consecutivo_seq" does not exist` porque la migración `20260713165742` hace `SELECT last_value FROM public.embarque_consecutivo_seq` dentro de un `DO $$` (eager) y esa secuencia sólo existía en prod desde pre-historial (nunca vía migración). Se añade `CREATE SEQUENCE IF NOT EXISTS public.embarque_consecutivo_seq` como drift stub en `supabase/tests/rls/_ci_drift.sql`, que corre antes del loop de migraciones. Idempotente y sin efecto en prod.
+
 ## [13.292.0] - 2026-07-13
 - **feat(cotización/paso 2 unificado con catálogo SAT)**: el paso 2 del wizard ya no usa listas hardcodeadas (`CONCEPTOS_COSTO_USD/MXN`) ni un select de unidades libre. Ahora reutiliza `ProductoServicioSelect` (mismo componente del paso 3, con búsqueda contra `catalogo_claves_sat`) y `UnidadMedidaSelect`. Al elegir un producto, la fila hereda `clave_sat`, `tipo_iva → aplica_iva`, `tasa_iva_aplicada` y `clave_unidad_sat` (si la fila aún no tenía unidad). El tipo `FilaCostoLocal` gana los campos opcionales `clave_sat` y `tasa_iva_aplicada`; `buildConceptosFromCostos` respeta la tasa del catálogo cuando existe (0.16 / 0 / exento) y cae al comportamiento legacy (`CONCEPTOS_CON_IVA_USD` + IVA general MXN) cuando la fila no trae metadata. Beneficio: al pasar a paso 3, los conceptos ya llegan con la clave SAT y el tipo de IVA correctos — se elimina la doble captura y la desincronización paso 2 ↔ paso 3.
 
