@@ -60,6 +60,7 @@ export function CotizacionWizardSteps({ w, clientes, esMaritimo, sinDesgloseFlag
             actualizarConceptoMXN={(i, c, v) => w.actualizarConcepto("MXN", i, c, v)}
             agregarConceptoUSD={() => w.agregarConcepto("USD")}
             agregarConceptoMXN={() => w.agregarConcepto("MXN")}
+            agregarConceptoPrefill={w.agregarConceptoPrefill}
             eliminarConceptoUSD={(i) => w.eliminarConcepto("USD", i)}
             eliminarConceptoMXN={(i) => w.eliminarConcepto("MXN", i)}
             totalUSD={w.totalUSD}
