@@ -1,93 +1,79 @@
+# Auditoría P2 y cierre de fase
 
-## Auditoría de la Fase P1 (v13.294.0)
+## 1) Auditoría de lo construido en el turno anterior
 
-### Lo que quedó bien ✅
-- `WizardTotalsBar`: consume el P&L que ya calcula el orquestador, no duplica matemática, tiene semáforo de margen y aria-label. **4/4 tests.**
-- `useCotizacionKeyboardShortcuts`: cleanup obligatorio, respeta textareas/contenteditable, deps completas. **7/7 tests.**
-- **34/34 tests verdes** para P0 + P1. Typecheck limpio.
+### Verde ✅
+- **Migración** `cotizacion_plantillas`: RLS multi-tenant correcta (autor + `visibilidad='org'` + roles `admin/admin_org/gerente_comercial`), RPC `aplicar_plantilla_cotizacion` atómica con incremento `veces_usada`, GRANTs y trigger `updated_at` presentes.
+- **Hooks** (`useCotizacionPlantillas.ts`): `queryOptions`, `staleTime`, invalidación explícita, orden por `veces_usada desc, updated_at desc`, tipado limpio. 6/6 tests verdes.
+- **Integraciones**: `CotizacionSuccessDialog` (botón "Guardar como plantilla") y `NuevaCotizacion.tsx` (banner en Paso 1) cableadas correctamente. `form.reset({...current, ...values}, { keepDefaultValues: true }) + trigger()` cumple la regla RHF del core.
 
-### Huecos detectados 🔴
+### Rojo/Ámbar 🟡
+1. **Tests faltantes** para dos componentes nuevos:
+   - `GuardarPlantillaDialog` — validación `nombre ≥ 3`, limpieza de folios/fechas en `limpiarValues`, cierre + reset al guardar OK, toast de error.
+   - `PlantillaSelectorPaso1` — no renderiza si `organizationId=null` o lista vacía, aplica con `form.reset+trigger`, dispara `onApplied`, muestra badge `Nx` vs `Nueva`.
+2. **Cumplimiento `FormDialogShell`** (regla core "Modales tipo formulario…"): `GuardarPlantillaDialog` usa `Dialog` plano. Migrar a `FormDialogShell` + `FormDialogSection` para alinearse al estándar del proyecto.
+3. **Tipado**: `limpiarValues` usa `any`. Reemplazar por un `Omit<Partial<CotizacionFormValues>, 'id'|'folio'|...>` con destructuring tipado (Power of 10: prohibido `any` implícito).
 
-1. **`Ctrl/Cmd + S` no hace nada útil hoy.** El hook `useCotizacionDraftAutosave` sólo expone `clear`, no `flush()`. Y `CotizacionWizardLayout` tampoco pasa `onFlushDraft` al hook de shortcuts. En la práctica el atajo se anuncia pero es un no-op.
-2. **Descubribilidad cero.** No hay ninguna pista visual de que existan atajos. Un usuario nuevo nunca los va a encontrar.
-3. **`sticky bottom-0` de la barra de totales** vive dentro del `WizardShell > children`, no del footer. Depende del scroll container correcto — hay que verificarlo con Playwright (riesgo bajo pero visible).
-4. **Tests de integración del layout faltan.** Probamos los componentes aislados, pero nadie prueba que apretar `Ctrl+Enter` en el paso 2 dispara `handleSiguiente` con el form real.
+### Acciones de la auditoría (correcciones + tests)
+- Migrar `GuardarPlantillaDialog` a `FormDialogShell` + `FormDialogSection` (icon-tile, secciones, footer sticky).
+- Tipar `limpiarValues` sin `any`.
+- Crear `GuardarPlantillaDialog.test.tsx` (≥4 casos) y `PlantillaSelectorPaso1.test.tsx` (≥4 casos).
 
-### Cierre de P1 (parte "auditoría + tests que faltan")
+## 2) Cierre de Fase P2 — pendientes anunciados
 
-**Fixes:**
-- `useCotizacionDraftAutosave` → exponer `flush()` que persiste sincrónicamente (además del debounce). Retorno pasa de `{ clear }` a `{ clear, flush }`.
-- `NuevaCotizacion.tsx` → pasar `flush` al layout vía prop (`onFlushDraft`).
-- `CotizacionWizardLayout.tsx` → aceptar `onFlushDraft?` y pasarlo al hook de shortcuts + mostrar toast "Borrador guardado" cuando se dispara.
-- `CotizacionWizardFooter.tsx` → agregar tooltip discreto en los botones "Siguiente" / "Guardar" mostrando el atajo (`⌘↵`). Solo visual, sin lógica nueva.
+### 2A. Página `/cotizaciones/plantillas` (gestión)
+- **Ruta**: `src/routes/cotizaciones/plantillas.tsx` (lazy) registrada en el router de cotizaciones + entrada en menú "Cotizaciones → Plantillas".
+- **UI**: `DataTable` estándar con columnas *Nombre · Descripción · Visibilidad · Usos · Última actualización · Autor · Acciones* (menu con `e.stopPropagation()` en la fila).
+- **Acciones**:
+  - **Editar metadatos** (nombre / descripción / visibilidad) → nuevo hook `useActualizarPlantilla` (update directo, RLS ya lo protege) con optimistic update via `useMutationWithFeedback`.
+  - **Eliminar** con doble confirmación tipable "ELIMINAR" (regla data-safety) → reusa `useEliminarPlantilla` existente.
+  - **Duplicar** (opcional pequeño): copia payload con nombre "… (copia)".
+- **Filtros**: por visibilidad (yo/org) y búsqueda por nombre. Server-side vía `.ilike` + `.range()` (paginación estándar del proyecto).
+- **Empty state**: CTA "Guarda tu primera plantilla desde el wizard".
+- **Tests**: 1 test de integración del listado + 1 por acción (editar / eliminar).
 
-**Tests nuevos (~8):**
-- `useCotizacionDraftAutosave.test.tsx` → 2 casos para `flush()` (persiste inmediato, no rompe si `enabled=false`).
-- `CotizacionWizardLayout.integration.test.tsx` → smoke que verifica que `Ctrl+Enter` en paso 2 llama al `handleSiguiente` del `useCotizacionWizardForm` con RHF real y mocks mínimos de Supabase. **Este test se ha estado extrañando desde P0.**
-- Playwright visual (opcional, headless): abrir `/cotizaciones/nueva`, mandar a paso 2, screenshot con la barra sticky visible sobre el footer.
+### 2B. Unificar "Agregar concepto" en pasos 2/3
+Estado actual: `SeccionConceptosVentaCotizacion` tiene **dos botones separados** ("Agregar" USD y "Agregar" MXN) → fricción reportada en la auditoría inicial del wizard.
 
-## Fase P2 — Arranque: Templates de cotización
+- **Nuevo componente** `AgregarConceptoInline.tsx`: un solo botón "Agregar concepto" que abre un `Popover` con:
+  - `ProductoServicioSelect` (catálogo SAT) — reutiliza el existente.
+  - Toggle **Moneda: USD / MXN** (segmented) — determina en qué tabla se inserta.
+  - Descripción libre opcional, unidad (`UnidadMedidaSelect`) y cantidad prefill 1.
+  - Botón "Agregar" → llama a `agregarConceptoUSD` o `agregarConceptoMXN` inyectando `clave_sat` + `descripcion` + `unidad`.
+- **Reutilización paso 2/3**: el mismo componente se monta tanto en `SeccionConceptosVentaCotizacion` (paso 3 — venta) como en `SeccionCostosInternosPLLocal` / `SeccionCostosInternosPLUnificado` (paso 2 — costos). Se pasa un prop `variante: "venta" | "costo"` que ajusta el label del toggle y los callbacks.
+- **Compatibilidad**: se mantienen `agregarConceptoUSD` / `agregarConceptoMXN` — el nuevo componente sólo los orquesta. Sin cambios en el store del wizard.
+- **Tests**: 3 casos — abre popover, selecciona SAT+USD y llama al callback correcto, valida cantidad > 0.
 
-De la hoja de ruta original teníamos dos frentes para P2: **templates** y **unificar "Agregar concepto"**. Recomiendo arrancar por templates (mayor ROI: cotizar en 30s vs 5 min) y dejar la unificación técnica para P2.5.
+## 3) Versionado y changelog
+- Bump `APP_VERSION` → `13.296.0`.
+- Entrada `CHANGELOG.md`: "P2 cierre — Gestión de plantillas + Agregar concepto unificado".
 
-### P2 — Templates de cotización
+## 4) Verificación final
+- `bun run tsgo` (typecheck).
+- `bunx vitest run` sobre los archivos nuevos/tocados (hooks + 5 componentes).
+- Recorrido manual Playwright: crear plantilla desde success dialog → verla en `/cotizaciones/plantillas` → aplicarla en nuevo wizard → agregar concepto USD con `AgregarConceptoInline`.
 
-**Problema real:** los ejecutivos de ventas cotizan las mismas rutas (Shanghái→Manzanillo 40'HC, Ningbo→Veracruz LCL, etc.) todos los días. Cada cotización repite la misma captura de origen/destino/contenedor/incoterms/conceptos base.
+## Detalles técnicos
 
-**Solución:**
+```text
+src/
+├── features/cotizacion/
+│   ├── hooks/
+│   │   ├── useCotizacionPlantillas.ts        (+useActualizarPlantilla)
+│   │   └── __tests__/useCotizacionPlantillas.test.tsx  (+update tests)
+│   └── components/
+│       ├── wizard/
+│       │   ├── GuardarPlantillaDialog.tsx     (→ FormDialogShell, sin any)
+│       │   ├── PlantillaSelectorPaso1.tsx     (sin cambios funcionales)
+│       │   ├── AgregarConceptoInline.tsx      (NUEVO)
+│       │   └── __tests__/
+│       │       ├── GuardarPlantillaDialog.test.tsx    (NUEVO)
+│       │       ├── PlantillaSelectorPaso1.test.tsx    (NUEVO)
+│       │       └── AgregarConceptoInline.test.tsx     (NUEVO)
+│       └── SeccionConceptosVentaCotizacion.tsx  (usa AgregarConceptoInline)
+├── routes/cotizaciones/
+│   └── plantillas.tsx                         (NUEVO — página gestión)
+└── constants/appVersion.ts                    (13.296.0)
+```
 
-1. **Guardar como plantilla** — botón nuevo en `CotizacionSuccessDialog` ("Guardar esta cotización como plantilla"). Pide nombre + descripción opcional + visibilidad (Sólo yo / Toda la organización).
-2. **Nueva tabla `cotizacion_plantillas`** (organization_id, usuario_id, nombre, descripcion, visibilidad, payload jsonb, veces_usada, ultima_uso_at). RLS + GRANT según regla core. Payload guarda `datosGenerales` + `conceptos base` sin folios/fechas/tarifa (esos se generan al usarla).
-3. **Selector "Usar plantilla"** — en paso 1 de `NuevaCotizacion`, `Combobox` arriba del formulario ("Empezar desde plantilla…") con las 20 plantillas más usadas del tenant + filtro por origen/destino. Aplicar plantilla = `form.reset()` + `trigger()` + skip a paso 2 si la ruta ya está.
-4. **Administración de plantillas** — página `/cotizaciones/plantillas` (permiso `manage_cotizacion_templates`). Lista con nombre, uso, última fecha, autor. Editar nombre/descripción, cambiar visibilidad, eliminar (soft-delete estándar `deleted_at`).
-5. **Métrica de éxito** — incrementar `veces_usada` + `ultima_uso_at` cuando la plantilla se aplica y la cotización se guarda (no cuando se abre nomás).
-
-### Alcance NO incluido en este arranque
-- Compartir plantillas entre organizaciones.
-- Plantillas "oficiales" pre-cargadas por Libre Carga.
-- Sugerencia inteligente ("basado en tu historial, probablemente quieras esta plantilla") — eso es P3.
-- Unificar "Agregar concepto" (queda para P2.5).
-
-### Detalles técnicos
-
-- **Migración SQL** (`supabase/migrations/*_cotizacion_plantillas.sql`): tabla + índices `(organization_id, visibilidad, veces_usada DESC)` y `(organization_id, usuario_id)`, `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated`, `GRANT ALL ... TO service_role`, RLS enable, políticas: SELECT vía `has_org_membership + (visibilidad='org' OR usuario_id=auth.uid())`, INSERT sólo autor autenticado en su org, UPDATE/DELETE sólo autor o rol admin/gerente (usar `has_role`).
-- **Hooks** (React Query, cumpliendo memoria `queryOptions()` + query keys centralizadas):
-  - `cotizacionPlantillasKeys.list(orgId)` en `src/lib/queryKeys.ts`.
-  - `useCotizacionPlantillas()` (list, `staleTime: 60_000`).
-  - `useGuardarPlantilla()` mutation con optimistic update + toast.
-  - `useAplicarPlantilla()` que incrementa contador vía RPC `aplicar_plantilla_cotizacion(id uuid)` para atomicidad.
-- **RPC** `aplicar_plantilla_cotizacion` (SECURITY DEFINER, valida tenancy): update `veces_usada = veces_usada + 1, ultima_uso_at = now()` + devuelve payload.
-- **Componentes nuevos** (todos ≤200 líneas por Power of 10):
-  - `PlantillaSelectorPaso1.tsx` (Combobox arriba del paso 1).
-  - `GuardarPlantillaDialog.tsx` (invocado desde `CotizacionSuccessDialog`).
-  - `PlantillasList.tsx` + ruta `/cotizaciones/plantillas`.
-- **Tests** (mínimo por componente):
-  - `useCotizacionPlantillas.test.tsx` — cache, invalidación, error handling.
-  - `PlantillaSelectorPaso1.test.tsx` — aplicar plantilla llama a `form.reset` y salta al paso correcto.
-  - `GuardarPlantillaDialog.test.tsx` — valida nombre requerido, visibilidad default = "yo", limpia al cerrar.
-  - `aplicar_plantilla_cotizacion` — test de Deno edge en `supabase/functions` si aplica; si es RPC puro, cubrir vía integración con `supabase.rpc` mock.
-
-### CHANGELOG y versión
-
-- Cierre de auditoría P1: **v13.294.1** (patch, sólo fixes/tests).
-- Arranque de P2 (templates): **v13.295.0** (minor, feature).
-- Entrada en `CHANGELOG.md` root para cada uno.
-
-### Riesgos y qué podría romperse
-
-- **Payload de plantilla desactualizado** si el schema de `datosGenerales` cambia en el futuro. Mitigación: versionar el payload (`{ version: 1, datos: {...} }`) y aplicar migración defensiva al leer.
-- **Plantillas huérfanas** cuando un usuario se elimina. Mitigación: `ON DELETE SET NULL` en `usuario_id` + mostrar "Autor eliminado" en la lista.
-- **Explosión de plantillas** por org. Mitigación: paginar la lista y limitar el combobox del paso 1 a las 20 más usadas.
-
-### Orden de ejecución
-
-1. Cierre P1 (fixes + tests + tooltips) — v13.294.1.
-2. Migración SQL + RLS + GRANT — v13.295.0-alpha (feature flag off).
-3. Hooks + RPC + tests unitarios.
-4. `GuardarPlantillaDialog` conectado al éxito.
-5. `PlantillaSelectorPaso1` conectado al paso 1.
-6. Página `/cotizaciones/plantillas`.
-7. Playwright E2E: crear plantilla → usarla → verificar contador.
-8. Bump `APP_VERSION = 13.295.0` + CHANGELOG.
-
-¿Le arranco así o prefieres que P2 sea "unificar Agregar concepto" primero (más limpieza técnica, menos ROI de negocio)?
+Sin cambios de BD adicionales (la tabla y RPC ya existen). `useActualizarPlantilla` es un `UPDATE` directo con `.eq('id', ...)` — la RLS de update ya está limitada a autor/admin en la migración previa.
