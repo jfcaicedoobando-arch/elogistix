@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.6] - 2026-07-13
+- **fix(auditoria/docs)**: la matriz `_docs_requeridos_por_estado` marcaba como faltantes "Certificado de Origen" y "Ficha Técnica" en embarques Aéreos/Marítimos aunque la vista de detalle del embarque no los pedía (sólo mostraba AWB/Packing/Factura para Aéreo). Esto generaba falsos positivos como el reportado en `ELIMP00158`. Se alinea la matriz de auditoría con `getDocsForMode`: sólo se exigen los documentos base por modo (Aéreo: Factura + Packing + AWB; Marítimo: Factura + Packing + BL Master + BL House). Los documentos opcionales (Certificado de Origen, Ficha Técnica) siguen disponibles en el módulo, pero no disparan hallazgo por sí solos.
+
 ## [13.288.5] - 2026-07-13
 - **fix(embarques/folio)**: blindaje de la generación de expedientes contra duplicados. Tres candados:
   1. **`resolver_expediente_por_bl` ahora es multi-tenant**: antes buscaba cualquier embarque con el mismo BL Master sin filtrar organización, así que dos organizaciones con la misma naviera podían terminar con el mismo folio. Ahora filtra por `organization_id = current_user_org_id()` y por `deleted_at IS NULL`.
