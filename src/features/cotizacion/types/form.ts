@@ -78,6 +78,8 @@ export interface CotizacionFormValues {
   tarifaOverride: Record<string, boolean>;
   /** Atajo: cotización creada sin desglose interno de costos (Paso 2 omitido). */
   sinDesgloseCostos: boolean;
+  /** Flete LCL capturado manualmente (usado sólo cuando no hay tarifa vinculada). */
+  lclFleteManual: LclFleteManual;
 }
 
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
