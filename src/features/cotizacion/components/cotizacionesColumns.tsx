@@ -13,11 +13,12 @@ import {
   dateColumn,
   actionsColumn,
 } from "@/components/shared/dataTable/columnBuilders";
-import { Trash2 } from "lucide-react";
+import { Trash2, Copy } from "lucide-react";
 
 export interface BuildParams {
   canEdit: boolean;
   onEliminar: (id: string) => void;
+  onDuplicar?: (id: string) => void;
 }
 
 export function buildCotizacionesColumns(params: BuildParams): ColumnDef<CotizacionListItem, unknown>[] {
