@@ -101,9 +101,23 @@ export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: P
               </TableBody>
             </Table>
           </div>
-          <div className="flex justify-end gap-6 mt-2 text-sm font-semibold">
-            <span>Total piezas: {totalPiezas}</span>
-            <span>Volumen total: {totalVolumen.toFixed(4)} m³</span>
+          <div className="flex flex-wrap justify-end items-center gap-3 mt-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Peso total (kg):</span>
+              <div className="w-32">
+                <NumericInput
+                  value={pesoKg}
+                  onChange={(n) => setValue("pesoKg", n)}
+                  decimals
+                  aria-label="Peso total en kilogramos"
+                />
+              </div>
+            </div>
+            <div className="flex gap-6 text-sm font-semibold">
+              <span>Piezas: {totalPiezas}</span>
+              <span>Volumen: {totalVolumen.toFixed(4)} m³</span>
+              <span className="text-primary">W/M: {wm.toFixed(3)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
