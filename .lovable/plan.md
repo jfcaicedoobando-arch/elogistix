@@ -1,47 +1,47 @@
-## Contexto
+## Fallos detectados en el CI (run 79231484551)
 
-El job **"Prepare RLS database snapshot"** falla en CI al replayar migraciones sobre un Postgres limpio:
+**Job "Tests (shard 20/20)"**: 1 test fallando en `conceptosFacturaCrud.test.ts`.
+- `eliminarConceptoFactura borra por id y recalcula` → `TypeError: Cannot read properties of undefined (reading 'opArgs')`.
+- Causa: en Papelera Fase 3 (v13.290.0) `eliminarConceptoFactura` pasó de `supabase.from("conceptos_factura").delete().eq("id", ...)` a `supabase.rpc("soft_delete_record", { _table, _id })`. El test sigue buscando la cadena `delete().eq()` en `mock.tableCalls`, que ya no existe → `.find(...)` devuelve `undefined`.
 
-```
-ERROR:  relation "public.embarque_consecutivo_seq" does not exist
-QUERY:  SELECT last_value FROM public.embarque_consecutivo_seq
-en migración: 20260713165742_20aea6c0-...sql
-```
+**Jobs "Tests (shard 8/20)" y "Tests (shard 1/20)"**: `audit-report.test.ts` y `architecture-baseline.test.ts` fallan con la misma regla Power of 10:
+- `src/features/admin/routes/Papelera.tsx` → 216 líneas
+- `src/features/facturacion/services/conceptosFacturaCrud.ts` → 206 líneas
 
-Como el error interrumpe el replay, la suite RLS queda `skipped` y `0_RLS tests result` falla con exit 1.
+Ambos entraron con las fases de Papelera y hay que dividirlos (política del proyecto: nunca ampliar `OVERSIZED_BASELINE` ni bajar umbrales, escribir/dividir código nuevo).
 
-## Causa
+Ningún otro shard falla. Los aggregators reportan `failure` sólo porque estos 3 shards fallaron.
 
-La secuencia `public.embarque_consecutivo_seq` existe en producción desde hace mucho (migración pre-historial), pero **nunca aparece con `CREATE SEQUENCE`** en el repositorio. Las migraciones antiguas solo la usan con `nextval(...)` dentro de cuerpos de función (que no se resuelve hasta que se llama a la función, así que no rompen el replay).
+## Plan
 
-La migración `20260713165742_...sql` (agregada esta sesión al arreglar `generar_expediente` multi-tenant) hace `SELECT last_value FROM public.embarque_consecutivo_seq` **dentro de un `DO $$ ... $$` que sí se ejecuta al momento del replay** → error inmediato en CI.
+### 1. Dividir `Papelera.tsx` (< 200 líneas)
+- Crear `src/features/admin/routes/papelera/tablas.ts` con `TablaMeta`, `TABLAS`, `GRUPOS` y el formatter `dtf`. Sin cambios funcionales.
+- Crear `src/features/admin/routes/papelera/columns.tsx` con la fábrica `buildColumns({ restore, purge, onPurgeTarget })` que devuelve `ColumnDef<TrashRow>[]`.
+- `Papelera.tsx` queda como composición delgada (~110 líneas): importa las constantes y llama a `buildColumns`.
 
-Ya existe una migración posterior (`20260713190941_...sql`) con `CREATE SEQUENCE IF NOT EXISTS`, pero corre **después** de la que falla, así que no ayuda al snapshot.
+### 2. Dividir `conceptosFacturaCrud.ts` (< 200 líneas)
+- Extraer `recalcularTotalesFactura` (y sus helpers `resolverTasa`/lectura de renglones) a `src/features/facturacion/services/recalcularTotalesFactura.ts`.
+- `conceptosFacturaCrud.ts` re-exporta `recalcularTotalesFactura` para no romper call-sites y conserva `insertar / actualizar / eliminarConceptoFactura`.
+- Ajuste puramente estructural: cero cambios de lógica, cero cambios de firma pública.
 
-## Fix
+### 3. Actualizar el test `eliminarConceptoFactura borra por id y recalcula`
+Reescribir el caso para reflejar el contrato actual (RPC soft-delete):
+- Espiar `supabase.rpc` y verificar que se llama con `("soft_delete_record", { _table: "conceptos_factura", _id: "c1" })`.
+- Verificar que después se dispara el recálculo (llamada a `facturas` con `update`), tal como hacen los otros tests del archivo.
+- No se toca lógica del servicio; sólo se alinea la prueba con el comportamiento post-Papelera.
 
-Editar `supabase/migrations/20260713165742_20aea6c0-6aec-423b-b0a2-41ac714ec50e.sql` para anteponer, antes del bloque `DO`:
+### 4. Verificación
+- Ejecutar los 3 shards afectados: `bun run test:coverage:shard -- --shard=1/20`, `--shard=8/20`, `--shard=20/20`.
+- Confirmar que `OVERSIZED_BASELINE` sigue vacío (no la ampliamos).
+- No hace falta typecheck/build manual: los ejecuta el harness al mergear.
 
-```sql
--- Guard idempotente: la secuencia existe en prod desde el pre-historial,
--- pero en un replay limpio (CI RLS snapshot) todavía no ha sido creada.
-CREATE SEQUENCE IF NOT EXISTS public.embarque_consecutivo_seq;
-```
+### 5. Changelog / versión
+- Bump `APP_VERSION` a `13.292.2`.
+- Entrada en `CHANGELOG.md`:
+  - fix(ci/tests): actualizado `conceptosFacturaCrud.test.ts` para el nuevo RPC `soft_delete_record` introducido en v13.290.0.
+  - refactor(arch): `Papelera.tsx` y `conceptosFacturaCrud.ts` divididos para respetar el límite Power of 10 (≤200 líneas).
 
-Es idempotente y seguro en producción (no-op si ya existe).
-
-## Verificación
-
-- Typecheck no aplica (solo SQL).
-- El siguiente `Prepare RLS database snapshot` en CI debe pasar de `165742 → 165828 → 190941` sin abortar.
-- No tocar la migración `20260713190941` (queda como red de seguridad).
-
-## Entregables
-
-1. Editar `supabase/migrations/20260713165742_20aea6c0-6aec-423b-b0a2-41ac714ec50e.sql`: insertar `CREATE SEQUENCE IF NOT EXISTS` al inicio.
-2. Bump `APP_VERSION` a `13.292.1`.
-3. Entrada en `CHANGELOG.md` describiendo el hotfix.
-
-## Analogía (para principiantes)
-
-Imagina que tienes una receta que dice "toma la sal del frasco" pero nunca dijo cuándo comprar el frasco. En tu cocina real ya hay uno, así que funciona. Pero cuando un amigo intenta cocinar en una cocina vacía, se atora. La corrección es agregar al inicio: "si no tienes frasco, compra uno" — no rompe nada si ya lo tenías.
+## Notas técnicas
+- No se crean tablas ni migraciones.
+- No se cambia el contrato público de `eliminarConceptoFactura`; el fix es puramente de test + reorganización de archivos.
+- Los nombres de export públicos (`recalcularTotalesFactura`, `eliminarConceptoFactura`, etc.) se conservan mediante re-export desde `conceptosFacturaCrud.ts` para no propagar cambios de imports por la app.
