@@ -47,6 +47,7 @@ export default function SeccionCondicionesComerciales({ complete }: { complete?:
   const esLcl = tipoEmbarque === "LCL";
   const tieneTarifa = !!tarifaId;
   const camposHabilitados = tieneTarifa || esLcl;
+  const [openValidez, setOpenValidez] = useState(false);
   const { data: tarifaVinc } = useTarifaVinculada(tarifaId);
   const tarifaHasta = useMemo(
     () => parseVigenteHasta(tarifaVinc?.vigente_hasta ?? null),
