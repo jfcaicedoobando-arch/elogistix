@@ -121,6 +121,7 @@ export const appRoutes = (
 
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
+    <Route path="/clientes/:clienteId/estado-de-cuenta" element={guarded(FINANCE_READ_ROLES, <EstadoCuentaInterno />)} />
     <Route path="/cotizaciones" element={<Cotizaciones />} />
     <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
     <Route path="/cotizaciones/plantillas" element={<CotizacionPlantillas />} />
