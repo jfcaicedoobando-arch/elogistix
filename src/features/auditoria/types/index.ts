@@ -26,7 +26,9 @@ export type ReglaAuditoria =
   | "cxp_vencida"
   // AUD-1 (v13.235.0) — Reglas basadas en `embarque_contenedores`
   | "contenedor_datos_incompletos"
-  | "contenedor_fechas_incompletas";
+  | "contenedor_fechas_incompletas"
+  // AUD-2 (v13.288.0) — Fallback explícito cuando falta el tipo de cambio
+  | "tipo_cambio_faltante";
 
 export type SeveridadAuditoria = "critico" | "alto" | "medio";
 

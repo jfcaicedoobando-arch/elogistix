@@ -52,7 +52,7 @@ export function emptyPorRegla(): Record<ReglaAuditoria, number> {
     cxp_por_capturar_estancada: 0,
     cxp_vencida: 0,
     contenedor_datos_incompletos: 0,
-    contenedor_fechas_incompletas: 0,
+    contenedor_fechas_incompletas: 0, tipo_cambio_faltante: 0,
   };
 }
 

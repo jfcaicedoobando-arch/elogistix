@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.288.0] - 2026-07-13
+- **fix(auditoria)**: `auditoria_embarques_org` deja de mantener una copia hardcodeada de la matriz modo×estado de documentos y ahora consulta la función canónica `_docs_requeridos_por_estado(modo, estado)` (misma fuente que el candado de avance y `getDocsForMode`). Elimina el falso positivo reportado de "documentos que no aplican" y el falso negativo para embarques en `En Proceso`, `EIR` y `Cerrado`.
+- **fix(auditoria)**: la CTE base `emb` ahora filtra `deleted_at IS NULL`. Los embarques soft-deleted dejan de generar hallazgos en todas las reglas (docs, márgenes, huérfano, CxC/CxP, etc.).
+- **fix(auditoria)**: `docs_pendientes_avanzado` sólo cuenta documentos `Pendiente` que efectivamente aplican al modo/estado actual del embarque; ignora documentos legados de otro modo.
+- **feat(auditoria)**: nueva regla `tipo_cambio_faltante` (severidad `medio`) que reemplaza el fallback silencioso 17.5/19.0 en la conversión USD/EUR→MXN. Cuando falta el TC, `margen_negativo` y `margen_bajo` no disparan; se emite el hallazgo explícito hasta que se capture el TC.
+- **types**: `ReglaAuditoria` incorpora `tipo_cambio_faltante` con label, icono (Scale) y orden canónico.
+
 ## [13.287.1] - 2026-07-12
 - **refactor(export)**: `src/features/admin/services/exportOrg.ts` se divide en tres módulos (`exportOrg.tables.ts` catálogo + `exportOrg.manifest.ts` tipos/manifest + `exportOrg.ts` orquestador) para respetar la baseline Power-of-10 (≤200 líneas). API público sin cambios; re-exports conservan los imports existentes. Desbloquea CI (shard 1/20 y audit-report).
 

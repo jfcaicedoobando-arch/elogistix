@@ -35,6 +35,7 @@ export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
   "cxc_vencida",
   "cxp_por_capturar_estancada",
   "cxp_vencida",
+  "tipo_cambio_faltante",
 ];
 
 /** YYYY-MM-DD del día indicado (default: hoy) **en UTC**. */
