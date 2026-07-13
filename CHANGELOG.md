@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.292.2] - 2026-07-13
+- **fix(ci/tests · conceptosFacturaCrud)**: el test `eliminarConceptoFactura` seguía esperando la cadena `.delete().eq("id", ...)` contra `conceptos_factura`, pero desde v13.290.0 el servicio usa el RPC `soft_delete_record` (Papelera Fase 3). Se reescribió el caso para verificar `mock.rpcCalls` con `{ _table: "conceptos_factura", _id: "c1" }` y el recálculo posterior en `facturas`.
+- **refactor(arch · Power of 10)**: `Papelera.tsx` (216 → 114 líneas) se dividió en `routes/papelera/tablas.ts` (catálogo + formatter `dtf`) y `routes/papelera/columns.tsx` (fábrica `buildPapeleraColumns`). `conceptosFacturaCrud.ts` (206 → 145 líneas) extrajo `recalcularTotalesFactura.ts` y `conceptosFacturaShared.ts` (`resolverTasa` + `TipoIvaConcepto`). Contrato público intacto vía re-exports.
+
 ## [13.292.1] - 2026-07-13
 - **fix(ci/RLS snapshot)**: el job "Prepare RLS database snapshot" abortaba con `relation "public.embarque_consecutivo_seq" does not exist` porque la migración `20260713165742` hace `SELECT last_value FROM public.embarque_consecutivo_seq` dentro de un `DO $$` (eager) y esa secuencia sólo existía en prod desde pre-historial (nunca vía migración). Se añade `CREATE SEQUENCE IF NOT EXISTS public.embarque_consecutivo_seq` como drift stub en `supabase/tests/rls/_ci_drift.sql`, que corre antes del loop de migraciones. Idempotente y sin efecto en prod.
 
