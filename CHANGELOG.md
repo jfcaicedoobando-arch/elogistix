@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.2] - 2026-07-13
+- **fix(cotización LCL · condiciones comerciales)**: la sección "Condiciones comerciales" quedaba bloqueada en LCL porque exigía tarifa vinculada, pero LCL captura el flete manualmente. Ahora se habilita si hay tarifa vinculada **o** el embarque es LCL. Analogía: antes la puerta pedía la "llave" de la tarifa; en LCL esa llave no existe, así que ahora la puerta también abre con el candado del flete manual.
+
 ## [13.299.1] - 2026-07-13
 - **feat(cotización LCL · sin tarifa vinculada)**: en Marítimo LCL se elimina por completo el panel "Tarifa marítima vinculada" y sus sugerencias. LCL ahora usa exclusivamente la captura manual (`SeccionFleteManualLCL`: consolidador + tarifa W/M + mínimo + días libres). Al cambiar `tipoEmbarque` a LCL se limpia `tarifaId` / `tarifaOverride` para evitar estado huérfano heredado de FCL. El sidebar de progreso relabela el paso a "Flete" en LCL (FCL conserva "Tarifa"). Analogía: LCL ya no comparte la vitrina de tarifas fijas del FCL — captura su propio precio por W/M como en la operación real.
 
