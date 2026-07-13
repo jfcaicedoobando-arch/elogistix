@@ -118,6 +118,13 @@ export default function CotizacionWizardLayout({
           sinDesgloseFlag={sinDesgloseFlag}
           irACargarCostos={irACargarCostos}
         />
+        {mostrarTotales && (
+          <WizardTotalsBar
+            plUSD={w.plUSD}
+            plMXN={w.plMXN}
+            totalVentaMXN={w.totalMXN}
+          />
+        )}
       </WizardShell>
 
       <ConfirmSinDesgloseDialog
