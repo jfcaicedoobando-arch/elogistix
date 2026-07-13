@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.297.1] - 2026-07-13
+- **fix(cotización/detalle)**: `fetchCotizacionById` ahora usa `.maybeSingle()` y devuelve `null` cuando la cotización no existe, en lugar de lanzar PGRST116. La UI de `CotizacionDetalle` y `EditarCotizacion` ya manejaba el caso vacío. Elimina ruido de reportes en Sentry al abrir un link viejo o de una cotización borrada. Test nuevo: "devuelve null cuando no existe (PGRST116)". Fixes Sentry `JAVASCRIPT-REACT-1M` (55 ocurrencias, 8 usuarios).
+
 ## [13.297.0] - 2026-07-13
 - **feat(cotización/wizard P3 — Duplicar & Versionar)**: arranque de la Fase P3. Decisiones del usuario: snapshot **sólo al pasar a "Enviada"**, duplicación como **Borrador con folio COT-YYYY-XXXX nuevo**, alcance UI **mínima**.
   1. **Migración BD** (`cotizacion_versiones` + linaje + trigger + RPC):

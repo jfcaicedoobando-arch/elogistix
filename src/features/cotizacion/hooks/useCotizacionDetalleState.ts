@@ -40,7 +40,7 @@ export function useCotizacionDetalleState(id: string | undefined) {
     }
   }, [conceptosRaw, tasaIva]);
 
-  const handlers = useCotizacionDetalleHandlers(cotizacion);
+  const handlers = useCotizacionDetalleHandlers(cotizacion ?? undefined);
 
   const esProspecto = cotizacion?.es_prospecto;
   const prospectoEmpresa = cotizacion?.prospecto_empresa;

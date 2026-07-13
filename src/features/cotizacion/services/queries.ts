@@ -73,11 +73,15 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
   return fromDb<CotizacionRow[]>(data);
 }
 
-export async function fetchCotizacionById(id: string): Promise<CotizacionRow> {
+export async function fetchCotizacionById(id: string): Promise<CotizacionRow | null> {
+  // 13.297.1 — `.maybeSingle()` en lugar de `.single()` para no lanzar
+  // PGRST116 cuando la cotización fue borrada o el link está viejo.
+  // La UI (`CotizacionDetalle`, `EditarCotizacion`) ya maneja `null`.
+  // Fixes Sentry JAVASCRIPT-REACT-1M.
   const data = await unwrap(
-    supabase.from("cotizaciones").select("*").eq("id", id).single(),
+    supabase.from("cotizaciones").select("*").eq("id", id).maybeSingle(),
   );
-  return fromDb<CotizacionRow>(data);
+  return data ? fromDb<CotizacionRow>(data) : null;
 }
 
 export async function fetchEmbarquesVinculados(cotizacionId: string) {

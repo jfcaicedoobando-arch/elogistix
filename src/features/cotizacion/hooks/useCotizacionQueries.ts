@@ -14,7 +14,7 @@ export function useCotizaciones() {
 }
 
 export function useCotizacion(id: string | undefined) {
-  return useQuery<CotizacionRow>({
+  return useQuery<CotizacionRow | null>({
     ...cotizacionQueries.detail(id ?? ''),
     enabled: !!id,
   });
