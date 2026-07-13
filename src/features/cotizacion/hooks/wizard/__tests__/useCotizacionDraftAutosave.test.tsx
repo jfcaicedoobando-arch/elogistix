@@ -66,7 +66,7 @@ describe("clearDraft", () => {
 describe("useCotizacionDraftAutosave hook", () => {
   function renderWithForm(enabled: boolean) {
     return renderHook(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const form = useForm<any>({ defaultValues: { cliente_id: "" } });
       useCotizacionDraftAutosave({ form, userId: USER, enabled });
       return form;
@@ -120,7 +120,7 @@ describe("useCotizacionDraftAutosave hook", () => {
 describe("useCotizacionDraftAutosave flush (P1 — v13.294.1)", () => {
   function renderWithFlush(enabled: boolean) {
     return renderHook(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const form = useForm<any>({ defaultValues: { cliente_id: "seed" } });
       const api = useCotizacionDraftAutosave({ form, userId: USER, enabled });
       return { form, api };

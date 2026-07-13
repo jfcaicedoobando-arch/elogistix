@@ -1,42 +1,68 @@
-# Búsqueda global por BL (Master / House)
+# Fix CI — logs `79259840118` (build v13.297.3)
 
-Hoy el Ctrl+K sólo matchea embarques por `expediente`. Los usuarios necesitan pegar un número de BL y llegar al embarque.
+Tres jobs rojos (quality + tests + coverage), todos por regresiones dejadas por las fases P2/P3 de plantillas/versiones y por el `--max-warnings 0` del lint.
 
-## Alcance
-- Extender la rama `embarques` de la RPC `busqueda_global` para incluir `bl_master` y `bl_house` en el `WHERE`.
-- Mostrar el BL matcheado en el `sublabel` para que el usuario confirme visualmente el resultado.
-- Actualizar el placeholder del input de `GlobalSearch.tsx` para mencionar "BL".
-- Añadir un caso de prueba en `src/features/search/services` (o el test existente de la RPC) que valide match por BL Master y BL House.
+## Diagnóstico
 
-## Cambios técnicos
+### 1. `Tests` (shard 13/20) — arquitectura
+- `hooks y contexts no importan @/integrations/supabase/client directamente` falla por:
+  - `src/features/cotizacion/hooks/useCotizacionPlantillas.ts`
+  - `src/features/cotizacion/hooks/useCotizacionVersiones.ts`
+- `no hay 'as unknown as' sin marcador SAFE-CAST fuera de src/lib y src/test` falla por:
+  - `useCotizacionVersiones.ts:40` y `:64` (el comentario SAFE-CAST está separado por código).
 
-1. **Migración SQL** (`supabase/migrations/…_busqueda_global_bl.sql`)
-   - `CREATE OR REPLACE FUNCTION public.busqueda_global(...)` con la rama de embarques ampliada:
-     ```sql
-     WHERE (
-       e.expediente ILIKE '%'||termino||'%'
-       OR e.bl_master ILIKE '%'||termino||'%'
-       OR e.bl_house  ILIKE '%'||termino||'%'
-     )
-     ```
-   - `sublabel` ampliado: cliente + indicador de match, ej.
-     `cliente_nombre || ' · BL/M ' || bl_master` cuando el término coincide con Master (misma lógica para House). Si sólo matchea expediente, se mantiene el sublabel actual (cliente + contenedores).
-   - Resto de ramas (clientes, proveedores, facturas, cotizaciones, proformas, factura_proveedor) sin cambios.
-   - Mantener `SECURITY DEFINER`, `search_path=public`, y el filtro `organization_id = current_user_org_id() OR has_role(...,'super_admin')`.
+### 2. `Lint` — `--max-warnings 0` (10 warnings)
+- `react-refresh/only-export-components` en `HallazgoDetalleCell.tsx:38` (export de `getHallazgoDetalleParts` conviviendo con el componente) y `GuardarPlantillaDialog.tsx:41` (export de `limpiarValues` + `CAMPOS_TRANSITORIOS`).
+- 7 `Unused eslint-disable directive` en 3 tests (`GuardarPlantillaDialog.test.tsx`, `PlantillaSelectorPaso1.test.tsx`, `useCotizacionDraftAutosave.test.tsx`).
+- `max-lines` en `src/features/cotizacion/routes/CotizacionPlantillas.tsx` (321 líneas / máx 250).
 
-2. **Frontend**
-   - `src/components/shared/GlobalSearch.tsx`: cambiar placeholder a algo como `"Buscar por expediente, BL, cliente, factura…"` y el texto del botón se mantiene.
-   - No hace falta tocar `useGlobalSearch` / `services/index.ts` — la forma de la fila (id/label/sublabel/tipo/url) no cambia.
+### 3. `Coverage merge & report` — cae en cascada porque el shard 13 no emite el blob esperado. Se arregla solo al reparar los tests.
 
-3. **Tests**
-   - Añadir test en `src/features/search/services/__tests__/` (crear si no existe) que mockee `supabase.rpc` para verificar que se pasa el término tal cual y se mapea la fila. No re-testeamos SQL, pero sí el contrato.
-   - Opcional: smoke test manual — buscar por un BL conocido y verificar que aparece el embarque.
+## Cambios
 
-4. **Housekeeping**
-   - Bump `APP_VERSION` a `13.297.3`.
-   - Entrada en `CHANGELOG.md`: "Búsqueda global (Ctrl+K) ahora encuentra embarques por BL Master y BL House."
+### A. Mover I/O de plantillas a servicio
+Nuevo `src/features/cotizacion/services/plantillas.ts` con:
+- `fetchPlantillas(orgId)` — SELECT actual con `is('deleted_at', null)` + `order/limit`.
+- `insertPlantilla(input)` — INSERT + `.single()`.
+- `aplicarPlantillaRpc(id)` — `supabase.rpc('aplicar_plantilla_cotizacion', …)`.
+- `softDeletePlantilla(id)` — UPDATE `deleted_at`.
+- `updatePlantillaMeta(id, patch)` — UPDATE metadatos.
 
-## Consideraciones
-- `bl_master` / `bl_house` en `embarques` pueden compartirse entre múltiples filas (contenedores del mismo embarque). El `DISTINCT ON (e.expediente)` actual ya deduplica correctamente.
-- Sin cambios de índices por ahora — los BL suelen ser < 20 chars y el volumen por org es bajo; si aparece latencia, se puede añadir un índice trigram (`pg_trgm`) en una fase posterior.
-- No afecta permisos ni RLS: los mismos filtros existentes siguen aplicando.
+`useCotizacionPlantillas.ts` pasa a importar sólo del servicio. Cero import de `@/integrations/supabase/client`. Ya no requiere las 4 líneas `eslint-disable @typescript-eslint/no-explicit-any` — los tipos vivirán en el servicio con casts `SAFE-CAST` cuando aplique.
+
+### B. Mover I/O de versiones/duplicado a servicio
+Nuevo `src/features/cotizacion/services/versiones.ts` con:
+- `duplicarCotizacionRpc(id): Promise<string>` — encapsula el `rpc('duplicar_cotizacion', …)` con los `as never` (ahí sí lleva el marcador `// SAFE-CAST:` en la línea inmediata anterior).
+- `fetchVersiones(cotizacionId): Promise<CotizacionVersionRow[]>` — encapsula el `.from('cotizacion_versiones' as never)`.
+
+`useCotizacionVersiones.ts` queda como puros hooks React Query que consumen el servicio. Sin `as unknown as` en su archivo.
+
+### C. Extraer utilidades de componentes (react-refresh)
+- `src/features/auditoria/components/HallazgoDetalleCell.tsx` → mover `DOCUMENT_RULES`, `normalizeDocName`, `uniqueDocuments`, `suffixRepeatsDocuments` y `getHallazgoDetalleParts` a `HallazgoDetalleCell.utils.ts` (sibling). El componente sólo re-exporta / consume; ningún consumidor externo debería romperse porque los que importan `getHallazgoDetalleParts` migrarán al nuevo módulo (grep confirmará y ajustaré imports).
+- `src/features/cotizacion/components/wizard/GuardarPlantillaDialog.tsx` → mover `CAMPOS_TRANSITORIOS` + `limpiarValues` a `guardarPlantillaHelpers.ts`. El test `GuardarPlantillaDialog.test.tsx` cambia el import de `limpiarValues` a la nueva ruta.
+
+### D. Limpiar eslint-disable innecesarios
+Quitar los `// eslint-disable-next-line @typescript-eslint/no-explicit-any` que ESLint marca como "unused directive" en:
+- `GuardarPlantillaDialog.test.tsx` líneas 39, 47, 63, 66.
+- `PlantillaSelectorPaso1.test.tsx` línea 49.
+- `useCotizacionDraftAutosave.test.tsx` líneas 69, 123.
+
+### E. Reducir `CotizacionPlantillas.tsx` (321 → ≤250)
+Extraer a componentes sibling:
+- `CotizacionPlantillas.PlantillaCard.tsx` — la tarjeta individual con menú acciones.
+- `CotizacionPlantillas.EditarDialog.tsx` — dialog de editar metadatos.
+El archivo route se limita a estado, hooks, layout y wire de callbacks.
+
+### F. Housekeeping
+- Bump `APP_VERSION` → `13.297.4`.
+- Entrada en `CHANGELOG.md` describiendo el fix de CI (guardrails de arquitectura, `--max-warnings 0`, react-refresh, max-lines).
+
+## Verificación
+- Grep post-cambio: `rg "from ['\"]@/integrations/supabase/client" src/features/cotizacion/hooks` debe quedar vacío.
+- Grep: `rg "as unknown as" src/features/cotizacion` sólo dentro de `services/` y con marcador SAFE-CAST.
+- Los tests que usan `limpiarValues` seguirán pasando por import de la nueva ruta.
+
+## Notas
+- No toco `src/integrations/supabase/client.ts` ni `types.ts`.
+- Sin cambios de BD ni de RLS.
+- Los `SAFE-CAST` de las RPC nuevas se pueden quitar cuando se regeneren los tipos generados; mientras tanto, viven aislados en el servicio.

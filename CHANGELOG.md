@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.297.4] - 2026-07-13
+- **fix(CI shard 13/20 — arquitectura + lint)**: refactor para desbloquear los shards que fallaban tras P3.
+  - Nuevos servicios `features/cotizacion/services/plantillas.ts` y `versiones.ts` que centralizan el I/O contra Supabase; los hooks `useCotizacionPlantillas` y `useCotizacionVersiones` ya no importan el cliente directamente (cumple jerarquía Pages → Hooks → Services → Lib) y los `as unknown as` sensibles quedan aislados con marcador `// SAFE-CAST:` en la línea correcta.
+  - `HallazgoDetalleCell` movió `getHallazgoDetalleParts` y `normalizeDocName` a `HallazgoDetalleCell.utils.ts` para pasar `react-refresh/only-export-components`.
+  - `GuardarPlantillaDialog` movió `limpiarValues` a `guardarPlantillaHelpers.ts` (misma regla); el test se actualiza al nuevo import.
+  - `CotizacionPlantillas.tsx` (321 líneas) se divide en `components/plantillas/EditarPlantillaDialog.tsx` y `components/plantillas/PlantillasTabla.tsx` para respetar `max-lines`.
+  - Se limpian 7 directivas `eslint-disable` sin uso en 3 tests del wizard.
+
 ## [13.297.3] - 2026-07-13
 - **feat(búsqueda global)**: el Ctrl+K ahora encuentra embarques por **BL Master** y **BL House**, además de expediente. La RPC `busqueda_global` extiende el `WHERE` de la rama de embarques a `bl_master ILIKE …` y `bl_house ILIKE …`; el sublabel muestra el BL matcheado (`BL/M …` o `BL/H …`) para confirmación visual. Placeholder del input actualizado a "Buscar por expediente, BL, cliente, factura…".
 

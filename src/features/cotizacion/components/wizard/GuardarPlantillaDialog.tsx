@@ -14,6 +14,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { useGuardarPlantilla, type PlantillaVisibilidad } from "@/features/cotizacion/hooks/useCotizacionPlantillas";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
+import { limpiarValues } from "./guardarPlantillaHelpers";
 
 interface Props {
   open: boolean;
@@ -23,27 +24,6 @@ interface Props {
   /** Valores actuales del wizard. Se limpian antes de guardar (sin folios/fechas). */
   values: Partial<CotizacionFormValues>;
   onSaved?: () => void;
-}
-
-/**
- * Campos regenerados en cada aplicación de plantilla — no deben persistirse.
- * Tipado explícito para cumplir Power of 10 (sin `any`).
- */
-const CAMPOS_TRANSITORIOS = [
-  "id",
-  "folio",
-  "fecha_cotizacion",
-  "fecha_vencimiento",
-  "tarifa_id",
-  "tarifa_snapshot",
-] as const;
-
-export function limpiarValues(values: Partial<CotizacionFormValues>): Partial<CotizacionFormValues> {
-  const clon: Partial<CotizacionFormValues> & Record<string, unknown> = { ...values };
-  for (const campo of CAMPOS_TRANSITORIOS) {
-    delete clon[campo as keyof typeof clon];
-  }
-  return clon;
 }
 
 export function GuardarPlantillaDialog({

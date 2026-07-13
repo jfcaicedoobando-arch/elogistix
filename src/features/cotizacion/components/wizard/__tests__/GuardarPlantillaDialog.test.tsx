@@ -5,10 +5,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import {
-  GuardarPlantillaDialog,
-  limpiarValues,
-} from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
+import { GuardarPlantillaDialog } from "@/features/cotizacion/components/wizard/GuardarPlantillaDialog";
+import { limpiarValues } from "@/features/cotizacion/components/wizard/guardarPlantillaHelpers";
 
 const insertMock = vi.fn();
 
@@ -36,7 +34,7 @@ function wrapper({ children }: { children: ReactNode }) {
 describe("limpiarValues (P2 cierre)", () => {
   it("elimina folios, IDs y fechas del payload", () => {
     const input = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       id: "cot-1",
       folio: "COT-2026-0123",
       fecha_cotizacion: "2026-07-13",
@@ -44,7 +42,7 @@ describe("limpiarValues (P2 cierre)", () => {
       tarifa_id: "tarifa-1",
       tarifa_snapshot: { foo: 1 },
       cliente_id: "cli-1",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any;
     const out = limpiarValues(input);
     expect(out).toEqual({ cliente_id: "cli-1" });
@@ -60,10 +58,10 @@ describe("GuardarPlantillaDialog", () => {
     organizationId: "org-1",
     usuarioId: "u1",
     values: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       folio: "COT-1",
       cliente_id: "c1",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any,
   };
 
