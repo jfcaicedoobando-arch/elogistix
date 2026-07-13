@@ -94,6 +94,16 @@ export default function NuevaCotizacion() {
         </div>
       )}
 
+      {/* P2 (v13.295.0) — Empezar desde plantilla (sólo paso 1, sin cotización guardada). */}
+      {w.currentStep === 1 && !w.cotizacionId && (
+        <PlantillaSelectorPaso1
+          organizationId={organizationId}
+          form={w.form}
+        />
+      )}
+
+
+
       <CotizacionWizardLayout
         w={w}
         clientes={clientes}
