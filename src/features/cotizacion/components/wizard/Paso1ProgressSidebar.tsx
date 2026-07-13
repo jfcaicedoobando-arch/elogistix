@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Check, Circle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { usePaso1SectionStatus } from "@/features/cotizacion/hooks/usePaso1SectionStatus";
+import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
 interface SectionDef {
   id: string;
@@ -28,18 +30,22 @@ interface Props {
  */
 export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
   const status = usePaso1SectionStatus();
+  const { control } = useFormContext<CotizacionFormValues>();
+  const tipoEmbarque = useWatch({ control, name: "tipoEmbarque" });
+  const esLcl = esMaritimo && tipoEmbarque === "LCL";
 
   const sections: SectionDef[] = useMemo(() => {
     if (esMaritimo) {
       // v13.47.2 — Mercancía antes de Tarifa; Condiciones comerciales tras Tarifa.
+      // v13.299.1 — LCL: la etiqueta cambia a "Flete" (captura manual, sin tarifa vinculada).
       return [
-        { id: "seccion-cliente",      label: "Cliente",      done: status.cliente },
-        { id: "seccion-operacion",    label: "Operación",    done: status.operacion },
-        { id: "seccion-ruta",         label: "Ruta",         done: status.ruta },
-        { id: "seccion-mercancia",    label: "Mercancía",    done: status.mercancia },
-        { id: "seccion-tarifa",       label: "Tarifa",       done: status.tarifa },
-        { id: "seccion-condiciones",  label: "Condiciones",  done: status.condiciones },
-        { id: "seccion-cierre",       label: "Cierre",       done: status.cierre },
+        { id: "seccion-cliente",      label: "Cliente",                    done: status.cliente },
+        { id: "seccion-operacion",    label: "Operación",                  done: status.operacion },
+        { id: "seccion-ruta",         label: "Ruta",                       done: status.ruta },
+        { id: "seccion-mercancia",    label: "Mercancía",                  done: status.mercancia },
+        { id: "seccion-tarifa",       label: esLcl ? "Flete" : "Tarifa",   done: status.tarifa },
+        { id: "seccion-condiciones",  label: "Condiciones",                done: status.condiciones },
+        { id: "seccion-cierre",       label: "Cierre",                     done: status.cierre },
       ];
     }
     return [
@@ -49,7 +55,7 @@ export default function Paso1ProgressSidebar({ esMaritimo }: Props) {
       { id: "seccion-mercancia", label: "Mercancía", done: status.mercancia },
       { id: "seccion-cierre",    label: "Cierre",    done: status.cierre },
     ];
-  }, [status, esMaritimo]);
+  }, [status, esMaritimo, esLcl]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
