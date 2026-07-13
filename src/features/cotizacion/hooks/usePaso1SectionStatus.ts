@@ -35,6 +35,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
       "tarifaId",
       "rutaTexto", "validezPropuesta",
       "numContenedores",
+      "lclFleteManual",
     ],
   });
 
@@ -48,6 +49,7 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     tarifaId,
     rutaTexto, validezPropuesta,
     numContenedores,
+    lclFleteManual,
   ] = v as [
     string, boolean, string,
     string, string, string,
@@ -58,11 +60,13 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
     string | null,
     string, Date | undefined,
     number,
+    LclFleteManual | undefined,
   ];
 
   const modoLower = (modo || "").toLowerCase();
   const esMaritimo = modoLower.startsWith("mar");
   const esAereo = modoLower.startsWith("aér") || modoLower.startsWith("aer");
+  const esLcl = esMaritimo && tipoEmbarque === "LCL";
   // CIF/CFR/CIP/DAP/DDP marítimo: no se vincula tarifa ni hay condiciones
   // comerciales propias (las pone el shipper origen). No bloquear el paso.
   const sinFleteVenta = esIncotermSinFleteVenta(incoterm, modo);
@@ -77,10 +81,31 @@ export function usePaso1SectionStatus(): Paso1SectionStatus {
       tipoEmbarque, tipoContenedor, numContenedores,
       dimensionesAereas, dimensionesLCL,
     }),
-    tarifa: esMaritimo && !sinFleteVenta ? !!tarifaId : true,
+    // v13.299.0: LCL — la sección "Tarifa/Flete" ya no exige tarifa vinculada.
+    // Basta con vincularla O capturar manualmente (consolidador + tarifa W/M).
+    tarifa: tarifaOk({ esMaritimo, esLcl, sinFleteVenta, tarifaId, lclFleteManual }),
     condiciones: sinFleteVenta ? true : condicionesOk(esMaritimo, rutaTexto, validezPropuesta),
-    cierre: (numContenedores ?? 0) >= 1,
+    cierre: esLcl ? true : (numContenedores ?? 0) >= 1,
   };
+}
+
+interface TarifaArgs {
+  esMaritimo: boolean;
+  esLcl: boolean;
+  sinFleteVenta: boolean;
+  tarifaId: string | null;
+  lclFleteManual: LclFleteManual | undefined;
+}
+
+function tarifaOk(a: TarifaArgs): boolean {
+  if (!a.esMaritimo || a.sinFleteVenta) return true;
+  if (a.tarifaId) return true;
+  // LCL sin tarifa: requiere captura manual mínima (tarifa W/M > 0 y consolidador).
+  if (a.esLcl) {
+    const m = a.lclFleteManual;
+    return !!m && (Number(m.tarifaWM) || 0) > 0 && !!m.consolidadorId;
+  }
+  return false;
 }
 
 function clienteOk(esProspecto: boolean, prospectoEmpresa: string, clienteId: string): boolean {
