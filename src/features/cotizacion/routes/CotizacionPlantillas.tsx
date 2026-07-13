@@ -57,8 +57,10 @@ export default function CotizacionPlantillas() {
       toast.success("Plantilla eliminada");
       setAEliminar(null);
     } catch (err) {
-      toast.error("No se pudo eliminar", {
-        description: err instanceof Error ? err.message : undefined,
+      notifyError(undefined, {
+        title: "No se pudo eliminar",
+        error: err,
+        method: "CotizacionPlantillas.eliminar",
       });
     }
   };
