@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Save, ChevronRight, ChevronLeft, Loader2, AlertTriangle } from "lucide-react";
+import { Save, ChevronRight, ChevronLeft, Loader2, AlertTriangle, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Props {
   currentStep: number;
@@ -28,7 +34,9 @@ export function CotizacionWizardFooter({
   canSkipCostos = false,
 }: Props) {
   const busy = isPending || isProcessing;
-  const showSinDesglose = currentStep === 1 && !!onCotizarSinDesglose && canSkipCostos;
+  // v13.293.0 (P0): "Cotizar sin desglose" ya no compite con "Siguiente".
+  // Se relega a un menú "Más acciones" para bajar riesgo de click accidental.
+  const mostrarMenuMas = currentStep === 1 && !!onCotizarSinDesglose && canSkipCostos;
   return (
     <div className="flex flex-wrap gap-2 justify-between items-center">
       <Button variant="outline" onClick={onBack} disabled={busy}>
@@ -36,18 +44,30 @@ export function CotizacionWizardFooter({
           ? "Cancelar"
           : <><ChevronLeft className="h-4 w-4 mr-1" /> Anterior</>}
       </Button>
-      <div className="flex flex-wrap gap-2">
-        {showSinDesglose && (
-          <Button
-            variant="outline"
-            disabled={busy}
-            onClick={onCotizarSinDesglose}
-            className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-            title="No recomendado. El embarque quedará bloqueado hasta cargar costos."
-          >
-            <AlertTriangle className="h-4 w-4 mr-1" />
-            Cotizar sin desglose
-          </Button>
+      <div className="flex flex-wrap gap-2 items-center">
+        {mostrarMenuMas && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" disabled={busy} aria-label="Más acciones">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuItem
+                onClick={onCotizarSinDesglose}
+                disabled={busy}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">Cotizar sin desglose</span>
+                  <span className="text-xs text-muted-foreground">
+                    Salta al paso 3. El embarque quedará bloqueado hasta cargar costos.
+                  </span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
         <Button
           disabled={busy}
@@ -63,4 +83,3 @@ export function CotizacionWizardFooter({
     </div>
   );
 }
-
