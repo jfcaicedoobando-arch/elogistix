@@ -5,6 +5,8 @@ import { WizardShell } from "@/components/shared/WizardShell";
 import { CotizacionWizardFooter } from "@/features/cotizacion/components/wizard/CotizacionWizardFooter";
 import { CotizacionWizardSteps } from "@/features/cotizacion/components/wizard/CotizacionWizardSteps";
 import { ConfirmSinDesgloseDialog } from "@/features/cotizacion/components/ConfirmSinDesgloseDialog";
+import { WizardTotalsBar } from "@/features/cotizacion/components/wizard/WizardTotalsBar";
+import { useCotizacionKeyboardShortcuts } from "@/features/cotizacion/hooks/wizard/useCotizacionKeyboardShortcuts";
 import { usePermissions } from "@/hooks/shared";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
@@ -73,6 +75,16 @@ export default function CotizacionWizardLayout({
   const irACargarCostos = useCallback(() => {
     if (!isBusy) wHandleBack();
   }, [isBusy, wHandleBack]);
+
+  const mostrarTotales = w.currentStep === 2 || w.currentStep === 3;
+
+  // P1 (v13.294.0) — atajos de teclado del wizard.
+  useCotizacionKeyboardShortcuts({
+    currentStep: w.currentStep,
+    onNext: handleNext,
+    onSave: handleSave,
+    onBack: handleBack,
+  });
 
   return (
     <FormProvider {...form}>
