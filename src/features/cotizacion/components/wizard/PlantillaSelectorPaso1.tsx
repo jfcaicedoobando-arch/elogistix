@@ -6,6 +6,7 @@
  */
 import { useState } from "react";
 import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
