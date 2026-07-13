@@ -149,7 +149,11 @@ export function useActualizarPlantilla() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: ActualizarInput): Promise<void> => {
-      const patch: Record<string, unknown> = {};
+      const patch: {
+        nombre?: string;
+        descripcion?: string | null;
+        visibilidad?: PlantillaVisibilidad;
+      } = {};
       if (input.nombre !== undefined) patch.nombre = input.nombre.trim();
       if (input.descripcion !== undefined) patch.descripcion = input.descripcion?.trim() || null;
       if (input.visibilidad !== undefined) patch.visibilidad = input.visibilidad;
