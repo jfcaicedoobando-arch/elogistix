@@ -18,10 +18,10 @@ function dispatch(key: string, mod: "ctrl" | "meta" = "ctrl", target?: EventTarg
 }
 
 describe("useCotizacionKeyboardShortcuts", () => {
-  let onNext: ReturnType<typeof vi.fn>;
-  let onSave: ReturnType<typeof vi.fn>;
-  let onBack: ReturnType<typeof vi.fn>;
-  let onFlushDraft: ReturnType<typeof vi.fn>;
+  let onNext: () => void;
+  let onSave: () => void;
+  let onBack: () => void;
+  let onFlushDraft: () => void;
 
   beforeEach(() => {
     onNext = vi.fn();
