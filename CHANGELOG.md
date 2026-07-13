@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.1] - 2026-07-13
+- **feat(cotización LCL · sin tarifa vinculada)**: en Marítimo LCL se elimina por completo el panel "Tarifa marítima vinculada" y sus sugerencias. LCL ahora usa exclusivamente la captura manual (`SeccionFleteManualLCL`: consolidador + tarifa W/M + mínimo + días libres). Al cambiar `tipoEmbarque` a LCL se limpia `tarifaId` / `tarifaOverride` para evitar estado huérfano heredado de FCL. El sidebar de progreso relabela el paso a "Flete" en LCL (FCL conserva "Tarifa"). Analogía: LCL ya no comparte la vitrina de tarifas fijas del FCL — captura su propio precio por W/M como en la operación real.
+
 ## [13.299.0] - 2026-07-13
 - **feat(cotización LCL · flete manual + W/M)**: la tarifa vinculada ahora es **opcional** en Marítimo LCL. Se agregó captura manual del flete cuando no hay una tarifa vinculada (o como alternativa a ella): consolidador/agente (proveedor), tarifa USD por W/M, mínimo de flete y días libres de almacenaje.
   - Nueva sección `SeccionFleteManualLCL` (renderizada bajo `TarifaVinculadaPanel` sólo en LCL), con KPIs en vivo: peso total, volumen total, **W/M facturable** = `max(peso_kg/1000, volumen_m3)`, y venta calculada = `max(WM × tarifa, mínimo)`.
