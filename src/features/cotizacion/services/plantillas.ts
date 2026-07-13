@@ -65,7 +65,7 @@ export async function insertPlantilla(input: InsertPlantillaInput): Promise<Coti
       descripcion: input.descripcion?.trim() || null,
       visibilidad: input.visibilidad,
       // SAFE-CAST: payload es jsonb; el schema del insert espera Json.
-      payload: input.payload as unknown as Record<string, unknown>,
+      payload: input.payload as unknown as never,
     })
     .select()
     .single();
