@@ -14,7 +14,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - Tests reforzados en `src/features/facturacion/utils/__tests__/aging.test.ts`: casos `-10`, `-5`, `0`, `+3` (fallback) con label + className esperados.
   - `BandejaVencidas` no se ve afectada (sólo consume valores positivos).
 
-
+## [13.300.17] - 2026-07-14
 - **ui(emails · enviar documento)**: rediseño del modal "Enviar factura/cotización/proforma por correo" para dar congruencia a la captura de destinatarios y CC. El bug reportado: el modal mezclaba dos patrones distintos — "Para" usaba badges + botón "Agregar" con un input separado, y "CC" un `Input` de texto libre separado por comas.
   - Nuevo componente `src/components/shared/emails/EmailChipsField.tsx` (chip input tipo Gmail/Outlook): Enter/coma/`;`/Tab confirman chip, Backspace en input vacío elimina el último, paste con separadores auto-divide, chips inválidos en `variant="destructive"`, soporta `lockedChips` (candado) para el usuario logueado.
   - `EnviarDocumentoDialog.tsx` unifica **Para** y **CC** bajo `EmailChipsField`. Los contactos del cliente pasan a ser atajos en un `DestinatariosPicker` compacto (checkboxes) que sincroniza chips en "Para". El usuario logueado aparece como chip con candado en "CC" (no removible). Se agrega contador `N destinatarios · M en copia` en el footer y tamaño del dialog baja a `xl`.
