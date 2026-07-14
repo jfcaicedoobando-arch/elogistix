@@ -55,13 +55,19 @@ export function FacturaPagosSection({
         entidad_id: facturaId,
         entidad_nombre: `Pago eliminado factura ${facturaNumero}`,
       });
-      notifySuccess(toast, { title: "Pago eliminado" });
+      // NOTA: `notifySuccess` de éxito lo dispara el hook `useEliminarPagoFactura`.
+      // Aquí sólo cerramos el diálogo. El `onError` del hook ya adjunta el
+      // `error` real (incluye mensaje de Supabase) al toast, así que este
+      // catch únicamente evita que la promesa rechazada explote como unhandled.
       setPagoAEliminar(null);
-    } catch {
+    } catch (error) {
+      // Fallback diagnóstico: si por alguna razón el hook no adjuntó el error
+      // al toast (p.ej. un throw fuera del onError), lo mostramos aquí.
       notifyError(toast, {
         title: "Error al eliminar pago",
         method: "ON_ERROR",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
+        error: error instanceof Error ? error : new Error(String(error)),
       });
     }
   };
