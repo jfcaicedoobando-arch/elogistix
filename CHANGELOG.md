@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.4] - 2026-07-14
+- **audit(v13.300.2)**: encontrado un test rezagado — `src/lib/ui/__tests__/uiMappings.test.ts` seguía asertando `text-cyan-600`/`text-violet-600`/`text-orange-600` después de la tokenización del turno anterior. Actualizado a `text-state-arribo`/`text-state-aduana`/`text-state-eir`. Bug de test, no de código.
+- **ux(cohesión visual · Lote 3B — dashboards ejecutivos)**: 4 archivos migrados a tokens semánticos y removidos de la allowlist del guardrail:
+  - `src/features/dashboard/components/EmbarquesPendientesAdminCard.tsx`: badge `EIR` usa `border-state-eir/40 text-state-eir` (antes `border-orange-300 text-orange-700`).
+  - `src/features/dashboard/direccion/HeroCards.tsx`: delta positivo `text-emerald-600` → `text-success`.
+  - `src/features/dashboard/direccion/PulsoSection.tsx`: semáforo `text-emerald-600`/`text-amber-600` → `text-success`/`text-warning`; badge de acuses pendientes migrado a `text-warning`.
+  - `src/features/dashboard/finance/FinanceHeader.tsx`: chip "por timbrar" migrado de la paleta blue-* a tokens `info` (con soporte dark).
+- **refactor(allowlist)**: `CarteraSection.tsx` reclasificado — es una escala de aging (Corriente/1-30/31-60/+60) que debe migrar junto con `CobranzaBlock.tsx` cuando se definan los tokens `--aging-1..4`. Se agrupó bajo el mismo comentario para dejar clara la deuda compartida.
+- **coverage**: umbral de funciones (30%) validado con el test agregado en 13.300.3.
+
 ## [13.300.3] - 2026-07-14
 - **test(coverage)**: nuevo `src/features/facturacion/estadoCuenta/services/__tests__/estadoCuentaAggregates.test.ts` (5 casos) cubre `calcularKpisEstadoCuenta` — segregación MXN/USD, exclusión de saldos ≤0, conteo de vencidas y suma de anticipos. Sube el porcentaje de funciones cubiertas por encima del umbral global (30%) que hacía fallar la etapa `Coverage merge & report` en CI.
 
