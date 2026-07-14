@@ -58,4 +58,32 @@ describe("appFeedback (sonner)", () => {
     notifySuccess(undefined, { title: "Listo", description: "ok" });
     expect(m.success).toHaveBeenCalledWith("Listo", { description: "ok" });
   });
+
+  it("isAuthorizationError detecta variantes conocidas", () => {
+    expect(isAuthorizationError(new Error("No tienes permisos para X"))).toBe(true);
+    expect(isAuthorizationError(new Error("permission denied for table"))).toBe(true);
+    expect(isAuthorizationError(new Error("Forbidden"))).toBe(true);
+    expect(isAuthorizationError(new Error("Network fail"))).toBe(false);
+    expect(isAuthorizationError(null)).toBe(false);
+  });
+
+  it("notifyError NO envía a Sentry cuando el error es de autorización", () => {
+    notifyError(undefined, {
+      title: "Error al actualizar",
+      error: new Error("No tienes permisos para cambiar el estado del cliente en esta proforma."),
+      method: "PROFORMAS_RESPUESTA_MANUAL",
+    });
+    expect(m.error).toHaveBeenCalled();
+    expect(reportCaughtErrorMock).not.toHaveBeenCalled();
+  });
+
+  it("notifyError SÍ envía a Sentry cuando el error no es de autorización", () => {
+    notifyError(undefined, {
+      title: "Error al actualizar",
+      error: new Error("Network fail"),
+      method: "PROFORMAS_RESPUESTA_MANUAL",
+    });
+    expect(m.error).toHaveBeenCalled();
+    expect(reportCaughtErrorMock).toHaveBeenCalledTimes(1);
+  });
 });
