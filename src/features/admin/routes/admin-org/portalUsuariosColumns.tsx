@@ -44,7 +44,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
             (a.original.email ?? "").localeCompare(b.original.email ?? "", "es-MX", {
               sensitivity: "base",
             }),
-          meta: { width: "w-auto min-w-[240px]" },
+          meta: { width: "w-[360px] min-w-[280px]" },
           cell: ({ row }) => {
             const email = row.original.email;
             const unresolved = email === UNRESOLVED_EMAIL;
