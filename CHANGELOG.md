@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.21] - 2026-07-14
+- **ux(sidebar · costeo)**: renombradas las dos entradas del módulo de Costeo para que su propósito sea evidente: "Buscar tarifa" → **"Comparador Top 3"** (buscador read-only que devuelve las 3 mejores tarifas vigentes) y "Tarifas marítimas" → **"Catálogo de tarifas"** (CRUD de alta/edición/vencimiento). Sólo cambia el `title` en `SIDEBAR_COSTEO_ITEMS`; las rutas `/costeo/buscar` y `/costeo/tarifas` no cambian.
+
 ## [13.299.20] - 2026-07-14
+
 - **fix(auditoría · MTTR)**: la tarjeta "Tiempo medio de resolución" ya no muestra permanentemente "Sin datos". Antes exigía que la revisión tuviera **ambos** `asignado_at` y `revisado_at`, pero en el flujo real casi nadie asigna explícitamente (355 revisados vs. 1 con `asignado_at`), así que el promedio nunca acumulaba muestras. Ahora `procesarRevisionEnOperador` usa `asignado_at ?? created_at` como punto de inicio y el subtítulo de la tarjeta pasa a **"Desde detección del hallazgo hasta marca de revisado"**. Cambio 100 % lógica de agregado + copy, sin migración.
 
 ## [13.299.19] - 2026-07-14
