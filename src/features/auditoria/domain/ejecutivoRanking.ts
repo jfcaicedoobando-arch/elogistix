@@ -23,7 +23,10 @@ export interface RankingResultado {
 /**
  * Acumula la revisión en el ranking de un email particular y en el accumulator
  * de MTTR. Usa `revisado_at` (no `updated_at`) para que comentarios o
- * reasignaciones posteriores no distorsionen la métrica.
+ * reasignaciones posteriores no distorsionen la métrica. Como punto de inicio
+ * usa `asignado_at` cuando existe, y hace fallback a `created_at` (fecha en
+ * que se detectó el hallazgo) porque la asignación explícita es opcional
+ * en el flujo actual y sin fallback el promedio nunca acumula muestras.
  */
 function procesarRevisionEnOperador(
   r: AuditoriaRevision,
@@ -33,8 +36,9 @@ function procesarRevisionEnOperador(
 ): void {
   if (r.estado_revision === "revisado") {
     cur.resueltos++;
-    if (r.asignado_at && r.revisado_at) {
-      const horas = diffHoras(r.asignado_at, r.revisado_at);
+    const inicio = r.asignado_at ?? r.created_at;
+    if (inicio && r.revisado_at) {
+      const horas = diffHoras(inicio, r.revisado_at);
       if (horas >= 0 && horas < 24 * 90) {
         acc.suma += horas;
         acc.count++;
@@ -45,6 +49,7 @@ function procesarRevisionEnOperador(
     if (r.fecha_limite && r.fecha_limite < hoyIso) cur.vencidos++;
   }
 }
+
 
 /**
  * Calcula MTTR + dos rankings independientes:
