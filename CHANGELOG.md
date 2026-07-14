@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.11] - 2026-07-14
+- **ui(auditoría · hallazgos)**: se retiran las columnas `Cliente`, `Estado` y `ETA` de la tabla en `/auditoria` (`src/features/auditoria/components/HallazgosTabla.tsx`). Info redundante — el cliente y el estado ya aparecen dentro de la celda `Detalle`, y ETA se ve al abrir el hallazgo. La tabla queda más compacta y legible.
+
 ## [13.300.10] - 2026-07-14
 - **fix(proformas · aceptar/rechazar manual)**: los roles `gerente_operaciones` y `gerente_comercial` veían los botones "Aceptar (manual)" / "Rechazar (manual)" en `/proformas/:id`, pero al pulsarlos la app respondía con *"You do not have permission to change the customer status on this proforma."* (reportado por marta.sarmiento@elogistixshipping.com, v13.299.11).
   - Causa: desfase entre frontend y DB. `RESPONDER_PROFORMA_MANUAL` en `src/hooks/shared/usePermissions.ts` sigue la política v13.145.8 (super_admin, admin_org, admin, gerente_comercial, gerente_operaciones), pero el RPC `actualizar_estado_cliente_proforma` (migración `20260702174034`) todavía tenía la lista antigua (admin, admin_org, contador, operador).
