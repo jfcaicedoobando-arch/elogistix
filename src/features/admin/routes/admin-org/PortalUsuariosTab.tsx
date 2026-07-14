@@ -68,6 +68,7 @@ export function PortalUsuariosTab({ tipo }: Props) {
           }
           rowKey={(u) => u.id}
           density="comfortable"
+          tableClassName="w-full"
         />
       </div>
 

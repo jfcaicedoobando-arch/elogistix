@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.8] - 2026-07-14
+- **fix(gestión usuarios · tabla)**: en `/usuarios` sólo se veía la columna "Usuario"; `Rol`, `Fecha de registro` y `Acciones` quedaban fuera del viewport porque el `<table>` interno del `DataTable` usa `min-w-max` y el layout auto estaba estirando la tabla a ~16,000 px.
+  - `src/components/shared/DataTable.tsx`: nuevo prop opcional `tableClassName` (default `"min-w-max"`) que permite a un caller puntual desactivar el `min-w-max` sin afectar al resto de tablas.
+  - `src/features/admin/routes/admin-org/UsuariosInternosTab.tsx` y `PortalUsuariosTab.tsx`: pasan `tableClassName="w-full"` para que la tabla respete el ancho del contenedor.
+  - `src/features/admin/routes/admin-org/usuariosColumns.tsx`: columna `usuario` con `w-[360px] min-w-[280px]` (antes `w-auto min-w-[240px] max-w-[480px]`).
+  - `src/features/admin/routes/admin-org/portalUsuariosColumns.tsx`: columna `email` con el mismo ancho acotado y `vinculado` recibe `min-w-[220px]`.
+
 ## [13.300.7] - 2026-07-14
 - **fix(sentry noise · JAVASCRIPT-REACT-2E)**: los errores de autorización del backend (RLS/RPC guards) ya no se reportan a Sentry.
   - `src/components/shared/utils/appFeedback.ts`: nuevo helper `isAuthorizationError()` que detecta mensajes `no tienes permisos`, `permission denied`, `not authorized`, `forbidden`, `acceso denegado`. `notifyError` omite `reportCaughtError` cuando el error hace match.

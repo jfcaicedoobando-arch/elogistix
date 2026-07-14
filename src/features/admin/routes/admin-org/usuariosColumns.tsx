@@ -41,7 +41,7 @@ export function useUsuarioColumns({ currentUserId, onPendingRole, onDelete }: Op
             (a.original.email ?? "").localeCompare(b.original.email ?? "", "es-MX", {
               sensitivity: "base",
             }),
-          meta: { width: "w-auto min-w-[240px] max-w-[480px]" },
+          meta: { width: "w-[360px] min-w-[280px]" },
           cell: ({ row }) => (
             <UsuarioCell user={row.original} isSelf={row.original.user_id === currentUserId} />
           ),

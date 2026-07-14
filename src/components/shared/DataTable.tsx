@@ -52,6 +52,10 @@ interface DataTableProps<T> {
   footer?: React.ReactNode | ((data: T[]) => React.ReactNode);
   pagination?: DataTablePagination;
   className?: string;
+  /** Sobrescribe la className del `<table>` interno. Por defecto `"min-w-max"`
+   *  (obliga a respetar los anchos de columna declarados). Pásalo como `""`
+   *  o `"w-full table-fixed"` cuando no quieras scroll horizontal forzado. */
+  tableClassName?: string;
   /** Ancla el encabezado al top del contenedor de scroll (útil en tablas largas). */
   stickyHeader?: boolean;
   /** Visibilidad de columnas controlada (persistida por el caller vía `useColumnVisibility`). */
@@ -91,6 +95,7 @@ function DataTableInner<T>({
   footer,
   pagination,
   className,
+  tableClassName = "min-w-max",
   stickyHeader = false,
   columnVisibility,
   onColumnVisibilityChange,
@@ -125,7 +130,7 @@ function DataTableInner<T>({
             respetar los anchos declarados por columna; sin él, `w-full` del
             componente `Table` shadcn comprime las columnas y oculta las
             últimas (Estado/ETA) sin activar el scroll horizontal. */}
-        <Table className="min-w-max">
+        <Table className={tableClassName}>
           <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
           <DataTableBody
             table={table}

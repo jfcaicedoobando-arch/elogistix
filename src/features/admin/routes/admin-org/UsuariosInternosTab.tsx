@@ -128,6 +128,7 @@ export function UsuariosInternosTab() {
           }
           rowKey={(u) => u.user_id}
           density="comfortable"
+          tableClassName="w-full"
           initialSort={{ key: "role", dir: "asc" }}
         />
       </div>
