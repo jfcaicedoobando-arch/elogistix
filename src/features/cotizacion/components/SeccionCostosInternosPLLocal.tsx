@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { DollarSign, Banknote, Link2, AlertTriangle } from "lucide-react";
 import ResumenPL from "./ResumenPL";
