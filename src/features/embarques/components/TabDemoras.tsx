@@ -105,6 +105,7 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
             data={rows}
             rowKey={(r) => r.id}
             density="compact"
+            tableClassName="w-full"
             emptyState={
               <div className="p-6">
                 <EmptyState

@@ -1,64 +1,63 @@
-## Hallazgo de Sentry (últimas 24 h)
+## Contexto
 
-Sólo hay **1 issue abierto**: `JAVASCRIPT-REACT-2E` — 1 evento, 1 usuario.
+En v13.300.8 corregí un bug en la tabla de `/usuarios`: sólo se veía la columna "Usuario" porque el `<table>` interno del `DataTable` compartido usa `min-w-max` por defecto, y cuando una celda contiene un componente "pesado" (Select, Popover, Input sin ancho), el navegador estira la tabla a miles de píxeles y esconde el resto de las columnas.
 
-- **Mensaje:** `No tienes permisos para cambiar el estado del cliente en esta proforma.`
-- **Origen:** RPC del backend `actualizar_..._proforma` (guardia de autorización correcta).
-- **Ruta:** `/proformas/:id`, disparado desde `RespuestaClienteManualDialog.tsx` cuando un `gerente_operaciones` intenta "Marcar aceptada/rechazada por el cliente".
-- **Diagnóstico:** No es un bug. El backend está haciendo su trabajo. El problema es que se está reportando como **error crítico a Sentry** (contamina la cuota y las alertas) y el mensaje al usuario aparece con severidad "Error" en lugar de "Advertencia".
+Analogía: `min-w-max` es como decirle a la tabla "nunca te encojas por debajo de tu tamaño ideal". Si dentro de una celda pones un Select con muchas opciones, ese "ideal" se dispara y el resto de columnas se sale del viewport.
 
-## Analogía
+El fix ya aplicado (`UsuariosInternosTab.tsx` y `PortalUsuariosTab.tsx`) fue pasar `tableClassName="w-full"` al `DataTable`.
 
-Es como si la puerta con cerrojo (RLS del backend) hiciera sonar la alarma de incendios cada vez que alguien sin llave intenta entrar. Queremos que la puerta siga cerrada, pero que sólo muestre un cartel amable — no que llame a los bomberos.
+## Hallazgos de la auditoría
 
-## Plan
+Un subagente revisó los ~120 archivos que consumen `DataTable`. Sólo hay **3 tablas con el mismo patrón de riesgo** que aún no están corregidas:
 
-### 1. Convertir el error en advertencia local (fix puntual)
-- Archivo: `src/features/proformas/components/RespuestaClienteManualDialog.tsx`
-- En el `catch` de `handleConfirmar`, detectar si el mensaje contiene `"no tienes permisos"` (case-insensitive) y usar `notifyWarning` en lugar de `notifyError`. Así el usuario ve un toast amarillo claro y **no se envía a Sentry**.
-- El resto de errores (red, servidor, etc.) siguen reportándose normalmente.
+| # | Archivo | Componente pesado en `cell:` | Severidad |
+|---|---|---|---|
+| 1 | `src/features/admin/components/orgDetalle/OrgMembersCard.tsx` | `<Select>` de roles (mismo patrón exacto que el bug original) | Alta |
+| 2 | `src/features/embarques/components/TabGarantias.tsx` (columnas en `useGarantiasColumns.tsx`) | `<Input>` de monto/ref + `<Select>` de estado, sin `meta.width` declarado | Alta/Media |
+| 3 | `src/features/embarques/components/TabDemoras.tsx` (columnas en `tabDemorasColumns.tsx`) | `<DatePickerMx>` (Popover con calendario) + `<Input>` de días libres | Media |
 
-### 2. Filtro global preventivo en `notifyError`
-- Archivo: `src/components/shared/utils/appFeedback.ts`
-- Añadir un pequeño helper `isAuthorizationError(err)` que reconoce mensajes como `no tienes permisos`, `permission denied`, `not authorized`. Cuando detecta este patrón, **omite `reportCaughtError`** (Sentry) aunque igual muestra el toast al usuario.
-- Beneficio: cualquier otro call site que en el futuro tope con un guard del backend hereda el filtro sin código extra.
+Confirmado que **no hay más ocurrencias**: los demás Selects/Popovers viven en toolbars de filtro fuera de la tabla, no en `cell:`.
 
-### 3. Resolver el issue en Sentry
-- Marcar `JAVASCRIPT-REACT-2E` como `resolved` vía `update_issue` en el mismo turno del fix (regla de memoria).
+Además, `VirtualDataTable.tsx` usa CSS grid en vez de `<table>` y no está expuesto al bug.
 
-### 4. Tests
-- Añadir un test unitario en `appFeedback.test.ts` que verifica que `notifyError` con un `Error("No tienes permisos ...")` **no invoca** `reportCaughtError`, y con `Error("Network fail")` sí lo hace.
+## Plan de corrección
 
-### 5. Versionado y changelog
-- Bump `APP_VERSION` → `13.300.7`.
-- Entrada en `CHANGELOG.md`: fix Sentry noise por errores de autorización de proforma + resolución del issue.
+### Paso 1 — Aplicar el fix mínimo a los 3 archivos afectados
+
+Pasar `tableClassName="w-full"` al `<DataTable>` en:
+
+- `src/features/admin/components/orgDetalle/OrgMembersCard.tsx` (línea del `<DataTable ...>`)
+- `src/features/embarques/components/TabGarantias.tsx`
+- `src/features/embarques/components/TabDemoras.tsx`
+
+Es una sola prop añadida por archivo, sin cambios de lógica ni de datos.
+
+### Paso 2 — Verificación visual con Playwright
+
+Reproducir el flujo para cada una:
+
+1. Navegar a `/admin/organizaciones/:id` (`OrgMembersCard`) y abrir la pestaña de miembros.
+2. Abrir un embarque con garantías y verificar la tabla de `TabGarantias`.
+3. Abrir un embarque con demoras y verificar la tabla de `TabDemoras`.
+
+Capturar screenshot en cada una y confirmar que todas las columnas caben dentro del contenedor (sin scroll horizontal desmedido).
+
+### Paso 3 — Registro de cambios
+
+- Bump `APP_VERSION` a `13.300.9` (`src/constants/appVersion.ts`).
+- Entrada nueva en `CHANGELOG.md` describiendo el fix preventivo y los 3 archivos afectados, referenciando `13.300.8` como la corrección original.
 
 ## Detalles técnicos
 
-```ts
-// appFeedback.ts
-function isAuthorizationError(e: unknown): boolean {
-  const msg = e instanceof Error ? e.message : typeof e === "string" ? e : "";
-  return /no tienes permisos|permission denied|not authorized|forbidden/i.test(msg);
-}
+- El prop `tableClassName` ya existe en `src/components/shared/DataTable.tsx` (línea 55) desde la corrección anterior; el default sigue siendo `"min-w-max"` para no romper otras tablas que sí dependen de scroll horizontal.
+- El fix es idempotente y no requiere cambios en las definiciones de columnas ni en los hooks de datos.
+- No se tocan los componentes internos de las celdas (`<Select>`, `<Input>`, `<DatePickerMx>`), sólo la instancia del `<DataTable>` que las contiene.
 
-if (error !== undefined && error !== null && !isAuthorizationError(error)) {
-  reportCaughtError(error, { ... }, { ... });
-}
-```
+## Riesgos
 
-```tsx
-// RespuestaClienteManualDialog.tsx
-} catch (e) {
-  const msg = (e as Error).message ?? "";
-  if (/no tienes permisos/i.test(msg)) {
-    notifyWarning(toast, { title: "Acción no permitida", description: msg });
-  } else {
-    notifyError(toast, { title: "Error al actualizar", description: msg, error: e, method: "PROFORMAS_RESPUESTA_MANUAL" });
-  }
-}
-```
+- Bajo: `w-full` puede provocar que las columnas se compriman si el contenido crece mucho. Mitigación: las tres tablas afectadas ya declaran `meta.width` en sus columnas críticas o contienen inputs con ancho fijo, por lo que el layout resultante debería mantenerse legible. La verificación visual del paso 2 sirve de red de seguridad.
 
 ## Fuera de alcance
-- No se toca la RPC ni las políticas RLS — el backend está correcto.
-- No se ocultan botones por rol en este sprint (la UI ya asume que roles operativos pueden intentar la acción; el fix respeta esa expectativa).
+
+- No se refactorizan las 100+ tablas restantes que técnicamente heredan `min-w-max` pero no muestran el bug (no tienen componentes pesados en `cell:`). Se dejan como están para no arriesgar regresiones en scrolls horizontales legítimos (por ejemplo tablas anchas de embarques o CXP).
+- No se cambia el default de `DataTable.tsx`.
