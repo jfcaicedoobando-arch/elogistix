@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.21] - 2026-07-14
+- **fix(observability)**: limpieza de 4 issues abiertos en Sentry (`JAVASCRIPT-REACT-1V`, `-1M`, `-2F`, `-2G`).
+  - `reportCaughtError` ahora envuelve cualquier `unknown` en `Error` real antes de llamar a `Sentry.captureException`, preservando el objeto original en `extra.original`. Elimina el título minificado "Object captured as exception with keys: code, details, hint, message" y mejora la agrupación por mensaje.
+  - Los `PostgrestError` con código `23514` (check constraint = validación de negocio esperada, ej. "requiere cotización Aceptada") ya no se reportan a Sentry: son mensajes al usuario, no crashes.
+  - `insertTarifaConRecargos` / `updateTarifaConRecargos` en `costeo_tarifas` normalizan `vigente_desde`/`vigente_hasta === ""` → `null` antes de tocar Postgres (raíz del `22007 invalid input syntax for type date` en `/costeo/tarifas`).
+  - `shouldDropSentryEvent` descarta `TypeError: Converting circular structure to JSON` originado en frames `<anonymous>` (extensiones del navegador que monkey-parchean `appendChild`).
+  - Se marcan los 4 issues como `resolved` en Sentry.
+
 ## [13.300.20] - 2026-07-14
 - **fix(auditoría)**: el reporte de `/auditoria` quedaba desfasado del detalle del embarque cuando el operador subía documentos, los marcaba como "No aplica" o avanzaba el estado (se seguían viendo hallazgos con el estado anterior hasta pulsar Recalcular o esperar 5 min).
   - Se invalida `queryKeys.auditoria.embarques` en las mutations que afectan reglas de auditoría: subir/eliminar/crear documentos y marcar No aplica (`useDocumentoEmbarqueMutations`), avanzar/sincronizar/reabrir estado (`useEstadoEmbarque`), actualizar ETA y fecha real de llegada (`useActualizarEta`, `useActualizarFechaLlegadaReal`), actualizar/crear/duplicar embarque (`useUpdateEmbarque`, `useCreateEmbarque`), cerrar/reabrir (`useCierreEmbarque`), y crear/timbrar factura manual (`useCrearFacturaManual` — regla `ventas_sin_facturar`).
