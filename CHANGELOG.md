@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.7] - 2026-07-14
+- **fix(sentry noise · JAVASCRIPT-REACT-2E)**: los errores de autorización del backend (RLS/RPC guards) ya no se reportan a Sentry.
+  - `src/components/shared/utils/appFeedback.ts`: nuevo helper `isAuthorizationError()` que detecta mensajes `no tienes permisos`, `permission denied`, `not authorized`, `forbidden`, `acceso denegado`. `notifyError` omite `reportCaughtError` cuando el error hace match.
+  - `src/features/proformas/components/RespuestaClienteManualDialog.tsx`: el `catch` detecta el patrón y muestra `notifyWarning` ("Acción no permitida") en lugar de `notifyError`. El resto de errores (red/servidor) siguen su flujo normal.
+  - `src/components/shared/utils/__tests__/appFeedback.test.ts`: 3 tests nuevos que blindan el filtro (variantes detectadas, skip a Sentry para auth error, envío normal para errores genéricos).
+  - Issue de Sentry `JAVASCRIPT-REACT-2E` marcado como `resolved`.
+
 ## [13.300.6] - 2026-07-14
 - **audit(v13.300.5)**: los 4 archivos migrados (banners revalidación, BulkImportSteps, NotasCreditoSection) están cubiertos por el guardrail global; `NotasCreditoBadge.test.tsx` cubre explícitamente los tokens `success`/`info`. Sin gaps de test.
 - **ux(cohesión visual · Lote 3B — aging cartera)**: definida la escala `--aging-1..5` (verde → ámbar → naranja → rojo → rojo oscuro) en `src/index.css` con calibración light + dark, y expuesta como `bg-aging-{1..5}` en `tailwind.config.ts`.
