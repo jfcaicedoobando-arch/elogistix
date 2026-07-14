@@ -63,6 +63,28 @@ function isHostingAnalyticsNoise(
   );
 }
 
+/**
+ * `TypeError: Converting circular structure to JSON` originado desde
+ * `<anonymous>` (extensiones del navegador que monkey-parchean `appendChild`
+ * y stringifican el DOM). No es código nuestro y no rompe la UI.
+ * Ver Sentry JAVASCRIPT-REACT-2F/2G.
+ */
+function isBrowserExtensionCircularJson(
+  event: Sentry.ErrorEvent,
+  exc: unknown,
+): boolean {
+  const msg =
+    (exc as { message?: unknown } | undefined)?.message ??
+    event.exception?.values?.[0]?.value ??
+    event.message;
+  if (typeof msg !== "string" || !msg.includes("Converting circular structure to JSON")) {
+    return false;
+  }
+  const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
+  // Si al menos un frame vive en `<anonymous>` (extensión) lo tratamos como ruido.
+  return frames.some((f) => (f.filename ?? "").includes("<anonymous>"));
+}
+
 export function shouldDropSentryEvent(
   event: Sentry.ErrorEvent,
   hint: Sentry.EventHint | undefined,
@@ -75,6 +97,7 @@ export function shouldDropSentryEvent(
   if (isZodValidationError(exc)) return true;
   if (isPostgresRlsDenied(event, hint?.originalException)) return true;
   if (isHostingAnalyticsNoise(event, hint?.originalException)) return true;
+  if (isBrowserExtensionCircularJson(event, hint?.originalException)) return true;
   return false;
 }
 

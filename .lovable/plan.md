@@ -1,54 +1,48 @@
-## Diagnóstico
+## Hallazgos en Sentry (últimos 7 días)
 
-En BD, ELIMP00281 tiene:
-- Estado actual: **Entregado**
-- Factura Comercial / Packing List: **No aplica** (satisfechos en la matriz de auditoría)
-- BL Master y BL House: **Recibido con archivo**
+| Issue | Mensaje | Ocurrencias | Diagnóstico |
+|---|---|---|---|
+| `JAVASCRIPT-REACT-1V` | `Object captured as exception with keys: code, details, hint, message` (`22007 invalid input syntax for type date: ""`) | 22 · 3 usuarios · `/costeo/tarifas` | Se envía `""` en un campo `date` de una mutation de tarifas. Además, el `PostgrestError` se pasa **crudo** a `Sentry.captureException`, por eso el título es `SZ`/`OU` (nombre minificado) en vez del mensaje real. |
+| `JAVASCRIPT-REACT-1M` | `Object captured as exception with keys: ...` (`23514 Tu rol requiere vincular una cotización Aceptada…`) | 56 · 8 usuarios · `/embarques/:id` | Es una **validación de negocio esperada** (check constraint 23514 lanzado a propósito). No es un bug, pero se reporta como excepción. Mismo problema: objeto crudo pasado a Sentry. |
+| `JAVASCRIPT-REACT-2F` | `TypeError: Converting circular structure to JSON` (React reconciler → `HTMLElement.appendChild` → `JSON.stringify`) | 1 · 0 usuarios · `/` | El frame `<anonymous>:103 (HTMLElement.appendChild)` y `<anonymous>:25` no son código nuestro — es una **extensión del navegador** que monkey-parchea `appendChild` y stringifica el DOM (típico de traductores/anti-fraude). |
+| `JAVASCRIPT-REACT-2G` | Mismo `Converting circular structure to JSON`, ahora rebotando por el `ErrorBoundary` | 1 · 0 usuarios · `/` | Consecuencia del 2F. |
 
-Es decir, la RPC `auditoria_embarques_org` **hoy** ya no debería reportar `docs_faltantes` para ese embarque. Sin embargo, el card de auditoría muestra estado "Arribo" y como faltantes FC / PL / BL House — datos previos a que el operador marcara "No aplica" y subiera los BL.
+## Plan
 
-**Causa raíz:** el reporte de auditoría está en caché de React Query (`staleTime: 5 min`) y **ninguna mutation** de embarques invalida esa key. Cuando el operador:
+### 1. Normalizar errores antes de `captureException` (arregla 1V + 1M como ruido y mejora agrupación futura)
 
-1. avanza el estado (Arribo → Entregado),
-2. sube documentos,
-3. marca documentos como "No aplica",
+En `src/lib/observability/reportCaughtError.ts`:
+- Si `err` **no** es instancia de `Error`, construir `new Error(err.message ?? "unknown")` conservando `err` como `extra.original`. Así Sentry deja de mostrar títulos minificados (`SZ`, `OU`) y agrupa por mensaje real.
+- Copiar `stack` del Error original si existe, o dejar que el nuevo Error lo genere.
 
-la vista `/auditoria` queda mirando el snapshot viejo hasta que el usuario presione **Recalcular** o pasen 5 min. Por eso el detalle muestra todo en verde pero la lista de hallazgos sigue reportando faltantes con el estado anterior.
+### 2. Descartar violaciones de negocio esperadas (arregla 1M en la raíz)
 
-Analogía: la página de auditoría es como un pizarrón con la foto de ayer; los cambios del día se hacen en la operación, pero nadie borra el pizarrón hasta que alguien lo pide manualmente.
+En `reportCaughtError` (o vía `beforeSend` en `sentry/dropPredicate.ts`):
+- Si `classified.pgCode === "23514"` **y** `classified.pgHint` existe → tratar como validación esperada: no enviar a Sentry, sólo `logger.info` con breadcrumb. Estos errores ya se muestran al usuario vía `notifyError`; no son crashes.
+- Documentar la regla en `mem://preferences/sentry-resolve` (o memoria nueva).
 
-## Alcance del fix (frontend puro, sin tocar SQL)
+### 3. Arreglar la mutation de tarifas que manda fecha vacía (arregla 1V en la raíz)
 
-Invalidar `queryKeys.auditoria.embarques` en las mutations que cambian datos que la RPC evalúa. Con eso el reporte se refresca automáticamente y la contradicción desaparece.
+- Localizar la mutation que ejecuta `/costeo/tarifas` con `feature: react_query`, `kind: mutation` y produce `22007`. Candidatos: `useCreateTarifa` / `useUpdateTarifa` en `src/features/costeo/**`.
+- Antes de mandar al backend, normalizar todo campo `date` opcional: `value === "" ? null : value`. Aplicarlo en el schema Zod / mapper de la mutation, no en el componente.
 
-### Archivos a modificar
+### 4. Filtrar ruido de extensiones del navegador (arregla 2F/2G)
 
-1. **`src/features/embarques/hooks/mutations/useDocumentoEmbarqueMutations.ts`**
-   Agregar `queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques })` en los `onSuccess` de:
-   - `useUploadDocumentoEmbarque`
-   - `useDeleteDocumentoEmbarque`
-   - `useCreateDocumentoEmbarque`
-   - `useSetDocumentoNoAplica`
+En `src/lib/observability/sentry/dropPredicate.ts`:
+- Descartar eventos cuyo mensaje sea `Converting circular structure to JSON` **y** cuyo stack contenga sólo frames `<anonymous>` fuera de nuestros assets (`/assets/index-*.js`). Es un patrón conocido de extensiones y no accionable.
 
-2. **Mutation de avance de estado del embarque** (`avanzar_estado_embarque` / cierre). Localizar el hook (`useEmbarqueEstadoActions` / `useAvanzarEstadoEmbarque`) y agregar la misma invalidación en `onSuccess`. Aplicar también en la mutation de "cerrar embarque".
+### 5. Cerrar issues y bumpear versión
 
-3. **`src/features/embarques/hooks/mutations/useCreateEmbarque.ts`** (y update de datos que afectan reglas: ETD/ETA, fecha_llegada_real, tipo_cambio). Agregar la invalidación en el `onSuccess` correspondiente.
+- Marcar `1V`, `1M`, `2F`, `2G` como `resolved` con `update_issue` en el mismo turno del fix (mem://preferences/sentry-resolve).
+- `APP_VERSION` → `13.300.21`, entrada en `CHANGELOG.md`.
 
-4. **Facturación / conceptos_venta** (regla `ventas_sin_facturar`): invalidar auditoría al timbrar factura o cambiar `estado_facturacion`. Solo tocar los hooks ya existentes de fact./conceptos-venta que muten esos campos.
+## Detalles técnicos
 
-### Detalles técnicos
+- **`reportCaughtError` wrapping**: mantener el `err` original en `extra.original` (serializado por Sentry con truncado), pero pasar un `Error` real como primer argumento. Esto elimina el warning "Object captured as exception with keys" que Sentry usa como título fallback.
+- **`23514` como no-error**: alternativa a filtrar es mandarlo con `level: 'info'`. Prefiero descartar porque ya llega al usuario vía toast y contamina la lista de bugs reales.
+- **Test coverage**: agregar test en `reportCaughtError.test.ts` para (a) wrapping de objetos planos, (b) skip de código 23514.
 
-- Reusar `queryKeys.auditoria.embarques` desde `@/features/auditoria/queryKeys` para no romper la fuente única de la key.
-- No cambiar `staleTime` del `useAuditoria`: mantiene el badge del sidebar barato.
-- No tocar la RPC ni la matriz `_docs_requeridos_por_estado`.
+## Fuera de alcance
 
-### Verificación
-
-- `bun run lint`
-- Test unitario nuevo en `useDocumentoEmbarqueMutations` (mock de `queryClient.invalidateQueries`) asegurando que las 4 mutations invalidan `[auditoria, embarques]`.
-- Prueba manual: subir un doc en un embarque, entrar a `/auditoria` sin recargar y ver el hallazgo desaparecer.
-
-### Changelog
-
-- Bump `APP_VERSION` a `13.300.20`.
-- Entrada en `CHANGELOG.md`: "Auditoría: refresco automático al mutar documentos / estado / facturación de embarques."
+- No tocar la lógica de validación de "cotización Aceptada" — funciona como se espera.
+- No cambiar el `staleTime` de auditoría (ya se resolvió en 13.300.20).

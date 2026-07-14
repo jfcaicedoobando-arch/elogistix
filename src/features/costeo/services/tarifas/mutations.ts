@@ -40,11 +40,26 @@ function buildRecargoRows(tarifaId: string, recargos: TarifaRecargoInput[]) {
     }));
 }
 
+/**
+ * Normaliza campos `date` opcionales antes de mandarlos a Postgres: un `""`
+ * genera `22007 invalid input syntax for type date` (Sentry JAVASCRIPT-REACT-1V).
+ */
+function sanitizeTarifaDates<T extends { vigente_desde: string; vigente_hasta: string }>(
+  t: T,
+): T & { vigente_desde: string | null; vigente_hasta: string | null } {
+  return {
+    ...t,
+    vigente_desde: t.vigente_desde?.length ? t.vigente_desde : null,
+    vigente_hasta: t.vigente_hasta?.length ? t.vigente_hasta : null,
+  };
+}
+
 export async function insertTarifaConRecargos(
   organizationId: string,
   input: TarifaInput,
 ): Promise<CosteoTarifa> {
-  const { recargos, ...tarifa } = input;
+  const { recargos, ...rest } = input;
+  const tarifa = sanitizeTarifaDates(rest);
   const data = await unwrap(
     supabase
       .from("costeo_tarifas")
@@ -69,7 +84,8 @@ export async function updateTarifaConRecargos(
   id: string,
   input: TarifaInput,
 ): Promise<void> {
-  const { recargos, ...tarifa } = input;
+  const { recargos, ...rest } = input;
+  const tarifa = sanitizeTarifaDates(rest);
   await run(
     supabase.from("costeo_tarifas").update({ ...tarifa, moneda: "USD" }).eq("id", id),
   );
