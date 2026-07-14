@@ -6,7 +6,6 @@
  * navegación de fila (`onRowClick` en `Clientes.tsx` ya va a `/clientes/:id`).
  */
 import type { ColumnDef } from "@tanstack/react-table";
-import { clientColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 
@@ -23,10 +22,21 @@ export type ClienteRow = {
 export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
   return [
     {
-      ...clientColumn<ClienteRow>({ id: "nombre", header: "Nombre", accessor: (c) => c.nombre }),
+      id: "nombre",
+      header: "Nombre",
+      accessorFn: (c) => c.nombre,
+      enableSorting: true,
       sortingFn: sortByString<ClienteRow>((c) => c.nombre),
-      meta: { width: "min-w-[180px]", className: "max-w-[200px]", sticky: true },
-    } as ColumnDef<ClienteRow, unknown>,
+      meta: { width: "min-w-[240px]", className: "font-medium", sticky: true },
+      cell: ({ row }) => {
+        const nombre = toTitleCase(row.original.nombre ?? "");
+        return (
+          <span className="block whitespace-normal break-words leading-snug" title={nombre}>
+            {nombre}
+          </span>
+        );
+      },
+    },
     {
       id: "rfc",
       header: "RFC",
