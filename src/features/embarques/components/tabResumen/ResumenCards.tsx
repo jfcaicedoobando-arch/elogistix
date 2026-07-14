@@ -76,7 +76,7 @@ function RutaTerrestre({ e }: { e: EmbarqueRow }) {
 
 export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="pb-3"><CardTitle className="text-sm">Datos generales</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
         <DetailRow label="Tipo" value={embarque.tipo} />
@@ -120,70 +120,85 @@ export function DatosGeneralesCard({ embarque }: { embarque: EmbarqueRow }) {
 
 const ESTADOS_PERMITEN_CAPTURA_ETD_ETA = new Set(["Confirmado", "En Tránsito"]);
 
-function CampoFechaConCaptura({
-  actual,
-  original,
-  embarqueId,
+function BotonCapturarFecha({
   campo,
-  estado,
+  embarqueId,
 }: {
-  actual: string | null;
-  original: string | null | undefined;
-  embarqueId: string;
   campo: "ETD" | "ETA";
-  estado: string;
+  embarqueId: string;
 }) {
   const navigate = useNavigate();
-  const permiteCaptura = ESTADOS_PERMITEN_CAPTURA_ETD_ETA.has(estado);
-  if (!actual && permiteCaptura) {
-    return (
+  return (
+    <Button
+      type="button"
+      variant="link"
+      size="sm"
+      className="h-auto p-0 text-xs font-normal text-primary hover:no-underline"
+      onClick={() => navigate(`/embarques/${embarqueId}/editar`)}
+    >
+      <Plus className="h-3 w-3 mr-1" /> Capturar {campo}
+    </Button>
+  );
+}
+
+function BannerCaptureFechas({ embarqueId }: { embarqueId: string }) {
+  const navigate = useNavigate();
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs">
+      <span className="text-muted-foreground">
+        ETD y ETA sin capturar
+      </span>
       <Button
         type="button"
-        variant="ghost"
+        variant="link"
         size="sm"
-        className="h-7 px-2 text-xs text-primary hover:text-primary"
+        className="h-auto p-0 text-xs font-medium text-primary hover:no-underline"
         onClick={() => navigate(`/embarques/${embarqueId}/editar`)}
       >
-        <Plus className="h-3 w-3 mr-1" /> Capturar {campo}
+        Capturar fechas
       </Button>
-    );
-  }
-  return <FechaConOriginal actual={actual} original={original} />;
+    </div>
+  );
 }
 
 export function RutaTransporteCard({ embarque }: { embarque: EmbarqueRow }) {
   const orig = embarque as Partial<{ etd_original: string | null; eta_original: string | null }>;
+  const permiteCaptura = ESTADOS_PERMITEN_CAPTURA_ETD_ETA.has(embarque.estado);
+  const faltaETD = !embarque.etd;
+  const faltaETA = !embarque.eta;
+  const faltanAmbas = permiteCaptura && faltaETD && faltaETA;
+
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="pb-3"><CardTitle className="text-sm">Ruta y transporte</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
         {embarque.modo === 'Marítimo' && <RutaMaritimo e={embarque} />}
         {embarque.modo === 'Aéreo' && <RutaAereo e={embarque} />}
         {embarque.modo === 'Terrestre' && <RutaTerrestre e={embarque} />}
-        <DetailRow
-          label="ETD"
-          value={
-            <CampoFechaConCaptura
-              actual={embarque.etd}
-              original={orig.etd_original}
-              embarqueId={embarque.id}
-              campo="ETD"
-              estado={embarque.estado}
+
+        {faltanAmbas ? (
+          <BannerCaptureFechas embarqueId={embarque.id} />
+        ) : (
+          <>
+            <DetailRow
+              label="ETD"
+              value={
+                faltaETD && permiteCaptura
+                  ? <BotonCapturarFecha campo="ETD" embarqueId={embarque.id} />
+                  : <FechaConOriginal actual={embarque.etd} original={orig.etd_original} />
+              }
             />
-          }
-        />
-        <DetailRow
-          label="ETA"
-          value={
-            <CampoFechaConCaptura
-              actual={embarque.eta}
-              original={orig.eta_original}
-              embarqueId={embarque.id}
-              campo="ETA"
-              estado={embarque.estado}
+            <DetailRow
+              label="ETA"
+              value={
+                faltaETA && permiteCaptura
+                  ? <BotonCapturarFecha campo="ETA" embarqueId={embarque.id} />
+                  : <FechaConOriginal actual={embarque.eta} original={orig.eta_original} />
+              }
             />
-          }
-        />
+          </>
+        )}
+
         {embarque.fecha_llegada_real && (
           <DetailRow label="Llegada Real" value={formatDate(embarque.fecha_llegada_real)} />
         )}

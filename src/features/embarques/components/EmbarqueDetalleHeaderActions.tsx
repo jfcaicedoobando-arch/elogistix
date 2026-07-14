@@ -76,7 +76,7 @@ export function EmbarqueDetalleHeaderActions({
       {canEdit && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" aria-label="Más acciones">
+            <Button variant="ghost" size="sm" aria-label="Más acciones" className="h-9 w-9 p-0">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

@@ -101,22 +101,20 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
               </div>
             )}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full max-w-3xl text-sm">
                 <thead className="text-xs text-muted-foreground">
                   <tr className="border-b">
-                    <th className="text-left font-medium py-1.5 px-2">#</th>
-                    <th className="text-left font-medium py-1.5 px-2">Número</th>
-                    <th className="text-left font-medium py-1.5 px-2">Tipo</th>
-                    {mostrarBLHouse && <th className="text-left font-medium py-1.5 px-2">BL House</th>}
-                    {!pesoUniforme && <th className="text-right font-medium py-1.5 px-2">Peso (kg)</th>}
-                    {!volumenUniforme && <th className="text-right font-medium py-1.5 px-2">Volumen (m³)</th>}
-                    {!piezasUniformes && <th className="text-right font-medium py-1.5 px-2">Piezas</th>}
+                    <th className="text-left font-medium py-1.5 px-2 w-auto">Número</th>
+                    <th className="text-left font-medium py-1.5 px-2 w-[140px]">Tipo</th>
+                    {mostrarBLHouse && <th className="text-left font-medium py-1.5 px-2 w-[180px]">BL House</th>}
+                    {!pesoUniforme && <th className="text-right font-medium py-1.5 px-2 w-[120px]">Peso (kg)</th>}
+                    {!volumenUniforme && <th className="text-right font-medium py-1.5 px-2 w-[120px]">Volumen (m³)</th>}
+                    {!piezasUniformes && <th className="text-right font-medium py-1.5 px-2 w-[100px]">Piezas</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {lista.map((c, i) => (
+                  {lista.map((c) => (
                     <tr key={c.id} className="border-b last:border-0 odd:bg-muted/20">
-                      <td className="py-1.5 px-2 text-muted-foreground">{i + 1}</td>
                       <td className="py-1.5 px-2 font-medium">
                         {c.numero_contenedor || <span className="text-muted-foreground">—</span>}
                       </td>
