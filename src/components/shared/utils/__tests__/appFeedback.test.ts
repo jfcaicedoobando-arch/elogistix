@@ -12,7 +12,12 @@ vi.mock("sonner", () => {
 });
 
 import { toast as sonnerToast } from "sonner";
-import { notifyError, notifyWarning, notifySuccess } from "../appFeedback";
+import { notifyError, notifyWarning, notifySuccess, isAuthorizationError } from "../appFeedback";
+
+const reportCaughtErrorMock = vi.fn();
+vi.mock("@/lib/observability/reportCaughtError", () => ({
+  reportCaughtError: (...args: unknown[]) => reportCaughtErrorMock(...args),
+}));
 
 const m = sonnerToast as unknown as {
   error: ReturnType<typeof vi.fn>;
