@@ -16,7 +16,7 @@ import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDi
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad, useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { PagoRepCell } from "./PagoRepCell";
