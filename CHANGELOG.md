@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.16] - 2026-07-14
+- **fix(embarques · tab Tracking)**: se corrigen dos avisos falsos que aparecían cuando el embarque ya tenía `fecha_llegada_real` capturada (visto en ELIMP00297).
+  - `isEtaVencida` ahora considera el embarque como "arribado" si `fecha_llegada_real != null` (además de estados `Entregado`/`Cerrado`) y deja de mostrar la card roja "ETA vencida" en ese caso.
+  - `computeFreshness` recibe un flag `arribado`: cuando es `true` el badge amarillo "Requiere actualización" desaparece y el texto pasa a `"Arribado — <tipo del último evento>"`, reflejando que el flujo de tracking operativo cerró.
+
 ## [13.300.15] - 2026-07-14
 - **chore(ci · ErrorBoundary)**: se atiende el fallo del run CI 79480216680 (jobs `quality` y `tests`).
   - `src/components/shared/ErrorBoundary.tsx` (257 líneas) se divide en tres piezas para respetar Power of 10 (≤ 200 líneas): la clase orquestadora queda en ~115 líneas, la UI de fallback se mueve a `src/components/shared/errorBoundary/ErrorBoundaryFallback.tsx`, y los helpers de reporte (`buildDetailsText`, `ensureEventId`, `openReportFeedback`, `copyDetails`) a `src/components/shared/errorBoundary/reportFeedback.ts`. Corrige `audit-report.test.ts` y `architecture-baseline.test.ts`.
