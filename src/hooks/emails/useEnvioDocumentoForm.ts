@@ -143,6 +143,13 @@ export function useEnvioDocumentoForm(
     setEmailsManualesAgregados((arr) => [...arr, v]);
     setEmailManual("");
   };
+  const pushManual = (email: string) => {
+    const v = email.trim();
+    if (!EMAIL_RE.test(v)) return;
+    setEmailsManualesAgregados((arr) =>
+      arr.some((x) => x.toLowerCase() === v.toLowerCase()) ? arr : [...arr, v],
+    );
+  };
   const quitarManual = (e: string) =>
     setEmailsManualesAgregados((arr) => arr.filter((x) => x !== e));
 
