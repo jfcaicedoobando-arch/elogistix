@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.10] - 2026-07-14
+- **fix(facturación · eliminar pago · RLS)**: se corrige la política restrictiva `Hide soft deleted pagos_factura update source`, que todavía bloqueaba el soft delete con `new row violates row-level security policy` porque no permitía el estado final con `deleted_at`. Ahora la regla exige que el pago original esté activo y que el cambio permanezca dentro de la misma organización/super admin, dejando que `deleted_at` se llene correctamente. Analogía: el guardia revisa que el pago que entra a la papelera venga de una carpeta válida, pero ya no exige que siga fuera de la papelera después de tirarlo.
+
 ## [13.299.9] - 2026-07-14
 - **chore(CI · lint · complejidad)**: se corrigen 3 warnings de `complexity` que bloqueaban `bun run lint --max-warnings 0` en `logs_79281684154`. Se extraen helpers para bajar la complejidad ciclomática por debajo del umbral (16): (1) `validateMaritimo` (`handlePaso1Crm.ts`) → helper `validateLclFleteManual`. (2) `buildPaso1Data` (`mappers/cotizacion.ts`) → helper `partesLclManual`. (3) `partesExtras` (`mappers/cotizacionForm.ts`) → helper `partesLclFleteManual`. Sin cambios de comportamiento. Analogía: partimos una receta muy larga en pasos más chicos para que el chef (ESLint) no se queje de que la receta tiene demasiadas decisiones.
 
