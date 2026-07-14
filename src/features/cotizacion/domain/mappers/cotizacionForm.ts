@@ -80,6 +80,15 @@ function partesRuta(d: CotizacionInitialData) {
   };
 }
 
+function partesLclFleteManual(d: CotizacionInitialData) {
+  return {
+    tarifaWM: Number(d.lcl_tarifa_wm ?? 0) || 0,
+    minimo: Number(d.lcl_minimo_flete ?? 0) || 0,
+    diasLibresAlmacenaje: Number(d.lcl_dias_libres_almacenaje ?? 0) || 0,
+    consolidadorId: d.lcl_consolidador_id ?? null,
+  };
+}
+
 function partesExtras(d: CotizacionInitialData) {
   return {
     seguro: d.seguro ?? false,
@@ -94,12 +103,7 @@ function partesExtras(d: CotizacionInitialData) {
     tarifaId: d.tarifa_id ?? null,
     tarifaOverride: (d.tarifa_override ?? {}) as Record<string, boolean>,
     sinDesgloseCostos: d.sin_desglose_costos ?? false,
-    lclFleteManual: {
-      tarifaWM: Number(d.lcl_tarifa_wm ?? 0) || 0,
-      minimo: Number(d.lcl_minimo_flete ?? 0) || 0,
-      diasLibresAlmacenaje: Number(d.lcl_dias_libres_almacenaje ?? 0) || 0,
-      consolidadorId: d.lcl_consolidador_id ?? null,
-    },
+    lclFleteManual: partesLclFleteManual(d),
   };
 }
 

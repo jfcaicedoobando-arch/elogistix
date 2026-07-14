@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.9] - 2026-07-14
+- **chore(CI · lint · complejidad)**: se corrigen 3 warnings de `complexity` que bloqueaban `bun run lint --max-warnings 0` en `logs_79281684154`. Se extraen helpers para bajar la complejidad ciclomática por debajo del umbral (16): (1) `validateMaritimo` (`handlePaso1Crm.ts`) → helper `validateLclFleteManual`. (2) `buildPaso1Data` (`mappers/cotizacion.ts`) → helper `partesLclManual`. (3) `partesExtras` (`mappers/cotizacionForm.ts`) → helper `partesLclFleteManual`. Sin cambios de comportamiento. Analogía: partimos una receta muy larga en pasos más chicos para que el chef (ESLint) no se queje de que la receta tiene demasiadas decisiones.
+
 ## [13.299.8] - 2026-07-14
 - **fix(facturación · eliminar pago · RLS)**: la eliminación lógica de pagos fallaba con `new row violates row-level security policy "Hide soft deleted pagos_factura"` porque la policy restrictiva también exigía `deleted_at IS NULL` sobre la fila nueva del `UPDATE`. Se separó la regla: lectura oculta pagos eliminados y actualización permite partir de una fila activa, conservando la validación existente de organización/rol. También se eliminó el segundo toast del componente; ahora sólo queda el toast real del hook `DELETE_PAYMENT`. Analogía: quitamos el candado que impedía meter el pago a la papelera y dejamos una sola alarma en vez de dos.
 

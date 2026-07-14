@@ -49,16 +49,17 @@ export function validateTerrestre(v: CotizacionFormValues): string | null {
   return null;
 }
 
+function validateLclFleteManual(v: CotizacionFormValues): string | null {
+  const tarifaWM = Number(v.lclFleteManual?.tarifaWM ?? 0);
+  const consolidador = v.lclFleteManual?.consolidadorId?.trim() ?? "";
+  if (tarifaWM > 0 && consolidador) return null;
+  return "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).";
+}
+
 export function validateMaritimo(v: CotizacionFormValues): string | null {
   if (v.modo !== "Marítimo" || v.tarifaId) return null;
   if (esIncotermSinFleteVenta(v.incoterm, v.modo)) return null;
-  // LCL no exige tarifa vinculada: valida captura manual de flete.
-  if (v.tipoEmbarque === "LCL") {
-    const tarifaWM = Number(v.lclFleteManual?.tarifaWM ?? 0);
-    const consolidador = v.lclFleteManual?.consolidadorId?.trim() ?? "";
-    if (tarifaWM > 0 && consolidador) return null;
-    return "Captura el flete LCL (Tarifa W/M y Consolidador) antes de continuar (Paso 1 → Flete LCL).";
-  }
+  if (v.tipoEmbarque === "LCL") return validateLclFleteManual(v);
   void registrarBloqueoSinTarifa({
     entidadNombre: v.esProspecto ? v.prospectoEmpresa : (v.clienteId ?? ""),
     origen: v.origen ?? null,

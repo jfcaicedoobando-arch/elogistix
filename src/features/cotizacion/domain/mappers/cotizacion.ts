@@ -113,14 +113,25 @@ function partesRuta(v: CotizacionFormValues) {
   };
 }
 
+function partesLclManual(values: CotizacionFormValues) {
+  const esLcl = values.modo === "Marítimo" && values.tipoEmbarque === "LCL";
+  const lclManual = values.lclFleteManual;
+  return {
+    lcl_tarifa_wm: esLcl ? (Number(lclManual?.tarifaWM) || null) : null,
+    lcl_minimo_flete: esLcl ? (Number(lclManual?.minimo) || null) : null,
+    lcl_dias_libres_almacenaje: esLcl
+      ? (Number(lclManual?.diasLibresAlmacenaje) || null)
+      : null,
+    lcl_consolidador_id: esLcl ? (lclManual?.consolidadorId ?? null) : null,
+  };
+}
+
 export function buildPaso1Data(
   values: CotizacionFormValues,
   clientes: { id: string; nombre: string }[],
   userEmail: string,
 ): Record<string, unknown> {
   const { peso, volumen, piezas } = calcularPesoVolumenPiezas(values);
-  const esLcl = values.modo === "Marítimo" && values.tipoEmbarque === "LCL";
-  const lclManual = values.lclFleteManual;
   return {
     ...partesCliente(values, clientes),
     ...partesMercancia(values),
@@ -137,12 +148,6 @@ export function buildPaso1Data(
     tarifa_id: values.tarifaId ?? null,
     tarifa_override: values.tarifaOverride ?? {},
     sin_desglose_costos: values.sinDesgloseCostos ?? false,
-    // v13.299.0: campos LCL manuales (nulos fuera de LCL o cuando no aplica).
-    lcl_tarifa_wm: esLcl ? (Number(lclManual?.tarifaWM) || null) : null,
-    lcl_minimo_flete: esLcl ? (Number(lclManual?.minimo) || null) : null,
-    lcl_dias_libres_almacenaje: esLcl
-      ? (Number(lclManual?.diasLibresAlmacenaje) || null)
-      : null,
-    lcl_consolidador_id: esLcl ? (lclManual?.consolidadorId ?? null) : null,
+    ...partesLclManual(values),
   };
 }
