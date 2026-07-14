@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.9] - 2026-07-14
+- **fix preventivo(tablas · min-w-max)**: aplicado el mismo remedio de `13.300.8` a las 3 tablas restantes que tenían celdas con componentes "pesados" (Select, Popover/DatePicker, Input) dentro de `cell:` y podían disparar el bloat de `min-w-max` en el `<table>` interno del `DataTable`.
+  - `src/features/admin/components/orgDetalle/OrgMembersCard.tsx`: pestaña de miembros de organización — la celda `change_role` es un `<Select>` de roles (mismo patrón que causó el bug original en `/usuarios`).
+  - `src/features/embarques/components/TabGarantias.tsx`: celdas `monto`/`ref`/`estado` son `<Input>` y `<Select>` sin `meta.width` declarado.
+  - `src/features/embarques/components/TabDemoras.tsx`: celdas `f_desc`/`f_dev`/`dias_libres` son `<DatePickerMx>` (Popover) e `<Input>`.
+  - Fix idéntico en los tres: `tableClassName="w-full"` en la instancia del `<DataTable>`. Sin cambios de lógica, datos, ni definiciones de columna. El resto de las ~115 tablas del proyecto no requieren el fix porque no tienen componentes pesados dentro de `cell:` (auditoría vía subagente `sub_eg0d7ej0`).
+
 ## [13.300.8] - 2026-07-14
 - **fix(gestión usuarios · tabla)**: en `/usuarios` sólo se veía la columna "Usuario"; `Rol`, `Fecha de registro` y `Acciones` quedaban fuera del viewport porque el `<table>` interno del `DataTable` usa `min-w-max` y el layout auto estaba estirando la tabla a ~16,000 px.
   - `src/components/shared/DataTable.tsx`: nuevo prop opcional `tableClassName` (default `"min-w-max"`) que permite a un caller puntual desactivar el `min-w-max` sin afectar al resto de tablas.
