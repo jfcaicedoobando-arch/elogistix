@@ -16,14 +16,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   fetchContactosClienteConEmail,
-  esContactoPrioridadCliente,
-  CLIENTE_PRINCIPAL_ID,
   type ContactoClienteEmail,
 } from "@/features/cotizacion/services/envios";
 import { queryKeys } from "@/lib/query";
+import {
+  EMAIL_RE,
+  computeInitialPrecarga,
+} from "@/hooks/emails/envioDocumentoInit";
 export type Contacto = ContactoClienteEmail;
+export { EMAIL_RE } from "@/hooks/emails/envioDocumentoInit";
 const EMPTY_CONTACTOS: readonly Contacto[] = Object.freeze([]);
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface EnvioFormState {
   contactos: Contacto[];
