@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.19] - 2026-07-14
+- **refactor(emails · power-of-10)**: se divide el modal de envío para respetar la regla de ≤200 líneas por archivo (CI arch baseline).
+  - Nuevo `src/components/shared/emails/useEnvioChips.ts`: memos `paraChips`/`ccChips` y handlers add/remove extraídos del dialog.
+  - Nuevo `src/hooks/emails/envioDocumentoInit.ts`: helper puro `computeInitialPrecarga` para la lógica de reset del formulario y `EMAIL_RE`.
+  - `EnviarDocumentoDialog.tsx` (225 → 164 líneas) y `useEnvioDocumentoForm.ts` (208 → 190 líneas). Sin cambios funcionales ni de API.
+
 ## [13.300.18] - 2026-07-14
 - **fix(facturación · bandeja Por cobrar)**: la columna **"Vence en"** mostraba el badge "Vence hoy" en **todas** las filas, aunque las facturas vencieran en semanas.
   - Causa raíz: `fetchCobranza` guardaba `dias_vencido: Math.max(0, diasVencido)`, borrando el signo negativo que indica "aún faltan N días". Al llegar `0` a `agingPorCobrarBucket`, éste calculaba `faltan = -0 = 0` y caía en la rama "Vence hoy" para todas las facturas no vencidas. El mismo clamp rompía silenciosamente el bucket "Por vencer" de `cobranzaAggregates` (condición `f.dias_vencido <= 0 && >= -7` que nunca se cumplía).

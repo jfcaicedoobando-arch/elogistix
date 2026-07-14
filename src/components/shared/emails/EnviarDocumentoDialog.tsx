@@ -9,7 +9,6 @@
  *
  * Compatible con el hook `useEnvioDocumentoForm` sin cambios de API pública.
  */
-import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,15 +17,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import {
-  EMAIL_RE,
   useEnvioDocumentoForm,
   type EnvioFormState,
 } from "@/hooks/emails/useEnvioDocumentoForm";
 import { DestinatariosPicker } from "@/components/shared/emails/DestinatariosPicker";
-import {
-  EmailChipsField,
-  type EmailChip,
-} from "@/components/shared/emails/EmailChipsField";
+import { EmailChipsField } from "@/components/shared/emails/EmailChipsField";
+import { useEnvioChips } from "@/components/shared/emails/useEnvioChips";
 
 export interface EnviarDocumentoPayload {
   destinatarios: Array<{ email: string; nombre?: string; contacto_id?: string }>;
@@ -61,66 +57,9 @@ export function EnviarDocumentoDialog({
   esReenvio, loading, ccInicial, destinatariosInicial, onEnviar,
 }: Props) {
   const form = useEnvioDocumentoForm(open, clienteId, buildAsuntoInicial, ccInicial, destinatariosInicial);
+  const chips = useEnvioChips(form);
 
   const puedeEnviar = form.destinatarios.length > 0 && !loading;
-
-  // Chips del campo "Para": combina contactos seleccionados + manuales.
-  const paraChips: EmailChip[] = useMemo(() => {
-    return form.destinatarios.map((d) => {
-      const contacto = d.contacto_id
-        ? form.contactos.find((c) => c.id === d.contacto_id)
-        : undefined;
-      return {
-        email: d.email,
-        label: d.nombre ?? undefined,
-        tag: contacto?.tipo ?? undefined,
-        invalid: !EMAIL_RE.test(d.email),
-      };
-    });
-  }, [form.destinatarios, form.contactos]);
-
-  // Chips editables del campo "CC" (se serializan a `ccManual` como string).
-  const ccChips: EmailChip[] = useMemo(() => {
-    return form.ccManual
-      .split(/[,;\s]+/)
-      .map((e) => e.trim())
-      .filter(Boolean)
-      .map((e) => ({ email: e, invalid: !EMAIL_RE.test(e) }));
-  }, [form.ccManual]);
-
-  const handleParaAdd = (email: string) => {
-    const emailLc = email.toLowerCase();
-    const contacto = form.contactos.find((c) => c.email.toLowerCase() === emailLc);
-    if (contacto) {
-      form.setSeleccionados((s) => ({ ...s, [contacto.id]: true }));
-      return;
-    }
-    if (form.emailsManualesAgregados.some((e) => e.toLowerCase() === emailLc)) return;
-    form.pushManual(email);
-  };
-
-  const handleParaRemove = (email: string) => {
-    const emailLc = email.toLowerCase();
-    const desde = form.destinatarios.find((d) => d.email.toLowerCase() === emailLc);
-    if (desde?.contacto_id) {
-      form.setSeleccionados((s) => ({ ...s, [desde.contacto_id!]: false }));
-    } else {
-      form.quitarManual(email);
-    }
-  };
-
-  const serializeCc = (list: string[]) =>
-    form.setCcManual(list.join(", "));
-
-  const handleCcAdd = (email: string) => {
-    const emailLc = email.toLowerCase();
-    if (ccChips.some((c) => c.email.toLowerCase() === emailLc)) return;
-    serializeCc([...ccChips.map((c) => c.email), email]);
-  };
-
-  const handleCcRemove = (email: string) => {
-    serializeCc(ccChips.map((c) => c.email).filter((e) => e !== email));
-  };
 
   const handleSubmit = async () => {
     await onEnviar(
@@ -165,9 +104,9 @@ export function EnviarDocumentoDialog({
         </Label>
         <EmailChipsField
           id="envio-para"
-          chips={paraChips}
-          onAdd={handleParaAdd}
-          onRemove={handleParaRemove}
+          chips={chips.paraChips}
+          onAdd={chips.handleParaAdd}
+          onRemove={chips.handleParaRemove}
           ariaLabel="Destinatarios"
           placeholder="escribe un correo o marca un contacto abajo…"
         />
@@ -183,14 +122,14 @@ export function EnviarDocumentoDialog({
         <Label htmlFor="envio-cc">Copia (CC)</Label>
         <EmailChipsField
           id="envio-cc"
-          chips={ccChips}
+          chips={chips.ccChips}
           lockedChips={form.userEmail ? [{
             email: form.userEmail,
             label: `${form.userEmail} (tú)`,
             tooltip: "Siempre se agrega tu correo",
           }] : []}
-          onAdd={handleCcAdd}
-          onRemove={handleCcRemove}
+          onAdd={chips.handleCcAdd}
+          onRemove={chips.handleCcRemove}
           ariaLabel="Copia CC"
           placeholder="agrega correos en copia…"
         />
