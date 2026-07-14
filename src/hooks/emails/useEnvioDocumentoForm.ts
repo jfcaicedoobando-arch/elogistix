@@ -191,6 +191,7 @@ export function useEnvioDocumentoForm(
     setEmailManual,
     emailsManualesAgregados,
     agregarManual,
+    pushManual,
     quitarManual,
     ccManual,
     setCcManual,
