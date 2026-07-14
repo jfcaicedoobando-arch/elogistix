@@ -5,11 +5,8 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/shared";
 import { useDeleteCotizacion, usePrefetchCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
-import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 export interface CotizacionExportRow {
   folio: string;
@@ -25,7 +22,7 @@ export interface CotizacionExportRow {
 
 export function useCotizacionActions() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
   const prefetchCotizacion = usePrefetchCotizacion();
   const deleteCotizacion = useDeleteCotizacion();
 
@@ -39,14 +36,9 @@ export function useCotizacionActions() {
     if (!cotizacionAEliminar) return;
     try {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
-      notifySuccess(toast, { title: "Cotización eliminada correctamente" });
-    } catch (err: unknown) {
-      notifyError(toast, {
-        title: "Error al eliminar",
-        description: getErrorMessage(err),
-        error: err,
-        method: "CONFIRMAR_ELIMINAR",
-      });
+      // Toast de éxito/error lo emite `useDeleteCotizacion` para evitar duplicado.
+    } catch {
+      // Error ya notificado por la mutación; sólo cerramos el diálogo.
     }
     setCotizacionAEliminar(null);
   };

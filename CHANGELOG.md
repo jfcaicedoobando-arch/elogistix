@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.15] - 2026-07-14
+- **fix(cotización · eliminar)**: al eliminar una cotización sólo se muestra un toast. Antes se disparaban dos ("Cotización eliminada" desde la mutación + "Cotización eliminada correctamente" desde la acción de la fila). Se dejó únicamente el toast centralizado en `useDeleteCotizacion`.
+
 ## [13.299.14] - 2026-07-14
 - **feat(cotización · LCL · Paso 2)**: el paso "Costos & P&L" ahora precarga automáticamente una fila de flete USD tomando los datos del bloque "Flete LCL manual" del paso 1 (consolidador, tarifa W/M, mínimo, W/M facturable). Antes el ejecutivo tenía que re-teclear el mismo flete que ya había capturado en el paso anterior. La fila queda editable como cualquier otra y respeta el mínimo cuando aplica. Analogía: el ticket que llenaste en la caja del paso 1 ahora se pasa solo al cajero del paso 2 — igual que ya sucedía con las tarifas FCL vinculadas.
 
