@@ -55,7 +55,7 @@ export function FinanceHeader({
       ? {
           icon: <Receipt className="h-3.5 w-3.5" />,
           label: `${porTimbrar} por timbrar`,
-          className: "border-blue-300/50 bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-300",
+          className: "border-info/50 bg-info/10 text-info dark:bg-info/30 dark:text-info",
         }
       : null,
   ];

@@ -14,7 +14,7 @@ function pct(n: number): string { return `${n.toFixed(1)}%`; }
 function DeltaMargen({ actual, previo }: { actual: number; previo: number }) {
   const delta = actual - previo;
   const Icon = delta > 0.05 ? ArrowUp : delta < -0.05 ? ArrowDown : ArrowRight;
-  const color = delta > 0.05 ? "text-emerald-600" : delta < -0.05 ? "text-destructive" : "text-muted-foreground";
+  const color = delta > 0.05 ? "text-success" : delta < -0.05 ? "text-destructive" : "text-muted-foreground";
   return (
     <span className={`inline-flex items-center gap-1 text-sm ${color}`}>
       <Icon className="h-3.5 w-3.5" aria-hidden />

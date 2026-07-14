@@ -56,12 +56,9 @@ const ALLOWLIST: readonly string[] = [
   "src/features/cotizacion/components/wizard/WizardTotalsBar.tsx",
   // Lote 3B (CXP): NotasCreditoSection.
   "src/features/cxp/components/NotasCreditoSection.tsx",
-  // Lote 3B (dashboards ejecutivos): rehacer con tokens `success`/`warning`.
-  "src/features/dashboard/components/EmbarquesPendientesAdminCard.tsx",
+  // Lote 3B (aging cartera): escala de 4 buckets (Corriente/1-30/31-60/+60).
+  // Requiere tokens `--aging-1..4` como CobranzaBlock. Se migra junto con CobranzaBlock.
   "src/features/dashboard/direccion/components/CarteraSection.tsx",
-  "src/features/dashboard/direccion/components/HeroCards.tsx",
-  "src/features/dashboard/direccion/components/PulsoSection.tsx",
-  "src/features/dashboard/finance/components/FinanceHeader.tsx",
   // Marketing/landing: preview interno del logo, no forma parte del ERP.
   // Se mantiene con paleta cruda intencionalmente.
   "src/features/marketing/routes/LogoPreview.tsx",

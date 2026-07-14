@@ -74,7 +74,7 @@ export function EmbarquesPendientesAdminCard({ enabled }: Props) {
                     variant={it.estado === "EIR" ? "outline" : "secondary"}
                     className={
                       it.estado === "EIR"
-                        ? "border-orange-300 text-orange-700"
+                        ? "border-state-eir/40 text-state-eir"
                         : "bg-success/10 text-success hover:bg-success/10"
                     }
                   >

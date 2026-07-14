@@ -10,10 +10,10 @@ describe("getEstadoColor", () => {
   it("retorna clase correcta para cada estado conocido", () => {
     expect(getEstadoColor("Confirmado")).toContain("text-info");
     expect(getEstadoColor("En Tránsito")).toContain("text-warning");
-    expect(getEstadoColor("Arribo")).toContain("text-cyan-600");
-    expect(getEstadoColor("En Aduana")).toContain("text-violet-600");
+    expect(getEstadoColor("Arribo")).toContain("text-state-arribo");
+    expect(getEstadoColor("En Aduana")).toContain("text-state-aduana");
     expect(getEstadoColor("Entregado")).toContain("text-success");
-    expect(getEstadoColor("EIR")).toContain("text-orange-600");
+    expect(getEstadoColor("EIR")).toContain("text-state-eir");
     expect(getEstadoColor("Cerrado")).toContain("text-muted-foreground");
     expect(getEstadoColor("Pagada")).toContain("text-success");
     expect(getEstadoColor("Vencida")).toContain("text-destructive");
