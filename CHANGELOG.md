@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.24] - 2026-07-14
+- **ux(tablas · clientColumn)**: el builder compartido `clientColumn` (usado por bandejas de facturación, embarques, cotizaciones, etc.) ya no aplica `truncate max-w-[220px]`. Ahora la celda usa `min-w-[220px] whitespace-normal break-words leading-snug`, así los nombres largos de cliente se muestran completos en varias líneas en todas las tablas que reutilizan este helper.
+
 ## [13.299.23] - 2026-07-14
 - **ux(clientes · tabla)**: la columna **Nombre** ya no se corta con `truncate` + `max-w-[200px]`. Se dejó de usar `clientColumn` (que forzaba `max-w-[220px] truncate`) y ahora la celda envuelve en varias líneas (`whitespace-normal break-words`) con `min-w-[240px]`. El nombre completo del cliente siempre queda visible en la lista `/clientes`.
 
