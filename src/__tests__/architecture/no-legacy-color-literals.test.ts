@@ -42,13 +42,7 @@ const LITERAL_COLOR = /(?<![\w-])(?:text|bg|border|ring|from|to|via)-(?:red|gree
 const ALLOWLIST: readonly string[] = [
   // Lote 3B (H1): escalera de aging con 4 rojos. Migrar a tokens `--aging-1..4`.
   "src/features/dashboard/finance/components/CobranzaBlock.tsx",
-  // Lote 3B (H2): estadoConfig usa `bg-orange-500/15`, `bg-indigo-500/15`.
-  "src/lib/ui/estadoConfig.ts",
-  // Lote 3B (M5): colores de modo de transporte.
-  "src/lib/ui/uiMappings.ts",
-  "src/components/shared/ModoIcon.tsx",
-  // Lote 3B (M6): AmbienteBadge + banners de revalidación.
-  "src/features/facturacion/components/AmbienteBadge.tsx",
+  // Lote 3B (M6 remanente): banners de revalidación de tarifa.
   "src/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner.tsx",
   "src/features/cotizacion/components/revalidacion/RevalidarTarifaModal.tsx",
   // Lote 3B (H3 remanente): BulkImportSteps mantiene 2 literales pendientes.
