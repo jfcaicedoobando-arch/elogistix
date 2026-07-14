@@ -1,72 +1,50 @@
-# Auditoría FHD (1920×1080, sidebar abierta) — Detalle de embarque
+## Diagnóstico del CI (run 79480216680)
 
-Screenshots recapturados a resolución exacta 1920×1080 (verificado con PIL). Hallazgos priorizados por severidad visual en pantalla ancha.
+Fallan **quality** y **tests** por 3 causas ligadas al mismo archivo `src/components/shared/ErrorBoundary.tsx`:
 
----
+1. **Power of 10 (>200 líneas):** `ErrorBoundary.tsx` tiene **257 líneas** → rompen `audit-report.test.ts` y `architecture-baseline.test.ts` (fuera de allowlist).
+2. **Regla de toasts:** `ErrorBoundary.tsx` llama `toast.error(...)` directo en 3 puntos → rompe `error-toasts-use-notifyError.test.ts` (debe usar `notifyError`).
+3. **Test de ErrorBoundary:** `screen.getByText(/ui-explota/)` matchea **dos** nodos (el `<span>` del mensaje y el `<pre>` del stack, que ahora incluye `Error: ui-explota`) → `TestingLibraryElementError: Found multiple elements`.
 
-## Hallazgos observados
+Coverage y edge-functions pasaron. El resto de shards fallan por los mismos 2 tests de arquitectura.
 
-**Above-the-fold (pantalla 1):**
-1. **Cards `Datos generales` vs `Ruta y transporte` desiguales.** `Ruta y transporte` tiene 9 filas (por los botones "Capturar ETD/ETA"); `Datos generales` tiene 7. Ambas usan `h-full`, así que la más corta queda estirada con ~150px de espacio vacío bajo "Responsable operativo".
-2. **Botones `+ Capturar ETD` y `+ Capturar ETA`** aparecen dos veces seguidos en color `primary`. En FHD, dos CTAs primarios idénticos apilados generan ruido y compiten con `Avanzar a En Tránsito` del header.
-3. **Stepper de 8 pasos** ocupa ~130px verticales sólo para indicar "vas en el 2/8". En FHD es demasiado espacio para info de baja frecuencia.
-4. **Header:** botón `⋯` con `variant="outline"` tiene el mismo peso visual que `Editar`. Debería ser secundario.
+## Cambios
 
-**Scroll medio (pantalla 2):**
-5. **Cards `Shipper` y `Consignatario`** — una sola línea de contenido cada una, pero cada card mide ~140px de alto. Podrían unificarse.
-6. **Tabla de contenedores** — sólo 4 columnas visibles (#, Número, Tipo, Piezas). En 1500px de ancho útil los valores quedan flotando con 400+ px de gap entre columnas. La columna `#` no aporta valor con 6 filas.
+### 1. Partir `ErrorBoundary.tsx` (≤ 200 líneas)
 
----
+Extraer:
 
-## Plan de refinamiento
+- `src/components/shared/errorBoundary/ErrorBoundaryFallback.tsx` — la Card/Details/Botones (bloque JSX del `render()`).
+- `src/components/shared/errorBoundary/reportFeedback.ts` — funciones `ensureEventId`, `handleReportFeedback`, `buildDetailsText`, `handleCopyDetails` como helpers puros (reciben `state`/`setState` o retornan strings).
 
-### Batch E — Balance de cards principales
-**Archivo:** `src/features/embarques/components/TabResumen.tsx`, `tabResumen/ResumenCards.tsx`
+`ErrorBoundary.tsx` queda solo con: constructor, `getDerivedStateFromError`, `componentDidCatch`, `handleReset`, y `render()` que delega a `<ErrorBoundaryFallback ...>`. Objetivo: ~120–140 líneas.
 
-- Quitar `h-full` de `DatosGeneralesCard` y `RutaTransporteCard`, o cambiar el grid contenedor a `items-start` para que cada card mida lo que necesita.
-- Consolidar `Shipper` + `Consignatario` en una sola card "Partes" con grid de 2 columnas internas (mismo alto, mitad de espacio vertical).
+### 2. Reemplazar `toast.error` por `notifyError`
 
-### Batch F — ETD/ETA: un solo CTA discreto
-**Archivo:** `tabResumen/ResumenCards.tsx`
+En los helpers extraídos (los 3 sitios del archivo actual): usar `notifyError({ title, description, method: "ErrorBoundary.<accion>" })` desde `@/lib/notifications/notifyError` (o la ruta que use el proyecto — verificar `error-toasts-use-notifyError.test.ts` para el import canónico). `toast.success` se conserva.
 
-- Cuando ambos ETD y ETA faltan en `Confirmado`/`En Tránsito`, colapsar en un solo banner interno arriba de la tabla de fechas:
-  `⚠ ETD y ETA sin capturar — [Capturar fechas]` (botón `variant="link"` → wizard paso 3).
-- Cuando falta sólo uno, mantener el botón inline pero cambiarlo a `variant="link"` (text-primary sin fondo) para bajar el peso visual y no competir con el CTA del header.
+### 3. Arreglar `ErrorBoundary.test.tsx`
 
-### Batch G — Stepper compacto
-**Archivo:** `src/features/embarques/components/EstadoStepper.tsx` (o donde viva)
+Cambiar el selector ambiguo `getByText(/ui-explota/)` por uno específico al `<span>` del mensaje:
 
-- Variante compacta para el detalle: reemplazar los 8 círculos numerados grandes por una fila horizontal más delgada (altura ~48px vs ~130px), con:
-  - Chip activo grande con nombre del estado actual (`Paso 2 de 8 · Confirmado`).
-  - Barra de progreso discreta debajo, con puntos pequeños para pasos previos/futuros.
-- Mantiene la información pero libera ~80px verticales.
+```
+expect(screen.getByText("ui-explota", { selector: "span" })).toBeInTheDocument();
+```
 
-### Batch H — Header: bajar peso del `⋯`
-**Archivo:** `EmbarqueDetalleHeaderActions.tsx`
+(o `getAllByText(/ui-explota/).length` ≥ 1 si preferimos ser laxos — voy por la variante estricta).
 
-- Cambiar el trigger del `DropdownMenu` de `variant="outline"` a `variant="ghost"` (solo icono, sin borde). Queda claro que es un menú secundario y `Editar` recupera su jerarquía.
+### 4. Versionado
 
-### Batch I — Tabla de contenedores densa
-**Archivo:** `contenedores/SeccionContenedoresReadonly.tsx`
+- `APP_VERSION` → `13.300.15` en `src/constants/appVersion.ts`.
+- `CHANGELOG.md`: entrada `[13.300.15] - 2026-07-14` con bullets: split ErrorBoundary, migración a `notifyError`, fix selector del test.
 
-- Eliminar la columna `#` (con 6 filas la numeración no aporta).
-- Ajustar anchos: `Número` con `w-auto`, `Tipo` con `w-[120px]`, `Piezas` con `w-[120px]` alineado a la derecha, y `max-w-4xl mx-auto` en la tabla para que no se estire innecesariamente en FHD. Así las columnas quedan agrupadas con espaciado natural en vez de flotando en 1500px.
+## Validación
 
----
-
-## Detalles técnicos
-
-- No hay cambios de lógica de negocio; sólo layout, `variant` de botones, y visibilidad de columnas.
-- `EstadoStepper` (Batch G) es el cambio con más superficie: si el componente se usa también en otras vistas (lista, edición), habría que:
-  1. Confirmar dónde más se renderiza (grep de `EstadoStepper` o similar).
-  2. Aceptar prop `compact?: boolean` en vez de reemplazar el diseño, para no romper otras vistas.
-- El banner de Batch F reutilizará `Alert` de shadcn con `variant="default"` + icono, mismo look que otros avisos de la app.
-
-## Verificación
-- Recapturar 4 screenshots FHD tras cada batch y comparar con la línea base actual.
-- Typecheck (`bunx tsgo`) tras cada batch.
-- Bump `APP_VERSION` a `13.300.14` y una entrada nueva en `CHANGELOG.md` cubriendo E–I.
+- Typecheck (`tsgo`).
+- Tests locales de arquitectura: `bunx vitest run src/__tests__/audit-report.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/architecture/error-toasts-use-notifyError.test.ts src/components/shared/__tests__/ErrorBoundary.test.tsx`.
 
 ## Fuera de alcance
-- Reagrupar los 11 tabs (Resumen, Tracking, …, Notas y Actividad) en clusters funcionales (Operativa / Financiero / Docs). Requiere decisión de producto y navegación — abrir plan separado si se aprueba.
-- Cambios en tabs distintos a `Resumen` (Tracking, Documentos, Costos, etc.) — la auditoría fue sólo del tab activo (Resumen).
+
+- No tocar umbrales de coverage (memoria `coverage-threshold`).
+- No modificar los tests de arquitectura ni la allowlist.
+- No refactorizar otros archivos oversized que no rompan este CI.
