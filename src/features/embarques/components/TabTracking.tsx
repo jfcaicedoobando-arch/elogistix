@@ -131,7 +131,8 @@ export function TabTracking({ embarqueId, embarque }: Props) {
   const { canEdit } = usePermissions();
   const [formAbierto, setFormAbierto] = useState(false);
 
-  const freshness = useMemo(() => computeFreshness(eventos, embarque?.eta), [eventos, embarque?.eta]);
+  const arribado = isArribado(embarque);
+  const freshness = useMemo(() => computeFreshness(eventos, embarque?.eta, arribado), [eventos, embarque?.eta, arribado]);
   const etaVencida = isEtaVencida(embarque);
   const showEtaBanner = etaVencida && embarque?.eta;
 
