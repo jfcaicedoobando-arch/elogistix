@@ -115,14 +115,21 @@ export function OrigenCostosSection({
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <TarifaChip label="Tarifa cotizada" id={tarifaIdOriginal ?? null} />
+        {mismaTarifa && decision === "sin_cambios" ? (
           <TarifaChip
-            label="Tarifa aplicada"
+            label="Tarifa cotizada y aplicada"
             id={tarifaIdAplicada ?? null}
-            suffix={mismaTarifa ? "(misma)" : undefined}
           />
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <TarifaChip label="Tarifa cotizada" id={tarifaIdOriginal ?? null} />
+            <TarifaChip
+              label="Tarifa aplicada"
+              id={tarifaIdAplicada ?? null}
+              suffix={mismaTarifa ? "(misma)" : undefined}
+            />
+          </div>
+        )}
 
         {cambios.length > 0 && <DeltaTable cambios={cambios} />}
       </CardContent>
