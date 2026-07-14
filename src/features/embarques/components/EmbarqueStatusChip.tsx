@@ -8,8 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { cn } from "@/lib/utils";
-
-type CobroStatus = "pendiente" | "parcial" | "pagado" | null | undefined;
+import { resolveFinancieroInfo, type CobroStatus } from "./embarqueStatusChip.helpers";
 
 interface Props {
   estado: string;
@@ -17,21 +16,6 @@ interface Props {
   tieneProforma: boolean | null | undefined;
   cobroStatus: CobroStatus;
   className?: string;
-}
-
-interface FinancieroInfo {
-  label: string;
-  tone: "warning" | "neutral" | "success";
-}
-
-export function resolveFinancieroInfo(
-  tieneProforma: boolean | null | undefined,
-  cobroStatus: CobroStatus,
-): FinancieroInfo {
-  if (cobroStatus === "pagado") return { label: "Cobrado", tone: "success" };
-  if (cobroStatus === "parcial") return { label: "Cobro parcial", tone: "neutral" };
-  if (!tieneProforma) return { label: "Sin proforma", tone: "warning" };
-  return { label: "Proforma", tone: "neutral" };
 }
 
 function Separator() {
