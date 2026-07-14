@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.11] - 2026-07-14
+- **fix(CI · audit:tests · duplicate-title)**: se renombra el título del test `redondea a 2 decimales` en `calcularWMLcl.test.ts` a `redondea el flete venta LCL a 2 decimales` para evitar colisión con `pnlPorContenedor.helpers.test.ts` y desbloquear `bun run audit:tests`. Analogía: dos archivos con el mismo nombre en la misma carpeta confundían al sistema; ahora cada uno tiene etiqueta única.
+
 ## [13.299.10] - 2026-07-14
 - **fix(facturación · eliminar pago · RLS)**: se corrige la política restrictiva `Hide soft deleted pagos_factura update source`, que todavía bloqueaba el soft delete con `new row violates row-level security policy` porque no permitía el estado final con `deleted_at`. Ahora la regla exige que el pago original esté activo y que el cambio permanezca dentro de la misma organización/super admin, dejando que `deleted_at` se llene correctamente. Analogía: el guardia revisa que el pago que entra a la papelera venga de una carpeta válida, pero ya no exige que siga fuera de la papelera después de tirarlo.
 
