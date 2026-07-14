@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifyWarning } from "@/components/shared/utils/appFeedback";
 import {
   actualizarEstadoClienteProforma,
   type RespuestaCliente,
