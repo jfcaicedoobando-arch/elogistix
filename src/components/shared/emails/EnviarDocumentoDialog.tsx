@@ -1,25 +1,32 @@
 /**
  * EnviarDocumentoDialog — Dialog reutilizable para envío branded al cliente.
  *
- * Encapsula el mismo layout usado en cotizaciones/proformas y ahora facturas:
- *   1. Selector de destinatarios (contactos del cliente + manuales).
- *   2. CC (auto-agrega al usuario logueado).
- *   3. Asunto y mensaje personalizado.
- *   4. Opción "marcar como enviada" (para borradores).
+ * Rediseño (v13.300.17): unifica destinatarios y CC bajo un mismo patrón de
+ * chip input (`EmailChipsField`) para dar congruencia visual e interacción
+ * consistente. Los contactos del cliente se muestran como checkboxes que
+ * actúan como atajos: alternan el chip correspondiente en el campo "Para".
+ * El usuario logueado aparece como chip con candado en "CC" (no removible).
  *
- * El caller sólo provee `clienteId`, el asunto por defecto y `onEnviar`.
- * Toda la lógica de estado vive en `useEnvioDocumentoForm`.
+ * Compatible con el hook `useEnvioDocumentoForm` sin cambios de API pública.
  */
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { Loader2, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { useEnvioDocumentoForm, type EnvioFormState } from "@/hooks/emails/useEnvioDocumentoForm";
+import {
+  EMAIL_RE,
+  useEnvioDocumentoForm,
+  type EnvioFormState,
+} from "@/hooks/emails/useEnvioDocumentoForm";
 import { DestinatariosPicker } from "@/components/shared/emails/DestinatariosPicker";
+import {
+  EmailChipsField,
+  type EmailChip,
+} from "@/components/shared/emails/EmailChipsField";
 
 export interface EnviarDocumentoPayload {
   destinatarios: Array<{ email: string; nombre?: string; contacto_id?: string }>;
@@ -35,18 +42,14 @@ interface Props {
   clienteId: string | null;
   titulo: string;
   descripcion?: string;
-  /** Construye el asunto inicial la primera vez que abre el dialog. */
   buildAsuntoInicial: () => string;
-  /** Toggle "marcar como enviada" — sólo aplica cuando el doc está en borrador. */
   mostrarMarcarEnviada?: boolean;
   labelMarcarEnviada?: React.ReactNode;
   labelBotonEnviar?: string;
   labelBotonReenviar?: string;
   esReenvio?: boolean;
   loading?: boolean;
-  /** Correos a precargar en el campo CC (heredados del cliente / última factura). */
   ccInicial?: string[] | null;
-  /** Correos manuales a precargar como destinatarios (heredados del cliente / último envío). */
   destinatariosInicial?: string[] | null;
   onEnviar: (payload: EnviarDocumentoPayload, form: EnvioFormState) => Promise<void> | void;
 }
@@ -60,6 +63,64 @@ export function EnviarDocumentoDialog({
   const form = useEnvioDocumentoForm(open, clienteId, buildAsuntoInicial, ccInicial, destinatariosInicial);
 
   const puedeEnviar = form.destinatarios.length > 0 && !loading;
+
+  // Chips del campo "Para": combina contactos seleccionados + manuales.
+  const paraChips: EmailChip[] = useMemo(() => {
+    return form.destinatarios.map((d) => {
+      const contacto = d.contacto_id
+        ? form.contactos.find((c) => c.id === d.contacto_id)
+        : undefined;
+      return {
+        email: d.email,
+        label: d.nombre ?? undefined,
+        tag: contacto?.tipo ?? undefined,
+        invalid: !EMAIL_RE.test(d.email),
+      };
+    });
+  }, [form.destinatarios, form.contactos]);
+
+  // Chips editables del campo "CC" (se serializan a `ccManual` como string).
+  const ccChips: EmailChip[] = useMemo(() => {
+    return form.ccManual
+      .split(/[,;\s]+/)
+      .map((e) => e.trim())
+      .filter(Boolean)
+      .map((e) => ({ email: e, invalid: !EMAIL_RE.test(e) }));
+  }, [form.ccManual]);
+
+  const handleParaAdd = (email: string) => {
+    const emailLc = email.toLowerCase();
+    const contacto = form.contactos.find((c) => c.email.toLowerCase() === emailLc);
+    if (contacto) {
+      form.setSeleccionados((s) => ({ ...s, [contacto.id]: true }));
+      return;
+    }
+    if (form.emailsManualesAgregados.some((e) => e.toLowerCase() === emailLc)) return;
+    form.pushManual(email);
+  };
+
+  const handleParaRemove = (email: string) => {
+    const emailLc = email.toLowerCase();
+    const desde = form.destinatarios.find((d) => d.email.toLowerCase() === emailLc);
+    if (desde?.contacto_id) {
+      form.setSeleccionados((s) => ({ ...s, [desde.contacto_id!]: false }));
+    } else {
+      form.quitarManual(email);
+    }
+  };
+
+  const serializeCc = (list: string[]) =>
+    form.setCcManual(list.join(", "));
+
+  const handleCcAdd = (email: string) => {
+    const emailLc = email.toLowerCase();
+    if (ccChips.some((c) => c.email.toLowerCase() === emailLc)) return;
+    serializeCc([...ccChips.map((c) => c.email), email]);
+  };
+
+  const handleCcRemove = (email: string) => {
+    serializeCc(ccChips.map((c) => c.email).filter((e) => e !== email));
+  };
 
   const handleSubmit = async () => {
     await onEnviar(
@@ -81,9 +142,13 @@ export function EnviarDocumentoDialog({
       icon={Send}
       title={titulo}
       description={descripcion ?? "Se enviará un correo branded al cliente con los adjuntos correspondientes."}
-      size="2xl"
+      size="xl"
       footer={
         <>
+          <div className="mr-auto text-xs text-muted-foreground">
+            {form.destinatarios.length} destinatario{form.destinatarios.length === 1 ? "" : "s"}
+            {form.ccEmails.length > 0 && <> · {form.ccEmails.length} en copia</>}
+          </div>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancelar
           </Button>
@@ -94,38 +159,52 @@ export function EnviarDocumentoDialog({
         </>
       }
     >
-      <DestinatariosPicker
-        contactos={form.contactos}
-        loadingContactos={form.loadingContactos}
-        seleccionados={form.seleccionados}
-        onToggle={(id, v) => form.setSeleccionados((s) => ({ ...s, [id]: v }))}
-        emailManual={form.emailManual}
-        setEmailManual={form.setEmailManual}
-        emailsManualesAgregados={form.emailsManualesAgregados}
-        agregarManual={form.agregarManual}
-        quitarManual={form.quitarManual}
-      />
-
       <div className="space-y-2">
-        <Label>Copia (CC)</Label>
-        <div className="flex flex-wrap gap-1 mb-1">
-          {form.userEmail && <Badge variant="outline">{form.userEmail} (tú)</Badge>}
-        </div>
-        <Input
-          placeholder="emails adicionales separados por coma"
-          value={form.ccManual}
-          onChange={(e) => form.setCcManual(e.target.value)}
+        <Label htmlFor="envio-para">
+          Para <span className="text-destructive">*</span>
+        </Label>
+        <EmailChipsField
+          id="envio-para"
+          chips={paraChips}
+          onAdd={handleParaAdd}
+          onRemove={handleParaRemove}
+          ariaLabel="Destinatarios"
+          placeholder="escribe un correo o marca un contacto abajo…"
+        />
+        <DestinatariosPicker
+          contactos={form.contactos}
+          loadingContactos={form.loadingContactos}
+          seleccionados={form.seleccionados}
+          onToggle={(id, v) => form.setSeleccionados((s) => ({ ...s, [id]: v }))}
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Asunto</Label>
-        <Input value={form.asunto} onChange={(e) => form.setAsunto(e.target.value)} />
+        <Label htmlFor="envio-cc">Copia (CC)</Label>
+        <EmailChipsField
+          id="envio-cc"
+          chips={ccChips}
+          lockedChips={form.userEmail ? [{
+            email: form.userEmail,
+            label: `${form.userEmail} (tú)`,
+            tooltip: "Siempre se agrega tu correo",
+          }] : []}
+          onAdd={handleCcAdd}
+          onRemove={handleCcRemove}
+          ariaLabel="Copia CC"
+          placeholder="agrega correos en copia…"
+        />
       </div>
 
       <div className="space-y-2">
-        <Label>Mensaje (opcional)</Label>
+        <Label htmlFor="envio-asunto">Asunto</Label>
+        <Input id="envio-asunto" value={form.asunto} onChange={(e) => form.setAsunto(e.target.value)} />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="envio-mensaje">Mensaje (opcional)</Label>
         <Textarea
+          id="envio-mensaje"
           rows={4}
           value={form.mensaje}
           onChange={(e) => form.setMensaje(e.target.value)}

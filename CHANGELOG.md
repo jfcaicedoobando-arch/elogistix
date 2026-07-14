@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.17] - 2026-07-14
+- **ui(emails · enviar documento)**: rediseño del modal "Enviar factura/cotización/proforma por correo" para dar congruencia a la captura de destinatarios y CC. El bug reportado: el modal mezclaba dos patrones distintos — "Para" usaba badges + botón "Agregar" con un input separado, y "CC" un `Input` de texto libre separado por comas.
+  - Nuevo componente `src/components/shared/emails/EmailChipsField.tsx` (chip input tipo Gmail/Outlook): Enter/coma/`;`/Tab confirman chip, Backspace en input vacío elimina el último, paste con separadores auto-divide, chips inválidos en `variant="destructive"`, soporta `lockedChips` (candado) para el usuario logueado.
+  - `EnviarDocumentoDialog.tsx` unifica **Para** y **CC** bajo `EmailChipsField`. Los contactos del cliente pasan a ser atajos en un `DestinatariosPicker` compacto (checkboxes) que sincroniza chips en "Para". El usuario logueado aparece como chip con candado en "CC" (no removible). Se agrega contador `N destinatarios · M en copia` en el footer y tamaño del dialog baja a `xl`.
+  - `DestinatariosPicker.tsx` se simplifica: sólo renderiza contactos del cliente (filtra proveedores/shippers), sin lógica de input manual. Baja de ~90 a ~65 líneas.
+  - `useEnvioDocumentoForm.ts` expone `pushManual(email)` para agregar correos manuales sin depender del state `emailManual` (necesario para el chip input). API pública compatible.
+  - Tests actualizados: `DestinatariosPicker.test.tsx` y `EnviarDocumentoDialog.test.tsx`.
+
 ## [13.300.16] - 2026-07-14
 - **fix(embarques · tab Tracking)**: se corrigen dos avisos falsos que aparecían cuando el embarque ya tenía `fecha_llegada_real` capturada (visto en ELIMP00297).
   - `isEtaVencida` ahora considera el embarque como "arribado" si `fecha_llegada_real != null` (además de estados `Entregado`/`Cerrado`) y deja de mostrar la card roja "ETA vencida" en ese caso.

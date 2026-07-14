@@ -1,37 +1,106 @@
-## Problema
 
-En el tab **Tracking** del detalle de embarques (ELIMP00297), aparecen dos avisos incorrectos cuando el embarque **ya tiene `fecha_llegada_real` capturada**:
+## Auditoría del modal "Enviar factura por correo"
 
-1. **Card "ETA vencida"** — se muestra aunque el embarque ya arribó.
-2. **Badge "Requiere actualización"** junto a "Último evento hace 10 días — Arribo a Puerto" — se marca como crítico aunque el arribo ya ocurrió y no hay más movimientos que esperar.
+Archivo: `src/components/shared/emails/EnviarDocumentoDialog.tsx` (compartido con cotización/proforma).
 
-## Causa
+### Incongruencias detectadas
 
-En `src/features/embarques/components/TabTracking.tsx`:
+1. **Dos patrones distintos para lo mismo (agregar un email):**
+   - *Destinatarios manuales*: input + botón "Agregar" → produce un `Badge` por correo con "x" para quitar.
+   - *CC*: un solo `Input` de texto libre "emails adicionales separados por coma". El usuario logueado aparece como badge readonly aparte. No hay chips, no hay validación visible, no se puede quitar uno individual sin editar la cadena.
 
-- `isEtaVencida()` sólo descarta los estados `Entregado` y `Cerrado`, pero **no** el caso donde `fecha_llegada_real` está capturada (el embarque ya llegó a puerto/aeropuerto aunque siga En Tránsito administrativamente).
-- `computeFreshness()` marca `critical: true` si el último evento tiene ≥ 7 días, sin importar que ese último evento sea precisamente el **arribo** (fin del flujo de tracking operativo).
+2. **Feedback de validación desigual:**
+   - En destinatarios el botón se desactiva si el email es inválido y hay `Enter` para agregar.
+   - En CC no hay validación en vivo; se parsea sólo al enviar. No queda claro qué se está por enviar.
 
-## Solución (frontend puro, sin cambios de negocio)
+3. **Jerarquía visual confusa:**
+   - "Destinatarios" mezcla en el mismo bloque: contactos con checkboxes, badges de manuales, e input de "agregar manual". Cuando el cliente no tiene contactos, el input queda pegado a un mensaje informativo sin separación.
+   - "Recientes" (chips sugeridos) sólo existe en proforma (`DestinatariosRecientesChips`), no se aprovecha aquí.
 
-**Archivo:** `src/features/embarques/components/TabTracking.tsx`
+4. **Usuario logueado como CC "fantasma":**
+   - Se muestra como badge `(tú)` pero no se puede quitar ni se refleja en el input. No queda claro si es obligatorio.
 
-1. **`isEtaVencida`**: retornar `false` cuando `embarque.fecha_llegada_real` está definido (además de los estados `Entregado`/`Cerrado`).
+5. **Sin distinción visual entre contactos del cliente vs. manuales** una vez agregados: los manuales viven en badges arriba del input; los del cliente quedan como checkboxes. Al enviar, todos son "destinatarios" pero la UI los trata como dos mundos.
 
-2. **`computeFreshness`**: recibir un flag `arribado` (derivado de `fecha_llegada_real != null` o estado `Entregado`/`Cerrado`). Cuando `arribado === true`:
-   - No marcar `critical`.
-   - No calcular `etaProxima`.
-   - Cambiar el label a algo como `"Arribado — <tipo del último evento>"` para que el usuario entienda que el tracking cerró.
+6. **Espaciado / uso del ancho** (`size="2xl"`): la sección de CC se ve pobre (un input flaco); destinatarios ocupa mucho vertical con la lista completa aunque sean 1-2 contactos.
 
-3. Pasar el flag desde el render principal usando el `embarque` ya disponible.
+---
 
-## Verificación
+## Propuesta de rediseño (sólo UI/UX, sin cambios de backend)
 
-- Recargar el detalle del embarque 297 (que tiene `fecha_llegada_real`): no debe aparecer la card roja "ETA vencida" ni el badge amarillo "Requiere actualización".
-- Un embarque **En Tránsito sin** `fecha_llegada_real` y con ETA pasada debe seguir mostrando ambos avisos.
-- Typecheck + tests de `TabTracking` si existen.
+Unificar destinatarios y CC bajo **un mismo componente de "campo tipo etiquetas"** (chip input), como Gmail/Outlook. Cambios:
 
-## Entregables
+### 1. Nuevo componente compartido `EmailChipsField`
 
-- Edición del archivo mencionado.
-- Bump de `APP_VERSION` (patch) y entrada en `CHANGELOG.md` describiendo el fix.
+Un campo reutilizable que muestre chips + input inline:
+- Input al final del contenedor, `Enter`, `,`, `;` o `Tab` confirman el chip.
+- Backspace en input vacío elimina el último chip.
+- Cada chip tiene "×" y tooltip con el correo completo.
+- Validación en vivo: chip inválido en `destructive` con tooltip "correo inválido".
+- Soporta pegar lista separada por comas (auto-split).
+- Prop `readonlyChips` para el correo del usuario logueado (chip con candado, no removible) y prop `suggestedChips` para "Recientes".
+- Prop `sourceLabel` opcional para colorear chips que vienen de contactos del cliente vs. manuales (badge chico "cliente" / "manual").
+
+### 2. Rediseño del modal (`EnviarDocumentoDialog.tsx`)
+
+```
+┌─ Enviar factura ─────────────────────────────┐
+│ Para *                                        │
+│  ┌─────────────────────────────────────────┐ │
+│  │ [Ana Pérez · principal ×] [otro@x.com ×]│ │
+│  │ [escribe un correo o elige abajo…____ ] │ │
+│  └─────────────────────────────────────────┘ │
+│  Contactos del cliente:                       │
+│   ☑ Ana Pérez · principal   ana@x.com         │
+│   ☐ Juan · operativo         juan@x.com       │
+│  Recientes: [maria@x.com +] [pagos@x.com +]   │
+│                                               │
+│ CC                                            │
+│  ┌─────────────────────────────────────────┐ │
+│  │ [🔒 yo@empresa.com] [copia@x.com ×] [__]│ │
+│  └─────────────────────────────────────────┘ │
+│                                               │
+│ Asunto                                        │
+│ Mensaje (opcional)                            │
+│ ☐ Marcar el documento como Enviado            │
+└───────────────────────────────────────────────┘
+```
+
+- **Para** y **CC** usan el mismo componente → misma interacción, mismo look.
+- Los checkboxes de contactos del cliente ahora sólo **agregan/quitan chips en el campo "Para"** (los chips son la fuente de verdad; el check refleja si el email de ese contacto está presente).
+- Chips de contactos muestran un mini-badge con el tipo (`principal`, `facturacion`, `operativo`).
+- El usuario logueado en CC es un chip con candado (no removible), no un badge "fuera del campo".
+- Se agrega la fila "Recientes" (reusando `DestinatariosRecientesChips` para facturas también) — click agrega el chip.
+
+### 3. Ajustes de layout menores
+
+- Reducir `size` del dialog a `xl` en desktop (2xl era necesario porque el input de CC quedaba solitario; con chips ya no hace falta tanto ancho).
+- Sección de checkboxes de contactos: colapsable si hay >4, y ocultar sección completa si el cliente no tiene contactos (evita el "input flotante" incongruente).
+- Añadir contador `N destinatarios · M en copia` arriba del footer para dar confianza antes de enviar.
+
+### 4. Sin cambios en:
+
+- `useEnvioDocumentoForm` API pública (mantiene `seleccionados`, `emailsManualesAgregados`, `ccManual`, `destinatarios`, `ccEmails`). Internamente `ccManual` seguirá siendo string separado por comas — el nuevo `EmailChipsField` lo serializa/parsea.
+- Edge functions ni contratos de payload.
+- Memoria de destinatarios (`useDestinatariosSugeridos`).
+
+---
+
+## Archivos que se tocarían (cuando implementemos)
+
+- **Nuevo:** `src/components/shared/emails/EmailChipsField.tsx`
+- **Editado:** `src/components/shared/emails/EnviarDocumentoDialog.tsx` (rediseño interno).
+- **Editado:** `src/components/shared/emails/DestinatariosPicker.tsx` — se recorta a "lista de contactos con checkboxes" (los manuales dejan de vivir aquí).
+- Reutilizar `src/features/proformas/components/DestinatariosRecientesChips.tsx` también para facturas (pasar como prop).
+- Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
+
+### Detalle técnico (no visible al usuario)
+
+- `EmailChipsField` es un `input`-container con `role="group"` + `aria-label`. Chips son botones focusables con `aria-label="quitar <email>"`. Cumple accesibilidad teclado (Tab entre chips, Backspace elimina).
+- Validación con `EMAIL_RE` existente.
+- Sin nuevas dependencias.
+- Componentes ≤200 líneas (Power of 10 #4). Si `EnviarDocumentoDialog` crece, extraer secciones a `EnviarDocumentoDialog.Para.tsx` / `.CC.tsx`.
+
+---
+
+¿Procedo a implementarlo tal cual, o quieres afinar algo (por ejemplo: mantener los checkboxes de contactos separados del campo de chips, o preferir que el usuario logueado en CC sí sea removible)?

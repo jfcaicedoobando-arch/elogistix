@@ -15,6 +15,7 @@ const formState = {
   setEmailManual: vi.fn(),
   emailsManualesAgregados: [],
   agregarManual: vi.fn(),
+  pushManual: vi.fn(),
   quitarManual: vi.fn(),
   userEmail: "yo@x.com",
   ccManual: "",
