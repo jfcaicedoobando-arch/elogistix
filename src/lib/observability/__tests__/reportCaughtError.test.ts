@@ -85,4 +85,25 @@ describe("reportCaughtError", () => {
     expect(() => reportCaughtError(new Error("x"), { feature: "pnl" })).not.toThrow();
     await flush();
   });
+
+  it("envuelve PostgrestError plano en Error real (evita título 'Object captured as exception')", async () => {
+    const pgError = { code: "22007", message: 'invalid input syntax for type date: ""' };
+    reportCaughtError(pgError, { feature: "costeo", op: "insert_tarifa" });
+    await flush();
+    const call = mocks.captureException.mock.calls[0];
+    expect(call[0]).toBeInstanceOf(Error);
+    expect((call[0] as Error).message).toBe('invalid input syntax for type date: ""');
+    expect(call[1].extra.original).toBe(pgError);
+  });
+
+  it("descarta violaciones 23514 (validaciones de negocio esperadas)", async () => {
+    const pgError = {
+      code: "23514",
+      message: "Tu rol requiere vincular una cotización Aceptada.",
+      hint: "Selecciona una cotización en el paso 1.",
+    };
+    reportCaughtError(pgError, { feature: "embarques", op: "create" });
+    await flush();
+    expect(mocks.captureException).not.toHaveBeenCalled();
+  });
 });
