@@ -6,10 +6,10 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import type { BucketAntiguedad, TopCliente } from "@/features/dashboard/direccion/services/tipos";
 
 const COLOR_BUCKET: Record<BucketAntiguedad["bucket"], string> = {
-  "Corriente": "bg-emerald-500",
-  "1-30": "bg-amber-400",
-  "31-60": "bg-orange-500",
-  "+60": "bg-destructive",
+  "Corriente": "bg-aging-1",
+  "1-30": "bg-aging-2",
+  "31-60": "bg-aging-3",
+  "+60": "bg-aging-5",
 };
 
 function fmt(n: number): string { return formatCurrency(n, "MXN"); }

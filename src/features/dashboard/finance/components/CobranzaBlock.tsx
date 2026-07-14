@@ -24,11 +24,11 @@ interface Props {
 }
 
 const AGING_LABELS: Array<{ key: keyof AgingBuckets; label: string; tone: string }> = [
-  { key: "b0_15", label: "0-15 d", tone: "bg-warning/10 text-warning" },
-  { key: "b16_30", label: "16-30 d", tone: "bg-orange-100 text-orange-800" },
-  { key: "b31_60", label: "31-60 d", tone: "bg-red-100 text-red-800" },
-  { key: "b61_90", label: "61-90 d", tone: "bg-red-200 text-red-900" },
-  { key: "b90plus", label: "90+ d", tone: "bg-red-300 text-red-950" },
+  { key: "b0_15", label: "0-15 d", tone: "bg-aging-1/20 text-foreground" },
+  { key: "b16_30", label: "16-30 d", tone: "bg-aging-2/25 text-foreground" },
+  { key: "b31_60", label: "31-60 d", tone: "bg-aging-3/30 text-foreground" },
+  { key: "b61_90", label: "61-90 d", tone: "bg-aging-4/35 text-foreground" },
+  { key: "b90plus", label: "90+ d", tone: "bg-aging-5/40 text-foreground" },
 ];
 
 export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
@@ -105,7 +105,7 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
                   <span className="text-sm tabular-nums font-semibold">
                     {formatCurrency(f.saldo, f.moneda)}
                   </span>
-                  <Badge variant="outline" className="text-2xs border-red-300 text-red-700">
+                  <Badge variant="outline" className="text-2xs border-destructive/40 text-destructive">
                     {f.dias_vencido} d
                   </Badge>
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
