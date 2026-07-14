@@ -40,8 +40,6 @@ const LITERAL_COLOR = /(?<![\w-])(?:text|bg|border|ring|from|to|via)-(?:red|gree
  * y documentarse en `.lovable/plan.md`.
  */
 const ALLOWLIST: readonly string[] = [
-  // Lote 3B (H1): escalera de aging con 4 rojos. Migrar a tokens `--aging-1..4`.
-  "src/features/dashboard/finance/components/CobranzaBlock.tsx",
   // Lote 3B (deuda P&L cotización): heatmap de márgenes usa emerald/red literales
   // en escala continua — requiere token gradiente antes de tokenizar.
   "src/features/cotizacion/components/ResumenPL.tsx",
@@ -49,9 +47,6 @@ const ALLOWLIST: readonly string[] = [
   "src/features/cotizacion/components/SeccionCostosInternosPLLocal.tsx",
   "src/features/cotizacion/components/TablaCostosLocal.tsx",
   "src/features/cotizacion/components/wizard/WizardTotalsBar.tsx",
-  // Lote 3B (aging cartera): escala de 4 buckets (Corriente/1-30/31-60/+60).
-  // Requiere tokens `--aging-1..4` como CobranzaBlock. Se migra junto con CobranzaBlock.
-  "src/features/dashboard/direccion/components/CarteraSection.tsx",
   // Marketing/landing: preview interno del logo, no forma parte del ERP.
   // Se mantiene con paleta cruda intencionalmente.
   "src/features/marketing/routes/LogoPreview.tsx",
