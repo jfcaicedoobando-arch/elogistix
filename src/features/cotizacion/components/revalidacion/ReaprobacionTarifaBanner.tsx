@@ -64,8 +64,8 @@ export function ReaprobacionTarifaBanner({ cotizacionId, estado, deltaJsonb }: P
   const disabled = isPending || recotizando;
 
   return (
-    <Alert variant="default" className="border-yellow-500 bg-yellow-50">
-      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+    <Alert variant="default" className="border-warning bg-warning/10">
+      <AlertTriangle className="h-4 w-4 text-warning" />
       <AlertTitle>Tarifa pendiente de re-aprobación</AlertTitle>
       <AlertDescription className="space-y-3">
         <p>

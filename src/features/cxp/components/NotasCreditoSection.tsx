@@ -27,7 +27,7 @@ interface Props {
 function NcEstadoBadge({ estado }: { estado: string }) {
   if (estado === "Aplicada") return <Badge className="bg-success/15 text-success border-success/30">Aplicada</Badge>;
   if (estado === "Cancelada") return <Badge variant="secondary">Cancelada</Badge>;
-  if (estado === "Aprobada") return <Badge className="bg-sky-500/15 text-sky-700 border-sky-500/30">Aprobada</Badge>;
+  if (estado === "Aprobada") return <Badge className="bg-info/15 text-info border-info/30">Aprobada</Badge>;
   return <Badge variant="outline">Borrador</Badge>;
 }
 
