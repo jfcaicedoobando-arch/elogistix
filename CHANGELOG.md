@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.23] - 2026-07-14
+- **ux(clientes · tabla)**: la columna **Nombre** ya no se corta con `truncate` + `max-w-[200px]`. Se dejó de usar `clientColumn` (que forzaba `max-w-[220px] truncate`) y ahora la celda envuelve en varias líneas (`whitespace-normal break-words`) con `min-w-[240px]`. El nombre completo del cliente siempre queda visible en la lista `/clientes`.
+
 ## [13.299.22] - 2026-07-14
 - **fix(observabilidad · ErrorBoundary)**: el botón "Reportar" de la pantalla de crash ya **no abre `mailto:`**. Ahora siempre va a Sentry: 1) widget de feedback (`Sentry.getFeedback().createForm()`), 2) fallback a `Sentry.showReportDialog({ eventId })`, 3) si no hay `eventId` se genera con `captureMessage`, 4) si todo falla se muestra un toast con el `eventId` para copiar manualmente. El panel de error incorpora **"Detalles técnicos"** colapsable (abierto en dev) con versión, timestamp, ruta, event ID, `error.name`, mensaje, `stack` y `componentStack`, más un botón **"Copiar detalles"** que copia todo al portapapeles. Se guardan `componentStack` y `timestamp` en `state` y se etiqueta `app_version` en el scope de Sentry.
 
