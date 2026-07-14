@@ -73,6 +73,29 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
     return () => { cancelado = true; };
   }, [tarifaId, filas.length, setFilas, markup, numContenedores, tipoEmbarque]);
 
+  // Precarga LCL manual: si el paso 1 capturó `lclFleteManual` con tarifa W/M
+  // válida y no hay filas todavía, inyectamos una fila de flete USD para que
+  // el ejecutivo no re-teclee. Se ejecuta una sola vez (guard con ref).
+  useEffect(() => {
+    if (tipoEmbarque !== "LCL") return;
+    if (tarifaId) return; // FCL/tarifa vinculada ya se encarga.
+    if (precargadaLclRef.current) return;
+    if (filas.length > 0) { precargadaLclRef.current = true; return; }
+    const consolidador = proveedores.find(p => p.id === lclFleteManual?.consolidadorId);
+    const nuevas = buildCostosLCLManual({
+      lclFleteManual,
+      dimensiones: dimensionesLCL,
+      pesoKg,
+      consolidadorNombre: consolidador?.nombre ?? null,
+    });
+    if (nuevas.length === 0) return;
+    setFilas(prev => (prev.length > 0 ? prev : nuevas));
+    precargadaLclRef.current = true;
+    setLclAutoCargado(true);
+  }, [tipoEmbarque, tarifaId, filas.length, lclFleteManual, dimensionesLCL, pesoKg, proveedores, setFilas]);
+
+
+
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
     setFilas(prev => {
