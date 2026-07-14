@@ -40,6 +40,20 @@ function buildRecargoRows(tarifaId: string, recargos: TarifaRecargoInput[]) {
     }));
 }
 
+/**
+ * Normaliza campos `date` opcionales antes de mandarlos a Postgres: un `""`
+ * genera `22007 invalid input syntax for type date` (Sentry JAVASCRIPT-REACT-1V).
+ */
+function sanitizeTarifaDates<T extends { vigente_desde: string; vigente_hasta: string }>(
+  t: T,
+): T & { vigente_desde: string | null; vigente_hasta: string | null } {
+  return {
+    ...t,
+    vigente_desde: t.vigente_desde?.length ? t.vigente_desde : null,
+    vigente_hasta: t.vigente_hasta?.length ? t.vigente_hasta : null,
+  };
+}
+
 export async function insertTarifaConRecargos(
   organizationId: string,
   input: TarifaInput,
