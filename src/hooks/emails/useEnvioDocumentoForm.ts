@@ -34,6 +34,8 @@ export interface EnvioFormState {
   setEmailManual: (v: string) => void;
   emailsManualesAgregados: string[];
   agregarManual: () => void;
+  /** Agrega un correo manual sin depender del state `emailManual` (chip input). */
+  pushManual: (email: string) => void;
   quitarManual: (e: string) => void;
   ccManual: string;
   setCcManual: (v: string) => void;
