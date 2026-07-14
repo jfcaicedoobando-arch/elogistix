@@ -46,7 +46,7 @@ describe("calcularFleteVentaLCL", () => {
     expect(calcularFleteVentaLCL(10, 55, 200)).toBe(550); // 550 > 200
   });
 
-  it("redondea a 2 decimales", () => {
+  it("redondea el flete venta LCL a 2 decimales", () => {
     expect(calcularFleteVentaLCL(1.234, 45.67, 0)).toBe(56.36);
   });
 

@@ -1,39 +1,29 @@
 ## Objetivo
-Permitir que un usuario autorizado elimine (soft delete) un pago sin que la policy de backend lo bloquee, y dejar un solo toast de error si algo falla.
+Desbloquear el CI que está fallando en el paso `audit:tests`.
 
 ## Diagnóstico
-- El error real ya quedó visible: la policy restrictiva `Hide soft deleted pagos_factura` tiene `WITH CHECK (deleted_at IS NULL)`.
-- En un `UPDATE` para soft delete, la fila nueva queda con `deleted_at != null`, entonces esa policy restrictiva bloquea la operación aunque el usuario tenga rol `contador`.
-- El doble toast ocurre porque:
-  1. `useEliminarPagoFactura` muestra el toast real con `DELETE_PAYMENT`.
-  2. `FacturaPagosSection.tsx` vuelve a mostrar otro toast genérico en el `catch`.
+El auditor de higiene de tests detectó **un solo problema**: dos tests distintos usan exactamente el mismo título `"redondea a 2 decimales"`:
 
-## Cambios propuestos
+- `src/features/cotizacion/utils/__tests__/calcularWMLcl.test.ts:49` (nuevo, agregado con LCL manual)
+- `src/features/embarques/services/__tests__/pnlPorContenedor.helpers.test.ts:11` (existente)
 
-### 1. Backend: ajustar RLS de `pagos_factura`
-Crear una migración para reemplazar la policy restrictiva `Hide soft deleted pagos_factura` por una versión que:
-- Mantenga ocultos los pagos ya eliminados en lectura.
-- Permita que usuarios autorizados hagan el `UPDATE` que marca `deleted_at` y `deleted_by`.
-- No abra acceso anónimo ni permisos extra.
+La regla `duplicate-title` prohíbe títulos idénticos entre archivos para que los reportes de test sean rastreables.
 
-Técnicamente, la forma segura es separar la regla por operación:
-- `SELECT`: sólo filas con `deleted_at IS NULL`.
-- `UPDATE`: permitir que el update parta de una fila activa; el permiso real de rol/organización sigue protegido por `Tenant CRUD pagos_factura`.
+Analogía: es como tener dos archivos con exactamente el mismo nombre en la misma carpeta — el sistema no sabe cuál es cuál.
 
-### 2. Frontend: quitar el segundo toast
-Actualizar `FacturaPagosSection.tsx` para que el `catch` sólo absorba la promesa rechazada y no emita otro `notifyError`.
+## Cambio propuesto
+Renombrar el título en el archivo **nuevo** (`calcularWMLcl.test.ts:49`) para reflejar su contexto específico, por ejemplo:
 
-Analogía: el hook ya es la alarma principal; el componente estaba tocando una segunda alarma con menos información.
+```
+it("redondea el W/M a 2 decimales", () => { ... })
+```
 
-### 3. Versionado
-- Bump `APP_VERSION` a `13.299.8`.
-- Agregar entrada en `CHANGELOG.md` explicando:
-  - Fix RLS para soft delete de pagos.
-  - Fix doble toast al fallar eliminación de pago.
+No se toca el test de `pnlPorContenedor` porque es preexistente y su nombre ya está referenciado en histórico.
+
+## Versionado
+- Bump `APP_VERSION` → `13.299.11`.
+- Entrada en `CHANGELOG.md`: "Fix CI: renombrado título duplicado en test de calcularWMLcl para pasar `audit:tests`."
 
 ## Validación
-- Revisar que la policy quede separada correctamente en backend.
-- Confirmar que ya no haya segundo `notifyError` en `FacturaPagosSection.tsx`.
-- Si se vuelve a intentar borrar el pago, debe:
-  - Eliminarse correctamente si el rol/organización tiene permiso.
-  - O mostrar un solo toast con el error real si existe otro bloqueo.
+- Correr mentalmente el auditor: sin duplicados → verde.
+- No cambia el comportamiento del test; sólo su etiqueta.
