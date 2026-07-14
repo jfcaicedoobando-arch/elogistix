@@ -39,14 +39,9 @@ export function useCotizacionActions() {
     if (!cotizacionAEliminar) return;
     try {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
-      notifySuccess(toast, { title: "Cotización eliminada correctamente" });
-    } catch (err: unknown) {
-      notifyError(toast, {
-        title: "Error al eliminar",
-        description: getErrorMessage(err),
-        error: err,
-        method: "CONFIRMAR_ELIMINAR",
-      });
+      // Toast de éxito/error lo emite `useDeleteCotizacion` para evitar duplicado.
+    } catch {
+      // Error ya notificado por la mutación; sólo cerramos el diálogo.
     }
     setCotizacionAEliminar(null);
   };
