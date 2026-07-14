@@ -107,4 +107,3 @@ export const FORBIDDEN_EXPORT_TABLES = [
   "folio_secuencias",
 ] as const;
 
-export type ExportTable = (typeof EXPORT_TABLES)[number];
