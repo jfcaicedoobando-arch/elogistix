@@ -44,6 +44,24 @@ export interface ReportExtra {
   [key: string]: unknown;
 }
 
+/**
+ * Códigos de Postgres que representan validaciones de negocio esperadas
+ * (ya se muestran al usuario vía toast). No son bugs — no llegan a Sentry.
+ *   - 23514: check constraint (ej. "requiere cotización aceptada").
+ */
+const EXPECTED_PG_CODES = new Set(["23514"]);
+
+/** Convierte cualquier `unknown` en un Error real para que Sentry
+ *  agrupe por mensaje en vez de mostrar el título minificado
+ *  "Object captured as exception with keys". */
+function toError(err: unknown): { error: Error; original: unknown } {
+  if (err instanceof Error) return { error: err, original: undefined };
+  const msg =
+    (err as { message?: unknown } | null | undefined)?.message;
+  const text = typeof msg === "string" && msg.length > 0 ? msg : "unknown error";
+  return { error: new Error(text), original: err };
+}
+
 export function reportCaughtError(
   err: unknown,
   tags: ReportTags,
@@ -51,6 +69,9 @@ export function reportCaughtError(
 ): void {
   const ctx = getErrorContext();
   const classified = classifyError(err);
+
+  // Skip: validaciones de negocio esperadas (mem plan Sentry 13.300.21).
+  if (classified.pgCode && EXPECTED_PG_CODES.has(classified.pgCode)) return;
 
   const enrichedTags: Record<string, string> = {
     ...(tags as Record<string, string>),
@@ -70,10 +91,13 @@ export function reportCaughtError(
   if (classified.pgDetails) enrichedExtra.pg_details = classified.pgDetails;
   if (ctx.organizationName) enrichedExtra.organization_name = ctx.organizationName;
 
+  const { error, original } = toError(err);
+  if (original !== undefined) enrichedExtra.original = original;
+
   void import("@sentry/react")
     .then(({ captureException }) => {
       try {
-        captureException(err, { tags: enrichedTags, extra: enrichedExtra });
+        captureException(error, { tags: enrichedTags, extra: enrichedExtra });
       } catch {
         // best-effort
       }
