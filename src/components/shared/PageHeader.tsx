@@ -22,7 +22,7 @@ interface PageHeaderProps {
  * Encabezado de página estandarizado.
  *
  * Estándar visual del sistema:
- *  - <h1> con `text-2xl font-bold tracking-tight` y color heredado (foreground).
+ *  - <h1> con `text-display font-bold tracking-tight` (token fluido en tailwind.config.ts).
  *  - Descripción con `text-sm text-muted-foreground` y `mt-1` para separación
  *    consistente respecto al título.
  *  - Layout flex responsive: título e icono a la izquierda, acciones a la
