@@ -29,6 +29,7 @@ interface StoredDraft {
 const DATE_FIELDS: readonly (keyof CotizacionFormValues)[] = ["validezPropuesta"];
 
 function reviveDateFields(values: CotizacionFormValues): void {
+  // SAFE-CAST: rehidratación local de fechas serializadas a JSON en el draft (ver mem://principles/safe-cast).
   const bag = values as unknown as Record<string, unknown>;
   for (const key of DATE_FIELDS) {
     const raw = bag[key as string];
