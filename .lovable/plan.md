@@ -1,55 +1,48 @@
-## Contexto
+## Problema
 
-Hoy el wizard tiene dos comportamientos distintos según el tipo de embarque:
+En LCL, al pasar del paso 1 al paso 2, la fila auto-cargada de "Flete marítimo LCL" usa:
 
-- **FCL con tarifa vinculada** → el paso 2 "Costos & P&L" precarga automáticamente el flete + recargos usando `buildCostosDesdeTarifa` (ver `SeccionCostosInternosPLLocal.tsx`). El usuario no re-teclea nada.
-- **LCL con captura manual** (bloque "Flete LCL" del paso 1: consolidador, tarifa W/M, mínimo) → el paso 2 **no** ve esos datos, así que el usuario tiene que volver a agregar la fila del flete a mano. Eso es la duplicación que estás notando.
+- `cantidad` = W/M facturable (ej. 0.894)
+- `costo_unitario` = tarifa W/M (ej. 42)
+- `precio_venta` = venta total / W/M
 
-Analogía: en FCL, el "cajero" del paso 2 ya tiene el ticket precargado desde la caja del paso 1. En LCL, ese ticket se queda en la caja y toca dictarlo otra vez. Vamos a conectar la caja LCL al mismo cajero.
+Eso genera dos problemas:
 
-## Objetivo
+1. **Conceptualmente incorrecto**: el usuario está vendiendo **un solo flete marítimo**, no 0.894 unidades de algo. El desglose por W/M ya vive en el paso 1 (bloque "Flete LCL manual"); duplicarlo en el paso 2 confunde.
+2. **Rompe el guardado**: el check constraint `cotizacion_costos_cantidad_pos` está rechazando la fila (probablemente exige `cantidad >= 1`, no sólo `> 0`), y valores como `0.894` la revientan.
 
-Que el paso 2 "Costos & P&L" precargue automáticamente **una fila de costo USD** con el flete LCL capturado en el paso 1, editable como cualquier otra fila. Sin duplicaciones y sin obligar al usuario a re-teclear.
+## Cambio propuesto
 
-## Diseño funcional
+Ajustar `buildCostosLCLManual.ts` para que la fila auto-cargada represente **un flete como línea única**:
 
-En el paso 2, cuando `tipoEmbarque === "LCL"` y existe `lclFleteManual` en el formulario, y la lista de filas está vacía (mismo criterio anti-doble-carga que ya usa FCL), se inserta una única fila:
+- `cantidad` = `1`
+- `unidad_medida` = `"Servicio"` (o `"Flete"`)
+- `costo_unitario` = costo total del flete (`wm × tarifaWM`, redondeado a 2 decimales)
+- `precio_venta` = venta total del flete (`max(wm × tarifaWM, minimo)`, redondeado a 2 decimales)
+- `notas` conserva el detalle: `"Auto-cargado desde Flete LCL manual — W/M facturable X.XXX @ USD Y.YY [aplica mínimo USD Z.ZZ]"` para no perder la trazabilidad del cálculo.
 
-| Campo          | Valor derivado                                              |
-| -------------- | ----------------------------------------------------------- |
-| Concepto       | `Flete marítimo LCL`                                        |
-| Moneda         | `USD`                                                       |
-| Proveedor      | `lclFleteManual.consolidador` (nombre del agente/consolidador) |
-| Unidad medida  | `W/M`                                                       |
-| Cantidad       | `wmFacturable` (calculado con `calcularTotalesLcl`)         |
-| Costo unitario | `lclFleteManual.tarifaWM`                                   |
-| Precio venta   | `calcularFleteVentaLCL(wm, tarifa, minimo) / wmFacturable` (para que `cantidad × precio_venta` coincida con la venta ya mostrada en paso 1, respetando el mínimo) |
-| Aplica IVA     | `false` (USD)                                                |
-| Notas          | `Mínimo USD X` cuando aplique el piso                       |
+Con esto:
+- El usuario ve una sola línea "Flete marítimo LCL — 1 Servicio — USD 111.86" en el P&L, coherente con lo que está vendiendo.
+- `cantidad = 1` pasa cualquier variante del check constraint.
+- El detalle W/M sigue vivo en el paso 1 (donde se captura) y en `notas` (para auditoría).
 
-Comportamiento:
+## Alcance técnico
 
-- Es una **precarga inicial**, igual que FCL: si la fila ya existe o el usuario la borró, no se vuelve a inyectar (control por `useRef` como el `precargadaRef` actual).
-- Si el usuario cambia la tarifa W/M o el mínimo en el paso 1 y regresa al paso 2, la fila **no** se sobrescribe automáticamente (respetamos ediciones manuales). Mostramos un aviso discreto tipo el banner FCL: "Precargado desde Flete LCL (paso 1). Puedes editarlo."
-- Si `tipoEmbarque` cambia de LCL a FCL (o viceversa), el efecto de precarga LCL no se dispara.
+1. **`src/features/cotizacion/components/seccionRuta/buildCostosLCLManual.ts`**
+   - Recalcular `costoTotal = round2(wm × tarifaWM)` y `ventaTotal = calcularFleteVentaLCL(...)` (ya existe).
+   - Devolver fila con `cantidad: 1`, `unidad_medida: "Servicio"`, `costo_unitario: costoTotal`, `precio_venta: ventaTotal`.
+   - Extender la nota con el W/M y la tarifa capturados.
 
-## Cambios técnicos
+2. **`src/features/cotizacion/components/seccionRuta/__tests__/buildCostosLCLManual.test.ts`**
+   - Actualizar los 2 tests que hoy asertan `cantidad = wm` y `costo_unitario = tarifaWM` para el nuevo contrato (`cantidad = 1`, `costo_unitario = costoTotal`, `precio_venta = ventaTotal`).
+   - Mantener los 3 tests de casos vacíos sin cambios.
 
-1. **`src/features/cotizacion/components/seccionRuta/buildCostosLCLManual.ts`** (nuevo): función pura que recibe `{ lclFleteManual, dimensionesLCL, pesoKg }` y devuelve `FilaCostoLocal[]` (una fila). Reutiliza `calcularTotalesLcl` y `calcularFleteVentaLCL` que ya existen.
-2. **`src/features/cotizacion/components/SeccionCostosInternosPLLocal.tsx`**: agregar un segundo `useEffect` de precarga para el caso LCL manual (paralelo al de tarifa vinculada), con su propio `precargadaLclRef`. Añadir el banner informativo cuando la fila LCL fue autogenerada.
-3. **Tests**:
-   - `buildCostosLCLManual.test.ts` con casos: sin mínimo, con mínimo activado, sin dimensiones (devuelve `[]`).
-   - Test de integración liviano en `SeccionCostosInternosPLLocal` que verifique que al montar con `lclFleteManual` presente se inyecta exactamente una fila.
-4. **`CHANGELOG.md` + `APP_VERSION`**: bump a `13.299.14`, bullet "Costos & P&L precarga el flete LCL manual capturado en el paso 1, sin duplicaciones."
+3. **Changelog / versión**
+   - `APP_VERSION` → `13.299.16`.
+   - Entrada breve en `CHANGELOG.md`: "Fix: flete LCL manual se auto-carga como 1 línea de servicio (antes usaba W/M como cantidad y rompía el check constraint de `cotizacion_costos`)".
 
-## Consideraciones
+No hay cambios de BD, ni en el paso 1, ni en el resto del flujo de costos: sólo cambia la **forma** de la fila auto-precargada.
 
-- No tocamos el paso 1: el bloque "Flete LCL (captura manual)" sigue siendo la fuente de verdad.
-- No hay cambios de esquema ni de backend.
-- Componentes se mantienen ≤200 líneas (extraemos la lógica a `buildCostosLCLManual.ts`).
-- Cumple Power of 10: sin `any`, effects con cleanup, ref guard para evitar re-precargas.
+## Analogía
 
-## Fuera de alcance
-
-- Sincronización bidireccional (editar la fila del paso 2 y que se refleje en el paso 1). Mantenemos el paso 1 como origen y el paso 2 como destino editable, igual que en FCL.
-- Cambios visuales al bloque manual del paso 1.
+Es como cuando pides un Uber: la app calcula la tarifa según km y minutos, pero en tu recibo ves **"1 viaje — $180"**, no "12.4 km × $14.51". El desglose queda en el detalle, no en la línea de venta.

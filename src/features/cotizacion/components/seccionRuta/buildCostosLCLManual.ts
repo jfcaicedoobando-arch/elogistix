@@ -45,24 +45,26 @@ export function buildCostosLCLManual({
   const { wmFacturable } = calcularTotalesLcl(dimensiones, pesoKg);
   if (!(wmFacturable > 0)) return [];
 
+  // El flete marítimo LCL se cotiza como UN servicio único (cantidad = 1).
+  // El desglose W/M vive en el paso 1 y queda documentado en `notas`.
+  const costoTotal = Math.round(wmFacturable * tarifaWM * 100) / 100;
   const ventaTotal = calcularFleteVentaLCL(wmFacturable, tarifaWM, minimo);
-  // Precio de venta unitario para que cantidad × precio_venta = ventaTotal.
-  const precioVentaUnit = Math.round((ventaTotal / wmFacturable) * 100) / 100;
   const aplicaMinimo = tarifaWM * wmFacturable < minimo;
 
+  const detalleWm = `W/M facturable ${wmFacturable} @ USD ${tarifaWM.toFixed(2)}`;
   const nota = aplicaMinimo
-    ? `Auto-cargado desde Flete LCL manual (aplica mínimo USD ${minimo.toFixed(2)})`
-    : "Auto-cargado desde Flete LCL manual";
+    ? `Auto-cargado desde Flete LCL manual — ${detalleWm} (aplica mínimo USD ${minimo.toFixed(2)})`
+    : `Auto-cargado desde Flete LCL manual — ${detalleWm}`;
 
   return [
     {
       concepto: "Flete marítimo LCL",
       moneda: "USD",
       proveedor: consolidadorNombre ?? "",
-      cantidad: wmFacturable,
-      costo_unitario: tarifaWM,
-      precio_venta: precioVentaUnit,
-      unidad_medida: "W/M",
+      cantidad: 1,
+      costo_unitario: costoTotal,
+      precio_venta: ventaTotal,
+      unidad_medida: "Servicio",
       aplica_iva: false,
       notas: nota,
     },
