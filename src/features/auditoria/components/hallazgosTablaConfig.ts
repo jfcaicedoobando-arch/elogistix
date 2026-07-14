@@ -71,8 +71,3 @@ export const severidadConfig: Record<
 
 export const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
-export function formatEta(eta: string | null): string {
-  if (!eta) return "—";
-  const [y, m, d] = eta.split("-");
-  return `${d}/${m}/${y}`;
-}
