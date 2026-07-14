@@ -130,7 +130,7 @@ function DataTableInner<T>({
             respetar los anchos declarados por columna; sin él, `w-full` del
             componente `Table` shadcn comprime las columnas y oculta las
             últimas (Estado/ETA) sin activar el scroll horizontal. */}
-        <Table className="min-w-max">
+        <Table className={tableClassName}>
           <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
           <DataTableBody
             table={table}
