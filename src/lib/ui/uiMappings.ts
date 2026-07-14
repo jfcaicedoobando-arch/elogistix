@@ -33,10 +33,10 @@ export const getModoIcon = (modo: string): string => {
 /** Estilo de círculo por modo de transporte */
 export const getModoCircleStyle = (modo: string): string => {
   const map: Record<string, string> = {
-    "Marítimo": "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400",
-    "Aéreo": "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
+    "Marítimo": "bg-info/15 text-info",
+    "Aéreo": "bg-mode-aereo-soft text-mode-aereo",
     "Terrestre": "bg-warning/15 text-warning dark:bg-warning/20",
-    "Multimodal": "bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400",
+    "Multimodal": "bg-mode-multimodal-soft text-mode-multimodal",
   };
   return map[modo] || "bg-muted text-muted-foreground";
 };

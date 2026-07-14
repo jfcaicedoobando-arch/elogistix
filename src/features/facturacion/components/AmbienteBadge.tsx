@@ -23,7 +23,7 @@ export function AmbienteBadge({ ambiente, size = "sm", className }: Props) {
       <TooltipTrigger asChild>
         <Badge
           variant="outline"
-          className={`bg-orange-100 text-orange-800 border-orange-300 font-semibold uppercase tracking-wide ${sizeCls} ${className ?? ""}`}
+          className={`bg-warning/15 text-warning border-warning/40 font-semibold uppercase tracking-wide ${sizeCls} ${className ?? ""}`}
           aria-label="Documento timbrado en ambiente sandbox — no válido ante el SAT"
         >
           <AlertTriangle className="h-3 w-3 mr-1" />

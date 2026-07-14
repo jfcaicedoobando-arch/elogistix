@@ -34,4 +34,13 @@ describe("<KpiCard />", () => {
     render(<KpiCard label="X" value="1" sublabel="Últimos 7 días" />);
     expect(screen.getByText("Últimos 7 días")).toBeInTheDocument();
   });
+
+  it("variant default no aplica bordes de color semántico", () => {
+    const { container } = render(<KpiCard label="X" value="1" />);
+    // La variant default no debe pintar borde de color (destructive/warning/info/success).
+    expect(container.querySelector(".border-destructive\\/30")).toBeNull();
+    expect(container.querySelector(".border-warning\\/30")).toBeNull();
+    expect(container.querySelector(".border-info\\/30")).toBeNull();
+    expect(container.querySelector(".border-success\\/30")).toBeNull();
+  });
 });

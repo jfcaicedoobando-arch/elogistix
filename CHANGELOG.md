@@ -6,6 +6,22 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.2] - 2026-07-14
+- **ux(cohesión visual · Lote 3B parcial)**: tokenizados 4 archivos que aún vivían en la allowlist del guardrail `no-legacy-color-literals`. Salen de la deuda:
+  - `src/lib/ui/estadoConfig.ts`: los estados `Arribo` (cyan), `En Aduana` (violet), `EIR` (orange) y `En operación` (indigo) ahora usan tokens `state-arribo`, `state-aduana`, `state-eir` y `state-operacion`. Los `shadow-[0_0_20px_rgba(...)]` se migran a `hsl(var(--state-*))` para que respondan al tema.
+  - `src/lib/ui/uiMappings.ts` (`getModoCircleStyle`): Marítimo→`bg-info/15`, Aéreo→`bg-mode-aereo-soft`, Terrestre→`bg-warning/15`, Multimodal→`bg-mode-multimodal-soft`.
+  - `src/components/shared/ModoIcon.tsx`: mismos tokens en `COLOR_MAP` y `CIRCLE_BG` — se retiran los pares `sky-*`/`purple-*` con override manual de dark mode.
+  - `src/features/facturacion/components/AmbienteBadge.tsx`: `bg-orange-100 text-orange-800 border-orange-300` → `bg-warning/15 text-warning border-warning/40`. Ahora respeta dark mode.
+- **design(tokens)**: nuevos tokens en `src/index.css` + `tailwind.config.ts`:
+  - Estados operativos: `--state-arribo`, `--state-aduana`, `--state-eir`, `--state-operacion` (cada uno con variante `-soft`).
+  - Modos de transporte: `--mode-aereo`, `--mode-multimodal` (con `-soft`).
+  - Los tokens se expresan como `state.arribo.DEFAULT`/`state.arribo.soft` para permitir escribir `bg-state-arribo/15` o `bg-state-arribo-soft`.
+- **test(cohesión visual)**: 2 tests nuevos + 1 caso adicional cubriendo la migración:
+  - `src/lib/ui/__tests__/estadoConfig.test.ts` (3 tests): regresión que impide reintroducir literales cyan/violet/orange/indigo en `ESTADO_CONFIG` y valida el fallback `muted`.
+  - `src/components/shared/__tests__/ModoIcon.test.tsx` (3 tests): renderiza los 4 modos, verifica que ninguno inyecta literales Tailwind y que cada uno cae en el token correcto.
+  - `src/components/shared/__tests__/KpiCard.test.tsx`: nuevo caso que asegura que la variant `default` no pinta bordes semánticos.
+- **arch(guardrail)**: 4 entradas removidas del `ALLOWLIST` de `no-legacy-color-literals.test.ts` (`estadoConfig.ts`, `uiMappings.ts`, `ModoIcon.tsx`, `AmbienteBadge.tsx`). El segundo test del guardrail (`no hay entradas obsoletas`) fuerza que la lista se mantenga mínima.
+
 ## [13.300.1] - 2026-07-14
 - **test(cohesión visual · red de respaldo)**: cerrada la brecha de tests detectada en la auditoría del Lote 1+3+5. 3 archivos nuevos:
   - `AuditoriaKpis.test.tsx` (3 tests): valida que los 3 KPIs de auditoría renderizan con `KpiCard` canónico y aplican las variantes semánticas `destructive`/`warning`/`info` esperadas.
