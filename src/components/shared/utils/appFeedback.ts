@@ -88,7 +88,10 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   // sin que el usuario abriera "Ver detalles" Sentry nunca veía el error.
   // Reportamos sólo cuando hay `error` real (skip puro form-validation que
   // pasa `errors`/`message` sin objeto Error, para no inflar la cuota).
-  if (error !== undefined && error !== null) {
+  //
+  // 13.300.7: además, filtramos errores de autorización (RLS/guards del
+  // backend). No son bugs — mostramos el toast pero NO enviamos a Sentry.
+  if (error !== undefined && error !== null && !isAuthorizationError(error)) {
     reportCaughtError(
       error,
       {
@@ -106,6 +109,19 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
       },
     );
   }
+}
+
+/**
+ * Detecta errores de autorización esperados (guards RLS / RPC del backend).
+ * Estos NO deben reportarse a Sentry — son parte del flujo normal cuando un
+ * usuario intenta una acción para la que no tiene permisos.
+ */
+export function isAuthorizationError(err: unknown): boolean {
+  const msg =
+    err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  return /no tienes permisos|permission denied|not authorized|forbidden|acceso denegado/i.test(
+    msg,
+  );
 }
 
 /** Emite un toast de advertencia (no bloquea). */
