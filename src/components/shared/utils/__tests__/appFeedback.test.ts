@@ -29,6 +29,7 @@ beforeEach(() => {
   m.error.mockClear();
   m.success.mockClear();
   m.warning.mockClear();
+  reportCaughtErrorMock.mockClear();
 });
 
 describe("appFeedback (sonner)", () => {
