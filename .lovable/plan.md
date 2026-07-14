@@ -1,35 +1,25 @@
 ## Problema
 
-`buildPaso1Data → partesRuta` llama `v.validezPropuesta.toISOString()`, pero `validezPropuesta` en tiempo de ejecución es un **string**, no un `Date`. El tipo dice `Date | undefined`, así que TS no lo detecta.
+Al intentar eliminar un pago, el usuario recibe **"Error al eliminar pago"** con `errorDetails: {}` — no sabemos qué falló porque el `catch` en `FacturaPagosSection.tsx` está vacío (`catch { ... }` sin capturar el error) y descarta el mensaje real del backend.
 
-## Causa raíz
+Además, hay un **doble toast**: el hook `useEliminarPagoFactura` ya muestra `notifyError` con `error.message` en su `onError`, y el componente muestra otro toast genérico encima, pisando el diagnóstico útil.
 
-El draft del wizard se persiste en `localStorage` vía `useCotizacionDraftAutosave` (`JSON.stringify(values)`). Al pasar por JSON, `Date` → string ISO. Al recargar la página, `loadDraft` devuelve el objeto tal cual y `form.reset(draft.values)` mete un string en `validezPropuesta`. Al guardar el Paso 1, el mapper explota.
+### Hipótesis del origen real
+La factura del caso (`5945e7ca…`) está en estado **`Pagada`** y no tiene REP timbrado, por lo que ni RLS, ni constraints, ni triggers deberían bloquear el soft delete. La causa raíz no es visible hasta que dejemos de perder el mensaje del backend. Este cambio nos deja ver el error real la próxima vez que el usuario reproduzca el flujo.
 
-Analogía: guardaste la fecha en una postal (JSON) y al llegar sólo tienes el texto de la fecha impreso; ya no es un reloj con manecillas (`Date`) al que puedas pedirle "dame tu ISO".
+## Cambios (analogía: hoy la app "traga" el papelito con el error; vamos a leerlo antes de tirarlo)
 
-## Fix propuesto
+1. **`src/features/facturacion/components/detalle/FacturaPagosSection.tsx`**
+   - Reemplazar el `catch { ... }` vacío por `catch (error) { ... }`.
+   - Pasar `error` a `notifyError({ error, ... })` para que el toast incluya el mensaje real de Supabase.
+   - Quitar el toast duplicado: dejar que el hook `useEliminarPagoFactura` (que ya tiene `onError` con `notifyError`) sea la única fuente del toast de error. El componente sólo maneja el éxito (bitácora + notifySuccess + cerrar diálogo).
 
-Dos capas — defensa y origen — para que no vuelva a pasar:
+2. **`src/features/facturacion/hooks/usePagosFactura.ts`**
+   - Confirmar que el `onError` existente ya adjunta `error` — sí lo hace (línea 44). Sin cambios.
 
-1. **`domain/mappers/cotizacion.ts` — defensivo en el boundary**
-   Normalizar `validezPropuesta` con un helper local `toDate(x)`:
-   - `Date` válida → misma
-   - `string` → `new Date(string)` (si NaN → null)
-   - otro → null
-   Reemplazar la línea 88 para usar el helper y evitar el crash.
+3. **Versionado**
+   - Bump `APP_VERSION` a `13.299.7`.
+   - Entrada en `CHANGELOG.md`: "Fix: propagar detalle real del error al eliminar pago (antes se mostraba mensaje genérico)".
 
-2. **`hooks/wizard/useCotizacionDraftAutosave.ts` — revivir Date al cargar**
-   En `loadDraft`, después de validar el shape, revivir campos `Date` conocidos del draft (`values.validezPropuesta`, y por precaución `values.tarifaHasta` si existiera en el estado). Función `reviveDates(values)` que convierte strings ISO en `Date`.
-
-## Archivos a modificar
-
-- `src/features/cotizacion/domain/mappers/cotizacion.ts` — helper `toDate` + usarlo en línea 88.
-- `src/features/cotizacion/hooks/wizard/useCotizacionDraftAutosave.ts` — revivir `validezPropuesta` (y otros campos Date del form) al cargar.
-- `src/features/cotizacion/domain/mappers/__tests__/cotizacion.test.ts` — un test que pase un string ISO en `validezPropuesta` y verifique que `buildPaso1Data` no truena y produce el `validez_propuesta` correcto.
-- `CHANGELOG.md` + `APP_VERSION` → `13.299.6`.
-
-## Verificación
-
-- `bunx vitest run src/features/cotizacion/domain/mappers/__tests__/cotizacion.test.ts`
-- Recargar `/cotizaciones/nueva` con un draft persistido y avanzar Paso 1.
+## Fuera de alcance
+- No tocar RLS ni triggers de `pagos_factura`: con los datos actuales del caso no hay evidencia de bloqueo por policy/constraint. Si tras el fix diagnóstico el mensaje real apunta a RLS o a un trigger, abrimos un segundo plan con esa evidencia.
