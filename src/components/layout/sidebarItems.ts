@@ -97,8 +97,8 @@ export const SIDEBAR_SUPER_ADMIN_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
-  { title: "Buscar tarifa", url: "/costeo/buscar", icon: Search },
-  { title: "Tarifas marítimas", url: "/costeo/tarifas", icon: Calculator },
+  { title: "Comparador Top 3", url: "/costeo/buscar", icon: Search },
+  { title: "Catálogo de tarifas", url: "/costeo/tarifas", icon: Calculator },
   { title: "Rutas CN → MX", url: "/costeo/rutas", icon: Route },
   { title: "Agentes", url: "/costeo/agentes", icon: Users },
   { title: "Navieras (Condiciones)", url: "/costeo/navieras", icon: Anchor },
