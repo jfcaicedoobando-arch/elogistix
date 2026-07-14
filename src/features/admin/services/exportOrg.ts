@@ -21,7 +21,6 @@ export {
   EXPORT_GROUPS,
   EXPORT_TABLES,
   FORBIDDEN_EXPORT_TABLES,
-  type ExportTable,
 } from "./exportOrg.tables";
 export {
   buildExportManifest,
