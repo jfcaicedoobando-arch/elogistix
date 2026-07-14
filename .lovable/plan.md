@@ -1,77 +1,92 @@
-# Auditoría del Lote 1+3+5 + arranque de Lote 2
+# Auditoría v13.300.1 + Lote 3B (parcial)
 
-## Qué se hizo el turno pasado (recordatorio)
+## Fase A — Auditoría del turno anterior
 
-`v13.300.0` unificó KPI Cards (`AuditoriaKpis`, `GarantiasKpiCards`), homogeneizó tipografía en KpiCards locales de P&L/CxP, migró 6 usos de `text-green-600`/`text-red-600` a tokens semánticos y alineó grids KPI a `gap-4`.
+### Qué se hizo (v13.300.1)
+- 3 tests nuevos: `AuditoriaKpis`, `GarantiasKpiCards`, guardrail `no-legacy-color-literals`.
+- 2 `<h1>` migrados a `text-display` (`DetailHeader`, `WizardShell`).
+- Comentario obsoleto arreglado en `PageHeader`.
 
-**Cobertura de tests actual**: el `KpiCard` canónico ya tiene 5 tests que cubren `variant`, `delta`, `onClick` y `sublabel` (`src/components/shared/__tests__/KpiCard.test.tsx`). Los consumidores migrados (`AuditoriaKpis`, `GarantiasKpiCards`) no tienen tests — riesgo bajo (son wrappers presentacionales), pero conviene un smoke test para blindarlos ante refactors.
+### Hallazgos
+1. **OK** — Los tests existentes de `DetailHeader` y `WizardShell` no asertan sobre `text-2xl`, así que la migración no rompió snapshots. Verificado con `grep`.
+2. **Gap menor** — El guardrail funciona pero no valida que la **ALLOWLIST no crezca sin justificación**. Cada entrada tiene comentario, pero no hay tope numérico ni convención `// Lote X`.
+3. **Gap de cobertura** — `KpiCard` variant `default` (sin variant) no tiene test dedicado; sólo se prueban las variantes semánticas. Riesgo bajo pero cierra la matriz.
+4. **Deuda visible** — 17 archivos en allowlist. Los más fáciles de tokenizar (sin gradientes complejos ni escalas continuas) son: modos de transporte (2 archivos), `estadoConfig` (1), `AmbienteBadge` (1). Total: **4 archivos** que pueden salir de la allowlist en un turno.
 
-**Riesgo real detectado**: no hay guardrail que impida regresiones de color literal. Un futuro cambio podría volver a introducir `text-red-600` sin que CI se queje. El plan lo lista en el "Contrato de tokens" pero no hay red de respaldo.
+### Tests a agregar en esta fase
+- `src/components/shared/__tests__/KpiCard.test.tsx` — 1 caso extra que verifica variant `default` (sin borde de color, sin `bg-*/5`).
+- `src/lib/ui/__tests__/estadoConfig.test.ts` — smoke que verifica que **ningún** valor de `bar`/`text` contenga literales `bg-orange-*`/`text-indigo-*` (protege la migración de esta fase).
+- `src/components/shared/__tests__/ModoIcon.test.tsx` — smoke que renderiza los 4 modos y verifica que usa clases tokenizadas.
 
 ---
 
-## Fase A — Auditoría + tests (este turno, ~10 archivos)
+## Fase B — Lote 3B parcial: tokenizar 4 archivos
 
-### A1. Smoke tests para consumidores migrados
+### B1. Nuevos tokens en `src/index.css`
+Agregar bajo la sección de tokens categóricos:
 
-- `src/features/auditoria/components/__tests__/AuditoriaKpis.test.tsx` — renderiza los 3 KPIs (Críticos/Altos/Medios), verifica que usa las variantes `destructive`/`warning`/`info` (buscando las clases `border-destructive/30`, `border-warning/30`, `border-info/30` que emite `KpiCard`) y que los sublabels se muestran.
-- `src/features/embarques/components/garantias/__tests__/GarantiasKpiCards.test.tsx` — renderiza los 4 KPIs, formatea moneda en USD y muestra "—" cuando `diasPromRecuperacion === null`.
+```css
+/* Modos de transporte (categóricos, no semánticos) */
+--mode-maritimo: 217 91% 50%;         --mode-maritimo-soft: 214 100% 96%;
+--mode-aereo: 199 89% 48%;            --mode-aereo-soft: 204 100% 96%;
+--mode-terrestre: 25 95% 53%;         --mode-terrestre-soft: 33 100% 96%;
+--mode-multimodal: 262 83% 58%;       --mode-multimodal-soft: 270 100% 97%;
 
-Ambos tests son de <30 líneas cada uno, siguiendo el patrón de `KpiCard.test.tsx`.
-
-### A2. Guardrail de arquitectura: prohibir literales de color legacy
-
-Nuevo test `src/__tests__/architecture/no-legacy-color-literals.test.ts` que camina `src/**` (excluyendo `__tests__`, `.test.*`, `test/`, `constants/tailwind*` si existe) y falla si aparece cualquiera de:
-
+/* Estados operativos extra usados por estadoConfig */
+--state-transito: 199 89% 48%;        /* cyan */
+--state-entregado: 262 83% 58%;       /* violeta */
+--state-alerta: 25 95% 53%;           /* naranja */
 ```
-text-(green|red|yellow|orange|blue|slate|gray|zinc)-(500|600|700|800|900)
-bg-(green|red|yellow|orange)-(50|100|200|300)
+
+Duplicar los valores en el bloque `.dark` con ajustes de luminosidad (misma paleta, +10% lightness donde aplique). No tocamos otros tokens.
+
+### B2. `tailwind.config.ts`
+Extender `colors` con:
+```ts
+mode: {
+  maritimo: "hsl(var(--mode-maritimo))",
+  "maritimo-soft": "hsl(var(--mode-maritimo-soft))",
+  aereo: "hsl(var(--mode-aereo))",
+  ...
+},
+state: {
+  transito: "hsl(var(--state-transito))",
+  ...
+},
 ```
 
-Salvo en una **ALLOWLIST** documentada con comentarios (por ejemplo: `CobranzaBlock` que aún usa la escalera aging pendiente de tokenizar en Lote 3B, y `estadoConfig.ts` pendiente de migrar). Sigue el patrón exacto de `no-raw-table.test.ts` (uso de `walk`, `relPath`, comentario "cómo pedir excepción").
+### B3. Migraciones
+- **`src/lib/ui/uiMappings.ts`**: `bg-blue-100 text-blue-600` → `bg-mode-maritimo-soft text-mode-maritimo`, etc. para los 4 modos.
+- **`src/components/shared/ModoIcon.tsx`**: mismo mapeo con clases tokenizadas.
+- **`src/lib/ui/estadoConfig.ts`**: `bg-cyan-500` → `bg-state-transito`, `bg-violet-500` → `bg-state-entregado`, `bg-orange-500` → `bg-state-alerta`. Y sus contrapartes `text-*-600`.
+- **`src/features/facturacion/components/AmbienteBadge.tsx`**: revisar los ~2-3 literales (probablemente `bg-yellow-*`/`text-yellow-*` para "Prueba") → usar `warning`/`success` semánticos.
 
-**Por qué**: es la única salvaguarda real contra que la cohesión visual se degrade turno a turno. Coste: 1 archivo, ~50 líneas.
+### B4. Actualizar allowlist
+Remover de `src/__tests__/architecture/no-legacy-color-literals.test.ts`:
+- `src/lib/ui/estadoConfig.ts`
+- `src/lib/ui/uiMappings.ts`
+- `src/components/shared/ModoIcon.tsx`
+- `src/features/facturacion/components/AmbienteBadge.tsx`
 
-### A3. Ejecutar `vitest run` de los 3 tests nuevos para confirmar verde.
+El segundo test del guardrail (`no hay entradas obsoletas`) forzará que se removieran realmente.
 
----
-
-## Fase B — Lote 2A: Tipografía canónica (mismo turno si A pasa limpio)
-
-El Lote 2 completo del plan original toca 25+ archivos. Lo parto en **2A (quirúrgico, 3 archivos)** ahora y **2B (limpieza masiva de overrides en `CardTitle`)** para un turno futuro, porque 2B necesita revisión visual página por página.
-
-### B1. Migrar `<h1>` de página a `text-display` (C3)
-
-- `src/components/shared/DetailHeader.tsx:63` — cambiar `text-2xl font-bold` → `text-display font-bold`.
-- `src/features/cotizacion/components/wizard/WizardShell.tsx:120` — mismo cambio.
-
-Ambos ya tienen tests (`DetailHeader.test.tsx`, `WizardShell.test.tsx`). Revisar si algún test snapshotea la clase `text-2xl`; si sí, actualizar el aserto.
-
-### B2. Limpiar comentario desactualizado (L3)
-
-- `src/components/shared/PageHeader.tsx:25` — comentario menciona `text-2xl` pero el código real usa `text-display`. Actualizar el comentario.
-
-### B3. Bump de versión + changelog
-
-- `APP_VERSION` → `13.300.1` (patch: solo tipografía + tests, sin cambios funcionales).
-- Entrada en `CHANGELOG.md` (root) explicando: 3 tests nuevos (2 smoke + 1 guardrail), migración de 2 `<h1>` a `text-display`, comentario corregido.
+### B5. Bump + changelog
+- `APP_VERSION` → `13.300.2`
+- Entrada en `CHANGELOG.md` explicando: tokens de modo/estado, 4 archivos fuera de allowlist, 3 tests nuevos.
 
 ---
 
-## Fase C — Verificación final
-
-- `vitest run` del suite completo debe pasar (>= mismo umbral que antes; nunca bajar coverage según `mem://principles/coverage-threshold`).
-- Confirmar visualmente en `/clientes/:id` (`DetailHeader`) y `/cotizaciones/nueva` (`WizardShell`) que el `<h1>` sigue siendo legible a 1920×1080 con `text-display`.
+## Fase C — Verificación
+- `vitest run` — todos los tests actuales + los 3 nuevos deben pasar.
+- Revisar visualmente `ModoIcon` en la tabla de embarques y las barras de `estadoConfig` en el dashboard: los colores deben verse iguales (los tokens replican la paleta original).
 
 ---
 
-## Fuera de alcance (siguientes turnos)
-
-- **Lote 2B**: barrido de `CardTitle` con overrides `text-lg`/`text-base`/`text-sm` en 25+ archivos — requiere pase visual módulo por módulo.
-- **Lote 4**: 10 tablas HTML nativas → shadcn.
-- **Lote 6**: `DemoAccessDialog` → `FormDialogShell`, chips con `Button variant="ghost"`.
-
-Estos quedan documentados en `.lovable/plan.md` sin cambios.
+## Fuera de alcance (turnos siguientes)
+- Lote 3B remanente (13 archivos): heatmaps de P&L (requieren token gradiente), CobranzaBlock aging (requiere escala `--aging-1..4`), dashboards ejecutivos.
+- Lote 2B: overrides de `CardTitle`.
+- Lote 4: tablas HTML → shadcn.
+- Lote 6: `DemoAccessDialog` + chips.
 
 ---
 
@@ -79,20 +94,24 @@ Estos quedan documentados en `.lovable/plan.md` sin cambios.
 
 **Archivos a crear**:
 ```text
-src/features/auditoria/components/__tests__/AuditoriaKpis.test.tsx
-src/features/embarques/components/garantias/__tests__/GarantiasKpiCards.test.tsx
-src/__tests__/architecture/no-legacy-color-literals.test.ts
+src/lib/ui/__tests__/estadoConfig.test.ts
+src/components/shared/__tests__/ModoIcon.test.tsx
 ```
 
 **Archivos a editar**:
 ```text
-src/components/shared/DetailHeader.tsx           (línea 63)
-src/features/cotizacion/components/wizard/WizardShell.tsx  (línea 120)
-src/components/shared/PageHeader.tsx             (línea 25 — comentario)
-src/constants/appVersion.ts                      (13.300.0 → 13.300.1)
-CHANGELOG.md                                     (nueva entrada)
+src/index.css                                         (+ tokens mode/state)
+tailwind.config.ts                                    (+ colors mode/state)
+src/lib/ui/uiMappings.ts                              (4 líneas)
+src/components/shared/ModoIcon.tsx                    (~6 líneas)
+src/lib/ui/estadoConfig.ts                            (~6 líneas)
+src/features/facturacion/components/AmbienteBadge.tsx (~3 líneas)
+src/__tests__/architecture/no-legacy-color-literals.test.ts  (remover 4 entradas)
+src/components/shared/__tests__/KpiCard.test.tsx      (+1 caso)
+src/constants/appVersion.ts                           (13.300.1 → 13.300.2)
+CHANGELOG.md                                          (nueva entrada)
 ```
 
 **Riesgos**:
-- El guardrail A2 puede fallar de entrada si detecta literales aún no tokenizados (`CobranzaBlock`, `estadoConfig`, mapeos de aging). Mitigación: usar la ALLOWLIST desde el arranque para no bloquear CI. Cualquier literal fuera de la lista fuerza al autor a agregarlo explícitamente, lo que documenta la deuda.
-- El cambio de `text-2xl` → `text-display` en `DetailHeader`/`WizardShell` puede cambiar visualmente la escala del título. `text-display` es un token fluido; revisar en `index.css` que la escala en desktop sea comparable (~28-32px) para evitar sorpresas.
+- Los HSL de los tokens nuevos podrían no coincidir 100% con las paletas de Tailwind (`cyan-500`, `violet-500`, etc.). Mitigación: uso los valores oficiales de Tailwind convertidos a HSL. Diferencia visual <2%.
+- `AmbienteBadge` puede tener más literales de los estimados; si aparecen paletas fuera del alcance de `warning`/`success`, dejo el archivo en allowlist y documento por qué (no bloqueo el turno por eso).
