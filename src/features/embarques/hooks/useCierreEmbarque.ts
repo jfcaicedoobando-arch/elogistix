@@ -40,6 +40,7 @@ function invalidarTodo(qc: ReturnType<typeof useQueryClient>, embarqueId: string
   qc.invalidateQueries({ queryKey: queryKeys.embarques.single(embarqueId) });
   qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
   qc.invalidateQueries({ queryKey: queryKeys.comisiones.all });
+  qc.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
 }
 
 export function useCerrarEmbarque(embarqueId: string) {

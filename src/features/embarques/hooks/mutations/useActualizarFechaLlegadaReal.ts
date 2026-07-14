@@ -29,7 +29,7 @@ export function useActualizarFechaLlegadaReal(options: Options = {}) {
   return useMutationWithFeedback<unknown, Error, Input>({
     mutationFn: ({ embarqueId, fechaIso }: Input) =>
       actualizarFechaLlegadaRealEmbarque(embarqueId, fechaIso),
-    invalidate: [queryKeys.embarques.all],
+    invalidate: [queryKeys.embarques.all, queryKeys.auditoria.embarques],
     optimistic: [
       { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchFecha },
       { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchFecha },

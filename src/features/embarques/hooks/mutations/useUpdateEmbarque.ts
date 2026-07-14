@@ -43,6 +43,7 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueActualizado.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       notifySuccess(undefined, { title: "Embarque actualizado" });
     },
     onError: (error: Error) => {

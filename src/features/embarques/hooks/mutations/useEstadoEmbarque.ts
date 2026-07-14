@@ -48,6 +48,7 @@ export function useAvanzarEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
     // Toasts (éxito y error) los maneja el caller (useEmbarqueEstadoActions)
     // para evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
@@ -80,7 +81,7 @@ export function useSyncEstadoEmbarque() {
         usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
       );
     },
-    invalidate: [queryKeys.embarques.all],
+    invalidate: [queryKeys.embarques.all, queryKeys.auditoria.embarques],
     optimistic: [
       { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEstado },
       { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchEstado },
@@ -116,6 +117,7 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
     // Toasts (éxito y error) manejados por el caller para evitar doble notificación.
     onError: () => {

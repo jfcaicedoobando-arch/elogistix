@@ -40,6 +40,7 @@ export function useCreateEmbarque() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       notifySuccess(undefined, { title: "Embarque creado" });
     },
     onError: (error: Error) => {
@@ -69,6 +70,7 @@ export function useDuplicarEmbarque() {
       duplicarEmbarqueRpc(embarqueOrigen.id, copias, requestId ?? newRequestId()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       notifySuccess(undefined, { title: "Embarque duplicado" });
     },
     onError: (error: Error) => {
