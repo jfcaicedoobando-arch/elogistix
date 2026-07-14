@@ -1,11 +1,7 @@
 import { Link } from "react-router-dom";
-import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
-import { ModoIcon } from "@/components/shared/ModoIcon";
-import { ProformaBadge } from "./ProformaBadge";
-import { CobroClienteBadge } from "./CobroClienteBadge";
+import { EmbarqueStatusChip } from "./EmbarqueStatusChip";
 import { EmbarqueBadgeAdmin } from "./EmbarqueBadgeAdmin";
 import { EmbarqueHeaderDialogs } from "./EmbarqueHeaderDialogs";
 import { EmbarqueDetalleHeaderActions } from "./EmbarqueDetalleHeaderActions";
