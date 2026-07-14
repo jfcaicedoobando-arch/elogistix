@@ -113,6 +113,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
     try {
       const feedback = Sentry.getFeedback?.();
       if (feedback) {
+        if (eventId) {
+          Sentry.getCurrentScope().setTag("crash_event_id", eventId);
+        }
         const form = await feedback.createForm();
         form.appendToDom();
         form.open();
