@@ -58,7 +58,8 @@ export async function insertTarifaConRecargos(
   organizationId: string,
   input: TarifaInput,
 ): Promise<CosteoTarifa> {
-  const { recargos, ...tarifa } = input;
+  const { recargos, ...rest } = input;
+  const tarifa = sanitizeTarifaDates(rest);
   const data = await unwrap(
     supabase
       .from("costeo_tarifas")
