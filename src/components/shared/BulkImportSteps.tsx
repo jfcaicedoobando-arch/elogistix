@@ -56,7 +56,7 @@ export function PreviewStep<T>({ fileName, preview, error }: PreviewStepProps<T>
           {fileName ?? "Archivo"}
         </span>
         <div className="flex gap-2 text-xs">
-          <span className="rounded-md bg-green-50 text-green-700 px-2 py-1">
+          <span className="rounded-md bg-success/10 text-success px-2 py-1">
             {valid.length} válidos
           </span>
           <span
@@ -64,7 +64,7 @@ export function PreviewStep<T>({ fileName, preview, error }: PreviewStepProps<T>
               "rounded-md px-2 py-1",
               invalid.length === 0
                 ? "bg-muted text-muted-foreground"
-                : "bg-red-50 text-red-700",
+                : "bg-destructive/10 text-destructive",
             )}
           >
             {invalid.length} con error

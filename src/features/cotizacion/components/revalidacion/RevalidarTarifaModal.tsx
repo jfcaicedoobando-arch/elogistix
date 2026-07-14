@@ -39,7 +39,7 @@ export function RevalidarTarifaModal({
       {esBloqueante ? (
         <AlertCircle className="h-4 w-4 text-destructive" aria-hidden />
       ) : (
-        <AlertTriangle className="h-4 w-4 text-yellow-600" aria-hidden />
+        <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
       )}
       {esBloqueante
         ? "Tarifa requiere re-aprobación de ventas"
