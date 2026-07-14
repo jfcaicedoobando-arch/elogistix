@@ -117,6 +117,7 @@ export function useReabrirEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
     // Toasts (éxito y error) manejados por el caller para evitar doble notificación.
     onError: () => {
