@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { revisionKey } from "@/features/auditoria/hooks";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 import {
-  formatEta,
   reglaLabel,
   reglaToTab,
   severidadConfig,
@@ -76,10 +75,6 @@ export function HallazgosTabla(props: Props) {
         );
       } },
     { id: "regla", header: "Regla", meta: { width: "w-[160px]", className: "text-xs text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
-    { id: "cliente", header: "Cliente", meta: { className: "truncate max-w-[180px] text-xs" },
-      cell: ({ row }) => <span title={row.original.cliente_nombre}>{row.original.cliente_nombre || "—"}</span> },
-    { id: "estado", header: "Estado", meta: { width: "w-[110px]", className: "text-xs text-muted-foreground" }, cell: ({ row }) => row.original.estado },
-    { id: "eta", header: "ETA", meta: { width: "w-[100px]", className: "text-xs tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
     { id: "detalle", header: "Detalle", meta: { className: "text-xs" },
       cell: ({ row }) => {
         return <HallazgoDetalleCell hallazgo={row.original} />;
