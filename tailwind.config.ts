@@ -123,6 +123,14 @@ export default {
           aereo:      { DEFAULT: "hsl(var(--mode-aereo))",      soft: "hsl(var(--mode-aereo-soft))" },
           multimodal: { DEFAULT: "hsl(var(--mode-multimodal))", soft: "hsl(var(--mode-multimodal-soft))" },
         },
+        // Lote 3B (v13.300.6) — escala de aging (5 niveles) para cartera vencida.
+        aging: {
+          1: "hsl(var(--aging-1))",
+          2: "hsl(var(--aging-2))",
+          3: "hsl(var(--aging-3))",
+          4: "hsl(var(--aging-4))",
+          5: "hsl(var(--aging-5))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

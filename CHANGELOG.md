@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.6] - 2026-07-14
+- **audit(v13.300.5)**: los 4 archivos migrados (banners revalidación, BulkImportSteps, NotasCreditoSection) están cubiertos por el guardrail global; `NotasCreditoBadge.test.tsx` cubre explícitamente los tokens `success`/`info`. Sin gaps de test.
+- **ux(cohesión visual · Lote 3B — aging cartera)**: definida la escala `--aging-1..5` (verde → ámbar → naranja → rojo → rojo oscuro) en `src/index.css` con calibración light + dark, y expuesta como `bg-aging-{1..5}` en `tailwind.config.ts`.
+  - `src/features/dashboard/finance/components/CobranzaBlock.tsx`: 5 buckets (0-15/16-30/31-60/61-90/90+) migrados de `bg-orange-100`/`bg-red-100..300` a `bg-aging-1..5` con opacidad ascendente (20% → 40%). Badge de días vencidos migrado a `border-destructive/40 text-destructive`.
+  - `src/features/dashboard/direccion/components/CarteraSection.tsx`: 4 buckets (Corriente/1-30/31-60/+60) migrados de `bg-emerald-500`/`bg-amber-400`/`bg-orange-500`/`bg-destructive` a `bg-aging-1/2/3/5` (salta el 4 para conservar el contraste de "muy vencido").
+- **test(aging)**: `src/features/dashboard/__tests__/aging-tokens.test.ts` — 4 casos que blindan la escala: verifica presencia de `bg-aging-1..5` en CobranzaBlock, mapeo correcto por bucket en CarteraSection y ausencia de literales emerald/amber/orange/red.
+- **allowlist**: pasó de 7 a 6 entradas (removidos CobranzaBlock y CarteraSection; agrupados los 5 heatmaps P&L en un solo bloque). Lo que queda son los heatmaps de márgenes P&L (escala continua que aún requiere token gradiente) y el preview de logo de marketing.
+
 ## [13.300.5] - 2026-07-14
 - **audit(v13.300.4)**: los 4 archivos migrados el turno anterior estaban cubiertos por el guardrail `no-legacy-color-literals` (que asegura que no vuelvan literales), así que no requerían tests adicionales por componente. Verificado.
 - **ux(cohesión visual · Lote 3B — banners/imports/CXP)**: 4 archivos más migrados a tokens semánticos y removidos de la allowlist:
