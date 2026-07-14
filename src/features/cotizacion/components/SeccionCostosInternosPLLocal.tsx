@@ -9,6 +9,8 @@ import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVincu
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
+import { buildCostosLCLManual } from "@/features/cotizacion/components/seccionRuta/buildCostosLCLManual";
+import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
 
