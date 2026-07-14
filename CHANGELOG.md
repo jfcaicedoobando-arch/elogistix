@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.12] - 2026-07-14
+- **ui(embarques · header)**: se consolidan los 6 badges del detalle de embarque (`Estado`, `Modo`, `Proforma`, `Cobro cliente`, `Admin`, `Generado desde COT-…`) en un solo chip compuesto para reducir la saturación visual reportada.
+  - Nuevo componente `src/features/embarques/components/EmbarqueStatusChip.tsx`: un solo `Badge` con fondo semántico del estado (`getEstadoColor`), icono de modo + separadores `·`, y sub-estado financiero unificado. La resolución del sub-estado (`resolveFinancieroInfo`) prioriza el más avanzado: `Cobrado` > `Cobro parcial` > `Proforma` > `Sin proforma`.
+  - `src/features/embarques/components/EmbarqueDetalleHeader.tsx`: sustituye los 4 badges de la fila del título por `<EmbarqueStatusChip />`. `EmbarqueBadgeAdmin` (sólo admin) queda al lado del chip.
+  - "Generado desde COT-…" deja de ser badge: ahora es un `<Link>` de texto discreto (`text-xs hover:underline`) junto al nombre del cliente. Cubre los 3 casos: con folio (link), sin folio (texto muted) y sin cotización vinculada (texto warning).
+  - Tests: `src/features/embarques/components/__tests__/EmbarqueStatusChip.test.tsx` valida la matriz de sub-estados financieros y el render del chip.
+  - `ProformaBadge` y `CobroClienteBadge` no se eliminan (podrían usarse en listas u otros contextos), sólo dejan de renderizarse en este header.
+
 ## [13.300.11] - 2026-07-14
 - **ui(auditoría · hallazgos)**: se retiran las columnas `Cliente`, `Estado` y `ETA` de la tabla en `/auditoria` (`src/features/auditoria/components/HallazgosTabla.tsx`). Info redundante — el cliente y el estado ya aparecen dentro de la celda `Detalle`, y ETA se ve al abrir el hallazgo. La tabla queda más compacta y legible.
 
