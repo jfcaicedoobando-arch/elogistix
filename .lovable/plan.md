@@ -1,70 +1,58 @@
-## Contexto
+## Objetivo
 
-Marta (gerente_operaciones) intentó dar clic en "Aceptar (manual)" o "Rechazar (manual)" en `/proformas/…` y la app le mostró un toast/pantalla de error: *"You do not have permission to change the customer status on this proforma."* (traducción visible del mensaje que devuelve el backend).
+El header de `/embarques/:id` muestra hoy hasta 6 badges (`Estado`, `Modo`, `Proforma`, `Admin`, `Cobro cliente`, `Generado desde COT-…`) que compiten con el título y con el nombre del cliente. Vamos a consolidarlos en **un solo chip de estado unificado** y convertir la referencia a cotización en un link discreto de texto.
 
-## Causa raíz
+## Estado final propuesto
 
-Hay **inconsistencia entre el frontend y el RPC de la base de datos** sobre quién puede cambiar manualmente el estado del cliente en una proforma:
-
-| Capa | Roles permitidos |
-|---|---|
-| Frontend — `src/hooks/shared/usePermissions.ts:136` (`RESPONDER_PROFORMA_MANUAL`) | `super_admin`, `admin_org`, `admin`, `gerente_comercial`, `gerente_operaciones` |
-| DB — RPC `actualizar_estado_cliente_proforma` (migración `20260702174034`, línea 78) | `admin`, `admin_org`, `contador`, `operador` (+ `super_admin` global) |
-
-- El frontend le muestra los botones a Marta porque su rol (`gerente_operaciones`) está en la lista.
-- La DB rechaza el UPDATE porque los gerentes no están en la lista del guardia.
-- Nota: la política de v13.145.8 (visible en el comentario de `usePermissions.ts:134`) fue: "sólo admins y gerentes deben poder responder manualmente". La migración del RPC (creada meses después) copió la lista vieja (contador/operador) y **se olvidó de reflejar** la política v13.145.8. Este es el desfase que hay que corregir.
-
-## Plan
-
-### Paso 1 — Alinear el RPC con el frontend
-
-Nueva migración SQL que redefine `public.actualizar_estado_cliente_proforma(uuid, text, text)` para que su chequeo de rol coincida exactamente con `RESPONDER_PROFORMA_MANUAL` del frontend:
-
-```sql
-CREATE OR REPLACE FUNCTION public.actualizar_estado_cliente_proforma(...)
-...
-SELECT EXISTS (
-  SELECT 1 FROM public.organization_members om
-   WHERE om.user_id = auth.uid()
-     AND om.organization_id = v_proforma.organization_id
-     AND om.role IN (
-       'admin'::app_role,
-       'admin_org'::app_role,
-       'gerente_operaciones'::app_role,
-       'gerente_comercial'::app_role
-     )
-) OR public.has_role(auth.uid(), 'super_admin'::app_role) INTO v_is_authorized;
+```text
+ELIMP00287  [ En Tránsito · Marítimo · Proforma · Por cobrar ]
+Indimex Trading · Cotización origen: COT-2026-0087
 ```
 
-- Se **quitan** `contador` y `operador` de la lista (siguiendo la política v13.145.8 declarada en `usePermissions.ts`).
-- Se **añaden** `gerente_operaciones` y `gerente_comercial`.
-- El resto del cuerpo del RPC no cambia (misma bitácora, mismo update, misma liberación de conceptos en rechazo, mismos `REVOKE`/`GRANT EXECUTE`).
-- Se traduce al español el mensaje de excepción (ya está en español: *"No tienes permisos para cambiar el estado del cliente en esta proforma."*), pero el `RespuestaClienteManualDialog.tsx:63` ya intercepta el texto con la regex `/no tienes permisos|permission denied|.../i`, así que el usuario verá un toast en español, no la pantalla técnica de ErrorBoundary. Confirmar leyendo ese archivo antes de aplicar.
+- **Un solo chip compuesto** al lado del expediente, con separadores `·`.
+- **Modo** (Marítimo/Aéreo/Terrestre) sigue con su icono al inicio del chip.
+- **Estado operativo** (`En Tránsito`) mantiene el color semántico actual como fondo del chip (via `getEstadoColor`).
+- **Sub-estado financiero** en el chip: se resuelve al más avanzado entre proforma y cobro:
+  - `Sin proforma` (warning) si `tiene_proforma=false`
+  - `Proforma` (neutral) si hay proforma pero cobro es `pendiente` o `null`
+  - `Cobro parcial` si `cobro_cliente_status="parcial"`
+  - `Cobrado` (success) si `cobro_cliente_status="pagado"`
+- **Badge admin** (`EmbarqueBadgeAdmin`) queda fuera del chip pero visible al lado, sólo para admins (sin cambio de lógica).
+- **Cotización origen** deja de ser badge: pasa a texto pequeño gris junto al nombre del cliente, como `<Link>` subrayado al pasar el mouse. Cubre los 3 casos existentes (link a COT-…, no disponible, sin cotización).
 
-### Paso 2 — Test unitario del catálogo de permisos
+## Cambios
 
-Añadir un test en `src/hooks/shared/__tests__/usePermissions.responderProforma.test.ts` que verifique que **`gerente_operaciones` y `gerente_comercial`** están en `RESPONDER_PROFORMA_MANUAL` y que `contador`/`operador`/`vendedor`/`viewer` no lo están. Sirve como red de seguridad para que nadie vuelva a divergir la lista sin darse cuenta.
+### `src/features/embarques/components/EmbarqueStatusChip.tsx` (nuevo)
+- Componente puro que recibe `estado`, `modo`, `tieneProforma`, `cobroStatus`.
+- Renderiza un solo `Badge` con `getEstadoColor(estado)` de fondo, `ModoIcon` al inicio, y las secciones separadas por `·`.
+- Helper interno `resolveFinancieroLabel()` para elegir el sub-estado más avanzado.
 
-Este es el único test que puedo escribir con Vitest para prevenir la regresión; el chequeo real está en Postgres y se validaría manualmente (con Marta o con un usuario de prueba con rol `gerente_operaciones`).
+### `src/features/embarques/components/EmbarqueDetalleHeader.tsx`
+- Sustituye las 3 líneas de badges (`Estado`, `Modo`, `Proforma`, `Cobro`) por `<EmbarqueStatusChip …>`.
+- Mueve `EmbarqueBadgeAdmin` para que quede al lado del chip (sólo se muestra si aplica).
+- Elimina el bloque `<div className="mt-1.5">…</div>` con el badge de cotización.
+- Nombre del cliente + link discreto quedan en la misma línea:
+  `Indimex Trading · Cotización origen: <Link>COT-2026-0087</Link>`.
+- Los 3 estados del link:
+  - Con folio → `Link` a `/cotizaciones/:id` con `hover:underline`.
+  - Sin folio (cotización borrada) → texto `Cotización origen no disponible` en muted.
+  - Sin `cotizacion_id` → texto `Sin cotización vinculada` en warning muted (no badge).
 
-### Paso 3 — Bump y changelog
+### `src/features/embarques/components/__tests__/EmbarqueStatusChip.test.tsx` (nuevo)
+- Cubre las 4 combinaciones del sub-estado financiero + render de icono según modo.
 
-- `APP_VERSION` → `13.300.10` (`src/constants/appVersion.ts`).
-- Entrada en `CHANGELOG.md`: describe el desfase, la migración y menciona v13.145.8 como la política que se termina de aplicar.
+### `CHANGELOG.md` + `src/constants/appVersion.ts`
+- Nueva entrada `## [13.300.12] - 2026-07-14` describiendo la consolidación.
+- Bump `APP_VERSION` a `13.300.12`.
+
+## Fuera de alcance
+
+- Lógica de `tiene_proforma`, `cobro_cliente_status`, `getEstadoColor`, permisos y acciones del header no cambian.
+- No se toca `EmbarqueBadgeAdmin`, `ProformaBadge` ni `CobroClienteBadge` (quedan como componentes reutilizables por si otro lugar los usa; sólo dejan de renderizarse en el header).
 
 ## Detalles técnicos
 
-- La migración usa `CREATE OR REPLACE FUNCTION` con la misma firma `(uuid, text, text)` que la migración `20260702174034`, así que no hay que re-`GRANT` (los grants se preservan para `authenticated`).
-- El único cambio funcional dentro del RPC son las 4 líneas del `role IN (...)`.
-- No se toca la política RLS de `public.proformas` — el RPC ya es `SECURITY DEFINER` y ese es el único camino de escritura para `estado_cliente` desde la app.
-- Fuera de alcance: revisar si otros RPCs (`portal_responder_proforma`, RPCs de embarque, etc.) tienen el mismo desfase — no aparece en el reporte y ese análisis sería un sprint aparte.
-
-## Verificación
-
-- Correr `bun run audit:tests` y la suite de Vitest tras añadir el nuevo test.
-- Correr Playwright con la cuenta de auditoría (`mem://reference/audit-login`), impersonar a un `gerente_operaciones` sobre una proforma pendiente y confirmar que el clic en "Aceptar (manual)" ya no produce el toast rojo (respuesta 200 en la red y el badge de estado_cliente cambia a "Aceptada").
-
-## Riesgos
-
-- Bajo. Quitar `contador`/`operador` de la lista es un endurecimiento (no una apertura) y coincide con la política que ya declara el frontend. Si algún cliente esperaba que su contador aceptara manualmente proformas, se detectará rápidamente y podemos volver a añadir el rol en una migración de una línea.
+- `Badge` de shadcn acepta children; el chip compuesto se implementa con `<Badge>` + `<span>` internos separados por un `<span aria-hidden>·</span>` con `opacity-60`.
+- El color de fondo del chip viene de `getEstadoColor(estado)` (ya usa tokens semánticos, no colores hardcodeados).
+- El sub-estado financiero se pinta con un texto discreto dentro del mismo chip; si es `Cobrado` se añade un `CheckCircle2` de 12px para reforzar.
+- El link de cotización usa `text-xs text-muted-foreground hover:text-foreground hover:underline`.
