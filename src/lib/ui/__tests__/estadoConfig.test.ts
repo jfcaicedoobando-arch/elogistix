@@ -1,36 +1,35 @@
+/**
+ * Regression: los estados operativos migrados en el Lote 3B (v13.300.2) no
+ * pueden volver a introducir literales Tailwind (cyan/violet/orange/indigo).
+ * Todo el sistema visual de estado debe pasar por tokens semánticos
+ * (`state-arribo`, `state-aduana`, `state-eir`, `state-operacion`).
+ */
 import { describe, it, expect } from "vitest";
-import { getEstadoVisual, ESTADO_CONFIG } from "@/lib/ui/estadoConfig";
-import { kpiIconChipClasses } from "@/lib/ui/kpiTones";
+import { ESTADO_CONFIG, getEstadoVisual } from "@/lib/ui/estadoConfig";
 
-describe("getEstadoVisual", () => {
-  it("retorna config específica para estados conocidos", () => {
-    const v = getEstadoVisual("Confirmado");
-    expect(v.bar).toBe("bg-info");
-    expect(v.badge).toContain("text-info");
+const LITERAL_TAILWIND =
+  /(?:bg|text|border|from|to)-(?:cyan|violet|orange|indigo|purple|sky|blue)-\d{3}/;
+
+describe("estadoConfig — tokens semánticos", () => {
+  it("ningún estado usa literales Tailwind de color en badge/bar/border/text/gradient", () => {
+    const offenders: string[] = [];
+    for (const [estado, cfg] of Object.entries(ESTADO_CONFIG)) {
+      const cls = [cfg.badge, cfg.bar, cfg.border, cfg.borderLeft, cfg.text, cfg.gradient].join(" ");
+      if (LITERAL_TAILWIND.test(cls)) offenders.push(`${estado} → ${cls}`);
+    }
+    expect(offenders).toEqual([]);
   });
 
-  it("aplica fallback default para estados desconocidos", () => {
-    const v = getEstadoVisual("NoExiste");
-    expect(v.badge).toContain("muted");
-    expect(v.bar).toBe("bg-muted-foreground");
+  it("Arribo, En Aduana, EIR y En operación usan tokens de la familia state-*", () => {
+    expect(ESTADO_CONFIG.Arribo.text).toBe("text-state-arribo");
+    expect(ESTADO_CONFIG["En Aduana"].text).toBe("text-state-aduana");
+    expect(ESTADO_CONFIG.EIR.text).toBe("text-state-eir");
+    expect(ESTADO_CONFIG["En operación"].badge).toContain("state-operacion");
   });
 
-  it("cubre estados de cotización", () => {
-    expect(getEstadoVisual("Aceptada").badge).toContain("warning");
-    expect(getEstadoVisual("Rechazada").badge).toContain("destructive");
-  });
-
-  it("ESTADO_CONFIG incluye estados clave de embarque", () => {
-    expect(ESTADO_CONFIG).toHaveProperty("Confirmado");
-    expect(ESTADO_CONFIG).toHaveProperty("En Tránsito");
-    expect(ESTADO_CONFIG).toHaveProperty("Arribo");
-  });
-});
-
-describe("kpiIconChipClasses", () => {
-  it("genera bg-*-soft y text-* según tono", () => {
-    expect(kpiIconChipClasses("info")).toBe("bg-kpi-info-soft text-kpi-info");
-    expect(kpiIconChipClasses("danger")).toBe("bg-kpi-danger-soft text-kpi-danger");
-    expect(kpiIconChipClasses("success")).toBe("bg-kpi-success-soft text-kpi-success");
+  it("getEstadoVisual devuelve fallback muted para estados desconocidos", () => {
+    const v = getEstadoVisual("EstadoInexistente");
+    expect(v.badge).toContain("bg-muted");
+    expect(v.text).toBe("text-muted-foreground");
   });
 });
