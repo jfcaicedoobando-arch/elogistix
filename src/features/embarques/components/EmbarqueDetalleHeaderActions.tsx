@@ -1,6 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, Share2, Copy } from "lucide-react";
+import { Edit, Trash2, Share2, Copy, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AvanzarEstadoButton } from "./header/AvanzarEstadoButton";
 import { ReabrirEmbarqueButton } from "./header/ReabrirEmbarqueButton";
 
@@ -58,19 +65,6 @@ export function EmbarqueDetalleHeaderActions({
         </Button>
       )}
 
-
-      {canEdit && (
-        <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
-          <Share2 className="h-4 w-4 mr-1" /> Compartir
-        </Button>
-      )}
-
-      {canEdit && (
-        <Button variant="outline" size="sm" onClick={onAbrirDuplicar}>
-          <Copy className="h-4 w-4 mr-1" /> Duplicar
-        </Button>
-      )}
-
       {puedeReabrir && (
         <ReabrirEmbarqueButton
           expediente={expediente}
@@ -80,15 +74,42 @@ export function EmbarqueDetalleHeaderActions({
       )}
 
       {canEdit && (
-        <>
-          <span aria-hidden="true" className="hidden sm:inline-block h-6 w-px bg-border mx-1" />
-          <Button
-            variant="ghost" size="sm" onClick={onAbrirEliminar}
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4 mr-1" /> Eliminar
-          </Button>
-        </>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" aria-label="Más acciones">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                onCompartirTracking();
+              }}
+              disabled={trackingPending}
+            >
+              <Share2 className="h-4 w-4 mr-2" /> Compartir tracking
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                onAbrirDuplicar();
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Duplicar embarque
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                onAbrirEliminar();
+              }}
+              className="text-destructive focus:text-destructive focus:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </div>
   );
