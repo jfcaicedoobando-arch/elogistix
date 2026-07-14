@@ -71,7 +71,7 @@ describe("architecture — no raw @/components/ui/table imports", () => {
     ).toEqual([]);
   });
 
-  it("no hay entradas obsoletas en la allowlist", () => {
+  it("no hay entradas obsoletas en la allowlist de raw table", () => {
     const stale: string[] = [];
     for (const rel of ALLOWLIST) {
       try {
