@@ -113,6 +113,7 @@ export function OrgMembersCard({ members, loading, onAddClick, onChangeRole, onR
           emptyMessage="Sin miembros."
           rowKey={(m) => m.id}
           density="comfortable"
+          tableClassName="w-full"
         />
       </CardContent>
 
