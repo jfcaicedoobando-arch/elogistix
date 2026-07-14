@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.19] - 2026-07-14
+- **fix(auditoría · tarjeta ETA vencida)**: la tarjeta roja "hallazgos en embarques con ETA vencida" y la ámbar "ETA en ≤ 3 días" ahora **excluyen** hallazgos cuyo vencimiento no depende del ETA del embarque: `cxp_por_capturar_estancada`, `cxp_vencida`, `cxc_vencida`, `proforma_vencida`, `proforma_borrador_abandonada`. Antes las CXP con crédito de proveedor generaban falsa alarma porque su ETA ya estaba en el pasado aunque el pago aún no venciera. La métrica `edadPromediaPendientesDias` también se recalcula sin esas reglas. Nueva constante `REGLAS_CON_VENCIMIENTO_PROPIO` en `ejecutivoAgregados.ts`.
+
 ## [13.299.18] - 2026-07-14
 - **fix(auditoría · docs_faltantes · En Tránsito)**: los embarques en **En Tránsito** ya no exigen ningún documento en la auditoría (antes seguían pidiendo Factura Comercial y Packing List). Durante el tránsito es normal que esos documentos aún estén pendientes de recibirse del embarcador, así que se movió toda la exigencia a partir de **En Aduana**. Complementa la corrección de v13.299.17 y resuelve el falso positivo del embarque ELIMP00256.
 
