@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.10] - 2026-07-14
+- **fix(proformas · aceptar/rechazar manual)**: los roles `gerente_operaciones` y `gerente_comercial` veían los botones "Aceptar (manual)" / "Rechazar (manual)" en `/proformas/:id`, pero al pulsarlos la app respondía con *"You do not have permission to change the customer status on this proforma."* (reportado por marta.sarmiento@elogistixshipping.com, v13.299.11).
+  - Causa: desfase entre frontend y DB. `RESPONDER_PROFORMA_MANUAL` en `src/hooks/shared/usePermissions.ts` sigue la política v13.145.8 (super_admin, admin_org, admin, gerente_comercial, gerente_operaciones), pero el RPC `actualizar_estado_cliente_proforma` (migración `20260702174034`) todavía tenía la lista antigua (admin, admin_org, contador, operador).
+  - Migración nueva: `CREATE OR REPLACE FUNCTION public.actualizar_estado_cliente_proforma(...)` con la lista alineada al frontend. Se quitan `contador` y `operador` (que el frontend ya no permitía) y se añaden `gerente_operaciones` y `gerente_comercial`. El resto del cuerpo del RPC (bitácora, liberación de conceptos en rechazo, grants) no cambia.
+  - Test de regresión: `src/hooks/shared/__tests__/usePermissions.responderProforma.test.tsx` cubre los 5 roles permitidos y 8 rechazados + caso sin sesión, para bloquear divergencias futuras.
+
 ## [13.300.9] - 2026-07-14
 - **fix preventivo(tablas · min-w-max)**: aplicado el mismo remedio de `13.300.8` a las 3 tablas restantes que tenían celdas con componentes "pesados" (Select, Popover/DatePicker, Input) dentro de `cell:` y podían disparar el bloat de `min-w-max` en el `<table>` interno del `DataTable`.
   - `src/features/admin/components/orgDetalle/OrgMembersCard.tsx`: pestaña de miembros de organización — la celda `change_role` es un `<Select>` de roles (mismo patrón que causó el bug original en `/usuarios`).

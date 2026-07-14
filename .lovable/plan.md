@@ -1,63 +1,70 @@
 ## Contexto
 
-En v13.300.8 corregí un bug en la tabla de `/usuarios`: sólo se veía la columna "Usuario" porque el `<table>` interno del `DataTable` compartido usa `min-w-max` por defecto, y cuando una celda contiene un componente "pesado" (Select, Popover, Input sin ancho), el navegador estira la tabla a miles de píxeles y esconde el resto de las columnas.
+Marta (gerente_operaciones) intentó dar clic en "Aceptar (manual)" o "Rechazar (manual)" en `/proformas/…` y la app le mostró un toast/pantalla de error: *"You do not have permission to change the customer status on this proforma."* (traducción visible del mensaje que devuelve el backend).
 
-Analogía: `min-w-max` es como decirle a la tabla "nunca te encojas por debajo de tu tamaño ideal". Si dentro de una celda pones un Select con muchas opciones, ese "ideal" se dispara y el resto de columnas se sale del viewport.
+## Causa raíz
 
-El fix ya aplicado (`UsuariosInternosTab.tsx` y `PortalUsuariosTab.tsx`) fue pasar `tableClassName="w-full"` al `DataTable`.
+Hay **inconsistencia entre el frontend y el RPC de la base de datos** sobre quién puede cambiar manualmente el estado del cliente en una proforma:
 
-## Hallazgos de la auditoría
+| Capa | Roles permitidos |
+|---|---|
+| Frontend — `src/hooks/shared/usePermissions.ts:136` (`RESPONDER_PROFORMA_MANUAL`) | `super_admin`, `admin_org`, `admin`, `gerente_comercial`, `gerente_operaciones` |
+| DB — RPC `actualizar_estado_cliente_proforma` (migración `20260702174034`, línea 78) | `admin`, `admin_org`, `contador`, `operador` (+ `super_admin` global) |
 
-Un subagente revisó los ~120 archivos que consumen `DataTable`. Sólo hay **3 tablas con el mismo patrón de riesgo** que aún no están corregidas:
+- El frontend le muestra los botones a Marta porque su rol (`gerente_operaciones`) está en la lista.
+- La DB rechaza el UPDATE porque los gerentes no están en la lista del guardia.
+- Nota: la política de v13.145.8 (visible en el comentario de `usePermissions.ts:134`) fue: "sólo admins y gerentes deben poder responder manualmente". La migración del RPC (creada meses después) copió la lista vieja (contador/operador) y **se olvidó de reflejar** la política v13.145.8. Este es el desfase que hay que corregir.
 
-| # | Archivo | Componente pesado en `cell:` | Severidad |
-|---|---|---|---|
-| 1 | `src/features/admin/components/orgDetalle/OrgMembersCard.tsx` | `<Select>` de roles (mismo patrón exacto que el bug original) | Alta |
-| 2 | `src/features/embarques/components/TabGarantias.tsx` (columnas en `useGarantiasColumns.tsx`) | `<Input>` de monto/ref + `<Select>` de estado, sin `meta.width` declarado | Alta/Media |
-| 3 | `src/features/embarques/components/TabDemoras.tsx` (columnas en `tabDemorasColumns.tsx`) | `<DatePickerMx>` (Popover con calendario) + `<Input>` de días libres | Media |
+## Plan
 
-Confirmado que **no hay más ocurrencias**: los demás Selects/Popovers viven en toolbars de filtro fuera de la tabla, no en `cell:`.
+### Paso 1 — Alinear el RPC con el frontend
 
-Además, `VirtualDataTable.tsx` usa CSS grid en vez de `<table>` y no está expuesto al bug.
+Nueva migración SQL que redefine `public.actualizar_estado_cliente_proforma(uuid, text, text)` para que su chequeo de rol coincida exactamente con `RESPONDER_PROFORMA_MANUAL` del frontend:
 
-## Plan de corrección
+```sql
+CREATE OR REPLACE FUNCTION public.actualizar_estado_cliente_proforma(...)
+...
+SELECT EXISTS (
+  SELECT 1 FROM public.organization_members om
+   WHERE om.user_id = auth.uid()
+     AND om.organization_id = v_proforma.organization_id
+     AND om.role IN (
+       'admin'::app_role,
+       'admin_org'::app_role,
+       'gerente_operaciones'::app_role,
+       'gerente_comercial'::app_role
+     )
+) OR public.has_role(auth.uid(), 'super_admin'::app_role) INTO v_is_authorized;
+```
 
-### Paso 1 — Aplicar el fix mínimo a los 3 archivos afectados
+- Se **quitan** `contador` y `operador` de la lista (siguiendo la política v13.145.8 declarada en `usePermissions.ts`).
+- Se **añaden** `gerente_operaciones` y `gerente_comercial`.
+- El resto del cuerpo del RPC no cambia (misma bitácora, mismo update, misma liberación de conceptos en rechazo, mismos `REVOKE`/`GRANT EXECUTE`).
+- Se traduce al español el mensaje de excepción (ya está en español: *"No tienes permisos para cambiar el estado del cliente en esta proforma."*), pero el `RespuestaClienteManualDialog.tsx:63` ya intercepta el texto con la regex `/no tienes permisos|permission denied|.../i`, así que el usuario verá un toast en español, no la pantalla técnica de ErrorBoundary. Confirmar leyendo ese archivo antes de aplicar.
 
-Pasar `tableClassName="w-full"` al `<DataTable>` en:
+### Paso 2 — Test unitario del catálogo de permisos
 
-- `src/features/admin/components/orgDetalle/OrgMembersCard.tsx` (línea del `<DataTable ...>`)
-- `src/features/embarques/components/TabGarantias.tsx`
-- `src/features/embarques/components/TabDemoras.tsx`
+Añadir un test en `src/hooks/shared/__tests__/usePermissions.responderProforma.test.ts` que verifique que **`gerente_operaciones` y `gerente_comercial`** están en `RESPONDER_PROFORMA_MANUAL` y que `contador`/`operador`/`vendedor`/`viewer` no lo están. Sirve como red de seguridad para que nadie vuelva a divergir la lista sin darse cuenta.
 
-Es una sola prop añadida por archivo, sin cambios de lógica ni de datos.
+Este es el único test que puedo escribir con Vitest para prevenir la regresión; el chequeo real está en Postgres y se validaría manualmente (con Marta o con un usuario de prueba con rol `gerente_operaciones`).
 
-### Paso 2 — Verificación visual con Playwright
+### Paso 3 — Bump y changelog
 
-Reproducir el flujo para cada una:
-
-1. Navegar a `/admin/organizaciones/:id` (`OrgMembersCard`) y abrir la pestaña de miembros.
-2. Abrir un embarque con garantías y verificar la tabla de `TabGarantias`.
-3. Abrir un embarque con demoras y verificar la tabla de `TabDemoras`.
-
-Capturar screenshot en cada una y confirmar que todas las columnas caben dentro del contenedor (sin scroll horizontal desmedido).
-
-### Paso 3 — Registro de cambios
-
-- Bump `APP_VERSION` a `13.300.9` (`src/constants/appVersion.ts`).
-- Entrada nueva en `CHANGELOG.md` describiendo el fix preventivo y los 3 archivos afectados, referenciando `13.300.8` como la corrección original.
+- `APP_VERSION` → `13.300.10` (`src/constants/appVersion.ts`).
+- Entrada en `CHANGELOG.md`: describe el desfase, la migración y menciona v13.145.8 como la política que se termina de aplicar.
 
 ## Detalles técnicos
 
-- El prop `tableClassName` ya existe en `src/components/shared/DataTable.tsx` (línea 55) desde la corrección anterior; el default sigue siendo `"min-w-max"` para no romper otras tablas que sí dependen de scroll horizontal.
-- El fix es idempotente y no requiere cambios en las definiciones de columnas ni en los hooks de datos.
-- No se tocan los componentes internos de las celdas (`<Select>`, `<Input>`, `<DatePickerMx>`), sólo la instancia del `<DataTable>` que las contiene.
+- La migración usa `CREATE OR REPLACE FUNCTION` con la misma firma `(uuid, text, text)` que la migración `20260702174034`, así que no hay que re-`GRANT` (los grants se preservan para `authenticated`).
+- El único cambio funcional dentro del RPC son las 4 líneas del `role IN (...)`.
+- No se toca la política RLS de `public.proformas` — el RPC ya es `SECURITY DEFINER` y ese es el único camino de escritura para `estado_cliente` desde la app.
+- Fuera de alcance: revisar si otros RPCs (`portal_responder_proforma`, RPCs de embarque, etc.) tienen el mismo desfase — no aparece en el reporte y ese análisis sería un sprint aparte.
+
+## Verificación
+
+- Correr `bun run audit:tests` y la suite de Vitest tras añadir el nuevo test.
+- Correr Playwright con la cuenta de auditoría (`mem://reference/audit-login`), impersonar a un `gerente_operaciones` sobre una proforma pendiente y confirmar que el clic en "Aceptar (manual)" ya no produce el toast rojo (respuesta 200 en la red y el badge de estado_cliente cambia a "Aceptada").
 
 ## Riesgos
 
-- Bajo: `w-full` puede provocar que las columnas se compriman si el contenido crece mucho. Mitigación: las tres tablas afectadas ya declaran `meta.width` en sus columnas críticas o contienen inputs con ancho fijo, por lo que el layout resultante debería mantenerse legible. La verificación visual del paso 2 sirve de red de seguridad.
-
-## Fuera de alcance
-
-- No se refactorizan las 100+ tablas restantes que técnicamente heredan `min-w-max` pero no muestran el bug (no tienen componentes pesados en `cell:`). Se dejan como están para no arriesgar regresiones en scrolls horizontales legítimos (por ejemplo tablas anchas de embarques o CXP).
-- No se cambia el default de `DataTable.tsx`.
+- Bajo. Quitar `contador`/`operador` de la lista es un endurecimiento (no una apertura) y coincide con la política que ya declara el frontend. Si algún cliente esperaba que su contador aceptara manualmente proformas, se detectará rápidamente y podemos volver a añadir el rol en una migración de una línea.
