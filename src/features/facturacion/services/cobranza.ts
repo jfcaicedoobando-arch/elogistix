@@ -124,7 +124,10 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
       saldo,
       fecha_emision: f.fecha_emision,
       fecha_vencimiento: f.fecha_vencimiento,
-      dias_vencido: Math.max(0, diasVencido),
+      // Signo importa: negativo = faltan N días, 0 = vence hoy, positivo = días vencidos.
+      // Este valor lo consume `agingPorCobrarBucket` y `cobranzaAggregates` para clasificar
+      // "Por vencer" vs "Vencida". Un clamp a 0 rompe la bandeja "Por cobrar".
+      dias_vencido: diasVencido,
       estatus_cobranza: calcularEstatus(saldo, diasVencido),
       estado_factura: f.estado,
       tipo_cambio: Number(f.tipo_cambio),
