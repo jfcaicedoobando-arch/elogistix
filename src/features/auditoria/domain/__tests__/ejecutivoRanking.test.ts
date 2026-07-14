@@ -82,8 +82,22 @@ describe("calcularRanking", () => {
     expect(r.rankingResponsables[0].email).toBe("Sin asignar");
   });
 
+  it("usa created_at como fallback cuando asignado_at es null (flujo real)", () => {
+    const map = new Map<string, AuditoriaRevision>();
+    map.set("a", mkRev({
+      estado_revision: "revisado",
+      responsable_email: "op@x.com",
+      asignado_at: null,
+      created_at: "2026-07-04T00:00:00Z",
+      revisado_at: "2026-07-05T00:00:00Z", // 24h desde created_at
+    }));
+    const r = calcularRanking(map, hoyIso);
+    expect(r.mttrHoras).toBe(24);
+  });
+
   it("rankingOperadores es alias de rankingResponsables", () => {
     const r = calcularRanking(new Map(), hoyIso);
     expect(r.rankingOperadores).toBe(r.rankingResponsables);
   });
 });
+
