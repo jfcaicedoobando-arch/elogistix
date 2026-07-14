@@ -52,6 +52,10 @@ interface DataTableProps<T> {
   footer?: React.ReactNode | ((data: T[]) => React.ReactNode);
   pagination?: DataTablePagination;
   className?: string;
+  /** Sobrescribe la className del `<table>` interno. Por defecto `"min-w-max"`
+   *  (obliga a respetar los anchos de columna declarados). Pásalo como `""`
+   *  o `"w-full table-fixed"` cuando no quieras scroll horizontal forzado. */
+  tableClassName?: string;
   /** Ancla el encabezado al top del contenedor de scroll (útil en tablas largas). */
   stickyHeader?: boolean;
   /** Visibilidad de columnas controlada (persistida por el caller vía `useColumnVisibility`). */
