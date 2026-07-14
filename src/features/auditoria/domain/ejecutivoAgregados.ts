@@ -115,6 +115,21 @@ export function agruparPorEtapaYCliente(pendientes: HallazgoAuditoria[]) {
   return { porEtapa, topClientes };
 }
 
+/**
+ * Reglas cuyo vencimiento NO depende del ETA del embarque (tienen su propio
+ * calendario: crédito de proveedor, plazo de factura, expiración de proforma).
+ * Se excluyen del bucket "ETA vencida" / "ETA en ≤ 3 días" para evitar
+ * falsas urgencias — los pagos a proveedor suelen hacerse mucho después del
+ * arribo.
+ */
+export const REGLAS_CON_VENCIMIENTO_PROPIO: ReglaAuditoria[] = [
+  "cxp_por_capturar_estancada",
+  "cxp_vencida",
+  "cxc_vencida",
+  "proforma_vencida",
+  "proforma_borrador_abandonada",
+];
+
 export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
   // UTC-only: evita drift por TZ local (ver banner core.ts).
   const nowMs = Date.now();
@@ -126,6 +141,7 @@ export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
   let countDias = 0;
   for (const h of pendientes) {
     if (!h.eta) continue;
+    if (REGLAS_CON_VENCIMIENTO_PROPIO.includes(h.regla)) continue;
     if (h.eta < hoyIso) {
       pendientesVencidos++;
       const dias = Math.floor((Date.parse(hoyIso) - Date.parse(h.eta)) / 86_400_000);
@@ -138,4 +154,5 @@ export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
   const edadPromediaPendientesDias = countDias > 0 ? Math.round(sumaDias / countDias) : null;
   return { hoyIso, pendientesVencidos, pendientesUrgentesPorEta, edadPromediaPendientesDias };
 }
+
 
