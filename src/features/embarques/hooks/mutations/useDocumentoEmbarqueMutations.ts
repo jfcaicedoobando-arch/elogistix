@@ -11,14 +11,28 @@ import {
 } from '@/features/embarques/services';
 import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
 
+/**
+ * Invalida las caches que dependen del estado de documentos del embarque:
+ * lista/detalle de documentos, embarque y reporte de auditoría (regla
+ * `docs_faltantes`). Sin esto, la vista `/auditoria` mostraría datos rancios
+ * hasta el próximo `Recalcular` manual.
+ */
+function invalidateDocumentosCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  embarqueId: string,
+) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(embarqueId) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+  queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
+}
+
 export function useUploadDocumentoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ embarqueId, docId, file }: { embarqueId: string; docId: string; file: File }) =>
       uploadDocumentoEmbarque(embarqueId, docId, file),
     onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      invalidateDocumentosCaches(queryClient, vars.embarqueId);
       notifySuccess(undefined, { title: "Documento subido" });
     },
     onError: (error: Error) => {
@@ -33,8 +47,7 @@ export function useDeleteDocumentoEmbarque() {
     mutationFn: ({ docId, archivoPath }: { embarqueId: string; docId: string; archivoPath: string }) =>
       deleteDocumentoEmbarque(docId, archivoPath),
     onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      invalidateDocumentosCaches(queryClient, vars.embarqueId);
       notifySuccess(undefined, { title: "Documento eliminado" });
     },
     onError: (error: Error) => {
@@ -54,8 +67,7 @@ export function useCreateDocumentoEmbarque() {
     mutationFn: ({ embarqueId, nombre, notas }: { embarqueId: string; nombre: string; notas?: string }) =>
       createDocumentoEmbarqueRow({ embarqueId, nombre, notas }),
     onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      invalidateDocumentosCaches(queryClient, vars.embarqueId);
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al crear documento: ${error.message}`, error, method: "CREATE_DOC_EMBARQUE" });
@@ -73,8 +85,7 @@ export function useSetDocumentoNoAplica() {
     mutationFn: ({ docId, noAplica }: { embarqueId: string; docId: string; noAplica: boolean }) =>
       setDocumentoEstadoNoAplica(docId, noAplica),
     onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      invalidateDocumentosCaches(queryClient, vars.embarqueId);
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al marcar documento: ${error.message}`, error, method: "SET_DOC_NO_APLICA" });
