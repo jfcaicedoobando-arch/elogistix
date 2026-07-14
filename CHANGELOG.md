@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.20] - 2026-07-14
+- **fix(auditoría · MTTR)**: la tarjeta "Tiempo medio de resolución" ya no muestra permanentemente "Sin datos". Antes exigía que la revisión tuviera **ambos** `asignado_at` y `revisado_at`, pero en el flujo real casi nadie asigna explícitamente (355 revisados vs. 1 con `asignado_at`), así que el promedio nunca acumulaba muestras. Ahora `procesarRevisionEnOperador` usa `asignado_at ?? created_at` como punto de inicio y el subtítulo de la tarjeta pasa a **"Desde detección del hallazgo hasta marca de revisado"**. Cambio 100 % lógica de agregado + copy, sin migración.
+
 ## [13.299.19] - 2026-07-14
+
 - **fix(auditoría · tarjeta ETA vencida)**: la tarjeta roja "hallazgos en embarques con ETA vencida" y la ámbar "ETA en ≤ 3 días" ahora **excluyen** hallazgos cuyo vencimiento no depende del ETA del embarque: `cxp_por_capturar_estancada`, `cxp_vencida`, `cxc_vencida`, `proforma_vencida`, `proforma_borrador_abandonada`. Antes las CXP con crédito de proveedor generaban falsa alarma porque su ETA ya estaba en el pasado aunque el pago aún no venciera. La métrica `edadPromediaPendientesDias` también se recalcula sin esas reglas. Nueva constante `REGLAS_CON_VENCIMIENTO_PROPIO` en `ejecutivoAgregados.ts`.
 
 ## [13.299.18] - 2026-07-14
