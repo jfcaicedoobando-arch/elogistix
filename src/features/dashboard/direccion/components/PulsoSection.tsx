@@ -7,7 +7,7 @@ import type { PulsoKpis } from "@/features/dashboard/direccion/services/tipos";
 
 function Semaforo({ ok }: { ok: boolean }) {
   const Icon = ok ? CheckCircle2 : AlertCircle;
-  const color = ok ? "text-emerald-600" : "text-amber-600";
+  const color = ok ? "text-success" : "text-warning";
   return <Icon className={`h-5 w-5 ${color}`} aria-hidden />;
 }
 
