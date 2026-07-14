@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.14] - 2026-07-14
+- **feat(cotización · LCL · Paso 2)**: el paso "Costos & P&L" ahora precarga automáticamente una fila de flete USD tomando los datos del bloque "Flete LCL manual" del paso 1 (consolidador, tarifa W/M, mínimo, W/M facturable). Antes el ejecutivo tenía que re-teclear el mismo flete que ya había capturado en el paso anterior. La fila queda editable como cualquier otra y respeta el mínimo cuando aplica. Analogía: el ticket que llenaste en la caja del paso 1 ahora se pasa solo al cajero del paso 2 — igual que ya sucedía con las tarifas FCL vinculadas.
+
 ## [13.299.13] - 2026-07-14
 - **fix(cotización · LCL)**: se oculta el bloque "Número de Embarques / Número de contenedores" en el Paso 1 cuando el tipo de embarque es LCL, ya que la carga consolidada no usa contenedores propios. Analogía: si viajas compartiendo un tráiler con otros, no tiene sentido que te pregunten cuántos tráileres alquilas — sólo importan tus cajas.
 
