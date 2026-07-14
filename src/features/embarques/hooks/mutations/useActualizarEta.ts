@@ -31,7 +31,7 @@ export function useActualizarEta(options: Options = {}) {
   return useMutationWithFeedback<unknown, Error, Input>({
     mutationFn: ({ embarqueId, nuevaEta }: Input) =>
       actualizarEtaEmbarque(embarqueId, nuevaEta),
-    invalidate: [queryKeys.embarques.all],
+    invalidate: [queryKeys.embarques.all, queryKeys.auditoria.embarques],
     optimistic: [
       { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEta("eta_actual") },
       { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchEta("eta_actual") },
