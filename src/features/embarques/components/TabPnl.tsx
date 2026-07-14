@@ -66,7 +66,7 @@ export function TabPnl({ embarqueId }: Props) {
       <div
         ref={registerRef("utilidad")}
         data-focus="utilidad"
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
         <KpiCard
           label="Venta real"

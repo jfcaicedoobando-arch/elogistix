@@ -169,7 +169,7 @@ function FlujoTile({
   positive?: boolean;
 }) {
   const Icon = positive ? TrendingUp : TrendingDown;
-  const color = positive ? "text-success" : "text-red-600";
+  const color = positive ? "text-success" : "text-destructive";
   return (
     <div className="rounded-md border p-3">
       <div className={`flex items-center gap-2 text-xs text-muted-foreground`}>

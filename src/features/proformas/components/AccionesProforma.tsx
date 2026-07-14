@@ -87,7 +87,7 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
       onClick: () => setManualOpen("aceptada"),
     });
     secondary.push({
-      id: "rechazar", label: "Rechazar (manual)", icon: XCircle, iconClassName: "text-red-600",
+      id: "rechazar", label: "Rechazar (manual)", icon: XCircle, iconClassName: "text-destructive",
       onClick: () => setManualOpen("rechazada"),
     });
   }

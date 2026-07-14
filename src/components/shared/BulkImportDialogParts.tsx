@@ -49,7 +49,7 @@ export function BulkImportBody<T>({
   if (step === "done") {
     return (
       <div className="py-10 text-center flex flex-col items-center gap-3">
-        <CheckCircle2 className="h-10 w-10 text-green-600" />
+        <CheckCircle2 className="h-10 w-10 text-success" />
         <p className="text-base font-medium">
           {insertedCount} registro{insertedCount === 1 ? "" : "s"} importado{insertedCount === 1 ? "" : "s"} correctamente.
         </p>
