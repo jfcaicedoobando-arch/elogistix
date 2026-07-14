@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.15] - 2026-07-14
+- **chore(ci · ErrorBoundary)**: se atiende el fallo del run CI 79480216680 (jobs `quality` y `tests`).
+  - `src/components/shared/ErrorBoundary.tsx` (257 líneas) se divide en tres piezas para respetar Power of 10 (≤ 200 líneas): la clase orquestadora queda en ~115 líneas, la UI de fallback se mueve a `src/components/shared/errorBoundary/ErrorBoundaryFallback.tsx`, y los helpers de reporte (`buildDetailsText`, `ensureEventId`, `openReportFeedback`, `copyDetails`) a `src/components/shared/errorBoundary/reportFeedback.ts`. Corrige `audit-report.test.ts` y `architecture-baseline.test.ts`.
+  - Los tres `toast.error(...)` directos del `ErrorBoundary` se migran a `notifyError(undefined, { title, description, method })`. Corrige `architecture/error-toasts-use-notifyError.test.ts`. `toast.success` (copia al portapapeles) se conserva.
+  - `src/components/shared/__tests__/ErrorBoundary.test.tsx`: el selector `getByText(/ui-explota/)` matchea el `<span>` del mensaje y el `<pre>` del stack (que ahora incluye `Error: ui-explota`); se cambia por `getByText("ui-explota", { selector: "span" })` para apuntar al campo Mensaje.
+
 ## [13.300.14] - 2026-07-14
 - **ui(embarques · detalle FHD)**: segunda pasada de auditoría a 1920×1080 (sidebar abierta). Se ataca densidad, jerarquía visual y balance de cards. Ver `.lovable/plan.md`, batches E–I.
   - **Batch E — Balance de cards**: `TabResumen.tsx` cambia `auto-rows-fr` a `items-start` para que `Datos generales` y `Ruta y transporte` midan lo que necesitan (elimina ~150px de espacio muerto bajo "Responsable operativo"). Las cards individuales de `Shipper` y `Consignatario` se consolidan en una sola card **Partes** con grid de 2 columnas — libera ~80px verticales.
