@@ -70,6 +70,7 @@ export function usePortalUsuarioColumns<T extends PortalUserRow>({
               "es-MX",
               { sensitivity: "base" },
             ),
+          meta: { width: "min-w-[220px]" },
           cell: ({ row }) => (
             <span className="text-sm">{getVinculadoNombre(row.original, tipo)}</span>
           ),
