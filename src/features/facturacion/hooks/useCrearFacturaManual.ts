@@ -36,6 +36,9 @@ export function useCrearFacturaManual() {
         toast.success("Factura manual guardada como borrador");
       }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
+      // Auditoría: la regla `ventas_sin_facturar` depende del estado de facturación
+      // de los embarques. Al crear/timbrar una factura, forzamos refetch del reporte.
+      qc.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
     onError: (err: Error) =>
       notifyError(toast, {
