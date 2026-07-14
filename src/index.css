@@ -146,6 +146,12 @@
     --state-llegada: 199 89% 60%;
     --state-en-proceso: 262 83% 70%;
     --state-cerrado: 160 70% 50%;
+    --state-arribo: 189 84% 58%;       --state-arribo-soft: 189 35% 20%;
+    --state-aduana: 262 83% 70%;       --state-aduana-soft: 262 30% 22%;
+    --state-eir: 25 95% 60%;           --state-eir-soft: 25 35% 22%;
+    --state-operacion: 239 84% 72%;    --state-operacion-soft: 239 35% 22%;
+    --mode-aereo: 199 89% 65%;         --mode-aereo-soft: 199 35% 20%;
+    --mode-multimodal: 262 83% 70%;    --mode-multimodal-soft: 262 30% 22%;
 
     /* KPI categóricos en dark — solo color base; fondos derivan vía opacidad (Tailwind /15) */
     --kpi-info: 217 91% 65%;          --kpi-info-soft: 217 33% 18%;
