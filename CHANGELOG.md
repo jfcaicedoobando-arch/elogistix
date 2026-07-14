@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.5] - 2026-07-14
+- **audit(v13.300.4)**: los 4 archivos migrados el turno anterior estaban cubiertos por el guardrail `no-legacy-color-literals` (que asegura que no vuelvan literales), así que no requerían tests adicionales por componente. Verificado.
+- **ux(cohesión visual · Lote 3B — banners/imports/CXP)**: 4 archivos más migrados a tokens semánticos y removidos de la allowlist:
+  - `src/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner.tsx`: `border-yellow-500 bg-yellow-50 text-yellow-600` → `border-warning bg-warning/10 text-warning`.
+  - `src/features/cotizacion/components/revalidacion/RevalidarTarifaModal.tsx`: `text-yellow-600` → `text-warning`.
+  - `src/components/shared/BulkImportSteps.tsx`: badges de válidos/inválidos migrados a `bg-success/10 text-success` y `bg-destructive/10 text-destructive`.
+  - `src/features/cxp/components/NotasCreditoSection.tsx`: badge `Aprobada` migrado de la paleta `sky-*` a tokens `info`.
+- **test(cohesión visual)**: `src/features/cxp/components/__tests__/NotasCreditoBadge.test.tsx` — smoke con 3 casos que verifica los tokens `success`/`info` y bloquea regresión a paletas Tailwind crudas (sky/green/emerald).
+- **allowlist**: pasó de 10 a 7 entradas. Lo que queda son escalas continuas (aging de 4 buckets en CobranzaBlock/CarteraSection, heatmaps P&L de 5 archivos) y el preview del logo de marketing.
+
 ## [13.300.4] - 2026-07-14
 - **audit(v13.300.2)**: encontrado un test rezagado — `src/lib/ui/__tests__/uiMappings.test.ts` seguía asertando `text-cyan-600`/`text-violet-600`/`text-orange-600` después de la tokenización del turno anterior. Actualizado a `text-state-arribo`/`text-state-aduana`/`text-state-eir`. Bug de test, no de código.
 - **ux(cohesión visual · Lote 3B — dashboards ejecutivos)**: 4 archivos migrados a tokens semánticos y removidos de la allowlist del guardrail:
