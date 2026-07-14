@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.22] - 2026-07-14
+- **fix(observabilidad · ErrorBoundary)**: el botón "Reportar" de la pantalla de crash ya **no abre `mailto:`**. Ahora siempre va a Sentry: 1) widget de feedback (`Sentry.getFeedback().createForm()`), 2) fallback a `Sentry.showReportDialog({ eventId })`, 3) si no hay `eventId` se genera con `captureMessage`, 4) si todo falla se muestra un toast con el `eventId` para copiar manualmente. El panel de error incorpora **"Detalles técnicos"** colapsable (abierto en dev) con versión, timestamp, ruta, event ID, `error.name`, mensaje, `stack` y `componentStack`, más un botón **"Copiar detalles"** que copia todo al portapapeles. Se guardan `componentStack` y `timestamp` en `state` y se etiqueta `app_version` en el scope de Sentry.
+
 ## [13.299.21] - 2026-07-14
 - **ux(sidebar · costeo)**: renombradas las dos entradas del módulo de Costeo para que su propósito sea evidente: "Buscar tarifa" → **"Comparador Top 3"** (buscador read-only que devuelve las 3 mejores tarifas vigentes) y "Tarifas marítimas" → **"Catálogo de tarifas"** (CRUD de alta/edición/vencimiento). Sólo cambia el `title` en `SIDEBAR_COSTEO_ITEMS`; las rutas `/costeo/buscar` y `/costeo/tarifas` no cambian.
 
