@@ -95,6 +95,7 @@ function DataTableInner<T>({
   footer,
   pagination,
   className,
+  tableClassName = "min-w-max",
   stickyHeader = false,
   columnVisibility,
   onColumnVisibilityChange,
