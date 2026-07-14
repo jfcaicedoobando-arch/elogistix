@@ -22,7 +22,7 @@ export interface CotizacionExportRow {
 
 export function useCotizacionActions() {
   const navigate = useNavigate();
-  const { toast: _toast } = { toast: undefined as unknown as never };
+  
   const prefetchCotizacion = usePrefetchCotizacion();
   const deleteCotizacion = useDeleteCotizacion();
 
