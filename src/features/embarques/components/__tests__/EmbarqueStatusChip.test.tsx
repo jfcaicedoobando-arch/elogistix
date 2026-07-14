@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { EmbarqueStatusChip, resolveFinancieroInfo } from "../EmbarqueStatusChip";
+import { EmbarqueStatusChip } from "../EmbarqueStatusChip";
+import { resolveFinancieroInfo } from "../embarqueStatusChip.helpers";
 
 describe("resolveFinancieroInfo", () => {
   it("prioriza 'Cobrado' cuando cobro=pagado", () => {
