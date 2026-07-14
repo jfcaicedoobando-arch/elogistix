@@ -1,34 +1,32 @@
-# Ajuste tarjeta "hallazgos en embarques con ETA vencida"
-
 ## Problema
-La tarjeta roja del dashboard de auditoría cuenta **todos** los hallazgos pendientes cuya `eta < hoy`, sin filtrar por tipo de regla. Cuando entran ahí hallazgos de **cuentas por pagar a proveedor** (`cxp_por_capturar_estancada`, `cxp_vencida`), se dispara una falsa urgencia: los proveedores dan crédito y esos pagos se hacen mucho después del ETA — la fecha de arribo del embarque no es la fecha límite del pago.
 
-La tarjeta debería enfocarse en pendientes **operativos** del embarque (documentos, fechas, contenedores, tipo de cambio, márgenes) — cosas que sí deberían estar resueltas para cuando el barco llega. Las CXP/CXC/proformas tienen su propio calendario y ya se muestran en otras tarjetas.
+En `/auditoria`, la tarjeta **"Tiempo medio de resolución"** siempre muestra **"Sin datos"** aunque hay 355 hallazgos marcados como *revisado*.
 
-## Cambio
+La causa: el cálculo actual exige que la revisión tenga **ambos** `asignado_at` y `revisado_at`. En la BD sólo 1 de 357 revisiones tiene `asignado_at` — en la práctica los operadores marcan directamente el hallazgo como *revisado* sin pasar por un paso explícito de asignación, así que el promedio nunca acumula muestras.
 
-En `src/features/auditoria/domain/ejecutivoAgregados.ts`, dentro de `calcularVencimientos`, filtrar los hallazgos por regla antes de contarlos contra el ETA.
+## Solución
 
-**Reglas EXCLUIDAS** del bucket "ETA vencida" (tienen su propia fecha de vencimiento, no dependen del ETA del embarque):
-- `cxp_por_capturar_estancada` — ventana de captura del proveedor
-- `cxp_vencida` — fecha de pago pactada
-- `cxc_vencida` — vencimiento de la factura al cliente
-- `proforma_vencida` — expiración de la proforma
-- `proforma_borrador_abandonada` — antigüedad del borrador
+Usar la fecha en que **apareció** el hallazgo (`asignado_at ?? created_at`) como punto de partida del MTTR. Esto refleja mejor la métrica real de negocio: *"cuánto tarda el equipo desde que la auditoría detecta un problema hasta que lo marca como revisado"*, y funciona con el flujo actual donde la asignación explícita es opcional.
 
-**Reglas INCLUIDAS** (siguen sumando cuando `eta < hoy`): docs_faltantes, docs_pendientes_avanzado, fechas, ventas_sin_facturar, margen_negativo, margen_bajo, venta_sin_costo, costo_sin_venta, proforma_inconsistente, embarque_huerfano, factura_sin_timbrar, rep_pendiente, factura_cancelada_sin_sustitucion, contenedor_datos_incompletos, contenedor_fechas_incompletas, tipo_cambio_faltante.
+### Cambios
 
-Mismo filtro se aplica a `pendientesUrgentesPorEta` (tarjeta ámbar "ETA en ≤ 3 días") por consistencia.
+1. **`src/features/auditoria/domain/ejecutivoRanking.ts`**
+   - En `procesarRevisionEnOperador`, usar `r.asignado_at ?? r.created_at` como fecha de inicio para `diffHoras(...)`.
+   - Mantener el filtro sanidad `horas >= 0 && horas < 24 * 90` (descarta outliers > 90 días).
+
+2. **`src/features/auditoria/components/AuditoriaOperadoresCard.tsx`**
+   - Actualizar el subtítulo de la tarjeta de *"Desde asignación hasta marca de revisado"* a **"Desde detección hasta marca de revisado"** para reflejar la nueva semántica.
+
+3. **Tests**
+   - Ajustar `ejecutivoRanking.test.ts` y `ejecutivoAgregados.test.ts` para cubrir el nuevo fallback (revisiones sin `asignado_at` pero con `created_at` sí cuentan para MTTR).
+   - Verificar que el test existente "usa revisado_at para MTTR" siga verde con la nueva prioridad `asignado_at ?? created_at`.
+
+4. **`CHANGELOG.md` + `APP_VERSION`** → bump a `13.299.20`.
 
 ## Detalles técnicos
-- Nueva constante `REGLAS_CON_VENCIMIENTO_PROPIO: ReglaAuditoria[]` exportada desde `ejecutivoAgregados.ts` para reutilizar.
-- Actualizar tests en `src/features/auditoria/domain/__tests__/ejecutivoAgregados.test.ts` para cubrir el filtrado (caso: hallazgo `cxp_vencida` con `eta` pasada NO cuenta).
-- `edadPromediaPendientesDias` también se recalcula sólo con las reglas incluidas, para que la métrica de antigüedad promedio no la distorsionen las CXP.
-- La regla `cxp_por_capturar_estancada` y `cxp_vencida` siguen apareciendo íntegras en el dashboard (Compras / CXP), sólo dejan de agruparse en la tarjeta de urgencia por ETA.
 
-## Versionado
-- Bump `APP_VERSION` → `13.299.19`.
-- Entrada en `CHANGELOG.md` explicando el filtro y por qué CXP no debería alarmar por ETA.
+El tipo `AuditoriaRevision` ya incluye `created_at` (columna existente en `auditoria_revisiones`), así que no se requiere migración de BD ni cambios en tipos generados. Es un cambio puramente de lógica de agregado + copy.
 
-## Analogía
-Es como la lista de "vuelos que ya despegaron y tienen pendientes" en un aeropuerto: tiene sentido incluir el equipaje sin escanear o el manifiesto pendiente, pero **no** la factura del combustible que pagas 30 días después. Cada pendiente tiene su reloj — el reloj del embarque no aplica a todos.
+## Analogía para el usuario
+
+Es como medir cuánto tarda un mesero en atender una mesa: hoy sólo contamos las mesas donde alguien anotó explícitamente *"asignada a Juan a las 8:00"*, pero casi nadie lo apunta. Cambiamos la referencia al momento en que **entró el cliente** (la detección del hallazgo), que sí siempre queda registrado. Así la métrica deja de estar vacía y refleja la operación real.
