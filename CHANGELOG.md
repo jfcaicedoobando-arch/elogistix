@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.20] - 2026-07-14
+- **fix(auditoría)**: el reporte de `/auditoria` quedaba desfasado del detalle del embarque cuando el operador subía documentos, los marcaba como "No aplica" o avanzaba el estado (se seguían viendo hallazgos con el estado anterior hasta pulsar Recalcular o esperar 5 min).
+  - Se invalida `queryKeys.auditoria.embarques` en las mutations que afectan reglas de auditoría: subir/eliminar/crear documentos y marcar No aplica (`useDocumentoEmbarqueMutations`), avanzar/sincronizar/reabrir estado (`useEstadoEmbarque`), actualizar ETA y fecha real de llegada (`useActualizarEta`, `useActualizarFechaLlegadaReal`), actualizar/crear/duplicar embarque (`useUpdateEmbarque`, `useCreateEmbarque`), cerrar/reabrir (`useCierreEmbarque`), y crear/timbrar factura manual (`useCrearFacturaManual` — regla `ventas_sin_facturar`).
+  - Se agrega helper interno `invalidateDocumentosCaches` en `useDocumentoEmbarqueMutations` para no duplicar la lista de keys.
+  - Sin cambios de SQL: la matriz canónica `_docs_requeridos_por_estado` y `auditoria_embarques_org` quedan intactas.
+
 ## [13.300.19] - 2026-07-14
 - **refactor(emails · power-of-10)**: se divide el modal de envío para respetar la regla de ≤200 líneas por archivo (CI arch baseline).
   - Nuevo `src/components/shared/emails/useEnvioChips.ts`: memos `paraChips`/`ccChips` y handlers add/remove extraídos del dialog.
