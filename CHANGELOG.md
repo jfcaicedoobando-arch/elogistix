@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.18] - 2026-07-14
+- **fix(facturación · bandeja Por cobrar)**: la columna **"Vence en"** mostraba el badge "Vence hoy" en **todas** las filas, aunque las facturas vencieran en semanas.
+  - Causa raíz: `fetchCobranza` guardaba `dias_vencido: Math.max(0, diasVencido)`, borrando el signo negativo que indica "aún faltan N días". Al llegar `0` a `agingPorCobrarBucket`, éste calculaba `faltan = -0 = 0` y caía en la rama "Vence hoy" para todas las facturas no vencidas. El mismo clamp rompía silenciosamente el bucket "Por vencer" de `cobranzaAggregates` (condición `f.dias_vencido <= 0 && >= -7` que nunca se cumplía).
+  - `src/features/facturacion/services/cobranza.ts`: se elimina el `Math.max(0, …)` y se documenta la convención de signo (negativo = faltan días, 0 = vence hoy, positivo = ya venció). Analogía: antes le rompíamos el signo `–` al reloj y todo lo futuro se veía como "ahora"; ahora el signo se respeta.
+  - `src/features/facturacion/utils/aging.ts`: `agingPorCobrarBucket` se endurece con 4 ramas explícitas (holgado, próximo, hoy, y **fallback destructivo** si por error llega un positivo), para que este bug no pueda volver a manifestarse como "Vence hoy" masivo.
+  - Tests reforzados en `src/features/facturacion/utils/__tests__/aging.test.ts`: casos `-10`, `-5`, `0`, `+3` (fallback) con label + className esperados.
+  - `BandejaVencidas` no se ve afectada (sólo consume valores positivos).
+
 ## [13.300.17] - 2026-07-14
 - **ui(emails · enviar documento)**: rediseño del modal "Enviar factura/cotización/proforma por correo" para dar congruencia a la captura de destinatarios y CC. El bug reportado: el modal mezclaba dos patrones distintos — "Para" usaba badges + botón "Agregar" con un input separado, y "CC" un `Input` de texto libre separado por comas.
   - Nuevo componente `src/components/shared/emails/EmailChipsField.tsx` (chip input tipo Gmail/Outlook): Enter/coma/`;`/Tab confirman chip, Backspace en input vacío elimina el último, paste con separadores auto-divide, chips inválidos en `variant="destructive"`, soporta `lockedChips` (candado) para el usuario logueado.

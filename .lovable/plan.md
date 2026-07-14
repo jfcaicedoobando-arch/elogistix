@@ -1,106 +1,53 @@
+## Diagnóstico
 
-## Auditoría del modal "Enviar factura por correo"
+En la bandeja **Por cobrar** (`/facturacion?bandeja=por-cobrar`) hay dos problemas:
 
-Archivo: `src/components/shared/emails/EnviarDocumentoDialog.tsx` (compartido con cotización/proforma).
+### 1. Bug real: todas las filas dicen "Vence hoy"
 
-### Incongruencias detectadas
+En `src/features/facturacion/services/cobranza.ts:127` se guarda:
 
-1. **Dos patrones distintos para lo mismo (agregar un email):**
-   - *Destinatarios manuales*: input + botón "Agregar" → produce un `Badge` por correo con "x" para quitar.
-   - *CC*: un solo `Input` de texto libre "emails adicionales separados por coma". El usuario logueado aparece como badge readonly aparte. No hay chips, no hay validación visible, no se puede quitar uno individual sin editar la cadena.
-
-2. **Feedback de validación desigual:**
-   - En destinatarios el botón se desactiva si el email es inválido y hay `Enter` para agregar.
-   - En CC no hay validación en vivo; se parsea sólo al enviar. No queda claro qué se está por enviar.
-
-3. **Jerarquía visual confusa:**
-   - "Destinatarios" mezcla en el mismo bloque: contactos con checkboxes, badges de manuales, e input de "agregar manual". Cuando el cliente no tiene contactos, el input queda pegado a un mensaje informativo sin separación.
-   - "Recientes" (chips sugeridos) sólo existe en proforma (`DestinatariosRecientesChips`), no se aprovecha aquí.
-
-4. **Usuario logueado como CC "fantasma":**
-   - Se muestra como badge `(tú)` pero no se puede quitar ni se refleja en el input. No queda claro si es obligatorio.
-
-5. **Sin distinción visual entre contactos del cliente vs. manuales** una vez agregados: los manuales viven en badges arriba del input; los del cliente quedan como checkboxes. Al enviar, todos son "destinatarios" pero la UI los trata como dos mundos.
-
-6. **Espaciado / uso del ancho** (`size="2xl"`): la sección de CC se ve pobre (un input flaco); destinatarios ocupa mucho vertical con la lista completa aunque sean 1-2 contactos.
-
----
-
-## Propuesta de rediseño (sólo UI/UX, sin cambios de backend)
-
-Unificar destinatarios y CC bajo **un mismo componente de "campo tipo etiquetas"** (chip input), como Gmail/Outlook. Cambios:
-
-### 1. Nuevo componente compartido `EmailChipsField`
-
-Un campo reutilizable que muestre chips + input inline:
-- Input al final del contenedor, `Enter`, `,`, `;` o `Tab` confirman el chip.
-- Backspace en input vacío elimina el último chip.
-- Cada chip tiene "×" y tooltip con el correo completo.
-- Validación en vivo: chip inválido en `destructive` con tooltip "correo inválido".
-- Soporta pegar lista separada por comas (auto-split).
-- Prop `readonlyChips` para el correo del usuario logueado (chip con candado, no removible) y prop `suggestedChips` para "Recientes".
-- Prop `sourceLabel` opcional para colorear chips que vienen de contactos del cliente vs. manuales (badge chico "cliente" / "manual").
-
-### 2. Rediseño del modal (`EnviarDocumentoDialog.tsx`)
-
-```
-┌─ Enviar factura ─────────────────────────────┐
-│ Para *                                        │
-│  ┌─────────────────────────────────────────┐ │
-│  │ [Ana Pérez · principal ×] [otro@x.com ×]│ │
-│  │ [escribe un correo o elige abajo…____ ] │ │
-│  └─────────────────────────────────────────┘ │
-│  Contactos del cliente:                       │
-│   ☑ Ana Pérez · principal   ana@x.com         │
-│   ☐ Juan · operativo         juan@x.com       │
-│  Recientes: [maria@x.com +] [pagos@x.com +]   │
-│                                               │
-│ CC                                            │
-│  ┌─────────────────────────────────────────┐ │
-│  │ [🔒 yo@empresa.com] [copia@x.com ×] [__]│ │
-│  └─────────────────────────────────────────┘ │
-│                                               │
-│ Asunto                                        │
-│ Mensaje (opcional)                            │
-│ ☐ Marcar el documento como Enviado            │
-└───────────────────────────────────────────────┘
+```ts
+dias_vencido: Math.max(0, diasVencido),
 ```
 
-- **Para** y **CC** usan el mismo componente → misma interacción, mismo look.
-- Los checkboxes de contactos del cliente ahora sólo **agregan/quitan chips en el campo "Para"** (los chips son la fuente de verdad; el check refleja si el email de ese contacto está presente).
-- Chips de contactos muestran un mini-badge con el tipo (`principal`, `facturacion`, `operativo`).
-- El usuario logueado en CC es un chip con candado (no removible), no un badge "fuera del campo".
-- Se agrega la fila "Recientes" (reusando `DestinatariosRecientesChips` para facturas también) — click agrega el chip.
+Es decir, para facturas que **aún no vencen** se pierde el signo negativo y `dias_vencido` queda en `0`. Luego `agingPorCobrarBucket(0)` (aging.ts:53) calcula `faltan = -0 = 0`, cae en la rama `faltan <= 0` y devuelve **"Vence hoy"** para toda factura no vencida.
 
-### 3. Ajustes de layout menores
+El mismo `Math.max(0, ...)` rompe `cobranzaAggregates.ts:83` (`f.dias_vencido <= 0 && >= -7`), que nunca detecta las "próximas a vencer". Los tests (`cobranza.test.ts`, `cobranzaAggregates.test.ts`) ya asumen valores negativos (`-2`, `-3`, `-8`), así que el clamp es lo que está mal.
 
-- Reducir `size` del dialog a `xl` en desktop (2xl era necesario porque el input de CC quedaba solitario; con chips ya no hace falta tanto ancho).
-- Sección de checkboxes de contactos: colapsable si hay >4, y ocultar sección completa si el cliente no tiene contactos (evita el "input flotante" incongruente).
-- Añadir contador `N destinatarios · M en copia` arriba del footer para dar confianza antes de enviar.
+`BandejaVencidas` solo lee valores positivos, así que no se ve afectada.
 
-### 4. Sin cambios en:
+### 2. Redundancia UX: "Vence" y "Vence en" juntas
 
-- `useEnvioDocumentoForm` API pública (mantiene `seleccionados`, `emailsManualesAgregados`, `ccManual`, `destinatarios`, `ccEmails`). Internamente `ccManual` seguirá siendo string separado por comas — el nuevo `EmailChipsField` lo serializa/parsea.
-- Edge functions ni contratos de payload.
-- Memoria de destinatarios (`useDestinatariosSugeridos`).
+`BandejaPorCobrar.tsx` muestra:
+- **Vence** → fecha de vencimiento (dd/mm/aaaa)
+- **Vence en** → badge con días restantes
 
----
+Ambas columnas expresan lo mismo. La fecha es referencia dura; el badge aporta color/urgencia. Se conservan las dos pero el badge se vuelve informativo (no otro dato redundante) mostrando también el signo cuando ya venció (defensa por si llega una fila con `dias_vencido > 0`).
 
-## Archivos que se tocarían (cuando implementemos)
+## Cambios
 
-- **Nuevo:** `src/components/shared/emails/EmailChipsField.tsx`
-- **Editado:** `src/components/shared/emails/EnviarDocumentoDialog.tsx` (rediseño interno).
-- **Editado:** `src/components/shared/emails/DestinatariosPicker.tsx` — se recorta a "lista de contactos con checkboxes" (los manuales dejan de vivir aquí).
-- Reutilizar `src/features/proformas/components/DestinatariosRecientesChips.tsx` también para facturas (pasar como prop).
-- Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
+### A. Corregir sign de `dias_vencido` en el servicio
+`src/features/facturacion/services/cobranza.ts`
+- Línea 127: cambiar `dias_vencido: Math.max(0, diasVencido)` por `dias_vencido: diasVencido` (valor con signo: negativo = faltan días, positivo = días vencidos, 0 = vence hoy).
+- Con esto `agingPorCobrarBucket` y `cobranzaAggregates` recuperan su lógica original ya probada.
 
-### Detalle técnico (no visible al usuario)
+### B. Endurecer `agingPorCobrarBucket`
+`src/features/facturacion/utils/aging.ts`
+- Manejar explícitamente los 3 casos: `faltan > 7` (holgado, gris), `1 ≤ faltan ≤ 7` (warning suave), `faltan === 0` (vence hoy, warning fuerte), y **fallback `faltan < 0`** por seguridad (mostrar "Venció hace N d" en destructivo) para que jamás vuelvan a mostrarse todas como "Vence hoy" si algún día vuelve a llegar un positivo.
 
-- `EmailChipsField` es un `input`-container con `role="group"` + `aria-label`. Chips son botones focusables con `aria-label="quitar <email>"`. Cumple accesibilidad teclado (Tab entre chips, Backspace elimina).
-- Validación con `EMAIL_RE` existente.
-- Sin nuevas dependencias.
-- Componentes ≤200 líneas (Power of 10 #4). Si `EnviarDocumentoDialog` crece, extraer secciones a `EnviarDocumentoDialog.Para.tsx` / `.CC.tsx`.
+### C. Reforzar tests
+`src/features/facturacion/utils/__tests__/aging.test.ts`
+- Añadir casos: `agingPorCobrarBucket(-10) → "10 d"`, `agingPorCobrarBucket(-3)` warning suave, `agingPorCobrarBucket(0) → "Vence hoy"`, `agingPorCobrarBucket(2)` fallback destructivo.
 
----
+`src/features/facturacion/services/__tests__/cobranza.test.ts`
+- Añadir test que verifique que una factura con `fecha_vencimiento` futura devuelve `dias_vencido` **negativo** (no `0`).
 
-¿Procedo a implementarlo tal cual, o quieres afinar algo (por ejemplo: mantener los checkboxes de contactos separados del campo de chips, o preferir que el usuario logueado en CC sí sea removible)?
+### D. Changelog + versión
+- `APP_VERSION` → `13.300.18`.
+- Entrada en `CHANGELOG.md` describiendo el fix.
+
+## Detalle técnico
+
+El bug fue introducido al agregar el clamp defensivo en el servicio; el resto del sistema (buckets, aggregates, tests) ya asumía la convención con signo. Es un cambio de una sola línea + endurecimiento del bucket y pruebas para blindarlo.
+
+No se toca la UI de columnas: el usuario ya tiene fecha (`Vence`) + badge (`Vence en`); tras el fix el badge mostrará valores correctos ("12 d", "5 d", "Vence hoy") en vez de "Vence hoy" para todo.

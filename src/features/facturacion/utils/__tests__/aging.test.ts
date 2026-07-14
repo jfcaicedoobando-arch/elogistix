@@ -22,8 +22,16 @@ describe("agingPorCobrarBucket", () => {
   });
   it("usa warning suave si faltan 1-7 días", () => {
     expect(agingPorCobrarBucket(-5).className).toContain("bg-warning/60");
+    expect(agingPorCobrarBucket(-5).label).toBe("5 d");
   });
   it("usa muted cuando falta más de una semana", () => {
     expect(agingPorCobrarBucket(-30).className).toContain("bg-muted");
+    expect(agingPorCobrarBucket(-10).label).toBe("10 d");
+  });
+  it("fallback destructivo si llega un valor positivo (ya vencida)", () => {
+    const b = agingPorCobrarBucket(3);
+    expect(b.className).toContain("bg-destructive");
+    expect(b.label).toBe("3 d");
+    expect(b.ariaLabel).toContain("Venció hace 3");
   });
 });

@@ -51,9 +51,22 @@ export function agingVencidoBucket(dias: number): AgingBucket {
 }
 
 export function agingPorCobrarBucket(diasVencido: number): AgingBucket {
-  // diasVencido < 0  => aún faltan (-diasVencido) días para vencer.
+  // Convención de signo (ver `cobranza.ts`):
+  //   diasVencido < 0  → aún faltan (-diasVencido) días para vencer.
+  //   diasVencido = 0  → vence hoy.
+  //   diasVencido > 0  → ya venció (defensa: aquí no debería llegar, pero lo mostramos).
   const faltan = -diasVencido;
-  if (faltan <= 0) {
+
+  if (faltan < 0) {
+    // Ya venció. Delegamos el color al bucket de vencidas para consistencia visual.
+    const vencidos = -faltan;
+    return {
+      label: `${vencidos} d`,
+      className: "bg-destructive/70 text-destructive-foreground",
+      ariaLabel: `Venció hace ${vencidos} días`,
+    };
+  }
+  if (faltan === 0) {
     return {
       label: "Vence hoy",
       className: "bg-warning text-warning-foreground",
