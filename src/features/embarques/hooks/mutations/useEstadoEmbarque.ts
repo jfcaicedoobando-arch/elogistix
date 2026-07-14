@@ -81,7 +81,7 @@ export function useSyncEstadoEmbarque() {
         usuarioEmail && usuarioEmail.trim() ? usuarioEmail : 'sistema',
       );
     },
-    invalidate: [queryKeys.embarques.all],
+    invalidate: [queryKeys.embarques.all, queryKeys.auditoria.embarques],
     optimistic: [
       { queryKey: (v) => queryKeys.embarques.detail(v.embarqueId), updater: patchEstado },
       { queryKey: (v) => queryKeys.embarques.full(v.embarqueId), updater: patchEstado },
