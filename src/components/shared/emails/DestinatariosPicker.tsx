@@ -29,17 +29,19 @@ function ContactoRow({
     <label className="flex items-start gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer">
       <Checkbox checked={checked} onCheckedChange={(v) => onToggle(!!v)} className="mt-0.5" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">
-          {esPrincipal ? "Email principal del cliente" : c.contacto || c.nombre}{" "}
+        <div className="text-sm font-medium truncate flex items-center gap-1.5">
+          <span className="truncate">
+            {esPrincipal ? "Email principal del cliente" : c.contacto || c.nombre}
+          </span>
           {c.tipo && (
             <Badge
               variant={esPrincipal ? "default" : "outline"}
-              className="ml-1 text-[10px] uppercase tracking-wide"
+              className="text-[10px] uppercase tracking-wide"
             >
               {c.tipo}
             </Badge>
           )}
-        </p>
+        </div>
         <p className="text-xs text-muted-foreground truncate">{c.email}</p>
       </div>
     </label>
