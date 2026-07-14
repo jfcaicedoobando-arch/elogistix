@@ -69,7 +69,8 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
     expect(screen.getByText(/algo salió mal/i)).toBeInTheDocument();
-    expect(screen.getByText(/ui-explota/)).toBeInTheDocument();
+    // El stack también contiene "ui-explota"; seleccionamos el <span> del campo Mensaje.
+    expect(screen.getByText("ui-explota", { selector: "span" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /reintentar/i })).toBeInTheDocument();
   });
 
