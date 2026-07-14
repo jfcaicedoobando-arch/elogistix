@@ -104,9 +104,9 @@ export function EnviarDocumentoDialog({
         </Label>
         <EmailChipsField
           id="envio-para"
-          chips={paraChips}
-          onAdd={handleParaAdd}
-          onRemove={handleParaRemove}
+          chips={chips.paraChips}
+          onAdd={chips.handleParaAdd}
+          onRemove={chips.handleParaRemove}
           ariaLabel="Destinatarios"
           placeholder="escribe un correo o marca un contacto abajo…"
         />
@@ -122,14 +122,14 @@ export function EnviarDocumentoDialog({
         <Label htmlFor="envio-cc">Copia (CC)</Label>
         <EmailChipsField
           id="envio-cc"
-          chips={ccChips}
+          chips={chips.ccChips}
           lockedChips={form.userEmail ? [{
             email: form.userEmail,
             label: `${form.userEmail} (tú)`,
             tooltip: "Siempre se agrega tu correo",
           }] : []}
-          onAdd={handleCcAdd}
-          onRemove={handleCcRemove}
+          onAdd={chips.handleCcAdd}
+          onRemove={chips.handleCcRemove}
           ariaLabel="Copia CC"
           placeholder="agrega correos en copia…"
         />
