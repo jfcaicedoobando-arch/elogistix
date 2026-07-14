@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.16] - 2026-07-14
+- **fix(cotización · LCL · Paso 2)**: la fila auto-cargada de flete LCL ahora se guarda como **1 servicio** (cantidad = 1, costo_unitario = costo total, precio_venta = venta total) en vez de usar el W/M facturable como cantidad. Antes valores decimales como `0.894` chocaban con el check constraint `cotizacion_costos_cantidad_pos` y bloqueaban el guardado del paso 2. El desglose W/M queda documentado en la nota de la fila.
+
 ## [13.299.15] - 2026-07-14
 - **fix(cotización · eliminar)**: al eliminar una cotización sólo se muestra un toast. Antes se disparaban dos ("Cotización eliminada" desde la mutación + "Cotización eliminada correctamente" desde la acción de la fila). Se dejó únicamente el toast centralizado en `useDeleteCotizacion`.
 
