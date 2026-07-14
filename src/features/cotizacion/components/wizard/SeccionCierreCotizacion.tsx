@@ -18,35 +18,40 @@ interface Props {
  * Extraído en v13.142.2 para cumplir el límite Power of 10 de 200 líneas.
  */
 export default function SeccionCierreCotizacion({ form, complete }: Props) {
+  const tipoEmbarque = form.watch("tipoEmbarque") as string;
+  const esLcl = tipoEmbarque === "LCL";
+  const defaultOpen = esLcl ? ["notas"] : ["num-embarques", "notas"];
   return (
     <div id="seccion-cierre" className="scroll-mt-4">
-      <Accordion type="multiple" defaultValue={["num-embarques", "notas"]} className="w-full">
-        <AccordionItem value="num-embarques">
-          <AccordionTrigger className="text-base font-semibold hover:no-underline">
-            <span className="flex items-center gap-2">
-              <Ship className="h-5 w-5 text-primary" />
-              Número de Embarques
-              {complete && (
-                <span
-                  className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success"
-                  aria-label="Sección completa"
-                >
-                  <Check className="h-3.5 w-3.5" />
-                </span>
-              )}
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="pt-2">
-            <Label htmlFor="cot-num-contenedores">Número de contenedores</Label>
-            <Input
-              id="cot-num-contenedores"
-              type="number" min={1}
-              value={form.watch("numContenedores") as number}
-              onChange={(e) => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-32 mt-1"
-            />
-          </AccordionContent>
-        </AccordionItem>
+      <Accordion type="multiple" defaultValue={defaultOpen} className="w-full">
+        {!esLcl && (
+          <AccordionItem value="num-embarques">
+            <AccordionTrigger className="text-base font-semibold hover:no-underline">
+              <span className="flex items-center gap-2">
+                <Ship className="h-5 w-5 text-primary" />
+                Número de Embarques
+                {complete && (
+                  <span
+                    className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-success/15 text-success"
+                    aria-label="Sección completa"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                  </span>
+                )}
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2">
+              <Label htmlFor="cot-num-contenedores">Número de contenedores</Label>
+              <Input
+                id="cot-num-contenedores"
+                type="number" min={1}
+                value={form.watch("numContenedores") as number}
+                onChange={(e) => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-32 mt-1"
+              />
+            </AccordionContent>
+          </AccordionItem>
+        )}
         <AccordionItem value="notas">
           <AccordionTrigger className="text-base font-semibold hover:no-underline">
             <span className="flex items-center gap-2">

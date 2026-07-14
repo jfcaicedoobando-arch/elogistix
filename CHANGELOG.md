@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.13] - 2026-07-14
+- **fix(cotización · LCL)**: se oculta el bloque "Número de Embarques / Número de contenedores" en el Paso 1 cuando el tipo de embarque es LCL, ya que la carga consolidada no usa contenedores propios. Analogía: si viajas compartiendo un tráiler con otros, no tiene sentido que te pregunten cuántos tráileres alquilas — sólo importan tus cajas.
+
 ## [13.299.12] - 2026-07-14
 - **fix(CI · arquitectura · safe-cast)**: se agrega el marcador `// SAFE-CAST:` al `as unknown as Record<string, unknown>` de `reviveDateFields` en `useCotizacionDraftAutosave.ts` para pasar `audit:casts` y el test de arquitectura. Analogía: el conversor de datos ya llevaba el permiso correcto, sólo le faltaba pegarle la etiqueta que el guardia pide antes de dejarlo pasar.
 
