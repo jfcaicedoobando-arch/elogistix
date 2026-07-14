@@ -12,7 +12,12 @@ vi.mock("sonner", () => {
 });
 
 import { toast as sonnerToast } from "sonner";
-import { notifyError, notifyWarning, notifySuccess } from "../appFeedback";
+import { notifyError, notifyWarning, notifySuccess, isAuthorizationError } from "../appFeedback";
+
+const reportCaughtErrorMock = vi.fn();
+vi.mock("@/lib/observability/reportCaughtError", () => ({
+  reportCaughtError: (...args: unknown[]) => reportCaughtErrorMock(...args),
+}));
 
 const m = sonnerToast as unknown as {
   error: ReturnType<typeof vi.fn>;
@@ -24,6 +29,7 @@ beforeEach(() => {
   m.error.mockClear();
   m.success.mockClear();
   m.warning.mockClear();
+  reportCaughtErrorMock.mockClear();
 });
 
 describe("appFeedback (sonner)", () => {
@@ -51,5 +57,33 @@ describe("appFeedback (sonner)", () => {
   it("notifySuccess emite sonner.success", () => {
     notifySuccess(undefined, { title: "Listo", description: "ok" });
     expect(m.success).toHaveBeenCalledWith("Listo", { description: "ok" });
+  });
+
+  it("isAuthorizationError detecta variantes conocidas", () => {
+    expect(isAuthorizationError(new Error("No tienes permisos para X"))).toBe(true);
+    expect(isAuthorizationError(new Error("permission denied for table"))).toBe(true);
+    expect(isAuthorizationError(new Error("Forbidden"))).toBe(true);
+    expect(isAuthorizationError(new Error("Network fail"))).toBe(false);
+    expect(isAuthorizationError(null)).toBe(false);
+  });
+
+  it("notifyError NO envía a Sentry cuando el error es de autorización", () => {
+    notifyError(undefined, {
+      title: "Error al actualizar",
+      error: new Error("No tienes permisos para cambiar el estado del cliente en esta proforma."),
+      method: "PROFORMAS_RESPUESTA_MANUAL",
+    });
+    expect(m.error).toHaveBeenCalled();
+    expect(reportCaughtErrorMock).not.toHaveBeenCalled();
+  });
+
+  it("notifyError SÍ envía a Sentry cuando el error no es de autorización", () => {
+    notifyError(undefined, {
+      title: "Error al actualizar",
+      error: new Error("Network fail"),
+      method: "PROFORMAS_RESPUESTA_MANUAL",
+    });
+    expect(m.error).toHaveBeenCalled();
+    expect(reportCaughtErrorMock).toHaveBeenCalledTimes(1);
   });
 });

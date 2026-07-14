@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifyWarning } from "@/components/shared/utils/appFeedback";
 import {
   actualizarEstadoClienteProforma,
   type RespuestaCliente,
@@ -59,12 +59,20 @@ export function RespuestaClienteManualDialog({
       onOpenChange(false);
       setMotivo("");
     } catch (e) {
-      notifyError(toast, {
-        title: "Error al actualizar",
-        description: (e as Error).message,
-        error: e,
-        method: "PROFORMAS_RESPUESTA_MANUAL",
-      });
+      const msg = (e as Error)?.message ?? "";
+      if (/no tienes permisos|permission denied|not authorized|forbidden|acceso denegado/i.test(msg)) {
+        notifyWarning(toast, {
+          title: "Acción no permitida",
+          description: msg,
+        });
+      } else {
+        notifyError(toast, {
+          title: "Error al actualizar",
+          description: msg,
+          error: e,
+          method: "PROFORMAS_RESPUESTA_MANUAL",
+        });
+      }
     } finally {
       setLoading(false);
     }
