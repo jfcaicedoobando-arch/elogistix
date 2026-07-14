@@ -49,24 +49,44 @@ interface Freshness {
   dias: number;
 }
 
-function computeFreshness(eventos: Array<{ fecha: string; tipo: string; ubicacion: string | null }>, eta: string | null | undefined): Freshness {
+function computeFreshness(
+  eventos: Array<{ fecha: string; tipo: string; ubicacion: string | null }>,
+  eta: string | null | undefined,
+  arribado: boolean,
+): Freshness {
   if (eventos.length === 0) {
-    return { label: "Sin eventos registrados", critical: true, etaProxima: false, dias: 0 };
+    return { label: "Sin eventos registrados", critical: !arribado, etaProxima: false, dias: 0 };
   }
   const ultimo = eventos[0];
   const dias = Math.floor((Date.now() - new Date(ultimo.fecha).getTime()) / DAY_MS);
+  const ubicacion = ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : "";
+
+  if (arribado) {
+    return {
+      label: `Arribado — ${ultimo.tipo}${ubicacion}`,
+      critical: false,
+      etaProxima: false,
+      dias,
+    };
+  }
+
   const diasParaEta = eta != null ? Math.ceil((new Date(eta).getTime() - Date.now()) / DAY_MS) : null;
   const etaProxima = diasParaEta != null && diasParaEta >= 0 && diasParaEta <= 2;
-  const ubicacion = ultimo.ubicacion ? ` en ${ultimo.ubicacion}` : "";
   const label = dias === 0
     ? `Último evento hoy — ${ultimo.tipo}`
     : `Último evento hace ${dias} día${dias === 1 ? "" : "s"} — ${ultimo.tipo}${ubicacion}`;
   return { label, critical: dias >= 7 || etaProxima, etaProxima, dias };
 }
 
+function isArribado(embarque?: EmbarqueTrackingProps | null): boolean {
+  if (!embarque) return false;
+  if (embarque.fecha_llegada_real != null) return true;
+  return embarque.estado === "Entregado" || embarque.estado === "Cerrado";
+}
+
 function isEtaVencida(embarque?: EmbarqueTrackingProps | null): boolean {
   if (!embarque?.eta) return false;
-  if (embarque.estado === "Entregado" || embarque.estado === "Cerrado") return false;
+  if (isArribado(embarque)) return false;
   return new Date(embarque.eta).getTime() < Date.now();
 }
 
