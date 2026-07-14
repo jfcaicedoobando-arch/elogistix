@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.13] - 2026-07-14
+- **ui(embarques · detalle)**: auditoría Full HD del detalle de embarque. Se reduce ruido visual y redundancia siguiendo el plan aprobado (Batches A–D en `.lovable/plan.md`).
+  - `EmbarqueDetalleHeaderActions.tsx`: los botones `Compartir`, `Duplicar` y `Eliminar` se agrupan bajo un menú `⋯` (`DropdownMenu`) a la derecha del CTA principal, evitando que `Eliminar` (destructivo) compita visualmente con `Avanzar a…`.
+  - `tabResumen/ResumenCards.tsx`: se retira la fila duplicada `Modo` de "Datos generales" (ya está en el chip del header). El campo `Contenedor` (singular, sólo primer registro) se reemplaza por un resumen agrupado por tipo (`6 × 40HC`) usando `useContenedoresEmbarque`. `Creador / Responsable` → `Responsable operativo`. Placeholders estandarizados a `—`. Títulos en sentence case.
+  - `ETD` y `ETA`: cuando el embarque está en `Confirmado` o `En Tránsito` y la fecha es null, se muestra un botón fantasma `+ Capturar ETD/ETA` que lleva directo al wizard de edición (menos fricción operativa).
+  - `contenedores/SeccionContenedoresReadonly.tsx`: la columna `BL House` se oculta cuando todas las filas están vacías. Cuando `Peso`, `Volumen` o `Piezas` son iguales en todas las filas, se contrae la columna y se muestran badges resumen `Todos los contenedores: 9,683 kg · 68 m³ · 1,547 piezas` arriba de la tabla. Row height reducido a 32 px.
+  - `OrigenCostosSection.tsx`: cuando la decisión es `sin_cambios` y la tarifa cotizada = aplicada, se muestra una sola tarjeta `Tarifa cotizada y aplicada` en lugar de dos tarjetas duplicadas.
+
 ## [13.300.12] - 2026-07-14
 - **ui(embarques · header)**: se consolidan los 6 badges del detalle de embarque (`Estado`, `Modo`, `Proforma`, `Cobro cliente`, `Admin`, `Generado desde COT-…`) en un solo chip compuesto para reducir la saturación visual reportada.
   - Nuevo componente `src/features/embarques/components/EmbarqueStatusChip.tsx`: un solo `Badge` con fondo semántico del estado (`getEstadoColor`), icono de modo + separadores `·`, y sub-estado financiero unificado. La resolución del sub-estado (`resolveFinancieroInfo`) prioriza el más avanzado: `Cobrado` > `Cobro parcial` > `Proforma` > `Sin proforma`.
