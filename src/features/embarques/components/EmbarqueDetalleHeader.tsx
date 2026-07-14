@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+
 import { toTitleCase } from "@/lib/formatters";
 import { EmbarqueStatusChip } from "./EmbarqueStatusChip";
 import { EmbarqueBadgeAdmin } from "./EmbarqueBadgeAdmin";
