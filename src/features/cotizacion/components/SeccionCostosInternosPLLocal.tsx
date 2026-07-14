@@ -29,13 +29,19 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   const tarifaId = watch("tarifaId");
   const numContenedores = watch("numContenedores") ?? 1;
   const tipoEmbarque = watch("tipoEmbarque");
+  const lclFleteManual = watch("lclFleteManual");
+  const dimensionesLCL = watch("dimensionesLCL");
+  const pesoKg = watch("pesoKg");
   const { data: tarifa } = useTarifaVinculada(tarifaId);
+  const { data: proveedores = [] } = useProveedoresLite();
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
 
   const precargadaRef = useRef<string | null>(null);
+  const precargadaLclRef = useRef<boolean>(false);
+  const [lclAutoCargado, setLclAutoCargado] = useState(false);
 
   // Detecta desajuste tarifa (FCL) ↔ cotización (LCL): la tabla `costeo_tarifas`
   // está modelada para contenedor; una tarifa con `tipo_contenedor_nombre` en una
