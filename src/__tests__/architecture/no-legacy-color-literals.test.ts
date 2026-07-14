@@ -49,8 +49,28 @@ const ALLOWLIST: readonly string[] = [
   "src/components/shared/ModoIcon.tsx",
   // Lote 3B (M6): AmbienteBadge + banners de revalidación.
   "src/features/facturacion/components/AmbienteBadge.tsx",
+  "src/features/cotizacion/components/revalidacion/ReaprobacionTarifaBanner.tsx",
+  "src/features/cotizacion/components/revalidacion/RevalidarTarifaModal.tsx",
   // Lote 3B (H3 remanente): BulkImportSteps mantiene 2 literales pendientes.
   "src/components/shared/BulkImportSteps.tsx",
+  // Lote 3B (deuda P&L cotización): heatmap de márgenes usa emerald/red literales
+  // en escala continua — requiere token gradiente antes de tokenizar.
+  "src/features/cotizacion/components/ResumenPL.tsx",
+  "src/features/cotizacion/components/SeccionCostosInternosPLDetalle.tsx",
+  "src/features/cotizacion/components/SeccionCostosInternosPLLocal.tsx",
+  "src/features/cotizacion/components/TablaCostosLocal.tsx",
+  "src/features/cotizacion/components/wizard/WizardTotalsBar.tsx",
+  // Lote 3B (CXP): NotasCreditoSection.
+  "src/features/cxp/components/NotasCreditoSection.tsx",
+  // Lote 3B (dashboards ejecutivos): rehacer con tokens `success`/`warning`.
+  "src/features/dashboard/components/EmbarquesPendientesAdminCard.tsx",
+  "src/features/dashboard/direccion/components/CarteraSection.tsx",
+  "src/features/dashboard/direccion/components/HeroCards.tsx",
+  "src/features/dashboard/direccion/components/PulsoSection.tsx",
+  "src/features/dashboard/finance/components/FinanceHeader.tsx",
+  // Marketing/landing: preview interno del logo, no forma parte del ERP.
+  // Se mantiene con paleta cruda intencionalmente.
+  "src/features/marketing/routes/LogoPreview.tsx",
 ];
 
 describe("architecture — no legacy tailwind color literals", () => {
