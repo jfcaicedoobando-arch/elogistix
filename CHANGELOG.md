@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.14] - 2026-07-14
+- **ui(embarques · detalle FHD)**: segunda pasada de auditoría a 1920×1080 (sidebar abierta). Se ataca densidad, jerarquía visual y balance de cards. Ver `.lovable/plan.md`, batches E–I.
+  - **Batch E — Balance de cards**: `TabResumen.tsx` cambia `auto-rows-fr` a `items-start` para que `Datos generales` y `Ruta y transporte` midan lo que necesitan (elimina ~150px de espacio muerto bajo "Responsable operativo"). Las cards individuales de `Shipper` y `Consignatario` se consolidan en una sola card **Partes** con grid de 2 columnas — libera ~80px verticales.
+  - **Batch F — ETD/ETA discreto**: `ResumenCards.tsx` sustituye los dos botones `+ Capturar` en `variant="primary"` por `variant="link"` (text-primary sin fondo). Cuando faltan **ambas** fechas, se colapsan en un único banner interno `ETD y ETA sin capturar · Capturar fechas` con borde punteado y `bg-primary/5`. Deja de competir con el CTA `Avanzar a…` del header.
+  - **Batch G — Stepper compacto**: `EstadoProgresoCard.tsx` sustituye los 8 círculos numerados (alto ~130px) por una barra segmentada delgada (alto ~48px) con `Paso 2 de 8 · Confirmado` a la izquierda y `Siguiente: En Tránsito` a la derecha. Cada segmento conserva `title`/`aria-label` para accesibilidad y hay un `progressbar` sr-only.
+  - **Batch H — Header `⋯` ghost**: `EmbarqueDetalleHeaderActions.tsx` cambia el trigger del `DropdownMenu` de `variant="outline"` a `variant="ghost"` con `h-9 w-9 p-0`. `Editar` recupera su jerarquía visual.
+  - **Batch I — Tabla contenedores densa**: `SeccionContenedoresReadonly.tsx` elimina la columna `#` (redundante con 6 filas) y aplica anchos fijos (`Tipo` 140px, `BL House` 180px, `Peso`/`Volumen` 120px, `Piezas` 100px) + `max-w-3xl` en la tabla. Las columnas quedan agrupadas en vez de flotando en 1500px de ancho.
+
 ## [13.300.13] - 2026-07-14
 - **ui(embarques · detalle)**: auditoría Full HD del detalle de embarque. Se reduce ruido visual y redundancia siguiendo el plan aprobado (Batches A–D en `.lovable/plan.md`).
   - `EmbarqueDetalleHeaderActions.tsx`: los botones `Compartir`, `Duplicar` y `Eliminar` se agrupan bajo un menú `⋯` (`DropdownMenu`) a la derecha del CTA principal, evitando que `Eliminar` (destructivo) compita visualmente con `Avanzar a…`.
