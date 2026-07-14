@@ -145,6 +145,14 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
           </span>
         </div>
       )}
+      {lclAutoCargado && !tarifa && (
+        <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+          <Link2 className="size-4 text-primary" />
+          <span>
+            Flete LCL precargado desde el Paso 1 (captura manual). Puedes editar, agregar o eliminar conceptos.
+          </span>
+        </div>
+      )}
 
       <TablaCostosLocal
         filas={filas} filasMoneda={filasUSD} moneda="USD"
