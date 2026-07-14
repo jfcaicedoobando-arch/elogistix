@@ -84,7 +84,8 @@ export async function updateTarifaConRecargos(
   id: string,
   input: TarifaInput,
 ): Promise<void> {
-  const { recargos, ...tarifa } = input;
+  const { recargos, ...rest } = input;
+  const tarifa = sanitizeTarifaDates(rest);
   await run(
     supabase.from("costeo_tarifas").update({ ...tarifa, moneda: "USD" }).eq("id", id),
   );
