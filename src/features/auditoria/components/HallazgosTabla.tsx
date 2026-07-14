@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { revisionKey } from "@/features/auditoria/hooks";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/features/auditoria/types";
 import {
-  formatEta,
   reglaLabel,
   reglaToTab,
   severidadConfig,
