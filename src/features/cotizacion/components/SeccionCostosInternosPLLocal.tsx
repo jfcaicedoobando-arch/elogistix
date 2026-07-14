@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { DollarSign, Banknote, Link2, AlertTriangle } from "lucide-react";
 import ResumenPL from "./ResumenPL";
@@ -9,6 +9,8 @@ import { fetchTarifaVinculada } from "@/features/cotizacion/services/tarifaVincu
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
 import { buildCostosDesdeTarifa } from "@/features/cotizacion/components/seccionRuta/buildCostosDesdeTarifa";
+import { buildCostosLCLManual } from "@/features/cotizacion/components/seccionRuta/buildCostosLCLManual";
+import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 
 
@@ -27,13 +29,19 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   const tarifaId = watch("tarifaId");
   const numContenedores = watch("numContenedores") ?? 1;
   const tipoEmbarque = watch("tipoEmbarque");
+  const lclFleteManual = watch("lclFleteManual");
+  const dimensionesLCL = watch("dimensionesLCL");
+  const pesoKg = watch("pesoKg");
   const { data: tarifa } = useTarifaVinculada(tarifaId);
+  const { data: proveedores = [] } = useProveedoresLite();
   const markup = useConfigValue<number>("cotizaciones", "markup_default_maritimo", 0.15);
 
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
 
   const precargadaRef = useRef<string | null>(null);
+  const precargadaLclRef = useRef<boolean>(false);
+  const [lclAutoCargado, setLclAutoCargado] = useState(false);
 
   // Detecta desajuste tarifa (FCL) ↔ cotización (LCL): la tabla `costeo_tarifas`
   // está modelada para contenedor; una tarifa con `tipo_contenedor_nombre` en una
@@ -64,6 +72,29 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
     })();
     return () => { cancelado = true; };
   }, [tarifaId, filas.length, setFilas, markup, numContenedores, tipoEmbarque]);
+
+  // Precarga LCL manual: si el paso 1 capturó `lclFleteManual` con tarifa W/M
+  // válida y no hay filas todavía, inyectamos una fila de flete USD para que
+  // el ejecutivo no re-teclee. Se ejecuta una sola vez (guard con ref).
+  useEffect(() => {
+    if (tipoEmbarque !== "LCL") return;
+    if (tarifaId) return; // FCL/tarifa vinculada ya se encarga.
+    if (precargadaLclRef.current) return;
+    if (filas.length > 0) { precargadaLclRef.current = true; return; }
+    const consolidador = proveedores.find(p => p.id === lclFleteManual?.consolidadorId);
+    const nuevas = buildCostosLCLManual({
+      lclFleteManual,
+      dimensiones: dimensionesLCL,
+      pesoKg,
+      consolidadorNombre: consolidador?.nombre ?? null,
+    });
+    if (nuevas.length === 0) return;
+    setFilas(prev => (prev.length > 0 ? prev : nuevas));
+    precargadaLclRef.current = true;
+    setLclAutoCargado(true);
+  }, [tipoEmbarque, tarifaId, filas.length, lclFleteManual, dimensionesLCL, pesoKg, proveedores, setFilas]);
+
+
 
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
@@ -111,6 +142,14 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
           <span>
             Costos precargados desde tarifa <strong>{tarifa.naviera_nombre}</strong> ({tarifa.puerto_origen_nombre} → {tarifa.puerto_destino_nombre}).
             Puedes editar, agregar o eliminar conceptos.
+          </span>
+        </div>
+      )}
+      {lclAutoCargado && !tarifa && (
+        <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
+          <Link2 className="size-4 text-primary" />
+          <span>
+            Flete LCL precargado desde el Paso 1 (captura manual). Puedes editar, agregar o eliminar conceptos.
           </span>
         </div>
       )}
