@@ -105,35 +105,15 @@ export function useEnvioDocumentoForm(
     setAsunto(buildAsuntoInicialRef.current());
     setMensaje("");
     setEmailManual("");
-    // Precargamos CC con los correos heredados (última factura / preferencia
-    // del cliente), excluyendo al usuario logueado (que ya se agrega solo).
-    const userEmailLc = userEmail?.toLowerCase();
-    const precargaCc = (ccInicialRef.current ?? [])
-      .map((e) => e.trim())
-      .filter((e) => EMAIL_RE.test(e) && e.toLowerCase() !== userEmailLc);
-    setCcManual(precargaCc.join(", "));
-    // Precargamos destinatarios manuales heredados, evitando duplicar los
-    // emails que ya vengan de los contactos del cliente.
-    const contactoEmails = new Set(contactos.map((c) => c.email.toLowerCase()));
-    const precargaDest = (destInicialRef.current ?? [])
-      .map((e) => e.trim())
-      .filter((e) => EMAIL_RE.test(e) && !contactoEmails.has(e.toLowerCase()));
-    // Dedupe manteniendo orden
-    const seenDest = new Set<string>();
-    setEmailsManualesAgregados(
-      precargaDest.filter((e) => {
-        const k = e.toLowerCase();
-        if (seenDest.has(k)) return false;
-        seenDest.add(k);
-        return true;
-      }),
+    const { precargaCc, precargaDest, seleccionadosPre } = computeInitialPrecarga(
+      contactos,
+      ccInicialRef.current,
+      destInicialRef.current,
+      userEmail,
     );
-    const pre: Record<string, boolean> = {};
-    const principal = contactos.find((c) => c.id === CLIENTE_PRINCIPAL_ID);
-    const prioridad = contactos.find(esContactoPrioridadCliente);
-    if (principal) pre[principal.id] = true;
-    else if (prioridad) pre[prioridad.id] = true;
-    setSeleccionados(pre);
+    setCcManual(precargaCc.join(", "));
+    setEmailsManualesAgregados(precargaDest);
+    setSeleccionados(seleccionadosPre);
   }, [open, contactos, ccInicialKey, destInicialKey, userEmail]);
 
   const agregarManual = () => {
