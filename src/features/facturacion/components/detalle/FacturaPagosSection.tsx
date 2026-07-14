@@ -15,9 +15,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
-import { useRegistrarActividad, useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
 import { PagoRepCell } from "./PagoRepCell";
 
@@ -34,7 +32,6 @@ interface Props {
 export function FacturaPagosSection({
   facturaId, facturaNumero, totalFactura, moneda, canEdit,
 }: Props) {
-  const { toast } = useToast();
   const { data: pagos = [], isLoading } = usePagosFactura(facturaId);
   const eliminar = useEliminarPagoFactura();
   const registrarActividad = useRegistrarActividad();
@@ -56,19 +53,11 @@ export function FacturaPagosSection({
         entidad_nombre: `Pago eliminado factura ${facturaNumero}`,
       });
       // NOTA: `notifySuccess` de éxito lo dispara el hook `useEliminarPagoFactura`.
-      // Aquí sólo cerramos el diálogo. El `onError` del hook ya adjunta el
-      // `error` real (incluye mensaje de Supabase) al toast, así que este
-      // catch únicamente evita que la promesa rechazada explote como unhandled.
+      // Aquí sólo cerramos el diálogo.
       setPagoAEliminar(null);
-    } catch (error) {
-      // Fallback diagnóstico: si por alguna razón el hook no adjuntó el error
-      // al toast (p.ej. un throw fuera del onError), lo mostramos aquí.
-      notifyError(toast, {
-        title: "Error al eliminar pago",
-        method: "ON_ERROR",
-        errorCode: ERROR_CODES.VALIDATION_FAILED,
-        error: error instanceof Error ? error : new Error(String(error)),
-      });
+    } catch {
+      // El hook `useEliminarPagoFactura` ya muestra el toast con el error real.
+      // Este catch sólo evita una promesa rechazada sin manejar desde el diálogo.
     }
   };
 

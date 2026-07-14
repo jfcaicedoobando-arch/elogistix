@@ -1,25 +1,39 @@
-## Problema
+## Objetivo
+Permitir que un usuario autorizado elimine (soft delete) un pago sin que la policy de backend lo bloquee, y dejar un solo toast de error si algo falla.
 
-Al intentar eliminar un pago, el usuario recibe **"Error al eliminar pago"** con `errorDetails: {}` — no sabemos qué falló porque el `catch` en `FacturaPagosSection.tsx` está vacío (`catch { ... }` sin capturar el error) y descarta el mensaje real del backend.
+## Diagnóstico
+- El error real ya quedó visible: la policy restrictiva `Hide soft deleted pagos_factura` tiene `WITH CHECK (deleted_at IS NULL)`.
+- En un `UPDATE` para soft delete, la fila nueva queda con `deleted_at != null`, entonces esa policy restrictiva bloquea la operación aunque el usuario tenga rol `contador`.
+- El doble toast ocurre porque:
+  1. `useEliminarPagoFactura` muestra el toast real con `DELETE_PAYMENT`.
+  2. `FacturaPagosSection.tsx` vuelve a mostrar otro toast genérico en el `catch`.
 
-Además, hay un **doble toast**: el hook `useEliminarPagoFactura` ya muestra `notifyError` con `error.message` en su `onError`, y el componente muestra otro toast genérico encima, pisando el diagnóstico útil.
+## Cambios propuestos
 
-### Hipótesis del origen real
-La factura del caso (`5945e7ca…`) está en estado **`Pagada`** y no tiene REP timbrado, por lo que ni RLS, ni constraints, ni triggers deberían bloquear el soft delete. La causa raíz no es visible hasta que dejemos de perder el mensaje del backend. Este cambio nos deja ver el error real la próxima vez que el usuario reproduzca el flujo.
+### 1. Backend: ajustar RLS de `pagos_factura`
+Crear una migración para reemplazar la policy restrictiva `Hide soft deleted pagos_factura` por una versión que:
+- Mantenga ocultos los pagos ya eliminados en lectura.
+- Permita que usuarios autorizados hagan el `UPDATE` que marca `deleted_at` y `deleted_by`.
+- No abra acceso anónimo ni permisos extra.
 
-## Cambios (analogía: hoy la app "traga" el papelito con el error; vamos a leerlo antes de tirarlo)
+Técnicamente, la forma segura es separar la regla por operación:
+- `SELECT`: sólo filas con `deleted_at IS NULL`.
+- `UPDATE`: permitir que el update parta de una fila activa; el permiso real de rol/organización sigue protegido por `Tenant CRUD pagos_factura`.
 
-1. **`src/features/facturacion/components/detalle/FacturaPagosSection.tsx`**
-   - Reemplazar el `catch { ... }` vacío por `catch (error) { ... }`.
-   - Pasar `error` a `notifyError({ error, ... })` para que el toast incluya el mensaje real de Supabase.
-   - Quitar el toast duplicado: dejar que el hook `useEliminarPagoFactura` (que ya tiene `onError` con `notifyError`) sea la única fuente del toast de error. El componente sólo maneja el éxito (bitácora + notifySuccess + cerrar diálogo).
+### 2. Frontend: quitar el segundo toast
+Actualizar `FacturaPagosSection.tsx` para que el `catch` sólo absorba la promesa rechazada y no emita otro `notifyError`.
 
-2. **`src/features/facturacion/hooks/usePagosFactura.ts`**
-   - Confirmar que el `onError` existente ya adjunta `error` — sí lo hace (línea 44). Sin cambios.
+Analogía: el hook ya es la alarma principal; el componente estaba tocando una segunda alarma con menos información.
 
-3. **Versionado**
-   - Bump `APP_VERSION` a `13.299.7`.
-   - Entrada en `CHANGELOG.md`: "Fix: propagar detalle real del error al eliminar pago (antes se mostraba mensaje genérico)".
+### 3. Versionado
+- Bump `APP_VERSION` a `13.299.8`.
+- Agregar entrada en `CHANGELOG.md` explicando:
+  - Fix RLS para soft delete de pagos.
+  - Fix doble toast al fallar eliminación de pago.
 
-## Fuera de alcance
-- No tocar RLS ni triggers de `pagos_factura`: con los datos actuales del caso no hay evidencia de bloqueo por policy/constraint. Si tras el fix diagnóstico el mensaje real apunta a RLS o a un trigger, abrimos un segundo plan con esa evidencia.
+## Validación
+- Revisar que la policy quede separada correctamente en backend.
+- Confirmar que ya no haya segundo `notifyError` en `FacturaPagosSection.tsx`.
+- Si se vuelve a intentar borrar el pago, debe:
+  - Eliminarse correctamente si el rol/organización tiene permiso.
+  - O mostrar un solo toast con el error real si existe otro bloqueo.

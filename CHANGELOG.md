@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.8] - 2026-07-14
+- **fix(facturación · eliminar pago · RLS)**: la eliminación lógica de pagos fallaba con `new row violates row-level security policy "Hide soft deleted pagos_factura"` porque la policy restrictiva también exigía `deleted_at IS NULL` sobre la fila nueva del `UPDATE`. Se separó la regla: lectura oculta pagos eliminados y actualización permite partir de una fila activa, conservando la validación existente de organización/rol. También se eliminó el segundo toast del componente; ahora sólo queda el toast real del hook `DELETE_PAYMENT`. Analogía: quitamos el candado que impedía meter el pago a la papelera y dejamos una sola alarma en vez de dos.
+
 ## [13.299.7] - 2026-07-14
 - **fix(facturación · eliminar pago · diagnóstico)**: al eliminar un pago, si el backend fallaba el usuario recibía "Error al eliminar pago" con `errorDetails: {}` porque el `catch` en `FacturaPagosSection` era vacío (`catch { ... }`) y descartaba el error real de Supabase. Además había doble toast (uno genérico del componente pisaba el detallado del hook). Ahora el componente sólo cierra el diálogo en éxito (el toast de éxito lo dispara el hook `useEliminarPagoFactura`) y, si algo revienta, adjunta el `error` real al `notifyError` para que aparezca el mensaje del backend. Analogía: antes tirábamos a la basura el papelito con la razón del error; ahora lo leemos antes.
 
