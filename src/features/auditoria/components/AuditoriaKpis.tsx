@@ -1,6 +1,5 @@
 import { AlertTriangle, AlertCircle, Info } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { formatNumber } from "@/lib/formatters";
 
 interface Props {
@@ -9,55 +8,34 @@ interface Props {
   medio: number;
 }
 
-const kpis = [
-  {
-    key: "critico" as const,
-    label: "Críticos",
-    icon: AlertCircle,
-    accent: "text-destructive",
-    ring: "ring-destructive/20",
-    description: "Requieren atención inmediata",
-  },
-  {
-    key: "alto" as const,
-    label: "Altos",
-    icon: AlertTriangle,
-    accent: "text-warning",
-    ring: "ring-warning/20",
-    description: "Documentos faltantes en operación",
-  },
-  {
-    key: "medio" as const,
-    label: "Medios",
-    icon: Info,
-    accent: "text-primary",
-    ring: "ring-primary/20",
-    description: "Inconsistencias menores",
-  },
-];
-
+/**
+ * KPIs de auditoría — migrados al `KpiCard` canónico para unificar el
+ * design language (font-semibold, sin uppercase, padding p-4).
+ */
 export function AuditoriaKpis({ critico, alto, medio }: Props) {
-  const values = { critico, alto, medio };
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {kpis.map(({ key, label, icon: Icon, accent, ring, description }) => (
-        <Card key={key} className={cn("ring-1", ring)}>
-          <CardContent className="p-5 flex items-start gap-4">
-            <div className={cn("rounded-lg p-2 bg-muted/40", accent)}>
-              <Icon className="h-5 w-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                {label}
-              </div>
-              <div className={cn("text-2xl font-bold tabular-nums", accent)}>
-                {formatNumber(values[key])}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5 truncate">{description}</div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      <KpiCard
+        label="Críticos"
+        value={formatNumber(critico)}
+        icon={AlertCircle}
+        variant="destructive"
+        sublabel="Requieren atención inmediata"
+      />
+      <KpiCard
+        label="Altos"
+        value={formatNumber(alto)}
+        icon={AlertTriangle}
+        variant="warning"
+        sublabel="Documentos faltantes en operación"
+      />
+      <KpiCard
+        label="Medios"
+        value={formatNumber(medio)}
+        icon={Info}
+        variant="info"
+        sublabel="Inconsistencias menores"
+      />
     </div>
   );
 }

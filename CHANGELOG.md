@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.0] - 2026-07-14
+- **ux(cohesión visual · lote 1+3+5)**: pase de unificación del design system detectado por la auditoría UI/UX a 1920×1080. Cambios de presentación, cero lógica:
+  - **KPI Cards unificadas**: `AuditoriaKpis` y `GarantiasKpiCards` migradas al `KpiCard` canónico (`@/components/shared/KpiCard`) con `variant` semántico (`destructive`/`warning`/`info`/`success`). Se elimina `text-2xl font-bold` + labels en `uppercase tracking-wider` que hacían que los KPIs de Auditoría se vieran visualmente "más pesados" que los del Dashboard.
+  - **KpiCard local de P&L** (`embarques/components/pnl/KpiCard.tsx`): `font-bold` → `font-semibold`, se quita `uppercase tracking-wide` del label y se agrega `tabular-nums`. Consumido por `TabPnl` y `TablaPnlPorMoneda`.
+  - **KPICard local de CxP** (`cxp/components/CxpKpiCards.tsx`): padding `p-3` → `p-4`, valor `text-lg` → `text-xl` para igualar peso visual con el resto del sistema.
+  - **Tokens de color semánticos**: reemplazados 6 usos hardcodeados de `text-green-600` / `text-red-600` por `text-success` / `text-destructive` en `BulkImportDialogParts`, `ActividadRowActions`, `PortalProforma`, `AccionesProforma`, `EnvioProformaExitoso` y `PagosCajaBlock`. Ahora respetan tema claro/oscuro.
+  - **Grids KPI consistentes**: `TabPnl` y `TablaPnlPorMoneda` alineados a `gap-4` (antes `gap-3`), mismo estándar que el resto del sistema.
+  - Auditoría completa y plan de 6 lotes documentados en `.lovable/plan.md`. Lotes 2 (tipografía canónica), 4 (tablas nativas → shadcn) y 6 (modales + polish) quedan pendientes para siguientes turnos.
+
 ## [13.299.24] - 2026-07-14
 - **ux(tablas · clientColumn)**: el builder compartido `clientColumn` (usado por bandejas de facturación, embarques, cotizaciones, etc.) ya no aplica `truncate max-w-[220px]`. Ahora la celda usa `min-w-[220px] whitespace-normal break-words leading-snug`, así los nombres largos de cliente se muestran completos en varias líneas en todas las tablas que reutilizan este helper.
 

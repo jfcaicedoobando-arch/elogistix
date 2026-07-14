@@ -28,7 +28,7 @@ function AlertaRespondida({ proforma }: { proforma: ProformaData }) {
     : `Rechazada el ${fechaMx(proforma.rechazada_at)}.${proforma.motivo_rechazo ? ` Motivo: ${proforma.motivo_rechazo}` : ""}`;
   return (
     <Alert>
-      {aceptada ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-destructive" />}
+      {aceptada ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
       <AlertTitle className="flex items-center gap-2">
         Proforma {proforma.estado_cliente}
         <Badge variant={aceptada ? "default" : "destructive"}>{proforma.estado_cliente}</Badge>

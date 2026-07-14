@@ -15,7 +15,7 @@ interface Props {
 export function EnvioProformaExitoso({ estado, enlacePortal, onCopiar }: Props) {
   return (
     <div className="space-y-3 py-2">
-      <div className="flex items-center gap-2 text-green-600">
+      <div className="flex items-center gap-2 text-success">
         <CheckCircle2 className="h-5 w-5" />
         <span className="font-semibold">Correo {estado}</span>
       </div>

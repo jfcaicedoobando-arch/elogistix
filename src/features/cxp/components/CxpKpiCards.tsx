@@ -16,8 +16,8 @@ function KPICard({
     : tone === "warn" ? "text-warning" : "text-foreground";
   return (
     <Card>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
+      <CardContent className="p-4">
+        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
           <span>{label}</span>
           {count != null && (
             <span className="text-2xs text-muted-foreground/70">
@@ -25,9 +25,9 @@ function KPICard({
             </span>
           )}
         </p>
-        <p className={cn("text-lg font-semibold tabular-nums leading-tight", toneCls)}>{value}</p>
+        <p className={cn("text-xl font-semibold tabular-nums leading-tight mt-1", toneCls)}>{value}</p>
         {secondary && (
-          <p className={cn("text-xs tabular-nums leading-tight", toneCls, "opacity-80")}>{secondary}</p>
+          <p className={cn("text-xs tabular-nums leading-tight mt-0.5", toneCls, "opacity-80")}>{secondary}</p>
         )}
       </CardContent>
     </Card>

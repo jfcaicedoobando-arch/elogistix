@@ -95,7 +95,7 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard label="Venta total" value={fmt(total?.ventaTotal ?? 0)} />
           <KpiCard label="Costo total" value={fmt(total?.costoTotal ?? 0)} />
           <KpiCard

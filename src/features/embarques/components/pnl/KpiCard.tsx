@@ -19,12 +19,12 @@ export function KpiCard({ label, value, delta, tone = "default" }: KpiCardProps)
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        <CardTitle className="text-xs font-medium text-muted-foreground">
           {label}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1">
-        <div className={`text-2xl font-bold ${toneClass}`}>{value}</div>
+        <div className={`text-2xl font-semibold tabular-nums ${toneClass}`}>{value}</div>
         {delta && <div className="text-xs text-muted-foreground">{delta}</div>}
       </CardContent>
     </Card>
