@@ -117,7 +117,7 @@ export function WizardShell({
             <ArrowLeft className="h-4 w-4" aria-hidden />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{title}</h1>
+            <h1 className="text-display font-bold tracking-tight">{title}</h1>
             {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
         </div>
