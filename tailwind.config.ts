@@ -108,10 +108,20 @@ export default {
         },
         // Ola 7 · Lote A — expuestos como color Tailwind para poder escribir `bg-state-llegada/10`
         // sin caer en `bg-[hsl(var(--state-llegada))]`.
+        // Lote 3B (v13.300.2) — añadidos estados operativos (arribo/aduana/eir/operacion)
+        // y modos de transporte (aereo/multimodal) que antes usaban literales Tailwind.
         state: {
           llegada: "hsl(var(--state-llegada))",
           "en-proceso": "hsl(var(--state-en-proceso))",
           cerrado: "hsl(var(--state-cerrado))",
+          arribo:    { DEFAULT: "hsl(var(--state-arribo))",    soft: "hsl(var(--state-arribo-soft))" },
+          aduana:    { DEFAULT: "hsl(var(--state-aduana))",    soft: "hsl(var(--state-aduana-soft))" },
+          eir:       { DEFAULT: "hsl(var(--state-eir))",       soft: "hsl(var(--state-eir-soft))" },
+          operacion: { DEFAULT: "hsl(var(--state-operacion))", soft: "hsl(var(--state-operacion-soft))" },
+        },
+        mode: {
+          aereo:      { DEFAULT: "hsl(var(--mode-aereo))",      soft: "hsl(var(--mode-aereo-soft))" },
+          multimodal: { DEFAULT: "hsl(var(--mode-multimodal))", soft: "hsl(var(--mode-multimodal-soft))" },
         },
       },
       borderRadius: {
