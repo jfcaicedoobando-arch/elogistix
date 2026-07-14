@@ -74,40 +74,34 @@ export function EmbarqueDetalleHeader({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
-          <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-          <Badge variant="outline" className="gap-1 font-normal">
-            <ModoIcon modo={embarque.modo} size={12} />
-            {embarque.modo}
-          </Badge>
-          <ProformaBadge tieneProforma={embarque.tiene_proforma} size="sm" />
+          <EmbarqueStatusChip
+            estado={estadoVisual}
+            modo={embarque.modo}
+            tieneProforma={embarque.tiene_proforma}
+            cobroStatus={embarque.cobro_cliente_status as "pendiente" | "parcial" | "pagado" | null | undefined}
+          />
           <EmbarqueBadgeAdmin embarqueId={embarqueId} estado={estadoVisual} />
-          <CobroClienteBadge status={embarque.cobro_cliente_status as "pendiente" | "parcial" | "pagado" | null | undefined} />
         </div>
-        <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
-        {embarque.cotizacion_id ? (
-          <div className="mt-1.5">
-            {cotizacionFolio ? (
-              <Link to={`/cotizaciones/${embarque.cotizacion_id}`}>
-                <Badge variant="outline" className="gap-1 hover:bg-muted cursor-pointer">
-                  <FileText className="h-3 w-3" />
-                  Generado desde {cotizacionFolio}
-                </Badge>
+        <p className="text-sm text-muted-foreground truncate mt-1">
+          <span>{toTitleCase(embarque.cliente_nombre)}</span>
+          <span aria-hidden className="mx-1.5 opacity-60">·</span>
+          {embarque.cotizacion_id ? (
+            cotizacionFolio ? (
+              <Link
+                to={`/cotizaciones/${embarque.cotizacion_id}`}
+                className="text-xs hover:text-foreground hover:underline"
+              >
+                Cotización origen: {cotizacionFolio}
               </Link>
             ) : (
-              <Badge variant="outline" className="gap-1 text-muted-foreground">
-                <FileText className="h-3 w-3" />
-                Cotización origen no disponible
-              </Badge>
-            )}
-          </div>
-        ) : (
-          <div className="mt-1.5">
-            <Badge variant="warning" className="gap-1" title="Embarque creado sin cotización vinculada">
-              <FileText className="h-3 w-3" />
-              Sin cotización
-            </Badge>
-          </div>
-        )}
+              <span className="text-xs">Cotización origen no disponible</span>
+            )
+          ) : (
+            <span className="text-xs text-warning" title="Embarque creado sin cotización vinculada">
+              Sin cotización vinculada
+            </span>
+          )}
+        </p>
       </div>
 
       <EmbarqueDetalleHeaderActions
