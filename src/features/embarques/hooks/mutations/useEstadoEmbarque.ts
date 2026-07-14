@@ -48,6 +48,7 @@ export function useAvanzarEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
     },
     // Toasts (éxito y error) los maneja el caller (useEmbarqueEstadoActions)
     // para evitar doble notificación y poder clasificar mensajes (docs_faltantes, etc.).
