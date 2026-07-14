@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.18] - 2026-07-14
+- **fix(auditoría · docs_faltantes · En Tránsito)**: los embarques en **En Tránsito** ya no exigen ningún documento en la auditoría (antes seguían pidiendo Factura Comercial y Packing List). Durante el tránsito es normal que esos documentos aún estén pendientes de recibirse del embarcador, así que se movió toda la exigencia a partir de **En Aduana**. Complementa la corrección de v13.299.17 y resuelve el falso positivo del embarque ELIMP00256.
+
 ## [13.299.17] - 2026-07-14
 - **fix(auditoría · docs_faltantes)**: los embarques en estado **En Tránsito** ya no generan hallazgo crítico por falta de BL Master, BL House, Air Waybill o Carta Porte. Las navieras/aerolíneas suelen entregar esos documentos después del zarpe, así que ahora sólo se exigen a partir de **En Aduana**. Se actualiza la matriz canónica `_docs_requeridos_por_estado` (fuente única compartida con el candado de avance de estado).
 
