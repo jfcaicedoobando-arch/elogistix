@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { type Contacto } from "@/hooks/emails/useEnvioDocumentoForm";
-import { CLIENTE_PRINCIPAL_ID } from "@/features/cotizacion/services/envios";
+import { CLIENTE_PRINCIPAL_ID, esContactoProveedor } from "@/features/cotizacion/services/envios";
 
 interface Props {
   contactos: Contacto[];
