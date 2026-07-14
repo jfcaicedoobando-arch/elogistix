@@ -1,36 +1,34 @@
-# Ajuste regla `docs_faltantes` para embarques En Tránsito
+# Ajuste tarjeta "hallazgos en embarques con ETA vencida"
 
 ## Problema
-El embarque 290 aparece con hallazgo **crítico "documentos faltantes"** porque la matriz canónica exige BL Master + BL House desde el estado **En Tránsito**. En la práctica, las navieras suelen liberar esos documentos días después del zarpe, así que estamos generando falsas alarmas para un caso completamente normal del negocio.
+La tarjeta roja del dashboard de auditoría cuenta **todos** los hallazgos pendientes cuya `eta < hoy`, sin filtrar por tipo de regla. Cuando entran ahí hallazgos de **cuentas por pagar a proveedor** (`cxp_por_capturar_estancada`, `cxp_vencida`), se dispara una falsa urgencia: los proveedores dan crédito y esos pagos se hacen mucho después del ETA — la fecha de arribo del embarque no es la fecha límite del pago.
 
-## Objetivo
-Que la auditoría **no marque hallazgo** por BL / AWB / Carta Porte cuando el embarque todavía está En Tránsito. Esos documentos seguirán exigiéndose a partir de **En Aduana** en adelante (que es cuando realmente los necesitamos para despacho).
+La tarjeta debería enfocarse en pendientes **operativos** del embarque (documentos, fechas, contenedores, tipo de cambio, márgenes) — cosas que sí deberían estar resueltas para cuando el barco llega. Las CXP/CXC/proformas tienen su propio calendario y ya se muestran en otras tarjetas.
 
-## Cambios
+## Cambio
 
-### 1. Base de datos — matriz canónica
-Nueva migración que reemplaza `public._docs_requeridos_por_estado(modo, estado)`. Sólo cambia la rama `WHEN 'En Tránsito'`:
+En `src/features/auditoria/domain/ejecutivoAgregados.ts`, dentro de `calcularVencimientos`, filtrar los hallazgos por regla antes de contarlos contra el ETA.
 
-| Modo | Antes (En Tránsito) | Después (En Tránsito) |
-|---|---|---|
-| Marítimo / Multimodal | Factura Comercial, Packing List, **BL Master, BL House** | Factura Comercial, Packing List |
-| Aéreo | Factura Comercial, Packing List, **AWB** | Factura Comercial, Packing List |
-| Terrestre | Factura, Lista de Empaque, **Carta Porte** | Factura, Lista de Empaque |
+**Reglas EXCLUIDAS** del bucket "ETA vencida" (tienen su propia fecha de vencimiento, no dependen del ETA del embarque):
+- `cxp_por_capturar_estancada` — ventana de captura del proveedor
+- `cxp_vencida` — fecha de pago pactada
+- `cxc_vencida` — vencimiento de la factura al cliente
+- `proforma_vencida` — expiración de la proforma
+- `proforma_borrador_abandonada` — antigüedad del borrador
 
-Los estados **En Aduana, Llegada, Arribo, En Proceso, Entregado, EIR, Cerrado** se quedan idénticos: siguen exigiendo BL/AWB/Carta Porte como hoy.
+**Reglas INCLUIDAS** (siguen sumando cuando `eta < hoy`): docs_faltantes, docs_pendientes_avanzado, fechas, ventas_sin_facturar, margen_negativo, margen_bajo, venta_sin_costo, costo_sin_venta, proforma_inconsistente, embarque_huerfano, factura_sin_timbrar, rep_pendiente, factura_cancelada_sin_sustitucion, contenedor_datos_incompletos, contenedor_fechas_incompletas, tipo_cambio_faltante.
 
-Al ser la fuente única, este cambio impacta automáticamente:
-- `auditoria_embarques_org` (regla `docs_faltantes`).
-- `embarque_docs_faltantes` (candado al avanzar estado — En Tránsito es soft-warn, no bloqueante, así que no rompe nada).
+Mismo filtro se aplica a `pendientesUrgentesPorEta` (tarjeta ámbar "ETA en ≤ 3 días") por consistencia.
 
-### 2. Memoria del proyecto
-Actualizar `.lovable/memories/features/auditoria-docs-faltantes-rules.md` y `candado-docs-avance-estado.md` con la nueva matriz.
+## Detalles técnicos
+- Nueva constante `REGLAS_CON_VENCIMIENTO_PROPIO: ReglaAuditoria[]` exportada desde `ejecutivoAgregados.ts` para reutilizar.
+- Actualizar tests en `src/features/auditoria/domain/__tests__/ejecutivoAgregados.test.ts` para cubrir el filtrado (caso: hallazgo `cxp_vencida` con `eta` pasada NO cuenta).
+- `edadPromediaPendientesDias` también se recalcula sólo con las reglas incluidas, para que la métrica de antigüedad promedio no la distorsionen las CXP.
+- La regla `cxp_por_capturar_estancada` y `cxp_vencida` siguen apareciendo íntegras en el dashboard (Compras / CXP), sólo dejan de agruparse en la tarjeta de urgencia por ETA.
 
-### 3. Changelog + versión
-- Bump `APP_VERSION` → `13.299.17`.
-- Entrada en `CHANGELOG.md` explicando el cambio de regla.
+## Versionado
+- Bump `APP_VERSION` → `13.299.19`.
+- Entrada en `CHANGELOG.md` explicando el filtro y por qué CXP no debería alarmar por ETA.
 
-## Notas técnicas
-- **No** se toca `getDocsForMode` (UI del wizard): el usuario debe poder seguir adjuntando BL/AWB/Carta Porte cuando quiera desde En Tránsito; sólo dejamos de **exigirlos** a nivel auditoría.
-- **No** se cambia la severidad `critico` de `docs_faltantes` en estados posteriores — sigue siendo crítico si llegamos a En Aduana sin BL.
-- Analogía: es como pedirle a alguien la factura de un Uber apenas se sube al carro — la factura llega al final del viaje, no al arranque. Movemos la exigencia al momento en que el documento realmente existe.
+## Analogía
+Es como la lista de "vuelos que ya despegaron y tienen pendientes" en un aeropuerto: tiene sentido incluir el equipaje sin escanear o el manifiesto pendiente, pero **no** la factura del combustible que pagas 30 días después. Cada pendiente tiene su reloj — el reloj del embarque no aplica a todos.

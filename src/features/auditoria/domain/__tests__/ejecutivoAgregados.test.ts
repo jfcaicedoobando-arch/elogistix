@@ -76,6 +76,25 @@ describe("ejecutivoAgregados", () => {
     expect(r.pendientesUrgentesPorEta).toBe(1);
   });
 
+  it("calcularVencimientos excluye reglas con vencimiento propio (CXP/CXC/proformas)", () => {
+    const ayer = new Date(); ayer.setDate(ayer.getDate() - 5);
+    const ayerIso = ayer.toISOString().slice(0, 10);
+    const en2 = new Date(); en2.setDate(en2.getDate() + 2);
+    const en2Iso = en2.toISOString().slice(0, 10);
+    const r = calcularVencimientos([
+      h({ eta: ayerIso, regla: "cxp_vencida" }),
+      h({ eta: ayerIso, regla: "cxp_por_capturar_estancada" }),
+      h({ eta: ayerIso, regla: "cxc_vencida" }),
+      h({ eta: ayerIso, regla: "proforma_vencida" }),
+      h({ eta: en2Iso, regla: "cxp_vencida" }),
+      h({ eta: ayerIso, regla: "docs_faltantes" }), // sí cuenta
+    ]);
+    expect(r.pendientesVencidos).toBe(1);
+    expect(r.pendientesUrgentesPorEta).toBe(0);
+    expect(r.edadPromediaPendientesDias).toBe(5);
+  });
+
+
   it("calcularRanking separa responsables y revisores, usa revisado_at para MTTR", () => {
     const rev = (over: Partial<AuditoriaRevision>) =>
       ({ estado_revision: "pendiente", responsable_email: "op@x.com", revisado_por_email: "", asignado_at: null, updated_at: "", revisado_at: null, fecha_limite: null, ...over } as AuditoriaRevision);
