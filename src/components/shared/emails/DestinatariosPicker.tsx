@@ -52,7 +52,8 @@ export function DestinatariosPicker({
   if (loadingContactos) {
     return <p className="text-sm text-muted-foreground">Cargando contactos…</p>;
   }
-  if (contactos.length === 0) return null;
+  const clienteContactos = contactos.filter((c) => !esContactoProveedor(c));
+  if (clienteContactos.length === 0) return null;
 
   return (
     <div className="space-y-1">
