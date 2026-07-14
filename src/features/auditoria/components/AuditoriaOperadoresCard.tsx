@@ -71,8 +71,9 @@ export function AuditoriaOperadoresCard({ mttrHoras, ranking, rankingRevisores }
         <CardContent>
           <div className="text-4xl font-bold tabular-nums">{formatMttr(mttrHoras)}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Desde asignación hasta marca de revisado.
+            Desde detección del hallazgo hasta marca de revisado.
           </p>
+
         </CardContent>
       </Card>
 
