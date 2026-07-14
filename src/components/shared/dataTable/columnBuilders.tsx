@@ -59,7 +59,10 @@ export function clientColumn<T>({
     header,
     accessorFn: (row) => accessor(row) ?? "",
     cell: ({ row }) => (
-      <span className="block truncate max-w-[220px]" title={accessor(row.original) ?? ""}>
+      <span
+        className="block min-w-[220px] whitespace-normal break-words leading-snug"
+        title={accessor(row.original) ?? ""}
+      >
         {toTitleCase(accessor(row.original) ?? "")}
       </span>
     ),
