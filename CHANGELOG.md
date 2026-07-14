@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.3] - 2026-07-14
+- **test(coverage)**: nuevo `src/features/facturacion/estadoCuenta/services/__tests__/estadoCuentaAggregates.test.ts` (5 casos) cubre `calcularKpisEstadoCuenta` — segregación MXN/USD, exclusión de saldos ≤0, conteo de vencidas y suma de anticipos. Sube el porcentaje de funciones cubiertas por encima del umbral global (30%) que hacía fallar la etapa `Coverage merge & report` en CI.
+
 ## [13.300.2] - 2026-07-14
 - **ux(cohesión visual · Lote 3B parcial)**: tokenizados 4 archivos que aún vivían en la allowlist del guardrail `no-legacy-color-literals`. Salen de la deuda:
   - `src/lib/ui/estadoConfig.ts`: los estados `Arribo` (cyan), `En Aduana` (violet), `EIR` (orange) y `En operación` (indigo) ahora usan tokens `state-arribo`, `state-aduana`, `state-eir` y `state-operacion`. Los `shadow-[0_0_20px_rgba(...)]` se migran a `hsl(var(--state-*))` para que respondan al tema.
