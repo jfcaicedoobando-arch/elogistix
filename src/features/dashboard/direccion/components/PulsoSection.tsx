@@ -66,7 +66,7 @@ export function PulsoSection({ pulso }: { pulso: PulsoKpis }) {
           </li>
           <li className="flex justify-between">
             <span>Acuses de cancelación pendientes</span>
-            <span className={`tabular-nums ${pulso.acuses_pendientes > 0 ? "text-amber-600 font-medium" : ""}`}>
+            <span className={`tabular-nums ${pulso.acuses_pendientes > 0 ? "text-warning font-medium" : ""}`}>
               {pulso.acuses_pendientes}
             </span>
           </li>
