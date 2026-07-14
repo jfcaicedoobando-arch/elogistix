@@ -5,26 +5,50 @@ interface Props {
   currentStepIndex: number;
 }
 
+/**
+ * Versión compacta del stepper para el detalle de embarque.
+ * En FHD la variante original ocupaba ~130px verticales sólo para mostrar
+ * "paso 2/8". Esta variante libera ~80px y mantiene toda la información.
+ */
 export function EstadoProgresoCard({ currentStepIndex }: Props) {
+  const total = ESTADOS_EMBARQUE.length;
+  const estadoActual = ESTADOS_EMBARQUE[currentStepIndex] ?? ESTADOS_EMBARQUE[0];
+  const progreso = total > 1 ? (currentStepIndex / (total - 1)) * 100 : 0;
+  const siguiente = ESTADOS_EMBARQUE[currentStepIndex + 1];
+
   return (
     <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
+      <CardContent className="px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              Paso {currentStepIndex + 1} de {total}
+            </span>
+            <span className="text-sm font-semibold truncate">{estadoActual}</span>
+          </div>
+          {siguiente && (
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              Siguiente: <span className="text-foreground/80">{siguiente}</span>
+            </span>
+          )}
+        </div>
+
+        <div className="mt-2 flex items-center gap-1.5">
           {ESTADOS_EMBARQUE.map((estado, i) => (
-            <div key={estado} className="flex items-center flex-1">
-              <div className="flex flex-col items-center">
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  i <= currentStepIndex ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
-                }`}>{i + 1}</div>
-                <span className={`text-2xs mt-1 text-center ${
-                  i <= currentStepIndex ? 'text-foreground font-medium' : 'text-muted-foreground'
-                }`}>{estado}</span>
-              </div>
-              {i < ESTADOS_EMBARQUE.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 ${i < currentStepIndex ? 'bg-accent' : 'bg-border'}`} />
-              )}
-            </div>
+            <div
+              key={estado}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i <= currentStepIndex ? "bg-accent" : "bg-muted"
+              }`}
+              title={estado}
+              aria-label={estado}
+            />
           ))}
+        </div>
+
+        {/* Fallback accesible: barra continua */}
+        <div className="sr-only" role="progressbar" aria-valuenow={progreso} aria-valuemin={0} aria-valuemax={100}>
+          {estadoActual} — {Math.round(progreso)}%
         </div>
       </CardContent>
     </Card>

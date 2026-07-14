@@ -25,21 +25,24 @@ export function TabResumen({ embarque }: Props) {
     <div className="space-y-6">
       <EstadoProgresoCard currentStepIndex={currentStepIndex} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         <DatosGeneralesCard embarque={embarque} />
         <RutaTransporteCard embarque={embarque} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
-        <Card className="h-full">
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Shipper</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.shipper)}</CardContent>
-        </Card>
-        <Card className="h-full">
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Consignatario</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.consignatario)}</CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader className="pb-3"><CardTitle className="text-sm">Partes</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+          <div className="space-y-1">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Shipper</div>
+            <div className="text-foreground">{toTitleCase(embarque.shipper) || "—"}</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Consignatario</div>
+            <div className="text-foreground">{toTitleCase(embarque.consignatario) || "—"}</div>
+          </div>
+        </CardContent>
+      </Card>
 
       {embarque.modo === "Marítimo" && (
         <div ref={registerRef("contenedores")} data-focus="contenedores">
