@@ -61,7 +61,7 @@ export function DestinatariosPicker({
         Contactos del cliente
       </Label>
       <div className="rounded-md border bg-muted/20 p-1 max-h-48 overflow-auto">
-        {contactos.map((c) => (
+        {clienteContactos.map((c) => (
           <ContactoRow
             key={c.id}
             c={c}
