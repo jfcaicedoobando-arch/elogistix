@@ -1,39 +1,54 @@
-## Objetivo
-CI falla en el baseline arquitectónico (Power of 10, regla ≤200 líneas). Dos archivos rebasan el límite tras el rediseño del modal de envío:
+## Diagnóstico
 
-- `src/components/shared/emails/EnviarDocumentoDialog.tsx` — 225 líneas (25 extras)
-- `src/hooks/emails/useEnvioDocumentoForm.ts` — 208 líneas (8 extras)
+En BD, ELIMP00281 tiene:
+- Estado actual: **Entregado**
+- Factura Comercial / Packing List: **No aplica** (satisfechos en la matriz de auditoría)
+- BL Master y BL House: **Recibido con archivo**
 
-Ambos están fuera de la allowlist y disparan `architecture-baseline` + `audit-report`.
+Es decir, la RPC `auditoria_embarques_org` **hoy** ya no debería reportar `docs_faltantes` para ese embarque. Sin embargo, el card de auditoría muestra estado "Arribo" y como faltantes FC / PL / BL House — datos previos a que el operador marcara "No aplica" y subiera los BL.
 
-## Analogía
-Los dos archivos crecieron pasados de "página" que permite el reglamento del edificio. Vamos a mover un mueble a otro cuarto para que cada archivo vuelva a caber en su cuarto sin cambiar lo que hace.
+**Causa raíz:** el reporte de auditoría está en caché de React Query (`staleTime: 5 min`) y **ninguna mutation** de embarques invalida esa key. Cuando el operador:
 
-## Cambios
+1. avanza el estado (Arribo → Entregado),
+2. sube documentos,
+3. marca documentos como "No aplica",
 
-### 1. Extraer chips helpers del modal → nuevo archivo
-Crear `src/components/shared/emails/useEnvioChips.ts` con:
-- `paraChips` / `ccChips` memos
-- `handleParaAdd/Remove`, `handleCcAdd/Remove`
-- Firma: `useEnvioChips(form) => { paraChips, ccChips, handleParaAdd, handleParaRemove, handleCcAdd, handleCcRemove }`
+la vista `/auditoria` queda mirando el snapshot viejo hasta que el usuario presione **Recalcular** o pasen 5 min. Por eso el detalle muestra todo en verde pero la lista de hallazgos sigue reportando faltantes con el estado anterior.
 
-`EnviarDocumentoDialog.tsx` sólo hace `const chips = useEnvioChips(form)` y pasa los handlers a `EmailChipsField`. Cae de ~225 a ~150 líneas.
+Analogía: la página de auditoría es como un pizarrón con la foto de ayer; los cambios del día se hacen en la operación, pero nadie borra el pizarrón hasta que alguien lo pide manualmente.
 
-### 2. Compactar `useEnvioDocumentoForm.ts` (208 → ≤200)
-Alternativas ligeras (sin cambio funcional):
-- Extraer la lógica de precarga inicial (`useEffect` de reset) a un helper interno `initEnvioForm` en `src/hooks/emails/envioDocumentoInit.ts` (~40 líneas), o
-- Consolidar comentarios extensos y unir returns/derivaciones que quedaron verbosas.
+## Alcance del fix (frontend puro, sin tocar SQL)
 
-Prefiero el primero: helper `computeInitialPrecarga(contactos, ccInicial, destInicial, userEmail)` que retorna `{ precargaCc, precargaDest, seleccionadosPre }`. El hook queda en ~170 líneas.
+Invalidar `queryKeys.auditoria.embarques` en las mutations que cambian datos que la RPC evalúa. Con eso el reporte se refresca automáticamente y la contradicción desaparece.
 
-### 3. Versionado
-- Bump `APP_VERSION` a `13.300.19` (patch: refactor de tamaño, sin cambios de comportamiento).
-- Entrada en `CHANGELOG.md`: "Refactor: split de `EnviarDocumentoDialog` y `useEnvioDocumentoForm` para cumplir Power of 10 (≤200 líneas)."
+### Archivos a modificar
 
-## Validación
+1. **`src/features/embarques/hooks/mutations/useDocumentoEmbarqueMutations.ts`**
+   Agregar `queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques })` en los `onSuccess` de:
+   - `useUploadDocumentoEmbarque`
+   - `useDeleteDocumentoEmbarque`
+   - `useCreateDocumentoEmbarque`
+   - `useSetDocumentoNoAplica`
+
+2. **Mutation de avance de estado del embarque** (`avanzar_estado_embarque` / cierre). Localizar el hook (`useEmbarqueEstadoActions` / `useAvanzarEstadoEmbarque`) y agregar la misma invalidación en `onSuccess`. Aplicar también en la mutation de "cerrar embarque".
+
+3. **`src/features/embarques/hooks/mutations/useCreateEmbarque.ts`** (y update de datos que afectan reglas: ETD/ETA, fecha_llegada_real, tipo_cambio). Agregar la invalidación en el `onSuccess` correspondiente.
+
+4. **Facturación / conceptos_venta** (regla `ventas_sin_facturar`): invalidar auditoría al timbrar factura o cambiar `estado_facturacion`. Solo tocar los hooks ya existentes de fact./conceptos-venta que muten esos campos.
+
+### Detalles técnicos
+
+- Reusar `queryKeys.auditoria.embarques` desde `@/features/auditoria/queryKeys` para no romper la fuente única de la key.
+- No cambiar `staleTime` del `useAuditoria`: mantiene el badge del sidebar barato.
+- No tocar la RPC ni la matriz `_docs_requeridos_por_estado`.
+
+### Verificación
+
 - `bun run lint`
-- `bunx vitest run src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/components/shared/emails src/hooks/emails`
-- Sanity check: contar líneas de los 3 archivos resultantes ≤200.
+- Test unitario nuevo en `useDocumentoEmbarqueMutations` (mock de `queryClient.invalidateQueries`) asegurando que las 4 mutations invalidan `[auditoria, embarques]`.
+- Prueba manual: subir un doc en un embarque, entrar a `/auditoria` sin recargar y ver el hallazgo desaparecer.
 
-## Fuera de alcance
-- No se toca el diseño del modal, ni la API pública del hook, ni tests existentes de comportamiento.
+### Changelog
+
+- Bump `APP_VERSION` a `13.300.20`.
+- Entrada en `CHANGELOG.md`: "Auditoría: refresco automático al mutar documentos / estado / facturación de embarques."
