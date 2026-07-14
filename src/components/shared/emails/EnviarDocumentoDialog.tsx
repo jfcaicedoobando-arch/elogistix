@@ -96,9 +96,7 @@ export function EnviarDocumentoDialog({
       return;
     }
     if (form.emailsManualesAgregados.some((e) => e.toLowerCase() === emailLc)) return;
-    form.setEmailManual(email);
-    // Diferimos al siguiente tick para que `agregarManual` lea el valor.
-    queueMicrotask(() => form.agregarManual());
+    form.pushManual(email);
   };
 
   const handleParaRemove = (email: string) => {
