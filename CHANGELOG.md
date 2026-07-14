@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.1] - 2026-07-14
+- **test(cohesión visual · red de respaldo)**: cerrada la brecha de tests detectada en la auditoría del Lote 1+3+5. 3 archivos nuevos:
+  - `AuditoriaKpis.test.tsx` (3 tests): valida que los 3 KPIs de auditoría renderizan con `KpiCard` canónico y aplican las variantes semánticas `destructive`/`warning`/`info` esperadas.
+  - `GarantiasKpiCards.test.tsx` (3 tests): valida los 4 KPIs de garantías, el fallback "—" cuando `diasPromRecuperacion === null` y las variantes `info`/`warning`/`success`.
+  - `no-legacy-color-literals.test.ts` (2 tests, guardrail de arquitectura): prohíbe `text/bg/border-(red|green|yellow|orange|amber|emerald|lime|blue|sky|indigo|violet|purple|pink|rose|slate|gray|zinc|neutral|stone)-(50…950)` en `src/**`. Cualquier literal fuera de la ALLOWLIST documentada rompe CI. La deuda pendiente (17 archivos: escaleras de aging, dashboards ejecutivos, ResumenPL heatmap, banners de revalidación, LogoPreview marketing) queda catalogada con comentarios que apuntan al lote responsable.
+- **ux(tipografía · Lote 2A)**: migrados los 2 `<h1>` de página que aún usaban `text-2xl font-bold` hardcoded al token fluido `text-display`:
+  - `DetailHeader.tsx:63` (usado en `/clientes/:id`, `/embarques/:id`, `/facturas/:id`, `/cotizaciones/:id`, `/proveedores/:id`).
+  - `WizardShell.tsx:120` (usado en el wizard de cotización).
+  - Ambos ahora coinciden con el `PageHeader` que ya usaba `text-display` — cierra la brecha del hallazgo C3 de la auditoría 1920×1080.
+- **docs**: corregido comentario obsoleto en `PageHeader.tsx:25` que decía `text-2xl` cuando el código real usa `text-display`.
+
 ## [13.300.0] - 2026-07-14
 - **ux(cohesión visual · lote 1+3+5)**: pase de unificación del design system detectado por la auditoría UI/UX a 1920×1080. Cambios de presentación, cero lógica:
   - **KPI Cards unificadas**: `AuditoriaKpis` y `GarantiasKpiCards` migradas al `KpiCard` canónico (`@/components/shared/KpiCard`) con `variant` semántico (`destructive`/`warning`/`info`/`success`). Se elimina `text-2xl font-bold` + labels en `uppercase tracking-wider` que hacían que los KPIs de Auditoría se vieran visualmente "más pesados" que los del Dashboard.
