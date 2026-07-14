@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.299.17] - 2026-07-14
+- **fix(auditoría · docs_faltantes)**: los embarques en estado **En Tránsito** ya no generan hallazgo crítico por falta de BL Master, BL House, Air Waybill o Carta Porte. Las navieras/aerolíneas suelen entregar esos documentos después del zarpe, así que ahora sólo se exigen a partir de **En Aduana**. Se actualiza la matriz canónica `_docs_requeridos_por_estado` (fuente única compartida con el candado de avance de estado).
+
 ## [13.299.16] - 2026-07-14
 - **fix(cotización · LCL · Paso 2)**: la fila auto-cargada de flete LCL ahora se guarda como **1 servicio** (cantidad = 1, costo_unitario = costo total, precio_venta = venta total) en vez de usar el W/M facturable como cantidad. Antes valores decimales como `0.894` chocaban con el check constraint `cotizacion_costos_cantidad_pos` y bloqueaban el guardado del paso 2. El desglose W/M queda documentado en la nota de la fila.
 
