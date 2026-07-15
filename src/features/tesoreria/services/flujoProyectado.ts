@@ -3,8 +3,9 @@
  * (liquidaciones de comisión). Cobranza/CxP/cuentas se inyectan por el
  * caller (hook `useFlujoProyectado`). Auditoría Paso 4, v12.95.11.
  *
- * v13.300.36 — filtra `liquidaciones_comision` por `organization_id` y
- * excluye soft-deletes (`deleted_at IS NULL`). Auditoría Profit Batch G.
+ * v13.300.36 — filtra `liquidaciones_comision` por `organization_id`.
+ * Nota: `liquidaciones_comision` no tiene columna `deleted_at`; el
+ * filtro funcional equivalente es `fecha_pago IS NULL` (pendientes).
  */
 import { supabase } from "@/integrations/supabase/client";
 import {
