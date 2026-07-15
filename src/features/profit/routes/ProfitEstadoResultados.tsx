@@ -19,6 +19,7 @@ import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
+import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
