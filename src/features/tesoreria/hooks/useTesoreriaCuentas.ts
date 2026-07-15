@@ -55,6 +55,7 @@ export function useSaldosCuentas() {
   return useQuery({
     queryKey: queryKeys.tesoreria.saldosCuentasPorOrg(organizationId ?? null),
     queryFn: () => fetchSaldosCuentas(organizationId ?? null),
+    enabled: !!organizationId,
     staleTime: 60_000,
   });
 }
