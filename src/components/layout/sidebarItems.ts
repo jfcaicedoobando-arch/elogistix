@@ -17,7 +17,7 @@ import {
   Bug,
   Handshake,
   TrendingUp,
-  PiggyBank,
+  
   Receipt,
   Landmark,
   Percent,
