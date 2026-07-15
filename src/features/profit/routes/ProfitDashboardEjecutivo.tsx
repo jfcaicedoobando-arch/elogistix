@@ -34,7 +34,7 @@ export default function ProfitDashboardEjecutivo() {
   const periodoCtl = usePeriodoMesUrl("mes", MES_MINIMO);
   const periodo = periodoCtl.mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);
-  const { data, isLoading, error } = useDashboardEjecutivo(periodo);
+  const { data, isLoading, error, refetch, isFetching } = useDashboardEjecutivo(periodo);
 
   const exportar = useMemo(() => async () => {
     if (!data || generandoPdf) return;
