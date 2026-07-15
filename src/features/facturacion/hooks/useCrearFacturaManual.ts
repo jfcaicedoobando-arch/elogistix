@@ -11,6 +11,7 @@ import { emitirFacturapi } from "@/features/facturacion/services/facturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { programarPagoProveedor } from "@/features/cxp/services/programarPagoProveedor";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 /**
  * Hook para programar (o desprogramar) el pago de una factura de proveedor.
@@ -21,6 +22,7 @@ export function useProgramarPagoProveedor() {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.proveedorFacturas.all });
       qc.invalidateQueries({ queryKey: queryKeys.tesoreria.all });
+      invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
       notifyError(toast, {

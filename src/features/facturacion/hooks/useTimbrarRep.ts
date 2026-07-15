@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { emitirRep, cancelarRep, type MotivoCancelacionSat } from "@/features/facturacion/services/repFacturapi";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 export function useTimbrarRep(facturaId?: string) {
   const qc = useQueryClient();
@@ -21,6 +22,7 @@ export function useTimbrarRep(facturaId?: string) {
         qc.invalidateQueries({ queryKey: queryKeys.facturas.pagosAll });
       }
       qc.invalidateQueries({ queryKey: queryKeys.facturacion.repPendientes });
+      invalidateProfitDependencies(qc);
     },
     onError: (err: Error) => notifyError(toast, {
       title: `No se pudo timbrar el REP: ${err.message}`,
@@ -44,6 +46,7 @@ export function useCancelarRep(facturaId?: string) {
         qc.invalidateQueries({ queryKey: queryKeys.facturas.pagosAll });
       }
       qc.invalidateQueries({ queryKey: queryKeys.facturacion.repPendientes });
+      invalidateProfitDependencies(qc);
     },
     onError: (err: Error) => notifyError(toast, {
       title: `No se pudo cancelar el REP: ${err.message}`,
