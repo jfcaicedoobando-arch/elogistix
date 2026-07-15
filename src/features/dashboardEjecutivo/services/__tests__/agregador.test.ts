@@ -13,6 +13,7 @@ const fetchSaldosCuentas = vi.fn();
 const fetchResumenTesoreria = vi.fn();
 const fetchFlujoProyectado = vi.fn();
 const fetchPresupuestoVsReal = vi.fn();
+const fetchExchangeRates = vi.fn();
 
 vi.mock("@/features/profit/services/estadoResultadosDevengado", () => ({
   fetchEstadoResultadosDevengado: (...args: unknown[]) =>
@@ -25,6 +26,9 @@ vi.mock("@/features/tesoreria/services", () => ({
 }));
 vi.mock("@/features/presupuesto/services", () => ({
   fetchPresupuestoVsReal: (...args: unknown[]) => fetchPresupuestoVsReal(...args),
+}));
+vi.mock("@/features/catalogos/services", () => ({
+  fetchExchangeRates: (...args: unknown[]) => fetchExchangeRates(...args),
 }));
 
 const calcularAlertasMock = vi.fn((...args: unknown[]) => {
