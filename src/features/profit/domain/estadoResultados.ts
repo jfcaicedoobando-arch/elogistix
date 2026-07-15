@@ -177,8 +177,8 @@ export function buildEstadoResultados(
   const ingresosMap = new Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>();
   const costosMap = new Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>();
 
-  pivotConceptosVenta(embById, ventas, ingresosMap);
-  pivotConceptosCosto(embById, costos, costosMap);
+  pivotConceptos(embById, ventas, (v) => v.descripcion, (v) => v.total, ingresosMap);
+  pivotConceptos(embById, costos, (c) => c.concepto, (c) => c.monto, costosMap);
 
   const ingresos = materializar(ingresosMap);
   const cstos = materializar(costosMap);
