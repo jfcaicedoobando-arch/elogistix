@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.34] - 2026-07-15
+- **fix(ci)**: shard 3 fallaba porque la edge function `e2e-provision-users` (creada para provisionar usuarios E2E desde GitHub Actions) no estaba clasificada en el test de arquitectura de cobertura Sentry. Agregada a `SENTRY_EXEMPT` en `sentry-edge-coverage.test.ts` — es tooling de CI, no recibe tráfico de producción y los errores ya se propagan al script `provision-users.ts` que hace fallar el job con logs completos.
+
 ## [13.300.33] - 2026-07-15
 - **fix(profit) — auditoría Batch B+D**: la auditoría detectó 3 mutaciones que impactan directamente los KPIs financieros pero no invalidaban las queries del módulo Profit (dashboards podían quedar stale hasta 5 min). Parcheadas: (a) `useAcuseCancelacion` — cancelación/reintento de acuse SAT impacta ingresos del mes; (b) `useAprobarFactura` — aprobar/rechazar factura de proveedor activa el gasto en resultados; (c) helper interno `invalidarFacturasYPagos` en `usePagosFactura` — cubre tanto registrar pago como eliminar pago; impacta cartera vencida.
 - **test(profit)**: nuevo `invalidateProfitDependencies.test.ts` — test de contrato que verifica que el helper invalida exactamente los 3 dominios (`dashboardEjecutivo.all`, `presupuesto.all`, prefijo `["profit"]`). Si en el futuro alguien renombra un query key silenciosamente rompiendo el matching, este test falla.
