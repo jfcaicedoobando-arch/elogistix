@@ -6,6 +6,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCategorias } from "./categorias";
 import { fetchPresupuestoMensualAnio } from "./mensual";
+import { UMBRAL_SOBREEJERCICIO_PCT } from "../constants";
 
 export interface FilaVsReal {
   categoria_id: string;
