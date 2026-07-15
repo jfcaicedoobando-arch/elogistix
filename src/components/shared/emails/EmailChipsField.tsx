@@ -125,6 +125,8 @@ export function EmailChipsField({
           variant={c.invalid ? "destructive" : "secondary"}
           className="gap-1 pl-2 pr-1 font-normal"
           title={c.email}
+          data-testid="envio-chip"
+          data-email={c.email}
         >
           <span className="truncate max-w-[220px]">
             {c.label ? (
