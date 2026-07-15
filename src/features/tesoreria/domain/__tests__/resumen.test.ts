@@ -60,14 +60,39 @@ describe("calcularResumenTesoreria", () => {
     expect(r.top_deudores.every((d) => d.nombre !== "X")).toBe(true);
   });
 
-  it("top_acreedores acepta 'Por vencer' y 'Vencida'", () => {
+  it("top_acreedores sólo incluye 'Vencida' (v13.300.49 · alineado a deudores)", () => {
     const cxp: CxpRow[] = [
       { id: "1", folio_proveedor: "F1", proveedor_nombre: "A", moneda: "MXN", saldo: 100, fecha_vencimiento: "2026-06-20", estatus: "Por vencer" },
       { id: "2", folio_proveedor: "F2", proveedor_nombre: "B", moneda: "MXN", saldo: 200, fecha_vencimiento: "2026-06-20", estatus: "Vencida" },
       { id: "3", folio_proveedor: "F3", proveedor_nombre: "C", moneda: "MXN", saldo: 999, fecha_vencimiento: "2026-06-20", estatus: "Pagada" },
     ];
     const r = calcularResumenTesoreria({ cuentas, cobranza: [], cxp, hoy: HOY });
-    expect(r.top_acreedores.map((t) => t.nombre)).toEqual(["B", "A"]);
+    expect(r.top_acreedores.map((t) => t.nombre)).toEqual(["B"]);
+    expect(r.cxp_vencidas_count).toBe(1);
+    expect(r.cxp_vencidas_total_mxn).toBe(200);
+  });
+
+  it("saldo_bancos_mxn convierte USD→MXN con TC (v13.300.49)", () => {
+    const mix: ResumenCuenta[] = [
+      { id: "c1", alias: "MXN", banco: "BBVA", moneda: "MXN", saldo: 100_000 },
+      { id: "c2", alias: "USD", banco: "BBVA", moneda: "USD", saldo: 10_000 },
+    ];
+    const r = calcularResumenTesoreria({
+      cuentas: mix, cobranza: [], cxp: [], hoy: HOY, tipoCambioUsd: 20,
+    });
+    expect(r.saldo_bancos_mxn).toBe(300_000);
+  });
+
+  it("cartera_vencida_total_mxn agrega TODO (no sólo Top-5)", () => {
+    const cobranza: CobranzaRow[] = Array.from({ length: 10 }, (_, i) => ({
+      id: `f${i}`, numero: `F-${i}`, cliente_nombre: `Cliente ${i}`,
+      moneda: "MXN", saldo: 1_000, fecha_vencimiento: "2026-05-01",
+      estatus_cobranza: "Vencida", dias_vencido: 30,
+    }));
+    const r = calcularResumenTesoreria({ cuentas, cobranza, cxp: [], hoy: HOY });
+    expect(r.cartera_vencida_count).toBe(10);
+    expect(r.cartera_vencida_total_mxn).toBe(10_000);
+    expect(r.top_deudores).toHaveLength(5);
   });
 
   it("propaga cuentas y usa hoy=new Date() por defecto", () => {
