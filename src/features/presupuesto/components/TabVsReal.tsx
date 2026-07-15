@@ -68,7 +68,7 @@ export function TabVsReal() {
   const [sortKey, setSortKey] = useState<SortKey>("variacion");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [soloExcesos, setSoloExcesos] = useState(false);
-  const { data, isLoading } = usePresupuestoVsReal(periodo);
+  const { data, isLoading, error, refetch, isFetching } = usePresupuestoVsReal(periodo);
 
   const toggleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
