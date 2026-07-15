@@ -8,6 +8,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import { eliminarEmbarqueRpc } from '@/features/embarques/services';
+import { invalidateProfitDependencies } from '@/features/profit/hooks/invalidateProfitDependencies';
 
 export function useEliminarEmbarque() {
   const queryClient = useQueryClient();
@@ -16,6 +17,7 @@ export function useEliminarEmbarque() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      invalidateProfitDependencies(queryClient);
     },
   });
 }

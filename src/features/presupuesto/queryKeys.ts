@@ -6,4 +6,6 @@ export const presupuesto = {
   mensualPorOrg: (anio: number, organizationId: string | null) =>
     ["presupuesto", "mensual", anio, organizationId ?? "none"] as const,
   vsReal: (periodo: string) => ["presupuesto", "vs-real", periodo] as const,
+  vsRealPorOrg: (periodo: string, organizationId: string | null) =>
+    ["presupuesto", "vs-real", periodo, organizationId ?? "none"] as const,
 } as const;
