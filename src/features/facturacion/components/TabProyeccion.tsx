@@ -71,6 +71,14 @@ export function TabProyeccion() {
         </CardContent>
       </Card>
 
+      {c.error && (
+        <ErrorStateInline
+          message={c.error.message}
+          onRetry={() => { void c.refetch(); }}
+          retrying={c.isFetching}
+        />
+      )}
+
       {/* Bloque "Cierre [Mes Año]" */}
       <ProyeccionCierreSection k={k} mesLabel={c.mesActual.label} />
 
