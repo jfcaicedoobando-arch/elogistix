@@ -104,7 +104,6 @@ describe("dashboardEjecutivo/agregador", () => {
       cuentas: [{ id: "c1", saldo: 500 }],
       cobranza: [{ id: "c" }],
       cxp: [],
-      fuente: "facturas",
       dias: 28,
       organizationId: "org-1",
     });
