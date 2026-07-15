@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.53] - 2026-07-15
+- **fix(facturacion) Sustituir CFDI precarga conceptos + UI sin duplicar**: `duplicar_factura_para_sustitucion` ahora copia los renglones vivos de `conceptos_factura` (descripción, cantidades, precios, IVA, retenciones, unidad, embarque, proforma origen) al nuevo borrador para que aparezcan precargados en el editor. En el detalle se oculta la carta "Desglose de conceptos" cuando el borrador es editable (el editor ya muestra los mismos datos); vuelve al timbrar.
+
 ## [13.300.52] - 2026-07-15
 - **chore(tesoreria) Complejidad ciclomática ≤16**: `calcularFlujoProyectado` extrajo `aplicarCobranza` / `aplicarCxp` / `aplicarLiquidaciones` (18 → ok). `calcularResumenTesoreria` extrajo `calcularFlujo` + `sumarVencidas` (20 → ok) y `agruparTop` pasa a recibir un objeto `TopAccessors` (6 params → 2). Sin cambios de comportamiento; 69/69 tests verdes.
 
