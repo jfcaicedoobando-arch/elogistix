@@ -56,6 +56,7 @@ export default function ProfitDashboardEjecutivo() {
       <PageHeader
         title="Dashboard Ejecutivo"
         description="Vista consolidada de la situación financiera."
+        tabs={<ProfitSubNav />}
       />
 
       <Card>
