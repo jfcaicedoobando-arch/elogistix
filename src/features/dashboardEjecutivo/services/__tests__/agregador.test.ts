@@ -65,6 +65,7 @@ describe("dashboardEjecutivo/agregador", () => {
     });
     fetchFlujoProyectado.mockResolvedValue({ semanas: [] });
     fetchPresupuestoVsReal.mockResolvedValue({ filas: [] });
+    fetchExchangeRates.mockResolvedValue({ usdMxn: 17.5, eurMxn: 18 });
   });
 
   it("invoca EERR para periodo, periodo anterior y 12 meses hacia atrás", async () => {
