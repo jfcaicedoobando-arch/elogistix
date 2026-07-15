@@ -67,6 +67,10 @@ const SENTRY_EXEMPT = new Set<string>([
   // los errores se devuelven al cliente (200 con `ok:false, status, detail`)
   // y se reportan desde el front (`reportCaughtError`).
   "supabase/functions/facturapi-test-conexion/index.ts",
+  // e2e-provision-users: invocada exclusivamente desde CI (bun run e2e:provision).
+  // Los errores se propagan al script provision-users.ts que hace fallar el job
+  // de GitHub Actions con logs completos; Sentry aquí sólo generaría ruido.
+  "supabase/functions/e2e-provision-users/index.ts",
 ]);
 
 describe("Edge functions con manejo manual de Sentry", () => {

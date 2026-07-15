@@ -1,76 +1,52 @@
+# Fix CI: cobertura Sentry para `e2e-provision-users`
 
-# Fase 3 — Auditoría Batch B+D y Batch E–F del módulo Profit
+## Contexto
 
-## Parte 1 · Auditoría de la fase anterior
+El shard 3 de tests falló con:
 
-Revisé `usePeriodoMesUrl`, `invalidateProfitDependencies`, las 5 mutaciones parcheadas y `TabVsReal`. El resultado:
+```
+AssertionError: Edge functions sin cobertura Sentry declarada:
+supabase/functions/e2e-provision-users/index.ts
+```
 
-| Área | Estado | Notas |
-|---|---|---|
-| Sync back/forward | ✅ | `useEffect(qp)` |
-| Canonicalización URL | ✅ | Reescribe con `replace: true` |
-| `setMesKey` estable | ✅ | Callback funcional |
-| `minMes` vacío | ✅ | Guard con `MES_VACIO` |
-| Prefijo `["profit"]` | ✅ | Coincide con `queryKeys.profit` (no expone `.all`, el prefijo string funciona por matching parcial de React Query) |
-| Invalidación cruzada | ✅ | 5 mutaciones parcheadas |
-| Tests | ✅ | 18/18 verdes |
+El resto del CI (33 test files, 372 tests) pasó. Es un solo test de arquitectura que exige que toda edge function nueva esté clasificada en una de tres listas.
 
-**Gaps detectados (menores, se corrigen en esta fase):**
+## Diagnóstico
 
-1. **Falta invalidar profit en `useRegistrarPagoSubmit`** (registrar pago cliente): impacta `cartera_vencida_mxn` y KPIs de cobro.
-2. **Falta invalidar en `useAcuseCancelacion`** (cancelación de factura de cliente): impacta ingresos del mes.
-3. **Falta invalidar en `useAprobarFactura`** (aprobación CxP): activa el gasto en resultados.
-4. **No hay test de contrato para `invalidateProfitDependencies`**: cualquier cambio futuro en `queryKeys.profit` podría silenciosamente dejar de invalidar.
+La función `e2e-provision-users` se creó en fases anteriores para aprovisionar los usuarios E2E desde el workflow de GitHub Actions. Sólo se invoca desde CI vía `bun run e2e:provision` — nunca recibe tráfico de usuarios finales ni tráfico de producción. No importa `captureEdgeException` ni usa `wrapEdgeHandler`.
 
-## Parte 2 · Batch E — Drill-downs de KPIs
+## Decisión
 
-Los KPIs del Dashboard Ejecutivo (Utilidad operativa, Cartera vencida, Ingresos del mes) son "vidrieras" — el usuario ve el número pero no puede navegar al detalle. Objetivo: cada KPI clickeable abre un panel lateral (`Sheet`) con la lista subyacente.
+Clasificarla como **`SENTRY_EXEMPT`** (misma categoría que `sentry-tunnel` y `facturapi-test-conexion`):
 
-**Componentes:**
+- No es un flujo de negocio; es tooling de CI.
+- Los errores ya se propagan al script `provision-users.ts` (que hace `process.exit(1)` y hace fallar el job de GitHub Actions con logs completos).
+- Añadir Sentry en un endpoint que sólo corre en CI generaría ruido sin valor.
 
-- `KpiDrilldownSheet.tsx` — shell reutilizable con título + tabla + botón "Ver todos en [módulo]".
-- `useKpiDrilldownData.ts` — hook que resuelve por `kpiId` la fuente:
-  - `utilidad_operativa` → embarques del mes con `utilidad_mxn` (link a Embarques).
-  - `cartera_vencida` → facturas con `dias_vencido > 30` (link a Cobranza).
-  - `ingresos_mes` → facturas timbradas del mes (link a Facturación).
-  - `egresos_mes` → CxP aprobadas del mes (link a CxP).
-- `KpiCard` recibe `onDrilldown?: () => void` — cursor pointer + focus ring cuando existe.
+## Cambios
 
-**UX:** tabla compacta (10 filas + "Ver todos"), formateo consistente con `formatCurrency`, badges de estado, click en fila navega al detalle.
+**Archivo:** `src/__tests__/architecture/sentry-edge-coverage.test.ts`
 
-## Parte 3 · Batch F — Forecast multi-mes con banda de confianza
+Agregar dentro del `Set` `SENTRY_EXEMPT`:
 
-La Proyección actual muestra sólo el mes seleccionado. El usuario ejecutivo necesita ver la tendencia. Objetivo: gráfico multi-mes (últimos 6 reales + próximos 3 proyectados) con banda de confianza y comparativo YoY.
+```ts
+// e2e-provision-users: función invocada exclusivamente desde CI para
+// aprovisionar usuarios de tests. Los errores se propagan al script
+// provision-users.ts que hace fallar el job de GitHub Actions.
+"supabase/functions/e2e-provision-users/index.ts",
+```
 
-**Servicio:**
+**No** modificar la edge function — su comportamiento actual es correcto.
 
-- `fetchForecastMultiMes(organizationId, mesActual, meses = 9)` — arma serie con:
-  - `realizado`: suma real por mes (facturas timbradas).
-  - `proyectado`: para meses futuros usa embarques con ETA + tarifas.
-  - `banda_min` / `banda_max`: ±15% sobre proyectado (heurística inicial documentada; se puede afinar con desviación histórica en fase posterior).
+## Bump versión + changelog
 
-**Componente:**
+- `APP_VERSION` → `13.300.34`
+- `CHANGELOG.md`: entrada breve "Fix CI: `e2e-provision-users` clasificada como `SENTRY_EXEMPT`."
 
-- `ForecastMultiMesChart.tsx` — `<ComposedChart>` de Recharts: barras reales, línea proyectada, `Area` para banda de confianza. Tooltip con MXN formateado, línea vertical "hoy". Empty state y skeleton reales.
+## Verificación
 
-**Testing (audit Parte 1 + fase nueva):**
+```bash
+bunx vitest run src/__tests__/architecture/sentry-edge-coverage.test.ts
+```
 
-- `invalidateProfitDependencies.test.ts` — contrato: 3 invalidaciones exactas (dashboardEjecutivo, presupuesto, profit).
-- Tests de invalidación cruzada en las 3 mutaciones adicionales (spy sobre `queryClient.invalidateQueries`).
-- `useKpiDrilldownData.test.tsx` — 4 casos (uno por kpiId) verificando fuente y filtro por organización.
-- `fetchForecastMultiMes.test.ts` — serie coherente, banda simétrica, exclusión de "Cancelado", filtro org.
-
-## Detalles técnicos
-
-- Sin migraciones DB en esta fase.
-- El `Sheet` de drill-down reutiliza `@/components/ui/sheet` (ya existente).
-- `Recharts` ya está instalado.
-- `APP_VERSION` → `13.300.33`.
-- CHANGELOG entry único cubriendo audit gaps + Batch E + Batch F.
-
-## Salida esperada
-
-- 3 hooks parcheados + 1 helper con test de contrato → cierra el hueco de invalidación.
-- Drill-downs funcionales en los 4 KPIs principales del Dashboard Ejecutivo.
-- Gráfico de forecast con banda de confianza en Proyección de Facturación.
-- ~8 tests nuevos, todos verdes.
+Debe pasar 9/9 tests.
