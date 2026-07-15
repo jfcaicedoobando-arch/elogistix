@@ -17,6 +17,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReportePresupuestoDocument } from "@/pdf/documents/ReportePresupuestoDocument";
 import { withOrgPrefix } from "@/lib/filenames";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { VsRealFila } from "./VsRealFila";
 import type { FilaVsReal } from "@/features/presupuesto/services";
 
@@ -67,7 +68,7 @@ export function TabVsReal() {
   const [sortKey, setSortKey] = useState<SortKey>("variacion");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [soloExcesos, setSoloExcesos] = useState(false);
-  const { data, isLoading } = usePresupuestoVsReal(periodo);
+  const { data, isLoading, error, refetch, isFetching } = usePresupuestoVsReal(periodo);
 
   const toggleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -111,7 +112,13 @@ export function TabVsReal() {
         </Button>
       </div>
 
-      {isLoading || !data ? (
+      {error ? (
+        <ErrorStateInline
+          message={(error as Error).message}
+          onRetry={() => { void refetch(); }}
+          retrying={isFetching}
+        />
+      ) : isLoading || !data ? (
         <CardSkeleton lines={8} />
       ) : (
         <>

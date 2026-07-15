@@ -7,6 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/features/facturacion/hooks";
 import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
@@ -69,6 +70,14 @@ export function TabProyeccion() {
           </Button>
         </CardContent>
       </Card>
+
+      {c.error && (
+        <ErrorStateInline
+          message={c.error.message}
+          onRetry={() => { void c.refetch(); }}
+          retrying={c.isFetching}
+        />
+      )}
 
       {/* Bloque "Cierre [Mes Año]" */}
       <ProyeccionCierreSection k={k} mesLabel={c.mesActual.label} />

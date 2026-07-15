@@ -27,6 +27,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { FuenteEerrToggle } from "@/components/profit/FuenteEerrToggle";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 const MES_MINIMO = "2026-04";
 
@@ -34,7 +35,7 @@ export default function ProfitDashboardEjecutivo() {
   const periodoCtl = usePeriodoMesUrl("mes", MES_MINIMO);
   const periodo = periodoCtl.mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);
-  const { data, isLoading, error } = useDashboardEjecutivo(periodo);
+  const { data, isLoading, error, refetch, isFetching } = useDashboardEjecutivo(periodo);
 
   const exportar = useMemo(() => async () => {
     if (!data || generandoPdf) return;
@@ -84,9 +85,11 @@ export default function ProfitDashboardEjecutivo() {
       )}
 
       {error && (
-        <div className="p-4 border rounded text-sm text-destructive">
-          Error al cargar el snapshot: {(error as Error).message}
-        </div>
+        <ErrorStateInline
+          message={(error as Error).message}
+          onRetry={() => { void refetch(); }}
+          retrying={isFetching}
+        />
       )}
 
       {data && (
