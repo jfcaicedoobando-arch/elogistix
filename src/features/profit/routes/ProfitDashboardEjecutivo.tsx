@@ -12,6 +12,7 @@ import { pdf } from "@react-pdf/renderer";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks/useDashboardEjecutivo";
 import { BandaKPIs } from "@/features/dashboardEjecutivo/components/BandaKPIs";
+import { BandaKPIsEficiencia } from "@/features/dashboardEjecutivo/components/BandaKPIsEficiencia";
 import { GraficoEERR12m } from "@/features/dashboardEjecutivo/components/GraficoEERR12m";
 import { ForecastMultiMesChart } from "@/features/dashboardEjecutivo/components/ForecastMultiMesChart";
 import { SaldosBancosCard } from "@/features/dashboardEjecutivo/components/SaldosBancosCard";
@@ -102,6 +103,7 @@ export default function ProfitDashboardEjecutivo() {
             topAcreedores={data.topAcreedores}
             presupuesto={data.presupuesto}
           />
+          <BandaKPIsEficiencia kpis={data.kpis} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <div className="lg:col-span-2"><GraficoEERR12m data={data.eerr12m} /></div>
             <SaldosBancosCard cuentas={data.tesoreria.cuentas} />
