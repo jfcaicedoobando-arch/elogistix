@@ -5,7 +5,7 @@
  * tableta (768×1024) y escritorio xl+ (1440×900): heading visible, sin
  * overflow horizontal y tabs de facturación accesibles.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const VIEWPORTS = [

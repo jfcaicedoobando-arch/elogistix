@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { loginAs, portalCreds } from "../fixtures/auth";
 
 test.describe("Flujo 05 — Portal cliente", () => {
