@@ -10,7 +10,7 @@ import { CardSkeleton } from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { MonthPickerMx } from "@/components/ui/month-picker-mx";
+import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
