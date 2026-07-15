@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.30] - 2026-07-15
+- **feat(profit) — Batch A+C auditoría**: (1) `guarded(PROFIT_READ_ROLES, ...)` en `/profit/proyeccion` y `/profit/estado-resultados` (antes públicas dentro del área autenticada). (2) `fetchPresupuestoMensualAnio(anio, organizationId)` ahora filtra por organización y el hook `usePresupuestoMensualAnio` lo cablea desde `OrganizationContext` (defensa en profundidad, evita fugas cross-tenant si RLS se relajara). (3) `fetchEmbarquesMes` excluye `estado = 'Cancelado'` en Proyección de Facturación (alineado con Estado de Resultados). (4) Dashboard Ejecutivo: KPI "Utilidad neta" → **"Utilidad operativa"** (con subtítulo "antes de gastos admin") y "Cartera vencida" ahora suma únicamente deudores con `dias > 30` (antes sumaba TODA la cartera, contradiciendo la alerta `cartera-vencida-alta`). (5) SelectorPeriodo oculta "YTD" hasta que exista soporte real de rango acumulado (se degrada a "Mes actual" sin romper estado persistido). (6) `TabVsReal` muestra card de estado vacío cuando no hay presupuesto capturado y neutraliza colores/variación cuando `presupuesto=0` (evita rojo espurio). (7) Botones PDF de Dashboard Ejecutivo y Presupuesto ahora exponen loading state ("Generando…") y evitan doble-click.
+
 ## [13.300.29] - 2026-07-15
 - **fix(ci)**: reduce complejidad ciclomática del handler de la edge function `e2e-provision-users` (28 → dentro del límite 16) extrayendo helpers `guard`, `resolveOrgId`, `resolveClienteId`, `provisionAdmin` y `provisionPortal`. Sin cambios de contrato HTTP ni de lógica de verificación. Desbloquea `bun run lint -- --max-warnings 0` en CI.
 
