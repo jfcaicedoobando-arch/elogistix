@@ -12,7 +12,7 @@ import type { Tables } from "@/integrations/supabase/types";
 type Factura = Tables<"facturas">;
 
 interface Props {
-  factura: Pick<Factura, "id" | "numero" | "total" | "moneda" | "metodo_pago" | "uuid_fiscal" | "cliente_id">;
+  factura: Pick<Factura, "id" | "numero" | "total" | "moneda" | "metodo_pago" | "uuid_fiscal" | "cliente_id" | "fecha_emision" | "rfc_cliente">;
   pagoOpen: boolean;
   setPagoOpen: (v: boolean) => void;
   timbrarOpen: boolean;
@@ -69,6 +69,9 @@ export function FacturaDetalleModales(props: Props) {
       <DialogCancelarFactura
         facturaId={cancelarOpen ? factura.id : null}
         numero={factura.numero}
+        fechaEmision={factura.fecha_emision ?? null}
+        total={factura.total !== null && factura.total !== undefined ? Number(factura.total) : null}
+        rfcCliente={factura.rfc_cliente ?? null}
         open={cancelarOpen}
         onOpenChange={setCancelarOpen}
       />
