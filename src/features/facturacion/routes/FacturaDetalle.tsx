@@ -132,11 +132,13 @@ export default function FacturaDetalle() {
         conceptosVivos={conceptosVivos}
       />
 
-      <FacturaConceptosTable
-        snapshot={factura.snapshot_emision}
-        moneda={factura.moneda}
-        conceptos={conceptosVivos}
-      />
+      {!puedeEditarBorrador && (
+        <FacturaConceptosTable
+          snapshot={factura.snapshot_emision}
+          moneda={factura.moneda}
+          conceptos={conceptosVivos}
+        />
+      )}
 
       <FacturaTotalesCard
         subtotal={Number(factura.subtotal)}
