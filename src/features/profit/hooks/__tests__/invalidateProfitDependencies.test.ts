@@ -1,28 +1,18 @@
-/**
- * Contrato: `invalidateProfitDependencies` DEBE invalidar los 3 dominios
- * financieros del módulo Profit — Dashboard Ejecutivo, Presupuesto y EERR/Profit.
- *
- * Si alguien añade/renombra un `queryKeys.profit`, este test falla y obliga a
- * revisar el helper. Evita el escenario silencioso en que las mutaciones dejan
- * de refrescar los dashboards.
- */
 import { describe, it, expect, vi } from "vitest";
-import type { QueryClient } from "@tanstack/react-query";
 import { invalidateProfitDependencies } from "../invalidateProfitDependencies";
 import { queryKeys } from "@/lib/query";
 
 describe("invalidateProfitDependencies", () => {
-  it("invalida los 3 dominios Profit (dashboardEjecutivo, presupuesto, profit)", () => {
+  it("invalida las tres claves raíz de Profit", () => {
     const invalidateQueries = vi.fn();
-    const qc = { invalidateQueries } as unknown as QueryClient;
+    const qc = { invalidateQueries } as unknown as import("@tanstack/react-query").QueryClient;
 
     invalidateProfitDependencies(qc);
 
     expect(invalidateQueries).toHaveBeenCalledTimes(3);
-    const keys = invalidateQueries.mock.calls.map((c) => (c[0] as { queryKey: readonly unknown[] }).queryKey);
+    const keys = invalidateQueries.mock.calls.map((c) => c[0].queryKey);
     expect(keys).toContainEqual(queryKeys.dashboardEjecutivo.all);
     expect(keys).toContainEqual(queryKeys.presupuesto.all);
-    // Prefix ["profit"] — matching parcial de React Query alcanza queryKeys.profit.estadoResultados(...)
-    expect(keys).toContainEqual(["profit"]);
+    expect(keys).toContainEqual(queryKeys.profit.all);
   });
 });

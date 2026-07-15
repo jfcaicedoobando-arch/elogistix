@@ -69,6 +69,7 @@ describe("dashboardEjecutivo/agregador", () => {
       periodo: "2025-03",
       cobranza: [],
       cxp: [],
+      fuente: "facturas",
     });
     // 1 actual + 1 previo + 12 meses = 14
     expect(fetchEstadoResultadosDevengado).toHaveBeenCalledTimes(14);
@@ -84,6 +85,7 @@ describe("dashboardEjecutivo/agregador", () => {
       periodo: "2025-01",
       cobranza: [],
       cxp: [],
+      fuente: "facturas",
     });
     const calls = fetchEstadoResultadosDevengado.mock.calls.map((c) => c[0]);
     expect(calls).toContainEqual({ organizationId: null, year: 2024, month: 12 });
@@ -95,6 +97,7 @@ describe("dashboardEjecutivo/agregador", () => {
       periodo: "2025-06",
       cobranza: [{ id: "c" }] as never,
       cxp: [],
+      fuente: "facturas",
     });
     expect(fetchFlujoProyectado).toHaveBeenCalledTimes(1);
     expect(fetchFlujoProyectado).toHaveBeenCalledWith({
@@ -112,6 +115,7 @@ describe("dashboardEjecutivo/agregador", () => {
       periodo: "2025-06",
       cobranza: [],
       cxp: [],
+      fuente: "facturas",
     });
     expect(snap.periodo).toBe("2025-06");
     expect(snap.kpis).toEqual({ ingresos: 100 });

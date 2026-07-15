@@ -25,7 +25,7 @@ export function useFlujoProyectado(dias = 90) {
         dias,
         organizationId: organizationId ?? null,
       }),
-    enabled: ready,
+    enabled: ready && !!organizationId,
     staleTime: 60_000,
   });
 }

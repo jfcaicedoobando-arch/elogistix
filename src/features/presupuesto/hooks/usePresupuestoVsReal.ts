@@ -9,6 +9,6 @@ export function usePresupuestoVsReal(periodo: string) {
     queryKey: queryKeys.presupuesto.vsRealPorOrg(periodo, organizationId ?? null),
     queryFn: () => fetchPresupuestoVsReal(periodo, organizationId ?? null),
     staleTime: 30_000,
-    enabled: !!periodo,
+    enabled: !!periodo && !!organizationId,
   });
 }

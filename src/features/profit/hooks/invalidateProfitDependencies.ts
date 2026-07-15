@@ -12,6 +12,5 @@ import { queryKeys } from "@/lib/query";
 export function invalidateProfitDependencies(qc: QueryClient): void {
   qc.invalidateQueries({ queryKey: queryKeys.dashboardEjecutivo.all });
   qc.invalidateQueries({ queryKey: queryKeys.presupuesto.all });
-  // profit no tiene `.all`; usamos prefijo del tuple.
-  qc.invalidateQueries({ queryKey: ["profit"] });
+  qc.invalidateQueries({ queryKey: queryKeys.profit.all });
 }

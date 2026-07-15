@@ -4,6 +4,7 @@
  * `cxp` inyectados por el hook caller para no acoplar service→service.
  */
 import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
+import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
 import {
   fetchSaldosCuentas,
   fetchResumenTesoreria,
@@ -13,12 +14,15 @@ import { fetchPresupuestoVsReal } from "@/features/presupuesto/services";
 import type { CobranzaRow, CxpRow } from "@/features/tesoreria/domain";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
+import type { FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
 
 export interface FetchSnapshotParams {
   organizationId: string | null;
   periodo: string; // YYYY-MM
   cobranza: CobranzaRow[];
   cxp: CxpRow[];
+  /** Fuente del EERR. Default `"embarques"` para alinearse con la pantalla EERR. */
+  fuente?: FuenteEERR;
 }
 
 function periodoAnterior(periodo: string): string {
@@ -44,15 +48,15 @@ function meses12Atras(periodo: string): Array<{ year: number; month: number; key
 export async function fetchDashboardEjecutivo(
   params: FetchSnapshotParams,
 ): Promise<SnapshotEjecutivo> {
-  const { organizationId, periodo, cobranza, cxp } = params;
+  const { organizationId, periodo, cobranza, cxp, fuente = "embarques" } = params;
   const [year, month] = periodo.split("-").map(Number);
   const prev = periodoAnterior(periodo);
   const [prevY, prevM] = prev.split("-").map(Number);
 
-  // Optimización: una sola ola de Promise.all que incluye los 12 meses + EERR
-  // periodo + EERR previo + tesorería + flujo + presupuesto + cuentas. Antes
-  // había 2 olas secuenciales (cuentas, después el resto), lo que sumaba ~1
-  // RTT extra por la latencia agregada de cuentas.
+  // Selector de fuente EERR. `facturas` = devengado (contable);
+  // `embarques` = pagado/liquidado. Ambas firmas son idénticas.
+  const fetchEerr = fuente === "facturas" ? fetchEstadoResultadosDevengado : fetchEstadoResultadosMes;
+
   const meses = meses12Atras(periodo);
   const [
     cuentas,
@@ -63,13 +67,11 @@ export async function fetchDashboardEjecutivo(
     ...eerrMensuales
   ] = await Promise.all([
     fetchSaldosCuentas(organizationId),
-    fetchEstadoResultadosDevengado({ organizationId, year, month }),
-    fetchEstadoResultadosDevengado({ organizationId, year: prevY, month: prevM }),
+    fetchEerr({ organizationId, year, month }),
+    fetchEerr({ organizationId, year: prevY, month: prevM }),
     fetchResumenTesoreria({ cobranza, cxp, organizationId }),
     fetchPresupuestoVsReal(periodo, organizationId),
-    ...meses.map((m) =>
-      fetchEstadoResultadosDevengado({ organizationId, year: m.year, month: m.month }),
-    ),
+    ...meses.map((m) => fetchEerr({ organizationId, year: m.year, month: m.month })),
   ]);
   // `flujo` necesita `cuentas` ya resueltas — segunda fase mínima.
   const flujo = await fetchFlujoProyectado({ cuentas, cobranza, cxp, dias: 28, organizationId });

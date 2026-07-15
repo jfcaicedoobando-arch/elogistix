@@ -6,11 +6,11 @@ import { queryKeys } from "@/lib/query";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
 import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
 import { generarMesesDisponibles, mesActualKey } from "@/features/facturacion/domain/proyeccionFacturacion";
-import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
+import { useFuenteEerr, type FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
+
+export type { FuenteEERR };
 
 const MES_MINIMO = "2026-04";
-
-export type FuenteEERR = "embarques" | "facturas";
 
 export function useEstadoResultados() {
   const { organizationId } = useOrgFilter();
@@ -26,14 +26,7 @@ export function useEstadoResultados() {
   const defaultMes = mesesDisponibles.find((m) => m.key === mesActualKey()) ?? mesesDisponibles[0];
   const [mesKey, setMesKeyState] = useState<string>(mesValido?.key ?? defaultMes.key);
 
-  const [fuente, setFuenteState] = useState<FuenteEERR>(() => {
-    const stored = safeLocalStorage.getItem(STORAGE_KEYS.eerrFuente);
-    return stored === "facturas" ? "facturas" : "embarques";
-  });
-  const setFuente = useCallback((f: FuenteEERR) => {
-    setFuenteState(f);
-    safeLocalStorage.setItem(STORAGE_KEYS.eerrFuente, f);
-  }, []);
+  const { fuente, setFuente } = useFuenteEerr();
 
   const setMesKey = useCallback(
     (key: string) => {
