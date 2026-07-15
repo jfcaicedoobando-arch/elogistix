@@ -24,6 +24,26 @@ function formatDelta(pct: number): { text: string; variant: "positive" | "negati
   };
 }
 
+/**
+ * Texto del delta para la card "Utilidad operativa": muestra margen del
+ * periodo + variación en puntos porcentuales vs. mes anterior cuando exista
+ * comparable (Fase I).
+ */
+function buildUtilidadDelta(kpis: KPIsEjecutivos): string {
+  const margen = `Margen ${kpis.margen_pct.toFixed(1)}%`;
+  if (kpis.margen_delta_puntos == null) return `${margen} · sin comparable previo`;
+  const puntos = kpis.margen_delta_puntos;
+  const signo = puntos > 0 ? "+" : "";
+  return `${margen} · ${signo}${puntos.toFixed(1)}pp vs mes anterior`;
+}
+
+function utilidadVariant(kpis: KPIsEjecutivos): "positive" | "negative" | "neutral" {
+  if (kpis.margen_delta_puntos != null && Math.abs(kpis.margen_delta_puntos) >= 0.5) {
+    return kpis.margen_delta_puntos > 0 ? "positive" : "negative";
+  }
+  return kpis.margen_pct >= 0 ? "positive" : "negative";
+}
+
 export function BandaKPIs({ kpis, topDeudores, topAcreedores }: Props) {
   const nav = useNavigate();
   const [drill, setDrill] = useState<null | "deudores" | "acreedores">(null);
@@ -62,8 +82,8 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores }: Props) {
         <KpiCard
           label="Utilidad operativa"
           value={formatCurrency(kpis.utilidad_mxn, "MXN")}
-          delta={`Margen ${kpis.margen_pct.toFixed(1)}% · antes de gastos admin`}
-          deltaVariant={kpis.margen_pct >= 0 ? "positive" : "negative"}
+          delta={buildUtilidadDelta(kpis)}
+          deltaVariant={utilidadVariant(kpis)}
           icon={TrendingUp}
           onClick={() => nav("/profit/estado-resultados")}
         />

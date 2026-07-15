@@ -35,10 +35,16 @@ export function useFuenteEerr(): { fuente: FuenteEERR; setFuente: (f: FuenteEERR
   const fuente = useSyncExternalStore(subscribe, read, () => DEFAULT);
   const setFuente = useCallback((f: FuenteEERR) => {
     safeLocalStorage.setItem(STORAGE_KEYS.eerrFuente, f);
-    // Notifica a otros consumidores en la MISMA pestaña (el evento `storage`
-    // solo dispara entre pestañas distintas).
+    // Notifica a otros consumidores en la MISMA pestaña. Envolvemos en
+    // try/catch — un listener que truene no debe romper el setter (auditoría
+    // Fase H, hallazgo #1).
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("lc:eerr-fuente-change"));
+      try {
+        window.dispatchEvent(new Event("lc:eerr-fuente-change"));
+      } catch {
+        // Silencioso: la persistencia ya ocurrió; los otros consumidores
+        // se actualizarán en su próximo render o evento `storage`.
+      }
     }
   }, []);
   return { fuente, setFuente };

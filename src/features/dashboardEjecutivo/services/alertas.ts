@@ -85,12 +85,30 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
 export function calcularKPIsEjecutivos(
   snapshot: Omit<SnapshotEjecutivo, "kpis" | "alertas" | "topDeudores" | "topAcreedores" | "generadoEn">,
   ingresosPrevios: number,
+  eerrPrevio?: SnapshotEjecutivo["eerrPeriodo"],
 ): SnapshotEjecutivo["kpis"] {
   const eerr = snapshot.eerrPeriodo;
   const ingresos = eerr.totalIngresos.total;
   const utilidad = eerr.utilidad.total;
   const margen = ingresos > 0 ? (utilidad / ingresos) * 100 : 0;
   const delta = ingresosPrevios > 0 ? ((ingresos - ingresosPrevios) / ingresosPrevios) * 100 : 0;
+
+  // Variación de utilidad y margen vs. mes anterior (Fase I).
+  // Convención: `null` cuando el mes previo es 0 (evita `Infinity`) o negativo
+  // (comparar contra pérdidas no aporta señal accionable en la UI).
+  let utilidadDelta: number | null = null;
+  let margenDelta: number | null = null;
+  if (eerrPrevio) {
+    const utilPrev = eerrPrevio.utilidad.total;
+    const ingPrev = eerrPrevio.totalIngresos.total;
+    if (utilPrev > 0) {
+      utilidadDelta = ((utilidad - utilPrev) / utilPrev) * 100;
+    }
+    if (ingPrev > 0) {
+      const margenPrev = (utilPrev / ingPrev) * 100;
+      margenDelta = margen - margenPrev;
+    }
+  }
 
   const saldoBancos = snapshot.tesoreria.cuentas.reduce((acc, c) => acc + c.saldo, 0);
 
@@ -112,7 +130,9 @@ export function calcularKPIsEjecutivos(
     ingresos_mxn: ingresos,
     ingresos_delta_pct: delta,
     utilidad_mxn: utilidad,
+    utilidad_delta_pct: utilidadDelta,
     margen_pct: margen,
+    margen_delta_puntos: margenDelta,
     saldo_bancos_mxn: saldoBancos,
     cartera_vencida_mxn: carteraVencida,
     cartera_vencida_count: deudoresVencidos.length,

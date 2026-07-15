@@ -87,7 +87,7 @@ export async function fetchDashboardEjecutivo(
   });
 
   const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto };
-  const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total);
+  const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);
   const alertas = calcularAlertas({ flujo, tesoreria, presupuesto });
 
   return {
