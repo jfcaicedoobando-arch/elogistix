@@ -9,6 +9,7 @@
 
 export type FacturapiEventType =
   | "invoice.status_updated"
+  | "invoice.cancellation_status_updated"
   | "invoice.canceled"
   | "invoice.delivered_to_customer"
   | "invoice.created"
