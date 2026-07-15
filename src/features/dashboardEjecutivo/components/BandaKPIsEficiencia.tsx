@@ -43,6 +43,7 @@ function runwayVariant(n: number | null): "positive" | "negative" | "neutral" {
 
 function runwayValue(n: number | null): string {
   if (n == null) return "Sin burn";
+  if (n === 0) return "Caja agotada";
   if (n < 1) return "< 1 mes";
   return `${n.toFixed(1)} meses`;
 }
