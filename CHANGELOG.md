@@ -6,6 +6,20 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.23] - 2026-07-15
+- **test(e2e)**: auditoría e implementación del primer batch de mejoras del framework Playwright.
+  - **Paralelismo**: `playwright.config.ts` ahora corre con `fullyParallel: true` y `workers` configurable (4 local / 2 CI, override con `E2E_WORKERS`). Los specs mutadores (09–12) quedan aislados en el project `chromium-mutators` con `workers: 1` y `fullyParallel: false` para preservar el orden serial contra la DB compartida. Los read-only (01–08, 13–24) van al project `chromium-internal` en paralelo. Reduce ~9 min → ~3 min localmente.
+  - **Selectores estables**: añadidos `data-testid` a los anchor points frágiles.
+    - `EmbarqueDetalleTabs`: `tab-resumen`, `tab-tracking`, `tab-documentos`, `tab-costos`, `tab-facturacion`, `tab-garantias`, `tab-seguros`, `tab-conciliacion`, `tab-pnl`, `tab-cierre`, `tab-notas`.
+    - `EstadoProgresoCard`: `estado-progreso` con `data-arrived` derivado de `fecha_llegada_real`.
+    - `AuditoriaPage`: `auditoria-recalcular-btn` (evita match ambiguo con la sidebar).
+    - `EmailChipsField`: `envio-chip` + `envio-chip-locked` con `data-email` y `data-locked`.
+    - `BandejaPorCobrar`: celda "Vence en" con `data-testid="col-vence-en"` y `data-dias` (elimina dependencia de orden de columnas).
+  - **Page Objects** (`e2e/pageObjects/`): `EmbarquesListPO`, `EmbarqueDetallePO`, `FacturacionPO`, `AuditoriaPO` centralizan `goto`, `openFirstRow`, `openTab`, y sondas de RPC — refactor aplicado en specs 21–24.
+  - **Fixture global de errores** (`e2e/fixtures/pageErrors.ts`): captura `pageerror` y `console.error` en todos los tests; falla la spec si hay errores no whitelisteados. Whitelist configurable por spec vía `test.info().annotations.push({ type: "allow-console", description: "regex" })`. Aplicado automáticamente a los 4 specs refactorizados.
+  - **Reporters CI**: agregados `junit` (`test-results/junit.xml`) y `blob` opcional (`E2E_BLOB=1`) para poder shardear en la matrix de GitHub Actions.
+  - Los 24 specs siguen siendo compatibles; los cambios son additivos y retro-compatibles con `.env.e2e` existente.
+
 ## [13.300.22] - 2026-07-15
 - **test(e2e)**: 4 nuevos specs Playwright de regresión para los bugs corregidos en 13.300.14-20.
   - `21-embarque-detalle-tabs.spec.ts`: monta Resumen / Tracking / Documentos y valida que no aparezca "ETA vencida" cuando el embarque ya arribó (bug 13.300.16).

@@ -73,6 +73,7 @@ export default function Auditoria() {
                 size="sm"
                 onClick={c.handleRecalcular}
                 disabled={c.isFetching}
+                data-testid="auditoria-recalcular-btn"
               >
                 <RefreshCw
                   className={`mr-2 h-4 w-4 ${c.isFetching ? "animate-spin" : ""}`}

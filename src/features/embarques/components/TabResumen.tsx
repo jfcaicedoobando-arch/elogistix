@@ -23,7 +23,7 @@ export function TabResumen({ embarque }: Props) {
 
   return (
     <div className="space-y-6">
-      <EstadoProgresoCard currentStepIndex={currentStepIndex} />
+      <EstadoProgresoCard currentStepIndex={currentStepIndex} arribado={Boolean(embarque.fecha_llegada_real)} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         <DatosGeneralesCard embarque={embarque} />

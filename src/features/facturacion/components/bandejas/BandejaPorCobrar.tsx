@@ -50,6 +50,8 @@ const columns = defineColumns<FilaCobranza>([
         <span
           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums whitespace-nowrap ${b.className}`}
           aria-label={b.ariaLabel}
+          data-testid="col-vence-en"
+          data-dias={row.original.dias_vencido}
         >
           {b.label}
         </span>

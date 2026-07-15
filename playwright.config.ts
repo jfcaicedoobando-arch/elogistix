@@ -1,7 +1,13 @@
 /**
  * Configuración Playwright para E2E críticos de Libre Carga.
  *
- * No corre como parte de `npm test` ni del CI por defecto.
+ * v13.300.23 — Auditoría:
+ *   - Paralelismo activado (`fullyParallel: true`, workers configurables).
+ *   - Specs mutadores (09–12) agrupados en `chromium-mutators` con
+ *     `fullyParallel: false` para preservar el orden y evitar contención
+ *     sobre datos compartidos.
+ *   - Reporters `junit` + `blob` habilitados en CI para shards.
+ *
  * Setup local:
  *   1) `npm i -D @playwright/test`
  *   2) `npx playwright install chromium`
@@ -10,36 +16,47 @@
  *        E2E_PORTAL_EMAIL, E2E_PORTAL_PASSWORD,
  *        E2E_CROSS_ORG_EMBARQUE_ID, E2E_CROSS_ORG_FACTURA_ID, E2E_CROSS_ORG_COTIZACION_ID
  *   4) `npx playwright test`
- *
- * Vive fuera de `tsconfig.app.json` para no exigir la dependencia al bundle.
  */
 import { defineConfig, devices } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { config as loadDotenv } from "dotenv";
 
-// Carga `.env.e2e` si existe (no rompe si falta — el usuario puede exportar).
 const envFile = resolve(process.cwd(), ".env.e2e");
 if (existsSync(envFile)) loadDotenv({ path: envFile });
 
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:8080";
 const IS_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(BASE_URL);
 
+// Regex de specs mutadores: mantener aquí y en globalSetup.
+const MUTATOR_SPECS = /0[9]-|1[0-2]-/;
+const PORTAL_SPEC = /05-portal\.spec\.ts/;
+
+// Workers: CI conservador (2), local agresivo (4). Override con E2E_WORKERS.
+const WORKERS = Number(
+  process.env.E2E_WORKERS ?? (process.env.CI ? 2 : 4),
+);
+
+const reporters: NonNullable<Parameters<typeof defineConfig>[0]["reporter"]> = process.env.CI
+  ? [
+      ["list"],
+      ["html", { open: "never" }],
+      ["junit", { outputFile: "test-results/junit.xml" }],
+      ...(process.env.E2E_BLOB ? ([["blob"]] as [["blob"]]) : []),
+    ]
+  : "list";
+
 export default defineConfig({
   testDir: "./e2e/specs",
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  fullyParallel: false, // mutaciones contra DB compartida ⇒ serie
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
-  // globalSetup hace login una vez y persiste storageState en e2e/.auth/*.json.
-  // Los projects de abajo lo consumen vía `use.storageState`.
+  workers: Number.isFinite(WORKERS) && WORKERS > 0 ? WORKERS : 1,
   globalSetup: "./e2e/globalSetup.ts",
   globalTeardown: "./e2e/globalTeardown.ts",
-  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
-  // Levanta el dev server sólo cuando apuntamos a localhost. En remoto (staging)
-  // no toca nada. `reuseExistingServer` evita un segundo proceso si ya corre.
+  reporter: reporters,
   webServer: IS_LOCAL
     ? {
         command: "bun run dev",
@@ -59,9 +76,22 @@ export default defineConfig({
     navigationTimeout: 30_000,
   },
   projects: [
+    // Specs read-only internos → paralelo.
     {
       name: "chromium-internal",
-      testIgnore: /05-portal\.spec\.ts/,
+      testIgnore: [PORTAL_SPEC, MUTATOR_SPECS],
+      fullyParallel: true,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "e2e/.auth/internal.json",
+      },
+    },
+    // Specs mutadores (09–12) → serie estricta contra la DB compartida.
+    {
+      name: "chromium-mutators",
+      testMatch: MUTATOR_SPECS,
+      fullyParallel: false,
+      workers: 1,
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/internal.json",
@@ -69,7 +99,7 @@ export default defineConfig({
     },
     {
       name: "chromium-portal",
-      testMatch: /05-portal\.spec\.ts/,
+      testMatch: PORTAL_SPEC,
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/portal.json",
