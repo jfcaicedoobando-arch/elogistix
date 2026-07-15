@@ -100,6 +100,12 @@ export function calcularResumenTesoreria(args: {
   cobranza: CobranzaRow[];
   cxp: CxpRow[];
   hoy?: Date;
+  /**
+   * v13.300.49 — Tipo de cambio USD→MXN. Se usa para convertir saldos de
+   * cuentas en USD y la porción USD de la cartera vencida. Si no se
+   * proporciona, se usa `1` (compatibilidad con callers que no manejan TC).
+   */
+  tipoCambioUsd?: number;
 }): ResumenTesoreria {
   const hoy = args.hoy ?? new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -107,11 +113,13 @@ export function calcularResumenTesoreria(args: {
   limite.setDate(limite.getDate() + 30);
   const enVentana = (iso: string | null) =>
     !!iso && new Date(iso + "T00:00:00") <= limite;
+  const tc = args.tipoCambioUsd && args.tipoCambioUsd > 0 ? args.tipoCambioUsd : 1;
 
   const flujo: FlujoMes = {
     por_cobrar_mxn: 0, por_cobrar_usd: 0,
     por_pagar_mxn: 0, por_pagar_usd: 0,
     flujo_neto_mxn: 0, flujo_neto_usd: 0,
+    por_cobrar_total_mxn: 0, por_pagar_total_mxn: 0,
   };
   for (const f of args.cobranza) {
     if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
@@ -125,6 +133,27 @@ export function calcularResumenTesoreria(args: {
   }
   flujo.flujo_neto_mxn = flujo.por_cobrar_mxn - flujo.por_pagar_mxn;
   flujo.flujo_neto_usd = flujo.por_cobrar_usd - flujo.por_pagar_usd;
+  flujo.por_cobrar_total_mxn = flujo.por_cobrar_mxn + flujo.por_cobrar_usd * tc;
+  flujo.por_pagar_total_mxn = flujo.por_pagar_mxn + flujo.por_pagar_usd * tc;
+
+  // Cartera vencida completa (previa al Top-5). Convertida a MXN.
+  let cartera_vencida_total_mxn = 0;
+  let cartera_vencida_count = 0;
+  for (const f of args.cobranza) {
+    if (f.saldo <= 0 || f.estatus_cobranza !== "Vencida") continue;
+    cartera_vencida_count += 1;
+    cartera_vencida_total_mxn += f.moneda === "USD" ? f.saldo * tc : f.saldo;
+  }
+
+  // CxP vencidas completas (previa al Top-5). C1: alineado a sólo "Vencida"
+  // (antes acreedores incluía "Por vencer", inconsistente con deudores).
+  let cxp_vencidas_total_mxn = 0;
+  let cxp_vencidas_count = 0;
+  for (const f of args.cxp) {
+    if (f.saldo <= 0 || f.estatus !== "Vencida") continue;
+    cxp_vencidas_count += 1;
+    cxp_vencidas_total_mxn += f.moneda === "USD" ? f.saldo * tc : f.saldo;
+  }
 
   const top_deudores = agruparTop(
     args.cobranza,
@@ -135,16 +164,32 @@ export function calcularResumenTesoreria(args: {
     (f) => f.dias_vencido,
   );
 
+  // C1 fix: criterio unificado con deudores → sólo `Vencida`.
   const top_acreedores = agruparTop(
     args.cxp,
-    (f) => f.saldo > 0 && (f.estatus === "Por vencer" || f.estatus === "Vencida"),
+    (f) => f.saldo > 0 && f.estatus === "Vencida",
     (f) => f.proveedor_nombre,
     (f) => f.moneda,
     (f) => f.saldo,
     (f) => f.dias_vencido,
   );
 
-  return { cuentas: args.cuentas, flujo, top_deudores, top_acreedores };
+  const saldo_bancos_mxn = args.cuentas.reduce(
+    (acc, c) => acc + (c.moneda === "USD" ? c.saldo * tc : c.saldo),
+    0,
+  );
+
+  return {
+    cuentas: args.cuentas,
+    flujo,
+    top_deudores,
+    top_acreedores,
+    saldo_bancos_mxn,
+    cartera_vencida_total_mxn,
+    cartera_vencida_count,
+    cxp_vencidas_count,
+    cxp_vencidas_total_mxn,
+  };
 }
 
 /**
