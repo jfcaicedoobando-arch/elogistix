@@ -103,17 +103,39 @@ Deno.serve(async (req) => {
       const r = await upsertUser(admin, payload.admin.email, payload.admin.password);
       await upsertRole(admin, r.user_id, "admin");
       await upsertOrgMember(admin, r.user_id, orgId, "admin");
-      results.push({ ...r, role: "admin" });
+      const checks = await verifyAdmin(admin, r.user_id, orgId);
+      results.push({
+        ...r,
+        role: "admin",
+        verified: checks.user_role_ok && checks.org_member_ok === true,
+        checks,
+      });
     }
 
     if (payload.portal?.email && payload.portal.password && clienteId) {
       const r = await upsertUser(admin, payload.portal.email, payload.portal.password);
       await upsertRole(admin, r.user_id, "cliente");
       await upsertClientUser(admin, r.user_id, clienteId, orgId);
-      results.push({ ...r, role: "cliente" });
+      const checks = await verifyPortal(admin, r.user_id, clienteId, orgId);
+      results.push({
+        ...r,
+        role: "cliente",
+        verified: checks.user_role_ok && checks.client_user_ok === true,
+        checks,
+      });
     }
 
-    return json({ ok: true, organization_id: orgId, cliente_id: clienteId, users: results });
+    const allVerified = results.every((r) => r.verified);
+    return json(
+      {
+        ok: allVerified,
+        organization_id: orgId,
+        cliente_id: clienteId,
+        users: results,
+        ...(allVerified ? {} : { error: "verification_failed" }),
+      },
+      allVerified ? 200 : 500,
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return json({ error: "provision_failed", message }, 500);
