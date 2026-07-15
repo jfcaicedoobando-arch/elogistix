@@ -89,7 +89,7 @@ jobs:
 
   provision-users:
     name: Provisionar usuarios E2E
-    needs: [guard-secrets, provision-users]
+    needs: [guard-secrets]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
