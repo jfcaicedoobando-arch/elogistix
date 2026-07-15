@@ -35,6 +35,87 @@ function ultimoDia(periodo: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+type PresupRow = { categoria_id: string; periodo: string; monto_mxn: number | string };
+type CxpRow = {
+  categoria_presupuesto_id: string | null;
+  total: number | string;
+  moneda: string | null;
+  tipo_cambio_usd: number | string | null;
+};
+type LiqRow = { total_mxn: number | string; periodo: string };
+type CatRow = { id: string; nombre: string };
+
+function mapPresupuestoPorCategoria(rows: PresupRow[], periodo: string): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const p of rows) {
+    if (p.periodo === periodo) out.set(p.categoria_id, Number(p.monto_mxn));
+  }
+  return out;
+}
+
+function agregarGastosCxP(rows: CxpRow[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const g of rows) {
+    if (!g.categoria_presupuesto_id) continue;
+    const monto = Number(g.total);
+    const mxn = g.moneda === "MXN" || !g.tipo_cambio_usd ? monto : monto * Number(g.tipo_cambio_usd);
+    out.set(g.categoria_presupuesto_id, (out.get(g.categoria_presupuesto_id) ?? 0) + mxn);
+  }
+  return out;
+}
+
+function aplicarLiquidacionesComisiones(
+  realPorCat: Map<string, number>,
+  cats: CatRow[],
+  liq: LiqRow[],
+): void {
+  const comisionesCat = cats.find((c) => c.nombre.toLowerCase() === "comisiones");
+  if (!comisionesCat) return;
+  const totalLiq = liq.reduce((acc, l) => acc + Number(l.total_mxn), 0);
+  if (totalLiq > 0) {
+    realPorCat.set(comisionesCat.id, (realPorCat.get(comisionesCat.id) ?? 0) + totalLiq);
+  }
+}
+
+function construirFila(
+  c: CatRow,
+  presupPorCat: Map<string, number>,
+  realPorCat: Map<string, number>,
+): FilaVsReal {
+  const presupuesto = presupPorCat.get(c.id) ?? 0;
+  const real = realPorCat.get(c.id) ?? 0;
+  const variacion = real - presupuesto;
+  const cumplimiento = presupuesto > 0 ? (real / presupuesto) * 100 : 0;
+  return {
+    categoria_id: c.id,
+    categoria_nombre: c.nombre,
+    presupuesto_mxn: presupuesto,
+    real_mxn: real,
+    variacion_mxn: variacion,
+    cumplimiento_pct: cumplimiento,
+  };
+}
+
+function construirFilaHuerfanos(
+  realPorCat: Map<string, number>,
+  catIds: Set<string>,
+): FilaVsReal | null {
+  let realHuerfano = 0;
+  for (const [catId, monto] of realPorCat) {
+    if (!catIds.has(catId)) realHuerfano += monto;
+  }
+  if (realHuerfano <= 0) return null;
+  return {
+    categoria_id: "__huerfanas__",
+    categoria_nombre: "Sin categoría / inactivas",
+    presupuesto_mxn: 0,
+    real_mxn: realHuerfano,
+    variacion_mxn: realHuerfano,
+    cumplimiento_pct: 0,
+  };
+}
+
+
 export async function fetchPresupuestoVsReal(
   periodo: string,
   organizationId?: string | null,
