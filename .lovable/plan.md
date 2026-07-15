@@ -1,97 +1,69 @@
-## Diagnóstico (auditoría del módulo Profit)
+# Auditoría Profit — Fase 2 de bugs y duplicados
 
-Rastreé las 4 quejas hasta su origen en código. Los 4 son bugs reales o UX confusa, no percepción del usuario.
+Tras la exploración detallada del módulo, encontré **12 hallazgos adicionales** a los 4 ya corregidos. Propongo agruparlos en 3 lotes por prioridad. Si prefieres otro orden o omitir alguno, dime antes de aprobar.
 
-### Hallazgo 1 · Top deudores / acreedores se repiten — **BUG confirmado**
+## Analogía rápida
+Imagina que llevas la contabilidad en dos monedas y tu calculadora suma dólares como si fueran pesos. Ese es el bug #1: el "Saldo bancario" y algunos KPIs están mezclando USD y MXN como si fueran lo mismo.
 
-**Dónde:** `src/features/tesoreria/domain/resumen.ts:106-116`.
-**Causa:** el ranking ordena **facturas individuales**, no clientes/proveedores. Si "ACME" tiene 3 facturas vencidas, "ACME" aparece 3 veces en el top 5, sacando a otros clientes del ranking.
+## Lote A — Divisas mezcladas (CRITICAL/HIGH) 🔴
 
-```ts
-// hoy
-args.cobranza.filter(...).sort((a,b) => b.saldo - a.saldo).slice(0,5)
-```
+**A1. Saldo bancario suma USD como si fuera MXN**
+- `dashboardEjecutivo/services/alertas.ts:128` y `tesoreria/domain/flujoProyectado.ts:88` hacen `reduce((acc, c) => acc + c.saldo, 0)` sin distinguir moneda, pero luego lo etiquetan como MXN.
+- **Fix**: convertir cada `c.saldo` a MXN usando `tipo_cambio` antes de sumar (o exponer `saldo_mxn` ya normalizado desde el servicio, como ya lo hace `SaldosBancosCard`).
+- Afecta también `runway_meses` y el saldo inicial del flujo proyectado a 28 días.
 
-**Fix propuesto:** agrupar por `cliente_nombre` (deudores) y `proveedor_nombre` (acreedores) antes de ordenar. Sumar `saldo`, tomar el `dias` mayor del grupo (peor caso), y luego top 5.
+**A2. DSO/DPO ignoran cartera en USD**
+- `alertas.ts:149-153` solo usa `por_cobrar_mxn` / `por_pagar_mxn` y descarta `por_cobrar_usd` / `por_pagar_usd`.
+- **Fix**: convertir USD → MXN con TC vigente antes de calcular DSO/DPO.
 
-**Analogía:** hoy la lista es "las 5 facturas más grandes vencidas". Debería ser "los 5 clientes que más deben en total".
+**A3. Test de regresión multi-moneda**
+- Agregar test en `tesoreria/domain/__tests__/resumen.test.ts` con una cuenta MXN + una USD para asegurar comportamiento correcto.
 
----
+## Lote B — Truncamiento Top-5 contamina KPIs (HIGH) 🟠
 
-### Hallazgo 2 · Estado de Resultados con ingresos repetidos — **BUG confirmado**
+**B1. "Cartera vencida" se calcula sobre Top-5 ya truncado**
+- `tesoreria/domain/resumen.ts:106-113` hace `.slice(0, 5)` en `agruparTop`. Luego `alertas.ts:132-135` filtra ese arreglo truncado para calcular el KPI "Cartera vencida" del Dashboard.
+- Si hay 12 clientes vencidos, el KPI sólo suma 5.
+- **Fix**: calcular `carteraVencida` y conteo sobre el dataset completo de cobranza (antes del truncamiento). Reservar `top_deudores` sólo para la tabla visual.
 
-**Dónde:** `src/features/profit/domain/estadoResultados.ts:58-60`.
-**Causa:** la clave que colapsa filas del pivot es `normalizeKey = trim + lowercase`. **No** normaliza acentos ni colapsa espacios internos. Por eso conceptos como:
+**B2. Alertas "N clientes con cartera vencida" también topan en 5**
+- Mismo origen que B1 (`alertas.ts:41-52, 55-66`).
+- **Fix**: contar sobre datos crudos, no sobre el Top-5.
 
-- `"Flete Marítimo"` vs `"Flete Maritimo"` (sin acento)
-- `"THC "` vs `"THC  "` (doble espacio)
-- `"Handling"` vs `"handling "` (ya lo agrupa) — este caso sí funciona.
+## Lote C — Criterios e inconsistencias lógicas (MEDIUM) 🟡
 
-...aparecen como filas distintas aunque son el mismo concepto.
+**C1. Criterio "vencido" distinto entre Top Deudores y Top Acreedores**
+- Deudores: sólo `Vencida` (`resumen.ts:108`). Acreedores: `Por vencer || Vencida` (`resumen.ts:117`).
+- **Fix**: unificar criterio (recomiendo "sólo vencidas" en ambos para consistencia con la etiqueta "vencidos").
 
-**Fix propuesto:** endurecer `normalizeKey` con `.normalize("NFD").replace(/\p{Diacritic}/gu,"").replace(/\s+/g," ").trim().toLowerCase()`. Tests de regresión con acento/espacios/mayúsculas.
+**C2. Triple recálculo de "categorías excedidas de presupuesto"**
+- Misma fórmula en `presupuesto/services/vsReal.ts:175-180`, `dashboardEjecutivo/services/alertas.ts:72-89` y `alertas.ts:144-146`.
+- **Fix**: `alertas.ts` debe consumir `snapshot.presupuesto.categorias_en_exceso` / `top_exceso` en vez de recalcular.
 
-**Nota:** este mismo `normalizeKey` se usa para costos, así que el fix corrige también costos duplicados.
+**C3. EERR "Embarques" no resta notas de crédito, "Facturas" sí**
+- `estadoResultados.ts` (embarques/pagado) no consulta `factura_notas_credito`; `estadoResultadosDevengado.ts:81-91` sí.
+- **Fix (mínimo invasivo)**: ampliar el tooltip del toggle Embarques/Facturas para advertir que sólo la vista "Facturas" descuenta NC. (Restarlas en Embarques requiere decisión de negocio; lo dejo fuera del lote a menos que confirmes.)
 
----
+**C4. `runway_meses` engañoso cuando saldo ya es negativo**
+- `alertas.ts:154-156`: si `saldoBancos <= 0` muestra "Utilidad ≥ 0 en el mes" en `BandaKPIsEficiencia.tsx:70` en lugar de alertar.
+- **Fix**: mensaje explícito "Saldo bancario negativo" cuando corresponda.
 
-### Hallazgo 3 · Toggle "Embarques / Facturas" — **UX confusa, no bug**
+## Fuera de lote (LOW, sin evidencia dura)
+- **Fallback modo "Marítimo"** en EERR devengado (líneas 113-118): reasignar a columna "Otros" cuando la factura no vincula embarque, para no sesgar el modo. Menor prioridad.
+- **Mezcla EUR en `vsReal.ts:56-65`**: sólo relevante si existen facturas de proveedor en EUR (no confirmado en datos actuales).
 
-**Dónde:** `src/features/profit/components/FuenteEerrToggle.tsx` + `hooks/useFuenteEerr.ts`.
-**Qué hace hoy:**
+## Detalles técnicos
 
-- `Embarques` (default): construye el EERR sumando **conceptos_venta / conceptos_costo de embarques cuyo ETA cae en el mes**. Es la vista **operativa** — refleja lo que "se movió" ese mes, aunque no esté facturado todavía.
-- `Facturas`: construye el EERR sumando **facturas emitidas (CxC) menos NC contra CxP del mes**. Es la vista **contable devengada** — refleja lo que oficialmente se emitió/registró.
+Archivos que se tocarían:
+- `src/features/dashboardEjecutivo/services/alertas.ts` (A1, A2, B1, B2, C2, C4)
+- `src/features/tesoreria/domain/resumen.ts` (B1, B2, C1 — exponer datasets pre-truncamiento)
+- `src/features/tesoreria/domain/flujoProyectado.ts` (A1)
+- `src/features/profit/components/FuenteEerrToggle.tsx` (C3 — solo texto)
+- `src/components/profit/BandaKPIsEficiencia.tsx` (C4 — mensaje)
+- Tests: `tesoreria/domain/__tests__/resumen.test.ts`, `dashboardEjecutivo/services/__tests__/alertas.test.ts`
 
-Los dos números **no coinciden** — y no deben — porque miden cosas distintas. Un embarque con ETA en junio pero facturado en julio aparece en junio con "Embarques" y en julio con "Facturas".
+Al terminar: `bun run test` completo, `APP_VERSION` → `13.300.49`, entrada en `CHANGELOG.md`.
 
-**Problema actual:** el tooltip existe pero es minúsculo y en español técnico. El usuario no sabe cuándo usar cuál y siente que "los números cambian sin razón".
-
-**Fix propuesto:**
-1. Cambiar el tooltip por un `HoverCard` con explicación completa + ejemplo numérico.
-2. Renombrar las etiquetas: `Operativa (por ETA)` / `Contable (facturas emitidas)`.
-3. Mostrar debajo del toggle una leyenda persistente: "Viendo vista operativa: refleja embarques con ETA en …".
-4. Persistir la preferencia por usuario (ya está en localStorage — verificar que el default en Dashboard sea el mismo que en EERR para que no cambien números al navegar).
-
----
-
-### Hallazgo 4 · Utilidad operativa "no hace sentido" — **posible bug, requiere confirmación**
-
-**Dónde:** `src/features/dashboardEjecutivo/components/BandaKPIs.tsx:100` + `services/alertas.ts:101`.
-**Cómo se calcula hoy:** `utilidad = eerr.totalIngresos.total − eerr.totalCostos.total` con la fuente EERR activa (embarques o facturas).
-
-**Sospechas concretas de por qué no cuadra al usuario:**
-
-- **(a) Doble conteo entre modos:** un embarque con `modo` no incluido en `["Marítimo","Aéreo","Terrestre"]` (por ejemplo `"Multimodal"` o vacío) es filtrado en `pivotConceptosVenta` (línea 106), pero **sus ingresos aún cargan CxC/bancos** en el Dashboard. Resultado: ves ingresos altos en KPI "Ingresos del periodo" pero utilidad baja porque parte de los conceptos no sumaron. — **BUG**.
-- **(b) Fuente inconsistente con CxC:** el KPI "Ingresos del periodo" viene del EERR (que puede ser "embarques"), pero "Cartera vencida" viene de facturas emitidas. Si el usuario compara ambos, no cuadran.
-- **(c) Utilidad negativa por costos "adelantados":** conceptos_costo con embarques cuyo ETA cae en el mes pero cuyos ingresos aún no se registraron.
-
-**Fix propuesto:**
-1. Incluir en el pivot los modos no reconocidos como columna virtual "Otros" (no descartarlos silenciosamente).
-2. Agregar tooltip al KPI "Utilidad operativa" explicando la fórmula y la fuente activa: "Ingresos − Costos operativos del mes según fuente Embarques".
-3. Test de invariante: `Σ ingresos por modo === totalIngresos.total`, sin descartes silenciosos.
-
-**Necesito confirmar contigo:** ¿al ver "utilidad operativa no hace sentido" fue una cifra puntual mala (negativa, muy chica, no coincide con ER), o es que no entiendes qué está midiendo?
-
----
-
-## Alcance del fix (si apruebas)
-
-Fase 1 · Bugs duros (bloquean confiar en Profit):
-1. Deduplicar Top deudores/acreedores por cliente/proveedor (`resumen.ts` + tests).
-2. Endurecer `normalizeKey` del EERR (acentos + espacios) (`estadoResultados.ts` + tests).
-3. Columna "Otros" en el pivot de EERR para modos no listados (`estadoResultados.ts` + tests).
-
-Fase 2 · UX del toggle:
-4. HoverCard explicativo + etiquetas nuevas + leyenda persistente en Dashboard y EERR.
-5. Tooltip explicativo en KPI "Utilidad operativa" con la fuente activa.
-
-Fase 3 · Regresión:
-6. Test de invariante ingresos por modo === total.
-7. Actualizar `CHANGELOG.md` y bump `APP_VERSION` → `13.300.48`.
-
-**Fuera de alcance:** no modifico rutas, permisos, ni schema. No toco la lógica devengada; solo la operativa donde hay bugs.
-
-## Pregunta bloqueante
-
-Antes de implementar, ¿confirmas la sospecha del Hallazgo 4? Si tienes un mes específico donde la utilidad se ve rara, dímelo y verifico en base de datos el desglose real antes de tocar código.
+## Preguntas antes de implementar
+1. ¿Ejecuto los **3 lotes (A, B, C)** en este turno, o prefieres empezar sólo por el **Lote A** (divisas, el más crítico) y ver resultados?
+2. Para **C3** (NC en EERR Embarques): ¿ampliamos sólo el tooltip, o quieres que también reste NC en la fuente Embarques (cambio de lógica de negocio)?
