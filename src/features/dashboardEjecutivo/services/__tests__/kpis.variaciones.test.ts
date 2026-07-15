@@ -78,15 +78,16 @@ describe("calcularKPIsEjecutivos · variaciones vs mes anterior (Fase I)", () =>
     expect(k.utilidad_delta_pct).toBeNull();
   });
 
-  it("ingresos previos 0 → margen_delta_puntos es null", () => {
+  it("ingresos previos 0 → ingresos_delta_pct y margen_delta_puntos son null (Fase I fix)", () => {
     const actual = makeEerr(100_000, 60_000);
     const prev = makeEerr(0, 0);
     const k = calcularKPIsEjecutivos(baseSnap(actual), 0, prev);
+    expect(k.ingresos_delta_pct).toBeNull();
     expect(k.margen_delta_puntos).toBeNull();
     expect(k.utilidad_delta_pct).toBeNull();
   });
 
-  it("sin eerrPrevio → ambos deltas son null (retrocompat)", () => {
+  it("sin eerrPrevio → utilidad/margen null, ingresos delta calculado normal", () => {
     const actual = makeEerr(100_000, 60_000);
     const k = calcularKPIsEjecutivos(baseSnap(actual), 80_000);
     expect(k.utilidad_delta_pct).toBeNull();

@@ -64,17 +64,25 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
     });
   }
 
-  // Categoría de presupuesto con variación >110%
+  // Fase J: categorías con cumplimiento >110% del presupuesto. Antes se
+  // emitía una alerta por la "peor" categoría; ahora se agrega una única alerta
+  // consolidada con severidad escalada por cantidad/gravedad para reflejar
+  // riesgo real de sobreejercicio.
   const fueraDePresupuesto = input.presupuesto.filas.filter(
     (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_VARIACION_PRESUPUESTO,
   );
   if (fueraDePresupuesto.length > 0) {
-    const peor = fueraDePresupuesto.sort((a, b) => b.cumplimiento_pct - a.cumplimiento_pct)[0];
+    const ordenadas = [...fueraDePresupuesto].sort((a, b) => b.cumplimiento_pct - a.cumplimiento_pct);
+    const peor = ordenadas[0];
+    const critico = fueraDePresupuesto.length >= 3 || peor.cumplimiento_pct >= 200;
     alertas.push({
-      id: `presupuesto-${peor.categoria_id}`,
-      severidad: "warning",
-      titulo: `Categoría "${peor.categoria_nombre}" excedida`,
-      descripcion: `Cumplimiento ${peor.cumplimiento_pct.toFixed(0)}% del presupuesto`,
+      id: "presupuesto-exceso-categoria",
+      severidad: critico ? "critica" : "warning",
+      titulo:
+        fueraDePresupuesto.length === 1
+          ? `Categoría "${peor.categoria_nombre}" excedida`
+          : `${fueraDePresupuesto.length} categorías excedidas`,
+      descripcion: `Peor: ${peor.categoria_nombre} al ${peor.cumplimiento_pct.toFixed(0)}%`,
       url: "/profit/presupuesto",
     });
   }
@@ -91,7 +99,13 @@ export function calcularKPIsEjecutivos(
   const ingresos = eerr.totalIngresos.total;
   const utilidad = eerr.utilidad.total;
   const margen = ingresos > 0 ? (utilidad / ingresos) * 100 : 0;
-  const delta = ingresosPrevios > 0 ? ((ingresos - ingresosPrevios) / ingresosPrevios) * 100 : 0;
+
+  // Fase I fix #2: `null` cuando el mes previo tiene ingresos = 0 — antes
+  // devolvíamos `0` y la UI mostraba "Sin cambio" indistinguible de "no había
+  // dato". Ahora `formatDelta` puede pintar "sin comparable previo".
+  const ingresosDelta: number | null = ingresosPrevios > 0
+    ? ((ingresos - ingresosPrevios) / ingresosPrevios) * 100
+    : null;
 
   // Variación de utilidad y margen vs. mes anterior (Fase I).
   // Convención: `null` cuando el mes previo es 0 (evita `Infinity`) o negativo
@@ -119,16 +133,20 @@ export function calcularKPIsEjecutivos(
   );
   const carteraVencida = deudoresVencidos.reduce((acc, d) => acc + d.saldo, 0);
 
-  // Próximos 7 días de CxP usando primera semana del flujo
   const cxp7d = snapshot.flujo.semanas[0]?.salidas_mxn ?? 0;
 
   const totalPresup = snapshot.presupuesto.total_presupuesto_mxn;
   const totalReal = snapshot.presupuesto.total_real_mxn;
   const cumplimiento = totalPresup > 0 ? (totalReal / totalPresup) * 100 : 0;
 
+  // Fase J: conteo de categorías en exceso (>110% del cumplimiento).
+  const categoriasEnExceso = snapshot.presupuesto.filas.filter(
+    (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_VARIACION_PRESUPUESTO,
+  ).length;
+
   return {
     ingresos_mxn: ingresos,
-    ingresos_delta_pct: delta,
+    ingresos_delta_pct: ingresosDelta,
     utilidad_mxn: utilidad,
     utilidad_delta_pct: utilidadDelta,
     margen_pct: margen,
@@ -138,5 +156,6 @@ export function calcularKPIsEjecutivos(
     cartera_vencida_count: deudoresVencidos.length,
     cxp_7dias_mxn: cxp7d,
     cumplimiento_presupuesto_pct: cumplimiento,
+    categorias_en_exceso: categoriasEnExceso,
   };
 }

@@ -25,7 +25,8 @@ export interface PuntoEERR {
 
 export interface KPIsEjecutivos {
   ingresos_mxn: number;
-  ingresos_delta_pct: number;
+  /** %Δ ingresos vs. mes anterior. `null` cuando el mes previo tiene ingresos = 0 (sin comparable). */
+  ingresos_delta_pct: number | null;
   utilidad_mxn: number;
   /** %Δ de utilidad vs. mes anterior. `null` cuando el mes previo es 0 o negativo. */
   utilidad_delta_pct: number | null;
@@ -37,6 +38,8 @@ export interface KPIsEjecutivos {
   cartera_vencida_count: number;
   cxp_7dias_mxn: number;
   cumplimiento_presupuesto_pct: number;
+  /** Fase J: categorías con cumplimiento > 110% en el periodo actual. */
+  categorias_en_exceso: number;
 }
 
 export interface SnapshotEjecutivo {

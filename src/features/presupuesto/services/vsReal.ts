@@ -22,6 +22,10 @@ export interface ResumenVsReal {
   total_presupuesto_mxn: number;
   total_real_mxn: number;
   variacion_neta_mxn: number;
+  /** Fase J: cantidad de categorías con cumplimiento_pct > 110%. */
+  categorias_en_exceso: number;
+  /** Fase J: top 5 categorías con mayor exceso absoluto (variacion_mxn desc). */
+  top_exceso: FilaVsReal[];
 }
 
 function ultimoDia(periodo: string): string {
@@ -103,11 +107,20 @@ export async function fetchPresupuestoVsReal(
   const total_presupuesto = filas.reduce((a, f) => a + f.presupuesto_mxn, 0);
   const total_real = filas.reduce((a, f) => a + f.real_mxn, 0);
 
+  // Fase J: derivados de sobreejercicio. Umbral 110% alineado con la alerta
+  // `presupuesto-exceso-categoria` en `calcularAlertas`.
+  const excedidas = filas.filter((f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > 110);
+  const top_exceso = [...excedidas]
+    .sort((a, b) => b.variacion_mxn - a.variacion_mxn)
+    .slice(0, 5);
+
   return {
     periodo,
     filas,
     total_presupuesto_mxn: total_presupuesto,
     total_real_mxn: total_real,
     variacion_neta_mxn: total_real - total_presupuesto,
+    categorias_en_exceso: excedidas.length,
+    top_exceso,
   };
 }
