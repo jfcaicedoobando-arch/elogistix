@@ -121,7 +121,14 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       entidadId: factura_id,
       detalles: { status, response: detail },
     });
-    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
+    const rawMessage = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
+    // Mensaje enriquecido para el caso "no cancelable por SAT": típicamente
+    // significa que el receptor debe ACEPTAR la cancelación desde su Buzón
+    // Tributario (regla 2.7.1.34, CFDIs > $1,000 MXN con RFC receptor).
+    const esNoCancelable = /no cancelable|marcada como no|no puede.*cancel|facturas relacionadas/i.test(rawMessage);
+    const message = esNoCancelable
+      ? `${rawMessage}\n\nEl SAT rechazó la cancelación. Causas comunes:\n• El receptor debe ACEPTAR la cancelación en su Buzón Tributario (CFDIs > $1,000 MXN).\n• Existen complementos de pago (REP) o notas de crédito vinculados: cancélalos primero.\n• El SAT aún no propaga la sustitución: reintenta en 30–60 minutos.`
+      : rawMessage;
     return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
   }
   const fapiJson = cancelResp;

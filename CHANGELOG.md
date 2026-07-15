@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.58] - 2026-07-15
+- **fix(facturacion) Mensaje claro en cancelación rechazada por SAT (requestId 9106467a)**: cuando FacturAPI responde "no cancelable" (regla SAT 2.7.1.34, CFDIs > $1,000 MXN), la edge `facturapi-cancelar` ahora anexa las 3 causas típicas al mensaje (aceptación pendiente del receptor en Buzón Tributario, complementos/NC vinculados, o rezago de propagación). No es un bug de código: es una respuesta del SAT.
+
 ## [13.300.57] - 2026-07-15
 - **fix(facturacion) Sustitución CFDI rechazada (requestId 71d2adee)**: FacturAPI v2 rechaza los campos legacy `related` + `relation`. Se reemplazan por `related_documents: [{ relationship: "04", documents: [uuid] }]` en `buildFacturapiPayload`, alineado con el esquema `RelatedDocumentInput` de la API.
 
