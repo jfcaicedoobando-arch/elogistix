@@ -43,18 +43,18 @@ export function EmbarqueDetalleTabs({
           flex-wrap. Cambiamos a scroll horizontal nativo con scrollbar fino
           para mantener todas las tabs en una sola fila sin partir el header. */}
       <div className="w-full overflow-x-auto [scrollbar-width:thin]">
-        <TabsList className="gap-1 inline-flex w-max flex-nowrap">
-          <TabsTrigger value="resumen" className="whitespace-nowrap">Resumen</TabsTrigger>
-          <TabsTrigger value="tracking" className="whitespace-nowrap">Tracking</TabsTrigger>
-          <TabsTrigger value="documentos" className="whitespace-nowrap">Documentos</TabsTrigger>
-          <TabsTrigger value="costos" className="whitespace-nowrap">Costos</TabsTrigger>
-          <TabsTrigger value="garantias" className="whitespace-nowrap">Demoras y Garantías</TabsTrigger>
-          <TabsTrigger value="seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
-          <TabsTrigger value="facturacion" className="whitespace-nowrap">Facturación</TabsTrigger>
-          <TabsTrigger value="conciliacion" className="whitespace-nowrap">Conciliación</TabsTrigger>
-          <TabsTrigger value="pnl" className="whitespace-nowrap">P&amp;L</TabsTrigger>
-          <TabsTrigger value="cierre" className="whitespace-nowrap">Cierre</TabsTrigger>
-          <TabsTrigger value="notas" className="whitespace-nowrap">Notas y Actividad</TabsTrigger>
+        <TabsList className="gap-1 inline-flex w-max flex-nowrap" data-testid="embarque-detalle-tabs">
+          <TabsTrigger value="resumen" data-testid="tab-resumen" className="whitespace-nowrap">Resumen</TabsTrigger>
+          <TabsTrigger value="tracking" data-testid="tab-tracking" className="whitespace-nowrap">Tracking</TabsTrigger>
+          <TabsTrigger value="documentos" data-testid="tab-documentos" className="whitespace-nowrap">Documentos</TabsTrigger>
+          <TabsTrigger value="costos" data-testid="tab-costos" className="whitespace-nowrap">Costos</TabsTrigger>
+          <TabsTrigger value="garantias" data-testid="tab-garantias" className="whitespace-nowrap">Demoras y Garantías</TabsTrigger>
+          <TabsTrigger value="seguros" data-testid="tab-seguros" className="whitespace-nowrap">Seguros</TabsTrigger>
+          <TabsTrigger value="facturacion" data-testid="tab-facturacion" className="whitespace-nowrap">Facturación</TabsTrigger>
+          <TabsTrigger value="conciliacion" data-testid="tab-conciliacion" className="whitespace-nowrap">Conciliación</TabsTrigger>
+          <TabsTrigger value="pnl" data-testid="tab-pnl" className="whitespace-nowrap">P&amp;L</TabsTrigger>
+          <TabsTrigger value="cierre" data-testid="tab-cierre" className="whitespace-nowrap">Cierre</TabsTrigger>
+          <TabsTrigger value="notas" data-testid="tab-notas" className="whitespace-nowrap">Notas y Actividad</TabsTrigger>
         </TabsList>
       </div>
 
