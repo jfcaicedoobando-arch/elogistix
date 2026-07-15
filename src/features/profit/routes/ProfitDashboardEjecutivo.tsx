@@ -73,7 +73,6 @@ export default function ProfitDashboardEjecutivo() {
           <div className="flex-1" />
           <ToggleGroup
             type="single"
-            size="sm"
             value={fuente}
             onValueChange={(v) => v && setFuente(v as "embarques" | "facturas")}
             aria-label="Fuente del Estado de Resultados"
