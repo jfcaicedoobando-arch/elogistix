@@ -12,6 +12,7 @@ import { pdf } from "@react-pdf/renderer";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks/useDashboardEjecutivo";
 import { BandaKPIs } from "@/features/dashboardEjecutivo/components/BandaKPIs";
+import { BandaKPIsEficiencia } from "@/features/dashboardEjecutivo/components/BandaKPIsEficiencia";
 import { GraficoEERR12m } from "@/features/dashboardEjecutivo/components/GraficoEERR12m";
 import { ForecastMultiMesChart } from "@/features/dashboardEjecutivo/components/ForecastMultiMesChart";
 import { SaldosBancosCard } from "@/features/dashboardEjecutivo/components/SaldosBancosCard";
