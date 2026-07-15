@@ -70,7 +70,12 @@ export function usePeriodoMesUrl(
   }, [indice, mesesDisponibles, setMesKey]);
 
   return {
-    mesActual,
+  ...(mesesDisponibles.length === 0
+    ? {
+        // Guard: lista vacía → devolvemos un mes sintético para no romper consumers.
+        mesActual: { key: "", label: "", year: 0, month: 0 } as MesDisponible,
+      }
+    : { mesActual }),
     mesesDisponibles,
     setMesKey,
     irMesAnterior,
