@@ -97,9 +97,11 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
           <Text style={{ fontSize: 11, fontWeight: 700 }}>
             Utilidad por modo: Marítimo {formatCurrency(utilidadModos[0], "MXN")} ·
             Aéreo {formatCurrency(utilidadModos[1], "MXN")} ·
-            Terrestre {formatCurrency(utilidadModos[2], "MXN")}
+            Terrestre {formatCurrency(utilidadModos[2], "MXN")} ·
+            Otros {formatCurrency(utilidadModos[3], "MXN")}
           </Text>
         </View>
+
 
         <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
