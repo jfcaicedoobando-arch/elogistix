@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.55] - 2026-07-15
+- **fix(facturacion) Borrador de sustitución editable (requestId fcfa87d7)**: `duplicar_factura_para_sustitucion` ya no copia `snapshot_emision` de la factura original al nuevo borrador; el trigger `bloquear_modificacion_factura_emitida` tomaba ese snapshot como "ya emitida" y bloqueaba el autosave con `factura_inmutable`. El snapshot se genera cuando el borrador se timbra (trigger `congelar_factura_al_emitir`). Se limpiaron los borradores de sustitución existentes que traían el snapshot heredado.
+
 ## [13.300.54] - 2026-07-15
 - **security(demo_leads) WITH CHECK con validación**: se reemplaza la policy pública `INSERT` con `WITH CHECK (true)` por una que valida nombre (2-120), empresa (2-160), email con regex y ≤200, teléfono en formato E.164 y `user_agent` ≤500. Cierra el hallazgo `SUPA_rls_policy_always_true`. La policy `ALL` de `cotizacion_costos_historico` se mantiene: está limitada a `service_role`, que ya bypassea RLS.
 

@@ -1,37 +1,34 @@
-## Contexto
+## Causa raíz
 
-El scanner marcó dos policies `USING/WITH CHECK (true)` en escrituras:
+El bug es un efecto colateral del fix anterior (v13.300.53). La RPC `duplicar_factura_para_sustitucion` copia también `snapshot_emision` de la factura original al nuevo borrador `F971-R`. El trigger `bloquear_modificacion_factura_emitida` interpreta `snapshot_emision IS NOT NULL` como "factura ya emitida" y bloquea cualquier UPDATE (incluido el autosave de datos fiscales) con el mensaje `factura_inmutable: la factura F971-R ya fue emitida…`.
 
-1. **`cotizacion_costos_historico`** — policy `ALL` restringida a `service_role`. `service_role` bypassea RLS por definición, así que `true` es inocuo. **Falso positivo**: se marca como *ignore* con explicación.
+Analogía: al fotocopiar el libro, también pegamos el sello de "documento oficial firmado" — la BD trata al borrador como si ya estuviera timbrado.
 
-2. **`demo_leads`** — policy `INSERT` a `anon, authenticated` con `WITH CHECK (true)`. Es el formulario público de captura de leads, así que el `INSERT` anónimo es intencional, pero podemos **endurecer el `WITH CHECK`** con validación básica de payload para reducir spam/abuso y quitar el `true` desnudo.
+El `snapshot_emision` sólo debe existir cuando la propia factura pase a `Emitida` (lo llena el trigger `congelar_factura_al_emitir`), nunca al crearse como borrador.
 
 ## Cambios
 
-### 1. Migración `demo_leads`
-Reemplazar la policy `"Anyone can insert demo leads"` por una versión con validación:
+### 1. Migración: RPC `duplicar_factura_para_sustitucion`
+- En el `INSERT INTO public.facturas`, sustituir `v_old.snapshot_emision` por `NULL` en la columna `snapshot_emision`.
+- El resto de la RPC (copia de renglones vivos, bitácora, validaciones de rol) se mantiene igual.
 
-```text
-WITH CHECK (
-  nombre IS NOT NULL AND length(btrim(nombre))    BETWEEN 2 AND 120
-  AND empresa IS NOT NULL AND length(btrim(empresa)) BETWEEN 2 AND 160
-  AND email IS NOT NULL AND email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' AND length(email) <= 200
-  AND telefono_e164 IS NOT NULL AND telefono_e164 ~ '^\+[1-9][0-9]{6,14}$'
-  AND (user_agent IS NULL OR length(user_agent) <= 500)
-)
+### 2. Data fix del borrador existente
+Con la herramienta de datos, limpiar `snapshot_emision` en los borradores de sustitución que hayan quedado contaminados por la versión anterior:
 ```
+UPDATE public.facturas
+   SET snapshot_emision = NULL
+ WHERE sustituye_a IS NOT NULL
+   AND estado = 'Borrador'
+   AND uuid_fiscal IS NULL
+   AND snapshot_emision IS NOT NULL;
+```
+Cubre el caso reportado (`75fe099b-…`) y cualquier otro creado en la ventana v13.300.53.
 
-Esto valida en la BD lo mismo que ya se manda desde el cliente (`createDemoLead`), sin cambiar la API pública ni romper el flujo actual.
-
-### 2. Ignorar el hallazgo de `cotizacion_costos_historico`
-Marcar como *ignore* vía `manage_security_finding` con la razón: policy alcanzada sólo por `service_role`, que ya bypassea RLS; el `true` no otorga acceso adicional a `anon`/`authenticated`.
-
-### 3. Marcar el hallazgo de `demo_leads` como *fixed* tras la migración.
-
-### 4. Versionado
-- `APP_VERSION` → `13.300.54`
-- Entrada en `CHANGELOG.md` describiendo el endurecimiento de la policy.
+### 3. Versionado
+- `APP_VERSION` → `13.300.55`
+- Entrada breve en `CHANGELOG.md` que referencie el `requestId` del error y explique el fix.
 
 ## Notas técnicas
-- No hay cambio de frontend: `createDemoLead` ya envía los campos con formato E.164 y email válido.
-- No se toca la policy del historial de cotizaciones; sólo se documenta como ignorado en el scanner.
+- No hay cambios de frontend.
+- El autosave de datos fiscales volverá a funcionar en cuanto se limpie el snapshot y se actualice la RPC.
+- El snapshot correcto se generará automáticamente cuando se timbre `F971-R` (trigger `congelar_factura_al_emitir`).
