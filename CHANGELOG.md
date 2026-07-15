@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
-## [13.300.60] - 2026-07-15
+## [13.301.0] - 2026-07-15
+- **feat(facturacion) Overhaul flujo sustitución CFDI (batches A-D)**: reescribe el ciclo asíncrono de cancelaciones alineado con el modelo de FacturApi v2 y la regla SAT 2.7.1.34.
+  - **Batch A (BD + edge cancelar)**: `facturas` gana columnas `cancellation_status` (`none|verifying|pending|accepted|rejected|expired`), `cancelacion_solicitada_en`, `cancelacion_vence_en` + índice parcial para reconciliación + helper SQL `calc_cancelacion_vence` (72 h hábiles aproximadas). `facturapi-cancelar` ya NO marca la factura como Cancelada/Sustituida cuando FacturApi devuelve `pending`/`verifying`: guarda la solicitud y la fecha de vencimiento, sin revertir proformas ni descargar acuse. El estado Cancelada/Sustituida sólo aplica cuando el SAT confirma `accepted` (o `canceled` sin ack, motivos 03/04).
+  - **Batch B (webhook + cron)**: `facturapi-webhook` maneja el nuevo evento `invoice.cancellation_status_updated` (sincroniza sólo el estado; el cambio de estado principal lo hace la reconciliación). Nueva edge `facturapi-reconciliar-cancelaciones` que cada 30 min consulta a FacturApi las facturas con `cancellation_status IN ('pending','verifying')`, detecta `accepted` (descarga acuse + revierte proformas si no es sustitución + bitácora) y `rejected/expired` (limpia solicitud). Cron `facturapi-reconciliar-cancelaciones` programado en pg_cron.
+  - **Batch C (UX single-tab)**: `DialogSustituirFactura` deja de abrir el borrador en pestaña nueva; navega en la misma pestaña y persiste el progreso en `sessionStorage` (`sustitucion:{facturaId}`) con expiración de 24 h. Al volver a la factura original y reabrir el diálogo, se restaura en el paso "confirmar" con opciones "Volver al borrador" y "Reiniciar". Incluye banner informativo sobre las 72 h del SAT.
+  - **Batch D**: documentación en `docs/facturapi-sustitucion.md` (nuevo).
+
+
 - **fix(facturacion) Error transitorio del SAT en cancelación con reintento (requestId 40849f69)**: cuando el SAT devuelve "CancelacionSAT no está disponible" (servicio externo caído/saturado), la edge `facturapi-cancelar` marca la respuesta con `transient: true` y un mensaje humano que aclara que no es un problema de la factura. `useCancelarFactura` detecta el flag vía `FacturapiError.transient` y muestra un toast ámbar con acción "Reintentar" en lugar del toast rojo; el modal queda abierto para no perder los datos. No hay reintentos automáticos silenciosos (peligrosos con timbrado fiscal).
 
 ## [13.300.59] - 2026-07-15
