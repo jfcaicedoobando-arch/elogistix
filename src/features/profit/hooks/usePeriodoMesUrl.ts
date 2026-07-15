@@ -4,11 +4,13 @@
  * `useTabProyeccionController` para poder unificar la UX de selector de mes
  * a lo largo del módulo Profit.
  *
- * - Escribe con `replace: true` para no ensuciar historial.
- * - Si el valor de la URL no está en `mesesDisponibles`, cae al mes actual
- *   (o al primero disponible si el mes actual quedó fuera del rango).
+ * Garantías:
+ * - Sincroniza cambios externos de URL (back/forward) → estado interno.
+ * - Canonicaliza URL en el primer render si el valor es inválido o queda
+ *   fuera de la ventana `[minMes, +∞)`.
+ * - `setMesKey` usa `setSearchParams((prev) => …)` — callback estable.
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { generarMesesDisponibles, mesActualKey } from "@/features/facturacion/domain/proyeccionFacturacion";
 
@@ -29,6 +31,8 @@ export interface UsePeriodoMesUrlResult {
   puedeIrAdelante: boolean;
 }
 
+const MES_VACIO: MesDisponible = { key: "", label: "", year: 0, month: 0 };
+
 export function usePeriodoMesUrl(
   paramName: string = "mes",
   minMes?: string,
@@ -41,19 +45,59 @@ export function usePeriodoMesUrl(
   }, [minMes]);
 
   const qp = searchParams.get(paramName);
-  const valido = mesesDisponibles.find((m) => m.key === qp);
-  const defaultMes =
-    mesesDisponibles.find((m) => m.key === mesActualKey()) ?? mesesDisponibles[0];
-  const [mesKey, setMesKeyState] = useState<string>(valido?.key ?? defaultMes?.key ?? "");
+  const defaultMes = useMemo(
+    () =>
+      mesesDisponibles.find((m) => m.key === mesActualKey()) ??
+      mesesDisponibles[0] ??
+      MES_VACIO,
+    [mesesDisponibles],
+  );
+
+  const [mesKey, setMesKeyState] = useState<string>(() => {
+    const inicial = mesesDisponibles.find((m) => m.key === qp);
+    return inicial?.key ?? defaultMes.key;
+  });
+
+  // Sincroniza cambios externos de URL (back/forward, deep-link) hacia el estado.
+  useEffect(() => {
+    if (!qp) return;
+    const match = mesesDisponibles.find((m) => m.key === qp);
+    if (match && match.key !== mesKey) {
+      setMesKeyState(match.key);
+    }
+  }, [qp, mesesDisponibles, mesKey]);
+
+  // Canonicaliza URL: si `qp` existe pero es inválido/fuera de rango, reescribimos
+  // al valor por defecto para dejar URL y estado siempre consistentes.
+  useEffect(() => {
+    if (!qp) return;
+    const valido = mesesDisponibles.some((m) => m.key === qp);
+    if (!valido && defaultMes.key) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set(paramName, defaultMes.key);
+          return next;
+        },
+        { replace: true },
+      );
+    }
+    // Sólo se ejecuta al montar y cuando cambia qp o el rango disponible.
+  }, [qp, mesesDisponibles, defaultMes.key, setSearchParams, paramName]);
 
   const setMesKey = useCallback(
     (key: string) => {
       setMesKeyState(key);
-      const next = new URLSearchParams(searchParams);
-      next.set(paramName, key);
-      setSearchParams(next, { replace: true });
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set(paramName, key);
+          return next;
+        },
+        { replace: true },
+      );
     },
-    [searchParams, setSearchParams, paramName],
+    [setSearchParams, paramName],
   );
 
   const mesActual = useMemo(
@@ -70,17 +114,12 @@ export function usePeriodoMesUrl(
   }, [indice, mesesDisponibles, setMesKey]);
 
   return {
-  ...(mesesDisponibles.length === 0
-    ? {
-        // Guard: lista vacía → devolvemos un mes sintético para no romper consumers.
-        mesActual: { key: "", label: "", year: 0, month: 0 } as MesDisponible,
-      }
-    : { mesActual }),
+    mesActual,
     mesesDisponibles,
     setMesKey,
     irMesAnterior,
     irMesSiguiente,
     puedeIrAtras: indice > 0,
-    puedeIrAdelante: indice < mesesDisponibles.length - 1,
+    puedeIrAdelante: indice >= 0 && indice < mesesDisponibles.length - 1,
   };
 }
