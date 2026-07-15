@@ -233,7 +233,7 @@ jobs:
   merge-reports:
     name: Merge HTML report
     needs: [internal-shard, mutators, portal]
-    if: ${{ !cancelled() && needs.guard-secrets.result == 'success' }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
