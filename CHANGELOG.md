@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.29] - 2026-07-15
+- **fix(ci)**: reduce complejidad ciclomática del handler de la edge function `e2e-provision-users` (28 → dentro del límite 16) extrayendo helpers `guard`, `resolveOrgId`, `resolveClienteId`, `provisionAdmin` y `provisionPortal`. Sin cambios de contrato HTTP ni de lógica de verificación. Desbloquea `bun run lint -- --max-warnings 0` en CI.
+
 ## [13.300.28] - 2026-07-15
 - **feat(e2e)**: aislamiento de sesión entre specs. Nuevo `e2e/fixtures/testBase.ts` que compone la captura de `pageerror`/`console.error` con un fixture auto `sessionIsolation`: antes de cada test detecta cookies de dominios ajenos al `baseURL` en el `storageState` cargado (adjunta `session-foreign-cookies.txt` al reporte) y después de cada test hace `context.clearCookies()` + `localStorage.clear()` + `sessionStorage.clear()` sobre el origen actual, blindando el escenario admin ↔ portal cliente. Nuevo helper `switchUser(page, creds)` en `fixtures/auth.ts` para cambios de rol dentro del mismo test (reset total antes de `loginAs`). Migrados todos los specs a importar `{ expect, test }` desde `../fixtures/testBase`; `pageErrors.ts` queda como re-export deprecado. Convenciones documentadas en `e2e/README.md`.
 
