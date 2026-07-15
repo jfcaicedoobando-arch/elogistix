@@ -40,6 +40,19 @@ export interface KPIsEjecutivos {
   cumplimiento_presupuesto_pct: number;
   /** Fase J: categorías con cumplimiento > 110% en el periodo actual. */
   categorias_en_exceso: number;
+  /**
+   * Fase 4 UI/UX: KPIs financieros derivados.
+   * DSO — Days Sales Outstanding. Días promedio de cobro estimados con
+   *   `CxC 30d / ingresos_mes * 30`. `null` si `ingresos_mes = 0`.
+   * DPO — Days Payable Outstanding. Análogo con CxP 30d / costos_mes * 30.
+   *   `null` si `costos_mes = 0`.
+   * Runway — meses de operación cubiertos por bancos si el resultado del mes
+   *   es negativo (burn = costos - ingresos > 0). `null` cuando no hay burn
+   *   (utilidad ≥ 0) o cuando no hay saldo bancario.
+   */
+  dso_dias: number | null;
+  dpo_dias: number | null;
+  runway_meses: number | null;
 }
 
 export interface SnapshotEjecutivo {
