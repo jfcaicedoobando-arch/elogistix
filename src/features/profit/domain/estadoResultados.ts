@@ -120,35 +120,24 @@ function materializar(
   return out;
 }
 
-function pivotConceptosVenta(
+function pivotConceptos<T extends { embarque_id: string; moneda: string }>(
   embById: Map<string, EmbarqueER>,
-  ventas: ConceptoVentaER[],
+  items: T[],
+  getDesc: (i: T) => string,
+  getMonto: (i: T) => number | string,
   out: Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>,
 ): void {
-  for (const v of ventas) {
-    const emb = embById.get(v.embarque_id);
+  for (const i of items) {
+    const emb = embById.get(i.embarque_id);
     if (!emb) continue;
     const columna = resolverModoColumna(emb.modo);
-    const moneda = (v.moneda?.toUpperCase() ?? "MXN") as Moneda;
-    const mxn = convertirAMXN(Number(v.total) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(out, normalizeKey(v.descripcion), (v.descripcion ?? "").trim() || "(Sin descripción)", columna, mxn);
+    const moneda = (i.moneda?.toUpperCase() ?? "MXN") as Moneda;
+    const mxn = convertirAMXN(Number(getMonto(i)) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
+    const desc = getDesc(i);
+    acumular(out, normalizeKey(desc), (desc ?? "").trim() || "(Sin descripción)", columna, mxn);
   }
 }
 
-function pivotConceptosCosto(
-  embById: Map<string, EmbarqueER>,
-  costos: ConceptoCostoER[],
-  out: Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>,
-): void {
-  for (const c of costos) {
-    const emb = embById.get(c.embarque_id);
-    if (!emb) continue;
-    const columna = resolverModoColumna(emb.modo);
-    const moneda = (c.moneda?.toUpperCase() ?? "MXN") as Moneda;
-    const mxn = convertirAMXN(Number(c.monto) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(out, normalizeKey(c.concepto), (c.concepto ?? "").trim() || "(Sin descripción)", columna, mxn);
-  }
-}
 
 function sumarFilas(rows: FilaER[]): TotalER {
   const porModo = emptyModos();

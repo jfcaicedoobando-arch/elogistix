@@ -1,41 +1,22 @@
-
 ## Problema
 
-Al hacer clic en **Sustituir CFDI** (usuaria Karol, rol `contador`), la base de datos revienta con:
-
-> `invalid input value for enum app_role: "contabilidad"`
-
-**Causa raíz:** la función `public.duplicar_factura_para_sustitucion(uuid)` (migración `20260630172919`, líneas 401–408) valida el rol así:
-
-```sql
-AND role IN ('admin_org','admin','super_admin','contabilidad')
-```
-
-Pero el enum real `public.app_role` **no contiene `contabilidad`**. Los roles contables válidos son `contador`, `auxiliar_contable`, `tesorero` (más `admin_org`, `admin`, `super_admin`). Postgres castea la lista a `app_role`, no encuentra `'contabilidad'`, y aborta antes siquiera de evaluar la condición. Resultado: **nadie** puede duplicar la factura para sustituir CFDI — no sólo contadores.
-
-Analogía: es como si el portero revisara tu credencial contra una lista donde uno de los "roles autorizados" está mal escrito y no existe en el sistema. Al no poder leer la lista completa, el portero se cae y nadie pasa.
-
-La misma cadena aparece también en la versión anterior de la función (`20260626055826`, líneas 48–50), pero esa fue reemplazada por la de 20260630 — con arreglar la vigente basta.
+CI (shard 8) falla: `src/features/profit/domain/estadoResultados.ts` tiene 202 líneas y excede el baseline arquitectónico de 200. Es el archivo que toqué en la fase anterior de Profit (Lote C, para agregar la columna "Otros" y reforzar `normalizeKey`). Se pasó de 200 por 2 líneas.
 
 ## Plan
 
-1. **Nueva migración** que hace `CREATE OR REPLACE FUNCTION public.duplicar_factura_para_sustitucion(p_factura_id uuid)` idéntica a la actual pero con:
-   - `role IN ('admin_org','admin','super_admin','contador','auxiliar_contable','tesorero')`
-   - Mensaje de excepción: `'forbidden: requiere rol admin, contador o tesorero'`
-   - Mantiene `SECURITY DEFINER`, `search_path`, y el `GRANT EXECUTE ... TO authenticated` existente.
+Refactor mínimo del mismo archivo — sin cambiar comportamiento, sin tocar tests:
 
-2. **Test de regresión** en `src/features/facturacion/services/__tests__/facturapi.test.ts` (o similar) que verifique que el RPC se invoca correctamente. Este ya existe; no necesita cambios de lógica, pero sí un caso adicional que documente que roles contables pueden sustituir.
+1. **Consolidar los dos pivotes duplicados** (`pivotConceptosVenta` y `pivotConceptosCosto`, que difieren solo en el nombre del campo `descripcion` vs `concepto` y `total` vs `monto`) en una sola función genérica `pivotConceptos<T>` con dos getters (`getDesc`, `getMonto`). Reemplaza ~30 líneas de duplicación por ~18 líneas.
 
-3. **CHANGELOG.md** + bump `APP_VERSION` a `13.300.50`.
+2. Sin cambios en `buildEstadoResultados`, tipos exportados, ni orden de columnas. Los tests existentes (`estadoResultados.test.ts` y `estadoResultados.extra.test.ts`) deben seguir verdes tal cual.
 
-4. **Verificación**: llamar el RPC contra la BD con un usuario `contador` (via `read_query` no aplica porque muta; se probará implícitamente al reintentar desde la UI). Confirmar en el linter que no queden referencias a `'contabilidad'` en migraciones activas.
+3. Bump `APP_VERSION` a `13.300.51` y agregar entrada breve al CHANGELOG.
 
-## Detalles técnicos
+## Verificación
 
-- Roles a permitir (basado en enum real y catálogo de roles): `admin_org`, `admin`, `super_admin`, `contador`, `auxiliar_contable`, `tesorero`.
-- **No** se altera el enum `app_role` (no hay que agregar `'contabilidad'` porque nadie lo usa en tablas ni en el resto de la app; sólo era un typo del gatekeeper).
-- Sin cambios en frontend ni en el hook `duplicarFacturaParaSustitucion`.
+- `wc -l src/features/profit/domain/estadoResultados.ts` ≤ 195.
+- `bunx vitest run src/features/profit/domain src/__tests__/audit-report.test.ts` en verde.
 
 ## Riesgo
 
-Mínimo. La función se reemplaza en su totalidad, mismo cuerpo salvo la lista de roles y el mensaje. Nada más consume esa cadena `'contabilidad'`.
+Ninguno funcional — es una refactorización pura de deduplicación con misma firma pública.
