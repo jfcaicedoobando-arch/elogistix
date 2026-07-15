@@ -23,6 +23,13 @@ export interface FlujoMes {
   por_pagar_usd: number;
   flujo_neto_mxn: number;
   flujo_neto_usd: number;
+  /**
+   * v13.300.49 — Totales convertidos a MXN usando el tipo de cambio USD del
+   * agregador. Los KPIs DSO/DPO deben consumir estos campos, NO los `_mxn`
+   * puros (que descartan la porción en USD).
+   */
+  por_cobrar_total_mxn: number;
+  por_pagar_total_mxn: number;
 }
 
 export interface TopItem {
@@ -37,6 +44,22 @@ export interface ResumenTesoreria {
   flujo: FlujoMes;
   top_deudores: TopItem[];
   top_acreedores: TopItem[];
+  /**
+   * v13.300.49 — Saldo bancario TOTAL convertido a MXN (suma MXN + USD*TC).
+   * Antes los consumidores sumaban `saldo` directo sin distinguir moneda,
+   * inflando el "Saldo bancos" cuando había cuentas en USD.
+   */
+  saldo_bancos_mxn: number;
+  /**
+   * v13.300.49 — Cartera vencida completa (sin truncar a Top-5). Antes el
+   * KPI "Cartera vencida" del Dashboard se calculaba sobre `top_deudores`
+   * (ya limitado a 5), subestimando la exposición real.
+   */
+  cartera_vencida_total_mxn: number;
+  cartera_vencida_count: number;
+  /** Análogo a cartera_vencida_count pero para acreedores vencidos. */
+  cxp_vencidas_count: number;
+  cxp_vencidas_total_mxn: number;
 }
 
 export interface CobranzaRow {
