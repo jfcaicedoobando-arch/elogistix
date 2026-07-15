@@ -8,7 +8,7 @@ import type { SnapshotEjecutivo } from "../types";
 
 function makeEerr(ingresos: number, costos: number): SnapshotEjecutivo["eerrPeriodo"] {
   const total = ingresos - costos;
-  const zeros = { "Marítimo": 0, "Aéreo": 0, "Terrestre": 0 };
+  const zeros = { "Marítimo": 0, "Aéreo": 0, "Terrestre": 0, "Otros": 0 };
   return {
     totalIngresos: { total: ingresos, porModo: { ...zeros } },
     totalCostos: { total: costos, porModo: { ...zeros } },
