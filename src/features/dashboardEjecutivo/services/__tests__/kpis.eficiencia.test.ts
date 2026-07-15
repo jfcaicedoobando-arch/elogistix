@@ -21,8 +21,12 @@ function snap(over: Record<string, unknown> = {}) {
         por_cobrar_mxn: 50_000, por_cobrar_usd: 0,
         por_pagar_mxn: 30_000, por_pagar_usd: 0,
         flujo_neto_mxn: 20_000, flujo_neto_usd: 0,
+        por_cobrar_total_mxn: 50_000, por_pagar_total_mxn: 30_000,
       },
       top_deudores: [], top_acreedores: [],
+      saldo_bancos_mxn: 100_000,
+      cartera_vencida_total_mxn: 0, cartera_vencida_count: 0,
+      cxp_vencidas_count: 0, cxp_vencidas_total_mxn: 0,
     },
     presupuesto: {
       periodo: "2026-07", filas: [],
