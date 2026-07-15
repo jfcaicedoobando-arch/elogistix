@@ -2,18 +2,24 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createWrapper } from '@/test/utils/queryWrapper';
 
-const { mockFetchMensual, mockUpsert, mockFetchVsReal, mockFetchCats } = vi.hoisted(() => ({
-  mockFetchMensual: vi.fn(),
-  mockUpsert: vi.fn(),
-  mockFetchVsReal: vi.fn(),
-  mockFetchCats: vi.fn(),
-}));
+const { mockFetchMensual, mockUpsert, mockFetchVsReal, mockFetchCats, mockUseOrganization } =
+  vi.hoisted(() => ({
+    mockFetchMensual: vi.fn(),
+    mockUpsert: vi.fn(),
+    mockFetchVsReal: vi.fn(),
+    mockFetchCats: vi.fn(),
+    mockUseOrganization: vi.fn(() => ({ organizationId: "org-1" })),
+  }));
 
 vi.mock('@/features/presupuesto/services', () => ({
   fetchPresupuestoMensualAnio: mockFetchMensual,
   upsertCeldaPresupuesto: mockUpsert,
   fetchPresupuestoVsReal: mockFetchVsReal,
   fetchCategorias: mockFetchCats,
+}));
+
+vi.mock('@/lib/contexts/OrganizationContext', () => ({
+  useOrganization: () => mockUseOrganization(),
 }));
 
 import { usePresupuestoMensualAnio, useUpsertCeldaPresupuesto } from '../usePresupuestoMensual';
@@ -26,14 +32,25 @@ describe('usePresupuesto Hooks', () => {
     mockUpsert.mockReset();
     mockFetchVsReal.mockReset();
     mockFetchCats.mockReset();
+    mockUseOrganization.mockReturnValue({ organizationId: "org-1" });
   });
 
 
-  it('usePresupuestoMensualAnio fetches data', async () => {
+  it('usePresupuestoMensualAnio fetches con organizationId del contexto', async () => {
     mockFetchMensual.mockResolvedValueOnce([{ categoria: 'cat1', meses: [] }]);
     const { result } = renderHook(() => usePresupuestoMensualAnio(2023), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
+    expect(mockFetchMensual).toHaveBeenCalledWith(2023, "org-1");
+  });
+
+  it('usePresupuestoMensualAnio no dispara fetch si no hay organizationId', async () => {
+    mockUseOrganization.mockReturnValue({ organizationId: null });
+    const { result } = renderHook(() => usePresupuestoMensualAnio(2023), { wrapper: createWrapper() });
+    // Debe quedar disabled — nunca alcanza loading true
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mockFetchMensual).not.toHaveBeenCalled();
+    expect(result.current.isSuccess).toBe(false);
   });
 
   it('useUpsertCeldaPresupuesto calls service', async () => {
