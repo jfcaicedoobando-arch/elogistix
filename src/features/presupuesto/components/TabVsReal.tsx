@@ -10,7 +10,7 @@ import { CardSkeleton } from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { MonthPickerMx } from "@/components/ui/month-picker-mx";
+import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
@@ -62,7 +62,8 @@ function ordenarFilas(filas: FilaVsReal[], key: SortKey, dir: SortDir): FilaVsRe
 }
 
 export function TabVsReal() {
-  const { mesActual, setMesKey } = usePeriodoMesUrl("periodo_vs_real");
+  const periodoCtl = usePeriodoMesUrl("periodo_vs_real");
+  const { mesActual, setMesKey } = periodoCtl;
   const periodo = mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("variacion");
@@ -101,7 +102,15 @@ export function TabVsReal() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <Label className="text-xs">Periodo</Label>
-          <MonthPickerMx value={periodo} onChange={setMesKey} className="h-9" />
+          <PeriodoMensualToolbar
+            mesActual={mesActual}
+            mesesDisponibles={periodoCtl.mesesDisponibles}
+            onChange={setMesKey}
+            onPrev={periodoCtl.irMesAnterior}
+            onNext={periodoCtl.irMesSiguiente}
+            puedeIrAtras={periodoCtl.puedeIrAtras}
+            puedeIrAdelante={periodoCtl.puedeIrAdelante}
+          />
         </div>
         <div className="flex items-center gap-2">
           <Switch id="solo-excesos" checked={soloExcesos} onCheckedChange={setSoloExcesos} />

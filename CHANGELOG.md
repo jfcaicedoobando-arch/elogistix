@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.45] - 2026-07-15
+- **audit(profit) Fase 4 · seguimiento**: revisada la sub-nav de 13.300.44 — integrada en las 4 rutas, tests 2/2 verdes, sin warnings de lint. Sin bugs detectados.
+- **refactor(profit) Fase 4 · MonthPicker unificado**: había 3 selectores de mes distintos entre las 4 vistas del módulo. Estado de Resultados duplicaba en línea la toolbar de flechas + Select; Presupuesto vs Real usaba `MonthPickerMx` (popover con año/mes). Ahora todas usan `PeriodoMensualToolbar` (‹ · Select · ›) que ya vivía en Dashboard Ejecutivo. **Analogía:** antes cada cuarto tenía su propio termostato con perillas diferentes; ahora comparten el mismo panel. Elimina 18 líneas duplicadas en `ProfitEstadoResultados.tsx` e importa una API consistente en `TabVsReal.tsx`.
+- **test(profit)**: `PeriodoMensualToolbar.test.tsx` con 2 casos — muestra mes activo + dispara `onPrev/onNext`; deshabilita flechas en los bordes del rango.
+
 ## [13.300.44] - 2026-07-15
 - **audit(profit) Fase 3 · seguimiento**: revisado lo aterrizado en 13.300.43. Detectado un warning de complejidad (18/16) en `fetchPresupuestoVsReal` tras agregar el manejo de canceladas y huérfanas. Refactor a helpers puros (`mapPresupuestoPorCategoria`, `agregarGastosCxP`, `aplicarLiquidacionesComisiones`, `construirFila`, `construirFilaHuerfanos`) — misma salida, complejidad ciclomática abajo del umbral. Tests: 71/71 verdes.
 - **feat(profit) Fase 4 · UI/UX**: nuevo `ProfitSubNav` — sub-navegación horizontal (pills con borde inferior activo) que se inyecta en el slot `tabs` de `PageHeader` de las 4 rutas del módulo (`/profit/dashboard`, `/profit/proyeccion`, `/profit/estado-resultados`, `/profit/presupuesto`). Un CFO ya no tiene que volver al sidebar para saltar entre Dashboard → EERR → Presupuesto durante la misma revisión. **Analogía:** antes cada vista era un cuarto aislado con puerta trasera al pasillo; ahora las 4 comparten una barra común arriba.
