@@ -46,13 +46,13 @@ const storageKey = (facturaId: string) => `sustitucion:${facturaId}`;
 
 function readPersisted(facturaId: string): PersistedState | null {
   try {
-    const raw = browserStorage.session.getItem(storageKey(facturaId));
+    const raw = safeSessionStorage.getItem(storageKey(facturaId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PersistedState;
     if (!parsed?.nuevaId) return null;
     // Expira a las 24 h para no dejar borradores huérfanos.
     if (Date.now() - parsed.ts > 24 * 60 * 60 * 1000) {
-      browserStorage.session.removeItem(storageKey(facturaId));
+      safeSessionStorage.removeItem(storageKey(facturaId));
       return null;
     }
     return parsed;
@@ -62,14 +62,14 @@ function readPersisted(facturaId: string): PersistedState | null {
 }
 
 function writePersisted(facturaId: string, nuevaId: string) {
-  browserStorage.session.setItem(
+  safeSessionStorage.setItem(
     storageKey(facturaId),
     JSON.stringify({ nuevaId, ts: Date.now() } satisfies PersistedState),
   );
 }
 
 function clearPersisted(facturaId: string) {
-  browserStorage.session.removeItem(storageKey(facturaId));
+  safeSessionStorage.removeItem(storageKey(facturaId));
 }
 
 export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, onOpenChange }: Props) {
