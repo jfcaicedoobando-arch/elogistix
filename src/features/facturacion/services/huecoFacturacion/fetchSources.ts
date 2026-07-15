@@ -89,10 +89,14 @@ export async function fetchConceptosVentaDeEmbarques(
   }));
 }
 
-export async function fetchVentasYFacturas(ids: string[], expedientes: string[]) {
+export async function fetchVentasYFacturas(
+  ids: string[],
+  expedientes: string[],
+  organizationId?: string | null,
+) {
   const [ventasRes, facturas, conceptosDetalle] = await Promise.all([
     supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids),
-    fetchFacturasPorExpedientes(expedientes),
+    fetchFacturasPorExpedientes(expedientes, organizationId),
     fetchConceptosVentaDeEmbarques(ids),
   ]);
   if (ventasRes.error) throw ventasRes.error;
