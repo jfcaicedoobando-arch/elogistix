@@ -1,10 +1,12 @@
 /**
  * Tests para el hook compartido de periodo mensual persistido en URL.
+ * Cubre lectura inicial, sanitización, navegación, minMes, sync con URL externa
+ * y canonicalización cuando el query param es inválido.
  */
 import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
-import type { ReactNode } from "react";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { MemoryRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, type ReactNode } from "react";
 import { usePeriodoMesUrl } from "../usePeriodoMesUrl";
 
 function makeWrapper(initialUrl: string) {
@@ -17,9 +19,30 @@ function makeWrapper(initialUrl: string) {
   );
 }
 
+/** Wrapper que expone `navigate` para simular back/forward externo. */
+let externalNavigate: ((to: string) => void) | null = null;
+let externalSearch: string = "";
+function InstrumentedRoutes({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    externalNavigate = (to) => navigate(to);
+    externalSearch = location.search;
+  }, [navigate, location.search]);
+  return <>{children}</>;
+}
+function makeInstrumentedWrapper(initialUrl: string) {
+  return ({ children }: { children: ReactNode }) => (
+    <MemoryRouter initialEntries={[initialUrl]}>
+      <Routes>
+        <Route path="*" element={<InstrumentedRoutes>{children}</InstrumentedRoutes>} />
+      </Routes>
+    </MemoryRouter>
+  );
+}
+
 describe("usePeriodoMesUrl", () => {
   it("lee el valor inicial desde ?mes= cuando es válido", () => {
-    // Elegimos un mes que caiga en la ventana [hoy-24m, hoy+12m]
     const d = new Date();
     const target = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const { result } = renderHook(() => usePeriodoMesUrl("mes"), {
@@ -63,8 +86,41 @@ describe("usePeriodoMesUrl", () => {
     const { result } = renderHook(() => usePeriodoMesUrl("mes", "2100-01"), {
       wrapper: makeWrapper("/dashboard"),
     });
-    // Todos los meses generados por generarMesesDisponibles quedan por debajo de 2100-01,
-    // así que la lista debe quedar vacía y el mesActual será undefined-safe: verificamos length 0.
     expect(result.current.mesesDisponibles.length).toBe(0);
+    expect(result.current.mesActual.key).toBe("");
+    expect(result.current.puedeIrAtras).toBe(false);
+    expect(result.current.puedeIrAdelante).toBe(false);
+  });
+
+  it("sincroniza mesActual cuando la URL cambia externamente (back/forward)", async () => {
+    const disp = (() => {
+      const d = new Date();
+      const y = d.getFullYear(); const m = d.getMonth();
+      const p = (n: number) => String(n).padStart(2, "0");
+      // Usamos dos meses seguros dentro de la ventana [-24, +12].
+      return [`${y}-${p(m + 1)}`, `${y - 1}-${p(m + 1)}`];
+    })();
+    externalNavigate = null;
+    const { result } = renderHook(() => usePeriodoMesUrl("mes"), {
+      wrapper: makeInstrumentedWrapper(`/dashboard?mes=${disp[0]}`),
+    });
+    expect(result.current.mesActual.key).toBe(disp[0]);
+
+    // Simular back/forward: cambiar la URL sin pasar por setMesKey.
+    await waitFor(() => expect(externalNavigate).not.toBeNull());
+    act(() => { externalNavigate!(`/dashboard?mes=${disp[1]}`); });
+    await waitFor(() => expect(result.current.mesActual.key).toBe(disp[1]));
+  });
+
+  it("canonicaliza URL cuando el query param es inválido", async () => {
+    externalSearch = "";
+    renderHook(() => usePeriodoMesUrl("mes"), {
+      wrapper: makeInstrumentedWrapper("/dashboard?mes=1999-01"),
+    });
+    // El efecto debe reescribir la URL a un valor válido.
+    await waitFor(() => {
+      expect(externalSearch).not.toContain("mes=1999-01");
+      expect(externalSearch).toMatch(/mes=\d{4}-\d{2}/);
+    });
   });
 });

@@ -1,85 +1,68 @@
-## Auditoría de Batch A + C
+# Auditoría Batch B + Fase 4 (D–F)
 
-Revisé lo aplicado ayer. Todo consistente **excepto un bug latente y falta de cobertura de tests**:
+## Hallazgos de la auditoría del Batch B
 
-### Bug detectado
-- `usePresupuestoMensualAnio` ahora depende de `useOrganization()` y desactiva la query si no hay `organizationId`. **El test existente** (`src/features/presupuesto/hooks/__tests__/usePresupuesto.test.tsx`) usa un wrapper sólo con `QueryClient` — el hook nunca dispara la query, `isSuccess` no llega y **el test va a fallar en CI**.
+**Bug 1 — Sincronización URL ↔ estado.** `usePeriodoMesUrl` y `TabVsReal` leen `searchParams` sólo en la inicialización (`useState`). Si el usuario usa botón **Atrás/Adelante** del navegador o comparte un link y navega dentro de la app, la URL cambia pero el estado interno no reacciona → se ve mes distinto al de la URL.
 
-### Faltan tests que blinden las correcciones
-- `fetchPresupuestoMensualAnio(anio, orgId)` — nadie prueba que se aplique el filtro `.eq("organization_id", ...)`.
-- `fetchEmbarquesMes` — nadie prueba que se excluyan `estado='Cancelado'`.
-- `calcularKPIsEjecutivos` — nadie prueba que "Cartera vencida" sume sólo deudores con `>30 días` (regresión fácil de volver a introducir).
+**Bug 2 — URL no se canonicaliza.** Si alguien entra con `?mes=2020-01` (fuera del `MES_MINIMO` del Dashboard), el hook cae al mes actual pero deja la URL con el valor inválido. Refresh perpetúa la inconsistencia.
 
-### Batch B — Consistencia de periodo (siguiente fase)
+**Bug 3 — `setSearchParams` con dependencia inestable.** `setMesKey`/`setPeriodo` dependen de `searchParams` — cada cambio en query params recrea el callback. Debe usar la forma funcional `setSearchParams((prev) => …)` para ser estable y evitar cierres obsoletos.
 
-Hoy tenemos **4 selectores de periodo distintos** en Profit:
-- Dashboard: dropdown "Mes actual / Mes anterior" (`SelectorPeriodo`).
-- Estado de Resultados: chevron ‹ › + `Select` con lista de meses.
-- Presupuesto Vs Real: `MonthPickerMx`.
-- Proyección: **sin selector**, siempre el mes en curso.
+**Bug 4 — Edge case lista vacía.** El `return` con spread condicional funciona pero es frágil de leer. Consolidar en un sólo objeto con `mesActual` seguro.
 
-Además ningún selector persiste el periodo en la URL, así que refrescar pierde el contexto y no se puede compartir link con periodo fijo.
+## Fase 3 · Fixes + tests de regresión
 
-## Plan de trabajo
+1. Refactor `usePeriodoMesUrl`:
+   - `useEffect` que sincroniza `mesKey` cuando `searchParams.get(paramName)` cambia y es válido.
+   - Cuando `qp` existe pero es inválido (o cae fuera de `minMes`), escribir la URL canónica al montar.
+   - `setSearchParams((prev) => …)` funcional; quitar `searchParams` de deps.
+   - Simplificar el `return` (siempre devuelve `mesActual` seguro).
 
-### Fase 1 · Fixes + tests de blindaje (Batch A tail)
+2. Aplicar la misma corrección en `TabVsReal` (o migrarlo al hook `usePeriodoMesUrl` para no duplicar lógica). Elegimos migrarlo → menos código, un solo punto de verdad.
 
-1. **Fix hook test** `src/features/presupuesto/hooks/__tests__/usePresupuesto.test.tsx`
-   - `vi.mock("@/lib/contexts/OrganizationContext", ...)` devolviendo `{ organizationId: "org-1" }`.
-   - Verificar que `mockFetchMensual` sea llamado con `(2023, "org-1")`.
-   - Añadir test: si `organizationId=null`, la query queda `enabled=false` y no fetch.
+3. Tests nuevos en `usePeriodoMesUrl.test.tsx`:
+   - Cambio externo de URL (simular navegación) → `mesActual` se actualiza.
+   - URL inválida → se reescribe a la canónica en la primera render.
+   - `setMesKey` no depende de mutaciones externas del query string.
 
-2. **Nuevo** `src/features/presupuesto/services/__tests__/mensual.organizationFilter.test.ts`
-   - Verifica que `fetchPresupuestoMensualAnio(2026, "org-1")` invoque `.eq("organization_id", "org-1")` usando el chain mock.
-   - Verifica que sin `organizationId` no se llame `.eq(...)`.
+4. Test de integración ligero para `TabVsReal`:
+   - Renderiza con `?periodo_vs_real=2026-05` → `MonthPickerMx` recibe ese valor.
+   - Al cambiar el picker, se llama `setSearchParams` con el nuevo valor.
 
-3. **Nuevo** `src/features/facturacion/services/proyeccion/__tests__/fetchSources.test.ts`
-   - Verifica que `fetchEmbarquesMes` aplique `.neq("estado", "Cancelado")` y `.eq("organization_id", ...)` cuando se pasa `orgId`.
+## Fase 4 · Batch D–F (siguiente fase del audit de Profit)
 
-4. **Nuevo** `src/features/dashboardEjecutivo/services/__tests__/kpis.test.ts`
-   - `calcularKPIsEjecutivos` con mezcla de deudores `dias:10` (no cuenta), `dias:35`, `dias:60`: `cartera_vencida_mxn` = suma sólo de los dos últimos; `cartera_vencida_count = 2`.
-   - Caso todos ≤30 días: `cartera_vencida_mxn = 0`, `count = 0`.
+Batch D–F es amplio. Propongo dividir así (D primero como parte de este turno, E–F como iteraciones posteriores para no explotar el diff):
 
-### Fase 2 · Persistencia y unificación de periodo (Batch B)
+### Batch D · Performance & robustez (este turno)
+- **Invalidación cruzada:** hoy `useDashboardEjecutivo`, `usePresupuestoVsReal` y las proyecciones no se invalidan tras crear/editar factura o pago. Auditar mutaciones de `pagos_factura`, `facturas`, `presupuesto_mensual` y añadir `queryClient.invalidateQueries` sobre las keys de Profit.
+- **`staleTime` diferenciado:** las queries pesadas de Profit hoy usan el default (5 min). Ajustar a 60 s para el Dashboard (más volátil) y 5 min para EERR/VsReal (ya calculados por RPC).
+- **Memoización defensiva:** en `BandaKPIs` y `GraficoEERR12m` los props se recomputan en cada render. Aplicar `useMemo` a las derivaciones caras (formateo de series 12 m).
 
-5. **Hook compartido** `src/features/profit/hooks/usePeriodoUrl.ts`
-   - Firma: `usePeriodoUrl(key = "periodo", defaultValue?)` → `{ periodo, setPeriodo, mesActual, mesAnterior, mesSiguiente }`.
-   - Lee/escribe `?periodo=YYYY-MM` con `useSearchParams` (usa `replace: true`).
-   - Fallback: valor guardado en `safeSessionStorage` con la key indicada; si no, mes actual.
-   - Valida formato `YYYY-MM`, sanea valores inválidos al mes actual.
+### Batch E · Drill-downs (turno posterior)
+- KPIs del Dashboard clicables: `Cartera vencida` → tabla filtrada `/cxc?dias_gt=30`; `Utilidad operativa` → EERR del mes; `Efectivo` → Tesorería. Se abre un `Sheet` lateral con detalle o `navigate` al módulo correspondiente.
 
-6. **Componente compartido** `src/features/profit/components/PeriodoMensualToolbar.tsx`
-   - Recibe `{ value, onChange, min?, max? }`.
-   - Renderiza: chevron ‹, `MonthPickerMx`, chevron ›. Consistente en las 4 páginas.
-   - Sin PDF/Fuente/etc. — sólo control de mes.
+### Batch F · Forecast (turno posterior)
+- Extender la Proyección de Facturación a 3–6 meses hacia adelante con base en pipeline (`cotizaciones` en estado ganado) + histórico móvil. Requiere una RPC nueva `forecast_facturacion(meses int)`.
 
-7. **Migración de pantallas**
-   - `ProfitDashboardEjecutivo.tsx`: reemplaza el `SelectorPeriodo` legacy por `usePeriodoUrl` + `PeriodoMensualToolbar`. Elimina el `preset` (ya no se muestra "YTD" desde Batch A y ya nadie usa `PresetPeriodo` fuera del dashboard).
-   - `ProfitEstadoResultados.tsx`: sustituye `mesActual.key + setMesKey + irMesAnterior/irMesSiguiente` por `usePeriodoUrl`; conserva el toggle "Operativa/Devengada".
-   - `TabVsReal.tsx` (presupuesto): usa `usePeriodoUrl("periodo_vs_real")` (key separada porque vive en otra pantalla).
-   - `ProfitProyeccion.tsx`: agrega el `PeriodoMensualToolbar` en la cabecera y pasa `periodo` al hook `useProyeccionFacturacion` (hoy fijo a mes en curso).
+## Detalles técnicos (referencia)
 
-8. **Legado**
-   - `SelectorPeriodo.tsx` y `PresetPeriodo` quedan sin usos → eliminarlos + limpiar `STORAGE_KEYS.dashboardEjecutivoPeriodo` obsoleto.
+```text
+usePeriodoMesUrl
+├─ useSearchParams()                    // hook v6
+├─ mesesDisponibles (memo)              // ventana ± meses filtrada por minMes
+├─ useEffect: sync qp → mesKey           // NUEVO: back/forward
+├─ useEffect: canonicalizar URL          // NUEVO: qp inválido
+├─ setMesKey usa setSearchParams(prev)  // FIX dep inestable
+└─ mesActual seguro (nunca undefined)
+```
 
-9. **Tests nuevos**
-   - `usePeriodoUrl.test.tsx`: lectura de `?periodo=`, escritura al cambiar, fallback a sessionStorage, sanitización de valores inválidos.
-   - `PeriodoMensualToolbar.test.tsx`: click en chevrons cambia mes correctamente; respeta `min/max` cuando se pasan.
+## Cambios de versión y changelog
 
-### Fase 3 · Cierre
+- Bumps: `13.300.32` (Fase 3 + Batch D).
+- CHANGELOG: 1 bloque `[13.300.32]` con `fix(profit)` para los 4 bugs, `perf(profit)` para invalidaciones y `staleTime`, `test(profit)` para nuevos casos.
 
-10. `CHANGELOG.md` con entrada `## [13.300.31]` describiendo fixes de audit + unificación.
-11. `APP_VERSION → "13.300.31"`.
+## Riesgos
 
-## Detalle técnico
-
-- El fix del hook test es crítico — si no se hace primero, el CI se queda rojo y no se puede mergear Batch B.
-- `usePeriodoUrl` se coloca en `features/profit/hooks/` porque el consumo es intra-Profit + un consumidor en presupuesto (que hoy vive fuera pero se importa desde Profit). Si en el futuro lo necesitamos en Facturación o Tesorería, se sube a `src/lib/hooks/`.
-- No se toca `useProyeccionFacturacion` internamente: sólo se le pasa el `periodo` que hoy calcula fijo — cambio mínimo de firma.
-- La key `?periodo=` se comparte entre Dashboard, Estado de Resultados y Proyección porque conceptualmente representan el mismo periodo global; Presupuesto Vs Real usa `?periodo_vs_real=` porque es una sub-vista dentro de otra ruta con sus propios tabs.
-- Persistencia: el hook usa `replace: true` en `useSearchParams` para no ensuciar el historial del navegador al cambiar de mes.
-
-## Fuera de alcance de esta fase (para batches futuros)
-- Batch D — performance del dashboard (N+1 de 14 llamadas).
-- Batch E — drill-downs desde KPIs.
-- Batch F — flujo de caja / forecast.
+- La canonicalización de URL cambia el path visible al abrir un link "malo"; documentado en el CHANGELOG.
+- Ajustar `staleTime` reduce lecturas pero puede mostrar valor stale al alternar tabs — 60 s es un compromiso razonable para el Dashboard.
+- Batch E y F quedan fuera de este turno para mantener el diff auditable.
