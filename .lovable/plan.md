@@ -1,36 +1,37 @@
-## Cómo editar los conceptos hoy (sin cambios)
+## Contexto
 
-Analogía: piensa en la factura como una **hoja de Excel impresa**. La carta de arriba, **"Editar conceptos del borrador"**, es tu hoja de Excel en pantalla — puedes modificar celdas. La carta de abajo, **"Desglose de conceptos"**, es la vista previa impresa — sólo para leer. Como estás en un **borrador**, ambas muestran lo mismo.
+El scanner marcó dos policies `USING/WITH CHECK (true)` en escrituras:
 
-Para corregir un concepto:
+1. **`cotizacion_costos_historico`** — policy `ALL` restringida a `service_role`. `service_role` bypassea RLS por definición, así que `true` es inocuo. **Falso positivo**: se marca como *ignore* con explicación.
 
-1. Ve a la carta **"Editar conceptos del borrador"** (la de arriba).
-2. En el renglón que quieras cambiar, haz clic en el **ícono de lápiz** (a la derecha del renglón).
-3. Edita descripción, cantidad, precio, IVA o retenciones.
-4. Confirma con el ícono de **✓** (check). Si te arrepientes, la **X** cancela.
-5. Para borrar un renglón usa el **bote de basura**. Para agregar uno nuevo usa el botón **"+ Agregar"** arriba a la derecha.
+2. **`demo_leads`** — policy `INSERT` a `anon, authenticated` con `WITH CHECK (true)`. Es el formulario público de captura de leads, así que el `INSERT` anónimo es intencional, pero podemos **endurecer el `WITH CHECK`** con validación básica de payload para reducir spam/abuso y quitar el `true` desnudo.
 
-Los totales (subtotal, IVA, total) se recalculan solos al guardar.
+## Cambios
 
-## Diagnóstico UX
+### 1. Migración `demo_leads`
+Reemplazar la policy `"Anyone can insert demo leads"` por una versión con validación:
 
-Sí hay un problema real: cuando la factura está en **borrador**, las dos cartas muestran **exactamente los mismos renglones**. Eso genera la duda "¿cuál edito?". La segunda carta sólo aporta valor cuando la factura ya está **timbrada** (ahí el editor desaparece y "Desglose" muestra el snapshot inmutable de Facturapi).
+```text
+WITH CHECK (
+  nombre IS NOT NULL AND length(btrim(nombre))    BETWEEN 2 AND 120
+  AND empresa IS NOT NULL AND length(btrim(empresa)) BETWEEN 2 AND 160
+  AND email IS NOT NULL AND email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' AND length(email) <= 200
+  AND telefono_e164 IS NOT NULL AND telefono_e164 ~ '^\+[1-9][0-9]{6,14}$'
+  AND (user_agent IS NULL OR length(user_agent) <= 500)
+)
+```
 
-## Cambio propuesto en la app
+Esto valida en la BD lo mismo que ya se manda desde el cliente (`createDemoLead`), sin cambiar la API pública ni romper el flujo actual.
 
-Ocultar la carta **"Desglose de conceptos"** cuando el editor está visible, porque muestran los mismos datos y confunde. Cuando la factura se timbre, el editor desaparece y el "Desglose" vuelve a mostrarse automáticamente (ya con el snapshot fiscal).
+### 2. Ignorar el hallazgo de `cotizacion_costos_historico`
+Marcar como *ignore* vía `manage_security_finding` con la razón: policy alcanzada sólo por `service_role`, que ya bypassea RLS; el `true` no otorga acceso adicional a `anon`/`authenticated`.
 
-**Archivo a tocar:** `src/features/facturacion/routes/FacturaDetalle.tsx` (líneas 128-139).
+### 3. Marcar el hallazgo de `demo_leads` como *fixed* tras la migración.
 
-**Cambio:** envolver `<FacturaConceptosTable ...>` en `{!puedeEditarBorrador && (...)}`. Una sola línea de condición, sin lógica nueva.
+### 4. Versionado
+- `APP_VERSION` → `13.300.54`
+- Entrada en `CHANGELOG.md` describiendo el endurecimiento de la policy.
 
-**Detalles técnicos**
-
-- `puedeEditarBorrador` ya se calcula en el detalle y es la misma bandera que usa `FacturaDetalleEditableSections` para renderizar el editor. Reutilizamos exactamente esa condición → cero riesgo de estados intermedios.
-- No hay pérdida de información: el editor ya muestra descripción, cantidad, precio, importe, IVA y retenciones por renglón, más los mismos badges de régimen de IVA.
-- Bump `APP_VERSION` a `13.300.53` + entrada en `CHANGELOG.md`.
-- No requiere migración ni cambios en servicios/hooks.
-
-**Qué podría romperse:** nada funcional. El único efecto secundario es visual — los usuarios acostumbrados a ver dos cartas verán sólo una mientras el CFDI esté en borrador. Es el resultado deseado.
-
-En la carta de Editar conceptos, no se precargaron los datos de la factura original para que la edición sea sencilla. Corrije esto. 
+## Notas técnicas
+- No hay cambio de frontend: `createDemoLead` ya envía los campos con formato E.164 y email válido.
+- No se toca la policy del historial de cotizaciones; sólo se documenta como ignorado en el scanner.
