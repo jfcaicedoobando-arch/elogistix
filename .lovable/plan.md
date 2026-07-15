@@ -1,20 +1,29 @@
-## Problema
+## Diagnóstico
 
-Al timbrar, FacturAPI responde `"serie" is not allowed`. Estamos enviando el campo con nombre en español (`serie`), pero la API de FacturAPI espera `series` (inglés, plural). De hecho ya leemos `fapiJson.series` en la respuesta, así que la inconsistencia está sólo en el envío.
+El error `"related" is not allowed` es exactamente el mismo bug que corregimos ayer en la versión **13.300.57**. En el reporte que compartes, la telemetría dice `"version": "13.300.56"` — o sea, esa captura vino del build **anterior** al fix.
 
-**Analogía:** Es como escribir "calle" en un formulario que exige "street" — el sistema rechaza el campo aunque el valor sea correcto.
+Ya revisé el código actual (`supabase/functions/facturapi-emitir/helpers.ts` línea 167) y confirma la forma correcta según la documentación oficial de FacturAPI v2:
 
-## Cambios
+```ts
+payload.related_documents = [{ relationship: "04", documents: [ctx.sustituye_uuid] }];
+```
 
-Archivo único: `supabase/functions/facturapi-emitir/helpers.ts`
+La doc de FacturAPI (`createInvoice`, campo `related_documents: Array of RelatedDocumentInput`) confirma que ese es el esquema válido. El campo `related` sin sufijo ya no existe en la v2.
 
-1. En la interfaz `FacturapiPayload` (línea 53): renombrar `serie?: string` → `series?: string`.
-2. En `buildFacturapiPayload` (línea 162): cambiar `payload.serie = ctx.serie` → `payload.series = ctx.serie`.
+**Analogía:** es como cuando actualizas una app en el celular pero sigues viendo la pantalla vieja porque no la cerraste — el arreglo ya está guardado, pero el navegador (o los logs) aún muestra la versión previa.
 
-El resto queda igual: internamente seguimos usando `ctx.serie` (input) y `serieTimbrada` (respuesta parseada desde `fapiJson.series`), sólo cambia el nombre del campo que viaja por HTTP a FacturAPI.
+## Qué hacer
 
-## Verificación
+1. **Publicar la versión actual (13.300.57)** desde el botón *Publish* en Lovable. Producción (`librecarga.com`) sigue sirviendo el bundle 13.300.56.
+2. Refrescar la pestaña con Ctrl+F5 (para tirar el JS viejo cacheado) y reintentar la sustitución.
+3. Si vuelve a fallar con la **misma versión 13.300.57 visible en el nuevo reporte de error**, entonces sí hay un bug remanente y abro una nueva ronda de investigación:
+   - Revisar si el SDK oficial `facturapi@4.18.0` está transformando `related_documents` → `related` internamente (poco probable, pero verificable inspeccionando `node_modules/facturapi/lib/resources/Invoice.js`).
+   - Agregar un `console.log` del payload final justo antes de `facturapi.invoices.create(payload)` para confirmar qué se está enviando en runtime.
 
-- Actualizar `helpers_test.ts` si valida el nombre del campo del payload (revisar línea 42 que hoy compara `p.serie`).
-- Bump `APP_VERSION` a `13.300.56` y entrada en `CHANGELOG.md`.
-- Reintentar timbrado desde la UI.
+## No requiere cambios de código todavía
+
+Prefiero no bumpear a 13.300.58 con cambios especulativos. Primero necesitamos confirmar que el error persiste con la 13.300.57 ya publicada.
+
+<presentation-actions>
+<presentation-open-publish>Publish your app</presentation-open-publish>
+</presentation-actions>
