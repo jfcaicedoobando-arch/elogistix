@@ -144,7 +144,7 @@ jobs:
     # NUNCA correr mutators en paralelo con otro run mutador contra el mismo
     # tenant staging — el orden serial de 09→12 asume DB estable.
     concurrency:
-      group: e2e-mutators-${{ secrets.E2E_BASE_URL }}
+      group: e2e-mutators
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
