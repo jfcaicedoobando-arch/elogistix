@@ -9,6 +9,10 @@ const { mockFetchFlujo, mockFetchSaldos, mockCobranza, mockCxp } = vi.hoisted(()
   mockCxp: vi.fn(),
 }));
 
+vi.mock("@/hooks/shared", async () => {
+  const actual = await vi.importActual<typeof import("@/hooks/shared")>("@/hooks/shared");
+  return { ...actual, useOrgFilter: () => ({ organizationId: "org-test" }) };
+});
 vi.mock('@/features/tesoreria/services', () => ({
   fetchFlujoProyectado: mockFetchFlujo,
   fetchSaldosCuentas: mockFetchSaldos,
