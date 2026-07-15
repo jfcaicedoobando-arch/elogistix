@@ -30,7 +30,6 @@ export async function fetchLiquidacionesPendientes(
     .from("liquidaciones_comision")
     .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at")
     .is("fecha_pago", null)
-    .is("deleted_at", null)
     .limit(500);
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
