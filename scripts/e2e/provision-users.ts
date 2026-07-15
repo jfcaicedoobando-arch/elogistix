@@ -121,5 +121,57 @@ if (!res.ok) {
   process.exit(1);
 }
 
-console.log("✅ Usuarios E2E listos:");
-console.dir(body, { depth: 5 });
+// Verificación estricta: la edge function releyó user_roles / organization_members /
+// client_users tras el upsert. Fallamos ruidosamente si alguna asociación no cuadró.
+type ProvisionedUser = {
+  email: string;
+  user_id: string;
+  role: string;
+  verified: boolean;
+  checks: {
+    user_role_ok: boolean;
+    org_member_ok?: boolean;
+    client_user_ok?: boolean;
+  };
+};
+const parsed = body as {
+  ok?: boolean;
+  organization_id?: string;
+  cliente_id?: string;
+  users?: ProvisionedUser[];
+};
+
+if (!parsed || parsed.ok !== true || !Array.isArray(parsed.users) || parsed.users.length === 0) {
+  console.error("❌ Respuesta inválida o sin usuarios provisionados:", body);
+  process.exit(1);
+}
+
+const failures: string[] = [];
+for (const u of parsed.users) {
+  if (!u.verified) {
+    failures.push(
+      `  · ${u.email} (${u.role}) — user_role_ok=${u.checks.user_role_ok}` +
+        (u.role === "admin"
+          ? `, org_member_ok=${u.checks.org_member_ok}`
+          : `, client_user_ok=${u.checks.client_user_ok}`),
+    );
+  }
+}
+
+if (failures.length > 0) {
+  console.error("❌ Verificación de roles/asociaciones falló:");
+  console.error(failures.join("\n"));
+  process.exit(1);
+}
+
+// Chequeo defensivo en cliente: cada email esperado debe estar presente y verificado.
+const expectedEmails = [adminEmail, portalEmail].filter(Boolean) as string[];
+const returnedEmails = new Set(parsed.users.map((u) => u.email.toLowerCase()));
+const missing = expectedEmails.filter((e) => !returnedEmails.has(e.toLowerCase()));
+if (missing.length > 0) {
+  console.error(`❌ Emails esperados no devueltos por la edge function: ${missing.join(", ")}`);
+  process.exit(1);
+}
+
+console.log("✅ Usuarios E2E listos y verificados:");
+console.dir(parsed, { depth: 5 });

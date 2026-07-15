@@ -21,7 +21,18 @@ type ProvisionPayload = {
   cliente_id?: string;
 };
 
-type UserResult = { email: string; user_id: string; created: boolean; role: string };
+type UserResult = {
+  email: string;
+  user_id: string;
+  created: boolean;
+  role: string;
+  verified: boolean;
+  checks: {
+    user_role_ok: boolean;
+    org_member_ok?: boolean;
+    client_user_ok?: boolean;
+  };
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -92,17 +103,39 @@ Deno.serve(async (req) => {
       const r = await upsertUser(admin, payload.admin.email, payload.admin.password);
       await upsertRole(admin, r.user_id, "admin");
       await upsertOrgMember(admin, r.user_id, orgId, "admin");
-      results.push({ ...r, role: "admin" });
+      const checks = await verifyAdmin(admin, r.user_id, orgId);
+      results.push({
+        ...r,
+        role: "admin",
+        verified: checks.user_role_ok && checks.org_member_ok === true,
+        checks,
+      });
     }
 
     if (payload.portal?.email && payload.portal.password && clienteId) {
       const r = await upsertUser(admin, payload.portal.email, payload.portal.password);
       await upsertRole(admin, r.user_id, "cliente");
       await upsertClientUser(admin, r.user_id, clienteId, orgId);
-      results.push({ ...r, role: "cliente" });
+      const checks = await verifyPortal(admin, r.user_id, clienteId, orgId);
+      results.push({
+        ...r,
+        role: "cliente",
+        verified: checks.user_role_ok && checks.client_user_ok === true,
+        checks,
+      });
     }
 
-    return json({ ok: true, organization_id: orgId, cliente_id: clienteId, users: results });
+    const allVerified = results.every((r) => r.verified);
+    return json(
+      {
+        ok: allVerified,
+        organization_id: orgId,
+        cliente_id: clienteId,
+        users: results,
+        ...(allVerified ? {} : { error: "verification_failed" }),
+      },
+      allVerified ? 200 : 500,
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return json({ error: "provision_failed", message }, 500);
@@ -191,4 +224,59 @@ async function upsertClientUser(
       { onConflict: "user_id,cliente_id" },
     );
   if (error) throw error;
+}
+
+// -----------------------------------------------------------------------------
+// Verificación post-upsert: releemos las tablas para confirmar rol + asociación.
+
+async function verifyAdmin(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  orgId: string,
+): Promise<{ user_role_ok: boolean; org_member_ok: boolean }> {
+  const [roleRes, memberRes] = await Promise.all([
+    admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+    admin
+      .from("organization_members")
+      .select("organization_id, role")
+      .eq("user_id", userId)
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+  ]);
+  return {
+    user_role_ok: !roleRes.error && roleRes.data?.role === "admin",
+    org_member_ok:
+      !memberRes.error &&
+      memberRes.data?.organization_id === orgId &&
+      memberRes.data?.role === "admin",
+  };
+}
+
+async function verifyPortal(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  clienteId: string,
+  orgId: string,
+): Promise<{ user_role_ok: boolean; client_user_ok: boolean }> {
+  const [roleRes, cuRes] = await Promise.all([
+    admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "cliente")
+      .maybeSingle(),
+    admin
+      .from("client_users")
+      .select("cliente_id, organization_id")
+      .eq("user_id", userId)
+      .eq("cliente_id", clienteId)
+      .maybeSingle(),
+  ]);
+  return {
+    user_role_ok: !roleRes.error && roleRes.data?.role === "cliente",
+    client_user_ok:
+      !cuRes.error &&
+      cuRes.data?.cliente_id === clienteId &&
+      cuRes.data?.organization_id === orgId,
+  };
 }
