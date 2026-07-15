@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { cancelarFacturaProveedor } from "@/features/cxp/services/cancelarFacturaProveedor";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 /**
  * Hook para cancelar una factura de proveedor.
@@ -25,6 +26,7 @@ export function useCancelarFacturaProveedor() {
       qc.invalidateQueries({ queryKey: queryKeys.proveedorNotasCredito.all });
       qc.invalidateQueries({ queryKey: queryKeys.conceptosCosto.all });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
       notifyError(toast, {
