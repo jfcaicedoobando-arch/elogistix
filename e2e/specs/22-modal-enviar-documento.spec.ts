@@ -1,15 +1,8 @@
 /**
  * Flujo 22 — Modal "Enviar documento por correo" (rediseño 13.300.17).
- *
- * Verifica el nuevo patrón unificado:
- *  - Campo "Para" con chips (EmailChipsField)
- *  - Campo "CC" con chip bloqueado del usuario logueado
- *  - Toggle de un contacto agrega/quita chip de "Para"
- *
- * Entry point: detalle de cotización → "Enviar por correo".
- * Requiere ≥1 cotización en el tenant.
+ * v13.300.23 — usa data-testid del EmailChipsField.
  */
-import { expect, test } from "@playwright/test";
+import { test, expect } from "../fixtures/pageErrors";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 test.describe("Flujo 22 — Modal Enviar documento", () => {
@@ -24,7 +17,6 @@ test.describe("Flujo 22 — Modal Enviar documento", () => {
     await rows.first().click();
     await expect(page).toHaveURL(/\/cotizaciones\/[0-9a-f-]{36}/i, { timeout: 15_000 });
 
-    // Botón "Enviar por correo" (o "Reenviar" si ya se envió).
     await page
       .getByRole("button", { name: /enviar por correo|^reenviar$/i })
       .first()
@@ -36,34 +28,25 @@ test.describe("Flujo 22 — Modal Enviar documento", () => {
       dialog.getByRole("heading", { name: /enviar cotizaci[oó]n|reenviar cotizaci[oó]n/i }),
     ).toBeVisible();
 
-    // Campos con chips deben existir por aria-label.
     const paraField = dialog.getByLabel(/^destinatarios$/i);
     const ccField = dialog.getByLabel(/^copia cc$/i);
     await expect(paraField).toBeVisible();
     await expect(ccField).toBeVisible();
 
-    // CC debe tener un chip bloqueado con el email del usuario logueado.
-    // El chip locked se identifica por el tooltip "Siempre se agrega tu correo".
-    const lockedChip = ccField.locator("[data-locked=true], [aria-label*='tu correo' i]").first();
-    // Fallback: al menos un chip visible dentro de CC.
-    const ccChips = ccField.locator("[data-chip], [role='listitem']");
-    if (await lockedChip.count()) {
-      await expect(lockedChip).toBeVisible();
-    } else {
-      await expect(ccChips.first()).toBeVisible();
-    }
+    // Chip bloqueado del usuario logueado en CC — selector estable.
+    const lockedChip = ccField.getByTestId("envio-chip-locked").first();
+    await expect(lockedChip).toBeVisible();
 
-    // Toggle de un contacto (si hay checkboxes disponibles) debe agregar chip en Para.
+    // Toggle contacto → aparece un chip nuevo en "Para".
     const contactCheckboxes = dialog.getByRole("checkbox");
     if ((await contactCheckboxes.count()) > 0) {
-      const before = await paraField.locator("[data-chip], [role='listitem']").count();
+      const before = await paraField.getByTestId("envio-chip").count();
       await contactCheckboxes.first().check().catch(() => null);
-      await page.waitForTimeout(200);
-      const after = await paraField.locator("[data-chip], [role='listitem']").count();
-      expect(after).toBeGreaterThanOrEqual(before);
+      await expect
+        .poll(() => paraField.getByTestId("envio-chip").count(), { timeout: 3_000 })
+        .toBeGreaterThanOrEqual(before);
     }
 
-    // Cerrar sin enviar.
     await dialog.getByRole("button", { name: /cancelar/i }).click();
     await expect(dialog).toBeHidden();
   });
