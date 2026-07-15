@@ -38,14 +38,31 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
   const facturapi_id = obj.id;
   const status = typeof obj.status === "string" ? obj.status : null;
   const uuid = typeof obj.uuid === "string" ? obj.uuid : null;
+  const cancellationStatus = typeof obj.cancellation_status === "string"
+    ? obj.cancellation_status.toLowerCase()
+    : null;
 
   switch (ev.type) {
+    case "invoice.cancellation_status_updated": {
+      // Evento crítico: el SAT resolvió (o avanzó) la solicitud asíncrona.
+      // No cambiamos `estado` aquí — lo hace el cron/reconciliar cuando
+      // pasa a `accepted`, porque necesita descargar el acuse y revertir
+      // proformas. El webhook sólo refleja el estado en la BD.
+      if (!cancellationStatus) return null;
+      const patch: Record<string, unknown> = { cancellation_status: cancellationStatus };
+      if (cancellationStatus === "rejected" || cancellationStatus === "expired") {
+        patch.cancelacion_solicitada_en = null;
+        patch.cancelacion_vence_en = null;
+      }
+      return { facturapi_id, patch, bitacora_accion: "facturapi_webhook_cancellation_status" };
+    }
     case "invoice.status_updated": {
       const patch: Record<string, unknown> = {};
       if (uuid) patch.uuid_fiscal = uuid;
       if (status === "canceled") {
         patch.estado = "Cancelada";
         patch.cancelado_en = new Date().toISOString();
+        patch.cancellation_status = "accepted";
       } else if (status === "valid") {
         patch.estado = "Timbrada";
       }
@@ -55,7 +72,11 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
     case "invoice.canceled":
       return {
         facturapi_id,
-        patch: { estado: "Cancelada", cancelado_en: new Date().toISOString() },
+        patch: {
+          estado: "Cancelada",
+          cancelado_en: new Date().toISOString(),
+          cancellation_status: "accepted",
+        },
         bitacora_accion: "facturapi_webhook_canceled",
       };
     case "invoice.delivered_to_customer":
