@@ -68,7 +68,13 @@ export function BandaKPIsEficiencia({ kpis }: Props) {
       <KpiCard
         label="Runway financiero"
         value={runwayValue(kpis.runway_meses)}
-        delta={kpis.runway_meses == null ? "Utilidad ≥ 0 en el mes" : "Bancos ÷ (costos − ingresos)"}
+        delta={
+          kpis.runway_meses == null
+            ? "Utilidad ≥ 0 en el mes"
+            : kpis.runway_meses === 0
+              ? "Saldo bancario negativo"
+              : "Bancos ÷ (costos − ingresos)"
+        }
         deltaVariant={runwayVariant(kpis.runway_meses)}
         icon={Waves}
       />
