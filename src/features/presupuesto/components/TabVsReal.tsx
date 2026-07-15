@@ -62,7 +62,8 @@ function ordenarFilas(filas: FilaVsReal[], key: SortKey, dir: SortDir): FilaVsRe
 }
 
 export function TabVsReal() {
-  const { mesActual, setMesKey } = usePeriodoMesUrl("periodo_vs_real");
+  const periodoCtl = usePeriodoMesUrl("periodo_vs_real");
+  const { mesActual, setMesKey } = periodoCtl;
   const periodo = mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("variacion");
