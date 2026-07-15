@@ -21,7 +21,18 @@ type ProvisionPayload = {
   cliente_id?: string;
 };
 
-type UserResult = { email: string; user_id: string; created: boolean; role: string };
+type UserResult = {
+  email: string;
+  user_id: string;
+  created: boolean;
+  role: string;
+  verified: boolean;
+  checks: {
+    user_role_ok: boolean;
+    org_member_ok?: boolean;
+    client_user_ok?: boolean;
+  };
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
