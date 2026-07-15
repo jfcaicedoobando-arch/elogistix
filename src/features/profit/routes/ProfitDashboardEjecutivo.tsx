@@ -103,6 +103,7 @@ export default function ProfitDashboardEjecutivo() {
             topAcreedores={data.topAcreedores}
             presupuesto={data.presupuesto}
           />
+          <BandaKPIsEficiencia kpis={data.kpis} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             <div className="lg:col-span-2"><GraficoEERR12m data={data.eerr12m} /></div>
             <SaldosBancosCard cuentas={data.tesoreria.cuentas} />
