@@ -3,9 +3,9 @@
  * movimientos BBVA). Ya NO importa `@/services/facturas` ni `@/services/cxp`
  * (Auditoría Paso 4, v12.95.11).
  *
- * El cálculo del resumen se hace con la función pura
- * `calcularResumenTesoreria` en `@/features/tesoreria/domain`, alimentada por el
- * hook `useResumenTesoreria` que compone las tres fuentes.
+ * v13.300.36 — Se acepta `organizationId` para filtrar cuentas por tenant
+ * (auditoría Profit, Batch G). Además `fetchSaldosCuentas` paraleliza el
+ * cálculo de saldos con `Promise.all` en lugar de un loop secuencial.
  */
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -31,20 +31,27 @@ async function calcularSaldoCuenta(cuentaId: string, saldoInicial: number): Prom
   return s;
 }
 
-export async function fetchSaldosCuentas(): Promise<ResumenCuenta[]> {
-  const { data: cuentas, error } = await supabase
+export async function fetchSaldosCuentas(organizationId?: string | null): Promise<ResumenCuenta[]> {
+  let q = supabase
     .from("cuentas_bancarias")
-    .select("id, alias, banco, moneda, saldo_inicial")
+    .select("id, alias, banco, moneda, saldo_inicial, organization_id")
     .eq("activa", true)
     .order("alias");
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const { data: cuentas, error } = await q;
   if (error) throw error;
 
-  const out: ResumenCuenta[] = [];
-  for (const c of cuentas ?? []) {
-    const saldo = await calcularSaldoCuenta(c.id, Number(c.saldo_inicial));
-    out.push({ id: c.id, alias: c.alias, banco: c.banco, moneda: c.moneda, saldo });
-  }
-  return out;
+  // Paraleliza el cálculo de saldos: antes era secuencial (N RTTs).
+  const saldos = await Promise.all(
+    (cuentas ?? []).map((c) => calcularSaldoCuenta(c.id, Number(c.saldo_inicial))),
+  );
+  return (cuentas ?? []).map((c, i) => ({
+    id: c.id,
+    alias: c.alias,
+    banco: c.banco,
+    moneda: c.moneda,
+    saldo: saldos[i],
+  }));
 }
 
 /**
@@ -54,7 +61,8 @@ export async function fetchSaldosCuentas(): Promise<ResumenCuenta[]> {
 export async function fetchResumenTesoreria(args: {
   cobranza: CobranzaRow[];
   cxp: CxpRow[];
+  organizationId?: string | null;
 }): Promise<ResumenTesoreria> {
-  const cuentas = await fetchSaldosCuentas();
+  const cuentas = await fetchSaldosCuentas(args.organizationId);
   return calcularResumenTesoreria({ cuentas, cobranza: args.cobranza, cxp: args.cxp });
 }

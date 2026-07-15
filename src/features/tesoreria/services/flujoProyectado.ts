@@ -2,6 +2,9 @@
  * Servicio Tesorería — flujo proyectado. Solo carga fuentes propias
  * (liquidaciones de comisión). Cobranza/CxP/cuentas se inyectan por el
  * caller (hook `useFlujoProyectado`). Auditoría Paso 4, v12.95.11.
+ *
+ * v13.300.36 — filtra `liquidaciones_comision` por `organization_id` y
+ * excluye soft-deletes (`deleted_at IS NULL`). Auditoría Profit Batch G.
  */
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -19,12 +22,17 @@ export type {
   FlujoProyectado,
 } from "@/features/tesoreria/domain";
 
-export async function fetchLiquidacionesPendientes(): Promise<LiquidacionRow[]> {
-  const { data, error } = await supabase
+export async function fetchLiquidacionesPendientes(
+  organizationId?: string | null,
+): Promise<LiquidacionRow[]> {
+  let q = supabase
     .from("liquidaciones_comision")
     .select("id, vendedora_id, periodo, total_mxn, fecha_pago, created_at")
     .is("fecha_pago", null)
+    .is("deleted_at", null)
     .limit(500);
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as LiquidacionRow[];
 }
@@ -34,8 +42,9 @@ export async function fetchFlujoProyectado(args: {
   cobranza: CobranzaRow[];
   cxp: CxpRow[];
   dias?: number;
+  organizationId?: string | null;
 }): Promise<FlujoProyectado> {
-  const liquidaciones = await fetchLiquidacionesPendientes();
+  const liquidaciones = await fetchLiquidacionesPendientes(args.organizationId);
   return calcularFlujoProyectado({
     cuentas: args.cuentas,
     cobranza: args.cobranza,
