@@ -62,7 +62,7 @@ export function useTabProyeccionController() {
   const [filtroOperador, setFiltroOperador] = useState<string>("todos");
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todos");
 
-  const { data: filas = [], isLoading } = useQuery({
+  const { data: filas = [], isLoading, error, refetch, isFetching } = useQuery({
     queryKey: queryKeys.facturacion.proyeccion(organizationId, mesActual.key),
     queryFn: () =>
       fetchProyeccionMes({
