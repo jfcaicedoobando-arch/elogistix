@@ -7,6 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/features/facturacion/hooks";
 import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
