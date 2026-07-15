@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.59] - 2026-07-15
+- **feat(facturacion) Banner preventivo de aceptación SAT en modal de cancelación**: `DialogCancelarFactura` ahora evalúa la regla 2.7.1.34 antes del intento: si es mismo día de emisión muestra banner verde "ventana inmediata"; si monto ≤ $1,000 o RFC genérico muestra banner verde "exenta de aceptación"; en el resto muestra banner ámbar explicando que el receptor debe aceptar en Buzón Tributario (silencio positivo 72h). Se pasan `fecha_emision`, `total` y `rfc_cliente` desde `FacturaDetalleModales`.
+
 ## [13.300.58] - 2026-07-15
 - **fix(facturacion) Mensaje claro en cancelación rechazada por SAT (requestId 9106467a)**: cuando FacturAPI responde "no cancelable" (regla SAT 2.7.1.34, CFDIs > $1,000 MXN), la edge `facturapi-cancelar` ahora anexa las 3 causas típicas al mensaje (aceptación pendiente del receptor en Buzón Tributario, complementos/NC vinculados, o rezago de propagación). No es un bug de código: es una respuesta del SAT.
 
