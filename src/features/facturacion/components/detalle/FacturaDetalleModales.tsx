@@ -69,6 +69,9 @@ export function FacturaDetalleModales(props: Props) {
       <DialogCancelarFactura
         facturaId={cancelarOpen ? factura.id : null}
         numero={factura.numero}
+        fechaEmision={factura.fecha_emision ?? null}
+        total={factura.total !== null && factura.total !== undefined ? Number(factura.total) : null}
+        rfcCliente={factura.rfc_cliente ?? null}
         open={cancelarOpen}
         onOpenChange={setCancelarOpen}
       />
