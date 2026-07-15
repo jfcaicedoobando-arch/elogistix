@@ -53,13 +53,19 @@ export function FuenteEerrToggle({ ariaLabel = "Fuente del Estado de Resultados"
             <p className="text-muted-foreground text-xs">
               Suma conceptos de venta y costo de embarques cuya <strong>ETA</strong> cae en el mes.
               Refleja la utilidad real del negocio operado, sin importar cuándo se factura.
+              <span className="block mt-1">
+                <strong>Notas de crédito:</strong> no se restan aquí porque el
+                ingreso operativo se calcula sobre conceptos de embarque, no
+                sobre folios fiscales.
+              </span>
             </p>
           </div>
           <div>
             <div className="font-semibold">Facturas (Devengada)</div>
             <p className="text-muted-foreground text-xs">
-              Suma facturas emitidas (menos notas de crédito) contra CxP recibidas en el mes.
-              Coincide con lo contable pero puede diferir de la operativa por facturación diferida.
+              Suma facturas emitidas <strong>menos notas de crédito aplicadas</strong>
+              contra CxP recibidas en el mes. Coincide con lo contable pero puede
+              diferir de la operativa por facturación diferida.
             </p>
           </div>
           <p className="text-xs italic pt-1 border-t">
