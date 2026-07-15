@@ -125,14 +125,17 @@ export function calcularKPIsEjecutivos(
     }
   }
 
-  const saldoBancos = snapshot.tesoreria.cuentas.reduce((acc, c) => acc + c.saldo, 0);
+  // A1 fix (v13.300.49): `saldo_bancos_mxn` viene ya convertido a MXN
+  // desde el servicio de tesorería (antes se sumaba `c.saldo` directo,
+  // mezclando USD y MXN indistintamente).
+  const saldoBancos = snapshot.tesoreria.saldo_bancos_mxn;
 
-  // Cartera vencida: sólo deudores con >30 días — alineado con la alerta
-  // "cartera-vencida-alta" (antes se sumaba TODA la cartera y no cuadraba).
-  const deudoresVencidos = snapshot.tesoreria.top_deudores.filter(
-    (d) => (d.dias ?? 0) > 30,
-  );
-  const carteraVencida = deudoresVencidos.reduce((acc, d) => acc + d.saldo, 0);
+  // B1 fix (v13.300.49): usar el conteo/monto sobre el universo completo
+  // (no sobre el Top-5 truncado). El desglose por antigüedad (>30d) se
+  // sacrifica porque no se conserva en el dataset agregado; el filtro por
+  // "vencida" a nivel factura ya captura el 100% de exposición vencida.
+  const carteraVencida = snapshot.tesoreria.cartera_vencida_total_mxn;
+  const carteraVencidaCount = snapshot.tesoreria.cartera_vencida_count;
 
   const cxp7d = snapshot.flujo.semanas[0]?.salidas_mxn ?? 0;
 
@@ -140,20 +143,25 @@ export function calcularKPIsEjecutivos(
   const totalReal = snapshot.presupuesto.total_real_mxn;
   const cumplimiento = totalPresup > 0 ? (totalReal / totalPresup) * 100 : 0;
 
-  // Fase J: conteo de categorías en exceso (>110% del cumplimiento).
-  const categoriasEnExceso = snapshot.presupuesto.filas.filter(
-    (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_VARIACION_PRESUPUESTO,
-  ).length;
+  // C2 fix (v13.300.49): usar el conteo ya calculado por el servicio.
+  const categoriasEnExceso = snapshot.presupuesto.categorias_en_exceso;
 
-  // Fase 4 UI/UX: KPIs financieros derivados.
-  const cxc30d = snapshot.tesoreria.flujo.por_cobrar_mxn;
-  const cxp30d = snapshot.tesoreria.flujo.por_pagar_mxn;
+  // A2 fix (v13.300.49): DSO/DPO consideran también la porción USD
+  // (convertida a MXN por el servicio de tesorería).
+  const cxc30d = snapshot.tesoreria.flujo.por_cobrar_total_mxn;
+  const cxp30d = snapshot.tesoreria.flujo.por_pagar_total_mxn;
   const costos = eerr.totalCostos.total;
   const dsoDias: number | null = ingresos > 0 ? (cxc30d / ingresos) * 30 : null;
   const dpoDias: number | null = costos > 0 ? (cxp30d / costos) * 30 : null;
   const burnMensual = costos - ingresos;
-  const runwayMeses: number | null =
-    burnMensual > 0 && saldoBancos > 0 ? saldoBancos / burnMensual : null;
+  // C4 fix (v13.300.49): si `saldoBancos <= 0` la empresa ya está sin caja
+  // → devolvemos `0` (la UI muestra "Saldo bancario negativo"). Antes el
+  // resultado era `null` (mismo mensaje que "sin burn"), engañosamente
+  // tranquilizador.
+  let runwayMeses: number | null;
+  if (burnMensual <= 0) runwayMeses = null; // sin burn (utilidad ≥ 0)
+  else if (saldoBancos <= 0) runwayMeses = 0; // caja agotada
+  else runwayMeses = saldoBancos / burnMensual;
 
   return {
     ingresos_mxn: ingresos,
@@ -164,7 +172,7 @@ export function calcularKPIsEjecutivos(
     margen_delta_puntos: margenDelta,
     saldo_bancos_mxn: saldoBancos,
     cartera_vencida_mxn: carteraVencida,
-    cartera_vencida_count: deudoresVencidos.length,
+    cartera_vencida_count: carteraVencidaCount,
     cxp_7dias_mxn: cxp7d,
     cumplimiento_presupuesto_pct: cumplimiento,
     categorias_en_exceso: categoriasEnExceso,
