@@ -54,6 +54,9 @@ env:
   E2E_CROSS_ORG_EMBARQUE_ID: ${{ secrets.E2E_CROSS_ORG_EMBARQUE_ID }}
   E2E_CROSS_ORG_FACTURA_ID: ${{ secrets.E2E_CROSS_ORG_FACTURA_ID }}
   E2E_CROSS_ORG_COTIZACION_ID: ${{ secrets.E2E_CROSS_ORG_COTIZACION_ID }}
+  E2E_PROVISION_SECRET: ${{ secrets.E2E_PROVISION_SECRET }}
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
   E2E_BLOB: "1"
 
 jobs:
@@ -84,9 +87,31 @@ jobs:
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
 
+  provision-users:
+    name: Provisionar usuarios E2E
+    needs: [guard-secrets]
+    if: needs.guard-secrets.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: ./.github/actions/setup-bun
+      - name: Guard (provisioning secret)
+        id: check
+        run: |
+          if [ -z "${E2E_PROVISION_SECRET}" ] || [ -z "${VITE_SUPABASE_URL}" ]; then
+            echo "::warning::E2E_PROVISION_SECRET o VITE_SUPABASE_URL ausente — se omite provisión."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Provisionar admin + portal
+        if: steps.check.outputs.skip == 'false'
+        run: bun run e2e:provision
+
   internal-shard:
     name: Internal · shard ${{ matrix.shard }}/3
-    needs: [guard-secrets]
+    needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -137,7 +162,7 @@ jobs:
 
   mutators:
     name: Mutators (09-12, serial)
-    needs: [guard-secrets]
+    needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -187,7 +212,7 @@ jobs:
 
   portal:
     name: Portal
-    needs: [guard-secrets]
+    needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15

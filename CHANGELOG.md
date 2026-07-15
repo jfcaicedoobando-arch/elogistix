@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.26] - 2026-07-15
+- **ci(e2e)**: integrado el paso `bun run e2e:provision` en `.github/workflows/e2e.yml` como job dedicado `provision-users`, ejecutado tras `guard-secrets` y antes de los shards (`internal-shard`, `mutators`, `portal`) — todos ahora dependen de él. Añadidas variables `E2E_PROVISION_SECRET`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` al `env:` del workflow. Si faltan `E2E_PROVISION_SECRET` o `VITE_SUPABASE_URL` el step emite `warning` y se omite la provisión (los shards continúan asumiendo usuarios ya existentes).
+
 ## [13.300.25] - 2026-07-15
 - **feat(e2e)**: script y edge function para provisionar los usuarios E2E (admin interno + cliente portal) con sus roles y membresías antes de correr Playwright.
   - Nueva edge function `e2e-provision-users` (Deno) protegida por header `x-e2e-secret` (secreto runtime `E2E_PROVISION_SECRET`). Usa `service_role` para crear/actualizar cuentas vía `auth.admin`, resetear password, upsert en `user_roles` (`admin` / `cliente`) y vincular en `organization_members` (admin) o `client_users` (portal). Idempotente.
