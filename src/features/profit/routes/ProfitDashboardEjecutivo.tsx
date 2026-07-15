@@ -84,9 +84,11 @@ export default function ProfitDashboardEjecutivo() {
       )}
 
       {error && (
-        <div className="p-4 border rounded text-sm text-destructive">
-          Error al cargar el snapshot: {(error as Error).message}
-        </div>
+        <ErrorStateInline
+          message={(error as Error).message}
+          onRetry={() => { void refetch(); }}
+          retrying={isFetching}
+        />
       )}
 
       {data && (
