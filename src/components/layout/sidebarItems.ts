@@ -40,11 +40,11 @@ import {
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
+// v13.300.47 — Se consolidó Profit en un único enlace (patrón hub + tabs).
+// La navegación entre Dashboard Ejecutivo, Proyección, Estado de Resultados
+// y Presupuesto vs Real vive en `ProfitSubNav` dentro del módulo.
 export const SIDEBAR_PROFIT_ITEMS: SidebarItem[] = [
-  { title: "Dashboard Ejecutivo", url: "/profit/dashboard", icon: LayoutDashboard },
-  { title: "Proyección", url: "/profit/proyeccion", icon: TrendingUp },
-  { title: "Estado de Resultados", url: "/profit/estado-resultados", icon: PiggyBank },
-  { title: "Presupuesto vs Real", url: "/profit/presupuesto", icon: BarChart3 },
+  { title: "Profit", url: "/profit", icon: TrendingUp },
 ];
 
 export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
