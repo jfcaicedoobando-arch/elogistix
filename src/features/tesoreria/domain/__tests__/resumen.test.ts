@@ -75,4 +75,24 @@ describe("calcularResumenTesoreria", () => {
     expect(r.cuentas).toBe(cuentas);
     expect(r.flujo.flujo_neto_mxn).toBe(0);
   });
+
+  it("agrupa top_deudores por cliente+moneda (fix bug de duplicados)", () => {
+    // Mismo cliente, 3 facturas vencidas en MXN → una sola fila con suma
+    const cobranza: CobranzaRow[] = [
+      { id: "a1", numero: "A-1", cliente_nombre: "Acme", moneda: "MXN", saldo: 100, fecha_vencimiento: "2026-05-01", estatus_cobranza: "Vencida", dias_vencido: 5 },
+      { id: "a2", numero: "A-2", cliente_nombre: "Acme", moneda: "MXN", saldo: 200, fecha_vencimiento: "2026-05-01", estatus_cobranza: "Vencida", dias_vencido: 30 },
+      { id: "a3", numero: "A-3", cliente_nombre: "Acme", moneda: "MXN", saldo: 400, fecha_vencimiento: "2026-05-01", estatus_cobranza: "Vencida", dias_vencido: 10 },
+      // Mismo cliente pero USD → fila separada
+      { id: "a4", numero: "A-4", cliente_nombre: "Acme", moneda: "USD", saldo: 50, fecha_vencimiento: "2026-05-01", estatus_cobranza: "Vencida", dias_vencido: 3 },
+      { id: "b1", numero: "B-1", cliente_nombre: "Beta", moneda: "MXN", saldo: 50, fecha_vencimiento: "2026-05-01", estatus_cobranza: "Vencida", dias_vencido: 2 },
+    ];
+    const r = calcularResumenTesoreria({ cuentas, cobranza, cxp: [], hoy: HOY });
+    const nombres = r.top_deudores.map((d) => `${d.nombre}/${d.moneda}`);
+    // Acme aparece 2 veces (una por moneda), NO 3 por cada factura
+    expect(nombres).toEqual(["Acme/MXN", "Acme/USD", "Beta/MXN"]);
+    const acmeMxn = r.top_deudores.find((d) => d.nombre === "Acme" && d.moneda === "MXN")!;
+    expect(acmeMxn.saldo).toBe(700);
+    expect(acmeMxn.dias).toBe(30); // peor caso del grupo
+  });
 });
+
