@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.51] - 2026-07-15
+- **chore(profit/tesoreria) Baseline arquitectónico (<200 líneas)**: `estadoResultados.ts` unificó `pivotConceptosVenta` + `pivotConceptosCosto` en un genérico `pivotConceptos<T>` (202 → 190). `resumen.ts` extrajo interfaces a `resumen.types.ts` (228 → 159). Sin cambios de comportamiento; 133 tests verdes.
+
 ## [13.300.50] - 2026-07-15
 - **fix(facturacion) Sustituir CFDI fallaba con `invalid input value for enum app_role: "contabilidad"`**: la RPC `duplicar_factura_para_sustitucion` validaba pertenencia contra un rol inexistente (`'contabilidad'`) que Postgres castea al enum `app_role`, abortando la operación para cualquier usuario. Reemplazado por la lista real: `admin_org`, `admin`, `super_admin`, `contador`, `auxiliar_contable`, `tesorero`. Reportado por `karol.hernandez@elogistixshipping.com` (requestId `e35121ea-8da7-4bd4-8845-a224060bd11c`).
 
