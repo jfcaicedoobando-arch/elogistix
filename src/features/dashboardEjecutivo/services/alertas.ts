@@ -8,7 +8,6 @@ import type {
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenTesoreria } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
-import { UMBRAL_SOBREEJERCICIO_PCT } from "@/features/presupuesto/constants";
 
 export interface AlertasInput {
   flujo: FlujoProyectado;
@@ -18,7 +17,6 @@ export interface AlertasInput {
 }
 
 const UMBRAL_CARTERA_DEFAULT = 50_000;
-const UMBRAL_VARIACION_PRESUPUESTO = UMBRAL_SOBREEJERCICIO_PCT;
 
 export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
   const alertas: AlertaEjecutiva[] = [];
@@ -37,52 +35,52 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
     });
   }
 
-  // Top deudores con saldo >umbral
-  const deudoresAltos = input.tesoreria.top_deudores.filter(
-    (d) => d.saldo >= umbral && (d.dias ?? 0) > 30,
-  );
-  if (deudoresAltos.length > 0) {
+  // B2 fix (v13.300.49): conteo sobre el universo completo de deudores
+  // vencidos (`cartera_vencida_count`), no sobre el Top-5.
+  const deudoresVencidosCount = input.tesoreria.cartera_vencida_count;
+  if (deudoresVencidosCount > 0 && input.tesoreria.cartera_vencida_total_mxn >= umbral) {
+    const top = input.tesoreria.top_deudores[0];
     alertas.push({
       id: "cartera-vencida-alta",
       severidad: "warning",
-      titulo: `${deudoresAltos.length} cliente(s) con cartera vencida >30 días`,
-      descripcion: `Top: ${deudoresAltos[0].nombre} (${deudoresAltos[0].saldo.toFixed(0)} ${deudoresAltos[0].moneda})`,
+      titulo: `${deudoresVencidosCount} cliente(s) con cartera vencida`,
+      descripcion: top
+        ? `Top: ${top.nombre} (${top.saldo.toFixed(0)} ${top.moneda})`
+        : "Ver detalle en Facturación",
       url: "/facturacion",
     });
   }
 
-  // CxP vencidas
-  const acreedoresVencidos = input.tesoreria.top_acreedores.filter(
-    (a) => (a.dias ?? 0) > 0,
-  );
-  if (acreedoresVencidos.length > 0) {
+  // CxP vencidas — conteo sobre universo completo (B2 fix).
+  const acreedoresVencidosCount = input.tesoreria.cxp_vencidas_count;
+  if (acreedoresVencidosCount > 0) {
+    const top = input.tesoreria.top_acreedores[0];
     alertas.push({
       id: "cxp-vencidas",
       severidad: "warning",
-      titulo: `${acreedoresVencidos.length} proveedor(es) con pagos vencidos`,
-      descripcion: `Top: ${acreedoresVencidos[0].nombre} (${acreedoresVencidos[0].saldo.toFixed(0)} ${acreedoresVencidos[0].moneda})`,
+      titulo: `${acreedoresVencidosCount} proveedor(es) con pagos vencidos`,
+      descripcion: top
+        ? `Top: ${top.nombre} (${top.saldo.toFixed(0)} ${top.moneda})`
+        : "Ver detalle en Compras",
       url: "/compras/facturas",
     });
   }
 
-  // Fase J: categorías con cumplimiento >110% del presupuesto. Antes se
-  // emitía una alerta por la "peor" categoría; ahora se agrega una única alerta
-  // consolidada con severidad escalada por cantidad/gravedad para reflejar
-  // riesgo real de sobreejercicio.
-  const fueraDePresupuesto = input.presupuesto.filas.filter(
-    (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_VARIACION_PRESUPUESTO,
-  );
-  if (fueraDePresupuesto.length > 0) {
-    const ordenadas = [...fueraDePresupuesto].sort((a, b) => b.cumplimiento_pct - a.cumplimiento_pct);
-    const peor = ordenadas[0];
-    const critico = fueraDePresupuesto.length >= 3 || peor.cumplimiento_pct >= 200;
+  // C2 fix (v13.300.49): consumir `categorias_en_exceso` y `top_exceso` que
+  // ya calculó el servicio `fetchPresupuestoVsReal`, en vez de recalcular
+  // el mismo filtro con lógica potencialmente desincronizada.
+  const fueraDePresupuestoCount = input.presupuesto.categorias_en_exceso;
+  const topExceso = input.presupuesto.top_exceso;
+  if (fueraDePresupuestoCount > 0 && topExceso.length > 0) {
+    const peor = topExceso[0];
+    const critico = fueraDePresupuestoCount >= 3 || peor.cumplimiento_pct >= 200;
     alertas.push({
       id: "presupuesto-exceso-categoria",
       severidad: critico ? "critica" : "warning",
       titulo:
-        fueraDePresupuesto.length === 1
+        fueraDePresupuestoCount === 1
           ? `Categoría "${peor.categoria_nombre}" excedida`
-          : `${fueraDePresupuesto.length} categorías excedidas`,
+          : `${fueraDePresupuestoCount} categorías excedidas`,
       descripcion: `Peor: ${peor.categoria_nombre} al ${peor.cumplimiento_pct.toFixed(0)}%`,
       url: "/profit/presupuesto",
     });
@@ -125,14 +123,17 @@ export function calcularKPIsEjecutivos(
     }
   }
 
-  const saldoBancos = snapshot.tesoreria.cuentas.reduce((acc, c) => acc + c.saldo, 0);
+  // A1 fix (v13.300.49): `saldo_bancos_mxn` viene ya convertido a MXN
+  // desde el servicio de tesorería (antes se sumaba `c.saldo` directo,
+  // mezclando USD y MXN indistintamente).
+  const saldoBancos = snapshot.tesoreria.saldo_bancos_mxn;
 
-  // Cartera vencida: sólo deudores con >30 días — alineado con la alerta
-  // "cartera-vencida-alta" (antes se sumaba TODA la cartera y no cuadraba).
-  const deudoresVencidos = snapshot.tesoreria.top_deudores.filter(
-    (d) => (d.dias ?? 0) > 30,
-  );
-  const carteraVencida = deudoresVencidos.reduce((acc, d) => acc + d.saldo, 0);
+  // B1 fix (v13.300.49): usar el conteo/monto sobre el universo completo
+  // (no sobre el Top-5 truncado). El desglose por antigüedad (>30d) se
+  // sacrifica porque no se conserva en el dataset agregado; el filtro por
+  // "vencida" a nivel factura ya captura el 100% de exposición vencida.
+  const carteraVencida = snapshot.tesoreria.cartera_vencida_total_mxn;
+  const carteraVencidaCount = snapshot.tesoreria.cartera_vencida_count;
 
   const cxp7d = snapshot.flujo.semanas[0]?.salidas_mxn ?? 0;
 
@@ -140,20 +141,25 @@ export function calcularKPIsEjecutivos(
   const totalReal = snapshot.presupuesto.total_real_mxn;
   const cumplimiento = totalPresup > 0 ? (totalReal / totalPresup) * 100 : 0;
 
-  // Fase J: conteo de categorías en exceso (>110% del cumplimiento).
-  const categoriasEnExceso = snapshot.presupuesto.filas.filter(
-    (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_VARIACION_PRESUPUESTO,
-  ).length;
+  // C2 fix (v13.300.49): usar el conteo ya calculado por el servicio.
+  const categoriasEnExceso = snapshot.presupuesto.categorias_en_exceso;
 
-  // Fase 4 UI/UX: KPIs financieros derivados.
-  const cxc30d = snapshot.tesoreria.flujo.por_cobrar_mxn;
-  const cxp30d = snapshot.tesoreria.flujo.por_pagar_mxn;
+  // A2 fix (v13.300.49): DSO/DPO consideran también la porción USD
+  // (convertida a MXN por el servicio de tesorería).
+  const cxc30d = snapshot.tesoreria.flujo.por_cobrar_total_mxn;
+  const cxp30d = snapshot.tesoreria.flujo.por_pagar_total_mxn;
   const costos = eerr.totalCostos.total;
   const dsoDias: number | null = ingresos > 0 ? (cxc30d / ingresos) * 30 : null;
   const dpoDias: number | null = costos > 0 ? (cxp30d / costos) * 30 : null;
   const burnMensual = costos - ingresos;
-  const runwayMeses: number | null =
-    burnMensual > 0 && saldoBancos > 0 ? saldoBancos / burnMensual : null;
+  // C4 fix (v13.300.49): si `saldoBancos <= 0` la empresa ya está sin caja
+  // → devolvemos `0` (la UI muestra "Saldo bancario negativo"). Antes el
+  // resultado era `null` (mismo mensaje que "sin burn"), engañosamente
+  // tranquilizador.
+  let runwayMeses: number | null;
+  if (burnMensual <= 0) runwayMeses = null; // sin burn (utilidad ≥ 0)
+  else if (saldoBancos <= 0) runwayMeses = 0; // caja agotada
+  else runwayMeses = saldoBancos / burnMensual;
 
   return {
     ingresos_mxn: ingresos,
@@ -164,7 +170,7 @@ export function calcularKPIsEjecutivos(
     margen_delta_puntos: margenDelta,
     saldo_bancos_mxn: saldoBancos,
     cartera_vencida_mxn: carteraVencida,
-    cartera_vencida_count: deudoresVencidos.length,
+    cartera_vencida_count: carteraVencidaCount,
     cxp_7dias_mxn: cxp7d,
     cumplimiento_presupuesto_pct: cumplimiento,
     categorias_en_exceso: categoriasEnExceso,

@@ -62,7 +62,13 @@ export async function fetchResumenTesoreria(args: {
   cobranza: CobranzaRow[];
   cxp: CxpRow[];
   organizationId?: string | null;
+  tipoCambioUsd?: number;
 }): Promise<ResumenTesoreria> {
   const cuentas = await fetchSaldosCuentas(args.organizationId);
-  return calcularResumenTesoreria({ cuentas, cobranza: args.cobranza, cxp: args.cxp });
+  return calcularResumenTesoreria({
+    cuentas,
+    cobranza: args.cobranza,
+    cxp: args.cxp,
+    tipoCambioUsd: args.tipoCambioUsd,
+  });
 }

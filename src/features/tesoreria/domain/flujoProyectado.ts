@@ -64,11 +64,18 @@ export function calcularFlujoProyectado(args: {
   liquidaciones: LiquidacionRow[];
   dias: number;
   hoy?: Date;
+  /**
+   * v13.300.49 — TC USD→MXN para convertir el saldo inicial de cuentas
+   * en USD. Antes se sumaban USD como si fueran MXN, inflando el saldo
+   * inicial del flujo proyectado.
+   */
+  tipoCambioUsd?: number;
 }): FlujoProyectado {
   const hoy = args.hoy ?? new Date();
   hoy.setHours(0, 0, 0, 0);
   const limite = new Date(hoy);
   limite.setDate(limite.getDate() + args.dias);
+  const tcSaldo = args.tipoCambioUsd && args.tipoCambioUsd > 0 ? args.tipoCambioUsd : 1;
 
   const semanasMap = new Map<string, SemanaFlujo>();
   let cursor = inicioSemana(hoy);
@@ -85,7 +92,10 @@ export function calcularFlujoProyectado(args: {
     cursor = new Date(cursor); cursor.setDate(cursor.getDate() + 7);
   }
 
-  const saldoInicial = args.cuentas.reduce((acc, c) => acc + c.saldo, 0);
+  const saldoInicial = args.cuentas.reduce(
+    (acc, c) => acc + (c.moneda === "USD" ? c.saldo * tcSaldo : c.saldo),
+    0,
+  );
 
   const inWindow = (iso: string | null): SemanaFlujo | null => {
     if (!iso) return null;

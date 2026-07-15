@@ -11,6 +11,7 @@ import {
   fetchFlujoProyectado,
 } from "@/features/tesoreria/services";
 import { fetchPresupuestoVsReal } from "@/features/presupuesto/services";
+import { fetchExchangeRates } from "@/features/catalogos/services";
 import type { CobranzaRow, CxpRow } from "@/features/tesoreria/domain";
 import { calcularAlertas, calcularKPIsEjecutivos } from "./alertas";
 import type { SnapshotEjecutivo, PuntoEERR } from "./types";
@@ -62,19 +63,26 @@ export async function fetchDashboardEjecutivo(
     cuentas,
     eerrPeriodo,
     eerrPrev,
-    tesoreria,
     presupuesto,
+    tipoCambio,
     ...eerrMensuales
   ] = await Promise.all([
     fetchSaldosCuentas(organizationId),
     fetchEerr({ organizationId, year, month }),
     fetchEerr({ organizationId, year: prevY, month: prevM }),
-    fetchResumenTesoreria({ cobranza, cxp, organizationId }),
     fetchPresupuestoVsReal(periodo, organizationId),
+    fetchExchangeRates().catch(() => ({ usdMxn: 17.25, eurMxn: 18.5 })),
     ...meses.map((m) => fetchEerr({ organizationId, year: m.year, month: m.month })),
   ]);
-  // `flujo` necesita `cuentas` ya resueltas — segunda fase mínima.
-  const flujo = await fetchFlujoProyectado({ cuentas, cobranza, cxp, dias: 28, organizationId });
+  const tipoCambioUsd = tipoCambio.usdMxn;
+  // A1/A2 fix (v13.300.49): tesorería y flujo reciben el TC para
+  // convertir a MXN los saldos y flujos en USD.
+  const tesoreria = await fetchResumenTesoreria({
+    cobranza, cxp, organizationId, tipoCambioUsd,
+  });
+  const flujo = await fetchFlujoProyectado({
+    cuentas, cobranza, cxp, dias: 28, organizationId, tipoCambioUsd,
+  });
 
   const eerr12m: PuntoEERR[] = meses.map((m, i) => {
     const er = eerrMensuales[i];

@@ -43,6 +43,7 @@ function runwayVariant(n: number | null): "positive" | "negative" | "neutral" {
 
 function runwayValue(n: number | null): string {
   if (n == null) return "Sin burn";
+  if (n === 0) return "Caja agotada";
   if (n < 1) return "< 1 mes";
   return `${n.toFixed(1)} meses`;
 }
@@ -67,7 +68,13 @@ export function BandaKPIsEficiencia({ kpis }: Props) {
       <KpiCard
         label="Runway financiero"
         value={runwayValue(kpis.runway_meses)}
-        delta={kpis.runway_meses == null ? "Utilidad ≥ 0 en el mes" : "Bancos ÷ (costos − ingresos)"}
+        delta={
+          kpis.runway_meses == null
+            ? "Utilidad ≥ 0 en el mes"
+            : kpis.runway_meses === 0
+              ? "Saldo bancario negativo"
+              : "Bancos ÷ (costos − ingresos)"
+        }
         deltaVariant={runwayVariant(kpis.runway_meses)}
         icon={Waves}
       />
