@@ -20,7 +20,7 @@ export const STORAGE_KEYS = {
   loginLoggedPrefix: "lc:login-logged:",
   appVersion: "lc-app-version",
   eerrFuente: "lc-eerr-fuente",
-  dashboardEjecutivoPeriodo: "lc-dashboard-ejec-periodo",
+  // dashboardEjecutivoPeriodo removida en v13.300.31: el periodo ahora vive en URL (?mes=).
   tarifasViewMode: "lc-tarifas-view-mode",
 } as const;
 
