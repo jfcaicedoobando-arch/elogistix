@@ -26,7 +26,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
-import { FuenteEerrToggle } from "@/components/profit/FuenteEerrToggle";
+import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 
 const MES_MINIMO = "2026-04";

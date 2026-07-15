@@ -8,7 +8,7 @@ import type { TopItem } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiDrilldownSheet } from "./KpiDrilldownSheet";
-import { BudgetOverrunSheet } from "@/components/profit/BudgetOverrunSheet";
+import { BudgetOverrunSheet } from "@/features/profit/components/BudgetOverrunSheet";
 
 interface Props {
   kpis: KPIsEjecutivos;
