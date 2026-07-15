@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.57] - 2026-07-15
+- **fix(facturacion) Sustitución CFDI rechazada (requestId 71d2adee)**: FacturAPI v2 rechaza los campos legacy `related` + `relation`. Se reemplazan por `related_documents: [{ relationship: "04", documents: [uuid] }]` en `buildFacturapiPayload`, alineado con el esquema `RelatedDocumentInput` de la API.
+
 ## [13.300.56] - 2026-07-15
 - **fix(facturacion) Timbrado rechazado por FacturAPI (requestId 9bff6dae)**: el payload enviaba el campo `serie` (español) pero FacturAPI espera `series` (inglés, plural). Se renombra el campo en `FacturapiPayload` y en `buildFacturapiPayload`. Internamente seguimos usando `ctx.serie`; sólo cambia el nombre que viaja por HTTP.
 
