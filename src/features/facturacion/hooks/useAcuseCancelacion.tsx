@@ -17,6 +17,7 @@ import {
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { queryKeys } from "@/lib/query";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import type { FacturaDetalle } from "@/features/facturacion/services/detail";
 
 function nombreArchivoBase(factura: Pick<FacturaDetalle, "numero">): string {
@@ -43,6 +44,7 @@ export function useAcuseCancelacion(factura: FacturaDetalle | null | undefined) 
         });
       }
       qc.invalidateQueries({ queryKey: queryKeys.facturas.detail(factura?.id) });
+      invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
       notifyError(toast, {
