@@ -11,7 +11,7 @@ const mk = (periodo: string, ingresos: number, costos = 0) => ({
   utilidad: ingresos - costos,
 });
 
-describe("computeForecast", () => {
+describe("computeForecast (dashboardEjecutivo)", () => {
   it("no proyecta si la historia tiene menos de 3 puntos", () => {
     const r = computeForecast([mk("2026-01", 100), mk("2026-02", 200)]);
     expect(r.length).toBe(2);
