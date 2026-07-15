@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.46] - 2026-07-15
+- **audit(profit) Fase 4 · seguimiento**: revisada la unificación de MonthPickers de 13.300.45 — 92/92 tests verdes en Profit/Presupuesto, sin warnings. Sin bugs detectados.
+- **feat(profit) Fase 4 · KPIs financieros derivados**: agregada tira `BandaKPIsEficiencia` con **DSO** (días de cobro), **DPO** (días de pago) y **Runway** (meses que aguantan los bancos si hay burn) en Dashboard Ejecutivo. **Analogía:** antes veíamos "cuánto entra y cuánto sale"; ahora también vemos "qué tan rápido cobramos, qué tan tarde pagamos, y cuánta gasolina queda en el tanque". Cálculos derivados de datos ya disponibles (CxC/CxP 30d + EERR + saldos bancarios), sin cambios de contrato aguas arriba.
+- **test(profit)**: `kpis.eficiencia.test.ts` (6 casos: fórmulas DSO/DPO, `null` sin ingresos/costos, runway con y sin burn, sin bancos) + `BandaKPIsEficiencia.test.tsx` (2 casos: placeholders y formatos).
+
 ## [13.300.45] - 2026-07-15
 - **audit(profit) Fase 4 · seguimiento**: revisada la sub-nav de 13.300.44 — integrada en las 4 rutas, tests 2/2 verdes, sin warnings de lint. Sin bugs detectados.
 - **refactor(profit) Fase 4 · MonthPicker unificado**: había 3 selectores de mes distintos entre las 4 vistas del módulo. Estado de Resultados duplicaba en línea la toolbar de flechas + Select; Presupuesto vs Real usaba `MonthPickerMx` (popover con año/mes). Ahora todas usan `PeriodoMensualToolbar` (‹ · Select · ›) que ya vivía en Dashboard Ejecutivo. **Analogía:** antes cada cuarto tenía su propio termostato con perillas diferentes; ahora comparten el mismo panel. Elimina 18 líneas duplicadas en `ProfitEstadoResultados.tsx` e importa una API consistente en `TabVsReal.tsx`.
