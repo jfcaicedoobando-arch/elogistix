@@ -74,60 +74,18 @@ export async function fetchPresupuestoVsReal(
   if (gastosCxP.error) throw gastosCxP.error;
   if (liquidaciones.error) throw liquidaciones.error;
 
-  const presupPorCat = new Map<string, number>();
-  for (const p of presupuestoAnio.filter((r) => r.periodo === periodo)) {
-    presupPorCat.set(p.categoria_id, Number(p.monto_mxn));
-  }
-
-  const realPorCat = new Map<string, number>();
-  for (const g of gastosCxP.data ?? []) {
-    if (!g.categoria_presupuesto_id) continue;
-    const monto = Number(g.total);
-    const mxn = g.moneda === "MXN" || !g.tipo_cambio_usd ? monto : monto * Number(g.tipo_cambio_usd);
-    realPorCat.set(g.categoria_presupuesto_id, (realPorCat.get(g.categoria_presupuesto_id) ?? 0) + mxn);
-  }
-
-  // Liquidaciones de comisión → categoría "Comisiones"
-  const comisionesCat = cats.find((c) => c.nombre.toLowerCase() === "comisiones");
-  if (comisionesCat) {
-    const totalLiq = (liquidaciones.data ?? []).reduce((acc, l) => acc + Number(l.total_mxn), 0);
-    if (totalLiq > 0) {
-      realPorCat.set(comisionesCat.id, (realPorCat.get(comisionesCat.id) ?? 0) + totalLiq);
-    }
-  }
+  const presupPorCat = mapPresupuestoPorCategoria(presupuestoAnio, periodo);
+  const realPorCat = agregarGastosCxP(gastosCxP.data ?? []);
+  aplicarLiquidacionesComisiones(realPorCat, cats, liquidaciones.data ?? []);
 
   const catIds = new Set(cats.map((c) => c.id));
-  const filas: FilaVsReal[] = cats.map((c) => {
-    const presupuesto = presupPorCat.get(c.id) ?? 0;
-    const real = realPorCat.get(c.id) ?? 0;
-    const variacion = real - presupuesto;
-    const cumplimiento = presupuesto > 0 ? (real / presupuesto) * 100 : 0;
-    return {
-      categoria_id: c.id,
-      categoria_nombre: c.nombre,
-      presupuesto_mxn: presupuesto,
-      real_mxn: real,
-      variacion_mxn: variacion,
-      cumplimiento_pct: cumplimiento,
-    };
-  });
+  const filas: FilaVsReal[] = cats.map((c) => construirFila(c, presupPorCat, realPorCat));
 
   // Fase 3 (alta #6): gasto real con categoría inactiva/eliminada no debe
   // desaparecer silenciosamente. Se agrega fila sintética "Sin categoría".
-  let realHuerfano = 0;
-  for (const [catId, monto] of realPorCat) {
-    if (!catIds.has(catId)) realHuerfano += monto;
-  }
-  if (realHuerfano > 0) {
-    filas.push({
-      categoria_id: "__huerfanas__",
-      categoria_nombre: "Sin categoría / inactivas",
-      presupuesto_mxn: 0,
-      real_mxn: realHuerfano,
-      variacion_mxn: realHuerfano,
-      cumplimiento_pct: 0,
-    });
-  }
+  const filaHuerfanos = construirFilaHuerfanos(realPorCat, catIds);
+  if (filaHuerfanos) filas.push(filaHuerfanos);
+
 
   const total_presupuesto = filas.reduce((a, f) => a + f.presupuesto_mxn, 0);
   const total_real = filas.reduce((a, f) => a + f.real_mxn, 0);
