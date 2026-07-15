@@ -78,6 +78,13 @@ function normalizeKey(desc: string): string {
     .toLowerCase();
 }
 
+const emptyModosCurrency = (): Record<ModoColumna, currency.Any> => ({
+  "Marítimo": currency(0, { precision: 2 }),
+  "Aéreo": currency(0, { precision: 2 }),
+  "Terrestre": currency(0, { precision: 2 }),
+  "Otros": currency(0, { precision: 2 }),
+});
+
 function acumular(
   filas: Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>,
   key: string,
@@ -87,10 +94,7 @@ function acumular(
 ) {
   let row = filas.get(key);
   if (!row) {
-    row = {
-      display,
-      porModo: { "Marítimo": currency(0, { precision: 2 }), "Aéreo": currency(0, { precision: 2 }), "Terrestre": currency(0, { precision: 2 }) },
-    };
+    row = { display, porModo: emptyModosCurrency() };
     filas.set(key, row);
   }
   row.porModo[modo] = (row.porModo[modo] as currency).add(mxn);
@@ -105,8 +109,9 @@ function materializar(
       "Marítimo": (porModo["Marítimo"] as currency).value,
       "Aéreo": (porModo["Aéreo"] as currency).value,
       "Terrestre": (porModo["Terrestre"] as currency).value,
+      "Otros": (porModo["Otros"] as currency).value,
     };
-    const total = por["Marítimo"] + por["Aéreo"] + por["Terrestre"];
+    const total = por["Marítimo"] + por["Aéreo"] + por["Terrestre"] + por["Otros"];
     // Ocultar filas en cero en todas las columnas.
     if (total === 0) continue;
     out.push({ concepto: display, porModo: por, total });
@@ -122,10 +127,11 @@ function pivotConceptosVenta(
 ): void {
   for (const v of ventas) {
     const emb = embById.get(v.embarque_id);
-    if (!emb || !isModoColumna(emb.modo)) continue;
+    if (!emb) continue;
+    const columna = resolverModoColumna(emb.modo);
     const moneda = (v.moneda?.toUpperCase() ?? "MXN") as Moneda;
     const mxn = convertirAMXN(Number(v.total) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(out, normalizeKey(v.descripcion), (v.descripcion ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
+    acumular(out, normalizeKey(v.descripcion), (v.descripcion ?? "").trim() || "(Sin descripción)", columna, mxn);
   }
 }
 
@@ -136,10 +142,11 @@ function pivotConceptosCosto(
 ): void {
   for (const c of costos) {
     const emb = embById.get(c.embarque_id);
-    if (!emb || !isModoColumna(emb.modo)) continue;
+    if (!emb) continue;
+    const columna = resolverModoColumna(emb.modo);
     const moneda = (c.moneda?.toUpperCase() ?? "MXN") as Moneda;
     const mxn = convertirAMXN(Number(c.monto) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(out, normalizeKey(c.concepto), (c.concepto ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
+    acumular(out, normalizeKey(c.concepto), (c.concepto ?? "").trim() || "(Sin descripción)", columna, mxn);
   }
 }
 
@@ -147,13 +154,12 @@ function sumarFilas(rows: FilaER[]): TotalER {
   const porModo = emptyModos();
   let total = 0;
   for (const r of rows) {
-    porModo["Marítimo"] += r.porModo["Marítimo"];
-    porModo["Aéreo"] += r.porModo["Aéreo"];
-    porModo["Terrestre"] += r.porModo["Terrestre"];
+    for (const col of MODOS_COLUMNAS) porModo[col] += r.porModo[col];
     total += r.total;
   }
   return { porModo, total };
 }
+
 
 function calcularUtilidadYMargen(
   totalIngresos: TotalER,
