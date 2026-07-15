@@ -25,7 +25,7 @@ import { duplicarFacturaParaSustitucion } from "@/features/facturacion/services/
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { browserStorage } from "@/lib/browser-storage";
+import { safeSessionStorage } from "@/lib/browserStorage";
 
 interface Props {
   facturaId: string | null;
