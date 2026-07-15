@@ -5,6 +5,7 @@ import {
   AprobacionFacturaError,
 } from "@/features/cxp/services/aprobacionFactura";
 import { queryKeys } from "@/lib/query";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 interface Vars {
   id: string;
@@ -24,6 +25,8 @@ export function useAprobarFactura() {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.pendientesAprobacionCount });
       qc.invalidateQueries({ queryKey: queryKeys.cxp.factura(vars.id) });
+      // Aprobar/rechazar impacta egresos del mes en el Dashboard Ejecutivo. v13.300.33.
+      invalidateProfitDependencies(qc);
 
       const ctx = [vars.folio, vars.proveedor].filter(Boolean).join(" · ");
       notifySuccess(undefined, {

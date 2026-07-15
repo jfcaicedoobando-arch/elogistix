@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import {
   listarPagosFactura,
   registrarPagoFactura,
@@ -19,6 +20,9 @@ export function usePagosFactura(facturaId: string | undefined) {
 function invalidarFacturasYPagos(qc: ReturnType<typeof useQueryClient>, facturaId: string) {
   qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
   qc.invalidateQueries({ queryKey: queryKeys.facturas.pagos(facturaId) });
+  // Registrar/eliminar un pago impacta cartera vencida e ingresos cobrados
+  // (Dashboard Ejecutivo, EERR, Presupuesto vs Real). v13.300.33.
+  invalidateProfitDependencies(qc);
 }
 
 // NOTA: el dialog `DialogRegistrarPago` ya muestra su propio toast de éxito
