@@ -50,7 +50,9 @@ export default function ProfitEstadoResultados() {
       <PageHeader
         title="Estado de Resultados"
         description="P&G mensual por modo de transporte basado en ETA del embarque"
+        tabs={<ProfitSubNav />}
       />
+
 
       <Card>
         <CardContent className="p-4 flex flex-wrap items-center gap-3">
