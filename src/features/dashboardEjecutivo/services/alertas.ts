@@ -145,6 +145,16 @@ export function calcularKPIsEjecutivos(
     (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_VARIACION_PRESUPUESTO,
   ).length;
 
+  // Fase 4 UI/UX: KPIs financieros derivados.
+  const cxc30d = snapshot.tesoreria.flujo.por_cobrar_mxn;
+  const cxp30d = snapshot.tesoreria.flujo.por_pagar_mxn;
+  const costos = eerr.totalCostos.total;
+  const dsoDias: number | null = ingresos > 0 ? (cxc30d / ingresos) * 30 : null;
+  const dpoDias: number | null = costos > 0 ? (cxp30d / costos) * 30 : null;
+  const burnMensual = costos - ingresos;
+  const runwayMeses: number | null =
+    burnMensual > 0 && saldoBancos > 0 ? saldoBancos / burnMensual : null;
+
   return {
     ingresos_mxn: ingresos,
     ingresos_delta_pct: ingresosDelta,
@@ -158,5 +168,8 @@ export function calcularKPIsEjecutivos(
     cxp_7dias_mxn: cxp7d,
     cumplimiento_presupuesto_pct: cumplimiento,
     categorias_en_exceso: categoriasEnExceso,
+    dso_dias: dsoDias,
+    dpo_dias: dpoDias,
+    runway_meses: runwayMeses,
   };
 }
