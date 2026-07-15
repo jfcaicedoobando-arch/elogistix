@@ -56,23 +56,15 @@ export default function ProfitEstadoResultados() {
 
       <Card>
         <CardContent className="p-4 flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={c.irMesAnterior} disabled={!c.puedeIrAtras} aria-label="Mes anterior">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Select value={c.mesActual.key} onValueChange={c.setMesKey}>
-              <SelectTrigger className="w-[220px] font-medium"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {c.mesesDisponibles.slice().reverse().map((m) => (
-                  <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" className="h-9 w-9" onClick={c.irMesSiguiente} disabled={!c.puedeIrAdelante} aria-label="Mes siguiente">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <PeriodoMensualToolbar
+            mesActual={c.mesActual}
+            mesesDisponibles={c.mesesDisponibles}
+            onChange={c.setMesKey}
+            onPrev={c.irMesAnterior}
+            onNext={c.irMesSiguiente}
+            puedeIrAtras={c.puedeIrAtras}
+            puedeIrAdelante={c.puedeIrAdelante}
+          />
           <FuenteEerrToggle />
           <div className="flex-1" />
           <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
