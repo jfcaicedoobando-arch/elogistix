@@ -37,52 +37,52 @@ export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
     });
   }
 
-  // Top deudores con saldo >umbral
-  const deudoresAltos = input.tesoreria.top_deudores.filter(
-    (d) => d.saldo >= umbral && (d.dias ?? 0) > 30,
-  );
-  if (deudoresAltos.length > 0) {
+  // B2 fix (v13.300.49): conteo sobre el universo completo de deudores
+  // vencidos (`cartera_vencida_count`), no sobre el Top-5.
+  const deudoresVencidosCount = input.tesoreria.cartera_vencida_count;
+  if (deudoresVencidosCount > 0 && input.tesoreria.cartera_vencida_total_mxn >= umbral) {
+    const top = input.tesoreria.top_deudores[0];
     alertas.push({
       id: "cartera-vencida-alta",
       severidad: "warning",
-      titulo: `${deudoresAltos.length} cliente(s) con cartera vencida >30 días`,
-      descripcion: `Top: ${deudoresAltos[0].nombre} (${deudoresAltos[0].saldo.toFixed(0)} ${deudoresAltos[0].moneda})`,
+      titulo: `${deudoresVencidosCount} cliente(s) con cartera vencida`,
+      descripcion: top
+        ? `Top: ${top.nombre} (${top.saldo.toFixed(0)} ${top.moneda})`
+        : "Ver detalle en Facturación",
       url: "/facturacion",
     });
   }
 
-  // CxP vencidas
-  const acreedoresVencidos = input.tesoreria.top_acreedores.filter(
-    (a) => (a.dias ?? 0) > 0,
-  );
-  if (acreedoresVencidos.length > 0) {
+  // CxP vencidas — conteo sobre universo completo (B2 fix).
+  const acreedoresVencidosCount = input.tesoreria.cxp_vencidas_count;
+  if (acreedoresVencidosCount > 0) {
+    const top = input.tesoreria.top_acreedores[0];
     alertas.push({
       id: "cxp-vencidas",
       severidad: "warning",
-      titulo: `${acreedoresVencidos.length} proveedor(es) con pagos vencidos`,
-      descripcion: `Top: ${acreedoresVencidos[0].nombre} (${acreedoresVencidos[0].saldo.toFixed(0)} ${acreedoresVencidos[0].moneda})`,
+      titulo: `${acreedoresVencidosCount} proveedor(es) con pagos vencidos`,
+      descripcion: top
+        ? `Top: ${top.nombre} (${top.saldo.toFixed(0)} ${top.moneda})`
+        : "Ver detalle en Compras",
       url: "/compras/facturas",
     });
   }
 
-  // Fase J: categorías con cumplimiento >110% del presupuesto. Antes se
-  // emitía una alerta por la "peor" categoría; ahora se agrega una única alerta
-  // consolidada con severidad escalada por cantidad/gravedad para reflejar
-  // riesgo real de sobreejercicio.
-  const fueraDePresupuesto = input.presupuesto.filas.filter(
-    (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_VARIACION_PRESUPUESTO,
-  );
-  if (fueraDePresupuesto.length > 0) {
-    const ordenadas = [...fueraDePresupuesto].sort((a, b) => b.cumplimiento_pct - a.cumplimiento_pct);
-    const peor = ordenadas[0];
-    const critico = fueraDePresupuesto.length >= 3 || peor.cumplimiento_pct >= 200;
+  // C2 fix (v13.300.49): consumir `categorias_en_exceso` y `top_exceso` que
+  // ya calculó el servicio `fetchPresupuestoVsReal`, en vez de recalcular
+  // el mismo filtro con lógica potencialmente desincronizada.
+  const fueraDePresupuestoCount = input.presupuesto.categorias_en_exceso;
+  const topExceso = input.presupuesto.top_exceso;
+  if (fueraDePresupuestoCount > 0 && topExceso.length > 0) {
+    const peor = topExceso[0];
+    const critico = fueraDePresupuestoCount >= 3 || peor.cumplimiento_pct >= 200;
     alertas.push({
       id: "presupuesto-exceso-categoria",
       severidad: critico ? "critica" : "warning",
       titulo:
-        fueraDePresupuesto.length === 1
+        fueraDePresupuestoCount === 1
           ? `Categoría "${peor.categoria_nombre}" excedida`
-          : `${fueraDePresupuesto.length} categorías excedidas`,
+          : `${fueraDePresupuestoCount} categorías excedidas`,
       descripcion: `Peor: ${peor.categoria_nombre} al ${peor.cumplimiento_pct.toFixed(0)}%`,
       url: "/profit/presupuesto",
     });
