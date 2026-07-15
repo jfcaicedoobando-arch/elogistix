@@ -39,7 +39,7 @@ Deno.test("validateContext detecta clave SAT faltante", () => {
 Deno.test("buildFacturapiPayload omite exchange cuando moneda = MXN", () => {
   const p = buildFacturapiPayload(baseCtx);
   assertEquals(p.exchange, undefined);
-  assertEquals(p.serie, "A");
+  assertEquals(p.series, "A");
   assertEquals(p.items.length, 1);
   assertEquals(p.items[0].product.product_key, "78101800");
 });
