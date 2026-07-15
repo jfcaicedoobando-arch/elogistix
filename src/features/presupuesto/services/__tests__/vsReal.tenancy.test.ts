@@ -41,4 +41,20 @@ describe("fetchPresupuestoVsReal — tenancy", () => {
       expect(eqCalls.some((p) => p.args[0] === "organization_id")).toBe(false);
     }
   });
+
+  // Regresión v13.300.42 — el crash del Dashboard Ejecutivo se debía a
+  // `column liquidaciones_comision.deleted_at does not exist`. La tabla
+  // no tiene borrado lógico, así que la query NO debe filtrar por deleted_at.
+  it("NO filtra liquidaciones_comision por deleted_at (columna inexistente)", async () => {
+    await fetchPresupuestoVsReal("2026-06", "org-c");
+    const call = mock.tableCalls.find((c) => c.table === "liquidaciones_comision");
+    expect(call).toBeDefined();
+    const isCalls = call!.ops
+      .map((op, i) => ({ op, args: call!.opArgs[i] }))
+      .filter((p) => p.op === "is");
+    expect(
+      isCalls.some((p) => p.args[0] === "deleted_at"),
+      "liquidaciones_comision no debe filtrarse por deleted_at",
+    ).toBe(false);
+  });
 });

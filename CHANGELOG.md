@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.42] - 2026-07-15
+- **fix(profit) CRÍTICO — cierre real del crash Dashboard**: la Fase 1 (v13.300.40) parchó `flujoProyectado.ts`, pero el Dashboard Ejecutivo seguía crasheando con `column liquidaciones_comision.deleted_at does not exist`. El culpable real vivía en `src/features/presupuesto/services/vsReal.ts:53` — `fetchPresupuestoVsReal` también filtraba `liquidaciones_comision` por una columna inexistente. Removido el filtro; el service ya no truena y "Presupuesto vs Real" vuelve a cargar. **Analogía:** habíamos tapado la fuga del baño de arriba pero el agua venía también del baño de abajo — ahora sí están las dos cerradas.
+- **feat(quality)**: nuevo `scripts/audit-schema-columns.ts` + comando `bun run audit:schema`. Recorre todo `src/**` y detecta cualquier `.from("tabla").is("columna", ...)` cuya columna no exista en `src/integrations/supabase/types.ts`. Se integró a `audit:all` para que CI falle antes de que un filtro contra columna fantasma llegue a producción.
+- **test(profit)**: nuevo caso de regresión en `vsReal.tenancy.test.ts` — asegura que la query a `liquidaciones_comision` nunca vuelva a agregar `.is("deleted_at", ...)`. 3/3 tests verdes.
+
 ## [13.300.41] - 2026-07-15
 - **fix(profit) arquitectura**: `src/lib/__tests__/architecture.test.ts` fallaba porque `src/components/profit/` duplicaba el dominio ya migrado a `src/features/profit/`. Se movieron `BudgetOverrunSheet.tsx`, `FuenteEerrToggle.tsx` y su test a `src/features/profit/components/**` y se actualizaron los 3 imports (`ProfitDashboardEjecutivo`, `ProfitEstadoResultados`, `BandaKPIs`). Sin cambios de lógica.
 
