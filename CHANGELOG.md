@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.56] - 2026-07-15
+- **fix(facturacion) Timbrado rechazado por FacturAPI (requestId 9bff6dae)**: el payload enviaba el campo `serie` (español) pero FacturAPI espera `series` (inglés, plural). Se renombra el campo en `FacturapiPayload` y en `buildFacturapiPayload`. Internamente seguimos usando `ctx.serie`; sólo cambia el nombre que viaja por HTTP.
+
 ## [13.300.55] - 2026-07-15
 - **fix(facturacion) Borrador de sustitución editable (requestId fcfa87d7)**: `duplicar_factura_para_sustitucion` ya no copia `snapshot_emision` de la factura original al nuevo borrador; el trigger `bloquear_modificacion_factura_emitida` tomaba ese snapshot como "ya emitida" y bloqueaba el autosave con `factura_inmutable`. El snapshot se genera cuando el borrador se timbra (trigger `congelar_factura_al_emitir`). Se limpiaron los borradores de sustitución existentes que traían el snapshot heredado.
 
