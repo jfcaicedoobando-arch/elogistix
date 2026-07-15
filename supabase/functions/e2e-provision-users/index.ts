@@ -225,3 +225,58 @@ async function upsertClientUser(
     );
   if (error) throw error;
 }
+
+// -----------------------------------------------------------------------------
+// Verificación post-upsert: releemos las tablas para confirmar rol + asociación.
+
+async function verifyAdmin(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  orgId: string,
+): Promise<{ user_role_ok: boolean; org_member_ok: boolean }> {
+  const [roleRes, memberRes] = await Promise.all([
+    admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+    admin
+      .from("organization_members")
+      .select("organization_id, role")
+      .eq("user_id", userId)
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+  ]);
+  return {
+    user_role_ok: !roleRes.error && roleRes.data?.role === "admin",
+    org_member_ok:
+      !memberRes.error &&
+      memberRes.data?.organization_id === orgId &&
+      memberRes.data?.role === "admin",
+  };
+}
+
+async function verifyPortal(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  clienteId: string,
+  orgId: string,
+): Promise<{ user_role_ok: boolean; client_user_ok: boolean }> {
+  const [roleRes, cuRes] = await Promise.all([
+    admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "cliente")
+      .maybeSingle(),
+    admin
+      .from("client_users")
+      .select("cliente_id, organization_id")
+      .eq("user_id", userId)
+      .eq("cliente_id", clienteId)
+      .maybeSingle(),
+  ]);
+  return {
+    user_role_ok: !roleRes.error && roleRes.data?.role === "cliente",
+    client_user_ok:
+      !cuRes.error &&
+      cuRes.data?.cliente_id === clienteId &&
+      cuRes.data?.organization_id === orgId,
+  };
+}
