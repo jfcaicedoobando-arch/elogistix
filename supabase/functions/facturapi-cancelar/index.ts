@@ -100,7 +100,11 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
-  interface FapiCancelResponse { status?: string }
+  // FacturApi devuelve tanto `status` (valid/canceled) como `cancellation_status`
+  // (none|verifying|pending|accepted|rejected|expired). El segundo es el que
+  // realmente refleja si el SAT ya aceptó la cancelación o si el receptor
+  // todavía tiene 72 h para responder (regla 2.7.1.34 RMF).
+  interface FapiCancelResponse { status?: string; cancellation_status?: string }
   let cancelResp: FapiCancelResponse;
   try {
     // `substitution` requiere el facturapi_id (ObjectId) de la factura sustituta.
@@ -122,13 +126,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       detalles: { status, response: detail },
     });
     const rawMessage = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    // Mensaje enriquecido para el caso "no cancelable por SAT": típicamente
-    // significa que el receptor debe ACEPTAR la cancelación desde su Buzón
-    // Tributario (regla 2.7.1.34, CFDIs > $1,000 MXN con RFC receptor).
     const esNoCancelable = /no cancelable|marcada como no|no puede.*cancel|facturas relacionadas/i.test(rawMessage);
-    // Servicio SAT caído/saturado: es un error externo transitorio, no un
-    // problema de datos ni de FacturApi. El usuario debe reintentar en unos
-    // minutos. Marcamos `transient: true` para que la UI ofrezca "Reintentar".
     const esServicioSatCaido = /cancelacionsat no est|servicio.*sat.*no.*disp|sat.*no.*disponible/i.test(rawMessage);
     let message = rawMessage;
     if (esServicioSatCaido) {
@@ -138,22 +136,109 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     }
     return jsonResponse({ error: "facturapi_error", status, detail, message, transient: esServicioSatCaido }, 502);
   }
-  const fapiJson = cancelResp;
 
-  // Descarga inmediata del acuse SAT. Si el SAT aún no lo emite, quedará
-  // como 'pending' y un cron posterior podrá reintentar. Guardar el XML
-  // es OBLIGATORIO por SAT desde 2022 (conservación 5 años).
-  const acuse = await descargarAcuseCancelacion(factura.facturapi_id!, resolved.data.apiKey);
-
-  // Si fue sustitución (motivo 01 + sustituta resuelta), marcar estado 'Sustituida'
-  // y enlazar `sustituida_por`; si no, el ciclo normal -> 'Cancelada'.
+  const cancellationStatus = (cancelResp.cancellation_status ?? "none").toLowerCase();
+  const invoiceStatus = (cancelResp.status ?? "").toLowerCase();
   const esSustitucion = motivo === "01" && !!sustituidaPorFacturaId;
+
+  // Terminal aceptado = el SAT confirmó cancelación. `status: 'canceled'` sin
+  // `cancellation_status` (respuesta antigua o motivo que no requiere ack)
+  // también cae aquí.
+  const esAceptada = cancellationStatus === "accepted" || (invoiceStatus === "canceled" && cancellationStatus === "none");
+  const esPendiente = cancellationStatus === "pending" || cancellationStatus === "verifying";
+  const esRechazada = cancellationStatus === "rejected" || cancellationStatus === "expired";
+
+  if (esRechazada) {
+    // El SAT rechazó (raro que ocurra en el mismo request, pero se maneja).
+    await registrarBitacoraEdge(supabase, {
+      organizationId: factura.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
+      accion: "facturapi_cancelacion_rechazada",
+      entidadId: factura_id,
+      detalles: { cancellation_status: cancellationStatus },
+    });
+    await supabase.from("facturas").update({ cancellation_status: cancellationStatus }).eq("id", factura_id);
+    return jsonResponse({
+      ok: false,
+      cancellation_status: cancellationStatus,
+      message: cancellationStatus === "expired"
+        ? "El plazo de 72 h expiró sin respuesta del receptor. Reintenta la solicitud."
+        : "El receptor rechazó la cancelación desde su Buzón Tributario.",
+    }, 409);
+  }
+
+  const nowIso = new Date().toISOString();
+
+  if (esPendiente) {
+    // Aceptación pendiente: NO cambiamos `estado` (sigue Emitida/Timbrada),
+    // NO revertimos proformas, NO descargamos acuse todavía. Sólo registramos
+    // la solicitud y la fecha estimada de vencimiento (silencio positivo 72 h).
+    const { data: vence } = await supabase.rpc("calc_cancelacion_vence", { p_solicitada: nowIso });
+    const pendingPatch: Record<string, unknown> = {
+      cancellation_status: cancellationStatus,
+      cancelacion_motivo: motivo,
+      cancelacion_solicitada_en: nowIso,
+      cancelacion_vence_en: vence ?? null,
+    };
+    // Guardar `sustituida_por` desde ya para que el webhook/cron sepa que fue sustitución.
+    if (esSustitucion) pendingPatch.sustituida_por = sustituidaPorFacturaId;
+
+    const { error: updErr } = await supabase.from("facturas").update(pendingPatch).eq("id", factura_id);
+    if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+
+    await registrarBitacoraEdge(supabase, {
+      organizationId: factura.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      modulo: "facturacion",
+      accion: "facturapi_cancelacion_solicitada",
+      entidadId: factura_id,
+      detalles: {
+        motivo,
+        cancellation_status: cancellationStatus,
+        sustituida_por_factura_id: sustituidaPorFacturaId,
+        vence_en: vence ?? null,
+      },
+    });
+
+    return jsonResponse({
+      ok: true,
+      pending: true,
+      cancellation_status: cancellationStatus,
+      vence_en: vence ?? null,
+      message: "Cancelación enviada al SAT. El receptor tiene hasta 72 h hábiles para aceptar o rechazar (silencio positivo).",
+    });
+  }
+
+  // Camino aceptada (terminal): mantiene el flujo histórico intacto.
+  if (!esAceptada) {
+    // Estado inesperado — registrar y reportar sin cambiar la factura.
+    await registrarBitacoraEdge(supabase, {
+      organizationId: factura.organization_id,
+      usuarioId: userData.user.id,
+      modulo: "facturacion",
+      accion: "facturapi_cancelacion_estado_desconocido",
+      entidadId: factura_id,
+      detalles: { cancellation_status: cancellationStatus, invoice_status: invoiceStatus },
+    });
+    return jsonResponse({
+      ok: false,
+      cancellation_status: cancellationStatus,
+      message: `FacturApi devolvió un estado inesperado: ${cancellationStatus || invoiceStatus}.`,
+    }, 502);
+  }
+
+  const acuse = await descargarAcuseCancelacion(factura.facturapi_id!, resolved.data.apiKey);
   const updatePayload: Record<string, unknown> = {
     estado: esSustitucion ? "Sustituida" : "Cancelada",
+    cancellation_status: "accepted",
     cancelacion_motivo: motivo,
-    cancelado_en: new Date().toISOString(),
+    cancelado_en: nowIso,
+    cancelacion_solicitada_en: nowIso,
     acuse_cancelacion_xml: acuse.xml,
-    acuse_cancelacion_fecha: acuse.xml ? new Date().toISOString() : null,
+    acuse_cancelacion_fecha: acuse.xml ? nowIso : null,
     acuse_cancelacion_status: acuse.status,
   };
   if (esSustitucion) updatePayload.sustituida_por = sustituidaPorFacturaId;
@@ -164,10 +249,6 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .eq("id", factura_id);
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  // Revertir proformas ligadas a esta factura para que puedan volver a facturarse.
-  // Si la proforma originó 2 facturas (venta + demoras), sólo limpiamos el campo
-  // que apunta a la factura cancelada; volvemos a 'pendiente' únicamente cuando
-  // ya no queda ninguna factura activa ligada.
   const proformasRevertidas: Array<{ id: string; estado: string }> = [];
   if (!esSustitucion) {
     const { data: proformasLigadas } = await supabase
@@ -201,6 +282,7 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     entidadId: factura_id,
     detalles: {
       motivo,
+      cancellation_status: "accepted",
       sustituye_uuid: sustituye_uuid ?? null,
       sustituida_por_factura_id: sustituidaPorFacturaId,
       proformas_revertidas: proformasRevertidas,
@@ -209,7 +291,8 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
 
   return jsonResponse({
     ok: true,
-    status: fapiJson.status ?? "canceled",
+    status: cancelResp.status ?? "canceled",
+    cancellation_status: "accepted",
     sustituida: esSustitucion,
     acuse_status: acuse.status,
     acuse_guardado: !!acuse.xml,
