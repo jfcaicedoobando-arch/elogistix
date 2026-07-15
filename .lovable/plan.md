@@ -1,38 +1,33 @@
-## Diagnóstico
+## Respuesta corta
 
-Este error **no es un bug de código** — es una respuesta del SAT vía FacturAPI. El texto viene tal cual de ellos:
+**Estás parcialmente en lo correcto**, pero hay una condición que se te está escapando: el SAT sí exige aceptación del receptor aunque la cancelación sea por sustitución (motivo 01), **salvo que canceles el mismo día de emisión**.
 
-> "Esta factura está marcada como no cancelable por el SAT. Es posible que tengas que cancelar las facturas relacionadas antes."
+## La regla real (RMF 2.7.1.34/35, vigente 2022+)
 
-**Analogía:** Es como querer romper un contrato que ya tiene addendas firmadas encima. El SAT no te deja cancelar la factura vieja mientras existan otros documentos fiscales colgados de ella.
+Un CFDI se puede cancelar **sin aceptación del receptor** SOLO si cae en alguno de estos supuestos:
 
-## Posibles causas (en orden de probabilidad)
 
-1. **Complementos de pago (REP) vinculados a la factura vieja.** Si la vieja tenía método `PPD` y alguien ya timbró un complemento de pago contra ella, primero hay que cancelar el complemento.
-2. **Notas de crédito timbradas** que referencian la vieja. Cancelarlas primero.
-3. **La factura nueva sustitutiva aún no está registrada en el SAT** (rezago de minutos/horas). A veces el SAT tarda en propagar la relación `04` y rechaza la cancelación temporalmente.
-4. **Aceptación del receptor pendiente.** Si el total > $1,000 MXN y el receptor tiene RFC, el SAT requiere que el cliente **acepte** la cancelación desde su Buzón Tributario. Mientras no acepte, sale como "no cancelable".
+| Supuesto                                          | ¿Aplica a F971?                     |
+| ------------------------------------------------- | ----------------------------------- |
+| Monto ≤ $1,000 MXN                                | ❌ ($4,760)                          |
+| RFC genérico (XAXX010101000 / público en general) | ❌ (cliente con RFC)                 |
+| Nómina, egresos, traslado, ingresos a extranjeros | ❌ (es CFDI ingreso normal)          |
+| **Cancelado el mismo día de emisión**             | ❌ (emitida 10-jul, cancelas 15-jul) |
+| Sector primario, retenciones, RIF, etc.           | ❌                                   |
 
-## Qué necesito verificar antes de proponer código
 
-Voy a leer en la base:
+Como F971 no cae en ninguno, **requiere aceptación** aunque emitas la sustituta con relación 04.
 
-1. `facturas` relacionadas a `dc1e0162-ae7a-474b-abed-3b6301a86add`: si tiene pagos_factura con complemento timbrado, o notas de crédito.
-2. `factura_notas_credito` y `pagos_factura` (con `complemento_facturapi_id`) que apunten a esa factura.
-3. Estado actual de la factura vieja y de la nueva sustitutiva.
+**Analogía:** La sustitución (motivo 01) es como decirle al SAT "esta factura vieja se reemplaza por esta nueva". Es correcto y necesario para no duplicar ingresos ante Hacienda, pero **no salta el trámite de aceptación** del cliente. Son dos cosas independientes: relacionar (obligatorio ante SAT) y cancelar (requiere aceptación del receptor).
 
-## Acción propuesta
+## Confusión común
 
-**Paso 1 — Investigación (sin cambios de código):** Consultar la BD para confirmar cuál de las 4 causas está bloqueando la cancelación.
+Antes de la reforma 2022, la sustitución sí eximía de aceptación. Ese cambio pegó fuerte porque mucha gente aún opera con la regla vieja. Hoy el único atajo real es **cancelar el mismo día**.
 
-**Paso 2 — Según hallazgo:**
+## Opciones que puedo implementar (si quieres)
 
-- Si hay complementos/notas → guiarte para cancelarlos primero desde la UI.
-- Si es aceptación pendiente → toca esperar a que el cliente acepte en su Buzón. Podemos mejorar el mensaje en `facturapi.ts` para explicarlo claramente (hoy solo repite el texto crudo del SAT).
-- Si es rezago SAT → reintentar en 30 min. También podemos mejorar el mensaje.
+1. **Alerta preventiva en el modal de cancelación**: antes de intentar cancelar, mostrar un banner con las condiciones de aceptación cuando aplique (monto > $1,000, no mismo día, RFC no genérico). Evita el ida-y-vuelta al SAT.
+2. **Botón "Cancelar mismo día"** destacado cuando `fecha_emision = hoy`: para aprovechar la ventana sin aceptación.
+3. **Dejarlo como está** ahora que el mensaje de error (v13.300.58) ya explica claramente qué hacer.
 
-**Paso 3 (opcional, si aplica):** Enriquecer el manejador de error en `supabase/functions/facturapi-cancelar/` para detectar el patrón "no cancelable" y sugerir en el toast qué revisar (complementos, notas de crédito, aceptación del receptor).
-
-## Pregunta para ti
-
-¿La factura vieja ya tenía complementos de pago timbrados o notas de crédito antes de que intentaras sustituirla? Si sabes la respuesta, me ahorras el paso 1. Si no, en cuanto apruebes este plan hago la consulta a la BD. No tenia ni REP ni NC
+¿Quieres que implemente 1, 2, ambos, o lo dejamos con solo el mensaje mejorado? 1 y 2
