@@ -112,7 +112,13 @@ export function TabVsReal() {
         </Button>
       </div>
 
-      {isLoading || !data ? (
+      {error ? (
+        <ErrorStateInline
+          message={(error as Error).message}
+          onRetry={() => { void refetch(); }}
+          retrying={isFetching}
+        />
+      ) : isLoading || !data ? (
         <CardSkeleton lines={8} />
       ) : (
         <>
