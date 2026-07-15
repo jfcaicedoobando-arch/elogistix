@@ -127,8 +127,8 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Pro
         <KpiCard
           label="Cumplim. presupuesto"
           value={sinPresupuesto ? "—" : `${cumplimiento.toFixed(1)}%`}
-          delta={cumplDelta}
-          deltaVariant={cumplVariant}
+          delta={cumpl.delta}
+          deltaVariant={cumpl.variant}
           icon={Target}
           onClick={() => (puedeDrillPresupuesto ? setDrill("presupuesto") : nav("/profit/presupuesto"))}
         />
