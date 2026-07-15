@@ -43,7 +43,7 @@ export function ForecastMultiMesChart({ historico, mesesAdelante = 3 }: Props) {
                 <XAxis dataKey="periodo" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCurrencyCompact(v, "MXN")} />
                 <Tooltip
-                  formatter={(v: number | null) => (v === null ? "—" : formatCurrencyCompact(v, "MXN"))}
+                  formatter={(v: unknown) => (typeof v === "number" ? formatCurrencyCompact(v, "MXN") : "—")}
                   contentStyle={{ fontSize: 12 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
