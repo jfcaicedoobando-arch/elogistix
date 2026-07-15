@@ -57,27 +57,29 @@ function utilidadVariant(kpis: KPIsEjecutivos): "positive" | "negative" | "neutr
   return kpis.margen_pct >= 0 ? "positive" : "negative";
 }
 
+/**
+ * Deriva variant + texto para la KPI "Cumplim. presupuesto". Extraído del
+ * componente para bajar la complejidad ciclomática (regla ESLint ≤16).
+ */
+function buildCumplimientoDisplay(
+  cumplimiento: number,
+  excesos: number,
+): { variant: "positive" | "negative" | "neutral"; delta: string; sinPresupuesto: boolean } {
+  const sinPresupuesto = cumplimiento === 0;
+  if (sinPresupuesto) return { variant: "neutral", delta: "Sin presupuesto capturado", sinPresupuesto };
+  if (excesos > 0) return { variant: "negative", delta: `${excesos} categoría(s) en exceso`, sinPresupuesto };
+  if (cumplimiento > 100) return { variant: "neutral", delta: "Cercano al límite", sinPresupuesto };
+  return { variant: "positive", delta: "En rango", sinPresupuesto };
+}
+
 export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Props) {
   const nav = useNavigate();
   const [drill, setDrill] = useState<null | "deudores" | "acreedores" | "presupuesto">(null);
   const delta = formatDelta(kpis.ingresos_delta_pct);
   const cumplimiento = kpis.cumplimiento_presupuesto_pct;
-  const sinPresupuesto = cumplimiento === 0;
   const excesos = kpis.categorias_en_exceso ?? 0;
-  const cumplVariant: "positive" | "negative" | "neutral" = sinPresupuesto
-    ? "neutral"
-    : excesos > 0
-      ? "negative"
-      : cumplimiento > 100
-        ? "neutral"
-        : "positive";
-  const cumplDelta = sinPresupuesto
-    ? "Sin presupuesto capturado"
-    : excesos > 0
-      ? `${excesos} categoría(s) en exceso`
-      : cumplimiento > 100
-        ? "Cercano al límite"
-        : "En rango";
+  const cumpl = buildCumplimientoDisplay(cumplimiento, excesos);
+  const { sinPresupuesto } = cumpl;
 
   const puedeDrillDeudores = Array.isArray(topDeudores);
   const puedeDrillAcreedores = Array.isArray(topAcreedores);
