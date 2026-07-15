@@ -7,13 +7,20 @@ import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 
 export type CategoriaPresupuesto = Tables<"presupuesto_categorias">;
 
-export async function fetchCategorias(activas = true): Promise<CategoriaPresupuesto[]> {
+export async function fetchCategorias(
+  activas = true,
+  organizationId?: string | null,
+): Promise<CategoriaPresupuesto[]> {
   let q = supabase
     .from("presupuesto_categorias")
     .select("*")
     .order("orden", { ascending: true })
     .order("nombre", { ascending: true });
   if (activas) q = q.eq("activa", true);
+  // Defensa en profundidad multi-tenant (Fase 3): además de RLS, filtramos
+  // explícitamente por organización para evitar mezcla si RLS falla o el rol
+  // es de servicio. Alineado con el resto del módulo Presupuesto.
+  if (organizationId) q = q.eq("organization_id", organizationId);
   return unwrapOr(q, []) as Promise<CategoriaPresupuesto[]>;
 }
 
