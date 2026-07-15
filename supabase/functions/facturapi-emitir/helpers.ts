@@ -159,7 +159,7 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
       };
     }),
   };
-  if (ctx.serie) payload.serie = ctx.serie;
+  if (ctx.serie) payload.series = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
   if (ctx.sustituye_uuid) {
