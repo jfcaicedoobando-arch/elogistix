@@ -44,7 +44,7 @@ export function usePeriodoMesUrl(
   const valido = mesesDisponibles.find((m) => m.key === qp);
   const defaultMes =
     mesesDisponibles.find((m) => m.key === mesActualKey()) ?? mesesDisponibles[0];
-  const [mesKey, setMesKeyState] = useState<string>(valido?.key ?? defaultMes.key);
+  const [mesKey, setMesKeyState] = useState<string>(valido?.key ?? defaultMes?.key ?? "");
 
   const setMesKey = useCallback(
     (key: string) => {
