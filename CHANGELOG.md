@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.47] - 2026-07-15
+- **refactor(sidebar): consolidar Profit en un solo enlace (hub + tabs)**: el sidebar mostraba las 4 rutas de Profit (Dashboard Ejecutivo, Proyección, Estado de Resultados, Presupuesto vs Real) y la `ProfitSubNav` las repetía arriba en cada página. **Analogía:** era como tener dos menús idénticos en un restaurante — uno en la puerta y otro en la mesa. Ahora el sidebar sólo dice "Profit" (icono TrendingUp, ruta `/profit` → redirige a `/profit/dashboard`) y la navegación fina entre pestañas vive sólo dentro del módulo. `isActive` por `startsWith("/profit")` mantiene el enlace resaltado en cualquier sub-ruta. Sin cambios en rutas, permisos ni lógica.
+
 ## [13.300.46] - 2026-07-15
 - **audit(profit) Fase 4 · seguimiento**: revisada la unificación de MonthPickers de 13.300.45 — 92/92 tests verdes en Profit/Presupuesto, sin warnings. Sin bugs detectados.
 - **feat(profit) Fase 4 · KPIs financieros derivados**: agregada tira `BandaKPIsEficiencia` con **DSO** (días de cobro), **DPO** (días de pago) y **Runway** (meses que aguantan los bancos si hay burn) en Dashboard Ejecutivo. **Analogía:** antes veíamos "cuánto entra y cuánto sale"; ahora también vemos "qué tan rápido cobramos, qué tan tarde pagamos, y cuánta gasolina queda en el tanque". Cálculos derivados de datos ya disponibles (CxC/CxP 30d + EERR + saldos bancarios), sin cambios de contrato aguas arriba.
