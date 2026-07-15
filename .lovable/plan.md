@@ -1,75 +1,82 @@
+## Auditoría de Fase H (Unificación fuente EERR)
 
-## Auditoría de Batch G (v13.300.36)
+Revisé los 9 archivos tocados. Todos los tests actuales pasan (29/29). Hallazgos:
 
-**Estado de tests**: 24 archivos verdes en los módulos tocados (tesorería, presupuesto, dashboard ejecutivo, embarques, profit). Ningún regresivo.
+### Bugs y observaciones
 
-**Bugs encontrados**:
+1. **[Menor] Robustez de `useFuenteEerr.setFuente`**  
+   Si un listener del evento `lc:eerr-fuente-change` lanza synchronously, `dispatchEvent` propaga la excepción y `setFuente` truena. El test `"no crashea si dispatchEvent falla"` en realidad **asserta que sí truena** — descripción y aserción no coinciden.
+   
+2. **[Consistencia UI] Doble UI para la misma preferencia**  
+   El Dashboard usa `ToggleGroup` (Embarques/Facturas), pero la página EERR sigue usando un `Select` con etiquetas distintas ("Operativa (por ETA del embarque)" vs "Devengada (facturas + CxP)"). Confunde al usuario: son la misma preferencia con dos UIs.
 
-1. **Lint blocker en `invalidateProfitDependencies.ts:16`** — `queryKey: ["profit"]` inline viola la regla `no-restricted-syntax`. Preexistente pero ahora ejecutado en muchas más mutaciones. Fix: agregar `profit.all = ["profit"] as const` a `src/features/profit/queryKeys.ts` y usar `queryKeys.profit.all`.
+3. **[Consistencia periodo] `useEstadoResultados` no usa `usePeriodoMesUrl`**  
+   Mantiene su propio `useState` + `useSearchParams` para `?mes=`. Duplica lógica que ya fue centralizada en Batch B. Bajo riesgo pero se puede alinear.
 
-2. **`useResumenTesoreria` perdió la key de caché por org** — al recomponerse en el hook (ya no llama al servicio), no hay `useQuery`, por lo que depende de las queries hijas. Está bien funcionalmente, pero pierde consistencia con el patrón. Verificar que `useCobranza` y `useFacturasCxP` ya filtren por org (revisar servicios).
+4. **[Coverage gap]**  
+   Falta un test de integración que verifique que cambiar la fuente en un consumidor (ej. Dashboard) refleja en el otro (EERR) — hoy sólo probamos cross-instance con `renderHook`.
 
-3. **Riesgo con `organizationId` null** — si el usuario no tiene org activa (edge case durante login), `?? null` propaga null y el servicio salta el filtro devolviendo TODO. RLS lo protege pero mejora higiénica: no ejecutar la query hasta tener orgId.
+### Fase I — Relevancia de negocio + polish UI
 
-**Tests nuevos requeridos**:
-- `resumen.tenancy.test.ts` — verificar que `fetchSaldosCuentas("org-A")` pasa `.eq("organization_id", "org-A")`.
-- `flujoProyectado.tenancy.test.ts` — verificar filtro `organization_id` + `deleted_at is null`.
-- `vsReal.tenancy.test.ts` — verificar ambos filtros en `proveedor_facturas` y `liquidaciones_comision`.
-- `invalidateProfitDependencies.test.ts` — verificar que invalida las 3 keys correctas.
-- `useCreateEmbarque.profitInvalidation.test.tsx` (extender existente) — verificar que se dispara `invalidateProfitDependencies` en `onSuccess`.
+Además de cerrar los hallazgos arriba, entro a **Fase I: relevancia** con dos entregables de negocio pedidos por la auditoría original:
 
-## Fase H — Unificar fuente EERR + persistencia + guardias
+- **Comparativo periodo vs. anterior en KPIs** — hoy `calcularKPIsEjecutivos` recibe `ingresosMesAnterior` pero no expone `%Δ vs. mes anterior` en la banda. Sólo hay YTD.
+- **Margen bruto y margen operativo separados en el Dashboard** — el KPI actual "Utilidad operativa" muestra el neto, pero no permite ver dónde se erosiona el margen. Añadir "Margen bruto %" al lado.
 
-**Contexto**: Sub-agent `sub_tswyqaz2` detectó que Dashboard Ejecutivo usa siempre EERR devengado, mientras que la ruta `/profit/estado-resultados` deja al usuario elegir entre `devengado` y `pagado`. Esto genera KPIs contradictorios entre pantallas.
+## Cambios propuestos
 
-**Cambios propuestos**:
+### Bloque 1 — Cierre de auditoría Fase H
 
-1. **Store de preferencia de fuente EERR** (`src/features/profit/hooks/useFuenteEerr.ts`)
-   - Lee/escribe `localStorage` con clave `profit.eerr.fuente` vía el wrapper `browserStorage` (regla `mem://technical/browser-storage`).
-   - Valores válidos: `"devengado" | "pagado"`. Default: `"devengado"`.
-   - Retorna `{fuente, setFuente}` con `useSyncExternalStore` para reaccionar entre tabs.
+1. `src/features/profit/hooks/useFuenteEerr.ts`
+   - Envolver `window.dispatchEvent(...)` en `try/catch` con `reportCaughtError` (feature: `"profit"`, op: `"eerr_fuente_dispatch"`). El setter nunca truena por listeners.
 
-2. **Propagar `fuente` al agregador**
-   - `fetchDashboardEjecutivo({ fuente })` acepta parámetro.
-   - Reemplazar `fetchEstadoResultadosDevengado` por selector `fetchEstadoResultados[fuente]` en las 14 llamadas (periodo + previo + 12 meses).
-   - QueryKey `dashboardEjecutivo` incluye `fuente` para no colisionar caché.
+2. `src/features/profit/hooks/__tests__/useFuenteEerr.test.ts`
+   - Ajustar el test problemático: renombrarlo a `"no propaga excepciones de listeners"` y assertar que `setFuente` **no** truena y que `localStorage` sí quedó actualizado (persistencia gana sobre notificación).
 
-3. **Selector de fuente en Dashboard**
-   - Toolbar en `ProfitDashboardEjecutivo.tsx` con `ToggleGroup` (Devengado / Pagado).
-   - Reutiliza el mismo hook `useFuenteEerr` que ya usa `/profit/estado-resultados` → un cambio se refleja en ambos.
+3. `src/components/profit/FuenteEerrToggle.tsx` (nuevo)
+   - Componente reutilizable `<FuenteEerrToggle />` que envuelve `ToggleGroup` + `useFuenteEerr`. Uso: `<FuenteEerrToggle aria-label="…" />`.
+   - Test unitario: cambio de valor invoca `setFuente` y refleja la fuente activa.
 
-4. **Guardia de query cuando falta orgId**
-   - En `useSaldosCuentas`, `useFlujoProyectado`, `usePresupuestoVsReal`: `enabled: !!organizationId`.
-   - Evita fetch inicial sin filtro (defense-in-depth sobre RLS).
+4. `src/features/profit/routes/ProfitDashboardEjecutivo.tsx`
+   - Reemplazar el `ToggleGroup` inline por `<FuenteEerrToggle />`.
 
-5. **Tests**
-   - `useFuenteEerr.test.ts` — persistencia, default, cross-tab sync.
-   - `agregador.fuente.test.ts` — verificar que llama `fetchEstadoResultadosPagado` cuando `fuente="pagado"`.
-   - Extender los tests de tenancy del audit para incluir `enabled: false` cuando `organizationId` es null.
+5. `src/features/profit/routes/ProfitEstadoResultados.tsx`
+   - Reemplazar el `<Select>` de fuente por `<FuenteEerrToggle />`.
+   - Mover la etiqueta descriptiva ("Fuente devengada: …" / "Fuente operativa: …") a un `Tooltip` sobre el toggle o mantenerla como texto de apoyo debajo — decidir mientras se implementa (favor texto de apoyo para no perder contexto).
 
-## Detalles técnicos
+### Bloque 2 — Fase I (relevancia de negocio)
 
-**Archivos a editar (audit)**:
-- `src/features/profit/queryKeys.ts` — agregar `all`.
-- `src/features/profit/hooks/invalidateProfitDependencies.ts` — usar `queryKeys.profit.all`.
+6. `src/features/dashboardEjecutivo/services/kpis.ts` (o `alertas.ts` donde vive `calcularKPIsEjecutivos`)
+   - Añadir campos: `variacionIngresosPct` (vs. mes anterior), `margenBrutoPct`, `margenOperativoPct` derivados de `eerrPeriodo`.
+   - Cuidado con divisiones por cero.
 
-**Archivos a crear (fase H)**:
-- `src/features/profit/hooks/useFuenteEerr.ts`
-- `src/features/profit/hooks/__tests__/useFuenteEerr.test.ts`
-- `src/features/tesoreria/services/__tests__/resumen.tenancy.test.ts`
-- `src/features/tesoreria/services/__tests__/flujoProyectado.tenancy.test.ts`
-- `src/features/presupuesto/services/__tests__/vsReal.tenancy.test.ts`
-- `src/features/profit/hooks/__tests__/invalidateProfitDependencies.test.ts`
-- `src/features/dashboardEjecutivo/services/__tests__/agregador.fuente.test.ts`
+7. `src/features/dashboardEjecutivo/services/types.ts`
+   - Extender `KPIsEjecutivos` con los tres nuevos campos.
 
-**Archivos a editar (fase H)**:
-- `src/features/dashboardEjecutivo/services/agregador.ts` — parámetro `fuente`.
-- `src/features/dashboardEjecutivo/hooks/useDashboardEjecutivo.ts` — leer `useFuenteEerr` y propagar.
-- `src/features/dashboardEjecutivo/queryKeys.ts` — incluir `fuente` en la key.
-- `src/pages/profit/ProfitDashboardEjecutivo.tsx` — toolbar selector.
-- `src/features/profit/hooks/useEstadoResultados.ts` — migrar a `useFuenteEerr` (deduplica lógica de localStorage).
-- Hooks de tesorería/presupuesto — `enabled: !!organizationId`.
+8. `src/features/dashboardEjecutivo/components/BandaKPIs.tsx`
+   - Añadir chip `%Δ vs. mes anterior` en el KPI de ingresos (verde/rojo).
+   - Añadir KPI "Margen bruto %" como card independiente.
 
-**Bump**: `APP_VERSION → 13.300.37` + entrada en `CHANGELOG.md`.
+9. Tests nuevos:
+   - `src/features/dashboardEjecutivo/services/__tests__/kpis.variaciones.test.ts` — casos: ingresos crecen, decrecen, mes anterior = 0 (evitar Infinity), margen bruto correcto.
+   - `src/components/profit/__tests__/FuenteEerrToggle.test.tsx` — render + interacción.
 
-**Verificación**: `bun run lint`, `bunx vitest run src/features/profit src/features/tesoreria src/features/presupuesto src/features/dashboardEjecutivo`.
+### Bloque 3 — Housekeeping
+
+10. Bump `APP_VERSION` a `13.300.38`.
+11. Entrada en `CHANGELOG.md` describiendo cierre de auditoría H + Fase I.
+
+## Notas técnicas
+
+- **Sin cambios de esquema BD.** Todos los cálculos son en cliente sobre datos que ya se consultan.
+- **`useEstadoResultados` migrar a `usePeriodoMesUrl`** lo dejo **fuera** de este plan — es refactor no funcional; lo agendaría a un batch posterior de code quality para evitar mezclar concerns.
+- **Compatibilidad:** el `Select` viejo tenía etiquetas "Operativa"/"Devengada" — el `ToggleGroup` tiene "Embarques"/"Facturas". Es un cambio de wording visible al usuario. Añadir tooltips explicativos para no perder claridad.
+- **Riesgo:** que un test snapshot antiguo dependa del texto "Operativa"/"Devengada" en la página EERR. Buscaré antes de tocar.
+
+## Criterios de aceptación
+
+- `bun run lint` y toda la suite (`bunx vitest run`) pasan.
+- El toggle de fuente se ve **idéntico** en Dashboard y EERR.
+- Cambiar la fuente en una pantalla se refleja al navegar a la otra sin recargar.
+- El Dashboard muestra `%Δ ingresos vs. mes anterior` con color y `Margen bruto %` como KPI adicional.
+- No hay `Infinity`/`NaN` en KPIs cuando el mes anterior es 0.

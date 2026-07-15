@@ -27,7 +27,11 @@ export interface KPIsEjecutivos {
   ingresos_mxn: number;
   ingresos_delta_pct: number;
   utilidad_mxn: number;
+  /** %Δ de utilidad vs. mes anterior. `null` cuando el mes previo es 0 o negativo. */
+  utilidad_delta_pct: number | null;
   margen_pct: number;
+  /** Variación del margen en **puntos porcentuales** vs. mes anterior. `null` si no aplica. */
+  margen_delta_puntos: number | null;
   saldo_bancos_mxn: number;
   cartera_vencida_mxn: number;
   cartera_vencida_count: number;

@@ -18,6 +18,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
+import { FuenteEerrToggle } from "@/components/profit/FuenteEerrToggle";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -69,13 +70,7 @@ export default function ProfitEstadoResultados() {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <Select value={c.fuente} onValueChange={(v) => c.setFuente(v as typeof c.fuente)}>
-            <SelectTrigger className="w-[230px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="embarques">Operativa (por ETA del embarque)</SelectItem>
-              <SelectItem value="facturas">Devengada (facturas + CxP)</SelectItem>
-            </SelectContent>
-          </Select>
+          <FuenteEerrToggle />
           <div className="flex-1" />
           <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV

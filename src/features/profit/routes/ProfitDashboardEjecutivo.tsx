@@ -26,15 +26,13 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useFuenteEerr } from "@/features/profit/hooks/useFuenteEerr";
+import { FuenteEerrToggle } from "@/components/profit/FuenteEerrToggle";
 
 const MES_MINIMO = "2026-04";
 
 export default function ProfitDashboardEjecutivo() {
   const periodoCtl = usePeriodoMesUrl("mes", MES_MINIMO);
   const periodo = periodoCtl.mesActual.key;
-  const { fuente, setFuente } = useFuenteEerr();
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const { data, isLoading, error } = useDashboardEjecutivo(periodo);
 
@@ -71,19 +69,7 @@ export default function ProfitDashboardEjecutivo() {
             puedeIrAdelante={periodoCtl.puedeIrAdelante}
           />
           <div className="flex-1" />
-          <ToggleGroup
-            type="single"
-            value={fuente}
-            onValueChange={(v) => v && setFuente(v as "embarques" | "facturas")}
-            aria-label="Fuente del Estado de Resultados"
-          >
-            <ToggleGroupItem value="embarques" aria-label="Fuente embarques (pagado)">
-              Embarques
-            </ToggleGroupItem>
-            <ToggleGroupItem value="facturas" aria-label="Fuente facturas (devengado)">
-              Facturas
-            </ToggleGroupItem>
-          </ToggleGroup>
+          <FuenteEerrToggle />
           <Button variant="outline" size="sm" onClick={exportar} disabled={!data || generandoPdf}>
             <Download className="h-4 w-4 mr-1" /> {generandoPdf ? "Generando…" : "PDF"}
           </Button>

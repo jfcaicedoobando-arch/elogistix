@@ -46,12 +46,15 @@ describe("useFuenteEerr", () => {
     expect(result.current.fuente).toBe("facturas");
   });
 
-  it("no crashea si dispatchEvent falla", () => {
+  it("no propaga excepciones de listeners y persiste el cambio", () => {
+    // Auditoría Fase H #1: dispatchEvent envuelto en try/catch → un listener
+    // roto no debe tirar el setter. La persistencia gana sobre la notificación.
     const spy = vi.spyOn(window, "dispatchEvent").mockImplementation(() => {
       throw new Error("boom");
     });
     const { result } = renderHook(() => useFuenteEerr());
-    expect(() => result.current.setFuente("facturas")).toThrow(); // el hook no oculta el error
+    expect(() => result.current.setFuente("facturas")).not.toThrow();
+    expect(safeLocalStorage.getItem(STORAGE_KEYS.eerrFuente)).toBe("facturas");
     spy.mockRestore();
   });
 });
