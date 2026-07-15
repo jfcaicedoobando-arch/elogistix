@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.54] - 2026-07-15
+- **security(demo_leads) WITH CHECK con validación**: se reemplaza la policy pública `INSERT` con `WITH CHECK (true)` por una que valida nombre (2-120), empresa (2-160), email con regex y ≤200, teléfono en formato E.164 y `user_agent` ≤500. Cierra el hallazgo `SUPA_rls_policy_always_true`. La policy `ALL` de `cotizacion_costos_historico` se mantiene: está limitada a `service_role`, que ya bypassea RLS.
+
 ## [13.300.53] - 2026-07-15
 - **fix(facturacion) Sustituir CFDI precarga conceptos + UI sin duplicar**: `duplicar_factura_para_sustitucion` ahora copia los renglones vivos de `conceptos_factura` (descripción, cantidades, precios, IVA, retenciones, unidad, embarque, proforma origen) al nuevo borrador para que aparezcan precargados en el editor. En el detalle se oculta la carta "Desglose de conceptos" cuando el borrador es editable (el editor ya muestra los mismos datos); vuelve al timbrar.
 
