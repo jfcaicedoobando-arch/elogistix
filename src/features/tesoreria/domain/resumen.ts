@@ -47,64 +47,24 @@ export function calcularResumenTesoreria(args: {
     !!iso && new Date(iso + "T00:00:00") <= limite;
   const tc = args.tipoCambioUsd && args.tipoCambioUsd > 0 ? args.tipoCambioUsd : 1;
 
-  const flujo: FlujoMes = {
-    por_cobrar_mxn: 0, por_cobrar_usd: 0,
-    por_pagar_mxn: 0, por_pagar_usd: 0,
-    flujo_neto_mxn: 0, flujo_neto_usd: 0,
-    por_cobrar_total_mxn: 0, por_pagar_total_mxn: 0,
-  };
-  for (const f of args.cobranza) {
-    if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
-    if (f.moneda === "USD") flujo.por_cobrar_usd += f.saldo;
-    else flujo.por_cobrar_mxn += f.saldo;
-  }
-  for (const f of args.cxp) {
-    if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
-    if (f.moneda === "USD") flujo.por_pagar_usd += f.saldo;
-    else flujo.por_pagar_mxn += f.saldo;
-  }
-  flujo.flujo_neto_mxn = flujo.por_cobrar_mxn - flujo.por_pagar_mxn;
-  flujo.flujo_neto_usd = flujo.por_cobrar_usd - flujo.por_pagar_usd;
-  flujo.por_cobrar_total_mxn = flujo.por_cobrar_mxn + flujo.por_cobrar_usd * tc;
-  flujo.por_pagar_total_mxn = flujo.por_pagar_mxn + flujo.por_pagar_usd * tc;
+  const flujo = calcularFlujo(args.cobranza, args.cxp, enVentana, tc);
+  const vencidasCobranza = sumarVencidas(args.cobranza, (f) => f.estatus_cobranza, tc);
+  const vencidasCxp = sumarVencidas(args.cxp, (f) => f.estatus, tc);
 
-  // Cartera vencida completa (previa al Top-5). Convertida a MXN.
-  let cartera_vencida_total_mxn = 0;
-  let cartera_vencida_count = 0;
-  for (const f of args.cobranza) {
-    if (f.saldo <= 0 || f.estatus_cobranza !== "Vencida") continue;
-    cartera_vencida_count += 1;
-    cartera_vencida_total_mxn += f.moneda === "USD" ? f.saldo * tc : f.saldo;
-  }
-
-  // CxP vencidas completas (previa al Top-5). C1: alineado a sólo "Vencida"
-  // (antes acreedores incluía "Por vencer", inconsistente con deudores).
-  let cxp_vencidas_total_mxn = 0;
-  let cxp_vencidas_count = 0;
-  for (const f of args.cxp) {
-    if (f.saldo <= 0 || f.estatus !== "Vencida") continue;
-    cxp_vencidas_count += 1;
-    cxp_vencidas_total_mxn += f.moneda === "USD" ? f.saldo * tc : f.saldo;
-  }
-
-  const top_deudores = agruparTop(
-    args.cobranza,
-    (f) => f.saldo > 0 && f.estatus_cobranza === "Vencida",
-    (f) => f.cliente_nombre,
-    (f) => f.moneda,
-    (f) => f.saldo,
-    (f) => f.dias_vencido,
-  );
-
-  // C1 fix: criterio unificado con deudores → sólo `Vencida`.
-  const top_acreedores = agruparTop(
-    args.cxp,
-    (f) => f.saldo > 0 && f.estatus === "Vencida",
-    (f) => f.proveedor_nombre,
-    (f) => f.moneda,
-    (f) => f.saldo,
-    (f) => f.dias_vencido,
-  );
+  const top_deudores = agruparTop(args.cobranza, {
+    filtro: (f) => f.saldo > 0 && f.estatus_cobranza === "Vencida",
+    nombre: (f) => f.cliente_nombre,
+    moneda: (f) => f.moneda,
+    saldo: (f) => f.saldo,
+    dias: (f) => f.dias_vencido,
+  });
+  const top_acreedores = agruparTop(args.cxp, {
+    filtro: (f) => f.saldo > 0 && f.estatus === "Vencida",
+    nombre: (f) => f.proveedor_nombre,
+    moneda: (f) => f.moneda,
+    saldo: (f) => f.saldo,
+    dias: (f) => f.dias_vencido,
+  });
 
   const saldo_bancos_mxn = args.cuentas.reduce(
     (acc, c) => acc + (c.moneda === "USD" ? c.saldo * tc : c.saldo),
@@ -117,43 +77,87 @@ export function calcularResumenTesoreria(args: {
     top_deudores,
     top_acreedores,
     saldo_bancos_mxn,
-    cartera_vencida_total_mxn,
-    cartera_vencida_count,
-    cxp_vencidas_count,
-    cxp_vencidas_total_mxn,
+    cartera_vencida_total_mxn: vencidasCobranza.total_mxn,
+    cartera_vencida_count: vencidasCobranza.count,
+    cxp_vencidas_count: vencidasCxp.count,
+    cxp_vencidas_total_mxn: vencidasCxp.total_mxn,
   };
 }
 
-/**
- * Agrupa facturas/CxP por nombre+moneda antes de rankear (fix bug: antes
- * el top mostraba facturas individuales, por lo que un mismo cliente con
- * múltiples facturas vencidas aparecía varias veces en el top 5).
- * `dias` se conserva como el peor caso (más días vencidos) del grupo.
- */
-function agruparTop<T>(
+function calcularFlujo(
+  cobranza: CobranzaRow[],
+  cxp: CxpRow[],
+  enVentana: (iso: string | null) => boolean,
+  tc: number,
+): FlujoMes {
+  const flujo: FlujoMes = {
+    por_cobrar_mxn: 0, por_cobrar_usd: 0,
+    por_pagar_mxn: 0, por_pagar_usd: 0,
+    flujo_neto_mxn: 0, flujo_neto_usd: 0,
+    por_cobrar_total_mxn: 0, por_pagar_total_mxn: 0,
+  };
+  for (const f of cobranza) {
+    if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
+    if (f.moneda === "USD") flujo.por_cobrar_usd += f.saldo;
+    else flujo.por_cobrar_mxn += f.saldo;
+  }
+  for (const f of cxp) {
+    if (!enVentana(f.fecha_vencimiento) || f.saldo <= 0) continue;
+    if (f.moneda === "USD") flujo.por_pagar_usd += f.saldo;
+    else flujo.por_pagar_mxn += f.saldo;
+  }
+  flujo.flujo_neto_mxn = flujo.por_cobrar_mxn - flujo.por_pagar_mxn;
+  flujo.flujo_neto_usd = flujo.por_cobrar_usd - flujo.por_pagar_usd;
+  flujo.por_cobrar_total_mxn = flujo.por_cobrar_mxn + flujo.por_cobrar_usd * tc;
+  flujo.por_pagar_total_mxn = flujo.por_pagar_mxn + flujo.por_pagar_usd * tc;
+  return flujo;
+}
+
+function sumarVencidas<T extends { saldo: number; moneda: string }>(
   rows: T[],
-  filtro: (r: T) => boolean,
-  nombreOf: (r: T) => string,
-  monedaOf: (r: T) => string,
-  saldoOf: (r: T) => number,
-  diasOf: (r: T) => number | undefined,
-): TopItem[] {
-  const acc = new Map<string, TopItem>();
+  estatusOf: (r: T) => string | undefined,
+  tc: number,
+): { total_mxn: number; count: number } {
+  let total_mxn = 0;
+  let count = 0;
+  for (const f of rows) {
+    if (f.saldo <= 0 || estatusOf(f) !== "Vencida") continue;
+    count += 1;
+    total_mxn += f.moneda === "USD" ? f.saldo * tc : f.saldo;
+  }
+  return { total_mxn, count };
+}
+
+interface TopAccessors<T> {
+  filtro: (r: T) => boolean;
+  nombre: (r: T) => string;
+  moneda: (r: T) => string;
+  saldo: (r: T) => number;
+  dias: (r: T) => number | undefined;
+}
+
+/**
+ * Agrupa filas por nombre+moneda antes de rankear (Top-5 por saldo).
+ * `dias` conserva el peor caso (más días vencidos) del grupo.
+ */
+function agruparTop<T>(rows: T[], acc: TopAccessors<T>): TopItem[] {
+  const map = new Map<string, TopItem>();
   for (const r of rows) {
-    if (!filtro(r)) continue;
-    const nombre = nombreOf(r);
-    const moneda = monedaOf(r);
+    if (!acc.filtro(r)) continue;
+    const nombre = acc.nombre(r);
+    const moneda = acc.moneda(r);
     const key = `${nombre}||${moneda}`;
-    const dias = diasOf(r);
-    const prev = acc.get(key);
+    const dias = acc.dias(r);
+    const prev = map.get(key);
     if (prev) {
-      prev.saldo += saldoOf(r);
+      prev.saldo += acc.saldo(r);
       if (dias != null && (prev.dias == null || dias > prev.dias)) prev.dias = dias;
     } else {
-      acc.set(key, { nombre, saldo: saldoOf(r), moneda, dias });
+      map.set(key, { nombre, saldo: acc.saldo(r), moneda, dias });
     }
   }
-  return Array.from(acc.values())
+  return Array.from(map.values())
     .sort((a, b) => b.saldo - a.saldo)
     .slice(0, 5);
 }
+

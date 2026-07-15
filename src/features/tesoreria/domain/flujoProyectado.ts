@@ -104,40 +104,10 @@ export function calcularFlujoProyectado(args: {
     return semanasMap.get(isoWeekKey(d)) ?? null;
   };
 
-  for (const f of args.cobranza) {
-    if (f.saldo <= 0) continue;
-    const sem = inWindow(f.fecha_vencimiento); if (!sem) continue;
-    const mxn = toMxn(f.saldo, f.moneda, f.tipo_cambio);
-    sem.entradas_mxn += mxn;
-    sem.detalle_entradas.push({
-      id: f.id, concepto: `${f.numero} · ${f.cliente_nombre}`,
-      monto_mxn: mxn, fecha_vencimiento: f.fecha_vencimiento!, moneda: f.moneda,
-    });
-  }
+  aplicarCobranza(args.cobranza, inWindow);
+  aplicarCxp(args.cxp, inWindow);
+  aplicarLiquidaciones(args.liquidaciones, inWindow);
 
-  for (const c of args.cxp) {
-    if (c.saldo <= 0 || !c.fecha_vencimiento) continue;
-    const sem = inWindow(c.fecha_vencimiento); if (!sem) continue;
-    const mxn = toMxn(c.saldo, c.moneda, c.tipo_cambio_usd);
-    sem.salidas_mxn += mxn;
-    sem.detalle_salidas.push({
-      id: c.id, concepto: `${c.folio_proveedor} · ${c.proveedor_nombre}`,
-      monto_mxn: mxn, fecha_vencimiento: c.fecha_vencimiento, moneda: c.moneda,
-    });
-  }
-
-  for (const l of args.liquidaciones) {
-    const [y, m] = l.periodo.split("-").map(Number);
-    if (!y || !m) continue;
-    const dueDate = new Date(y, m, 5);
-    const iso = dueDate.toISOString().slice(0, 10);
-    const sem = inWindow(iso); if (!sem) continue;
-    sem.salidas_mxn += Number(l.total_mxn);
-    sem.detalle_salidas.push({
-      id: l.id, concepto: `Liquidación comisión ${l.periodo}`,
-      monto_mxn: Number(l.total_mxn), fecha_vencimiento: iso, moneda: "MXN",
-    });
-  }
 
   let saldo = saldoInicial;
   let totalEnt = 0, totalSal = 0, alertas = 0;
@@ -160,3 +130,47 @@ export function calcularFlujoProyectado(args: {
     alertas_negativas: alertas,
   };
 }
+
+type InWindow = (iso: string | null) => SemanaFlujo | null;
+
+function aplicarCobranza(rows: CobranzaRow[], inWindow: InWindow): void {
+  for (const f of rows) {
+    if (f.saldo <= 0) continue;
+    const sem = inWindow(f.fecha_vencimiento); if (!sem) continue;
+    const mxn = toMxn(f.saldo, f.moneda, f.tipo_cambio);
+    sem.entradas_mxn += mxn;
+    sem.detalle_entradas.push({
+      id: f.id, concepto: `${f.numero} · ${f.cliente_nombre}`,
+      monto_mxn: mxn, fecha_vencimiento: f.fecha_vencimiento!, moneda: f.moneda,
+    });
+  }
+}
+
+function aplicarCxp(rows: CxpRow[], inWindow: InWindow): void {
+  for (const c of rows) {
+    if (c.saldo <= 0 || !c.fecha_vencimiento) continue;
+    const sem = inWindow(c.fecha_vencimiento); if (!sem) continue;
+    const mxn = toMxn(c.saldo, c.moneda, c.tipo_cambio_usd);
+    sem.salidas_mxn += mxn;
+    sem.detalle_salidas.push({
+      id: c.id, concepto: `${c.folio_proveedor} · ${c.proveedor_nombre}`,
+      monto_mxn: mxn, fecha_vencimiento: c.fecha_vencimiento, moneda: c.moneda,
+    });
+  }
+}
+
+function aplicarLiquidaciones(rows: LiquidacionRow[], inWindow: InWindow): void {
+  for (const l of rows) {
+    const [y, m] = l.periodo.split("-").map(Number);
+    if (!y || !m) continue;
+    const dueDate = new Date(y, m, 5);
+    const iso = dueDate.toISOString().slice(0, 10);
+    const sem = inWindow(iso); if (!sem) continue;
+    sem.salidas_mxn += Number(l.total_mxn);
+    sem.detalle_salidas.push({
+      id: l.id, concepto: `Liquidación comisión ${l.periodo}`,
+      monto_mxn: Number(l.total_mxn), fecha_vencimiento: iso, moneda: "MXN",
+    });
+  }
+}
+
