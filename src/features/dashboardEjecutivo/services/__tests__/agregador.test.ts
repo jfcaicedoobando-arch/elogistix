@@ -102,6 +102,7 @@ describe("dashboardEjecutivo/agregador", () => {
       cobranza: [{ id: "c" }],
       cxp: [],
       dias: 28,
+      organizationId: "org-1",
     });
   });
 
