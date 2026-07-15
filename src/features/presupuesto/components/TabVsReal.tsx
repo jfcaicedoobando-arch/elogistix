@@ -17,6 +17,7 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReportePresupuestoDocument } from "@/pdf/documents/ReportePresupuestoDocument";
 import { withOrgPrefix } from "@/lib/filenames";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import { VsRealFila } from "./VsRealFila";
 import type { FilaVsReal } from "@/features/presupuesto/services";
 
