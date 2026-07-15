@@ -44,9 +44,12 @@ export async function fetchPresupuestoVsReal(
   const hasta = ultimoDia(periodo);
 
   let cxpQuery = supabase.from("proveedor_facturas")
-    .select("categoria_presupuesto_id, total, moneda, tipo_cambio_usd, fecha_emision")
+    .select("categoria_presupuesto_id, total, moneda, tipo_cambio_usd, fecha_emision, estado")
     .gte("fecha_emision", desde).lte("fecha_emision", hasta)
     .is("deleted_at", null)
+    // Fase 3: excluye facturas canceladas para consistencia con
+    // `estadoResultadosDevengado` (que ya las excluye).
+    .neq("estado", "Cancelada")
     .limit(2000);
   // Nota: `liquidaciones_comision` no tiene columna `deleted_at` en el schema.
   // Filtrar por ella causa `column ... does not exist` y rompe el Dashboard Ejecutivo.
@@ -60,8 +63,10 @@ export async function fetchPresupuestoVsReal(
   }
 
   const [cats, presupuestoAnio, gastosCxP, liquidaciones] = await Promise.all([
-    fetchCategorias(true),
-    fetchPresupuestoMensualAnio(y),
+    // Fase 3 (crítico #2): pasa organizationId para defensa en profundidad.
+    fetchCategorias(true, organizationId),
+    // Fase 3 (crítico #1): pasa organizationId al presupuesto mensual.
+    fetchPresupuestoMensualAnio(y, organizationId),
     cxpQuery,
     liqQuery,
   ]);
@@ -91,6 +96,7 @@ export async function fetchPresupuestoVsReal(
     }
   }
 
+  const catIds = new Set(cats.map((c) => c.id));
   const filas: FilaVsReal[] = cats.map((c) => {
     const presupuesto = presupPorCat.get(c.id) ?? 0;
     const real = realPorCat.get(c.id) ?? 0;
@@ -106,12 +112,30 @@ export async function fetchPresupuestoVsReal(
     };
   });
 
+  // Fase 3 (alta #6): gasto real con categoría inactiva/eliminada no debe
+  // desaparecer silenciosamente. Se agrega fila sintética "Sin categoría".
+  let realHuerfano = 0;
+  for (const [catId, monto] of realPorCat) {
+    if (!catIds.has(catId)) realHuerfano += monto;
+  }
+  if (realHuerfano > 0) {
+    filas.push({
+      categoria_id: "__huerfanas__",
+      categoria_nombre: "Sin categoría / inactivas",
+      presupuesto_mxn: 0,
+      real_mxn: realHuerfano,
+      variacion_mxn: realHuerfano,
+      cumplimiento_pct: 0,
+    });
+  }
+
   const total_presupuesto = filas.reduce((a, f) => a + f.presupuesto_mxn, 0);
   const total_real = filas.reduce((a, f) => a + f.real_mxn, 0);
 
-  // Fase J: derivados de sobreejercicio. Umbral 110% alineado con la alerta
-  // `presupuesto-exceso-categoria` en `calcularAlertas`.
-  const excedidas = filas.filter((f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > 110);
+  // Fase J: derivados de sobreejercicio. Umbral compartido con `calcularAlertas`.
+  const excedidas = filas.filter(
+    (f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > UMBRAL_SOBREEJERCICIO_PCT,
+  );
   const top_exceso = [...excedidas]
     .sort((a, b) => b.variacion_mxn - a.variacion_mxn)
     .slice(0, 5);
@@ -126,3 +150,4 @@ export async function fetchPresupuestoVsReal(
     top_exceso,
   };
 }
+
