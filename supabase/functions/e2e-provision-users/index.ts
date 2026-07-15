@@ -21,6 +21,8 @@ type ProvisionPayload = {
   cliente_id?: string;
 };
 
+type AdminClient = ReturnType<typeof createClient>;
+
 type UserResult = {
   email: string;
   user_id: string;
@@ -35,29 +37,9 @@ type UserResult = {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-  if (req.method !== "POST") {
-    return json({ error: "method_not_allowed" }, 405);
-  }
-
-  // Guardia: secreto compartido
-  const expected = Deno.env.get("E2E_PROVISION_SECRET");
-  if (!expected) {
-    return json({ error: "e2e_provision_secret_not_configured" }, 500);
-  }
-  const provided = req.headers.get("x-e2e-secret");
-  if (provided !== expected) {
-    return json({ error: "unauthorized" }, 401);
-  }
-
-  let payload: ProvisionPayload;
-  try {
-    payload = await req.json();
-  } catch {
-    return json({ error: "invalid_json" }, 400);
-  }
+  const guarded = await guard(req);
+  if (guarded instanceof Response) return guarded;
+  const { payload } = guarded;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -66,64 +48,21 @@ Deno.serve(async (req) => {
   });
 
   try {
-    // Resolver organización (usa la primera si no se especifica).
-    let orgId = payload.organization_id ?? null;
-    if (!orgId) {
-      const { data: firstOrg, error: orgErr } = await admin
-        .from("organizations")
-        .select("id")
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (orgErr) throw orgErr;
-      if (!firstOrg) return json({ error: "no_organization_found" }, 400);
-      orgId = firstOrg.id;
-    }
+    const orgResult = await resolveOrgId(admin, payload);
+    if (orgResult instanceof Response) return orgResult;
+    const orgId = orgResult;
 
-    // Resolver cliente para el portal (usa el primero de la org si no se especifica).
-    let clienteId = payload.cliente_id ?? null;
-    if (payload.portal && !clienteId) {
-      const { data: firstCliente, error: clientErr } = await admin
-        .from("clientes")
-        .select("id")
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (clientErr) throw clientErr;
-      if (!firstCliente) {
-        return json({ error: "no_cliente_found_for_org", organization_id: orgId }, 400);
-      }
-      clienteId = firstCliente.id;
-    }
+    const clienteResult = await resolveClienteId(admin, payload, orgId);
+    if (clienteResult instanceof Response) return clienteResult;
+    const clienteId = clienteResult;
 
     const results: UserResult[] = [];
 
-    if (payload.admin?.email && payload.admin.password) {
-      const r = await upsertUser(admin, payload.admin.email, payload.admin.password);
-      await upsertRole(admin, r.user_id, "admin");
-      await upsertOrgMember(admin, r.user_id, orgId, "admin");
-      const checks = await verifyAdmin(admin, r.user_id, orgId);
-      results.push({
-        ...r,
-        role: "admin",
-        verified: checks.user_role_ok && checks.org_member_ok === true,
-        checks,
-      });
-    }
+    const adminRes = await provisionAdmin(admin, payload, orgId);
+    if (adminRes) results.push(adminRes);
 
-    if (payload.portal?.email && payload.portal.password && clienteId) {
-      const r = await upsertUser(admin, payload.portal.email, payload.portal.password);
-      await upsertRole(admin, r.user_id, "cliente");
-      await upsertClientUser(admin, r.user_id, clienteId, orgId);
-      const checks = await verifyPortal(admin, r.user_id, clienteId, orgId);
-      results.push({
-        ...r,
-        role: "cliente",
-        verified: checks.user_role_ok && checks.client_user_ok === true,
-        checks,
-      });
-    }
+    const portalRes = await provisionPortal(admin, payload, clienteId, orgId);
+    if (portalRes) results.push(portalRes);
 
     const allVerified = results.every((r) => r.verified);
     return json(
@@ -143,6 +82,115 @@ Deno.serve(async (req) => {
 });
 
 // -----------------------------------------------------------------------------
+// Guardas HTTP + parseo de payload.
+
+async function guard(
+  req: Request,
+): Promise<Response | { payload: ProvisionPayload }> {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  if (req.method !== "POST") {
+    return json({ error: "method_not_allowed" }, 405);
+  }
+
+  const expected = Deno.env.get("E2E_PROVISION_SECRET");
+  if (!expected) {
+    return json({ error: "e2e_provision_secret_not_configured" }, 500);
+  }
+  if (req.headers.get("x-e2e-secret") !== expected) {
+    return json({ error: "unauthorized" }, 401);
+  }
+
+  try {
+    const payload = (await req.json()) as ProvisionPayload;
+    return { payload };
+  } catch {
+    return json({ error: "invalid_json" }, 400);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Resolución de organización y cliente.
+
+async function resolveOrgId(
+  admin: AdminClient,
+  payload: ProvisionPayload,
+): Promise<string | Response> {
+  if (payload.organization_id) return payload.organization_id;
+  const { data, error } = await admin
+    .from("organizations")
+    .select("id")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return json({ error: "no_organization_found" }, 400);
+  return data.id as string;
+}
+
+async function resolveClienteId(
+  admin: AdminClient,
+  payload: ProvisionPayload,
+  orgId: string,
+): Promise<string | null | Response> {
+  if (payload.cliente_id) return payload.cliente_id;
+  if (!payload.portal) return null;
+  const { data, error } = await admin
+    .from("clientes")
+    .select("id")
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    return json({ error: "no_cliente_found_for_org", organization_id: orgId }, 400);
+  }
+  return data.id as string;
+}
+
+// -----------------------------------------------------------------------------
+// Flujos de provisioning por rol.
+
+async function provisionAdmin(
+  admin: AdminClient,
+  payload: ProvisionPayload,
+  orgId: string,
+): Promise<UserResult | null> {
+  if (!payload.admin?.email || !payload.admin.password) return null;
+  const r = await upsertUser(admin, payload.admin.email, payload.admin.password);
+  await upsertRole(admin, r.user_id, "admin");
+  await upsertOrgMember(admin, r.user_id, orgId, "admin");
+  const checks = await verifyAdmin(admin, r.user_id, orgId);
+  return {
+    ...r,
+    role: "admin",
+    verified: checks.user_role_ok && checks.org_member_ok === true,
+    checks,
+  };
+}
+
+async function provisionPortal(
+  admin: AdminClient,
+  payload: ProvisionPayload,
+  clienteId: string | null,
+  orgId: string,
+): Promise<UserResult | null> {
+  if (!payload.portal?.email || !payload.portal.password || !clienteId) return null;
+  const r = await upsertUser(admin, payload.portal.email, payload.portal.password);
+  await upsertRole(admin, r.user_id, "cliente");
+  await upsertClientUser(admin, r.user_id, clienteId, orgId);
+  const checks = await verifyPortal(admin, r.user_id, clienteId, orgId);
+  return {
+    ...r,
+    role: "cliente",
+    verified: checks.user_role_ok && checks.client_user_ok === true,
+    checks,
+  };
+}
+
+// -----------------------------------------------------------------------------
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -152,11 +200,10 @@ function json(body: unknown, status = 200) {
 }
 
 async function upsertUser(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   email: string,
   password: string,
 ): Promise<{ email: string; user_id: string; created: boolean }> {
-  // Búsqueda paginada por email (auth.admin no expone filtro directo).
   const target = email.toLowerCase();
   let found: { id: string } | null = null;
   for (let page = 1; page <= 20 && !found; page++) {
@@ -185,11 +232,7 @@ async function upsertUser(
   return { email, user_id: data.user!.id, created: true };
 }
 
-async function upsertRole(
-  admin: ReturnType<typeof createClient>,
-  userId: string,
-  role: string,
-) {
+async function upsertRole(admin: AdminClient, userId: string, role: string) {
   const { error } = await admin
     .from("user_roles")
     .upsert({ user_id: userId, role }, { onConflict: "user_id" });
@@ -197,7 +240,7 @@ async function upsertRole(
 }
 
 async function upsertOrgMember(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   userId: string,
   orgId: string,
   role: string,
@@ -212,7 +255,7 @@ async function upsertOrgMember(
 }
 
 async function upsertClientUser(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   userId: string,
   clienteId: string,
   orgId: string,
@@ -230,7 +273,7 @@ async function upsertClientUser(
 // Verificación post-upsert: releemos las tablas para confirmar rol + asociación.
 
 async function verifyAdmin(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   userId: string,
   orgId: string,
 ): Promise<{ user_role_ok: boolean; org_member_ok: boolean }> {
@@ -253,7 +296,7 @@ async function verifyAdmin(
 }
 
 async function verifyPortal(
-  admin: ReturnType<typeof createClient>,
+  admin: AdminClient,
   userId: string,
   clienteId: string,
   orgId: string,
