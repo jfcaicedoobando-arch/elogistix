@@ -19,6 +19,7 @@ import { ReporteEERRDocument } from "@/pdf/documents/ReporteEERRDocument";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
+import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
@@ -49,7 +50,9 @@ export default function ProfitEstadoResultados() {
       <PageHeader
         title="Estado de Resultados"
         description="P&G mensual por modo de transporte basado en ETA del embarque"
+        tabs={<ProfitSubNav />}
       />
+
 
       <Card>
         <CardContent className="p-4 flex flex-wrap items-center gap-3">

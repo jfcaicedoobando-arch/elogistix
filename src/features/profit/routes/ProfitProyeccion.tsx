@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabProyeccion } from "@/features/facturacion/components/TabProyeccion";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 
 export default function ProfitProyeccion() {
   return (
@@ -8,8 +9,10 @@ export default function ProfitProyeccion() {
       <PageHeader
         title="Proyección de Facturación"
         description="Cuánto vas a facturar este mes según los ETA de los embarques"
+        tabs={<ProfitSubNav />}
       />
       <TabProyeccion />
     </PageContainer>
   );
 }
+

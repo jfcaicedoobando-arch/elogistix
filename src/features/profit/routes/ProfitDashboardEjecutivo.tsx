@@ -28,6 +28,7 @@ import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
+import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
 
 const MES_MINIMO = "2026-04";
 
@@ -56,6 +57,7 @@ export default function ProfitDashboardEjecutivo() {
       <PageHeader
         title="Dashboard Ejecutivo"
         description="Vista consolidada de la situación financiera."
+        tabs={<ProfitSubNav />}
       />
 
       <Card>
