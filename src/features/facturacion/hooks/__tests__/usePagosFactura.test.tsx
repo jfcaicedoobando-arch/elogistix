@@ -14,6 +14,8 @@ vi.mock("@/lib/query", () => ({
       all: ["facturas"],
       pagos: (id: string) => ["facturas", "pagos", id],
     },
+    dashboardEjecutivo: { all: ["dashboard-ejecutivo"] },
+    presupuesto: { all: ["presupuesto"] },
   },
 }));
 
