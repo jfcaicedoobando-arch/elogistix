@@ -7,8 +7,8 @@
 import currency from "currency.js";
 import { convertirAMXN, calcularMargen, type Moneda } from "@/lib/financial/financialUtils";
 
-export type ModoColumna = "Marítimo" | "Aéreo" | "Terrestre";
-export const MODOS_COLUMNAS: readonly ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre"] as const;
+export type ModoColumna = "Marítimo" | "Aéreo" | "Terrestre" | "Otros";
+export const MODOS_COLUMNAS: readonly ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre", "Otros"] as const;
 
 export interface EmbarqueER {
   id: string;
@@ -49,14 +49,33 @@ export interface EstadoResultados {
   margen: TotalER;
 }
 
-const emptyModos = (): Record<ModoColumna, number> => ({ "Marítimo": 0, "Aéreo": 0, "Terrestre": 0 });
+const emptyModos = (): Record<ModoColumna, number> => ({ "Marítimo": 0, "Aéreo": 0, "Terrestre": 0, "Otros": 0 });
 
-function isModoColumna(modo: string): modo is ModoColumna {
-  return modo === "Marítimo" || modo === "Aéreo" || modo === "Terrestre";
+/**
+ * Mapea el `modo` crudo del embarque a una columna del EERR. Cualquier
+ * modo no reconocido (Multimodal, vacío, mayúsculas, con acentos raros)
+ * cae a "Otros" para que sus conceptos NO se pierdan silenciosamente —
+ * antes eran descartados y hacían que "Utilidad operativa" no cuadrara
+ * con "Ingresos del periodo".
+ */
+function resolverModoColumna(modo: string): ModoColumna {
+  const raw = (modo ?? "").trim();
+  if (raw === "Marítimo" || raw === "Aéreo" || raw === "Terrestre") return raw;
+  return "Otros";
 }
 
+/**
+ * Clave canónica para colapsar filas del pivot. Ignora acentos, colapsa
+ * espacios múltiples y normaliza mayúsculas — evita que "Flete Marítimo"
+ * y "Flete Maritimo" o "THC" y "THC  " aparezcan como filas separadas.
+ */
 function normalizeKey(desc: string): string {
-  return (desc ?? "").trim().toLowerCase();
+  return (desc ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 function acumular(
