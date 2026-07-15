@@ -115,8 +115,8 @@ export const appRoutes = (
 
     <Route path="/profit" element={<Navigate to="/profit/dashboard" replace />} />
     <Route path="/profit/dashboard" element={guarded(PROFIT_READ_ROLES, <ProfitDashboardEjecutivo />)} />
-    <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
-    <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
+    <Route path="/profit/proyeccion" element={guarded(PROFIT_READ_ROLES, <ProfitProyeccion />)} />
+    <Route path="/profit/estado-resultados" element={guarded(PROFIT_READ_ROLES, <ProfitEstadoResultados />)} />
     <Route path="/profit/presupuesto" element={guarded(PROFIT_READ_ROLES, <ProfitPresupuesto />)} />
 
     <Route path="/clientes" element={<Clientes />} />

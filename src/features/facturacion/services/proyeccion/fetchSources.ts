@@ -29,6 +29,9 @@ export async function fetchEmbarquesMes(
     )
     .gte("eta", desde)
     .lte("eta", hasta)
+    // Excluir embarques cancelados — alineado con Estado de Resultados
+    // para que la proyección no infle ingresos con expedientes cancelados.
+    .neq("estado", "Cancelado")
     .order("eta", { ascending: true });
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;

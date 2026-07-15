@@ -22,8 +22,21 @@ export function BandaKPIs({ kpis }: Props) {
   const nav = useNavigate();
   const delta = formatDelta(kpis.ingresos_delta_pct);
   const cumplimiento = kpis.cumplimiento_presupuesto_pct;
-  const cumplVariant: "positive" | "negative" | "neutral" =
-    cumplimiento === 0 ? "neutral" : cumplimiento > 110 ? "negative" : cumplimiento > 100 ? "neutral" : "positive";
+  const sinPresupuesto = cumplimiento === 0;
+  const cumplVariant: "positive" | "negative" | "neutral" = sinPresupuesto
+    ? "neutral"
+    : cumplimiento > 110
+      ? "negative"
+      : cumplimiento > 100
+        ? "neutral"
+        : "positive";
+  const cumplDelta = sinPresupuesto
+    ? "Sin presupuesto capturado"
+    : cumplimiento > 110
+      ? "Sobre el límite"
+      : cumplimiento > 100
+        ? "Cercano al límite"
+        : "En rango";
 
   return (
     <KpiStrip desktopCols={6}>
@@ -36,9 +49,9 @@ export function BandaKPIs({ kpis }: Props) {
         onClick={() => nav("/profit/estado-resultados")}
       />
       <KpiCard
-        label="Utilidad neta"
+        label="Utilidad operativa"
         value={formatCurrency(kpis.utilidad_mxn, "MXN")}
-        delta={`Margen ${kpis.margen_pct.toFixed(1)}%`}
+        delta={`Margen ${kpis.margen_pct.toFixed(1)}% · antes de gastos admin`}
         deltaVariant={kpis.margen_pct >= 0 ? "positive" : "negative"}
         icon={TrendingUp}
         onClick={() => nav("/profit/estado-resultados")}
@@ -50,7 +63,7 @@ export function BandaKPIs({ kpis }: Props) {
         onClick={() => nav("/tesoreria")}
       />
       <KpiCard
-        label="Cartera vencida"
+        label="Cartera vencida (>30d)"
         value={formatCurrency(kpis.cartera_vencida_mxn, "MXN")}
         delta={`${kpis.cartera_vencida_count} cliente(s)`}
         deltaVariant={kpis.cartera_vencida_mxn > 0 ? "negative" : "neutral"}
@@ -65,8 +78,8 @@ export function BandaKPIs({ kpis }: Props) {
       />
       <KpiCard
         label="Cumplim. presupuesto"
-        value={`${cumplimiento.toFixed(1)}%`}
-        delta={cumplimiento > 110 ? "Sobre el límite" : cumplimiento > 100 ? "Cercano al límite" : "En rango"}
+        value={sinPresupuesto ? "—" : `${cumplimiento.toFixed(1)}%`}
+        delta={cumplDelta}
         deltaVariant={cumplVariant}
         icon={Target}
         onClick={() => nav("/profit/presupuesto")}

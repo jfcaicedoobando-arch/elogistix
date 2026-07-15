@@ -4,13 +4,16 @@ import {
   fetchPresupuestoMensualAnio, upsertCeldaPresupuesto,
   type UpsertCeldaParams,
 } from "@/features/presupuesto/services";
+import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 
 export function usePresupuestoMensualAnio(anio: number) {
+  const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: queryKeys.presupuesto.mensual(anio),
-    queryFn: () => fetchPresupuestoMensualAnio(anio),
+    queryKey: [...queryKeys.presupuesto.mensual(anio), organizationId ?? "none"],
+    queryFn: () => fetchPresupuestoMensualAnio(anio, organizationId),
     staleTime: 30_000,
+    enabled: !!organizationId,
   });
 }
 
