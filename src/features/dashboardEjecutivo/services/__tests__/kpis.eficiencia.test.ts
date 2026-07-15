@@ -89,7 +89,7 @@ describe("calcularKPIsEjecutivos · DSO / DPO / Runway (Fase 4)", () => {
     expect(k.runway_meses).toBeCloseTo(2, 5);
   });
 
-  it("Runway es null si no hay saldo en bancos", () => {
+  it("Runway = 0 (caja agotada) si hay burn y saldo bancario ≤ 0 (v13.300.49)", () => {
     const k = calcularKPIsEjecutivos(
       snap({
         eerrPeriodo: {
@@ -99,17 +99,21 @@ describe("calcularKPIsEjecutivos · DSO / DPO / Runway (Fase 4)", () => {
           margen: -100, ingresos: [], costos: [],
         },
         tesoreria: {
-          cuentas: [], // sin saldo
+          cuentas: [],
           flujo: {
             por_cobrar_mxn: 0, por_cobrar_usd: 0,
             por_pagar_mxn: 0, por_pagar_usd: 0,
             flujo_neto_mxn: 0, flujo_neto_usd: 0,
+            por_cobrar_total_mxn: 0, por_pagar_total_mxn: 0,
           },
           top_deudores: [], top_acreedores: [],
+          saldo_bancos_mxn: 0,
+          cartera_vencida_total_mxn: 0, cartera_vencida_count: 0,
+          cxp_vencidas_count: 0, cxp_vencidas_total_mxn: 0,
         },
       }),
       0,
     );
-    expect(k.runway_meses).toBeNull();
+    expect(k.runway_meses).toBe(0);
   });
 });
