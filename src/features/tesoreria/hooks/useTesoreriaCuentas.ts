@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useOrgFilter } from "@/hooks/shared";
 import {
   listarCuentas, crearCuenta, eliminarCuenta, fetchSaldosCuentas,
 } from "@/features/tesoreria/services";
@@ -48,11 +49,12 @@ export function useEliminarCuenta() {
   });
 }
 
-/** Saldos por cuenta (sin lectura de facturas). Reutilizable. */
+/** Saldos por cuenta (sin lectura de facturas). Filtra por tenant activo. */
 export function useSaldosCuentas() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.tesoreria.saldosCuentas,
-    queryFn: fetchSaldosCuentas,
+    queryKey: queryKeys.tesoreria.saldosCuentasPorOrg(organizationId ?? null),
+    queryFn: () => fetchSaldosCuentas(organizationId ?? null),
     staleTime: 60_000,
   });
 }

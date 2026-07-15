@@ -18,7 +18,7 @@ export function useResumenTesoreria(): {
 
   const isLoading = cobranzaQ.isLoading || cxpQ.isLoading || cuentasQ.isLoading;
   const error = cobranzaQ.error ?? cxpQ.error ?? cuentasQ.error;
-  const ready = !!cobranzaQ.data && !!cxpQ.data && !!cuentasQ.data;
+  const ready = Array.isArray(cobranzaQ.data) && Array.isArray(cxpQ.data) && Array.isArray(cuentasQ.data);
 
   const data = ready
     ? calcularResumenTesoreria({
