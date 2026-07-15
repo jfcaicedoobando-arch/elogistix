@@ -1,29 +1,38 @@
 ## Diagnóstico
 
-El error `"related" is not allowed` es exactamente el mismo bug que corregimos ayer en la versión **13.300.57**. En el reporte que compartes, la telemetría dice `"version": "13.300.56"` — o sea, esa captura vino del build **anterior** al fix.
+Este error **no es un bug de código** — es una respuesta del SAT vía FacturAPI. El texto viene tal cual de ellos:
 
-Ya revisé el código actual (`supabase/functions/facturapi-emitir/helpers.ts` línea 167) y confirma la forma correcta según la documentación oficial de FacturAPI v2:
+> "Esta factura está marcada como no cancelable por el SAT. Es posible que tengas que cancelar las facturas relacionadas antes."
 
-```ts
-payload.related_documents = [{ relationship: "04", documents: [ctx.sustituye_uuid] }];
-```
+**Analogía:** Es como querer romper un contrato que ya tiene addendas firmadas encima. El SAT no te deja cancelar la factura vieja mientras existan otros documentos fiscales colgados de ella.
 
-La doc de FacturAPI (`createInvoice`, campo `related_documents: Array of RelatedDocumentInput`) confirma que ese es el esquema válido. El campo `related` sin sufijo ya no existe en la v2.
+## Posibles causas (en orden de probabilidad)
 
-**Analogía:** es como cuando actualizas una app en el celular pero sigues viendo la pantalla vieja porque no la cerraste — el arreglo ya está guardado, pero el navegador (o los logs) aún muestra la versión previa.
+1. **Complementos de pago (REP) vinculados a la factura vieja.** Si la vieja tenía método `PPD` y alguien ya timbró un complemento de pago contra ella, primero hay que cancelar el complemento.
+2. **Notas de crédito timbradas** que referencian la vieja. Cancelarlas primero.
+3. **La factura nueva sustitutiva aún no está registrada en el SAT** (rezago de minutos/horas). A veces el SAT tarda en propagar la relación `04` y rechaza la cancelación temporalmente.
+4. **Aceptación del receptor pendiente.** Si el total > $1,000 MXN y el receptor tiene RFC, el SAT requiere que el cliente **acepte** la cancelación desde su Buzón Tributario. Mientras no acepte, sale como "no cancelable".
 
-## Qué hacer
+## Qué necesito verificar antes de proponer código
 
-1. **Publicar la versión actual (13.300.57)** desde el botón *Publish* en Lovable. Producción (`librecarga.com`) sigue sirviendo el bundle 13.300.56.
-2. Refrescar la pestaña con Ctrl+F5 (para tirar el JS viejo cacheado) y reintentar la sustitución.
-3. Si vuelve a fallar con la **misma versión 13.300.57 visible en el nuevo reporte de error**, entonces sí hay un bug remanente y abro una nueva ronda de investigación:
-   - Revisar si el SDK oficial `facturapi@4.18.0` está transformando `related_documents` → `related` internamente (poco probable, pero verificable inspeccionando `node_modules/facturapi/lib/resources/Invoice.js`).
-   - Agregar un `console.log` del payload final justo antes de `facturapi.invoices.create(payload)` para confirmar qué se está enviando en runtime.
+Voy a leer en la base:
 
-## No requiere cambios de código todavía
+1. `facturas` relacionadas a `dc1e0162-ae7a-474b-abed-3b6301a86add`: si tiene pagos_factura con complemento timbrado, o notas de crédito.
+2. `factura_notas_credito` y `pagos_factura` (con `complemento_facturapi_id`) que apunten a esa factura.
+3. Estado actual de la factura vieja y de la nueva sustitutiva.
 
-Prefiero no bumpear a 13.300.58 con cambios especulativos. Primero necesitamos confirmar que el error persiste con la 13.300.57 ya publicada.
+## Acción propuesta
 
-<presentation-actions>
-<presentation-open-publish>Publish your app</presentation-open-publish>
-</presentation-actions>
+**Paso 1 — Investigación (sin cambios de código):** Consultar la BD para confirmar cuál de las 4 causas está bloqueando la cancelación.
+
+**Paso 2 — Según hallazgo:**
+
+- Si hay complementos/notas → guiarte para cancelarlos primero desde la UI.
+- Si es aceptación pendiente → toca esperar a que el cliente acepte en su Buzón. Podemos mejorar el mensaje en `facturapi.ts` para explicarlo claramente (hoy solo repite el texto crudo del SAT).
+- Si es rezago SAT → reintentar en 30 min. También podemos mejorar el mensaje.
+
+**Paso 3 (opcional, si aplica):** Enriquecer el manejador de error en `supabase/functions/facturapi-cancelar/` para detectar el patrón "no cancelable" y sugerir en el toast qué revisar (complementos, notas de crédito, aceptación del receptor).
+
+## Pregunta para ti
+
+¿La factura vieja ya tenía complementos de pago timbrados o notas de crédito antes de que intentaras sustituirla? Si sabes la respuesta, me ahorras el paso 1. Si no, en cuanto apruebes este plan hago la consulta a la BD. No tenia ni REP ni NC
