@@ -89,12 +89,13 @@ describe("estadoResultados.extra", () => {
     expect(er.ingresos[0].porModo["Marítimo"]).toBeCloseTo(1500);
   });
 
-  it("buildEstadoResultados: embarque con modo desconocido se ignora", () => {
+  it("buildEstadoResultados: embarque con modo desconocido cae a columna 'Otros'", () => {
     const embarques = [emb("e1", "Ferroviario" as string)];
     const ventas = [venta("e1", "Flete", 9999)];
     const er = buildEstadoResultados(embarques, ventas, []);
-    expect(er.totalIngresos.total).toBe(0);
-    expect(er.ingresos).toHaveLength(0);
+    expect(er.totalIngresos.total).toBe(9999);
+    expect(er.totalIngresos.porModo["Otros"]).toBe(9999);
+    expect(er.ingresos).toHaveLength(1);
   });
 
   it("buildEstadoResultados: margen es 0 cuando ingresos son 0", () => {
