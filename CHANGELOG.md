@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.52] - 2026-07-15
+- **chore(tesoreria) Complejidad ciclomática ≤16**: `calcularFlujoProyectado` extrajo `aplicarCobranza` / `aplicarCxp` / `aplicarLiquidaciones` (18 → ok). `calcularResumenTesoreria` extrajo `calcularFlujo` + `sumarVencidas` (20 → ok) y `agruparTop` pasa a recibir un objeto `TopAccessors` (6 params → 2). Sin cambios de comportamiento; 69/69 tests verdes.
+
 ## [13.300.51] - 2026-07-15
 - **chore(profit/tesoreria) Baseline arquitectónico (<200 líneas)**: `estadoResultados.ts` unificó `pivotConceptosVenta` + `pivotConceptosCosto` en un genérico `pivotConceptos<T>` (202 → 190). `resumen.ts` extrajo interfaces a `resumen.types.ts` (228 → 159). Sin cambios de comportamiento; 133 tests verdes.
 
