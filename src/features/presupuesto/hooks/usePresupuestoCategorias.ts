@@ -5,11 +5,13 @@ import {
 } from "@/features/presupuesto/services";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { useOrgFilter } from "@/hooks/shared";
 
 export function usePresupuestoCategorias(activas = true) {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.presupuesto.categorias(activas),
-    queryFn: () => fetchCategorias(activas),
+    queryKey: [...queryKeys.presupuesto.categorias(activas), organizationId ?? "none"] as const,
+    queryFn: () => fetchCategorias(activas, organizationId ?? null),
     staleTime: 60_000,
   });
 }

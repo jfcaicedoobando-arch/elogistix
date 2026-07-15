@@ -78,7 +78,7 @@ export async function fetchHuecoFacturacion({
     new Set(arr.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  const { ventas, facturas, conceptosDetalle } = await fetchVentasYFacturas(ids, expedientes);
+  const { ventas, facturas, conceptosDetalle } = await fetchVentasYFacturas(ids, expedientes, organizationId);
   const facturadosSet = new Set<string>(
     facturas.map((f) => f.expediente).filter((x): x is string => !!x),
   );

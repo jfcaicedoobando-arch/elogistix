@@ -39,11 +39,25 @@ export async function fetchEmbarquesMes(
   return data ?? [];
 }
 
-export async function fetchConceptosYFacturas(ids: string[], expedientes: string[]) {
+export async function fetchConceptosYFacturas(
+  ids: string[],
+  expedientes: string[],
+  organizationId?: string | null,
+) {
+  // Fase 3 (alta #10): filtramos conceptos soft-eliminados para consistencia
+  // con `estadoResultados` y evitar descuadre Proyección vs EERR.
   const [ventasRes, costosRes, facturas] = await Promise.all([
-    supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids),
-    supabase.from("conceptos_costo").select("embarque_id, monto, moneda").in("embarque_id", ids),
-    fetchFacturasPorExpedientes(expedientes),
+    supabase
+      .from("conceptos_venta")
+      .select("embarque_id, total, moneda")
+      .in("embarque_id", ids)
+      .is("deleted_at", null),
+    supabase
+      .from("conceptos_costo")
+      .select("embarque_id, monto, moneda")
+      .in("embarque_id", ids)
+      .is("deleted_at", null),
+    fetchFacturasPorExpedientes(expedientes, organizationId),
   ]);
   if (ventasRes.error) throw ventasRes.error;
   if (costosRes.error) throw costosRes.error;

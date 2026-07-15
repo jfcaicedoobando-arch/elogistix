@@ -25,7 +25,7 @@ export async function fetchProyeccionMes({
     new Set(embarques.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  const { ventas, costos, facturas } = await fetchConceptosYFacturas(ids, expedientesUnicos);
+  const { ventas, costos, facturas } = await fetchConceptosYFacturas(ids, expedientesUnicos, organizationId);
   const ventasMap = indexarPorEmbarque(ventas, "total");
   const costosMap = indexarPorEmbarque(costos, "monto");
   const facturadosSet = new Set<string>(
