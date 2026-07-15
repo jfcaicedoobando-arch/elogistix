@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.50] - 2026-07-15
+- **fix(facturacion) Sustituir CFDI fallaba con `invalid input value for enum app_role: "contabilidad"`**: la RPC `duplicar_factura_para_sustitucion` validaba pertenencia contra un rol inexistente (`'contabilidad'`) que Postgres castea al enum `app_role`, abortando la operación para cualquier usuario. Reemplazado por la lista real: `admin_org`, `admin`, `super_admin`, `contador`, `auxiliar_contable`, `tesorero`. Reportado por `karol.hernandez@elogistixshipping.com` (requestId `e35121ea-8da7-4bd4-8845-a224060bd11c`).
+
 ## [13.300.49] - 2026-07-15
 - **fix(profit) Mezcla de divisas en saldos y KPIs (Lote A)**: el saldo bancario del Dashboard y del cálculo de Runway sumaba `cuenta.saldo` sin distinguir moneda, así una cuenta con 10k USD engordaba el consolidado como si fueran 10k MXN. Ahora `calcularResumenTesoreria` recibe el `tipoCambioUsd` del edge `exchange-rates`, expone `saldo_bancos_mxn` ya convertido, y `flujoProyectado` hace lo mismo con el saldo inicial. DSO/DPO consumen `por_cobrar_total_mxn` / `por_pagar_total_mxn` (incluyen porción USD × TC) en vez de descartar USD.
 - **fix(profit) Cartera vencida subestimada por Top-5 (Lote B)**: la alerta `cartera-vencida-alta` y el KPI `cartera_vencida_mxn` se calculaban sobre `top_deudores` (ya truncado a 5 filas), por lo que una empresa con 20 clientes vencidos veía el total del 6º al 20º ignorado. `ResumenTesoreria` ahora expone `cartera_vencida_total_mxn` y `cartera_vencida_count` sobre el universo completo; simétrico para CxP con `cxp_vencidas_*`.
