@@ -5,7 +5,7 @@
  */
 import { Info } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useFuenteEerr, type FuenteEERR } from "@/features/profit/hooks/useFuenteEerr";
 
 interface Props {
