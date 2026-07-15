@@ -42,6 +42,34 @@ E2E_CROSS_ORG_COTIZACION_ID=<uuid>
 > con datos seed determinísticos. Los specs 09–12 **mutan** datos reales y
 > hacen cleanup best-effort; revisar el tenant tras correr.
 
+## Provisionar usuarios E2E
+
+Antes de la primera corrida (o cuando necesites resetear el password) ejecuta:
+
+```bash
+bun run e2e:provision
+```
+
+Esto invoca la edge function `e2e-provision-users`, que con `service_role`:
+
+- Crea (o resetea el password de) `E2E_EMAIL` y le asigna rol `admin` +
+  membresía en `organization_members` de `E2E_ORG_ID` (o la primera org).
+- Crea (o resetea el password de) `E2E_PORTAL_EMAIL`, le asigna rol `cliente`
+  y lo vincula vía `client_users` a `E2E_CLIENTE_ID` (o al primer cliente de
+  la organización).
+
+Requiere en `.env.e2e`:
+
+```bash
+E2E_PROVISION_SECRET=<mismo valor que el runtime secret del proyecto>
+# opcionales:
+E2E_ORG_ID=<uuid>
+E2E_CLIENTE_ID=<uuid>
+```
+
+Es idempotente: se puede correr N veces sin duplicar. En CI, agrégalo como
+paso previo al matrix de Playwright (`bun run e2e:provision`).
+
 ## Correr
 
 ```bash
