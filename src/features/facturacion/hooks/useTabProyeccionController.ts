@@ -123,6 +123,9 @@ export function useTabProyeccionController() {
     clientesDisponibles, operadoresDisponibles,
     // datos
     isLoading,
+    error: error as Error | null,
+    refetch,
+    isFetching,
     grupos: gruposFiltrados,
     kpis,
     kpisGlobales,
