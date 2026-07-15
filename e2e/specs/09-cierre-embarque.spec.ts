@@ -9,7 +9,7 @@
  *
  * v13.135.59 / v13.135.70 — cobertura del flujo de cierre y bypass.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";

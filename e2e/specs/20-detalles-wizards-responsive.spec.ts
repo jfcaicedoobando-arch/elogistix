@@ -11,7 +11,7 @@
  *
  * Nada se envía a la base de datos: el spec cancela/regresa antes de terminar.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const VIEWPORTS = [

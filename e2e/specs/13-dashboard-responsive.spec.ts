@@ -5,7 +5,7 @@
  * escritorio xl+ (1440×900): sin overflow horizontal en `<main>`, heading
  * visible y sin errores de consola.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const VIEWPORTS = [

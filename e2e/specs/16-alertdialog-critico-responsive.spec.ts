@@ -9,7 +9,7 @@
  * NO se ejecuta el borrado real: sólo se abre → cancela / Esc → verifica
  * cierre + foco + ausencia de overflow / errores de consola.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const VIEWPORTS = [

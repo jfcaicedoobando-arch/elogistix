@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.28] - 2026-07-15
+- **feat(e2e)**: aislamiento de sesión entre specs. Nuevo `e2e/fixtures/testBase.ts` que compone la captura de `pageerror`/`console.error` con un fixture auto `sessionIsolation`: antes de cada test detecta cookies de dominios ajenos al `baseURL` en el `storageState` cargado (adjunta `session-foreign-cookies.txt` al reporte) y después de cada test hace `context.clearCookies()` + `localStorage.clear()` + `sessionStorage.clear()` sobre el origen actual, blindando el escenario admin ↔ portal cliente. Nuevo helper `switchUser(page, creds)` en `fixtures/auth.ts` para cambios de rol dentro del mismo test (reset total antes de `loginAs`). Migrados todos los specs a importar `{ expect, test }` desde `../fixtures/testBase`; `pageErrors.ts` queda como re-export deprecado. Convenciones documentadas en `e2e/README.md`.
+
 ## [13.300.27] - 2026-07-15
 - **feat(e2e)**: verificación post-provisión en `e2e-provision-users` + `scripts/e2e/provision-users.ts`. La edge function ahora relee `user_roles`, `organization_members` y `client_users` tras cada upsert y devuelve `verified` + `checks` por usuario; responde HTTP 500 si algo no cuadra. El script asegura que todos los emails esperados regresen con `verified=true` y sale con código 1 si algún rol/asociación falla, bloqueando la corrida de Playwright antes de arrancar.
 

@@ -10,7 +10,7 @@
  *   - Cero `console.error`.
  * No se envía ningún formulario.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const VIEWPORTS = [

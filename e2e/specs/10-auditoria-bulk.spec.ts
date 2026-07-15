@@ -6,7 +6,7 @@
  *
  * v13.139.0 (score + snooze trigger) / v13.139.1 (bulk revisar).
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";

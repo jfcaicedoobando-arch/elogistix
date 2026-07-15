@@ -10,7 +10,7 @@
  * Si el usuario `E2E_EMAIL` no tiene rol Super Admin, el bloque se salta al
  * detectar redirección fuera de `/admin`.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const VIEWPORTS = [

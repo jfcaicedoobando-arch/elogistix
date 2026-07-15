@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 test.describe("Flujo 02 — Embarques", () => {

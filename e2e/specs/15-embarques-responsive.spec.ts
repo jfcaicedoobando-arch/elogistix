@@ -7,7 +7,7 @@
  *   2. Se abre el primer embarque y su detalle carga (heading EL…).
  *   3. Se regresa a la lista y sigue sin overflow ni errores.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const VIEWPORTS = [

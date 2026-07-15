@@ -1,4 +1,4 @@
-import { expect, test, type Response } from "@playwright/test";
+import { expect, test, type Response } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 /**

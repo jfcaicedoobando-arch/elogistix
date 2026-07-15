@@ -9,7 +9,7 @@
  *
  * Requiere `E2E_PORTAL_EMAIL` / `E2E_PORTAL_PASSWORD`. Si faltan, el spec se salta.
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../fixtures/testBase";
 import { loginAs, portalCreds } from "../fixtures/auth";
 
 const VIEWPORTS = [

@@ -112,6 +112,15 @@ profundizar a flujos transaccionales (crear embarque, emitir factura, etc.).
 
 ## Convenciones
 
+- Importar `{ expect, test }` desde `../fixtures/testBase` (NO desde
+  `@playwright/test`). `testBase` compone la captura de errores de página
+  con el fixture `sessionIsolation`, que limpia cookies + `localStorage` /
+  `sessionStorage` después de cada test y avisa si el `storageState`
+  arrastra cookies de dominios ajenos al `baseURL`.
+- Para mezclar roles dentro de un mismo test (admin ↔ portal cliente) usar
+  `switchUser(page, creds)` de `fixtures/auth.ts` — hace `clearCookies` +
+  purga de storage antes del `loginAs`, evitando que Supabase reutilice el
+  token del rol anterior.
 - Usar `data-testid="..."` para anclar elementos cuando el texto sea volátil.
 - Preferir `page.getByRole(...)` o `getByLabel(...)` sobre selectores CSS.
 - No depender de IDs autogenerados (UUID, timestamps).

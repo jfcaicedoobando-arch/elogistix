@@ -12,7 +12,7 @@
  * Requiere `E2E_HAS_SEED=1` y al menos una cotización ACEPTADA con cliente,
  * descripción de mercancía y tipo de carga. Si no hay seed, el spec se salta.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 
 const HAS_SEED = process.env.E2E_HAS_SEED === "1";

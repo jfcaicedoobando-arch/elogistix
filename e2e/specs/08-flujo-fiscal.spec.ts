@@ -10,7 +10,7 @@
  *
  * v13.137.13 — cierra el pendiente 11 del plan fiscal.
  */
-import { expect, test } from "@playwright/test";
+import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";
