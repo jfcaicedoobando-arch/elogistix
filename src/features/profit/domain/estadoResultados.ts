@@ -165,23 +165,16 @@ function calcularUtilidadYMargen(
   totalIngresos: TotalER,
   totalCostos: TotalER,
 ): { utilidad: TotalER; margen: TotalER } {
-  const utilidad: TotalER = {
-    porModo: {
-      "Marítimo": totalIngresos.porModo["Marítimo"] - totalCostos.porModo["Marítimo"],
-      "Aéreo": totalIngresos.porModo["Aéreo"] - totalCostos.porModo["Aéreo"],
-      "Terrestre": totalIngresos.porModo["Terrestre"] - totalCostos.porModo["Terrestre"],
-    },
-    total: totalIngresos.total - totalCostos.total,
+  const utilPorModo = emptyModos();
+  const margenPorModo = emptyModos();
+  for (const col of MODOS_COLUMNAS) {
+    utilPorModo[col] = totalIngresos.porModo[col] - totalCostos.porModo[col];
+    margenPorModo[col] = calcularMargen(totalIngresos.porModo[col], totalCostos.porModo[col]);
+  }
+  return {
+    utilidad: { porModo: utilPorModo, total: totalIngresos.total - totalCostos.total },
+    margen: { porModo: margenPorModo, total: calcularMargen(totalIngresos.total, totalCostos.total) },
   };
-  const margen: TotalER = {
-    porModo: {
-      "Marítimo": calcularMargen(totalIngresos.porModo["Marítimo"], totalCostos.porModo["Marítimo"]),
-      "Aéreo": calcularMargen(totalIngresos.porModo["Aéreo"], totalCostos.porModo["Aéreo"]),
-      "Terrestre": calcularMargen(totalIngresos.porModo["Terrestre"], totalCostos.porModo["Terrestre"]),
-    },
-    total: calcularMargen(totalIngresos.total, totalCostos.total),
-  };
-  return { utilidad, margen };
 }
 
 export function buildEstadoResultados(
