@@ -111,6 +111,7 @@ describe("dashboardEjecutivo/agregador", () => {
       cxp: [],
       dias: 28,
       organizationId: "org-1",
+      tipoCambioUsd: 17.5,
     });
   });
 
