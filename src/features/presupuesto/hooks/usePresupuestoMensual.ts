@@ -10,7 +10,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 export function usePresupuestoMensualAnio(anio: number) {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: [...queryKeys.presupuesto.mensual(anio), organizationId ?? "none"],
+    queryKey: queryKeys.presupuesto.mensualPorOrg(anio, organizationId),
     queryFn: () => fetchPresupuestoMensualAnio(anio, organizationId),
     staleTime: 30_000,
     enabled: !!organizationId,
