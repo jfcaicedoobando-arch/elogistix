@@ -18,6 +18,7 @@ const mockSnapshot = {
     cartera_vencida_count: 0,
     cxp_7dias_mxn: 0,
     cumplimiento_presupuesto_pct: 0,
+    categorias_en_exceso: 0,
   },
   eerrPeriodo: {} as SnapshotEjecutivo["eerrPeriodo"],
   eerr12m: [],

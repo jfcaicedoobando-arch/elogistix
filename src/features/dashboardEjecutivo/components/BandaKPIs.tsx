@@ -5,18 +5,30 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import type { KPIsEjecutivos } from "@/features/dashboardEjecutivo/services";
 import type { TopItem } from "@/features/tesoreria/services";
+import type { ResumenVsReal } from "@/features/presupuesto/services";
 import { KpiStrip } from "@/components/shared/KpiStrip";
 import { KpiDrilldownSheet } from "./KpiDrilldownSheet";
+import { BudgetOverrunSheet } from "@/components/profit/BudgetOverrunSheet";
 
 interface Props {
   kpis: KPIsEjecutivos;
   /** Datos para drill-downs (Batch E). Si no se proveen, el KPI navega directo. */
   topDeudores?: TopItem[];
   topAcreedores?: TopItem[];
+  /** Fase J: resumen presupuesto para drilldown de "Cumplim. presupuesto". */
+  presupuesto?: ResumenVsReal;
 }
 
-function formatDelta(pct: number): { text: string; variant: "positive" | "negative" | "neutral" } {
-  if (!isFinite(pct) || pct === 0) return { text: "Sin cambio", variant: "neutral" };
+/**
+ * Umbral por debajo del cual una variación se considera ruido y no se pinta
+ * con color (evita el "+0.0% vs periodo anterior" alarmante).
+ */
+const EPS_PCT = 0.05;
+const EPS_PP = 0.05;
+
+function formatDelta(pct: number | null): { text: string; variant: "positive" | "negative" | "neutral" } {
+  if (pct == null) return { text: "Sin comparable previo", variant: "neutral" };
+  if (!isFinite(pct) || Math.abs(pct) < EPS_PCT) return { text: "Sin variación vs. mes anterior", variant: "neutral" };
   const sign = pct > 0 ? "+" : "";
   return {
     text: `${sign}${pct.toFixed(1)}% vs periodo anterior`,
@@ -27,12 +39,13 @@ function formatDelta(pct: number): { text: string; variant: "positive" | "negati
 /**
  * Texto del delta para la card "Utilidad operativa": muestra margen del
  * periodo + variación en puntos porcentuales vs. mes anterior cuando exista
- * comparable (Fase I).
+ * comparable (Fase I). Fase I fix #1: umbral EPS_PP evita "+0.0pp" ruidoso.
  */
 function buildUtilidadDelta(kpis: KPIsEjecutivos): string {
   const margen = `Margen ${kpis.margen_pct.toFixed(1)}%`;
   if (kpis.margen_delta_puntos == null) return `${margen} · sin comparable previo`;
   const puntos = kpis.margen_delta_puntos;
+  if (Math.abs(puntos) < EPS_PP) return `${margen} · sin variación vs mes anterior`;
   const signo = puntos > 0 ? "+" : "";
   return `${margen} · ${signo}${puntos.toFixed(1)}pp vs mes anterior`;
 }
@@ -44,29 +57,31 @@ function utilidadVariant(kpis: KPIsEjecutivos): "positive" | "negative" | "neutr
   return kpis.margen_pct >= 0 ? "positive" : "negative";
 }
 
-export function BandaKPIs({ kpis, topDeudores, topAcreedores }: Props) {
+export function BandaKPIs({ kpis, topDeudores, topAcreedores, presupuesto }: Props) {
   const nav = useNavigate();
-  const [drill, setDrill] = useState<null | "deudores" | "acreedores">(null);
+  const [drill, setDrill] = useState<null | "deudores" | "acreedores" | "presupuesto">(null);
   const delta = formatDelta(kpis.ingresos_delta_pct);
   const cumplimiento = kpis.cumplimiento_presupuesto_pct;
   const sinPresupuesto = cumplimiento === 0;
+  const excesos = kpis.categorias_en_exceso ?? 0;
   const cumplVariant: "positive" | "negative" | "neutral" = sinPresupuesto
     ? "neutral"
-    : cumplimiento > 110
+    : excesos > 0
       ? "negative"
       : cumplimiento > 100
         ? "neutral"
         : "positive";
   const cumplDelta = sinPresupuesto
     ? "Sin presupuesto capturado"
-    : cumplimiento > 110
-      ? "Sobre el límite"
+    : excesos > 0
+      ? `${excesos} categoría(s) en exceso`
       : cumplimiento > 100
         ? "Cercano al límite"
         : "En rango";
 
   const puedeDrillDeudores = Array.isArray(topDeudores);
   const puedeDrillAcreedores = Array.isArray(topAcreedores);
+  const puedeDrillPresupuesto = !!presupuesto && excesos > 0;
 
   return (
     <>
@@ -113,7 +128,7 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores }: Props) {
           delta={cumplDelta}
           deltaVariant={cumplVariant}
           icon={Target}
-          onClick={() => nav("/profit/presupuesto")}
+          onClick={() => (puedeDrillPresupuesto ? setDrill("presupuesto") : nav("/profit/presupuesto"))}
         />
       </KpiStrip>
 
@@ -141,6 +156,14 @@ export function BandaKPIs({ kpis, topDeudores, topAcreedores }: Props) {
           verTodosHref="/compras/facturas"
           verTodosLabel="Ver cuentas por pagar"
           diasTone="porVencer"
+        />
+      )}
+      {puedeDrillPresupuesto && presupuesto && (
+        <BudgetOverrunSheet
+          open={drill === "presupuesto"}
+          onOpenChange={(v) => setDrill(v ? "presupuesto" : null)}
+          filas={presupuesto.top_exceso}
+          periodo={presupuesto.periodo}
         />
       )}
     </>

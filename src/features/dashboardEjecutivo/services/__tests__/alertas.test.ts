@@ -38,13 +38,18 @@ const tesoreria = (over: Partial<ResumenTesoreria> = {}): ResumenTesoreria => ({
   ...over,
 });
 
-const presupuesto = (filas: ResumenVsReal["filas"] = []): ResumenVsReal => ({
-  periodo: "2026-06",
-  filas,
-  total_presupuesto_mxn: filas.reduce((a, f) => a + f.presupuesto_mxn, 0),
-  total_real_mxn: filas.reduce((a, f) => a + f.real_mxn, 0),
-  variacion_neta_mxn: 0,
-});
+const presupuesto = (filas: ResumenVsReal["filas"] = []): ResumenVsReal => {
+  const excedidas = filas.filter((f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > 110);
+  return {
+    periodo: "2026-06",
+    filas,
+    total_presupuesto_mxn: filas.reduce((a, f) => a + f.presupuesto_mxn, 0),
+    total_real_mxn: filas.reduce((a, f) => a + f.real_mxn, 0),
+    variacion_neta_mxn: 0,
+    categorias_en_exceso: excedidas.length,
+    top_exceso: [...excedidas].sort((a, b) => b.variacion_mxn - a.variacion_mxn).slice(0, 5),
+  };
+};
 
 describe("calcularAlertas", () => {
   it("no genera alertas con datos limpios", () => {
@@ -111,7 +116,7 @@ describe("calcularAlertas", () => {
         cumplimiento_pct: 150,
       }]),
     });
-    expect(r.some((a) => a.id.startsWith("presupuesto-"))).toBe(true);
+    expect(r.some((a) => a.id === "presupuesto-exceso-categoria")).toBe(true);
   });
 
   it("acepta umbral personalizado de cartera", () => {

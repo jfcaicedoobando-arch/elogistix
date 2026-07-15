@@ -1,82 +1,53 @@
-## Auditoría de Fase H (Unificación fuente EERR)
+# Auditoría Fase I + Fase J (Presupuesto vs Real)
 
-Revisé los 9 archivos tocados. Todos los tests actuales pasan (29/29). Hallazgos:
+## Auditoría Fase I — resultado
 
-### Bugs y observaciones
+Revisé los archivos de la fase anterior (`useFuenteEerr`, `FuenteEerrToggle`, `alertas.ts`, `agregador.ts`, `BandaKPIs.tsx`) y los 48 tests. No detecté bugs funcionales. Dos observaciones menores que se resuelven en un solo commit corto antes de arrancar J:
 
-1. **[Menor] Robustez de `useFuenteEerr.setFuente`**  
-   Si un listener del evento `lc:eerr-fuente-change` lanza synchronously, `dispatchEvent` propaga la excepción y `setFuente` truena. El test `"no crashea si dispatchEvent falla"` en realidad **asserta que sí truena** — descripción y aserción no coinciden.
-   
-2. **[Consistencia UI] Doble UI para la misma preferencia**  
-   El Dashboard usa `ToggleGroup` (Embarques/Facturas), pero la página EERR sigue usando un `Select` con etiquetas distintas ("Operativa (por ETA del embarque)" vs "Devengada (facturas + CxP)"). Confunde al usuario: son la misma preferencia con dos UIs.
+1. `buildUtilidadDelta` cuando `margen_delta_puntos === 0` imprime `+0.0pp vs mes anterior`, ruido visual. Umbral: usar "sin variación" cuando `|Δ| < 0.05pp`.
+2. `formatDelta` (ingresos) devuelve "Sin cambio" con `pct === 0`, pero también cuando el mes previo es 0 (delta calculado como 0). Añadir campo `ingresos_delta_pct: number | null` para paralelismo con utilidad — ya modelamos "sin comparable" como `null`, hay que aplicarlo también al primer KPI.
 
-3. **[Consistencia periodo] `useEstadoResultados` no usa `usePeriodoMesUrl`**  
-   Mantiene su propio `useState` + `useSearchParams` para `?mes=`. Duplica lógica que ya fue centralizada en Batch B. Bajo riesgo pero se puede alinear.
+## Fase J — Alertas de sobreejercicio presupuestal + drilldown
 
-4. **[Coverage gap]**  
-   Falta un test de integración que verifique que cambiar la fuente en un consumidor (ej. Dashboard) refleja en el otro (EERR) — hoy sólo probamos cross-instance con `renderHook`.
+**Motivación (usuario final):** hoy la card "Cumplim. presupuesto" del Dashboard muestra un solo % agregado. Si el total va en 95% pero **una categoría** está al 300% (ej. viajes disparados), el usuario no lo ve hasta abrir la página Presupuesto → tab Vs Real → escanear la tabla. Además, la tabla de Vs Real no tiene ordenamiento ni resalta las filas críticas.
 
-### Fase I — Relevancia de negocio + polish UI
+### Alcance
 
-Además de cerrar los hallazgos arriba, entro a **Fase I: relevancia** con dos entregables de negocio pedidos por la auditoría original:
+1. **Nuevas KPIs derivadas** (`presupuesto/services/vsReal`): `categorias_en_exceso` (count con `cumplimiento_pct > 110`) y `top_exceso` (top 5 filas ordenadas por variación absoluta positiva).
+2. **KpiDrilldownSheet reutilizable** para presupuesto: nueva variante que muestra categorías con barra de progreso (verde ≤100, ámbar 100–110, rojo >110). Reutilizamos el sheet existente extendiéndolo con `renderItem` opcional.
+3. **BandaKPIs**: la card "Cumplim. presupuesto" ahora abre el sheet con top categorías en exceso (antes navegaba directo a `/profit/presupuesto`). Delta adicional: `N categoría(s) en exceso` cuando aplique.
+4. **TabVsReal**: (a) ordenamiento por columnas (variación asc/desc, % cumplimiento), (b) barra de progreso inline por fila para "% cumplimiento", (c) badge "Excede" en filas con `cumplimiento > 110`, (d) filtro rápido "Sólo excesos".
+5. **Alerta ejecutiva**: extender `calcularAlertas` con regla `presupuesto-exceso-categoria` (severidad: warning cuando ≥1 categoría >110%, danger cuando ≥3 o alguna >200%). Se une al banner de alertas ya existente en el Dashboard.
 
-- **Comparativo periodo vs. anterior en KPIs** — hoy `calcularKPIsEjecutivos` recibe `ingresosMesAnterior` pero no expone `%Δ vs. mes anterior` en la banda. Sólo hay YTD.
-- **Margen bruto y margen operativo separados en el Dashboard** — el KPI actual "Utilidad operativa" muestra el neto, pero no permite ver dónde se erosiona el margen. Añadir "Margen bruto %" al lado.
+### Fuera de alcance
 
-## Cambios propuestos
+- Exportar Excel/CSV del comparativo (Fase K candidata).
+- Comparación multi-mes de presupuesto (Fase K candidata).
+- Reordenar categorías en Captura (no es UX crítico).
 
-### Bloque 1 — Cierre de auditoría Fase H
+### Detalles técnicos
 
-1. `src/features/profit/hooks/useFuenteEerr.ts`
-   - Envolver `window.dispatchEvent(...)` en `try/catch` con `reportCaughtError` (feature: `"profit"`, op: `"eerr_fuente_dispatch"`). El setter nunca truena por listeners.
+- `src/features/presupuesto/services/vsReal.ts`: extender `PresupuestoVsRealResumen` con `categorias_en_exceso: number` y `top_exceso: PresupuestoVsRealFila[]` (top 5, ordenado por `variacion_mxn` desc, filtrando `presupuesto > 0`).
+- `src/features/dashboardEjecutivo/services/alertas.ts`: nueva alerta `presupuesto-exceso-categoria`; agrega a la lista solo si `resumen.categorias_en_exceso >= 1`.
+- `src/features/dashboardEjecutivo/services/types.ts`: agregar `categoriasExcedidas?: PresupuestoVsRealFila[]` en el snapshot para el drilldown.
+- `src/components/profit/BudgetOverrunSheet.tsx` (nuevo, <150 líneas): sheet especializado. Barra de progreso: `<div className="h-2 rounded bg-muted"><div style={...}` **no permitido** por regla de no inline styles → usar `Progress` de shadcn con `value` clamped a 100 y badge separado para el exceso real.
+- `src/features/presupuesto/components/TabVsReal.tsx`: refactor para bajar a <200 líneas si crece. Añadir `useState` con `sortKey/sortDir/soloExcesos`. Column headers clickables con ícono `ChevronUp/Down`.
+- Tests nuevos (mínimos):
+  - `vsReal.test.ts`: `top_exceso` ordena por variación desc y filtra sin-presupuesto; `categorias_en_exceso` respeta umbral 110%.
+  - `alertas.test.ts`: alerta `presupuesto-exceso-categoria` con severidad warning/danger según reglas.
+  - `BudgetOverrunSheet.test.tsx`: render de barra + badge de exceso.
+  - `TabVsReal.test.tsx`: sort por variación desc, filtro "solo excesos" oculta filas ≤110%.
 
-2. `src/features/profit/hooks/__tests__/useFuenteEerr.test.ts`
-   - Ajustar el test problemático: renombrarlo a `"no propaga excepciones de listeners"` y assertar que `setFuente` **no** truena y que `localStorage` sí quedó actualizado (persistencia gana sobre notificación).
+```text
+Dashboard Ejecutivo
+  BandaKPIs
+   └─ [Cumplim. presupuesto] ── click ──► BudgetOverrunSheet
+                                            ├─ top 5 categorías (barra + badge exceso)
+                                            └─ "Ver presupuesto completo" → /profit/presupuesto?periodo_vs_real=YYYY-MM
+  Alertas (banner existente)
+   └─ nueva regla presupuesto-exceso-categoria
+```
 
-3. `src/components/profit/FuenteEerrToggle.tsx` (nuevo)
-   - Componente reutilizable `<FuenteEerrToggle />` que envuelve `ToggleGroup` + `useFuenteEerr`. Uso: `<FuenteEerrToggle aria-label="…" />`.
-   - Test unitario: cambio de valor invoca `setFuente` y refleja la fuente activa.
-
-4. `src/features/profit/routes/ProfitDashboardEjecutivo.tsx`
-   - Reemplazar el `ToggleGroup` inline por `<FuenteEerrToggle />`.
-
-5. `src/features/profit/routes/ProfitEstadoResultados.tsx`
-   - Reemplazar el `<Select>` de fuente por `<FuenteEerrToggle />`.
-   - Mover la etiqueta descriptiva ("Fuente devengada: …" / "Fuente operativa: …") a un `Tooltip` sobre el toggle o mantenerla como texto de apoyo debajo — decidir mientras se implementa (favor texto de apoyo para no perder contexto).
-
-### Bloque 2 — Fase I (relevancia de negocio)
-
-6. `src/features/dashboardEjecutivo/services/kpis.ts` (o `alertas.ts` donde vive `calcularKPIsEjecutivos`)
-   - Añadir campos: `variacionIngresosPct` (vs. mes anterior), `margenBrutoPct`, `margenOperativoPct` derivados de `eerrPeriodo`.
-   - Cuidado con divisiones por cero.
-
-7. `src/features/dashboardEjecutivo/services/types.ts`
-   - Extender `KPIsEjecutivos` con los tres nuevos campos.
-
-8. `src/features/dashboardEjecutivo/components/BandaKPIs.tsx`
-   - Añadir chip `%Δ vs. mes anterior` en el KPI de ingresos (verde/rojo).
-   - Añadir KPI "Margen bruto %" como card independiente.
-
-9. Tests nuevos:
-   - `src/features/dashboardEjecutivo/services/__tests__/kpis.variaciones.test.ts` — casos: ingresos crecen, decrecen, mes anterior = 0 (evitar Infinity), margen bruto correcto.
-   - `src/components/profit/__tests__/FuenteEerrToggle.test.tsx` — render + interacción.
-
-### Bloque 3 — Housekeeping
-
-10. Bump `APP_VERSION` a `13.300.38`.
-11. Entrada en `CHANGELOG.md` describiendo cierre de auditoría H + Fase I.
-
-## Notas técnicas
-
-- **Sin cambios de esquema BD.** Todos los cálculos son en cliente sobre datos que ya se consultan.
-- **`useEstadoResultados` migrar a `usePeriodoMesUrl`** lo dejo **fuera** de este plan — es refactor no funcional; lo agendaría a un batch posterior de code quality para evitar mezclar concerns.
-- **Compatibilidad:** el `Select` viejo tenía etiquetas "Operativa"/"Devengada" — el `ToggleGroup` tiene "Embarques"/"Facturas". Es un cambio de wording visible al usuario. Añadir tooltips explicativos para no perder claridad.
-- **Riesgo:** que un test snapshot antiguo dependa del texto "Operativa"/"Devengada" en la página EERR. Buscaré antes de tocar.
-
-## Criterios de aceptación
-
-- `bun run lint` y toda la suite (`bunx vitest run`) pasan.
-- El toggle de fuente se ve **idéntico** en Dashboard y EERR.
-- Cambiar la fuente en una pantalla se refleja al navegar a la otra sin recargar.
-- El Dashboard muestra `%Δ ingresos vs. mes anterior` con color y `Margen bruto %` como KPI adicional.
-- No hay `Infinity`/`NaN` en KPIs cuando el mes anterior es 0.
+### Version y CHANGELOG
+- `APP_VERSION` → `13.300.39`.
+- `CHANGELOG.md`: entrada `[13.300.39]` con los dos bloques (fix Fase I: ruido en deltas, feat Fase J: alertas presupuesto).

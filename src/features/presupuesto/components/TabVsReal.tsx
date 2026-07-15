@@ -1,13 +1,15 @@
 /**
  * Tab Vs Real: comparativo presupuesto vs real del periodo seleccionado.
  * Periodo persistente en URL vía `?periodo_vs_real=YYYY-MM` (via `usePeriodoMesUrl`).
+ * Fase J: sort por columna, filtro "solo excesos", barra + badge por fila.
  */
-import { useState } from "react";
-import { FileText } from "lucide-react";
+import { useMemo, useState } from "react";
+import { FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { MonthPickerMx } from "@/components/ui/month-picker-mx";
 import { usePresupuestoVsReal } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
@@ -15,6 +17,11 @@ import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReportePresupuestoDocument } from "@/pdf/documents/ReportePresupuestoDocument";
 import { withOrgPrefix } from "@/lib/filenames";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
+import { VsRealFila } from "./VsRealFila";
+import type { FilaVsReal } from "@/features/presupuesto/services";
+
+type SortKey = "categoria" | "presupuesto" | "real" | "variacion" | "cumplimiento";
+type SortDir = "asc" | "desc";
 
 function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : "text-foreground";
@@ -28,12 +35,52 @@ function Kpi({ label, value, tone = "default" }: { label: string; value: string;
   );
 }
 
+function ThSort({ label, active, dir, onClick, align = "left" }: {
+  label: string; active: boolean; dir: SortDir; onClick: () => void; align?: "left" | "right";
+}) {
+  const Icon = active ? (dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th className={`px-3 py-2 ${align === "right" ? "text-right" : "text-left"}`}>
+      <button type="button" onClick={onClick} className="inline-flex items-center gap-1 hover:text-foreground">
+        {label} <Icon className="h-3 w-3" />
+      </button>
+    </th>
+  );
+}
+
+function ordenarFilas(filas: FilaVsReal[], key: SortKey, dir: SortDir): FilaVsReal[] {
+  const sign = dir === "asc" ? 1 : -1;
+  const cmp: Record<SortKey, (a: FilaVsReal, b: FilaVsReal) => number> = {
+    categoria: (a, b) => a.categoria_nombre.localeCompare(b.categoria_nombre, "es-MX"),
+    presupuesto: (a, b) => a.presupuesto_mxn - b.presupuesto_mxn,
+    real: (a, b) => a.real_mxn - b.real_mxn,
+    variacion: (a, b) => a.variacion_mxn - b.variacion_mxn,
+    cumplimiento: (a, b) => a.cumplimiento_pct - b.cumplimiento_pct,
+  };
+  return [...filas].sort((a, b) => cmp[key](a, b) * sign);
+}
+
 export function TabVsReal() {
   const { mesActual, setMesKey } = usePeriodoMesUrl("periodo_vs_real");
   const periodo = mesActual.key;
-  const setPeriodo = setMesKey;
   const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("variacion");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [soloExcesos, setSoloExcesos] = useState(false);
   const { data, isLoading } = usePresupuestoVsReal(periodo);
+
+  const toggleSort = (k: SortKey) => {
+    if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(k); setSortDir(k === "categoria" ? "asc" : "desc"); }
+  };
+
+  const filasVisibles = useMemo(() => {
+    if (!data) return [];
+    const base = soloExcesos
+      ? data.filas.filter((f) => f.presupuesto_mxn > 0 && f.cumplimiento_pct > 110)
+      : data.filas;
+    return ordenarFilas(base, sortKey, sortDir);
+  }, [data, sortKey, sortDir, soloExcesos]);
 
   const handlePdf = async () => {
     if (!data || generandoPdf) return;
@@ -43,9 +90,7 @@ export function TabVsReal() {
         <ReportePresupuestoDocument resumen={data} />,
         await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
       );
-    } finally {
-      setGenerandoPdf(false);
-    }
+    } finally { setGenerandoPdf(false); }
   };
 
   const sinPresupuestoGlobal = !!data && data.total_presupuesto_mxn === 0;
@@ -55,7 +100,11 @@ export function TabVsReal() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <Label className="text-xs">Periodo</Label>
-          <MonthPickerMx value={periodo} onChange={setPeriodo} className="h-9" />
+          <MonthPickerMx value={periodo} onChange={setMesKey} className="h-9" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch id="solo-excesos" checked={soloExcesos} onCheckedChange={setSoloExcesos} />
+          <Label htmlFor="solo-excesos" className="text-xs">Solo excesos</Label>
         </div>
         <Button variant="outline" onClick={handlePdf} disabled={!data || generandoPdf}>
           <FileText className="h-4 w-4 mr-2" /> {generandoPdf ? "Generando…" : "PDF"}
@@ -69,18 +118,22 @@ export function TabVsReal() {
           {sinPresupuestoGlobal && (
             <Card className="border-dashed">
               <CardContent className="p-3 text-sm text-muted-foreground">
-                No hay presupuesto capturado para {periodo}. Captúralo en la pestaña
-                "Captura" para ver el comparativo.
+                No hay presupuesto capturado para {periodo}. Captúralo en la pestaña "Captura" para ver el comparativo.
               </CardContent>
             </Card>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
             <Kpi label="Total presupuesto" value={formatCurrency(data.total_presupuesto_mxn, "MXN")} />
             <Kpi label="Total real" value={formatCurrency(data.total_real_mxn, "MXN")} />
             <Kpi
               label="Variación neta"
               value={formatCurrency(data.variacion_neta_mxn, "MXN")}
               tone={sinPresupuestoGlobal ? "default" : data.variacion_neta_mxn <= 0 ? "success" : "danger"}
+            />
+            <Kpi
+              label="Categorías en exceso"
+              value={data.categorias_en_exceso.toString()}
+              tone={data.categorias_en_exceso > 0 ? "danger" : "success"}
             />
           </div>
 
@@ -89,36 +142,21 @@ export function TabVsReal() {
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2 text-left">Categoría</th>
-                    <th className="px-3 py-2 text-right">Presupuesto</th>
-                    <th className="px-3 py-2 text-right">Real</th>
-                    <th className="px-3 py-2 text-right">Variación</th>
-                    <th className="px-3 py-2 text-right">% cumplimiento</th>
+                    <ThSort label="Categoría" active={sortKey === "categoria"} dir={sortDir} onClick={() => toggleSort("categoria")} />
+                    <ThSort label="Presupuesto" active={sortKey === "presupuesto"} dir={sortDir} onClick={() => toggleSort("presupuesto")} align="right" />
+                    <ThSort label="Real" active={sortKey === "real"} dir={sortDir} onClick={() => toggleSort("real")} align="right" />
+                    <ThSort label="Variación" active={sortKey === "variacion"} dir={sortDir} onClick={() => toggleSort("variacion")} align="right" />
+                    <ThSort label="% cumplimiento" active={sortKey === "cumplimiento"} dir={sortDir} onClick={() => toggleSort("cumplimiento")} align="right" />
                   </tr>
                 </thead>
                 <tbody>
-                  {data.filas.map((f, i) => {
-                    const sinPresup = f.presupuesto_mxn === 0;
-                    const exceso = !sinPresup && f.variacion_mxn > 0;
-                    const varClass = sinPresup
-                      ? "text-muted-foreground"
-                      : exceso
-                        ? "text-destructive"
-                        : "text-success";
-                    return (
-                      <tr key={f.categoria_id} className={`border-t ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
-                        <td className="px-3 py-2 font-medium">{f.categoria_nombre}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(f.presupuesto_mxn, "MXN")}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(f.real_mxn, "MXN")}</td>
-                        <td className={`px-3 py-2 text-right tabular-nums font-medium ${varClass}`}>
-                          {formatCurrency(f.variacion_mxn, "MXN")}
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums">
-                          {sinPresup ? "—" : `${f.cumplimiento_pct.toFixed(1)}%`}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {filasVisibles.length === 0 ? (
+                    <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                      {soloExcesos ? "Ninguna categoría excede el 110% este mes." : "Sin filas."}
+                    </td></tr>
+                  ) : (
+                    filasVisibles.map((f, i) => <VsRealFila key={f.categoria_id} fila={f} striped={i % 2 === 1} />)
+                  )}
                 </tbody>
               </table>
             </CardContent>
