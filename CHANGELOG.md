@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.22] - 2026-07-15
+- **test(e2e)**: 4 nuevos specs Playwright de regresión para los bugs corregidos en 13.300.14-20.
+  - `21-embarque-detalle-tabs.spec.ts`: monta Resumen / Tracking / Documentos y valida que no aparezca "ETA vencida" cuando el embarque ya arribó (bug 13.300.16).
+  - `22-modal-enviar-documento.spec.ts`: verifica el rediseño de chips unificados en "Para" y "CC", incluyendo el chip bloqueado del usuario logueado (13.300.17).
+  - `23-por-cobrar-aging.spec.ts`: regresión del clamp de "Vence en" — asegura que no todas las filas muestran "hoy" cuando hay facturas con vencimiento futuro (13.300.18).
+  - `24-auditoria-cache-invalidation.spec.ts`: smoke de que /auditoria dispara `auditoria_embarques_org` al montar y al pulsar Recalcular (13.300.20).
+  - Todos son defensivos: se saltan (`test.skip`) cuando el tenant staging no tiene datos sembrados, en línea con el patrón de specs 02-12.
+
 ## [13.300.21] - 2026-07-14
 - **fix(observability)**: limpieza de 4 issues abiertos en Sentry (`JAVASCRIPT-REACT-1V`, `-1M`, `-2F`, `-2G`).
   - `reportCaughtError` ahora envuelve cualquier `unknown` en `Error` real antes de llamar a `Sentry.captureException`, preservando el objeto original en `extra.original`. Elimina el título minificado "Object captured as exception with keys: code, details, hint, message" y mejora la agrupación por mensaje.
