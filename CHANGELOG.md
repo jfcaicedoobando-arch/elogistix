@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.35] - 2026-07-15
+- **fix(ci)**: quality y tests fallaban por dos regresiones triviales de la fase anterior. (1) Lint: `usePresupuestoMensual.ts` componía `queryKey` inline con spread — se agregó `queryKeys.presupuesto.mensualPorOrg(anio, orgId)` en el builder y se reemplazó el uso. (2) Test hygiene: el `describe("computeForecast")` nuevo en `dashboardEjecutivo/domain/__tests__/forecast.test.ts` colisionaba con el homónimo en `crm/domain/__tests__/forecast.test.ts` — renombrado a `"computeForecast (dashboardEjecutivo)"`.
+
 ## [13.300.34] - 2026-07-15
 - **fix(ci)**: shard 3 fallaba porque la edge function `e2e-provision-users` (creada para provisionar usuarios E2E desde GitHub Actions) no estaba clasificada en el test de arquitectura de cobertura Sentry. Agregada a `SENTRY_EXEMPT` en `sentry-edge-coverage.test.ts` — es tooling de CI, no recibe tráfico de producción y los errores ya se propagan al script `provision-users.ts` que hace fallar el job con logs completos.
 
