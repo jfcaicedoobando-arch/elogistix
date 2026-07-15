@@ -13,16 +13,16 @@ describe("fetchLiquidacionesPendientes — tenancy", () => {
     mock.setTableResult("liquidaciones_comision", { data: [], error: null });
   });
 
-  it("filtra por organization_id y deleted_at IS NULL", async () => {
+  it("filtra por organization_id y fecha_pago IS NULL (sin deleted_at)", async () => {
     await fetchLiquidacionesPendientes("org-b");
     const call = mock.tableCalls.find((c) => c.table === "liquidaciones_comision");
     expect(call).toBeDefined();
     const pairs = call!.ops.map((op, i) => ({ op, args: call!.opArgs[i] }));
     expect(pairs.some((p) => p.op === "eq" && p.args[0] === "organization_id" && p.args[1] === "org-b"))
       .toBe(true);
-    // fecha_pago + deleted_at ambos con `.is(..., null)`
+    // liquidaciones_comision no tiene columna deleted_at; sólo fecha_pago IS NULL
     const isCalls = pairs.filter((p) => p.op === "is");
-    expect(isCalls.some((p) => p.args[0] === "deleted_at" && p.args[1] === null)).toBe(true);
+    expect(isCalls.some((p) => p.args[0] === "deleted_at")).toBe(false);
     expect(isCalls.some((p) => p.args[0] === "fecha_pago" && p.args[1] === null)).toBe(true);
   });
 
