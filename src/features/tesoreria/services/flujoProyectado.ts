@@ -43,6 +43,7 @@ export async function fetchFlujoProyectado(args: {
   cxp: CxpRow[];
   dias?: number;
   organizationId?: string | null;
+  tipoCambioUsd?: number;
 }): Promise<FlujoProyectado> {
   const liquidaciones = await fetchLiquidacionesPendientes(args.organizationId);
   return calcularFlujoProyectado({
@@ -51,5 +52,6 @@ export async function fetchFlujoProyectado(args: {
     cxp: args.cxp,
     liquidaciones,
     dias: args.dias ?? 90,
+    tipoCambioUsd: args.tipoCambioUsd,
   });
 }
