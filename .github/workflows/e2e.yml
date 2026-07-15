@@ -89,7 +89,7 @@ jobs:
 
   provision-users:
     name: Provisionar usuarios E2E
-    needs: [guard-secrets]
+    needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -162,7 +162,7 @@ jobs:
 
   mutators:
     name: Mutators (09-12, serial)
-    needs: [guard-secrets]
+    needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -212,7 +212,7 @@ jobs:
 
   portal:
     name: Portal
-    needs: [guard-secrets]
+    needs: [guard-secrets, provision-users]
     if: needs.guard-secrets.outputs.ok == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
