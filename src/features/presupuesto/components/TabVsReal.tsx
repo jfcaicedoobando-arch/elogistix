@@ -1,10 +1,9 @@
 /**
  * Tab Vs Real: comparativo presupuesto vs real del periodo seleccionado.
- * Periodo persistente en URL vía `?periodo_vs_real=YYYY-MM`.
+ * Periodo persistente en URL vía `?periodo_vs_real=YYYY-MM` (via `usePeriodoMesUrl`).
  */
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { FileText } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/shared/skeletons";
 import { Button } from "@/components/ui/button";
@@ -15,14 +14,7 @@ import { formatCurrency } from "@/lib/formatters/numbers";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReportePresupuestoDocument } from "@/pdf/documents/ReportePresupuestoDocument";
 import { withOrgPrefix } from "@/lib/filenames";
-
-const PARAM = "periodo_vs_real";
-const RE_YM = /^\d{4}-\d{2}$/;
-
-function mesActual(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
+import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
 
 function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : "text-foreground";
@@ -37,21 +29,9 @@ function Kpi({ label, value, tone = "default" }: { label: string; value: string;
 }
 
 export function TabVsReal() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const inicial = (() => {
-    const qp = searchParams.get(PARAM);
-    return qp && RE_YM.test(qp) ? qp : mesActual();
-  })();
-  const [periodo, setPeriodoState] = useState(inicial);
-  const setPeriodo = useCallback(
-    (v: string) => {
-      setPeriodoState(v);
-      const next = new URLSearchParams(searchParams);
-      next.set(PARAM, v);
-      setSearchParams(next, { replace: true });
-    },
-    [searchParams, setSearchParams],
-  );
+  const { mesActual, setMesKey } = usePeriodoMesUrl("periodo_vs_real");
+  const periodo = mesActual.key;
+  const setPeriodo = setMesKey;
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const { data, isLoading } = usePresupuestoVsReal(periodo);
 
