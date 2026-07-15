@@ -50,7 +50,7 @@ export interface FacturaContext {
 
 export interface FacturapiPayload {
   type: "I";
-  serie?: string;
+  series?: string;
   use: string;
   payment_form: string;
   payment_method: string;
