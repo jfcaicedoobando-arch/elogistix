@@ -37,8 +37,8 @@ export function FuenteEerrToggle({ ariaLabel = "Fuente del Estado de Resultados"
           Facturas
         </ToggleGroupItem>
       </ToggleGroup>
-      <HoverCard openDelay={100}>
-        <HoverCardTrigger asChild>
+      <Popover>
+        <PopoverTrigger asChild>
           <button
             type="button"
             aria-label="¿Qué significa cada fuente?"
@@ -46,8 +46,8 @@ export function FuenteEerrToggle({ ariaLabel = "Fuente del Estado de Resultados"
           >
             <Info className="h-4 w-4" />
           </button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80 text-sm space-y-2" align="end">
+        </PopoverTrigger>
+        <PopoverContent className="w-80 text-sm space-y-2" align="end">
           <div>
             <div className="font-semibold">Embarques (Operativa)</div>
             <p className="text-muted-foreground text-xs">
@@ -65,8 +65,8 @@ export function FuenteEerrToggle({ ariaLabel = "Fuente del Estado de Resultados"
           <p className="text-xs italic pt-1 border-t">
             Es normal que las cifras difieran; comparar ambas ayuda a detectar rezagos de facturación.
           </p>
-        </HoverCardContent>
-      </HoverCard>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
