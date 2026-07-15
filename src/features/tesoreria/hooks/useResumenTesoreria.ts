@@ -6,6 +6,7 @@ import { calcularResumenTesoreria, type ResumenTesoreria } from "@/features/teso
 import { useCobranza } from "@/features/facturacion/hooks";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useSaldosCuentas } from "./useTesoreriaCuentas";
+import { useExchangeRates } from "@/features/catalogos/hooks/useExchangeRates";
 
 export function useResumenTesoreria(): {
   data: ResumenTesoreria | undefined;
@@ -15,6 +16,7 @@ export function useResumenTesoreria(): {
   const cobranzaQ = useCobranza({});
   const cxpQ = useFacturasCxP({});
   const cuentasQ = useSaldosCuentas();
+  const tcQ = useExchangeRates();
 
   const isLoading = cobranzaQ.isLoading || cxpQ.isLoading || cuentasQ.isLoading;
   const error = cobranzaQ.error ?? cxpQ.error ?? cuentasQ.error;
@@ -25,6 +27,7 @@ export function useResumenTesoreria(): {
         cuentas: cuentasQ.data!,
         cobranza: cobranzaQ.data!,
         cxp: cxpQ.data!,
+        tipoCambioUsd: tcQ.data?.usdMxn,
       })
     : undefined;
 
