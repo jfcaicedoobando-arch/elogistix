@@ -45,7 +45,7 @@ describe('usePresupuesto Hooks', () => {
   });
 
   it('usePresupuestoMensualAnio no dispara fetch si no hay organizationId', async () => {
-    mockUseOrganization.mockReturnValue({ organizationId: null });
+    mockUseOrganization.mockReturnValue({ organizationId: null as unknown as string });
     const { result } = renderHook(() => usePresupuestoMensualAnio(2023), { wrapper: createWrapper() });
     // Debe quedar disabled — nunca alcanza loading true
     await new Promise((r) => setTimeout(r, 50));
