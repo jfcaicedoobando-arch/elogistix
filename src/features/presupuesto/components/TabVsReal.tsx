@@ -102,7 +102,15 @@ export function TabVsReal() {
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <Label className="text-xs">Periodo</Label>
-          <MonthPickerMx value={periodo} onChange={setMesKey} className="h-9" />
+          <PeriodoMensualToolbar
+            mesActual={mesActual}
+            mesesDisponibles={periodoCtl.mesesDisponibles}
+            onChange={setMesKey}
+            onPrev={periodoCtl.irMesAnterior}
+            onNext={periodoCtl.irMesSiguiente}
+            puedeIrAtras={periodoCtl.puedeIrAtras}
+            puedeIrAdelante={periodoCtl.puedeIrAdelante}
+          />
         </div>
         <div className="flex items-center gap-2">
           <Switch id="solo-excesos" checked={soloExcesos} onCheckedChange={setSoloExcesos} />
