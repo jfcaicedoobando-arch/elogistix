@@ -103,17 +103,57 @@ export function calcularResumenTesoreria(args: {
   flujo.flujo_neto_mxn = flujo.por_cobrar_mxn - flujo.por_pagar_mxn;
   flujo.flujo_neto_usd = flujo.por_cobrar_usd - flujo.por_pagar_usd;
 
-  const top_deudores = args.cobranza
-    .filter((f) => f.saldo > 0 && f.estatus_cobranza === "Vencida")
-    .sort((a, b) => b.saldo - a.saldo)
-    .slice(0, 5)
-    .map((f) => ({ nombre: f.cliente_nombre, saldo: f.saldo, moneda: f.moneda, dias: f.dias_vencido }));
+  const top_deudores = agruparTop(
+    args.cobranza,
+    (f) => f.saldo > 0 && f.estatus_cobranza === "Vencida",
+    (f) => f.cliente_nombre,
+    (f) => f.moneda,
+    (f) => f.saldo,
+    (f) => f.dias_vencido,
+  );
 
-  const top_acreedores = args.cxp
-    .filter((f) => f.saldo > 0 && (f.estatus === "Por vencer" || f.estatus === "Vencida"))
-    .sort((a, b) => b.saldo - a.saldo)
-    .slice(0, 5)
-    .map((f) => ({ nombre: f.proveedor_nombre, saldo: f.saldo, moneda: f.moneda, dias: f.dias_vencido }));
+  const top_acreedores = agruparTop(
+    args.cxp,
+    (f) => f.saldo > 0 && (f.estatus === "Por vencer" || f.estatus === "Vencida"),
+    (f) => f.proveedor_nombre,
+    (f) => f.moneda,
+    (f) => f.saldo,
+    (f) => f.dias_vencido,
+  );
 
   return { cuentas: args.cuentas, flujo, top_deudores, top_acreedores };
+}
+
+/**
+ * Agrupa facturas/CxP por nombre+moneda antes de rankear (fix bug: antes
+ * el top mostraba facturas individuales, por lo que un mismo cliente con
+ * múltiples facturas vencidas aparecía varias veces en el top 5).
+ * `dias` se conserva como el peor caso (más días vencidos) del grupo.
+ */
+function agruparTop<T>(
+  rows: T[],
+  filtro: (r: T) => boolean,
+  nombreOf: (r: T) => string,
+  monedaOf: (r: T) => string,
+  saldoOf: (r: T) => number,
+  diasOf: (r: T) => number | undefined,
+): TopItem[] {
+  const acc = new Map<string, TopItem>();
+  for (const r of rows) {
+    if (!filtro(r)) continue;
+    const nombre = nombreOf(r);
+    const moneda = monedaOf(r);
+    const key = `${nombre}||${moneda}`;
+    const dias = diasOf(r);
+    const prev = acc.get(key);
+    if (prev) {
+      prev.saldo += saldoOf(r);
+      if (dias != null && (prev.dias == null || dias > prev.dias)) prev.dias = dias;
+    } else {
+      acc.set(key, { nombre, saldo: saldoOf(r), moneda, dias });
+    }
+  }
+  return Array.from(acc.values())
+    .sort((a, b) => b.saldo - a.saldo)
+    .slice(0, 5);
 }

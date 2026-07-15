@@ -12,7 +12,7 @@ interface Props {
   emisor?: { razonSocial?: string };
 }
 
-const MODOS: ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre"];
+const MODOS: ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre", "Otros"];
 
 type FilaPlana = {
   concepto: string;
@@ -20,6 +20,7 @@ type FilaPlana = {
   maritimo: number;
   aereo: number;
   terrestre: number;
+  otros: number;
 };
 
 function aplanar(filas: FilaER[]): FilaPlana[] {
@@ -29,6 +30,7 @@ function aplanar(filas: FilaER[]): FilaPlana[] {
     maritimo: f.porModo["Marítimo"] ?? 0,
     aereo: f.porModo["Aéreo"] ?? 0,
     terrestre: f.porModo["Terrestre"] ?? 0,
+    otros: f.porModo["Otros"] ?? 0,
   }));
 }
 
@@ -37,6 +39,7 @@ const cols: PdfColumn<FilaPlana>[] = [
   { key: "mar", title: "Marítimo", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.maritimo, "MXN") },
   { key: "aer", title: "Aéreo", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.aereo, "MXN") },
   { key: "ter", title: "Terrestre", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.terrestre, "MXN") },
+  { key: "otr", title: "Otros", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.otros, "MXN") },
   { key: "tot", title: "Total", cellStyle: styles.cellNum, render: (r) => formatCurrency(r.total, "MXN") },
 ];
 
@@ -94,9 +97,11 @@ export function ReporteEERRDocument({ periodo, fuente, data, emisor }: Props) {
           <Text style={{ fontSize: 11, fontWeight: 700 }}>
             Utilidad por modo: Marítimo {formatCurrency(utilidadModos[0], "MXN")} ·
             Aéreo {formatCurrency(utilidadModos[1], "MXN")} ·
-            Terrestre {formatCurrency(utilidadModos[2], "MXN")}
+            Terrestre {formatCurrency(utilidadModos[2], "MXN")} ·
+            Otros {formatCurrency(utilidadModos[3], "MXN")}
           </Text>
         </View>
+
 
         <Footer empresaNombre={emisor?.razonSocial} />
       </Page>

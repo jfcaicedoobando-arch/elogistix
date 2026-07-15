@@ -7,8 +7,8 @@
 import currency from "currency.js";
 import { convertirAMXN, calcularMargen, type Moneda } from "@/lib/financial/financialUtils";
 
-export type ModoColumna = "Marítimo" | "Aéreo" | "Terrestre";
-export const MODOS_COLUMNAS: readonly ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre"] as const;
+export type ModoColumna = "Marítimo" | "Aéreo" | "Terrestre" | "Otros";
+export const MODOS_COLUMNAS: readonly ModoColumna[] = ["Marítimo", "Aéreo", "Terrestre", "Otros"] as const;
 
 export interface EmbarqueER {
   id: string;
@@ -49,15 +49,41 @@ export interface EstadoResultados {
   margen: TotalER;
 }
 
-const emptyModos = (): Record<ModoColumna, number> => ({ "Marítimo": 0, "Aéreo": 0, "Terrestre": 0 });
+const emptyModos = (): Record<ModoColumna, number> => ({ "Marítimo": 0, "Aéreo": 0, "Terrestre": 0, "Otros": 0 });
 
-function isModoColumna(modo: string): modo is ModoColumna {
-  return modo === "Marítimo" || modo === "Aéreo" || modo === "Terrestre";
+/**
+ * Mapea el `modo` crudo del embarque a una columna del EERR. Cualquier
+ * modo no reconocido (Multimodal, vacío, mayúsculas, con acentos raros)
+ * cae a "Otros" para que sus conceptos NO se pierdan silenciosamente —
+ * antes eran descartados y hacían que "Utilidad operativa" no cuadrara
+ * con "Ingresos del periodo".
+ */
+function resolverModoColumna(modo: string): ModoColumna {
+  const raw = (modo ?? "").trim();
+  if (raw === "Marítimo" || raw === "Aéreo" || raw === "Terrestre") return raw;
+  return "Otros";
 }
 
+/**
+ * Clave canónica para colapsar filas del pivot. Ignora acentos, colapsa
+ * espacios múltiples y normaliza mayúsculas — evita que "Flete Marítimo"
+ * y "Flete Maritimo" o "THC" y "THC  " aparezcan como filas separadas.
+ */
 function normalizeKey(desc: string): string {
-  return (desc ?? "").trim().toLowerCase();
+  return (desc ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
+
+const emptyModosCurrency = (): Record<ModoColumna, currency.Any> => ({
+  "Marítimo": currency(0, { precision: 2 }),
+  "Aéreo": currency(0, { precision: 2 }),
+  "Terrestre": currency(0, { precision: 2 }),
+  "Otros": currency(0, { precision: 2 }),
+});
 
 function acumular(
   filas: Map<string, { display: string; porModo: Record<ModoColumna, currency.Any> }>,
@@ -68,10 +94,7 @@ function acumular(
 ) {
   let row = filas.get(key);
   if (!row) {
-    row = {
-      display,
-      porModo: { "Marítimo": currency(0, { precision: 2 }), "Aéreo": currency(0, { precision: 2 }), "Terrestre": currency(0, { precision: 2 }) },
-    };
+    row = { display, porModo: emptyModosCurrency() };
     filas.set(key, row);
   }
   row.porModo[modo] = (row.porModo[modo] as currency).add(mxn);
@@ -86,8 +109,9 @@ function materializar(
       "Marítimo": (porModo["Marítimo"] as currency).value,
       "Aéreo": (porModo["Aéreo"] as currency).value,
       "Terrestre": (porModo["Terrestre"] as currency).value,
+      "Otros": (porModo["Otros"] as currency).value,
     };
-    const total = por["Marítimo"] + por["Aéreo"] + por["Terrestre"];
+    const total = por["Marítimo"] + por["Aéreo"] + por["Terrestre"] + por["Otros"];
     // Ocultar filas en cero en todas las columnas.
     if (total === 0) continue;
     out.push({ concepto: display, porModo: por, total });
@@ -103,10 +127,11 @@ function pivotConceptosVenta(
 ): void {
   for (const v of ventas) {
     const emb = embById.get(v.embarque_id);
-    if (!emb || !isModoColumna(emb.modo)) continue;
+    if (!emb) continue;
+    const columna = resolverModoColumna(emb.modo);
     const moneda = (v.moneda?.toUpperCase() ?? "MXN") as Moneda;
     const mxn = convertirAMXN(Number(v.total) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(out, normalizeKey(v.descripcion), (v.descripcion ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
+    acumular(out, normalizeKey(v.descripcion), (v.descripcion ?? "").trim() || "(Sin descripción)", columna, mxn);
   }
 }
 
@@ -117,10 +142,11 @@ function pivotConceptosCosto(
 ): void {
   for (const c of costos) {
     const emb = embById.get(c.embarque_id);
-    if (!emb || !isModoColumna(emb.modo)) continue;
+    if (!emb) continue;
+    const columna = resolverModoColumna(emb.modo);
     const moneda = (c.moneda?.toUpperCase() ?? "MXN") as Moneda;
     const mxn = convertirAMXN(Number(c.monto) || 0, moneda, emb.tipo_cambio_usd ?? 1, emb.tipo_cambio_eur ?? 1);
-    acumular(out, normalizeKey(c.concepto), (c.concepto ?? "").trim() || "(Sin descripción)", emb.modo, mxn);
+    acumular(out, normalizeKey(c.concepto), (c.concepto ?? "").trim() || "(Sin descripción)", columna, mxn);
   }
 }
 
@@ -128,35 +154,27 @@ function sumarFilas(rows: FilaER[]): TotalER {
   const porModo = emptyModos();
   let total = 0;
   for (const r of rows) {
-    porModo["Marítimo"] += r.porModo["Marítimo"];
-    porModo["Aéreo"] += r.porModo["Aéreo"];
-    porModo["Terrestre"] += r.porModo["Terrestre"];
+    for (const col of MODOS_COLUMNAS) porModo[col] += r.porModo[col];
     total += r.total;
   }
   return { porModo, total };
 }
 
+
 function calcularUtilidadYMargen(
   totalIngresos: TotalER,
   totalCostos: TotalER,
 ): { utilidad: TotalER; margen: TotalER } {
-  const utilidad: TotalER = {
-    porModo: {
-      "Marítimo": totalIngresos.porModo["Marítimo"] - totalCostos.porModo["Marítimo"],
-      "Aéreo": totalIngresos.porModo["Aéreo"] - totalCostos.porModo["Aéreo"],
-      "Terrestre": totalIngresos.porModo["Terrestre"] - totalCostos.porModo["Terrestre"],
-    },
-    total: totalIngresos.total - totalCostos.total,
+  const utilPorModo = emptyModos();
+  const margenPorModo = emptyModos();
+  for (const col of MODOS_COLUMNAS) {
+    utilPorModo[col] = totalIngresos.porModo[col] - totalCostos.porModo[col];
+    margenPorModo[col] = calcularMargen(totalIngresos.porModo[col], totalCostos.porModo[col]);
+  }
+  return {
+    utilidad: { porModo: utilPorModo, total: totalIngresos.total - totalCostos.total },
+    margen: { porModo: margenPorModo, total: calcularMargen(totalIngresos.total, totalCostos.total) },
   };
-  const margen: TotalER = {
-    porModo: {
-      "Marítimo": calcularMargen(totalIngresos.porModo["Marítimo"], totalCostos.porModo["Marítimo"]),
-      "Aéreo": calcularMargen(totalIngresos.porModo["Aéreo"], totalCostos.porModo["Aéreo"]),
-      "Terrestre": calcularMargen(totalIngresos.porModo["Terrestre"], totalCostos.porModo["Terrestre"]),
-    },
-    total: calcularMargen(totalIngresos.total, totalCostos.total),
-  };
-  return { utilidad, margen };
 }
 
 export function buildEstadoResultados(

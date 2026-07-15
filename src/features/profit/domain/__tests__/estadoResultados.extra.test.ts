@@ -39,11 +39,12 @@ describe("estadoResultados.extra", () => {
     expect(er.utilidad.total).toBe(0);
   });
 
-  it("buildEstadoResultados: MODOS_COLUMNAS tiene exactamente 3 modos", () => {
-    expect(MODOS_COLUMNAS).toHaveLength(3);
+  it("buildEstadoResultados: MODOS_COLUMNAS incluye Marítimo/Aéreo/Terrestre/Otros", () => {
+    expect(MODOS_COLUMNAS).toHaveLength(4);
     expect(MODOS_COLUMNAS).toContain("Marítimo");
     expect(MODOS_COLUMNAS).toContain("Aéreo");
     expect(MODOS_COLUMNAS).toContain("Terrestre");
+    expect(MODOS_COLUMNAS).toContain("Otros");
   });
 
   it("buildEstadoResultados: ingreso MXN se refleja en totalIngresos", () => {
@@ -89,12 +90,13 @@ describe("estadoResultados.extra", () => {
     expect(er.ingresos[0].porModo["Marítimo"]).toBeCloseTo(1500);
   });
 
-  it("buildEstadoResultados: embarque con modo desconocido se ignora", () => {
+  it("buildEstadoResultados: embarque con modo desconocido cae a columna 'Otros'", () => {
     const embarques = [emb("e1", "Ferroviario" as string)];
     const ventas = [venta("e1", "Flete", 9999)];
     const er = buildEstadoResultados(embarques, ventas, []);
-    expect(er.totalIngresos.total).toBe(0);
-    expect(er.ingresos).toHaveLength(0);
+    expect(er.totalIngresos.total).toBe(9999);
+    expect(er.totalIngresos.porModo["Otros"]).toBe(9999);
+    expect(er.ingresos).toHaveLength(1);
   });
 
   it("buildEstadoResultados: margen es 0 cuando ingresos son 0", () => {
@@ -126,4 +128,27 @@ describe("estadoResultados.extra", () => {
     const er = buildEstadoResultados(embarques, ventas, []);
     expect(er.totalIngresos.total).toBe(0);
   });
+
+  it("colapsa filas por acento y espacios en el pivot (fix ingresos duplicados)", () => {
+    const embarques = [emb("e1", "Marítimo")];
+    const ventas = [
+      venta("e1", "Flete Marítimo", 100),
+      venta("e1", "Flete Maritimo", 200), // sin acento
+      venta("e1", "  Flete Marítimo  ", 300), // padding
+      venta("e1", "FLETE  MARÍTIMO", 400), // mayúsculas + doble espacio
+    ];
+    const er = buildEstadoResultados(embarques, ventas, []);
+    expect(er.ingresos).toHaveLength(1);
+    expect(er.ingresos[0].total).toBe(1000);
+  });
+
+  it("asigna a columna 'Otros' modos no reconocidos (Multimodal, vacío)", () => {
+    const embarques = [emb("e1", "Multimodal"), emb("e2", "")];
+    const ventas = [venta("e1", "Flete", 500), venta("e2", "Flete", 300)];
+    const er = buildEstadoResultados(embarques, ventas, []);
+    expect(er.totalIngresos.porModo["Otros"]).toBe(800);
+    expect(er.totalIngresos.total).toBe(800); // ya NO se pierden
+    expect(MODOS_COLUMNAS).toContain("Otros" as const);
+  });
 });
+

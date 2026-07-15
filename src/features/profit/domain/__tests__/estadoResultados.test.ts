@@ -47,13 +47,14 @@ describe("buildEstadoResultados – edge cases", () => {
     expect(er.totalIngresos.total).toBe(0);
   });
 
-  it("skips embarques with unknown modo", () => {
+  it("assigns unknown modo to 'Otros' column (no longer silently dropped)", () => {
     const badEmb: EmbarqueER = { id: "e2", modo: "Submarino", tipo_cambio_usd: 17, tipo_cambio_eur: 18 };
     const ventas: ConceptoVentaER[] = [
       { embarque_id: "e2", descripcion: "Flete", total: 500, moneda: "MXN" },
     ];
     const er = buildEstadoResultados([badEmb], ventas, []);
-    expect(er.totalIngresos.total).toBe(0);
+    expect(er.totalIngresos.total).toBe(500);
+    expect(er.totalIngresos.porModo["Otros"]).toBe(500);
   });
 
   it("buckets amounts into the correct modo column", () => {

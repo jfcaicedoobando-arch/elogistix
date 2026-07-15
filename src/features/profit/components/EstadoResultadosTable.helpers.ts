@@ -16,6 +16,7 @@ export const ESTADO_RESULTADOS_CSV_HEADERS = [
   { key: "maritimo", label: "Marítimo" },
   { key: "aereo", label: "Aéreo" },
   { key: "terrestre", label: "Terrestre" },
+  { key: "otros", label: "Otros" },
   { key: "total", label: "Total" },
 ] as const;
 
@@ -30,6 +31,7 @@ export function buildEstadoResultadosCsvRows(data: EstadoResultados) {
     maritimo: f.porModo["Marítimo"].toFixed(2),
     aereo: f.porModo["Aéreo"].toFixed(2),
     terrestre: f.porModo["Terrestre"].toFixed(2),
+    otros: f.porModo["Otros"].toFixed(2),
     total: f.total.toFixed(2),
   });
   const rows: Record<string, unknown>[] = [];
@@ -44,6 +46,7 @@ export function buildEstadoResultadosCsvRows(data: EstadoResultados) {
     maritimo: data.margen.porModo["Marítimo"].toFixed(2),
     aereo: data.margen.porModo["Aéreo"].toFixed(2),
     terrestre: data.margen.porModo["Terrestre"].toFixed(2),
+    otros: data.margen.porModo["Otros"].toFixed(2),
     total: data.margen.total.toFixed(2),
   });
   return rows;

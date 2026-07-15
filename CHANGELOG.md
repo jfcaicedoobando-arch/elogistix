@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.48] - 2026-07-15
+- **fix(profit) Top deudores/acreedores duplicados**: el ranking mostraba facturas individuales, así que un cliente con 3 facturas vencidas ocupaba 3 lugares del Top 5. Ahora se agrupa por `cliente_nombre + moneda` antes de rankear (suma saldo, conserva el peor `dias_vencido`). Simétrico para CxP.
+- **fix(profit) Ingresos repetidos en EERR**: `normalizeKey` sólo hacía `trim().toLowerCase()`, por lo que "Flete Marítimo" y "Flete Maritimo" (sin acento), o con doble espacio/mayúsculas, aparecían como filas separadas. Ahora normaliza acentos (NFD + strip diacritics) y colapsa espacios internos. Filas del pivot ya no se duplican.
+- **fix(profit) Utilidad operativa fuera de balance**: el pivot descartaba silenciosamente cualquier embarque cuyo modo no fuera Marítimo/Aéreo/Terrestre (ej. Multimodal o vacío), pero esos conceptos sí impactaban KPIs de tesorería. Agregada columna **Otros** al EERR para que ningún concepto se pierda. La tabla desktop, mobile, CSV y PDF ahora muestran 4 modos.
+- **feat(profit) UX del toggle Embarques/Facturas**: agregado ícono `Info` con Popover que explica ambas fuentes (Operativa por ETA vs Devengada por facturación) y aclara que es normal que las cifras difieran — útil para detectar rezagos de facturación.
+- **test**: `resumen.test.ts` cubre la agrupación por cliente+moneda; `estadoResultados.extra.test.ts` cubre el colapso de acentos/espacios y la columna "Otros".
+
 ## [13.300.47] - 2026-07-15
 - **refactor(sidebar): consolidar Profit en un solo enlace (hub + tabs)**: el sidebar mostraba las 4 rutas de Profit (Dashboard Ejecutivo, Proyección, Estado de Resultados, Presupuesto vs Real) y la `ProfitSubNav` las repetía arriba en cada página. **Analogía:** era como tener dos menús idénticos en un restaurante — uno en la puerta y otro en la mesa. Ahora el sidebar sólo dice "Profit" (icono TrendingUp, ruta `/profit` → redirige a `/profit/dashboard`) y la navegación fina entre pestañas vive sólo dentro del módulo. `isActive` por `startsWith("/profit")` mantiene el enlace resaltado en cualquier sub-ruta. Sin cambios en rutas, permisos ni lógica.
 

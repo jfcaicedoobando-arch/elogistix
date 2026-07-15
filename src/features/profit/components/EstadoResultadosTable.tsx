@@ -16,7 +16,7 @@ function Row({ label, fila }: { label: string; fila: FilaER }) {
 function SectionHeader({ label }: { label: string }) {
   return (
     <tr className="bg-primary/5 border-b border-t">
-      <td colSpan={5} className="py-2 px-3 text-xs font-bold uppercase tracking-wider text-primary">
+      <td colSpan={6} className="py-2 px-3 text-xs font-bold uppercase tracking-wider text-primary">
         {label}
       </td>
     </tr>
@@ -50,7 +50,7 @@ function MargenRow({ margen }: { margen: TotalER }) {
 
 function EmptyRow({ label }: { label: string }) {
   return (
-    <tr><td colSpan={5} className="py-3 px-6 text-muted-foreground italic">{label}</td></tr>
+    <tr><td colSpan={6} className="py-3 px-6 text-muted-foreground italic">{label}</td></tr>
   );
 }
 
@@ -150,7 +150,7 @@ export function EstadoResultadosTable({ data }: { data: EstadoResultados }) {
               : data.costos.map((r) => <Row key={`c-${r.concepto}`} label={r.concepto} fila={r} />)}
             <TotalRow label="TOTAL COSTOS" valores={data.totalCostos} />
 
-            <tr><td colSpan={5} className="h-2" /></tr>
+            <tr><td colSpan={6} className="h-2" /></tr>
             <TotalRow label="UTILIDAD BRUTA" valores={data.utilidad} variant="primary" />
             <MargenRow margen={data.margen} />
           </tbody>
