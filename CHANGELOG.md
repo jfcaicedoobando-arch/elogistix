@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.60] - 2026-07-15
+- **fix(facturacion) Error transitorio del SAT en cancelación con reintento (requestId 40849f69)**: cuando el SAT devuelve "CancelacionSAT no está disponible" (servicio externo caído/saturado), la edge `facturapi-cancelar` marca la respuesta con `transient: true` y un mensaje humano que aclara que no es un problema de la factura. `useCancelarFactura` detecta el flag vía `FacturapiError.transient` y muestra un toast ámbar con acción "Reintentar" en lugar del toast rojo; el modal queda abierto para no perder los datos. No hay reintentos automáticos silenciosos (peligrosos con timbrado fiscal).
+
 ## [13.300.59] - 2026-07-15
 - **feat(facturacion) Banner preventivo de aceptación SAT en modal de cancelación**: `DialogCancelarFactura` ahora evalúa la regla 2.7.1.34 antes del intento: si es mismo día de emisión muestra banner verde "ventana inmediata"; si monto ≤ $1,000 o RFC genérico muestra banner verde "exenta de aceptación"; en el resto muestra banner ámbar explicando que el receptor debe aceptar en Buzón Tributario (silencio positivo 72h). Se pasan `fecha_emision`, `total` y `rfc_cliente` desde `FacturaDetalleModales`.
 

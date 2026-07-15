@@ -15,6 +15,17 @@ interface EdgeErrorBody {
   error?: string;
   message?: string;
   issues?: ValidationIssue[];
+  transient?: boolean;
+}
+
+/** Error enriquecido: expone si el fallo es transitorio (reintentable). */
+export class FacturapiError extends Error {
+  transient: boolean;
+  constructor(message: string, transient = false) {
+    super(message);
+    this.name = "FacturapiError";
+    this.transient = transient;
+  }
 }
 
 /**
@@ -46,7 +57,7 @@ function toReadableError(error: unknown, body: EdgeErrorBody, fallback: string):
     ?? body.error
     ?? (error as { message?: string } | null)?.message
     ?? fallback;
-  return new Error(message + issues);
+  return new FacturapiError(message + issues, !!body.transient);
 }
 
 export async function emitirFacturapi(facturaId: string): Promise<TimbradoResult> {

@@ -60,7 +60,11 @@ export function DialogCancelarFactura({
   const onConfirm = () => {
     cancelar.mutate(
       { facturaId, motivo, sustituyeUuid: motivo === "01" ? sustituye : undefined },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => onOpenChange(false),
+        // En error transitorio (SAT caído) el hook ya muestra toast ámbar
+        // con "Reintentar"; dejamos el modal abierto para no perder datos.
+      },
     );
   };
 

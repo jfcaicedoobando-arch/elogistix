@@ -126,10 +126,17 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     // significa que el receptor debe ACEPTAR la cancelación desde su Buzón
     // Tributario (regla 2.7.1.34, CFDIs > $1,000 MXN con RFC receptor).
     const esNoCancelable = /no cancelable|marcada como no|no puede.*cancel|facturas relacionadas/i.test(rawMessage);
-    const message = esNoCancelable
-      ? `${rawMessage}\n\nEl SAT rechazó la cancelación. Causas comunes:\n• El receptor debe ACEPTAR la cancelación en su Buzón Tributario (CFDIs > $1,000 MXN).\n• Existen complementos de pago (REP) o notas de crédito vinculados: cancélalos primero.\n• El SAT aún no propaga la sustitución: reintenta en 30–60 minutos.`
-      : rawMessage;
-    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
+    // Servicio SAT caído/saturado: es un error externo transitorio, no un
+    // problema de datos ni de FacturApi. El usuario debe reintentar en unos
+    // minutos. Marcamos `transient: true` para que la UI ofrezca "Reintentar".
+    const esServicioSatCaido = /cancelacionsat no est|servicio.*sat.*no.*disp|sat.*no.*disponible/i.test(rawMessage);
+    let message = rawMessage;
+    if (esServicioSatCaido) {
+      message = "El SAT no está respondiendo en este momento (servicio de cancelación caído del lado del SAT). No es un problema de tu factura ni de tus datos. Espera unos minutos y reintenta.";
+    } else if (esNoCancelable) {
+      message = `${rawMessage}\n\nEl SAT rechazó la cancelación. Causas comunes:\n• El receptor debe ACEPTAR la cancelación en su Buzón Tributario (CFDIs > $1,000 MXN).\n• Existen complementos de pago (REP) o notas de crédito vinculados: cancélalos primero.\n• El SAT aún no propaga la sustitución: reintenta en 30–60 minutos.`;
+    }
+    return jsonResponse({ error: "facturapi_error", status, detail, message, transient: esServicioSatCaido }, 502);
   }
   const fapiJson = cancelResp;
 

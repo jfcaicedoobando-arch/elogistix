@@ -1,33 +1,42 @@
-## Respuesta corta
+## Diagnóstico
 
-**Estás parcialmente en lo correcto**, pero hay una condición que se te está escapando: el SAT sí exige aceptación del receptor aunque la cancelación sea por sustitución (motivo 01), **salvo que canceles el mismo día de emisión**.
+El error viene del **SAT**, no de nosotros ni de FacturApi. FacturApi es sólo el intermediario; cuando el SAT devuelve "CancelacionSAT no está disponible", significa que el web service oficial del SAT está caído o saturado (pasa varias veces al mes, típicamente unos minutos).
 
-## La regla real (RMF 2.7.1.34/35, vigente 2022+)
+**Analogía:** Es como cuando la terminal bancaria dice "banco no disponible". Ni la tienda ni la terminal fallaron — el banco allá lejos no contesta. Toca reintentar en un rato.
 
-Un CFDI se puede cancelar **sin aceptación del receptor** SOLO si cae en alguno de estos supuestos:
+Tu versión reportada es `13.300.57`, pero ya estamos en `13.300.59`. Aun así, ese cambio no habría evitado este error porque es un problema externo. Lo que sí podemos hacer es que la app lo maneje mejor.
 
+## Plan (2 mejoras chicas y focalizadas)
 
-| Supuesto                                          | ¿Aplica a F971?                     |
-| ------------------------------------------------- | ----------------------------------- |
-| Monto ≤ $1,000 MXN                                | ❌ ($4,760)                          |
-| RFC genérico (XAXX010101000 / público en general) | ❌ (cliente con RFC)                 |
-| Nómina, egresos, traslado, ingresos a extranjeros | ❌ (es CFDI ingreso normal)          |
-| **Cancelado el mismo día de emisión**             | ❌ (emitida 10-jul, cancelas 15-jul) |
-| Sector primario, retenciones, RIF, etc.           | ❌                                   |
+### 1. Detectar el error específico y mostrar mensaje humano
 
+En `supabase/functions/facturapi-cancelar/index.ts` (donde ya enriquecemos el error "no cancelable"), agregar otro patrón para `CancelacionSAT no está disponible`. En vez del texto crudo del SAT, devolver:
 
-Como F971 no cae en ninguno, **requiere aceptación** aunque emitas la sustituta con relación 04.
+> "El SAT no está respondiendo en este momento (servicio de cancelación caído). No es un problema de tu factura ni de tus datos. Espera unos minutos e intenta de nuevo."
 
-**Analogía:** La sustitución (motivo 01) es como decirle al SAT "esta factura vieja se reemplaza por esta nueva". Es correcto y necesario para no duplicar ingresos ante Hacienda, pero **no salta el trámite de aceptación** del cliente. Son dos cosas independientes: relacionar (obligatorio ante SAT) y cancelar (requiere aceptación del receptor).
+Y marcar el error con un flag `transient: true` en el payload para que la UI lo pinte distinto (ícono de reloj en lugar de ícono de error rojo).
 
-## Confusión común
+### 2. Botón "Reintentar" en el toast de error
 
-Antes de la reforma 2022, la sustitución sí eximía de aceptación. Ese cambio pegó fuerte porque mucha gente aún opera con la regla vieja. Hoy el único atajo real es **cancelar el mismo día**.
+En `DialogCancelarFactura.tsx` (o el hook `useTimbrarFactura` que dispara la cancelación), cuando el error tenga `transient: true`:
+- Mostrar toast ámbar (no rojo).
+- Añadir acción "Reintentar" que vuelve a llamar la mutación sin cerrar el modal.
+- El modal queda abierto con los datos ya llenados para no perder el trabajo.
 
-## Opciones que puedo implementar (si quieres)
+## Detalles técnicos
 
-1. **Alerta preventiva en el modal de cancelación**: antes de intentar cancelar, mostrar un banner con las condiciones de aceptación cuando aplique (monto > $1,000, no mismo día, RFC no genérico). Evita el ida-y-vuelta al SAT.
-2. **Botón "Cancelar mismo día"** destacado cuando `fecha_emision = hoy`: para aprovechar la ventana sin aceptación.
-3. **Dejarlo como está** ahora que el mensaje de error (v13.300.58) ya explica claramente qué hacer.
+**Archivos a tocar:**
+- `supabase/functions/facturapi-cancelar/index.ts` — añadir regex `/CancelacionSAT no est/i` en el bloque que hoy detecta "no cancelable"; devolver `{ error, transient: true, retryAfterSec: 120 }`.
+- `src/features/facturacion/hooks/useCancelarFactura.ts` (o donde viva la mutación) — leer `transient` del error y propagarlo.
+- `src/features/facturacion/components/DialogCancelarFactura.tsx` — al recibir error transient, mostrar toast con acción "Reintentar" y no cerrar el diálogo.
+- `CHANGELOG.md` + `src/constants/appVersion.ts` → `13.300.60`.
 
-¿Quieres que implemente 1, 2, ambos, o lo dejamos con solo el mensaje mejorado? 1 y 2
+**Lo que NO vamos a hacer:**
+- Reintento automático silencioso: peligroso con timbrado fiscal (podría duplicar operaciones si el SAT sí procesó pero cortó la respuesta). Mejor manual y consciente.
+- Cambios en la lógica de sustitución: el flujo ya funciona, sólo falló el paso final por caída externa.
+
+## Qué pasa mientras tanto con la F971
+
+Puedes intentar cancelarla de nuevo ahora mismo (probablemente el SAT ya volvió). Si sigue igual, espera 10–30 minutos. La factura sustituta F981 ya quedó timbrada y válida; sólo falta cerrar el ciclo cancelando la vieja.
+
+¿Procedo con el plan?
