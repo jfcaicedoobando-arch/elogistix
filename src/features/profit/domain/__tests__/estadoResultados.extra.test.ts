@@ -39,11 +39,12 @@ describe("estadoResultados.extra", () => {
     expect(er.utilidad.total).toBe(0);
   });
 
-  it("buildEstadoResultados: MODOS_COLUMNAS tiene exactamente 3 modos", () => {
-    expect(MODOS_COLUMNAS).toHaveLength(3);
+  it("buildEstadoResultados: MODOS_COLUMNAS incluye Marítimo/Aéreo/Terrestre/Otros", () => {
+    expect(MODOS_COLUMNAS).toHaveLength(4);
     expect(MODOS_COLUMNAS).toContain("Marítimo");
     expect(MODOS_COLUMNAS).toContain("Aéreo");
     expect(MODOS_COLUMNAS).toContain("Terrestre");
+    expect(MODOS_COLUMNAS).toContain("Otros");
   });
 
   it("buildEstadoResultados: ingreso MXN se refleja en totalIngresos", () => {
