@@ -1,5 +1,6 @@
 /**
- * Dashboard Ejecutivo Financiero — vista consolidada (Sprint 6 / v12.49.0).
+ * Dashboard Ejecutivo Financiero — vista consolidada.
+ * Periodo persistente en URL via `?mes=YYYY-MM`.
  */
 import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -10,7 +11,6 @@ import { Download } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks/useDashboardEjecutivo";
-import { SelectorPeriodo, type PresetPeriodo } from "@/features/dashboardEjecutivo/components/SelectorPeriodo";
 import { BandaKPIs } from "@/features/dashboardEjecutivo/components/BandaKPIs";
 import { GraficoEERR12m } from "@/features/dashboardEjecutivo/components/GraficoEERR12m";
 import { SaldosBancosCard } from "@/features/dashboardEjecutivo/components/SaldosBancosCard";
@@ -18,30 +18,21 @@ import { TopListaCard } from "@/features/dashboardEjecutivo/components/TopListaC
 import { MiniFlujoCard } from "@/features/dashboardEjecutivo/components/MiniFlujoCard";
 import { AlertasPanel } from "@/features/dashboardEjecutivo/components/AlertasPanel";
 import { ReporteEjecutivoDocument } from "@/pdf/documents/ReporteEjecutivoDocument";
-import { safeSessionStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 import { toast } from "sonner";
 import { descargarBlob } from "@/lib/downloadBlob";
-
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
-function periodoInicial(): string {
-  const guardado = safeSessionStorage.getItem(STORAGE_KEYS.dashboardEjecutivoPeriodo);
-  if (guardado && /^\d{4}-\d{2}$/.test(guardado)) return guardado;
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
+import { Card, CardContent } from "@/components/ui/card";
+import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";
+import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
+
+const MES_MINIMO = "2026-04";
 
 export default function ProfitDashboardEjecutivo() {
-  const [periodo, setPeriodo] = useState<string>(periodoInicial);
-  const [preset, setPreset] = useState<PresetPeriodo>("actual");
+  const periodoCtl = usePeriodoMesUrl("mes", MES_MINIMO);
+  const periodo = periodoCtl.mesActual.key;
   const [generandoPdf, setGenerandoPdf] = useState(false);
   const { data, isLoading, error } = useDashboardEjecutivo(periodo);
-
-  const handlePeriodo = (p: string, pr: PresetPeriodo) => {
-    setPeriodo(p);
-    setPreset(pr);
-    safeSessionStorage.setItem(STORAGE_KEYS.dashboardEjecutivoPeriodo, p);
-  };
 
   const exportar = useMemo(() => async () => {
     if (!data || generandoPdf) return;
@@ -62,15 +53,25 @@ export default function ProfitDashboardEjecutivo() {
       <PageHeader
         title="Dashboard Ejecutivo"
         description="Vista consolidada de la situación financiera."
-        actions={
-          <div className="flex items-center gap-2">
-            <SelectorPeriodo value={periodo} preset={preset} onChange={handlePeriodo} />
-            <Button variant="outline" size="sm" onClick={exportar} disabled={!data || generandoPdf}>
-              <Download className="h-4 w-4 mr-1" /> {generandoPdf ? "Generando…" : "PDF"}
-            </Button>
-          </div>
-        }
       />
+
+      <Card>
+        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+          <PeriodoMensualToolbar
+            mesActual={periodoCtl.mesActual}
+            mesesDisponibles={periodoCtl.mesesDisponibles}
+            onChange={periodoCtl.setMesKey}
+            onPrev={periodoCtl.irMesAnterior}
+            onNext={periodoCtl.irMesSiguiente}
+            puedeIrAtras={periodoCtl.puedeIrAtras}
+            puedeIrAdelante={periodoCtl.puedeIrAdelante}
+          />
+          <div className="flex-1" />
+          <Button variant="outline" size="sm" onClick={exportar} disabled={!data || generandoPdf}>
+            <Download className="h-4 w-4 mr-1" /> {generandoPdf ? "Generando…" : "PDF"}
+          </Button>
+        </CardContent>
+      </Card>
 
       {isLoading && (
         <div className="space-y-3">
