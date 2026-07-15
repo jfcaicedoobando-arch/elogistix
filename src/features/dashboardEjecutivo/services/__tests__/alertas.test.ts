@@ -76,10 +76,12 @@ describe("calcularAlertas", () => {
     expect(r.find((a) => a.severidad === "critica")).toBeDefined();
   });
 
-  it("detecta cartera vencida >30d sobre umbral", () => {
+  it("detecta cartera vencida sobre umbral", () => {
     const r = calcularAlertas({
       flujo: flujo(0),
       tesoreria: tesoreria({
+        cartera_vencida_total_mxn: 80_000,
+        cartera_vencida_count: 1,
         top_deudores: [{ nombre: "ACME", saldo: 80_000, moneda: "MXN", dias: 45 }],
       }),
       presupuesto: presupuesto(),
@@ -91,7 +93,8 @@ describe("calcularAlertas", () => {
     const r = calcularAlertas({
       flujo: flujo(0),
       tesoreria: tesoreria({
-        top_deudores: [{ nombre: "ACME", saldo: 1_000, moneda: "MXN", dias: 45 }],
+        cartera_vencida_total_mxn: 1_000,
+        cartera_vencida_count: 1,
       }),
       presupuesto: presupuesto(),
     });
@@ -102,6 +105,8 @@ describe("calcularAlertas", () => {
     const r = calcularAlertas({
       flujo: flujo(0),
       tesoreria: tesoreria({
+        cxp_vencidas_count: 1,
+        cxp_vencidas_total_mxn: 50_000,
         top_acreedores: [{ nombre: "Naviera X", saldo: 50_000, moneda: "USD", dias: 10 }],
       }),
       presupuesto: presupuesto(),
@@ -129,7 +134,8 @@ describe("calcularAlertas", () => {
     const r = calcularAlertas({
       flujo: flujo(0),
       tesoreria: tesoreria({
-        top_deudores: [{ nombre: "ACME", saldo: 10_000, moneda: "MXN", dias: 45 }],
+        cartera_vencida_total_mxn: 10_000,
+        cartera_vencida_count: 1,
       }),
       presupuesto: presupuesto(),
       umbralCarteraVencida: 5_000,
