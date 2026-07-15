@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.25] - 2026-07-15
+- **feat(e2e)**: script y edge function para provisionar los usuarios E2E (admin interno + cliente portal) con sus roles y membresías antes de correr Playwright.
+  - Nueva edge function `e2e-provision-users` (Deno) protegida por header `x-e2e-secret` (secreto runtime `E2E_PROVISION_SECRET`). Usa `service_role` para crear/actualizar cuentas vía `auth.admin`, resetear password, upsert en `user_roles` (`admin` / `cliente`) y vincular en `organization_members` (admin) o `client_users` (portal). Idempotente.
+  - Nuevo script `scripts/e2e/provision-users.ts` + npm script `bun run e2e:provision`. Lee `.env.e2e`, arma el payload y llama al endpoint. Si no se pasa `E2E_ORG_ID` / `E2E_CLIENTE_ID` usa la primera organización y su primer cliente.
+  - Documentado en `e2e/README.md` (setup local + CI).
+
 ## [13.300.24] - 2026-07-15
 - **ci(e2e)**: workflow `E2E (Playwright)` rediseñado para correr automático contra staging y fallar en regresiones.
   - **Triggers**: `schedule` diario 12:30 UTC (06:30 CDMX, tras `post-deploy-smoke`), `workflow_run` encadenado al smoke exitoso, `workflow_dispatch` con override de `E2E_BASE_URL`, y `pull_request` cuando el PR toca `e2e/**`, `playwright.config.ts` o el workflow mismo. Ya no depende solo de la corrida manual semanal.
