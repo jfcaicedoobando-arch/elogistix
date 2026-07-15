@@ -62,17 +62,17 @@ export async function fetchDashboardEjecutivo(
     presupuesto,
     ...eerrMensuales
   ] = await Promise.all([
-    fetchSaldosCuentas(),
+    fetchSaldosCuentas(organizationId),
     fetchEstadoResultadosDevengado({ organizationId, year, month }),
     fetchEstadoResultadosDevengado({ organizationId, year: prevY, month: prevM }),
-    fetchResumenTesoreria({ cobranza, cxp }),
-    fetchPresupuestoVsReal(periodo),
+    fetchResumenTesoreria({ cobranza, cxp, organizationId }),
+    fetchPresupuestoVsReal(periodo, organizationId),
     ...meses.map((m) =>
       fetchEstadoResultadosDevengado({ organizationId, year: m.year, month: m.month }),
     ),
   ]);
   // `flujo` necesita `cuentas` ya resueltas — segunda fase mínima.
-  const flujo = await fetchFlujoProyectado({ cuentas, cobranza, cxp, dias: 28 });
+  const flujo = await fetchFlujoProyectado({ cuentas, cobranza, cxp, dias: 28, organizationId });
 
   const eerr12m: PuntoEERR[] = meses.map((m, i) => {
     const er = eerrMensuales[i];

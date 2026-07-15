@@ -30,23 +30,34 @@ function ultimoDia(periodo: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-export async function fetchPresupuestoVsReal(periodo: string): Promise<ResumenVsReal> {
+export async function fetchPresupuestoVsReal(
+  periodo: string,
+  organizationId?: string | null,
+): Promise<ResumenVsReal> {
   const [y] = periodo.split("-").map(Number);
   const desde = `${periodo}-01`;
   const hasta = ultimoDia(periodo);
 
+  let cxpQuery = supabase.from("proveedor_facturas")
+    .select("categoria_presupuesto_id, total, moneda, tipo_cambio_usd, fecha_emision")
+    .gte("fecha_emision", desde).lte("fecha_emision", hasta)
+    .is("deleted_at", null)
+    .limit(2000);
+  let liqQuery = supabase.from("liquidaciones_comision")
+    .select("total_mxn, periodo")
+    .eq("periodo", periodo)
+    .is("deleted_at", null)
+    .limit(500);
+  if (organizationId) {
+    cxpQuery = cxpQuery.eq("organization_id", organizationId);
+    liqQuery = liqQuery.eq("organization_id", organizationId);
+  }
+
   const [cats, presupuestoAnio, gastosCxP, liquidaciones] = await Promise.all([
     fetchCategorias(true),
     fetchPresupuestoMensualAnio(y),
-    supabase.from("proveedor_facturas")
-      .select("categoria_presupuesto_id, total, moneda, tipo_cambio_usd, fecha_emision")
-      .gte("fecha_emision", desde).lte("fecha_emision", hasta)
-      .is("deleted_at", null)
-      .limit(2000),
-    supabase.from("liquidaciones_comision")
-      .select("total_mxn, periodo")
-      .eq("periodo", periodo)
-      .limit(500),
+    cxpQuery,
+    liqQuery,
   ]);
 
   if (gastosCxP.error) throw gastosCxP.error;
