@@ -1,15 +1,20 @@
 /**
  * DialogSustituirFactura — Wizard de sustitución (motivo SAT 01).
  *
- * Flujo:
- *   1) Confirmar intención y duplicar la factura como borrador (RPC
- *      `duplicar_factura_para_sustitucion`).
- *   2) El usuario edita y timbra la factura sustituta (link al detalle).
+ * Flujo single-tab (post overhaul v13.301.0):
+ *   1) Confirmar intención y duplicar la factura como borrador
+ *      (RPC `duplicar_factura_para_sustitucion`).
+ *   2) Navegar en la MISMA pestaña al detalle del borrador para editar/timbrar.
+ *      El progreso se guarda en `sessionStorage` bajo la clave
+ *      `sustitucion:{facturaId}` para que al volver a la factura original el
+ *      diálogo se reabra en el paso "confirmar" y el usuario continúe.
  *   3) Confirmar cancelación del CFDI original referenciando a la sustituta;
- *      el backend marca la original como `Sustituida`.
+ *      el backend marca la original como `Sustituida` (o pending si el SAT
+ *      requiere aceptación del receptor).
  */
-import { useState } from "react";
-import { Replace, ExternalLink, ArrowRight, Ban } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Replace, ArrowRight, Ban, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +25,7 @@ import { duplicarFacturaParaSustitucion } from "@/features/facturacion/services/
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
+import { browserStorage } from "@/lib/browser-storage";
 
 interface Props {
   facturaId: string | null;
@@ -29,13 +35,62 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-type Step = "intro" | "borrador" | "confirmar";
+type Step = "intro" | "confirmar";
+
+interface PersistedState {
+  nuevaId: string;
+  ts: number;
+}
+
+const storageKey = (facturaId: string) => `sustitucion:${facturaId}`;
+
+function readPersisted(facturaId: string): PersistedState | null {
+  try {
+    const raw = browserStorage.session.getItem(storageKey(facturaId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedState;
+    if (!parsed?.nuevaId) return null;
+    // Expira a las 24 h para no dejar borradores huérfanos.
+    if (Date.now() - parsed.ts > 24 * 60 * 60 * 1000) {
+      browserStorage.session.removeItem(storageKey(facturaId));
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writePersisted(facturaId: string, nuevaId: string) {
+  browserStorage.session.setItem(
+    storageKey(facturaId),
+    JSON.stringify({ nuevaId, ts: Date.now() } satisfies PersistedState),
+  );
+}
+
+function clearPersisted(facturaId: string) {
+  browserStorage.session.removeItem(storageKey(facturaId));
+}
 
 export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, onOpenChange }: Props) {
   const [step, setStep] = useState<Step>("intro");
   const [nuevaId, setNuevaId] = useState<string | null>(null);
   const [duplicando, setDuplicando] = useState(false);
+  const navigate = useNavigate();
   const cancelar = useCancelarFactura();
+
+  // Restaurar progreso al abrir el diálogo si ya existe borrador sustituto.
+  useEffect(() => {
+    if (!open || !facturaId) return;
+    const persisted = readPersisted(facturaId);
+    if (persisted) {
+      setNuevaId(persisted.nuevaId);
+      setStep("confirmar");
+    } else {
+      setNuevaId(null);
+      setStep("intro");
+    }
+  }, [open, facturaId]);
 
   if (!facturaId) return null;
 
@@ -45,9 +100,10 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
     setDuplicando(true);
     try {
       const id = await duplicarFacturaParaSustitucion(facturaId);
-      setNuevaId(id);
-      setStep("borrador");
+      writePersisted(facturaId, id);
       toast.success("Borrador sustituto creado");
+      onOpenChange(false);
+      navigate(`/facturacion/${id}?accion=timbrar`);
     } catch (err) {
       reportCaughtError(err, { feature: "facturacion", op: "duplicar_para_sustitucion" }, { facturaId });
       notifyError(toast, {
@@ -60,39 +116,56 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
     }
   };
 
+  const handleIrABorrador = () => {
+    if (!nuevaId) return;
+    onOpenChange(false);
+    navigate(`/facturacion/${nuevaId}?accion=timbrar`);
+  };
+
+  const handleReiniciar = () => {
+    clearPersisted(facturaId);
+    reset();
+  };
+
   const handleCancelarOriginal = () => {
     if (!nuevaId) return;
     cancelar.mutate(
       { facturaId, motivo: "01", sustituidaPorFacturaId: nuevaId },
       {
-        onSuccess: () => { onOpenChange(false); reset(); },
+        onSuccess: () => {
+          clearPersisted(facturaId);
+          onOpenChange(false);
+          reset();
+        },
       },
     );
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { /* preserva sessionStorage */ } onOpenChange(o); }}>
       <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Replace className="h-5 w-5 text-accent" /> Sustituir CFDI {numero ?? ""}
           </DialogTitle>
           <DialogDescription>
-            Sustitución SAT motivo 01. Se crea una nueva factura que referenciará a la original,
-            y al timbrarla se cancela la original enlazándolas.
+            Sustitución SAT motivo 01. Se crea una nueva factura, la editas/timbras
+            y al confirmar se cancela la original enlazándolas.
           </DialogDescription>
         </DialogHeader>
 
         {step === "intro" && (
           <div className="space-y-3 text-sm">
             <p>
-              Se clonará la factura <strong>{numero}</strong> como un nuevo borrador. Podrás editar
-              conceptos, cliente y demás datos antes de timbrar.
+              Se clonará la factura <strong>{numero}</strong> como un nuevo borrador. Al confirmar,
+              te llevaremos directamente al detalle del borrador para que lo edites y timbres.
+              Cuando vuelvas aquí (botón "Volver"), este diálogo reabrirá en el paso final para
+              cancelar la original.
             </p>
             <ol className="list-decimal list-inside text-muted-foreground space-y-1">
-              <li>Crear borrador sustituto.</li>
-              <li>Editar y timbrar el nuevo CFDI.</li>
-              <li>Confirmar la cancelación de la original (motivo 01).</li>
+              <li>Crear borrador sustituto y navegar a él.</li>
+              <li>Editar y timbrar el nuevo CFDI (en esta misma pestaña).</li>
+              <li>Volver a esta factura y confirmar cancelación (motivo 01).</li>
             </ol>
             {!uuidOriginal && (
               <p className="text-destructive text-xs">
@@ -102,34 +175,21 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
           </div>
         )}
 
-        {step === "borrador" && nuevaId && (
-          <div className="space-y-3 text-sm">
-            <p>
-              Borrador creado. Abre la nueva factura, edítala si es necesario y timbrarla.
-            </p>
-            <a
-              href={`/facturacion/${nuevaId}?accion=timbrar`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-accent underline"
-            >
-              Abrir factura sustituta <ExternalLink className="h-3 w-3" />
-            </a>
-            <p className="text-xs text-muted-foreground">
-              Cuando la nueva factura esté timbrada, vuelve aquí y continúa.
-            </p>
-          </div>
-        )}
-
         {step === "confirmar" && (
           <div className="space-y-3 text-sm">
             <p>
-              Se cancelará el CFDI <strong>{numero}</strong> con motivo SAT 01 referenciando
-              al UUID de la sustituta. Esta acción no se puede deshacer.
+              Ya existe un borrador sustituto para esta factura. Cuando esté timbrado,
+              cancelaremos el CFDI <strong>{numero}</strong> con motivo SAT 01 referenciando
+              al UUID de la sustituta.
             </p>
             <p className="text-xs text-muted-foreground">
-              Si la sustituta no está timbrada aún, FacturApi rechazará la cancelación.
+              Si la sustituta no está timbrada, la cancelación fallará. Puedes volver al borrador
+              o reiniciar el proceso.
             </p>
+            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-xs">
+              <strong>Nota:</strong> el SAT puede tardar hasta 72 h en aceptar la cancelación si el
+              CFDI supera $1,000 MXN (regla 2.7.1.34). El sistema hará seguimiento automático.
+            </div>
           </div>
         )}
 
@@ -138,21 +198,23 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
 
           {step === "intro" && (
             <Button onClick={handleDuplicar} disabled={duplicando || !uuidOriginal}>
-              {duplicando ? "Creando…" : (<>Crear borrador sustituto <ArrowRight className="h-4 w-4 ml-1" /></>)}
-            </Button>
-          )}
-
-          {step === "borrador" && (
-            <Button onClick={() => setStep("confirmar")}>
-              Ya está timbrada <ArrowRight className="h-4 w-4 ml-1" />
+              {duplicando ? "Creando…" : (<>Crear borrador y continuar <ArrowRight className="h-4 w-4 ml-1" /></>)}
             </Button>
           )}
 
           {step === "confirmar" && (
-            <Button variant="destructive" onClick={handleCancelarOriginal} disabled={cancelar.isPending}>
-              <Ban className="h-4 w-4 mr-1" />
-              {cancelar.isPending ? "Cancelando…" : "Cancelar original"}
-            </Button>
+            <>
+              <Button variant="outline" onClick={handleReiniciar}>
+                <RotateCw className="h-4 w-4 mr-1" /> Reiniciar
+              </Button>
+              <Button variant="secondary" onClick={handleIrABorrador}>
+                Volver al borrador
+              </Button>
+              <Button variant="destructive" onClick={handleCancelarOriginal} disabled={cancelar.isPending}>
+                <Ban className="h-4 w-4 mr-1" />
+                {cancelar.isPending ? "Cancelando…" : "Cancelar original"}
+              </Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
