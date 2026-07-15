@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.24] - 2026-07-15
+- **ci(e2e)**: workflow `E2E (Playwright)` rediseñado para correr automático contra staging y fallar en regresiones.
+  - **Triggers**: `schedule` diario 12:30 UTC (06:30 CDMX, tras `post-deploy-smoke`), `workflow_run` encadenado al smoke exitoso, `workflow_dispatch` con override de `E2E_BASE_URL`, y `pull_request` cuando el PR toca `e2e/**`, `playwright.config.ts` o el workflow mismo. Ya no depende solo de la corrida manual semanal.
+  - **Sharding**: 3 shards paralelos (`internal-shard 1..3`) para `chromium-internal` con `--shard=N/3` — reduce la suite de ~15 min a ~5 min end-to-end. Los mutadores (specs 09–12) corren en job `mutators` aparte con `workers: 1` y `concurrency: e2e-mutators` para preservar el orden serial y evitar contención en staging. El project `chromium-portal` corre en su propio job.
+  - **Merge reports**: job `merge-reports` descarga los blob artifacts de cada shard y ejecuta `playwright merge-reports --reporter=html`, publicando un único `playwright-report` unificado. Falla explícitamente si algún shard reportó failure → el workflow queda rojo (regresión).
+  - **Guards**: `guard-workflow-run` corta la corrida si el smoke previo falló (no gasta minutos). `guard-secrets` detecta secrets faltantes y hace skip limpio en vez de fallar oscuro.
+  - **Notificación**: job `notify-failure` (solo en `schedule` / `workflow_run`) abre o comenta un issue con label `e2e-regression` incluyendo run URL, SHA y trigger — mismo patrón que `post-deploy-smoke`. Los PRs fallan directo en el check sin abrir issue.
+  - **Artefactos**: blob reports (retention 3 días), HTML mergeado y traces/videos por shard fallido (retention 14 días).
+  - Validado con `actionlint`.
+
 ## [13.300.23] - 2026-07-15
 - **test(e2e)**: auditoría e implementación del primer batch de mejoras del framework Playwright.
   - **Paralelismo**: `playwright.config.ts` ahora corre con `fullyParallel: true` y `workers` configurable (4 local / 2 CI, override con `E2E_WORKERS`). Los specs mutadores (09–12) quedan aislados en el project `chromium-mutators` con `workers: 1` y `fullyParallel: false` para preservar el orden serial contra la DB compartida. Los read-only (01–08, 13–24) van al project `chromium-internal` en paralelo. Reduce ~9 min → ~3 min localmente.
