@@ -8,7 +8,6 @@ import type {
 import type { FlujoProyectado } from "@/features/tesoreria/services";
 import type { ResumenTesoreria } from "@/features/tesoreria/services";
 import type { ResumenVsReal } from "@/features/presupuesto/services";
-import { UMBRAL_SOBREEJERCICIO_PCT } from "@/features/presupuesto/constants";
 
 export interface AlertasInput {
   flujo: FlujoProyectado;
@@ -18,7 +17,6 @@ export interface AlertasInput {
 }
 
 const UMBRAL_CARTERA_DEFAULT = 50_000;
-const UMBRAL_VARIACION_PRESUPUESTO = UMBRAL_SOBREEJERCICIO_PCT;
 
 export function calcularAlertas(input: AlertasInput): AlertaEjecutiva[] {
   const alertas: AlertaEjecutiva[] = [];
