@@ -33,16 +33,23 @@ function Kpi({ label, value, tone = "default" }: { label: string; value: string;
 
 export function TabVsReal() {
   const [periodo, setPeriodo] = useState(mesActual());
+  const [generandoPdf, setGenerandoPdf] = useState(false);
   const { data, isLoading } = usePresupuestoVsReal(periodo);
 
   const handlePdf = async () => {
-    if (!data) return;
-    await descargarPdf(
-      <ReportePresupuestoDocument resumen={data} />,
-      await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
-    );
+    if (!data || generandoPdf) return;
+    setGenerandoPdf(true);
+    try {
+      await descargarPdf(
+        <ReportePresupuestoDocument resumen={data} />,
+        await withOrgPrefix(`Reporte_Presupuesto_${periodo}.pdf`),
+      );
+    } finally {
+      setGenerandoPdf(false);
+    }
   };
 
+  const sinPresupuestoGlobal = !!data && data.total_presupuesto_mxn === 0;
 
   return (
     <div className="space-y-3">
@@ -51,8 +58,8 @@ export function TabVsReal() {
           <Label className="text-xs">Periodo</Label>
           <MonthPickerMx value={periodo} onChange={setPeriodo} className="h-9" />
         </div>
-        <Button variant="outline" onClick={handlePdf} disabled={!data}>
-          <FileText className="h-4 w-4 mr-2" /> PDF
+        <Button variant="outline" onClick={handlePdf} disabled={!data || generandoPdf}>
+          <FileText className="h-4 w-4 mr-2" /> {generandoPdf ? "Generando…" : "PDF"}
         </Button>
       </div>
 
@@ -60,13 +67,21 @@ export function TabVsReal() {
         <CardSkeleton lines={8} />
       ) : (
         <>
+          {sinPresupuestoGlobal && (
+            <Card className="border-dashed">
+              <CardContent className="p-3 text-sm text-muted-foreground">
+                No hay presupuesto capturado para {periodo}. Captúralo en la pestaña
+                "Captura" para ver el comparativo.
+              </CardContent>
+            </Card>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <Kpi label="Total presupuesto" value={formatCurrency(data.total_presupuesto_mxn, "MXN")} />
             <Kpi label="Total real" value={formatCurrency(data.total_real_mxn, "MXN")} />
             <Kpi
               label="Variación neta"
               value={formatCurrency(data.variacion_neta_mxn, "MXN")}
-              tone={data.variacion_neta_mxn <= 0 ? "success" : "danger"}
+              tone={sinPresupuestoGlobal ? "default" : data.variacion_neta_mxn <= 0 ? "success" : "danger"}
             />
           </div>
 
@@ -84,17 +99,23 @@ export function TabVsReal() {
                 </thead>
                 <tbody>
                   {data.filas.map((f, i) => {
-                    const exceso = f.variacion_mxn > 0;
+                    const sinPresup = f.presupuesto_mxn === 0;
+                    const exceso = !sinPresup && f.variacion_mxn > 0;
+                    const varClass = sinPresup
+                      ? "text-muted-foreground"
+                      : exceso
+                        ? "text-destructive"
+                        : "text-success";
                     return (
                       <tr key={f.categoria_id} className={`border-t ${i % 2 === 1 ? "bg-muted/20" : ""}`}>
                         <td className="px-3 py-2 font-medium">{f.categoria_nombre}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(f.presupuesto_mxn, "MXN")}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(f.real_mxn, "MXN")}</td>
-                        <td className={`px-3 py-2 text-right tabular-nums font-medium ${exceso ? "text-destructive" : "text-success"}`}>
+                        <td className={`px-3 py-2 text-right tabular-nums font-medium ${varClass}`}>
                           {formatCurrency(f.variacion_mxn, "MXN")}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
-                          {f.presupuesto_mxn > 0 ? `${f.cumplimiento_pct.toFixed(1)}%` : "—"}
+                          {sinPresup ? "—" : `${f.cumplimiento_pct.toFixed(1)}%`}
                         </td>
                       </tr>
                     );

@@ -34,6 +34,7 @@ function periodoInicial(): string {
 export default function ProfitDashboardEjecutivo() {
   const [periodo, setPeriodo] = useState<string>(periodoInicial);
   const [preset, setPreset] = useState<PresetPeriodo>("actual");
+  const [generandoPdf, setGenerandoPdf] = useState(false);
   const { data, isLoading, error } = useDashboardEjecutivo(periodo);
 
   const handlePeriodo = (p: string, pr: PresetPeriodo) => {
@@ -43,15 +44,18 @@ export default function ProfitDashboardEjecutivo() {
   };
 
   const exportar = useMemo(() => async () => {
-    if (!data) return;
+    if (!data || generandoPdf) return;
+    setGenerandoPdf(true);
     try {
       const blob = await pdf(<ReporteEjecutivoDocument snapshot={data} />).toBlob();
       descargarBlob(blob, `dashboard-ejecutivo-${data.periodo}.pdf`);
     } catch (e) {
       notifyError(toast, { title: "No se pudo generar el PDF", error: e, method: "PAGES_PROFIT_PROFITDASHBOARDEJECUTIVO_1" });
       reportCaughtError(e, { feature: "pnl", op: "generar_pdf_ejecutivo" }, { periodo: data?.periodo });
+    } finally {
+      setGenerandoPdf(false);
     }
-  }, [data]);
+  }, [data, generandoPdf]);
 
   return (
     <PageContainer>
@@ -61,8 +65,8 @@ export default function ProfitDashboardEjecutivo() {
         actions={
           <div className="flex items-center gap-2">
             <SelectorPeriodo value={periodo} preset={preset} onChange={handlePeriodo} />
-            <Button variant="outline" size="sm" onClick={exportar} disabled={!data}>
-              <Download className="h-4 w-4 mr-1" /> PDF
+            <Button variant="outline" size="sm" onClick={exportar} disabled={!data || generandoPdf}>
+              <Download className="h-4 w-4 mr-1" /> {generandoPdf ? "Generando…" : "PDF"}
             </Button>
           </div>
         }

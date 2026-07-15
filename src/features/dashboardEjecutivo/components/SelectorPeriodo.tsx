@@ -1,5 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// NOTA: "ytd" se mantiene en el tipo por compatibilidad con estado persistido,
+// pero se oculta del selector hasta que el backend soporte rangos acumulados.
 export type PresetPeriodo = "actual" | "anterior" | "ytd";
 
 interface Props {
@@ -21,21 +23,22 @@ function periodoAnterior(): string {
 
 export function SelectorPeriodo({ value, preset, onChange }: Props) {
   const handle = (p: PresetPeriodo) => {
-    if (p === "actual") onChange(periodoActual(), p);
-    else if (p === "anterior") onChange(periodoAnterior(), p);
-    else onChange(periodoActual(), p); // YTD usa el mes actual como ancla
+    if (p === "anterior") onChange(periodoAnterior(), p);
+    else onChange(periodoActual(), "actual");
   };
+  // Si viniera un preset "ytd" persistido, degradamos a "actual" en el trigger
+  // sin romper la persistencia del padre.
+  const presetVisible: "actual" | "anterior" = preset === "anterior" ? "anterior" : "actual";
 
   return (
     <div className="flex items-center gap-2">
-      <Select value={preset} onValueChange={(v) => handle(v as PresetPeriodo)}>
+      <Select value={presetVisible} onValueChange={(v) => handle(v as PresetPeriodo)}>
         <SelectTrigger className="w-44">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="actual">Mes actual</SelectItem>
           <SelectItem value="anterior">Mes anterior</SelectItem>
-          <SelectItem value="ytd">YTD (año en curso)</SelectItem>
         </SelectContent>
       </Select>
       <span className="text-xs text-muted-foreground">Periodo: {value}</span>

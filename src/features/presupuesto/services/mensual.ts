@@ -7,15 +7,22 @@ import type { Tables } from "@/integrations/supabase/types";
 export type PresupuestoMensualRow = Tables<"presupuesto_mensual">;
 
 
-export async function fetchPresupuestoMensualAnio(anio: number): Promise<PresupuestoMensualRow[]> {
+export async function fetchPresupuestoMensualAnio(
+  anio: number,
+  organizationId?: string | null,
+): Promise<PresupuestoMensualRow[]> {
   const desde = `${anio}-01`;
   const hasta = `${anio}-12`;
-  const { data, error } = await supabase
+  let q = supabase
     .from("presupuesto_mensual")
     .select("*")
     .gte("periodo", desde)
     .lte("periodo", hasta)
     .limit(500);
+  // Filtro explícito por organización — consistente con el resto del módulo
+  // y defensa en profundidad además de RLS.
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as PresupuestoMensualRow[];
 }

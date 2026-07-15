@@ -94,10 +94,12 @@ export function calcularKPIsEjecutivos(
 
   const saldoBancos = snapshot.tesoreria.cuentas.reduce((acc, c) => acc + c.saldo, 0);
 
-  const carteraVencida = snapshot.tesoreria.top_deudores.reduce(
-    (acc, d) => acc + d.saldo,
-    0,
+  // Cartera vencida: sólo deudores con >30 días — alineado con la alerta
+  // "cartera-vencida-alta" (antes se sumaba TODA la cartera y no cuadraba).
+  const deudoresVencidos = snapshot.tesoreria.top_deudores.filter(
+    (d) => (d.dias ?? 0) > 30,
   );
+  const carteraVencida = deudoresVencidos.reduce((acc, d) => acc + d.saldo, 0);
 
   // Próximos 7 días de CxP usando primera semana del flujo
   const cxp7d = snapshot.flujo.semanas[0]?.salidas_mxn ?? 0;
@@ -113,7 +115,7 @@ export function calcularKPIsEjecutivos(
     margen_pct: margen,
     saldo_bancos_mxn: saldoBancos,
     cartera_vencida_mxn: carteraVencida,
-    cartera_vencida_count: snapshot.tesoreria.top_deudores.length,
+    cartera_vencida_count: deudoresVencidos.length,
     cxp_7dias_mxn: cxp7d,
     cumplimiento_presupuesto_pct: cumplimiento,
   };
