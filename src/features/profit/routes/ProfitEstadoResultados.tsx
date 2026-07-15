@@ -1,7 +1,6 @@
-import { ChevronLeft, ChevronRight, Calendar, Download, FileText, Info } from "lucide-react";
+import { Calendar, Download, FileText, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
@@ -20,6 +19,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
 import { FuenteEerrToggle } from "@/features/profit/components/FuenteEerrToggle";
 import { ProfitSubNav } from "@/features/profit/components/ProfitSubNav";
+import { PeriodoMensualToolbar } from "@/features/profit/components/PeriodoMensualToolbar";
 
 export default function ProfitEstadoResultados() {
   const c = useEstadoResultados();
