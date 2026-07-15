@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.300.27] - 2026-07-15
+- **feat(e2e)**: verificación post-provisión en `e2e-provision-users` + `scripts/e2e/provision-users.ts`. La edge function ahora relee `user_roles`, `organization_members` y `client_users` tras cada upsert y devuelve `verified` + `checks` por usuario; responde HTTP 500 si algo no cuadra. El script asegura que todos los emails esperados regresen con `verified=true` y sale con código 1 si algún rol/asociación falla, bloqueando la corrida de Playwright antes de arrancar.
+
 ## [13.300.26] - 2026-07-15
 - **ci(e2e)**: integrado el paso `bun run e2e:provision` en `.github/workflows/e2e.yml` como job dedicado `provision-users`, ejecutado tras `guard-secrets` y antes de los shards (`internal-shard`, `mutators`, `portal`) — todos ahora dependen de él. Añadidas variables `E2E_PROVISION_SECRET`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` al `env:` del workflow. Si faltan `E2E_PROVISION_SECRET` o `VITE_SUPABASE_URL` el step emite `warning` y se omite la provisión (los shards continúan asumiendo usuarios ya existentes).
 
