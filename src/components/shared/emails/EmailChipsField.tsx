@@ -111,6 +111,8 @@ export function EmailChipsField({
           variant="secondary"
           className="gap-1 pl-1.5 pr-2 font-normal"
           title={c.tooltip ?? c.email}
+          data-testid="envio-chip-locked"
+          data-locked="true"
         >
           <Lock className="h-3 w-3 opacity-60" aria-hidden />
           <span className="truncate max-w-[220px]">{c.label ?? c.email}</span>
