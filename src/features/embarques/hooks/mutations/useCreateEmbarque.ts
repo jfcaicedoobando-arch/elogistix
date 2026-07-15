@@ -10,6 +10,7 @@ import { fromDb } from "@/lib/supabase/cast";
 import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
+import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -41,6 +42,7 @@ export function useCreateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
+      invalidateProfitDependencies(queryClient);
       notifySuccess(undefined, { title: "Embarque creado" });
     },
     onError: (error: Error) => {
@@ -71,6 +73,7 @@ export function useDuplicarEmbarque() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
+      invalidateProfitDependencies(queryClient);
       notifySuccess(undefined, { title: "Embarque duplicado" });
     },
     onError: (error: Error) => {
