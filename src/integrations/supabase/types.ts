@@ -4824,7 +4824,10 @@ export type Database = {
           acuse_cancelacion_xml: string | null
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo: string | null
+          cancelacion_solicitada_en: string | null
+          cancelacion_vence_en: string | null
           cancelado_en: string | null
+          cancellation_status: string | null
           cliente_id: string
           cliente_nombre: string
           cotizacion_id: string | null
@@ -4880,7 +4883,10 @@ export type Database = {
           acuse_cancelacion_xml?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo?: string | null
+          cancelacion_solicitada_en?: string | null
+          cancelacion_vence_en?: string | null
           cancelado_en?: string | null
+          cancellation_status?: string | null
           cliente_id: string
           cliente_nombre?: string
           cotizacion_id?: string | null
@@ -4936,7 +4942,10 @@ export type Database = {
           acuse_cancelacion_xml?: string | null
           ambiente?: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo?: string | null
+          cancelacion_solicitada_en?: string | null
+          cancelacion_vence_en?: string | null
           cancelado_en?: string | null
+          cancellation_status?: string | null
           cliente_id?: string
           cliente_nombre?: string
           cotizacion_id?: string | null
@@ -7343,6 +7352,10 @@ export type Database = {
           url: string
         }[]
       }
+      calc_cancelacion_vence: {
+        Args: { p_solicitada: string }
+        Returns: string
+      }
       calcular_comision_pago: {
         Args: { p_pago_factura_id: string }
         Returns: undefined
@@ -7529,7 +7542,10 @@ export type Database = {
           acuse_cancelacion_xml: string | null
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"] | null
           cancelacion_motivo: string | null
+          cancelacion_solicitada_en: string | null
+          cancelacion_vence_en: string | null
           cancelado_en: string | null
+          cancellation_status: string | null
           cliente_id: string
           cliente_nombre: string
           cotizacion_id: string | null
