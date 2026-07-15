@@ -3,6 +3,7 @@ import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstan
 
 interface Props {
   currentStepIndex: number;
+  arribado?: boolean;
 }
 
 /**
@@ -10,14 +11,14 @@ interface Props {
  * En FHD la variante original ocupaba ~130px verticales sólo para mostrar
  * "paso 2/8". Esta variante libera ~80px y mantiene toda la información.
  */
-export function EstadoProgresoCard({ currentStepIndex }: Props) {
+export function EstadoProgresoCard({ currentStepIndex, arribado = false }: Props) {
   const total = ESTADOS_EMBARQUE.length;
   const estadoActual = ESTADOS_EMBARQUE[currentStepIndex] ?? ESTADOS_EMBARQUE[0];
   const progreso = total > 1 ? (currentStepIndex / (total - 1)) * 100 : 0;
   const siguiente = ESTADOS_EMBARQUE[currentStepIndex + 1];
 
   return (
-    <Card>
+    <Card data-testid="estado-progreso" data-arrived={arribado ? "true" : "false"}>
       <CardContent className="px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-baseline gap-2 min-w-0">
