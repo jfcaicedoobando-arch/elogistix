@@ -46,10 +46,8 @@ export default function FacturaDetalle() {
   } = useFacturaDetalleDialogs();
   const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
-  const { href: volverHref, label: volverLabel } = useVolverAFacturaOriginal(
-    id,
-    (factura as { sustituye_a?: string | null } | null | undefined)?.sustituye_a ?? null,
-  );
+  const sustituyeA = (factura as { sustituye_a?: string | null } | null | undefined)?.sustituye_a ?? null;
+  const { href: volverHref, label: volverLabel } = useVolverAFacturaOriginal(id, sustituyeA);
 
   if (isLoading) {
     return (
