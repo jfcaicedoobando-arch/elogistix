@@ -93,12 +93,12 @@ export function DialogCancelarFactura({
     >
       {/* Banner condiciones SAT — regla 2.7.1.34 */}
       {cond.mismoDia && (
-        <Alert className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          <AlertTitle className="text-emerald-900 dark:text-emerald-100">
+        <Alert className="border-success/30 bg-success/10">
+          <CheckCircle2 className="h-4 w-4 text-success" />
+          <AlertTitle className="text-success">
             Ventana de cancelación inmediata
           </AlertTitle>
-          <AlertDescription className="text-emerald-800 dark:text-emerald-200">
+          <AlertDescription className="text-foreground">
             Esta factura se emitió hoy. El SAT permite cancelarla sin aceptación del receptor.
             Aprovecha esta ventana antes del cierre del día.
           </AlertDescription>
@@ -106,12 +106,12 @@ export function DialogCancelarFactura({
       )}
 
       {!cond.mismoDia && cond.requiereAceptacion && (
-        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950">
-          <Info className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-900 dark:text-amber-100">
+        <Alert className="border-warning/30 bg-warning/10">
+          <Info className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-warning">
             El receptor debe aceptar la cancelación
           </AlertTitle>
-          <AlertDescription className="text-amber-800 dark:text-amber-200 space-y-1">
+          <AlertDescription className="text-foreground space-y-1">
             <p>
               Por regla SAT 2.7.1.34, esta factura requiere que el cliente <strong>acepte la cancelación
               en su Buzón Tributario</strong>. Timbrar la sustituta (relación 04) no exenta este paso.
@@ -124,12 +124,12 @@ export function DialogCancelarFactura({
       )}
 
       {!cond.mismoDia && !cond.requiereAceptacion && (cond.montoBajo || cond.rfcGenerico) && (
-        <Alert className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          <AlertTitle className="text-emerald-900 dark:text-emerald-100">
+        <Alert className="border-success/30 bg-success/10">
+          <CheckCircle2 className="h-4 w-4 text-success" />
+          <AlertTitle className="text-success">
             Cancelación sin aceptación
           </AlertTitle>
-          <AlertDescription className="text-emerald-800 dark:text-emerald-200">
+          <AlertDescription className="text-foreground">
             {cond.montoBajo && "Monto ≤ $1,000 MXN: exenta de aceptación del receptor."}
             {cond.rfcGenerico && "RFC genérico: exenta de aceptación del receptor."}
           </AlertDescription>
