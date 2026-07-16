@@ -1,79 +1,52 @@
 
-## Diagnóstico (analogía)
+## Problema
 
-Es como enviar un paquete con la etiqueta de destinatario en el idioma equivocado: la paquetería lo acepta, pero la información nunca "cuadra" con el sistema del SAT. Al momento de cancelar la factura vieja pidiendo "sustitúyela por esta otra", el SAT contesta "esa sustituta no me consta que sustituya a nadie" → **"motivo no válido"**.
+El botón "Volver" en el detalle de un borrador sustituto vuelve al listado (`/facturacion`) en vez de a la factura original. La corrección previa (13.301.23) resuelve el caso feliz vía `sessionStorage`, pero se cae cuando:
 
-### Bug real
+- El usuario recarga la página o cierra/reabre la pestaña (sessionStorage muere).
+- Abre el borrador desde otra pestaña, deep-link, notificación o el listado.
+- Cambia de dispositivo/navegador.
 
-En `supabase/functions/facturapi-emitir/helpers.ts:167` estamos mandando:
+Analogía: hoy dejamos un "post-it" en el escritorio (sessionStorage) diciendo qué factura era la original. Si alguien limpia el escritorio, perdemos la referencia. La solución es preguntarle a la base de datos, que ya sabe la respuesta.
 
-```ts
-payload.related_documents = [{ relationship: "04", documents: [ctx.sustituye_uuid] }];
-```
+## Causa raíz
 
-Pero el SDK oficial `facturapi@4.18.0` (verificado en `dist/types/common.d.ts` y `invoice.d.ts`) declara el tipo así:
-
-```ts
-interface RelatedDocument { relationship: string; uuid: string }
-```
-
-FacturAPI v2 en **creación** espera `{ relationship, uuid }` (un objeto por UUID), no `{ relationship, documents: [...] }` (ese shape es lo que la API devuelve al *consultar*, agrupado). Como TypeScript no cachó el mismatch (usamos `payload: Record<string, unknown>` en `buildFacturapiPayload`), FacturAPI descarta el bloque silenciosamente al timbrar. Resultado: F988 quedó timbrada **sin relación 04 a F975**, por eso el SAT rechaza cancelar F975 con motivo 01.
-
-Además, el pre-flight (`verificarRelacionSustitutaSAT`) sólo revisa `documents: string[]`; el shape real remoto es `documents: [{uuid, ...}]` (objetos), así que hubiera dejado pasar la petición aunque la relación existiera. Doble ceguera.
+La tabla `public.facturas` ya tiene la columna `sustituye_a` (FK a la factura original), y `facturapi-emitir` la lee. Pero `fetchFacturaById` no la selecciona, así que el frontend nunca la ve. `useVolverAFacturaOriginal` sólo consulta `sessionStorage`.
 
 ## Plan
 
-### 1. Corregir el payload de emisión (raíz del bug)
+### 1. Exponer `sustituye_a` en el detalle
 
-**Archivo:** `supabase/functions/facturapi-emitir/helpers.ts`
+**Archivo:** `src/features/facturacion/services/detail.ts`
 
-- Cambiar el shape a `[{ relationship: "04", uuid: ctx.sustituye_uuid }]`.
-- Ajustar el tipo local `related_documents` a `Array<{ relationship: string; uuid: string }>`.
-- Añadir test en `helpers_test.ts` (si existe) que asegure el nuevo shape.
+- Añadir `"sustituye_a"` a `COLUMNS` y al tipo `FacturaDetalle`.
 
-### 2. Endurecer pre-flight para soportar ambos shapes
+### 2. Preferir la relación de BD en el hook de "Volver"
 
-**Archivo:** `supabase/functions/facturapi-cancelar/cancelacion.ts`
+**Archivo:** `src/features/facturacion/hooks/useVolverAFacturaOriginal.ts`
 
-`verificarRelacionSustitutaSAT` debe reconocer **ambas** formas que puede devolver `retrieve`:
-- `documents: string[]` (UUIDs)
-- `documents: Array<{ uuid: string }>` (objetos)
-- fallback `uuid: string` a nivel del bloque
+- Recibir opcionalmente el `sustituye_a` de la factura actual (o leerlo con `useFactura(id)`).
+- Orden de prioridad: `factura.sustituye_a` (fuente de verdad) → `findOriginalFacturaIdFor(id)` (fallback para el instante en que aún no se refresca la caché) → `/facturacion`.
+- Mantener el label "Volver a factura F975" usando `useFactura(originalId)` como hoy.
 
-Y añadir logging: si `retrieve` falla o si la relación no se encuentra, incluir en la bitácora el `related_documents` remoto tal cual, para futuros diagnósticos.
+### 3. Pequeño ajuste en `FacturaDetalle`
 
-### 3. Retornar diagnóstico enriquecido al frontend cuando falle pre-flight
+**Archivo:** `src/features/facturacion/routes/FacturaDetalle.tsx`
 
-Cuando el pre-flight detecte que falta la relación 04, además del mensaje actual, devolver también `remote_related_documents` (el bloque crudo) para poder mostrarlo en el toast/dialog. UI opcional: agregar link "Consultar en FacturAPI" al toast de error de cancelación (ya existe el componente).
+- Pasar `factura?.sustituye_a` al hook (o usar la nueva variante). Sin cambios visuales.
 
-### 4. Guía al usuario para recuperar F975/F988
+### 4. Versionado y changelog
 
-Como F988 ya se timbró con el shape incorrecto, **no existe relación 04 en el SAT**. El usuario tiene que:
+- `APP_VERSION` → `13.301.28`
+- Entrada en `CHANGELOG.md` explicando que "Volver" ahora usa `facturas.sustituye_a` como fuente primaria (persiste entre refreshes/pestañas/dispositivos) y `sessionStorage` queda sólo como acelerador.
 
-1. Cancelar F988 con **motivo 02** ("errores sin relación") — F988 no tiene dependientes.
-2. Volver a "Sustituir CFDI" desde F975 para generar una nueva sustituta (ya con el fix aplicado, quedará con la relación 04 correcta).
-3. Cancelar F975 con motivo 01 apuntando a la nueva sustituta.
+### 5. Verificación
 
-Se documentará este flujo de recuperación en el CHANGELOG.
-
-### 5. Versionado y changelog
-
-- `APP_VERSION` → `13.301.27`
-- Entrada en `CHANGELOG.md` describiendo:
-  - Bug del shape `related_documents` al timbrar sustitutas.
-  - Pre-flight ampliado para reconocer ambos shapes remotos.
-  - Nota de recuperación manual para facturas sustitutas timbradas antes del fix.
-
-### 6. Verificación
-
-- `bun run ci:fast` (lint + typecheck + vitest + deno tests) verde.
-- Test unitario nuevo en `helpers.ts` de facturapi-emitir validando el shape `{relationship, uuid}`.
+- `bun run ci:fast` verde.
+- Test unitario ligero del hook: dado `sustituye_a` presente, `href` apunta a `/facturacion/<orig>` aunque no exista entrada en sessionStorage.
 
 ## Detalles técnicos
 
-- SDK confirmado inspeccionando el tarball de `facturapi@4.18.0`:
-  - `dist/types/common.d.ts:87` → `interface RelatedDocument { relationship: string; uuid: string }`
-  - `dist/types/invoice.d.ts:64` → `related_documents?: RelatedDocument[] | null`
-- El shape con `documents: [...]` sólo aparece en la respuesta de `GET /invoices/:id` (agrupado por relación).
-- No se requiere migración de BD.
-- No se toca la lógica de cancelación en sí (SDK call ya es correcta); todo el fix vive del lado del **timbrado** de la sustituta más las verificaciones/observabilidad.
+- No hay migración de BD: la columna ya existe y RLS ya permite lectura al owner.
+- No se modifica el diálogo de sustitución ni la persistencia en `sessionStorage`; sigue útil para reabrir el paso "confirmar" del wizard.
+- Sin cambios de comportamiento cuando la factura no es sustituta: `sustituye_a === null` → "Volver a facturación".
