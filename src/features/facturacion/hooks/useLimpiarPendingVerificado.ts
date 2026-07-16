@@ -9,7 +9,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { limpiarCancellationStatusVerificado } from "@/features/facturacion/services/limpiarPendingVerificado";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
 
@@ -21,13 +21,8 @@ interface Args {
 export function useLimpiarPendingVerificado(facturaId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation<void, Error, Args>({
-    mutationFn: async ({ facturaId: id, remoteCancellationStatus }) => {
-      const { error } = await supabase.rpc("limpiar_cancellation_status_verificado", {
-        p_factura_id: id,
-        p_remote_cancellation_status: remoteCancellationStatus,
-      });
-      if (error) throw new Error(error.message);
-    },
+    mutationFn: ({ facturaId: id, remoteCancellationStatus }) =>
+      limpiarCancellationStatusVerificado({ facturaId: id, remoteCancellationStatus }),
     onSuccess: () => {
       notifySuccess(toast, {
         title: "Estado local limpiado",
