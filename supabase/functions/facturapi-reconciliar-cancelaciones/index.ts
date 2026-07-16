@@ -77,14 +77,16 @@ async function applyAccepted(
   return true;
 }
 
-async function reconcileOne(
-  supabase: SupabaseClient,
-  facturapi: { invoices: { retrieve: (id: string) => Promise<unknown> } },
-  apiKey: string,
-  factura: FacturaPendiente,
-  orgId: string,
-  resumen: Resumen,
-): Promise<void> {
+interface ReconcileCtx {
+  supabase: SupabaseClient;
+  facturapi: { invoices: { retrieve: (id: string) => Promise<unknown> } };
+  apiKey: string;
+  orgId: string;
+  resumen: Resumen;
+}
+
+async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promise<void> {
+  const { supabase, facturapi, apiKey, orgId, resumen } = ctx;
   resumen.revisadas++;
   try {
     const remote = await facturapi.invoices.retrieve(factura.facturapi_id) as FapiInvoiceStatus;
