@@ -73,7 +73,11 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
     if (!s.nuevaId) return;
     cancelar.mutate(
       { facturaId, motivo: "01", sustituidaPorFacturaId: s.nuevaId },
-      { onSuccess: () => { clearPersisted(facturaId); onOpenChange(false); reset(); } },
+      {
+        // Éxito terminal (accepted) O pendiente (72 h): el wizard concluye desde
+        // la perspectiva del usuario. El toast (info vs success) lo maneja el hook.
+        onSuccess: () => { clearPersisted(facturaId); onOpenChange(false); reset(); },
+      },
     );
   };
 
