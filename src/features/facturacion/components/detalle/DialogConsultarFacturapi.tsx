@@ -4,12 +4,12 @@
  * la cancelación pero el portal FacturApi la marca como válida.
  */
 import { useEffect } from "react";
-import { AlertCircle, CheckCircle2, RefreshCw, ExternalLink } from "lucide-react";
+import { AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useConsultarFacturapi } from "@/features/facturacion/hooks/useConsultarFacturapi";
+import { DialogConsultarFacturapiResult } from "./DialogConsultarFacturapiResult";
 
 interface Props {
   facturaId: string | null;
@@ -18,16 +18,9 @@ interface Props {
   onOpenChange: (v: boolean) => void;
 }
 
-function fmtStatus(v: string | null | undefined): string {
-  if (!v) return "—";
-  return v;
-}
-
 export function DialogConsultarFacturapi({ facturaId, numero, open, onOpenChange }: Props) {
-  const mutation = useConsultarFacturapi(facturaId);
-  const { mutate, reset, data, isPending, isError, error } = mutation;
+  const { mutate, reset, data, isPending, isError, error } = useConsultarFacturapi(facturaId);
 
-  // Dispara la consulta al abrir; limpia al cerrar.
   useEffect(() => {
     if (open && facturaId) mutate();
     if (!open) reset();
@@ -57,8 +50,7 @@ export function DialogConsultarFacturapi({ facturaId, numero, open, onOpenChange
           </Alert>
         )}
 
-        {data && <ResultView data={data} />}
-
+        {data && <DialogConsultarFacturapiResult data={data} />}
 
         <DialogFooter className="gap-2">
           <Button
@@ -84,14 +76,5 @@ export function DialogConsultarFacturapi({ facturaId, numero, open, onOpenChange
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex justify-between gap-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={mono ? "font-mono text-xs truncate max-w-[60%]" : "font-medium"}>{value}</span>
-    </div>
   );
 }
