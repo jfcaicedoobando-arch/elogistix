@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.28] - 2026-07-16
+- **fix(facturacion)**: el botón "Volver" en el detalle de un borrador sustituto regresaba al listado cuando se recargaba la pestaña o se abría por deep-link, porque la relación con la factura original vivía sólo en `sessionStorage`. Ahora `fetchFacturaById` incluye `facturas.sustituye_a` y `useVolverAFacturaOriginal` la usa como fuente de verdad (persiste entre refreshes, pestañas y dispositivos); el fallback a `sessionStorage` queda sólo para el instante previo a que la caché de detalle se hidrate.
+
 ## [13.301.27] - 2026-07-16
 - **fix(facturacion)**: bug de raíz que impedía cancelar CFDI motivo 01 con sustitución. Al timbrar sustitutas enviábamos `related_documents: [{ relationship, documents: [uuid] }]`, pero `facturapi@4.18.0` v2 espera `[{ relationship, uuid }]` en creación (el shape con `documents[]` es sólo la respuesta agrupada del `retrieve`). FacturAPI descartaba el bloque silenciosamente, la sustituta quedaba sin relación SAT 04 y el SAT rechazaba después la cancelación con "motivo no válido". Fix en `facturapi-emitir/helpers.ts`. Además el pre-flight `verificarRelacionSustitutaSAT` ahora reconoce ambos shapes remotos (`documents: string[]`, `documents: [{uuid}]`, o `uuid` a nivel del bloque) y devuelve `remote_related_documents` en el 422 para diagnóstico. **Recuperación para facturas ya timbradas mal:** cancelar la sustituta con motivo 02, volver a "Sustituir CFDI" desde la original para generar una nueva sustituta (ahora con relación 04 correcta) y luego cancelar la original con motivo 01.
 
