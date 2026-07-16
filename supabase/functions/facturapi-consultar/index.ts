@@ -79,6 +79,109 @@ interface FapiInvoiceRemote extends FapiInvoiceStatus {
   }>;
 }
 
+interface LocalFactura {
+  id: string;
+  facturapi_id: string;
+  organization_id: string;
+  estado: string | null;
+  cancellation_status: string | null;
+  uuid_fiscal: string | null;
+  sustituida_por: string | null;
+}
+
+type SBClient = ReturnType<typeof createClient>;
+
+async function loadFactura(supabase: SBClient, facturaId: string): Promise<
+  { ok: true; factura: LocalFactura } | { ok: false; res: Response }
+> {
+  const { data, error } = await supabase
+    .from("facturas")
+    .select("id, facturapi_id, organization_id, estado, cancellation_status, uuid_fiscal, sustituida_por")
+    .eq("id", facturaId)
+    .maybeSingle();
+  if (error || !data) return { ok: false, res: jsonResponse({ error: "factura_not_found" }, 404) };
+  if (!data.facturapi_id) return { ok: false, res: jsonResponse({ error: "no_timbrada" }, 409) };
+  return { ok: true, factura: data as LocalFactura };
+}
+
+async function fetchRemote(supabase: SBClient, factura: LocalFactura): Promise<
+  { ok: true; remote: FapiInvoiceRemote } | { ok: false; res: Response }
+> {
+  const resolved = await getFacturapiClient(supabase, factura.organization_id);
+  if (!resolved.ok) {
+    return { ok: false, res: jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status) };
+  }
+  try {
+    const client = resolved.data.client as { invoices: { retrieve: (id: string) => Promise<unknown> } };
+    const remote = await client.invoices.retrieve(factura.facturapi_id) as FapiInvoiceRemote;
+    return { ok: true, remote };
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return { ok: false, res: jsonResponse({ error: "facturapi_error", message: detail }, 502) };
+  }
+}
+
+function computeDivergencias(remote: FapiInvoiceRemote, factura: LocalFactura): string[] {
+  const remoteStatus = (remote.status ?? "").toLowerCase();
+  const remoteCancellation = (remote.cancellation_status ?? "none").toLowerCase();
+  const localCancellation = (factura.cancellation_status ?? "none").toLowerCase();
+  const localEstado = (factura.estado ?? "").toLowerCase();
+  const out: string[] = [];
+  if (remoteCancellation !== localCancellation) {
+    out.push(`cancellation_status: BD='${localCancellation}' ≠ FacturApi='${remoteCancellation}'`);
+  }
+  if (remoteStatus === "canceled" && localEstado !== "cancelada" && localEstado !== "sustituida") {
+    out.push(`status: BD='${localEstado}' ≠ FacturApi='${remoteStatus}'`);
+  }
+  return out;
+}
+
+async function reconciliarSiAplica(
+  supabase: SBClient,
+  factura: LocalFactura,
+  remote: FapiInvoiceRemote,
+  divergencias: string[],
+  user: { id: string; email?: string },
+): Promise<boolean> {
+  if (divergencias.length === 0) return false;
+  const pendiente: FacturaPendiente = {
+    id: factura.id,
+    organization_id: factura.organization_id,
+    facturapi_id: factura.facturapi_id,
+    cancellation_status: (factura.cancellation_status ?? "none").toLowerCase(),
+    sustituida_por: factura.sustituida_por ?? null,
+  };
+  const decision = resolveNextAction(remote, pendiente, new Date().toISOString());
+  if (decision.outcome === "no_change" || Object.keys(decision.patch).length === 0) return false;
+  const { error: updErr } = await supabase.from("facturas").update(decision.patch).eq("id", factura.id);
+  if (updErr) return false;
+  await registrarBitacoraEdge(supabase, {
+    organizationId: factura.organization_id,
+    usuarioId: user.id,
+    usuarioEmail: user.email,
+    modulo: "facturacion",
+    accion: "facturapi_consulta_reconciliada",
+    entidadId: factura.id,
+    detalles: { outcome: decision.outcome, patch: decision.patch, divergencias },
+  });
+  return true;
+}
+
+function flattenRelated(remote: FapiInvoiceRemote) {
+  return (remote.related_documents ?? []).flatMap((rel) => {
+    const docs = rel.documents ?? [];
+    return docs.map((d) => (typeof d === "string"
+      ? { relationship: rel.relationship ?? null, id: d }
+      : {
+          relationship: rel.relationship ?? null,
+          uuid: d.uuid ?? null,
+          folio: d.folio_number ?? null,
+          serie: d.series ?? null,
+          total: d.total ?? null,
+        }));
+  });
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-consultar", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
@@ -96,83 +199,22 @@ Deno.serve(wrapEdgeHandler("facturapi-consultar", async (req) => {
   const body = (await req.json().catch(() => ({}))) as { factura_id?: string };
   if (!body.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
 
-  const { data: factura, error: fErr } = await supabase
-    .from("facturas")
-    .select("id, facturapi_id, organization_id, estado, cancellation_status, uuid_fiscal, sustituida_por")
-    .eq("id", body.factura_id)
-    .maybeSingle();
-  if (fErr || !factura) return jsonResponse({ error: "factura_not_found" }, 404);
-  if (!factura.facturapi_id) return jsonResponse({ error: "no_timbrada" }, 409);
+  const loaded = await loadFactura(supabase, body.factura_id);
+  if (!loaded.ok) return loaded.res;
+  const factura = loaded.factura;
+
   if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
-  const resolved = await getFacturapiClient(supabase, factura.organization_id);
-  if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
+  const fetched = await fetchRemote(supabase, factura);
+  if (!fetched.ok) return fetched.res;
+  const remote = fetched.remote;
 
-  let remote: FapiInvoiceRemote;
-  try {
-    const client = resolved.data.client as { invoices: { retrieve: (id: string) => Promise<unknown> } };
-    remote = await client.invoices.retrieve(factura.facturapi_id) as FapiInvoiceRemote;
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    return jsonResponse({ error: "facturapi_error", message: detail }, 502);
-  }
-
-  const remoteStatus = (remote.status ?? "").toLowerCase();
-  const remoteCancellation = (remote.cancellation_status ?? "none").toLowerCase();
-  const localCancellation = (factura.cancellation_status ?? "none").toLowerCase();
-  const localEstado = (factura.estado ?? "").toLowerCase();
-
-  // Diferencias BD ↔ FacturApi
-  const divergencias: string[] = [];
-  if (remoteCancellation !== localCancellation) {
-    divergencias.push(`cancellation_status: BD='${localCancellation}' ≠ FacturApi='${remoteCancellation}'`);
-  }
-  if (remoteStatus === "canceled" && localEstado !== "cancelada" && localEstado !== "sustituida") {
-    divergencias.push(`status: BD='${localEstado}' ≠ FacturApi='${remoteStatus}'`);
-  }
-
-  // Auto-reconciliar si FacturApi dice cancelada y BD no.
-  let reconciliada = false;
-  if (divergencias.length > 0) {
-    const pendiente: FacturaPendiente = {
-      id: factura.id,
-      organization_id: factura.organization_id,
-      facturapi_id: factura.facturapi_id,
-      cancellation_status: localCancellation,
-      sustituida_por: factura.sustituida_por ?? null,
-    };
-    const decision = resolveNextAction(remote, pendiente, new Date().toISOString());
-    if (decision.outcome !== "no_change" && Object.keys(decision.patch).length > 0) {
-      const { error: updErr } = await supabase.from("facturas").update(decision.patch).eq("id", factura.id);
-      if (!updErr) {
-        reconciliada = true;
-        await registrarBitacoraEdge(supabase, {
-          organizationId: factura.organization_id,
-          usuarioId: userData.user.id,
-          usuarioEmail: userData.user.email,
-          modulo: "facturacion",
-          accion: "facturapi_consulta_reconciliada",
-          entidadId: factura.id,
-          detalles: { outcome: decision.outcome, patch: decision.patch, divergencias },
-        });
-      }
-    }
-  }
-
-  // Aplanar related_documents para la UI (sólo folios/uuid, sin exponer todo).
-  const relacionados = (remote.related_documents ?? []).flatMap((rel) => {
-    const docs = rel.documents ?? [];
-    return docs.map((d) => (typeof d === "string"
-      ? { relationship: rel.relationship ?? null, id: d }
-      : {
-          relationship: rel.relationship ?? null,
-          uuid: d.uuid ?? null,
-          folio: d.folio_number ?? null,
-          serie: d.series ?? null,
-          total: d.total ?? null,
-        }));
+  const divergencias = computeDivergencias(remote, factura);
+  const reconciliada = await reconciliarSiAplica(supabase, factura, remote, divergencias, {
+    id: userData.user.id,
+    email: userData.user.email,
   });
 
   return jsonResponse({
@@ -180,18 +222,19 @@ Deno.serve(wrapEdgeHandler("facturapi-consultar", async (req) => {
     reconciliada,
     divergencias,
     remoto: {
-      status: remoteStatus || null,
-      cancellation_status: remoteCancellation,
+      status: (remote.status ?? "").toLowerCase() || null,
+      cancellation_status: (remote.cancellation_status ?? "none").toLowerCase(),
       canceled_at: remote.canceled_at ?? null,
       uuid: remote.uuid ?? null,
       folio: remote.folio_number ?? null,
       serie: remote.series ?? null,
-      related_documents: relacionados,
+      related_documents: flattenRelated(remote),
     },
     local: {
       estado: factura.estado,
-      cancellation_status: localCancellation,
+      cancellation_status: (factura.cancellation_status ?? "none").toLowerCase(),
       uuid_fiscal: factura.uuid_fiscal ?? null,
     },
   });
 }));
+
