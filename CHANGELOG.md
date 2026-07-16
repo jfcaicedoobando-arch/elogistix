@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.16] - 2026-07-16
+- **fix(facturacion)**: cancelar CFDI motivo 01 ya no pide UUID a mano — ahora lista las facturas con `sustituye_a = facturaId` y deja elegir la sustituta timbrada; se envía `sustituidaPorFacturaId` (id interno) para que el backend resuelva el `facturapi_id` que FacturAPI espera en `substitution`. Antes el input libre nunca populaba ese campo y siempre reventaba con *"Substitution invoice is required when cancellation motive is 01"*. Nuevo CTA "Abrir asistente de sustitución" cuando no hay sustituta timbrada. Extraído `SelectorSustituta.tsx` y `services/sustitutasDeFactura.ts` (Power-of-10 ≤200 líneas).
+
 ## [13.301.15] - 2026-07-16
 - **fix(ux)**: toast de timbrado ahora dice "Factura timbrada correctamente" con `Serie X · Folio N` en la descripción (6s), en vez del críptico `UUID 160A0EBE…`. El UUID completo sigue visible en el detalle para conciliación SAT.
 
