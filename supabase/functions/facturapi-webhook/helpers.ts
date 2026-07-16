@@ -28,12 +28,83 @@ export interface MappedUpdate {
   bitacora_accion: string;
   /**
    * Si es true, el llamador debe NO sobrescribir `estado` cuando la factura
-   * en BD ya está en `Sustituida` (o `sustituida_por IS NOT NULL`). El patch
-   * incluye `estado` calculado como "Cancelada" por default, pero para
-   * sustituciones el estado correcto es "Sustituida" y lo fija el cron
-   * `facturapi-reconciliar-cancelaciones` al descargar el acuse.
+   * en BD ya está en `Sustituida` (o `sustituida_por IS NOT NULL`).
    */
   preserva_sustituida?: boolean;
+}
+
+interface EventCtx {
+  facturapi_id: string;
+  status: string | null;
+  uuid: string | null;
+  cancellationStatus: string | null;
+}
+
+function extractCtx(ev: FacturapiWebhookEvent): EventCtx | null {
+  const obj = ev.data?.object;
+  if (!obj || typeof obj.id !== "string") return null;
+  return {
+    facturapi_id: obj.id,
+    status: typeof obj.status === "string" ? obj.status : null,
+    uuid: typeof obj.uuid === "string" ? obj.uuid : null,
+    cancellationStatus: typeof obj.cancellation_status === "string"
+      ? obj.cancellation_status.toLowerCase()
+      : null,
+  };
+}
+
+function mapCancellationStatusUpdated(ctx: EventCtx): MappedUpdate | null {
+  if (!ctx.cancellationStatus) return null;
+  const patch: Record<string, unknown> = { cancellation_status: ctx.cancellationStatus };
+  if (ctx.cancellationStatus === "rejected" || ctx.cancellationStatus === "expired") {
+    patch.cancelacion_solicitada_en = null;
+    patch.cancelacion_vence_en = null;
+  }
+  return {
+    facturapi_id: ctx.facturapi_id,
+    patch,
+    bitacora_accion: "facturapi_webhook_cancellation_status",
+  };
+}
+
+function mapInvoiceStatusUpdated(ctx: EventCtx): MappedUpdate | null {
+  const patch: Record<string, unknown> = {};
+  if (ctx.uuid) patch.uuid_fiscal = ctx.uuid;
+  if (ctx.status === "canceled") {
+    patch.estado = "Cancelada";
+    patch.cancelado_en = new Date().toISOString();
+    patch.cancellation_status = "accepted";
+  } else if (ctx.status === "valid") {
+    patch.estado = "Timbrada";
+  }
+  if (Object.keys(patch).length === 0) return null;
+  return {
+    facturapi_id: ctx.facturapi_id,
+    patch,
+    bitacora_accion: "facturapi_webhook_status",
+    preserva_sustituida: ctx.status === "canceled",
+  };
+}
+
+function mapInvoiceCanceled(ctx: EventCtx): MappedUpdate {
+  return {
+    facturapi_id: ctx.facturapi_id,
+    patch: {
+      estado: "Cancelada",
+      cancelado_en: new Date().toISOString(),
+      cancellation_status: "accepted",
+    },
+    bitacora_accion: "facturapi_webhook_canceled",
+    preserva_sustituida: true,
+  };
+}
+
+function mapInvoiceDelivered(ctx: EventCtx): MappedUpdate {
+  return {
+    facturapi_id: ctx.facturapi_id,
+    patch: { enviada_cliente_at: new Date().toISOString() },
+    bitacora_accion: "facturapi_webhook_delivered",
+  };
 }
 
 /**
@@ -41,75 +112,20 @@ export interface MappedUpdate {
  * Devuelve `null` si el evento no requiere acción.
  */
 export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate | null {
-  const obj = ev.data?.object as Record<string, unknown> | undefined;
-  if (!obj || typeof obj.id !== "string") return null;
-  const facturapi_id = obj.id;
-  const status = typeof obj.status === "string" ? obj.status : null;
-  const uuid = typeof obj.uuid === "string" ? obj.uuid : null;
-  const cancellationStatus = typeof obj.cancellation_status === "string"
-    ? obj.cancellation_status.toLowerCase()
-    : null;
-
+  const ctx = extractCtx(ev);
+  if (!ctx) return null;
   switch (ev.type) {
-    case "invoice.cancellation_status_updated": {
-      // Evento crítico: el SAT resolvió (o avanzó) la solicitud asíncrona.
-      // No cambiamos `estado` aquí — lo hace el cron/reconciliar cuando
-      // pasa a `accepted`, porque necesita descargar el acuse y revertir
-      // proformas. El webhook sólo refleja el estado en la BD.
-      if (!cancellationStatus) return null;
-      const patch: Record<string, unknown> = { cancellation_status: cancellationStatus };
-      if (cancellationStatus === "rejected" || cancellationStatus === "expired") {
-        patch.cancelacion_solicitada_en = null;
-        patch.cancelacion_vence_en = null;
-      }
-      return { facturapi_id, patch, bitacora_accion: "facturapi_webhook_cancellation_status" };
-    }
-    case "invoice.status_updated": {
-      const patch: Record<string, unknown> = {};
-      if (uuid) patch.uuid_fiscal = uuid;
-      if (status === "canceled") {
-        patch.estado = "Cancelada";
-        patch.cancelado_en = new Date().toISOString();
-        patch.cancellation_status = "accepted";
-      } else if (status === "valid") {
-        patch.estado = "Timbrada";
-      }
-      if (Object.keys(patch).length === 0) return null;
-      return {
-        facturapi_id,
-        patch,
-        bitacora_accion: "facturapi_webhook_status",
-        preserva_sustituida: status === "canceled",
-      };
-    }
-    case "invoice.canceled":
-      return {
-        facturapi_id,
-        patch: {
-          estado: "Cancelada",
-          cancelado_en: new Date().toISOString(),
-          cancellation_status: "accepted",
-        },
-        bitacora_accion: "facturapi_webhook_canceled",
-        preserva_sustituida: true,
-      };
-    case "invoice.delivered_to_customer":
-      return {
-        facturapi_id,
-        patch: { enviada_cliente_at: new Date().toISOString() },
-        bitacora_accion: "facturapi_webhook_delivered",
-      };
-    default:
-      return null;
+    case "invoice.cancellation_status_updated": return mapCancellationStatusUpdated(ctx);
+    case "invoice.status_updated": return mapInvoiceStatusUpdated(ctx);
+    case "invoice.canceled": return mapInvoiceCanceled(ctx);
+    case "invoice.delivered_to_customer": return mapInvoiceDelivered(ctx);
+    default: return null;
   }
 }
 
 /**
  * Mapper de eventos `receipt.*` (REP / Complemento de Pagos) hacia
  * `public.pagos_factura`. Devuelve el `facturapi_rep_id` para hacer match.
- *
- * FacturApi nombra al objeto REP `receipt`; los eventos siguen la misma
- * forma que invoice (`type`, `data.object`).
  */
 export interface MappedReceiptUpdate {
   facturapi_rep_id: string;
@@ -118,7 +134,7 @@ export interface MappedReceiptUpdate {
 }
 
 export function mapEventToReceiptPatch(ev: FacturapiWebhookEvent): MappedReceiptUpdate | null {
-  const obj = ev.data?.object as Record<string, unknown> | undefined;
+  const obj = ev.data?.object;
   if (!obj || typeof obj.id !== "string") return null;
   const facturapi_rep_id = obj.id;
   const status = typeof obj.status === "string" ? obj.status : null;

@@ -20,6 +20,11 @@ import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import {
+  enrichCancelacionErrorMessage,
+  resolveSustitutaSnapshot,
+  revertirProformasCancelacion,
+} from "./cancelacion.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -70,13 +75,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   let sustituyeFacturapiId: string | undefined;
   const sustituidaPorFacturaId: string | null = rawBody.sustituida_por_factura_id ?? null;
   if (sustituidaPorFacturaId) {
-    const { data: nueva } = await supabase
-      .from("facturas").select("id, uuid_fiscal, facturapi_id").eq("id", sustituidaPorFacturaId).maybeSingle();
-    if (!nueva?.uuid_fiscal || !nueva.facturapi_id) {
+    const snap = await resolveSustitutaSnapshot(supabase, sustituidaPorFacturaId);
+    if (!snap.ok) {
       return jsonResponse({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
     }
-    sustituyeUuidResuelto = nueva.uuid_fiscal as string;
-    sustituyeFacturapiId = nueva.facturapi_id as string;
+    sustituyeUuidResuelto = snap.uuid;
+    sustituyeFacturapiId = snap.facturapiId;
   }
 
   const validated = validateCancelacionInput({ ...rawBody, sustituye_uuid: sustituyeUuidResuelto });
@@ -126,15 +130,8 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       detalles: { status, response: detail },
     });
     const rawMessage = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    const esNoCancelable = /no cancelable|marcada como no|no puede.*cancel|facturas relacionadas/i.test(rawMessage);
-    const esServicioSatCaido = /cancelacionsat no est|servicio.*sat.*no.*disp|sat.*no.*disponible/i.test(rawMessage);
-    let message = rawMessage;
-    if (esServicioSatCaido) {
-      message = "El SAT no está respondiendo en este momento (servicio de cancelación caído del lado del SAT). No es un problema de tu factura ni de tus datos. Espera unos minutos y reintenta.";
-    } else if (esNoCancelable) {
-      message = `${rawMessage}\n\nEl SAT rechazó la cancelación. Causas comunes:\n• El receptor debe ACEPTAR la cancelación en su Buzón Tributario (CFDIs > $1,000 MXN).\n• Existen complementos de pago (REP) o notas de crédito vinculados: cancélalos primero.\n• El SAT aún no propaga la sustitución: reintenta en 30–60 minutos.`;
-    }
-    return jsonResponse({ error: "facturapi_error", status, detail, message, transient: esServicioSatCaido }, 502);
+    const { message, transient } = enrichCancelacionErrorMessage(rawMessage);
+    return jsonResponse({ error: "facturapi_error", status, detail, message, transient }, 502);
   }
 
   const cancellationStatus = (cancelResp.cancellation_status ?? "none").toLowerCase();
@@ -249,29 +246,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .eq("id", factura_id);
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  const proformasRevertidas: Array<{ id: string; estado: string }> = [];
-  if (!esSustitucion) {
-    const { data: proformasLigadas } = await supabase
-      .from("proformas")
-      .select("id, factura_id, factura_secundaria_id")
-      .or(`factura_id.eq.${factura_id},factura_secundaria_id.eq.${factura_id}`);
-    for (const pf of proformasLigadas ?? []) {
-      const nuevoFacturaId = pf.factura_id === factura_id ? null : pf.factura_id;
-      const nuevoFacturaSecId = pf.factura_secundaria_id === factura_id ? null : pf.factura_secundaria_id;
-      const ambosNulos = !nuevoFacturaId && !nuevoFacturaSecId;
-      const patch: Record<string, unknown> = {
-        factura_id: nuevoFacturaId,
-        factura_secundaria_id: nuevoFacturaSecId,
-      };
-      if (ambosNulos) {
-        patch.estado_proforma = "pendiente";
-        patch.fecha_facturacion = null;
-        patch.folio_factura_externa = null;
-      }
-      const { error: upPfErr } = await supabase.from("proformas").update(patch).eq("id", pf.id);
-      if (!upPfErr) proformasRevertidas.push({ id: pf.id, estado: ambosNulos ? "pendiente" : "facturada" });
-    }
-  }
+  const proformasRevertidas = esSustitucion
+    ? []
+    : await revertirProformasCancelacion(supabase, factura_id);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: factura.organization_id,

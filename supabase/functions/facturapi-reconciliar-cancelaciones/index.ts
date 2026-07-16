@@ -1,46 +1,122 @@
 /**
  * facturapi-reconciliar-cancelaciones — cron que consulta a FacturApi el
- * `cancellation_status` de cada factura marcada como `pending` o `verifying`
- * y sincroniza la BD (aceptada → estado Cancelada/Sustituida + acuse; rechazada
- * o expirada → limpiar solicitud; sin cambios → no-op).
- *
- * Se dispara cada 30 minutos via pg_cron/pg_net. Es seguro reintentar: idempotente.
- * NO recibe input del usuario (llamado por el scheduler); usa service_role.
+ * `cancellation_status` de cada factura marcada como `pending`/`verifying`
+ * y sincroniza la BD. Se dispara cada 30 min via pg_cron/pg_net.
+ * Idempotente y seguro de reintentar.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { getFacturapiClient } from "../_shared/facturapiClient.ts";
-import { FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import {
+  descargarAcuse,
+  resolveNextAction,
+  agruparPorOrg,
+  nuevoResumen,
+  acumularOutcome,
+  type FacturaPendiente,
+  type FapiInvoiceStatus,
+  type Resumen,
+} from "./reconcile.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-interface FacturaPendiente {
-  id: string;
-  organization_id: string;
-  facturapi_id: string;
-  cancellation_status: string;
-  sustituida_por: string | null;
+async function revertirProformas(supabase: SupabaseClient, facturaId: string): Promise<void> {
+  const { data: pfs } = await supabase
+    .from("proformas")
+    .select("id, factura_id, factura_secundaria_id")
+    .or(`factura_id.eq.${facturaId},factura_secundaria_id.eq.${facturaId}`);
+  for (const pf of pfs ?? []) {
+    const nuevoFacturaId = pf.factura_id === facturaId ? null : pf.factura_id;
+    const nuevoFacturaSecId = pf.factura_secundaria_id === facturaId ? null : pf.factura_secundaria_id;
+    const ambosNulos = !nuevoFacturaId && !nuevoFacturaSecId;
+    const pfPatch: Record<string, unknown> = {
+      factura_id: nuevoFacturaId,
+      factura_secundaria_id: nuevoFacturaSecId,
+    };
+    if (ambosNulos) {
+      pfPatch.estado_proforma = "pendiente";
+      pfPatch.fecha_facturacion = null;
+      pfPatch.folio_factura_externa = null;
+    }
+    await supabase.from("proformas").update(pfPatch).eq("id", pf.id);
+  }
 }
 
-interface FapiInvoiceStatus {
-  status?: string;
-  cancellation_status?: string;
+async function applyAccepted(
+  supabase: SupabaseClient,
+  factura: FacturaPendiente,
+  patchBase: Record<string, unknown>,
+  apiKey: string,
+  orgId: string,
+): Promise<boolean> {
+  const acuse = await descargarAcuse(factura.facturapi_id, apiKey);
+  const patch = {
+    ...patchBase,
+    acuse_cancelacion_xml: acuse.xml,
+    acuse_cancelacion_fecha: acuse.xml ? new Date().toISOString() : null,
+    acuse_cancelacion_status: acuse.status,
+  };
+  const { error: upErr } = await supabase.from("facturas").update(patch).eq("id", factura.id);
+  if (upErr) return false;
+
+  const esSustitucion = !!factura.sustituida_por;
+  if (!esSustitucion) await revertirProformas(supabase, factura.id);
+
+  await registrarBitacoraEdge(supabase, {
+    organizationId: orgId,
+    usuarioId: null,
+    modulo: "facturacion",
+    accion: esSustitucion ? "facturapi_sustituida_async" : "facturapi_cancelada_async",
+    entidadId: factura.id,
+    detalles: { via: "cron_reconciliacion", cancellation_status: "accepted" },
+  });
+  return true;
 }
 
-async function descargarAcuse(facturapiId: string, apiKey: string): Promise<{ xml: string | null; status: string }> {
+async function reconcileOne(
+  supabase: SupabaseClient,
+  facturapi: { invoices: { retrieve: (id: string) => Promise<unknown> } },
+  apiKey: string,
+  factura: FacturaPendiente,
+  orgId: string,
+  resumen: Resumen,
+): Promise<void> {
+  resumen.revisadas++;
   try {
-    const res = await fetch(`${FACTURAPI_BASE}/invoices/${facturapiId}/cancellation_receipt/xml`, {
-      headers: { Authorization: basicAuthHeader(apiKey) },
-    });
-    if (res.status === 200) return { xml: await res.text(), status: "accepted" };
-    if (res.status === 404 || res.status === 425) return { xml: null, status: "pending" };
-    return { xml: null, status: `error_${res.status}` };
-  } catch {
-    return { xml: null, status: "error_network" };
+    const remote = await facturapi.invoices.retrieve(factura.facturapi_id) as FapiInvoiceStatus;
+    const decision = resolveNextAction(remote, factura, new Date().toISOString());
+
+    if (decision.outcome === "no_change") {
+      resumen.sin_cambio++;
+      return;
+    }
+
+    if (decision.outcome === "accepted") {
+      const ok = await applyAccepted(supabase, factura, decision.patch, apiKey, orgId);
+      if (!ok) { resumen.errores++; return; }
+      resumen.aceptadas++;
+      return;
+    }
+
+    // rejected / expired / transition
+    await supabase.from("facturas").update(decision.patch).eq("id", factura.id);
+    if (decision.outcome === "rejected" || decision.outcome === "expired") {
+      await registrarBitacoraEdge(supabase, {
+        organizationId: orgId,
+        usuarioId: null,
+        modulo: "facturacion",
+        accion: "facturapi_cancelacion_no_aceptada",
+        entidadId: factura.id,
+        detalles: { via: "cron_reconciliacion", cancellation_status: decision.outcome },
+      });
+    }
+    acumularOutcome(resumen, decision.outcome);
+  } catch (_err) {
+    resumen.errores++;
   }
 }
 
@@ -62,14 +138,8 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
   if (fetchErr) return jsonResponse({ error: "db_fetch_failed", detail: fetchErr.message }, 500);
 
   const facturas = (pendientes ?? []) as FacturaPendiente[];
-  const resumen = { revisadas: 0, aceptadas: 0, rechazadas: 0, expiradas: 0, sin_cambio: 0, errores: 0 };
-
-  // Agrupar por organization_id para reutilizar el cliente FacturApi.
-  const porOrg = new Map<string, FacturaPendiente[]>();
-  for (const f of facturas) {
-    if (!porOrg.has(f.organization_id)) porOrg.set(f.organization_id, []);
-    porOrg.get(f.organization_id)!.push(f);
-  }
+  const resumen = nuevoResumen();
+  const porOrg = agruparPorOrg(facturas);
 
   for (const [orgId, lote] of porOrg) {
     const resolved = await getFacturapiClient(supabase, orgId);
@@ -77,93 +147,8 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
       resumen.errores += lote.length;
       continue;
     }
-    const facturapi = resolved.data.client;
-    const apiKey = resolved.data.apiKey;
-
     for (const factura of lote) {
-      resumen.revisadas++;
-      try {
-        const remote = await facturapi.invoices.retrieve(factura.facturapi_id) as FapiInvoiceStatus;
-        const cs = (remote.cancellation_status ?? "").toLowerCase();
-        const nowIso = new Date().toISOString();
-
-        if (cs === factura.cancellation_status) {
-          resumen.sin_cambio++;
-          continue;
-        }
-
-        if (cs === "accepted" || remote.status === "canceled") {
-          const esSustitucion = !!factura.sustituida_por;
-          const acuse = await descargarAcuse(factura.facturapi_id, apiKey);
-          const patch: Record<string, unknown> = {
-            estado: esSustitucion ? "Sustituida" : "Cancelada",
-            cancellation_status: "accepted",
-            cancelado_en: nowIso,
-            acuse_cancelacion_xml: acuse.xml,
-            acuse_cancelacion_fecha: acuse.xml ? nowIso : null,
-            acuse_cancelacion_status: acuse.status,
-          };
-          const { error: upErr } = await supabase.from("facturas").update(patch).eq("id", factura.id);
-          if (upErr) { resumen.errores++; continue; }
-
-          // Revertir proformas SÓLO si no fue sustitución.
-          if (!esSustitucion) {
-            const { data: pfs } = await supabase
-              .from("proformas")
-              .select("id, factura_id, factura_secundaria_id")
-              .or(`factura_id.eq.${factura.id},factura_secundaria_id.eq.${factura.id}`);
-            for (const pf of pfs ?? []) {
-              const nuevoFacturaId = pf.factura_id === factura.id ? null : pf.factura_id;
-              const nuevoFacturaSecId = pf.factura_secundaria_id === factura.id ? null : pf.factura_secundaria_id;
-              const ambosNulos = !nuevoFacturaId && !nuevoFacturaSecId;
-              const pfPatch: Record<string, unknown> = {
-                factura_id: nuevoFacturaId,
-                factura_secundaria_id: nuevoFacturaSecId,
-              };
-              if (ambosNulos) {
-                pfPatch.estado_proforma = "pendiente";
-                pfPatch.fecha_facturacion = null;
-                pfPatch.folio_factura_externa = null;
-              }
-              await supabase.from("proformas").update(pfPatch).eq("id", pf.id);
-            }
-          }
-
-          await registrarBitacoraEdge(supabase, {
-            organizationId: orgId,
-            usuarioId: null,
-            modulo: "facturacion",
-            accion: esSustitucion ? "facturapi_sustituida_async" : "facturapi_cancelada_async",
-            entidadId: factura.id,
-            detalles: { via: "cron_reconciliacion", cancellation_status: "accepted" },
-          });
-          resumen.aceptadas++;
-        } else if (cs === "rejected" || cs === "expired") {
-          await supabase.from("facturas").update({
-            cancellation_status: cs,
-            cancelacion_solicitada_en: null,
-            cancelacion_vence_en: null,
-          }).eq("id", factura.id);
-          await registrarBitacoraEdge(supabase, {
-            organizationId: orgId,
-            usuarioId: null,
-            modulo: "facturacion",
-            accion: "facturapi_cancelacion_no_aceptada",
-            entidadId: factura.id,
-            detalles: { via: "cron_reconciliacion", cancellation_status: cs },
-          });
-          if (cs === "rejected") resumen.rechazadas++;
-          else resumen.expiradas++;
-        } else if (cs && cs !== factura.cancellation_status) {
-          // Transición pending → verifying (o viceversa): sólo actualizar el estado.
-          await supabase.from("facturas").update({ cancellation_status: cs }).eq("id", factura.id);
-          resumen.sin_cambio++;
-        } else {
-          resumen.sin_cambio++;
-        }
-      } catch (_err) {
-        resumen.errores++;
-      }
+      await reconcileOne(supabase, resolved.data.client, resolved.data.apiKey, factura, orgId, resumen);
     }
   }
 
