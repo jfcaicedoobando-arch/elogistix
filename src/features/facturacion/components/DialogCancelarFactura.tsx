@@ -123,40 +123,7 @@ export function DialogCancelarFactura({
       size="lg"
       footer={footer}
     >
-      {cond.mismoDia && (
-        <Alert className="border-success/30 bg-success/10">
-          <CheckCircle2 className="h-4 w-4 text-success" />
-          <AlertTitle className="text-success">Ventana de cancelación inmediata</AlertTitle>
-          <AlertDescription className="text-foreground">
-            Esta factura se emitió hoy. El SAT permite cancelarla sin aceptación del receptor.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!cond.mismoDia && cond.requiereAceptacion && (
-        <Alert className="border-warning/30 bg-warning/10">
-          <Info className="h-4 w-4 text-warning" />
-          <AlertTitle className="text-warning">El receptor debe aceptar la cancelación</AlertTitle>
-          <AlertDescription className="text-foreground space-y-1">
-            <p>
-              Por regla SAT 2.7.1.34, esta factura requiere que el cliente <strong>acepte la cancelación
-              en su Buzón Tributario</strong>. Timbrar la sustituta (relación 04) no exenta este paso.
-            </p>
-            <p className="text-xs">Si no responde en 72 horas hábiles aplica cancelación por silencio positivo.</p>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!cond.mismoDia && !cond.requiereAceptacion && (cond.montoBajo || cond.rfcGenerico) && (
-        <Alert className="border-success/30 bg-success/10">
-          <CheckCircle2 className="h-4 w-4 text-success" />
-          <AlertTitle className="text-success">Cancelación sin aceptación</AlertTitle>
-          <AlertDescription className="text-foreground">
-            {cond.montoBajo && "Monto ≤ $1,000 MXN: exenta de aceptación del receptor."}
-            {cond.rfcGenerico && "RFC genérico: exenta de aceptación del receptor."}
-          </AlertDescription>
-        </Alert>
-      )}
+      <BannersCondicionesSAT {...cond} />
 
       <div className="space-y-2">
         <Label>Motivo SAT</Label>
