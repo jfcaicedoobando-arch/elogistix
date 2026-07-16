@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.6] - 2026-07-16
+- **fix(test) `useTimbrarFactura.test.tsx`**: `FacturapiError` movido dentro del factory de `vi.mock` para evitar `ReferenceError: Cannot access 'FacturapiError' before initialization` cuando vitest hoistea el mock por encima de la declaración de clase.
+
 ## [13.301.5] - 2026-07-16
 - **test(e2e) Sustitución CFDI**: nuevo spec `e2e/specs/25-sustituir-cfdi.spec.ts` que valida el wizard single-tab (motivo SAT 01) contra FacturApi sandbox. Cubre happy path (duplicar → timbrar sustituta → cancelar original), persistencia en `sessionStorage`, guard UI con sustituta en Borrador y auto-reset ante borrador eliminado externamente. Gate por `E2E_FISCAL=1 + E2E_SUSTITUCION_FACTURA_UUID`. Añadido al project `chromium-mutators` (regex ampliada a `0[9]-|1[0-2]-|25-`).
 
