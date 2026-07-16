@@ -26,6 +26,14 @@ export interface MappedUpdate {
   facturapi_id: string;
   patch: Record<string, unknown>;
   bitacora_accion: string;
+  /**
+   * Si es true, el llamador debe NO sobrescribir `estado` cuando la factura
+   * en BD ya está en `Sustituida` (o `sustituida_por IS NOT NULL`). El patch
+   * incluye `estado` calculado como "Cancelada" por default, pero para
+   * sustituciones el estado correcto es "Sustituida" y lo fija el cron
+   * `facturapi-reconciliar-cancelaciones` al descargar el acuse.
+   */
+  preserva_sustituida?: boolean;
 }
 
 /**
