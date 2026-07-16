@@ -70,11 +70,11 @@ jobs:
         run: bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts
 
       - name: Architecture & cast report
-        if: always()
+        if: always() && steps.setup-bun.outcome == 'success'
         run: bun run audit:report
 
       - name: PR summary (audit report)
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && steps.setup-bun.outcome == 'success'
         run: cat reports/audit-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload audit report
