@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.22] - 2026-07-16
+- **fix(facturacion)**: el badge "En cancelación" aparecía en el detalle de la factura pero no en la lista de facturas emitidas. Causa: el RPC `facturas_listado` (fuente del listado) no devolvía `cancellation_status`, así que `facturacionColumns` recibía siempre `null` y `deriveFacturaBadgeEstado` no podía derivar el estado ámbar. Se agrega la columna al RETURNS TABLE del RPC y se propaga en `FacturaListItem` + `fetchFacturasListado` (`services/facturasCrud.ts`). Ahora F971 (y cualquier factura con `estado='Emitida'` + `cancellation_status='pending'/'verifying'`) muestra el badge ámbar tanto en detalle como en el listado.
+
 ## [13.301.21] - 2026-07-16
 - **fix(facturacion)**: el badge del detalle de factura y de la tabla no reflejaba el estado "En cancelación" cuando `estado='Emitida'` pero `cancellation_status='pending'` (caso F971 tras 13.301.20). `deriveFacturaBadgeEstado` ahora recibe también `cancellation_status`: si la factura sigue Emitida pero hay solicitud viva (`pending`/`verifying`), se muestra "En cancelación" (ámbar). Se actualizan `FacturaDetalleHeader`, `FacturaDetalle` y `facturacionColumns` para propagar el campo, y se amplían los tests unitarios.
 
