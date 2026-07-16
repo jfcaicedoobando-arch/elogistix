@@ -81,8 +81,8 @@ export default function FacturaDetalle() {
 
   return (
     <PageContainer>
-      <Button variant="ghost" size="sm" onClick={() => navigate("/facturacion")} className="-ml-2">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
+      <Button variant="ghost" size="sm" onClick={() => navigate(volverHref)} className="-ml-2">
+        <ArrowLeft className="h-4 w-4 mr-1" /> {volverLabel}
       </Button>
 
       <FacturaDetalleHeader
