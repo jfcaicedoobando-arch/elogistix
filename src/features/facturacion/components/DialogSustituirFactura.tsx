@@ -91,6 +91,21 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
 
   const reset = () => { s.setStep("intro"); s.setNuevaId(null); };
 
+  const handleYaSustituida = async () => {
+    try {
+      const [existente] = await listarSustitutas(facturaId);
+      if (!existente) return false;
+      writePersisted(facturaId, existente.id);
+      toast.info("Esta factura ya tiene un borrador sustituto. Te llevamos a él.");
+      onOpenChange(false);
+      navigate(`/facturacion/${existente.id}?accion=timbrar`);
+      return true;
+    } catch (lookupErr) {
+      reportCaughtError(lookupErr, { feature: "facturacion", op: "listar_sustitutas_fallback" }, { facturaId });
+      return false;
+    }
+  };
+
   const handleDuplicar = async () => {
     setDuplicando(true);
     try {
@@ -101,27 +116,9 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
       navigate(`/facturacion/${id}?accion=timbrar`);
     } catch (err) {
       const msg = (err as Error)?.message ?? "";
-      if (msg.includes("factura_ya_sustituida")) {
-        try {
-          const sustitutas = await listarSustitutas(facturaId);
-          const existente = sustitutas[0];
-          if (existente) {
-            writePersisted(facturaId, existente.id);
-            toast.info("Esta factura ya tiene un borrador sustituto. Te llevamos a él.");
-            onOpenChange(false);
-            navigate(`/facturacion/${existente.id}?accion=timbrar`);
-            return;
-          }
-        } catch (lookupErr) {
-          reportCaughtError(lookupErr, { feature: "facturacion", op: "listar_sustitutas_fallback" }, { facturaId });
-        }
-      }
+      if (msg.includes("factura_ya_sustituida") && (await handleYaSustituida())) return;
       reportCaughtError(err, { feature: "facturacion", op: "duplicar_para_sustitucion" }, { facturaId });
-      notifyError(toast, {
-        title: "No se pudo duplicar",
-        error: err as Error,
-        method: "FEATURES_FACTURACION_DIALOG_SUSTITUIR_1",
-      });
+      notifyError(toast, { title: "No se pudo duplicar", error: err as Error, method: "FEATURES_FACTURACION_DIALOG_SUSTITUIR_1" });
     } finally {
       setDuplicando(false);
     }
