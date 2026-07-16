@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.29] - 2026-07-16
+- **fix(facturacion)**: al intentar sustituir una factura que ya tenía sustituto (`facturas.sustituida_por` presente) la RPC `duplicar_factura_para_sustitucion` respondía `factura_ya_sustituida` y el UI mostraba un toast genérico "No se pudo duplicar", dejando al usuario sin salida (requestId `2df07b2a-3eaf-4853-8e83-6adf43368666`). Ahora: (a) `deriveFacturaFlags` oculta "Sustituir CFDI" y "Cancelar CFDI" cuando la factura ya tiene sustituto — la red de seguridad servidor-side se conserva; (b) si aún así la RPC devuelve `factura_ya_sustituida`, el diálogo busca la sustituta con `listarSustitutas`, la persiste en `sessionStorage` y navega al borrador existente con un toast informativo en vez de un error; (c) el menú "Más acciones" del detalle expone un enlace "Ver factura sustituta" cuando aplica; (d) `fetchFacturaById` selecciona `sustituida_por`.
+
 ## [13.301.28] - 2026-07-16
 - **fix(facturacion)**: el botón "Volver" en el detalle de un borrador sustituto regresaba al listado cuando se recargaba la pestaña o se abría por deep-link, porque la relación con la factura original vivía sólo en `sessionStorage`. Ahora `fetchFacturaById` incluye `facturas.sustituye_a` y `useVolverAFacturaOriginal` la usa como fuente de verdad (persiste entre refreshes, pestañas y dispositivos); el fallback a `sessionStorage` queda sólo para el instante previo a que la caché de detalle se hidrate.
 
