@@ -23,7 +23,7 @@ export interface AcuseResult {
 }
 
 export interface ResolvedPatch {
-  outcome: "accepted" | "rejected" | "expired" | "transition" | "no_change";
+  outcome: "accepted" | "rejected" | "expired" | "transition" | "cleared" | "no_change";
   patch: Record<string, unknown>;
 }
 
