@@ -13,6 +13,7 @@ interface Props {
   numero: string;
   estado: string;
   acuseCancelacionStatus?: string | null;
+  cancellationStatus?: string | null;
   sinTimbrar: boolean;
   clienteNombre: string;
   expediente: string;
@@ -23,12 +24,12 @@ interface Props {
 
 export function FacturaDetalleHeader(props: Props) {
   const {
-    numero, estado, acuseCancelacionStatus, sinTimbrar,
+    numero, estado, acuseCancelacionStatus, cancellationStatus, sinTimbrar,
     clienteNombre, expediente, total, moneda, ambiente,
   } = props;
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
-  const estadoVisual = deriveFacturaBadgeEstado(estado, acuseCancelacionStatus);
+  const estadoVisual = deriveFacturaBadgeEstado(estado, acuseCancelacionStatus, cancellationStatus);
   return (
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
       <div className="min-w-0">

@@ -88,6 +88,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
       accessor: (f) => deriveFacturaBadgeEstado(
         f.estado,
         (f as { acuse_cancelacion_status?: string | null }).acuse_cancelacion_status ?? null,
+        (f as { cancellation_status?: string | null }).cancellation_status ?? null,
       ),
     }),
     {
