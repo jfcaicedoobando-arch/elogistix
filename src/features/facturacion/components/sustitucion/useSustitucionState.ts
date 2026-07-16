@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
 import { clearPersisted, readPersisted } from "./persistence";
 
 export type Step = "intro" | "confirmar";
@@ -23,7 +24,7 @@ export function useSustitucionState(facturaId: string | null, open: boolean) {
   const [nuevaId, setNuevaId] = useState<string | null>(null);
 
   const sustitutaQuery = useQuery<SustitutaData | null>({
-    queryKey: ["factura-sustituta-estado", nuevaId],
+    queryKey: facturacionKeys.sustitutaEstado(nuevaId),
     enabled: !!nuevaId && open,
     // Al reabrir el diálogo siempre reconsultamos: la sustituta pudo timbrarse
     // en otra pestaña o desde el detalle mientras el diálogo estaba cerrado.
