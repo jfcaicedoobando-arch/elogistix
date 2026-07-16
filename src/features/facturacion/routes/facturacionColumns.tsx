@@ -11,6 +11,7 @@ import {
 } from "@/components/shared/dataTable/columnBuilders";
 import type { useFacturas } from "@/features/facturacion/hooks";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
+import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
 
 export type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
