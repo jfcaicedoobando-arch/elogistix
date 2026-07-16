@@ -1,92 +1,57 @@
-# Batch F — Estabilizar CI post Batch E
 
-El CI de v13.301.1 falló en 3 jobs. Ninguno es de lógica: son de calidad, tamaño de archivo y cobertura. **No bajaré thresholds**; escribiré tests.
+## Objetivo
 
-## Diagnóstico (extraído de los logs)
+Agregar un spec E2E `e2e/specs/25-sustituir-cfdi.spec.ts` que valide el flujo single-tab de sustitución CFDI (motivo SAT 01) sobre FacturApi sandbox, siguiendo el mismo patrón que el spec fiscal `08-flujo-fiscal.spec.ts`.
 
-**1. Quality (`bun run lint --max-warnings 0`)** — 8 warnings:
+## Alcance
 
-| Archivo | Regla | Detalle |
-|---|---|---|
-| `supabase/functions/facturapi-cancelar/index.ts` | `max-lines-per-function` | handler async = 223 líneas (máx 200) |
-| `supabase/functions/facturapi-reconciliar-cancelaciones/index.ts` | `complexity` | 32 (máx 16) |
-| ídem | `max-depth` (×5) | bloques anidados 5-7 (máx 4) |
-| `supabase/functions/facturapi-webhook/helpers.ts` | `complexity` | `mapEventToFacturaPatch` = 18 (máx 16) |
+Cubrir el happy path completo y los escenarios de persistencia y guardas UI que introdujeron los batches A–G:
 
-**2. Tests (`audit-report.test.ts` en shard 8)** — 2 fallos:
-- Arch baseline: `src/features/facturacion/components/DialogSustituirFactura.tsx` = 224 líneas (hoy 266, no está en allowlist).
-- Casts baseline: 1 hallazgo HIGH/CRITICAL nuevo (introducido en Batch E).
+1. **Happy path** — Desde una factura ya timbrada:
+   - Abrir menú de acciones → "Sustituir CFDI".
+   - Confirmar duplicación (RPC `duplicar_factura_para_sustitucion`).
+   - Verificar redirección al detalle del borrador con `?accion=timbrar` y que trae los conceptos copiados.
+   - Timbrar el borrador (sandbox).
+   - Regresar al detalle de la factura original y reabrir el diálogo.
+   - Verificar que restaura al paso "confirmar" con la sustituta detectada como Emitida.
+   - Ejecutar "Cancelar original" motivo 01.
+   - Aceptar toast `success` (accepted) **o** `info` (pending 72h) — ambos son terminales.
 
-**3. Coverage merge** — 4 umbrales globales por debajo:
-- lines 36.46% < 38%
-- functions 27.73% < 30%
-- statements 36.05% < 38%
-- branches 30.86% < 34%
+2. **Persistencia sessionStorage** — Tras duplicar, cerrar y reabrir el diálogo debe restaurar el paso "confirmar" leyendo `sustitucion:{facturaId}`.
 
-Los archivos nuevos (`DialogSustituirFactura`, helpers de reconciliación, guard de webhook) entraron sin tests unitarios de UI ni del cliente RPC, arrastrando el promedio.
+3. **Guard UI de sustituta no timbrada** — Si la sustituta está en `Borrador`, el botón "Cancelar original" debe estar `disabled`.
 
-## Plan (analogía: pulir carrocería y sumar cinturones que faltaron)
+4. **Auto-reset ante borrador eliminado** — Simular borrado externo del clon (RPC/REST) y verificar que al reabrir el diálogo regresa a "intro" con toast `info`.
 
-### F1. Lint (edge functions) — refactor a helpers puros
+## Estructura
 
-**`facturapi-webhook/helpers.ts`**
-- Extraer sub-mappers: `mapInvoiceStatusUpdated`, `mapInvoiceCanceled`, `mapCancellationStatusUpdated`, `mapDelivery`. `mapEventToFacturaPatch` queda como despachador (`switch (event.type)` → sub-mapper). Complexity ≤ 6.
-
-**`facturapi-reconciliar-cancelaciones/index.ts`**
-- Extraer a un módulo hermano `reconcile.ts`:
-  - `fetchCandidateInvoices(sb)` — SELECT.
-  - `consultarEstadoCancelacion(facturapi, id)` — llamada HTTP + parseo.
-  - `resolveNextPatch(remote, local)` — decide patch/log (case por sub-estado).
-  - `reconcileOne(sb, facturapi, factura)` — orquesta el ciclo, sin anidamientos > 3.
-- El `index.ts` queda como bootstrap: valida req → `for` sobre candidatas → `reconcileOne` → responder resumen. Complexity ≤ 8, depth ≤ 3.
-
-**`facturapi-cancelar/index.ts`**
-- Extraer del handler async: `validateAndAuthorize(req)`, `postCancelToFacturapi(...)`, `applyLocalPatch(...)`, `classifyFacturapiError(err)` (ya existe parcialmente inline; sólo moverla). Handler queda ~120 líneas.
-
-### F2. Arch baseline — `DialogSustituirFactura.tsx` (266 → ≤200 líneas)
-
-Extraer a `components/sustitucion/`:
-- `useSustitucionState.ts` — `readPersisted / writePersisted / clearPersisted` + hook con `nuevaId`, `step`, `sustitutaQuery`, `sustitutaTimbrada`, `resetIfMissing`.
-- `SustitucionStepIntro.tsx` — UI del paso "intro" (duplicar borrador + navegar).
-- `SustitucionStepConfirmar.tsx` — UI del paso "confirmar" (guard `sustitutaTimbrada` + cancelar).
-- El componente principal orquesta: dialog shell + `switch(step)`.
-
-### F3. Casts baseline — eliminar el HIGH nuevo
-
-Identificar el `as ...` HIGH/CRITICAL introducido en Batch E (candidatos: casts en `DialogSustituirFactura` sobre `sustitutaQuery.data`, `helpers.ts` sobre `event.object`). Sustituir por:
-- Type guards (`isInvoiceEvent`, `isCancellationEvent`) con narrowing.
-- O `// SAFE-CAST:` con justificación si es inevitable (mem://principles/safe-cast).
-
-### F4. Coverage — sumar tests para el código nuevo
-
-Archivos con muy poca cobertura hoy y objetivo mínimo para volver por encima del threshold:
-
-- `supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.test.ts` (Deno) — casos: accepted → patch, pending → sólo `cancellation_status`, rejected → limpia timestamps, expired → limpia, error HTTP → log sin patch. **5 tests**.
-- `src/features/facturacion/components/sustitucion/useSustitucionState.test.ts` (Vitest + RTL) — `readPersisted` sin/ con valor, `writePersisted` idempotente, `clearPersisted`, guard `sustitutaTimbrada` con estados `Borrador`/`Emitida`. **6 tests**.
-- `src/features/facturacion/services/__tests__/duplicarFacturaParaSustitucion.test.ts` — happy path, error propagado, mapeo de columnas retornadas. **3 tests**.
-- `src/lib/observability/__tests__/reportCaughtError.additional.test.ts` — sólo si tras los anteriores seguimos por debajo (probable que no).
-
-Meta: recuperar +2 pts en lines/statements, +3 pts en branches, +3 pts en functions. Suficiente para pasar el gate de 38/34/30/38.
-
-### F5. Versionado
-
-- `APP_VERSION` → `13.301.2`.
-- `CHANGELOG.md`: entrada Batch F resumiendo fixes de CI y refactor por Power-of-10.
+- Archivo: `e2e/specs/25-sustituir-cfdi.spec.ts`.
+- Se une al project `chromium-mutators` (regex `MUTATOR_SPECS`) — ampliar el patrón en `playwright.config.ts` a `/0[9]-|1[0-2]-|25-/` para que corra en serie.
+- Gate por env vars, como spec 08:
+  - `E2E_FISCAL=1` (obligatorio).
+  - `E2E_SUSTITUCION_FACTURA_UUID` — id de una factura **timbrada** sandbox reutilizable (o crear on-the-fly llamando al flujo del spec 08 como precondición si `E2E_SUSTITUCION_AUTO=1`).
+- Fixtures: `testBase` (autoPageErrors + sessionIsolation), `loginAs(internalCreds())`, `supabaseRest(page)` para cleanup.
+- Cleanup `afterAll` best-effort:
+  - Borrar borrador huérfano si el test falló antes de timbrar.
+  - Cancelar sustituta timbrada motivo 02 (evita colisión de UUIDs).
+  - Limpiar `sessionStorage` (ya lo hace `sessionIsolation`).
 
 ## Detalles técnicos
 
-- Ningún cambio de lógica de negocio: el webhook y la reconciliación deben producir exactamente los mismos patches que hoy (los tests existentes de `helpers_test.ts` deben seguir pasando sin tocar).
-- Los sub-mappers exportados quedan disponibles para pruebas unitarias directas.
-- El allowlist `OVERSIZED_BASELINE` en `audit-report.test.ts` NO se toca (evitamos "esconder" deuda).
-- No se modifica `vitest.config.ts` ni los thresholds (memoria core).
-- Los tests Deno usan el patrón `import "https://deno.land/std@0.224.0/dotenv/load.ts"` y consumen bodies como marca `edge-function-testing`.
+- Selectores por rol/nombre (`getByRole("button", { name: /sustituir cfdi/i })`, `getByText(/borrador sustituto creado/i)`).
+- Esperar el RPC con `page.waitForResponse(/rpc\/duplicar_factura_para_sustitucion/)` para capturar el `nuevaId` sin depender del DOM.
+- Para la restauración: `page.goto("/facturacion/{originalId}")` y volver a abrir el menú; assert de que el `DialogSustituirFactura` renderiza el paso "confirmar" (buscar botón "Cancelar original").
+- Para el auto-reset: usar `supabaseRest(page).delete("facturas", { id: nuevaId })` (RLS lo permite si el borrador no está timbrado) y reabrir el diálogo.
+- Marcar `test.describe.configure({ mode: "serial" })` para preservar orden entre los sub-tests (happy path debe correr primero).
 
-## Verificación
+## Entregable
 
-1. `bun run lint -- --max-warnings 0` → 0 warnings.
-2. `bunx vitest run src/__tests__/audit-report.test.ts` → 5/5 pasan.
-3. `supabase--test_edge_functions` para `facturapi-webhook` y `facturapi-reconciliar-cancelaciones`.
-4. `bun run test:coverage` local (o revisar output de CI) → los 4 umbrales por encima.
-5. `wc -l` de los 4 archivos tocados ≤ 200.
+- `e2e/specs/25-sustituir-cfdi.spec.ts` con 4 tests (happy path + 3 guardas).
+- Ajuste en `playwright.config.ts` para incluir `25-` en `MUTATOR_SPECS`.
+- Nota breve en `docs/facturapi-sustitucion.md` sobre cómo correrlo (`E2E_FISCAL=1 E2E_SUSTITUCION_FACTURA_UUID=... npx playwright test 25`).
+- Bump `APP_VERSION` a `13.301.5` + entrada en `CHANGELOG.md`.
 
-¿Ejecuto Batch F?
+## Fuera de alcance
+
+- No se automatiza la creación de la factura sandbox base (se reutiliza la de spec 08 o se pasa por env).
+- No se cubre el flujo de reconciliación por cron (ya tiene Deno tests en `reconcile_test.ts`).
