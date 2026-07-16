@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.9] - 2026-07-16
+- **fix(proveedores)**: al elegir categoría "Logístico" en el wizard de Nuevo Proveedor se preselecciona `tipo="Naviera"` como default (usuario puede cambiarlo en el mismo paso). Evita que `isStep1Valid` se quede en `false` silenciosamente tras el endurecimiento de `13.301.8` y arregla 3 tests unitarios de `useNuevoProveedorController` en shard 14.
+
 ## [13.301.8] - 2026-07-16
 - **fix(proveedores)** [Sentry JAVASCRIPT-REACT-1M]: `useNuevoProveedorController` ahora exige `tipo` para todo Logístico (nacional y extranjero). El CHECK `proveedores_categoria_check` requiere `tipo IS NOT NULL` cuando `categoria='Logistico'`; la validación anterior sólo lo pedía a extranjeros → INSERT nacional fallaba con `23514`. `NuevoProveedorStep1` muestra el select de Tipo también para Nacional y ya no se limpia al alternar origen.
 

@@ -97,9 +97,10 @@ export function useNuevoProveedorController(
     setForm((prev) => ({
       ...prev,
       categoria: next,
-      // No autoseleccionamos tipo: para Nacional ya no aplica, para Extranjero
-      // el usuario debe elegir entre Naviera/Aerolínea/Agente de Carga.
-      tipo: next === "Logistico" ? null : null,
+      // Auto-seleccionamos "Naviera" como default para Logístico: evita bloqueo
+      // silencioso del wizard (BD exige tipo NOT NULL) y el usuario puede
+      // cambiarlo entre Naviera/Aerolínea/Agente de Carga desde el Select.
+      tipo: next === "Logistico" ? "Naviera" : null,
       subtipo_gasto: esGasto ? (prev.subtipo_gasto ?? "Otros") : null,
       pais: next === "Logistico" ? prev.pais : "",
       // Gasto operativo: siempre nacional y siempre MXN.
