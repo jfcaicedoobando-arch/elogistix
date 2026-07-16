@@ -163,8 +163,10 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
   if (ctx.sustituye_uuid) {
     // SAT relación 04 = "Sustitución de los CFDI previos".
-    // FacturAPI v2 espera el bloque `related_documents` (array de {relationship, documents}).
-    payload.related_documents = [{ relationship: "04", documents: [ctx.sustituye_uuid] }];
+    // FacturAPI v2 espera `related_documents: [{ relationship, uuid }]` (un objeto por UUID),
+    // no `{ relationship, documents: [...] }` (ese shape es sólo la RESPUESTA agrupada al consultar).
+    // Ver `facturapi@4.18.0` dist/types/common.d.ts → interface RelatedDocument { relationship; uuid }.
+    payload.related_documents = [{ relationship: "04", uuid: ctx.sustituye_uuid }];
   }
   // v13.208.0 — bloque "Referencias del embarque" al pie del PDF de FacturAPI.
   const pdfSection = buildPdfCustomSection(ctx.referencias);
