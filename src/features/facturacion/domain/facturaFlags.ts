@@ -87,7 +87,10 @@ export function deriveFacturaFlags(
   // timbradas fuera del sistema antes del corte). Cancelar/Sustituir sí requiere
   // uuid_fiscal porque son operaciones contra el SAT.
   const vigenteCobrable = factura.estado === "Emitida" && !estaCancelada;
-  const puedeCambiarCfdi = timbradaVigente && canEdit && !factura.sustituida_por;
+  const sustEstado = factura.sustituida_por_ref?.estado ?? null;
+  const sustitutaViva =
+    !!factura.sustituida_por && sustEstado !== "Cancelada" && sustEstado !== "Sustituida";
+  const puedeCambiarCfdi = timbradaVigente && canEdit && !sustitutaViva;
   const puedeCancelarCfdi = puedeCambiarCfdi;
   const puedeSustituirCfdi = puedeCambiarCfdi;
   const saldo = ctx.saldo ?? 0;
