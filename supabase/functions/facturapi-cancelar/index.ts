@@ -75,13 +75,12 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   let sustituyeFacturapiId: string | undefined;
   const sustituidaPorFacturaId: string | null = rawBody.sustituida_por_factura_id ?? null;
   if (sustituidaPorFacturaId) {
-    const { data: nueva } = await supabase
-      .from("facturas").select("id, uuid_fiscal, facturapi_id").eq("id", sustituidaPorFacturaId).maybeSingle();
-    if (!nueva?.uuid_fiscal || !nueva.facturapi_id) {
+    const snap = await resolveSustitutaSnapshot(supabase, sustituidaPorFacturaId);
+    if (!snap.ok) {
       return jsonResponse({ error: "sustituta_sin_uuid", message: "La factura sustituta aún no está timbrada." }, 422);
     }
-    sustituyeUuidResuelto = nueva.uuid_fiscal as string;
-    sustituyeFacturapiId = nueva.facturapi_id as string;
+    sustituyeUuidResuelto = snap.uuid;
+    sustituyeFacturapiId = snap.facturapiId;
   }
 
   const validated = validateCancelacionInput({ ...rawBody, sustituye_uuid: sustituyeUuidResuelto });
