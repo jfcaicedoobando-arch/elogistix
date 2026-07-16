@@ -14,6 +14,7 @@ export type FacturaListItem = Pick<
   | "id" | "numero" | "cliente_nombre" | "expediente" | "total" | "moneda"
   | "fecha_emision" | "fecha_vencimiento" | "estado"
   | "proforma_id" | "factura_pdf_url" | "factura_xml_url" | "ambiente"
+  | "acuse_cancelacion_status"
 > & {
   proformas: { numero: string } | null;
 };
