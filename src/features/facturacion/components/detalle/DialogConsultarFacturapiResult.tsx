@@ -1,9 +1,14 @@
 /**
  * Sub-vista del resultado (extraída para reducir la complejidad del dialog padre).
+ * Incluye la acción manual "Limpiar estado local (verificado)" cuando FacturAPI
+ * confirma en vivo que no hay solicitud de cancelación abierta pero la factura
+ * local sigue con `cancellation_status = pending`/`verifying`.
  */
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Eraser } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useLimpiarPendingVerificado } from "@/features/facturacion/hooks/useLimpiarPendingVerificado";
 import type { ConsultarFacturapiResult } from "@/features/facturacion/services/facturapi";
 
 function fmt(v: string | null | undefined): string {
@@ -81,7 +86,43 @@ function RelacionadosList({ docs }: { docs: ConsultarFacturapiResult["remoto"]["
   );
 }
 
-export function DialogConsultarFacturapiResult({ data }: { data: ConsultarFacturapiResult }) {
+interface Props {
+  data: ConsultarFacturapiResult;
+  facturaId: string | null;
+}
+
+function LimpiarPendingCta({ facturaId, data }: Props) {
+  const remoteCs = (data.remoto.cancellation_status ?? "").trim().toLowerCase();
+  const localCs = (data.local.cancellation_status ?? "").trim().toLowerCase();
+  const puedeLimpiar =
+    !!facturaId
+    && remoteCs === ""
+    && (localCs === "pending" || localCs === "verifying")
+    && data.remoto.status !== "canceled";
+  const { mutate, isPending } = useLimpiarPendingVerificado(facturaId);
+  if (!puedeLimpiar) return null;
+  return (
+    <Alert>
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <span>
+          FacturAPI confirma que <strong>no hay cancelación en curso</strong>, pero localmente sigue marcada como "En cancelación". Puedes limpiar el estado local para que vuelva a mostrarse como Emitida.
+        </span>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isPending}
+          onClick={() => mutate({ facturaId: facturaId!, remoteCancellationStatus: data.remoto.cancellation_status ?? "" })}
+        >
+          <Eraser className="h-4 w-4 mr-1" />
+          {isPending ? "Limpiando…" : "Limpiar estado local"}
+        </Button>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+export function DialogConsultarFacturapiResult({ data, facturaId }: Props) {
   const enSync = data.divergencias.length === 0 && !data.reconciliada;
   return (
     <div className="space-y-4">
@@ -98,6 +139,7 @@ export function DialogConsultarFacturapiResult({ data }: { data: ConsultarFactur
         <LocalCard l={data.local} />
       </div>
       <DivergenciasAlert items={data.divergencias} />
+      <LimpiarPendingCta data={data} facturaId={facturaId} />
       <RelacionadosList docs={data.remoto.related_documents} />
       {enSync && (
         <Alert>

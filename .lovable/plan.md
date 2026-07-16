@@ -1,72 +1,88 @@
-## Diagnóstico
+## Contexto
 
-Las tres facturas están así en la BD (todas con acuse vacío, sin `cancelado_en`, sin sustituida_por):
+FacturAPI **sí reporta `cancellation_status = pending`** para F971/F973/F974 (aunque `status = valid`). Es la fuente de verdad: hay una solicitud de cancelación abierta en su lado que el SAT aún no resuelve. La UI debe mostrar "En cancelación".
 
-| Numero | Estado | `cancellation_status` | `acuse_cancelacion_status` | `cancelado_en` |
-|--------|--------|----------------------|----------------------------|----------------|
-| F971 | Emitida | **pending** | null | null |
-| F973 | Emitida | **pending** | null | null |
-| F974 | Emitida | **pending** | null | null |
+Mi fix anterior fue incorrecto: asumí que FacturAPI devolvía cadena vacía y agregué una rama `cleared` que borró el flag. Estado actual en BD:
 
-Las tres muestran el badge amarillo **"En cancelación"** en el detalle y en las tablas, pero en el portal de FacturAPI aparecen como *válidas* (sin proceso de cancelación abierto). Es la misma divergencia que ya nos había pasado con F971 en la sesión anterior.
-
-### Causa raíz
-
-El cron `facturapi-reconciliar-cancelaciones` **no maneja la transición "pending local → sin cancelación remota"**. En `reconcile.ts → resolveNextAction`:
-
-```text
-remote.cancellation_status = "" (o ausente)
-local.cancellation_status  = "pending"
-```
-
-Recorre las ramas `accepted / rejected / expired` — ninguna aplica — y llega a `if (cs && cs !== local.cancellation_status)`. Como `cs` está vacío (falsy), devuelve `no_change`. Resultado: el `pending` se queda colgado para siempre aunque FacturAPI ya diga que no hay cancelación en curso.
+- F971 → `pending` (sigue correcto, no se alcanzó a limpiar)
+- F973 → `null` (limpiado por error)
+- F974 → `null` (limpiado por error)
 
 ## Plan
 
-### 1. Reconciliar las 3 facturas ahora mismo
-- Llamar `facturapi-consultar` (ya existe) para F971, F973 y F974 desde una migración de datos (`supabase--insert`) que:
-  1. Traiga el estado remoto en tiempo real vía `net.http_post` o simplemente consulte lo que ya sabemos del portal.
-  2. Alternativa más simple y segura: si el remoto no reporta cancelación abierta, hacer un `UPDATE facturas SET cancellation_status = NULL, cancelacion_solicitada_en = NULL, cancelacion_vence_en = NULL WHERE numero IN ('F971','F973','F974') AND cancellation_status = 'pending' AND cancelado_en IS NULL AND acuse_cancelacion_status IS NULL`.
-- Registrar la corrección en `bitacora_actividad` (módulo `facturacion`, acción `reconciliacion_manual_pending_stale`).
+### 1. Revertir F973 y F974
 
-### 2. Corregir el reconciliador para que no se repita
-En `supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.ts`:
-- Agregar rama en `resolveNextAction`: cuando `local.cancellation_status ∈ {pending, verifying}` **y** `cs` está vacío **y** `remote.status !== "canceled"` → devolver un nuevo outcome `cleared` con patch:
-  ```ts
-  { cancellation_status: null, cancelacion_solicitada_en: null, cancelacion_vence_en: null }
-  ```
-- Actualizar el tipo `ResolvedPatch["outcome"]` y `Resumen` para incluir `limpiadas: number`.
-- En `index.ts`, tratar el outcome `cleared` como un update simple sin acuse ni reversión de proformas y con entrada en bitácora `facturapi_pending_limpiada_async`.
+Migración de datos vía `supabase--insert` (UPDATE fila existente):
 
-### 3. Tests
-- Añadir casos en `reconcile.test.ts` (o crearlo si no existe) para:
-  - remote vacío + local `pending` → outcome `cleared` con patch correcto.
-  - remote vacío + local `pending` + remote.status `canceled` → sigue siendo `accepted` (no se limpia por error).
-  - remote `none`/`""` + local `null` → `no_change`.
+```sql
+UPDATE public.facturas
+SET cancellation_status = 'pending'
+WHERE numero IN ('F973','F974')
+  AND cancellation_status IS NULL
+  AND cancelado_en IS NULL
+  AND acuse_cancelacion_status IS NULL;
+```
 
-### 4. UI (verificación)
-- Confirmar con Playwright FullHD que tras el fix el detalle de F971 muestra badge **"Emitida"** (no "En cancelación") y la lista de facturación también.
+Más una entrada en `bitacora_actividad` (módulo `facturacion`, acción `reconciliacion_revertir_pending`) documentando que la fuente de verdad (FacturAPI) reporta `cancellation_status=pending`.
+
+### 2. Quitar la rama `cleared` del reconciliador
+
+`supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.ts`:
+- Eliminar la rama `cleared` (cuando `cs` está vacío y local `pending`).
+- Quitar `"cleared"` del union `outcome` y `limpiadas` del tipo `Resumen`.
+
+`index.ts` de la misma función:
+- Quitar el manejo del outcome `cleared` y la entrada de bitácora `facturapi_pending_limpiada_async`.
+
+`reconcile.test.ts`:
+- Reemplazar los tests de `cleared` por casos que aseguren `pending` local + remoto vacío → `no_change` (así el proceso queda esperando resolución real del SAT).
+
+Desplegar la función.
+
+### 3. Nueva acción manual "Limpiar estado local (verificado)"
+
+En el detalle de factura, dentro del diálogo existente `DialogConsultarFacturapi` (que ya llama al edge `facturapi-consultar` para hacer GET en vivo):
+
+- Cuando la consulta en vivo devuelva `cancellation_status` **realmente vacío** (no `pending`, no `accepted`, no `rejected`), mostrar un botón **"Limpiar estado local"**.
+- El botón invoca un nuevo RPC `limpiar_cancellation_status_verificado(factura_id, cancellation_status_remoto)` que:
+  - Valida rol `facturacion.admin` (o `admin`) vía `has_role`.
+  - Sólo permite limpiar si el parámetro remoto es cadena vacía y la fila local está en `pending`/`verifying` sin `cancelado_en`.
+  - Escribe en `bitacora_actividad` con acción `facturapi_pending_limpiada_manual`.
+- Si la consulta devuelve `pending` (como hoy), mostrar mensaje "Aún en trámite ante el SAT — no se puede limpiar" y no habilitar el botón.
+
+Esto respeta la respuesta "Verificar antes de limpiar": FacturAPI decide, humano confirma.
+
+### 4. UI de badge
+
+Sin cambios de código — `deriveFacturaBadgeEstado` ya interpreta `estado='Emitida' + cancellation_status='pending'` como "En cancelación" (ámbar). Con el paso 1, las tres facturas vuelven a mostrar ese badge.
+
+Verificación visual con Playwright FullHD en `/facturacion` (badge amarillo) y en el detalle de F971/F973/F974.
 
 ### 5. Versionado y bitácora
-- Bump `APP_VERSION` a `13.301.19`.
-- Entrada en `CHANGELOG.md` bajo `## [13.301.19]` describiendo:
-  - Fix de estado colgado en F971/F973/F974.
-  - Nueva rama `cleared` en el reconciliador con test.
+
+- Bump `APP_VERSION` a `13.301.20`.
+- Entrada en `CHANGELOG.md` bajo `## [13.301.20]`:
+  - Revertidas F973/F974 a `pending` (F971 ya estaba bien).
+  - Quitada la rama automática `cleared` del reconciliador.
+  - Nueva acción manual verificada para limpieza de `pending` colgado.
 
 ## Detalles técnicos
 
-- La migración de datos usa `supabase--insert` (solo UPDATE de filas existentes, sin cambio de schema).
-- Se preserva la salvaguarda: solo se limpia si `cancelado_en IS NULL AND acuse_cancelacion_status IS NULL` — así jamás pisamos una cancelación real ya confirmada.
-- El cron sigue idempotente: ejecutar la rama `cleared` sobre una factura ya limpia devuelve `no_change` en la siguiente corrida.
-- No se tocan RLS, grants ni tipos generados.
+- No hay cambios de schema para el paso 1 — sólo UPDATE de filas existentes.
+- El RPC `limpiar_cancellation_status_verificado` es `SECURITY DEFINER`, valida rol y estado. No acepta SQL crudo.
+- Idempotencia del cron: `pending` local + `pending` remoto → `no_change` (comportamiento pre-fix roto).
+- No se tocan RLS/grants/tipos generados.
 
 ## Archivos afectados
 
 ```text
-supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.ts   (nueva rama)
-supabase/functions/facturapi-reconciliar-cancelaciones/index.ts       (manejo outcome cleared)
-supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.test.ts (tests)
-supabase--insert                                                        (UPDATE F971/F973/F974 + bitácora)
-src/config/version.ts                                                   (13.301.19)
-CHANGELOG.md                                                            (entrada nueva)
+supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.ts       (quitar rama cleared)
+supabase/functions/facturapi-reconciliar-cancelaciones/index.ts           (quitar outcome cleared)
+supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.test.ts  (ajustar tests)
+supabase/migrations                                                        (RPC limpiar_cancellation_status_verificado)
+src/features/facturacion/components/DialogConsultarFacturapiResult.tsx    (botón condicional)
+src/features/facturacion/hooks/useLimpiarPendingVerificado.ts             (nuevo)
+supabase--insert                                                           (UPDATE F973/F974 + bitácora)
+src/constants/appVersion.ts                                                (13.301.20)
+CHANGELOG.md                                                               (nueva entrada)
 ```

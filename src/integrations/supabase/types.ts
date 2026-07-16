@@ -8107,6 +8107,10 @@ export type Database = {
         Args: { p_proforma_id: string }
         Returns: number
       }
+      limpiar_cancellation_status_verificado: {
+        Args: { p_factura_id: string; p_remote_cancellation_status: string }
+        Returns: Json
+      }
       list_idempotency_log: {
         Args: { _limit?: number; _offset?: number }
         Returns: {
