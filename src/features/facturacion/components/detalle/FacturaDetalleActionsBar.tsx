@@ -39,8 +39,10 @@ interface Props {
   onSustituir: () => void;
   onCancelar: () => void;
   onEliminar: () => void;
+  onConsultar: () => void;
   onDownload: (stored: string | null, tipo: "pdf" | "xml") => void;
 }
+
 
 function buildPrimary(props: Props): DetalleActionItem | null {
   const { flags, canEdit } = props;
