@@ -68,7 +68,7 @@ export function useCancelarFactura() {
                   qc.invalidateQueries({ queryKey: facturasKeys.all });
                 })
                 .catch((e: Error) => {
-                  toast.error(`No se pudo cancelar: ${e.message}`);
+                  notifyError(toast, { title: `No se pudo cancelar: ${e.message}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });
                 });
             },
           },
