@@ -29,16 +29,18 @@ Deno.test("facturapi-cancelar: usa supabase.auth.getUser para validar JWT", () =
 
 Deno.test("facturapi-cancelar: registra fallo en bitacora_actividad si Facturapi rechaza", () => {
   // Auditoría: cancelaciones fallidas deben quedar trazadas.
-  assertStringIncludes(indexSource, "facturapi_cancelar_failed");
-  assertStringIncludes(indexSource, "facturapi_cancelada");
+Deno.test("facturapi-cancelar: registra fallo en bitacora_actividad si Facturapi rechaza", () => {
+  // Auditoría: cancelaciones fallidas deben quedar trazadas.
+  assertStringIncludes(bundleSource, "facturapi_cancelar_failed");
+  assertStringIncludes(bundleSource, "facturapi_cancelada");
 });
 
 Deno.test("facturapi-cancelar: actualiza estado=Cancelada Y registra motivo (no parcial)", () => {
   // Si sólo se cambia estado sin motivo, perdemos trazabilidad SAT.
   // Acepta el ternario `esSustitucion ? "Sustituida" : "Cancelada"` introducido en 13.137.9.
-  const estadoIdx = indexSource.search(/estado:\s*(?:esSustitucion\s*\?\s*"Sustituida"\s*:\s*)?"Cancelada"/);
-  const motIdx = indexSource.indexOf("cancelacion_motivo: motivo");
-  const fechaIdx = indexSource.indexOf("cancelado_en:");
+  const estadoIdx = bundleSource.search(/estado:\s*(?:esSustitucion\s*\?\s*"Sustituida"\s*:\s*)?"Cancelada"/);
+  const motIdx = bundleSource.indexOf("cancelacion_motivo: motivo");
+  const fechaIdx = bundleSource.indexOf("cancelado_en:");
   assertEquals(estadoIdx > 0 && motIdx > 0 && fechaIdx > 0, true,
     "Update debe incluir estado + motivo + fecha juntos");
 });
