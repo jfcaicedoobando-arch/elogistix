@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.15] - 2026-07-16
+- **fix(ux)**: toast de timbrado ahora dice "Factura timbrada correctamente" con `Serie X · Folio N` en la descripción (6s), en vez del críptico `UUID 160A0EBE…`. El UUID completo sigue visible en el detalle para conciliación SAT.
+
 ## [13.301.14] - 2026-07-16
 - **chore(ci)**: nuevo script `bun run ci:fast` que corre `lint --max-warnings 0`, `typecheck` y `test:fast --reporter=dot --bail=1` en paralelo (`scripts/ci-fast.sh`). Cada tarea escribe en su propio log temporal y sólo se imprimen las últimas 60 líneas si falla, para detectar regresiones en minutos en vez de decenas de minutos.
 

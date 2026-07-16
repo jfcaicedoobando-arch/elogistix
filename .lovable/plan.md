@@ -1,58 +1,42 @@
+## Problema
 
-## Contexto
+Al timbrar una factura el toast dice:
 
-El portal de FacturAPI muestra la factura F971 como **`status: "valid"`** y **`cancellation_status: "none"`** (no está en proceso de cancelación). Sin embargo, al intentar cancelarla desde Libre Carga, FacturAPI devuelve `409 "no cancelable por el SAT"`.
+> Factura timbrada · UUID 160A0EBE…
 
-Según la documentación pública de FacturAPI (`GET /v2/invoices/{id}`), cada factura expone estos campos que hoy no consultamos en vivo:
+El UUID truncado no le dice nada al usuario. Lo que necesita saber es "quedó timbrada, con qué folio, y que ya está lista para descargar/enviar".
 
-- `status`: `valid` | `canceled` | `pending`
-- `cancellation_status`: `none` | `pending` | `accepted` | `rejected` | `expired`
-- `canceled_at`, `related_documents[]` (aquí aparecen REP / notas de crédito relacionadas)
+## Cambio
 
-El 409 típicamente ocurre cuando el SAT rechaza porque existe **al menos un documento relacionado activo** (Recibo de Pago / Nota de Crédito) o porque la factura sustituta (`F971-R`) sigue viva y el SAT exige aceptación del receptor. FacturAPI **replica** la respuesta del SAT sin bloquear la factura en su portal, por eso ahí sigue "valid".
+Reemplazar el toast en `src/features/facturacion/hooks/useTimbrarFactura.ts` (línea 14) por un `toast.success` con:
 
-## Plan
+- **Título**: `Factura timbrada correctamente` (mensaje humano, sin jerga)
+- **Descripción**: `Serie <serie> · Folio <folio>` (lo que el usuario reconoce en la lista y en los PDF)
+- **Duración**: 6 s para que dé tiempo a leerla
 
-### 1. Nueva Edge Function `facturapi-consultar` (solo lectura)
+El UUID completo se sigue mostrando en el detalle de la factura (donde sí importa para conciliación con el SAT), así que no se pierde información — sólo se saca de la notificación efímera.
 
-- `POST /facturapi-consultar` con `{ factura_id }`.
-- Valida JWT + `organization_id` como las demás funciones.
-- Hace `GET /v2/invoices/{facturapi_id}` a FacturAPI.
-- Devuelve al frontend:
-  - `status`, `cancellation_status`, `canceled_at`, `uuid`, `folio_number`, `series`
-  - `related_documents` resumido (relación + folios)
-  - Diferencias detectadas contra la BD local (`estado`, `cancellation_status`, `uuid_fiscal`).
-- Si detecta divergencia (ej. remoto = `canceled` pero local = `Emitida`), aplica el mismo `resolveNextAction` que el cron para reconciliar en el momento.
+## Archivos afectados
 
-### 2. Botón "Verificar estatus con FacturAPI" en el detalle de factura
+- `src/features/facturacion/hooks/useTimbrarFactura.ts` — cambiar la línea del toast en `onSuccess`.
+- `CHANGELOG.md` + `src/constants/appVersion.ts` — bump a `13.301.15` con nota "fix(ux): toast de timbrado muestra serie/folio en vez de UUID truncado".
 
-- Ubicación: `FacturaDetalle.tsx`, junto a las acciones (Cancelar / Sustituir).
-- Muestra el resultado en un `Dialog` con dos columnas: **En FacturAPI** vs **En Libre Carga**, resaltando divergencias.
-- Si hubo reconciliación automática, invalida las queries relevantes.
+## Fuera de alcance
 
-### 3. Enriquecer el mensaje de error 409 en `facturapi-cancelar`
-
-Cuando el `detail.message` contenga "no cancelable" o "facturas relacionadas", incluir en la respuesta la lista de `related_documents` que FacturAPI acaba de devolver, para que la UI diga textualmente:
-
-> "El SAT rechazó la cancelación. FacturAPI reporta N documentos relacionados activos: REP folio 123, Nota de Crédito folio 45. Debes cancelarlos primero."
-
-### 4. Tests
-
-- `reconcile.test.ts`: agregar caso `remote.status = "valid"` + local `Cancelada` → outcome `no_change` (defensa contra divergencias).
-- Deno test de `facturapi-consultar` con `fetch` mockeado.
-- Vitest para el nuevo botón (spy sobre `supabase.functions.invoke`).
-
-### 5. Changelog
-
-`APP_VERSION` → `13.301.10` + entrada en `CHANGELOG.md`.
+- El toast de cancelación (línea 44) ya es claro (`CFDI cancelado` / `CFDI sustituido`).
+- El toast de "timbrada pero no se envió el email" en `useTimbrarFacturaDialog.ts` sigue igual.
+- No se toca la lógica de timbrado ni las query keys.
 
 ## Detalles técnicos
 
-- Endpoint FacturAPI: `GET https://www.facturapi.io/v2/invoices/{invoice_id}` con `Authorization: Basic base64(sk_xxx:)`.
-- El cron actual (`facturapi-reconciliar-cancelaciones`) sólo revisa facturas cuyo `cancellation_status` local esté en `pending`/`verifying`; por eso F971 nunca se reconcilia sola. El endpoint nuevo cubre ese hueco bajo demanda.
-- Sin cambios de esquema BD.
+```ts
+onSuccess: (res) => {
+  toast.success("Factura timbrada correctamente", {
+    description: `Serie ${res.serie} · Folio ${res.folio}`,
+    duration: 6000,
+  });
+  qc.invalidateQueries({ queryKey: facturasKeys.all });
+},
+```
 
-## Qué NO se toca
-
-- El flujo de sustitución (`DialogSustituirFactura`) sigue igual.
-- No se fuerza la cancelación: sólo diagnostica y refleja el estado real que el SAT / FacturAPI reportan.
+`TimbradoResult` ya expone `serie: string` y `folio: number` (ver `services/facturapi.ts`), así que no hay cambios de tipos ni de red.
