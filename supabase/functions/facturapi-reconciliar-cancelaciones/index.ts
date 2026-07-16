@@ -94,7 +94,7 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
 
         if (cs === "accepted" || remote.status === "canceled") {
           const esSustitucion = !!factura.sustituida_por;
-          const acuse = await descargarAcuseCancelacion(factura.facturapi_id, apiKey);
+          const acuse = await descargarAcuse(factura.facturapi_id, apiKey);
           const patch: Record<string, unknown> = {
             estado: esSustitucion ? "Sustituida" : "Cancelada",
             cancellation_status: "accepted",
