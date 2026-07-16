@@ -51,6 +51,15 @@ export default function FacturaDetalle() {
   const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
 
+  // Si la factura actual es un borrador sustituto de otra, el botón Volver
+  // regresa a la factura original en lugar de al listado (flujo de sustitución CFDI).
+  const originalFacturaId = useMemo(() => (id ? findOriginalFacturaIdFor(id) : null), [id]);
+  const originalFactura = useFactura(originalFacturaId ?? undefined);
+  const volverHref = originalFacturaId ? `/facturacion/${originalFacturaId}` : "/facturacion";
+  const volverLabel = originalFacturaId
+    ? `Volver a factura ${originalFactura.data?.numero ?? "original"}`
+    : "Volver";
+
   if (isLoading) {
     return (
       <PageContainer>
