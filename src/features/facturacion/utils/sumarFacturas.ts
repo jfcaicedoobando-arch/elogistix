@@ -47,6 +47,8 @@ export function sumarFacturasPorMoneda(
       conteoCanceladas += 1;
       continue;
     }
+    // Los borradores no son ingreso facturado; se ignoran sin contarse.
+    if (f.estado === "Borrador") continue;
     const monto = Number(f.total) || 0;
     if (f.moneda === "USD") {
       totalUsd += monto;
