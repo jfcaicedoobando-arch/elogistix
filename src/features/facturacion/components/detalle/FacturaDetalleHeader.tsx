@@ -4,13 +4,15 @@
  */
 import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { formatCurrency } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { AmbienteBadge } from "@/features/facturacion/components/AmbienteBadge";
+import { deriveFacturaBadgeEstado } from "@/features/facturacion/domain/facturaBadgeEstado";
 
 interface Props {
   numero: string;
   estado: string;
+  acuseCancelacionStatus?: string | null;
   sinTimbrar: boolean;
   clienteNombre: string;
   expediente: string;
@@ -20,9 +22,13 @@ interface Props {
 }
 
 export function FacturaDetalleHeader(props: Props) {
-  const { numero, estado, sinTimbrar, clienteNombre, expediente, total, moneda, ambiente } = props;
+  const {
+    numero, estado, acuseCancelacionStatus, sinTimbrar,
+    clienteNombre, expediente, total, moneda, ambiente,
+  } = props;
   const vencida = estado === "Vencida";
   const esBorradorSinFolio = (numero ?? "").startsWith("BORRADOR-");
+  const estadoVisual = deriveFacturaBadgeEstado(estado, acuseCancelacionStatus);
   return (
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
       <div className="min-w-0">
@@ -32,7 +38,7 @@ export function FacturaDetalleHeader(props: Props) {
               ? <span className="text-muted-foreground italic">Sin folio (borrador)</span>
               : numero}
           </h1>
-          <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
+          <StatusBadge domain="factura" status={estadoVisual} />
           {sinTimbrar && <Badge variant="outline" className="text-xs">Sin timbrar</Badge>}
           <AmbienteBadge ambiente={ambiente} size="md" />
           {vencida && <AlertTriangle className="h-4 w-4 text-destructive" />}
