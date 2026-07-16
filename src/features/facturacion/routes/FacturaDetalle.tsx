@@ -40,7 +40,9 @@ export default function FacturaDetalle() {
     pagoOpen, setPagoOpen, timbrarOpen, setTimbrarOpen,
     enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen,
     cancelarOpen, setCancelarOpen, eliminarOpen, setEliminarOpen,
+    consultarOpen, setConsultarOpen,
   } = useFacturaDetalleDialogs();
+
 
   const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
