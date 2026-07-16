@@ -44,11 +44,8 @@ export default function FacturaDetalle() {
     cancelarOpen, setCancelarOpen, eliminarOpen, setEliminarOpen,
     consultarOpen, setConsultarOpen,
   } = useFacturaDetalleDialogs();
-
-
   const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
-
   const { href: volverHref, label: volverLabel } = useVolverAFacturaOriginal(id);
 
   if (isLoading) {
