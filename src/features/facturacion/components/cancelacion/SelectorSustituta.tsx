@@ -46,12 +46,15 @@ export function SelectorSustituta({ isLoading, sustitutasTimbradas, value, onCha
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger><SelectValue placeholder="Elige la sustituta" /></SelectTrigger>
         <SelectContent>
-          {sustitutasTimbradas.map((s) => (
-            <SelectItem key={s.id} value={s.id}>
-              {s.serie ?? ""}{s.folio_fiscal ? ` · Folio ${s.folio_fiscal}` : ""}
-              {s.numero ? ` — ${s.numero}` : ""}
-            </SelectItem>
-          ))}
+          {sustitutasTimbradas.map((s) => {
+            const label = s.numero ?? `${s.serie ?? ""}${s.folio_fiscal ?? ""}`;
+            const uuidHint = s.uuid_fiscal ? ` · UUID ${s.uuid_fiscal.slice(0, 8)}…` : "";
+            return (
+              <SelectItem key={s.id} value={s.id}>
+                {label}{uuidHint}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
       <p className="text-xs text-muted-foreground">
