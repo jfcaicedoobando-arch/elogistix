@@ -51,11 +51,13 @@ export async function runPreflightSustitucion(params: {
       motivo: params.motivo,
       sustituida_por_factura_id: params.sustituidaPorFacturaId,
       uuid_original: uuidOriginal,
+      remote_related_documents: check.remoteRelated ?? null,
     },
   });
   return jsonResponse({
     error: "sustituta_sin_relacion_04",
     message: check.message,
+    remote_related_documents: check.remoteRelated ?? null,
     transient: false,
   }, 422);
 }
