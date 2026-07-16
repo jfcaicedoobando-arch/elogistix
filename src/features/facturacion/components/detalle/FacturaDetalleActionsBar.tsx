@@ -113,6 +113,13 @@ function buildMore(props: Props): DetalleActionItem[] {
       icon: SearchCheck, onClick: props.onConsultar,
     });
   }
+  if (factura.sustituida_por) {
+    items.push({
+      id: "ver-sustituta", label: "Ver factura sustituta", icon: ExternalLink,
+      href: `/facturacion/${factura.sustituida_por}`,
+    });
+  }
+
 
   if (flags.puedeSustituirCfdi) {
     items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
