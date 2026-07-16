@@ -1,126 +1,92 @@
-## Diagnóstico (implementación actual vs docs FacturApi)
+# Batch F — Estabilizar CI post Batch E
 
-### Lo que hicimos bien ✅
+El CI de v13.301.1 falló en 3 jobs. Ninguno es de lógica: son de calidad, tamaño de archivo y cobertura. **No bajaré thresholds**; escribiré tests.
 
+## Diagnóstico (extraído de los logs)
 
-| Área                                                                                  | Estado                  |
-| ------------------------------------------------------------------------------------- | ----------------------- |
-| Emitir sustituta con `related_documents: [{ relationship: "04", documents: [uuid] }]` | ✅ Correcto (v13.300.57) |
-| Cancelar original con `motive: "01"` + `substitution: <facturapi_id_sustituta>`       | ✅ Correcto              |
-| Duplicar factura sin `snapshot_emision` para permitir edición                         | ✅ Correcto (v13.300.55) |
-| Copiar `conceptos_factura` al borrador                                                | ✅ Correcto (v13.300.53) |
-| Copiar conceptos con IVA/retenciones/embarque                                         | ✅ Correcto              |
-| Enlaces `sustituye_a` / `sustituida_por` en BD                                        | ✅ Correcto              |
-| Banner preventivo regla SAT 2.7.1.34                                                  | ✅ Correcto (v13.300.59) |
-| Toast ámbar + reintentar si SAT caído                                                 | ✅ Correcto (v13.300.60) |
+**1. Quality (`bun run lint --max-warnings 0`)** — 8 warnings:
 
+| Archivo | Regla | Detalle |
+|---|---|---|
+| `supabase/functions/facturapi-cancelar/index.ts` | `max-lines-per-function` | handler async = 223 líneas (máx 200) |
+| `supabase/functions/facturapi-reconciliar-cancelaciones/index.ts` | `complexity` | 32 (máx 16) |
+| ídem | `max-depth` (×5) | bloques anidados 5-7 (máx 4) |
+| `supabase/functions/facturapi-webhook/helpers.ts` | `complexity` | `mapEventToFacturaPatch` = 18 (máx 16) |
 
-### Lo que está mal o falta ❌
+**2. Tests (`audit-report.test.ts` en shard 8)** — 2 fallos:
+- Arch baseline: `src/features/facturacion/components/DialogSustituirFactura.tsx` = 224 líneas (hoy 266, no está en allowlist).
+- Casts baseline: 1 hallazgo HIGH/CRITICAL nuevo (introducido en Batch E).
 
-**1. CRÍTICO — Ignoramos `cancellation_status` del SAT.**
-Según docs, `invoices.cancel(...)` puede devolver 3 estados legítimos:
+**3. Coverage merge** — 4 umbrales globales por debajo:
+- lines 36.46% < 38%
+- functions 27.73% < 30%
+- statements 36.05% < 38%
+- branches 30.86% < 34%
 
-- `accepted` → efectivamente cancelada.
-- `pending` → **requiere aceptación del receptor** (72h para silencio positivo).
-- `verifying` → SAT está validando la solicitud.
+Los archivos nuevos (`DialogSustituirFactura`, helpers de reconciliación, guard de webhook) entraron sin tests unitarios de UI ni del cliente RPC, arrastrando el promedio.
 
-Nuestro `facturapi-cancelar/index.ts:145` marca `estado: 'Sustituida'` **de inmediato**, sin leer `cancellation_status`. Resultado: si el receptor tarda en aceptar (o rechaza), nuestra BD miente y el original ya está "sustituido" cuando en realidad sigue `valid` ante el SAT. Cuando la sustituta se timbra, esto es especialmente peligroso porque el receptor podría rechazar y quedamos con dos CFDIs vivos por la misma operación.
+## Plan (analogía: pulir carrocería y sumar cinturones que faltaron)
 
-**2. Descargamos el acuse aunque no exista todavía.**
-`descargarAcuseCancelacion(...)` en línea 139 se ejecuta siempre; si el SAT no ha emitido acuse (pending/verifying) queda `acuse_cancelacion_status: 'pending'` — pero **no existe ningún cron ni webhook que lo reintente**. El comentario del código dice "un cron posterior podrá reintentar", pero ese cron nunca se implementó.
+### F1. Lint (edge functions) — refactor a helpers puros
 
-**3. No procesamos el webhook `invoice.cancellation_status_updated`.**
-FacturApi dispara este evento cada vez que el SAT actualiza el estado. Nuestro `facturapi-webhook` receiver no lo maneja (o no reconcilia el estado de la factura original). Por eso ninguna cancelación pending se actualiza sola.
+**`facturapi-webhook/helpers.ts`**
+- Extraer sub-mappers: `mapInvoiceStatusUpdated`, `mapInvoiceCanceled`, `mapCancellationStatusUpdated`, `mapDelivery`. `mapEventToFacturaPatch` queda como despachador (`switch (event.type)` → sub-mapper). Complexity ≤ 6.
 
-**4. UX del wizard rompe el flujo.**
-`DialogSustituirFactura` abre la sustituta en **otra pestaña** (`target="_blank"`) y el usuario tiene que volver manualmente y hacer clic en "Ya está timbrada". No hay verificación real de que se timbró; si el usuario miente o se equivoca, la cancelación falla porque la sustituta no tiene UUID. Peor: si cierra el modal, queda un borrador colgando sin flujo para retomarlo.
+**`facturapi-reconciliar-cancelaciones/index.ts`**
+- Extraer a un módulo hermano `reconcile.ts`:
+  - `fetchCandidateInvoices(sb)` — SELECT.
+  - `consultarEstadoCancelacion(facturapi, id)` — llamada HTTP + parseo.
+  - `resolveNextPatch(remote, local)` — decide patch/log (case por sub-estado).
+  - `reconcileOne(sb, facturapi, factura)` — orquesta el ciclo, sin anidamientos > 3.
+- El `index.ts` queda como bootstrap: valida req → `for` sobre candidatas → `reconcileOne` → responder resumen. Complexity ≤ 8, depth ≤ 3.
 
-**5. Migraciones duplicadas.**
-Hay 4 versiones de `duplicar_factura_para_sustitucion` en distintas migraciones. Funciona (Postgres queda con la última) pero es ruido histórico.
+**`facturapi-cancelar/index.ts`**
+- Extraer del handler async: `validateAndAuthorize(req)`, `postCancelToFacturapi(...)`, `applyLocalPatch(...)`, `classifyFacturapiError(err)` (ya existe parcialmente inline; sólo moverla). Handler queda ~120 líneas.
 
-## Veredicto
+### F2. Arch baseline — `DialogSustituirFactura.tsx` (266 → ≤200 líneas)
 
-**No es overhaul completo, es un fix crítico + refactor de UX.** El backbone (payloads a FacturApi, campos SAT, relaciones) está correcto y alineado con la doc. Lo roto es cómo **modelamos el estado asíncrono del SAT** — asumimos síncrono lo que la doc dice explícitamente que puede tardar 72h.
+Extraer a `components/sustitucion/`:
+- `useSustitucionState.ts` — `readPersisted / writePersisted / clearPersisted` + hook con `nuevaId`, `step`, `sustitutaQuery`, `sustitutaTimbrada`, `resetIfMissing`.
+- `SustitucionStepIntro.tsx` — UI del paso "intro" (duplicar borrador + navegar).
+- `SustitucionStepConfirmar.tsx` — UI del paso "confirmar" (guard `sustitutaTimbrada` + cancelar).
+- El componente principal orquesta: dialog shell + `switch(step)`.
 
----
+### F3. Casts baseline — eliminar el HIGH nuevo
 
-## Plan de trabajo (4 batches)
+Identificar el `as ...` HIGH/CRITICAL introducido en Batch E (candidatos: casts en `DialogSustituirFactura` sobre `sustitutaQuery.data`, `helpers.ts` sobre `event.object`). Sustituir por:
+- Type guards (`isInvoiceEvent`, `isCancellationEvent`) con narrowing.
+- O `// SAFE-CAST:` con justificación si es inevitable (mem://principles/safe-cast).
 
-### Batch A — Estado asíncrono del SAT [crítico]
+### F4. Coverage — sumar tests para el código nuevo
 
-Modelar `cancellation_status` de FacturApi como columna de primera clase:
+Archivos con muy poca cobertura hoy y objetivo mínimo para volver por encima del threshold:
 
-1. Migración: agregar a `facturas`:
-  - `cancellation_status` (enum `none|verifying|pending|accepted|rejected|expired`, default `none`)
-  - `cancelacion_solicitada_en` (timestamp — cuándo pedimos cancelar)
-  - `cancelacion_vence_en` (timestamp — solicitada + 72h hábiles, para countdown)
-2. En `facturapi-cancelar/index.ts`:
-  - Leer `cancellation_status` de la respuesta de `invoices.cancel`.
-  - Mapear a nuestro `estado`:
-    - `accepted` → `Cancelada` / `Sustituida` (como hoy).
-    - `pending` / `verifying` → **mantener `estado: 'Emitida'**` + poblar `cancellation_status` + `cancelacion_solicitada_en` + `cancelacion_vence_en`.
-  - Descargar acuse XML **sólo si `accepted**` (evita el 404 al SAT).
-3. En UI:
-  - Chip nuevo "Cancelación en proceso" (ámbar) en `FacturaEstadoChip` cuando `cancellation_status ∈ (pending, verifying)`.
-  - En detalle de factura, banner con countdown "El receptor tiene X horas para responder. Si no, se cancelará automáticamente."
+- `supabase/functions/facturapi-reconciliar-cancelaciones/reconcile.test.ts` (Deno) — casos: accepted → patch, pending → sólo `cancellation_status`, rejected → limpia timestamps, expired → limpia, error HTTP → log sin patch. **5 tests**.
+- `src/features/facturacion/components/sustitucion/useSustitucionState.test.ts` (Vitest + RTL) — `readPersisted` sin/ con valor, `writePersisted` idempotente, `clearPersisted`, guard `sustitutaTimbrada` con estados `Borrador`/`Emitida`. **6 tests**.
+- `src/features/facturacion/services/__tests__/duplicarFacturaParaSustitucion.test.ts` — happy path, error propagado, mapeo de columnas retornadas. **3 tests**.
+- `src/lib/observability/__tests__/reportCaughtError.additional.test.ts` — sólo si tras los anteriores seguimos por debajo (probable que no).
 
-### Batch B — Webhook y reconciliación
+Meta: recuperar +2 pts en lines/statements, +3 pts en branches, +3 pts en functions. Suficiente para pasar el gate de 38/34/30/38.
 
-1. Extender `facturapi-webhook/index.ts` para procesar `invoice.cancellation_status_updated`:
-  - Buscar factura por `facturapi_id`.
-  - Actualizar `cancellation_status`.
-  - Si el nuevo estado es `accepted`: pasar `estado` a `Cancelada`/`Sustituida` (según si tiene `sustituida_por`), descargar acuse XML, revertir proformas.
-  - Si es `rejected` o `expired`: dejar `estado` en `Emitida`, limpiar `cancelacion_solicitada_en`, notificar al usuario (bitácora + toast en próxima visita).
-2. Nueva edge function `facturapi-reconciliar-cancelaciones` (invocada por cron cada 6h):
-  - Busca facturas con `cancellation_status IN ('pending','verifying')` con `cancelacion_solicitada_en < now() - '10 min'`.
-  - Llama `invoices.retrieve(facturapi_id)` y sincroniza el estado.
-  - Sirve de backup si el webhook falla o hay backlog.
-3. Botón manual "Refrescar estado SAT" en detalle de factura que reutilice la misma función.
+### F5. Versionado
 
-### Batch C — UX del wizard en una sola pestaña
-
-Rediseñar `DialogSustituirFactura` para no requerir cambio de pestaña:
-
-1. Paso 2 (borrador creado): navegar **en la misma pestaña** al detalle de la sustituta con un banner sticky "Estás editando el reemplazo de F971. [Volver al flujo ↩]".
-2. Estado del wizard persistido en `sessionStorage` con `originalId` + `nuevaId` para reanudar al volver.
-3. Detección automática: cuando el detalle carga la nueva factura y ésta pasa a `Emitida`, mostrar banner CTA "Listo. Ir a cancelar la original".
-4. Al hacer clic, navegar de vuelta al original con el modal ya en Paso 3 pre-poblado.
-5. Cambiar copy: "Cancelar original" → "Solicitar cancelación al SAT" (refleja que no es instantáneo).
-
-### Batch D — Limpieza
-
-1. Consolidar las 4 migraciones de `duplicar_factura_para_sustitucion` en una nota en `docs/facturapi-flujos.md` (documentar la versión vigente y por qué se re-escribió).
-2. Crear `docs/facturapi-flujos.md` con diagrama del ciclo completo (emitir → sustituir → cancelar → estados asíncronos).
-3. Bump `APP_VERSION` a `13.301.0` (cambio de contrato de estado).
-4. Registro en `CHANGELOG.md`.
+- `APP_VERSION` → `13.301.2`.
+- `CHANGELOG.md`: entrada Batch F resumiendo fixes de CI y refactor por Power-of-10.
 
 ## Detalles técnicos
 
-**Archivos principales a tocar:**
+- Ningún cambio de lógica de negocio: el webhook y la reconciliación deben producir exactamente los mismos patches que hoy (los tests existentes de `helpers_test.ts` deben seguir pasando sin tocar).
+- Los sub-mappers exportados quedan disponibles para pruebas unitarias directas.
+- El allowlist `OVERSIZED_BASELINE` en `audit-report.test.ts` NO se toca (evitamos "esconder" deuda).
+- No se modifica `vitest.config.ts` ni los thresholds (memoria core).
+- Los tests Deno usan el patrón `import "https://deno.land/std@0.224.0/dotenv/load.ts"` y consumen bodies como marca `edge-function-testing`.
 
-- `supabase/migrations/<new>.sql` — columnas nuevas en `facturas`.
-- `supabase/functions/facturapi-cancelar/index.ts` — leer y persistir `cancellation_status`.
-- `supabase/functions/facturapi-webhook/index.ts` — manejar `invoice.cancellation_status_updated`.
-- `supabase/functions/facturapi-reconciliar-cancelaciones/index.ts` — nueva.
-- `src/features/facturacion/components/DialogSustituirFactura.tsx` — rediseño UX.
-- `src/features/facturacion/components/FacturaEstadoChip.tsx` — chip "En cancelación".
-- `src/features/facturacion/components/detalle/FacturaDetalleModales.tsx` — banner countdown.
-- Tests: helpers de mapping + webhook payloads.
+## Verificación
 
-**Qué NO vamos a tocar (ya está bien):**
+1. `bun run lint -- --max-warnings 0` → 0 warnings.
+2. `bunx vitest run src/__tests__/audit-report.test.ts` → 5/5 pasan.
+3. `supabase--test_edge_functions` para `facturapi-webhook` y `facturapi-reconciliar-cancelaciones`.
+4. `bun run test:coverage` local (o revisar output de CI) → los 4 umbrales por encima.
+5. `wc -l` de los 4 archivos tocados ≤ 200.
 
-- `buildFacturapiPayload` (helpers.ts) — el payload es correcto.
-- RPC `duplicar_factura_para_sustitucion` — funciona bien tras los últimos fixes.
-- Banner preventivo regla 2.7.1.34 en el modal de cancelar directo.
-- Toast ámbar de SAT caído.
-
-## Recomendación
-
-Si tuviera que priorizar por dolor real:
-
-- **Batch A es urgente**: hoy podríamos estar reportándole al usuario que canceló cuando el SAT dice "pending". Riesgo de doble facturación de la misma operación.
-- **Batch B es la mitad de A**: sin webhook o cron, A queda a medias porque los estados no evolucionan solos.
-- **Batch C es cosmético pero importante**: el brincar de pestaña es la causa #1 de que la gente se pierda en el flujo.
-- **Batch D es limpieza pura**.
-
-¿Le entramos a los 4 en secuencia, o hacemos sólo A+B ahora y dejamos C+D para después? Hacemos los 4 en secuencia. 
+¿Ejecuto Batch F?
