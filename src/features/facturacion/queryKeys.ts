@@ -32,6 +32,7 @@ export const facturacion = {
   cancelarRep: ['fiscal', 'cancelar-rep'] as const,
   acuseReintentar: (facturaId?: string | null) => ['factura', 'acuse-reintentar', facturaId] as const,
   repPendientes: ['rep_pendientes'] as const,
+  sustitutaEstado: (nuevaId?: string | null) => ['factura-sustituta-estado', nuevaId] as const,
 } as const;
 
 export const facturas = {
