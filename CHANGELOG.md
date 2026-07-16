@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.24] - 2026-07-16
+- **fix(facturacion)**: en el modal "Cancelar CFDI" el dropdown de sustitutas mostraba el folio duplicado ("F · Folio 988 — F988") porque `numero` ya concatena `serie + folio_fiscal`. Se simplifica el label a `numero` + UUID SAT truncado como pista de auditoría (ej. "F988 · UUID 160A0EBE…").
+
 ## [13.301.23] - 2026-07-16
 - **fix(facturacion)**: en el flujo de sustitución CFDI, tras timbrar el borrador sustituto el botón "Volver" del detalle regresaba al listado en lugar de a la factura original, obligando a buscarla de nuevo para el paso final de cancelación. Ahora `FacturaDetalle` detecta (vía `findOriginalFacturaIdFor` sobre `sessionStorage`) si la factura actual es el borrador sustituto de otra y, en ese caso, "Volver" navega a `/facturacion/<originalId>` con etiqueta "Volver a factura F975". Deep-links directos y facturas fuera del flujo conservan el comportamiento original ("Volver" → `/facturacion`).
 
