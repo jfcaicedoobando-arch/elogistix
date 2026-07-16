@@ -49,6 +49,7 @@ export type FacturaDetalle = Pick<
   | "cancelacion_solicitada_en"
   | "cancelacion_vence_en"
   | "sustituye_a"
+  | "sustituida_por"
 > & {
   proformas: { numero: string } | null;
 };
