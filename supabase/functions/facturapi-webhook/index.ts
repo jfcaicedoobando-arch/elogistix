@@ -22,6 +22,77 @@ import { jsonResponse } from "../_shared/response.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SB = any;
+
+async function handleReceiptEvent(
+  supabase: SB, orgId: string, event: FacturapiWebhookEvent,
+  receipt: NonNullable<ReturnType<typeof mapEventToReceiptPatch>>,
+): Promise<Response> {
+  const { data: pago } = await supabase
+    .from("pagos_factura")
+    .select("id, organization_id")
+    .eq("facturapi_rep_id", receipt.facturapi_rep_id)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (!pago) return jsonResponse({ ok: true, ignored: "pago_not_found" });
+
+  const { error: updErr } = await supabase
+    .from("pagos_factura")
+    .update(receipt.patch)
+    .eq("id", pago.id);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+
+  await registrarBitacoraEdge(supabase, {
+    organizationId: orgId,
+    usuarioId: null,
+    modulo: "facturacion",
+    accion: receipt.bitacora_accion,
+    entidadId: pago.id,
+    detalles: { event_type: event.type, patch: receipt.patch },
+  });
+  return jsonResponse({ ok: true, target: "pagos_factura" });
+}
+
+async function handleFacturaEvent(
+  supabase: SB, orgId: string, event: FacturapiWebhookEvent,
+): Promise<Response> {
+  const mapped = mapEventToFacturaPatch(event);
+  if (!mapped) return jsonResponse({ ok: true, ignored: true });
+
+  const { data: factura } = await supabase
+    .from("facturas")
+    .select("id, organization_id, estado, sustituida_por")
+    .eq("facturapi_id", mapped.facturapi_id)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (!factura) return jsonResponse({ ok: true, ignored: "factura_not_found" });
+
+  // Si el evento cancela pero la factura fue sustitución, NO sobrescribimos
+  // `estado` — el cron de reconciliación lo fija a "Sustituida" al descargar
+  // el acuse. Sí conservamos el resto del patch.
+  const patch = { ...mapped.patch };
+  if (mapped.preserva_sustituida && (factura.estado === "Sustituida" || factura.sustituida_por)) {
+    delete patch.estado;
+  }
+
+  const { error: updErr } = await supabase
+    .from("facturas")
+    .update(patch)
+    .eq("id", factura.id);
+  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+
+  await registrarBitacoraEdge(supabase, {
+    organizationId: orgId,
+    usuarioId: null,
+    modulo: "facturacion",
+    accion: mapped.bitacora_accion,
+    entidadId: factura.id,
+    detalles: { event_type: event.type, patch: mapped.patch },
+  });
+  return jsonResponse({ ok: true });
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
@@ -49,68 +120,7 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   let event: FacturapiWebhookEvent;
   try { event = JSON.parse(rawBody); } catch { return jsonResponse({ error: "invalid_json" }, 400); }
 
-  // Eventos de REP (`receipt.*`) → tabla `pagos_factura`.
   const receipt = mapEventToReceiptPatch(event);
-  if (receipt) {
-    const { data: pago } = await supabase
-      .from("pagos_factura")
-      .select("id, organization_id")
-      .eq("facturapi_rep_id", receipt.facturapi_rep_id)
-      .eq("organization_id", orgId)
-      .maybeSingle();
-    if (!pago) return jsonResponse({ ok: true, ignored: "pago_not_found" });
-
-    const { error: updErr } = await supabase
-      .from("pagos_factura")
-      .update(receipt.patch)
-      .eq("id", pago.id);
-    if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
-
-    await registrarBitacoraEdge(supabase, {
-      organizationId: orgId,
-      usuarioId: null,
-      modulo: "facturacion",
-      accion: receipt.bitacora_accion,
-      entidadId: pago.id,
-      detalles: { event_type: event.type, patch: receipt.patch },
-    });
-    return jsonResponse({ ok: true, target: "pagos_factura" });
-  }
-
-  // Eventos de factura (`invoice.*`) → tabla `facturas`.
-  const mapped = mapEventToFacturaPatch(event);
-  if (!mapped) return jsonResponse({ ok: true, ignored: true });
-
-  const { data: factura } = await supabase
-    .from("facturas")
-    .select("id, organization_id, estado, sustituida_por")
-    .eq("facturapi_id", mapped.facturapi_id)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!factura) return jsonResponse({ ok: true, ignored: "factura_not_found" });
-
-  // Si el evento cancela pero la factura fue sustitución, NO sobrescribimos
-  // `estado` — el cron de reconciliación lo fija a "Sustituida" al descargar
-  // el acuse. Sí conservamos el resto del patch (cancellation_status, timestamps).
-  const patch = { ...mapped.patch };
-  if (mapped.preserva_sustituida && (factura.estado === "Sustituida" || factura.sustituida_por)) {
-    delete patch.estado;
-  }
-
-  const { error: updErr } = await supabase
-    .from("facturas")
-    .update(patch)
-    .eq("id", factura.id);
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
-
-  await registrarBitacoraEdge(supabase, {
-    organizationId: orgId,
-    usuarioId: null,
-    modulo: "facturacion",
-    accion: mapped.bitacora_accion,
-    entidadId: factura.id,
-    detalles: { event_type: event.type, patch: mapped.patch },
-  });
-
-  return jsonResponse({ ok: true });
+  if (receipt) return handleReceiptEvent(supabase, orgId, event, receipt);
+  return handleFacturaEvent(supabase, orgId, event);
 }));
