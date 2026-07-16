@@ -194,7 +194,3 @@ export async function duplicarFacturaParaSustitucion(facturaId: string): Promise
 // consultarEstadoFacturapi() vive en ./facturapiConsultar.ts (split Power-of-10).
 export type { ConsultarFacturapiRelacionado, ConsultarFacturapiResult } from "./facturapiConsultar";
 export { consultarEstadoFacturapi } from "./facturapiConsultar";
-
-
-
-
