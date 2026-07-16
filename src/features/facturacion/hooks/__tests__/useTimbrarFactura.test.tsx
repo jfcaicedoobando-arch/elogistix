@@ -58,8 +58,8 @@ beforeEach(() => {
 });
 
 describe("useTimbrarFactura", () => {
-  it("onSuccess: muestra UUID truncado e invalida facturas.all", async () => {
-    emitirFacturapi.mockResolvedValue({ uuid: "ABCDEF12-XYZ" });
+  it("onSuccess: muestra serie/folio e invalida facturas.all", async () => {
+    emitirFacturapi.mockResolvedValue({ uuid: "ABCDEF12-XYZ", serie: "F", folio: 42 });
     const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const spy = vi.spyOn(qc, "invalidateQueries");
     const { result } = renderHook(() => useTimbrarFactura(), { wrapper: wrapper(qc) });
@@ -68,7 +68,10 @@ describe("useTimbrarFactura", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(emitirFacturapi).toHaveBeenCalledWith("fac-1");
-    expect(toastSuccess).toHaveBeenCalledWith(expect.stringContaining("ABCDEF12"));
+    expect(toastSuccess).toHaveBeenCalledWith(
+      "Factura timbrada correctamente",
+      expect.objectContaining({ description: "Serie F · Folio 42" }),
+    );
     expect(spy).toHaveBeenCalledWith({ queryKey: facturasKeys.all });
     qc.clear();
   });
