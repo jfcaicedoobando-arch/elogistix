@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.2] - 2026-07-16
+- **chore(ci) Batch F — Estabilización de CI para overhaul de sustitución CFDI**:
+  - **Complejidad edge functions**: `facturapi-reconciliar-cancelaciones/index.ts` se parte en `reconcile.ts` (helpers puros: `resolveNextAction`, `descargarAcuse`, `agruparPorOrg`, `nuevoResumen`, `acumularOutcome`) + `index.ts` reducido a orquestación (156 líneas, sin ternarios anidados). El handler baja de ~270 a bajo el límite de `max-lines-per-function`.
+  - **facturapi-cancelar**: se extrae `enrichCancelacionErrorMessage`, `resolveSustitutaSnapshot` y `revertirProformasCancelacion` a `cancelacion.ts`. El handler queda en 278 líneas (dentro del umbral) y las regex de detección SAT viven en un solo lugar reutilizable.
+  - **Arquitectura UI**: `DialogSustituirFactura.tsx` refactorizado a 168 líneas usando `useSustitucionState.ts` (hook con `sustitutaQuery` + persistencia sessionStorage) y `persistence.ts` (guard `isPersistedState` que sustituye el cast crítico `JSON.parse(...) as PersistedState`).
+  - **Coverage**: nuevos tests Deno `reconcile_test.ts` (10 casos: transiciones accepted/pending/rejected/expired/transition/no_change, `descargarAcuse` con 200/404/error red, `agruparPorOrg`, `acumularOutcome`) y `cancelacion_test.ts` (detección SAT caído vs. no cancelable vs. genérico). Elevan la cobertura sobre reconciliación y enriquecimiento de errores por encima del umbral.
+
 ## [13.301.1] - 2026-07-16
 - **fix(facturacion) Batch E — Cierre del overhaul de sustitución CFDI**:
   - **Cron real**: se agenda `facturapi-reconciliar-cancelaciones` en pg_cron cada 30 min (antes existía la edge pero no el schedule; las cancelaciones asíncronas nunca se reconciliarían).
