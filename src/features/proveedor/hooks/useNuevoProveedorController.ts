@@ -68,8 +68,10 @@ export function useNuevoProveedorController(
     if (!form.nombre.trim()) return false;
     if (!form.origen_proveedor) return false;
     if (isLogistico) {
-      // El tipo sólo se requiere para proveedores extranjeros.
-      if (esExtranjero && !form.tipo) return false;
+      // `tipo` es obligatorio para TODO Logístico (nacional y extranjero).
+      // El CHECK `proveedores_categoria_check` exige tipo IS NOT NULL cuando
+      // categoria='Logistico'; permitir tipo=null aquí producía 23514 en BD.
+      if (!form.tipo) return false;
       if (isAgenteCarga && !form.pais) return false;
     }
     if (isGasto && !form.subtipo_gasto) return false;
