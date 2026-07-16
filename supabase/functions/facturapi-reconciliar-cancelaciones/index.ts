@@ -104,7 +104,7 @@ async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promi
       return;
     }
 
-    // rejected / expired / transition / cleared
+    // rejected / expired / transition
     await supabase.from("facturas").update(decision.patch).eq("id", factura.id);
     if (decision.outcome === "rejected" || decision.outcome === "expired") {
       await registrarBitacoraEdge(supabase, {
@@ -114,15 +114,6 @@ async function reconcileOne(ctx: ReconcileCtx, factura: FacturaPendiente): Promi
         accion: "facturapi_cancelacion_no_aceptada",
         entidadId: factura.id,
         detalles: { via: "cron_reconciliacion", cancellation_status: decision.outcome },
-      });
-    } else if (decision.outcome === "cleared") {
-      await registrarBitacoraEdge(supabase, {
-        organizationId: orgId,
-        usuarioId: null,
-        modulo: "facturacion",
-        accion: "facturapi_pending_limpiada_async",
-        entidadId: factura.id,
-        detalles: { via: "cron_reconciliacion", cancellation_status_previo: factura.cancellation_status },
       });
     }
     acumularOutcome(resumen, decision.outcome);
