@@ -16,6 +16,7 @@ export interface FacturaFlagsInput {
   facturapi_id?: string | null;
   uuid_fiscal?: string | null;
   fecha_emision?: string | null;
+  sustituida_por?: string | null;
 }
 
 export interface FacturaFlagsContext {
@@ -80,8 +81,9 @@ export function deriveFacturaFlags(
   // timbradas fuera del sistema antes del corte). Cancelar/Sustituir sí requiere
   // uuid_fiscal porque son operaciones contra el SAT.
   const vigenteCobrable = factura.estado === "Emitida" && !estaCancelada;
-  const puedeCancelarCfdi = timbradaVigente && canEdit;
-  const puedeSustituirCfdi = timbradaVigente && canEdit;
+  const puedeCambiarCfdi = timbradaVigente && canEdit && !factura.sustituida_por;
+  const puedeCancelarCfdi = puedeCambiarCfdi;
+  const puedeSustituirCfdi = puedeCambiarCfdi;
   const saldo = ctx.saldo ?? 0;
   const puedeRegistrarPago = vigenteCobrable && canRegistrarCobro && saldo > 0.01;
   const repPendiente = (ctx.pagosRepPendientes ?? 0) > 0;

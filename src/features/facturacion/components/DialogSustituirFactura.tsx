@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { duplicarFacturaParaSustitucion } from "@/features/facturacion/services/facturapi";
+import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFactura";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
@@ -90,6 +91,21 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
 
   const reset = () => { s.setStep("intro"); s.setNuevaId(null); };
 
+  const handleYaSustituida = async () => {
+    try {
+      const [existente] = await listarSustitutas(facturaId);
+      if (!existente) return false;
+      writePersisted(facturaId, existente.id);
+      toast.info("Esta factura ya tiene un borrador sustituto. Te llevamos a él.");
+      onOpenChange(false);
+      navigate(`/facturacion/${existente.id}?accion=timbrar`);
+      return true;
+    } catch (lookupErr) {
+      reportCaughtError(lookupErr, { feature: "facturacion", op: "listar_sustitutas_fallback" }, { facturaId });
+      return false;
+    }
+  };
+
   const handleDuplicar = async () => {
     setDuplicando(true);
     try {
@@ -99,12 +115,10 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
       onOpenChange(false);
       navigate(`/facturacion/${id}?accion=timbrar`);
     } catch (err) {
+      const msg = (err as Error)?.message ?? "";
+      if (msg.includes("factura_ya_sustituida") && (await handleYaSustituida())) return;
       reportCaughtError(err, { feature: "facturacion", op: "duplicar_para_sustitucion" }, { facturaId });
-      notifyError(toast, {
-        title: "No se pudo duplicar",
-        error: err as Error,
-        method: "FEATURES_FACTURACION_DIALOG_SUSTITUIR_1",
-      });
+      notifyError(toast, { title: "No se pudo duplicar", error: err as Error, method: "FEATURES_FACTURACION_DIALOG_SUSTITUIR_1" });
     } finally {
       setDuplicando(false);
     }
@@ -120,14 +134,9 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
 
   const handleCancelarOriginal = () => {
     if (!s.nuevaId) return;
-    cancelar.mutate(
-      { facturaId, motivo: "01", sustituidaPorFacturaId: s.nuevaId },
-      {
-        // Éxito terminal (accepted) O pendiente (72 h): el wizard concluye desde
-        // la perspectiva del usuario. El toast (info vs success) lo maneja el hook.
-        onSuccess: () => { clearPersisted(facturaId); onOpenChange(false); reset(); },
-      },
-    );
+    cancelar.mutate({ facturaId, motivo: "01", sustituidaPorFacturaId: s.nuevaId }, {
+      onSuccess: () => { clearPersisted(facturaId); onOpenChange(false); reset(); },
+    });
   };
 
   return (

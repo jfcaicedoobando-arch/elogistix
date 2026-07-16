@@ -68,6 +68,17 @@ describe("deriveFacturaFlags", () => {
     expect(r.puedeSustituirCfdi).toBe(false);
   });
 
+  it("Ya sustituida (sustituida_por presente) → no puede cancelar ni sustituir de nuevo", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, sustituida_por: "otra-id" },
+      true,
+    );
+    expect(r.puedeCancelarCfdi).toBe(false);
+    expect(r.puedeSustituirCfdi).toBe(false);
+  });
+
+
+
 
   it("Borrador sin canEdit → sólo lectura", () => {
     const r = deriveFacturaFlags({ estado: "Borrador", facturapi_id: null, fecha_emision: POST }, false);
