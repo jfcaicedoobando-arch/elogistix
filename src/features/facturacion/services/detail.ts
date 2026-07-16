@@ -52,6 +52,7 @@ export type FacturaDetalle = Pick<
   | "sustituida_por"
 > & {
   proformas: { numero: string } | null;
+  sustituida_por_ref: { id: string; numero: string | null; estado: string | null } | null;
 };
 
 const COLUMNS = [
