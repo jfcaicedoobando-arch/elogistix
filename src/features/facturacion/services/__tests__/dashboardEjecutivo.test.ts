@@ -96,4 +96,21 @@ describe("fetchDashboardEjecutivoFacturacion", () => {
       expect(eqIdx).toBe(-1);
     }
   });
+
+  it("filtra facturas por estados facturados (excluye Borrador y Cancelada)", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    mock.setTableResult("pagos_factura", { data: [], error: null });
+    await fetchDashboardEjecutivoFacturacion("org", null, HOY);
+    const facturasCall = mock.tableCalls.find((c) => c.table === "facturas");
+    expect(facturasCall).toBeDefined();
+    const inIdx = facturasCall!.ops.indexOf("in");
+    expect(inIdx).toBeGreaterThanOrEqual(0);
+    // neq no debe usarse — antes filtraba solo Cancelada y dejaba pasar Borradores.
+    expect(facturasCall!.ops.indexOf("neq")).toBe(-1);
+    const [col, estados] = facturasCall!.opArgs[inIdx] as [string, string[]];
+    expect(col).toBe("estado");
+    expect(estados).toEqual(expect.arrayContaining(["Emitida", "Parcialmente pagada", "Vencida", "Pagada"]));
+    expect(estados).not.toContain("Borrador");
+    expect(estados).not.toContain("Cancelada");
+  });
 });
