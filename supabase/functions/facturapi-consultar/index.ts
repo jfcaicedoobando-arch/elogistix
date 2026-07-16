@@ -182,7 +182,7 @@ function flattenRelated(remote: FapiInvoiceRemote) {
   });
 }
 
-Deno.serve(wrapEdgeHandler("facturapi-consultar", async (req) => {
+async function handle(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
@@ -217,7 +217,16 @@ Deno.serve(wrapEdgeHandler("facturapi-consultar", async (req) => {
     email: userData.user.email,
   });
 
-  return jsonResponse({
+  return jsonResponse(buildResponse(factura, remote, divergencias, reconciliada));
+}
+
+function buildResponse(
+  factura: LocalFactura,
+  remote: FapiInvoiceRemote,
+  divergencias: string[],
+  reconciliada: boolean,
+) {
+  return {
     ok: true,
     reconciliada,
     divergencias,
@@ -235,6 +244,9 @@ Deno.serve(wrapEdgeHandler("facturapi-consultar", async (req) => {
       cancellation_status: (factura.cancellation_status ?? "none").toLowerCase(),
       uuid_fiscal: factura.uuid_fiscal ?? null,
     },
-  });
-}));
+  };
+}
+
+Deno.serve(wrapEdgeHandler("facturapi-consultar", handle));
+
 
