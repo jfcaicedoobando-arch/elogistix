@@ -1,14 +1,17 @@
-import { useState, useMemo } from "react";
-import { Ban, Info, CheckCircle2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Ban } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { MOTIVOS_CANCELACION_SAT } from "@/constants/catalogosSAT";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
+import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFactura";
+import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
+import { SelectorSustituta } from "@/features/facturacion/components/cancelacion/SelectorSustituta";
+import { BannersCondicionesSAT } from "@/features/facturacion/components/cancelacion/BannersCondicionesSAT";
 
 interface Props {
   facturaId: string | null;
@@ -18,6 +21,7 @@ interface Props {
   rfcCliente?: string | null;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  onAbrirSustituir?: () => void;
 }
 
 // RFC genérico SAT para "público en general" y extranjeros.
@@ -25,8 +29,7 @@ const RFC_GENERICOS = new Set(["XAXX010101000", "XEXX010101000"]);
 
 /**
  * Evalúa si la cancelación requiere aceptación del receptor según la
- * regla SAT 2.7.1.34 (RMF 2022+). Retorna las condiciones que se cumplen
- * (exentan) y las que no (requieren aceptación).
+ * regla SAT 2.7.1.34 (RMF 2022+).
  */
 function evaluarCondicionesSAT(params: {
   fechaEmision: string | null | undefined;
@@ -44,28 +47,57 @@ function evaluarCondicionesSAT(params: {
 }
 
 export function DialogCancelarFactura({
-  facturaId, numero, fechaEmision, total, rfcCliente, open, onOpenChange,
+  facturaId, numero, fechaEmision, total, rfcCliente, open, onOpenChange, onAbrirSustituir,
 }: Props) {
   const cancelar = useCancelarFactura();
   const [motivo, setMotivo] = useState<MotivoCancelacionSat>("02");
-  const [sustituye, setSustituye] = useState("");
+  const [sustitutaId, setSustitutaId] = useState<string>("");
 
   const cond = useMemo(
     () => evaluarCondicionesSAT({ fechaEmision, total, rfc: rfcCliente }),
     [fechaEmision, total, rfcCliente],
   );
 
+  const sustitutasQ = useQuery({
+    queryKey: facturacionKeys.sustitutasDe(facturaId),
+    queryFn: () => listarSustitutas(facturaId as string),
+    enabled: !!facturaId && open && motivo === "01",
+    staleTime: 5_000,
+  });
+
+  const sustitutasTimbradas = useMemo(
+    () => (sustitutasQ.data ?? []).filter((s) => s.estado === "Emitida" && !!s.uuid_fiscal),
+    [sustitutasQ.data],
+  );
+
+  // Autoseleccionar la primera timbrada cuando llegan resultados.
+  useEffect(() => {
+    if (motivo !== "01") return;
+    if (sustitutasTimbradas.length === 0) { setSustitutaId(""); return; }
+    if (!sustitutasTimbradas.some((s) => s.id === sustitutaId)) {
+      setSustitutaId(sustitutasTimbradas[0].id);
+    }
+  }, [motivo, sustitutasTimbradas, sustitutaId]);
+
   if (!facturaId) return null;
+
+  const requiereSustituta = motivo === "01";
+  const puedeConfirmar = !requiereSustituta || !!sustitutaId;
 
   const onConfirm = () => {
     cancelar.mutate(
-      { facturaId, motivo, sustituyeUuid: motivo === "01" ? sustituye : undefined },
       {
-        onSuccess: () => onOpenChange(false),
-        // En error transitorio (SAT caído) el hook ya muestra toast ámbar
-        // con "Reintentar"; dejamos el modal abierto para no perder datos.
+        facturaId,
+        motivo,
+        sustituidaPorFacturaId: requiereSustituta ? sustitutaId : undefined,
       },
+      { onSuccess: () => onOpenChange(false) },
     );
+  };
+
+  const abrirWizard = () => {
+    onOpenChange(false);
+    onAbrirSustituir?.();
   };
 
   const footer = (
@@ -74,7 +106,7 @@ export function DialogCancelarFactura({
       <Button
         variant="destructive"
         onClick={onConfirm}
-        disabled={cancelar.isPending || (motivo === "01" && !sustituye)}
+        disabled={cancelar.isPending || !puedeConfirmar}
       >
         {cancelar.isPending ? "Cancelando…" : "Confirmar cancelación"}
       </Button>
@@ -91,50 +123,7 @@ export function DialogCancelarFactura({
       size="lg"
       footer={footer}
     >
-      {/* Banner condiciones SAT — regla 2.7.1.34 */}
-      {cond.mismoDia && (
-        <Alert className="border-success/30 bg-success/10">
-          <CheckCircle2 className="h-4 w-4 text-success" />
-          <AlertTitle className="text-success">
-            Ventana de cancelación inmediata
-          </AlertTitle>
-          <AlertDescription className="text-foreground">
-            Esta factura se emitió hoy. El SAT permite cancelarla sin aceptación del receptor.
-            Aprovecha esta ventana antes del cierre del día.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!cond.mismoDia && cond.requiereAceptacion && (
-        <Alert className="border-warning/30 bg-warning/10">
-          <Info className="h-4 w-4 text-warning" />
-          <AlertTitle className="text-warning">
-            El receptor debe aceptar la cancelación
-          </AlertTitle>
-          <AlertDescription className="text-foreground space-y-1">
-            <p>
-              Por regla SAT 2.7.1.34, esta factura requiere que el cliente <strong>acepte la cancelación
-              en su Buzón Tributario</strong>. Timbrar la sustituta (relación 04) no exenta este paso.
-            </p>
-            <p className="text-xs">
-              Si no responde en 72 horas hábiles aplica cancelación por silencio positivo.
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!cond.mismoDia && !cond.requiereAceptacion && (cond.montoBajo || cond.rfcGenerico) && (
-        <Alert className="border-success/30 bg-success/10">
-          <CheckCircle2 className="h-4 w-4 text-success" />
-          <AlertTitle className="text-success">
-            Cancelación sin aceptación
-          </AlertTitle>
-          <AlertDescription className="text-foreground">
-            {cond.montoBajo && "Monto ≤ $1,000 MXN: exenta de aceptación del receptor."}
-            {cond.rfcGenerico && "RFC genérico: exenta de aceptación del receptor."}
-          </AlertDescription>
-        </Alert>
-      )}
+      <BannersCondicionesSAT {...cond} />
 
       <div className="space-y-2">
         <Label>Motivo SAT</Label>
@@ -148,13 +137,15 @@ export function DialogCancelarFactura({
         </Select>
       </div>
 
-      {motivo === "01" && (
+      {requiereSustituta && (
         <div className="space-y-2">
-          <Label>UUID que sustituye</Label>
-          <Input
-            value={sustituye}
-            onChange={(e) => setSustituye(e.target.value)}
-            placeholder="00000000-0000-0000-0000-000000000000"
+          <Label>Factura sustituta timbrada</Label>
+          <SelectorSustituta
+            isLoading={sustitutasQ.isLoading}
+            sustitutasTimbradas={sustitutasTimbradas}
+            value={sustitutaId}
+            onChange={setSustitutaId}
+            onAbrirSustituir={onAbrirSustituir ? abrirWizard : undefined}
           />
         </div>
       )}

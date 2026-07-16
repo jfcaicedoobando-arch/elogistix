@@ -33,6 +33,7 @@ export const facturacion = {
   acuseReintentar: (facturaId?: string | null) => ['factura', 'acuse-reintentar', facturaId] as const,
   repPendientes: ['rep_pendientes'] as const,
   sustitutaEstado: (nuevaId?: string | null) => ['factura-sustituta-estado', nuevaId] as const,
+  sustitutasDe: (facturaId?: string | null) => ['facturas', 'sustitutas-de', facturaId] as const,
 } as const;
 
 export const facturas = {
