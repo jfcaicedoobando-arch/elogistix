@@ -13,8 +13,9 @@
  */
 import {
   Stamp, Mail, FileText, FileCode2, Ship, Trash2, Replace, Ban,
-  FileArchive, RefreshCw, HandCoins,
+  FileArchive, RefreshCw, HandCoins, SearchCheck,
 } from "lucide-react";
+
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 import type { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
@@ -38,8 +39,10 @@ interface Props {
   onSustituir: () => void;
   onCancelar: () => void;
   onEliminar: () => void;
+  onConsultar: () => void;
   onDownload: (stored: string | null, tipo: "pdf" | "xml") => void;
 }
+
 
 function buildPrimary(props: Props): DetalleActionItem | null {
   const { flags, canEdit } = props;
@@ -104,6 +107,13 @@ function buildMore(props: Props): DetalleActionItem[] {
       href: `/embarques/${factura.embarque_id}`,
     });
   }
+  if (factura.facturapi_id) {
+    items.push({
+      id: "consultar-facturapi", label: "Verificar estatus en FacturApi",
+      icon: SearchCheck, onClick: props.onConsultar,
+    });
+  }
+
   if (flags.puedeSustituirCfdi) {
     items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
   }

@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { PageContainer } from "@/components/shared/PageContainer";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { DialogConsultarFacturapi } from "@/features/facturacion/components/detalle/DialogConsultarFacturapi";
+
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
@@ -40,7 +42,9 @@ export default function FacturaDetalle() {
     pagoOpen, setPagoOpen, timbrarOpen, setTimbrarOpen,
     enviarOpen, setEnviarOpen, sustituirOpen, setSustituirOpen,
     cancelarOpen, setCancelarOpen, eliminarOpen, setEliminarOpen,
+    consultarOpen, setConsultarOpen,
   } = useFacturaDetalleDialogs();
+
 
   const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
@@ -98,8 +102,10 @@ export default function FacturaDetalle() {
         onSustituir={() => setSustituirOpen(true)}
         onCancelar={() => setCancelarOpen(true)}
         onEliminar={() => setEliminarOpen(true)}
+        onConsultar={() => setConsultarOpen(true)}
         onDownload={handleDownload}
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
@@ -185,6 +191,14 @@ export default function FacturaDetalle() {
         isPending={eliminando}
         onConfirm={() => eliminar(factura.id)}
       />
+
+      <DialogConsultarFacturapi
+        facturaId={factura.id}
+        numero={factura.numero}
+        open={consultarOpen}
+        onOpenChange={setConsultarOpen}
+      />
     </PageContainer>
+
   );
 }

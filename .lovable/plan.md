@@ -1,38 +1,58 @@
-# Fix CI: tests fallidos en `useNuevoProveedorController`
 
 ## Contexto
 
-En `v13.301.8` endurecí la validación para exigir `tipo` en TODO proveedor Logístico (nacional y extranjero) — esto alineó el form con el CHECK `proveedores_categoria_check` y cerró el Sentry `JAVASCRIPT-REACT-1M`.
+El portal de FacturAPI muestra la factura F971 como **`status: "valid"`** y **`cancellation_status: "none"`** (no está en proceso de cancelación). Sin embargo, al intentar cancelarla desde Libre Carga, FacturAPI devuelve `409 "no cancelable por el SAT"`.
 
-Pero rompí 3 tests del shard 14 porque el helper `fillStep1Logistico` sólo captura `nombre + origen + rfc` (sin `tipo`), y los tests declaran explícitamente "**default Naviera**" — es decir, esperan que al elegir categoría "Logistico" el controller **auto-seleccione** `tipo = "Naviera"`.
+Según la documentación pública de FacturAPI (`GET /v2/invoices/{id}`), cada factura expone estos campos que hoy no consultamos en vivo:
 
-Tests fallidos:
-1. `valida logístico nacional con nombre + rfc + tipo (default Naviera)` → `isStep1Valid` = false
-2. `avanza y carga 7 documentos nacionales` → no avanza al step 2 (bloqueado por validación)
-3. `handleFileChange marca documento como adjuntado` → misma causa, no llega al step 2
+- `status`: `valid` | `canceled` | `pending`
+- `cancellation_status`: `none` | `pending` | `accepted` | `rejected` | `expired`
+- `canceled_at`, `related_documents[]` (aquí aparecen REP / notas de crédito relacionadas)
 
-## Cambio propuesto (1 archivo, 1 línea)
+El 409 típicamente ocurre cuando el SAT rechaza porque existe **al menos un documento relacionado activo** (Recibo de Pago / Nota de Crédito) o porque la factura sustituta (`F971-R`) sigue viva y el SAT exige aceptación del receptor. FacturAPI **replica** la respuesta del SAT sin bloquear la factura en su portal, por eso ahí sigue "valid".
 
-**`src/features/proveedor/hooks/useNuevoProveedorController.ts`** — en `handleCategoriaChange`:
+## Plan
 
-```diff
--      tipo: next === "Logistico" ? null : null,
-+      tipo: next === "Logistico" ? "Naviera" : null,
-```
+### 1. Nueva Edge Function `facturapi-consultar` (solo lectura)
 
-Naviera es el default más neutro (no requiere `pais` extra, a diferencia de "Agente de Carga"). El usuario puede cambiarlo con el `Select` en el mismo paso. Actualizo también el comentario adyacente.
+- `POST /facturapi-consultar` con `{ factura_id }`.
+- Valida JWT + `organization_id` como las demás funciones.
+- Hace `GET /v2/invoices/{facturapi_id}` a FacturAPI.
+- Devuelve al frontend:
+  - `status`, `cancellation_status`, `canceled_at`, `uuid`, `folio_number`, `series`
+  - `related_documents` resumido (relación + folios)
+  - Diferencias detectadas contra la BD local (`estado`, `cancellation_status`, `uuid_fiscal`).
+- Si detecta divergencia (ej. remoto = `canceled` pero local = `Emitida`), aplica el mismo `resolveNextAction` que el cron para reconciliar en el momento.
 
-## Analogía
+### 2. Botón "Verificar estatus con FacturAPI" en el detalle de factura
 
-Es como cuando un formulario web te pregunta "país" y te pre-selecciona "México" — no te obliga, pero evita que el botón "Siguiente" quede gris por olvido. Antes: dejaba el campo vacío y bloqueaba (correcto por BD, malo por UX y tests). Ahora: precarga "Naviera", usuario cambia si quiere.
+- Ubicación: `FacturaDetalle.tsx`, junto a las acciones (Cancelar / Sustituir).
+- Muestra el resultado en un `Dialog` con dos columnas: **En FacturAPI** vs **En Libre Carga**, resaltando divergencias.
+- Si hubo reconciliación automática, invalida las queries relevantes.
 
-## Verificación
+### 3. Enriquecer el mensaje de error 409 en `facturapi-cancelar`
 
-- Los 3 tests fallidos vuelven a pasar sin tocar el helper.
-- No regresa el Sentry `1M`: la BD sigue recibiendo `tipo` no-nulo.
-- El UI ya muestra el `Select` de tipo, así que el usuario puede cambiar el default.
+Cuando el `detail.message` contenga "no cancelable" o "facturas relacionadas", incluir en la respuesta la lista de `related_documents` que FacturAPI acaba de devolver, para que la UI diga textualmente:
 
-## Changelog
+> "El SAT rechazó la cancelación. FacturAPI reporta N documentos relacionados activos: REP folio 123, Nota de Crédito folio 45. Debes cancelarlos primero."
 
-Bump `APP_VERSION` a `13.301.9` y agregar bullet en `CHANGELOG.md`:
-- Fix: al crear proveedor Logístico se preselecciona `tipo="Naviera"` (evita bloqueo silencioso del wizard y arregla 3 tests de CI).
+### 4. Tests
+
+- `reconcile.test.ts`: agregar caso `remote.status = "valid"` + local `Cancelada` → outcome `no_change` (defensa contra divergencias).
+- Deno test de `facturapi-consultar` con `fetch` mockeado.
+- Vitest para el nuevo botón (spy sobre `supabase.functions.invoke`).
+
+### 5. Changelog
+
+`APP_VERSION` → `13.301.10` + entrada en `CHANGELOG.md`.
+
+## Detalles técnicos
+
+- Endpoint FacturAPI: `GET https://www.facturapi.io/v2/invoices/{invoice_id}` con `Authorization: Basic base64(sk_xxx:)`.
+- El cron actual (`facturapi-reconciliar-cancelaciones`) sólo revisa facturas cuyo `cancellation_status` local esté en `pending`/`verifying`; por eso F971 nunca se reconcilia sola. El endpoint nuevo cubre ese hueco bajo demanda.
+- Sin cambios de esquema BD.
+
+## Qué NO se toca
+
+- El flujo de sustitución (`DialogSustituirFactura`) sigue igual.
+- No se fuerza la cancelación: sólo diagnostica y refleja el estado real que el SAT / FacturAPI reportan.
