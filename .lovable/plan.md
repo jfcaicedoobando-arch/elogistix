@@ -1,52 +1,57 @@
-
 ## Problema
 
-El botón "Volver" en el detalle de un borrador sustituto vuelve al listado (`/facturacion`) en vez de a la factura original. La corrección previa (13.301.23) resuelve el caso feliz vía `sessionStorage`, pero se cae cuando:
-
-- El usuario recarga la página o cierra/reabre la pestaña (sessionStorage muere).
-- Abre el borrador desde otra pestaña, deep-link, notificación o el listado.
-- Cambia de dispositivo/navegador.
-
-Analogía: hoy dejamos un "post-it" en el escritorio (sessionStorage) diciendo qué factura era la original. Si alguien limpia el escritorio, perdemos la referencia. La solución es preguntarle a la base de datos, que ya sabe la respuesta.
+Al hacer clic en **"Crear borrador y continuar"** en `DialogSustituirFactura` para la factura `bd75aa8…`, la RPC `duplicar_factura_para_sustitucion` responde `factura_ya_sustituida` (guarda de BD: `facturas.sustituida_por IS NOT NULL`). El diálogo lo muestra como un toast genérico "No se pudo duplicar" y el usuario queda atorado.
 
 ## Causa raíz
 
-La tabla `public.facturas` ya tiene la columna `sustituye_a` (FK a la factura original), y `facturapi-emitir` la lee. Pero `fetchFacturaById` no la selecciona, así que el frontend nunca la ve. `useVolverAFacturaOriginal` sólo consulta `sessionStorage`.
+Dos problemas en cadena:
+
+1. **UI no bloquea el botón.** `deriveFacturaFlags` calcula `puedeSustituirCfdi = timbradaVigente && canEdit`, pero **no** revisa si la factura ya fue sustituida (`sustituida_por` no null). Si la factura sigue en estado `Emitida` (por ejemplo, la cancelación quedó `pending` en el SAT), el botón "Sustituir CFDI" sigue habilitado aunque la BD ya tenga un sustituto asociado.
+2. **Error no accionable.** Cuando la RPC devuelve `factura_ya_sustituida`, no ofrecemos ir al borrador/sustituta existente; el usuario ni siquiera sabe que ya existe.
+
+Analogía: es como si la app dejara pedir un duplicado del pasaporte cuando ya emitiste uno; y cuando la ventanilla te lo rechaza, solo te dice "no se pudo" sin decirte dónde está el pasaporte nuevo.
 
 ## Plan
 
-### 1. Exponer `sustituye_a` en el detalle
+### 1. Bloquear el botón si ya hay sustituta (`facturaFlags`)
 
-**Archivo:** `src/features/facturacion/services/detail.ts`
+**Archivo:** `src/features/facturacion/domain/facturaFlags.ts`
 
-- Añadir `"sustituye_a"` a `COLUMNS` y al tipo `FacturaDetalle`.
+- Añadir `sustituida_por?: string | null` a `FacturaFlagsInput`.
+- `puedeSustituirCfdi = timbradaVigente && canEdit && !factura.sustituida_por`.
+- Idem para `puedeCancelarCfdi` (no tiene sentido cancelar dos veces).
+- Ajustar tests existentes en `facturaFlags.test.ts` (agregar caso: `sustituida_por` presente ⇒ ambos flags en `false`).
 
-### 2. Preferir la relación de BD en el hook de "Volver"
+### 2. Diálogo maneja el error `factura_ya_sustituida`
 
-**Archivo:** `src/features/facturacion/hooks/useVolverAFacturaOriginal.ts`
+**Archivo:** `src/features/facturacion/components/DialogSustituirFactura.tsx`
 
-- Recibir opcionalmente el `sustituye_a` de la factura actual (o leerlo con `useFactura(id)`).
-- Orden de prioridad: `factura.sustituye_a` (fuente de verdad) → `findOriginalFacturaIdFor(id)` (fallback para el instante en que aún no se refresca la caché) → `/facturacion`.
-- Mantener el label "Volver a factura F975" usando `useFactura(originalId)` como hoy.
+- En `handleDuplicar`, si el error trae `message === "factura_ya_sustituida"`:
+  - Buscar la sustituta con `listarSustitutas(facturaId)` (ya existe en `services/sustitutasDeFactura.ts`) y tomar la más reciente.
+  - Persistirla con `writePersisted` para que el flujo "Volver" siga funcionando.
+  - Toast informativo (no error): "Esta factura ya tiene un borrador sustituto. Te llevamos a él."
+  - Navegar a `/facturacion/<sustitutaId>?accion=timbrar`.
+- Si no encontramos sustituta (edge case), caer al `notifyError` actual.
 
-### 3. Pequeño ajuste en `FacturaDetalle`
+### 3. Aviso visual en el detalle cuando ya fue sustituida
 
-**Archivo:** `src/features/facturacion/routes/FacturaDetalle.tsx`
+**Archivo:** `src/features/facturacion/components/detalle/FacturaDetalleActionsBar.tsx` (o el header)
 
-- Pasar `factura?.sustituye_a` al hook (o usar la nueva variante). Sin cambios visuales.
+- Cuando `factura.sustituida_por` no sea null, mostrar un badge/enlace pequeño "Sustituida por → <numero>" que navegue al sustituto. Sin cambios de layout mayores.
 
 ### 4. Versionado y changelog
 
-- `APP_VERSION` → `13.301.28`
-- Entrada en `CHANGELOG.md` explicando que "Volver" ahora usa `facturas.sustituye_a` como fuente primaria (persiste entre refreshes/pestañas/dispositivos) y `sessionStorage` queda sólo como acelerador.
+- `APP_VERSION` → `13.301.29`.
+- Entrada en `CHANGELOG.md` referenciando requestId `2df07b2a-3eaf-4853-8e83-6adf43368666`.
 
 ### 5. Verificación
 
 - `bun run ci:fast` verde.
-- Test unitario ligero del hook: dado `sustituye_a` presente, `href` apunta a `/facturacion/<orig>` aunque no exista entrada en sessionStorage.
+- Actualizar/añadir tests en `facturaFlags.test.ts` cubriendo `sustituida_por`.
+- (Opcional) test unitario del branch nuevo del handler en `DialogSustituirFactura`.
 
 ## Detalles técnicos
 
-- No hay migración de BD: la columna ya existe y RLS ya permite lectura al owner.
-- No se modifica el diálogo de sustitución ni la persistencia en `sessionStorage`; sigue útil para reabrir el paso "confirmar" del wizard.
-- Sin cambios de comportamiento cuando la factura no es sustituta: `sustituye_a === null` → "Volver a facturación".
+- No hay migración: la guarda en la RPC se conserva como red de seguridad servidor-side. El fix es puramente cliente + observabilidad.
+- `sustituida_por` ya está expuesto en `fetchFacturaById` (se agregó junto a `sustituye_a` en 13.301.28)? Verificar: `services/detail.ts` seleccionaba `sustituye_a` pero **no** `sustituida_por`. Agregarlo a `COLUMNS` y al tipo `FacturaDetalle` es parte del paso 1.
+- No se modifica la RPC ni el mecanismo de `sessionStorage`.
