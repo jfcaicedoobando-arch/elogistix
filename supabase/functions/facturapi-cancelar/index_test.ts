@@ -6,6 +6,9 @@ import { assert, assertEquals, assertStringIncludes } from "https://deno.land/st
 import * as helpers from "./helpers.ts";
 
 const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+const cancelacionSource = await Deno.readTextFile(new URL("./cancelacion.ts", import.meta.url));
+const terminalesSource = await Deno.readTextFile(new URL("./terminales.ts", import.meta.url));
+const bundleSource = indexSource + "\n" + cancelacionSource + "\n" + terminalesSource;
 
 Deno.test("helpers exporta la API consumida por index.ts", () => {
   assert(typeof helpers.validateCancelacionInput === "function");
