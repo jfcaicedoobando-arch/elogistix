@@ -23,18 +23,20 @@ vi.mock("sonner", () => ({
     error: vi.fn(),
   },
 }));
-class FacturapiError extends Error {
-  transient: boolean;
-  constructor(message: string, transient = false) {
-    super(message);
-    this.transient = transient;
+vi.mock("@/features/facturacion/services/facturapi", () => {
+  class FacturapiError extends Error {
+    transient: boolean;
+    constructor(message: string, transient = false) {
+      super(message);
+      this.transient = transient;
+    }
   }
-}
-vi.mock("@/features/facturacion/services/facturapi", () => ({
-  emitirFacturapi: (...a: unknown[]) => emitirFacturapi(...a),
-  cancelarFacturapi: (...a: unknown[]) => cancelarFacturapi(...a),
-  FacturapiError,
-}));
+  return {
+    emitirFacturapi: (...a: unknown[]) => emitirFacturapi(...a),
+    cancelarFacturapi: (...a: unknown[]) => cancelarFacturapi(...a),
+    FacturapiError,
+  };
+});
 vi.mock("@/components/shared/utils/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
