@@ -39,7 +39,7 @@ Deno.test("facturapi-cancelar: actualiza estado=Cancelada Y registra motivo (no 
   const estadoIdx = bundleSource.search(/estado:\s*(?:(?:ctx\.)?esSustitucion\s*\?\s*"Sustituida"\s*:\s*)?"Cancelada"/);
   const motIdx = bundleSource.indexOf("cancelacion_motivo: motivo");
   const fechaIdx = bundleSource.indexOf("cancelado_en:");
-  assertEquals(estadoIdx > 0 && motIdx > 0 && fechaIdx > 0, true,
+  assertEquals(estadoIdx >= 0 && motIdx >= 0 && fechaIdx >= 0, true,
     "Update debe incluir estado + motivo + fecha juntos");
 });
 
