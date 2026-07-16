@@ -57,76 +57,8 @@ export function DialogConsultarFacturapi({ facturaId, numero, open, onOpenChange
           </Alert>
         )}
 
-        {data && (
-          <div className="space-y-4">
-            {data.reconciliada && (
-              <Alert>
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription>
-                  Se detectó divergencia y la factura local se reconcilió con FacturApi.
-                </AlertDescription>
-              </Alert>
-            )}
+        {data && <ResultView data={data} />}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-lg border p-3 space-y-2">
-                <div className="text-xs font-semibold text-muted-foreground uppercase">En FacturApi</div>
-                <Row label="status" value={fmtStatus(data.remoto.status)} />
-                <Row label="cancellation_status" value={fmtStatus(data.remoto.cancellation_status)} />
-                <Row label="canceled_at" value={data.remoto.canceled_at ?? "—"} />
-                <Row label="UUID" value={data.remoto.uuid ?? "—"} mono />
-                <Row label="Folio" value={data.remoto.folio ? `${data.remoto.serie ?? ""}${data.remoto.folio}` : "—"} />
-              </div>
-              <div className="rounded-lg border p-3 space-y-2">
-                <div className="text-xs font-semibold text-muted-foreground uppercase">En Libre Carga</div>
-                <Row label="estado" value={fmtStatus(data.local.estado)} />
-                <Row label="cancellation_status" value={fmtStatus(data.local.cancellation_status)} />
-                <Row label="UUID" value={data.local.uuid_fiscal ?? "—"} mono />
-              </div>
-            </div>
-
-            {data.divergencias.length > 0 && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="font-semibold mb-1">Divergencias detectadas:</div>
-                  <ul className="list-disc ml-4 text-sm space-y-1">
-                    {data.divergencias.map((d) => <li key={d}>{d}</li>)}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {data.remoto.related_documents.length > 0 && (
-              <div className="rounded-lg border p-3">
-                <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                  Documentos relacionados ({data.remoto.related_documents.length})
-                </div>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Si el SAT rechaza la cancelación, revisa que estos documentos ya estén cancelados también.
-                </p>
-                <ul className="text-sm space-y-1">
-                  {data.remoto.related_documents.map((doc, idx) => (
-                    <li key={idx} className="flex items-center gap-2 flex-wrap">
-                      {doc.relationship && <Badge variant="outline">{doc.relationship}</Badge>}
-                      {doc.folio && <span>{doc.serie ?? ""}{doc.folio}</span>}
-                      {doc.uuid && <span className="text-xs font-mono text-muted-foreground">{doc.uuid}</span>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {data.divergencias.length === 0 && !data.reconciliada && (
-              <Alert>
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription>
-                  El estado local coincide con lo que FacturApi reporta.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-        )}
 
         <DialogFooter className="gap-2">
           <Button
