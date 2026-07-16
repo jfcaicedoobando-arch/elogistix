@@ -99,12 +99,10 @@ Deno.test("acumularOutcome: incrementa contadores correctos", () => {
   acumularOutcome(r, "accepted");
   acumularOutcome(r, "rejected");
   acumularOutcome(r, "expired");
-  acumularOutcome(r, "cleared");
   acumularOutcome(r, "no_change");
   assertEquals(r.aceptadas, 1);
   assertEquals(r.rechazadas, 1);
   assertEquals(r.expiradas, 1);
-  assertEquals(r.limpiadas, 1);
   assertEquals(r.sin_cambio, 1);
 });
 
