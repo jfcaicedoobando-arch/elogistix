@@ -1,24 +1,35 @@
-## Problema
+## Contexto
 
-En el job `quality` de `.github/workflows/ci.yml`, el paso "Architecture & cast report" corre `bun run audit:report` con `if: always()`. Cuando el paso previo `Setup Bun + install` falla (por ejemplo, un hiccup de red al descargar Bun o al hacer `bun install`), los pasos con `always()` intentan ejecutar `bun` de todos modos y se cae con `bun: command not found` (exit 127). Lo mismo aplica a "PR summary (audit report)" y "Upload audit report".
+F975 tiene `sustituida_por = F988`, pero F988 fue **cancelada** en el SAT (`estado = 'Cancelada'`, `cancellation_status = 'accepted'`). Hoy la UI y el RPC bloquean cualquier acción sobre F975 porque asumen que un `sustituida_por` presente = sustitución vigente. Esto es incorrecto: si la sustituta fue cancelada, la original vuelve a estar "sola" y debe poder cancelarse (motivo 01 con otra sustituta, o motivo 02) o re-sustituirse.
 
-Analogía: es como intentar cocinar cuando aún no llegó el gas — la olla (bun) no existe, así que la receta (`audit:report`) truena antes de empezar.
+Analogía: si emitiste un pasaporte duplicado pero luego lo invalidaron, el original vuelve a ser el único válido y la ventanilla debe atenderte otra vez.
 
-## Fix
+## Cambios
 
-1. Darle un `id` al step de Setup Bun (`id: setup-bun`) en `.github/workflows/ci.yml`.
-2. Cambiar la condición de los steps que corren después con `if: always()` para que sólo se ejecuten cuando Bun quedó instalado:
-   - `Architecture & cast report` → `if: always() && steps.setup-bun.outcome == 'success'`
-   - `PR summary (audit report)` → `if: always() && github.event_name == 'pull_request' && steps.setup-bun.outcome == 'success'`
-   - `Upload audit report` se queda con `if: always()` (no usa `bun`, sólo sube archivos si existen).
+### 1. Backend — RPC `duplicar_factura_para_sustitucion`
+Migración nueva: cambiar la guarda `factura_ya_sustituida` para que sólo dispare si la sustituta existente **no** está en estado `Cancelada`/`Sustituida`. Si la sustituta anterior está cancelada, se permite crear una nueva y se sobrescribe `sustituida_por` con el nuevo borrador (además el nuevo borrador copia `sustituye_a` como hoy).
 
-Con esto, si Bun no se instaló, el job falla con el error real (el de setup-bun) en vez de enmascararlo con `command not found`.
+### 2. Frontend — Flags de UI
+`src/features/facturacion/services/detail.ts`
+- Agregar al SELECT una relación `sustituida_por_ref:facturas!facturas_sustituida_por_fkey(id, estado, numero)` para saber el estado de la sustituta.
 
-## Alcance
+`src/features/facturacion/domain/facturaFlags.ts`
+- `FacturaFlagsInput` gana `sustituida_por_ref?: { estado } | null`.
+- `puedeCambiarCfdi` deja de bloquear cuando la sustituta está `Cancelada` o `Sustituida`. Regla: bloquear sólo si existe una sustituta **viva** (estado distinto de esos dos).
 
-- Un solo archivo tocado: `.github/workflows/ci.yml`.
-- Sin cambios de código de aplicación, sin bump de `APP_VERSION`, sin entrada de `CHANGELOG.md` (es sólo infraestructura de CI). Si prefieres registrarlo igual, avísame y lo agrego.
+### 3. UI — Banner informativo
+En `FacturaDetalleActionsBar.tsx` (o el header ya existente), cuando `sustituida_por` está presente **pero** la sustituta fue cancelada, mostrar un aviso corto: "La sustituta F988 fue cancelada — esta factura vuelve a estar disponible para cancelación/sustitución." Con link a la sustituta cancelada.
 
-## Recomendación complementaria
+### 4. Tests
+- `facturaFlags.test.ts`: casos nuevos
+  - `sustituida_por` presente + `sustituida_por_ref.estado = 'Cancelada'` → `puedeCancelarCfdi` y `puedeSustituirCfdi` en `true`.
+  - `sustituida_por` presente + `sustituida_por_ref.estado = 'Emitida'` → siguen en `false` (regresión).
 
-Este error normalmente es transitorio. Antes/después del fix, puedes re-correr el job fallido en GitHub Actions ("Re-run failed jobs") — si vuelve a fallar en `Setup Bun + install`, ahí veremos el error real (red, cache corrupto, etc.) sin el ruido del `command not found`.
+### 5. Housekeeping
+- Bump `APP_VERSION` a `13.301.30`.
+- Entrada en `CHANGELOG.md`.
+
+## Fuera de alcance
+
+- No se modifica el flujo de emisión ni la lógica de `sustituye_a`/`related_documents` v2 de FacturAPI (ya corregido en 13.301.27).
+- No se toca `DialogSustituirFactura` (ya redirige a la sustituta existente si el error `factura_ya_sustituida` sigue apareciendo por otras causas).
