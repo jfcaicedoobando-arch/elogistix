@@ -94,47 +94,15 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
           </DialogDescription>
         </DialogHeader>
 
-        {s.step === "intro" && (
-          <div className="space-y-3 text-sm">
-            <p>
-              Se clonará la factura <strong>{numero}</strong> como un nuevo borrador. Al confirmar,
-              te llevaremos directamente al detalle del borrador para que lo edites y timbres.
-              Cuando vuelvas aquí, este diálogo reabrirá en el paso final para cancelar la original.
-            </p>
-            <ol className="list-decimal list-inside text-muted-foreground space-y-1">
-              <li>Crear borrador sustituto y navegar a él.</li>
-              <li>Editar y timbrar el nuevo CFDI (en esta misma pestaña).</li>
-              <li>Volver a esta factura y confirmar cancelación (motivo 01).</li>
-            </ol>
-            {!uuidOriginal && (
-              <p className="text-destructive text-xs">
-                Esta factura no tiene UUID fiscal; no se puede sustituir.
-              </p>
-            )}
-          </div>
-        )}
+        {s.step === "intro" && <IntroBody numero={numero} uuidOriginal={uuidOriginal} />}
 
         {s.step === "confirmar" && (
-          <div className="space-y-3 text-sm">
-            <p>
-              Ya existe un borrador sustituto para esta factura. Cuando esté timbrado,
-              cancelaremos el CFDI <strong>{numero}</strong> con motivo SAT 01 referenciando
-              al UUID de la sustituta.
-            </p>
-            <div className={`rounded-md border p-3 text-xs ${s.sustitutaTimbrada ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}`}>
-              <strong>Estado de la sustituta:</strong>{" "}
-              {s.sustitutaQuery.isLoading ? "Consultando…" : s.sustitutaEstadoLabel}
-              {!s.sustitutaTimbrada && !s.sustitutaQuery.isLoading && (
-                <div className="mt-1 text-muted-foreground">
-                  Debe estar timbrada antes de cancelar la original.
-                </div>
-              )}
-            </div>
-            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-xs">
-              <strong>Nota:</strong> el SAT puede tardar hasta 72 h en aceptar la cancelación si el
-              CFDI supera $1,000 MXN (regla 2.7.1.34). El sistema hará seguimiento automático.
-            </div>
-          </div>
+          <ConfirmarBody
+            numero={numero}
+            isLoading={s.sustitutaQuery.isLoading}
+            timbrada={s.sustitutaTimbrada}
+            estadoLabel={s.sustitutaEstadoLabel}
+          />
         )}
 
         <DialogFooter className="gap-2">
