@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.27] - 2026-07-16
+- **fix(facturacion)**: bug de raíz que impedía cancelar CFDI motivo 01 con sustitución. Al timbrar sustitutas enviábamos `related_documents: [{ relationship, documents: [uuid] }]`, pero `facturapi@4.18.0` v2 espera `[{ relationship, uuid }]` en creación (el shape con `documents[]` es sólo la respuesta agrupada del `retrieve`). FacturAPI descartaba el bloque silenciosamente, la sustituta quedaba sin relación SAT 04 y el SAT rechazaba después la cancelación con "motivo no válido". Fix en `facturapi-emitir/helpers.ts`. Además el pre-flight `verificarRelacionSustitutaSAT` ahora reconoce ambos shapes remotos (`documents: string[]`, `documents: [{uuid}]`, o `uuid` a nivel del bloque) y devuelve `remote_related_documents` en el 422 para diagnóstico. **Recuperación para facturas ya timbradas mal:** cancelar la sustituta con motivo 02, volver a "Sustituir CFDI" desde la original para generar una nueva sustituta (ahora con relación 04 correcta) y luego cancelar la original con motivo 01.
+
 ## [13.301.26] - 2026-07-16
 - **chore(facturacion)**: refactor de `facturapi-cancelar/index.ts` extrayendo los outcomes terminales (rechazada/pendiente/aceptada/desconocido) a `terminales.ts` para bajar el handler de 204 a ~150 líneas y cumplir `max-lines-per-function`. Sin cambios de comportamiento. CI fast verde (lint, typecheck, vitest).
 

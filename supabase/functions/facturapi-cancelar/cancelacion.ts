@@ -51,11 +51,13 @@ export async function runPreflightSustitucion(params: {
       motivo: params.motivo,
       sustituida_por_factura_id: params.sustituidaPorFacturaId,
       uuid_original: uuidOriginal,
+      remote_related_documents: check.remoteRelated ?? null,
     },
   });
   return jsonResponse({
     error: "sustituta_sin_relacion_04",
     message: check.message,
+    remote_related_documents: check.remoteRelated ?? null,
     transient: false,
   }, 422);
 }
@@ -146,28 +148,43 @@ export async function verificarRelacionSustitutaSAT(
   facturapi: { invoices: { retrieve: (id: string) => Promise<unknown> } },
   sustitutaFacturapiId: string,
   uuidOriginal: string,
-): Promise<{ ok: true } | { ok: false; message: string }> {
+): Promise<
+  | { ok: true }
+  | { ok: false; message: string; remoteRelated?: unknown }
+> {
   try {
     const remota = (await facturapi.invoices.retrieve(sustitutaFacturapiId)) as {
-      related_documents?: Array<{ relationship?: string; documents?: string[] }>;
+      related_documents?: Array<{
+        relationship?: string;
+        uuid?: string;
+        // Al consultar, FacturAPI agrupa: documents puede ser string[] o {uuid}[].
+        documents?: Array<string | { uuid?: string }>;
+      }>;
     };
     const bloques = Array.isArray(remota?.related_documents) ? remota.related_documents : [];
     const uuidUp = uuidOriginal.toUpperCase();
-    const referencia = bloques.some((b) =>
-      b?.relationship === "04" &&
-      Array.isArray(b.documents) &&
-      b.documents.some((d) => typeof d === "string" && d.toUpperCase() === uuidUp),
-    );
+    const referencia = bloques.some((b) => {
+      if (b?.relationship !== "04") return false;
+      // Shape 1: uuid a nivel del bloque (creación v2).
+      if (typeof b.uuid === "string" && b.uuid.toUpperCase() === uuidUp) return true;
+      // Shape 2: documents como array de strings o de objetos {uuid}.
+      if (!Array.isArray(b.documents)) return false;
+      return b.documents.some((d) => {
+        if (typeof d === "string") return d.toUpperCase() === uuidUp;
+        return typeof d?.uuid === "string" && d.uuid.toUpperCase() === uuidUp;
+      });
+    });
     if (!referencia) {
       return {
         ok: false,
-        message: `La factura sustituta no referencia a la factura original con relación SAT 04 (UUID ${uuidOriginal}). Vuelve a timbrar la sustituta desde el asistente de sustitución para que FacturAPI incluya el bloque related_documents correcto.`,
+        message: `La factura sustituta no referencia a la factura original con relación SAT 04 (UUID ${uuidOriginal}). Cancela la sustituta con motivo 02 y vuelve a timbrarla desde el asistente de sustitución para que FacturAPI incluya la relación 04 correcta.`,
+        remoteRelated: bloques,
       };
     }
     return { ok: true };
   } catch (_err) {
-    // Si la consulta falla, dejamos que la cancelación intente y devuelva
-    // el error real. No queremos bloquear por un problema de red aquí.
+    // Si la consulta falla (red, permisos), no bloqueamos: dejamos que la
+    // cancelación intente y devuelva el error real de FacturAPI.
     return { ok: true };
   }
 }
