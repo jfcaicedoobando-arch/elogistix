@@ -17,6 +17,12 @@ export interface FacturaFlagsInput {
   uuid_fiscal?: string | null;
   fecha_emision?: string | null;
   sustituida_por?: string | null;
+  /**
+   * Estado de la factura sustituta apuntada por `sustituida_por`. Si está
+   * `Cancelada` o `Sustituida` significa que la sustitución ya no es vigente
+   * y la factura original vuelve a estar disponible para cancelar/sustituir.
+   */
+  sustituida_por_ref?: { estado?: string | null } | null;
 }
 
 export interface FacturaFlagsContext {
