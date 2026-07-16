@@ -32,7 +32,17 @@ export function useCancelarFactura() {
     mutationFn: (vars: CancelarVars) =>
       cancelarFacturapi(vars.facturaId, vars.motivo, vars.sustituyeUuid, vars.sustituidaPorFacturaId),
     onSuccess: (res) => {
-      toast.success(res.sustituida ? "CFDI sustituido" : "CFDI cancelado");
+      if (res.pending) {
+        // Silencio positivo SAT (regla 2.7.1.34 RMF): el receptor tiene hasta
+        // 72 h hábiles para aceptar/rechazar. NO decimos "cancelado".
+        toast.info("Cancelación enviada al SAT", {
+          description: res.message
+            ?? "El receptor tiene hasta 72 h para aceptar. El sistema reconciliará automáticamente.",
+          duration: 12000,
+        });
+      } else {
+        toast.success(res.sustituida ? "CFDI sustituido" : "CFDI cancelado");
+      }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
     onError: (err: Error, vars) => {

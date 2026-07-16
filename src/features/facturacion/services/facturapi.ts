@@ -77,23 +77,42 @@ export async function emitirFacturapi(facturaId: string): Promise<TimbradoResult
 
 export type MotivoCancelacionSat = "01" | "02" | "03" | "04";
 
+export interface CancelarFacturapiResult {
+  /** true → cancelación aceptada terminal, sustitución consolidada. */
+  sustituida: boolean;
+  /** true → SAT devolvió `pending`/`verifying`; el receptor tiene hasta 72 h. */
+  pending: boolean;
+  /** Estado remoto textual: accepted | pending | verifying | rejected | expired | none. */
+  cancellation_status?: string;
+  /** ISO con la fecha estimada de vencimiento del silencio positivo. */
+  vence_en?: string | null;
+  /** Mensaje humano listo para toast. */
+  message?: string;
+}
+
 export async function cancelarFacturapi(
   facturaId: string,
   motivo: MotivoCancelacionSat,
   sustituyeUuid?: string,
   sustituidaPorFacturaId?: string,
-): Promise<{ sustituida: boolean }> {
-  const { data, error } = await supabase.functions.invoke<{ ok?: boolean; sustituida?: boolean } & EdgeErrorBody>(
-    "facturapi-cancelar",
+): Promise<CancelarFacturapiResult> {
+  const { data, error } = await supabase.functions.invoke<
     {
-      body: {
-        factura_id: facturaId,
-        motivo,
-        sustituye_uuid: sustituyeUuid,
-        sustituida_por_factura_id: sustituidaPorFacturaId,
-      },
+      ok?: boolean;
+      sustituida?: boolean;
+      pending?: boolean;
+      cancellation_status?: string;
+      vence_en?: string | null;
+      message?: string;
+    } & EdgeErrorBody
+  >("facturapi-cancelar", {
+    body: {
+      factura_id: facturaId,
+      motivo,
+      sustituye_uuid: sustituyeUuid,
+      sustituida_por_factura_id: sustituidaPorFacturaId,
     },
-  );
+  });
   if (error) {
     const body = await parseFunctionError(error);
     throw toReadableError(error, body, "No se pudo cancelar la factura.");
@@ -101,7 +120,13 @@ export async function cancelarFacturapi(
   if (data?.error) {
     throw toReadableError(null, data, data.error);
   }
-  return { sustituida: !!data?.sustituida };
+  return {
+    sustituida: !!data?.sustituida,
+    pending: !!data?.pending,
+    cancellation_status: data?.cancellation_status,
+    vence_en: data?.vence_en ?? null,
+    message: data?.message,
+  };
 }
 
 /**

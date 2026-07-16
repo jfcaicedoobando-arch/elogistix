@@ -25,6 +25,11 @@ export function useSustitucionState(facturaId: string | null, open: boolean) {
   const sustitutaQuery = useQuery<SustitutaData | null>({
     queryKey: ["factura-sustituta-estado", nuevaId],
     enabled: !!nuevaId && open,
+    // Al reabrir el diálogo siempre reconsultamos: la sustituta pudo timbrarse
+    // en otra pestaña o desde el detalle mientras el diálogo estaba cerrado.
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    staleTime: 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("facturas")
