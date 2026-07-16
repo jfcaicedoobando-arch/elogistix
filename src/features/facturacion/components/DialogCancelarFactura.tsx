@@ -172,43 +172,13 @@ export function DialogCancelarFactura({
       {requiereSustituta && (
         <div className="space-y-2">
           <Label>Factura sustituta timbrada</Label>
-          {sustitutasQ.isLoading ? (
-            <p className="text-sm text-muted-foreground">Buscando sustitutas…</p>
-          ) : sustitutasTimbradas.length === 0 ? (
-            <Alert className="border-warning/30 bg-warning/10">
-              <Info className="h-4 w-4 text-warning" />
-              <AlertTitle className="text-warning">No hay sustituta timbrada</AlertTitle>
-              <AlertDescription className="text-foreground space-y-2">
-                <p>
-                  El motivo 01 requiere que primero timbres una factura sustituta con relación 04.
-                  Usa el asistente de sustitución para crearla, editarla y timbrarla; después regresa a cancelar.
-                </p>
-                {onAbrirSustituir && (
-                  <Button size="sm" variant="outline" onClick={abrirWizard}>
-                    Abrir asistente de sustitución <ArrowRight className="ml-1 h-3 w-3" />
-                  </Button>
-                )}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <>
-              <Select value={sustitutaId} onValueChange={setSustitutaId}>
-                <SelectTrigger><SelectValue placeholder="Elige la sustituta" /></SelectTrigger>
-                <SelectContent>
-                  {sustitutasTimbradas.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.serie ?? ""}{s.folio_fiscal ? ` · Folio ${s.folio_fiscal}` : ""}
-                      {s.numero ? ` — ${s.numero}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Se enviará a FacturAPI el <code>facturapi_id</code> interno de la sustituta seleccionada
-                (parámetro <code>substitution</code>). El UUID SAT queda en bitácora para auditoría.
-              </p>
-            </>
-          )}
+          <SelectorSustituta
+            isLoading={sustitutasQ.isLoading}
+            sustitutasTimbradas={sustitutasTimbradas}
+            value={sustitutaId}
+            onChange={setSustitutaId}
+            onAbrirSustituir={onAbrirSustituir ? abrirWizard : undefined}
+          />
         </div>
       )}
     </FormDialogShell>
