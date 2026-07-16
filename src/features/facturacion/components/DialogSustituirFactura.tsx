@@ -100,6 +100,22 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
       onOpenChange(false);
       navigate(`/facturacion/${id}?accion=timbrar`);
     } catch (err) {
+      const msg = (err as Error)?.message ?? "";
+      if (msg.includes("factura_ya_sustituida")) {
+        try {
+          const sustitutas = await listarSustitutas(facturaId);
+          const existente = sustitutas[0];
+          if (existente) {
+            writePersisted(facturaId, existente.id);
+            toast.info("Esta factura ya tiene un borrador sustituto. Te llevamos a él.");
+            onOpenChange(false);
+            navigate(`/facturacion/${existente.id}?accion=timbrar`);
+            return;
+          }
+        } catch (lookupErr) {
+          reportCaughtError(lookupErr, { feature: "facturacion", op: "listar_sustitutas_fallback" }, { facturaId });
+        }
+      }
       reportCaughtError(err, { feature: "facturacion", op: "duplicar_para_sustitucion" }, { facturaId });
       notifyError(toast, {
         title: "No se pudo duplicar",
