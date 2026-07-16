@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16; do NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --shard=$i/16 || exit 1; done",
+    "ci:fast": "bash scripts/ci-fast.sh",
     "test:ci": "bun run test:coverage:merge",
     "test:shard": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run",
     "test:watch": "vitest",
