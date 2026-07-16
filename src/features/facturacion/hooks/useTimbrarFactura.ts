@@ -11,7 +11,10 @@ export function useTimbrarFactura() {
     mutationKey: queryKeys.facturacion.emitirFactura,
     mutationFn: (facturaId: string) => emitirFacturapi(facturaId),
     onSuccess: (res) => {
-      toast.success(`Factura timbrada · UUID ${res.uuid.slice(0, 8)}…`);
+      toast.success("Factura timbrada correctamente", {
+        description: `Serie ${res.serie} · Folio ${res.folio}`,
+        duration: 6000,
+      });
       qc.invalidateQueries({ queryKey: facturasKeys.all });
     },
     onError: (err: Error) => notifyError(toast, { title: `No se pudo timbrar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" }),
