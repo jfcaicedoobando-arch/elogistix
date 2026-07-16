@@ -1,66 +1,32 @@
-## Objetivo
+## Problema
 
-Que el badge de estado de una factura distinga tres situaciones que hoy se ven idénticas:
+El KPI **"Facturado mes"** (y la mini-tendencia de 6 meses) del card superior de Facturación filtra únicamente `estado ≠ 'Cancelada'`. Eso deja pasar **borradores** (`estado = 'Borrador'`) — que aún no están timbrados y no son ingreso facturado.
 
-| Situación hoy | Se ve como | Debería verse |
-|---|---|---|
-| Cancelación enviada al SAT esperando aceptación del receptor (`estado='Cancelada'` + `acuse_cancelacion_status='pending'`) | "Cancelada" rojo | **"En cancelación"** ámbar |
-| Cancelación aceptada por el SAT (`accepted`) | "Cancelada" rojo | **"Cancelada"** rojo (sin cambio) |
-| Sustituida por otra factura (`estado='Sustituida'`) | "Sustituida" cae al fallback gris (no está registrada) | **"Sustituida"** muted+línea diagonal implícita, tono destructive tenue |
+Hoy el mes en curso no tiene borradores, así que la suma coincide de casualidad. En cuanto haya un borrador con `fecha_emision` dentro del mes (por ejemplo, un borrador de sustitución creado desde el wizard) el KPI infla la cifra.
 
-Aplica en:
-- Detalle de factura (`FacturaDetalleHeader`)
-- Tabla de facturación (`facturacionColumns` → `StatusBadge` dominio `factura`)
+Referencia: `src/features/facturacion/services/dashboardEjecutivo.ts` línea ~110 usa `.neq("estado", "Cancelada")`. En cambio, `src/features/facturacion/services/cobranza.ts` y `estadoCuenta.ts` ya usan la lista blanca correcta `ESTADOS_ACTIVOS = ["Emitida", "Parcialmente pagada", "Vencida", "Pagada"]`.
 
-## Cambios
+## Solución
 
-### 1. Helper puro nuevo — `src/features/facturacion/domain/facturaBadgeEstado.ts`
-```ts
-export function deriveFacturaBadgeEstado(
-  estado: string | null | undefined,
-  acuseStatus: string | null | undefined,
-): string
-```
-Reglas:
-- `Cancelada` + `pending` → `"En cancelación"`
-- `Sustituida` → `"Sustituida"`
-- resto → `estado` tal cual
-Tests: matriz 6 casos.
+1. **`src/features/facturacion/services/dashboardEjecutivo.ts`**
+   - Reemplazar `.neq("estado", "Cancelada")` por `.in("estado", ["Emitida","Parcialmente pagada","Vencida","Pagada"])` en la consulta de `facturas`.
+   - Exportar la constante `ESTADOS_FACTURADO` para reutilizarla desde tests y del sumador del footer.
 
-### 2. Registry — `src/lib/status/statusRegistry.ts`
-- Agregar `"En cancelación"` y `"Sustituida"` a `DOMAIN_STATUSES.factura`.
-- Agregar en `EXTRA`:
-  - `"En cancelación"`: `bg-warning/15 text-warning border border-warning/30` (mismo tono que "Pendiente")
-  - `"Sustituida"`: `bg-muted text-muted-foreground border border-destructive/30` (gris con borde rojo tenue, para diferenciarlo de "Borrador")
+2. **`src/features/facturacion/utils/sumarFacturas.ts`**
+   - Extender el filtro: además de saltar `Cancelada`, saltar `Borrador` (el footer de la tabla Emitidas ya rara vez los ve, pero cerramos el hueco por consistencia con el KPI).
+   - Ajustar `conteoCanceladas` para que siga midiendo solo canceladas; los borradores se ignoran sin contarse.
 
-### 3. Detalle — `FacturaDetalleHeader.tsx`
-- Recibir `acuseStatus` opcional (o el `factura` completo).
-- Reemplazar `<Badge className={getEstadoColor(estado)}>{estado}</Badge>` por `<StatusBadge domain="factura" status={deriveFacturaBadgeEstado(estado, acuseStatus)} />`.
-- Actualizar callsite en `FacturaDetalle.tsx` para pasar `factura.acuse_cancelacion_status`.
+3. **Tests**
+   - Actualizar `src/features/facturacion/services/__tests__/` (o crear uno nuevo, `dashboardEjecutivo.test.ts`) que arme un dataset con mezcla `Emitida / Borrador / Cancelada` y verifique que solo se suman los estados facturados.
+   - Añadir caso a `sumarFacturas.test.ts` para asegurar que el borrador no infla `mxnEquivalente`.
 
-### 4. Tabla — `facturacionColumns.tsx`
-- Cambiar la `statusColumn` por un `ColumnDef` inline que use `StatusBadge` con el estado derivado (accesa a `estado` + `acuse_cancelacion_status` de la row).
-- Mantener `enableSorting` sobre el string derivado para que "En cancelación" y "Sustituida" agrupen bien.
+4. **Tooltip del KPI**
+   - Ajustar `buildFacturadoUi` en `DashboardEjecutivoFacturacion.tsx` para que el hint diga "Excluye canceladas y borradores" (ambos idiomas de estado).
 
-### 5. Servicio + RPC
-La tabla se llena vía RPC `facturas_listado` que hoy **no** devuelve `acuse_cancelacion_status`. Se agrega la columna al SELECT del RPC y al tipo `FacturaListItem`:
-- Migración SQL: `CREATE OR REPLACE FUNCTION public.facturas_listado(...)` añadiendo `f.acuse_cancelacion_status` a las columnas retornadas (sin cambiar firma de parámetros).
-- `facturasCrud.ts`: extender `FacturaListItem` con `acuse_cancelacion_status: string | null` y mapearlo en el `rows.map`.
-
-### 6. CHANGELOG + APP_VERSION
-- Bump a **13.301.17** en `src/constants/appVersion.ts`.
-- Entrada nueva en `CHANGELOG.md`.
+5. **Versionado**
+   - `CHANGELOG.md` (raíz) + bump `APP_VERSION` a `13.301.18` con nota:
+     _"Fix KPI Facturado mes: excluye borradores además de canceladas."_
 
 ## Fuera de alcance
 
-- Filtros del dropdown "Estado" en `TabFacturasEmitidas` (siguen filtrando por `estado` de BD; el filtro semántico "En cancelación" queda para otra iteración si lo piden — no es lo que el usuario pidió).
-- Otras vistas donde aparecen facturas (bandejas, dashboard) — se pueden migrar en un turno posterior si lo piden.
-
-## Diagrama del flujo de derivación
-
-```text
-estado='Cancelada' ─┬─ acuse='pending'  → "En cancelación" (ámbar)
-                    └─ acuse='accepted' → "Cancelada"       (rojo)
-estado='Sustituida' ────────────────────→ "Sustituida"      (gris + rojo tenue)
-estado=otro         ────────────────────→ estado            (sin cambio)
-```
+- No tocar "Cobrado mes" en este cambio (el usuario indicó que el problema está en "Facturado mes"). Queda anotado que actualmente no valida si el pago apunta a una factura cancelada.
