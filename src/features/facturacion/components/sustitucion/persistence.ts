@@ -5,7 +5,7 @@
  * del borrador sustituto y regresa, el diálogo reabra en el paso "confirmar".
  * TTL: 24 h; después se descarta para no dejar borradores huérfanos.
  */
-import { safeSessionStorage } from "@/lib/browserStorage";
+import { getStorageRef, safeSessionStorage } from "@/lib/browserStorage";
 
 export interface PersistedState {
   nuevaId: string;
