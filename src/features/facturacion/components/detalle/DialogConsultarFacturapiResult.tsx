@@ -1,9 +1,14 @@
 /**
  * Sub-vista del resultado (extraída para reducir la complejidad del dialog padre).
+ * Incluye la acción manual "Limpiar estado local (verificado)" cuando FacturAPI
+ * confirma en vivo que no hay solicitud de cancelación abierta pero la factura
+ * local sigue con `cancellation_status = pending`/`verifying`.
  */
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Eraser } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useLimpiarPendingVerificado } from "@/features/facturacion/hooks/useLimpiarPendingVerificado";
 import type { ConsultarFacturapiResult } from "@/features/facturacion/services/facturapi";
 
 function fmt(v: string | null | undefined): string {
