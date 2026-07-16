@@ -48,6 +48,8 @@ const CRITICAL = [
   // 13.187.0 — Verificación UUID vs SAT + reintento nocturno de REP
   "supabase/functions/verificar-uuid-sat/index.ts",
   "supabase/functions/rep-retry-nocturno/index.ts",
+  // 13.301.0 — Reconciliación async de cancelaciones CFDI (cron 30 min)
+  "supabase/functions/facturapi-reconciliar-cancelaciones/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
