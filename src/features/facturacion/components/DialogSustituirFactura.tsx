@@ -171,7 +171,7 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
   };
 
   const sustitutaTimbrada = !!sustitutaQuery.data?.uuid_fiscal &&
-    (sustitutaQuery.data.estado === "Timbrada" || sustitutaQuery.data.estado === "Emitida");
+    sustitutaQuery.data.estado === "Emitida";
   const sustitutaEstadoLabel = sustitutaQuery.data?.estado ?? "…";
 
   return (
