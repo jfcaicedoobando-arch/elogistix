@@ -1,24 +1,66 @@
-## Revisión del fix de cancelación motivo 01
+## Objetivo
 
-Revisé los archivos tocados en el turno anterior. **No hay bugs bloqueantes**; el flujo queda correcto de punta a punta:
+Que el badge de estado de una factura distinga tres situaciones que hoy se ven idénticas:
 
-- `DialogCancelarFactura.tsx` (154 líneas) manda `sustituidaPorFacturaId` (id interno) al hook cuando motivo=01, no un UUID crudo.
-- El hook `useCancelarFactura` ya soporta ese parámetro y lo reenvía a la edge `facturapi-cancelar` (verificado líneas 28-67 del hook).
-- La edge resuelve `facturapi_id` desde `sustituida_por_factura_id` (verificado líneas 71-84 de `index.ts`) y arma `substitution` en el query string → el error "Substitution invoice is required" queda resuelto.
-- `sustitutasDeFactura.ts` filtra por `sustituye_a = facturaId` y `SelectorSustituta` sólo muestra las que tienen `estado === "Emitida"` y `uuid_fiscal`, así que es imposible elegir un borrador o la propia factura.
-- `FacturaDetalleModales.tsx` cablea `onAbrirSustituir` cerrando cancelar y abriendo el wizard.
+| Situación hoy | Se ve como | Debería verse |
+|---|---|---|
+| Cancelación enviada al SAT esperando aceptación del receptor (`estado='Cancelada'` + `acuse_cancelacion_status='pending'`) | "Cancelada" rojo | **"En cancelación"** ámbar |
+| Cancelación aceptada por el SAT (`accepted`) | "Cancelada" rojo | **"Cancelada"** rojo (sin cambio) |
+| Sustituida por otra factura (`estado='Sustituida'`) | "Sustituida" cae al fallback gris (no está registrada) | **"Sustituida"** muted+línea diagonal implícita, tono destructive tenue |
 
-### Observaciones menores (no bugs, mejoras opcionales)
+Aplica en:
+- Detalle de factura (`FacturaDetalleHeader`)
+- Tabla de facturación (`facturacionColumns` → `StatusBadge` dominio `factura`)
 
-1. **Doble `onOpenChange(false)` al abrir el wizard** — el dialog cierra en `abrirWizard()` y el padre vuelve a cerrar en el handler. Es idempotente, no rompe nada.
-2. **`motivo` default = "02"** — el usuario debe cambiar manualmente a "01". Si el flujo esperado tras timbrar una sustituta es cancelar con motivo 01, podría preseleccionarse "01" cuando existan sustitutas timbradas. No es un bug del fix actual, es UX.
-3. **`staleTime: 5_000`** en `sustitutasQ` es razonable; si el usuario timbra una sustituta y regresa rápido, la lista se refresca al reabrir el modal (cachea sólo 5s).
-4. **Falta test unitario** para `DialogCancelarFactura` (mencionado en el plan `.lovable/plan.md` pero no se creó). No bloquea funcionalidad pero deja el fix sin cobertura de regresión.
+## Cambios
 
-### Recomendación
+### 1. Helper puro nuevo — `src/features/facturacion/domain/facturaBadgeEstado.ts`
+```ts
+export function deriveFacturaBadgeEstado(
+  estado: string | null | undefined,
+  acuseStatus: string | null | undefined,
+): string
+```
+Reglas:
+- `Cancelada` + `pending` → `"En cancelación"`
+- `Sustituida` → `"Sustituida"`
+- resto → `estado` tal cual
+Tests: matriz 6 casos.
 
-Cerrar el turno tal cual **o** agregar (en un turno de build separado) el test `DialogCancelarFactura.test.tsx` con dos casos:
-- Sin sustitutas timbradas → botón "Confirmar" deshabilitado + CTA visible.
-- Con sustituta timbrada seleccionada → `mutate` recibe `sustituidaPorFacturaId`.
+### 2. Registry — `src/lib/status/statusRegistry.ts`
+- Agregar `"En cancelación"` y `"Sustituida"` a `DOMAIN_STATUSES.factura`.
+- Agregar en `EXTRA`:
+  - `"En cancelación"`: `bg-warning/15 text-warning border border-warning/30` (mismo tono que "Pendiente")
+  - `"Sustituida"`: `bg-muted text-muted-foreground border border-destructive/30` (gris con borde rojo tenue, para diferenciarlo de "Borrador")
 
-¿Quieres que agregue ese test ahora, o lo dejamos así?
+### 3. Detalle — `FacturaDetalleHeader.tsx`
+- Recibir `acuseStatus` opcional (o el `factura` completo).
+- Reemplazar `<Badge className={getEstadoColor(estado)}>{estado}</Badge>` por `<StatusBadge domain="factura" status={deriveFacturaBadgeEstado(estado, acuseStatus)} />`.
+- Actualizar callsite en `FacturaDetalle.tsx` para pasar `factura.acuse_cancelacion_status`.
+
+### 4. Tabla — `facturacionColumns.tsx`
+- Cambiar la `statusColumn` por un `ColumnDef` inline que use `StatusBadge` con el estado derivado (accesa a `estado` + `acuse_cancelacion_status` de la row).
+- Mantener `enableSorting` sobre el string derivado para que "En cancelación" y "Sustituida" agrupen bien.
+
+### 5. Servicio + RPC
+La tabla se llena vía RPC `facturas_listado` que hoy **no** devuelve `acuse_cancelacion_status`. Se agrega la columna al SELECT del RPC y al tipo `FacturaListItem`:
+- Migración SQL: `CREATE OR REPLACE FUNCTION public.facturas_listado(...)` añadiendo `f.acuse_cancelacion_status` a las columnas retornadas (sin cambiar firma de parámetros).
+- `facturasCrud.ts`: extender `FacturaListItem` con `acuse_cancelacion_status: string | null` y mapearlo en el `rows.map`.
+
+### 6. CHANGELOG + APP_VERSION
+- Bump a **13.301.17** en `src/constants/appVersion.ts`.
+- Entrada nueva en `CHANGELOG.md`.
+
+## Fuera de alcance
+
+- Filtros del dropdown "Estado" en `TabFacturasEmitidas` (siguen filtrando por `estado` de BD; el filtro semántico "En cancelación" queda para otra iteración si lo piden — no es lo que el usuario pidió).
+- Otras vistas donde aparecen facturas (bandejas, dashboard) — se pueden migrar en un turno posterior si lo piden.
+
+## Diagrama del flujo de derivación
+
+```text
+estado='Cancelada' ─┬─ acuse='pending'  → "En cancelación" (ámbar)
+                    └─ acuse='accepted' → "Cancelada"       (rojo)
+estado='Sustituida' ────────────────────→ "Sustituida"      (gris + rojo tenue)
+estado=otro         ────────────────────→ estado            (sin cambio)
+```

@@ -7921,6 +7921,7 @@ export type Database = {
           p_search?: string
         }
         Returns: {
+          acuse_cancelacion_status: string
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"]
           cliente_nombre: string
           estado: Database["public"]["Enums"]["estado_factura"]

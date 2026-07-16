@@ -48,7 +48,9 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Pagada",
     "Parcialmente pagada",
     "Vencida",
+    "En cancelación",
     "Cancelada",
+    "Sustituida",
     "Pendiente",
   ],
   factura_cxp: [
@@ -166,6 +168,9 @@ const EXTRA: Record<string, EstadoVisual["badge"]> = {
   "Sin tarifa": "bg-destructive/15 text-destructive border border-destructive/30",
   // Liquidación
   Pagado: "bg-success/15 text-success border border-success/30",
+  // Factura — estados derivados del ciclo SAT
+  "En cancelación": "bg-warning/15 text-warning border border-warning/30",
+  Sustituida: "bg-muted text-muted-foreground border border-destructive/30",
 };
 
 /**

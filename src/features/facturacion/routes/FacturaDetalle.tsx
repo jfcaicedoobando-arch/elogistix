@@ -76,6 +76,7 @@ export default function FacturaDetalle() {
       <FacturaDetalleHeader
         numero={factura.numero}
         estado={factura.estado}
+        acuseCancelacionStatus={(factura as { acuse_cancelacion_status?: string | null }).acuse_cancelacion_status ?? null}
         sinTimbrar={sinTimbrar}
         clienteNombre={factura.cliente_nombre}
         expediente={factura.expediente}
