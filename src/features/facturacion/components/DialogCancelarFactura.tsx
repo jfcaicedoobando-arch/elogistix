@@ -11,6 +11,7 @@ import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactu
 import type { MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFactura";
 import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
+import { SelectorSustituta } from "@/features/facturacion/components/cancelacion/SelectorSustituta";
 
 interface Props {
   facturaId: string | null;
