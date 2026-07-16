@@ -13,8 +13,9 @@
  */
 import {
   Stamp, Mail, FileText, FileCode2, Ship, Trash2, Replace, Ban,
-  FileArchive, RefreshCw, HandCoins,
+  FileArchive, RefreshCw, HandCoins, SearchCheck,
 } from "lucide-react";
+
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
 import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
 import type { deriveFacturaFlags } from "@/features/facturacion/domain/facturaFlags";
