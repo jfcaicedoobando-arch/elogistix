@@ -16,7 +16,53 @@ import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
-import { resolveNextAction, type FacturaPendiente, type FapiInvoiceStatus } from "../facturapi-reconciliar-cancelaciones/reconcile.ts";
+
+interface FapiInvoiceStatus {
+  status?: string;
+  cancellation_status?: string;
+}
+interface FacturaPendiente {
+  id: string;
+  organization_id: string;
+  facturapi_id: string;
+  cancellation_status: string;
+  sustituida_por: string | null;
+}
+interface ResolvedPatch {
+  outcome: "accepted" | "rejected" | "expired" | "transition" | "no_change";
+  patch: Record<string, unknown>;
+}
+
+/**
+ * Copia local de la lógica de `facturapi-reconciliar-cancelaciones/reconcile.ts`.
+ * Supabase bundle-only permite archivos del mismo folder, así que se duplica aquí
+ * para no depender de un import cross-folder que rompería el deploy.
+ */
+function resolveNextAction(remote: FapiInvoiceStatus, local: FacturaPendiente, nowIso: string): ResolvedPatch {
+  const cs = (remote.cancellation_status ?? "").toLowerCase();
+  if (cs === local.cancellation_status) return { outcome: "no_change", patch: {} };
+  if (cs === "accepted" || remote.status === "canceled") {
+    return {
+      outcome: "accepted",
+      patch: {
+        estado: local.sustituida_por ? "Sustituida" : "Cancelada",
+        cancellation_status: "accepted",
+        cancelado_en: nowIso,
+      },
+    };
+  }
+  if (cs === "rejected" || cs === "expired") {
+    return {
+      outcome: cs,
+      patch: { cancellation_status: cs, cancelacion_solicitada_en: null, cancelacion_vence_en: null },
+    };
+  }
+  if (cs && cs !== local.cancellation_status) {
+    return { outcome: "transition", patch: { cancellation_status: cs } };
+  }
+  return { outcome: "no_change", patch: {} };
+}
+
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
