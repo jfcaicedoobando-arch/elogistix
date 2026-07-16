@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.8] - 2026-07-16
+- **fix(proveedores)** [Sentry JAVASCRIPT-REACT-1M]: `useNuevoProveedorController` ahora exige `tipo` para todo Logístico (nacional y extranjero). El CHECK `proveedores_categoria_check` requiere `tipo IS NOT NULL` cuando `categoria='Logistico'`; la validación anterior sólo lo pedía a extranjeros → INSERT nacional fallaba con `23514`. `NuevoProveedorStep1` muestra el select de Tipo también para Nacional y ya no se limpia al alternar origen.
+
 ## [13.301.7] - 2026-07-16
 - **chore(lint)**: cero warnings en `bun run lint --max-warnings 0`. `useSustitucionState` usa `facturacionKeys.sustitutaEstado(...)` en vez de queryKey inline (no-restricted-syntax). `DialogSustituirFactura` extrae `IntroBody`/`ConfirmarBody` para bajar complejidad (17 → ≤16). `facturapi-webhook/index.ts` divide handler en `handleReceiptEvent`/`handleFacturaEvent` (complejidad 19 → ≤16). `facturapi-reconciliar-cancelaciones` agrupa parámetros de `reconcileOne` en un `ReconcileCtx` (max-params 6 → 2).
 

@@ -1,57 +1,44 @@
+## Errores Sentry (últimos 7 días)
 
-## Objetivo
+5 issues abiertos. 4 ya están arreglados en código pero siguen abiertos en Sentry. 1 es un bug real vigente en producción.
 
-Agregar un spec E2E `e2e/specs/25-sustituir-cfdi.spec.ts` que valide el flujo single-tab de sustitución CFDI (motivo SAT 01) sobre FacturApi sandbox, siguiendo el mismo patrón que el spec fiscal `08-flujo-fiscal.spec.ts`.
+---
 
-## Alcance
+### 🐛 Bug real: `JAVASCRIPT-REACT-1M` — check constraint `proveedores_categoria_check` (57 eventos, 8 usuarios)
 
-Cubrir el happy path completo y los escenarios de persistencia y guardas UI que introdujeron los batches A–G:
+**Causa raíz**: incoherencia entre la validación del formulario y el CHECK de la BD.
 
-1. **Happy path** — Desde una factura ya timbrada:
-   - Abrir menú de acciones → "Sustituir CFDI".
-   - Confirmar duplicación (RPC `duplicar_factura_para_sustitucion`).
-   - Verificar redirección al detalle del borrador con `?accion=timbrar` y que trae los conceptos copiados.
-   - Timbrar el borrador (sandbox).
-   - Regresar al detalle de la factura original y reabrir el diálogo.
-   - Verificar que restaura al paso "confirmar" con la sustituta detectada como Emitida.
-   - Ejecutar "Cancelar original" motivo 01.
-   - Aceptar toast `success` (accepted) **o** `info` (pending 72h) — ambos son terminales.
+- BD (`proveedores_categoria_check`) exige: `categoria='Logistico' → tipo IS NOT NULL`.
+- Formulario (`useNuevoProveedorController.ts`, línea 71-72): sólo requiere `tipo` cuando el proveedor es **extranjero**. Para proveedores **nacionales** con categoría Logístico, `tipo` queda `null` → INSERT explota con `23514`.
 
-2. **Persistencia sessionStorage** — Tras duplicar, cerrar y reabrir el diálogo debe restaurar el paso "confirmar" leyendo `sustitucion:{facturaId}`.
+**Fix (código)**: en `useNuevoProveedorController.ts`, exigir `tipo` para todo Logístico (nacional y extranjero) y marcar el campo como obligatorio en la UI de `NuevoProveedor` cuando `categoria === "Logistico"`. Es la corrección menos invasiva y respeta la intención del constraint (todo logístico tiene un tipo operativo).
 
-3. **Guard UI de sustituta no timbrada** — Si la sustituta está en `Borrador`, el botón "Cancelar original" debe estar `disabled`.
+Alternativa descartada: relajar el CHECK de la BD — introduciría proveedores logísticos "sin tipo" que rompen filtros y catálogos aguas abajo.
 
-4. **Auto-reset ante borrador eliminado** — Simular borrado externo del clon (RPC/REST) y verificar que al reabrir el diálogo regresa a "intro" con toast `info`.
+---
 
-## Estructura
+### ✅ Ya arreglados en código — sólo cerrar en Sentry
 
-- Archivo: `e2e/specs/25-sustituir-cfdi.spec.ts`.
-- Se une al project `chromium-mutators` (regex `MUTATOR_SPECS`) — ampliar el patrón en `playwright.config.ts` a `/0[9]-|1[0-2]-|25-/` para que corra en serie.
-- Gate por env vars, como spec 08:
-  - `E2E_FISCAL=1` (obligatorio).
-  - `E2E_SUSTITUCION_FACTURA_UUID` — id de una factura **timbrada** sandbox reutilizable (o crear on-the-fly llamando al flujo del spec 08 como precondición si `E2E_SUSTITUCION_AUTO=1`).
-- Fixtures: `testBase` (autoPageErrors + sessionIsolation), `loginAs(internalCreds())`, `supabaseRest(page)` para cleanup.
-- Cleanup `afterAll` best-effort:
-  - Borrar borrador huérfano si el test falló antes de timbrar.
-  - Cancelar sustituta timbrada motivo 02 (evita colisión de UUIDs).
-  - Limpiar `sessionStorage` (ya lo hace `sessionIsolation`).
+Todos son regresiones fiscales resueltas en releases previos (`13.300.56`–`13.300.60`); siguen `unresolved` porque nunca se marcaron:
 
-## Detalles técnicos
+| Issue | Título | Fix aplicado en |
+|---|---|---|
+| `JAVASCRIPT-REACT-2J` | `"serie" is not allowed` | 13.300.56 (renombrado a `series`) |
+| `JAVASCRIPT-REACT-2K` | `"related" is not allowed` | 13.300.57 (`related_documents[]`) |
+| `JAVASCRIPT-REACT-2M` | `La factura sustituta aún no está timbrada` | 13.301.3 (guard UI + refetch) |
+| `JAVASCRIPT-REACT-2N` | `CancelacionSAT no está disponible` | 13.300.60 (reintentar + mensaje) |
 
-- Selectores por rol/nombre (`getByRole("button", { name: /sustituir cfdi/i })`, `getByText(/borrador sustituto creado/i)`).
-- Esperar el RPC con `page.waitForResponse(/rpc\/duplicar_factura_para_sustitucion/)` para capturar el `nuevaId` sin depender del DOM.
-- Para la restauración: `page.goto("/facturacion/{originalId}")` y volver a abrir el menú; assert de que el `DialogSustituirFactura` renderiza el paso "confirmar" (buscar botón "Cancelar original").
-- Para el auto-reset: usar `supabaseRest(page).delete("facturas", { id: nuevaId })` (RLS lo permite si el borrador no está timbrado) y reabrir el diálogo.
-- Marcar `test.describe.configure({ mode: "serial" })` para preservar orden entre los sub-tests (happy path debe correr primero).
+Acción: `update_issue` → `status: resolved` para los 4, referenciando el `APP_VERSION` correspondiente.
 
-## Entregable
+---
 
-- `e2e/specs/25-sustituir-cfdi.spec.ts` con 4 tests (happy path + 3 guardas).
-- Ajuste en `playwright.config.ts` para incluir `25-` en `MUTATOR_SPECS`.
-- Nota breve en `docs/facturapi-sustitucion.md` sobre cómo correrlo (`E2E_FISCAL=1 E2E_SUSTITUCION_FACTURA_UUID=... npx playwright test 25`).
-- Bump `APP_VERSION` a `13.301.5` + entrada en `CHANGELOG.md`.
+### Entregables
 
-## Fuera de alcance
+1. **Fix bug proveedores nacionales logísticos**
+   - `src/features/proveedor/hooks/useNuevoProveedorController.ts`: quitar el `esExtranjero &&` de la validación de `tipo`; asegurar que `isValid` sea `false` si Logistico sin tipo.
+   - `src/features/proveedor/routes/NuevoProveedor.tsx` (o el componente que renderiza el Select de tipo): mostrar el campo `tipo` también para nacionales y marcarlo como requerido cuando `categoria === "Logistico"`.
+   - Test unitario en `src/features/proveedor/services/__tests__/proveedor.test.ts` (o hook test nuevo) cubriendo el caso nacional + Logistico.
 
-- No se automatiza la creación de la factura sandbox base (se reutiliza la de spec 08 o se pasa por env).
-- No se cubre el flujo de reconciliación por cron (ya tiene Deno tests en `reconcile_test.ts`).
+2. **Cerrar Sentry**: `update_issue` sobre los 4 issues fiscales con nota apuntando al release y al CHANGELOG.
+
+3. **Housekeeping**: bump `APP_VERSION` → `13.301.8` y entrada en `CHANGELOG.md` referenciando `JAVASCRIPT-REACT-1M`.

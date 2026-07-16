@@ -61,15 +61,18 @@ export function useNuevoProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
-  const esExtranjero = form.origen_proveedor === "Extranjero";
+
+
 
   const isStep1Valid = (): boolean => {
     if (!form.categoria) return false;
     if (!form.nombre.trim()) return false;
     if (!form.origen_proveedor) return false;
     if (isLogistico) {
-      // El tipo sólo se requiere para proveedores extranjeros.
-      if (esExtranjero && !form.tipo) return false;
+      // `tipo` es obligatorio para TODO Logístico (nacional y extranjero).
+      // El CHECK `proveedores_categoria_check` exige tipo IS NOT NULL cuando
+      // categoria='Logistico'; permitir tipo=null aquí producía 23514 en BD.
+      if (!form.tipo) return false;
       if (isAgenteCarga && !form.pais) return false;
     }
     if (isGasto && !form.subtipo_gasto) return false;
@@ -80,9 +83,9 @@ export function useNuevoProveedorController(
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
     setForm((prev) => {
       const next = { ...prev, [field]: value } as NuevoProveedorForm;
-      // Al cambiar a Nacional, limpiamos `tipo` porque ya no aplica.
+      // Al cambiar a Nacional, limpiamos `pais` (aplica sólo a Agente de Carga extranjero).
+      // `tipo` SÍ se conserva porque también es requerido para Logístico nacional.
       if (field === "origen_proveedor" && value === "Nacional") {
-        next.tipo = null;
         next.pais = "";
       }
       return next;

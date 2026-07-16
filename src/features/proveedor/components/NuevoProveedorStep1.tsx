@@ -32,7 +32,7 @@ export function NuevoProveedorStep1({ c }: { c: Controller }) {
         <Input value={c.form.nombre} onChange={(e) => c.setField("nombre", e.target.value)} />
       </div>
 
-      {c.isLogistico && c.form.origen_proveedor === "Extranjero" && <TipoLogisticoSelect c={c} />}
+      {c.isLogistico && <TipoLogisticoSelect c={c} />}
       {c.isGasto && <SubtipoGastoSelect c={c} />}
       {c.isAgenteCarga && <PaisAgenteSelect c={c} />}
       {mostrarRfc && <RfcField c={c} />}
