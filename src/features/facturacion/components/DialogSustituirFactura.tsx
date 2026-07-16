@@ -14,6 +14,7 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Replace, ArrowRight, Ban, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactu
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { safeSessionStorage } from "@/lib/browserStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   facturaId: string | null;
@@ -79,6 +81,22 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
   const navigate = useNavigate();
   const cancelar = useCancelarFactura();
 
+  // Consulta el estado de la sustituta para decidir si "Cancelar original" está listo.
+  // Si el borrador fue eliminado (returns null), limpiamos sessionStorage huérfano.
+  const sustitutaQuery = useQuery({
+    queryKey: ["factura-sustituta-estado", nuevaId],
+    enabled: !!nuevaId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("facturas")
+        .select("id, estado, uuid_fiscal")
+        .eq("id", nuevaId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Restaurar progreso al abrir el diálogo si ya existe borrador sustituto.
   useEffect(() => {
     if (!open || !facturaId) return;
@@ -91,6 +109,17 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
       setStep("intro");
     }
   }, [open, facturaId]);
+
+  // Detectar borrador huérfano (eliminado externamente) y reiniciar automáticamente.
+  useEffect(() => {
+    if (step !== "confirmar" || !nuevaId || sustitutaQuery.isLoading) return;
+    if (sustitutaQuery.data === null && facturaId) {
+      clearPersisted(facturaId);
+      toast.info("El borrador sustituto ya no existe. Reinicia el proceso.");
+      setNuevaId(null);
+      setStep("intro");
+    }
+  }, [step, nuevaId, sustitutaQuery.data, sustitutaQuery.isLoading, facturaId]);
 
   if (!facturaId) return null;
 
@@ -141,8 +170,12 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
     );
   };
 
+  const sustitutaTimbrada = !!sustitutaQuery.data?.uuid_fiscal &&
+    sustitutaQuery.data.estado === "Emitida";
+  const sustitutaEstadoLabel = sustitutaQuery.data?.estado ?? "…";
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { /* preserva sessionStorage */ } onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -182,10 +215,15 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
               cancelaremos el CFDI <strong>{numero}</strong> con motivo SAT 01 referenciando
               al UUID de la sustituta.
             </p>
-            <p className="text-xs text-muted-foreground">
-              Si la sustituta no está timbrada, la cancelación fallará. Puedes volver al borrador
-              o reiniciar el proceso.
-            </p>
+            <div className={`rounded-md border p-3 text-xs ${sustitutaTimbrada ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}`}>
+              <strong>Estado de la sustituta:</strong>{" "}
+              {sustitutaQuery.isLoading ? "Consultando…" : sustitutaEstadoLabel}
+              {!sustitutaTimbrada && !sustitutaQuery.isLoading && (
+                <div className="mt-1 text-muted-foreground">
+                  Debe estar timbrada antes de cancelar la original.
+                </div>
+              )}
+            </div>
             <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-xs">
               <strong>Nota:</strong> el SAT puede tardar hasta 72 h en aceptar la cancelación si el
               CFDI supera $1,000 MXN (regla 2.7.1.34). El sistema hará seguimiento automático.
@@ -210,7 +248,12 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
               <Button variant="secondary" onClick={handleIrABorrador}>
                 Volver al borrador
               </Button>
-              <Button variant="destructive" onClick={handleCancelarOriginal} disabled={cancelar.isPending}>
+              <Button
+                variant="destructive"
+                onClick={handleCancelarOriginal}
+                disabled={cancelar.isPending || !sustitutaTimbrada}
+                title={!sustitutaTimbrada ? "La sustituta debe estar timbrada" : undefined}
+              >
                 <Ban className="h-4 w-4 mr-1" />
                 {cancelar.isPending ? "Cancelando…" : "Cancelar original"}
               </Button>

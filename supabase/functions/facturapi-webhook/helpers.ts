@@ -26,6 +26,14 @@ export interface MappedUpdate {
   facturapi_id: string;
   patch: Record<string, unknown>;
   bitacora_accion: string;
+  /**
+   * Si es true, el llamador debe NO sobrescribir `estado` cuando la factura
+   * en BD ya está en `Sustituida` (o `sustituida_por IS NOT NULL`). El patch
+   * incluye `estado` calculado como "Cancelada" por default, pero para
+   * sustituciones el estado correcto es "Sustituida" y lo fija el cron
+   * `facturapi-reconciliar-cancelaciones` al descargar el acuse.
+   */
+  preserva_sustituida?: boolean;
 }
 
 /**
@@ -67,7 +75,12 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
         patch.estado = "Timbrada";
       }
       if (Object.keys(patch).length === 0) return null;
-      return { facturapi_id, patch, bitacora_accion: "facturapi_webhook_status" };
+      return {
+        facturapi_id,
+        patch,
+        bitacora_accion: "facturapi_webhook_status",
+        preserva_sustituida: status === "canceled",
+      };
     }
     case "invoice.canceled":
       return {
@@ -78,6 +91,7 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
           cancellation_status: "accepted",
         },
         bitacora_accion: "facturapi_webhook_canceled",
+        preserva_sustituida: true,
       };
     case "invoice.delivered_to_customer":
       return {

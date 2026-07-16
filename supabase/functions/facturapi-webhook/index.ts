@@ -83,15 +83,23 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
 
   const { data: factura } = await supabase
     .from("facturas")
-    .select("id, organization_id")
+    .select("id, organization_id, estado, sustituida_por")
     .eq("facturapi_id", mapped.facturapi_id)
     .eq("organization_id", orgId)
     .maybeSingle();
   if (!factura) return jsonResponse({ ok: true, ignored: "factura_not_found" });
 
+  // Si el evento cancela pero la factura fue sustitución, NO sobrescribimos
+  // `estado` — el cron de reconciliación lo fija a "Sustituida" al descargar
+  // el acuse. Sí conservamos el resto del patch (cancellation_status, timestamps).
+  const patch = { ...mapped.patch };
+  if (mapped.preserva_sustituida && (factura.estado === "Sustituida" || factura.sustituida_por)) {
+    delete patch.estado;
+  }
+
   const { error: updErr } = await supabase
     .from("facturas")
-    .update(mapped.patch)
+    .update(patch)
     .eq("id", factura.id);
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 

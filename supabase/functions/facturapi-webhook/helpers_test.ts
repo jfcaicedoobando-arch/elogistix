@@ -70,3 +70,78 @@ Deno.test("mapEventToReceiptPatch: receipt.canceled", () => {
 Deno.test("mapEventToReceiptPatch: invoice.* -> null", () => {
   assertEquals(mapEventToReceiptPatch({ type: "invoice.status_updated", data: { object: { id: "fa_1" } } }), null);
 });
+
+// ── cancellation_status_updated ─────────────────────────────────────────────
+Deno.test("cancellation_status_updated: accepted -> patch con accepted (sin limpiar timestamps)", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.cancellation_status_updated",
+    data: { object: { id: "fa_10", cancellation_status: "accepted" } },
+  });
+  assert(r);
+  assertEquals(r!.patch.cancellation_status, "accepted");
+  // No debe limpiar solicitada_en/vence_en; el cron lo hace al descargar acuse.
+  assertEquals(r!.patch.cancelacion_solicitada_en, undefined);
+});
+
+Deno.test("cancellation_status_updated: pending -> sólo actualiza estado async", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.cancellation_status_updated",
+    data: { object: { id: "fa_11", cancellation_status: "pending" } },
+  });
+  assertEquals(r!.patch.cancellation_status, "pending");
+  assertEquals(r!.patch.estado, undefined);
+});
+
+Deno.test("cancellation_status_updated: rejected -> limpia timestamps de solicitud", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.cancellation_status_updated",
+    data: { object: { id: "fa_12", cancellation_status: "rejected" } },
+  });
+  assertEquals(r!.patch.cancellation_status, "rejected");
+  assertEquals(r!.patch.cancelacion_solicitada_en, null);
+  assertEquals(r!.patch.cancelacion_vence_en, null);
+});
+
+Deno.test("cancellation_status_updated: expired -> limpia timestamps", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.cancellation_status_updated",
+    data: { object: { id: "fa_13", cancellation_status: "expired" } },
+  });
+  assertEquals(r!.patch.cancellation_status, "expired");
+  assertEquals(r!.patch.cancelacion_solicitada_en, null);
+});
+
+Deno.test("cancellation_status_updated: sin cancellation_status -> null", () => {
+  assertEquals(
+    mapEventToFacturaPatch({
+      type: "invoice.cancellation_status_updated",
+      data: { object: { id: "fa_14" } },
+    }),
+    null,
+  );
+});
+
+// ── preserva_sustituida ─────────────────────────────────────────────────────
+Deno.test("status_updated canceled marca preserva_sustituida=true", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.status_updated",
+    data: { object: { id: "fa_20", status: "canceled" } },
+  });
+  assertEquals(r!.preserva_sustituida, true);
+});
+
+Deno.test("status_updated valid NO marca preserva_sustituida", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.status_updated",
+    data: { object: { id: "fa_21", status: "valid" } },
+  });
+  assertEquals(r!.preserva_sustituida, false);
+});
+
+Deno.test("invoice.canceled marca preserva_sustituida=true", () => {
+  const r = mapEventToFacturaPatch({
+    type: "invoice.canceled",
+    data: { object: { id: "fa_22" } },
+  });
+  assertEquals(r!.preserva_sustituida, true);
+});
