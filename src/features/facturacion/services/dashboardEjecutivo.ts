@@ -113,7 +113,7 @@ export async function fetchDashboardEjecutivoFacturacion(
     .from("facturas")
     .select("fecha_emision, total, moneda, tipo_cambio, estado")
     .gte("fecha_emision", desdeIso)
-    .neq("estado", "Cancelada")
+    .in("estado", [...ESTADOS_FACTURADO])
     .is("deleted_at", null)
     .limit(5000);
   if (organizationId) qFacturas = qFacturas.eq("organization_id", organizationId);
