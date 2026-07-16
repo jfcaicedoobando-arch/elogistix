@@ -130,15 +130,8 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       detalles: { status, response: detail },
     });
     const rawMessage = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    const esNoCancelable = /no cancelable|marcada como no|no puede.*cancel|facturas relacionadas/i.test(rawMessage);
-    const esServicioSatCaido = /cancelacionsat no est|servicio.*sat.*no.*disp|sat.*no.*disponible/i.test(rawMessage);
-    let message = rawMessage;
-    if (esServicioSatCaido) {
-      message = "El SAT no está respondiendo en este momento (servicio de cancelación caído del lado del SAT). No es un problema de tu factura ni de tus datos. Espera unos minutos y reintenta.";
-    } else if (esNoCancelable) {
-      message = `${rawMessage}\n\nEl SAT rechazó la cancelación. Causas comunes:\n• El receptor debe ACEPTAR la cancelación en su Buzón Tributario (CFDIs > $1,000 MXN).\n• Existen complementos de pago (REP) o notas de crédito vinculados: cancélalos primero.\n• El SAT aún no propaga la sustitución: reintenta en 30–60 minutos.`;
-    }
-    return jsonResponse({ error: "facturapi_error", status, detail, message, transient: esServicioSatCaido }, 502);
+    const { message, transient } = enrichCancelacionErrorMessage(rawMessage);
+    return jsonResponse({ error: "facturapi_error", status, detail, message, transient }, 502);
   }
 
   const cancellationStatus = (cancelResp.cancellation_status ?? "none").toLowerCase();
