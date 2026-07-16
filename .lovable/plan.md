@@ -1,44 +1,38 @@
-## Errores Sentry (últimos 7 días)
+# Fix CI: tests fallidos en `useNuevoProveedorController`
 
-5 issues abiertos. 4 ya están arreglados en código pero siguen abiertos en Sentry. 1 es un bug real vigente en producción.
+## Contexto
 
----
+En `v13.301.8` endurecí la validación para exigir `tipo` en TODO proveedor Logístico (nacional y extranjero) — esto alineó el form con el CHECK `proveedores_categoria_check` y cerró el Sentry `JAVASCRIPT-REACT-1M`.
 
-### 🐛 Bug real: `JAVASCRIPT-REACT-1M` — check constraint `proveedores_categoria_check` (57 eventos, 8 usuarios)
+Pero rompí 3 tests del shard 14 porque el helper `fillStep1Logistico` sólo captura `nombre + origen + rfc` (sin `tipo`), y los tests declaran explícitamente "**default Naviera**" — es decir, esperan que al elegir categoría "Logistico" el controller **auto-seleccione** `tipo = "Naviera"`.
 
-**Causa raíz**: incoherencia entre la validación del formulario y el CHECK de la BD.
+Tests fallidos:
+1. `valida logístico nacional con nombre + rfc + tipo (default Naviera)` → `isStep1Valid` = false
+2. `avanza y carga 7 documentos nacionales` → no avanza al step 2 (bloqueado por validación)
+3. `handleFileChange marca documento como adjuntado` → misma causa, no llega al step 2
 
-- BD (`proveedores_categoria_check`) exige: `categoria='Logistico' → tipo IS NOT NULL`.
-- Formulario (`useNuevoProveedorController.ts`, línea 71-72): sólo requiere `tipo` cuando el proveedor es **extranjero**. Para proveedores **nacionales** con categoría Logístico, `tipo` queda `null` → INSERT explota con `23514`.
+## Cambio propuesto (1 archivo, 1 línea)
 
-**Fix (código)**: en `useNuevoProveedorController.ts`, exigir `tipo` para todo Logístico (nacional y extranjero) y marcar el campo como obligatorio en la UI de `NuevoProveedor` cuando `categoria === "Logistico"`. Es la corrección menos invasiva y respeta la intención del constraint (todo logístico tiene un tipo operativo).
+**`src/features/proveedor/hooks/useNuevoProveedorController.ts`** — en `handleCategoriaChange`:
 
-Alternativa descartada: relajar el CHECK de la BD — introduciría proveedores logísticos "sin tipo" que rompen filtros y catálogos aguas abajo.
+```diff
+-      tipo: next === "Logistico" ? null : null,
++      tipo: next === "Logistico" ? "Naviera" : null,
+```
 
----
+Naviera es el default más neutro (no requiere `pais` extra, a diferencia de "Agente de Carga"). El usuario puede cambiarlo con el `Select` en el mismo paso. Actualizo también el comentario adyacente.
 
-### ✅ Ya arreglados en código — sólo cerrar en Sentry
+## Analogía
 
-Todos son regresiones fiscales resueltas en releases previos (`13.300.56`–`13.300.60`); siguen `unresolved` porque nunca se marcaron:
+Es como cuando un formulario web te pregunta "país" y te pre-selecciona "México" — no te obliga, pero evita que el botón "Siguiente" quede gris por olvido. Antes: dejaba el campo vacío y bloqueaba (correcto por BD, malo por UX y tests). Ahora: precarga "Naviera", usuario cambia si quiere.
 
-| Issue | Título | Fix aplicado en |
-|---|---|---|
-| `JAVASCRIPT-REACT-2J` | `"serie" is not allowed` | 13.300.56 (renombrado a `series`) |
-| `JAVASCRIPT-REACT-2K` | `"related" is not allowed` | 13.300.57 (`related_documents[]`) |
-| `JAVASCRIPT-REACT-2M` | `La factura sustituta aún no está timbrada` | 13.301.3 (guard UI + refetch) |
-| `JAVASCRIPT-REACT-2N` | `CancelacionSAT no está disponible` | 13.300.60 (reintentar + mensaje) |
+## Verificación
 
-Acción: `update_issue` → `status: resolved` para los 4, referenciando el `APP_VERSION` correspondiente.
+- Los 3 tests fallidos vuelven a pasar sin tocar el helper.
+- No regresa el Sentry `1M`: la BD sigue recibiendo `tipo` no-nulo.
+- El UI ya muestra el `Select` de tipo, así que el usuario puede cambiar el default.
 
----
+## Changelog
 
-### Entregables
-
-1. **Fix bug proveedores nacionales logísticos**
-   - `src/features/proveedor/hooks/useNuevoProveedorController.ts`: quitar el `esExtranjero &&` de la validación de `tipo`; asegurar que `isValid` sea `false` si Logistico sin tipo.
-   - `src/features/proveedor/routes/NuevoProveedor.tsx` (o el componente que renderiza el Select de tipo): mostrar el campo `tipo` también para nacionales y marcarlo como requerido cuando `categoria === "Logistico"`.
-   - Test unitario en `src/features/proveedor/services/__tests__/proveedor.test.ts` (o hook test nuevo) cubriendo el caso nacional + Logistico.
-
-2. **Cerrar Sentry**: `update_issue` sobre los 4 issues fiscales con nota apuntando al release y al CHANGELOG.
-
-3. **Housekeeping**: bump `APP_VERSION` → `13.301.8` y entrada en `CHANGELOG.md` referenciando `JAVASCRIPT-REACT-1M`.
+Bump `APP_VERSION` a `13.301.9` y agregar bullet en `CHANGELOG.md`:
+- Fix: al crear proveedor Logístico se preselecciona `tipo="Naviera"` (evita bloqueo silencioso del wizard y arregla 3 tests de CI).
