@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.11] - 2026-07-16
+- **chore(lint)**: reducida complejidad ciclomática en `DialogConsultarFacturapi.tsx` (extraído `DialogConsultarFacturapiResult.tsx` con subcomponentes `RemotoCard`/`LocalCard`/`DivergenciasAlert`/`RelacionadosList`) y en el handler de `facturapi-consultar` (helpers `loadFactura`, `fetchRemote`, `computeDivergencias`, `reconciliarSiAplica`, `flattenRelated`). CI `lint --max-warnings 0` en verde.
+
 ## [13.301.10] - 2026-07-16
 - **feat(facturacion)**: nueva acción "Verificar estatus en FacturApi" en el detalle de factura. Invoca `GET /v2/invoices/{id}` en vivo vía nueva edge function `facturapi-consultar`, compara `status` y `cancellation_status` contra la BD, muestra `related_documents` (útil cuando el SAT rechaza cancelación por REP/NC vinculada) y reconcilia la fila local automáticamente si detecta divergencia. Diagnóstico para casos en que FacturApi reporta la factura como válida pero el flujo local queda desincronizado.
 
