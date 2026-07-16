@@ -74,6 +74,7 @@ export function FacturaDetalleModales(props: Props) {
         rfcCliente={factura.rfc_cliente ?? null}
         open={cancelarOpen}
         onOpenChange={setCancelarOpen}
+        onAbrirSustituir={() => { setCancelarOpen(false); setSustituirOpen(true); }}
       />
     </>
   );
