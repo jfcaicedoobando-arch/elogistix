@@ -81,17 +81,49 @@ interface FacturapiErrorShape {
   status?: number;
   data?: unknown;
   message?: string;
+  // Campos planos expuestos por el SDK `facturapi@4.18.0` en su clase
+  // `FacturapiError` (no viven bajo `response.data`).
+  code?: string;
+  path?: string;
+  location?: string;
+  errors?: unknown;
+  logId?: string;
+}
+
+export interface FacturapiErrorDetail {
+  message: string;
+  code?: string;
+  path?: string;
+  location?: string;
+  errors?: unknown;
+  logId?: string;
+  raw?: unknown;
+}
+
+function pickStr(...values: unknown[]): string | undefined {
+  for (const v of values) {
+    if (typeof v === "string" && v.length > 0) return v;
+  }
+  return undefined;
 }
 
 /**
  * Normaliza un error lanzado por el SDK de FacturApi a `{ status, detail }`
- * para responder al cliente con un shape consistente.
+ * para responder al cliente con un shape consistente. Preserva `code`,
+ * `path`, `location`, `errors[]` y `logId` que expone el SDK como campos
+ * planos (v4.18.0) — antes se perdían al leer sólo `response.data`.
  */
-export function describeFacturapiError(err: unknown): { status: number; detail: unknown } {
+export function describeFacturapiError(err: unknown): { status: number; detail: FacturapiErrorDetail } {
   const e = (err ?? {}) as FacturapiErrorShape;
   const status: number = e.response?.status ?? e.status ?? 502;
-  const detail: unknown = e.response?.data ?? e.data ?? {
-    message: e.message ?? String(err),
+  const base = ((e.response?.data ?? e.data ?? {}) as Record<string, unknown>);
+  const detail: FacturapiErrorDetail = {
+    message: pickStr(base.message, e.message) ?? String(err),
+    code: pickStr(base.code, e.code),
+    path: pickStr(base.path, e.path),
+    location: pickStr(base.location, e.location),
+    errors: base.errors ?? e.errors,
+    logId: pickStr(base.logId, e.logId),
   };
   return { status, detail };
 }

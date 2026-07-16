@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
-import { Ban } from "lucide-react";
+import { Ban, AlertCircle, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { MOTIVOS_CANCELACION_SAT } from "@/constants/catalogosSAT";
@@ -12,6 +13,7 @@ import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFa
 import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
 import { SelectorSustituta } from "@/features/facturacion/components/cancelacion/SelectorSustituta";
 import { BannersCondicionesSAT } from "@/features/facturacion/components/cancelacion/BannersCondicionesSAT";
+import { DialogConsultarFacturapi } from "@/features/facturacion/components/detalle/DialogConsultarFacturapi";
 
 interface Props {
   facturaId: string | null;
@@ -79,6 +81,8 @@ export function DialogCancelarFactura({
     }
   }, [motivo, sustitutasTimbradas, sustitutaId]);
 
+  const [consultarOpen, setConsultarOpen] = useState(false);
+
   if (!facturaId) return null;
 
   const requiereSustituta = motivo === "01";
@@ -100,8 +104,22 @@ export function DialogCancelarFactura({
     onAbrirSustituir?.();
   };
 
+  const errorMessage = cancelar.isError
+    ? (cancelar.error instanceof Error ? cancelar.error.message : String(cancelar.error))
+    : null;
+
   const footer = (
     <>
+      {errorMessage && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setConsultarOpen(true)}
+          className="mr-auto"
+        >
+          <Search className="h-4 w-4 mr-1" /> Consultar en FacturAPI
+        </Button>
+      )}
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
       <Button
         variant="destructive"
@@ -114,41 +132,57 @@ export function DialogCancelarFactura({
   );
 
   return (
-    <FormDialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      icon={Ban}
-      title={`Cancelar CFDI ${numero ?? ""}`}
-      description="La cancelación se enviará al SAT a través de Facturapi. Selecciona el motivo correcto."
-      size="lg"
-      footer={footer}
-    >
-      <BannersCondicionesSAT {...cond} />
+    <>
+      <FormDialogShell
+        open={open}
+        onOpenChange={onOpenChange}
+        icon={Ban}
+        title={`Cancelar CFDI ${numero ?? ""}`}
+        description="La cancelación se enviará al SAT a través de Facturapi. Selecciona el motivo correcto."
+        size="lg"
+        footer={footer}
+      >
+        <BannersCondicionesSAT {...cond} />
 
-      <div className="space-y-2">
-        <Label>Motivo SAT</Label>
-        <Select value={motivo} onValueChange={(v) => setMotivo(v as MotivoCancelacionSat)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {MOTIVOS_CANCELACION_SAT.map((m) => (
-              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="whitespace-pre-line">{errorMessage}</AlertDescription>
+          </Alert>
+        )}
 
-      {requiereSustituta && (
         <div className="space-y-2">
-          <Label>Factura sustituta timbrada</Label>
-          <SelectorSustituta
-            isLoading={sustitutasQ.isLoading}
-            sustitutasTimbradas={sustitutasTimbradas}
-            value={sustitutaId}
-            onChange={setSustitutaId}
-            onAbrirSustituir={onAbrirSustituir ? abrirWizard : undefined}
-          />
+          <Label>Motivo SAT</Label>
+          <Select value={motivo} onValueChange={(v) => setMotivo(v as MotivoCancelacionSat)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {MOTIVOS_CANCELACION_SAT.map((m) => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      )}
-    </FormDialogShell>
+
+        {requiereSustituta && (
+          <div className="space-y-2">
+            <Label>Factura sustituta timbrada</Label>
+            <SelectorSustituta
+              isLoading={sustitutasQ.isLoading}
+              sustitutasTimbradas={sustitutasTimbradas}
+              value={sustitutaId}
+              onChange={setSustitutaId}
+              onAbrirSustituir={onAbrirSustituir ? abrirWizard : undefined}
+            />
+          </div>
+        )}
+      </FormDialogShell>
+
+      <DialogConsultarFacturapi
+        facturaId={facturaId}
+        numero={numero ?? ""}
+        open={consultarOpen}
+        onOpenChange={setConsultarOpen}
+      />
+    </>
   );
 }

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.25] - 2026-07-16
+- **fix(facturacion)**: al cancelar con motivo 01 y sustituta, FacturAPI devolvía "No se especificó el motivo de cancelación o el motivo no es válido" sin diagnóstico. Tres cambios: (1) `describeFacturapiError` ahora preserva `code`, `path`, `location`, `errors[]` y `logId` del SDK (antes leía sólo `response.data`, que no existe en `facturapi@4.18.0`); (2) pre-flight en `facturapi-cancelar` que consulta la sustituta remota y verifica `related_documents` relación 04 antes de intentar cancelar — devuelve 422 accionable si falta; (3) `enrichCancelacionErrorMessage` reconoce el patrón "motivo no válido" y guía al usuario; el modal "Cancelar CFDI" muestra el error inline con acción "Consultar en FacturAPI" para comparar el estado local vs remoto.
+
 ## [13.301.24] - 2026-07-16
 - **fix(facturacion)**: en el modal "Cancelar CFDI" el dropdown de sustitutas mostraba el folio duplicado ("F · Folio 988 — F988") porque `numero` ya concatena `serie + folio_fiscal`. Se simplifica el label a `numero` + UUID SAT truncado como pista de auditoría (ej. "F988 · UUID 160A0EBE…").
 

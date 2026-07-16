@@ -14,16 +14,17 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
-  enrichCancelacionErrorMessage,
+  handleCancelFailure,
   resolveSustitutaSnapshot,
   revertirProformasCancelacion,
+  runPreflightSustitucion,
 } from "./cancelacion.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -104,14 +105,27 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
+  // Pre-flight motivo 01: verificar related_documents relación 04.
+  if (motivo === "01" && sustituyeFacturapiId) {
+    const preflight = await runPreflightSustitucion({
+      supabase,
+      facturapi: facturapi as { invoices: { retrieve: (id: string) => Promise<unknown> } },
+      facturaId: factura_id,
+      organizationId: factura.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      motivo,
+      sustituyeFacturapiId,
+      sustituidaPorFacturaId,
+    });
+    if (preflight) return preflight;
+  }
+
   // FacturApi devuelve tanto `status` (valid/canceled) como `cancellation_status`
-  // (none|verifying|pending|accepted|rejected|expired). El segundo es el que
-  // realmente refleja si el SAT ya aceptó la cancelación o si el receptor
-  // todavía tiene 72 h para responder (regla 2.7.1.34 RMF).
+  // (none|verifying|pending|accepted|rejected|expired).
   interface FapiCancelResponse { status?: string; cancellation_status?: string }
   let cancelResp: FapiCancelResponse;
   try {
-    // `substitution` requiere el facturapi_id (ObjectId) de la factura sustituta.
     const cancelPayload: { motive: string; substitution?: string } = { motive: motivo };
     if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
     cancelResp = await facturapi.invoices.cancel(
@@ -119,19 +133,14 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       cancelPayload,
     ) as FapiCancelResponse;
   } catch (err) {
-    const { status, detail } = describeFacturapiError(err);
-    await registrarBitacoraEdge(supabase, {
+    return await handleCancelFailure({
+      err,
+      supabase,
+      facturaId: factura_id,
       organizationId: factura.organization_id,
       usuarioId: userData.user.id,
       usuarioEmail: userData.user.email,
-      modulo: "facturacion",
-      accion: "facturapi_cancelar_failed",
-      entidadId: factura_id,
-      detalles: { status, response: detail },
     });
-    const rawMessage = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    const { message, transient } = enrichCancelacionErrorMessage(rawMessage);
-    return jsonResponse({ error: "facturapi_error", status, detail, message, transient }, 502);
   }
 
   const cancellationStatus = (cancelResp.cancellation_status ?? "none").toLowerCase();
