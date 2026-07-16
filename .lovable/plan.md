@@ -1,68 +1,79 @@
-## Contexto
 
-Al cancelar F975 con motivo 01 y sustituta F988, FacturAPI devolvió `400` con el mensaje **"No se especificó el motivo de cancelación o el motivo no es válido"**. La bitácora sólo guarda `{status: 400, message: "..."}` — no vemos el `code` ni `errors[]` que FacturAPI devuelve, así que quedamos sin pistas para saber si el problema es:
+## Diagnóstico (analogía)
 
-- La sustituta F988 no quedó timbrada con `related_documents: [{relationship:"04", documents:[UUID_F975]}]`.
-- F975 tiene notas de crédito o REP ligados que la vuelven no cancelable.
-- El PAC/SAT rechazó la operación por otra causa.
+Es como enviar un paquete con la etiqueta de destinatario en el idioma equivocado: la paquetería lo acepta, pero la información nunca "cuadra" con el sistema del SAT. Al momento de cancelar la factura vieja pidiendo "sustitúyela por esta otra", el SAT contesta "esa sustituta no me consta que sustituya a nadie" → **"motivo no válido"**.
 
-La causa raíz del "toast poco útil" es un bug de observabilidad: `describeFacturapiError` (`supabase/functions/_shared/facturapiClient.ts`) sólo lee `err.response?.data`, pero el SDK `facturapi@4.18.0` expone los campos **planos** en la instancia del error (`code`, `path`, `location`, `errors`, `logId`). Los tiramos.
+### Bug real
 
-## Plan de fix
+En `supabase/functions/facturapi-emitir/helpers.ts:167` estamos mandando:
 
-### 1. Capturar el error completo del SDK (observabilidad)
+```ts
+payload.related_documents = [{ relationship: "04", documents: [ctx.sustituye_uuid] }];
+```
 
-**Archivo:** `supabase/functions/_shared/facturapiClient.ts`
+Pero el SDK oficial `facturapi@4.18.0` (verificado en `dist/types/common.d.ts` y `invoice.d.ts`) declara el tipo así:
 
-Actualizar `describeFacturapiError` para devolver además `code`, `path`, `location`, `errors[]`, `logId`. Retornar shape `{ status, detail: { message, code?, path?, location?, errors?, logId? } }`.
+```ts
+interface RelatedDocument { relationship: string; uuid: string }
+```
 
-### 2. Propagar el detalle al frontend y a bitácora
+FacturAPI v2 en **creación** espera `{ relationship, uuid }` (un objeto por UUID), no `{ relationship, documents: [...] }` (ese shape es lo que la API devuelve al *consultar*, agrupado). Como TypeScript no cachó el mismatch (usamos `payload: Record<string, unknown>` en `buildFacturapiPayload`), FacturAPI descarta el bloque silenciosamente al timbrar. Resultado: F988 quedó timbrada **sin relación 04 a F975**, por eso el SAT rechaza cancelar F975 con motivo 01.
 
-**Archivo:** `supabase/functions/facturapi-cancelar/index.ts`
+Además, el pre-flight (`verificarRelacionSustitutaSAT`) sólo revisa `documents: string[]`; el shape real remoto es `documents: [{uuid, ...}]` (objetos), así que hubiera dejado pasar la petición aunque la relación existiera. Doble ceguera.
 
-- Incluir `code` y `errors[]` en la fila de bitácora `facturapi_cancelar_failed`.
-- Enriquecer el `message` humano que vuelve al frontend con el `code` cuando existe (`[SAT CFDI40147] …`).
+## Plan
 
-### 3. Pre-flight cuando motivo=01
+### 1. Corregir el payload de emisión (raíz del bug)
 
-**Archivo:** `supabase/functions/facturapi-cancelar/cancelacion.ts`
+**Archivo:** `supabase/functions/facturapi-emitir/helpers.ts`
 
-Antes de llamar `invoices.cancel`:
+- Cambiar el shape a `[{ relationship: "04", uuid: ctx.sustituye_uuid }]`.
+- Ajustar el tipo local `related_documents` a `Array<{ relationship: string; uuid: string }>`.
+- Añadir test en `helpers_test.ts` (si existe) que asegure el nuevo shape.
 
-- Si `motivo === "01"` con `sustituidaPorFacturaId`, hacer `facturapi.invoices.retrieve(sustitutaFacturapiId)` y verificar que `related_documents` contiene un bloque `{ relationship: "04", documents: [<uuid_F975>] }`.
-- Si no, responder 422 con un mensaje accionable: “La factura sustituta F988 no referencia a F975 con relación SAT 04. Vuelve a timbrar la sustituta desde el asistente de sustitución.”
-
-Esto convierte el 400 críptico de FacturAPI en un mensaje que el usuario puede accionar solo.
-
-### 4. Enriquecer `enrichCancelacionErrorMessage`
+### 2. Endurecer pre-flight para soportar ambos shapes
 
 **Archivo:** `supabase/functions/facturapi-cancelar/cancelacion.ts`
 
-Agregar patrones para:
+`verificarRelacionSustitutaSAT` debe reconocer **ambas** formas que puede devolver `retrieve`:
+- `documents: string[]` (UUIDs)
+- `documents: Array<{ uuid: string }>` (objetos)
+- fallback `uuid: string` a nivel del bloque
 
-- `motivo/motive.*(no.*(v[aá]lido|especificado))` → guía: “FacturAPI rechazó el motivo. Suele ocurrir cuando la sustituta no fue timbrada con relación 04 al UUID original, o cuando la original tiene notas de crédito/REP ligados. Usa **Consultar en FacturAPI** para comparar.”
+Y añadir logging: si `retrieve` falla o si la relación no se encuentra, incluir en la bitácora el `related_documents` remoto tal cual, para futuros diagnósticos.
 
-### 5. UX: acción “Consultar en FacturAPI” en el modal de cancelación
+### 3. Retornar diagnóstico enriquecido al frontend cuando falle pre-flight
 
-**Archivo:** `src/features/facturacion/components/DialogCancelarFactura.tsx`
+Cuando el pre-flight detecte que falta la relación 04, además del mensaje actual, devolver también `remote_related_documents` (el bloque crudo) para poder mostrarlo en el toast/dialog. UI opcional: agregar link "Consultar en FacturAPI" al toast de error de cancelación (ya existe el componente).
 
-Cuando `cancelar.error` esté presente, mostrar un botón secundario “Consultar en FacturAPI” que abra `DialogConsultarFacturapi` para la factura actual (ya existe el hook). Cierra el modal de cancelación y abre el de consulta.
+### 4. Guía al usuario para recuperar F975/F988
 
-### 6. Versionado
+Como F988 ya se timbró con el shape incorrecto, **no existe relación 04 en el SAT**. El usuario tiene que:
 
-- `APP_VERSION` → `13.301.25`
-- Entrada en `CHANGELOG.md`.
+1. Cancelar F988 con **motivo 02** ("errores sin relación") — F988 no tiene dependientes.
+2. Volver a "Sustituir CFDI" desde F975 para generar una nueva sustituta (ya con el fix aplicado, quedará con la relación 04 correcta).
+3. Cancelar F975 con motivo 01 apuntando a la nueva sustituta.
+
+Se documentará este flujo de recuperación en el CHANGELOG.
+
+### 5. Versionado y changelog
+
+- `APP_VERSION` → `13.301.27`
+- Entrada en `CHANGELOG.md` describiendo:
+  - Bug del shape `related_documents` al timbrar sustitutas.
+  - Pre-flight ampliado para reconocer ambos shapes remotos.
+  - Nota de recuperación manual para facturas sustitutas timbradas antes del fix.
+
+### 6. Verificación
+
+- `bun run ci:fast` (lint + typecheck + vitest + deno tests) verde.
+- Test unitario nuevo en `helpers.ts` de facturapi-emitir validando el shape `{relationship, uuid}`.
 
 ## Detalles técnicos
 
-- La forma real del error del SDK `facturapi@4.18.0` es una clase `FacturapiError` con propiedades planas (verificado en bundle CJS `dist/index.cjs.js`): `{message, status, code, path, location, errors, logId, headers}`. NO existe `err.response.data`.
-- El `retrieve` extra sólo se hace cuando motivo=01, así que no impacta la ruta feliz de 02/03/04.
-- La verificación de `related_documents` es idempotente y no muta estado.
-- Se añade test unitario ligero para `describeFacturapiError` (asegurar que preserva `code` y `errors`).
-
-## Verificación
-
-1. `bun run ci:fast` (lint + typecheck + vitest) verde.
-2. Reintentar cancelación de F975 en preview:
-   - Si F988 no tiene relación 04 → toast claro sugiriendo re-timbrar la sustituta.
-   - Si sí la tiene y el error persiste → bitácora ahora incluirá `code` y `errors[]` para siguiente iteración.
+- SDK confirmado inspeccionando el tarball de `facturapi@4.18.0`:
+  - `dist/types/common.d.ts:87` → `interface RelatedDocument { relationship: string; uuid: string }`
+  - `dist/types/invoice.d.ts:64` → `related_documents?: RelatedDocument[] | null`
+- El shape con `documents: [...]` sólo aparece en la respuesta de `GET /invoices/:id` (agrupado por relación).
+- No se requiere migración de BD.
+- No se toca la lógica de cancelación en sí (SDK call ya es correcta); todo el fix vive del lado del **timbrado** de la sustituta más las verificaciones/observabilidad.
