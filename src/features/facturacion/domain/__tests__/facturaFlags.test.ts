@@ -70,11 +70,29 @@ describe("deriveFacturaFlags", () => {
 
   it("Ya sustituida (sustituida_por presente) → no puede cancelar ni sustituir de nuevo", () => {
     const r = deriveFacturaFlags(
-      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, sustituida_por: "otra-id" },
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, sustituida_por: "otra-id", sustituida_por_ref: { estado: "Emitida" } },
       true,
     );
     expect(r.puedeCancelarCfdi).toBe(false);
     expect(r.puedeSustituirCfdi).toBe(false);
+  });
+
+  it("Sustituta previa Cancelada → la original vuelve a estar disponible", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, sustituida_por: "otra-id", sustituida_por_ref: { estado: "Cancelada" } },
+      true,
+    );
+    expect(r.puedeCancelarCfdi).toBe(true);
+    expect(r.puedeSustituirCfdi).toBe(true);
+  });
+
+  it("Sustituta previa Sustituida → la original vuelve a estar disponible", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, sustituida_por: "otra-id", sustituida_por_ref: { estado: "Sustituida" } },
+      true,
+    );
+    expect(r.puedeCancelarCfdi).toBe(true);
+    expect(r.puedeSustituirCfdi).toBe(true);
   });
 
 

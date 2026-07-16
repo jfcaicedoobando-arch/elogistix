@@ -28,6 +28,7 @@ import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/de
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
+import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -86,6 +87,13 @@ export default function FacturaDetalle() {
         moneda={factura.moneda}
         ambiente={factura.ambiente}
       />
+
+      {factura.sustituida_por && factura.sustituida_por_ref?.estado === "Cancelada" && (
+        <SustitutaCanceladaBanner
+          sustitutaId={factura.sustituida_por}
+          sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
+        />
+      )}
 
       <FacturaDetalleActionsBar
         factura={factura}
