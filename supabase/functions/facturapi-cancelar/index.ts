@@ -14,17 +14,21 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
-import { descargarAcuseCancelacion } from "./descargarAcuse.ts";
+import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { validateCancelacionInput, type CancelacionInput } from "./helpers.ts";
-import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { handleDescargarAcusePdf, handleDescargarAcuseXml } from "./acuseHandlers.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
-  enrichCancelacionErrorMessage,
+  handleCancelFailure,
   resolveSustitutaSnapshot,
-  revertirProformasCancelacion,
+  runPreflightSustitucion,
 } from "./cancelacion.ts";
+import {
+  handleAceptada,
+  handleEstadoDesconocido,
+  handlePendiente,
+  handleRechazada,
+} from "./terminales.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -104,14 +108,27 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
   if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
   const facturapi = resolved.data.client;
 
+  // Pre-flight motivo 01: verificar related_documents relación 04.
+  if (motivo === "01" && sustituyeFacturapiId) {
+    const preflight = await runPreflightSustitucion({
+      supabase,
+      facturapi: facturapi as { invoices: { retrieve: (id: string) => Promise<unknown> } },
+      facturaId: factura_id,
+      organizationId: factura.organization_id,
+      usuarioId: userData.user.id,
+      usuarioEmail: userData.user.email,
+      motivo,
+      sustituyeFacturapiId,
+      sustituidaPorFacturaId,
+    });
+    if (preflight) return preflight;
+  }
+
   // FacturApi devuelve tanto `status` (valid/canceled) como `cancellation_status`
-  // (none|verifying|pending|accepted|rejected|expired). El segundo es el que
-  // realmente refleja si el SAT ya aceptó la cancelación o si el receptor
-  // todavía tiene 72 h para responder (regla 2.7.1.34 RMF).
+  // (none|verifying|pending|accepted|rejected|expired).
   interface FapiCancelResponse { status?: string; cancellation_status?: string }
   let cancelResp: FapiCancelResponse;
   try {
-    // `substitution` requiere el facturapi_id (ObjectId) de la factura sustituta.
     const cancelPayload: { motive: string; substitution?: string } = { motive: motivo };
     if (sustituyeFacturapiId) cancelPayload.substitution = sustituyeFacturapiId;
     cancelResp = await facturapi.invoices.cancel(
@@ -119,160 +136,46 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
       cancelPayload,
     ) as FapiCancelResponse;
   } catch (err) {
-    const { status, detail } = describeFacturapiError(err);
-    await registrarBitacoraEdge(supabase, {
+    return await handleCancelFailure({
+      err,
+      supabase,
+      facturaId: factura_id,
       organizationId: factura.organization_id,
       usuarioId: userData.user.id,
       usuarioEmail: userData.user.email,
-      modulo: "facturacion",
-      accion: "facturapi_cancelar_failed",
-      entidadId: factura_id,
-      detalles: { status, response: detail },
     });
-    const rawMessage = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    const { message, transient } = enrichCancelacionErrorMessage(rawMessage);
-    return jsonResponse({ error: "facturapi_error", status, detail, message, transient }, 502);
   }
 
   const cancellationStatus = (cancelResp.cancellation_status ?? "none").toLowerCase();
   const invoiceStatus = (cancelResp.status ?? "").toLowerCase();
   const esSustitucion = motivo === "01" && !!sustituidaPorFacturaId;
-
-  // Terminal aceptado = el SAT confirmó cancelación. `status: 'canceled'` sin
-  // `cancellation_status` (respuesta antigua o motivo que no requiere ack)
-  // también cae aquí.
   const esAceptada = cancellationStatus === "accepted" || (invoiceStatus === "canceled" && cancellationStatus === "none");
   const esPendiente = cancellationStatus === "pending" || cancellationStatus === "verifying";
   const esRechazada = cancellationStatus === "rejected" || cancellationStatus === "expired";
-
-  if (esRechazada) {
-    // El SAT rechazó (raro que ocurra en el mismo request, pero se maneja).
-    await registrarBitacoraEdge(supabase, {
-      organizationId: factura.organization_id,
-      usuarioId: userData.user.id,
-      usuarioEmail: userData.user.email,
-      modulo: "facturacion",
-      accion: "facturapi_cancelacion_rechazada",
-      entidadId: factura_id,
-      detalles: { cancellation_status: cancellationStatus },
-    });
-    await supabase.from("facturas").update({ cancellation_status: cancellationStatus }).eq("id", factura_id);
-    return jsonResponse({
-      ok: false,
-      cancellation_status: cancellationStatus,
-      message: cancellationStatus === "expired"
-        ? "El plazo de 72 h expiró sin respuesta del receptor. Reintenta la solicitud."
-        : "El receptor rechazó la cancelación desde su Buzón Tributario.",
-    }, 409);
-  }
-
   const nowIso = new Date().toISOString();
-
-  if (esPendiente) {
-    // Aceptación pendiente: NO cambiamos `estado` (sigue Emitida/Timbrada),
-    // NO revertimos proformas, NO descargamos acuse todavía. Sólo registramos
-    // la solicitud y la fecha estimada de vencimiento (silencio positivo 72 h).
-    const { data: vence } = await supabase.rpc("calc_cancelacion_vence", { p_solicitada: nowIso });
-    const pendingPatch: Record<string, unknown> = {
-      cancellation_status: cancellationStatus,
-      cancelacion_motivo: motivo,
-      cancelacion_solicitada_en: nowIso,
-      cancelacion_vence_en: vence ?? null,
-    };
-    // Guardar `sustituida_por` desde ya para que el webhook/cron sepa que fue sustitución.
-    if (esSustitucion) pendingPatch.sustituida_por = sustituidaPorFacturaId;
-
-    const { error: updErr } = await supabase.from("facturas").update(pendingPatch).eq("id", factura_id);
-    if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
-
-    await registrarBitacoraEdge(supabase, {
-      organizationId: factura.organization_id,
-      usuarioId: userData.user.id,
-      usuarioEmail: userData.user.email,
-      modulo: "facturacion",
-      accion: "facturapi_cancelacion_solicitada",
-      entidadId: factura_id,
-      detalles: {
-        motivo,
-        cancellation_status: cancellationStatus,
-        sustituida_por_factura_id: sustituidaPorFacturaId,
-        vence_en: vence ?? null,
-      },
-    });
-
-    return jsonResponse({
-      ok: true,
-      pending: true,
-      cancellation_status: cancellationStatus,
-      vence_en: vence ?? null,
-      message: "Cancelación enviada al SAT. El receptor tiene hasta 72 h hábiles para aceptar o rechazar (silencio positivo).",
-    });
-  }
-
-  // Camino aceptada (terminal): mantiene el flujo histórico intacto.
-  if (!esAceptada) {
-    // Estado inesperado — registrar y reportar sin cambiar la factura.
-    await registrarBitacoraEdge(supabase, {
-      organizationId: factura.organization_id,
-      usuarioId: userData.user.id,
-      modulo: "facturacion",
-      accion: "facturapi_cancelacion_estado_desconocido",
-      entidadId: factura_id,
-      detalles: { cancellation_status: cancellationStatus, invoice_status: invoiceStatus },
-    });
-    return jsonResponse({
-      ok: false,
-      cancellation_status: cancellationStatus,
-      message: `FacturApi devolvió un estado inesperado: ${cancellationStatus || invoiceStatus}.`,
-    }, 502);
-  }
-
-  const acuse = await descargarAcuseCancelacion(factura.facturapi_id!, resolved.data.apiKey);
-  const updatePayload: Record<string, unknown> = {
-    estado: esSustitucion ? "Sustituida" : "Cancelada",
-    cancellation_status: "accepted",
-    cancelacion_motivo: motivo,
-    cancelado_en: nowIso,
-    cancelacion_solicitada_en: nowIso,
-    acuse_cancelacion_xml: acuse.xml,
-    acuse_cancelacion_fecha: acuse.xml ? nowIso : null,
-    acuse_cancelacion_status: acuse.status,
-  };
-  if (esSustitucion) updatePayload.sustituida_por = sustituidaPorFacturaId;
-
-  const { error: updErr } = await supabase
-    .from("facturas")
-    .update(updatePayload)
-    .eq("id", factura_id);
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
-
-  const proformasRevertidas = esSustitucion
-    ? []
-    : await revertirProformasCancelacion(supabase, factura_id);
-
-  await registrarBitacoraEdge(supabase, {
+  const baseCtx = {
+    supabase,
+    facturaId: factura_id,
     organizationId: factura.organization_id,
     usuarioId: userData.user.id,
     usuarioEmail: userData.user.email,
-    modulo: "facturacion",
-    accion: esSustitucion ? "facturapi_sustituida" : "facturapi_cancelada",
-    entidadId: factura_id,
-    detalles: {
-      motivo,
-      cancellation_status: "accepted",
-      sustituye_uuid: sustituye_uuid ?? null,
-      sustituida_por_factura_id: sustituidaPorFacturaId,
-      proformas_revertidas: proformasRevertidas,
-    },
-  });
+    motivo,
+    esSustitucion,
+    sustituidaPorFacturaId,
+  };
 
-  return jsonResponse({
-    ok: true,
-    status: cancelResp.status ?? "canceled",
-    cancellation_status: "accepted",
-    sustituida: esSustitucion,
-    acuse_status: acuse.status,
-    acuse_guardado: !!acuse.xml,
+  if (esRechazada) return await handleRechazada({ ...baseCtx, cancellationStatus });
+  if (esPendiente) return await handlePendiente({ ...baseCtx, cancellationStatus, nowIso });
+  if (!esAceptada) return await handleEstadoDesconocido({ ...baseCtx, cancellationStatus, invoiceStatus });
+
+  return await handleAceptada({
+    ...baseCtx,
+    nowIso,
+    facturapiId: factura.facturapi_id!,
+    apiKey: resolved.data.apiKey,
+    sustituyeUuid: sustituye_uuid,
+    cancelStatusHint: cancelResp.status,
   });
 }));
+
 
