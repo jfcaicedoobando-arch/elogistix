@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.1] - 2026-07-16
+- **fix(facturacion) Batch E — Cierre del overhaul de sustitución CFDI**:
+  - **Cron real**: se agenda `facturapi-reconciliar-cancelaciones` en pg_cron cada 30 min (antes existía la edge pero no el schedule; las cancelaciones asíncronas nunca se reconciliarían).
+  - **Webhook preserva "Sustituida"**: `mapEventToFacturaPatch` marca `preserva_sustituida` en eventos `invoice.status_updated status=canceled` e `invoice.canceled`. El handler ahora consulta `estado` y `sustituida_por` de la factura y omite el `estado` del patch cuando aplica, evitando degradar "Sustituida" → "Cancelada" si el webhook llega antes que el cron.
+  - **Guard en el diálogo**: `DialogSustituirFactura` consulta el estado del borrador vía React Query; deshabilita "Cancelar original" hasta que la sustituta esté timbrada (UUID + estado `Emitida`), y auto-reinicia si el borrador fue eliminado externamente. Se elimina el wrapper muerto de `onOpenChange`.
+  - **Tests**: `helpers_test.ts` cubre los 4 sub-estados de `invoice.cancellation_status_updated` (accepted/pending/rejected/expired), el fallback sin `cancellation_status`, y el flag `preserva_sustituida` en las tres rutas.
+
 ## [13.301.0] - 2026-07-15
 - **feat(facturacion) Overhaul flujo sustitución CFDI (batches A-D)**: reescribe el ciclo asíncrono de cancelaciones alineado con el modelo de FacturApi v2 y la regla SAT 2.7.1.34.
   - **Batch A (BD + edge cancelar)**: `facturas` gana columnas `cancellation_status` (`none|verifying|pending|accepted|rejected|expired`), `cancelacion_solicitada_en`, `cancelacion_vence_en` + índice parcial para reconciliación + helper SQL `calc_cancelacion_vence` (72 h hábiles aproximadas). `facturapi-cancelar` ya NO marca la factura como Cancelada/Sustituida cuando FacturApi devuelve `pending`/`verifying`: guarda la solicitud y la fecha de vencimiento, sin revertir proformas ni descargar acuse. El estado Cancelada/Sustituida sólo aplica cuando el SAT confirma `accepted` (o `canceled` sin ack, motivos 03/04).
