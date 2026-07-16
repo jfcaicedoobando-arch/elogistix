@@ -189,6 +189,14 @@ export default function FacturaDetalle() {
         isPending={eliminando}
         onConfirm={() => eliminar(factura.id)}
       />
+
+      <DialogConsultarFacturapi
+        facturaId={factura.id}
+        numero={factura.numero}
+        open={consultarOpen}
+        onOpenChange={setConsultarOpen}
+      />
     </PageContainer>
+
   );
 }
