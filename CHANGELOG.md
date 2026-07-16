@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.23] - 2026-07-16
+- **fix(facturacion)**: en el flujo de sustitución CFDI, tras timbrar el borrador sustituto el botón "Volver" del detalle regresaba al listado en lugar de a la factura original, obligando a buscarla de nuevo para el paso final de cancelación. Ahora `FacturaDetalle` detecta (vía `findOriginalFacturaIdFor` sobre `sessionStorage`) si la factura actual es el borrador sustituto de otra y, en ese caso, "Volver" navega a `/facturacion/<originalId>` con etiqueta "Volver a factura F975". Deep-links directos y facturas fuera del flujo conservan el comportamiento original ("Volver" → `/facturacion`).
+
 ## [13.301.22] - 2026-07-16
 - **fix(facturacion)**: el badge "En cancelación" aparecía en el detalle de la factura pero no en la lista de facturas emitidas. Causa: el RPC `facturas_listado` (fuente del listado) no devolvía `cancellation_status`, así que `facturacionColumns` recibía siempre `null` y `deriveFacturaBadgeEstado` no podía derivar el estado ámbar. Se agrega la columna al RETURNS TABLE del RPC y se propaga en `FacturaListItem` + `fetchFacturasListado` (`services/facturasCrud.ts`). Ahora F971 (y cualquier factura con `estado='Emitida'` + `cancellation_status='pending'/'verifying'`) muestra el badge ámbar tanto en detalle como en el listado.
 
