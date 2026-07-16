@@ -28,6 +28,7 @@ import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/de
 import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/FacturaDetalleHeader";
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
+import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
