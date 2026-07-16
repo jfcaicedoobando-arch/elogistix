@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.14] - 2026-07-16
+- **chore(ci)**: nuevo script `bun run ci:fast` que corre `lint --max-warnings 0`, `typecheck` y `test:fast --reporter=dot --bail=1` en paralelo (`scripts/ci-fast.sh`). Cada tarea escribe en su propio log temporal y sólo se imprimen las últimas 60 líneas si falla, para detectar regresiones en minutos en vez de decenas de minutos.
+
 ## [13.301.13] - 2026-07-16
 - **chore(arch)**: split Power-of-10 — `facturapi.ts` (245→200) mueve `consultarEstadoFacturapi` a `facturapiConsultar.ts`; `FacturaDetalle.tsx` (205→184) extrae `FacturaDetalleFooterDialogs.tsx` (borrar borrador + verificar estatus). `facturapi-consultar` añadida a `WRAPPED_COVERAGE` (sentry-edge-coverage) y a `CRITICAL` (sentry-edge-wrapping). CI en verde.
 
