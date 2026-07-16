@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Ban, Info, CheckCircle2, ArrowRight } from "lucide-react";
+import { Ban, Info, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
