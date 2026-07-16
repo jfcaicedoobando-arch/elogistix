@@ -246,29 +246,9 @@ Deno.serve(wrapEdgeHandler("facturapi-cancelar", async (req) => {
     .eq("id", factura_id);
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
-  const proformasRevertidas: Array<{ id: string; estado: string }> = [];
-  if (!esSustitucion) {
-    const { data: proformasLigadas } = await supabase
-      .from("proformas")
-      .select("id, factura_id, factura_secundaria_id")
-      .or(`factura_id.eq.${factura_id},factura_secundaria_id.eq.${factura_id}`);
-    for (const pf of proformasLigadas ?? []) {
-      const nuevoFacturaId = pf.factura_id === factura_id ? null : pf.factura_id;
-      const nuevoFacturaSecId = pf.factura_secundaria_id === factura_id ? null : pf.factura_secundaria_id;
-      const ambosNulos = !nuevoFacturaId && !nuevoFacturaSecId;
-      const patch: Record<string, unknown> = {
-        factura_id: nuevoFacturaId,
-        factura_secundaria_id: nuevoFacturaSecId,
-      };
-      if (ambosNulos) {
-        patch.estado_proforma = "pendiente";
-        patch.fecha_facturacion = null;
-        patch.folio_factura_externa = null;
-      }
-      const { error: upPfErr } = await supabase.from("proformas").update(patch).eq("id", pf.id);
-      if (!upPfErr) proformasRevertidas.push({ id: pf.id, estado: ambosNulos ? "pendiente" : "facturada" });
-    }
-  }
+  const proformasRevertidas = esSustitucion
+    ? []
+    : await revertirProformasCancelacion(supabase, factura_id);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: factura.organization_id,
