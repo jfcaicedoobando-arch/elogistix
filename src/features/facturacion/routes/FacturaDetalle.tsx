@@ -88,6 +88,13 @@ export default function FacturaDetalle() {
         ambiente={factura.ambiente}
       />
 
+      {factura.sustituida_por && factura.sustituida_por_ref?.estado === "Cancelada" && (
+        <SustitutaCanceladaBanner
+          sustitutaId={factura.sustituida_por}
+          sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
+        />
+      )}
+
       <FacturaDetalleActionsBar
         factura={factura}
         canEdit={canEdit}
