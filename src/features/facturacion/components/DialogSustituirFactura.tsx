@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { duplicarFacturaParaSustitucion } from "@/features/facturacion/services/facturapi";
+import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFactura";
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
