@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.18] - 2026-07-16
+- **fix(facturacion)**: KPI "Facturado mes" y tendencia de 6 meses ya no incluyen borradores. Antes la consulta usaba `.neq("estado","Cancelada")`, lo que dejaba pasar facturas `Borrador` (aún no timbradas) e inflaba la cifra en cuanto había un draft (típicamente creado por el wizard de sustitución) con `fecha_emision` en el mes. Ahora se usa lista blanca `ESTADOS_FACTURADO = ["Emitida","Parcialmente pagada","Vencida","Pagada"]` en `services/dashboardEjecutivo.ts`, alineada con `cobranza.ts` y `estadoCuenta.ts`. `utils/sumarFacturas.ts` (footer de la tabla de Emitidas) también salta borradores para mantener consistencia con el KPI. Tooltip del KPI y tests actualizados.
+
 ## [13.301.17] - 2026-07-16
 - **feat(facturacion)**: el badge de estado de factura ahora distingue "En cancelación" (ámbar) mientras el SAT no confirma la aceptación (`acuse_cancelacion_status != 'accepted'`) del rojo "Cancelada" definitiva, y registra "Sustituida" (gris con borde destructive tenue). Aplica en el detalle (`FacturaDetalleHeader`) y en la tabla de facturación (`facturacionColumns`). Nuevo helper puro `deriveFacturaBadgeEstado` + tests. Migración: el RPC `facturas_listado` ahora devuelve `acuse_cancelacion_status`.
 

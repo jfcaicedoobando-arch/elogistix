@@ -82,4 +82,18 @@ describe("sumarFacturasPorMoneda", () => {
     expect(r.mxnEquivalente).toBe(0);
     expect(r.conteo).toBe(2);
   });
+
+  it("ignora borradores (no cuentan como facturado ni como canceladas)", () => {
+    const r = sumarFacturasPorMoneda([
+      { total: 100, moneda: "MXN", estado: "Emitida" },
+      { total: 500, moneda: "MXN", estado: "Borrador" },
+      { total: 200, moneda: "USD", estado: "Borrador", tipo_cambio: 20 },
+      { total: 999, moneda: "MXN", estado: "Cancelada" },
+    ]);
+    expect(r.totalMxn).toBe(100);
+    expect(r.totalUsd).toBe(0);
+    expect(r.mxnEquivalente).toBe(100);
+    expect(r.conteo).toBe(1);
+    expect(r.conteoCanceladas).toBe(1);
+  });
 });

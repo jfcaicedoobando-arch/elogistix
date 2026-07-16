@@ -11,6 +11,13 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Estados que representan una factura efectivamente facturada (timbrada) para
+ * los KPIs de "Facturado mes" y la tendencia. Excluye `Borrador` (aún no
+ * timbrado) y `Cancelada` (revertida).
+ */
+export const ESTADOS_FACTURADO = ["Emitida", "Parcialmente pagada", "Vencida", "Pagada"] as const;
+
 export interface MesKpi {
   mes: string; // 'YYYY-MM'
   facturado_mxn: number;
@@ -113,7 +120,7 @@ export async function fetchDashboardEjecutivoFacturacion(
     .from("facturas")
     .select("fecha_emision, total, moneda, tipo_cambio, estado")
     .gte("fecha_emision", desdeIso)
-    .neq("estado", "Cancelada")
+    .in("estado", [...ESTADOS_FACTURADO])
     .is("deleted_at", null)
     .limit(5000);
   if (organizationId) qFacturas = qFacturas.eq("organization_id", organizationId);
