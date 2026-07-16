@@ -48,6 +48,7 @@ export type FacturaDetalle = Pick<
   | "cancellation_status"
   | "cancelacion_solicitada_en"
   | "cancelacion_vence_en"
+  | "sustituye_a"
 > & {
   proformas: { numero: string } | null;
 };
@@ -92,6 +93,7 @@ const COLUMNS = [
   "cancellation_status",
   "cancelacion_solicitada_en",
   "cancelacion_vence_en",
+  "sustituye_a",
   "proformas:proformas!facturas_proforma_id_fkey(numero)",
 ].join(", ");
 
