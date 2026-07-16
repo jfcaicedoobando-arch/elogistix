@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import { Ban, Info, CheckCircle2 } from "lucide-react";
+import { Ban } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { MOTIVOS_CANCELACION_SAT } from "@/constants/catalogosSAT";
@@ -12,6 +11,7 @@ import type { MotivoCancelacionSat } from "@/features/facturacion/services/factu
 import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFactura";
 import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
 import { SelectorSustituta } from "@/features/facturacion/components/cancelacion/SelectorSustituta";
+import { BannersCondicionesSAT } from "@/features/facturacion/components/cancelacion/BannersCondicionesSAT";
 
 interface Props {
   facturaId: string | null;
