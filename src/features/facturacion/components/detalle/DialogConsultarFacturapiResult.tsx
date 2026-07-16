@@ -152,4 +152,3 @@ export function DialogConsultarFacturapiResult({ data, facturaId }: Props) {
     </div>
   );
 }
-}
