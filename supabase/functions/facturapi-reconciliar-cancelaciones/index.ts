@@ -149,8 +149,11 @@ Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) =>
       resumen.errores += lote.length;
       continue;
     }
+    const ctx: ReconcileCtx = {
+      supabase, facturapi: resolved.data.client, apiKey: resolved.data.apiKey, orgId, resumen,
+    };
     for (const factura of lote) {
-      await reconcileOne(supabase, resolved.data.client, resolved.data.apiKey, factura, orgId, resumen);
+      await reconcileOne(ctx, factura);
     }
   }
 
