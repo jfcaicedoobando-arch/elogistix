@@ -52,8 +52,8 @@ function buildFacturadoUi(facturasSinTc: number): FacturadoUi {
     label: sinTc ? "Facturado mes ⚠️" : "Facturado mes",
     tone: sinTc ? "warn" : "default",
     hint: sinTc
-      ? `Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas. ⚠️ ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
-      : "Facturas emitidas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.",
+      ? `Facturas timbradas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (o TC del día como fallback). Excluye canceladas y borradores. ⚠️ ${facturasSinTc} factura(s) USD con TC inválido (vacío o ≤1) y sin TC del día disponible están excluidas — corrige el TC en cada factura para que cuadre.`
+      : "Facturas timbradas del mes en curso, convertidas a MXN con el tipo de cambio de cada factura (TC inválido como ≤1 se reemplaza con el TC del día). Excluye canceladas y borradores. En la tabla de Emitidas usa el preset 'Este mes' para cuadrar.",
   };
 }
 
