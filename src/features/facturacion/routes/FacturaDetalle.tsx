@@ -100,8 +100,10 @@ export default function FacturaDetalle() {
         onSustituir={() => setSustituirOpen(true)}
         onCancelar={() => setCancelarOpen(true)}
         onEliminar={() => setEliminarOpen(true)}
+        onConsultar={() => setConsultarOpen(true)}
         onDownload={handleDownload}
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
