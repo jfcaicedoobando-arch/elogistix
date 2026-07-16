@@ -7923,6 +7923,7 @@ export type Database = {
         Returns: {
           acuse_cancelacion_status: string
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"]
+          cancellation_status: string
           cliente_nombre: string
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
