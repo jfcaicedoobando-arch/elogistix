@@ -81,6 +81,22 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
   const navigate = useNavigate();
   const cancelar = useCancelarFactura();
 
+  // Consulta el estado de la sustituta para decidir si "Cancelar original" está listo.
+  // Si el borrador fue eliminado (returns null), limpiamos sessionStorage huérfano.
+  const sustitutaQuery = useQuery({
+    queryKey: ["factura-sustituta-estado", nuevaId],
+    enabled: !!nuevaId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("facturas")
+        .select("id, estado, uuid_fiscal")
+        .eq("id", nuevaId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Restaurar progreso al abrir el diálogo si ya existe borrador sustituto.
   useEffect(() => {
     if (!open || !facturaId) return;
@@ -93,6 +109,17 @@ export function DialogSustituirFactura({ facturaId, numero, uuidOriginal, open, 
       setStep("intro");
     }
   }, [open, facturaId]);
+
+  // Detectar borrador huérfano (eliminado externamente) y reiniciar automáticamente.
+  useEffect(() => {
+    if (step !== "confirmar" || !nuevaId || sustitutaQuery.isLoading) return;
+    if (sustitutaQuery.data === null && facturaId) {
+      clearPersisted(facturaId);
+      toast.info("El borrador sustituto ya no existe. Reinicia el proceso.");
+      setNuevaId(null);
+      setStep("intro");
+    }
+  }, [step, nuevaId, sustitutaQuery.data, sustitutaQuery.isLoading, facturaId]);
 
   if (!facturaId) return null;
 
