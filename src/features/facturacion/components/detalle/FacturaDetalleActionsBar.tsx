@@ -107,6 +107,13 @@ function buildMore(props: Props): DetalleActionItem[] {
       href: `/embarques/${factura.embarque_id}`,
     });
   }
+  if (factura.facturapi_id) {
+    items.push({
+      id: "consultar-facturapi", label: "Verificar estatus en FacturApi",
+      icon: SearchCheck, onClick: props.onConsultar,
+    });
+  }
+
   if (flags.puedeSustituirCfdi) {
     items.push({ id: "sustituir", label: "Sustituir CFDI", icon: Replace, onClick: props.onSustituir });
   }
