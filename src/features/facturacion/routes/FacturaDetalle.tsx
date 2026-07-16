@@ -13,6 +13,8 @@ import { FacturaDetalleFooterDialogs } from "@/features/facturacion/components/d
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
+import { useFactura } from "@/features/facturacion/hooks/useFactura";
+import { findOriginalFacturaIdFor } from "@/features/facturacion/components/sustitucion/persistence";
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
 import { useFacturaDetalleController } from "@/features/facturacion/hooks/useFacturaDetalleController";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
