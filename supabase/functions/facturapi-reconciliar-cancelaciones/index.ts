@@ -31,6 +31,19 @@ interface FapiInvoiceStatus {
   cancellation_status?: string;
 }
 
+async function descargarAcuse(facturapiId: string, apiKey: string): Promise<{ xml: string | null; status: string }> {
+  try {
+    const res = await fetch(`${FACTURAPI_BASE}/invoices/${facturapiId}/cancellation_receipt/xml`, {
+      headers: { Authorization: basicAuthHeader(apiKey) },
+    });
+    if (res.status === 200) return { xml: await res.text(), status: "accepted" };
+    if (res.status === 404 || res.status === 425) return { xml: null, status: "pending" };
+    return { xml: null, status: `error_${res.status}` };
+  } catch {
+    return { xml: null, status: "error_network" };
+  }
+}
+
 Deno.serve(wrapEdgeHandler("facturapi-reconciliar-cancelaciones", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST" && req.method !== "GET") {
