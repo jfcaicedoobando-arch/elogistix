@@ -61,7 +61,8 @@ export function useNuevoProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
-  const esExtranjero = form.origen_proveedor === "Extranjero";
+
+
 
   const isStep1Valid = (): boolean => {
     if (!form.categoria) return false;
