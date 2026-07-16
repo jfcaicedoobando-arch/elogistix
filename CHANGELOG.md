@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.10] - 2026-07-16
+- **feat(facturacion)**: nueva acción "Verificar estatus en FacturApi" en el detalle de factura. Invoca `GET /v2/invoices/{id}` en vivo vía nueva edge function `facturapi-consultar`, compara `status` y `cancellation_status` contra la BD, muestra `related_documents` (útil cuando el SAT rechaza cancelación por REP/NC vinculada) y reconcilia la fila local automáticamente si detecta divergencia. Diagnóstico para casos en que FacturApi reporta la factura como válida pero el flujo local queda desincronizado.
+
 ## [13.301.9] - 2026-07-16
+
 - **fix(proveedores)**: al elegir categoría "Logístico" en el wizard de Nuevo Proveedor se preselecciona `tipo="Naviera"` como default (usuario puede cambiarlo en el mismo paso). Evita que `isStep1Valid` se quede en `false` silenciosamente tras el endurecimiento de `13.301.8` y arregla 3 tests unitarios de `useNuevoProveedorController` en shard 14.
 
 ## [13.301.8] - 2026-07-16
