@@ -50,7 +50,7 @@ export function DialogConsultarFacturapi({ facturaId, numero, open, onOpenChange
           </Alert>
         )}
 
-        {data && <DialogConsultarFacturapiResult data={data} />}
+        {data && <DialogConsultarFacturapiResult data={data} facturaId={facturaId} />}
 
         <DialogFooter className="gap-2">
           <Button
