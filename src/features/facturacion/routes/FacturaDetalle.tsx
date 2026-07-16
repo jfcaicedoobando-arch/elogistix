@@ -8,8 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { PageContainer } from "@/components/shared/PageContainer";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { DialogConsultarFacturapi } from "@/features/facturacion/components/detalle/DialogConsultarFacturapi";
+import { FacturaDetalleFooterDialogs } from "@/features/facturacion/components/detalle/FacturaDetalleFooterDialogs";
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
@@ -182,23 +181,16 @@ export default function FacturaDetalle() {
         cancelarOpen={cancelarOpen} setCancelarOpen={setCancelarOpen}
       />
 
-      <DoubleConfirmDeleteDialog
-        open={eliminarOpen}
-        onOpenChange={setEliminarOpen}
-        entityName={`borrador ${factura.numero}`}
-        description="Se eliminará el borrador de factura y la proforma volverá a estar disponible para convertir. Sólo se pueden eliminar borradores sin timbrar."
-        finalDescription="Esta acción es irreversible: se borran conceptos, la factura borrador y se revierte la proforma."
-        isPending={eliminando}
-        onConfirm={() => eliminar(factura.id)}
-      />
-
-      <DialogConsultarFacturapi
+      <FacturaDetalleFooterDialogs
         facturaId={factura.id}
         numero={factura.numero}
-        open={consultarOpen}
-        onOpenChange={setConsultarOpen}
+        eliminarOpen={eliminarOpen}
+        setEliminarOpen={setEliminarOpen}
+        eliminando={eliminando}
+        onEliminar={() => eliminar(factura.id)}
+        consultarOpen={consultarOpen}
+        setConsultarOpen={setConsultarOpen}
       />
     </PageContainer>
-
   );
 }

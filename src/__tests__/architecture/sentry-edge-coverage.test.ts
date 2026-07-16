@@ -58,6 +58,8 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/rep-retry-nocturno/index.ts",
   // 13.301.0 — Reconciliación async de cancelaciones CFDI
   "supabase/functions/facturapi-reconciliar-cancelaciones/index.ts",
+  // 13.301.11 — Consulta en vivo + reconciliación puntual
+  "supabase/functions/facturapi-consultar/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.13] - 2026-07-16
+- **chore(arch)**: split Power-of-10 — `facturapi.ts` (245→200) mueve `consultarEstadoFacturapi` a `facturapiConsultar.ts`; `FacturaDetalle.tsx` (205→184) extrae `FacturaDetalleFooterDialogs.tsx` (borrar borrador + verificar estatus). `facturapi-consultar` añadida a `WRAPPED_COVERAGE` (sentry-edge-coverage) y a `CRITICAL` (sentry-edge-wrapping). CI en verde.
+
 ## [13.301.12] - 2026-07-16
 - **chore(lint)**: extraído `handle` y `buildResponse` del `Deno.serve` en `facturapi-consultar/index.ts` para bajar la complejidad ciclomática del arrow (19 → <16). Lint en verde.
 

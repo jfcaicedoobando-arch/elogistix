@@ -177,7 +177,6 @@ export async function descargarAcuseCancelacionPdf(facturaId: string): Promise<B
   return data;
 }
 
-
 /**
  * Clona una factura timbrada como borrador para sustituirla (motivo SAT 01).
  * Devuelve el ID de la factura clonada (estado `Borrador`, con `sustituye_a` enlazado).
@@ -192,54 +191,10 @@ export async function duplicarFacturaParaSustitucion(facturaId: string): Promise
   return data as string;
 }
 
-export interface ConsultarFacturapiRelacionado {
-  relationship: string | null;
-  uuid?: string | null;
-  folio?: number | null;
-  serie?: string | null;
-  total?: number | null;
-  id?: string;
-}
+// consultarEstadoFacturapi() vive en ./facturapiConsultar.ts (split Power-of-10).
+export type { ConsultarFacturapiRelacionado, ConsultarFacturapiResult } from "./facturapiConsultar";
+export { consultarEstadoFacturapi } from "./facturapiConsultar";
 
-export interface ConsultarFacturapiResult {
-  ok: true;
-  reconciliada: boolean;
-  divergencias: string[];
-  remoto: {
-    status: string | null;
-    cancellation_status: string;
-    canceled_at: string | null;
-    uuid: string | null;
-    folio: number | null;
-    serie: string | null;
-    related_documents: ConsultarFacturapiRelacionado[];
-  };
-  local: {
-    estado: string | null;
-    cancellation_status: string;
-    uuid_fiscal: string | null;
-  };
-}
 
-/**
- * Consulta el estado en vivo de una factura en FacturApi
- * (`GET /v2/invoices/{id}`) y reconcilia BD si detecta divergencia.
- */
-export async function consultarEstadoFacturapi(
-  facturaId: string,
-): Promise<ConsultarFacturapiResult> {
-  const { data, error } = await supabase.functions.invoke<ConsultarFacturapiResult & EdgeErrorBody>(
-    "facturapi-consultar",
-    { body: { factura_id: facturaId } },
-  );
-  if (error) {
-    const body = await parseFunctionError(error);
-    throw toReadableError(error, body, "No se pudo consultar el estado en FacturApi.");
-  }
-  if (!data || data.error) {
-    throw toReadableError(null, data ?? {}, data?.error ?? "Respuesta vacía de FacturApi.");
-  }
-  return data;
-}
 
 

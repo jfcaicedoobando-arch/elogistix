@@ -50,6 +50,8 @@ const CRITICAL = [
   "supabase/functions/rep-retry-nocturno/index.ts",
   // 13.301.0 — Reconciliación async de cancelaciones CFDI (cron 30 min)
   "supabase/functions/facturapi-reconciliar-cancelaciones/index.ts",
+  // 13.301.11 — Consulta en vivo + reconciliación puntual de una factura
+  "supabase/functions/facturapi-consultar/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
