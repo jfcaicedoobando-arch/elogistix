@@ -31,6 +31,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Setup Bun + install
+        id: setup-bun
         uses: ./.github/actions/setup-bun
 
       # 13.274.0 — ESLint enforce React 19 discipline:
