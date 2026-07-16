@@ -83,9 +83,9 @@ export function useNuevoProveedorController(
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
     setForm((prev) => {
       const next = { ...prev, [field]: value } as NuevoProveedorForm;
-      // Al cambiar a Nacional, limpiamos `tipo` porque ya no aplica.
+      // Al cambiar a Nacional, limpiamos `pais` (aplica sólo a Agente de Carga extranjero).
+      // `tipo` SÍ se conserva porque también es requerido para Logístico nacional.
       if (field === "origen_proveedor" && value === "Nacional") {
-        next.tipo = null;
         next.pais = "";
       }
       return next;
