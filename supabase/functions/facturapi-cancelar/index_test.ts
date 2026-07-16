@@ -29,8 +29,6 @@ Deno.test("facturapi-cancelar: usa supabase.auth.getUser para validar JWT", () =
 
 Deno.test("facturapi-cancelar: registra fallo en bitacora_actividad si Facturapi rechaza", () => {
   // Auditoría: cancelaciones fallidas deben quedar trazadas.
-Deno.test("facturapi-cancelar: registra fallo en bitacora_actividad si Facturapi rechaza", () => {
-  // Auditoría: cancelaciones fallidas deben quedar trazadas.
   assertStringIncludes(bundleSource, "facturapi_cancelar_failed");
   assertStringIncludes(bundleSource, "facturapi_cancelada");
 });
