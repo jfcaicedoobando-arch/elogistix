@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.12] - 2026-07-16
+- **chore(lint)**: extraído `handle` y `buildResponse` del `Deno.serve` en `facturapi-consultar/index.ts` para bajar la complejidad ciclomática del arrow (19 → <16). Lint en verde.
+
 ## [13.301.11] - 2026-07-16
 - **chore(lint)**: reducida complejidad ciclomática en `DialogConsultarFacturapi.tsx` (extraído `DialogConsultarFacturapiResult.tsx` con subcomponentes `RemotoCard`/`LocalCard`/`DivergenciasAlert`/`RelacionadosList`) y en el handler de `facturapi-consultar` (helpers `loadFactura`, `fetchRemote`, `computeDivergencias`, `reconciliarSiAplica`, `flattenRelated`). CI `lint --max-warnings 0` en verde.
 
