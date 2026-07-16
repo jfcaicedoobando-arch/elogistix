@@ -177,7 +177,6 @@ export async function descargarAcuseCancelacionPdf(facturaId: string): Promise<B
   return data;
 }
 
-
 /**
  * Clona una factura timbrada como borrador para sustituirla (motivo SAT 01).
  * Devuelve el ID de la factura clonada (estado `Borrador`, con `sustituye_a` enlazado).
@@ -193,11 +192,9 @@ export async function duplicarFacturaParaSustitucion(facturaId: string): Promise
 }
 
 // consultarEstadoFacturapi() vive en ./facturapiConsultar.ts (split Power-of-10).
-export type {
-  ConsultarFacturapiRelacionado,
-  ConsultarFacturapiResult,
-} from "./facturapiConsultar";
+export type { ConsultarFacturapiRelacionado, ConsultarFacturapiResult } from "./facturapiConsultar";
 export { consultarEstadoFacturapi } from "./facturapiConsultar";
+
 
 
 
