@@ -75,7 +75,12 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
         patch.estado = "Timbrada";
       }
       if (Object.keys(patch).length === 0) return null;
-      return { facturapi_id, patch, bitacora_accion: "facturapi_webhook_status" };
+      return {
+        facturapi_id,
+        patch,
+        bitacora_accion: "facturapi_webhook_status",
+        preserva_sustituida: status === "canceled",
+      };
     }
     case "invoice.canceled":
       return {
@@ -86,6 +91,7 @@ export function mapEventToFacturaPatch(ev: FacturapiWebhookEvent): MappedUpdate 
           cancellation_status: "accepted",
         },
         bitacora_accion: "facturapi_webhook_canceled",
+        preserva_sustituida: true,
       };
     case "invoice.delivered_to_customer":
       return {
