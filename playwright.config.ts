@@ -29,7 +29,7 @@ const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:8080";
 const IS_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(BASE_URL);
 
 // Regex de specs mutadores: mantener aquí y en globalSetup.
-const MUTATOR_SPECS = /0[9]-|1[0-2]-/;
+const MUTATOR_SPECS = /0[9]-|1[0-2]-|25-/;
 const PORTAL_SPEC = /05-portal\.spec\.ts/;
 
 // Workers: CI conservador (2), local agresivo (4). Override con E2E_WORKERS.
