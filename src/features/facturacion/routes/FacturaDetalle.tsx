@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { DetailSkeleton } from "@/components/shared/skeletons";
 import { PageContainer } from "@/components/shared/PageContainer";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { DialogConsultarFacturapi } from "@/features/facturacion/components/detalle/DialogConsultarFacturapi";
+
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
