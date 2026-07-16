@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.3] - 2026-07-16
+- **fix(facturacion) Sustitución CFDI — auditoría post-Batch F**:
+  - **Bug UX crítico**: el cliente descartaba el estado `pending` del SAT. La edge `facturapi-cancelar` ya devolvía `{ ok:true, pending:true, cancellation_status, vence_en, message }` cuando el receptor tiene 72 h para aceptar, pero `cancelarFacturapi` sólo leía `sustituida` y `useCancelarFactura.onSuccess` mostraba "CFDI cancelado" aunque el CFDI siguiera vivo. Ahora el service propaga `pending`/`cancellation_status`/`vence_en` y el hook emite un toast `info` "Cancelación enviada al SAT — el receptor tiene hasta 72 h" cuando no es terminal.
+  - **Staleness de la sustituta**: `useSustitucionState.sustitutaQuery` no refetcheaba al reabrir el diálogo si `nuevaId` no cambió (usuario timbra la sustituta en otra pestaña, regresa, ve el botón "Cancelar original" deshabilitado unos segundos). Se agrega `refetchOnMount:"always"`, `refetchOnWindowFocus:true` y `staleTime:0`.
+  - Sin cambios en BD ni en edge functions. `DialogSustituirFactura` sólo documenta que `onSuccess` es terminal para el wizard tanto en `accepted` como en `pending`.
+
 ## [13.301.2] - 2026-07-16
 - **chore(ci) Batch F — Estabilización de CI para overhaul de sustitución CFDI**:
   - **Complejidad edge functions**: `facturapi-reconciliar-cancelaciones/index.ts` se parte en `reconcile.ts` (helpers puros: `resolveNextAction`, `descargarAcuse`, `agruparPorOrg`, `nuevoResumen`, `acumularOutcome`) + `index.ts` reducido a orquestación (156 líneas, sin ternarios anidados). El handler baja de ~270 a bajo el límite de `max-lines-per-function`.
