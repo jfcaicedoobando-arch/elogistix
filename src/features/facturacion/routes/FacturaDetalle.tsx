@@ -77,6 +77,7 @@ export default function FacturaDetalle() {
         numero={factura.numero}
         estado={factura.estado}
         acuseCancelacionStatus={(factura as { acuse_cancelacion_status?: string | null }).acuse_cancelacion_status ?? null}
+        cancellationStatus={(factura as { cancellation_status?: string | null }).cancellation_status ?? null}
         sinTimbrar={sinTimbrar}
         clienteNombre={factura.cliente_nombre}
         expediente={factura.expediente}

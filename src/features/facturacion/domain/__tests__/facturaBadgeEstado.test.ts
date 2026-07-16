@@ -15,8 +15,18 @@ describe("deriveFacturaBadgeEstado", () => {
   it("Sustituida → Sustituida", () => {
     expect(deriveFacturaBadgeEstado("Sustituida", null)).toBe("Sustituida");
   });
-  it("Emitida no se modifica aunque venga acuse", () => {
+  it("Emitida sin cancellation_status no se modifica aunque venga acuseStatus", () => {
     expect(deriveFacturaBadgeEstado("Emitida", "pending")).toBe("Emitida");
+  });
+  it("Emitida + cancellation_status pending → En cancelación", () => {
+    expect(deriveFacturaBadgeEstado("Emitida", null, "pending")).toBe("En cancelación");
+  });
+  it("Emitida + cancellation_status verifying → En cancelación", () => {
+    expect(deriveFacturaBadgeEstado("Emitida", null, "verifying")).toBe("En cancelación");
+  });
+  it("Emitida + cancellation_status vacío → Emitida", () => {
+    expect(deriveFacturaBadgeEstado("Emitida", null, null)).toBe("Emitida");
+    expect(deriveFacturaBadgeEstado("Emitida", null, "")).toBe("Emitida");
   });
   it("estado vacío devuelve vacío", () => {
     expect(deriveFacturaBadgeEstado(null, null)).toBe("");
