@@ -16,6 +16,7 @@ export interface FacturaFlagsInput {
   facturapi_id?: string | null;
   uuid_fiscal?: string | null;
   fecha_emision?: string | null;
+  sustituida_por?: string | null;
 }
 
 export interface FacturaFlagsContext {
