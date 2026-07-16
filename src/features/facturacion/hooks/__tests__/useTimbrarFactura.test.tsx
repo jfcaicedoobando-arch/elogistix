@@ -16,11 +16,24 @@ const toastSuccess = vi.fn();
 const notifyError = vi.fn();
 
 vi.mock("sonner", () => ({
-  toast: { success: (...a: unknown[]) => toastSuccess(...a) },
+  toast: {
+    success: (...a: unknown[]) => toastSuccess(...a),
+    warning: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+  },
 }));
+class FacturapiError extends Error {
+  transient: boolean;
+  constructor(message: string, transient = false) {
+    super(message);
+    this.transient = transient;
+  }
+}
 vi.mock("@/features/facturacion/services/facturapi", () => ({
   emitirFacturapi: (...a: unknown[]) => emitirFacturapi(...a),
   cancelarFacturapi: (...a: unknown[]) => cancelarFacturapi(...a),
+  FacturapiError,
 }));
 vi.mock("@/components/shared/utils/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),

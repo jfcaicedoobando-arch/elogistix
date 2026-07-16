@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.4] - 2026-07-16
+- **fix(ci) Batch G — Estabilización tras Batch F**:
+  - `facturapi.test.ts`: `toEqual` → `toMatchObject` (nuevo contrato con `pending`/`cancellation_status`).
+  - `useTimbrarFactura.test.tsx`: mock de `sonner` incluye `warning`/`info`/`error` y expone `FacturapiError`.
+  - `useTimbrarFactura.ts`: reintento transient usa `notifyError` en vez de `toast.error` (regla `error-toasts-use-notifyError`).
+  - `DialogCancelarFactura.tsx`: literales `emerald-*`/`amber-*` reemplazados por tokens semánticos `text-success`/`text-warning`.
+  - `sentry-edge-coverage.test.ts` + `sentry-edge-wrapping.test.ts`: añadida `facturapi-reconciliar-cancelaciones` a las listas cubiertas.
+
 ## [13.301.3] - 2026-07-16
 - **fix(facturacion) Sustitución CFDI — auditoría post-Batch F**:
   - **Bug UX crítico**: el cliente descartaba el estado `pending` del SAT. La edge `facturapi-cancelar` ya devolvía `{ ok:true, pending:true, cancellation_status, vence_en, message }` cuando el receptor tiene 72 h para aceptar, pero `cancelarFacturapi` sólo leía `sustituida` y `useCancelarFactura.onSuccess` mostraba "CFDI cancelado" aunque el CFDI siguiera vivo. Ahora el service propaga `pending`/`cancellation_status`/`vence_en` y el hook emite un toast `info` "Cancelación enviada al SAT — el receptor tiene hasta 72 h" cuando no es terminal.

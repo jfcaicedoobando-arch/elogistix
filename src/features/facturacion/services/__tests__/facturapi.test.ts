@@ -59,7 +59,7 @@ describe("facturapi service", () => {
   it("cancelarFacturapi pasa motivo y sustituye_uuid en el body", async () => {
     invoke.mockResolvedValueOnce({ data: { ok: true, sustituida: true }, error: null });
     const res = await cancelarFacturapi("f1", "01", "UUID-1", "f2");
-    expect(res).toEqual({ sustituida: true });
+    expect(res).toMatchObject({ sustituida: true });
     expect(invoke).toHaveBeenCalledWith("facturapi-cancelar", {
       body: { factura_id: "f1", motivo: "01", sustituye_uuid: "UUID-1", sustituida_por_factura_id: "f2" },
     });
@@ -67,7 +67,7 @@ describe("facturapi service", () => {
 
   it("cancelarFacturapi returns sustituida=false when omitted", async () => {
     invoke.mockResolvedValueOnce({ data: { ok: true }, error: null });
-    await expect(cancelarFacturapi("f1", "02")).resolves.toEqual({ sustituida: false });
+    await expect(cancelarFacturapi("f1", "02")).resolves.toMatchObject({ sustituida: false });
   });
 
   it("cancelarFacturapi propaga error de transporte y de data.error", async () => {
