@@ -14,6 +14,7 @@
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Replace, ArrowRight, Ban, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactu
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { safeSessionStorage } from "@/lib/browserStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   facturaId: string | null;
