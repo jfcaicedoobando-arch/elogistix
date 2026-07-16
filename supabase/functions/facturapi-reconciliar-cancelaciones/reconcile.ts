@@ -95,6 +95,21 @@ export function resolveNextAction(
     };
   }
 
+  // Local dice "pending/verifying" pero FacturAPI ya no reporta cancelación en curso
+  // (ni aceptada). El proceso quedó colgado: limpiar el flag local para que la
+  // factura vuelva a mostrarse como "Emitida" en la UI.
+  const localEnProceso = local.cancellation_status === "pending" || local.cancellation_status === "verifying";
+  if (!cs && localEnProceso && remote.status !== "canceled") {
+    return {
+      outcome: "cleared",
+      patch: {
+        cancellation_status: null,
+        cancelacion_solicitada_en: null,
+        cancelacion_vence_en: null,
+      },
+    };
+  }
+
   if (cs && cs !== local.cancellation_status) {
     return { outcome: "transition", patch: { cancellation_status: cs } };
   }
