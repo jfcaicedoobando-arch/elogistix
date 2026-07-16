@@ -13,7 +13,7 @@
  */
 import {
   Stamp, Mail, FileText, FileCode2, Ship, Trash2, Replace, Ban,
-  FileArchive, RefreshCw, HandCoins, SearchCheck,
+  FileArchive, RefreshCw, HandCoins, SearchCheck, ExternalLink,
 } from "lucide-react";
 
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
