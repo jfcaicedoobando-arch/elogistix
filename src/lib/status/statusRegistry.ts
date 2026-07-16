@@ -48,7 +48,9 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
     "Pagada",
     "Parcialmente pagada",
     "Vencida",
+    "En cancelación",
     "Cancelada",
+    "Sustituida",
     "Pendiente",
   ],
   factura_cxp: [
