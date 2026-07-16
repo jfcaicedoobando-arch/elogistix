@@ -3,6 +3,7 @@
  * `?accion=timbrar` (llegada desde conversión de proforma) abre el diálogo
  * de timbrado automáticamente.
  */
+import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import { FacturaDetalleFooterDialogs } from "@/features/facturacion/components/d
 
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { useAutoAbrirTimbrar } from "@/features/facturacion/hooks/useAutoAbrirTimbrar";
+import { useFactura } from "@/features/facturacion/hooks/useFactura";
+import { findOriginalFacturaIdFor } from "@/features/facturacion/components/sustitucion/persistence";
 import { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
 import { useFacturaDetalleController } from "@/features/facturacion/hooks/useFacturaDetalleController";
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
@@ -48,6 +51,15 @@ export default function FacturaDetalle() {
   const { sinTimbrar, puedeEditarBorrador, puedeEliminarBorrador, puedeTimbrarDesdeSistema } = flags;
   useAutoAbrirTimbrar(puedeTimbrarDesdeSistema, canEdit, () => setTimbrarOpen(true));
 
+  // Si la factura actual es un borrador sustituto de otra, el botón Volver
+  // regresa a la factura original en lugar de al listado (flujo de sustitución CFDI).
+  const originalFacturaId = useMemo(() => (id ? findOriginalFacturaIdFor(id) : null), [id]);
+  const originalFactura = useFactura(originalFacturaId ?? undefined);
+  const volverHref = originalFacturaId ? `/facturacion/${originalFacturaId}` : "/facturacion";
+  const volverLabel = originalFacturaId
+    ? `Volver a factura ${originalFactura.data?.numero ?? "original"}`
+    : "Volver";
+
   if (isLoading) {
     return (
       <PageContainer>
@@ -69,8 +81,8 @@ export default function FacturaDetalle() {
 
   return (
     <PageContainer>
-      <Button variant="ghost" size="sm" onClick={() => navigate("/facturacion")} className="-ml-2">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Volver
+      <Button variant="ghost" size="sm" onClick={() => navigate(volverHref)} className="-ml-2">
+        <ArrowLeft className="h-4 w-4 mr-1" /> {volverLabel}
       </Button>
 
       <FacturaDetalleHeader

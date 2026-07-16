@@ -5,7 +5,7 @@
  * del borrador sustituto y regresa, el diálogo reabra en el paso "confirmar".
  * TTL: 24 h; después se descarta para no dejar borradores huérfanos.
  */
-import { safeSessionStorage } from "@/lib/browserStorage";
+import { getStorageRef, safeSessionStorage } from "@/lib/browserStorage";
 
 export interface PersistedState {
   nuevaId: string;
@@ -50,3 +50,40 @@ export function writePersisted(facturaId: string, nuevaId: string): void {
 export function clearPersisted(facturaId: string): void {
   safeSessionStorage.removeItem(storageKey(facturaId));
 }
+
+const PREFIX = "sustitucion:";
+
+/**
+ * Busca en sessionStorage la factura original cuya sustituta es `nuevaId`.
+ * Devuelve el `facturaId` original o null. Limpia entradas expiradas.
+ */
+export function findOriginalFacturaIdFor(nuevaId: string): string | null {
+  const store = getStorageRef("session");
+  if (!store) return null;
+  try {
+    for (let i = 0; i < store.length; i++) {
+      const key = store.key(i);
+      if (!key || !key.startsWith(PREFIX)) continue;
+      const raw = safeSessionStorage.getItem(key);
+      if (!raw) continue;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        continue;
+      }
+      if (!isPersistedState(parsed)) continue;
+      if (Date.now() - parsed.ts > TTL_MS) {
+        safeSessionStorage.removeItem(key);
+        continue;
+      }
+      if (parsed.nuevaId === nuevaId) {
+        return key.slice(PREFIX.length);
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
