@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.7] - 2026-07-16
+- **chore(lint)**: cero warnings en `bun run lint --max-warnings 0`. `useSustitucionState` usa `facturacionKeys.sustitutaEstado(...)` en vez de queryKey inline (no-restricted-syntax). `DialogSustituirFactura` extrae `IntroBody`/`ConfirmarBody` para bajar complejidad (17 → ≤16). `facturapi-webhook/index.ts` divide handler en `handleReceiptEvent`/`handleFacturaEvent` (complejidad 19 → ≤16). `facturapi-reconciliar-cancelaciones` agrupa parámetros de `reconcileOne` en un `ReconcileCtx` (max-params 6 → 2).
+
 ## [13.301.6] - 2026-07-16
 - **fix(test) `useTimbrarFactura.test.tsx`**: `FacturapiError` movido dentro del factory de `vi.mock` para evitar `ReferenceError: Cannot access 'FacturapiError' before initialization` cuando vitest hoistea el mock por encima de la declaración de clase.
 
