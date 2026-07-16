@@ -1,9 +1,11 @@
 /**
  * Suma facturas por moneda para el footer totalizador de la tabla de Emitidas.
- * Excluye facturas canceladas para alinearse con el KPI "Facturado mes" del header.
+ * Excluye facturas canceladas y borradores para alinearse con el KPI
+ * "Facturado mes" del header (ver `services/dashboardEjecutivo.ts`).
  *
  * v13.135.72: agrega `mxnEquivalente` y `facturasSinTc` para poder comparar
  * directamente contra el KPI "Facturado mes" del header, que también está en MXN.
+ * v13.301.18: también excluye borradores (aún no timbrados).
  */
 export interface FacturaSumable {
   total: number | string;
