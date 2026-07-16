@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.19] - 2026-07-16
+- **fix(facturacion)**: F971, F973 y F974 aparecían con badge amarillo "En cancelación" a pesar de estar válidas en FacturAPI. Causa: el cron `facturapi-reconciliar-cancelaciones` (`reconcile.ts → resolveNextAction`) no manejaba la transición "local `pending` → remoto sin cancelación", así que el flag se quedaba colgado para siempre. Se añade rama `cleared` que limpia `cancellation_status`, `cancelacion_solicitada_en` y `cancelacion_vence_en` cuando `remote.cancellation_status` viene vacío, el estado remoto no es `canceled` y localmente estaba `pending`/`verifying`. Nuevo contador `limpiadas` en el resumen, entrada `facturapi_pending_limpiada_async` en bitácora, y tests dedicados en `reconcile_test.ts`. Además se ejecutó una limpieza manual sobre las 3 facturas afectadas para volverlas a estado "Emitida" en la UI.
+
 ## [13.301.18] - 2026-07-16
 - **fix(facturacion)**: KPI "Facturado mes" y tendencia de 6 meses ya no incluyen borradores. Antes la consulta usaba `.neq("estado","Cancelada")`, lo que dejaba pasar facturas `Borrador` (aún no timbradas) e inflaba la cifra en cuanto había un draft (típicamente creado por el wizard de sustitución) con `fecha_emision` en el mes. Ahora se usa lista blanca `ESTADOS_FACTURADO = ["Emitida","Parcialmente pagada","Vencida","Pagada"]` en `services/dashboardEjecutivo.ts`, alineada con `cobranza.ts` y `estadoCuenta.ts`. `utils/sumarFacturas.ts` (footer de la tabla de Emitidas) también salta borradores para mantener consistencia con el KPI. Tooltip del KPI y tests actualizados.
 

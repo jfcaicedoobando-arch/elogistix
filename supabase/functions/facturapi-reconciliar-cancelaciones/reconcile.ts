@@ -23,7 +23,7 @@ export interface AcuseResult {
 }
 
 export interface ResolvedPatch {
-  outcome: "accepted" | "rejected" | "expired" | "transition" | "no_change";
+  outcome: "accepted" | "rejected" | "expired" | "transition" | "cleared" | "no_change";
   patch: Record<string, unknown>;
 }
 
@@ -95,6 +95,21 @@ export function resolveNextAction(
     };
   }
 
+  // Local dice "pending/verifying" pero FacturAPI ya no reporta cancelación en curso
+  // (ni aceptada). El proceso quedó colgado: limpiar el flag local para que la
+  // factura vuelva a mostrarse como "Emitida" en la UI.
+  const localEnProceso = local.cancellation_status === "pending" || local.cancellation_status === "verifying";
+  if (!cs && localEnProceso && remote.status !== "canceled") {
+    return {
+      outcome: "cleared",
+      patch: {
+        cancellation_status: null,
+        cancelacion_solicitada_en: null,
+        cancelacion_vence_en: null,
+      },
+    };
+  }
+
   if (cs && cs !== local.cancellation_status) {
     return { outcome: "transition", patch: { cancellation_status: cs } };
   }
@@ -118,17 +133,19 @@ export interface Resumen {
   aceptadas: number;
   rechazadas: number;
   expiradas: number;
+  limpiadas: number;
   sin_cambio: number;
   errores: number;
 }
 
 export function nuevoResumen(): Resumen {
-  return { revisadas: 0, aceptadas: 0, rechazadas: 0, expiradas: 0, sin_cambio: 0, errores: 0 };
+  return { revisadas: 0, aceptadas: 0, rechazadas: 0, expiradas: 0, limpiadas: 0, sin_cambio: 0, errores: 0 };
 }
 
 export function acumularOutcome(resumen: Resumen, outcome: ResolvedPatch["outcome"]): void {
   if (outcome === "accepted") resumen.aceptadas++;
   else if (outcome === "rejected") resumen.rechazadas++;
   else if (outcome === "expired") resumen.expiradas++;
+  else if (outcome === "cleared") resumen.limpiadas++;
   else resumen.sin_cambio++;
 }

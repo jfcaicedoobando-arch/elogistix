@@ -63,6 +63,28 @@ Deno.test("resolveNextAction: status=canceled sin cancellation_status = accepted
   assertEquals(r.outcome, "accepted");
 });
 
+Deno.test("resolveNextAction: remoto vacío + local pending => cleared limpia flags", () => {
+  const r = resolveNextAction({}, baseFactura, "2026-01-01T00:00:00Z");
+  assertEquals(r.outcome, "cleared");
+  assertEquals(r.patch.cancellation_status, null);
+  assertEquals(r.patch.cancelacion_solicitada_en, null);
+  assertEquals(r.patch.cancelacion_vence_en, null);
+});
+
+Deno.test("resolveNextAction: remoto vacío + local verifying => cleared", () => {
+  const r = resolveNextAction(
+    { cancellation_status: "" },
+    { ...baseFactura, cancellation_status: "verifying" },
+    "2026-01-01T00:00:00Z",
+  );
+  assertEquals(r.outcome, "cleared");
+});
+
+Deno.test("resolveNextAction: remoto vacío + status=canceled NO se limpia (queda accepted)", () => {
+  const r = resolveNextAction({ status: "canceled" }, baseFactura, "2026-01-01T00:00:00Z");
+  assertEquals(r.outcome, "accepted");
+});
+
 Deno.test("agruparPorOrg: agrupa por organization_id", () => {
   const map = agruparPorOrg([
     baseFactura,
@@ -79,10 +101,12 @@ Deno.test("acumularOutcome: incrementa contadores correctos", () => {
   acumularOutcome(r, "accepted");
   acumularOutcome(r, "rejected");
   acumularOutcome(r, "expired");
+  acumularOutcome(r, "cleared");
   acumularOutcome(r, "no_change");
   assertEquals(r.aceptadas, 1);
   assertEquals(r.rechazadas, 1);
   assertEquals(r.expiradas, 1);
+  assertEquals(r.limpiadas, 1);
   assertEquals(r.sin_cambio, 1);
 });
 
