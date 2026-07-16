@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.17] - 2026-07-16
+- **feat(facturacion)**: el badge de estado de factura ahora distingue "En cancelación" (ámbar) mientras el SAT no confirma la aceptación (`acuse_cancelacion_status != 'accepted'`) del rojo "Cancelada" definitiva, y registra "Sustituida" (gris con borde destructive tenue). Aplica en el detalle (`FacturaDetalleHeader`) y en la tabla de facturación (`facturacionColumns`). Nuevo helper puro `deriveFacturaBadgeEstado` + tests. Migración: el RPC `facturas_listado` ahora devuelve `acuse_cancelacion_status`.
+
 ## [13.301.16] - 2026-07-16
 - **fix(facturacion)**: cancelar CFDI motivo 01 ya no pide UUID a mano — ahora lista las facturas con `sustituye_a = facturaId` y deja elegir la sustituta timbrada; se envía `sustituidaPorFacturaId` (id interno) para que el backend resuelva el `facturapi_id` que FacturAPI espera en `substitution`. Antes el input libre nunca populaba ese campo y siempre reventaba con *"Substitution invoice is required when cancellation motive is 01"*. Nuevo CTA "Abrir asistente de sustitución" cuando no hay sustituta timbrada. Extraído `SelectorSustituta.tsx` y `services/sustitutasDeFactura.ts` (Power-of-10 ≤200 líneas).
 
