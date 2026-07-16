@@ -56,6 +56,7 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
     factura_pdf_url: string | null; factura_xml_url: string | null;
     ambiente: FacturaRow["ambiente"];
     acuse_cancelacion_status: string | null;
+    cancellation_status: string | null;
     total_count: number | string;
   }>;
   const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
@@ -74,6 +75,7 @@ export async function fetchFacturasListado(f: FacturasListadoFilters): Promise<F
     factura_xml_url: r.factura_xml_url,
     ambiente: r.ambiente,
     acuse_cancelacion_status: r.acuse_cancelacion_status,
+    cancellation_status: r.cancellation_status ?? null,
     proformas: r.proforma_numero ? { numero: r.proforma_numero } : null,
   }));
   return { data: items, count };
