@@ -116,3 +116,16 @@ Acuse guardado        cancelacion_solicitada_en / _vence_en
 - `No cancelable por SAT` → típicamente falta aceptación del receptor
   (regla 2.7.1.34) o hay REP/NC vinculados. El mensaje enriquecido lo
   explica.
+
+## Pruebas E2E
+
+Spec: `e2e/specs/25-sustituir-cfdi.spec.ts` (sandbox).
+
+```bash
+E2E_FISCAL=1 \
+E2E_SUSTITUCION_FACTURA_UUID=<uuid-factura-timbrada-sandbox> \
+npx playwright test 25
+```
+
+Corre en el project `chromium-mutators` (serial). Cubre: happy path,
+persistencia sessionStorage, guard UI y auto-reset ante borrador eliminado.
