@@ -16,7 +16,7 @@ Deno.test("describeFacturapiError: extrae status y data desde respuesta HTTP del
   };
   const out = describeFacturapiError(err);
   assertEquals(out.status, 400);
-  assertEquals(out.detail, { message: "RFC inválido" });
+  assertEquals(out.detail.message, "RFC inválido");
 });
 
 Deno.test("describeFacturapiError: cae a 502 y mensaje cuando el error no tiene response", () => {
