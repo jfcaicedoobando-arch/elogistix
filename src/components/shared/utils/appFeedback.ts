@@ -91,7 +91,16 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   //
   // 13.300.7: además, filtramos errores de autorización (RLS/guards del
   // backend). No son bugs — mostramos el toast pero NO enviamos a Sentry.
-  if (error !== undefined && error !== null && !isAuthorizationError(error)) {
+  //
+  // 13.301.59: también filtramos validaciones esperadas de FacturApi/SAT
+  // (razón social vs RFC, RFC no registrado, régimen inválido). El usuario
+  // debe corregir el catálogo — no es bug de código.
+  if (
+    error !== undefined
+    && error !== null
+    && !isAuthorizationError(error)
+    && !isExpectedFacturapiValidation(error)
+  ) {
     reportCaughtError(
       error,
       {
@@ -121,6 +130,21 @@ export function isAuthorizationError(err: unknown): boolean {
     err instanceof Error ? err.message : typeof err === "string" ? err : "";
   return /no tienes permisos|permission denied|not authorized|forbidden|acceso denegado/i.test(
     msg,
+  );
+}
+
+/**
+ * Detecta validaciones de negocio esperadas de FacturApi/SAT (dato mal
+ * capturado en el catálogo del cliente). Se identifica vía el flag
+ * `expected` que expone `FacturapiError` (whitelist regex vive en
+ * `services/facturapi.ts`).
+ */
+export function isExpectedFacturapiValidation(err: unknown): boolean {
+  return (
+    typeof err === "object"
+    && err !== null
+    && (err as { name?: unknown }).name === "FacturapiError"
+    && (err as { expected?: unknown }).expected === true
   );
 }
 
