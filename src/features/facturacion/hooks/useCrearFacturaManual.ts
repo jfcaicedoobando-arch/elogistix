@@ -12,6 +12,7 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;
