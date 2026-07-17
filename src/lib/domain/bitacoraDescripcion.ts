@@ -135,6 +135,17 @@ export function describirEntrada(entrada: EntradaBitacora): DescripcionBitacora 
       const uuid = asString(detalles.uuid);
       return { titulo: "Timbró factura", contexto: uuid ? `UUID ${uuid.slice(0, 8)}…` : undefined };
     }
+    if (accion === "factura.borrador_generado") return { titulo: "Generó borrador de factura" };
+    if (accion === "factura.borrador_eliminado") return { titulo: "Eliminó borrador de factura" };
+    if (accion === "factura_duplicada_para_sustitucion") {
+      return { titulo: "Generó borrador de sustitución" };
+    }
+    if (accion === "facturapi_cancelacion_solicitada") {
+      return { titulo: "Solicitó cancelación de factura", contexto: asString(detalles.motivo) };
+    }
+    if (accion === "facturapi_consulta_reconciliada") {
+      return { titulo: "Reconciliación con FacturApi" };
+    }
     if (accion === "facturapi_cancelada" || accion === "facturapi_cancelar_failed") {
       return { titulo: accion === "facturapi_cancelada" ? "Canceló factura" : "Falló cancelación de factura" };
     }

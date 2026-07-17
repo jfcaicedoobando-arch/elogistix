@@ -1,12 +1,14 @@
 /**
- * FacturaBitacoraCard — historial de eventos de la factura filtrados por
- * `modulo='facturas'` y `entidad_id=facturaId`. Visible para todos los
- * usuarios con acceso al detalle.
+ * FacturaBitacoraCard — historial de eventos de la factura leído por RPC
+ * segura, incluyendo bitácora `facturas` y `facturacion`.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
-import { useBitacora } from "@/hooks/shared";
+import { fetchHistorialFacturaEmitida } from "@/features/facturacion/services/historialFactura";
+import { queryKeys } from "@/lib/query";
 import { formatDate } from "@/lib/formatters";
+import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
+import { useQuery } from "@tanstack/react-query";
 import { History } from "lucide-react";
 
 interface Props {
@@ -37,14 +39,13 @@ function etiquetaAccion(accion: string): string {
 }
 
 export function FacturaBitacoraCard({ facturaId }: Props) {
-  const { data, isLoading } = useBitacora({
-    modulo: "facturas",
-    entidadId: facturaId,
-    limite: 50,
-    pagina: 0,
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKeys.facturas.historial(facturaId),
+    queryFn: () => fetchHistorialFacturaEmitida(facturaId, 50),
+    enabled: Boolean(facturaId),
   });
 
-  const entradas = data?.datos ?? [];
+  const entradas = data ?? [];
 
   return (
     <Card>
@@ -57,6 +58,10 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
       <CardContent>
         {isLoading ? (
           <ListSkeleton rows={3} />
+        ) : isError ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">
+            No se pudo cargar el historial de esta factura.
+          </p>
         ) : entradas.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
             Sin eventos registrados para esta factura.
@@ -64,15 +69,21 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
         ) : (
           <ul className="divide-y">
             {entradas.map((e) => {
+              const descripcion = describirEntrada(e);
               const detalle = [e.entidad_nombre, e.usuario_email].filter(Boolean).join(" • ");
               return (
                 <li key={e.id} className="py-2 text-sm">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-medium">{etiquetaAccion(e.accion)}</span>
+                    <span className="font-medium">{descripcion.titulo || etiquetaAccion(e.accion)}</span>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {formatDate(e.created_at)}
                     </span>
                   </div>
+                  {descripcion.contexto && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      {descripcion.contexto}
+                    </p>
+                  )}
                   {detalle && (
                     <p className="text-xs text-muted-foreground truncate">{detalle}</p>
                   )}

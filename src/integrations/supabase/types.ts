@@ -8081,6 +8081,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      historial_factura: {
+        Args: { p_factura_id: string; p_limite?: number }
+        Returns: {
+          accion: string
+          created_at: string
+          detalles: Json
+          entidad_id: string
+          entidad_nombre: string
+          id: string
+          modulo: string
+          usuario_email: string
+          usuario_id: string
+        }[]
+      }
       historial_proveedor_factura: {
         Args: { p_id: string }
         Returns: {

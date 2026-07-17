@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.39] - 2026-07-17
+- Fix: el historial del detalle de factura ahora usa la RPC segura `historial_factura`, que valida acceso a la factura y devuelve eventos de `facturas` + `facturacion` aunque hayan sido creados por funciones internas u otros usuarios autorizados. Esto corrige el caso donde la tarjeta seguía vacía porque RLS ocultaba la bitácora global. La UI muestra error de carga explícito si no puede leer el historial en vez de confundirlo con "sin eventos".
+
 ## [13.301.38] - 2026-07-17
 - Fix: la tarjeta "Historial de la factura" mostraba "Sin eventos registrados" aunque la bitácora tuviera entradas (verificado: F975 tenía 11 eventos reales). El componente pedía las últimas 25 filas del módulo `facturas` de toda la organización y filtraba en cliente por `entidad_id`, por lo que casi nunca intersectaban con la factura visible. Se agregó filtro server-side `entidadId` en `FiltrosBitacora` + `fetchBitacora`, se elevó el límite a 50 y se reemplazaron los slugs (`facturapi_emitida`, `factura.borrador_generado`, etc.) por etiquetas legibles ("Timbrada", "Borrador generado", …).
 

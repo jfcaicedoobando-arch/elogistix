@@ -48,6 +48,7 @@ export const facturas = {
   notasCredito: (facturaId: string) => ['factura_notas_credito', facturaId] as const,
   notasCreditoRecientes: (filtros?: unknown) => ['factura_notas_credito', 'recientes', filtros ?? null] as const,
   envios: (facturaId?: string | null) => ['factura-envios', facturaId] as const,
+  historial: (facturaId?: string | null) => ['facturas', 'historial', facturaId] as const,
   legacyDetail: (facturaId?: string | null) => ['factura', facturaId] as const,
 } as const;
 
