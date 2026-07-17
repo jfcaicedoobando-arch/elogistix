@@ -51,10 +51,15 @@ export function calcularExclusionesPorProformaHistorica(
   for (const c of conceptos) {
     const acc = agrupado.get(c.embarque_id) ?? { total: 0, cubiertos: 0 };
     acc.total += 1;
+    // v13.301.47 — Legacy back-fill: un concepto se considera cubierto si
+    //   (a) ya está marcado como `facturado` (proceso histórico completado), o
+    //   (b) está `en_proforma` y su proforma padre está `facturada` (aceptación
+    //       histórica sin CFDI real).
     const cubierto =
-      c.estado_facturacion === "en_proforma" &&
-      !!c.proforma_id &&
-      c.proforma_estado === "facturada";
+      c.estado_facturacion === "facturado" ||
+      (c.estado_facturacion === "en_proforma" &&
+        !!c.proforma_id &&
+        c.proforma_estado === "facturada");
     if (cubierto) acc.cubiertos += 1;
     agrupado.set(c.embarque_id, acc);
   }
