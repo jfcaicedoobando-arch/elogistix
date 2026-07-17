@@ -105,19 +105,21 @@ async function assertNoCrossAccess(page: Page, _own: OrgFixture, other: OrgFixtu
   }
 
   // Storage: descargar el marker de la otra org vía signed URL debe fallar.
+  const headers = await authHeadersFromPage(page);
   const signResp = await page.request.post(
-    `${supabaseRestUrl(page)}/storage/v1/object/sign/${other.storage_bucket}/${other.storage_path}`,
-    { data: { expiresIn: 60 }, headers: authHeadersFromPage(page) },
+    `${supabaseRestUrl()}/storage/v1/object/sign/${other.storage_bucket}/${other.storage_path}`,
+    { data: { expiresIn: 60 }, headers },
   );
   // 403 (RLS) o 400/404 (no encontrado) — cualquier cosa MENOS 200.
   expect(signResp.status(), `Storage cross-org leak en ${other.storage_path}`).not.toBe(200);
 }
 
 async function assertCatalogosAislados(page: Page, own: OrgFixture, other: OrgFixture) {
+  const headers = await authHeadersFromPage(page);
   const tablas = ["factura_series", "crm_etapas_pipeline", "crm_motivos_perdida", "presupuesto_categorias"];
   for (const tabla of tablas) {
-    const url = `${supabaseRestUrl(page)}/rest/v1/${tabla}?select=organization_id&limit=200`;
-    const resp = await page.request.get(url, { headers: authHeadersFromPage(page) });
+    const url = `${supabaseRestUrl()}/rest/v1/${tabla}?select=organization_id&limit=200`;
+    const resp = await page.request.get(url, { headers });
     expect(resp.ok(), `${tabla} REST no OK`).toBe(true);
     const rows = (await resp.json()) as Array<{ organization_id: string }>;
     const orgIds = new Set(rows.map((r) => r.organization_id));
@@ -130,25 +132,30 @@ async function assertCatalogosAislados(page: Page, own: OrgFixture, other: OrgFi
 
 // ── Utilidades REST ─────────────────────────────────────────────────────
 
-function supabaseRestUrl(page: Page): string {
-  const url = process.env.E2E_BASE_URL ?? page.url();
-  // El client Supabase usa `VITE_SUPABASE_URL`. En specs no lo tenemos, así
-  // que lo derivamos de la primera respuesta REST que capturemos, o del env.
+function supabaseRestUrl(): string {
   const supa = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (supa) return supa.replace(/\/$/, "");
-  // Fallback: heurístico basado en storage. Este spec depende de que la env
-  // esté propagada al proceso Playwright.
-  throw new Error(
-    `VITE_SUPABASE_URL no está definido en el entorno del test (base ${url}).`,
-  );
+  throw new Error("VITE_SUPABASE_URL no está definido en el entorno del test.");
 }
 
-function authHeadersFromPage(page: Page): Record<string, string> {
+async function authHeadersFromPage(page: Page): Promise<Record<string, string>> {
   const anon = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
+  const token = await page.evaluate(() => {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (!key || !key.startsWith("sb-") || !key.endsWith("-auth-token")) continue;
+      try {
+        const raw = window.localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw) as { access_token?: string };
+        if (parsed.access_token) return parsed.access_token;
+      } catch {
+        /* ignore */
+      }
+    }
+    return null;
+  });
   const headers: Record<string, string> = { apikey: anon };
-  // Extraer el access_token del storage state de la página.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const state = (page as any).__lastAuthToken as string | undefined;
-  if (state) headers.Authorization = `Bearer ${state}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
   return headers;
 }
