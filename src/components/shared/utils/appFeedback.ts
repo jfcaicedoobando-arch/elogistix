@@ -115,6 +115,16 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   }
 }
 
+/** Decide si un error debe llegar a Sentry (excluye autorización + validaciones
+ *  esperadas SAT + fallos transitorios de red de FacturApi). */
+function shouldReportToSentry(error: unknown): boolean {
+  if (error === undefined || error === null) return false;
+  if (isAuthorizationError(error)) return false;
+  if (isExpectedFacturapiValidation(error)) return false;
+  if (isTransientFacturapiNetwork(error)) return false;
+  return true;
+}
+
 /**
  * Detecta errores de autorización esperados (guards RLS / RPC del backend).
  * Estos NO deben reportarse a Sentry — son parte del flujo normal cuando un
