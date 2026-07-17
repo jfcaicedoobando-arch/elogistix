@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.41] - 2026-07-17
+- Auditoría "Embarques sin factura" — Fase A: la exclusión "ya tiene CFDI" ahora usa como fuente de verdad el bridge `factura_embarques.activa = true` unido a `facturas.estado = 'Emitida'`, con fallback legacy por `expediente` filtrado también por estado Emitida y PDF presente. Antes bastaba con cualquier factura (incluso cancelada) que tuviera `factura_pdf_url` para ocultar el embarque, dejando fuera del hueco casos donde el único CFDI estaba cancelado sin sustituta viva. Se actualizan `huecoFacturacion/fetchSources.ts` (`fetchEmbarquesConFacturaViva`, `fetchExpedientesConFacturaVivaLegacy`) y su orquestador. Tests ampliados para cubrir: bridge activo, factura cancelada que no oculta, y fallback legacy por expediente.
+
 ## [13.301.40] - 2026-07-17
 - Fix: se bloquea por completo la creación de notas de crédito sobre facturas ya liquidadas (saldo ≤ 0.01). Defensa en 3 capas: (1) el botón "Nueva" en la tarjeta de NC del detalle de factura queda deshabilitado con tooltip explicativo; (2) el diálogo `DialogCrearNotaCredito` muestra alerta bloqueante y desactiva "Guardar" / "Timbrar" si el saldo es 0; (3) trigger BEFORE INSERT `check_factura_saldo_para_nc` en `factura_notas_credito` que levanta `FACTURA_LIQUIDADA_SIN_NC` para blindar cualquier ruta (RPC, scripts, integraciones futuras). El código de error se traduce a mensaje amigable en `getErrorMessage`.
 
