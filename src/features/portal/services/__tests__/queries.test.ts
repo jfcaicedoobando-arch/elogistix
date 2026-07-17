@@ -116,6 +116,19 @@ describe("portal/queries", () => {
     expect(r).toEqual([{ id: "f1" }]);
   });
 
+  it("fetchPortalFacturas: filtra por estados vivos (excluye Cancelada/Sustituida)", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    await fetchPortalFacturas(["cli-1"]);
+    const call = mock.tableCalls.find((c) => c.table === "facturas");
+    const inCalls = call!.ops.map((op, i) => [op, call!.opArgs[i]] as const).filter(([op]) => op === "in");
+    const estadoFilter = inCalls.find(([, args]) => args[0] === "estado");
+    expect(estadoFilter).toBeDefined();
+    const values = estadoFilter![1][1] as string[];
+    expect(values).not.toContain("Cancelada");
+    expect(values).not.toContain("Sustituida");
+    expect(values).toEqual(expect.arrayContaining(["Emitida", "Pagada", "Parcialmente pagada", "Vencida"]));
+  });
+
   it("fetchPortalFactura: consulta tabla facturas por id", async () => {
     mock.setTableResult("facturas", { data: { id: "f1" }, error: null });
     const r = await fetchPortalFactura("f1");
