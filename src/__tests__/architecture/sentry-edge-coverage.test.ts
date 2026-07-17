@@ -75,6 +75,9 @@ const SENTRY_EXEMPT = new Set<string>([
   // Los errores se propagan al script provision-users.ts que hace fallar el job
   // de GitHub Actions con logs completos; Sentry aquí sólo generaría ruido.
   "supabase/functions/e2e-provision-users/index.ts",
+  // e2e-provision-multi-tenant: mismo patrón que e2e-provision-users (CI-only,
+  // errores propagados al workflow con logs completos).
+  "supabase/functions/e2e-provision-multi-tenant/index.ts",
 ]);
 
 describe("Edge functions con manejo manual de Sentry", () => {
