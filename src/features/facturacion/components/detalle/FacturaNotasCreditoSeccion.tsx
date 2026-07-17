@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FileMinus, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { listarNotasCreditoPorFactura, type ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { DialogCrearNotaCredito } from "@/features/facturacion/components/DialogCrearNotaCredito";
@@ -73,6 +74,8 @@ export function FacturaNotasCreditoSeccion(props: Props) {
     [snapshotEmision],
   );
 
+  const facturaLiquidada = saldoFactura <= 0.01;
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -81,9 +84,24 @@ export function FacturaNotasCreditoSeccion(props: Props) {
           <span className="text-xs text-muted-foreground font-normal">({notas.length})</span>
         </CardTitle>
         {canEdit && (
-          <Button size="sm" onClick={() => setOpenCrear(true)}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Nueva
-          </Button>
+          facturaLiquidada ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button size="sm" disabled>
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Nueva
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente.
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button size="sm" onClick={() => setOpenCrear(true)}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> Nueva
+            </Button>
+          )
         )}
       </CardHeader>
       <CardContent>

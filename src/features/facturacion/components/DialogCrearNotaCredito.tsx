@@ -85,11 +85,12 @@ export function DialogCrearNotaCredito({
   );
 
   const excedeSaldo = monto > saldoFactura + 0.01;
+  const facturaLiquidada = saldoFactura <= 0.01;
   const sinUuid = !uuidFacturaOriginal;
   const conceptosValidos =
     conceptos.length > 0 &&
     conceptos.every((c) => c.descripcion.trim() && c.cantidad > 0 && c.precio_unitario >= 0);
-  const puedeGuardar = !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo;
+  const puedeGuardar = !!descripcion.trim() && conceptosValidos && monto > 0 && !excedeSaldo && !facturaLiquidada;
   const puedeTimbrar = puedeGuardar && !sinUuid;
 
   // v13.213.20 — sin folio de entrada: el servicio asigna `BORRADOR-<ts>`.
@@ -164,6 +165,14 @@ export function DialogCrearNotaCredito({
       size="lg"
       footer={footer}
     >
+      {facturaLiquidada && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {sinUuid && (
         <Alert variant="destructive">
           <AlertDescription>

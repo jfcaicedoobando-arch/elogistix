@@ -9,6 +9,11 @@ const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
     message:
       "Esta factura ya fue emitida y no puede modificarse. Para corregirla, emite una nota de crédito.",
   },
+  {
+    match: /FACTURA_LIQUIDADA_SIN_NC/i,
+    message:
+      "La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente.",
+  },
 ];
 
 export function getErrorMessage(err: unknown): string {

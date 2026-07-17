@@ -1,40 +1,41 @@
-## Diagnóstico
+## Objetivo
 
-La tarjeta de historial no está fallando por carga visual; está recibiendo una lista vacía desde la API.
+Bloquear por completo la creación de notas de crédito cuando la factura ya está liquidada (saldo ≈ 0). Aplicar defensa en 3 capas: UI, dialog y base de datos.
 
-Causas encontradas:
-- La tarjeta consulta sólo `modulo = 'facturas'`, pero los eventos importantes de CFDI/timbrado/cancelación/sustitución se guardan como `modulo = 'facturacion'`.
-- La política de lectura de `bitacora_actividad` sólo deja ver eventos propios o a administradores de organización; si el evento lo creó otro usuario/función, un usuario con acceso a la factura puede ver la factura pero no su historial.
-- La factura actual en pantalla (`5945...`) sí tiene al menos un evento en base de datos, pero la API lo devuelve como `[]`, consistente con la restricción de RLS/permisos.
+## Cambios
 
-Analogía: la factura es una carpeta compartida, pero el historial estaba guardado en dos archiveros distintos y además algunas hojas sólo las podía leer quien las escribió.
+### 1. UI — `FacturaNotasCreditoSeccion.tsx`
+- Calcular `facturaLiquidada = saldoFactura <= 0.01`.
+- Si está liquidada: ocultar el botón "Nueva" (o mantenerlo `disabled` con `Tooltip` explicativo: *"La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente."*). Preferencia: **disabled + tooltip** para que el usuario entienda la razón, no que "desaparezca".
+- Bloquear también apertura del dialog (aunque el botón esté deshabilitado, defensa extra en `onClick`).
 
-## Plan de implementación
+### 2. Dialog — `DialogCrearNotaCredito.tsx`
+- Añadir guard: si `saldoFactura <= 0.01` mostrar mensaje bloqueante y deshabilitar `Guardar` / `Timbrar` (además del check ya existente `excedeSaldo`).
 
-1. **Crear lectura segura de historial por factura**
-   - Agregar una RPC/función de sólo lectura para devolver eventos de bitácora de una factura específica.
-   - La función validará primero que el usuario tenga acceso a esa factura por organización/rol.
-   - Sólo después devolverá eventos relacionados, evitando abrir toda la bitácora general.
+### 3. Base de datos — nuevo trigger BEFORE INSERT sobre `factura_notas_credito`
+- Valida que la factura padre tenga `saldo > 0.01`.
+- Si no, `RAISE EXCEPTION` con mensaje claro para que la UI lo capture.
+- Blindaje contra cualquier ruta (RPC, scripts, integración futura).
 
-2. **Unificar eventos relevantes de facturación**
-   - Incluir eventos con `modulo IN ('facturas', 'facturacion')`.
-   - Filtrar por `entidad_id = facturaId`.
-   - Considerar eventos de sustitución/cancelación que referencien la factura en `detalles` cuando aplique, para que F975/F991 y casos similares queden rastreables.
+### 4. Documentación
+- `CHANGELOG.md`: entrada nueva versión.
+- `APP_VERSION` → siguiente patch (`13.301.40`).
 
-3. **Actualizar la tarjeta `Historial de la factura`**
-   - Cambiar `FacturaBitacoraCard` para usar el nuevo lector específico de factura, no el listado global de auditoría.
-   - Mantener el diseño actual y las etiquetas legibles.
-   - Si hay error de permisos, mostrar mensaje discreto en vez de “Sin eventos” para no confundir.
+## Fuera de alcance
+- No se toca el módulo de auditoría, ni el flujo de cancelación de NC existentes.
+- No se cambia la lógica para facturas parcialmente pagadas (saldo > 0): siguen permitiendo NC.
 
-4. **Corregir etiquetas y contexto**
-   - Reusar/centralizar las descripciones humanas de bitácora cuando sea posible.
-   - Mostrar fecha, acción y actor cuando esté disponible.
+## Detalles técnicos
 
-5. **Tests y verificación**
-   - Añadir pruebas para el servicio/hook de historial de factura.
-   - Verificar con la factura actual que la API ya no regresa `[]`.
-   - Actualizar `APP_VERSION` y `CHANGELOG.md` como regla del proyecto.
+- Trigger SQL (pseudo):
 
-## Resultado esperado
+```text
+CREATE FUNCTION check_saldo_factura_para_nc() ...
+  IF saldo <= 0.01 THEN RAISE EXCEPTION 'FACTURA_LIQUIDADA_SIN_NC'
+```
 
-La tarjeta mostrará eventos reales de la factura aunque hayan sido generados por funciones internas o por otro usuario autorizado, sin exponer la bitácora completa a usuarios que no deberían verla.
+- Umbral `0.01` consistente con `puedeRegistrarPago` en `facturaFlags.ts`.
+- Manejo de error en el hook `useCrearNotaCredito` para traducir el código a mensaje amigable.
+
+## Analogía
+Es como el cajero automático: si tu cuenta ya está en cero, la máquina simplemente no te deja iniciar un retiro — no aparece el botón habilitado, y aunque intentaras forzarlo, el banco (la base de datos) lo rechaza.

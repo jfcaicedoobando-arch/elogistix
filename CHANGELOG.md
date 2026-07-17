@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.40] - 2026-07-17
+- Fix: se bloquea por completo la creación de notas de crédito sobre facturas ya liquidadas (saldo ≤ 0.01). Defensa en 3 capas: (1) el botón "Nueva" en la tarjeta de NC del detalle de factura queda deshabilitado con tooltip explicativo; (2) el diálogo `DialogCrearNotaCredito` muestra alerta bloqueante y desactiva "Guardar" / "Timbrar" si el saldo es 0; (3) trigger BEFORE INSERT `check_factura_saldo_para_nc` en `factura_notas_credito` que levanta `FACTURA_LIQUIDADA_SIN_NC` para blindar cualquier ruta (RPC, scripts, integraciones futuras). El código de error se traduce a mensaje amigable en `getErrorMessage`.
+
 ## [13.301.39] - 2026-07-17
 - Fix: el historial del detalle de factura ahora usa la RPC segura `historial_factura`, que valida acceso a la factura y devuelve eventos de `facturas` + `facturacion` aunque hayan sido creados por funciones internas u otros usuarios autorizados. Esto corrige el caso donde la tarjeta seguía vacía porque RLS ocultaba la bitácora global. La UI muestra error de carga explícito si no puede leer el historial en vez de confundirlo con "sin eventos".
 
