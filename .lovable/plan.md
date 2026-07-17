@@ -1,47 +1,39 @@
-## Problema
+## Diagnóstico
 
-Al timbrar una factura por sustitución, FacturAPI rechaza el payload con:
+La factura **F975** está en estado `Emitida`, ya tiene `sustituida_por = F991` (también `Emitida`, viva). El botón "Cancelar CFDI" desapareció porque en `src/features/facturacion/domain/facturaFlags.ts` (línea 91) `Cancelar` y `Sustituir` comparten la misma condición:
 
-> `"related_documents[0].uuid" is not allowed`
+```ts
+const puedeCambiarCfdi = timbradaVigente && canEdit && !isSustitutaViva(f);
+// ...
+puedeCancelarCfdi:  puedeCambiarCfdi,
+puedeSustituirCfdi: puedeCambiarCfdi,
+```
 
-En un cambio previo (v13.301.27) el payload se envió como `[{ relationship: "04", uuid: "..." }]`. La API real de FacturAPI espera el shape agrupado: `[{ relationship, documents: ["<uuid>", ...] }]` — el `uuid` plano es de la versión antigua del SDK y ya no es aceptado por el endpoint de emisión.
+Cuando existe una sustituta viva, `isSustitutaViva = true` y ambos se apagan. Pero en el flujo SAT motivo **01 (sustitución)** el orden correcto es: **1º emitir la sustituta → 2º cancelar la original**. Es decir, tener sustituta viva es *precondición* para cancelar la original, no un bloqueo.
 
 ## Cambios
 
-### `supabase/functions/facturapi-emitir/helpers.ts`
-- `FacturapiPayload.related_documents`: cambiar el tipo a
-  ```ts
-  Array<{ relationship: string; documents: string[] }>
-  ```
-- En la construcción del payload de sustitución (línea ~169):
-  ```ts
-  payload.related_documents = [
-    { relationship: "04", documents: [ctx.sustituye_uuid] }
-  ];
-  ```
-- Actualizar los comentarios que decían que la API espera `{ relationship, uuid }` (era incorrecto — sólo aplicaba al tipo interno del SDK antiguo).
+### 1. `src/features/facturacion/domain/facturaFlags.ts`
+Separar las dos condiciones:
 
-### `supabase/functions/facturapi-cancelar/cancelacion.ts` (pre-flight motivo 01)
-Ya lee ambos shapes al consultar la remota; verificar que la lógica de match del UUID cubra el bloque `documents: [uuid]`. Ajustar si sólo mira `.uuid`.
+- `puedeSustituirCfdi = timbradaVigente && canEdit && !isSustitutaViva(f)` (sin cambio: no se sustituye dos veces).
+- `puedeCancelarCfdi = timbradaVigente && canEdit && !estaCancelada && (cancellation_status !== 'pending')` (permitir cuando ya hay sustituta viva; bloquear si ya está en trámite de cancelación).
 
-### Tests Deno
-- `facturapi-emitir/helpers_test.ts` (si existe cobertura del bloque de sustitución): actualizar assertions para el nuevo shape.
-- Si no existe test para sustitución, agregar uno mínimo que verifique:
-  ```ts
-  assertEquals(payload.related_documents, [
-    { relationship: "04", documents: ["<UUID>"] }
-  ]);
-  ```
+Ajustar tests de `facturaFlags.test.ts` si existen (agregar caso: factura Emitida con sustituta viva → `puedeCancelarCfdi: true, puedeSustituirCfdi: false`).
 
-### Versionado
-- `src/constants/appVersion.ts` → `13.301.34`.
-- `CHANGELOG.md`: entrada con el fix, referencia al requestId `772664a6-f280-4ebd-979c-fa919b279947` y al mensaje `related_documents[0].uuid is not allowed`.
+### 2. `DialogCancelarFactura` / `SelectorSustituta`
+Verificar que cuando se abre desde una factura con `sustituida_por` ya establecido, el `SelectorSustituta` prellene esa sustituta y no permita elegir otra (motivo 01 debe amarrarse a la relación que ya existe en BD).
 
-### Sentry
-- Marcar el issue asociado (buscar por `JAVASCRIPT-REACT` o similar con el título del error) como `resolved` referenciando el commit y la versión.
+### 3. Limpiar estado stale de F975
+`cancelacion_solicitada_en` tiene fecha pero `cancellation_status = 'none'` (residuo de un intento previo). No es lo que bloquea el botón, pero conviene ejecutar `facturapi-consultar` sobre F975 después del fix para reconciliar (o dejar que el usuario use "Limpiar estado local"). No requiere código, sólo verificación manual.
+
+### 4. Versionado
+- Bump `APP_VERSION` a `13.301.36`.
+- Nueva entrada en `CHANGELOG.md`.
 
 ## Verificación
 
-1. `bun run ci:fast` para lint/typecheck/tests unit.
-2. Deno tests de las edge functions afectadas: `deno test supabase/functions/facturapi-emitir/`.
-3. Manual: reintentar el timbrado de la factura `9924813f-47c7-49c7-853c-6fd8a3f794ca` (borrador de sustitución). Debe pasar sin el error de `uuid is not allowed`.
+1. Recargar F975 → botón "Cancelar CFDI" visible en la barra de acciones.
+2. Al abrir el diálogo, la sustituta F991 aparece preseleccionada.
+3. F991 (la sustituta viva) sigue **sin** botón "Sustituir" ni "Cancelar" reutilizables incorrectos — sólo su propio flujo normal.
+4. `bun run ci:fast` en verde.

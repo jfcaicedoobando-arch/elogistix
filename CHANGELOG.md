@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 ## [13.301.35] - 2026-07-17
 - Fix CI: `FacturaDetalleView.tsx` bajado a <200 líneas (Power of 10) colapsando eslint-disable en bloque; agregado marcador `// SAFE-CAST:` al cast `sustituida_por` en `facturacion/services/detail.ts` para pasar la auditoría de casts (baseline arch).
 
+## [13.301.36] - 2026-07-17
+- Fix: el botón "Cancelar CFDI" desaparecía en la factura original después de emitir la sustituta (bloqueando el paso 2 del flujo SAT motivo 01). En `facturaFlags.ts` se separaron las condiciones: `puedeSustituirCfdi` sigue bloqueado si hay sustituta viva (para no sustituir dos veces), pero `puedeCancelarCfdi` sólo depende de que la factura esté timbrada, vigente y sin trámite de cancelación en curso (`cancellation_status !== pending/verifying`). Test actualizado.
+
 ## [13.301.34] - 2026-07-17
 - Fix: timbrado por sustitución fallaba con `"related_documents[0].uuid" is not allowed` (requestId `772664a6-f280-4ebd-979c-fa919b279947`). FacturAPI v2 exige el shape agrupado `related_documents: [{ relationship, documents: ["<uuid>"] }]`; el envío previo con `{ relationship, uuid }` era incompatible con `/v2/invoices`. Corregido en `facturapi-emitir/helpers.ts` + test de regresión.
 
