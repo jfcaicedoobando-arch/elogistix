@@ -63,10 +63,11 @@ BEGIN
     (emb_b, 'ELCRM00002', cli_b, 'Cli CRM B', org_b, 'Marítimo', 'Importación');
 
   -- Etapas pipeline (FK requerido por crm_oportunidades)
+  -- Nombre único para no colisionar con etapas auto-seed del trigger handle_new_organization
   INSERT INTO public.crm_etapas_pipeline(id, organization_id, nombre, orden, probabilidad_default, color, tipo)
   VALUES
-    (etapa_a, org_a, 'Prospecto', 1, 10, '#2563EB', 'abierta'),
-    (etapa_b, org_b, 'Prospecto', 1, 10, '#2563EB', 'abierta');
+    (etapa_a, org_a, 'RLS Test Etapa', 99, 10, '#2563EB', 'abierta'),
+    (etapa_b, org_b, 'RLS Test Etapa', 99, 10, '#2563EB', 'abierta');
 
   -- =========================================================================
   -- TEST 1: crm_leads — aislamiento por organization_id
@@ -142,8 +143,8 @@ BEGIN
   -- =========================================================================
   RESET ROLE; PERFORM set_config('request.jwt.claims', NULL, true);
   INSERT INTO public.presupuesto_categorias(id, organization_id, nombre, orden, activa) VALUES
-    (cat_a, org_a, 'Ventas', 1, true),
-    (cat_b, org_b, 'Ventas', 1, true);
+    (cat_a, org_a, 'RLS Test Cat', 99, true),
+    (cat_b, org_b, 'RLS Test Cat', 99, true);
   INSERT INTO public.presupuesto_mensual(id, organization_id, categoria_id, periodo, monto_mxn) VALUES
     (pres_a, org_a, cat_a, '2026-06', 500000),
     (pres_b, org_b, cat_b, '2026-06', 999999);
