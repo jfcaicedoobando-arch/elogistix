@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FileMinus, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { listarNotasCreditoPorFactura, type ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { DialogCrearNotaCredito } from "@/features/facturacion/components/DialogCrearNotaCredito";
