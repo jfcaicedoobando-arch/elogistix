@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.55] - 2026-07-17
+- Remediación auditoría multi-tenant (H1/H2/H3). **H1**: las políticas RLS de `idempotency_keys` ya no dependen sólo de `user_id`; ahora exigen `organization_id = current_user_org_id()` en SELECT/INSERT/UPDATE. Se agregó la política UPDATE que faltaba y los `super_admin` ya no cruzan claves entre orgs. **H2**: se eliminan 7 tablas `_backup_*` (merges y backfills ya cerrados) que sólo eran polvo histórico. **H3**: 6 policies de `email_send_log`, `email_send_state`, `email_unsubscribe_tokens` y `suppressed_emails` migran de `TO public` (con filtro `auth.role()='service_role'`) a `TO service_role` para higiene. Nuevo guardrail `rls-idempotency-keys-scoped.test.ts` que audita el SQL de la migración y bloquea CI si alguna policy futura re-elimina el scope por organización.
+
 ## [13.301.54] - 2026-07-17
 - Fix suites RLS de CI: los 7 fixtures en `supabase/tests/rls/test_rls_*.sql` insertaban embarques con expedientes tipo `EXP-A-001`, `EXP-CRM-B`, etc., que ya no pasan el CHECK `embarques_expediente_formato_valido` introducido en v13.301.49 (exige `^EL[A-Z]{3}[0-9]+$` o `^DEMO-[0-9]{4}-[0-9]+$`). Se renombran a formato válido por suite: `ELISO`, `ELFIN`, `ELFCR`, `ELOPS`, `ELCRM`, `ELTAR`, `ELNAD` (`00001/00002`). Nuevo test de arquitectura `rls-fixtures-expediente-format.test.ts` que valida el formato en cualquier fixture RLS nuevo para que la regresión no vuelva a colarse.
 
