@@ -1,8 +1,13 @@
 /**
  * Orquestador del "Hueco de Facturación".
  *
- * v13.301.41 — Fase A auditoría: la exclusión "ya tiene CFDI" se determina en
- * dos capas, en este orden:
+ * v13.301.42 — Fase C auditoría: si un embarque tiene al menos un
+ * `conceptos_venta.estado_facturacion = 'pendiente'` (no borrado), REAPARECE
+ * en el hueco aunque exista bridge, factura legacy o proforma histórica que
+ * lo hubiera ocultado. Esto captura el caso "se agregan nuevos conceptos
+ * después de facturar" (H6 de la auditoría).
+ *
+ * Fase A (v13.301.41) — exclusión "ya tiene CFDI" en dos capas:
  *   1. Bridge canónico `factura_embarques.activa = true` cuya factura está
  *      `Emitida`. Fuente de verdad desde v13.301.31.
  *   2. Fallback legacy: expediente con al menos una `facturas.estado='Emitida'`
@@ -59,6 +64,22 @@ export function calcularExclusionesPorProformaHistorica(
   return excluidos;
 }
 
+/**
+ * v13.301.42 — Fase C: devuelve el Set de embarques con al menos un
+ * concepto de venta `pendiente`. Estos embarques se consideran "con hueco
+ * pendiente" y NO pueden ser ocultados por reglas de exclusión, aunque
+ * exista un CFDI histórico.
+ */
+export function calcularEmbarquesConPendiente(
+  conceptos: ConceptoVentaDetalle[],
+): Set<string> {
+  const set = new Set<string>();
+  for (const c of conceptos) {
+    if (c.estado_facturacion === "pendiente") set.add(c.embarque_id);
+  }
+  return set;
+}
+
 export async function fetchHuecoFacturacion({
   organizationId,
   hoy = new Date(),
@@ -85,17 +106,23 @@ export async function fetchHuecoFacturacion({
   const { ventas, expedientesFacturados, embarquesConBridge, conceptosDetalle } =
     await fetchVentasYFacturas(ids, expedientes, organizationId);
   const excluidosPorProformaHistorica = calcularExclusionesPorProformaHistorica(conceptosDetalle);
+  const embarquesConPendiente = calcularEmbarquesConPendiente(conceptosDetalle);
   const ventasMap = indexarVentas(ventas);
 
   const filas: FilaHueco[] = [];
   let totalUsd = 0;
   let totalMxn = 0;
   for (const e of arr) {
-    // Fuente de verdad principal: bridge activo con factura Emitida.
-    if (embarquesConBridge.has(e.id)) continue;
-    // Fallback legacy por expediente (facturas sin bridge, sólo si están vivas).
-    if (e.expediente && expedientesFacturados.has(e.expediente)) continue;
-    if (excluidosPorProformaHistorica.has(e.id)) continue;
+    // v13.301.42 — Override de re-aparición: si hay conceptos pendientes,
+    // el embarque siempre entra al hueco (nuevos conceptos post-facturación).
+    const tienePendiente = embarquesConPendiente.has(e.id);
+    if (!tienePendiente) {
+      // Fuente de verdad principal: bridge activo con factura Emitida.
+      if (embarquesConBridge.has(e.id)) continue;
+      // Fallback legacy por expediente (facturas sin bridge, sólo si están vivas).
+      if (e.expediente && expedientesFacturados.has(e.expediente)) continue;
+      if (excluidosPorProformaHistorica.has(e.id)) continue;
+    }
     const fila = construirFilaHueco(e, ventasMap, hoy);
     if (!fila) continue;
     totalMxn += fila.ventaMxn;

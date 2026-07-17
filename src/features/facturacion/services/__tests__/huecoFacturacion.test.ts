@@ -119,5 +119,42 @@ describe("fetchHuecoFacturacion", () => {
     // HOY = 2026-06-15 → límite = 2026-06-18
     expect(embarquesCall!.opArgs[lteIdx]).toEqual(["eta", "2026-06-18"]);
   });
+
+  it("v13.301.42 — Fase C: concepto 'pendiente' re-surge sobre bridge activo", async () => {
+    mock.setTableResult("embarques", { data: [emb("a")], error: null });
+    mock.setTableResult("conceptos_venta", {
+      data: [{ embarque_id: "a", total: 50, moneda: "USD", estado_facturacion: "pendiente", proforma_id: null, proformas: null }],
+      error: null,
+    });
+    mock.setTableResult("factura_embarques", { data: [{ embarque_id: "a" }], error: null });
+    mock.setTableResult("facturas", { data: [], error: null });
+    const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    expect(r.totalEmbarques).toBe(1);
+    expect(r.filas[0].embarque_id).toBe("a");
+  });
+
+  it("v13.301.42 — Fase C: 'pendiente' re-surge sobre factura legacy por expediente", async () => {
+    mock.setTableResult("embarques", { data: [emb("a")], error: null });
+    mock.setTableResult("conceptos_venta", {
+      data: [{ embarque_id: "a", total: 30, moneda: "USD", estado_facturacion: "pendiente", proforma_id: null, proformas: null }],
+      error: null,
+    });
+    mock.setTableResult("factura_embarques", { data: [], error: null });
+    mock.setTableResult("facturas", { data: [{ expediente: "EXP-a" }], error: null });
+    const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    expect(r.totalEmbarques).toBe(1);
+  });
+
+  it("v13.301.42 — Fase C: sin pendientes, el bridge sigue ocultando", async () => {
+    mock.setTableResult("embarques", { data: [emb("a")], error: null });
+    mock.setTableResult("conceptos_venta", {
+      data: [{ embarque_id: "a", total: 50, moneda: "USD", estado_facturacion: "facturado", proforma_id: null, proformas: null }],
+      error: null,
+    });
+    mock.setTableResult("factura_embarques", { data: [{ embarque_id: "a" }], error: null });
+    mock.setTableResult("facturas", { data: [], error: null });
+    const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    expect(r.totalEmbarques).toBe(0);
+  });
 });
 
