@@ -149,6 +149,22 @@ export function isExpectedFacturapiValidation(err: unknown): boolean {
   );
 }
 
+/**
+ * Detecta fallos transitorios de red al invocar Edge Functions de FacturApi
+ * (típico `FunctionsFetchError` cuando el navegador pierde conexión). No son
+ * bugs de código: mostramos toast accionable, el usuario reintenta y listo.
+ * Ref audit Sentry JAVASCRIPT-REACT-2T (13.301.60).
+ */
+export function isTransientFacturapiNetwork(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  if ((err as { name?: unknown }).name !== "FacturapiError") return false;
+  if ((err as { transient?: unknown }).transient !== true) return false;
+  const msg = (err as { message?: unknown }).message;
+  if (typeof msg !== "string") return false;
+  return /failed to send a request to the edge function|networkerror|failed to fetch|load failed/i
+    .test(msg);
+}
+
 /** Emite un toast de advertencia (no bloquea). */
 export function notifyWarning(
   _toast: AnyToastFn | undefined,
