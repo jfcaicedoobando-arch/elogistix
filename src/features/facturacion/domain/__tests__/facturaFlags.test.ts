@@ -68,13 +68,21 @@ describe("deriveFacturaFlags", () => {
     expect(r.puedeSustituirCfdi).toBe(false);
   });
 
-  it("Ya sustituida (sustituida_por presente) → no puede cancelar ni sustituir de nuevo", () => {
+  it("Con sustituta viva → puede cancelar la original (flujo SAT motivo 01) pero NO sustituirla dos veces", () => {
     const r = deriveFacturaFlags(
       { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, sustituida_por: "otra-id", sustituida_por_ref: { estado: "Emitida" } },
       true,
     );
-    expect(r.puedeCancelarCfdi).toBe(false);
+    expect(r.puedeCancelarCfdi).toBe(true);
     expect(r.puedeSustituirCfdi).toBe(false);
+  });
+
+  it("En trámite de cancelación (cancellation_status=pending) → NO puede cancelar de nuevo", () => {
+    const r = deriveFacturaFlags(
+      { estado: "Emitida", uuid_fiscal: "UUID-1", fecha_emision: POST, cancellation_status: "pending" },
+      true,
+    );
+    expect(r.puedeCancelarCfdi).toBe(false);
   });
 
   it("Sustituta previa Cancelada → la original vuelve a estar disponible", () => {
