@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.34] - 2026-07-17
+- Fix: timbrado por sustitución fallaba con `"related_documents[0].uuid" is not allowed` (requestId `772664a6-f280-4ebd-979c-fa919b279947`). FacturAPI v2 exige el shape agrupado `related_documents: [{ relationship, documents: ["<uuid>"] }]`; el envío previo con `{ relationship, uuid }` era incompatible con `/v2/invoices`. Corregido en `facturapi-emitir/helpers.ts` + test de regresión.
+
 ## [13.301.33] - 2026-07-17
 - Refactor: reducida la complejidad ciclomática de `deriveFacturaFlags` y `FacturaDetalle` (extrayendo `FacturaDetalleView` y helpers `isSustitutaViva` / `deriveActionFlags`) para pasar el umbral de lint (max complexity 16).
 

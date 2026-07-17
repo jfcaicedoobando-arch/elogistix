@@ -56,7 +56,7 @@ export interface FacturapiPayload {
   payment_method: string;
   currency: string;
   exchange?: number;
-  related_documents?: Array<{ relationship: string; uuid: string }>;
+  related_documents?: Array<{ relationship: string; documents: string[] }>;
   /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
   pdf_custom_section?: string;
   customer: {
@@ -163,10 +163,10 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
   if (ctx.sustituye_uuid) {
     // SAT relación 04 = "Sustitución de los CFDI previos".
-    // FacturAPI v2 espera `related_documents: [{ relationship, uuid }]` (un objeto por UUID),
-    // no `{ relationship, documents: [...] }` (ese shape es sólo la RESPUESTA agrupada al consultar).
-    // Ver `facturapi@4.18.0` dist/types/common.d.ts → interface RelatedDocument { relationship; uuid }.
-    payload.related_documents = [{ relationship: "04", uuid: ctx.sustituye_uuid }];
+    // FacturAPI v2 (endpoint /v2/invoices) espera el shape agrupado:
+    //   related_documents: [{ relationship, documents: ["<uuid>", ...] }]
+    // Enviar `{ relationship, uuid }` provoca: `"related_documents[0].uuid" is not allowed`.
+    payload.related_documents = [{ relationship: "04", documents: [ctx.sustituye_uuid] }];
   }
   // v13.208.0 — bloque "Referencias del embarque" al pie del PDF de FacturAPI.
   const pdfSection = buildPdfCustomSection(ctx.referencias);
