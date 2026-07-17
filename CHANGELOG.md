@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.42] - 2026-07-17
+- Auditoría "Embarques sin factura" — Fase C: un embarque con al menos un `conceptos_venta.estado_facturacion = 'pendiente'` REAPARECE en la bandeja aunque tenga bridge `factura_embarques.activa` con CFDI Emitida, factura legacy por expediente o proforma histórica facturada. Cubre el caso "se agregan nuevos conceptos después de facturar" (H6 de la auditoría). Se añade el helper puro `calcularEmbarquesConPendiente` en `huecoFacturacion/index.ts` y el override se aplica antes de las tres reglas de exclusión. Tests nuevos: override de bridge, override de legacy y override de proforma histórica.
+
 ## [13.301.41] - 2026-07-17
 - Auditoría "Embarques sin factura" — Fase A: la exclusión "ya tiene CFDI" ahora usa como fuente de verdad el bridge `factura_embarques.activa = true` unido a `facturas.estado = 'Emitida'`, con fallback legacy por `expediente` filtrado también por estado Emitida y PDF presente. Antes bastaba con cualquier factura (incluso cancelada) que tuviera `factura_pdf_url` para ocultar el embarque, dejando fuera del hueco casos donde el único CFDI estaba cancelado sin sustituta viva. Se actualizan `huecoFacturacion/fetchSources.ts` (`fetchEmbarquesConFacturaViva`, `fetchExpedientesConFacturaVivaLegacy`) y su orquestador. Tests ampliados para cubrir: bridge activo, factura cancelada que no oculta, y fallback legacy por expediente.
 
