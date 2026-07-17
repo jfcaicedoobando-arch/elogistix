@@ -5,6 +5,7 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 export function useTimbrarFactura() {
   const qc = useQueryClient();
   return useMutation({
