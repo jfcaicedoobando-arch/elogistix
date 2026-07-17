@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.45] - 2026-07-17
+- Fix trigger `check_factura_saldo_para_nc`: la validación fallaba con `column "saldo" does not exist` al insertar notas de crédito. Ahora el saldo se calcula al vuelo (`total − pagos aplicados − NC previas aplicadas`) en vez de leer una columna inexistente. Se sigue bloqueando NC sobre facturas Emitidas con saldo ≤ 0.01. Desbloquea `test_rls_financiero_critico.sql` en CI.
+
 ## [13.301.44] - 2026-07-17
 - Auditoría "Embarques sin factura" — cierre Fase D: (1) se añade el test `invalidateHuecoFacturacion.test.ts` para blindar el prefijo de invalidación de caché; (2) se agregan marcadores `SAFE-CAST:` en los dos casts anidados de Supabase en `huecoFacturacion/fetchSources.ts`; (3) se divide `DialogCrearNotaCredito.tsx` extrayendo su estado y submit al hook `useNotaCreditoDraft` (Power of 10 ≤ 200 líneas); (4) se divide `lib/domain/bitacoraDescripcion.ts` extrayendo el despacho por módulo (`facturacion`/`cxp`/`costeo`) a `bitacoraDescripcionModulos.ts` y las types a `bitacoraDescripcion.types.ts`. Con esto queda cerrada la auditoría de las 4 fases sin regresiones.
 
