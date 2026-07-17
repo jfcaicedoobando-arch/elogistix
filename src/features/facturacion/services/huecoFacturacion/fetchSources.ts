@@ -8,6 +8,7 @@
  * ocultar al embarque del hueco (antes bastaba con `factura_pdf_url`).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { HUECO_ETA_CORTE_ISO } from "./constants";
 
 export interface EmbarqueHuecoRow {
   id: string;
