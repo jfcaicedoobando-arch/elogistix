@@ -110,7 +110,7 @@ export async function fetchFacturaById(id: string): Promise<FacturaDetalle | nul
   if (!data) return null;
   // Self-referencing FK embeds en PostgREST son frágiles ante recargas del
   // schema cache; consultamos la sustituta con una segunda query explícita.
-  const sustituidaPorId = (data as { sustituida_por: string | null }).sustituida_por;
+  const sustituidaPorId = (data as unknown as { sustituida_por: string | null }).sustituida_por;
   let sustituida_por_ref: FacturaDetalle["sustituida_por_ref"] = null;
   if (sustituidaPorId) {
     const { data: ref, error: refError } = await supabase
