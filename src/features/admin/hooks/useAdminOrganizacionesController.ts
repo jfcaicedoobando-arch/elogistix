@@ -6,6 +6,7 @@ export function useAdminOrganizacionesController() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nombre, setNombre] = useState("");
   const [rfc, setRfc] = useState("");
+  const [ownerUserId, setOwnerUserId] = useState("");
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
@@ -26,23 +27,25 @@ export function useAdminOrganizacionesController() {
     });
   }, [orgs, search, planFilter, estadoFilter]);
 
-  // 13.85.10 — Toasts viven en `useCreateOrganization`. Aquí sólo cerramos el dialog y limpiamos inputs.
   const handleCreate = () => {
-    createOrg.mutate({ nombre, rfc }, {
+    if (!ownerUserId) return;
+    createOrg.mutate({ nombre, rfc, ownerUserId }, {
       onSuccess: () => {
         setDialogOpen(false);
         setNombre("");
         setRfc("");
+        setOwnerUserId("");
       },
     });
   };
 
   return {
-    state: { dialogOpen, nombre, rfc, search, planFilter, estadoFilter },
+    state: { dialogOpen, nombre, rfc, ownerUserId, search, planFilter, estadoFilter },
     setters: {
       setDialogOpen,
       setNombre,
       setRfc,
+      setOwnerUserId,
       setSearch,
       setPlanFilter,
       setEstadoFilter,
@@ -51,3 +54,4 @@ export function useAdminOrganizacionesController() {
     createOrg: { mutate: handleCreate, isPending: createOrg.isPending },
   };
 }
+

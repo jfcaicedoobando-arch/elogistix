@@ -57,6 +57,8 @@ export default function AdminOrganizaciones() {
         onNombreChange={setters.setNombre}
         rfc={state.rfc}
         onRfcChange={setters.setRfc}
+        ownerUserId={state.ownerUserId}
+        onOwnerUserIdChange={setters.setOwnerUserId}
         onCreate={createOrg.mutate}
         isPending={createOrg.isPending}
       />

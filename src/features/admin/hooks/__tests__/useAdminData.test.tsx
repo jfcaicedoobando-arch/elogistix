@@ -18,7 +18,7 @@ describe("useAdminData", () => {
 
   it("creates an organization", async () => {
     const { result } = renderHook(() => useCreateOrganization(), { wrapper: createWrapper() });
-    await result.current.mutateAsync({ nombre: "New Org", rfc: "RFC" });
+    await result.current.mutateAsync({ nombre: "New Org", rfc: "RFC", ownerUserId: "u-1" });
     expect(adminService.createOrganization).toHaveBeenCalled();
   });
 });

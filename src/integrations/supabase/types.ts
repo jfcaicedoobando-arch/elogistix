@@ -8268,6 +8268,10 @@ export type Database = {
           total_operaciones: number
         }[]
       }
+      provision_organization: {
+        Args: { p_nombre: string; p_owner_user_id: string; p_rfc: string }
+        Returns: string
+      }
       purgar_embarque_cascade: {
         Args: { p_embarque_id: string }
         Returns: undefined
