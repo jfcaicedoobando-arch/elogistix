@@ -1,6 +1,14 @@
 // Helpers de provisioning para `e2e-provision-multi-tenant`.
 // Separado del handler para respetar los límites de longitud/complejidad del lint.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  BUCKET,
+  upsertCliente,
+  upsertEmbarque,
+  upsertFactura,
+  upsertCotizacion,
+  uploadMarker,
+} from "./entities.ts";
 
 type AdminClient = ReturnType<typeof createClient>;
 
@@ -25,8 +33,6 @@ export interface OrgProvisionResult {
   storage_path: string;
   marker: string;
 }
-
-const BUCKET = "documentos";
 
 export function jsonResponse(body: unknown, status: number, corsHeaders: HeadersInit) {
   return new Response(JSON.stringify(body), {
