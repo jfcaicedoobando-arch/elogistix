@@ -6,6 +6,7 @@ const mock = await vi.hoisted(async () => {
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import { fetchHuecoFacturacion } from "@/features/facturacion/services/huecoFacturacion";
+import { FACTURA_ESTADOS_VIVOS_HUECO } from "@/features/facturacion/services/huecoFacturacion/constants";
 
 const HOY = new Date("2026-06-15T12:00:00Z");
 
@@ -29,7 +30,7 @@ describe("fetchHuecoFacturacion", () => {
     expect(r).toEqual({ filas: [], totalEmbarques: 0, totalUsd: 0, totalMxn: 0 });
   });
 
-  it("excluye embarques con bridge factura_embarques activo (fuente canónica)", async () => {
+  it("excluye embarques con bridge activo y cualquier estado vivo", async () => {
     mock.setTableResult("embarques", { data: [emb("a"), emb("b")], error: null });
     mock.setTableResult("conceptos_venta", {
       data: [
@@ -46,6 +47,23 @@ describe("fetchHuecoFacturacion", () => {
     const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
     expect(r.totalEmbarques).toBe(1);
     expect(r.filas[0].expediente).toBe("EXP-b");
+    const bridgeCall = mock.tableCalls.find((c) => c.table === "factura_embarques");
+    expect(bridgeCall?.opArgs).toContainEqual(["facturas.estado", FACTURA_ESTADOS_VIVOS_HUECO]);
+  });
+
+  it("v13.301.46 — bridge activo con factura Pagada oculta al embarque", async () => {
+    mock.setTableResult("embarques", { data: [emb("a")], error: null });
+    mock.setTableResult("conceptos_venta", {
+      data: [{ embarque_id: "a", total: 100, moneda: "USD", estado_facturacion: "facturado" }],
+      error: null,
+    });
+    mock.setTableResult("factura_embarques", {
+      data: [{ embarque_id: "a", facturas: { estado: "Pagada" } }],
+      error: null,
+    });
+    mock.setTableResult("facturas", { data: [], error: null });
+    const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    expect(r.totalEmbarques).toBe(0);
   });
 
   it("v13.301.41 — factura Cancelada sin bridge activo NO oculta al embarque", async () => {
@@ -74,10 +92,22 @@ describe("fetchHuecoFacturacion", () => {
     const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
     expect(r.totalEmbarques).toBe(1);
     expect(r.filas[0].expediente).toBe("EXP-b");
-    // Verifica que el fallback filtre por estado Emitida y pdf no nulo.
+    // Verifica que el fallback filtre por estados vivos y pdf no nulo.
     const facturasCall = mock.tableCalls.find((c) => c.table === "facturas");
     expect(facturasCall).toBeDefined();
-    expect(facturasCall!.opArgs.some((a) => a[0] === "estado" && a[1] === "Emitida")).toBe(true);
+    expect(facturasCall!.opArgs).toContainEqual(["estado", FACTURA_ESTADOS_VIVOS_HUECO]);
+  });
+
+  it("v13.301.46 — fallback legacy con factura Pagada oculta al embarque", async () => {
+    mock.setTableResult("embarques", { data: [emb("a")], error: null });
+    mock.setTableResult("conceptos_venta", {
+      data: [{ embarque_id: "a", total: 30, moneda: "USD", estado_facturacion: "facturado" }],
+      error: null,
+    });
+    mock.setTableResult("factura_embarques", { data: [], error: null });
+    mock.setTableResult("facturas", { data: [{ expediente: "EXP-a", estado: "Pagada" }], error: null });
+    const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    expect(r.totalEmbarques).toBe(0);
   });
 
   it("calcula totales en USD/MXN sumando conceptos del embarque", async () => {

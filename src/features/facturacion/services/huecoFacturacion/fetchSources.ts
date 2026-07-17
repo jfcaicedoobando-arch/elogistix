@@ -2,13 +2,13 @@
  * Fuentes de datos (Supabase) para el "Hueco de Facturación". Solo I/O.
  *
  * v13.301.41 — Fase A auditoría: la fuente de verdad para "ya tiene CFDI vivo"
- * es `factura_embarques.activa = true` unido a `facturas.estado = 'Emitida'`.
+ * es `factura_embarques.activa = true` unido a un estado de factura vivo.
  * Se mantiene un fallback por `expediente` con filtro de estado para cubrir
  * facturas legacy sin bridge; una factura únicamente `Cancelada` deja de
  * ocultar al embarque del hueco (antes bastaba con `factura_pdf_url`).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { HUECO_ETA_CORTE_ISO } from "./constants";
+import { FACTURA_ESTADOS_VIVOS_HUECO, HUECO_ETA_CORTE_ISO } from "./constants";
 
 export interface EmbarqueHuecoRow {
   id: string;
@@ -92,8 +92,8 @@ export async function fetchConceptosVentaDeEmbarques(
 
 /**
  * Devuelve el Set de `embarque_id` que tienen al menos una entrada en
- * `factura_embarques.activa = true` cuya factura está `Emitida`. Ésta es la
- * fuente de verdad canónica desde v13.301.31.
+ * `factura_embarques.activa = true` cuya factura tiene estado vivo. Ésta es
+ * la fuente de verdad canónica desde v13.301.31.
  */
 export async function fetchEmbarquesConFacturaViva(
   embarqueIds: string[],
@@ -105,7 +105,7 @@ export async function fetchEmbarquesConFacturaViva(
     .select("embarque_id, facturas!inner(estado, cancellation_status)")
     .in("embarque_id", embarqueIds)
     .eq("activa", true)
-    .eq("facturas.estado", "Emitida");
+    .in("facturas.estado", FACTURA_ESTADOS_VIVOS_HUECO);
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
   if (error) throw error;
@@ -116,7 +116,7 @@ export async function fetchEmbarquesConFacturaViva(
 }
 
 /**
- * Fallback legacy: expedientes con al menos una factura `Emitida` con PDF.
+ * Fallback legacy: expedientes con al menos una factura viva con PDF.
  * Sólo debe usarse para embarques sin bridge activo (facturas históricas
  * anteriores a `factura_embarques`).
  */
@@ -129,7 +129,7 @@ export async function fetchExpedientesConFacturaVivaLegacy(
     .from("facturas")
     .select("expediente")
     .in("expediente", expedientes)
-    .eq("estado", "Emitida")
+    .in("estado", FACTURA_ESTADOS_VIVOS_HUECO)
     .not("factura_pdf_url", "is", null);
   if (organizationId) q = q.eq("organization_id", organizationId);
   const { data, error } = await q;
