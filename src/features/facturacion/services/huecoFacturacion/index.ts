@@ -78,10 +78,8 @@ export async function fetchHuecoFacturacion({
     new Set(arr.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  const { ventas, facturas, conceptosDetalle } = await fetchVentasYFacturas(ids, expedientes, organizationId);
-  const facturadosSet = new Set<string>(
-    facturas.map((f) => f.expediente).filter((x): x is string => !!x),
-  );
+  const { ventas, expedientesFacturados, embarquesConBridge, conceptosDetalle } =
+    await fetchVentasYFacturas(ids, expedientes, organizationId);
   const excluidosPorProformaHistorica = calcularExclusionesPorProformaHistorica(conceptosDetalle);
   const ventasMap = indexarVentas(ventas);
 
@@ -89,7 +87,10 @@ export async function fetchHuecoFacturacion({
   let totalUsd = 0;
   let totalMxn = 0;
   for (const e of arr) {
-    if (e.expediente && facturadosSet.has(e.expediente)) continue;
+    // Fuente de verdad principal: bridge activo con factura Emitida.
+    if (embarquesConBridge.has(e.id)) continue;
+    // Fallback legacy por expediente (facturas sin bridge, sólo si están vivas).
+    if (e.expediente && expedientesFacturados.has(e.expediente)) continue;
     if (excluidosPorProformaHistorica.has(e.id)) continue;
     const fila = construirFilaHueco(e, ventasMap, hoy);
     if (!fila) continue;
