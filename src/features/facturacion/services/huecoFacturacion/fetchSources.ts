@@ -46,7 +46,7 @@ export async function fetchEmbarquesParaHueco(
       "id, expediente, cliente_nombre, operador, etd, eta, bl_master, bl_house, tipo_cambio_usd, tipo_cambio_eur",
     )
     .not("eta", "is", null)
-    .gte("eta", "2026-04-01")
+    .gte("eta", HUECO_ETA_CORTE_ISO)
     .lte("eta", limiteEtaIso)
     .eq("facturado_historico", false)
     .order("eta", { ascending: true });
