@@ -100,6 +100,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     && error !== null
     && !isAuthorizationError(error)
     && !isExpectedFacturapiValidation(error)
+    && !isTransientFacturapiNetwork(error)
   ) {
     reportCaughtError(
       error,
