@@ -1,58 +1,73 @@
-# Por qué los usuarios ven toasts de colores distintos
 
-Hoy el `Toaster` global (`src/components/ui/sonner.tsx`) tiene la prop **`richColors`** activada. Con esa prop, Sonner pinta cada toast con un fondo distinto según la severidad:
+## Objetivo
 
-| Tipo | Fondo actual | Dónde se usa |
+Que ningún reporte financiero/operativo sume ni cuente facturas **Cancelada** o **Sustituida**. El listado de Facturas y las vistas de detalle/historial siguen mostrándolas (con su badge) porque su función es dar trazabilidad, no reportar.
+
+## Auditoría — estado actual
+
+Recorrí las 3 rutas por donde entran las facturas a los reportes: RPCs de Postgres, servicios TypeScript y generadores/exportaciones.
+
+### Ya filtran correctamente (no requieren cambio)
+
+| Reporte | Fuente | Cómo excluye |
 |---|---|---|
-| `toast.error` / `notifyError` | rojo | 340+ call sites de error |
-| `toast.success` / `notifySuccess` | verde | 82 call sites (guardados, timbrado, etc.) |
-| `toast.warning` / `notifyWarning` | ámbar | 15 call sites (SAT retry, avisos) |
-| `toast.info` | azul | 10 call sites (SAT pending, "cancelación enviada") |
-| `toast(...)` (neutro) | blanco/gris | 47 call sites (CRM, mensajes simples) |
+| Sidebar · "Facturas vencidas" | RPC `sidebar_alert_counts` | `estado = 'Vencida'` |
+| Bandeja · Cartera pendiente | RPC `cartera_pendiente` | `estado IN (Emitida, Vencida, Parcialmente pagada)` |
+| Dashboard operativo | RPC `dashboard_summary` | No lee `facturas`, usa `conceptos_venta` y `proveedor_facturas` |
+| Reportes de rentabilidad por cliente | RPC `profit_por_cliente` / `reportes_resumen` | No lee `facturas`, usa `conceptos_venta/costo` |
+| Dashboard ejecutivo de facturación (KPI facturado) | `dashboardEjecutivo.ts` | `estado IN ESTADOS_FACTURADO` (Emitida/Parcial/Vencida/Pagada) |
+| Cobranza (aging) | `cobranza.ts` | `estado IN ESTADOS_ACTIVOS` (Emitida/Parcial/Vencida) |
+| Estado de cuenta cliente | `estadoCuenta.ts` | `estado IN ESTADOS_ACTIVOS` |
+| Bandejas (borradores, emitidas, pagos) | `bandejas.ts` | Filtros por estado vivo |
+| Hueco de facturación | `huecoFacturacion/fetchSources.ts` | `FACTURA_ESTADOS_VIVOS_HUECO` |
+| Presupuesto vs Real | `presupuesto/vsReal.ts` | `.neq('estado','Cancelada')` sobre `proveedor_facturas` (la tabla no tiene "Sustituida") |
+| Perfil financiero cliente | `cliente/services/financials.ts` | `estado IN ('Emitida','Vencida')` |
 
-**Analogía**: es como si cada aviso de la app viniera en un post-it de color distinto — rojo, verde, amarillo, azul, blanco. Individualmente cada color tiene sentido, pero cuando el usuario ve varios seguidos siente que la app "cambia de idioma" en cada mensaje.
+### Con hueco confirmado (a corregir)
 
-Además hay una inconsistencia real: los mismos flujos usan tanto `toast.info` (azul) como `toast(...)` (neutro) para mensajes informativos equivalentes → mismo tipo de aviso, dos colores.
+1. **EERR devengado** — `src/features/profit/services/estadoResultadosDevengado.ts:76`  
+   Usa `.neq("estado", "Cancelada")` pero **no excluye `Sustituida`**. Una factura sustituida sigue sumando en el estado de resultados devengado hasta que se cancele su UUID original. Debe excluir ambas.
 
-# Recomendación (patrón moderno tipo Linear/Vercel)
+2. **Portal del cliente — listado y detalle de facturas** — `src/features/portal/services/queries.ts:129` y `:142`  
+   `fetchPortalFacturas` y `fetchPortalFactura` **no filtran por estado**. El cliente ve la Cancelada y la Sustituida mezcladas con las vigentes en su listado. Debe ocultar Canceladas y Sustituidas del listado (no del detalle si se accede por URL directa, para que el badge sea informativo).
 
-Un solo color de fondo para TODOS los toasts (superficie `--card` sobre `--background`), y la severidad se comunica sólo por:
+## Cambios propuestos
 
-1. **Icono a color** (círculo rojo/verde/ámbar/azul, ya viene de Sonner).
-2. **Borde izquierdo de 3 px** con el color semántico.
-3. **Título con peso** consistente (14 px semibold, ya existe).
+### 1. Constante compartida para "estados vivos"
+Crear `src/features/facturacion/domain/estadosFactura.ts` con:
+```ts
+export const FACTURA_ESTADOS_VIVOS = [
+  "Emitida", "Pagada", "Parcialmente pagada", "Vencida",
+] as const;
+```
+y usarla desde EERR devengado, portal y (opcionalmente) unificar con `ESTADOS_FACTURADO`, `ESTADOS_ACTIVOS` y `FACTURA_ESTADOS_VIVOS_HUECO` en un segundo paso (dejar la unificación fuera de este scope para no tocar reportes que ya funcionan).
 
-Ventajas:
-- Look calmado, "Apple-like minimal" que ya rige el proyecto (mem://core).
-- Elimina el choque visual al encolar avisos de distinto tipo.
-- Mantiene la accesibilidad (icono + borde + texto son 3 canales de severidad, no sólo color).
-- Cero cambios en los ~450 call sites: sigue siendo `notifyError` / `toast.success` / etc.
+### 2. Fix EERR devengado
+`estadoResultadosDevengado.ts:76` — reemplazar `.neq("estado", "Cancelada")` por `.in("estado", FACTURA_ESTADOS_VIVOS)`.
 
-# Cambios concretos (sólo presentación)
+### 3. Fix Portal
+`portal/services/queries.ts:129` — añadir `.in("estado", FACTURA_ESTADOS_VIVOS)` en `fetchPortalFacturas`. Dejar `fetchPortalFactura` (detalle) sin filtro para no romper enlaces directos, pero renderizar el badge de estado ya existente.
 
-**Único archivo a tocar:** `src/components/ui/sonner.tsx`
+### 4. Tests
+- Test unitario en `estadoResultadosDevengado.test.ts` que verifique que una factura `Sustituida` no aparece en el EERR.
+- Test en `portal/queries` (o snapshot del filtro) que asegure que el `in("estado", …)` está presente.
+- Test de regresión en `src/lib/__tests__/facturas-estados-reportes.test.ts` que escanee los servicios de reportes (`dashboardEjecutivo`, `cobranza`, `estadoCuenta`, `estadoResultadosDevengado`, `hueco…`, `portal/queries`, `financials`) y falle si alguno lee `from("facturas")` sin un filtro por estado vivo.
 
-1. Quitar `richColors`.
-2. En `toastOptions.classNames.toast`, usar tokens semánticos del design system: `bg-card text-card-foreground border-border`.
-3. Añadir variantes por `data-type` (Sonner las expone) para el borde izquierdo y el color del icono, usando tokens ya definidos:
-   - `data-[type=error]`: `border-l-4 border-l-destructive`, icono `text-destructive`.
-   - `data-[type=success]`: `border-l-4 border-l-primary` (o un token `--success` si preferimos añadirlo), icono en verde.
-   - `data-[type=warning]`: `border-l-4 border-l-amber-500` (token `--warning` si lo agregamos), icono ámbar.
-   - `data-[type=info]` y toast neutro: `border-l-4 border-l-muted`, sin icono destacado.
-4. Consolidar `toast.info` con toast neutro (no separar visualmente informativo de neutro) — se logra automáticamente al usar el mismo estilo para ambos.
+### 5. Fuera de scope explícito
+- `masivas.ts` y `exports.ts` (layout contable): operan sobre IDs seleccionados por el usuario o exportaciones contables donde la Cancelada es información válida. No se tocan.
+- `facturas_listado` RPC: es el listado maestro. Debe seguir mostrando Canceladas/Sustituidas.
+- Historial de la factura: sigue mostrando ambas por diseño (trazabilidad).
 
-Nada más se toca: `appFeedback.ts`, `useToast` shim, `crmToast` y todos los call sites quedan igual.
+## Detalles técnicos
 
-# Verificación
+```text
+src/features/facturacion/domain/estadosFactura.ts        [NUEVO]
+src/features/profit/services/estadoResultadosDevengado.ts [FIX línea 76]
+src/features/portal/services/queries.ts                   [FIX línea 129]
+src/features/profit/services/__tests__/…                  [TEST]
+src/features/portal/services/__tests__/queries.test.ts    [TEST]
+src/lib/__tests__/facturas-estados-reportes.test.ts       [TEST guardrail]
+CHANGELOG.md + APP_VERSION → 13.301.62
+```
 
-- Screenshot manual con Playwright a Full HD disparando un toast de cada severidad para confirmar el look unificado.
-- Los tests de arquitectura que ya prohíben `toast.error(...)` directo y `variant: destructive` siguen protegiendo el uso correcto.
-
-# CHANGELOG y versión
-
-- Bump `APP_VERSION` a `13.301.61`.
-- Entrada nueva en `CHANGELOG.md` bajo Ajustes de UI: "Unificado el color de fondo de todos los toasts; la severidad ahora se comunica por icono y borde izquierdo".
-
-# ¿Quieres una variante?
-
-Si prefieres mantener el fondo coloreado para errores (para que un error de veras "grite"), puedo ajustar el plan para dejar SÓLO `error` con fondo rojo suave y el resto en superficie neutra. Dime antes de implementar si prefieres esa versión "1 color acentuado + resto neutro".
+Sin migraciones ni cambios de RLS. Solo cliente + tests.

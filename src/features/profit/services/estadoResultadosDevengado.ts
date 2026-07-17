@@ -13,6 +13,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapOr } from "@/lib/supabase/response";
 import { rangoMes } from "@/features/facturacion/domain/proyeccionFacturacion";
+import { FACTURA_ESTADOS_VIVOS } from "@/features/facturacion/domain/estadosFactura";
 import {
   buildEstadoResultados,
   type EstadoResultados,
@@ -73,7 +74,9 @@ async function fetchFacturasMes(orgId: string | null, desde: string, hasta: stri
     .select("id, expediente, total, moneda, fecha_emision, tipo_cambio")
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
-    .neq("estado", "Cancelada");
+    // Excluye Cancelada y Sustituida: ambas dejan de ser CFDI vigentes y no
+    // deben sumar en el EERR devengado. Ref: FACTURA_ESTADOS_VIVOS.
+    .in("estado", [...FACTURA_ESTADOS_VIVOS]);
   if (orgId) q = q.eq("organization_id", orgId);
   return mapFacturaRows(await unwrapOr(q, []));
 }

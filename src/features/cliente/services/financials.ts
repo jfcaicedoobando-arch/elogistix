@@ -3,6 +3,7 @@
  * Encapsula consultas a `facturas` y la RPC `profit_por_cliente`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { FACTURA_ESTADOS_VIVOS } from "@/features/facturacion/domain/estadosFactura";
 
 export interface ClienteFinancials {
   facturadoUSD: number;
@@ -17,10 +18,13 @@ interface ProfitRow {
 }
 
 export async function fetchClienteFinancials(clienteId: string): Promise<ClienteFinancials> {
+  // Filtra Cancelada y Sustituida server-side: no forman parte del facturado
+  // vigente al cliente. Ref: FACTURA_ESTADOS_VIVOS.
   const { data: facturas, error: errF } = await supabase
     .from("facturas")
     .select("total, moneda, estado, embarque_id")
-    .eq("cliente_id", clienteId);
+    .eq("cliente_id", clienteId)
+    .in("estado", [...FACTURA_ESTADOS_VIVOS]);
   if (errF) throw errF;
 
   let facturadoUSD = 0;
