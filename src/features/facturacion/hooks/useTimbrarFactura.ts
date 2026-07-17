@@ -49,6 +49,7 @@ export function useCancelarFactura() {
         toast.success(res.sustituida ? "CFDI sustituido" : "CFDI cancelado");
       }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
+      invalidateHuecoFacturacion(qc);
     },
     onError: (err: Error, vars) => {
       // Error transitorio del SAT: pintar toast ámbar con acción "Reintentar"
