@@ -64,8 +64,8 @@ BEGIN
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo, estado, incoterm)
     VALUES
-      (emb_a, 'EXP-FC-A', cli_a, 'CliFinC A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
-      (emb_b, 'EXP-FC-B', cli_b, 'CliFinC B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
+      (emb_a, 'ELFCR00001', cli_a, 'CliFinC A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
+      (emb_b, 'ELFCR00002', cli_b, 'CliFinC B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
 
   INSERT INTO public.proveedores(id, nombre, organization_id, tipo, categoria)
     VALUES

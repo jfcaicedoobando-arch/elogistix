@@ -61,8 +61,8 @@ BEGIN
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
   VALUES
-    (emb_a, 'EXP-OPS-A', cli_a, 'Cli OPS A', org_a, 'Marítimo', 'Importación'),
-    (emb_b, 'EXP-OPS-B', cli_b, 'Cli OPS B', org_b, 'Marítimo', 'Importación');
+    (emb_a, 'ELOPS00001', cli_a, 'Cli OPS A', org_a, 'Marítimo', 'Importación'),
+    (emb_b, 'ELOPS00002', cli_b, 'Cli OPS B', org_b, 'Marítimo', 'Importación');
 
   -- =========================================================================
   -- TEST 1: proveedores — aislamiento
