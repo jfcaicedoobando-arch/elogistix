@@ -72,6 +72,7 @@ export function useCancelarFactura() {
                 .then(() => {
                   toast.success("CFDI cancelado");
                   qc.invalidateQueries({ queryKey: facturasKeys.all });
+                  invalidateHuecoFacturacion(qc);
                 })
                 .catch((e: Error) => {
                   notifyError(toast, { title: `No se pudo cancelar: ${e.message}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });
