@@ -164,66 +164,6 @@ export type Database = {
         }
         Relationships: []
       }
-      _backup_conceptos_venta_elimp00195_20260706: {
-        Row: {
-          aplica_iva: boolean | null
-          cantidad: number | null
-          contenedor_id: string | null
-          created_at: string | null
-          deleted_at: string | null
-          deleted_by: string | null
-          descripcion: string | null
-          embarque_id: string | null
-          estado_facturacion: string | null
-          id: string | null
-          moneda: Database["public"]["Enums"]["moneda"] | null
-          organization_id: string | null
-          origen: string | null
-          precio_unitario: number | null
-          proforma_id: string | null
-          tasa_iva_aplicada: number | null
-          total: number | null
-        }
-        Insert: {
-          aplica_iva?: boolean | null
-          cantidad?: number | null
-          contenedor_id?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          descripcion?: string | null
-          embarque_id?: string | null
-          estado_facturacion?: string | null
-          id?: string | null
-          moneda?: Database["public"]["Enums"]["moneda"] | null
-          organization_id?: string | null
-          origen?: string | null
-          precio_unitario?: number | null
-          proforma_id?: string | null
-          tasa_iva_aplicada?: number | null
-          total?: number | null
-        }
-        Update: {
-          aplica_iva?: boolean | null
-          cantidad?: number | null
-          contenedor_id?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          descripcion?: string | null
-          embarque_id?: string | null
-          estado_facturacion?: string | null
-          id?: string | null
-          moneda?: Database["public"]["Enums"]["moneda"] | null
-          organization_id?: string | null
-          origen?: string | null
-          precio_unitario?: number | null
-          proforma_id?: string | null
-          tasa_iva_aplicada?: number | null
-          total?: number | null
-        }
-        Relationships: []
-      }
       _backup_gap_externo_proformas_20260706: {
         Row: {
           aceptada_at: string | null
