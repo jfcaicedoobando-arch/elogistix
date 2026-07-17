@@ -66,7 +66,9 @@ export function FacturaPagosSection({
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">Historial de pagos</CardTitle>
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Historial de pagos
+            </CardTitle>
             {pagos.length > 0 && (
               <Badge variant={liquidada ? "default" : "secondary"} className="gap-1">
                 {liquidada ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
@@ -74,8 +76,6 @@ export function FacturaPagosSection({
               </Badge>
             )}
           </div>
-          {/* El botón "Registrar pago" vive ahora en la barra superior de acciones
-              del detalle (`FacturaDetalleActionsBar`) para mantener el patrón unificado. */}
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
@@ -143,14 +143,14 @@ export function FacturaPagosSection({
             </div>
           )}
 
-          <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
+          <div className="border-t pt-3 grid grid-cols-2 gap-2">
             <div>
-              <p className="text-xs text-muted-foreground">Pagado</p>
-              <p className="font-semibold tabular-nums">{formatCurrency(totalPagado, moneda)}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Pagado</p>
+              <p className="text-base font-semibold tabular-nums">{formatCurrency(totalPagado, moneda)}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">Saldo</p>
-              <p className={`font-bold tabular-nums ${liquidada ? "text-success" : "text-accent"}`}>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Saldo</p>
+              <p className={`text-base font-semibold tabular-nums ${liquidada ? "text-success" : "text-accent"}`}>
                 {formatCurrency(saldo, moneda)}
               </p>
             </div>

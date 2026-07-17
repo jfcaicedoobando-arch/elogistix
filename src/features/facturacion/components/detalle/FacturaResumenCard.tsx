@@ -26,10 +26,10 @@ export function FacturaResumenCard({ factura }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Datos generales</CardTitle>
+        <CardTitle className="text-base font-semibold">Datos generales</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <Field label="Emisión" value={factura.fecha_emision ? formatDate(factura.fecha_emision) : "—"} />
           <Field
             label="Vencimiento"
@@ -62,7 +62,7 @@ export function FacturaResumenCard({ factura }: Props) {
 
         {factura.notas && (
           <div className="border-t pt-4">
-            <p className="text-xs text-muted-foreground mb-1">Notas</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Notas</p>
             <p className="text-sm whitespace-pre-wrap">{factura.notas}</p>
           </div>
         )}
@@ -74,8 +74,8 @@ export function FacturaResumenCard({ factura }: Props) {
 function Field({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div className={`font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <div className={`text-sm font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
   );
 }

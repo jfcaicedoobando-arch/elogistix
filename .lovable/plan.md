@@ -1,39 +1,70 @@
-## Diagnóstico
+## Diagnóstico visual (F975, FullHD, sidebar abierto)
 
-La factura **F975** está en estado `Emitida`, ya tiene `sustituida_por = F991` (también `Emitida`, viva). El botón "Cancelar CFDI" desapareció porque en `src/features/facturacion/domain/facturaFlags.ts` (línea 91) `Cancelar` y `Sustituir` comparten la misma condición:
+Muestreando los nodos de texto de la página encontré **6 tamaños distintos** (11, 12, 14, 16, 18 y 24 px), **4 pesos** (400/500/600/700) y **dos grises casi idénticos** (`rgb(18,27,43)` y `rgb(20,29,46)`) que se usan indistintamente. Eso genera una sensación de "ruido tipográfico" aunque cada carta individual se vea limpia.
 
-```ts
-const puedeCambiarCfdi = timbradaVigente && canEdit && !isSustitutaViva(f);
-// ...
-puedeCancelarCfdi:  puedeCambiarCfdi,
-puedeSustituirCfdi: puedeCambiarCfdi,
+Problemas concretos que se ven en las capturas:
+
+1. **Títulos de tarjeta inconsistentes.**
+  - Emisor / Receptor / Datos generales / Timbrado fiscal → 18 px, peso 600, con icono.
+  - Desglose de conceptos / Totales / Historial de pagos / Notas de crédito / Historial de la factura → 16 px, peso 700, algunos sin icono.
+   Son "hermanos" jerárquicamente pero se ven como niveles distintos.
+2. **Etiquetas de campo inconsistentes.**
+  - En Receptor, las etiquetas ("Cliente", "RFC", "Código postal", "Régimen fiscal", "Uso CFDI por defecto") son 12 px / 400 con un check verde delante.
+  - En Datos generales y Timbrado fiscal las etiquetas son 12 px / 500 sin icono.
+   Mismo rol, dos tratamientos.
+3. **Dos grises de cuerpo indistinguibles.** `#121B2B` y `#141D2E` conviven en textos primarios; a ojo son el mismo color pero rompen el token semántico.
+4. **Salto de tamaño en Totales.** Subtotal / IVA muestran valor a 16 px / 700, pero Total salta a 24 px / 700 y además cambia a azul. La jerarquía se entiende, pero el salto (16 → 24) es demasiado grande dentro de la misma fila de KPIs y compite con el USD 6,320.00 del header, que también está a 24 px.
+5. **Header vs. card duplicados.** El total aparece dos veces a 24 px azul (arriba a la derecha y en la tarjeta Totales). Uno de los dos debería ceder tamaño.
+6. **Micro-inconsistencia de números.** El "Folio 975" del bloque Timbrado fiscal y el "60" de "Días de crédito" usan 14 px / 500, mientras que UUID / RFC (mismo rol de "dato monoespaciado") usan 14 px / 500 mono. Está bien, pero el UUID se ve más pesado por la fuente mono; conviene bajarle un nivel visual.
+
+## Propuesta: una escala tipográfica de 4 niveles
+
+Toda la página vive con estos tokens (no se inventan colores ni fuentes, solo se aplican los ya existentes en `index.css`):
+
+```text
+display   24 / 700   foreground             → total del header
+h-card    16 / 600   foreground             → TODOS los títulos de tarjeta
+label     12 / 500   muted-foreground upper → TODAS las etiquetas de campo
+value     14 / 500   foreground             → TODOS los valores
+value-mx  14 / 600   foreground             → totales/KPIs destacados
+mono      13 / 500   foreground (font-mono) → UUID, RFC, folios
 ```
 
-Cuando existe una sustituta viva, `isSustitutaViva = true` y ambos se apagan. Pero en el flujo SAT motivo **01 (sustitución)** el orden correcto es: **1º emitir la sustituta → 2º cancelar la original**. Es decir, tener sustituta viva es *precondición* para cancelar la original, no un bloqueo.
+Con esa escala desaparecen los tamaños 11 y 18 px, y se unifica el peso de los títulos.
 
-## Cambios
+## Cambios concretos
 
-### 1. `src/features/facturacion/domain/facturaFlags.ts`
-Separar las dos condiciones:
+1. **Unificar títulos de tarjeta a `h-card` (16 / 600, con icono a la izquierda).**
+  Tocar los `CardHeader` de: `TabResumen` (Emisor, Receptor, Datos generales, Timbrado fiscal) y `FacturaDetalleView` (Desglose de conceptos, Totales, Historial de pagos, Notas de crédito, Historial de la factura). Todos con el mismo componente wrapper para que no vuelvan a divergir.
+2. **Unificar etiquetas a `label` (12 / 500, `text-muted-foreground`, uppercase tracking-wide opcional).**
+  Sacar el check verde delante de las etiquetas de Receptor: el check corresponde al valor validado (RFC verificado), no a la etiqueta. Se mueve como badge junto al valor o se quita si no aporta.
+3. **Consolidar los dos grises.** Reemplazar cualquier uso literal de `#141D2E` por el token `text-foreground` que ya resuelve a `#121B2B`. Es una búsqueda-reemplazo en los archivos del detalle.
+4. **Ajustar el bloque Totales.**
+  - Subtotal, IVA y Total con el mismo tamaño de valor (`value-mx`, 16 / 600).
+  - Total se distingue solo por color (azul primario) y por un borde/anillo sutil, no por tamaño. Deja de competir con el header.
+5. **Reducir el "USD 6,320.00" duplicado.**
+  - Si se mantiene en el header, la tarjeta Totales usa `value-mx`.
+  - Alternativa (recomendada): quitar el número del header y dejar solo `F975 · Sustituida · INDIMEX TRADING · Exp. ELIMP00294`. El total vive en su carta. Confirmar preferencia (ver pregunta abajo).
+6. **UUID / RFC / Folio → estilo `mono` (13 / 500).** Un pelo más chico que el resto de valores para que el bloque monoespaciado no pese de más.
+7. **Densidad del Timbrado fiscal.** Fecha de emisión queda huérfana en su propia fila. Reordenar el grid a `UUID · Serie · Folio · Fecha` en una sola fila (4 columnas en FullHD) para eliminar la fila casi vacía.
 
-- `puedeSustituirCfdi = timbradaVigente && canEdit && !isSustitutaViva(f)` (sin cambio: no se sustituye dos veces).
-- `puedeCancelarCfdi = timbradaVigente && canEdit && !estaCancelada && (cancellation_status !== 'pending')` (permitir cuando ya hay sustituta viva; bloquear si ya está en trámite de cancelación).
+## Archivos afectados (sección técnica)
 
-Ajustar tests de `facturaFlags.test.ts` si existen (agregar caso: factura Emitida con sustituta viva → `puedeCancelarCfdi: true, puedeSustituirCfdi: false`).
+- `src/features/facturacion/components/detalle/TabResumen.tsx` — títulos de tarjeta, etiquetas Receptor, grid de Timbrado fiscal.
+- `src/features/facturacion/components/detalle/FacturaDetalleView.tsx` — títulos de las tarjetas inferiores + header con total.
+- `src/features/facturacion/components/detalle/*` (Totales, HistorialPagos, NotasCredito, HistorialFactura) — normalizar CardHeader.
+- Posible pequeño componente compartido `FacturaCardHeader` (title + icon) para prevenir que vuelva a divergir.
+- Cero cambios en `index.css` / `tailwind.config.ts` (uso los tokens existentes).
 
-### 2. `DialogCancelarFactura` / `SelectorSustituta`
-Verificar que cuando se abre desde una factura con `sustituida_por` ya establecido, el `SelectorSustituta` prellene esa sustituta y no permita elegir otra (motivo 01 debe amarrarse a la relación que ya existe en BD).
+## Fuera de alcance
 
-### 3. Limpiar estado stale de F975
-`cancelacion_solicitada_en` tiene fecha pero `cancellation_status = 'none'` (residuo de un intento previo). No es lo que bloquea el botón, pero conviene ejecutar `facturapi-consultar` sobre F975 después del fix para reconciliar (o dejar que el usuario use "Limpiar estado local"). No requiere código, sólo verificación manual.
+- Colores nuevos, iconos nuevos, animaciones. Solo tipografía y espaciado.
+- Cambios en tabs distintos a "Resumen".
+- Cambios en la lógica de negocio o en los datos mostrados.
 
-### 4. Versionado
-- Bump `APP_VERSION` a `13.301.36`.
-- Nueva entrada en `CHANGELOG.md`.
+## Pregunta antes de implementar
 
-## Verificación
+En el header, el "USD 6,320.00" se ve idéntico al de la tarjeta Totales. ¿Prefieres…
 
-1. Recargar F975 → botón "Cancelar CFDI" visible en la barra de acciones.
-2. Al abrir el diálogo, la sustituta F991 aparece preseleccionada.
-3. F991 (la sustituta viva) sigue **sin** botón "Sustituir" ni "Cancelar" reutilizables incorrectos — sólo su propio flujo normal.
-4. `bun run ci:fast` en verde.
+- **A. Quitarlo del header** y dejarlo solo en la tarjeta Totales (mi recomendación). Esto
+- **B. Mantenerlo en el header** y en Totales dejar los tres KPIs al mismo tamaño (Total solo se distingue por color).

@@ -25,8 +25,8 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <History className="h-4 w-4" />
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <History className="h-4 w-4 text-muted-foreground" />
           Historial de la factura
         </CardTitle>
       </CardHeader>

@@ -30,33 +30,33 @@ export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmisi
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
           <FileCheck2 className="h-4 w-4 text-success" /> Timbrado fiscal
           <AmbienteBadge ambiente={ambiente} size="md" />
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="md:col-span-2 min-w-0">
-            <p className="text-xs text-muted-foreground">UUID fiscal</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">UUID fiscal</p>
             <div className="flex items-center gap-1">
-              <p className="font-mono text-xs truncate">{uuidFiscal}</p>
+              <p className="font-mono text-sm truncate">{uuidFiscal}</p>
               <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={copiarUuid}>
                 <Copy className="h-3 w-3" />
               </Button>
             </div>
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">Folio</p>
-            <p className="font-mono">{folioFiscal ?? "—"}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Folio</p>
+            <p className="font-mono text-sm">{folioFiscal ?? "—"}</p>
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">Serie</p>
-            <p className="font-mono">{serie || "—"}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Serie</p>
+            <p className="font-mono text-sm">{serie || "—"}</p>
           </div>
-          <div className="min-w-0 md:col-span-2">
-            <p className="text-xs text-muted-foreground">Fecha de emisión</p>
-            <p className="font-medium">{fechaEmision ? formatDate(fechaEmision) : "—"}</p>
+          <div className="min-w-0 md:col-span-4">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Fecha de emisión</p>
+            <p className="text-sm font-medium">{fechaEmision ? formatDate(fechaEmision) : "—"}</p>
           </div>
         </div>
       </CardContent>

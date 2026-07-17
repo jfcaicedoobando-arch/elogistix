@@ -20,8 +20,8 @@ export function FacturaEmisorCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Building2 className="h-4 w-4" /> Emisor
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-muted-foreground" /> Emisor
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 text-sm">

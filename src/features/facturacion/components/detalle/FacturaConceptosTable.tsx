@@ -87,7 +87,9 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Desglose de conceptos</CardTitle>
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-muted-foreground" /> Desglose de conceptos
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
@@ -103,7 +105,9 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Desglose de conceptos</CardTitle>
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <Receipt className="h-4 w-4 text-muted-foreground" /> Desglose de conceptos
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ConceptosMobileList
