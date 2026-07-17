@@ -63,15 +63,16 @@ DECLARE
   visible int;
 BEGIN
   -- ── Seed usuarios en auth.users (necesarios porque provision_organization
-  --    valida la existencia del owner con FK-like check).
-  INSERT INTO auth.users(id, email, instance_id, aud, role)
-  VALUES
-    (super_a,     'super_a+rpc@e2e.test', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
-    (admin_a,     'admin_a+rpc@e2e.test', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
-    (operador_a,  'oper_a+rpc@e2e.test',  '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
-    (viewer_a,    'view_a+rpc@e2e.test',  '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
-    (plano_a,     'plano+rpc@e2e.test',   '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
-    (new_owner,   'owner+rpc@e2e.test',   '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated');
+  --    valida la existencia del owner con EXISTS). Bootstrap CI define
+  --    auth.users con columnas mínimas (id, email, raw_user_meta_data,
+  --    created_at); en producción hay muchas más pero no las tocamos.
+  INSERT INTO auth.users(id, email) VALUES
+    (super_a,     'super_a+rpc@e2e.test'),
+    (admin_a,     'admin_a+rpc@e2e.test'),
+    (operador_a,  'oper_a+rpc@e2e.test'),
+    (viewer_a,    'view_a+rpc@e2e.test'),
+    (plano_a,     'plano+rpc@e2e.test'),
+    (new_owner,   'owner+rpc@e2e.test');
 
   -- Org y roles previos.
   INSERT INTO public.organizations(id, nombre) VALUES (seed_org, 'RPC Provision Seed');
