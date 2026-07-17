@@ -63,6 +63,12 @@ async function applyAccepted(
   const { error: upErr } = await supabase.from("facturas").update(patch).eq("id", factura.id);
   if (upErr) return false;
 
+  // Marcar los vínculos con embarques como inactivos.
+  await supabase.from("factura_embarques").update({ activa: false }).eq("factura_id", factura.id);
+
+  // Liberar la proforma si ya no quedan facturas vivas apuntando a ella.
+  await supabase.rpc("revertir_proforma_al_cancelar_sustitucion", { p_factura_id: factura.id });
+
   const esSustitucion = !!factura.sustituida_por;
   if (!esSustitucion) await revertirProformas(supabase, factura.id);
 

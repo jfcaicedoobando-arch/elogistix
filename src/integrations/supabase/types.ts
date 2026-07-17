@@ -4438,18 +4438,21 @@ export type Database = {
       }
       factura_embarques: {
         Row: {
+          activa: boolean
           created_at: string
           embarque_id: string
           factura_id: string
           organization_id: string
         }
         Insert: {
+          activa?: boolean
           created_at?: string
           embarque_id: string
           factura_id: string
           organization_id: string
         }
         Update: {
+          activa?: boolean
           created_at?: string
           embarque_id?: string
           factura_id?: string
@@ -8421,6 +8424,10 @@ export type Database = {
       revalidar_tarifa_cotizacion: {
         Args: { p_cotizacion_id: string }
         Returns: Json
+      }
+      revertir_proforma_al_cancelar_sustitucion: {
+        Args: { p_factura_id: string }
+        Returns: string
       }
       run_auditoria_backfill_legacy: { Args: never; Returns: Json }
       seed_demo_organization: { Args: never; Returns: undefined }
