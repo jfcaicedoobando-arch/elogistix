@@ -66,6 +66,14 @@ BEGIN
   --    valida la existencia del owner con EXISTS). Bootstrap CI define
   --    auth.users con columnas mínimas (id, email, raw_user_meta_data,
   --    created_at); en producción hay muchas más pero no las tocamos.
+  --
+  --    Deshabilitamos temporalmente `on_auth_user_created` porque en
+  --    producción cada INSERT en auth.users auto-crea una organización +
+  --    membership admin para el usuario. Como el UNIQUE(user_id) en
+  --    organization_members impide más de una membresía por user_id, esa
+  --    autoseed choca con los INSERTs manuales de seed_org de más abajo.
+  ALTER TABLE auth.users DISABLE TRIGGER on_auth_user_created;
+
   INSERT INTO auth.users(id, email) VALUES
     (super_a,     'super_a+rpc@e2e.test'),
     (admin_a,     'admin_a+rpc@e2e.test'),
@@ -73,6 +81,8 @@ BEGIN
     (viewer_a,    'view_a+rpc@e2e.test'),
     (plano_a,     'plano+rpc@e2e.test'),
     (new_owner,   'owner+rpc@e2e.test');
+
+  ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;
 
   -- Org y roles previos.
   INSERT INTO public.organizations(id, nombre) VALUES (seed_org, 'RPC Provision Seed');
