@@ -1,70 +1,49 @@
-## Diagnóstico visual (F975, FullHD, sidebar abierto)
+# Fix: Historial de la factura sin datos
 
-Muestreando los nodos de texto de la página encontré **6 tamaños distintos** (11, 12, 14, 16, 18 y 24 px), **4 pesos** (400/500/600/700) y **dos grises casi idénticos** (`rgb(18,27,43)` y `rgb(20,29,46)`) que se usan indistintamente. Eso genera una sensación de "ruido tipográfico" aunque cada carta individual se vea limpia.
+## Diagnóstico
 
-Problemas concretos que se ven en las capturas:
+La tarjeta **Historial de la factura** (`FacturaBitacoraCard.tsx`) llama `useBitacora({ modulo: "facturas", limite: 25, pagina: 0 })` y luego filtra en cliente por `entidad_id === facturaId`.
 
-1. **Títulos de tarjeta inconsistentes.**
-  - Emisor / Receptor / Datos generales / Timbrado fiscal → 18 px, peso 600, con icono.
-  - Desglose de conceptos / Totales / Historial de pagos / Notas de crédito / Historial de la factura → 16 px, peso 700, algunos sin icono.
-   Son "hermanos" jerárquicamente pero se ven como niveles distintos.
-2. **Etiquetas de campo inconsistentes.**
-  - En Receptor, las etiquetas ("Cliente", "RFC", "Código postal", "Régimen fiscal", "Uso CFDI por defecto") son 12 px / 400 con un check verde delante.
-  - En Datos generales y Timbrado fiscal las etiquetas son 12 px / 500 sin icono.
-   Mismo rol, dos tratamientos.
-3. **Dos grises de cuerpo indistinguibles.** `#121B2B` y `#141D2E` conviven en textos primarios; a ojo son el mismo color pero rompen el token semántico.
-4. **Salto de tamaño en Totales.** Subtotal / IVA muestran valor a 16 px / 700, pero Total salta a 24 px / 700 y además cambia a azul. La jerarquía se entiende, pero el salto (16 → 24) es demasiado grande dentro de la misma fila de KPIs y compite con el USD 6,320.00 del header, que también está a 24 px.
-5. **Header vs. card duplicados.** El total aparece dos veces a 24 px azul (arriba a la derecha y en la tarjeta Totales). Uno de los dos debería ceder tamaño.
-6. **Micro-inconsistencia de números.** El "Folio 975" del bloque Timbrado fiscal y el "60" de "Días de crédito" usan 14 px / 500, mientras que UUID / RFC (mismo rol de "dato monoespaciado") usan 14 px / 500 mono. Está bien, pero el UUID se ve más pesado por la fuente mono; conviene bajarle un nivel visual.
+Analogía: es como pedir "las últimas 25 cartas del correo de toda la oficina" y luego revisar cuáles son para mí. Como el módulo `facturas` recibe muchos eventos al día (pagos, timbrado, cancelaciones de todas las facturas de la organización), las 25 filas más recientes casi nunca contienen eventos de la factura que estoy viendo → la tarjeta muestra "Sin eventos registrados".
 
-## Propuesta: una escala tipográfica de 4 niveles
+**Verificado con la BD**: la factura F975 tiene **11 eventos** reales en `bitacora_actividad` (timbrado, consulta reconciliada, cancelación solicitada, duplicada para sustitución, etc.), pero ninguno cae en las 25 filas más recientes del módulo (que están dominadas por acciones `crear` de pagos).
 
-Toda la página vive con estos tokens (no se inventan colores ni fuentes, solo se aplican los ya existentes en `index.css`):
+Bonus detectado: las acciones se muestran con `capitalize` sobre el slug crudo (`facturapi_emitida`, `factura.borrador_generado`), difícil de leer para el usuario.
 
-```text
-display   24 / 700   foreground             → total del header
-h-card    16 / 600   foreground             → TODOS los títulos de tarjeta
-label     12 / 500   muted-foreground upper → TODAS las etiquetas de campo
-value     14 / 500   foreground             → TODOS los valores
-value-mx  14 / 600   foreground             → totales/KPIs destacados
-mono      13 / 500   foreground (font-mono) → UUID, RFC, folios
-```
+## Cambios
 
-Con esa escala desaparecen los tamaños 11 y 18 px, y se unifica el peso de los títulos.
+### 1. Filtro server-side por `entidad_id`
+- `src/types/bitacora.ts` — agregar `entidadId?: string | null` a `FiltrosBitacora`.
+- `src/features/auditoria/services/bitacora/index.ts` — en `fetchBitacora`, si `entidadId` viene, aplicar `.eq("entidad_id", entidadId)` antes de `.range(...)`. Así la paginación funciona sobre las filas correctas.
 
-## Cambios concretos
+### 2. Consumir el nuevo filtro
+- `src/features/facturacion/components/detalle/FacturaBitacoraCard.tsx`:
+  - Pasar `entidadId: facturaId` al hook y subir `limite` a 50 (histórico completo de una factura).
+  - Eliminar el `.filter(...)` client-side.
+  - Reemplazar `capitalize(accion)` por un mapa de etiquetas legibles (con fallback al slug capitalizado):
+    - `facturapi_emitida` → "Timbrada"
+    - `facturapi_cancelacion_solicitada` → "Cancelación solicitada"
+    - `facturapi_cancelada` → "Cancelada"
+    - `facturapi_sustituida` → "Sustituida"
+    - `facturapi_consulta_reconciliada` → "Estado reconciliado con FacturApi"
+    - `factura.borrador_generado` → "Borrador generado"
+    - `factura.borrador_eliminado` → "Borrador eliminado"
+    - `factura_duplicada_para_sustitucion` → "Duplicada para sustitución"
+    - `facturapi_emitir_failed` / `facturapi_cancelar_failed` → "Error al timbrar" / "Error al cancelar"
+    - `enviada_cliente` → "Enviada al cliente"
+    - Cualquier otra: reemplazar `_` y `.` por espacios y capitalizar.
+  - Mostrar `usuario_email` sin `entidad_nombre` cuando esté vacío (varias entradas de F975 tienen `entidad_nombre: ""`).
 
-1. **Unificar títulos de tarjeta a `h-card` (16 / 600, con icono a la izquierda).**
-  Tocar los `CardHeader` de: `TabResumen` (Emisor, Receptor, Datos generales, Timbrado fiscal) y `FacturaDetalleView` (Desglose de conceptos, Totales, Historial de pagos, Notas de crédito, Historial de la factura). Todos con el mismo componente wrapper para que no vuelvan a divergir.
-2. **Unificar etiquetas a `label` (12 / 500, `text-muted-foreground`, uppercase tracking-wide opcional).**
-  Sacar el check verde delante de las etiquetas de Receptor: el check corresponde al valor validado (RFC verificado), no a la etiqueta. Se mueve como badge junto al valor o se quita si no aporta.
-3. **Consolidar los dos grises.** Reemplazar cualquier uso literal de `#141D2E` por el token `text-foreground` que ya resuelve a `#121B2B`. Es una búsqueda-reemplazo en los archivos del detalle.
-4. **Ajustar el bloque Totales.**
-  - Subtotal, IVA y Total con el mismo tamaño de valor (`value-mx`, 16 / 600).
-  - Total se distingue solo por color (azul primario) y por un borde/anillo sutil, no por tamaño. Deja de competir con el header.
-5. **Reducir el "USD 6,320.00" duplicado.**
-  - Si se mantiene en el header, la tarjeta Totales usa `value-mx`.
-  - Alternativa (recomendada): quitar el número del header y dejar solo `F975 · Sustituida · INDIMEX TRADING · Exp. ELIMP00294`. El total vive en su carta. Confirmar preferencia (ver pregunta abajo).
-6. **UUID / RFC / Folio → estilo `mono` (13 / 500).** Un pelo más chico que el resto de valores para que el bloque monoespaciado no pese de más.
-7. **Densidad del Timbrado fiscal.** Fecha de emisión queda huérfana en su propia fila. Reordenar el grid a `UUID · Serie · Folio · Fecha` en una sola fila (4 columnas en FullHD) para eliminar la fila casi vacía.
+### 3. Versionado
+- `src/constants/appVersion.ts` → `13.301.38`.
+- `CHANGELOG.md` → entrada breve describiendo el fix.
 
-## Archivos afectados (sección técnica)
+## Verificación
 
-- `src/features/facturacion/components/detalle/TabResumen.tsx` — títulos de tarjeta, etiquetas Receptor, grid de Timbrado fiscal.
-- `src/features/facturacion/components/detalle/FacturaDetalleView.tsx` — títulos de las tarjetas inferiores + header con total.
-- `src/features/facturacion/components/detalle/*` (Totales, HistorialPagos, NotasCredito, HistorialFactura) — normalizar CardHeader.
-- Posible pequeño componente compartido `FacturaCardHeader` (title + icon) para prevenir que vuelva a divergir.
-- Cero cambios en `index.css` / `tailwind.config.ts` (uso los tokens existentes).
+Recargar `/facturacion/facturas/bd75aa84-...` (F975); la tarjeta debe listar las 11 entradas ordenadas descendente, con acciones legibles. Verificar también una factura sin eventos (borrador nuevo) para confirmar que sigue mostrando el estado vacío.
 
-## Fuera de alcance
+## Notas técnicas (para desarrollador)
 
-- Colores nuevos, iconos nuevos, animaciones. Solo tipografía y espaciado.
-- Cambios en tabs distintos a "Resumen".
-- Cambios en la lógica de negocio o en los datos mostrados.
-
-## Pregunta antes de implementar
-
-En el header, el "USD 6,320.00" se ve idéntico al de la tarjeta Totales. ¿Prefieres…
-
-- **A. Quitarlo del header** y dejarlo solo en la tarjeta Totales (mi recomendación). Esto
-- **B. Mantenerlo en el header** y en Totales dejar los tres KPIs al mismo tamaño (Total solo se distingue por color).
+- No cambia RLS ni policies: `bitacora_actividad` ya expone `entidad_id`.
+- `useBitacora` sigue siendo genérico; el cambio es aditivo — otros consumidores (página `/auditoria`) no requieren ajuste.
+- Los eventos donde `entidad_id` apunta al *borrador* de sustitución (ej. `factura_duplicada_para_sustitucion` con `entidad_id = F975-R`) seguirán apareciendo en la bitácora de la factura sustituta, no de la original. Fuera de scope.
