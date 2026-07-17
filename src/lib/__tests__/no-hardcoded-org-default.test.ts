@@ -18,7 +18,7 @@ const HARDCODED = /DEFAULT\s+'00000000-0000-0000-0000-000000000001'/i;
 // Ya fueron sobrescritas el mismo día; se listan aquí sólo para que el
 // test siga verde. NO añadir migraciones nuevas a este set.
 const HISTORICAL_ALLOWLIST: ReadonlySet<string> = new Set([
-  "20260326215454_efd12f32-9b8a-4b3c-9ae5-6e73e7d2a0f1.sql",
+  "20260326215454_efd12f32-1805-4d7f-939f-7f0a976082b6.sql",
 ]);
 
 describe("Arquitectura — organization_id sin default hardcodeado", () => {
