@@ -66,7 +66,9 @@ export function FacturaPagosSection({
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">Historial de pagos</CardTitle>
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Historial de pagos
+            </CardTitle>
             {pagos.length > 0 && (
               <Badge variant={liquidada ? "default" : "secondary"} className="gap-1">
                 {liquidada ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
@@ -74,8 +76,6 @@ export function FacturaPagosSection({
               </Badge>
             )}
           </div>
-          {/* El botón "Registrar pago" vive ahora en la barra superior de acciones
-              del detalle (`FacturaDetalleActionsBar`) para mantener el patrón unificado. */}
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
