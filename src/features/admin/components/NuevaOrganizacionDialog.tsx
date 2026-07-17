@@ -28,7 +28,7 @@ export function NuevaOrganizacionDialog({
   ownerUserId, onOwnerUserIdChange, onCreate, isPending,
 }: Props) {
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ["admin", "available-users"],
+    queryKey: adminKeys.allUsersOptions,
     queryFn: fetchAvailableUsers,
     enabled: open,
     staleTime: 60_000,
