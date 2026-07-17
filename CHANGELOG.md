@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.61] - 2026-07-17
+- UI toasts: unificado el color de fondo de todos los toasts (`bg-card`) en `src/components/ui/sonner.tsx`. Se retiró la prop `richColors` de Sonner que pintaba fondos rojo/verde/ámbar/azul/blanco distintos por severidad y hacía ver la app "inconsistente" cuando se encolaban avisos de distinto tipo. La severidad ahora se comunica sólo por (a) icono a color, (b) borde izquierdo de 4 px con el token semántico (`destructive`, `success`, `warning`, `info`) y (c) jerarquía tipográfica del título. Cero cambios en los ~450 call sites: `notifyError` / `toast.success` / `toast.warning` / `toast.info` siguen funcionando igual.
+
 ## [13.301.60] - 2026-07-17
 - Auditoría Sentry: `FacturapiError` transitorios de red (típico "Failed to send a request to the Edge Function" cuando el navegador pierde conexión al invocar `facturapi-emitir`/`cancelar`) dejan de reportarse a Sentry. Nuevo helper `isTransientFacturapiNetwork` en `appFeedback.ts` filtra por `transient: true` + patrón de mensaje de red (`failed to send a request to the edge function`, `networkerror`, `failed to fetch`, `load failed`). El usuario sigue viendo el toast accionable para reintentar. Ref `JAVASCRIPT-REACT-2T`.
 

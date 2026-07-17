@@ -3,28 +3,26 @@ import { Toaster as SonnerToaster } from "sonner";
 /**
  * Toaster global de la app (Sonner).
  *
- * v13.67.2 — Tres fixes para el botón "Ver detalles" en mobile:
+ * v13.301.61 — **Colores unificados**. Se retiró `richColors` para que TODOS
+ * los toasts compartan la misma superficie (`bg-card`) y la severidad se
+ * comunique sólo por:
+ *  - icono a color (Sonner lo pinta automáticamente por `data-type`),
+ *  - un borde izquierdo de 4 px con el token semántico (`destructive`,
+ *    `success`, `warning`, `info` / `muted`),
+ *  - jerarquía tipográfica del título.
  *
- *  1. **Clases CSS rotas**: el preset original usaba `group-[.toaster]`,
- *     que NUNCA matcheaba porque Sonner usa `data-sonner-toaster` (no la
- *     clase `.toaster`). Reemplazamos por selectores basados en `data-type`
- *     que sí dispara Sonner para cada severidad.
+ * Ventajas: elimina el choque visual entre toasts de distinta severidad al
+ * encolar avisos (antes: fondos rojo/verde/ámbar/azul/blanco simultáneos),
+ * respeta la identidad "Apple-like minimal" del proyecto y mantiene 3
+ * canales de accesibilidad para severidad (icono + borde + texto).
  *
- *  2. **Tap target del actionButton <44px**: Sonner aplica padding mínimo al
- *     botón de acción. Forzamos `min-h-11 min-w-[44px] px-3` para cumplir
- *     el estándar P0 de tap targets en mobile.
- *
- *  3. **Swipe-to-dismiss intercepta el tap**: en mobile, mover el dedo unos
- *     píxeles al tocar "Ver detalles" disparaba el dismiss antes del onClick.
- *     Subimos `swipeThreshold` a 80px y bajamos `swipeDuration` para que el
- *     gesto sólo se active con un swipe deliberado, no con un tap normal.
+ * v13.67.2 — Tap targets ≥44px y swipe-to-dismiss ajustado (se conservan).
  */
 export function Toaster() {
   return (
     <SonnerToaster
       position="top-right"
       closeButton
-      richColors
       expand
       duration={4000}
       swipeDirections={["right"]}
@@ -32,15 +30,31 @@ export function Toaster() {
         // @ts-expect-error sonner permite estas keys en runtime aunque el d.ts las marca a nivel <Toaster>
         swipeThreshold: 80,
         classNames: {
-          toast:
-            "group toast border shadow-xl rounded-lg px-4 py-3 gap-3 backdrop-blur-sm",
-          title: "text-sm font-semibold leading-tight",
+          toast: [
+            "group toast rounded-lg px-4 py-3 gap-3 backdrop-blur-sm shadow-xl",
+            "bg-card text-card-foreground border border-border",
+            // Borde izquierdo semántico por severidad (Sonner emite data-type).
+            "data-[type=error]:border-l-4 data-[type=error]:border-l-destructive",
+            "data-[type=success]:border-l-4 data-[type=success]:border-l-[hsl(var(--success))]",
+            "data-[type=warning]:border-l-4 data-[type=warning]:border-l-[hsl(var(--warning))]",
+            "data-[type=info]:border-l-4 data-[type=info]:border-l-[hsl(var(--info))]",
+          ].join(" "),
+          title: "text-sm font-semibold leading-tight text-foreground",
           description: "text-xs text-muted-foreground leading-snug mt-0.5",
-          icon: "shrink-0",
+          // Icono coloreado por severidad (sin fondo tintado).
+          icon: [
+            "shrink-0",
+            "group-data-[type=error]:text-destructive",
+            "group-data-[type=success]:text-[hsl(var(--success))]",
+            "group-data-[type=warning]:text-[hsl(var(--warning))]",
+            "group-data-[type=info]:text-[hsl(var(--info))]",
+          ].join(" "),
           actionButton:
             "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-primary !text-primary-foreground !text-sm !font-medium !rounded-md",
           cancelButton:
             "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-muted !text-muted-foreground !rounded-md",
+          closeButton:
+            "!bg-card !border-border !text-muted-foreground hover:!text-foreground",
         },
       }}
     />
