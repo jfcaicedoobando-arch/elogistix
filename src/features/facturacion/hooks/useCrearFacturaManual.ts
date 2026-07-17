@@ -12,6 +12,7 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
+import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 
 export interface CrearFacturaManualVars {
   input: CrearFacturaManualInput;
@@ -40,6 +41,7 @@ export function useCrearFacturaManual() {
       // Auditoría: la regla `ventas_sin_facturar` depende del estado de facturación
       // de los embarques. Al crear/timbrar una factura, forzamos refetch del reporte.
       qc.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
+      invalidateHuecoFacturacion(qc);
       invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>

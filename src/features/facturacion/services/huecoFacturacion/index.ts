@@ -27,6 +27,7 @@ import {
   indexarVentas,
   type FilaHueco,
 } from "./buildFilas";
+import { HUECO_ETA_BUFFER_DIAS, MS_POR_DIA } from "./constants";
 
 export type { FilaHueco } from "./buildFilas";
 
@@ -89,7 +90,7 @@ export async function fetchHuecoFacturacion({
 }): Promise<HuecoFacturacionResult> {
   // v13.217.0 — ampliamos el límite a hoy + 3 días naturales para dar buffer
   // al agente aduanal antes del arribo real del contenedor.
-  const limite = new Date(hoy.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const limite = new Date(hoy.getTime() + HUECO_ETA_BUFFER_DIAS * MS_POR_DIA);
   const limiteEtaIso = limite.toISOString().slice(0, 10);
 
   const arr = await fetchEmbarquesParaHueco(organizationId, limiteEtaIso);

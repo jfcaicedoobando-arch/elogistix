@@ -5,6 +5,7 @@ import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { queryKeys } from "@/lib/query";
+import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 export function useTimbrarFactura() {
   const qc = useQueryClient();
   return useMutation({
@@ -16,6 +17,7 @@ export function useTimbrarFactura() {
         duration: 6000,
       });
       qc.invalidateQueries({ queryKey: facturasKeys.all });
+      invalidateHuecoFacturacion(qc);
     },
     onError: (err: Error) => notifyError(toast, { title: `No se pudo timbrar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" }),
   });
@@ -47,6 +49,7 @@ export function useCancelarFactura() {
         toast.success(res.sustituida ? "CFDI sustituido" : "CFDI cancelado");
       }
       qc.invalidateQueries({ queryKey: facturasKeys.all });
+      invalidateHuecoFacturacion(qc);
     },
     onError: (err: Error, vars) => {
       // Error transitorio del SAT: pintar toast ámbar con acción "Reintentar"
@@ -69,6 +72,7 @@ export function useCancelarFactura() {
                 .then(() => {
                   toast.success("CFDI cancelado");
                   qc.invalidateQueries({ queryKey: facturasKeys.all });
+                  invalidateHuecoFacturacion(qc);
                 })
                 .catch((e: Error) => {
                   notifyError(toast, { title: `No se pudo cancelar: ${e.message}`, error: e, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_RETRY" });

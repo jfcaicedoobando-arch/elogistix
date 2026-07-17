@@ -9,6 +9,7 @@ import { toast } from "@/hooks/shared/useToast";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { eliminarFacturaBorrador } from "@/features/facturacion/services/eliminarBorrador";
 import { queryKeys } from "@/lib/query";
+import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
 
 export function useEliminarBorradorFactura() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export function useEliminarBorradorFactura() {
       qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
       qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
       qc.invalidateQueries({ queryKey: queryKeys.facturacion.proformaDetalleAll });
+      invalidateHuecoFacturacion(qc);
       navigate("/facturacion");
     },
     onError: (err) =>
