@@ -40,7 +40,7 @@ describe("fetchFacturaById", () => {
   it("devuelve la factura cuando existe", async () => {
     mock.setTableResult("facturas", { data: FACTURA, error: null });
     const r = await fetchFacturaById("f1");
-    expect(r).toEqual(FACTURA);
+    expect(r).toEqual({ ...FACTURA, sustituida_por_ref: null });
   });
 
   it("devuelve null cuando RLS bloquea o la fila no existe", async () => {
