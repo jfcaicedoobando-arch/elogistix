@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.49] - 2026-07-17
+- Blindaje folios de embarque per-organización: se reemplaza la secuencia global `embarque_consecutivo_seq` por un contador por (org, tipo='embarque') en `folio_secuencias`. Cada organización lleva su propio consecutivo y es imposible que folios de otra org (por ejemplo los seeds `DEMO-2026-###`) contaminen realineaciones futuras. Se siembra el contador con `MAX(substring(expediente FROM 6)::bigint)` usando sólo folios en formato estándar `^EL[A-Z]{3}[0-9]+$` (org principal→327, org secundaria→139). `generar_expediente()` ahora hace `INSERT … ON CONFLICT DO UPDATE RETURNING` atómico por org, con loop defensivo que revisa colisiones sólo dentro de la misma org. Se añade CHECK constraint `embarques_expediente_formato_valido` (NOT VALID, valida sólo nuevos inserts). La secuencia global se elimina.
+
 ## [13.301.48] - 2026-07-17
 - Fix folios de embarques: la secuencia `embarque_consecutivo_seq` se contaminó porque las migraciones de realineación del 13-jul (`20260713165742`, `20260713190941`) usaban `regexp_replace(expediente, '\D', '', 'g')::bigint`, que interpretaba `DEMO-2026-004` como `2026004` y disparaba el contador a millones. Como resultado, entre el 14-jul y el 16-jul se crearon 9 embarques con folios `ELIMP20260`–`ELIMP20268`. Se renombran a `ELIMP00319`–`ELIMP00327` (`00317`/`00318` ya existían desde la migración `20260713165257`), se realinea la secuencia con filtro estricto `^EL[A-Z]{3}[0-9]+$` y se registra cada rename en `bitacora_actividad` con acción `renombrar_expediente`. El próximo embarque nacerá como `ELIMP00328`.
 
