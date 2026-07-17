@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.59] - 2026-07-17
+- Auditoría Sentry: cerrados 5 issues ya arreglados en producción (`JAVASCRIPT-REACT-2S/2R/2Q/2P/2N`, versiones ≤13.301.28) con nota de referencia al commit del fix. Filtro nuevo `isExpectedFacturapiValidation` en `notifyError` para omitir Sentry cuando FacturApi/SAT rechaza por dato mal capturado del cliente (razón social vs RFC, RFC no registrado ante SAT, régimen fiscal/CP/uso CFDI inválidos). `FacturapiError` expone ahora `expected: boolean` que se calcula desde una whitelist regex en `services/facturapi.ts`. El usuario sigue viendo el toast accionable — sólo dejamos de reportar como bug lo que es corrección de catálogo. Ref `JAVASCRIPT-REACT-2T`.
+
 ## [13.301.58] - 2026-07-17
 - Fix CI (suite `rls-suites/rpc_provision_organization`): la suite fallaba con `duplicate key on organization_members_user_id_unique` porque el trigger `on_auth_user_created` (producción) auto-crea una organización + membership admin por cada usuario nuevo, y el UNIQUE(user_id) global de `organization_members` impedía luego los INSERTs manuales del seed. El fixture ahora deshabilita ese trigger antes de insertar en `auth.users` y lo re-habilita después, dejando el seed determinístico sin tocar el trigger de producción.
 
