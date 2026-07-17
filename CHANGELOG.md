@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.48] - 2026-07-17
+- Fix folios de embarques: la secuencia `embarque_consecutivo_seq` se contaminó porque las migraciones de realineación del 13-jul (`20260713165742`, `20260713190941`) usaban `regexp_replace(expediente, '\D', '', 'g')::bigint`, que interpretaba `DEMO-2026-004` como `2026004` y disparaba el contador a millones. Como resultado, entre el 14-jul y el 16-jul se crearon 9 embarques con folios `ELIMP20260`–`ELIMP20268`. Se renombran a `ELIMP00319`–`ELIMP00327` (`00317`/`00318` ya existían desde la migración `20260713165257`), se realinea la secuencia con filtro estricto `^EL[A-Z]{3}[0-9]+$` y se registra cada rename en `bitacora_actividad` con acción `renombrar_expediente`. El próximo embarque nacerá como `ELIMP00328`.
+
 ## [13.301.47] - 2026-07-17
 - Fix "Embarques sin factura" legacy: los embarques cuyos `conceptos_venta` ya están todos en `estado_facturacion='facturado'` (back-fill histórico previo al módulo de facturación, sin CFDI en el sistema) ahora se excluyen del hueco. Antes sólo se excluían si los conceptos estaban `en_proforma` con proforma `facturada`. Corrige casos como ELIMP00269, ELIMP00297 y ELIMP00304, que no tenían facturas pero seguían apareciendo. ELIMP00209 sigue apareciendo correctamente porque tiene conceptos pendientes reales.
 
