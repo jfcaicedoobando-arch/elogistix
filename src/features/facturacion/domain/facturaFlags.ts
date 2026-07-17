@@ -55,59 +55,64 @@ export interface FacturaFlags {
   estaCancelada: boolean;
 }
 
+const EMPTY_FLAGS: FacturaFlags = {
+  sinTimbrar: false,
+  esBorrador: false,
+  puedeEditarBorrador: false,
+  puedeEliminarBorrador: false,
+  puedeTimbrarDesdeSistema: false,
+  puedeCancelarCfdi: false,
+  puedeSustituirCfdi: false,
+  puedeRegistrarPago: false,
+  repPendiente: false,
+  estaCancelada: false,
+};
+
+function isEstadoCanceladoOSustituido(estado: string | null | undefined): boolean {
+  return estado === "Cancelada" || estado === "Sustituida";
+}
+
+function isSustitutaViva(f: FacturaFlagsInput): boolean {
+  if (!f.sustituida_por) return false;
+  return !isEstadoCanceladoOSustituido(f.sustituida_por_ref?.estado);
+}
+
+function deriveActionFlags(
+  f: FacturaFlagsInput,
+  canEdit: boolean,
+  ctx: FacturaFlagsContext,
+  canRegistrarCobro: boolean,
+): FacturaFlags {
+  const sinTimbrar = !f.uuid_fiscal;
+  const esBorrador = f.estado === "Borrador" && !f.facturapi_id;
+  const puedeEditarBorrador = esBorrador && canEdit;
+  const estaCancelada = isEstadoCanceladoOSustituido(f.estado);
+  const timbradaVigente = !sinTimbrar && f.estado === "Emitida";
+  const puedeCambiarCfdi = timbradaVigente && canEdit && !isSustitutaViva(f);
+  const saldo = ctx.saldo ?? 0;
+  const vigenteCobrable = f.estado === "Emitida" && !estaCancelada;
+  return {
+    sinTimbrar,
+    esBorrador,
+    puedeEditarBorrador,
+    puedeEliminarBorrador: puedeEditarBorrador,
+    puedeTimbrarDesdeSistema: sinTimbrar && esCreadaConCapacidadTimbrado(f.fecha_emision),
+    puedeCancelarCfdi: puedeCambiarCfdi,
+    puedeSustituirCfdi: puedeCambiarCfdi,
+    puedeRegistrarPago: vigenteCobrable && canRegistrarCobro && saldo > 0.01,
+    repPendiente: (ctx.pagosRepPendientes ?? 0) > 0,
+    estaCancelada,
+  };
+}
+
 export function deriveFacturaFlags(
   factura: FacturaFlagsInput | null | undefined,
   canEdit: boolean,
   ctx: FacturaFlagsContext = {},
   canRegistrarCobro: boolean = canEdit,
 ): FacturaFlags {
-  if (!factura) {
-    return {
-      sinTimbrar: false,
-      esBorrador: false,
-      puedeEditarBorrador: false,
-      puedeEliminarBorrador: false,
-      puedeTimbrarDesdeSistema: false,
-      puedeCancelarCfdi: false,
-      puedeSustituirCfdi: false,
-      puedeRegistrarPago: false,
-      repPendiente: false,
-      estaCancelada: false,
-    };
-  }
-  const sinTimbrar = !factura.uuid_fiscal;
-  const esBorrador = factura.estado === "Borrador" && !factura.facturapi_id;
-  const puedeEditarBorrador = esBorrador && canEdit;
-  const puedeEliminarBorrador = puedeEditarBorrador;
-  const puedeTimbrarDesdeSistema =
-    sinTimbrar && esCreadaConCapacidadTimbrado(factura.fecha_emision);
-  const estaCancelada = factura.estado === "Cancelada" || factura.estado === "Sustituida";
-  const timbradaVigente = !sinTimbrar && factura.estado === "Emitida";
-  // Factura vigente cobrable: incluye facturas legacy (Emitida sin uuid_fiscal,
-  // timbradas fuera del sistema antes del corte). Cancelar/Sustituir sí requiere
-  // uuid_fiscal porque son operaciones contra el SAT.
-  const vigenteCobrable = factura.estado === "Emitida" && !estaCancelada;
-  const sustEstado = factura.sustituida_por_ref?.estado ?? null;
-  const sustitutaViva =
-    !!factura.sustituida_por && sustEstado !== "Cancelada" && sustEstado !== "Sustituida";
-  const puedeCambiarCfdi = timbradaVigente && canEdit && !sustitutaViva;
-  const puedeCancelarCfdi = puedeCambiarCfdi;
-  const puedeSustituirCfdi = puedeCambiarCfdi;
-  const saldo = ctx.saldo ?? 0;
-  const puedeRegistrarPago = vigenteCobrable && canRegistrarCobro && saldo > 0.01;
-  const repPendiente = (ctx.pagosRepPendientes ?? 0) > 0;
-  return {
-    sinTimbrar,
-    esBorrador,
-    puedeEditarBorrador,
-    puedeEliminarBorrador,
-    puedeTimbrarDesdeSistema,
-    puedeCancelarCfdi,
-    puedeSustituirCfdi,
-    puedeRegistrarPago,
-    repPendiente,
-    estaCancelada,
-  };
+  if (!factura) return EMPTY_FLAGS;
+  return deriveActionFlags(factura, canEdit, ctx, canRegistrarCobro);
 }
 
 
