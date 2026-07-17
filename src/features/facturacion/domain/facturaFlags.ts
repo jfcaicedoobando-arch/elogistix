@@ -90,7 +90,13 @@ function deriveActionFlags(
   const puedeEditarBorrador = esBorrador && canEdit;
   const estaCancelada = isEstadoCanceladoOSustituido(f.estado);
   const timbradaVigente = !sinTimbrar && f.estado === "Emitida";
-  const puedeCambiarCfdi = timbradaVigente && canEdit && !isSustitutaViva(f);
+  // Sustituir requiere que NO exista ya una sustituta viva (no se sustituye dos veces).
+  const puedeSustituirCfdi = timbradaVigente && canEdit && !isSustitutaViva(f);
+  // Cancelar sólo requiere que la factura esté vigente y no en trámite de cancelación.
+  // Tener sustituta viva NO bloquea: el flujo SAT motivo 01 es emitir sustituta → cancelar original.
+  const enTramiteCancelacion =
+    f.cancellation_status === "pending" || f.cancellation_status === "verifying";
+  const puedeCancelarCfdi = timbradaVigente && canEdit && !enTramiteCancelacion;
   const saldo = ctx.saldo ?? 0;
   const vigenteCobrable = f.estado === "Emitida" && !estaCancelada;
   return {
@@ -99,8 +105,8 @@ function deriveActionFlags(
     puedeEditarBorrador,
     puedeEliminarBorrador: puedeEditarBorrador,
     puedeTimbrarDesdeSistema: sinTimbrar && esCreadaConCapacidadTimbrado(f.fecha_emision),
-    puedeCancelarCfdi: puedeCambiarCfdi,
-    puedeSustituirCfdi: puedeCambiarCfdi,
+    puedeCancelarCfdi,
+    puedeSustituirCfdi,
     puedeRegistrarPago: vigenteCobrable && canRegistrarCobro && saldo > 0.01,
     repPendiente: (ctx.pagosRepPendientes ?? 0) > 0,
     estaCancelada,
