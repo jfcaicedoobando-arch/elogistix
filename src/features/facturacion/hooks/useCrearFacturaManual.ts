@@ -41,6 +41,7 @@ export function useCrearFacturaManual() {
       // Auditoría: la regla `ventas_sin_facturar` depende del estado de facturación
       // de los embarques. Al crear/timbrar una factura, forzamos refetch del reporte.
       qc.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
+      invalidateHuecoFacturacion(qc);
       invalidateProfitDependencies(qc);
     },
     onError: (err: Error) =>
