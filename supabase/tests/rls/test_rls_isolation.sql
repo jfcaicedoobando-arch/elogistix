@@ -59,8 +59,8 @@ BEGIN
 
   INSERT INTO public.embarques(id, cliente_id, cliente_nombre, organization_id, tipo, modo, expediente)
     VALUES
-      (emb_a, cli_a, 'Cliente A', org_a, 'Importación', 'Marítimo', 'EXP-A-001'),
-      (emb_b, cli_b, 'Cliente B', org_b, 'Importación', 'Marítimo', 'EXP-B-001');
+      (emb_a, cli_a, 'Cliente A', org_a, 'Importación', 'Marítimo', 'ELISO00001'),
+      (emb_b, cli_b, 'Cliente B', org_b, 'Importación', 'Marítimo', 'ELISO00002');
 
   -- --------------------------------------------------------------------------
   -- Test 1: Admin de Org A solo ve clientes de Org A
@@ -94,7 +94,7 @@ BEGIN
   -- --------------------------------------------------------------------------
   PERFORM pg_temp.as_user(user_a);
   SELECT COUNT(*) INTO visible_count FROM public.embarques
-    WHERE expediente IN ('EXP-A-001', 'EXP-B-001');
+    WHERE expediente IN ('ELISO00001', 'ELISO00002');
   PERFORM pg_temp.assert(visible_count = 1,
     format('Admin A vio %s embarques, esperaba 1', visible_count));
 
@@ -103,7 +103,7 @@ BEGIN
   -- --------------------------------------------------------------------------
   PERFORM pg_temp.as_user(user_cli);
   SELECT COUNT(*) INTO visible_count FROM public.embarques
-    WHERE expediente IN ('EXP-A-001', 'EXP-B-001');
+    WHERE expediente IN ('ELISO00001', 'ELISO00002');
   PERFORM pg_temp.assert(visible_count = 1,
     format('Cliente del portal vio %s embarques, esperaba 1', visible_count));
 

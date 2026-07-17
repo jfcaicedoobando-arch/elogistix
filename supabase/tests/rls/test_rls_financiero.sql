@@ -54,8 +54,8 @@ BEGIN
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo, estado, incoterm)
   VALUES
-    (emb_a, 'EXP-FIN-A', cli_a, 'Cliente Fin A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
-    (emb_b, 'EXP-FIN-B', cli_b, 'Cliente Fin B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
+    (emb_a, 'ELFIN00001', cli_a, 'Cliente Fin A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
+    (emb_b, 'ELFIN00002', cli_b, 'Cliente Fin B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
 
   -- =========================================================================
   -- TEST 1: facturas aislamiento
@@ -84,7 +84,7 @@ BEGIN
     numero, fecha_emision, subtotal_usd, iva_usd, total_usd,
     subtotal_mxn, iva_mxn, total_mxn, estado_proforma
   ) VALUES
-    (prof_a, org_a, emb_a, cli_a, 'Cliente Fin A', 'EXP-FIN-A',
+    (prof_a, org_a, emb_a, cli_a, 'Cliente Fin A', 'ELFIN00001',
       'PA-001', CURRENT_DATE, 100, 16, 116, 0, 0, 0, 'pendiente');
 
   PERFORM pg_temp.as_user(user_b);

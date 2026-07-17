@@ -60,8 +60,8 @@ BEGIN
     (cli_a, cli_user, org_a);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo, estado, incoterm) VALUES
-    (emb_a, 'EXP-NA-A', cli_a, 'Cliente NA A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
-    (emb_b, 'EXP-NA-B', cli_b, 'Cliente NA B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
+    (emb_a, 'ELNAD00001', cli_a, 'Cliente NA A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
+    (emb_b, 'ELNAD00002', cli_b, 'Cliente NA B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
 
   INSERT INTO public.facturas(
     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,

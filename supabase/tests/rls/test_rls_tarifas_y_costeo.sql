@@ -64,8 +64,8 @@ BEGIN
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
   VALUES
-    (emb_a, 'EXP-TAR-A', cli_a, 'Cli TAR A', org_a, 'Marítimo', 'Importación'),
-    (emb_b, 'EXP-TAR-B', cli_b, 'Cli TAR B', org_b, 'Marítimo', 'Importación');
+    (emb_a, 'ELTAR00001', cli_a, 'Cli TAR A', org_a, 'Marítimo', 'Importación'),
+    (emb_b, 'ELTAR00002', cli_b, 'Cli TAR B', org_b, 'Marítimo', 'Importación');
 
   -- Catálogos globales (sin organization_id): puertos, navieras, tipos_contenedor
   -- Usar códigos únicos del test para evitar colisión con seed/datos previos;

@@ -59,8 +59,8 @@ BEGIN
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
   VALUES
-    (emb_a, 'EXP-CRM-A', cli_a, 'Cli CRM A', org_a, 'Marítimo', 'Importación'),
-    (emb_b, 'EXP-CRM-B', cli_b, 'Cli CRM B', org_b, 'Marítimo', 'Importación');
+    (emb_a, 'ELCRM00001', cli_a, 'Cli CRM A', org_a, 'Marítimo', 'Importación'),
+    (emb_b, 'ELCRM00002', cli_b, 'Cli CRM B', org_b, 'Marítimo', 'Importación');
 
   -- Etapas pipeline (FK requerido por crm_oportunidades)
   INSERT INTO public.crm_etapas_pipeline(id, organization_id, nombre, orden, probabilidad_default, color, tipo)
