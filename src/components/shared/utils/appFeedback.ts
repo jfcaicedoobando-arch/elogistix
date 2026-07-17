@@ -95,13 +95,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   // 13.301.59: también filtramos validaciones esperadas de FacturApi/SAT
   // (razón social vs RFC, RFC no registrado, régimen inválido). El usuario
   // debe corregir el catálogo — no es bug de código.
-  if (
-    error !== undefined
-    && error !== null
-    && !isAuthorizationError(error)
-    && !isExpectedFacturapiValidation(error)
-    && !isTransientFacturapiNetwork(error)
-  ) {
+  if (shouldReportToSentry(error)) {
     reportCaughtError(
       error,
       {
