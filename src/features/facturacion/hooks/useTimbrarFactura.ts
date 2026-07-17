@@ -17,6 +17,7 @@ export function useTimbrarFactura() {
         duration: 6000,
       });
       qc.invalidateQueries({ queryKey: facturasKeys.all });
+      invalidateHuecoFacturacion(qc);
     },
     onError: (err: Error) => notifyError(toast, { title: `No se pudo timbrar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" }),
   });
