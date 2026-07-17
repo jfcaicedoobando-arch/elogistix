@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.32] - 2026-07-17
+- Fix: detalle de factura mostraba "Factura no encontrada o sin acceso" tras cambios recientes de schema. Se evitó el embed self-FK `sustituida_por_ref` (frágil ante recargas de cache de PostgREST) y ahora se consulta la sustituta con una segunda query explícita en `fetchFacturaById`.
+
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
