@@ -105,6 +105,21 @@ export async function handleAceptada(ctx: CtxBase & {
     .eq("id", ctx.facturaId);
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
 
+  // Marcar los vínculos con embarques como inactivos (conserva historial).
+  await ctx.supabase
+    .from("factura_embarques")
+    .update({ activa: false })
+    .eq("factura_id", ctx.facturaId);
+
+  // Liberar la proforma si ya no quedan facturas vivas apuntando a ella.
+  // Aplica también en sustitución (motivo 01): si la sustituta también se
+  // canceló, la proforma vuelve a estar disponible para re-facturar.
+  const { data: proformaLiberada } = await ctx.supabase.rpc(
+    "revertir_proforma_al_cancelar_sustitucion",
+    { p_factura_id: ctx.facturaId },
+  );
+
+  // Compatibilidad con flujo legacy (columnas proformas.factura_id/factura_secundaria_id).
   const proformasRevertidas = ctx.esSustitucion
     ? []
     : await revertirProformasCancelacion(ctx.supabase, ctx.facturaId);
@@ -122,6 +137,7 @@ export async function handleAceptada(ctx: CtxBase & {
       sustituye_uuid: ctx.sustituyeUuid ?? null,
       sustituida_por_factura_id: ctx.sustituidaPorFacturaId,
       proformas_revertidas: proformasRevertidas,
+      proforma_liberada: proformaLiberada ?? null,
     },
   });
 
