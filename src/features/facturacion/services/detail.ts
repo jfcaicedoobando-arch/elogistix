@@ -98,7 +98,6 @@ const COLUMNS = [
   "sustituye_a",
   "sustituida_por",
   "proformas:proformas!facturas_proforma_id_fkey(numero)",
-  "sustituida_por_ref:facturas!facturas_sustituida_por_fkey(id, numero, estado)",
 ].join(", ");
 
 export async function fetchFacturaById(id: string): Promise<FacturaDetalle | null> {
@@ -108,5 +107,19 @@ export async function fetchFacturaById(id: string): Promise<FacturaDetalle | nul
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return (data ?? null) as FacturaDetalle | null;
+  if (!data) return null;
+  // Self-referencing FK embeds en PostgREST son frágiles ante recargas del
+  // schema cache; consultamos la sustituta con una segunda query explícita.
+  const sustituidaPorId = (data as { sustituida_por: string | null }).sustituida_por;
+  let sustituida_por_ref: FacturaDetalle["sustituida_por_ref"] = null;
+  if (sustituidaPorId) {
+    const { data: ref, error: refError } = await supabase
+      .from("facturas")
+      .select("id, numero, estado")
+      .eq("id", sustituidaPorId)
+      .maybeSingle();
+    if (refError) throw refError;
+    sustituida_por_ref = ref ?? null;
+  }
+  return { ...(data as object), sustituida_por_ref } as FacturaDetalle;
 }
