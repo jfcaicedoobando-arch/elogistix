@@ -1,71 +1,53 @@
-# Remediación de auditoría multi-tenant (H1, H2, H3)
+## Plan: limpiar Sentry y silenciar validaciones SAT esperadas
 
-Cierra los tres hallazgos abiertos de la auditoría con una migración única y aditiva. Sin cambios de UI ni de lógica de negocio.
+### Contexto
 
-## H1 · `idempotency_keys` filtrada por organización (media)
+De los 6 issues abiertos, **5 ya están corregidos en producción** (versiones ≤13.301.28, fixes desplegados en 13.301.30/35/16/27). El sexto (2T) es una validación de FacturApi/SAT — dato mal capturado, no bug — que se está reportando como error genérico.
 
-Hoy las policies solo comparan `user_id = auth.uid()`. Un `super_admin` que impersona, o un usuario miembro de dos orgs, podría chocar/leer claves entre organizaciones. La tabla ya tiene `organization_id NOT NULL` y existe `public.current_user_org_id()`.
+### Acciones
 
-Acciones:
-- Reemplazar las 2 policies existentes por un set completo scopeado por org:
-  - `SELECT` a `authenticated`: `USING (organization_id = public.current_user_org_id() AND (user_id = auth.uid() OR public.has_role(auth.uid(),'super_admin')))`.
-  - `INSERT` a `authenticated`: `WITH CHECK (user_id = auth.uid() AND organization_id = public.current_user_org_id())`.
-  - `UPDATE` a `authenticated`: `USING` + `WITH CHECK` iguales al `INSERT` (mismo user + misma org).
-  - `DELETE`: no se agrega (las claves expiran/rotan por proceso; nadie las borra desde el cliente).
-- Mantener `service_role` con acceso total (funciones edge que persisten respuestas).
+**1. Cerrar issues ya resueltos en Sentry** (usar `update_issue` con `status: resolved` y comentario apuntando a la versión del fix):
 
-## H2 · Dropear tablas `_backup_*` (baja, limpieza)
+- `JAVASCRIPT-REACT-2S` → fix 13.301.35
+- `JAVASCRIPT-REACT-2R` → fix 13.301.30
+- `JAVASCRIPT-REACT-2Q` → fix 13.301.27
+- `JAVASCRIPT-REACT-2P` → fix 13.301.16
+- `JAVASCRIPT-REACT-2N` → mejora UX 13.301.1 (comportamiento SAT esperado — no es bug de código)
 
-Las 7 tablas no tienen policies y no están referenciadas por código de app. Son respaldos de merges/backfills ya cerrados.
+**2. Filtrar validaciones esperadas de FacturApi para que no lleguen a Sentry (issue 2T)**
 
-Acciones:
-- `DROP TABLE IF EXISTS` de las 7 tablas dentro de la misma migración:
-  - `_backup_backfill_proformas_20260706`
-  - `_backup_gap_externo_proformas_20260706`
-  - `_backup_gap_externo_proformas_20260706_lote2`
-  - `_backup_merge_client_users_20260706`
-  - `_backup_merge_clientes_20260706`
-  - `_backup_merge_embarques_20260602`
-  - `_backup_merge_fk_remap_20260602`
+Actualmente `parseFacturapiError` marca ciertos errores como `transient` (reintentables), pero todos terminan reportándose vía `reportCaughtError` en el `onError` de la mutation `emitir-factura`/`cancelar-factura`.
 
-Riesgo: nulo — RLS bloqueaba a `anon`/`authenticated` y no hay referencias en `src/`. Si necesitáramos restaurarlas, viven en el historial de migraciones.
+Añadir una nueva clase de error: **`expected_business` = validación de datos que el usuario debe corregir**. Ejemplos:
+- "El campo Nombre del receptor, debe pertenecer al nombre asociado al RFC…"
+- "El RFC del receptor no está registrado ante el SAT"
+- "El régimen fiscal no es válido para el RFC"
 
-## H3 · Convertir policies `TO public` de service_role a `TO service_role` (informativa)
+**Implementación:**
 
-Seis policies en `email_send_log`, `email_send_state`, `email_unsubscribe_tokens`, `suppressed_emails` usan `TO public` con filtro `auth.role() = 'service_role'`. Comportamiento idéntico, pero por higiene pasan a `TO service_role`.
+- En `src/features/facturacion/services/facturapiError.ts` (o donde vive `mapFacturapiError`): añadir flag `expected: boolean` con una whitelist regex de patrones de mensaje SAT/FacturApi conocidos como validaciones de negocio.
+- En `useTimbrarFactura` y `useCancelarFactura` (hooks de mutation): en `onError`, si `error.expected === true`, mostrar toast con mensaje amable ("Verifica la razón social del cliente en Constancia Fiscal") y **NO** llamar a `reportCaughtError`.
+- Extender el patrón que ya existe en `reportCaughtError.ts` con `EXPECTED_PG_CODES` (23514) — pero aplicado a errores de FacturApi en el call site del hook.
 
-Acciones:
-- `DROP POLICY` + `CREATE POLICY` idénticas en cuanto a `USING/WITH CHECK`, cambiando el rol destino.
+**3. Test guardrail**
 
-## Verificación
+Añadir `src/features/facturacion/services/__tests__/facturapiError.expected.test.ts` que valide:
+- Mensaje "Nombre del receptor debe pertenecer al nombre asociado al RFC" → `expected: true`
+- Mensaje genérico "Internal server error" → `expected: false`
 
-- Test nuevo `src/lib/__tests__/rls-idempotency-keys-scoped.test.ts`: consulta `pg_policies` (vía snapshot en `supabase/tests/rls/`) para asegurar que las 3 policies (`SELECT`/`INSERT`/`UPDATE`) mencionan `organization_id` y `current_user_org_id`.
-- Suite RLS existente `test_rls_isolation.sql`: añadir 4 aserciones que:
-  1. usuario de Org A no ve claves de Org B,
-  2. no puede insertar con `organization_id` de Org B (falla con RLS),
-  3. `super_admin` sin impersonación no ve claves de otra org sin `current_user_org_id`,
-  4. mismo `user_id` en dos orgs no colisiona (dos filas conviven).
-- Guardrail: extender `no-hardcoded-org-default.test.ts` para que también rechace tablas `_backup_*` (previene reintroducirlas).
-- CI completo (`bun run ci:fast`) y `supabase--linter` post-migración.
+**4. Changelog + versión**
 
-## Detalles técnicos
+Bump `APP_VERSION` a `13.301.59`, entrada en `CHANGELOG.md`:
 
-Estructura de la migración (una sola llamada):
-
-```text
-1. DROP POLICY x2 en idempotency_keys
-2. CREATE POLICY SELECT/INSERT/UPDATE (scoped by org) — TO authenticated
-3. DROP TABLE IF EXISTS 7 tablas _backup_*
-4. DROP + CREATE POLICY x6 en email_* / suppressed_emails con TO service_role
+```
+## [13.301.59] - 2026-07-17
+- Sentry: cerrados 5 issues ya corregidos (2S, 2R, 2Q, 2P, 2N).
+- Facturación: validaciones SAT/FacturApi esperadas (razón social vs RFC,
+  RFC no registrado, régimen fiscal inválido) ya no se reportan a Sentry —
+  se muestran como toast accionable al usuario. Ref JAVASCRIPT-REACT-2T.
 ```
 
-- No se toca `service_role`; sigue con `GRANT ALL` implícito por bypass.
-- `current_user_org_id()` ya es `SECURITY DEFINER STABLE` — apto para RLS.
-- No hay cambios en tipos generados (`src/integrations/supabase/types.ts`) más allá de la eliminación de los tipos de las tablas `_backup_*`.
-- `CHANGELOG.md` + bump `APP_VERSION` a `13.301.55` (patch, remediación).
+### Fuera de alcance
 
-## Fuera de alcance
-
-- No se toca el modelo de folios ni `provision_organization`.
-- No se refactoriza el uso de idempotency en edge functions (payload actual sigue siendo compatible; ya envían el `organization_id` correcto).
-- No se agregan políticas `DELETE` en `idempotency_keys` (no hay caso de uso desde el cliente).
+- No tocamos la lógica de timbrado ni de cancelación — solo la clasificación de errores.
+- No modificamos `reportCaughtError` global; el filtro vive en el hook de facturación para no ocultar otros errores legítimos.
