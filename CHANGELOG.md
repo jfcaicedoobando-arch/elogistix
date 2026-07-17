@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.60] - 2026-07-17
+- Auditoría Sentry: `FacturapiError` transitorios de red (típico "Failed to send a request to the Edge Function" cuando el navegador pierde conexión al invocar `facturapi-emitir`/`cancelar`) dejan de reportarse a Sentry. Nuevo helper `isTransientFacturapiNetwork` en `appFeedback.ts` filtra por `transient: true` + patrón de mensaje de red (`failed to send a request to the edge function`, `networkerror`, `failed to fetch`, `load failed`). El usuario sigue viendo el toast accionable para reintentar. Ref `JAVASCRIPT-REACT-2T`.
+
 ## [13.301.59] - 2026-07-17
 - Auditoría Sentry: cerrados 5 issues ya arreglados en producción (`JAVASCRIPT-REACT-2S/2R/2Q/2P/2N`, versiones ≤13.301.28) con nota de referencia al commit del fix. Filtro nuevo `isExpectedFacturapiValidation` en `notifyError` para omitir Sentry cuando FacturApi/SAT rechaza por dato mal capturado del cliente (razón social vs RFC, RFC no registrado ante SAT, régimen fiscal/CP/uso CFDI inválidos). `FacturapiError` expone ahora `expected: boolean` que se calcula desde una whitelist regex en `services/facturapi.ts`. El usuario sigue viendo el toast accionable — sólo dejamos de reportar como bug lo que es corrección de catálogo. Ref `JAVASCRIPT-REACT-2T`.
 
