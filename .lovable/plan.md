@@ -1,53 +1,58 @@
-## Plan: limpiar Sentry y silenciar validaciones SAT esperadas
+# Por qué los usuarios ven toasts de colores distintos
 
-### Contexto
+Hoy el `Toaster` global (`src/components/ui/sonner.tsx`) tiene la prop **`richColors`** activada. Con esa prop, Sonner pinta cada toast con un fondo distinto según la severidad:
 
-De los 6 issues abiertos, **5 ya están corregidos en producción** (versiones ≤13.301.28, fixes desplegados en 13.301.30/35/16/27). El sexto (2T) es una validación de FacturApi/SAT — dato mal capturado, no bug — que se está reportando como error genérico.
+| Tipo | Fondo actual | Dónde se usa |
+|---|---|---|
+| `toast.error` / `notifyError` | rojo | 340+ call sites de error |
+| `toast.success` / `notifySuccess` | verde | 82 call sites (guardados, timbrado, etc.) |
+| `toast.warning` / `notifyWarning` | ámbar | 15 call sites (SAT retry, avisos) |
+| `toast.info` | azul | 10 call sites (SAT pending, "cancelación enviada") |
+| `toast(...)` (neutro) | blanco/gris | 47 call sites (CRM, mensajes simples) |
 
-### Acciones
+**Analogía**: es como si cada aviso de la app viniera en un post-it de color distinto — rojo, verde, amarillo, azul, blanco. Individualmente cada color tiene sentido, pero cuando el usuario ve varios seguidos siente que la app "cambia de idioma" en cada mensaje.
 
-**1. Cerrar issues ya resueltos en Sentry** (usar `update_issue` con `status: resolved` y comentario apuntando a la versión del fix):
+Además hay una inconsistencia real: los mismos flujos usan tanto `toast.info` (azul) como `toast(...)` (neutro) para mensajes informativos equivalentes → mismo tipo de aviso, dos colores.
 
-- `JAVASCRIPT-REACT-2S` → fix 13.301.35
-- `JAVASCRIPT-REACT-2R` → fix 13.301.30
-- `JAVASCRIPT-REACT-2Q` → fix 13.301.27
-- `JAVASCRIPT-REACT-2P` → fix 13.301.16
-- `JAVASCRIPT-REACT-2N` → mejora UX 13.301.1 (comportamiento SAT esperado — no es bug de código)
+# Recomendación (patrón moderno tipo Linear/Vercel)
 
-**2. Filtrar validaciones esperadas de FacturApi para que no lleguen a Sentry (issue 2T)**
+Un solo color de fondo para TODOS los toasts (superficie `--card` sobre `--background`), y la severidad se comunica sólo por:
 
-Actualmente `parseFacturapiError` marca ciertos errores como `transient` (reintentables), pero todos terminan reportándose vía `reportCaughtError` en el `onError` de la mutation `emitir-factura`/`cancelar-factura`.
+1. **Icono a color** (círculo rojo/verde/ámbar/azul, ya viene de Sonner).
+2. **Borde izquierdo de 3 px** con el color semántico.
+3. **Título con peso** consistente (14 px semibold, ya existe).
 
-Añadir una nueva clase de error: **`expected_business` = validación de datos que el usuario debe corregir**. Ejemplos:
-- "El campo Nombre del receptor, debe pertenecer al nombre asociado al RFC…"
-- "El RFC del receptor no está registrado ante el SAT"
-- "El régimen fiscal no es válido para el RFC"
+Ventajas:
+- Look calmado, "Apple-like minimal" que ya rige el proyecto (mem://core).
+- Elimina el choque visual al encolar avisos de distinto tipo.
+- Mantiene la accesibilidad (icono + borde + texto son 3 canales de severidad, no sólo color).
+- Cero cambios en los ~450 call sites: sigue siendo `notifyError` / `toast.success` / etc.
 
-**Implementación:**
+# Cambios concretos (sólo presentación)
 
-- En `src/features/facturacion/services/facturapiError.ts` (o donde vive `mapFacturapiError`): añadir flag `expected: boolean` con una whitelist regex de patrones de mensaje SAT/FacturApi conocidos como validaciones de negocio.
-- En `useTimbrarFactura` y `useCancelarFactura` (hooks de mutation): en `onError`, si `error.expected === true`, mostrar toast con mensaje amable ("Verifica la razón social del cliente en Constancia Fiscal") y **NO** llamar a `reportCaughtError`.
-- Extender el patrón que ya existe en `reportCaughtError.ts` con `EXPECTED_PG_CODES` (23514) — pero aplicado a errores de FacturApi en el call site del hook.
+**Único archivo a tocar:** `src/components/ui/sonner.tsx`
 
-**3. Test guardrail**
+1. Quitar `richColors`.
+2. En `toastOptions.classNames.toast`, usar tokens semánticos del design system: `bg-card text-card-foreground border-border`.
+3. Añadir variantes por `data-type` (Sonner las expone) para el borde izquierdo y el color del icono, usando tokens ya definidos:
+   - `data-[type=error]`: `border-l-4 border-l-destructive`, icono `text-destructive`.
+   - `data-[type=success]`: `border-l-4 border-l-primary` (o un token `--success` si preferimos añadirlo), icono en verde.
+   - `data-[type=warning]`: `border-l-4 border-l-amber-500` (token `--warning` si lo agregamos), icono ámbar.
+   - `data-[type=info]` y toast neutro: `border-l-4 border-l-muted`, sin icono destacado.
+4. Consolidar `toast.info` con toast neutro (no separar visualmente informativo de neutro) — se logra automáticamente al usar el mismo estilo para ambos.
 
-Añadir `src/features/facturacion/services/__tests__/facturapiError.expected.test.ts` que valide:
-- Mensaje "Nombre del receptor debe pertenecer al nombre asociado al RFC" → `expected: true`
-- Mensaje genérico "Internal server error" → `expected: false`
+Nada más se toca: `appFeedback.ts`, `useToast` shim, `crmToast` y todos los call sites quedan igual.
 
-**4. Changelog + versión**
+# Verificación
 
-Bump `APP_VERSION` a `13.301.59`, entrada en `CHANGELOG.md`:
+- Screenshot manual con Playwright a Full HD disparando un toast de cada severidad para confirmar el look unificado.
+- Los tests de arquitectura que ya prohíben `toast.error(...)` directo y `variant: destructive` siguen protegiendo el uso correcto.
 
-```
-## [13.301.59] - 2026-07-17
-- Sentry: cerrados 5 issues ya corregidos (2S, 2R, 2Q, 2P, 2N).
-- Facturación: validaciones SAT/FacturApi esperadas (razón social vs RFC,
-  RFC no registrado, régimen fiscal inválido) ya no se reportan a Sentry —
-  se muestran como toast accionable al usuario. Ref JAVASCRIPT-REACT-2T.
-```
+# CHANGELOG y versión
 
-### Fuera de alcance
+- Bump `APP_VERSION` a `13.301.61`.
+- Entrada nueva en `CHANGELOG.md` bajo Ajustes de UI: "Unificado el color de fondo de todos los toasts; la severidad ahora se comunica por icono y borde izquierdo".
 
-- No tocamos la lógica de timbrado ni de cancelación — solo la clasificación de errores.
-- No modificamos `reportCaughtError` global; el filtro vive en el hook de facturación para no ocultar otros errores legítimos.
+# ¿Quieres una variante?
+
+Si prefieres mantener el fondo coloreado para errores (para que un error de veras "grite"), puedo ajustar el plan para dejar SÓLO `error` con fondo rojo suave y el resto en superficie neutra. Dime antes de implementar si prefieres esa versión "1 color acentuado + resto neutro".
