@@ -50,16 +50,21 @@ describe("services/admin/organizations", () => {
     await expect(fetchOrganizationsList()).rejects.toThrow();
   });
 
-  it("createOrganization inserta payload", async () => {
-    mock.setTableResult("organizations", { data: null, error: null });
-    await createOrganization({ nombre: "ACME", rfc: "AAA010101AAA" });
-    const p = mock.getMutationPayload("organizations") as Record<string, unknown>;
-    expect(p).toEqual({ nombre: "ACME", rfc: "AAA010101AAA" });
+  it("createOrganization llama RPC provision_organization", async () => {
+    mock.setRpcResult("provision_organization", { data: "org-new", error: null });
+    const id = await createOrganization({ nombre: "ACME", rfc: "AAA010101AAA", ownerUserId: "u-1" });
+    expect(id).toBe("org-new");
+    expect(mock.rpcCalls[0]).toEqual({
+      fn: "provision_organization",
+      args: { p_nombre: "ACME", p_rfc: "AAA010101AAA", p_owner_user_id: "u-1" },
+    });
   });
 
-  it("createOrganization propaga error", async () => {
-    mock.setTableResult("organizations", { data: null, error: { message: "x" } });
-    await expect(createOrganization({ nombre: "x", rfc: "y" })).rejects.toThrow();
+  it("createOrganization propaga error de RPC", async () => {
+    mock.setRpcResult("provision_organization", { data: null, error: { message: "denied" } });
+    await expect(
+      createOrganization({ nombre: "x", rfc: "y", ownerUserId: "u-1" }),
+    ).rejects.toThrow();
   });
 
   it("fetchAdminOrganization devuelve fila única", async () => {
