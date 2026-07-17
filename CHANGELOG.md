@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.43] - 2026-07-17
+- Auditoría "Embarques sin factura" — Fase D (consistencia técnica): (1) se centralizan los valores mágicos del hueco en `huecoFacturacion/constants.ts` (`HUECO_ETA_CORTE_ISO`, `HUECO_ETA_BUFFER_DIAS`, `MS_POR_DIA`, `HUECO_QUERY_KEY_PREFIX`) y se consumen desde `index.ts` y `fetchSources.ts`; (2) nuevo helper `invalidateHuecoFacturacion(qc)` que invalida por prefijo `['facturacion','hueco']`; (3) se cablea en `useTimbrarFactura` (timbrar), `useCancelarFactura` (cancelar/sustituir + retry SAT), `useCrearFacturaManual` y `useEliminarBorradorFactura`, para que la bandeja refresque automáticamente al mutar el estado factura↔embarque.
+
 ## [13.301.42] - 2026-07-17
 - Auditoría "Embarques sin factura" — Fase C: un embarque con al menos un `conceptos_venta.estado_facturacion = 'pendiente'` REAPARECE en la bandeja aunque tenga bridge `factura_embarques.activa` con CFDI Emitida, factura legacy por expediente o proforma histórica facturada. Cubre el caso "se agregan nuevos conceptos después de facturar" (H6 de la auditoría). Se añade el helper puro `calcularEmbarquesConPendiente` en `huecoFacturacion/index.ts` y el override se aplica antes de las tres reglas de exclusión. Tests nuevos: override de bridge, override de legacy y override de proforma histórica.
 
