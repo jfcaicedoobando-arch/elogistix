@@ -19,7 +19,7 @@ export const HUECO_ETA_CORTE_ISO = "2026-04-01" as const;
 export const HUECO_ETA_BUFFER_DIAS = 3 as const;
 
 /** Milisegundos en un día natural. */
-export const MS_POR_DIA = 24 * 60 * 60 * 1000 as const;
+export const MS_POR_DIA = 24 * 60 * 60 * 1000;
 
 /**
  * Prefijo de query key del hueco. Cualquier `queryKey` que empiece con
