@@ -12,6 +12,7 @@ import {
   PORTAL_FACTURA_DETAIL_COLUMNS,
   PORTAL_PAGO_FACTURA_COLUMNS,
 } from "./columns";
+import { FACTURA_ESTADOS_VIVOS } from "@/features/facturacion/domain/estadosFactura";
 
 // Schema reutilizable para joins anidados { nombre } | null — valida en runtime.
 const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
