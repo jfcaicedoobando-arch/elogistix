@@ -18,14 +18,36 @@ interface EdgeErrorBody {
   transient?: boolean;
 }
 
-/** Error enriquecido: expone si el fallo es transitorio (reintentable). */
+/** Error enriquecido: expone si el fallo es transitorio (reintentable)
+ *  y si es una validación de negocio esperada (dato mal capturado por el
+ *  usuario, no bug — ver `EXPECTED_FACTURAPI_PATTERNS`). */
 export class FacturapiError extends Error {
   transient: boolean;
-  constructor(message: string, transient = false) {
+  expected: boolean;
+  constructor(message: string, transient = false, expected = false) {
     super(message);
     this.name = "FacturapiError";
     this.transient = transient;
+    this.expected = expected;
   }
+}
+
+/**
+ * Whitelist de mensajes que FacturApi/SAT devuelven cuando el dato del
+ * cliente es incorrecto. NO son bugs — son validaciones que el usuario
+ * debe corregir en su catálogo (razón social, RFC, régimen fiscal). Se
+ * excluyen de Sentry para no generar ruido. Ref audit Sentry 2T (13.301.59).
+ */
+const EXPECTED_FACTURAPI_PATTERNS: RegExp[] = [
+  /nombre del receptor.*pertenece.*rfc/i,
+  /rfc del receptor.*no.*registrado.*sat/i,
+  /r[eé]gimen fiscal.*no.*v[aá]lido/i,
+  /c[oó]digo postal.*no.*coincide/i,
+  /uso de cfdi.*no.*v[aá]lido/i,
+];
+
+function isExpectedFacturapiMessage(message: string): boolean {
+  return EXPECTED_FACTURAPI_PATTERNS.some((rx) => rx.test(message));
 }
 
 /**
@@ -57,7 +79,12 @@ function toReadableError(error: unknown, body: EdgeErrorBody, fallback: string):
     ?? body.error
     ?? (error as { message?: string } | null)?.message
     ?? fallback;
-  return new FacturapiError(message + issues, !!body.transient);
+  const finalMessage = message + issues;
+  return new FacturapiError(
+    finalMessage,
+    !!body.transient,
+    isExpectedFacturapiMessage(finalMessage),
+  );
 }
 
 export async function emitirFacturapi(facturaId: string): Promise<TimbradoResult> {
