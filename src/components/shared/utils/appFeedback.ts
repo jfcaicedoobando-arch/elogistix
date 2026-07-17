@@ -95,13 +95,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   // 13.301.59: también filtramos validaciones esperadas de FacturApi/SAT
   // (razón social vs RFC, RFC no registrado, régimen inválido). El usuario
   // debe corregir el catálogo — no es bug de código.
-  if (
-    error !== undefined
-    && error !== null
-    && !isAuthorizationError(error)
-    && !isExpectedFacturapiValidation(error)
-    && !isTransientFacturapiNetwork(error)
-  ) {
+  if (shouldReportToSentry(error)) {
     reportCaughtError(
       error,
       {
@@ -119,6 +113,16 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
       },
     );
   }
+}
+
+/** Decide si un error debe llegar a Sentry (excluye autorización + validaciones
+ *  esperadas SAT + fallos transitorios de red de FacturApi). */
+function shouldReportToSentry(error: unknown): boolean {
+  if (error === undefined || error === null) return false;
+  if (isAuthorizationError(error)) return false;
+  if (isExpectedFacturapiValidation(error)) return false;
+  if (isTransientFacturapiNetwork(error)) return false;
+  return true;
 }
 
 /**
