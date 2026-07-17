@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [13.301.31] - 2026-07-16
+- **fix(facturacion, proformas, embarques)**: al cancelar/sustituir una factura no se sincronizaba nada más allá de `facturas`. La proforma origen quedaba `estado_proforma='facturada'` para siempre (caso PRO-2026-0973) y la tabla puente `factura_embarques` no reflejaba el cambio. Ahora:
+  - Nueva RPC `revertir_proforma_al_cancelar_sustitucion(p_factura_id)`: libera la proforma (`pendiente`, `fecha_facturacion=NULL`) sólo si ya no queda ninguna factura viva apuntando a ella. Se registra en bitácora.
+  - `factura_embarques` gana columna `activa boolean default true`. Al cancelar/sustituir una factura, sus filas puente quedan `activa=false` (se conserva el historial).
+  - `duplicar_factura_para_sustitucion` copia las filas de `factura_embarques` al nuevo borrador sustituto.
+  - Los edge functions `facturapi-cancelar` y `facturapi-reconciliar-cancelaciones` invocan la RPC y marcan las filas puente al aceptarse la cancelación (tanto motivo 01 como 02).
+  - Backfill: revisa proformas actualmente marcadas como facturadas cuyas facturas están todas canceladas/sustituidas y las libera; sincroniza `factura_embarques.activa` con el estado actual de las facturas.
+
 ## [13.301.30] - 2026-07-16
 - **fix(facturacion)**: cuando una factura sustituta era cancelada, la factura original quedaba atrapada porque `sustituida_por` seguía apuntando a la sustituta y la UI/RPC seguían bloqueando cancelación y re-sustitución (caso F975 → F988). Ahora: (a) la RPC `duplicar_factura_para_sustitucion` sólo bloquea si la sustituta previa está viva (no `Cancelada`/`Sustituida`), y en el caso permitido sobrescribe `sustituida_por` con el nuevo borrador; (b) `fetchFacturaById` trae el estado de la sustituta vía `sustituida_por_ref`; (c) `deriveFacturaFlags` reactiva `puedeCancelarCfdi` y `puedeSustituirCfdi` cuando la sustituta previa ya no está viva; (d) se agrega un banner informativo `SustitutaCanceladaBanner` en el detalle explicando que la factura vuelve a estar disponible.
 
