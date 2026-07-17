@@ -43,12 +43,12 @@ function labelUsoCfdi(clave: string | null | undefined): string {
 function Row({ label, ok, value, missingLabel }: { label: string; ok: boolean; value: string; missingLabel: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        {ok ? <Check className="h-3 w-3 text-success" /> : <X className="h-3 w-3 text-destructive" />}
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <p className={`font-medium truncate ${ok ? "" : "text-destructive italic"}`}>
-        {ok ? value : missingLabel}
+      <p className={`text-sm font-medium truncate flex items-center gap-1 ${ok ? "" : "text-destructive italic"}`}>
+        {ok ? <Check className="h-3 w-3 text-success shrink-0" /> : <X className="h-3 w-3 text-destructive shrink-0" />}
+        <span className="truncate">{ok ? value : missingLabel}</span>
       </p>
     </div>
   );
