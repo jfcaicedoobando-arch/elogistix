@@ -23,6 +23,8 @@ export interface FacturaFlagsInput {
    * y la factura original vuelve a estar disponible para cancelar/sustituir.
    */
   sustituida_por_ref?: { estado?: string | null } | null;
+  /** Estado del trámite de cancelación (none | pending | verifying | verified). */
+  cancellation_status?: string | null;
 }
 
 export interface FacturaFlagsContext {
