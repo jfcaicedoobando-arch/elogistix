@@ -18,6 +18,7 @@ export interface EntradaBitacora {
 export interface FiltrosBitacora {
   modulo?: string;
   usuarioId?: string;
+  entidadId?: string | null;
   fechaDesde?: string;
   fechaHasta?: string;
   limite?: number;

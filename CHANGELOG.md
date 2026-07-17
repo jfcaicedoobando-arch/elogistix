@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.38] - 2026-07-17
+- Fix: la tarjeta "Historial de la factura" mostraba "Sin eventos registrados" aunque la bitácora tuviera entradas (verificado: F975 tenía 11 eventos reales). El componente pedía las últimas 25 filas del módulo `facturas` de toda la organización y filtraba en cliente por `entidad_id`, por lo que casi nunca intersectaban con la factura visible. Se agregó filtro server-side `entidadId` en `FiltrosBitacora` + `fetchBitacora`, se elevó el límite a 50 y se reemplazaron los slugs (`facturapi_emitida`, `factura.borrador_generado`, etc.) por etiquetas legibles ("Timbrada", "Borrador generado", …).
+
 ## [13.301.37] - 2026-07-17
 - UI/UX: normalizada la escala tipográfica del detalle de factura. Todos los `CardTitle` (Emisor, Receptor, Datos generales, Timbrado fiscal, Desglose, Totales, Historial de pagos, Notas de crédito, Historial de la factura) usan ahora `text-base font-semibold` con icono `text-muted-foreground` para verse como hermanos jerárquicos. Etiquetas de campo unificadas a `text-[11px] font-medium uppercase tracking-wide text-muted-foreground` en todas las tarjetas del tab Resumen. Se quitó el check verde de las etiquetas del Receptor y se movió junto al valor (el check valida el dato, no el label). En Totales, Subtotal/IVA/Total ahora comparten tamaño (`text-base`) y "Total" se distingue sólo por color y anillo `ring-1 ring-accent/20`. El total del header baja de `text-2xl bold accent` a `text-lg semibold foreground` para dejar de competir con la tarjeta Totales. Timbrado fiscal reordena "Fecha de emisión" a fila propia full-width para no dejar celdas huérfanas.
 

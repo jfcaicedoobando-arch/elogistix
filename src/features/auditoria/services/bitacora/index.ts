@@ -20,6 +20,7 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
     pagina = 0,
     modulo,
     usuarioId,
+    entidadId,
     fechaDesde,
     fechaHasta,
     excluirLogin = true,
@@ -35,6 +36,7 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
   if (excluirLogin) query = query.neq("accion", "login");
   if (modulo) query = query.eq("modulo", modulo);
   if (usuarioId) query = query.eq("usuario_id", usuarioId);
+  if (entidadId) query = query.eq("entidad_id", entidadId);
   if (fechaDesde) query = query.gte("created_at", fechaDesde);
   if (fechaHasta) query = query.lte("created_at", fechaHasta);
   if (acciones && acciones.length > 0) query = query.in("accion", acciones);
