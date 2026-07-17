@@ -75,4 +75,21 @@ describe("estadoResultadosDevengado service", () => {
     mock.setTableResult("facturas", { data: null, error: { message: "db-fail" } });
     await expect(fetchEstadoResultadosDevengado({ organizationId: null, year: 2024, month: 1 })).rejects.toThrow("db-fail");
   });
+
+  it("filtra facturas por estados vivos: Cancelada y Sustituida quedan fuera", async () => {
+    mock.setTableResult("facturas", { data: [], error: null });
+    mock.setTableResult("factura_notas_credito", { data: [], error: null });
+    mock.setTableResult("proveedor_facturas", { data: [], error: null });
+
+    await fetchEstadoResultadosDevengado({ organizationId: "o1", year: 2024, month: 1 });
+
+    const facturasCall = mock.tableCalls.find((c) => c.table === "facturas");
+    const inIdx = facturasCall?.ops.indexOf("in") ?? -1;
+    expect(inIdx).toBeGreaterThanOrEqual(0);
+    const [column, values] = facturasCall!.opArgs[inIdx] as [string, string[]];
+    expect(column).toBe("estado");
+    expect(values).toEqual(expect.arrayContaining(["Emitida", "Pagada", "Parcialmente pagada", "Vencida"]));
+    expect(values).not.toContain("Cancelada");
+    expect(values).not.toContain("Sustituida");
+  });
 });
