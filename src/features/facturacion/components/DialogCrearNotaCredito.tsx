@@ -165,6 +165,14 @@ export function DialogCrearNotaCredito({
       size="lg"
       footer={footer}
     >
+      {facturaLiquidada && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {sinUuid && (
         <Alert variant="destructive">
           <AlertDescription>
