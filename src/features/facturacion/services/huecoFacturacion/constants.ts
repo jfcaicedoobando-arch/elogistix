@@ -18,6 +18,17 @@ export const HUECO_ETA_CORTE_ISO = "2026-04-01" as const;
  */
 export const HUECO_ETA_BUFFER_DIAS = 3 as const;
 
+/**
+ * Estados que representan una factura viva para el hueco. Una factura pagada,
+ * vencida o parcialmente pagada ya cubre al embarque igual que una emitida.
+ */
+export const FACTURA_ESTADOS_VIVOS_HUECO = [
+  "Emitida",
+  "Pagada",
+  "Vencida",
+  "Parcialmente pagada",
+] as const;
+
 /** Milisegundos en un día natural. */
 export const MS_POR_DIA = 24 * 60 * 60 * 1000;
 

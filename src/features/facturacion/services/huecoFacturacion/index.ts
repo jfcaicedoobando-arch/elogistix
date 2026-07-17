@@ -8,10 +8,10 @@
  * después de facturar" (H6 de la auditoría).
  *
  * Fase A (v13.301.41) — exclusión "ya tiene CFDI" en dos capas:
- *   1. Bridge canónico `factura_embarques.activa = true` cuya factura está
- *      `Emitida`. Fuente de verdad desde v13.301.31.
- *   2. Fallback legacy: expediente con al menos una `facturas.estado='Emitida'`
- *      con PDF (para CFDIs históricos sin bridge).
+ *   1. Bridge canónico `factura_embarques.activa = true` cuya factura tiene
+ *      estado vivo. Fuente de verdad desde v13.301.31.
+ *   2. Fallback legacy: expediente con al menos una factura viva con PDF
+ *      (para CFDIs históricos sin bridge).
  * Una factura sólo `Cancelada` deja de ocultar al embarque del hueco.
  *
  * Ventana temporal (v13.217.0):
@@ -118,7 +118,7 @@ export async function fetchHuecoFacturacion({
     // el embarque siempre entra al hueco (nuevos conceptos post-facturación).
     const tienePendiente = embarquesConPendiente.has(e.id);
     if (!tienePendiente) {
-      // Fuente de verdad principal: bridge activo con factura Emitida.
+      // Fuente de verdad principal: bridge activo con factura viva.
       if (embarquesConBridge.has(e.id)) continue;
       // Fallback legacy por expediente (facturas sin bridge, sólo si están vivas).
       if (e.expediente && expedientesFacturados.has(e.expediente)) continue;

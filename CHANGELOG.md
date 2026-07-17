@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.46] - 2026-07-17
+- Fix "Embarques sin factura": el hueco ya reconoce facturas `Pagada`, `Vencida` y `Parcialmente pagada` como facturas vivas, no sólo `Emitida`. Esto corrige casos como ELIMP00007, ELIMP00020 y ELIMP00022, que tenían bridge activo y todos sus conceptos facturados pero seguían apareciendo en la bandeja. Se agregan tests de regresión para bridge y fallback legacy con factura pagada.
+
 ## [13.301.45] - 2026-07-17
 - Fix trigger `check_factura_saldo_para_nc`: la validación fallaba con `column "saldo" does not exist` al insertar notas de crédito. Ahora el saldo se calcula al vuelo (`total − pagos aplicados − NC previas aplicadas`) en vez de leer una columna inexistente. Se sigue bloqueando NC sobre facturas Emitidas con saldo ≤ 0.01. Desbloquea `test_rls_financiero_critico.sql` en CI.
 
