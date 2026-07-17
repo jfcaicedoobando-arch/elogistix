@@ -89,6 +89,7 @@ jobs:
             operaciones \
             tarifas_y_costeo \
             roles_no_admin \
+            rpc_provision_organization \
             | LC_ALL=C sort)
           if ! diff <(echo "$expected") <(echo "$declared") >/dev/null; then
             echo "::error::matrix.suite está desincronizada con los archivos test_rls_*.sql"
