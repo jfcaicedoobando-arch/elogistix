@@ -29,7 +29,7 @@ describe("fetchHuecoFacturacion", () => {
     expect(r).toEqual({ filas: [], totalEmbarques: 0, totalUsd: 0, totalMxn: 0 });
   });
 
-  it("excluye embarques con factura asociada al expediente", async () => {
+  it("excluye embarques con bridge factura_embarques activo (fuente canónica)", async () => {
     mock.setTableResult("embarques", { data: [emb("a"), emb("b")], error: null });
     mock.setTableResult("conceptos_venta", {
       data: [
@@ -38,13 +38,46 @@ describe("fetchHuecoFacturacion", () => {
       ],
       error: null,
     });
+    mock.setTableResult("factura_embarques", {
+      data: [{ embarque_id: "a" }],
+      error: null,
+    });
+    mock.setTableResult("facturas", { data: [], error: null });
+    const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    expect(r.totalEmbarques).toBe(1);
+    expect(r.filas[0].expediente).toBe("EXP-b");
+  });
+
+  it("v13.301.41 — factura Cancelada sin bridge activo NO oculta al embarque", async () => {
+    mock.setTableResult("embarques", { data: [emb("a")], error: null });
+    mock.setTableResult("conceptos_venta", {
+      data: [{ embarque_id: "a", total: 100, moneda: "USD" }],
+      error: null,
+    });
+    // Ni bridge ni fallback legacy (facturas Emitidas) devuelven resultados
+    // → una factura cancelada sin sustituta no debe ocultar el embarque.
+    mock.setTableResult("factura_embarques", { data: [], error: null });
+    mock.setTableResult("facturas", { data: [], error: null });
+    const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
+    expect(r.totalEmbarques).toBe(1);
+    expect(r.filas[0].expediente).toBe("EXP-a");
+  });
+
+  it("v13.301.41 — fallback legacy por expediente (factura Emitida sin bridge)", async () => {
+    mock.setTableResult("embarques", { data: [emb("a"), emb("b")], error: null });
+    mock.setTableResult("conceptos_venta", { data: [], error: null });
+    mock.setTableResult("factura_embarques", { data: [], error: null });
     mock.setTableResult("facturas", {
-      data: [{ expediente: "EXP-a", factura_pdf_url: "x.pdf" }],
+      data: [{ expediente: "EXP-a" }],
       error: null,
     });
     const r = await fetchHuecoFacturacion({ organizationId: "org-1", hoy: HOY });
     expect(r.totalEmbarques).toBe(1);
     expect(r.filas[0].expediente).toBe("EXP-b");
+    // Verifica que el fallback filtre por estado Emitida y pdf no nulo.
+    const facturasCall = mock.tableCalls.find((c) => c.table === "facturas");
+    expect(facturasCall).toBeDefined();
+    expect(facturasCall!.opArgs.some((a) => a[0] === "estado" && a[1] === "Emitida")).toBe(true);
   });
 
   it("calcula totales en USD/MXN sumando conceptos del embarque", async () => {

@@ -1,13 +1,13 @@
 /**
  * Fuentes de datos (Supabase) para el "Hueco de Facturación". Solo I/O.
  *
- * v13.213.3 — Se agrega `fetchConceptosVentaDeEmbarques` para detectar
- * "aceptación histórica": embarques cuyos conceptos ya viven en proformas
- * marcadas como `facturada` (back-fill), que deben excluirse del hueco aunque
- * no exista CFDI real.
+ * v13.301.41 — Fase A auditoría: la fuente de verdad para "ya tiene CFDI vivo"
+ * es `factura_embarques.activa = true` unido a `facturas.estado = 'Emitida'`.
+ * Se mantiene un fallback por `expediente` con filtro de estado para cubrir
+ * facturas legacy sin bridge; una factura únicamente `Cancelada` deja de
+ * ocultar al embarque del hueco (antes bastaba con `factura_pdf_url`).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
 
 export interface EmbarqueHuecoRow {
   id: string;
@@ -89,16 +89,72 @@ export async function fetchConceptosVentaDeEmbarques(
   }));
 }
 
+/**
+ * Devuelve el Set de `embarque_id` que tienen al menos una entrada en
+ * `factura_embarques.activa = true` cuya factura está `Emitida`. Ésta es la
+ * fuente de verdad canónica desde v13.301.31.
+ */
+export async function fetchEmbarquesConFacturaViva(
+  embarqueIds: string[],
+  organizationId?: string | null,
+): Promise<Set<string>> {
+  if (embarqueIds.length === 0) return new Set();
+  let q = supabase
+    .from("factura_embarques")
+    .select("embarque_id, facturas!inner(estado, cancellation_status)")
+    .in("embarque_id", embarqueIds)
+    .eq("activa", true)
+    .eq("facturas.estado", "Emitida");
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const { data, error } = await q;
+  if (error) throw error;
+  type Row = { embarque_id: string };
+  const rows = (data ?? []) as unknown as Row[];
+  return new Set(rows.map((r) => r.embarque_id));
+}
+
+/**
+ * Fallback legacy: expedientes con al menos una factura `Emitida` con PDF.
+ * Sólo debe usarse para embarques sin bridge activo (facturas históricas
+ * anteriores a `factura_embarques`).
+ */
+export async function fetchExpedientesConFacturaVivaLegacy(
+  expedientes: string[],
+  organizationId?: string | null,
+): Promise<Set<string>> {
+  if (expedientes.length === 0) return new Set();
+  let q = supabase
+    .from("facturas")
+    .select("expediente")
+    .in("expediente", expedientes)
+    .eq("estado", "Emitida")
+    .not("factura_pdf_url", "is", null);
+  if (organizationId) q = q.eq("organization_id", organizationId);
+  const { data, error } = await q;
+  if (error) throw error;
+  type Row = { expediente: string | null };
+  const rows = (data ?? []) as unknown as Row[];
+  const set = new Set<string>();
+  for (const r of rows) if (r.expediente) set.add(r.expediente);
+  return set;
+}
+
 export async function fetchVentasYFacturas(
   ids: string[],
   expedientes: string[],
   organizationId?: string | null,
 ) {
-  const [ventasRes, facturas, conceptosDetalle] = await Promise.all([
+  const [ventasRes, expedientesFacturados, embarquesConBridge, conceptosDetalle] = await Promise.all([
     supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids),
-    fetchFacturasPorExpedientes(expedientes, organizationId),
+    fetchExpedientesConFacturaVivaLegacy(expedientes, organizationId),
+    fetchEmbarquesConFacturaViva(ids, organizationId),
     fetchConceptosVentaDeEmbarques(ids),
   ]);
   if (ventasRes.error) throw ventasRes.error;
-  return { ventas: ventasRes.data ?? [], facturas, conceptosDetalle };
+  return {
+    ventas: ventasRes.data ?? [],
+    expedientesFacturados,
+    embarquesConBridge,
+    conceptosDetalle,
+  };
 }
