@@ -110,6 +110,7 @@ export async function fetchEmbarquesConFacturaViva(
   const { data, error } = await q;
   if (error) throw error;
   type Row = { embarque_id: string };
+  // SAFE-CAST: Supabase infiere el join anidado, sólo leemos embarque_id.
   const rows = (data ?? []) as unknown as Row[];
   return new Set(rows.map((r) => r.embarque_id));
 }
@@ -134,6 +135,7 @@ export async function fetchExpedientesConFacturaVivaLegacy(
   const { data, error } = await q;
   if (error) throw error;
   type Row = { expediente: string | null };
+  // SAFE-CAST: proyección plana de una sola columna, filtrada abajo.
   const rows = (data ?? []) as unknown as Row[];
   const set = new Set<string>();
   for (const r of rows) if (r.expediente) set.add(r.expediente);

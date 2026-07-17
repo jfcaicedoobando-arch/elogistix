@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.44] - 2026-07-17
+- Auditoría "Embarques sin factura" — cierre Fase D: (1) se añade el test `invalidateHuecoFacturacion.test.ts` para blindar el prefijo de invalidación de caché; (2) se agregan marcadores `SAFE-CAST:` en los dos casts anidados de Supabase en `huecoFacturacion/fetchSources.ts`; (3) se divide `DialogCrearNotaCredito.tsx` extrayendo su estado y submit al hook `useNotaCreditoDraft` (Power of 10 ≤ 200 líneas); (4) se divide `lib/domain/bitacoraDescripcion.ts` extrayendo el despacho por módulo (`facturacion`/`cxp`/`costeo`) a `bitacoraDescripcionModulos.ts` y las types a `bitacoraDescripcion.types.ts`. Con esto queda cerrada la auditoría de las 4 fases sin regresiones.
+
 ## [13.301.43] - 2026-07-17
 - Auditoría "Embarques sin factura" — Fase D (consistencia técnica): (1) se centralizan los valores mágicos del hueco en `huecoFacturacion/constants.ts` (`HUECO_ETA_CORTE_ISO`, `HUECO_ETA_BUFFER_DIAS`, `MS_POR_DIA`, `HUECO_QUERY_KEY_PREFIX`) y se consumen desde `index.ts` y `fetchSources.ts`; (2) nuevo helper `invalidateHuecoFacturacion(qc)` que invalida por prefijo `['facturacion','hueco']`; (3) se cablea en `useTimbrarFactura` (timbrar), `useCancelarFactura` (cancelar/sustituir + retry SAT), `useCrearFacturaManual` y `useEliminarBorradorFactura`, para que la bandeja refresque automáticamente al mutar el estado factura↔embarque.
 
