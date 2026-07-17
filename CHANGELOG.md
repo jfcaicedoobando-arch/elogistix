@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.35] - 2026-07-17
+- Fix CI: `FacturaDetalleView.tsx` bajado a <200 líneas (Power of 10) colapsando eslint-disable en bloque; agregado marcador `// SAFE-CAST:` al cast `sustituida_por` en `facturacion/services/detail.ts` para pasar la auditoría de casts (baseline arch).
+
 ## [13.301.34] - 2026-07-17
 - Fix: timbrado por sustitución fallaba con `"related_documents[0].uuid" is not allowed` (requestId `772664a6-f280-4ebd-979c-fa919b279947`). FacturAPI v2 exige el shape agrupado `related_documents: [{ relationship, documents: ["<uuid>"] }]`; el envío previo con `{ relationship, uuid }` era incompatible con `/v2/invoices`. Corregido en `facturapi-emitir/helpers.ts` + test de regresión.
 
