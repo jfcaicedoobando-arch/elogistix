@@ -39,7 +39,8 @@ interface FacturaDetalleViewProps {
   pagoRepPendiente: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   timbrarRep: any;
-  handleDownload: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handleDownload: any;
   onEliminar: () => void;
   volverHref: string;
   volverLabel: string;
