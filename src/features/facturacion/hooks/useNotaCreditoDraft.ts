@@ -99,6 +99,12 @@ export function useNotaCreditoDraft(p: Params) {
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(p.facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
     },
+    onError: (err) => {
+      // `handleSubmit` ya notifica al usuario; el onError sólo satisface la
+      // regla de arquitectura y deja huella en consola para diagnóstico.
+      // eslint-disable-next-line no-console
+      console.warn("[useNotaCreditoDraft] crearNotaCredito failed", getErrorMessage(err));
+    },
   });
 
   const handleSubmit = async (timbrarAhora: boolean) => {
