@@ -30,6 +30,17 @@ import { FacturaDetalleModales } from "@/features/facturacion/components/detalle
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 
+function FacturaNoEncontrada({ onVolver }: { onVolver: () => void }) {
+  return (
+    <div className="text-center py-12">
+      <p className="text-muted-foreground">Factura no encontrada o sin acceso.</p>
+      <Button variant="link" onClick={onVolver}>
+        Volver a facturación
+      </Button>
+    </div>
+  );
+}
+
 export default function FacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
