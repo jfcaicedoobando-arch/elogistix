@@ -1,13 +1,17 @@
 /**
  * Orquestador del "Hueco de Facturación".
  *
- * v13.217.0 — Se amplía la ventana a **ETA ≤ hoy + 3 días** para dar buffer al
- * agente aduanal (antes: `eta ≤ hoy`). Criterios:
- *   - `eta` capturado (embarques sin ETA se excluyen).
- *   - `eta ≥ 2026-04-01` (corte del modelo nuevo, no revive back-fill).
- *   - `eta ≤ hoy + 3 días` (ya vencidos o próximos a arribar → necesita CFDI
- *     para cruzar aduana con margen).
- *   - Y NO tiene factura con `factura_pdf_url` asociada por expediente.
+ * v13.301.41 — Fase A auditoría: la exclusión "ya tiene CFDI" se determina en
+ * dos capas, en este orden:
+ *   1. Bridge canónico `factura_embarques.activa = true` cuya factura está
+ *      `Emitida`. Fuente de verdad desde v13.301.31.
+ *   2. Fallback legacy: expediente con al menos una `facturas.estado='Emitida'`
+ *      con PDF (para CFDIs históricos sin bridge).
+ * Una factura sólo `Cancelada` deja de ocultar al embarque del hueco.
+ *
+ * Ventana temporal (v13.217.0):
+ *   - `eta` capturado; `eta ≥ 2026-04-01`; `eta ≤ hoy + 3 días`.
+ *   - `facturado_historico = false`.
  *   - Y NO todos sus conceptos de venta están en proformas marcadas como
  *     `facturada` (aceptación histórica del back-fill).
  */
