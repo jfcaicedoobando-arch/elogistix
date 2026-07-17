@@ -58,16 +58,12 @@ export default function FacturaDetalle() {
     );
   }
 
-  if (!factura) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Factura no encontrada o sin acceso.</p>
-        <Button variant="link" onClick={() => navigate("/facturacion")}>
-          Volver a facturación
-        </Button>
-      </div>
-    );
-  }
+  if (!factura) return <FacturaNoEncontrada onVolver={() => navigate("/facturacion")} />;
+
+  const acuseCancelacionStatus = (factura as { acuse_cancelacion_status?: string | null }).acuse_cancelacion_status ?? null;
+  const cancellationStatus = (factura as { cancellation_status?: string | null }).cancellation_status ?? null;
+  const mostrarSustitutaCancelada =
+    !!factura.sustituida_por && factura.sustituida_por_ref?.estado === "Cancelada";
 
   return (
     <PageContainer>
@@ -78,8 +74,8 @@ export default function FacturaDetalle() {
       <FacturaDetalleHeader
         numero={factura.numero}
         estado={factura.estado}
-        acuseCancelacionStatus={(factura as { acuse_cancelacion_status?: string | null }).acuse_cancelacion_status ?? null}
-        cancellationStatus={(factura as { cancellation_status?: string | null }).cancellation_status ?? null}
+        acuseCancelacionStatus={acuseCancelacionStatus}
+        cancellationStatus={cancellationStatus}
         sinTimbrar={sinTimbrar}
         clienteNombre={factura.cliente_nombre}
         expediente={factura.expediente}
@@ -88,9 +84,9 @@ export default function FacturaDetalle() {
         ambiente={factura.ambiente}
       />
 
-      {factura.sustituida_por && factura.sustituida_por_ref?.estado === "Cancelada" && (
+      {mostrarSustitutaCancelada && (
         <SustitutaCanceladaBanner
-          sustitutaId={factura.sustituida_por}
+          sustitutaId={factura.sustituida_por!}
           sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
         />
       )}
