@@ -2,17 +2,20 @@
  * Generación de descripciones legibles para entradas de bitácora.
  * Función pura: a partir de `accion + modulo + detalles` devuelve un título
  * descriptivo y un contexto secundario opcional.
+ *
+ * El despacho por módulo (facturacion, cxp, costeo) vive en
+ * `bitacoraDescripcionModulos.ts` para respetar Power of 10.
  */
 import type { EntradaBitacora } from "@/types/bitacora";
 import { formatCurrency } from "@/lib/formatters";
+import type { DescripcionBitacora } from "./bitacoraDescripcion.types";
+import {
+  describirFacturacion,
+  describirCxp,
+  describirCosteo,
+} from "./bitacoraDescripcionModulos";
 
-export interface DescripcionBitacora {
-  titulo: string;
-  contexto?: string;
-  /** Si es cambio de estado, exponemos los dos estados para render con badges. */
-  estadoAnterior?: string;
-  estadoNuevo?: string;
-}
+export type { DescripcionBitacora };
 
 const MODULO_SINGULAR: Record<string, string> = {
   embarques: "embarque",
@@ -32,7 +35,6 @@ const MODULO_SINGULAR: Record<string, string> = {
 function asString(v: unknown): string | undefined {
   return typeof v === "string" && v.length > 0 ? v : undefined;
 }
-
 function asNumber(v: unknown): number | undefined {
   return typeof v === "number" && Number.isFinite(v) ? v : undefined;
 }
@@ -91,116 +93,58 @@ function describirFactura(detalles: Record<string, unknown>): DescripcionBitacor
   const monto = asNumber(detalles.monto) ?? asNumber(detalles.total);
   const moneda = asString(detalles.moneda) ?? "MXN";
   const titulo = folio ? `Generó factura ${folio}` : "Generó factura";
+  
   const contexto = monto !== undefined ? formatCurrency(monto, moneda) : undefined;
   return { titulo, contexto };
 }
 
-function describirCreacionGenerica(modulo: string): DescripcionBitacora {
+function describirGenerica(accion: string, modulo: string): DescripcionBitacora {
   const singular = MODULO_SINGULAR[modulo] ?? "registro";
-  const articulo = singular === "cotización" || singular === "factura" ? "una" : "un";
-  return { titulo: `Creó ${articulo} ${singular}` };
-}
-
-function describirEdicionGenerica(modulo: string): DescripcionBitacora {
-  const singular = MODULO_SINGULAR[modulo] ?? "registro";
-  return { titulo: `Editó ${singular}` };
-}
-
-function describirEliminacionGenerica(modulo: string): DescripcionBitacora {
-  const singular = MODULO_SINGULAR[modulo] ?? "registro";
+  if (accion === "crear") {
+    const articulo = singular === "cotización" || singular === "factura" ? "una" : "un";
+    return { titulo: `Creó ${articulo} ${singular}` };
+  }
+  if (accion === "editar" || accion === "editar_cliente") return { titulo: `Editó ${singular}` };
   return { titulo: `Eliminó ${singular}` };
 }
 
-// eslint-disable-next-line complexity -- despacho por (accion, modulo): cada rama es un if lineal sin lógica anidada; se dejará como está hasta migrar a tabla de despacho.
+// eslint-disable-next-line complexity -- despacho por (accion, modulo); ramas lineales sin lógica anidada.
 export function describirEntrada(entrada: EntradaBitacora): DescripcionBitacora {
   const detalles = (entrada.detalles ?? {}) as Record<string, unknown>;
   const { accion, modulo } = entrada;
 
   if (accion === "login") return { titulo: "Inició sesión" };
-
-  if (accion === "cambiar_estado" || accion === "cambio_estado") {
-    return describirCambioEstado(detalles);
-  }
-
+  if (accion === "cambiar_estado" || accion === "cambio_estado") return describirCambioEstado(detalles);
   if (accion === "subir_documento" || accion === "eliminar_documento") {
     return describirDocumento(accion, detalles);
   }
-
   if (accion === "agregar_nota") return describirNota(detalles);
   if (accion === "factura") return describirFactura(detalles);
 
-  // Facturación (edge functions).
   if (modulo === "facturacion") {
-    if (accion === "facturapi_emitida") {
-      const uuid = asString(detalles.uuid);
-      return { titulo: "Timbró factura", contexto: uuid ? `UUID ${uuid.slice(0, 8)}…` : undefined };
-    }
-    if (accion === "factura.borrador_generado") return { titulo: "Generó borrador de factura" };
-    if (accion === "factura.borrador_eliminado") return { titulo: "Eliminó borrador de factura" };
-    if (accion === "factura_duplicada_para_sustitucion") {
-      return { titulo: "Generó borrador de sustitución" };
-    }
-    if (accion === "facturapi_cancelacion_solicitada") {
-      return { titulo: "Solicitó cancelación de factura", contexto: asString(detalles.motivo) };
-    }
-    if (accion === "facturapi_consulta_reconciliada") {
-      return { titulo: "Reconciliación con FacturApi" };
-    }
-    if (accion === "facturapi_cancelada" || accion === "facturapi_cancelar_failed") {
-      return { titulo: accion === "facturapi_cancelada" ? "Canceló factura" : "Falló cancelación de factura" };
-    }
-    if (accion === "facturapi_sustituida") return { titulo: "Sustituyó factura" };
-    if (accion === "facturapi_nc_emitida") return { titulo: "Emitió nota de crédito" };
-    if (accion === "facturapi_nc_cancelada") return { titulo: "Canceló nota de crédito" };
-    if (accion === "facturapi_rep_emitido") return { titulo: "Timbró complemento de pago" };
-    if (accion === "facturapi_rep_cancelado") return { titulo: "Canceló complemento de pago" };
-    if (accion === "cfdi_enviado") return { titulo: "Envió CFDI por email", contexto: asString(detalles.email) };
-    if (accion === "cfdi_envio_failed") return { titulo: "Falló envío de CFDI" };
-    if (accion === "facturapi_emitir_failed") return { titulo: "Falló timbrado de factura" };
+    const r = describirFacturacion(accion, detalles);
+    if (r) return r;
   }
-
-  // Cuentas por pagar.
   if (modulo === "cxp") {
-    if (accion === "pagar") {
-      const monto = asNumber(detalles.monto);
-      const moneda = asString(detalles.moneda) ?? "MXN";
-      return {
-        titulo: "Registró pago a proveedor",
-        contexto: monto !== undefined ? formatCurrency(monto, moneda) : undefined,
-      };
-    }
-    if (accion === "cancelar") return { titulo: "Canceló factura de proveedor", contexto: asString(detalles.motivo) };
-    if (accion === "eliminar_pago") return { titulo: "Eliminó pago a proveedor" };
-    if (accion === "crear_nota_credito") return { titulo: "Registró nota de crédito de proveedor" };
-    if (accion === "aplicar_nota_credito") return { titulo: "Aplicó nota de crédito" };
-    if (accion === "cancelar_nota_credito") return { titulo: "Canceló nota de crédito" };
+    const r = describirCxp(accion, detalles);
+    if (r) return r;
   }
-
-  // Costeo.
   if (modulo === "costeo") {
-    if (accion === "crear") return { titulo: "Creó tarifa", contexto: entrada.entidad_nombre || undefined };
-    if (accion === "editar") return { titulo: "Editó tarifa" };
-    if (accion === "eliminar") return { titulo: "Eliminó tarifa" };
-    if (accion === "reemplazar") return { titulo: "Marcó tarifa como reemplazada" };
+    const r = describirCosteo(accion, entrada.entidad_nombre);
+    if (r) return r;
   }
 
-  if (accion === "crear") {
-    if (modulo === "embarques") return describirEmbarqueCreado(detalles);
-    return describirCreacionGenerica(modulo);
+  if (accion === "crear" && modulo === "embarques") return describirEmbarqueCreado(detalles);
+  if ((accion === "editar" || accion === "editar_cliente") && modulo === "embarques") {
+    return describirEmbarqueEditado(detalles);
+  }
+  if (accion === "crear" || accion === "editar" || accion === "editar_cliente" || accion === "eliminar") {
+    return describirGenerica(accion, modulo);
   }
 
-  if (accion === "editar" || accion === "editar_cliente") {
-    if (modulo === "embarques") return describirEmbarqueEditado(detalles);
-    return describirEdicionGenerica(modulo);
-  }
-
-  if (accion === "eliminar") return describirEliminacionGenerica(modulo);
-
-  // Fallback: capitalizar acción
   const accionLegible = accion.replace(/_/g, " ");
   const titulo = accionLegible.charAt(0).toUpperCase() + accionLegible.slice(1);
   return { titulo };
 }
 
 export { GRUPOS_ACCION } from "./bitacoraGrupos";
-
