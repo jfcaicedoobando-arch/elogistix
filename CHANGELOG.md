@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.53] - 2026-07-17
+- E2E aislamiento multi-tenant: nueva edge function `e2e-provision-multi-tenant` (protegida por header `x-e2e-secret`) que provisiona idempotentemente dos organizaciones dedicadas (`E2E Multi-Tenant A` / `B`), un admin en cada una y datos trazadores por org (cliente, embarque, factura, cotización + blob de storage bajo `documentos/e2e-mt/<orgId>/…`). Nuevo script `bun run e2e:provision-multi-tenant` (con `--cleanup` para borrar) que llama a la función y guarda IDs y credenciales en `e2e/.tmp/multi-tenant.json` (git-ignored). Nuevo spec Playwright `26-multi-tenant-isolation.spec.ts` que loguea con cada org y valida: (1) rutas directas a IDs de la otra org no exponen datos, (2) respuestas REST filtradas por RLS no devuelven filas cruzadas, (3) Ctrl+K global search no filtra markers, (4) los catálogos sembrados por `handle_new_organization` (`factura_series`, `crm_etapas_pipeline`, `crm_motivos_perdida`, `presupuesto_categorias`) no cruzan `organization_id`, (5) storage: pedir un signed URL para el blob de la otra org falla. Se agrega proyecto Playwright `chromium-multi-tenant` (workers=1, sin storageState precargado). Cierra la iniciativa multi-tenant con una prueba viva end-to-end.
+
 ## [13.301.52] - 2026-07-17
 - Revisión Fase 2 multi-tenant: se corrige lint fail en `NuevaOrganizacionDialog.tsx` (queryKey inline `["admin","available-users"]` reemplazado por `adminKeys.allUsersOptions` desde `features/admin/queryKeys.ts`) para respetar la regla `no-restricted-syntax` y evitar cachés fragmentados con el resto del panel de admin. CI (`lint` + `typecheck` + `vitest`) queda en verde. Fase 3 (guardrail) ya estaba cubierta desde `v13.301.50` con `no-hardcoded-org-default.test.ts`, por lo que la iniciativa multi-tenant queda cerrada.
 

@@ -31,6 +31,7 @@ const IS_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(BASE_URL);
 // Regex de specs mutadores: mantener aquí y en globalSetup.
 const MUTATOR_SPECS = /0[9]-|1[0-2]-|25-/;
 const PORTAL_SPEC = /05-portal\.spec\.ts/;
+const MULTI_TENANT_SPEC = /26-multi-tenant-isolation\.spec\.ts/;
 
 // Workers: CI conservador (2), local agresivo (4). Override con E2E_WORKERS.
 const WORKERS = Number(
@@ -79,7 +80,7 @@ export default defineConfig({
     // Specs read-only internos → paralelo.
     {
       name: "chromium-internal",
-      testIgnore: [PORTAL_SPEC, MUTATOR_SPECS],
+      testIgnore: [PORTAL_SPEC, MUTATOR_SPECS, MULTI_TENANT_SPEC],
       fullyParallel: true,
       use: {
         ...devices["Desktop Chrome"],
@@ -103,6 +104,17 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/portal.json",
+      },
+    },
+    // Multi-tenant (26): sin storageState precargado — cada test hace su
+    // propio login con las credenciales de la org que le corresponde.
+    {
+      name: "chromium-multi-tenant",
+      testMatch: MULTI_TENANT_SPEC,
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
       },
     },
   ],

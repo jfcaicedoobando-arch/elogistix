@@ -39,6 +39,7 @@
     "audit:report": "tsx scripts/audit-report.ts",
     "audit:all": "bun run audit:arch && bun run audit:casts && bun run audit:tests && bun run audit:rpc-sync && bun run audit:schema && bun run audit:report",
     "e2e:provision": "tsx scripts/e2e/provision-users.ts",
+    "e2e:provision-multi-tenant": "tsx scripts/e2e/provision-multi-tenant.ts",
     "ci:local": "bun run lint && bun run lint:unused && bun run test && bun run build"
   },
   "dependencies": {
