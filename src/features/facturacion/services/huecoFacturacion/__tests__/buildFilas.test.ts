@@ -60,6 +60,21 @@ describe("calcularExclusionesPorProformaHistorica", () => {
     ]);
     expect(set.has("e1")).toBe(true);
     expect(set.has("e2")).toBe(false);
+
+  it("v13.301.47 — excluye legacy: todos los conceptos en estado_facturacion='facturado' sin proforma", () => {
+    const set = calcularExclusionesPorProformaHistorica([
+      { embarque_id: "e1", estado_facturacion: "facturado", proforma_id: null, proforma_estado: null },
+      { embarque_id: "e1", estado_facturacion: "facturado", proforma_id: "p1", proforma_estado: "facturada" },
+    ]);
+    expect(set.has("e1")).toBe(true);
+  });
+
+  it("v13.301.47 — no excluye legacy si algún concepto sigue pendiente aunque otros estén facturados", () => {
+    const set = calcularExclusionesPorProformaHistorica([
+      { embarque_id: "e1", estado_facturacion: "facturado", proforma_id: null, proforma_estado: null },
+      { embarque_id: "e1", estado_facturacion: "pendiente", proforma_id: null, proforma_estado: null },
+    ]);
+    expect(set.has("e1")).toBe(false);
   });
 });
 
