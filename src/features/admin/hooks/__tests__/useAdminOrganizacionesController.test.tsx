@@ -49,19 +49,36 @@ describe("useAdminOrganizacionesController", () => {
     expect(result.current.data.filtered[0].plan).toBe("Basic");
   });
 
-  it("handles organization creation", async () => {
+  it("handles organization creation con owner", async () => {
     const { result } = renderHook(() => useAdminOrganizacionesController(), { wrapper: createWrapper() });
-    
+
     await act(async () => {
       result.current.setters.setNombre("New Org");
       result.current.setters.setRfc("NEW_RFC");
+      result.current.setters.setOwnerUserId("u-1");
     });
-    
+
     await act(async () => {
       result.current.createOrg.mutate();
     });
-    
+
     expect(result.current.state.nombre).toBe("");
+    expect(result.current.state.ownerUserId).toBe("");
     expect(result.current.state.dialogOpen).toBe(false);
+  });
+
+  it("no crea la org sin owner seleccionado", async () => {
+    const { result } = renderHook(() => useAdminOrganizacionesController(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      result.current.setters.setNombre("Sin Owner");
+    });
+
+    await act(async () => {
+      result.current.createOrg.mutate();
+    });
+
+    // Dialog sigue abierto y nombre intacto porque no se llamó la mutación real.
+    expect(result.current.state.nombre).toBe("Sin Owner");
   });
 });
