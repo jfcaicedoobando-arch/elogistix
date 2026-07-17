@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.52] - 2026-07-17
+- Revisión Fase 2 multi-tenant: se corrige lint fail en `NuevaOrganizacionDialog.tsx` (queryKey inline `["admin","available-users"]` reemplazado por `adminKeys.allUsersOptions` desde `features/admin/queryKeys.ts`) para respetar la regla `no-restricted-syntax` y evitar cachés fragmentados con el resto del panel de admin. CI (`lint` + `typecheck` + `vitest`) queda en verde. Fase 3 (guardrail) ya estaba cubierta desde `v13.301.50` con `no-hardcoded-org-default.test.ts`, por lo que la iniciativa multi-tenant queda cerrada.
+
 ## [13.301.51] - 2026-07-17
 - Fase 2 multi-tenant (alta de owner automatizada, restringida a `super_admin`): nueva RPC `provision_organization(nombre, rfc, owner_user_id)` SECURITY DEFINER que en una sola transacción crea la organización, deja que el trigger `handle_new_organization` siembre los catálogos neutros y da de alta al usuario indicado como `admin` en `organization_members`. La RPC valida el rol del caller (rechaza cualquiera que no sea `super_admin` con `42501`) y que el owner exista en `auth.users`. El dialog "Nueva Organización" ahora exige seleccionar al administrador inicial desde el catálogo de usuarios (`fetchAvailableUsers`), con búsqueda por correo. Antes había que crear la org y luego, en otro paso manual, entrar a "Miembros" y asignar un admin; ahora es un solo click y la organización nace lista para usarse.
 

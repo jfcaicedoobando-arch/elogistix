@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
 import { fetchAvailableUsers } from "@/features/admin/services/usuario/availableUsers";
+import { admin as adminKeys } from "@/features/admin/queryKeys";
 
 interface Props {
   open: boolean;
@@ -27,7 +28,7 @@ export function NuevaOrganizacionDialog({
   ownerUserId, onOwnerUserIdChange, onCreate, isPending,
 }: Props) {
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ["admin", "available-users"],
+    queryKey: adminKeys.allUsersOptions,
     queryFn: fetchAvailableUsers,
     enabled: open,
     staleTime: 60_000,
