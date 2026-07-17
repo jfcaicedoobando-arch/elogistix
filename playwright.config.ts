@@ -80,7 +80,7 @@ export default defineConfig({
     // Specs read-only internos → paralelo.
     {
       name: "chromium-internal",
-      testIgnore: [PORTAL_SPEC, MUTATOR_SPECS],
+      testIgnore: [PORTAL_SPEC, MUTATOR_SPECS, MULTI_TENANT_SPEC],
       fullyParallel: true,
       use: {
         ...devices["Desktop Chrome"],
@@ -104,6 +104,17 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/portal.json",
+      },
+    },
+    // Multi-tenant (26): sin storageState precargado — cada test hace su
+    // propio login con las credenciales de la org que le corresponde.
+    {
+      name: "chromium-multi-tenant",
+      testMatch: MULTI_TENANT_SPEC,
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...devices["Desktop Chrome"],
       },
     },
   ],
