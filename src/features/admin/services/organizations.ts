@@ -28,8 +28,23 @@ export async function fetchOrganizationsList() {
   );
 }
 
-export async function createOrganization(input: { nombre: string; rfc: string }): Promise<void> {
-  await run(supabase.from("organizations").insert(input));
+/**
+ * v13.301.51 — Fase 2 multi-tenant: aprovisiona una organización mediante la
+ * RPC `provision_organization`, que sólo acepta super_admin y crea el vínculo
+ * inicial `organization_members` (rol `admin`) para el owner indicado.
+ */
+export async function createOrganization(input: {
+  nombre: string;
+  rfc: string;
+  ownerUserId: string;
+}): Promise<string> {
+  const { data, error } = await supabase.rpc("provision_organization", {
+    p_nombre: input.nombre,
+    p_rfc: input.rfc,
+    p_owner_user_id: input.ownerUserId,
+  });
+  if (error) throw error;
+  return data as string;
 }
 
 export async function fetchAdminOrganization(id: string) {
