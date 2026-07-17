@@ -1,7 +1,4 @@
-/**
- * FacturaDetalleView — vista pura de la factura ya resuelta.
- * Extraída de FacturaDetalle para reducir la complejidad ciclomática de la ruta.
- */
+/** FacturaDetalleView — vista pura de la factura ya resuelta. */
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/shared/PageContainer";
