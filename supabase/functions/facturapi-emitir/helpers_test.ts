@@ -102,3 +102,17 @@ Deno.test("buildFacturapiPayload con referencias vacías no altera nada", () => 
   assertEquals(p.items[0].product.description, "Flete marítimo");
   assertEquals(p.pdf_custom_section, undefined);
 });
+
+// v13.301.34 — Sustitución CFDI: FacturAPI v2 exige el shape agrupado
+// `related_documents: [{ relationship, documents: ["<uuid>"] }]`. Enviar
+// `{ relationship, uuid }` provoca `"related_documents[0].uuid" is not allowed`.
+Deno.test("buildFacturapiPayload arma related_documents con shape v2 (documents[])", () => {
+  const uuid = "11111111-2222-3333-4444-555555555555";
+  const p = buildFacturapiPayload({ ...baseCtx, sustituye_uuid: uuid });
+  assertEquals(p.related_documents, [{ relationship: "04", documents: [uuid] }]);
+});
+
+Deno.test("buildFacturapiPayload omite related_documents cuando no hay sustituye_uuid", () => {
+  const p = buildFacturapiPayload(baseCtx);
+  assertEquals(p.related_documents, undefined);
+});
