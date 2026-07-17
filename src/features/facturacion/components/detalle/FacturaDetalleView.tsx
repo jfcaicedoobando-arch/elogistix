@@ -21,33 +21,27 @@ import { FacturaDetalleModales } from "@/features/facturacion/components/detalle
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 
-// Tipos amplios: la ruta ya sabe que factura no es null.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Tipos amplios: la ruta ya validó que factura no es null y agrupa hooks/dialogs.
 type FacturaAny = any;
 
 interface FacturaDetalleViewProps {
   factura: FacturaAny;
   canEdit: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   flags: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   acuse: any;
   eliminando: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conceptosVivos: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pagoRepPendiente: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   timbrarRep: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleDownload: any;
   onEliminar: () => void;
   volverHref: string;
   volverLabel: string;
   onVolver: (href: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dialogs: any;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export function FacturaDetalleView(props: FacturaDetalleViewProps) {
   const {
