@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.56] - 2026-07-17
+- Hardening de autorización de `provision_organization`: la RPC ahora valida `super_admin` antes de tocar cualquier tabla, rechaza a `anon` con `REVOKE` explícito, valida largo del nombre (≤200), detecta duplicados exactos por `(lower(nombre), rfc)` con `23505` y deja rastro obligatorio en `bitacora_actividad` (acción `provision_organization`, módulo `admin_super`). Nueva suite SQL `supabase/tests/rls/test_rls_rpc_provision_organization.sql` con 10 aserciones que corren en el workflow `rls-tests` (matrix añadida): anónimo, sin rol, `admin`, `operador` y `viewer` reciben `42501`; sólo `super_admin` crea la org, valida payload (`22023` para nombre vacío / owner inexistente) y detecta duplicado (`23505`). Cierra el riesgo de que un tenant admin escale a "creador de organizaciones".
+
 ## [13.301.55] - 2026-07-17
 - Remediación auditoría multi-tenant (H1/H2/H3). **H1**: las políticas RLS de `idempotency_keys` ya no dependen sólo de `user_id`; ahora exigen `organization_id = current_user_org_id()` en SELECT/INSERT/UPDATE. Se agregó la política UPDATE que faltaba y los `super_admin` ya no cruzan claves entre orgs. **H2**: se eliminan 7 tablas `_backup_*` (merges y backfills ya cerrados) que sólo eran polvo histórico. **H3**: 6 policies de `email_send_log`, `email_send_state`, `email_unsubscribe_tokens` y `suppressed_emails` migran de `TO public` (con filtro `auth.role()='service_role'`) a `TO service_role` para higiene. Nuevo guardrail `rls-idempotency-keys-scoped.test.ts` que audita el SQL de la migración y bloquea CI si alguna policy futura re-elimina el scope por organización.
 
