@@ -13,14 +13,38 @@ interface Props {
   facturaId: string;
 }
 
+const ACCION_LABELS: Record<string, string> = {
+  facturapi_emitida: "Timbrada",
+  facturapi_cancelada: "Cancelada",
+  facturapi_cancelacion_solicitada: "Cancelación solicitada",
+  facturapi_sustituida: "Sustituida",
+  facturapi_consulta_reconciliada: "Estado reconciliado con FacturApi",
+  facturapi_emitir_failed: "Error al timbrar",
+  facturapi_cancelar_failed: "Error al cancelar",
+  "factura.borrador_generado": "Borrador generado",
+  "factura.borrador_eliminado": "Borrador eliminado",
+  factura_duplicada_para_sustitucion: "Duplicada para sustitución",
+  enviada_cliente: "Enviada al cliente",
+  crear: "Creada",
+  actualizar: "Actualizada",
+  eliminar: "Eliminada",
+};
+
+function etiquetaAccion(accion: string): string {
+  if (ACCION_LABELS[accion]) return ACCION_LABELS[accion];
+  const limpio = accion.replace(/[._]/g, " ").trim();
+  return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+}
+
 export function FacturaBitacoraCard({ facturaId }: Props) {
   const { data, isLoading } = useBitacora({
     modulo: "facturas",
-    limite: 25,
+    entidadId: facturaId,
+    limite: 50,
     pagina: 0,
   });
 
-  const entradas = (data?.datos ?? []).filter((e) => e.entidad_id === facturaId);
+  const entradas = data?.datos ?? [];
 
   return (
     <Card>
@@ -39,19 +63,22 @@ export function FacturaBitacoraCard({ facturaId }: Props) {
           </p>
         ) : (
           <ul className="divide-y">
-            {entradas.map((e) => (
-              <li key={e.id} className="py-2 text-sm">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-medium capitalize">{e.accion}</span>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDate(e.created_at)}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {e.entidad_nombre} • {e.usuario_email}
-                </p>
-              </li>
-            ))}
+            {entradas.map((e) => {
+              const detalle = [e.entidad_nombre, e.usuario_email].filter(Boolean).join(" • ");
+              return (
+                <li key={e.id} className="py-2 text-sm">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium">{etiquetaAccion(e.accion)}</span>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDate(e.created_at)}
+                    </span>
+                  </div>
+                  {detalle && (
+                    <p className="text-xs text-muted-foreground truncate">{detalle}</p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>
