@@ -34,7 +34,7 @@ describe("listIdempotencyLog", () => {
     expect(mock.rpcCalls[mock.rpcCalls.length - 1]?.args).toEqual({ _limit: 200, _offset: 0 });
   });
 
-  it("propaga errores de la RPC", async () => {
+  it("propaga errores de la RPC list_idempotency_log", async () => {
     mock.setRpcResult("list_idempotency_log", { data: null, error: new Error("boom") });
     await expect(listIdempotencyLog()).rejects.toThrow("boom");
   });
