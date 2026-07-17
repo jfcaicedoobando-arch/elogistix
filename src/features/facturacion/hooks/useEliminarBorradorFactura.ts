@@ -26,6 +26,7 @@ export function useEliminarBorradorFactura() {
       qc.invalidateQueries({ queryKey: queryKeys.facturas.all });
       qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
       qc.invalidateQueries({ queryKey: queryKeys.facturacion.proformaDetalleAll });
+      invalidateHuecoFacturacion(qc);
       navigate("/facturacion");
     },
     onError: (err) =>
