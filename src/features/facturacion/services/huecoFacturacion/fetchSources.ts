@@ -1,13 +1,13 @@
 /**
  * Fuentes de datos (Supabase) para el "Hueco de Facturación". Solo I/O.
  *
- * v13.213.3 — Se agrega `fetchConceptosVentaDeEmbarques` para detectar
- * "aceptación histórica": embarques cuyos conceptos ya viven en proformas
- * marcadas como `facturada` (back-fill), que deben excluirse del hueco aunque
- * no exista CFDI real.
+ * v13.301.41 — Fase A auditoría: la fuente de verdad para "ya tiene CFDI vivo"
+ * es `factura_embarques.activa = true` unido a `facturas.estado = 'Emitida'`.
+ * Se mantiene un fallback por `expediente` con filtro de estado para cubrir
+ * facturas legacy sin bridge; una factura únicamente `Cancelada` deja de
+ * ocultar al embarque del hueco (antes bastaba con `factura_pdf_url`).
  */
 import { supabase } from "@/integrations/supabase/client";
-import { fetchFacturasPorExpedientes } from "@/features/facturacion/services/shared/fetchFacturas";
 
 export interface EmbarqueHuecoRow {
   id: string;
