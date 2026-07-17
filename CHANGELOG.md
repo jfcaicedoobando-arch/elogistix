@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.47] - 2026-07-17
+- Fix "Embarques sin factura" legacy: los embarques cuyos `conceptos_venta` ya están todos en `estado_facturacion='facturado'` (back-fill histórico previo al módulo de facturación, sin CFDI en el sistema) ahora se excluyen del hueco. Antes sólo se excluían si los conceptos estaban `en_proforma` con proforma `facturada`. Corrige casos como ELIMP00269, ELIMP00297 y ELIMP00304, que no tenían facturas pero seguían apareciendo. ELIMP00209 sigue apareciendo correctamente porque tiene conceptos pendientes reales.
+
 ## [13.301.46] - 2026-07-17
 - Fix "Embarques sin factura": el hueco ya reconoce facturas `Pagada`, `Vencida` y `Parcialmente pagada` como facturas vivas, no sólo `Emitida`. Esto corrige casos como ELIMP00007, ELIMP00020 y ELIMP00022, que tenían bridge activo y todos sus conceptos facturados pero seguían apareciendo en la bandeja. Se agregan tests de regresión para bridge y fallback legacy con factura pagada.
 
