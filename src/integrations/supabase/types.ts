@@ -5692,6 +5692,50 @@ export type Database = {
           },
         ]
       }
+      provisioning_log: {
+        Row: {
+          accion: string
+          created_at: string
+          created_by: string | null
+          detalles: Json
+          entidad: string
+          filas_afectadas: number
+          id: string
+          organization_id: string
+          source: string
+        }
+        Insert: {
+          accion: string
+          created_at?: string
+          created_by?: string | null
+          detalles?: Json
+          entidad: string
+          filas_afectadas?: number
+          id?: string
+          organization_id: string
+          source: string
+        }
+        Update: {
+          accion?: string
+          created_at?: string
+          created_by?: string | null
+          detalles?: Json
+          entidad?: string
+          filas_afectadas?: number
+          id?: string
+          organization_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provisioning_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       puertos: {
         Row: {
           activo: boolean
@@ -6320,6 +6364,17 @@ export type Database = {
       _docs_requeridos_por_estado: {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]
+      }
+      _log_provisioning_step: {
+        Args: {
+          p_accion: string
+          p_detalles?: Json
+          p_entidad: string
+          p_filas: number
+          p_org_id: string
+          p_source: string
+        }
+        Returns: undefined
       }
       aceptar_cotizacion_version: {
         Args: { p_cotizacion_id: string }
@@ -7594,6 +7649,10 @@ export type Database = {
           p_fecha_hasta?: string
           p_modo?: string
         }
+        Returns: Json
+      }
+      reseed_organization_catalogs: {
+        Args: { p_org_id: string }
         Returns: Json
       }
       reservar_folio_factura: {
