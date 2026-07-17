@@ -60,6 +60,7 @@ describe("calcularExclusionesPorProformaHistorica", () => {
     ]);
     expect(set.has("e1")).toBe(true);
     expect(set.has("e2")).toBe(false);
+  });
 
   it("v13.301.47 — excluye legacy: todos los conceptos en estado_facturacion='facturado' sin proforma", () => {
     const set = calcularExclusionesPorProformaHistorica([
