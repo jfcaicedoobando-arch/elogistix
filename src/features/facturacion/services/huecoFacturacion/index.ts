@@ -1,8 +1,13 @@
 /**
  * Orquestador del "Hueco de Facturación".
  *
- * v13.301.41 — Fase A auditoría: la exclusión "ya tiene CFDI" se determina en
- * dos capas, en este orden:
+ * v13.301.42 — Fase C auditoría: si un embarque tiene al menos un
+ * `conceptos_venta.estado_facturacion = 'pendiente'` (no borrado), REAPARECE
+ * en el hueco aunque exista bridge, factura legacy o proforma histórica que
+ * lo hubiera ocultado. Esto captura el caso "se agregan nuevos conceptos
+ * después de facturar" (H6 de la auditoría).
+ *
+ * Fase A (v13.301.41) — exclusión "ya tiene CFDI" en dos capas:
  *   1. Bridge canónico `factura_embarques.activa = true` cuya factura está
  *      `Emitida`. Fuente de verdad desde v13.301.31.
  *   2. Fallback legacy: expediente con al menos una `facturas.estado='Emitida'`
