@@ -7703,6 +7703,7 @@ export type Database = {
         Returns: string[]
       }
       run_auditoria_backfill_legacy: { Args: never; Returns: Json }
+      saldo_factura: { Args: { p_factura_id: string }; Returns: number }
       seed_demo_organization: { Args: never; Returns: undefined }
       seed_presupuesto_categorias: {
         Args: { p_organization_id: string }
