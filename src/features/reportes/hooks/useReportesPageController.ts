@@ -33,7 +33,12 @@ export function useReportesPageController() {
   const { clientes, kpis, isLoading } = useRentabilidadClientes(filtros);
 
   const sorted = useMemo(() => {
-    const copy = [...clientes];
+    // v13.301.65 · Dedupe defensivo por `cliente_id` para evitar warnings de
+    // React "duplicate key" cuando el RPC agrupa el mismo cliente en más
+    // de una fila (join contra embarques con múltiples registros).
+    const byId = new Map<string, (typeof clientes)[number]>();
+    for (const c of clientes) if (!byId.has(c.cliente_id)) byId.set(c.cliente_id, c);
+    const copy = Array.from(byId.values());
     copy.sort((a, b) => {
       const va = a[sortField];
       const vb = b[sortField];
