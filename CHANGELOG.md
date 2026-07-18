@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.63] - 2026-07-17
+- Bandeja de facturas Emitidas: la columna **Fecha de emisión** ahora es visible en todos los tamaños de pantalla. Antes estaba oculta por debajo de `xl` (1280 px) con `hidden xl:table-cell` en `facturacionColumns.tsx`, lo que impedía ver la fecha en laptops/tabletas.
+
 ## [13.301.62] - 2026-07-17
 - Auditoría de reportes de facturación: ningún reporte financiero suma ya facturas `Cancelada` ni `Sustituida`. Nuevo `FACTURA_ESTADOS_VIVOS` en `src/features/facturacion/domain/estadosFactura.ts` (`Emitida | Pagada | Parcialmente pagada | Vencida`). Fixes: (1) `estadoResultadosDevengado.ts` — antes usaba `.neq("estado","Cancelada")` y dejaba pasar Sustituidas al EERR devengado; ahora usa `.in("estado", FACTURA_ESTADOS_VIVOS)`. (2) Portal cliente `fetchPortalFacturas` — antes listaba TODO al cliente; ahora oculta Borrador/Cancelada/Sustituida del listado (el detalle sigue accesible por URL para conservar trazabilidad con badge). Guardrail nuevo en `src/lib/__tests__/facturas-estados-reportes.test.ts` que escanea `dashboardEjecutivo`, `cobranza`, `estadoCuenta`, `hueco…`, `estadoResultadosDevengado`, `portal/queries` y `cliente/financials` y falla si alguien agrega un reporte sobre `facturas` sin filtrar por estado. Fuera de scope: `masivas.ts` (opera por IDs seleccionados), `exports.ts` layout contable (contabilidad legítimamente exporta canceladas) y `facturas_listado` RPC (listado maestro).
 
