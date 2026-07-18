@@ -1,109 +1,83 @@
-## Revisión independiente de la auditoría
+## Revisión de Fase A (v13.301.69)
 
-Verifiqué los tres bugs principales contra migraciones reales y **los tres son correctos** — no son especulación. Resumen de la verificación y plan de remediación.
+**Verificado en base de datos y código:**
+- `consolidar_proformas` desplegada con el `UPDATE conceptos_venta SET proforma_id = <consolidada>` al final del flujo, bajo `app.bypass_cierre`.
+- Backfill ejecutado: **0 conceptos huérfanos** apuntando a proformas en estado `consolidada` (antes eran 192).
+- `sync_conceptos_venta_facturado` no cambió — sigue propagando por `proforma_id = NEW.id`, ahora sí encuentra los conceptos correctos.
 
-### Verificación en código (cadena real, no supuesta)
+**Deuda de tests que arrastra Fase A:**
+- No hay ningún test que asegure que `consolidar_proformas` **hoy y mañana** siga repuntando conceptos. Un futuro rewrite podría reintroducir el bug 2 en silencio.
+- Se agrega un guardrail arquitectónico dentro de Fase B para no crear una fase separada sólo por eso.
 
-**Bug 1 — Cancelar factura multi-proforma no revierte** ✅ Confirmado.
-- `20260709180513/…convertir_proformas_a_factura` líneas 267 y 374: `proforma_id = CASE WHEN array_length(p_proforma_ids,1)=1 THEN p_proforma_ids[1] ELSE NULL END`. Con N≥2, `facturas.proforma_id = NULL`.
-- `20260717000021/…revertir_proforma_al_cancelar_sustitucion` línea 26: `SELECT proforma_id INTO v_proforma_id FROM public.facturas WHERE id = p_factura_id; IF v_proforma_id IS NULL THEN RETURN NULL;`. Corta seco, no cae a `conceptos_factura.proforma_id_origen`.
-- Consecuencia real: las N proformas quedan `facturada`, los conceptos `facturado`, el CFDI está `Cancelada`. Doble facturación bloqueada + hueco no visible.
+**Sin regresiones detectadas** — la migración de retry hizo sólo `CREATE OR REPLACE FUNCTION` + `DO` con `RAISE NOTICE`; no toca esquema ni políticas.
 
-**Bug 2 — Consolidación rompe la cascada** ✅ Confirmado (impacto real es mayor al descrito).
-- `20260604020144/…consolidar_proformas` líneas 501-511: la consolidada se inserta con `proformas_origen = p_proforma_ids` y las fuentes pasan a `estado_revision='consolidada'`. **Nunca** se hace `UPDATE conceptos_venta SET proforma_id = v_nueva.id`.
-- `20260708001814/…sync_conceptos_venta_facturado` línea 26: `UPDATE conceptos_venta … WHERE proforma_id = NEW.id`. Como los conceptos siguen apuntando a las fuentes, el trigger sobre la consolidada es no-op en las dos direcciones (facturar y cancelar).
-- **Además**, `conceptos_factura.proforma_id_origen` en la rama consolidada (línea 293) se rellena con `pcc.proforma_id` — que también es la id de la consolidada (ver `consolidar_proformas` línea 511: `SELECT v_nueva.id, …` como primera columna del INSERT en `proforma_conceptos_consolidados`). Es decir, **hoy no hay trazabilidad DB del concepto→proforma fuente** por la ruta consolidada, sólo el array `proformas.proformas_origen`.
+Fase A queda **en verde**. Continúo a Fase B.
 
-**Bug 3 — Borrador dual-moneda revierte con hermano vivo** ✅ Confirmado.
-- `convertir_proformas_a_factura` crea dos borradores independientes (líneas 253 MXN, 360 USD) ambos con el mismo `proforma_id`.
-- `20260708153202/…eliminar_factura_borrador` líneas 71-78: revierte `estado_proforma='pendiente'` sin `EXISTS` de hermano vivo. El trigger propaga a conceptos → doble facturación posible.
-- `revertir_proforma_al_cancelar_sustitucion` excluye `'Borrador'` del conteo de vivas (línea 40) — simétrico: cancelar la timbrada mientras el otro borrador sigue vivo también libera prematuramente.
+## Fase B — Bug 1: cancelación de sustitución no libera proformas multi-proforma
 
-**Hallazgo 4 — `soft_delete_record` sin guarda DB** — no verifiqué el trigger de soft-delete, pero la premisa es consistente con lo visto (guarda de UI en `useEliminarProforma`, sin CHECK/trigger DB que bloquee estado `facturada`). Lo marco como pendiente de verificar en fase 1.
+### Problema
 
-**Hallazgo 5 — regresar `estado_cliente` en proforma facturada** — no verificado; asumido para plan (revisión rápida ≤5 min).
+`revertir_proforma_al_cancelar_sustitucion(p_factura_id)` resuelve la proforma a liberar leyendo `facturas.proforma_id`. Ese campo se llena sólo para facturas 1:1. Cuando una factura consume $N \ge 2$ proformas, `emitir_factura_multi_proforma` la crea con `proforma_id = NULL` y guarda el vínculo real en `conceptos_factura.proforma_id_origen` (y en `bitacora_actividad.factura.borrador_generado → detalles.proforma_ids`).
 
-**Hallazgo 7 — bitácora como fuente de verdad** ✅ Confirmado en líneas 55-65 de `eliminar_factura_borrador` (fuente 3 = `bitacora_actividad`). Es un anti-patrón: el log puede purgarse.
+Consecuencia: al cancelar/sustituir esa factura, la RPC hace `RETURN NULL` a las 5 líneas y **ninguna** de las N proformas se libera; se quedan como `facturada` para siempre, y `Embarques sin factura` deja de detectarlas como hueco.
 
-**Hallazgo 8** — no verificado, revisión rápida en fase 1.
+### Fix
 
-### La recomendación del audit, corregida en un punto
+1. Reescribir `public.revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid)` para resolver los ids de proforma en este orden y unir:
+   - `facturas.proforma_id` (caso 1:1 existente),
+   - `SELECT DISTINCT proforma_id_origen FROM conceptos_factura WHERE factura_id = p_factura_id AND deleted_at IS NULL AND proforma_id_origen IS NOT NULL` (caso multi-proforma vía conceptos),
+   - `SELECT unnest(proformas_origen) FROM proformas WHERE id = facturas.proforma_id` (caso consolidada, defensa en profundidad para no dejar la consolidada facturada si en algún flujo entrara por aquí).
 
-La sugerencia "usar `conceptos_factura.proforma_id_origen` para revertir" resuelve Bug 1 (multi-proforma) pero **no resuelve la rama consolidada** porque hoy esa columna, para consolidados, contiene la id de la consolidada, no de las fuentes. Necesitamos dos arreglos ortogonales, no uno.
+2. Recorrer cada `v_proforma_id` con el mismo criterio "sin facturas vivas" ya existente (`estado NOT IN ('Cancelada','Sustituida','Borrador')`), tratando **la lista de facturas vivas por proforma** — una proforma A puede tener otra factura viva B aunque cancelemos la factura C que también la consumía; en ese caso A no se libera.
 
-### Plan de remediación (3 fases, cada una es una migración + tests)
+3. Devolver `uuid[]` en lugar de `uuid` para hacer explícito el multi-return. El único call site en `supabase/functions/facturapi-cancelar/*` ignora el retorno (llama por efecto secundario), así que el cambio de firma es seguro; se ajusta el `GRANT`.
 
-#### Fase A — Bug 2 primero (cura tres síntomas de un solo golpe)
+4. **Backfill único e idempotente**: para cada factura ya `Cancelada` o `Sustituida` con `proforma_id IS NULL`, ejecutar la nueva resolución y liberar las proformas que quedaron colgadas. Se registra `backfill.multi_proforma_liberadas` con `rows_updated` mediante `RAISE NOTICE` (evita la restricción `NOT NULL` sobre `bitacora_actividad.usuario_id` que ya conocimos en Fase A).
 
-Rationale: es el bug más silencioso y más difícil de detectar en producción. Si arreglamos primero A, los otros dos se simplifican.
+5. **Guardrail nuevo** en `src/lib/__tests__/consolidar-proformas-repunta-conceptos.test.ts`: lee la migración v13.301.69, verifica que el cuerpo de `consolidar_proformas` incluye `UPDATE public.conceptos_venta` con `SET proforma_id = v_nueva.id`. Blindaje contra regresiones del Bug 2.
 
-1. **Migración** `20260718_consolidacion_repunta_conceptos.sql`:
-   - En `consolidar_proformas`, después del `UPDATE proformas SET estado_revision='consolidada'`, agregar:
-     ```sql
-     UPDATE public.conceptos_venta
-        SET proforma_id = v_nueva.id
-      WHERE proforma_id = ANY(p_proforma_ids)
-        AND deleted_at IS NULL;
-     ```
-     Esto redirige los conceptos a la consolidada. El trigger `sync_conceptos_venta_facturado` ya funciona por `proforma_id = NEW.id`, así que facturar/cancelar la consolidada propagará correctamente.
-   - En `consolidar_proformas`, cambiar `proforma_conceptos_consolidados.proforma_id_origen` (columna nueva) para guardar la fuente real — el `pcc.proforma_id` se queda como la consolidada (contrato existente) pero añadimos `proforma_id_source uuid` para trazabilidad.
-   - Backfill idempotente: para consolidaciones existentes en estado `consolidada` cuya `conceptos_venta.proforma_id` sigue apuntando a fuentes, redirigir a la consolidada. Query de detección primero (dry-run en el mismo turno) para reportar cuántas filas se afectan antes de UPDATE.
-   - Ajustar `validar_cierre_embarque`: si ya cuenta por `proforma_id` en `conceptos_venta`, no requiere cambio; sólo verificar que la regla de "sin facturar" respeta el nuevo apuntamiento (revisión rápida en la misma migración).
-2. **Test SQL** en `supabase/tests/rls` (nuevo `test_consolidacion_cascada.sql`): consolidar 2 proformas → facturar → los conceptos_venta de ambos embarques deben quedar `facturado`. Cancelar → deben regresar a `en_proforma`.
+6. **Guardrail nuevo** en `src/lib/__tests__/revertir-proforma-multi-source.test.ts`: verifica que la nueva versión de `revertir_proforma_al_cancelar_sustitucion` referencia `conceptos_factura.proforma_id_origen`. Blindaje contra regresiones del Bug 1.
 
-#### Fase B — Bug 1 (revert multi-proforma)
+### Verificación post-migración
 
-3. **Migración** `20260718_revertir_multi_proforma.sql`:
-   - Reescribir `revertir_proforma_al_cancelar_sustitucion` para resolver proformas por **tres fuentes** en orden:
-     ```
-     a) facturas.proforma_id (caso 1:1)
-     b) DISTINCT conceptos_factura.proforma_id_origen WHERE factura_id = p_factura_id (multi-proforma)
-     c) proformas.proformas_origen array cuando la id resuelta es una consolidada
-     ```
-   - Para cada proforma resuelta: repetir el check de "facturas vivas restantes" y `UPDATE proformas SET estado_proforma='pendiente'`. Idempotente.
-   - Devolver `uuid[]` en vez de `uuid` para que el frontend loguee todas las liberadas.
-4. **Actualizar** `src/features/facturacion/services/facturapi/…` (el fallback legacy `revertirProformasCancelacion`) para consumir el array; eliminar el path que lee `proformas.factura_id` directamente (nunca lo escribimos hoy).
-5. **Test SQL**: crear 2 proformas → convertir a 1 factura → timbrar → cancelar → ambas proformas quedan `pendiente`, todos los conceptos `en_proforma`.
+- `psql`: consulta el número de facturas `Cancelada|Sustituida` con `proforma_id IS NULL` cuyas proformas asociadas siguen en `estado_proforma = 'facturada'` sin factura viva → debe quedar en 0.
+- `bunx vitest run src/lib/__tests__/consolidar-proformas-repunta-conceptos.test.ts src/lib/__tests__/revertir-proforma-multi-source.test.ts` → verde.
 
-#### Fase C — Bug 3 (borrador dual-moneda) + hallazgos menores
+### Entregables
 
-6. **Migración** `20260718_borrador_hermano_vivo.sql`:
-   - En `eliminar_factura_borrador`, antes del `UPDATE proformas SET estado_proforma='pendiente'`, verificar:
-     ```sql
-     WITH hermanos AS (
-       SELECT id FROM public.facturas
-       WHERE proforma_id = ANY(v_proforma_ids)
-         AND id <> p_factura_id
-         AND estado IN ('Borrador','Emitida','Pagada','Parcialmente pagada')
-     )
-     -- si hermanos > 0: skip el UPDATE de proformas, sólo borra la factura y sus conceptos.
-     ```
-   - En `revertir_proforma_al_cancelar_sustitucion`, cambiar el filtro de "vivas" para incluir `Borrador` cuando el hermano no está siendo cancelado en la misma operación.
-   - Trigger DB en `soft_delete_record` sobre `proformas`: `RAISE EXCEPTION` si `estado_proforma='facturada' OR estado_revision='consolidada'`. Cierra hallazgo 4.
-   - En `actualizar_estado_cliente_proforma`: bloquear cambio si `estado_proforma='facturada'`. Cierra hallazgo 5.
-7. **Migración adicional** `20260718_borrador_sin_bitacora.sql`:
-   - Añadir columna `facturas.proforma_ids uuid[]` (o mejor: usar `conceptos_factura.proforma_id_origen` como fuente autoritativa) y refactorizar `eliminar_factura_borrador` para no leer `bitacora_actividad`. Cierra hallazgo 7.
-8. **Tests SQL** por caso: (a) borrar MXN con USD vivo → proforma sigue `facturada`; (b) cancelar timbrada con borrador hermano → misma protección; (c) soft-delete de proforma facturada → error.
+- 1 migración (RPC + backfill + `RAISE NOTICE`).
+- 2 tests de guardrail arquitectónico.
+- Bump `APP_VERSION` a `13.301.70` y entrada en `CHANGELOG.md`.
 
-### Fuera de alcance de esta pasada
+### Detalle técnico
 
-- **Hallazgo 8** (facturas manuales externas): requiere diseño de "cancelación manual" — abrir un ticket separado, no lo mezclo aquí.
-- **Hallazgo 6** (no-atomicidad de `eliminarProforma` cliente): puede resolverse convirtiéndolo en RPC en una fase D si el equipo lo prioriza.
+```text
+Firma nueva:
+  revertir_proforma_al_cancelar_sustitucion(p_factura_id uuid) RETURNS uuid[]
 
-### Detalles técnicos
+Resolución de v_proforma_ids:
+  v_ids := ARRAY[]::uuid[];
+  IF facturas.proforma_id IS NOT NULL THEN v_ids := v_ids || facturas.proforma_id;
+  v_ids := v_ids || (SELECT array_agg(DISTINCT proforma_id_origen)
+                     FROM conceptos_factura
+                     WHERE factura_id = p_factura_id
+                       AND deleted_at IS NULL
+                       AND proforma_id_origen IS NOT NULL);
+  -- deduplicar
+  v_ids := array(SELECT DISTINCT unnest(v_ids) WHERE unnest IS NOT NULL);
 
-- 4 migraciones, ninguna destructiva; los backfills son idempotentes y reportan filas afectadas antes del UPDATE.
-- Sin cambios en tipos generados hasta que corran las migraciones — el cliente se toca sólo en Fase B (paso 4) y sigue el contrato del array.
-- Tests SQL en `supabase/tests/rls/` para tener cobertura end-to-end del contrato de estados (mismo patrón que ya usamos).
-- `APP_VERSION` sube una versión por fase (`13.301.69` A, `13.301.70` B, `13.301.71` C).
-- CHANGELOG por fase con `[breaking-lite]` en A porque el UPDATE de backfill toca datos reales.
+Por cada id en v_ids:
+  IF NOT EXISTS (SELECT 1 FROM facturas
+                 WHERE proforma_id = id
+                    OR EXISTS (SELECT 1 FROM conceptos_factura cf
+                               WHERE cf.factura_id = facturas.id
+                                 AND cf.proforma_id_origen = id
+                                 AND cf.deleted_at IS NULL)
+                 AND estado NOT IN ('Cancelada','Sustituida','Borrador'))
+  THEN liberar proforma id.
+```
 
-### Riesgo
+### Fuera de scope (queda para Fase C)
 
-- Fase A tiene el mayor riesgo de datos (backfill de conceptos existentes en consolidaciones ya facturadas). Mitigación: query de detección primero, listado a `/mnt/documents/` para revisar antes de aplicar el UPDATE; el UPDATE va detrás de un `DO $$ IF (SELECT count…) > 0 THEN … END IF; $$;` con conteo previo/posterior en bitácora.
-- Fase B es aditiva (recolecta más fuentes, no elimina las viejas) → 0 riesgo.
-- Fase C tiene riesgo de UX (un usuario que borre borradores en cadena verá un "no se pudo liberar la proforma"): el mensaje se redacta claro con analogía en el toast.
-
-### Confianza
-
-Los 3 bugs principales están verificados a nivel de línea en las migraciones actuales. El plan es correcto y ejecutable. La única corrección al audit original es la nota sobre trazabilidad consolidada: `conceptos_factura.proforma_id_origen` por sí sola no basta para revertir consolidaciones — se resuelve porque Fase A repunta `conceptos_venta.proforma_id`, y Fase B lee `proformas.proformas_origen` cuando detecta una consolidada.
+- Bug 3 (drafts multi-divisa que revierten proforma con hermano vivo) — se ataca junto con hardening final.
+- Trigger de guarda al borrar/soft-delete proformas — se ataca en Fase C junto con H7.
