@@ -13,7 +13,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
   const navigate = useNavigate();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-testid="timeline-estados-card">
       <CardContent className="p-4 sm:p-6">
         {/* v13.301.64 · Auditoría 698×572: máscara de fade en el borde
             derecho para señalar que la tira es desplazable cuando el

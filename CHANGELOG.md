@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.66] - 2026-07-18
+- Regresión visual automatizada: nuevo suite `e2e/specs/27-visual-regression.spec.ts` que captura y compara pixel-por-pixel tres componentes de layout (`TimelineEstadosCard`, `GlobalSearch` trigger y `Breadcrumbs`) en 3 viewports (mobile 375×812, tablet 768×1024, desktop 1440×900) — 9 baselines en total. Los conteos vivos del timeline se enmascaran (`mask:` sobre `.text-xl, .text-2xl`) para que el diff sólo evalúe estructura/estilo, no datos dinámicos. Umbral `maxDiffPixelRatio: 0.01` tolera anti-aliasing entre CI y local. Testids nuevos y estables: `data-testid="timeline-estados-card"` en `TimelineEstadosCard.tsx` y `data-testid="global-search-trigger"` + `aria-label="Abrir búsqueda global"` en el botón trigger de `GlobalSearch.tsx` (Breadcrumbs ya expone `role="navigation" aria-label="Migas de pan"`). Para generar los baselines la primera vez: `npx playwright test 27-visual-regression --update-snapshots` y commitear la carpeta `27-visual-regression.spec.ts-snapshots/`.
+
 ## [13.301.65] - 2026-07-18
 - Auditoría UI/UX a **1024×768** y **1280×720** con sidebar abierto (11 rutas núcleo). Resultado: overflow horizontal = 0 px en ambas resoluciones (main y document), sidebar/tablas/filtros sin clipping. Único hallazgo: 2 warnings de React "duplicate key" en `/reportes/rentabilidad` originados por filas con el mismo `cliente_id` en el RPC de rentabilidad (join contra embarques). Fix aplicado en `useReportesPageController.ts` — dedupe defensivo por `cliente_id` con `Map` antes de ordenar, mismo patrón que ya usábamos en `useDashboardData.ts`. Consola limpia en las 11 rutas × 2 resoluciones tras el fix.
 
