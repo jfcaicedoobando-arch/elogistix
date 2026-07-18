@@ -126,38 +126,63 @@ function DataTableInner<T>({
   const renderedFooter =
     typeof footer === "function" ? (footer as (d: T[]) => React.ReactNode)(orderedData) : footer;
 
+  const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
+
   return (
     <div className={className}>
-      <div className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]">
-        {/* v13.139.18 (F-06 auditoría 3): min-w-max obliga a la tabla a
-            respetar los anchos declarados por columna; sin él, `w-full` del
-            componente `Table` shadcn comprime las columnas y oculta las
-            últimas (Estado/ETA) sin activar el scroll horizontal. */}
-        <Table className={tableClassName}>
-          <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
-          <DataTableBody
-            table={table}
-            isLoading={isLoading}
-            skeletonRows={skeletonRows}
-            density={density}
-            striped={striped}
-            hoverable={hoverable}
-            bordered={bordered}
-            emptyMessage={emptyMessage}
-            emptyHint={emptyHint}
-            emptyIcon={emptyIcon}
-            emptyState={emptyState}
-            rowClassName={rowClassName}
-            onRowClick={onRowClick}
-            onRowMouseEnter={onRowMouseEnter}
-            getRowHref={getRowHref}
-            getRowAriaLabel={getRowAriaLabel}
-          />
-          {renderedFooter && !isLoading && orderedData.length > 0 && (
-            <TableFooter>{renderedFooter}</TableFooter>
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
+        >
+          {/* v13.139.18 (F-06 auditoría 3): min-w-max obliga a la tabla a
+              respetar los anchos declarados por columna; sin él, `w-full` del
+              componente `Table` shadcn comprime las columnas y oculta las
+              últimas (Estado/ETA) sin activar el scroll horizontal. */}
+          <Table className={tableClassName}>
+            <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
+            <DataTableBody
+              table={table}
+              isLoading={isLoading}
+              skeletonRows={skeletonRows}
+              density={density}
+              striped={striped}
+              hoverable={hoverable}
+              bordered={bordered}
+              emptyMessage={emptyMessage}
+              emptyHint={emptyHint}
+              emptyIcon={emptyIcon}
+              emptyState={emptyState}
+              rowClassName={rowClassName}
+              onRowClick={onRowClick}
+              onRowMouseEnter={onRowMouseEnter}
+              getRowHref={getRowHref}
+              getRowAriaLabel={getRowAriaLabel}
+            />
+            {renderedFooter && !isLoading && orderedData.length > 0 && (
+              <TableFooter>{renderedFooter}</TableFooter>
+            )}
+          </Table>
+        </div>
+        {/* Indicadores de scroll horizontal (v13.301.67): degradados a los
+            bordes cuando hay contenido oculto. Puramente visuales; no
+            interceptan interacciones. */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background to-transparent transition-opacity duration-150",
+            overflowing && !atStart ? "opacity-100" : "opacity-0",
           )}
-        </Table>
+        />
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent transition-opacity duration-150",
+            overflowing && !atEnd ? "opacity-100" : "opacity-0",
+          )}
+        />
       </div>
+
       {pagination && (
         <PaginationControls
           page={pagination.page}
