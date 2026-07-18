@@ -133,6 +133,7 @@ function DataTableInner<T>({
       <div className="relative">
         <div
           ref={scrollRef}
+          data-testid="datatable-scroll"
           className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
         >
           {/* v13.139.18 (F-06 auditoría 3): min-w-max obliga a la tabla a
