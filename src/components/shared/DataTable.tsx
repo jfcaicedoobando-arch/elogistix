@@ -7,7 +7,7 @@ import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeade
 import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
-import { cn } from "@/lib/utils";
+import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
 import type {
   DataTablePagination,
   TableDensity,
