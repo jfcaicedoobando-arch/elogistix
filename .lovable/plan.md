@@ -1,49 +1,97 @@
-## Diagnóstico
+# Revisión Fase F reforzada — verde
 
-El error `LC_REP_FACTURA_SIN_TIMBRAR ... line 19 at RAISE` proviene del trigger `trg_pago_factura_rep_viva` sobre `public.pagos_factura`. La hotfix (`v13.301.76`, migración `20260718213500_...sql`) ya está aplicada en la BD de la app: el trigger tiene `WHEN (NEW.uuid_rep IS NOT NULL OR NEW.facturapi_rep_id IS NOT NULL)` y la función tiene early-exit por esos dos campos. El fixture inserta pagos sin esos campos, así que el trigger no debería dispararse.
+Verifiqué los guardrails de Fases D/E/F + hotfix + refuerzo (v13.301.73–77):
 
-Verificado:
-- La migración hotfix existe en `supabase/migrations/` (timestamp `20260718213500`).
-- En la BD real, `pg_get_functiondef` y `pg_get_triggerdef` muestran la versión con early-exit + `WHEN` clause.
-- Los defaults de `uuid_rep`, `facturapi_rep_id` son `NULL`; sólo `estado_rep` tiene default `'NoAplica'`.
+- `saldo-factura-fase-d.test.ts` — 8/8 ✅
+- `eliminar-embarque-bloqueado-fiscal.test.ts` — 8/8 ✅
+- `candados-pagos-rep-nc-fase-f.test.ts` — 13/13 ✅
+- `rep-guard-hotfix-migration.test.ts` — 4/4 ✅
 
-La falla actual de CI viene de una corrida sobre un checkout que **aún no contenía la migración hotfix** (probablemente un push/rerun previo al commit de la hotfix, o un snapshot de cache que no incluye el nuevo archivo). En un checkout con la hotfix presente, la matriz `rls-suites` invalidaría el cache (hash de `migrations/**` cambia) y aplicaría la nueva definición del trigger, dejando pasar el INSERT de línea 79.
+**33/33 en verde.** Sin bugs pendientes. Fixtures RLS ya insertan facturas timbradas (estado realista), guardrail estático protege el `WHEN` clause y el early-exit del trigger. Cierro Fase F y arranco Fase G.
 
-## Objetivo
+---
 
-1. Confirmar que la hotfix se ejecuta en CI en la próxima corrida.
-2. Hacer las fixtures inmunes al detalle interno del trigger: los pagos deberían insertarse contra facturas **timbradas**, que es la única forma realista de estado en producción (una factura sin `uuid_fiscal` que reciba pago es un caso operativo inválido).
-3. Añadir un guardrail que asegure que la hotfix del guard de REP no se pierda en futuras migraciones.
+# Fase G — Grafo de transiciones de estado de embarque (Bug 12)
+
+## Problema (verificado en código)
+
+El enum `estado_embarque` tiene 12 valores (`Borrador, Cotización, Confirmado, En Tránsito, En Aduana, Llegada, Arribo, En Proceso, Entregado, EIR, Cerrado, Cancelado`), pero **nada valida qué transiciones son legales**:
+
+- `avanzar_estado_embarque` (RPC en `20260708044858_*.sql`) sólo bloquea:
+  - `Arribo` sin `fecha_llegada_real`
+  - Docs faltantes en 7 estados avanzados
+  - `Cerrado` delega a `cerrar_embarque`
+  
+  Pero acepta **cualquier salto**: `Borrador → Entregado`, `Cerrado → Cotización`, `Cancelado → En Tránsito`, ida y vuelta arbitraria, etc.
+- `actualizarEstadoEmbarque` (`embarqueDirectMutations.ts`) hace `UPDATE embarques SET estado = ...` sin ningún guard — camino paralelo que ignora hasta los pocos candados que sí tiene la RPC.
+- `useSyncEstadoEmbarque` usa la ruta directa desde el UI del Tracking.
+
+Consecuencia: bitácora y timeline pueden mostrar secuencias imposibles; reportes que asumen orden temporal (KPIs, alertas de demora) mienten; un usuario puede reabrir un embarque `Cancelado` sin pasar por reapertura formal.
+
+## Solución
+
+Definir el grafo dirigido de transiciones válidas server-side y aplicarlo en **ambas rutas** (RPC + trigger). El trigger es la última línea de defensa: incluso `actualizarEstadoEmbarque` (UPDATE directo) queda cubierto.
+
+### Grafo propuesto
+
+```text
+Borrador ─→ Cotización ─→ Confirmado ─→ En Tránsito ─→ En Aduana ─→ Llegada ─→ Arribo ─→ Entregado ─→ EIR ─→ Cerrado
+                              │              │              │           │          │           │
+                              └──────────────┴──────────────┴───────────┴──────────┴───────────┘
+                                              todos permiten → Cancelado
+                                              
+Reapertura: sólo Cerrado → EIR (vía RPC `reabrir_embarque`, ya existe)
+Cancelado: estado terminal (no sale de ahí sin intervención admin)
+En Proceso: estado legacy — se acepta como sinónimo de `En Tránsito` para no romper datos históricos, pero no es destino de nuevas transiciones.
+```
+
+Reglas adicionales:
+- Idempotencia: `estado_actual = nuevo_estado` se acepta como no-op (no rompe reintentos).
+- `Cerrado` sigue delegando a `cerrar_embarque` (candados financieros de Fase E ya existen).
+- `Cancelado` requiere que **no** haya facturas vivas ni CxP viva (reutiliza los contadores de Fase E).
 
 ## Cambios
 
-### 1. Fixtures RLS: timbrar las facturas antes de insertar pagos
-Archivos:
-- `supabase/tests/rls/test_rls_roles_no_admin.sql`
-- `supabase/tests/rls/test_rls_financiero_critico.sql`
+### 1. Migración `20260718XXXXXX_grafo_transiciones_embarque.sql`
 
-En los `INSERT INTO public.facturas(...)` de estas dos fixtures, incluir `uuid_fiscal` (UUID sintético estable) y `fecha_timbrado = now()` para que la factura quede como "timbrada viva". Esto:
-- Alinea el fixture con el estado que refleja la lógica de negocio real (una factura que recibe pagos SIEMPRE está timbrada).
-- Hace la prueba independiente de la ruta de early-exit del trigger — aunque el `WHEN` clause se dispare, la función pasa la validación de UUID fiscal.
+- **Función `public.transicion_embarque_valida(actual estado_embarque, nuevo estado_embarque) RETURNS boolean`** (IMMUTABLE, SECURITY DEFINER):
+  - Devuelve `true` si `actual = nuevo` (idempotente).
+  - Contiene la tabla de aristas del grafo como `CASE` explícito.
+- **Función `public.assert_transicion_embarque(actual, nuevo, expediente text)`**: `RAISE EXCEPTION 'LC_TRANSICION_INVALIDA: ...'` con `HINT` JSON `{estado_actual, estado_nuevo, expediente, transiciones_permitidas}`.
+- **Reescritura de `avanzar_estado_embarque`**: llama `assert_transicion_embarque` como primer chequeo tras leer el estado actual. Rama `Cancelado` agrega chequeo de facturas/CxP vivas (contadores de Fase E).
+- **Trigger nuevo `trg_embarque_transicion_valida` en `embarques` `BEFORE UPDATE OF estado`**:
+  - `WHEN (OLD.estado IS DISTINCT FROM NEW.estado)`.
+  - Bypass controlado con `current_setting('app.bypass_transicion', true) = 'on'` para migraciones/backfills legítimos (patrón ya usado por `app.bypass_cierre`).
+  - Llama `assert_transicion_embarque`.
 
-Cambio concreto: agregar `uuid_fiscal, fecha_timbrado` al listado de columnas y valores tipo `gen_random_uuid()::text, now()` en cada fila.
+### 2. Guardrails
 
-### 2. Guardrail arquitectónico
-Archivo: `src/lib/__tests__/rep-guard-hotfix.test.ts` (nuevo)
+- `src/lib/__tests__/grafo-transiciones-embarque-fase-g.test.ts` (nuevo):
+  - Existencia de `transicion_embarque_valida` y `assert_transicion_embarque`.
+  - Grafo cubre las 10 aristas del happy path.
+  - Todos los estados excepto `Cancelado` pueden ir a `Cancelado`.
+  - `Cerrado → *` sólo permite `Cerrado` (idempotente) y `EIR` (reapertura).
+  - `Cancelado` no tiene salidas.
+  - `avanzar_estado_embarque` invoca `assert_transicion_embarque` antes de cualquier UPDATE.
+  - Trigger `trg_embarque_transicion_valida` existe con `WHEN (OLD.estado IS DISTINCT FROM NEW.estado)` y bypass reconocido.
+  - Marcador `LC_TRANSICION_INVALIDA` presente con las 4 llaves del HINT.
+- Extender `mutations.test.ts` de embarques: `actualizarEstadoEmbarque` con transición inválida propaga error tipado del server.
 
-Test que lee `supabase/migrations/20260718213500_*.sql` y valida:
-- Contiene `CREATE OR REPLACE FUNCTION public.assert_factura_viva_para_rep()`.
-- La función tiene `IF NEW.uuid_rep IS NULL AND NEW.facturapi_rep_id IS NULL THEN RETURN NEW`.
-- Recrea el trigger con `WHEN (NEW.uuid_rep IS NOT NULL OR NEW.facturapi_rep_id IS NOT NULL)`.
+### 3. UI
 
-Si un futuro cambio revierte el hotfix, este test falla en `bun run test:audit`.
+- `useEmbarqueEstadoActions.ts`: mapear `LC_TRANSICION_INVALIDA` a un toast claro ("Transición no permitida: X → Y"), listando las transiciones válidas del `HINT`.
+- Sin cambios visuales adicionales — el botón "Avanzar" ya calcula el siguiente estado del happy path, así que el error sólo aparecería en atajos manuales / atomicidad de reintentos.
 
-### 3. Bump de versión + changelog
-- `APP_VERSION` → `13.301.77` (patch: refuerzo de fixtures RLS).
-- Entrada breve en `CHANGELOG.md` referenciando la hotfix previa y describiendo el refuerzo.
+### 4. Diagnóstico previo (dry-run antes de migrar)
 
-## Notas técnicas
+Antes de instalar el trigger, correr consulta de auditoría contra `bitacora_actividad` / `notas_embarque` para detectar embarques cuyo historial de estados **hoy** viole el grafo. Reportar cantidad y expedientes. Si hay >0, ajustar el grafo o marcar excepciones antes de bloquear.
 
-- No hay cambios en migraciones ni en RPCs — sólo fixtures de prueba y un test estático.
-- El fixture actualizado sigue representando escenarios válidos multi-tenant: `emb_a`/`emb_b` y sus facturas están timbrados, y las aserciones de RLS (isolate cliente A de B) no cambian.
-- Si la próxima corrida CI todavía falla con el mismo error, significará que el checkout de CI no incluye la migración hotfix — se resuelve confirmando que el commit del branch bajo prueba contiene `supabase/migrations/20260718213500_*.sql`.
+### 5. Versionado
+
+- `APP_VERSION` → `13.301.78`.
+- Entrada en `CHANGELOG.md` describiendo el grafo, el trigger, el diagnóstico dry-run y el guardrail.
+
+## Roadmap tras Fase G
+
+- Cierre de la ronda 2 de auditoría (Bugs 6–12 resueltos).
+- Queda pendiente evaluar si vale una Fase H para garantías/comisiones (Ronda 2 no las priorizó), o si cerramos la auditoría y volvemos a UX.
