@@ -56,8 +56,8 @@ export function DataTableBodySkeleton<T>({
                 key={col.id}
                 className={cn(
                   meta.width, cellPad, ALIGN_CLASS[align], borderCell, meta.className,
-                  meta.sticky && "sticky left-0 z-[5] bg-background shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
-                  meta.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
+                  meta.sticky && "sticky left-0 z-[5] bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 shadow-[4px_0_4px_-2px_hsl(var(--border)/0.3)]",
+                  meta.stickyRight && "sticky right-0 z-[5] bg-background [tr:nth-child(even)_&]:bg-muted/45 dark:[tr:nth-child(even)_&]:bg-muted/30 shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                 )}
               >
                 <div className={cn("flex items-center", wrapJustify)}>

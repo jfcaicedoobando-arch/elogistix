@@ -3,7 +3,11 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.67] - 2026-07-18
+- Responsividad de tablas (Emitidas, Facturas, Embarques y todas las que usan `DataTable`): (1) Indicadores de scroll horizontal automáticos — `DataTable.tsx` envuelve el contenedor con dos degradados absolutos (izq/der) que se muestran solo cuando hay contenido oculto, usando el nuevo hook `useHorizontalScrollEdges.ts` (scroll + `ResizeObserver` sobre contenedor e hijo). En pantallas pequeñas el usuario ya no depende de la scrollbar delgada para saber que puede desplazar. (2) Columnas sticky con zebra correcto — `DataTableBody.tsx` y `DataTableBodySkeleton.tsx` ya no fuerzan `bg-background` sobre la sticky (que se veía blanca sobre filas pares muted); ahora aplican `[tr:nth-child(even)_&]:bg-muted/45` + `[tr:hover_&]:bg-primary/5` + `[tr[data-state=selected]_&]:bg-muted` para heredar el estado real de la fila y eliminar la costura visible al hacer scroll horizontal. Sin cambios en business logic ni en anchos de columna.
+
 ## [13.301.66] - 2026-07-18
+
 - Regresión visual automatizada: nuevo suite `e2e/specs/27-visual-regression.spec.ts` que captura y compara pixel-por-pixel tres componentes de layout (`TimelineEstadosCard`, `GlobalSearch` trigger y `Breadcrumbs`) en 3 viewports (mobile 375×812, tablet 768×1024, desktop 1440×900) — 9 baselines en total. Los conteos vivos del timeline se enmascaran (`mask:` sobre `.text-xl, .text-2xl`) para que el diff sólo evalúe estructura/estilo, no datos dinámicos. Umbral `maxDiffPixelRatio: 0.01` tolera anti-aliasing entre CI y local. Testids nuevos y estables: `data-testid="timeline-estados-card"` en `TimelineEstadosCard.tsx` y `data-testid="global-search-trigger"` + `aria-label="Abrir búsqueda global"` en el botón trigger de `GlobalSearch.tsx` (Breadcrumbs ya expone `role="navigation" aria-label="Migas de pan"`). Para generar los baselines la primera vez: `npx playwright test 27-visual-regression --update-snapshots` y commitear la carpeta `27-visual-regression.spec.ts-snapshots/`.
 
 ## [13.301.65] - 2026-07-18
