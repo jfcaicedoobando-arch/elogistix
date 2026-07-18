@@ -159,7 +159,7 @@ BEGIN
   INSERT INTO public.facturas(
     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
     fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado,
-    uuid_fiscal, fecha_timbrado
+    uuid_fiscal, timbrado_en
   ) VALUES (
     fac_a, org_a, cli_a, 'CliFinC A', emb_a, 'FA-FC-001',
     CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida',
