@@ -29,6 +29,19 @@ function readLatestFaseFMigration(): string {
   throw new Error("No se encontró migración de Fase F (candados pagos/REP/NC)");
 }
 
+function readLatestRepGuardMigration(): string {
+  const dir = path.resolve(__dirname, "../../../supabase/migrations");
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort().reverse();
+  for (const f of files) {
+    const body = fs.readFileSync(path.join(dir, f), "utf8");
+    if (body.includes("FUNCTION public.assert_factura_viva_para_rep()")) {
+      return body;
+    }
+  }
+  throw new Error("No se encontró migración con assert_factura_viva_para_rep");
+}
+
+
 describe("Fase F — candados de pagos, REP y notas de crédito", () => {
   const sql = readLatestFaseFMigration();
 
