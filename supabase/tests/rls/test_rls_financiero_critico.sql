@@ -153,12 +153,17 @@ BEGIN
   -- (13.135.6) Guards `IF EXISTS facturas` eliminados: la tabla `facturas`
   -- es core y siempre existe en CI. El guard enmascaraba la cobertura.
   -- =========================================================================
+  -- Factura timbrada: refleja el estado real en que una factura recibe pagos.
+  -- Sin uuid_fiscal el trigger `trg_pago_factura_rep_viva` bloquearía cualquier
+  -- REP; timbrarla aquí hace la fixture inmune al early-exit del guard.
   INSERT INTO public.facturas(
     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
-    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado
+    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado,
+    uuid_fiscal, timbrado_en
   ) VALUES (
     fac_a, org_a, cli_a, 'CliFinC A', emb_a, 'FA-FC-001',
-    CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida'
+    CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida',
+    gen_random_uuid()::text, now()
   );
 
   INSERT INTO public.pagos_factura(

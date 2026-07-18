@@ -1,65 +1,49 @@
-## Bug
+## Diagnóstico
 
-El guard `trg_pago_factura_rep_viva` (Fase F v13.301.75) se dispara en **cualquier INSERT** en `pagos_factura` — no sólo cuando se está timbrando un REP. La función tiene un early-exit que devuelve temprano si no hay REP en curso, pero la lista de estados "no-REP" que reconoce es incompleta:
+El error `LC_REP_FACTURA_SIN_TIMBRAR ... line 19 at RAISE` proviene del trigger `trg_pago_factura_rep_viva` sobre `public.pagos_factura`. La hotfix (`v13.301.76`, migración `20260718213500_...sql`) ya está aplicada en la BD de la app: el trigger tiene `WHEN (NEW.uuid_rep IS NOT NULL OR NEW.facturapi_rep_id IS NOT NULL)` y la función tiene early-exit por esos dos campos. El fixture inserta pagos sin esos campos, así que el trigger no debería dispararse.
 
-```
-IF NEW.uuid_rep IS NULL AND NEW.facturapi_rep_id IS NULL
-   AND (NEW.estado_rep IS NULL OR NEW.estado_rep IN ('','pendiente','cancelado'))
-THEN RETURN NEW;
-```
+Verificado:
+- La migración hotfix existe en `supabase/migrations/` (timestamp `20260718213500`).
+- En la BD real, `pg_get_functiondef` y `pg_get_triggerdef` muestran la versión con early-exit + `WHEN` clause.
+- Los defaults de `uuid_rep`, `facturapi_rep_id` son `NULL`; sólo `estado_rep` tiene default `'NoAplica'`.
 
-Pero `pagos_factura.estado_rep` tiene default `'NoAplica'` (NOT NULL). Ese valor no matchea el early-exit, así que la función procede a validar que la factura tenga `uuid_fiscal`. Cualquier pago sobre una factura no timbrada (borrador, o fixture de RLS) rompe con `LC_REP_FACTURA_SIN_TIMBRAR`.
+La falla actual de CI viene de una corrida sobre un checkout que **aún no contenía la migración hotfix** (probablemente un push/rerun previo al commit de la hotfix, o un snapshot de cache que no incluye el nuevo archivo). En un checkout con la hotfix presente, la matriz `rls-suites` invalidaría el cache (hash de `migrations/**` cambia) y aplicaría la nueva definición del trigger, dejando pasar el INSERT de línea 79.
 
-Esto se disparó en el fixture `supabase/tests/rls/test_rls_financiero_critico.sql` línea 327, pero el mismo bug afectaría a la app en producción cada vez que se registra un pago manual antes de timbrar el REP.
+## Objetivo
 
-## Fix (migración hotfix v13.301.76)
+1. Confirmar que la hotfix se ejecuta en CI en la próxima corrida.
+2. Hacer las fixtures inmunes al detalle interno del trigger: los pagos deberían insertarse contra facturas **timbradas**, que es la única forma realista de estado en producción (una factura sin `uuid_fiscal` que reciba pago es un caso operativo inválido).
+3. Añadir un guardrail que asegure que la hotfix del guard de REP no se pierda en futuras migraciones.
 
-Un solo `CREATE OR REPLACE FUNCTION public.assert_factura_viva_para_rep()` que ajusta el early-exit para que la función sólo valide cuando **realmente hay un REP en curso**:
+## Cambios
 
-```sql
--- Sólo validamos cuando la fila timbra un REP.
-IF NEW.uuid_rep IS NULL AND NEW.facturapi_rep_id IS NULL THEN
-  RETURN NEW;
-END IF;
-```
+### 1. Fixtures RLS: timbrar las facturas antes de insertar pagos
+Archivos:
+- `supabase/tests/rls/test_rls_roles_no_admin.sql`
+- `supabase/tests/rls/test_rls_financiero_critico.sql`
 
-`estado_rep` deja de participar en el gate — un pago sin `uuid_rep` ni `facturapi_rep_id` **no está timbrando REP** por definición, independientemente de lo que diga `estado_rep`. El resto de la función (que exige `uuid_fiscal IS NOT NULL` y estado vivo) queda igual.
+En los `INSERT INTO public.facturas(...)` de estas dos fixtures, incluir `uuid_fiscal` (UUID sintético estable) y `fecha_timbrado = now()` para que la factura quede como "timbrada viva". Esto:
+- Alinea el fixture con el estado que refleja la lógica de negocio real (una factura que recibe pagos SIEMPRE está timbrada).
+- Hace la prueba independiente de la ruta de early-exit del trigger — aunque el `WHEN` clause se dispare, la función pasa la validación de UUID fiscal.
 
-También aprovecho para reforzar el trigger con una `WHEN` clause que corta antes de invocar la función, evitando work innecesario:
+Cambio concreto: agregar `uuid_fiscal, fecha_timbrado` al listado de columnas y valores tipo `gen_random_uuid()::text, now()` en cada fila.
 
-```sql
-CREATE TRIGGER trg_pago_factura_rep_viva
-  BEFORE INSERT OR UPDATE OF uuid_rep, estado_rep, facturapi_rep_id
-  ON public.pagos_factura
-  FOR EACH ROW
-  WHEN (NEW.uuid_rep IS NOT NULL OR NEW.facturapi_rep_id IS NOT NULL)
-  EXECUTE FUNCTION public.assert_factura_viva_para_rep();
-```
+### 2. Guardrail arquitectónico
+Archivo: `src/lib/__tests__/rep-guard-hotfix.test.ts` (nuevo)
 
-## Guardrail
+Test que lee `supabase/migrations/20260718213500_*.sql` y valida:
+- Contiene `CREATE OR REPLACE FUNCTION public.assert_factura_viva_para_rep()`.
+- La función tiene `IF NEW.uuid_rep IS NULL AND NEW.facturapi_rep_id IS NULL THEN RETURN NEW`.
+- Recrea el trigger con `WHEN (NEW.uuid_rep IS NOT NULL OR NEW.facturapi_rep_id IS NOT NULL)`.
 
-Extender `src/lib/__tests__/candados-pagos-rep-nc-fase-f.test.ts`:
+Si un futuro cambio revierte el hotfix, este test falla en `bun run test:audit`.
 
-- Assert que **la última** definición de `assert_factura_viva_para_rep` **no** referencia `estado_rep` en el early-exit (regresión contra el bug actual).
-- Assert que **la última** definición del trigger incluye la `WHEN` clause con `uuid_rep IS NOT NULL OR facturapi_rep_id IS NOT NULL`.
+### 3. Bump de versión + changelog
+- `APP_VERSION` → `13.301.77` (patch: refuerzo de fixtures RLS).
+- Entrada breve en `CHANGELOG.md` referenciando la hotfix previa y describiendo el refuerzo.
 
-El loader ya recorre las migraciones ordenadas desc y toma la primera que matchea el marcador de Fase F, así que después del hotfix leerá el archivo nuevo automáticamente.
+## Notas técnicas
 
-## Verificación
-
-- `bun run test` (subconjunto de Fase F + fixtures de RLS afectados).
-- `bun run ci:local` completo — el fixture `test_rls_financiero_critico.sql` que falló debe pasar ahora sin tocarlo.
-
-## Changelog + versión
-
-- `CHANGELOG.md`: entrada `[13.301.76]` con explicación del hotfix.
-- `src/constants/appVersion.ts` → `"13.301.76"`.
-
-## Ficheros tocados
-
-| Archivo | Acción |
-|---|---|
-| `supabase/migrations/<timestamp>_fase_f_hotfix_rep_early_exit.sql` | nuevo (redefine función + recrea trigger con WHEN) |
-| `src/lib/__tests__/candados-pagos-rep-nc-fase-f.test.ts` | +2 asserts |
-| `src/constants/appVersion.ts` | bump |
-| `CHANGELOG.md` | entrada 13.301.76 |
+- No hay cambios en migraciones ni en RPCs — sólo fixtures de prueba y un test estático.
+- El fixture actualizado sigue representando escenarios válidos multi-tenant: `emb_a`/`emb_b` y sus facturas están timbrados, y las aserciones de RLS (isolate cliente A de B) no cambian.
+- Si la próxima corrida CI todavía falla con el mismo error, significará que el checkout de CI no incluye la migración hotfix — se resuelve confirmando que el commit del branch bajo prueba contiene `supabase/migrations/20260718213500_*.sql`.
