@@ -106,9 +106,7 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
 }
 
 export async function fetchPortalCotizacion(id: string) {
-  // Fetch principal sin join embebido — un join a embarques con RLS distinta
-  // puede hacer que PostgREST devuelva 0 filas y .single() lance PGRST116,
-  // mostrando "Cotización no encontrada" aunque el cliente sí tenga acceso.
+  // Sin join embebido: RLS distinta en embarques puede colapsar .single() a PGRST116.
   const data = await unwrap(
     supabase.from("cotizaciones").select("*").eq("id", id).maybeSingle(),
   );
