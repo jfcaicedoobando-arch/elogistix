@@ -125,6 +125,7 @@ function DataTableInner<T>({
   const orderedData = table.getRowModel().rows.map((r) => r.original);
   const renderedFooter =
     typeof footer === "function" ? (footer as (d: T[]) => React.ReactNode)(orderedData) : footer;
+  const showFooter = Boolean(renderedFooter) && !isLoading && orderedData.length > 0;
 
   const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
 
@@ -160,28 +161,10 @@ function DataTableInner<T>({
               getRowHref={getRowHref}
               getRowAriaLabel={getRowAriaLabel}
             />
-            {renderedFooter && !isLoading && orderedData.length > 0 && (
-              <TableFooter>{renderedFooter}</TableFooter>
-            )}
+            {showFooter && <TableFooter>{renderedFooter}</TableFooter>}
           </Table>
         </div>
-        {/* Indicadores de scroll horizontal (v13.301.67): degradados a los
-            bordes cuando hay contenido oculto. Puramente visuales; no
-            interceptan interacciones. */}
-        <div
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background to-transparent transition-opacity duration-150",
-            overflowing && !atStart ? "opacity-100" : "opacity-0",
-          )}
-        />
-        <div
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent transition-opacity duration-150",
-            overflowing && !atEnd ? "opacity-100" : "opacity-0",
-          )}
-        />
+        <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
       </div>
 
       {pagination && (
@@ -196,6 +179,43 @@ function DataTableInner<T>({
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Degradados a los bordes horizontales cuando la tabla tiene overflow.
+ * Extraído de DataTableInner (v13.301.74) para bajar la complejidad ciclomática
+ * del componente principal por debajo del umbral de eslint (16).
+ * Puramente visuales; no interceptan interacciones.
+ */
+function HorizontalScrollFades({
+  overflowing,
+  atStart,
+  atEnd,
+}: {
+  overflowing: boolean;
+  atStart: boolean;
+  atEnd: boolean;
+}) {
+  const showLeft = overflowing && !atStart;
+  const showRight = overflowing && !atEnd;
+  return (
+    <>
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background to-transparent transition-opacity duration-150",
+          showLeft ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent transition-opacity duration-150",
+          showRight ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </>
   );
 }
 
