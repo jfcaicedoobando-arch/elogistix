@@ -45,9 +45,9 @@ function looksLikePostgrest(err: unknown): err is PostgrestLike {
 
 function safeParseMotivos(raw: string): MotivosBloqueoEmbarque | null {
   try {
-    // SAFE-CAST: JSON.parse devuelve unknown; validamos shape con runtime checks abajo antes de usarlo.
-    const parsed = JSON.parse(raw) as Partial<MotivosBloqueoEmbarque>;
-    if (typeof parsed !== "object" || parsed === null) return null;
+    const parsedUnknown: unknown = JSON.parse(raw);
+    if (typeof parsedUnknown !== "object" || parsedUnknown === null) return null;
+    const parsed = parsedUnknown as Partial<MotivosBloqueoEmbarque>;
     if (typeof parsed.expediente !== "string") return null;
     return {
       facturas: Number(parsed.facturas) || 0,
