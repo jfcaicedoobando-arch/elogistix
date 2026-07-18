@@ -62,13 +62,19 @@ export function useDashboardData() {
   const conteoPorEstado = useMemo(() => parseConteoPorEstado(stats), [stats]);
   const totalActivos = Number(stats?.totalActivos ?? 0);
 
+  // v13.301.64 · Auditoría 698×572: dedupe defensivo por `id` para evitar
+  // warnings de React "duplicate key" cuando el RPC devuelve el mismo
+  // embarque en más de una fila (alertas y arribos vienen de joins).
+  const dedupeById = <T extends { id: string }>(rows: T[] | null | undefined): T[] =>
+    Array.from(new Map((rows ?? []).map((r) => [r.id, r])).values());
+
   const alertasDemora = useMemo<AlertaDemora[]>(
-    () => (stats?.alertasDemora as AlertaDemora[]) ?? [],
+    () => dedupeById((stats?.alertasDemora as AlertaDemora[]) ?? []),
     [stats],
   );
 
   const proximosArribos = useMemo<ProximoArribo[]>(
-    () => (stats?.proximosArribos as ProximoArribo[]) ?? [],
+    () => dedupeById((stats?.proximosArribos as ProximoArribo[]) ?? []),
     [stats],
   );
 
