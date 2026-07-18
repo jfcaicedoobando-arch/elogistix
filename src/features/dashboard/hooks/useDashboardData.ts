@@ -90,7 +90,13 @@ export function useDashboardData() {
     [stats],
   );
 
-  const cargasPorCliente = useMemo(() => parseCargasPorCliente(stats), [stats]);
+  const cargasPorCliente = useMemo(() => {
+    // v13.301.64 · dedupe por `clienteId` — el RPC puede regresar un cliente
+    // en más de una fila (impersonación / branch legacy) y el `key` del
+    // grid en `CargasActivasClienteCard` es `c.clienteId`.
+    const rows = parseCargasPorCliente(stats);
+    return Array.from(new Map(rows.map((r) => [r.clienteId, r])).values());
+  }, [stats]);
   const cargasActivasTotal = useMemo(() => parseCargasActivasTotal(stats), [stats]);
 
   const resumenMesSiguiente = useMemo(() => parseResumenMesSiguiente(stats), [stats]);
