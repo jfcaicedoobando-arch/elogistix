@@ -137,10 +137,7 @@ function DataTableInner<T>({
           data-testid="datatable-scroll"
           className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
         >
-          {/* v13.139.18 (F-06 auditoría 3): min-w-max obliga a la tabla a
-              respetar los anchos declarados por columna; sin él, `w-full` del
-              componente `Table` shadcn comprime las columnas y oculta las
-              últimas (Estado/ETA) sin activar el scroll horizontal. */}
+          {/* min-w-max obliga a respetar anchos por columna (F-06 auditoría 3). */}
           <Table className={tableClassName}>
             <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
             <DataTableBody
