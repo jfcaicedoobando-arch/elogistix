@@ -85,6 +85,8 @@ export function GlobalSearch() {
     <>
       <button
         onClick={() => setOpen(true)}
+        data-testid="global-search-trigger"
+        aria-label="Abrir búsqueda global"
         className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground/90 hover:bg-muted hover:text-foreground transition-colors"
       >
         <Search className="h-4 w-4" />
