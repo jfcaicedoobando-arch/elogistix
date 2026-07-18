@@ -63,14 +63,19 @@ BEGIN
     (emb_a, 'ELNAD00001', cli_a, 'Cliente NA A', org_a, 'Marítimo', 'Importación', 'Confirmado', 'FOB'),
     (emb_b, 'ELNAD00002', cli_b, 'Cliente NA B', org_b, 'Marítimo', 'Importación', 'Confirmado', 'FOB');
 
+  -- Facturas timbradas (uuid_fiscal + fecha_timbrado): estado realista para
+  -- recibir pagos y evitar dependencia del early-exit del guard de REP.
   INSERT INTO public.facturas(
     id, organization_id, cliente_id, cliente_nombre, embarque_id, numero,
-    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado
+    fecha_emision, fecha_vencimiento, moneda, subtotal, iva, total, estado,
+    uuid_fiscal, fecha_timbrado
   ) VALUES
     (fac_a, org_a, cli_a, 'Cliente NA A', emb_a, 'NA-A-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida'),
+      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 1000, 160, 1160, 'Emitida',
+      gen_random_uuid()::text, now()),
     (fac_b, org_b, cli_b, 'Cliente NA B', emb_b, 'NA-B-001',
-      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 'Emitida');
+      CURRENT_DATE, CURRENT_DATE + 15, 'MXN', 2000, 320, 2320, 'Emitida',
+      gen_random_uuid()::text, now());
 
   INSERT INTO public.pagos_factura(
     id, organization_id, factura_id, monto, monto_aplicado_factura,
