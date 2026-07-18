@@ -1,69 +1,79 @@
-## Contexto verificado
+## Revisión Fase D (v13.301.73) — verde
 
-Confirmé contra la base de datos y el código:
+- Migración aplicada limpia: `saldo_factura(uuid)` + `validar_cierre_embarque` + `recalcular_cobro_embarques` + `recalcular_estado_factura` con trigger sobre `factura_notas_credito`.
+- Backfill idempotente ejecutado (0 filas modificadas: no hay NCs vivas hoy, defensa a futuro).
+- Guardrail `saldo-factura-fase-d.test.ts`: **8/8 tests en verde**, blinda las 8 condiciones críticas (grant público, filtro `Cancelada|Sustituida|Borrador`, NCs `Aplicada` no borradas, uso en cierre, exclusión en cobro, uso en trigger, trigger sobre NCs, filtro backfill).
+- `bun run lint --max-warnings 0` en verde tras extraer `HorizontalScrollFades`.
+- Sin nuevos warnings del linter de seguridad (los 265 eran pre-existentes).
 
-- `validar_cierre_embarque` (regla 6) y `recalcular_cobro_embarques` filtran por `estado <> 'Cancelada'` — incluyen `Sustituida` y `Borrador`, y **no restan NCs aplicadas**. ✅ BUG 6 real.
-- Existen facturas `estado='Sustituida'` en producción (ej. bd75aa84…) → doble conteo posible al cerrar embarques con sustitución. ✅
-- `fetchEmbarqueDependenciasFinancieras` no cuenta proformas; `eliminar_embarque_completo` no soft-borra proformas, pagos ni comisiones. ✅ BUG 7 real.
-- Actualmente **no hay pagos con REP `Timbrado` activos** (0 filas), así que BUG 8 no ha dañado datos, pero la guarda debe existir antes de que aparezca el primero.
-- `recalcular_estado_factura`, `check_factura_saldo_para_nc` y `avanzar_estado_embarque` existen tal cual los describe la auditoría (pendiente leer definición completa para las fases 9-12, pero el planteamiento coincide con lo que ya audité en rondas previas).
+**Bugs pendientes de Fase D**: ninguno. **Tests faltantes**: guardrail cubre el contrato SQL; no añado test funcional con NCs porque hoy no hay NCs en producción, y el pipeline `pagos_factura → recalcular_estado_factura` ya está cubierto por los tests de pagos existentes.
 
-Los hallazgos 6, 7, 8 tocan **dinero, fiscal y borrado**: van primero. 9-12 son consistencia y grafo de estados: van después. Los "menores" quedan como cleanup opcional.
+Todo verde → continuar a **Fase E**.
 
-## Fase D — v13.301.73: Fijar la definición de "factura viva" en cierre y cobranza (BUG 6, BUG 9)
+---
 
-Objetivo: que las reglas de cierre y el estado de factura usen la **misma** definición de saldo que el resto de la app.
+## Fase E — Endurecer eliminación de embarques (Bug 7)
 
-1. Nueva función SQL `public.saldo_factura(uuid) RETURNS numeric` — devuelve `total - pagos_no_borrados - ncs_aplicadas_no_borradas`, ignorando facturas `Cancelada`/`Sustituida`/`Borrador`. Fuente única.
-2. `validar_cierre_embarque` y `cerrar_embarque` regla 6:
-   - Reemplazar el par `v_cxc_total / v_cxc_pagado` por `SUM(saldo_factura(id))` sobre facturas del embarque con `estado IN (SELECT unnest(FACTURA_ESTADOS_VIVOS))` **y** `cancellation_status IS NULL`.
-   - Regla ok cuando `SUM(saldo) <= 0.01`.
-3. `recalcular_cobro_embarques` (y el trigger de `cobro_cliente_status`): mismo filtro de "viva" + resta de NCs.
-4. `recalcular_estado_factura` (trigger de `pagos_factura`): añadir dependencia de `factura_notas_credito` — si `saldo_factura(id) <= 0.01` marcar `Pagada`, en vez de solo comparar contra suma de pagos. Trigger espejo en `factura_notas_credito` para recalcular al aplicar/cancelar una NC.
-5. Guardrails Vitest:
-   - `cierre-nc-resta-saldo.test.ts`: SQL de la migración contiene `saldo_factura` en regla `cxc_cobrada`.
-   - `factura-viva-excluye-sustituida-borrador.test.ts`: las funciones no aceptan `Sustituida`, `Borrador`, `Cancelada`.
-6. **Backfill idempotente**: recorrer facturas cubiertas por NC al 100% y recalcular `estado` (hoy quedan como "Parcialmente pagada" falsas).
+### El problema
 
-## Fase E — v13.301.74: Blindar borrado de embarque (BUG 7)
+`eliminar_embarque_completo(uuid)` hoy hace cascade-soft-delete "obediente" sin verificar dependencias fiscales:
 
-Objetivo: que "Eliminar embarque" no deje huérfanos vivos y respete facturas emitidas.
+```text
+UPDATE facturas SET deleted_at = now() WHERE embarque_id = ...
+```
 
-1. Ampliar `fetchEmbarqueDependenciasFinancieras` para incluir **proformas** `estado IN ('Aceptada','Enviada','Borrador')` como bloqueante suave (permite borrar solo con confirmación extra) y **comisiones devengadas**.
-2. `eliminar_embarque_completo`:
-   - `RAISE` si existe cualquier factura viva (`Emitida`, `Pagada`, `Parcial`) — hoy solo confía en la UI.
-   - Soft-borrar `proformas`, `pagos_factura`, `proveedor_facturas`, `comisiones_devengadas` del embarque en la misma transacción.
-   - Registrar en `bitacora_actividad` el conteo por tabla.
-3. `convertir_proformas_a_factura`: validar `embarque.deleted_at IS NULL` antes de emitir.
-4. Guardrail: `eliminar-embarque-bloquea-facturas-vivas.test.ts` y `convertir-proforma-embarque-vivo.test.ts`.
+Consecuencias:
 
-## Fase F — v13.301.75: Candados de pagos y REP (BUG 8, BUG 10, BUG 11)
+1. **CFDIs vivos se sepultan** — una factura `Emitida`/`Pagada`/`Vencida` puede quedar `deleted_at IS NOT NULL` sin haber sido cancelada ante SAT. Riesgo fiscal directo.
+2. **CxP queda huérfana** — `proveedor_facturas`, `pagos_proveedor`, `proveedor_facturas_conceptos` referencian un `embarque_id` que ya no aparece en listados.
+3. **Pagos y NCs quedan huérfanos** — `pagos_factura` y `factura_notas_credito` no se tocan y apuntan a facturas soft-deleted.
+4. **Embarques cerrados se pueden borrar** — no valida `cerrado_at`; un cierre auditado desaparece con un clic.
+5. **Comisiones definitivas** quedan colgando (`comisiones_devengadas.definitiva = true`).
+6. **Guard mal escrito** — `IF v_cotizacion_id IS NULL AND NOT EXISTS ...` — un embarque sin cotización pasa el guard aunque no exista.
+7. **Sin bitácora** — no queda registro en `bitacora_actividad`.
 
-1. **BUG 8**: `eliminarPagoFactura` (service) y trigger `pagos_factura BEFORE DELETE/UPDATE deleted_at` — bloquear si `estado_rep IN ('Timbrado','En cancelación')`. Botón "Eliminar" en `FacturaPagosSection` con `disabled` + tooltip "Cancela primero el REP en el SAT".
-2. **BUG 10**: trigger `check_no_sobrepago_factura` espejo del que ya existe en CxP — `RAISE` si `SUM(monto_aplicado_factura) > factura.total + 0.01`.
-3. **BUG 11**: `check_factura_saldo_para_nc`:
-   - Filtrar `deleted_at IS NULL` al sumar NCs `Aplicada`.
-   - Aplicar la validación a `estado IN ('Emitida','Pagada','Parcialmente pagada','Vencida')`, no solo `Emitida`.
-4. Guardrails: `rep-timbrado-bloquea-borrado-pago.test.ts`, `sobrepago-cxc-bloqueado.test.ts`, `nc-saldo-check-ignora-borradas.test.ts`.
+La UI (`DialogEliminarEmbarque` + `fetchEmbarqueDependenciasFinancieras`) sí verifica dependencias, pero **el chequeo vive en cliente**. Un llamador directo al RPC (edge function, script, futura API) se lo salta.
 
-## Fase G — v13.301.76: Grafo de transiciones de embarque (BUG 12)
+### Alcance
 
-1. Tabla constante `ESTADO_EMBARQUE_TRANSICIONES` en SQL (grafo dirigido). `avanzar_estado_embarque` valida que `(estado_actual, nuevo_estado)` pertenezca al grafo o `RAISE`.
-2. Permitir retroceso solo con motivo obligatorio (≥20 chars) y solo hasta el estado anterior — mismo patrón que reapertura de cierre.
-3. UI (`useEmbarqueEstadoActions`): mostrar solo estados válidos en el `Select` según el estado actual.
-4. Guardrail: `transiciones-embarque-grafo.test.ts` (recorre pares y valida).
+Aplicar server-side el mismo contrato de bloqueo que ya usa la UI, más los casos que la UI no cubre, y dejar el RPC autoprotegido.
 
-## Fuera de alcance (para una fase G+ si lo apruebas después)
+### Fase única — `v13.301.74`
 
-- Menores: revertir comisiones al cancelar factura timbrada, cotización tras eliminar embarque, comisión sobre factura real vs. conceptos.
-- Cada uno cabe en una fase corta propia; no los mezclo aquí para no volver la migración una bola.
+**1. Reescribir `eliminar_embarque_completo`** en una migración que:
 
-## Orden y por qué
+- Corrige el guard de existencia: `SELECT ... INTO STRICT` o `NOT FOUND` con mensaje explícito.
+- **Bloquea la eliminación** (con `RAISE EXCEPTION` de código estable `LC_EMBARQUE_BLOQUEADO` y mensaje humano) cuando el embarque tenga:
+  - `facturas` vivas (`deleted_at IS NULL AND estado NOT IN ('Cancelada','Sustituida')`) — incluye `Borrador` porque puede haber sido timbrada en paralelo.
+  - `proveedor_facturas` vivas (`estado <> 'Cancelada'`).
+  - `pagos_factura` o `pagos_proveedor` vivos ligados a esas facturas.
+  - `factura_notas_credito` o `proveedor_notas_credito` vivas.
+  - `comisiones_devengadas` con `definitiva = true`.
+  - `estado_embarque = 'Cerrado'` o `cerrado_at IS NOT NULL` — pide reabrir primero.
+- Devuelve en el `MESSAGE` una lista JSON compacta de motivos (`{"facturas":2,"cxp":1,"cerrado":false,...}`) para que el cliente muestre el mismo bloqueado dialog sin necesidad de segunda vuelta a la BD.
+- **No** borra `facturas` ni `proveedor_facturas`: si pasa el guard, es porque no quedan vivas. Se soft-deletean sólo los hijos operativos (`conceptos_venta/costo`, `documentos_embarque`, `notas_embarque`, `eventos_embarque`, `embarque_contenedores`, `seguros_embarque`) y el embarque.
+- Registra el borrado en `bitacora_actividad` con `accion='eliminar_embarque'`, `modulo='embarques'`, `entidad_id=<uuid>`, `entidad_nombre=<expediente>` y `detalles` con `{ cotizacion_revertida, hijos_soft_deleted }`.
+- Mantiene la reversión de `cotizaciones.estado='Aceptada'` cuando no quedan embarques vivos.
 
-D → E → F → G. Cada fase queda **verde antes de la siguiente** (mismo patrón de rondas anteriores: migración + guardrail + backfill idempotente + CHANGELOG + bump). Empezamos por D porque desbloquea cierres reales hoy (`Sustituida` en producción) y arregla el estado de factura que alimenta todos los reportes financieros ya blindados en `v13.301.62`.
+**2. Adaptar el cliente**:
 
-## Riesgos
+- `services/mutations.ts` (`deleteEmbarqueService`) captura el error del RPC, extrae el JSON de motivos y lo re-lanza como `EmbarqueBloqueadoError` con `motivos` tipados.
+- `DialogEliminarEmbarque.tsx`: la ruta de éxito no cambia. Si viene `EmbarqueBloqueadoError`, se abre `DialogEliminarEmbarqueBloqueado` con los motivos server-side (contrato: los mismos que ya muestra hoy desde el service cliente).
+- El hook `useEmbarqueDependenciasFinancieras` se mantiene como fuente de UX (deshabilitar el botón antes de intentar), pero deja de ser la única línea de defensa.
 
-- **Riesgo D**: cambiar la definición de "Pagada" recalcula estados masivamente. Mitigación: backfill en misma migración, contando antes/después, con bitácora.
-- **Riesgo E**: bloquear borrado con facturas vivas puede molestar a quien limpia data de pruebas. Mitigación: super_admin sigue con RPC directa; el bloqueo es en la RPC pública.
-- **Riesgo G**: rutas de negocio actualmente en producción podrían tener saltos raros históricos. Mitigación: el grafo permite el conjunto observado en `bitacora_actividad` (query previo a la migración), no un ideal teórico.
+**3. Guardrails**:
+
+- `src/lib/__tests__/eliminar-embarque-bloqueado-fiscal.test.ts`: lee la migración y verifica que el SQL contiene los 6 filtros duros (facturas vivas, cxp vivas, pagos, NCs, comisiones definitivas, embarque cerrado), levanta con `RAISE EXCEPTION`, escribe bitácora, y **no** contiene `UPDATE public.facturas SET deleted_at` ni `UPDATE public.proveedor_facturas SET deleted_at`.
+- `src/features/embarques/services/__tests__/mutations.test.ts`: caso nuevo que mockea el error del RPC con payload JSON y verifica que se propaga como `EmbarqueBloqueadoError` con motivos.
+
+**4. Cierre**:
+
+- `CHANGELOG.md`: `## [13.301.74] - 2026-07-18` describiendo el fix Bug 7.
+- `APP_VERSION → 13.301.74`.
+- `bun run ci:fast` (guardrail nuevo + suite estable).
+
+### Riesgos y mitigaciones
+
+- **Riesgo**: un flujo legítimo actualmente borra embarques con facturas Borrador para "descartar". **Mitigación**: la UI ya bloquea por dependencias financieras (`tieneDependencias` incluye CxC count>0), así que el flujo actual también rompe hoy — no hay regresión. Si el usuario reporta un caso concreto, podemos afinar para excluir `Borrador` en el guard sin sacrificar CFDIs vivos.
+- **Riesgo**: embarques `Cerrado` con cero dependencias que hoy sí se borran quedan bloqueados. **Mitigación**: mensaje humano explica que hay que reabrir primero — coherente con el resto del flujo de auditoría (comisiones, cierre).
+- **Riesgo**: llamadas legacy al RPC sin manejar el nuevo error. **Mitigación**: sólo hay dos call sites (`services/mutations.ts` y el hook de tests); ambos se adaptan en la misma versión.

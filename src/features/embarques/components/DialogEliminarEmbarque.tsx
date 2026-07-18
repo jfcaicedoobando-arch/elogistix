@@ -10,8 +10,10 @@ import { useNavigate } from "react-router-dom";
 import {
   useEliminarEmbarque,
   useEmbarqueDependenciasFinancieras,
+  type EmbarqueDependenciasFinancieras,
   type EmbarqueRow,
 } from "@/features/embarques/hooks";
+import { EmbarqueBloqueadoError, type MotivosBloqueoEmbarque } from "@/features/embarques/services";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { Ban, Loader2 } from "lucide-react";
@@ -24,17 +26,34 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * Adapta los motivos server-side (Fase E) al shape del hook client-side
+ * `useEmbarqueDependenciasFinancieras` que consume el diálogo de bloqueo.
+ * No conocemos los folios/ids desde el server (sólo counts + expediente),
+ * así que se dejan las listas vacías y el componente muestra "… y N más".
+ */
+function motivosADependencias(m: MotivosBloqueoEmbarque): EmbarqueDependenciasFinancieras {
+  return {
+    tieneDependencias: true,
+    cxc: { count: m.facturas, facturas: [] },
+    cxp: { count: m.cxp, facturas: [] },
+    notasCredito: m.notas_credito_cxc + m.notas_credito_cxp,
+    pagos: m.pagos_cxc + m.pagos_cxp,
+  };
+}
+
 export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }: Props) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const eliminarEmbarque = useEliminarEmbarque();
   const registrarActividad = useRegistrarActividad();
   const [dependenciasVerificadas, setDependenciasVerificadas] = useState(false);
+  const [bloqueoServidor, setBloqueoServidor] = useState<MotivosBloqueoEmbarque | null>(null);
 
   const { data: deps, isLoading: depsLoading, error: depsError } =
     useEmbarqueDependenciasFinancieras(embarque.id, open);
 
-  const bloqueado = Boolean(deps?.tieneDependencias);
+  const bloqueado = Boolean(deps?.tieneDependencias) || bloqueoServidor !== null;
 
   const handleEliminar = async () => {
     if (bloqueado) {
@@ -57,15 +76,25 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
       });
       notifySuccess(toast, { title: "Embarque eliminado", description: `${embarque.expediente} fue eliminado permanentemente.` });
       navigate("/embarques");
+      onOpenChange(false);
     } catch (err: unknown) {
+      // v13.301.74 (Fase E): el server bloquea si aparecen dependencias
+      // fiscales entre la verificación en cliente y el commit del RPC.
+      if (err instanceof EmbarqueBloqueadoError) {
+        setBloqueoServidor(err.motivos);
+        return;
+      }
       notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err), error: err, method: "HANDLE_ELIMINAR" });
-    } finally {
       onOpenChange(false);
     }
   };
 
-  // Rama especial: bloqueado por dependencias financieras (sólo informativo).
-  if (open && bloqueado && deps) {
+  const depsBloqueado: EmbarqueDependenciasFinancieras | null =
+    bloqueoServidor !== null ? motivosADependencias(bloqueoServidor) : deps ?? null;
+
+  // Rama especial: bloqueado por dependencias financieras (client-side check
+  // o server-side EmbarqueBloqueadoError). Sólo informativo.
+  if (open && bloqueado && depsBloqueado) {
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent className={dialogSize.sm}>
@@ -75,11 +104,11 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
               No se puede eliminar el embarque
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <DialogEliminarEmbarqueBloqueado expediente={embarque.expediente} deps={deps} />
+              <DialogEliminarEmbarqueBloqueado expediente={embarque.expediente} deps={depsBloqueado} />
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => onOpenChange(false)}>Entendido</AlertDialogAction>
+            <AlertDialogAction onClick={() => { setBloqueoServidor(null); onOpenChange(false); }}>Entendido</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

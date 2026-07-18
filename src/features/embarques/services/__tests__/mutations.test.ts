@@ -185,9 +185,38 @@ describe("eliminarEmbarqueRpc", () => {
     expect((call?.args as { p_embarque_id: string }).p_embarque_id).toBe(UUID);
   });
 
-  it("propaga el error de Supabase", async () => {
+  it("propaga el error genérico de Supabase", async () => {
     mock.setRpcResult("eliminar_embarque_completo", { data: null, error: new Error("fk") });
     await expect(eliminarEmbarqueRpc(UUID)).rejects.toThrow("fk");
+  });
+
+  it("convierte el marcador LC_EMBARQUE_BLOQUEADO en EmbarqueBloqueadoError con motivos (Fase E)", async () => {
+    const { EmbarqueBloqueadoError } = await import("@/features/embarques/services");
+    const motivos = {
+      facturas: 2,
+      cxp: 1,
+      pagos_cxc: 0,
+      pagos_cxp: 0,
+      notas_credito_cxc: 0,
+      notas_credito_cxp: 0,
+      comisiones_definitivas: 0,
+      cerrado: false,
+      expediente: "ELIMP00099",
+    };
+    mock.setRpcResult("eliminar_embarque_completo", {
+      data: null,
+      error: {
+        message: "LC_EMBARQUE_BLOQUEADO: el embarque ELIMP00099 tiene dependencias",
+        hint: JSON.stringify(motivos),
+      },
+    });
+    await expect(eliminarEmbarqueRpc(UUID)).rejects.toBeInstanceOf(EmbarqueBloqueadoError);
+    try {
+      await eliminarEmbarqueRpc(UUID);
+    } catch (err) {
+      expect(err).toBeInstanceOf(EmbarqueBloqueadoError);
+      expect((err as InstanceType<typeof EmbarqueBloqueadoError>).motivos).toEqual(motivos);
+    }
   });
 });
 
