@@ -29,6 +29,19 @@ function readLatestFaseFMigration(): string {
   throw new Error("No se encontró migración de Fase F (candados pagos/REP/NC)");
 }
 
+function readLatestRepGuardMigration(): string {
+  const dir = path.resolve(__dirname, "../../../supabase/migrations");
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort().reverse();
+  for (const f of files) {
+    const body = fs.readFileSync(path.join(dir, f), "utf8");
+    if (body.includes("FUNCTION public.assert_factura_viva_para_rep()")) {
+      return body;
+    }
+  }
+  throw new Error("No se encontró migración con assert_factura_viva_para_rep");
+}
+
+
 describe("Fase F — candados de pagos, REP y notas de crédito", () => {
   const sql = readLatestFaseFMigration();
 
@@ -101,6 +114,26 @@ describe("Fase F — candados de pagos, REP y notas de crédito", () => {
     );
     expect(sql).toMatch(
       /CREATE TRIGGER trg_pago_proveedor_factura_viva[\s\S]{0,300}WHEN \(NEW\.deleted_at IS NULL\)/,
+    );
+  });
+});
+
+describe("Fase F hotfix v13.301.76 — early-exit del guard de REP", () => {
+  const sql = readLatestRepGuardMigration();
+
+  it("early-exit depende sólo de uuid_rep + facturapi_rep_id (no de estado_rep)", () => {
+    // La versión hotfix debe salir temprano cuando ambos son NULL, sin consultar estado_rep.
+    expect(sql).toMatch(
+      /assert_factura_viva_para_rep[\s\S]{0,600}IF NEW\.uuid_rep IS NULL AND NEW\.facturapi_rep_id IS NULL THEN\s+RETURN NEW;\s+END IF;/,
+    );
+    // Regresión: la lista de estados 'pendiente'/'cancelado' ya no debe estar en el early-exit.
+    const fnBody = sql.match(/FUNCTION public\.assert_factura_viva_para_rep\(\)[\s\S]*?\$\$;/)?.[0] ?? "";
+    expect(fnBody).not.toMatch(/estado_rep IN \(''/);
+  });
+
+  it("trigger trg_pago_factura_rep_viva tiene WHEN clause que corta antes de invocar la función", () => {
+    expect(sql).toMatch(
+      /CREATE TRIGGER trg_pago_factura_rep_viva[\s\S]{0,400}WHEN \(NEW\.uuid_rep IS NOT NULL OR NEW\.facturapi_rep_id IS NOT NULL\)/,
     );
   });
 });
