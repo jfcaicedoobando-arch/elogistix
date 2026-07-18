@@ -7700,7 +7700,7 @@ export type Database = {
       }
       revertir_proforma_al_cancelar_sustitucion: {
         Args: { p_factura_id: string }
-        Returns: string
+        Returns: string[]
       }
       run_auditoria_backfill_legacy: { Args: never; Returns: Json }
       seed_demo_organization: { Args: never; Returns: undefined }
