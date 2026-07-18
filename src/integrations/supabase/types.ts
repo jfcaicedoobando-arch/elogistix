@@ -6549,6 +6549,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      assert_transicion_embarque: {
+        Args: {
+          p_actual: Database["public"]["Enums"]["estado_embarque"]
+          p_expediente: string
+          p_nuevo: Database["public"]["Enums"]["estado_embarque"]
+        }
+        Returns: undefined
+      }
       auditoria_capturar_snapshot: {
         Args: { p_organization_id: string }
         Returns: string
@@ -7777,6 +7785,13 @@ export type Database = {
           match_tipo: string
           score: number
         }[]
+      }
+      transicion_embarque_valida: {
+        Args: {
+          p_actual: Database["public"]["Enums"]["estado_embarque"]
+          p_nuevo: Database["public"]["Enums"]["estado_embarque"]
+        }
+        Returns: boolean
       }
       validar_cierre_embarque: {
         Args: { p_embarque_id: string }
