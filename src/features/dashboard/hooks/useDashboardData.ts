@@ -62,29 +62,41 @@ export function useDashboardData() {
   const conteoPorEstado = useMemo(() => parseConteoPorEstado(stats), [stats]);
   const totalActivos = Number(stats?.totalActivos ?? 0);
 
+  // v13.301.64 · Auditoría 698×572: dedupe defensivo por `id` para evitar
+  // warnings de React "duplicate key" cuando el RPC devuelve el mismo
+  // embarque en más de una fila (alertas y arribos vienen de joins).
+  const dedupeById = <T extends { id: string }>(rows: T[] | null | undefined): T[] =>
+    Array.from(new Map((rows ?? []).map((r) => [r.id, r])).values());
+
   const alertasDemora = useMemo<AlertaDemora[]>(
-    () => (stats?.alertasDemora as AlertaDemora[]) ?? [],
+    () => dedupeById((stats?.alertasDemora as AlertaDemora[]) ?? []),
     [stats],
   );
 
   const proximosArribos = useMemo<ProximoArribo[]>(
-    () => (stats?.proximosArribos as ProximoArribo[]) ?? [],
+    () => dedupeById((stats?.proximosArribos as ProximoArribo[]) ?? []),
     [stats],
   );
 
   const profitArribosEsteMes = useMemo<EmbarqueConProfit[]>(
-    () => parseProfitArribosEsteMes(stats),
+    () => dedupeById(parseProfitArribosEsteMes(stats)),
     [stats],
   );
 
   const arribosEsteMes = useMemo(() => parseArribosEsteMes(stats), [stats]);
 
   const embarquesMesSiguiente = useMemo<EmbarqueMesSiguiente[]>(
-    () => parseEmbarquesMesSiguiente(stats),
+    () => dedupeById(parseEmbarquesMesSiguiente(stats)),
     [stats],
   );
 
-  const cargasPorCliente = useMemo(() => parseCargasPorCliente(stats), [stats]);
+  const cargasPorCliente = useMemo(() => {
+    // v13.301.64 · dedupe por `clienteId` — el RPC puede regresar un cliente
+    // en más de una fila (impersonación / branch legacy) y el `key` del
+    // grid en `CargasActivasClienteCard` es `c.clienteId`.
+    const rows = parseCargasPorCliente(stats);
+    return Array.from(new Map(rows.map((r) => [r.clienteId, r])).values());
+  }, [stats]);
   const cargasActivasTotal = useMemo(() => parseCargasActivasTotal(stats), [stats]);
 
   const resumenMesSiguiente = useMemo(() => parseResumenMesSiguiente(stats), [stats]);

@@ -15,7 +15,12 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-4 sm:p-6">
-        <div className="overflow-x-auto -mx-1 px-1">
+        {/* v13.301.64 · Auditoría 698×572: máscara de fade en el borde
+            derecho para señalar que la tira es desplazable cuando el
+            contenedor es más angosto que 600px (entre sm y md). */}
+        <div
+          className="overflow-x-auto -mx-1 px-1 [scrollbar-width:thin] [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] md:[mask-image:none]"
+        >
           <div className="flex items-center justify-between gap-2 sm:gap-3 min-w-[480px] sm:min-w-[600px] relative">
             <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-info via-warning to-success opacity-30" />
 
