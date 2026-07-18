@@ -8,6 +8,8 @@ import {
   embarqueInsertSchema,
   parseOrThrow,
 } from "@/lib/validation/mutationSchemas";
+import { toEmbarqueBloqueadoError } from "./embarqueBloqueadoError";
+export { EmbarqueBloqueadoError, type MotivosBloqueoEmbarque } from "./embarqueBloqueadoError";
 
 // Schemas para validar los payloads de retorno de las RPCs.
 // Si la RPC cambia de shape o devuelve null inesperado, fallamos rápido y
