@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.64] - 2026-07-18
+- Auditoría UI/UX a **698×572** (banda apretada entre `sm=640` y `md=768`). Tres fixes de presentación: (1) `TimelineEstadosCard.tsx` — la tira horizontal de contadores por estado ahora usa una máscara CSS `mask-image` que degrada el borde derecho para señalar que hay más contenido desplazable; a `md+` la máscara se apaga. (2) `useDashboardData.ts` — dedupe defensivo por `id` en `alertasDemora` y `proximosArribos` (`new Map(rows.map(r => [r.id, r]))`) para eliminar el warning de React "duplicate key" que aparecía cuando los RPC devolvían el mismo embarque en dos filas por joins. (3) `GlobalSearch.tsx` — el badge `⌘K` de la barra superior ahora se oculta hasta `md+` (`hidden md:inline-flex`) para liberar ancho en tabletas pequeñas; el atajo de teclado sigue funcionando. Sin cambios en business logic ni en tablas; los tabs del detalle de embarque ya soportaban scroll horizontal desde `v13.139.18` y no se tocaron.
+
 ## [13.301.63] - 2026-07-17
 - Bandeja de facturas Emitidas: la columna **Fecha de emisión** ahora es visible en todos los tamaños de pantalla. Antes estaba oculta por debajo de `xl` (1280 px) con `hidden xl:table-cell` en `facturacionColumns.tsx`, lo que impedía ver la fecha en laptops/tabletas.
 
