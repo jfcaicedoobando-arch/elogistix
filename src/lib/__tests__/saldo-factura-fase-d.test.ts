@@ -23,7 +23,11 @@ function readLatestSaldoFacturaMigration(): string {
     .reverse();
   for (const f of files) {
     const body = fs.readFileSync(path.join(dir, f), "utf8");
-    if (body.includes("FUNCTION public.saldo_factura")) return body;
+    if (
+      body.includes("CREATE OR REPLACE FUNCTION public.saldo_factura(p_factura_id uuid)")
+    ) {
+      return body;
+    }
   }
   throw new Error("No se encontró migración con FUNCTION public.saldo_factura");
 }
