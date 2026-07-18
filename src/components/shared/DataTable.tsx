@@ -6,11 +6,14 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
 import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
+import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
+import { cn } from "@/lib/utils";
 import type {
   DataTablePagination,
   TableDensity,
   SortDir,
 } from "@/components/shared/dataTable/types";
+
 
 // API pública estable: re-exports de tipos/helpers consumidos por todo el proyecto.
 // Esta convención (componente + helpers en el mismo archivo) está allowlisted
