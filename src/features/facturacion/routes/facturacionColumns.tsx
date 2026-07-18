@@ -70,8 +70,7 @@ export function buildFacturaColumns(): ColumnDef<Factura, unknown>[] {
     }),
     {
       ...dateColumn<Factura>({ id: "emision", header: "Emisión", accessor: (f) => f.fecha_emision }),
-      // Emisión oculta en tableta (<xl); en tablet basta con Vencimiento.
-      meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
+      meta: { width: "w-[110px]", className: "whitespace-nowrap" },
     },
     {
       id: "vencimiento", header: "Vencimiento",
