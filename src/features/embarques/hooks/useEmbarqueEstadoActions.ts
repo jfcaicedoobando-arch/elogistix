@@ -106,6 +106,14 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       const msg = getErrorMessage(err);
       if (msg.includes("documentos_faltantes")) { setBlockDocsOpen(true); return; }
       if (msg.includes("fecha_llegada_real_requerida")) { setBlockFechaLlegadaOpen(true); return; }
+      if (msg.includes("LC_TRANSICION_INVALIDA")) {
+        notifyError(toast, {
+          title: "Transición de estado no permitida",
+          description: `No se permite pasar de "${embarque.estado}" a "${siguiente}". Refresca la página; el estado del embarque pudo cambiar en otra sesión.`,
+          error: err, method: "HANDLE_AVANZAR_ESTADO_TRANSICION",
+        });
+        return;
+      }
       notifyError(toast, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
     }
   }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, toast]);
