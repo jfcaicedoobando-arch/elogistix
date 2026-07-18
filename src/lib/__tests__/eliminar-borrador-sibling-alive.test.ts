@@ -37,7 +37,7 @@ describe("eliminar_factura_borrador — Fase C (Bug 3 + H7)", () => {
   const migration = findLatestEliminarBorradorBody();
   const body = extractFunctionBody(migration);
 
-  it("existe al menos una migración que redefine la RPC", () => {
+  it("existe al menos una migración que redefine eliminar_factura_borrador", () => {
     expect(body.length).toBeGreaterThan(0);
   });
 
