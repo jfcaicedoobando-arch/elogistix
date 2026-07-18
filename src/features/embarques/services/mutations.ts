@@ -141,12 +141,23 @@ export async function duplicarEmbarqueRpc(
 }
 
 export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {
-  await run(
-    Sentry.startSpan(
-      { name: "rpc.eliminar_embarque_completo", op: "db.rpc", attributes: { embarque_id: embarqueId } },
-      () => supabase.rpc('eliminar_embarque_completo', { p_embarque_id: embarqueId }),
-    ),
-  );
+  try {
+    await run(
+      Sentry.startSpan(
+        { name: "rpc.eliminar_embarque_completo", op: "db.rpc", attributes: { embarque_id: embarqueId } },
+        () => supabase.rpc('eliminar_embarque_completo', { p_embarque_id: embarqueId }),
+      ),
+    );
+  } catch (err) {
+    // v13.301.74 (Fase E): la RPC ahora usa RAISE EXCEPTION con marcador
+    // `LC_EMBARQUE_BLOQUEADO` + JSON de motivos en el HINT cuando el
+    // embarque tiene facturas vivas, CxP, pagos, NCs, comisiones
+    // definitivas o está cerrado. Convertimos ese error a un tipo propio
+    // para que la UI pueda abrir el dialog de bloqueo con desglose real.
+    const bloqueado = toEmbarqueBloqueadoError(err);
+    if (bloqueado) throw bloqueado;
+    throw err;
+  }
 }
 
 // Mutaciones directas (update de columnas + inserción de notas) viven en
