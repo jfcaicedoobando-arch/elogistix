@@ -92,8 +92,9 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
   const depsBloqueado: EmbarqueDependenciasFinancieras | null =
     bloqueoServidor !== null ? motivosADependencias(bloqueoServidor) : deps ?? null;
 
-  // Rama especial: bloqueado por dependencias financieras (sólo informativo).
-  if (open && bloqueado && deps) {
+  // Rama especial: bloqueado por dependencias financieras (client-side check
+  // o server-side EmbarqueBloqueadoError). Sólo informativo.
+  if (open && bloqueado && depsBloqueado) {
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent className={dialogSize.sm}>
@@ -103,11 +104,11 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
               No se puede eliminar el embarque
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <DialogEliminarEmbarqueBloqueado expediente={embarque.expediente} deps={deps} />
+              <DialogEliminarEmbarqueBloqueado expediente={embarque.expediente} deps={depsBloqueado} />
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => onOpenChange(false)}>Entendido</AlertDialogAction>
+            <AlertDialogAction onClick={() => { setBloqueoServidor(null); onOpenChange(false); }}>Entendido</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
