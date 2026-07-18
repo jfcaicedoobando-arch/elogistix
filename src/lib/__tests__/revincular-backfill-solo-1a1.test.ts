@@ -35,8 +35,9 @@ describe("Fase C bis — auto-revincular proformas backfill 1:1", () => {
   });
 
   it("exige count(factura viva) = 1 por embarque", () => {
-    expect(revincularMigration!).toMatch(/count[\s\S]{0,80}=\s*1/i);
+    expect(revincularMigration!).toMatch(/n_facturas_vivas\s*=\s*1/i);
   });
+
 
   it("exige count(proforma backfill) = 1 por embarque", () => {
     // dos HAVING/count con = 1
