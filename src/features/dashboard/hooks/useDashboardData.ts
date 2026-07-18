@@ -79,14 +79,14 @@ export function useDashboardData() {
   );
 
   const profitArribosEsteMes = useMemo<EmbarqueConProfit[]>(
-    () => parseProfitArribosEsteMes(stats),
+    () => dedupeById(parseProfitArribosEsteMes(stats)),
     [stats],
   );
 
   const arribosEsteMes = useMemo(() => parseArribosEsteMes(stats), [stats]);
 
   const embarquesMesSiguiente = useMemo<EmbarqueMesSiguiente[]>(
-    () => parseEmbarquesMesSiguiente(stats),
+    () => dedupeById(parseEmbarquesMesSiguiente(stats)),
     [stats],
   );
 
