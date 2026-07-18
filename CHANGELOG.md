@@ -3,6 +3,9 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.301.65] - 2026-07-18
+- Auditoría UI/UX a **1024×768** y **1280×720** con sidebar abierto (11 rutas núcleo). Resultado: overflow horizontal = 0 px en ambas resoluciones (main y document), sidebar/tablas/filtros sin clipping. Único hallazgo: 2 warnings de React "duplicate key" en `/reportes/rentabilidad` originados por filas con el mismo `cliente_id` en el RPC de rentabilidad (join contra embarques). Fix aplicado en `useReportesPageController.ts` — dedupe defensivo por `cliente_id` con `Map` antes de ordenar, mismo patrón que ya usábamos en `useDashboardData.ts`. Consola limpia en las 11 rutas × 2 resoluciones tras el fix.
+
 ## [13.301.64] - 2026-07-18
 - Auditoría UI/UX a **698×572** (banda apretada entre `sm=640` y `md=768`). Tres fixes de presentación: (1) `TimelineEstadosCard.tsx` — la tira horizontal de contadores por estado ahora usa una máscara CSS `mask-image` que degrada el borde derecho para señalar que hay más contenido desplazable; a `md+` la máscara se apaga. (2) `useDashboardData.ts` — dedupe defensivo por `id` en `alertasDemora` y `proximosArribos` (`new Map(rows.map(r => [r.id, r]))`) para eliminar el warning de React "duplicate key" que aparecía cuando los RPC devolvían el mismo embarque en dos filas por joins. (3) `GlobalSearch.tsx` — el badge `⌘K` de la barra superior ahora se oculta hasta `md+` (`hidden md:inline-flex`) para liberar ancho en tabletas pequeñas; el atajo de teclado sigue funcionando. Sin cambios en business logic ni en tablas; los tabs del detalle de embarque ya soportaban scroll horizontal desde `v13.139.18` y no se tocaron.
 
