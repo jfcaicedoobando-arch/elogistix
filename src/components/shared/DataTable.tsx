@@ -7,7 +7,7 @@ import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeade
 import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
-import { cn } from "@/lib/utils";
+import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
 import type {
   DataTablePagination,
   TableDensity,
@@ -137,10 +137,7 @@ function DataTableInner<T>({
           data-testid="datatable-scroll"
           className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
         >
-          {/* v13.139.18 (F-06 auditoría 3): min-w-max obliga a la tabla a
-              respetar los anchos declarados por columna; sin él, `w-full` del
-              componente `Table` shadcn comprime las columnas y oculta las
-              últimas (Estado/ETA) sin activar el scroll horizontal. */}
+          {/* min-w-max obliga a respetar anchos por columna (F-06 auditoría 3). */}
           <Table className={tableClassName}>
             <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
             <DataTableBody
@@ -182,42 +179,8 @@ function DataTableInner<T>({
   );
 }
 
-/**
- * Degradados a los bordes horizontales cuando la tabla tiene overflow.
- * Extraído de DataTableInner (v13.301.74) para bajar la complejidad ciclomática
- * del componente principal por debajo del umbral de eslint (16).
- * Puramente visuales; no interceptan interacciones.
- */
-function HorizontalScrollFades({
-  overflowing,
-  atStart,
-  atEnd,
-}: {
-  overflowing: boolean;
-  atStart: boolean;
-  atEnd: boolean;
-}) {
-  const showLeft = overflowing && !atStart;
-  const showRight = overflowing && !atEnd;
-  return (
-    <>
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background to-transparent transition-opacity duration-150",
-          showLeft ? "opacity-100" : "opacity-0",
-        )}
-      />
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent transition-opacity duration-150",
-          showRight ? "opacity-100" : "opacity-0",
-        )}
-      />
-    </>
-  );
-}
+
+
 
 /**
  * DataTable — tabla genérica del ERP.
