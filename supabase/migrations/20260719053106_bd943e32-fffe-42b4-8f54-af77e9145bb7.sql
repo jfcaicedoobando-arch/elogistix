@@ -533,3 +533,8 @@ BEGIN
   RETURN QUERY SELECT * FROM public.facturas WHERE id = ANY(v_factura_ids);
 END;
 $function$;
+
+-- Preservar el contrato de grants de la Fase E: la RPC eliminar_embarque_completo
+-- sólo puede ser invocada por usuarios autenticados o el service_role.
+REVOKE ALL ON FUNCTION public.eliminar_embarque_completo(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.eliminar_embarque_completo(uuid) TO authenticated, service_role;
