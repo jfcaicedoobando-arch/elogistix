@@ -1,72 +1,67 @@
+## Ronda de cierre: bugs 7, 8, 15, 21, 24 + residual Fase B
 
-## Verificación de Fase P.3 (v13.301.89)
+Cerramos los pendientes que quedaron parciales/abiertos de rondas anteriores. Cada fix incluye migración + guardrail test + entrada en CHANGELOG y bump de `APP_VERSION`.
 
-Revisado migración `20260719044443_..._v13_301_89_fase_p3.sql`, guardrail `garantias-fase-p3.test.ts` (9 asserts), y cambios en `conceptosCostoVinculables.ts`. Todo en verde: la RPC `materializar_factura_retencion_garantia` está `SECURITY DEFINER` con `search_path=public`, revoca `PUBLIC`/`anon`, y el trigger `trg_garantia_auto_materializar` envuelve la llamada en `EXCEPTION WHEN OTHERS` para no bloquear la transición de estado. El cliente ya no toca `conceptos_costo` desde `vincularFacturaAConceptos`; el trigger BD `tg_pfc_recalc_liq` es la única fuente de verdad.
+### Fase R.1 — Bug 7 completo (eliminar embarque + proformas huérfanas) · v13.301.92
 
-## Auditoría Ronda 5 — Hallazgos confirmados
+**Problema:** `eliminar_embarque_completo` no cuenta proformas vivas como dependencia, y `convertir_proformas_a_factura` no valida que el embarque siga vivo. Vía abierta: borrar embarque con proforma sin facturar → la proforma queda huérfana pero facturable.
 
-Se auditó portal del cliente, portal del agente, envío de correos y tracking externo. Todos los hallazgos abajo están **confirmados por lectura de código/RLS**:
+- Migración:
+  - Agregar count de `proformas` (estado_aprobacion ≠ 'borrador' vacío, no facturadas) al bloque de motivos en `eliminar_embarque_completo`. Extender `MotivosBloqueoEmbarque` (server + cliente) con `proformas`.
+  - En `convertir_proformas_a_factura`, `RAISE` si el embarque asociado tiene `deleted_at IS NOT NULL` (código `LC_EMBARQUE_ELIMINADO`).
+- Cliente:
+  - Extender `MotivosBloqueoEmbarque` en `services` y el adaptador `motivosADependencias`.
+  - Renderizar la nueva categoría en `DialogEmbarqueBloqueadoAlert`.
+- Tests: guardrail SQL que confirma el nuevo count y el `RAISE` en la RPC de conversión.
 
-### Bug 25 — Alto · Portal cliente lee `cotizaciones.*` completo
+### Fase R.2 — Bug 15 completo (guarda DB para re-cotizar) · v13.301.93
 
-`src/features/portal/services/queries.ts:111` usa `.select("*")` sobre `cotizaciones`. La tabla tiene 81 columnas; aunque no hay `margen`/`costo` directos (viven en `cotizacion_costos`), sí filtra campos internos como `sin_desglose_costos`, notas internas de vendedor, historial de aprobaciones, snapshots, etc. Todas las demás rutas del portal usan whitelists (`PORTAL_*_COLUMNS`); esta es la única regresión.
+**Problema:** UI ya oculta el botón, pero `recotizar_cotizacion` no valida en BD → un cliente API puede versionar una cotización con embarques vinculados.
 
-### Bug 26 — Medio · Portal expone eventos/documentos borrados y IDs de staff
+- Migración: en `recotizar_cotizacion`, verificar `EXISTS (SELECT 1 FROM embarques WHERE cotizacion_id = p_cotizacion_id AND deleted_at IS NULL)` y `RAISE` con código `LC_COTIZACION_CON_EMBARQUES`.
+- Servicio `versionado/index.ts`: mapear el error a una clase de dominio (`CotizacionConEmbarquesError`) para que el modal lo muestre traducido.
+- Tests: guardrail que verifica presencia del check en la migración más reciente + test unitario del servicio.
 
-`PORTAL_EVENTO_COLUMNS` y `PORTAL_DOCUMENTO_COLUMNS` en `columns.ts` incluyen `deleted_at, deleted_by`. Los IDs UUID de usuarios internos (staff) filtran al portal del cliente. Además, las queries `fetchPortalEventos` y `fetchPortalDocumentos` no filtran `.is("deleted_at", null)`, así que el cliente ve eventos/documentos **eliminados** con leyenda de borrado.
+### Fase R.3 — Bug 21 completo (transiciones NC proveedor en BD) · v13.301.94
 
-### Bug 27 — Alto · Recordatorios de cobranza sobre facturas no vivas
+**Problema:** El estado (`Borrador → Vigente → Aplicada/Cancelada`) sólo se enforce en cliente. API puede aplicar una NC en 'Borrador' o 'Cancelada'.
 
-`factura_recordatorios` no tiene guard trigger. Un operador puede insertar un recordatorio contra una factura **Cancelada**, **Sustituida**, en cancelación o borrador. Fase F blindó pagos/REP/NC con `assert_factura_viva_*`, pero olvidó los recordatorios. Impacta cobranza (spam a cliente por CFDI que ya no existe) y confianza del reporte de cobranza.
+- Migración: trigger `BEFORE UPDATE` en `proveedor_notas_credito` que valide la matriz de transiciones (`transicion_nc_proveedor_valida`), similar al pattern de Fase G para embarques. Bloquea también `Aplicada → *` (inmutable).
+- Además, trigger `BEFORE INSERT` en la tabla puente `proveedor_nc_aplicaciones` (o equivalente) que exija `estado = 'Vigente'` en la NC padre.
+- Tests: guardrail SQL + unit test asegurando que se levantan los errores esperados.
 
-### Bug 28 — Bajo · `suppressed_emails` INSERT con `roles:{public}` (residuo H3)
+### Fase R.4 — Bug 24 real (aprobación previa a pago proveedor) · v13.301.95
 
-Policy `Service role can insert suppressed emails` sigue con `TO public` (with_check restringe a `auth.role()='service_role'`, así que no hay leak real, pero incumple el patrón H3 unificado en Fase 55). Corrección trivial: `TO service_role`.
+**Problema:** `pagos_proveedor` no valida `estado_aprobacion = 'aprobada'` en el INSERT. La mitigación por RLS admin-only no impide que un admin pague una factura aún no aprobada.
 
-### Bug 29 — Medio · `email_unsubscribe_tokens` sin `expires_at`
+- Migración: trigger `BEFORE INSERT` en `pagos_proveedor` que verifique `proveedor_facturas.estado_aprobacion = 'aprobada'` (y `<> 'cancelada'`). Código `LC_CXP_SIN_APROBACION`.
+- Cliente: mapear error en `useRegistrarPagoProveedor` + toast.
+- Tests: guardrail + RLS fixture.
 
-Los tokens de un solo uso son válidos hasta usarse (o para siempre). Enumeración de bounces históricos posible si se filtra la tabla. Baja severidad porque son de un solo uso, pero conviene TTL 90 días para higiene.
+### Fase R.5 — Bug 8 (eliminar pago con REP timbrado) · v13.301.96
 
-### Bug 30 — Medio · Notificaciones huérfanas para clientes desactivados
+**Problema:** Se puede borrar un `pagos_factura` cuyo REP ya está `Timbrado` sin cancelar antes el CFDI de pago.
 
-`notificaciones_cliente` se sigue insertando aunque `client_users` ya no exista para ese `cliente_id`. Las notificaciones se acumulan sin destinatario y ensucian reportes. Falta guard en el trigger de inserción (o purga programada).
+- Migración: trigger `BEFORE UPDATE` en `pagos_factura` que, cuando `NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL`, verifique `OLD.estado_rep NOT IN ('Timbrado','EnCancelacion')`. Código `LC_PAGO_CON_REP_TIMBRADO`.
+- UI: en `FacturaPagosSection`, ocultar/deshabilitar el botón "Eliminar" cuando `estado_rep IN ('Timbrado','EnCancelacion')` con tooltip explicativo.
+- Tests: guardrail SQL + test de UI (RTL) que oculta el botón.
 
-### Bug 31 — Bajo · `tracking_links.expires_at` nullable sin CHECK
+### Fase R.6 — Residual Fase B (revert cancelación considera borradores vivos) · v13.301.97
 
-La tabla permite tokens sin vencimiento (`expires_at IS NULL`). No es un leak por sí solo (los tokens son opacos y la RPC pública valida), pero la política es "tokens temporales". Debería ser `NOT NULL` con CHECK `expires_at > created_at`.
+**Problema:** En `revertir_proforma_al_cancelar_sustitucion`, el check de "facturas vivas" excluye `'Borrador'`. Escenario documentado: MXN timbrada + borrador USD vivo → cancelar MXN libera la proforma → re-conversión duplica.
 
-## Plan de implementación — Fase Q
+- Migración: incluir `'Borrador'` en la lista de estados vivos para el sibling-check del revert (mismo criterio que `eliminar_factura_borrador` de Fase C). Filtrar por conceptos_factura.proforma_id_origen compartido.
+- Backfill: query de diagnóstico (no destructivo) para detectar proformas actualmente en `pendiente` con borradores USD vivos consumiéndolas — reportar count, no mutar.
+- Tests: guardrail SQL que asegura `'Borrador'` presente en el check, y test de dominio que reproduce el escenario MXN timbrada + borrador USD.
 
-Dividida en Q.1 (código cliente) y Q.2 (migración BD) para mantener CI verde en cada paso.
+### Detalles técnicos comunes
 
-### Fase Q.1 (`v13.301.90`) — Portal cliente hardening (Bugs 25, 26)
+- Cada migración usa `ALTER FUNCTION`/`CREATE OR REPLACE FUNCTION` con `SECURITY DEFINER` y `SET search_path = public` según convención del repo.
+- Todos los `RAISE EXCEPTION` usan códigos `LC_*` para que `mapSupabaseError` los traduzca en UI.
+- CHANGELOG: una entrada por fase, formato `## [X.Y.Z] - YYYY-MM-DD`.
+- Bump `APP_VERSION` una vez por fase.
+- Guardrails vitest ubicados en `src/lib/__tests__/` siguiendo el patrón `*-fase-*.test.ts`.
 
-1. Añadir `PORTAL_COTIZACION_DETAIL_COLUMNS` en `columns.ts` con whitelist de ~30 campos consumidos por `PortalCotizacionDetalle` (folio, cliente_*, modo/tipo, estado, moneda, subtotal/iva/total, fechas, mercancia, incoterm, comentario_cliente, embarque_id, observaciones cliente, origen/destino/puertos/aeropuertos, tipo_servicio, notas visibles al cliente).
-2. Reemplazar `.select("*")` por `.select(PORTAL_COTIZACION_DETAIL_COLUMNS)` en `fetchPortalCotizacion`.
-3. Quitar `deleted_at, deleted_by` de `PORTAL_EVENTO_COLUMNS` y `PORTAL_DOCUMENTO_COLUMNS`.
-4. Agregar `.is("deleted_at", null)` en `fetchPortalEventos` y `fetchPortalDocumentos`.
-5. Guardrail nuevo `src/features/portal/services/__tests__/portal-columns-whitelist.test.ts` que verifica: `columns.ts` no exporta `deleted_by`, `queries.ts` no contiene `.select("*")`, todas las queries del portal filtran `deleted_at IS NULL` donde aplica.
+### Orden de ejecución
 
-### Fase Q.2 (`v13.301.91`) — Guardas BD (Bugs 27, 28, 29, 30, 31)
-
-Migración única con:
-
-1. Función `assert_factura_viva_para_recordatorio(uuid)` + trigger `BEFORE INSERT ON factura_recordatorios` que bloquea si la factura no está en `FACTURA_ESTADOS_VIVOS` (Emitida, Parcialmente pagada, Vencida). Excepción explícita `LC_RECORDATORIO_FACTURA_NO_VIVA` mapeada en el cliente.
-2. Recrear policy `Service role can insert suppressed emails` con `TO service_role` (drop + create).
-3. `ALTER TABLE email_unsubscribe_tokens ADD COLUMN expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '90 days')`. Ajustar `handle-email-unsubscribe/index.ts` para rechazar `now() > expires_at`.
-4. Trigger `BEFORE INSERT ON notificaciones_cliente` que verifica `EXISTS (SELECT 1 FROM client_users WHERE cliente_id = NEW.cliente_id)`. Excepción `LC_NOTIF_CLIENTE_SIN_PORTAL` (no fatal — degradar a `RAISE WARNING` + `RETURN NULL` para descartar silenciosamente).
-5. `ALTER TABLE tracking_links ALTER COLUMN expires_at SET NOT NULL, ADD CONSTRAINT tracking_links_expiry_futura CHECK (expires_at > created_at)`. Backfill: `UPDATE ... SET expires_at = created_at + interval '30 days' WHERE expires_at IS NULL`.
-6. Guardrail `src/lib/__tests__/portales-y-correos-fase-q.test.ts` con ≥6 asserts sobre la migración (funciones, triggers, CHECK, policy update, backfill).
-
-### Detalles técnicos
-
-- `PORTAL_COTIZACION_DETAIL_COLUMNS` se enumera leyendo `PortalCotizacionDetalle.tsx`, `DatosGeneralesCard.tsx`, `SeccionMercanciaCotizacionDetalle.tsx`, `ResumenTotalesCotizacion.tsx`, `PortalCotizacionEstadoBanner.tsx` y `usePortalCotizacionDetalle` para no romper la UI.
-- El trigger de recordatorios respeta la excepción de la Fase F: cheques manuales/históricos no aplican; los recordatorios siempre son nuevos, sin bypass.
-- Migración Q.2 usa `DROP POLICY IF EXISTS ... CREATE POLICY` para la corrección H3 residual (patrón ya usado en Fase 55).
-- Bump `APP_VERSION` a `13.301.90` (Q.1) y `13.301.91` (Q.2), con dos entradas en `CHANGELOG.md`.
-
-### Fuera de alcance
-
-- Bug 24 (Round 4) sigue refutado — el trigger `tg_pfc_recalc_liq` ya existe.
-- El portal del agente (`fetchAgenteEmbarques`) usa una whitelist explícita y no expone profit; sin cambios.
-- Ronda 6 (embarques 2, cierre, auditoría) queda para después de Q.2.
+R.1 → R.2 → R.3 → R.4 → R.5 → R.6, verificando `bun run ci:fast` entre cada fase (como en rondas anteriores). Después de cada fase espero tu "revisa y continúa" antes de saltar a la siguiente.
