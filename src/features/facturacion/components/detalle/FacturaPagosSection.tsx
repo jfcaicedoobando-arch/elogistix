@@ -123,17 +123,29 @@ export function FacturaPagosSection({
                       </td>
                       {canEdit && (
                         <td className="py-2 px-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPagoAEliminar(p.id);
-                            }}
-                            aria-label="Eliminar pago"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          {(() => {
+                            const repVivo = !!p.uuid_rep && !p.rep_cancelado_en;
+                            return (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={repVivo}
+                                title={
+                                  repVivo
+                                    ? "Cancela el REP (complemento de pago) antes de eliminar este pago"
+                                    : "Eliminar pago"
+                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (repVivo) return;
+                                  setPagoAEliminar(p.id);
+                                }}
+                                aria-label="Eliminar pago"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            );
+                          })()}
                         </td>
                       )}
                     </tr>
