@@ -58,14 +58,60 @@ describe("registrarPagoFactura", () => {
 });
 
 describe("eliminarPagoFactura", () => {
-  it("hace soft-delete (update deleted_at)", async () => {
-    mock.setTableResult("pagos_factura", { data: {}, error: null });
+  it("hace soft-delete (update deleted_at) cuando no hay REP vivo", async () => {
+    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: null, rep_cancelado_en: null }, error: null });
     await expect(eliminarPagoFactura("p-1")).resolves.toBeUndefined();
-    expect(mock.tableCalls[0]?.ops).toContain("update");
+    const ops = mock.tableCalls.flatMap((c) => c.ops);
+    expect(ops).toContain("update");
   });
 
-  it("propaga error de supabase al registrar pago", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: { message: "rls" } });
-    await expect(eliminarPagoFactura("p-1")).rejects.toThrow();
+  it("permite eliminar cuando el REP existe pero ya está cancelado", async () => {
+    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: "uuid-abc", rep_cancelado_en: "2026-01-01" }, error: null });
+    await expect(eliminarPagoFactura("p-1")).resolves.toBeUndefined();
+  });
+
+  it("R.5 · Bug 8 — bloquea eliminar cuando hay REP vivo (uuid_rep + rep_cancelado_en NULL)", async () => {
+    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: "uuid-abc", rep_cancelado_en: null }, error: null });
+    await expect(eliminarPagoFactura("p-1")).rejects.toBeInstanceOf(PagoConRepVivoError);
+    // Verificamos que ni siquiera se intentó el update.
+    const updates = mock.tableCalls.filter((c) => c.ops.includes("update"));
+    expect(updates).toHaveLength(0);
+  });
+
+  it("R.5 · Bug 8 — mapea LC_PAGO_CON_REP_VIVO del trigger a PagoConRepVivoError", async () => {
+    // Primer llamado (select) sin REP → pasa la defensa temprana; el trigger
+    // simula que entre la lectura y el update apareció un REP.
+    let call = 0;
+    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: null, rep_cancelado_en: null }, error: null });
+    const original = mock.supabase.from;
+    (mock.supabase as unknown as { from: typeof original }).from = ((table: string) => {
+      call += 1;
+      if (call === 2) {
+        mock.setTableResult("pagos_factura", { data: null, error: { message: "LC_PAGO_CON_REP_VIVO: no permitido" } });
+      }
+      return original(table);
+    }) as typeof original;
+    try {
+      await expect(eliminarPagoFactura("p-1")).rejects.toBeInstanceOf(PagoConRepVivoError);
+    } finally {
+      (mock.supabase as unknown as { from: typeof original }).from = original;
+    }
+  });
+
+  it("propaga errores genéricos de supabase al eliminar", async () => {
+    // La defensa temprana pasa (uuid_rep null), luego el update falla.
+    let call = 0;
+    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: null, rep_cancelado_en: null }, error: null });
+    const original = mock.supabase.from;
+    (mock.supabase as unknown as { from: typeof original }).from = ((table: string) => {
+      call += 1;
+      if (call === 2) mock.setTableResult("pagos_factura", { data: null, error: { message: "rls" } });
+      return original(table);
+    }) as typeof original;
+    try {
+      await expect(eliminarPagoFactura("p-1")).rejects.toThrow();
+    } finally {
+      (mock.supabase as unknown as { from: typeof original }).from = original;
+    }
   });
 });
