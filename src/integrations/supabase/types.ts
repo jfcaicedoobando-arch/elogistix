@@ -7739,6 +7739,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      materializar_factura_retencion_garantia: {
+        Args: { p_garantia_id: string }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
