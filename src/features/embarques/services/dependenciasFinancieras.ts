@@ -19,7 +19,9 @@ export interface EmbarqueDependenciasFinancieras {
   cxp: { count: number; facturas: FacturaLigada[] };
   notasCredito: number;
   pagos: number;
+  proformas: number;
 }
+
 
 const MAX_FOLIOS = 20;
 
