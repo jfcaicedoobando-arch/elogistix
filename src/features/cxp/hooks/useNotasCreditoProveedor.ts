@@ -53,6 +53,20 @@ export function useAplicarNotaCredito(facturaId: string | undefined) {
   });
 }
 
+export function useAprobarNotaCredito(facturaId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => aprobarNotaCredito(id),
+    onSuccess: () => {
+      invalidate(qc, facturaId);
+      notifySuccess(undefined, { title: "Nota de crédito aprobada" });
+    },
+    onError: (error: Error) => notifyError(undefined, {
+      title: `No se pudo aprobar la NC: ${error.message}`, error, method: "APROBAR_NC_PROVEEDOR",
+    }),
+  });
+}
+
 export function useCancelarNotaCredito(facturaId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
