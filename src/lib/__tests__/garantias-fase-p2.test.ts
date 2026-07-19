@@ -87,12 +87,10 @@ describe("Fase P.2 — Garantías re-evaluables (v13.301.88)", () => {
       /REVOKE (ALL |EXECUTE )?ON FUNCTION public\.set_garantia_estado[\s\S]*?FROM PUBLIC/,
     );
     expect(sql).toMatch(
-      /GRANT EXECUTE ON FUNCTION public\.set_garantia_estado[\s\S]*?TO authenticated/,
-    );
-    expect(sql).toMatch(
-      /GRANT EXECUTE ON FUNCTION public\.set_garantia_estado[\s\S]*?TO service_role/,
+      /GRANT EXECUTE ON FUNCTION public\.set_garantia_estado[\s\S]*?authenticated[\s\S]*?service_role/,
     );
   });
+
 
   it("valida roles permitidos (admin, admin_org, operador, super_admin)", () => {
     expect(sql).toMatch(/lc_garantia_sin_rol/i);
