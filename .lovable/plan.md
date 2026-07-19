@@ -1,75 +1,41 @@
-## Revisión Fase P.2 ✅
+## Revisión Fase P.3 (v13.301.89)
 
-`bun run ci:fast` verde (lint + typecheck + vitest). Migración `v13.301.88` aplicada con:
-- 3 triggers (`transicion_valida`, `congelar_monto`, `fechas_requeridas`) + trigger AFTER de historial.
-- Tabla `embarque_garantias_historial` con RLS scoped por org y grants correctos.
-- RPC `set_garantia_estado` SECURITY DEFINER con role gate.
-- Servicio cliente + hook + mapeo de 8 códigos `LC_GARANTIA_*`.
-- Guardrail SQL (9 asserts) + 9 tests unitarios.
+Auditoría rápida de lo generado:
 
-Sin bugs pendientes. Continuamos a **Fase P.3**.
+- Migración `20260719044443_..._v13_301_89_fase_p3.sql`: RPC `materializar_factura_retencion_garantia` SECURITY DEFINER con `search_path=public`, gate de rol correcto (`admin/admin_org/operador/super_admin`), valida `retenido`, no re-materialización, naviera mapeada a proveedor por nombre en org, categoría COGS con fallback, folio interno vía `siguiente_folio_proveedor`, `REVOKE PUBLIC/anon` + `GRANT` restringido. Trigger `trg_garantia_auto_materializar` con `EXCEPTION WHEN OTHERS` best-effort que no bloquea la transición de estado. ✅
+- Columna `navieras.name` confirmada en la BD → `SELECT name INTO ...` es válido. ✅
+- Cliente: `vincularFacturaAConceptos` limpio (ya no marca `estado_liquidacion` desde cliente; delega al trigger `tg_pfc_recalc_liq`). Tests actualizados verifican que no hay `update` a `conceptos_costo`. ✅
+- Guardrail `garantias-fase-p3.test.ts` con 9 asserts cubre SECURITY DEFINER + search_path, roles, los 5 códigos de error clave, mapeo por nombre, categoría de presupuesto, inserción en `proveedor_facturas` con folio interno + vínculo, trigger AFTER UPDATE OF estado con manejo de excepción, y `REVOKE/GRANT`. ✅
+- CHANGELOG.md y APP_VERSION → `13.301.89`. ✅
+
+**Sin bugs abiertos.** Falta cubrir un test unitario del servicio cliente para el nuevo contrato `{ insertadas }` (ya cubierto en `conceptosCostoVinculables.test.ts`).
+
+Bugs 19–23 de la Ronda 4 quedan cerrados con Fases L–P. Bug 24 fue refutado. Cierra Ronda 4.
 
 ---
 
-## Fase P.3 — Matching parcial CxP y retención → factura de proveedor
+## Fase siguiente — Auditoría Ronda 5: **Portal cliente, portal agente y notificaciones/emails**
 
-### Contexto
-Con las garantías ya blindadas (P.2), quedan dos hallazgos abiertos de Ronda 4:
+Áreas todavía sin pasar por auditoría profunda. Foco:
 
-- **Bug 22 (parcial):** el matching de `proveedor_facturas_conceptos` contra `conceptos_costo` funciona sólo si el monto vinculado cubre ≥99 % del concepto original (ver `conceptosCostoVinculables.ts`). Si la factura del proveedor llega dividida en varios documentos o con montos parciales, el `conceptos_costo` nunca se marca liquidado aunque la suma acumulada ya lo cubra.
-- **Bug 25 (P.3 del roadmap):** cuando una garantía pasa a `retenido`, hoy no se genera automáticamente la `proveedor_factura` correspondiente al monto retenido (queda como cuenta por pagar informal). Se documentó en P.2 como fuera de alcance.
+1. **Portal cliente** (`/portal/*`): RPCs `SECURITY DEFINER` de sólo lectura, exposición de datos entre orgs, filtros por `client_users`, RLS en documentos descargables, tokens de tracking externo.
+2. **Portal agente de carga** (`/agente/*`): aislamiento `agente_users`, permisos de subir/editar documentos, visibilidad de márgenes de venta (no debería ver).
+3. **Notificaciones y emails**: `notificaciones_cliente`, `notificaciones_internas`, `email_send_log`/`email_send_state`, `email_unsubscribe_tokens`, `suppressed_emails`. Verificar que no se filtren PII entre orgs, que unsubscribe tokens sean single-use, que `factura_recordatorios` respete `estado_vivo` de facturas (post-Fase 62), que edge functions de envío usen `wrapEdgeHandler` + `authenticateRequest` + rate-limit.
+4. **Tracking externo** (`tracking_externo`, `tracking_intentos`, `tracking_links`, `tracking_webhook_log`): tokens de acceso público, expiración, webhooks firmados.
 
-### Objetivo
-1. Que el matching parcial acumulado marque `conceptos_costo` como Liquidado cuando la **suma** de líneas vinculadas cruce el 99 %.
-2. Que al retener una garantía se materialice automáticamente una `proveedor_factura` (borrador) contra la naviera, ligada por bitácora.
+### Producto de esta auditoría (sin fixes todavía)
 
-### Cambios propuestos
+Un reporte con bugs numerados (Bug 26, 27, …), severidad (crítico/alto/medio/bajo), archivo/RPC involucrado, y evidencia (query SQL o fragmento de código). Luego el usuario aprueba las Fases Q/R/… de remediación como en rondas anteriores.
 
-**1) Migración `v13.301.89`**
+### Fuera de alcance de este turno
 
-- Vista/materialización `v_concepto_costo_cubierto(concepto_costo_id, monto_cubierto, moneda)` que suma `proveedor_facturas_conceptos.monto` por concepto (sólo facturas no canceladas).
-- Trigger `trg_pfc_recalcular_liquidacion` (AFTER INSERT/UPDATE/DELETE ON `proveedor_facturas_conceptos`) que, para cada `concepto_costo_id` afectado:
-  - Si `monto_cubierto ≥ monto * 0.99` → marca `estado_liquidacion = 'Pagado'`, setea `fecha_pago` (fecha de la factura más reciente) y `referencia_pago` (folio de la factura más reciente).
-  - Si baja del 99 % (por cancelación/borrado) → revierte a `Pendiente` limpiando `fecha_pago`/`referencia_pago`, siempre que no haya un pago manual (`pagos_proveedor`) que lo respalde.
-- RPC `public.materializar_factura_retencion_garantia(p_garantia_id uuid)` SECURITY DEFINER, `search_path = public`, gate `admin|admin_org|operador|super_admin`:
-  - Valida que la garantía esté en `retenido` y no tenga ya factura materializada.
-  - Inserta un `proveedor_facturas` borrador contra `naviera_id` con `monto_total = monto_deposito_usd`, moneda USD, `folio_interno` vía `siguiente_folio_proveedor`, `concepto = 'Retención garantía #<id>'`.
-  - Registra en `embarque_garantias_historial` (nueva columna `proveedor_factura_id uuid` nullable + índice).
-  - Códigos: `LC_GARANTIA_NO_RETENIDA`, `LC_GARANTIA_FACTURA_YA_MATERIALIZADA`, `LC_GARANTIA_SIN_NAVIERA`.
-- Trigger `trg_garantia_auto_materializar` (AFTER UPDATE OF estado) que dispara la RPC cuando `NEW.estado='retenido'` **si** existe naviera; si no, deja `notas` con marcador.
-- `REVOKE/GRANT` restrictivo estándar.
+- Escribir código o migraciones. Sólo lectura + reporte.
+- Rediseño de UI de portal.
+- Cambios en CRM (queda para Ronda 6 si aplica).
 
-**2) Cliente**
-- `src/features/cxp/services/conceptosCostoVinculables.ts`: eliminar el bloque de auto-liquidación en cliente (ya lo hace el trigger). Mantener sólo el `insert` de líneas.
-- `src/features/cxp/services/matchingErrors.ts` (nuevo): mapeo de 3 códigos `LC_GARANTIA_*` de la RPC de materialización.
-- `src/features/embarques/services/garantias.ts`: exponer `materializarFacturaRetencion(garantiaId)` (RPC). Usada por UI como acción manual de respaldo cuando falta naviera y se corrige.
-- Hook `useMaterializarRetencion` en `useGarantiasContenedor.ts` con toasts accionables.
-- `useGarantiasColumns.tsx`: cuando estado = `retenido` y existe `proveedor_factura_id`, mostrar link "Ver factura CxP"; si no, botón "Materializar CxP".
+### Detalles técnicos
 
-**3) Tests**
-- Guardrail `src/lib/__tests__/matching-parcial-fase-p3.test.ts` (≥10 asserts):
-  - Trigger `trg_pfc_recalcular_liquidacion` con AFTER INSERT/UPDATE/DELETE.
-  - Umbral 99 % expresado en SQL.
-  - RPC `materializar_factura_retencion_garantia` SECURITY DEFINER + `search_path=public`.
-  - Trigger `trg_garantia_auto_materializar` sobre `embarque_garantias_contenedor`.
-  - Columna `proveedor_factura_id` en `embarque_garantias_historial` + índice.
-  - 3 códigos `LC_GARANTIA_*` nuevos.
-  - `REVOKE PUBLIC` + `GRANT` restringido.
-- Unit tests `conceptosCostoVinculables.test.ts` extendido: verificar que ya no se hace `update` a `conceptos_costo` desde cliente.
-- Unit tests nuevos para `materializarFacturaRetencion` con mapeo de errores.
-
-**4) Bitácora**
-- `CHANGELOG.md` + `APP_VERSION = 13.301.89`.
-
-### Fuera de alcance (P.4)
-- Aplicación cruzada anticipo↔factura retención (si el proveedor devuelve la retención vía NC).
-- UI para desmaterializar (si la garantía vuelve a `liberado` por error humano — hoy es terminal en P.2).
-
-### Riesgos
-- Backfill: recalcular el estado de liquidación para `conceptos_costo` con líneas ya existentes se ejecuta como parte de la migración (`UPDATE ... WHERE id IN (SELECT concepto_costo_id ...)`).
-- Auto-materialización sin naviera: se degrada silenciosamente a nota en `historial` para no bloquear el cambio de estado.
-
-### Verificación
-1. `supabase--migration` con la migración `v13.301.89`.
-2. `bun run ci:fast` verde.
-3. Guardrails P.1, P.2 y P.3 pasan en conjunto.
+- Se revisarán todas las policies de las 12 tablas listadas arriba (via `information_schema` + `pg_policies`).
+- Se ejecutará `rg` sobre `src/features/portal-*`, `src/routes/portalRoutes.tsx`, `src/routes/agenteRoutes.tsx`, y `supabase/functions/{send-*,tracking-*,email-*}`.
+- Se cruzará con `mem://features/client-portal`, `mem://features/multi-tenant-architecture` y `mem://features/agente-portal` (si existe).
+- No se ejecutan cambios; sólo lectura.
