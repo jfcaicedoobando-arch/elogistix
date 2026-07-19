@@ -133,6 +133,3 @@ export async function cancelarNotaCredito(id: string): Promise<void> {
     entidadId: id,
   });
 }
-
-// Compatibilidad con test suite antigua que usa `run(...)` directamente.
-export { run as _runForTesting };
