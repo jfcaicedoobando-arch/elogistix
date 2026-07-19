@@ -9,8 +9,10 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import {
   fetchNotasCreditoFactura,
   crearNotaCreditoProveedor,
+  aprobarNotaCredito,
   aplicarNotaCredito,
   cancelarNotaCredito,
+  NcProveedorTransicionInvalidaError,
 } from "../proveedorNotasCredito";
 
 describe("proveedorNotasCredito service", () => {
