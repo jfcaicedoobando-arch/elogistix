@@ -2,9 +2,19 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { kpiIconChipClasses, type KpiTone } from "@/lib/ui/kpiTones";
 import type { LucideIcon } from "lucide-react";
 
-export type KpiVariant = "default" | "success" | "warning" | "info" | "destructive";
+export type KpiVariant =
+  | "default"
+  | "success"
+  | "warning"
+  | "info"
+  | "destructive"
+  | "accent"
+  | "secondary";
+
+export type KpiIconVariant = "inline" | "chip";
 
 interface KpiCardProps {
   label: string;
@@ -13,13 +23,21 @@ interface KpiCardProps {
   deltaVariant?: "positive" | "negative" | "neutral";
   icon?: LucideIcon;
   variant?: KpiVariant;
+  /** Presentación del icono. `inline` (default) = a la derecha, sin fondo.
+   *  `chip` = a la izquierda, con fondo pastel tintado según variant. */
+  iconVariant?: KpiIconVariant;
   sublabel?: string;
+  /** Tooltip nativo aplicado al valor. Útil cuando el valor viene en notación
+   *  compacta (p.ej. "USD 1.2M") y se quiere mostrar el valor completo. */
+  valueTooltip?: string;
   onClick?: () => void;
   /** Si se pasa, la card se envuelve en un `<Link to={...}>` (react-router). */
   to?: string;
   /** Renderiza un skeleton en lugar del valor mientras carga. */
   loading?: boolean;
   className?: string;
+  /** Contenido opcional que se renderiza debajo del sublabel. */
+  children?: React.ReactNode;
 }
 
 const variantStyles: Record<KpiVariant, string> = {
@@ -28,6 +46,8 @@ const variantStyles: Record<KpiVariant, string> = {
   warning: "border-warning/30 bg-warning/5",
   info: "border-info/30 bg-info/5",
   destructive: "border-destructive/30 bg-destructive/5",
+  accent: "",
+  secondary: "",
 };
 
 const iconStyles: Record<KpiVariant, string> = {
@@ -36,6 +56,18 @@ const iconStyles: Record<KpiVariant, string> = {
   warning: "text-warning",
   info: "text-info",
   destructive: "text-destructive",
+  accent: "text-kpi-accent",
+  secondary: "text-muted-foreground",
+};
+
+const variantToTone: Record<KpiVariant, KpiTone> = {
+  default: "secondary",
+  success: "success",
+  warning: "warning",
+  info: "info",
+  destructive: "danger",
+  accent: "accent",
+  secondary: "secondary",
 };
 
 /**
@@ -43,8 +75,19 @@ const iconStyles: Record<KpiVariant, string> = {
  *
  * Reemplaza las implementaciones locales de KpiCard/KpiTile en dashboards,
  * detalles y catálogos para unificar el design language.
+ *
+ * v13.302.3: agregado `iconVariant="chip"`, `valueTooltip`, `children` y
+ * variants `accent`/`secondary` para absorber el clon de `features/operaciones`.
  */
-function valueSize(valueStr: string) {
+function valueSize(valueStr: string, iconVariant: KpiIconVariant) {
+  // En modo chip el icono va a la izquierda y hay más aire para el número, así
+  // que subimos un escalón la tipografía adaptativa.
+  if (iconVariant === "chip") {
+    if (valueStr.length <= 8) return "text-3xl";
+    if (valueStr.length <= 13) return "text-2xl";
+    if (valueStr.length <= 18) return "text-xl";
+    return "text-lg";
+  }
   if (valueStr.length <= 8) return "text-2xl";
   if (valueStr.length <= 13) return "text-xl";
   return "text-lg";
@@ -66,18 +109,13 @@ interface KpiBodyProps {
   sublabel?: string;
   Icon?: LucideIcon;
   variant: KpiVariant;
+  iconVariant: KpiIconVariant;
+  valueTooltip?: string;
+  children?: React.ReactNode;
 }
 
-function KpiBody({
-  label,
-  value,
-  valueStr,
-  loading,
-  delta,
-  deltaVariant,
-  sublabel,
-  Icon,
-  variant,
+function KpiBodyInline({
+  label, value, valueStr, loading, delta, deltaVariant, sublabel, Icon, variant, valueTooltip, children,
 }: KpiBodyProps) {
   return (
     <CardContent className="p-4">
@@ -88,8 +126,8 @@ function KpiBody({
             <Skeleton className="h-7 w-20" />
           ) : (
             <p
-              className={cn(valueSize(valueStr), "font-semibold tabular-nums truncate")}
-              title={valueStr}
+              className={cn(valueSize(valueStr, "inline"), "font-semibold tabular-nums truncate")}
+              title={valueTooltip ?? valueStr}
             >
               {value}
             </p>
@@ -100,8 +138,57 @@ function KpiBody({
           {sublabel && !delta && (
             <p className="text-xs text-muted-foreground truncate">{sublabel}</p>
           )}
+          {children}
         </div>
         {Icon && <Icon className={cn("h-5 w-5 shrink-0", iconStyles[variant])} />}
+      </div>
+    </CardContent>
+  );
+}
+
+function KpiBodyChip({
+  label, value, valueStr, loading, delta, deltaVariant, sublabel, Icon, variant, valueTooltip, children,
+}: KpiBodyProps) {
+  const tone = variantToTone[variant];
+  return (
+    <CardContent className="p-3 sm:p-5 flex items-center gap-2 sm:gap-4">
+      {Icon && (
+        <div
+          aria-hidden="true"
+          className={cn(
+            "hidden sm:flex rounded-xl p-2.5 sm:p-3 shrink-0",
+            kpiIconChipClasses(tone),
+          )}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-muted-foreground truncate" title={label}>{label}</p>
+        {loading ? (
+          <Skeleton className="h-8 w-24 mt-1" />
+        ) : (
+          <>
+            <p
+              className={cn(
+                valueSize(valueStr, "chip"),
+                "font-bold text-foreground tabular-nums leading-tight truncate",
+              )}
+              title={valueTooltip ?? valueStr}
+            >
+              {value}
+            </p>
+            {delta && (
+              <p className={cn("text-xs tabular-nums mt-0.5", deltaClass(deltaVariant))}>{delta}</p>
+            )}
+            {sublabel && !delta && (
+              <p className="text-xs text-muted-foreground truncate mt-0.5" title={sublabel}>
+                {sublabel}
+              </p>
+            )}
+          </>
+        )}
+        {children}
       </div>
     </CardContent>
   );
@@ -114,14 +201,22 @@ export function KpiCard({
   deltaVariant = "neutral",
   icon: Icon,
   variant = "default",
+  iconVariant = "inline",
   sublabel,
+  valueTooltip,
   onClick,
   to,
   loading = false,
   className,
+  children,
 }: KpiCardProps) {
   const valueStr = String(value ?? "");
   const interactive = Boolean(onClick) && !to;
+
+  const bodyProps: KpiBodyProps = {
+    label, value, valueStr, loading, delta, deltaVariant, sublabel,
+    Icon, variant, iconVariant, valueTooltip, children,
+  };
 
   const card = (
     <Card
@@ -141,17 +236,7 @@ export function KpiCard({
         }
       }}
     >
-      <KpiBody
-        label={label}
-        value={value}
-        valueStr={valueStr}
-        loading={loading}
-        delta={delta}
-        deltaVariant={deltaVariant}
-        sublabel={sublabel}
-        Icon={Icon}
-        variant={variant}
-      />
+      {iconVariant === "chip" ? <KpiBodyChip {...bodyProps} /> : <KpiBodyInline {...bodyProps} />}
     </Card>
   );
 
@@ -167,4 +252,3 @@ export function KpiCard({
   }
   return card;
 }
-
