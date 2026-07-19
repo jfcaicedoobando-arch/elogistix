@@ -67,11 +67,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
-  // v13.171.0 — Guard: facturas en moneda extranjera requieren TC capturado
-  // (bloqueo también aplicado en UI vía checklist + banner). Defensa en profundidad.
+  // v13.171.0 / Fase I v13.301.80 — Guard: facturas en moneda extranjera requieren
+  // TC real capturado. Se rechaza NULL, ≤0 y TC == 1 exacto (que suele venir del
+  // borrador y saldría al SAT como CFDI subvaluado).
   const monedaFactura = factura.moneda ?? "MXN";
   const tcFactura = factura.tipo_cambio == null ? null : Number(factura.tipo_cambio);
-  if (monedaFactura !== "MXN" && (tcFactura == null || !Number.isFinite(tcFactura) || tcFactura <= 0)) {
+  const tcInvalido =
+    tcFactura == null || !Number.isFinite(tcFactura) || tcFactura <= 0 || tcFactura === 1;
+  if (monedaFactura !== "MXN" && tcInvalido) {
     return jsonResponse({
       error: "tipo_cambio_requerido",
       message: `Captura el tipo de cambio del día (DOF) antes de timbrar la factura en ${monedaFactura}.`,
