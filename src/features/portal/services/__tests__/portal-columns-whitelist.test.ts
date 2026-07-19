@@ -11,8 +11,8 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = path.resolve(__dirname, "../..");
-const readSrc = (rel: string) => fs.readFileSync(path.join(ROOT, "features/portal/services", rel), "utf8");
+const SVC_DIR = path.resolve(__dirname, "..");
+const readSrc = (rel: string) => fs.readFileSync(path.join(SVC_DIR, rel), "utf8");
 
 describe("Fase Q.1 — Portal cliente whitelist (v13.301.90)", () => {
   const columns = readSrc("columns.ts");
