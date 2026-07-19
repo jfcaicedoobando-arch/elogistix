@@ -35,7 +35,8 @@ function mapEstadoError(err: { message?: string | null } | null | undefined): Er
   const msg = err.message;
   if (
     msg.includes("LC_NC_PROV_TRANSICION_INVALIDA") ||
-    msg.includes("LC_NC_PROV_ESTADO_TERMINAL")
+    msg.includes("LC_NC_PROV_ESTADO_TERMINAL") ||
+    msg.includes("LC_NC_PROV_INSERT_ESTADO_INVALIDO")
   ) {
     const hintMatch = /HINT:\s*([^\n]+)/i.exec(msg);
     return new NcProveedorTransicionInvalidaError((hintMatch?.[1] ?? "").trim());
