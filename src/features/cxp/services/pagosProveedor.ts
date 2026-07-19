@@ -136,29 +136,14 @@ export async function eliminarPagoProveedor(id: string, facturaId: string, userI
 }
 
 /**
- * Recalcula el estado de la factura (Vigente/Pagada) en función de su saldo
- * según `v_proveedor_facturas_saldo`. No reabre facturas Canceladas/Borrador.
+ * Fase N (v13.301.85): el recálculo del estado de la factura vive en un
+ * trigger BD (`trg_pagos_proveedor_recalcular_estado` +
+ * `trg_notas_credito_prov_recalcular_estado`). Ver
+ * `_recalc_estado_proveedor_factura`. Se conserva `decidirEstadoFactura`
+ * como helper puro para UI, pero el cliente ya no escribe `estado`.
  */
-async function recalcularEstadoFactura(facturaId: string) {
-  const { data: saldoRow, error: e1 } = await supabase
-    .from("v_proveedor_facturas_saldo")
-    .select("saldo")
-    .eq("proveedor_factura_id", facturaId)
-    .maybeSingle();
-  if (e1) throw e1;
-  const { data: fact, error: e2 } = await supabase
-    .from("proveedor_facturas")
-    .select("estado")
-    .eq("id", facturaId)
-    .maybeSingle();
-  if (e2) throw e2;
-  if (!fact) return;
-  const saldo = Number(saldoRow?.saldo ?? 0);
-  const nuevoEstado = decidirEstadoFactura(
-    fact.estado as EstadoFacturaProveedor,
-    saldo,
-  );
-  if (nuevoEstado !== fact.estado) {
-    await supabase.from("proveedor_facturas").update({ estado: nuevoEstado }).eq("id", facturaId);
-  }
+async function recalcularEstadoFactura(_facturaId: string) {
+  // no-op: el trigger BD hace el recálculo de forma transaccional.
+  return;
 }
+
