@@ -34,6 +34,7 @@ function NcEstadoBadge({ estado }: { estado: string }) {
 export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, canEdit }: Props) {
   const { data: notas = [], isLoading } = useNotasCreditoFactura(facturaId);
   const aplicar = useAplicarNotaCredito(facturaId);
+  const aprobar = useAprobarNotaCredito(facturaId);
   const cancelar = useCancelarNotaCredito(facturaId);
   const [openNueva, setOpenNueva] = useState(false);
 
