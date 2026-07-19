@@ -76,7 +76,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
             const gi = getGlobalIndex(filas, moneda, idx);
 
             return (
-              <div key={idx} className="border-b border-slate-100 last:border-b-0 py-3 px-3 space-y-1">
+              <div key={idx} className="border-b border-border last:border-b-0 py-3 px-3 space-y-1">
                 <div className="flex items-center gap-2">
                   <div className="min-w-[220px] flex-1">
                     {/* Combobox estricto contra `catalogo_claves_sat` — mismo origen que el paso 3. */}

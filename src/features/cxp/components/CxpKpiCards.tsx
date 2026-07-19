@@ -1,37 +1,12 @@
 /**
  * Grid de KPIs para la página CxP. Extraído de Cxp.tsx para mantener el page < 200 líneas.
  */
-import { Card, CardContent } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
-function KPICard({
-  label, value, secondary, count, tone = "default",
-}: {
-  label: string; value: string; secondary?: string; count?: number;
-  tone?: "default" | "warn" | "danger";
-}) {
-  const toneCls = tone === "danger" ? "text-destructive"
-    : tone === "warn" ? "text-warning" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-          <span>{label}</span>
-          {count != null && (
-            <span className="text-2xs text-muted-foreground/70">
-              · {count} {count === 1 ? "factura" : "facturas"}
-            </span>
-          )}
-        </p>
-        <p className={cn("text-xl font-semibold tabular-nums leading-tight mt-1", toneCls)}>{value}</p>
-        {secondary && (
-          <p className={cn("text-xs tabular-nums leading-tight mt-0.5", toneCls, "opacity-80")}>{secondary}</p>
-        )}
-      </CardContent>
-    </Card>
-  );
+function countLabel(count: number): string {
+  return `· ${count} ${count === 1 ? "factura" : "facturas"}`;
 }
 
 export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] }) {
@@ -53,28 +28,25 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
     }
   }
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-5 gap-2">
-      <KPICard label="Por pagar MXN" value={formatCurrency(kpis.por_pagar_mxn, "MXN")} count={porPagarMxn} />
-      <KPICard label="Por pagar USD" value={formatCurrency(kpis.por_pagar_usd, "USD")} count={porPagarUsd} />
-      <KPICard
-        label="Vencido"
+    <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
+      <KpiCard label={`Por pagar MXN ${countLabel(porPagarMxn)}`} value={formatCurrency(kpis.por_pagar_mxn, "MXN")} />
+      <KpiCard label={`Por pagar USD ${countLabel(porPagarUsd)}`} value={formatCurrency(kpis.por_pagar_usd, "USD")} />
+      <KpiCard
+        label={`Vencido ${countLabel(vencidasN)}`}
         value={formatCurrency(kpis.vencido_mxn, "MXN")}
-        secondary={formatCurrency(kpis.vencido_usd, "USD")}
-        count={vencidasN}
-        tone="danger"
+        sublabel={formatCurrency(kpis.vencido_usd, "USD")}
+        variant="destructive"
       />
-      <KPICard
-        label="Por vencer 7 días"
+      <KpiCard
+        label={`Por vencer 7 días ${countLabel(porVencer7d)}`}
         value={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
-        secondary={formatCurrency(kpis.por_vencer_7d_usd, "USD")}
-        count={porVencer7d}
-        tone="warn"
+        sublabel={formatCurrency(kpis.por_vencer_7d_usd, "USD")}
+        variant="warning"
       />
-      <KPICard
-        label="Programado 7 días"
+      <KpiCard
+        label={`Programado 7 días ${countLabel(programadoN)}`}
         value={formatCurrency(programadoMxn, "MXN")}
-        secondary={formatCurrency(programadoUsd, "USD")}
-        count={programadoN}
+        sublabel={formatCurrency(programadoUsd, "USD")}
       />
     </div>
   );

@@ -10,6 +10,7 @@
 import { useMemo } from "react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -28,16 +29,6 @@ import type { EstadoComision, ComisionDevengada } from "@/features/comisiones/se
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 
-function KPICard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent density="tight">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-lg font-semibold tabular-nums">{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 const ESTADO_VALUES = ["todos", "Devengada", "Liquidada", "Cancelada"] as const;
 type EstadoUrl = typeof ESTADO_VALUES[number];
@@ -107,10 +98,10 @@ export default function Comisiones() {
         </TabsList>
 
         <TabsContent value="devengadas" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <KPICard label="Devengado del mes" value={formatCurrency(kpis.devengado_mes_mxn, "MXN")} />
-            <KPICard label="Pendiente de liquidar" value={formatCurrency(kpis.pendiente_liquidar_mxn, "MXN")} />
-            <KPICard label="Liquidado del mes" value={formatCurrency(kpis.liquidado_mes_mxn, "MXN")} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <KpiCard label="Devengado del mes" value={formatCurrency(kpis.devengado_mes_mxn, "MXN")} />
+            <KpiCard label="Pendiente de liquidar" value={formatCurrency(kpis.pendiente_liquidar_mxn, "MXN")} />
+            <KpiCard label="Liquidado del mes" value={formatCurrency(kpis.liquidado_mes_mxn, "MXN")} />
           </div>
 
           <UnifiedFiltersBar

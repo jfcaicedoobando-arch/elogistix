@@ -17,25 +17,7 @@ import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNue
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { PageContainer } from "@/components/shared/PageContainer";
-
-function KPICard({
-  label, value, icon, count,
-}: {
-  label: string; value: string | number; icon: React.ReactNode; count?: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <span className="text-muted-foreground">{icon}</span>
-          <span>{label}</span>
-          {count && <span className="text-2xs text-muted-foreground/70">· {count}</span>}
-        </p>
-        <p className="text-lg font-semibold tabular-nums">{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
+import { KpiCard } from "@/components/shared/KpiCard";
 
 // Mapeo entre ColumnDef.id de DataTable y los OrdenarPor del hook de filtros.
 const COL_TO_SORT: Record<string, OrdenarPor> = {
@@ -102,19 +84,19 @@ export default function CxpPorCapturar() {
 
 
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <KPICard
-          icon={<Ship className="h-3.5 w-3.5" />}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <KpiCard
+          icon={Ship}
           label="Embarques pendientes"
           value={data.length}
         />
-        <KPICard
-          icon={<Coins className="h-3.5 w-3.5" />}
+        <KpiCard
+          icon={Coins}
           label="Costo presupuestado"
           value={presupuestoLabel}
         />
-        <KPICard
-          icon={<FileStack className="h-3.5 w-3.5" />}
+        <KpiCard
+          icon={FileStack}
           label="Facturas capturadas"
           value={facturasCapturadas}
         />

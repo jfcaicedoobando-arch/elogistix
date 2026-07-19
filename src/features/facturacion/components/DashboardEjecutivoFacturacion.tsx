@@ -8,7 +8,7 @@
  * "Sin datos" cuando una serie es 0 en todo el rango.
  */
 import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { useDashboardEjecutivoFacturacion } from "@/features/facturacion/hooks/useDashboardEjecutivoFacturacion";
 import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
@@ -16,33 +16,6 @@ import { useCobranza } from "@/features/facturacion/hooks/useCobranza";
 import { useProformasListasCount } from "@/features/facturacion/hooks/useProformasListas";
 import { MiniSerie } from "./DashboardEjecutivoFacturacionMiniSerie";
 import { mesLabel } from "./DashboardEjecutivoFacturacionMiniSerie.helpers";
-
-type Tone = "default" | "success" | "warn" | "danger";
-
-function Kpi({ label, value, tone = "default", hint }: { label: string; value: string; tone?: Tone; hint?: string }) {
-  const cls =
-    tone === "danger" ? "text-destructive" :
-    tone === "warn" ? "text-warning" :
-    tone === "success" ? "text-success" :
-    "text-foreground";
-  const labelNode = hint ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex items-center gap-1 cursor-help">
-          {label}
-          <span aria-hidden className="opacity-60">ⓘ</span>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" className="max-w-[260px] text-xs">{hint}</TooltipContent>
-    </Tooltip>
-  ) : label;
-  return (
-    <div className="min-w-0 px-3 py-2">
-      <p className="text-label text-muted-foreground uppercase tracking-wide truncate">{labelNode}</p>
-      <p className={`text-lg font-semibold tabular-nums ${cls}`}>{value}</p>
-    </div>
-  );
-}
 
 interface FacturadoUi { label: string; tone: "warn" | "default"; hint: string }
 
@@ -76,60 +49,54 @@ export function DashboardEjecutivoFacturacion() {
   const listasTone: "warn" | "default" = proformasListas > 0 ? "warn" : "default";
 
   return (
-    <TooltipProvider delayDuration={150}>
-      <div className="space-y-2">
+    <div className="space-y-2">
+      {/* 5 KPIs ejecutivos con la card canónica del UI kit. */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+        <KpiCard
+          label="Listas para facturar"
+          value={proformasListas === 1 ? "1 proforma" : `${proformasListas} proformas`}
+          variant={listasTone === "warn" ? "warning" : "default"}
+          valueTooltip="Proformas aceptadas por el cliente y sin factura emitida — listas para timbrar. Se convierten desde la bandeja 'Proformas listas'."
+        />
+        <KpiCard
+          label={facturado.label}
+          value={formatCurrencyCompact(facturadoMes, "MXN")}
+          variant={facturado.tone === "warn" ? "warning" : "default"}
+          valueTooltip={facturado.hint}
+        />
+        <KpiCard label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} variant="success" />
+        <KpiCard label="Por cobrar" value={formatCurrencyCompact(porCobrar, "MXN")} />
+        <KpiCard
+          label={`Vencido (${cob.facturas_vencidas})`}
+          value={formatCurrencyCompact(vencido, "MXN")}
+          variant="destructive"
+        />
+      </div>
+
+      {tendencia.length > 0 && (
         <Card>
           <CardContent className="p-3">
-            {/* 5 KPIs ejecutivos alineados en el strip principal. */}
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-1 xl:gap-0 xl:divide-x xl:divide-border">
-              <Kpi
-                label="Listas para facturar"
-                value={proformasListas === 1 ? "1 proforma" : `${proformasListas} proformas`}
-                tone={listasTone}
-                hint="Proformas aceptadas por el cliente y sin factura emitida — listas para timbrar. Se convierten desde la bandeja 'Proformas listas'."
+            <p className="text-label text-muted-foreground uppercase tracking-wide mb-2">
+              Tendencia · Últimos 6 meses (MXN)
+            </p>
+            <div className="flex items-start gap-6">
+              <MiniSerie
+                titulo="Facturado"
+                data={facturadoArr}
+                meses={meses}
+                colorClass="bg-primary/70"
               />
-              <Kpi
-                label={facturado.label}
-                value={formatCurrencyCompact(facturadoMes, "MXN")}
-                tone={facturado.tone}
-                hint={facturado.hint}
-              />
-              <Kpi label="Cobrado mes" value={formatCurrencyCompact(cobradoMes, "MXN")} tone="success" />
-              <Kpi label="Por cobrar" value={formatCurrencyCompact(porCobrar, "MXN")} />
-              <Kpi
-                label={`Vencido (${cob.facturas_vencidas})`}
-                value={formatCurrencyCompact(vencido, "MXN")}
-                tone="danger"
+              <MiniSerie
+                titulo="Cobrado"
+                data={cobradoArr}
+                meses={meses}
+                colorClass="bg-success/70"
               />
             </div>
           </CardContent>
         </Card>
-
-        {tendencia.length > 0 && (
-          <Card>
-            <CardContent className="p-3">
-              <p className="text-label text-muted-foreground uppercase tracking-wide mb-2">
-                Tendencia · Últimos 6 meses (MXN)
-              </p>
-              <div className="flex items-start gap-6">
-                <MiniSerie
-                  titulo="Facturado"
-                  data={facturadoArr}
-                  meses={meses}
-                  colorClass="bg-primary/70"
-                />
-                <MiniSerie
-                  titulo="Cobrado"
-                  data={cobradoArr}
-                  meses={meses}
-                  colorClass="bg-success/70"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </TooltipProvider>
+      )}
+    </div>
   );
 }
 

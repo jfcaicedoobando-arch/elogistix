@@ -104,7 +104,7 @@ export function ArribosCard({ arribosEsteMes, isLoading, hideFinancials = false 
       <CardContent className="p-4">
         <div className="flex flex-col xl:flex-row xl:items-center gap-4">
           <div className="flex items-center gap-2 shrink-0">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-primary/80">
               <CalendarDays className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="text-sm font-semibold text-foreground">Arribos este mes</span>
