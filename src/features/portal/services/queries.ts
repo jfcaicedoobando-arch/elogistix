@@ -1,6 +1,4 @@
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { fromDb } from "@/lib/supabase/cast";
 import { unwrap, unwrapOr } from "@/lib/supabase/response";
 import {
   PORTAL_EMBARQUE_LIST_COLUMNS,
@@ -15,14 +13,14 @@ import {
 } from "./columns";
 import { FACTURA_ESTADOS_VIVOS } from "@/features/facturacion/domain/estadosFactura";
 
-// Schema reutilizable para joins anidados { nombre } | null — valida en runtime.
-const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
-
 // v13.56.3 — Límites defensivos en consultas del portal. Si un cliente acumula
 // más de 500 embarques/facturas o 200 eventos/documentos/pagos por embarque,
 // habrá que paginar; por ahora un techo evita queries sin tope desde el portal.
 const PORTAL_LIST_MAX = 500;
 const PORTAL_RELATED_MAX = 200;
+
+export { fetchPortalClientUsers, fetchPortalClienteName, fetchPortalOrgName } from "./identity";
+
 
 export async function fetchPortalEmbarques(clienteIds: string[]) {
   if (!clienteIds.length) return [];
