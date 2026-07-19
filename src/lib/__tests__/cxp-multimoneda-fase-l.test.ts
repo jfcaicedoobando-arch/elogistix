@@ -52,20 +52,19 @@ describe("Fase L — Multi-moneda CxP", () => {
 
   it("v_proveedor_facturas_saldo suma monto_en_moneda_factura (no `pp.monto`) y no clampa a 0", () => {
     const sql = readLatestContaining("v_proveedor_facturas_saldo");
-    // Extraer la última definición
-    const idx = sql.lastIndexOf("v_proveedor_facturas_saldo");
-    const chunk = sql.slice(idx, idx + 2000);
+    const idx = sql.lastIndexOf("CREATE OR REPLACE VIEW public.v_proveedor_facturas_saldo");
+    expect(idx, "no se encontró CREATE OR REPLACE VIEW").toBeGreaterThan(-1);
+    const chunk = sql.slice(idx, idx + 3000);
     expect(chunk).toMatch(/SUM\(pp\.monto_en_moneda_factura\)/);
-    // No debe quedar `SUM(pp.monto)` (moneda cruda)
-    expect(chunk).not.toMatch(/SUM\(pp\.monto\)/);
-    // Sin GREATEST(...,0) clamp
+    expect(chunk).not.toMatch(/SUM\(pp\.monto\)(?!_)/);
     expect(chunk).not.toMatch(/GREATEST\([^,]+,\s*0\)/);
   });
 
   it("check_no_sobrepago_proveedor compara en moneda de la factura", () => {
     const sql = readLatestContaining("check_no_sobrepago_proveedor");
-    const idx = sql.lastIndexOf("FUNCTION public.check_no_sobrepago_proveedor");
-    const chunk = sql.slice(idx, idx + 3000);
+    const idx = sql.lastIndexOf("CREATE OR REPLACE FUNCTION public.check_no_sobrepago_proveedor");
+    expect(idx, "no se encontró CREATE OR REPLACE FUNCTION").toBeGreaterThan(-1);
+    const chunk = sql.slice(idx, idx + 4000);
     expect(chunk).toMatch(/SUM\(monto_en_moneda_factura\)/);
     expect(chunk).toMatch(/NEW\.monto_en_moneda_factura/);
   });
