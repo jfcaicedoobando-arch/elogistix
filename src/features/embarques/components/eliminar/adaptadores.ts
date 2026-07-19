@@ -14,5 +14,7 @@ export function motivosADependencias(m: MotivosBloqueoEmbarque): EmbarqueDepende
     cxp: { count: m.cxp, facturas: [] },
     notasCredito: m.notas_credito_cxc + m.notas_credito_cxp,
     pagos: m.pagos_cxc + m.pagos_cxp,
+    proformas: m.proformas,
   };
 }
+
