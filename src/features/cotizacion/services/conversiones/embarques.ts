@@ -167,10 +167,20 @@ export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string)
   if (cot?.tipo_documento === "informativa") {
     throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
   }
+  // Fase R.6 (Bug 18): pre-check + mapeo del token `LC_TARIFA_REQUIERE_REVALIDACION`.
+  await assertTarifaSinCambios(cotizacionId);
   const { data, error } = await supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
     p_cotizacion_id: cotizacionId,
   });
-  if (error) throw error;
+  if (error) {
+    if (typeof error.message === "string" && /LC_TARIFA_REQUIERE_REVALIDACION/.test(error.message)) {
+      // La revalidación cambió entre el pre-check y la RPC — rehidratar para el modal.
+      const r = await revalidarTarifa(cotizacionId).catch(() => null);
+      if (r) throw new RevalidacionRequeridaError(r);
+    }
+    throw error;
+  }
   if (!data) throw new Error("La función no devolvió un embarque");
   return data as string;
+
 }
