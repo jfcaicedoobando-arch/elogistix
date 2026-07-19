@@ -1,56 +1,56 @@
-# Revisión Fase M + Plan Fase N
+# Fase O — Validaciones de cuadre y consistencia al aprobar CxP (Bug 23)
 
-## Revisión Fase M (v13.301.84)
+Fase N verificada en verde (14/14 tests). Continuamos con Bug 23: hoy `aprobar_factura_proveedor` sólo revisa rol y estado; permite aprobar facturas cuyos **conceptos no cuadran contra el total**, cuyo **embarque está cancelado**, o cuyo **UUID SAT no ha sido verificado**. Esto contamina reportes de rentabilidad y "hueco de facturación".
 
-Corrí los guardrails de Fases L y M juntos:
+## Objetivo
+Convertir la aprobación en una compuerta contable: sólo pasa si los datos son consistentes.
 
-- ✅ **Fase M** (`cerrar-factura-proveedor-rol-fase-m.test.ts`): 5/5 verdes. RPC exige rol, `LC_CERRAR_FACTURA_SIN_ROL` con `ERRCODE 42501`, bitácora con `rol_ejecutor`, `REVOKE/GRANT` correctos.
-- ⚠️ **Regresión en Fase L**: 1/5 falló. `cxp-multimoneda-fase-l.test.ts` línea 55 busca `CREATE OR REPLACE VIEW public.v_proveedor_facturas_saldo` en "la última migración que contiene `v_proveedor_facturas_saldo`", y la migración de Fase M ahora contiene ese texto (en el `SELECT saldo FROM public.v_proveedor_facturas_saldo`), pero no recrea la vista.
+## Cambios
 
-El bug es del test, no del código: `readLatestContaining` usa una substring demasiado permisiva. La vista sigue correcta en la migración de Fase L — la lógica multi-moneda no está rota.
+### 1. Base de datos (nueva migración `v13.301.86`)
 
-## Fix del guardrail (parte del entregable Fase N)
+**Función helper `public._cxp_validar_aprobacion(factura_id uuid)`** (SECURITY DEFINER, sólo lectura):
+- **Cuadre**: si la factura tiene ≥1 concepto en `proveedor_facturas_conceptos`, exige `|SUM(monto·cantidad) − subtotal| ≤ 0.01` en la misma moneda de la factura. Si `estado_captura = 'pendiente'` / sin conceptos, se rechaza con código `LC_CXP_SIN_CONCEPTOS` para forzar captura antes de aprobar.
+- **Embarque**: si `embarque_id IS NOT NULL`, valida que el embarque exista, no esté `Cancelado`, y `organization_id` coincida. Códigos: `LC_CXP_EMBARQUE_CANCELADO`, `LC_CXP_EMBARQUE_ORG_MISMATCH`, `LC_CXP_EMBARQUE_NO_EXISTE`.
+- **UUID SAT**: si `uuid_fiscal IS NOT NULL`, exige `uuid_verificado = true`. Código `LC_CXP_UUID_NO_VERIFICADO`.
+- Devuelve `void`; lanza `RAISE EXCEPTION` con los códigos anteriores como prefijo del mensaje.
 
-Cambiar el marker de línea 54 de `"v_proveedor_facturas_saldo"` a `"CREATE OR REPLACE VIEW public.v_proveedor_facturas_saldo"` (y análogamente el de `check_no_sobrepago_proveedor` a `"CREATE OR REPLACE FUNCTION public.check_no_sobrepago_proveedor"`) para que apunte a la migración que *define* el objeto, no a cualquiera que lo mencione.
+**Modificar `aprobar_factura_proveedor`**:
+- Justo después del check de estado (`v_row.estado_aprobacion <> 'pendiente'`) y **sólo cuando `p_aprobar = true`**, invoca `PERFORM public._cxp_validar_aprobacion(p_id)`.
+- Rechazo (`p_aprobar = false`) sigue sin restricciones — se puede rechazar aunque los datos no cuadren.
 
-## Plan Fase N — Bugs 21 y 22 (mover recálculo a la BD)
+**Grants**: `EXECUTE` de `_cxp_validar_aprobacion` sólo a `authenticated` y `service_role`; revocar de `PUBLIC` y `anon`.
 
-**Analogía**: hoy el semáforo de "Factura Pagada/Vigente" lo pinta el navegador después de registrar el pago. Si dos personas pagan al mismo tiempo, o si alguien llama a la BD desde otro cliente (SQL, script, edge function futura), el semáforo puede quedar en el color equivocado. Vamos a mover ese semáforo al motor de la base de datos, para que sea físicamente imposible que quede desincronizado.
+### 2. Cliente (`aprobacionFactura.ts`)
+- Extender `ERROR_RULES` con 4 nuevos códigos y mensajes en español mexicano:
+  - `LC_CXP_SIN_CONCEPTOS` → "Captura los conceptos de la factura antes de aprobar."
+  - `LC_CXP_DESCUADRE` → "Los conceptos no cuadran con el subtotal de la factura. Revisa la captura."
+  - `LC_CXP_EMBARQUE_CANCELADO` → "El embarque asociado está cancelado. No se puede aprobar esta factura."
+  - `LC_CXP_UUID_NO_VERIFICADO` → "Verifica el UUID en el SAT antes de aprobar."
+- Sin cambios de UI; los toasts existentes muestran `error.message`.
 
-### Bug 22 — Recálculo client-side de estado de factura de proveedor
+### 3. Tests
+- **Guardrail SQL** `src/lib/__tests__/cxp-aprobacion-consistencia-fase-o.test.ts` (~8 asserts):
+  1. `_cxp_validar_aprobacion` existe y es `SECURITY DEFINER`.
+  2. `aprobar_factura_proveedor` invoca `_cxp_validar_aprobacion` sólo si `p_aprobar`.
+  3. `EXECUTE` revocado de `PUBLIC` / `anon`.
+  4. Grant a `authenticated` y `service_role`.
+  5. Función revisa cuadre `subtotal` vs conceptos con tolerancia 0.01.
+  6. Función revisa embarque cancelado.
+  7. Función revisa `uuid_verificado` cuando hay `uuid_fiscal`.
+  8. Rechazo (`p_aprobar=false`) omite validación.
+- **Unit test** `aprobacionFactura.test.ts`: extender con casos de los 4 nuevos códigos → mensaje amigable correcto.
 
-Actualmente `recalcularEstadoFactura(facturaId)` en `pagosProveedor.ts` hace dos queries + un update tras cada `INSERT/UPDATE` de `pagos_proveedor`. Problemas:
-1. No es transaccional: si el cliente muere entre INSERT del pago y UPDATE del estado, la factura queda inconsistente.
-2. Cualquier código nuevo que inserte pagos (edge functions, RPCs futuras, scripts) tiene que replicar la lógica.
-3. Race conditions bajo concurrencia.
+### 4. Bitácora y CHANGELOG
+- Bump `APP_VERSION` a `13.301.86`.
+- Entrada en `CHANGELOG.md` describiendo Bug 23 remediado.
 
-**Fix**: crear trigger `AFTER INSERT/UPDATE/DELETE` en `pagos_proveedor` que recalcule `proveedor_facturas.estado` usando la misma regla (`saldo ≤ 0.01 → Pagada`, respeta `Cancelada`/`Borrador`).
+## Verificación
+```
+bun run ci:fast
+```
+Debe quedar todo verde y las 14 pruebas L+M+N seguir pasando junto con las nuevas de Fase O.
 
-### Bug 21 — Máquina de estado de NC en UI
-
-Las notas de crédito de proveedor (`proveedor_notas_credito`) impactan el saldo vía la vista `v_proveedor_facturas_saldo`, pero el estado de la factura no se recalcula cuando se aplica/cancela una NC — la UI depende de que el usuario vuelva a abrir la factura o que se registre otro pago. Consecuencia: una factura totalmente cubierta por NC puede seguir apareciendo "Vigente" hasta que se ejecute otra acción.
-
-**Fix**: mismo trigger, extendido a `proveedor_notas_credito` — cuando se inserta/actualiza/elimina una NC aplicada a una factura, recalcula el estado de la factura afectada.
-
-### Entregables Fase N (v13.301.85)
-
-1. **Migración** con:
-   - `public.tg_recalcular_estado_factura_proveedor()` (SECURITY DEFINER, search_path=public) — lee saldo desde `v_proveedor_facturas_saldo`, respeta `Cancelada`/`Borrador`, usa la misma tolerancia 0.01, hace `UPDATE ... WHERE estado IS DISTINCT FROM nuevo` para evitar loops.
-   - Trigger `AFTER INSERT/UPDATE OF monto,monto_en_moneda_factura,deleted_at/DELETE` en `pagos_proveedor`.
-   - Trigger `AFTER INSERT/UPDATE/DELETE` en `proveedor_notas_credito` (columnas relevantes: `proveedor_factura_id`, `estado`, `monto`).
-   - Backfill: `UPDATE proveedor_facturas SET estado = ...` para reconciliar el universo actual (cubre facturas cuya NC ya las liquidó pero seguían "Vigente").
-
-2. **Cliente**: retirar la llamada a `recalcularEstadoFactura` de `pagosProveedor.ts` (crear/eliminar pago). Mantener `decidirEstadoFactura` como pura para reuso en cálculos de UI, pero marcarla `@deprecated` para escrituras. El servicio ya no ejecuta el UPDATE del estado — confía en el trigger.
-
-3. **Guardrail tests**:
-   - `cxp-recalculo-estado-fase-n.test.ts` — asserts sobre la migración: existen ambos triggers, la función respeta `Cancelada`/`Borrador`, usa tolerancia 0.01, GRANT/REVOKE correcto.
-   - Fix del test de Fase L (marker estricto para View/Function definitions).
-
-4. **CHANGELOG** con analogía y detalles técnicos.
-5. **APP_VERSION** → `13.301.85`.
-
-## Detalles técnicos
-
-- Tratamiento defensivo del backfill: `UPDATE proveedor_facturas pf SET estado = 'Pagada' FROM v_proveedor_facturas_saldo v WHERE v.proveedor_factura_id = pf.id AND pf.estado = 'Vigente' AND v.saldo <= 0.01;` y análogo para el caso inverso (una NC anulada podría reabrir un saldo, pero **no** reabriremos facturas ya Pagadas manualmente si tienen pago real — sólo la trigger fresh maneja transacciones futuras; el backfill sólo mueve `Vigente → Pagada`, nunca al revés, para no sorprender al usuario).
-- La trigger es `SECURITY DEFINER` porque `pagos_proveedor` y `proveedor_notas_credito` los inserta el usuario final (RLS activa) pero necesita `UPDATE` sobre `proveedor_facturas` sin depender de la política del usuario que lo disparó.
-- No tocaré Fase L: el bug era del test, no de la migración.
+## Fuera de alcance
+- Backfill de facturas ya `aprobada` con datos inconsistentes → se reporta pero no se re-abre automáticamente (evitar efectos colaterales en reportes históricos).
+- Cuadre a nivel `total` incluyendo IVA/IEPS → se hará en Fase P junto con matching parcial y anticipos.
