@@ -3,6 +3,12 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.2] - 2026-07-19
+- **Ola 8 · Auditoría UI 1080p — Sprint 2, Ola 2 (KpiCard PnL + test wide)**:
+  - Consolidados los 2 consumidores de `features/embarques/components/pnl/KpiCard.tsx` al canónico `@/components/shared/KpiCard` (rename 1:1 de `tone` → `variant`). Se elimina el clon local.
+  - Test de regresión en `primitives.test.tsx`: verifica que `PageContainer width="wide"` renderiza `max-w-[1720px]` y no `max-w-screen-2xl`.
+  - Analogía: teníamos dos "tarjetas de resumen" con la misma cara pero cableado distinto por dentro. Ahora todas las que están en el detalle de embarque usan el mismo componente compartido; si mañana cambiamos el estilo de las KPI, se actualiza en un solo lugar.
+
 ## [13.302.1] - 2026-07-19
 - **Ola 8 · Auditoría UI 1080p — Sprint 2, Ola 1 (ancho de tablas densas)**:
   - `PageContainer` acepta nuevo prop `width: "default" | "wide"`. `wide` sube el tope a `max-w-[1720px]` (vs `max-w-screen-2xl` = 1536px) para listados con muchas columnas fijas + acciones.
