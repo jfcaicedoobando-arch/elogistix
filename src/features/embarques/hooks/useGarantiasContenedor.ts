@@ -21,7 +21,8 @@ export function useUpdateGarantia(embarqueId: string | undefined) {
       toast.success("Garantía actualizada");
     },
     onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : "Error al actualizar";
+      // Fase P.2 — el service ya devuelve GarantiaError con mensaje en español mexicano.
+      const msg = e instanceof Error ? e.message : "Error al actualizar la garantía";
       notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEGARANTIASCONTENEDOR_1" });
     },
   });

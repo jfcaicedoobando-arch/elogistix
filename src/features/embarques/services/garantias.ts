@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { EstadoGarantia, GarantiaContenedor } from "../types/garantia";
+import { mapApiError } from "./garantiasErrors";
 
 const GARANTIA_COLS =
   "id, embarque_id, embarque_contenedor_id, naviera_id, monto_deposito_usd, tiene_carta_garantia, estado, fecha_deposito, fecha_liberacion, fecha_limite_devolucion, referencia_deposito, notas";
@@ -23,11 +24,25 @@ export interface UpdateGarantiaInput {
   notas?: string | null;
 }
 
+/**
+ * Actualiza una garantía a través de la RPC `set_garantia_estado` (Fase P.2).
+ * El servidor valida rol, transición, congelamiento de monto y fechas requeridas.
+ */
 export async function updateGarantia(input: UpdateGarantiaInput): Promise<void> {
-  const { id, ...rest } = input;
-  const { error } = await supabase
-    .from("embarque_garantias_contenedor")
-    .update(rest)
-    .eq("id", id);
-  if (error) throw error;
+  // SAFE-CAST: el tipo generado no incluye aún la RPC nueva; el contrato está fijado por la migración v13.301.88.
+  const rpc = supabase.rpc as unknown as (
+    name: "set_garantia_estado",
+    args: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: { message?: string; code?: string } | null }>;
+
+  const { error } = await rpc("set_garantia_estado", {
+    p_id: input.id,
+    p_estado: input.estado ?? null,
+    p_fecha_deposito: input.fecha_deposito ?? null,
+    p_fecha_liberacion: input.fecha_liberacion ?? null,
+    p_monto: input.monto_deposito_usd ?? null,
+    p_referencia: input.referencia_deposito ?? null,
+    p_notas: input.notas ?? null,
+  });
+  if (error) throw mapApiError(error);
 }
