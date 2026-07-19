@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import type { FilaPnlContenedor } from "@/features/embarques/services/pnlPorContenedor";
-import { KpiCard } from "../pnl/KpiCard";
+import { KpiCard } from "@/components/shared/KpiCard";
 
 interface TablaProps {
   moneda: string;
@@ -101,12 +101,12 @@ export function TablaPorMoneda({ moneda, filas }: TablaProps) {
           <KpiCard
             label="Utilidad"
             value={fmt(utilidad)}
-            tone={utilidad >= 0 ? "success" : "destructive"}
+            variant={utilidad >= 0 ? "success" : "destructive"}
           />
           <KpiCard
             label="Margen"
             value={pct(margen)}
-            tone={margen < 15 ? "warning" : "success"}
+            variant={margen < 15 ? "warning" : "success"}
           />
         </div>
 

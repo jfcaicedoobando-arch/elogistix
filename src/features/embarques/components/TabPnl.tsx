@@ -11,7 +11,7 @@ import { AlertCircle } from "lucide-react";
 import { fmtPnl, pctPnl, deltaPnl } from "@/lib/formatters/pnl";
 import { usePnlFinanciero } from "@/features/embarques/hooks/usePnlFinanciero";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
-import { KpiCard } from "./pnl/KpiCard";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { PnlComparativaTable } from "./pnl/PnlComparativaTable";
 import { PnlProveedoresTable } from "./pnl/PnlProveedoresTable";
 
@@ -72,25 +72,25 @@ export function TabPnl({ embarqueId }: Props) {
           label="Venta real"
           value={fmtPnl(ventaReal)}
           delta={`Presup. ${fmtPnl(ventaPresup)} · Δ ${fmtPnl(dVenta.abs)}`}
-          tone={ventaReal >= ventaPresup ? "success" : "warning"}
+          variant={ventaReal >= ventaPresup ? "success" : "warning"}
         />
         <KpiCard
           label="Costo real"
           value={fmtPnl(costoReal)}
           delta={`Presup. ${fmtPnl(costoPresup)} · Δ ${fmtPnl(dCosto.abs)}`}
-          tone={alertaSobrecosto ? "destructive" : "default"}
+          variant={alertaSobrecosto ? "destructive" : "default"}
         />
         <KpiCard
           label="Utilidad real"
           value={fmtPnl(utilidadReal)}
           delta={`Presup. ${fmtPnl(utilidadPresup)} · Δ ${fmtPnl(dUtilidad.abs)}`}
-          tone={utilidadReal >= utilidadPresup ? "success" : "destructive"}
+          variant={utilidadReal >= utilidadPresup ? "success" : "destructive"}
         />
         <KpiCard
           label="Margen real"
           value={pctPnl(margenReal)}
           delta={`Presup. ${pctPnl(margenPresup)}`}
-          tone={
+          variant={
             utilidadReal < 0 || margenReal < 0
               ? "destructive"
               : margenReal < 15

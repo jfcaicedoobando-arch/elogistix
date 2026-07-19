@@ -1,59 +1,39 @@
-# ¿Tiene sentido la auditoría? Sí, en gran medida.
+## Revisión Sprint 2 · Ola 1 (`v13.302.1`)
 
-Verifiqué los números clave contra el código actual y coinciden: 129 usos de `text-[11px]`, 31 de `text-[10px]`, el token `text-2xs` ya existe pero no se adoptó, `PageContainer` fija `max-w-screen-2xl`, `KpiCard` canónico existe en `src/components/shared/`, y hay ~9 literales `violet-/amber-` en el clúster de cotización. Los hallazgos son reales y accionables.
+- ✅ Lint 0 warnings, sin regresiones de tipos.
+- ✅ 6 páginas migradas a `width="wide"` (Facturación + 5 de Compras).
+- ⚠️ **Falta test** que verifique que `width="wide"` renderiza `max-w-[1720px]` (el test actual sólo cubre default + `noSpacing`).
+- ✅ No detecté bugs: el prop es aditivo, default preservado, no toca UI de páginas normales.
 
-**Matices antes de aplicar todo a ciegas:**
+## Sprint 2 · Ola 2 — Unificación KpiCard (pnl) + test faltante
 
-- **§1.1 (ancho 1920px):** subir el default de `PageContainer` a `max-w-[1600px]` cambia TODAS las páginas. Riesgoso. Mejor opción B: dejar el default y pasar `className="max-w-none xl:max-w-[1760px]"` sólo en las rutas de tablas densas (Facturación, Cobranza, CxP). Decisión producto.
-- **§3.1 (barrido `sed` masivo):** los reemplazos regex son correctos pero tocan ~165 archivos en un solo commit. Prefiero hacerlo por carpetas (facturación, embarques, marketing, resto) para que el diff sea revisable y no rompa tests visuales.
-- **§4.1 (migrar 14 clones a `KpiCard`):** cambia tipografía (fija → adaptativa) y padding. Debe validarse visualmente por módulo. Sprint separado.
-- **§3.2 (colores cotización):** el mapeo `amber → warning`, `violet → primary` asume equivalencia semántica que hay que confirmar caso por caso (a veces `violet` era decorativo, no "acción principal").
-- **NO tocar** lo que la auditoría marca como sano: modales, botones, `estadoConfig`, inline styles en `src/pdf/` (react-pdf los exige).
+**Alcance intencionalmente pequeño y seguro.** Dejamos `operaciones/components/KpiCard.tsx` para una ola posterior porque tiene otra API (Spanish: `titulo/valor/icono/color`, chip de ícono, 5 consumidores) y merece su propia migración con matriz de aliases de color.
 
----
+### 1. Test de regresión `PageContainer width="wide"`
+Añadir un caso en `src/components/shared/__tests__/primitives.test.tsx` que asegure que:
+- `width="wide"` → clase `max-w-[1720px]` presente, `max-w-screen-2xl` ausente.
+- Sin prop → sigue en `max-w-screen-2xl` (guarda de default).
 
-## Plan de aplicación (2 sprints)
+### 2. Consolidar `features/embarques/components/pnl/KpiCard.tsx` → canónico
+Sólo 2 consumidores:
+- `src/features/embarques/components/TabPnl.tsx`
+- `src/features/embarques/components/_sections/TablaPnlPorMoneda.tsx`
 
-### Sprint 1 — Tipografía y color (alto impacto / bajo riesgo)
+Ambos usan la API `{ label, value, delta?, tone? }` con `tone: default|success|destructive|warning`. El canónico usa `variant` con los mismos nombres semánticos + `success/destructive/warning`. El mapeo es 1:1 (sólo cambia el nombre del prop `tone`→`variant`). Migrar callers, borrar el clon local, y añadir un test smoke que rendericé ambos consumidores para prevenir regresión.
 
-1. **Token faltante** en `tailwind.config.ts`:
-   ```ts
-   label: ["0.6875rem", { lineHeight: "1rem" }]  // 11px
-   ```
-   y clase utilitaria `.text-overline` en `src/index.css`.
+### 3. Bump + changelog
+`APP_VERSION` → `13.302.2` y bullet en `CHANGELOG.md` con analogía para principiante.
 
-2. **Barrido tipográfico por carpeta** (4 PRs pequeños, no uno gigante):
-   - `src/features/facturacion/**`
-   - `src/features/embarques/**` y `src/features/cxp/**`
-   - `src/features/marketing/**`
-   - resto de `src/**`
+### Detalles técnicos
+- El clon `pnl/KpiCard` renderiza `CardHeader` + `CardContent` (padding default), el canónico renderiza sólo `CardContent p-4`. Visualmente el canónico queda un poco más compacto — coherente con Sprint 1 (densidad). Si el usuario prefiere respetar el look actual con header, se puede pasar `sublabel` en el canónico, pero recomiendo aceptar la densidad del canónico.
+- Rangos de tono `default|success|destructive|warning` existen en el canónico como `variant`. No hay `info` en el clon, no hay pérdida.
+- Riesgo bajo: sólo 2 archivos migran; test smoke previene bug.
 
-   Reemplazos: `text-[11px]→text-label`, `text-[10px]→text-2xs`, `text-[9px]→text-3xs`, `text-[8px]→text-3xs`.
+### Qué NO se toca en esta ola
+- `operaciones/components/KpiCard.tsx` (5 consumidores, API distinta, requiere plan aparte).
+- Padding unificado de `Card` (>80 archivos con `<Card`, requiere criterio consensuado tabla/detalle).
+- Ancho de página en otras rutas fuera de Facturación/Compras.
 
-3. **Colores del clúster cotización P&L** (`ResumenPL.tsx`, `TablaCostosLocal.tsx`, `SeccionCostosInternosPLDetalle.tsx`, `SeccionCostosInternosPLLocal.tsx`, `WizardTotalsBar.tsx`): revisar significado y migrar a `--primary`, `--info`, `--warning`, `--success` (no automático).
-
-4. Actualizar `CHANGELOG.md` + bump `APP_VERSION`.
-
-### Sprint 2 — Estructura y componentes
-
-5. **Ancho de páginas densas:** override `max-w-none xl:max-w-[1760px]` en las rutas de Facturación / Cobranza / CxP (no cambiar el default global).
-6. **Constantes de columnas** en `src/lib/ui/tableColumns.ts` (`COL.folio/fecha/moneda/monto/acciones`) y adopción en tablas densas.
-7. **Convención de padding:** `p-4` en tablas/KPI strip, `p-6` en formularios/detalle. Eliminar los 3 `p-5`, revisar los 21 `p-3`.
-8. **Migrar los ~14 clones de KPI** a `KpiCard` canónica, un módulo por PR (empezar por `CxpKpiCards` que es el más citado), validando visualmente.
-9. Bump `APP_VERSION` + `CHANGELOG.md` por sprint.
-
-## Detalles técnicos
-
-- Los `sed` propuestos usan `\b` (word boundary); seguros para no tocar `text-[110px]` inexistentes, pero verificaré `bun run typecheck` + `bun run lint` tras cada barrido.
-- El token `text-2xs` ya existe (`0.625rem`); solo falta `label` para `text-[11px]`.
-- `PageContainer` ya acepta `className`, no requiere API nueva.
-- Los `text-[10px]×8` de `LandingHero` entran al barrido (la landing tiene paleta propia pero no debe romper el sistema tipográfico).
-- No hay migraciones de BD ni cambios de lógica de negocio en ninguno de los dos sprints.
-
-## Fuera de alcance / rechazado
-
-- Subir el default de `PageContainer` a 1600px globalmente (riesgo alto, poco beneficio en páginas de formulario).
-- Un único PR gigante con los 165 reemplazos tipográficos.
-- Tocar `src/pdf/` (react-pdf exige inline styles).
-
-¿Arranco por el Sprint 1 completo, o prefieres que primero haga sólo el paso 1+2 (token + barrido) y validamos antes de tocar cotización?
+### Verificación final
+- `bun run lint -- --max-warnings 0`.
+- `bunx vitest run src/components/shared/__tests__/primitives.test.tsx src/features/embarques/components/TabPnl` (o el path del smoke nuevo).
