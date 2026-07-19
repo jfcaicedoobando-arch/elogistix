@@ -59,17 +59,16 @@ describe("Fase P.2 — Garantías re-evaluables (v13.301.88)", () => {
     expect(sql.toLowerCase()).toContain("lc_garantia_monto_requerido");
   });
 
-  it("crea la tabla embarque_garantias_historial con grants, RLS y policies scoped por org", () => {
+  it("crea la tabla embarque_garantias_historial append-only con grants, RLS y policies scoped por org", () => {
     expect(sql).toMatch(/CREATE TABLE IF NOT EXISTS public\.embarque_garantias_historial/);
-    expect(sql).toMatch(
-      /GRANT SELECT, INSERT, UPDATE, DELETE ON public\.embarque_garantias_historial TO authenticated/,
-    );
+    expect(sql).toMatch(/GRANT SELECT ON public\.embarque_garantias_historial TO authenticated/);
     expect(sql).toMatch(/GRANT ALL ON public\.embarque_garantias_historial TO service_role/);
     expect(sql).toMatch(
       /ALTER TABLE public\.embarque_garantias_historial ENABLE ROW LEVEL SECURITY/,
     );
-    expect(sql).toMatch(/CREATE POLICY "[^"]*embarque_garantias_historial[^"]*"/i);
+    expect(sql).toMatch(/CREATE POLICY "[^"]*"[\s\S]*?ON public\.embarque_garantias_historial/i);
   });
+
 
   it("instala trigger AFTER que registra el historial", () => {
     expect(sql).toMatch(
