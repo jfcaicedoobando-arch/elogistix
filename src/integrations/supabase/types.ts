@@ -6379,6 +6379,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _recalc_estado_proveedor_factura: {
+        Args: { p_factura_id: string }
+        Returns: undefined
+      }
       aceptar_cotizacion_version: {
         Args: { p_cotizacion_id: string }
         Returns: Json
