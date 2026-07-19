@@ -141,11 +141,11 @@ export async function registrarAnticipo(input: RegistrarAnticipoInput): Promise<
     p_monto: input.monto,
     p_moneda: input.moneda,
     p_fecha_anticipo: input.fechaAnticipo,
-    p_tipo_cambio_usd: input.tipoCambioUsd ?? null,
-    p_metodo_pago: input.metodoPago ?? null,
-    p_referencia: input.referencia ?? null,
-    p_cuenta_bancaria_id: input.cuentaBancariaId ?? null,
-    p_notas: input.notas ?? null,
+    p_tipo_cambio_usd: input.tipoCambioUsd ?? undefined,
+    p_metodo_pago: input.metodoPago ?? undefined,
+    p_referencia: input.referencia ?? undefined,
+    p_cuenta_bancaria_id: input.cuentaBancariaId ?? undefined,
+    p_notas: input.notas ?? undefined,
   });
   if (error) throw mapApiError(error);
   // SAFE-CAST: la RPC retorna el row completo tipado en el server.
