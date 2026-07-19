@@ -3,6 +3,12 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.1] - 2026-07-19
+- **Ola 8 · Auditoría UI 1080p — Sprint 2, Ola 1 (ancho de tablas densas)**:
+  - `PageContainer` acepta nuevo prop `width: "default" | "wide"`. `wide` sube el tope a `max-w-[1720px]` (vs `max-w-screen-2xl` = 1536px) para listados con muchas columnas fijas + acciones.
+  - Aplicado a: `Facturacion.tsx`, `EstadoCuentaInterno.tsx`, `ComprasPorAprobar.tsx`, `ComprasPagos.tsx`, `ComprasConciliacion.tsx`, `ComprasNotasCredito.tsx`. Resto de páginas sigue en `default` (sin regresión visual).
+  - Analogía: era como leer un Excel en una hoja tamaño carta cuando en realidad cabía en tabloide; ahora las páginas densas usan tabloide y las normales siguen en carta.
+
 ## [13.302.0] - 2026-07-19
 - **Ola 8 · Auditoría UI 1080p — Sprint 1 (tipografía + color cotización)**:
   - Nuevo token tipográfico `text-label` (0.6875rem / 11px) en `tailwind.config.ts` y utilidad `.text-overline` en `src/index.css` (patrón `text-label uppercase tracking-wide text-muted-foreground`).
