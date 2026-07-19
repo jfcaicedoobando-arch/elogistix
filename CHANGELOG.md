@@ -3,6 +3,14 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.4] - 2026-07-19
+- **CI green-up post Ola 3**:
+  - `KpiCard.tsx` (255 líneas) dividido en `KpiCard.tsx` (102) + `KpiCardBody.tsx` + `kpiCard.tokens.ts` para respetar Power-of-10 (≤200 líneas) y evitar warnings de `react-refresh/only-export-components`.
+  - `no-legacy-color-literals` allowlist: eliminadas 4 entradas obsoletas de `cotizacion/*` que Sprint 1 ya tokenizó.
+  - `eliminar-embarque-bloqueado-fiscal.test.ts`: extractor por regex sobre TODAS las migraciones (evita contaminación con `restaurar_embarque` y captura GRANT/COMMENT fragmentados).
+  - Renombrado título duplicado en `revertir-proforma-borrador-vivo.test.ts` para pasar `test-hygiene:duplicate-title`.
+  - Suite completa: ✅ typecheck, ✅ lint (0 warnings), ✅ 2596 tests.
+
 ## [13.302.3] - 2026-07-19
 - **Ola 8 · Auditoría UI 1080p — Sprint 2, Ola 3 (KpiCard operaciones)**:
   - `@/components/shared/KpiCard` ahora acepta `iconVariant="chip"` (icono con chip tintado a la izquierda), `valueTooltip` (tooltip nativo sobre el valor), `children` (slot debajo del cuerpo) y variants `accent`/`secondary`. Los defaults preservan el look inline previo, así que los ~9 consumidores existentes no cambian visualmente.
