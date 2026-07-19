@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, FileWarning } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { EmbarquesPendientesAdminCard } from "@/features/dashboard/components/EmbarquesPendientesAdminCard";
 
 interface Props {
@@ -41,8 +41,16 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-2 text-center">
                 <Tile label="Embarques" value={String(huecoTotal)} />
-                <Tile label="MXN" value={formatCurrency(huecoMxn, "MXN")} />
-                <Tile label="USD" value={formatCurrency(huecoUsd, "USD")} />
+                <Tile
+                  label="MXN"
+                  value={formatCurrencyCompact(huecoMxn, "MXN")}
+                  fullValue={formatCurrency(huecoMxn, "MXN")}
+                />
+                <Tile
+                  label="USD"
+                  value={formatCurrencyCompact(huecoUsd, "USD")}
+                  fullValue={formatCurrency(huecoUsd, "USD")}
+                />
               </div>
               <p className="text-xs text-muted-foreground text-center">
                 Embarques con conceptos de venta pendientes de facturar.
@@ -55,11 +63,13 @@ export function CierreAdminBlock({ huecoTotal, huecoUsd, huecoMxn, loading }: Pr
   );
 }
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Tile({ label, value, fullValue }: { label: string; value: string; fullValue?: string }) {
   return (
-    <div className="rounded-md border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-base font-semibold tabular-nums truncate">{value}</p>
+    <div className="rounded-md border p-3 min-w-0">
+      <p className="text-xs text-muted-foreground truncate">{label}</p>
+      <p className="text-base font-semibold tabular-nums truncate" title={fullValue ?? value}>
+        {value}
+      </p>
     </div>
   );
 }

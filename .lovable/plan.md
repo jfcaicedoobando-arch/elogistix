@@ -1,57 +1,47 @@
+## Veredicto
 
-## Veredicto de la auditoría
-
-La auditoría es **sólida y coherente** con el trabajo de Ola 3/4. Cierra exactamente los dos pendientes que quedaban abiertos:
-
-1. **9 clones de KPI card** migrados al `KpiCard` canónico (elimina ~190 líneas duplicadas, uniformiza `gap-3` y las semánticas `warn→warning`, `bad→destructive`, `sub→sublabel`, hints→`valueTooltip`).
-2. **3 colores hardcodeados** reales reemplazados por tokens (`slate-100→border`, `blue-500→info`, `cyan-500/600→primary`).
-3. **Justificaciones aceptables**:
-   - `LogoPreview.tsx`: sujeto de prueba del logo sobre lienzos fijos — no tocar.
-   - `DialogDetallePagosProveedor.parts.tsx → Kpi`: es un stat-cell dentro de diálogo, no un KPI de página — no migrar.
-
-Diseño y convenciones alineados con lo establecido en Sprint 2 (Ola 3 enriqueció `KpiCard` con `iconVariant="chip"`, `valueTooltip`, `sublabel`, variants `accent`/`secondary`). No detecto conflictos con memoria del proyecto ni con el design system.
+La auditoría es **correcta y aplicable**. Los 7 hallazgos son reales y todos comparten una sola raíz: montos completos en celdas estrechas (~66–115 px) a 402 px de ancho. La solución propuesta (`MoneyCell` canónico + formato compacto con `title`) es consistente con lo que ya hicimos en Sprint 2 (KpiCard adaptativa, `formatCurrencyCompact`, tokens semánticos). No detecto conflictos con memoria del proyecto.
 
 ## Plan de aplicación
 
-### 1. Aplicar el patch
-Aplicar `cierre_parciales_ui.patch` tal cual. Toca 13 archivos (+137 / −327):
+### 1. Nuevo componente canónico
+- `src/components/shared/MoneyCell.tsx` — celda `min-w-0` + `truncate` + `title` con `fullValue`, tipografía `text-sm sm:text-base`, variante `highlight` para totales. Cierra los bugs 1.1–1.4 de raíz.
 
-- **Migraciones KPI (9)**: `bandejas/CxpPorCapturar`, `comisiones/Comisiones`, `compras/ComprasPorAprobar` (+ borra `ComprasPorAprobar.kpi.tsx`), `costeo/TarifasKpis`, `cxp/CxpKpiCards`, `facturacion/DashboardEjecutivoFacturacion`, `presupuesto/TabVsReal`, `proveedor/ProveedorSaludTab`, `tesoreria/TesoreriaFlujo`.
-- **Colores (3)**: `cotizacion/TablaCostosLocal.tsx`, `lib/ui/estadoConfig.ts`, `dashboard/statusCards/ArribosCard.tsx`.
+### 2. Fixes 🔴 críticos
+- **1.1** `dashboard/finance/components/CobranzaBlock.tsx` → montos aging con `formatCurrencyCompact` + `title=formatCurrency`.
+- **1.2** `facturacion/components/detalle/FacturaTotalesCard.tsx` → migrar a `MoneyCell`.
+- **1.3** `portal/components/factura/PortalFacturaResumenCard.tsx` → migrar a `MoneyCell` (portal = pantalla más usada en móvil).
 
-### 2. Verificación tras aplicar
-- `bun run lint -- --max-warnings 0`
-- `bun run ci:fast` (typecheck + tests fast). Especial atención a:
-  - `no-legacy-color-literals.test.ts` — validar que no queden entradas en el allowlist para los 3 archivos corregidos.
-  - Tests que puedan estar snapshotenando `Kpi`/`KPICard` locales (poco probable, pero revisar).
-- Smoke visual en `/compras/por-aprobar`, `/tesoreria/flujo`, `/comisiones`, `/proveedores/:id` (tab Salud), `/presupuesto` (tab vs Real) y el dashboard ejecutivo de facturación.
+### 3. Fixes 🟠 y 🟡
+- **1.4** `dashboard/finance/components/CierreAdminBlock.tsx` → `Tile` con compacto + `title`.
+- **1.5** `compras/routes/_sections/ConciliacionDetalleSections.tsx` (`TotalesMonedaFooter`) → wrap en `overflow-x-auto` + `min-w-[560px]`.
+- **1.6** `embarques/components/StepCostosPrecios.tsx` → Utilidad Estimada `text-lg sm:text-xl` + `truncate` + `title`.
+- **1.7** `components/ui/dialog.tsx` → `w-[calc(100vw-2rem)]` + `rounded-xl` (quitar `sm:rounded-xl`). Cambio de sistema: aplica a **todos los diálogos**; validar smoke en 3–4 modales representativos (form dialogs, alerts, wizard).
 
-### 3. Podar allowlist de colores
-Editar `src/__tests__/architecture/no-legacy-color-literals.test.ts` para retirar (si estaban listados) las 3 rutas ahora limpias.
+### 4. Pulido 🟢 (opcional, mismo turno)
+- Selects de filtro en 4 archivos → `w-full sm:w-[Npx]`:
+  - `ReportesFiltros`, `ProveedoresFiltros`, `TesoreriaConciliacion`, `PeriodoMensualToolbar`.
 
-### 4. Nota de entorno (no bloqueante)
-La auditoría menciona que `npm ci` falla por `@eslint/js@^10.0.1` vs `eslint@9.32.0`. En este proyecto usamos **bun**, así que no aplica al pipeline nuestro. Registrar en `.lovable/audit-todos.md` como observación para futura alineación de `package.json` si migramos.
+### 5. Verificación
+- `bun run ci:fast` (lint + typecheck + tests fast).
+- Smoke visual con Playwright a **402×874**: `/portal/facturas/:id`, `/facturacion/:id`, `/inicio` (Cobranza + Cierre), `/compras/conciliacion/:id`, wizard embarque Step Costos.
+- Verificar que ningún snapshot rompa por el cambio de `dialog.tsx`.
 
-### 5. Cambios de versión y changelog
-- `APP_VERSION` → `13.302.5`.
-- Entrada en `CHANGELOG.md`:
-  ```
-  ## [13.302.5] - 2026-07-19
-  - Sprint 2 Ola 4: 9 clones `KpiCard` migrados al canónico (~190 líneas duplicadas eliminadas).
-  - Colores hardcodeados residuales reemplazados por tokens semánticos (`slate-100`, `blue-500`, `cyan-500/600`).
-  - `LogoPreview` y stat-cell de diálogo justificados como no migrables.
-  ```
+### 6. Changelog y versión
+- `APP_VERSION` → `13.302.6`.
+- Entrada `## [13.302.6] - 2026-07-19`:
+  - Nuevo `MoneyCell` canónico + adopción en 4 tarjetas de dinero (Cobranza, Cierre admin, Totales factura, Portal factura).
+  - Fix overflow: footer conciliación, utilidad estimada Step Costos.
+  - `Dialog` con margen de 16 px y radio en todos los tamaños.
+  - Selects de filtro full-width en móvil (4 toolbars).
 
-## Detalles técnicos
+## Riesgos
+- **Bajo/medio**: `dialog.tsx` toca todos los modales; el cambio es puramente presentacional pero pide smoke visual.
+- **Bajo**: `MoneyCell` no altera datos; el resto son classes/wrappers.
+- Sin cambios de lógica de negocio ni de servicios.
 
-- **Anillo de "filtro activo"** en `TarifasKpis`: la auditoría lo resuelve con `ring-2 ring-<token>/60` mapeado por `KpiVariant`, sin tocar el componente compartido. Buena solución sin ensuciar la API.
-- **`DashboardEjecutivoFacturacion`**: cambia strip `divide-x` por grid de `KpiCard` + usa `valueTooltip` en lugar de `Tooltip` manual (borra `TooltipProvider` innecesario). Alineado con memoria de tooltips inline.
-- **`CxpKpiCards`**: el `count` se pliega al label vía helper `countLabel` porque el canónico no expone slot para contador secundario — trade-off aceptable (evita hinchar la API).
+## Alcance excluido
+- No tocar `LogoPreview` ni stat-cells de diálogos (ya justificados en cierre anterior).
+- No refactor masivo de otros footers con `grid-cols-N`; solo los detectados.
 
-## Riesgos y qué podría romperse
-
-- **Bajo**: cambios puramente presentacionales, sin tocar lógica ni servicios.
-- **Posible regresión visual** en anchos donde `TarifasKpis` pasaba de flex-wrap a grid `md:grid-cols-4` — verificar en 1280 y 1920.
-- **Snapshot tests** de las 9 páginas migradas: si existen, hay que aceptar snapshots nuevos.
-
-¿Aplico el patch?
+¿Aplico?

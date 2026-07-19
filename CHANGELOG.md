@@ -3,6 +3,16 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.6] - 2026-07-19
+- **Auditoría móvil 402×874 — cierre de familia de bugs de "montos truncados"**:
+  - Nuevo `MoneyCell` canónico (`components/shared/MoneyCell.tsx`) con `min-w-0` + `truncate` + `title=fullValue`, tipografía `text-sm sm:text-base` y variante `highlight`.
+  - Adopción en `FacturaTotalesCard` y `PortalFacturaResumenCard` (elimina helper `Total` duplicado).
+  - `CobranzaBlock` (aging CxC) y `CierreAdminBlock` (hueco MXN/USD): montos en formato compacto (`formatCurrencyCompact`) con valor completo en `title`.
+  - `TotalesMonedaFooter` de conciliación de compras: envuelto en `overflow-x-auto` + `min-w-[560px]` para respetar el patrón de la tabla superior.
+  - `StepCostosPrecios` — utilidad estimada USD: `text-lg sm:text-xl` + `truncate` + `title`.
+  - `dialog.tsx`: `w-[calc(100vw-2rem)]` + `rounded-xl` en todos los tamaños (16 px de margen y esquinas redondeadas también en móvil).
+  - Selects de filtro full-width en móvil: `TesoreriaConciliacion` (cuenta + moneda), `PeriodoMensualToolbar` (Profit).
+
 ## [13.302.5] - 2026-07-19
 - **Sprint 2 · Ola 4 — Cierre de parciales UI (KPI clones + colores residuales)**:
   - 9 clones locales de KPI card migrados al `KpiCard` canónico: `bandejas/CxpPorCapturar`, `comisiones/Comisiones`, `compras/ComprasPorAprobar` (+ borrado `ComprasPorAprobar.kpi.tsx`), `costeo/TarifasKpis`, `cxp/CxpKpiCards`, `facturacion/DashboardEjecutivoFacturacion`, `presupuesto/TabVsReal`, `proveedor/ProveedorSaludTab`, `tesoreria/TesoreriaFlujo`. ~190 líneas duplicadas eliminadas.

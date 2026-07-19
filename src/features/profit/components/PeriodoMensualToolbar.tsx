@@ -24,7 +24,7 @@ interface Props {
 
 export function PeriodoMensualToolbar({
   mesActual, mesesDisponibles, onChange, onPrev, onNext,
-  puedeIrAtras, puedeIrAdelante, triggerClassName = "w-[220px] font-medium",
+  puedeIrAtras, puedeIrAdelante, triggerClassName = "w-full sm:w-[220px] font-medium",
 }: Props) {
   return (
     <div className="flex items-center gap-2">

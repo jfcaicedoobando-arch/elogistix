@@ -66,7 +66,7 @@ export default function TesoreriaConciliacion() {
       <Card>
         <CardContent density="compact" className="flex flex-wrap gap-3 items-center">
           <Select value={cuentaId} onValueChange={setCuentaId}>
-            <SelectTrigger className="w-[260px]"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[260px]"><SelectValue placeholder="Selecciona cuenta..." /></SelectTrigger>
             <SelectContent>
               {cuentas.length === 0
                 ? <SelectItem value="__sin" disabled>No hay cuentas activas</SelectItem>
@@ -76,7 +76,7 @@ export default function TesoreriaConciliacion() {
           </Select>
 
           <Select value={estado} onValueChange={(v) => setEstado(v as typeof estado)} disabled={!cuentaId}>
-            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Pendiente">Pendientes</SelectItem>
               <SelectItem value="Conciliado">Conciliados</SelectItem>
