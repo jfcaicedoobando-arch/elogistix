@@ -22,6 +22,13 @@ export function useRecalcularDemoras(embarqueId: string | undefined) {
     },
     onError: (e: unknown) => {
       const msg = e instanceof Error ? e.message : "Error al calcular demoras";
+      if (msg.includes("LC_DEMORAS_BLOQUEADAS")) {
+        toast.error("No se pueden recalcular demoras", {
+          description:
+            "Hay conceptos ya en proforma, facturados o vinculados a cuentas por pagar. Cancela primero la proforma / la CxP asociada e intenta de nuevo.",
+        });
+        return;
+      }
       notifyError(toast, { title: msg, error: e, method: "FEATURES_EMBARQUES_HOOKS_USEDEMORASEMBARQUE_1" });
     },
   });

@@ -112,6 +112,9 @@ export function CotizacionDetalleAcciones({
   const esBorradorOEnviada = estado === "Borrador" || estado === "Enviada";
   const esAceptada = estado === "Aceptada";
   const mostrarCrearEmbarque = esAceptada && !esProspecto && !tieneEmbarquesVinculados;
+  // Fase J v13.301.81: sólo se puede re-cotizar si aún no hay embarque generado.
+  // Con embarque vivo, el flujo correcto es crear una nueva cotización.
+  const mostrarRecotizar = esAceptada && !tieneEmbarquesVinculados;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -121,7 +124,7 @@ export function CotizacionDetalleAcciones({
         <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
       {mostrarCrearEmbarque && <AccionCrearEmbarque cotizacionId={cotizacionId} numContenedores={numContenedores} />}
-      {esAceptada && (
+      {mostrarRecotizar && (
         <>
           <Button variant="outline" size="sm" onClick={() => setRecotizarOpen(true)}>
             Re-cotizar
