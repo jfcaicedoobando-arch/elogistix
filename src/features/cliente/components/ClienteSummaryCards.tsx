@@ -1,4 +1,4 @@
-import { Ship, ClipboardList, Users, DollarSign, AlertCircle, TrendingUp } from "lucide-react";
+import { Ship, ClipboardList, Users, DollarSign, AlertCircle, TrendingUp, type LucideIcon } from "lucide-react";
 import { KpiCard, type KpiVariant } from "@/components/shared/KpiCard";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
@@ -20,7 +20,7 @@ interface Props {
  * v13.302.3: migrado al `KpiCard` canónico (`iconVariant="chip"`).
  */
 export default function ClienteSummaryCards({ embarques, cotizaciones, contactos, facturadoUSD, pendienteUSD, profitUSD }: Props) {
-  const items: Array<{ label: string; value: string; tooltip?: string; icon: React.ElementType; variant: KpiVariant }> = [
+  const items: Array<{ label: string; value: string; tooltip?: string; icon: LucideIcon; variant: KpiVariant }> = [
     { label: "Embarques", value: String(embarques), icon: Ship, variant: "info" },
     { label: "Cotizaciones", value: String(cotizaciones), icon: ClipboardList, variant: "accent" },
     { label: "Contactos", value: String(contactos), icon: Users, variant: "success" },

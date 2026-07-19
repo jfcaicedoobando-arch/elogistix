@@ -1,4 +1,4 @@
-import { Users, DollarSign, TrendingUp, Percent } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Percent, type LucideIcon } from "lucide-react";
 import { KpiCard, type KpiVariant } from "@/components/shared/KpiCard";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
@@ -13,7 +13,7 @@ interface Kpis {
  * v13.302.3: migrado al `KpiCard` canónico (`iconVariant="chip"`).
  */
 export default function ReportesKpiCards({ kpis, isLoading }: { kpis: Kpis; isLoading: boolean }) {
-  const cards: Array<{ label: string; value: string; tooltip?: string; icon: React.ElementType; variant: KpiVariant }> = [
+  const cards: Array<{ label: string; value: string; tooltip?: string; icon: LucideIcon; variant: KpiVariant }> = [
     { label: "Clientes con operaciones", value: String(kpis.totalClientes), icon: Users, variant: "info" },
     { label: "Revenue total USD", value: formatCurrencyCompact(kpis.revenue, "USD"), tooltip: formatCurrency(kpis.revenue, "USD"), icon: DollarSign, variant: "success" },
     { label: "Profit total USD", value: formatCurrencyCompact(kpis.profit, "USD"), tooltip: formatCurrency(kpis.profit, "USD"), icon: TrendingUp, variant: "accent" },
