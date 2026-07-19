@@ -9,7 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/lib/domain/bitacora/registrar";
-import { unwrap, unwrapOr } from "@/lib/supabase/response";
+import { unwrapOr } from "@/lib/supabase/response";
 
 export type NotaCreditoProveedor = Tables<"proveedor_notas_credito">;
 
@@ -35,7 +35,8 @@ function mapEstadoError(err: { message?: string | null } | null | undefined): Er
   const msg = err.message;
   if (
     msg.includes("LC_NC_PROV_TRANSICION_INVALIDA") ||
-    msg.includes("LC_NC_PROV_ESTADO_TERMINAL")
+    msg.includes("LC_NC_PROV_ESTADO_TERMINAL") ||
+    msg.includes("LC_NC_PROV_INSERT_ESTADO_INVALIDO")
   ) {
     const hintMatch = /HINT:\s*([^\n]+)/i.exec(msg);
     return new NcProveedorTransicionInvalidaError((hintMatch?.[1] ?? "").trim());
@@ -59,9 +60,16 @@ export async function fetchNotasCreditoFactura(
 export async function crearNotaCreditoProveedor(
   payload: TablesInsert<"proveedor_notas_credito">,
 ): Promise<NotaCreditoProveedor> {
-  const data = await unwrap(
-    supabase.from("proveedor_notas_credito").insert(payload).select().single(),
-  );
+  const { data, error } = await supabase
+    .from("proveedor_notas_credito")
+    .insert(payload)
+    .select()
+    .single();
+  if (error) {
+    const mapped = mapEstadoError(error);
+    if (mapped) throw mapped;
+    throw error;
+  }
   await registrarActividad({
     modulo: "cxp",
     accion: "crear_nota_credito",

@@ -102,4 +102,23 @@ describe("proveedorNotasCredito service", () => {
     const err = await cancelarNotaCredito("nc1").catch((e) => e);
     expect(err).toBeInstanceOf(NcProveedorTransicionInvalidaError);
   });
+
+  it("crearNotaCreditoProveedor traduce LC_NC_PROV_INSERT_ESTADO_INVALIDO a error tipado (R.7)", async () => {
+    mock.setTableResult("proveedor_notas_credito", {
+      data: null,
+      error: {
+        message:
+          "LC_NC_PROV_INSERT_ESTADO_INVALIDO\nHINT: Toda nueva NC debe empezar en Borrador.",
+        code: "P0001",
+      },
+    });
+    const err = await crearNotaCreditoProveedor({
+      proveedor_factura_id: "f1",
+      estado: "Aplicada",
+    } as Parameters<typeof crearNotaCreditoProveedor>[0]).catch((e) => e);
+    expect(err).toBeInstanceOf(NcProveedorTransicionInvalidaError);
+    expect((err as NcProveedorTransicionInvalidaError).hint).toBe(
+      "Toda nueva NC debe empezar en Borrador.",
+    );
+  });
 });
