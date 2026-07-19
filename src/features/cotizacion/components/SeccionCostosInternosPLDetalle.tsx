@@ -133,12 +133,12 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
       )}
       <TablaCostosDetalle
         filas={filas} filasMoneda={filasUSD} moneda="USD"
-        title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-violet-500" />}
+        title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-primary" />}
         totales={totalesUSD} canEdit={canEdit && editMode} onUpdate={updateFila}
       />
       <TablaCostosDetalle
         filas={filas} filasMoneda={filasMXN} moneda="MXN"
-        title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-violet-500" />}
+        title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-primary" />}
         totales={totalesMXN} canEdit={canEdit && editMode} onUpdate={updateFila}
       />
       <ResumenPL

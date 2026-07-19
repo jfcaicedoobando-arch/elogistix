@@ -156,12 +156,12 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
 
       <TablaCostosLocal
         filas={filas} filasMoneda={filasUSD} moneda="USD"
-        title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-violet-500" />}
+        title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-primary" />}
         totales={totalesUSD} onUpdate={updateFila} onAdd={addFila} onRemove={removeFila}
       />
       <TablaCostosLocal
         filas={filas} filasMoneda={filasMXN} moneda="MXN"
-        title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-violet-500" />}
+        title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-primary" />}
         totales={totalesMXN} onUpdate={updateFila} onAdd={addFila} onRemove={removeFila}
       />
       <ResumenPL
