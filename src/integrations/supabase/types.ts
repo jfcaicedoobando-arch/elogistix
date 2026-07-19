@@ -4738,6 +4738,7 @@ export type Database = {
           metodo_pago: string
           moneda: Database["public"]["Enums"]["moneda"]
           monto: number
+          monto_en_moneda_factura: number | null
           motivo_ajuste: string | null
           notas: string
           organization_id: string
@@ -4759,6 +4760,7 @@ export type Database = {
           metodo_pago?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
+          monto_en_moneda_factura?: number | null
           motivo_ajuste?: string | null
           notas?: string
           organization_id?: string
@@ -4780,6 +4782,7 @@ export type Database = {
           metodo_pago?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           monto?: number
+          monto_en_moneda_factura?: number | null
           motivo_ajuste?: string | null
           notas?: string
           organization_id?: string
@@ -6784,6 +6787,16 @@ export type Database = {
           _monto: number
           _tc_eur: number
           _tc_usd: number
+        }
+        Returns: number
+      }
+      convertir_monto_pago_a_factura: {
+        Args: {
+          p_moneda_fact: Database["public"]["Enums"]["moneda"]
+          p_moneda_pago: Database["public"]["Enums"]["moneda"]
+          p_monto: number
+          p_tc_fact: number
+          p_tc_pago: number
         }
         Returns: number
       }
