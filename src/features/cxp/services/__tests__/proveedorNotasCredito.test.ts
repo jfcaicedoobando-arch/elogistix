@@ -74,6 +74,7 @@ describe("proveedorNotasCredito service", () => {
     await expect(
       crearNotaCreditoProveedor({ proveedor_factura_id: "f1" } as Parameters<typeof crearNotaCreditoProveedor>[0]),
     ).rejects.toMatchObject({ message: "x" });
+  });
 
   it("aprobarNotaCredito setea estado=Aprobada con timestamp", async () => {
     mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
