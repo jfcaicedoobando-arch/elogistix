@@ -128,7 +128,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   return (
     <div className="space-y-4">
       {mostrarAvisoLclFcl && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
           <AlertTriangle className="size-4 mt-0.5 shrink-0" />
           <span>
             La tarifa vinculada está capturada para contenedor (<strong>{tarifa?.tipo_contenedor_nombre}</strong>), pero esta cotización es <strong>LCL</strong>.
