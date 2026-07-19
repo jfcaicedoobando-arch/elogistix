@@ -72,6 +72,9 @@ export async function convertirCotizacionAEmbarques(
   if (cotizacion.tipo_documento === "informativa") {
     throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
   }
+  // Fase R.6 (Bug 18): revalidación de tarifa obligatoria antes de insertar.
+  await assertTarifaSinCambios(cotizacion.id);
+
   const { data: costos, error: errorCostos } = await supabase
     .from("cotizacion_costos")
     .select("*")
