@@ -5,7 +5,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { listarPagosProveedor, registrarPagoProveedor, eliminarPagoProveedor as _eliminarPagoProveedor } from "../pagosProveedor";
+import { listarPagosProveedor, registrarPagoProveedor, eliminarPagoProveedor as _eliminarPagoProveedor, PagoRequiereAprobacionError } from "../pagosProveedor";
 
 describe("pagosProveedor service", () => {
   beforeEach(() => {
