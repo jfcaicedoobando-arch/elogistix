@@ -86,8 +86,12 @@ export class PagoConRepVivoError extends Error {
 }
 
 function esErrorPagoConRepVivo(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err ?? "");
-  return /LC_PAGO_CON_REP_VIVO/.test(msg);
+  if (err instanceof Error) return /LC_PAGO_CON_REP_VIVO/.test(err.message);
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string") return /LC_PAGO_CON_REP_VIVO/.test(m);
+  }
+  return /LC_PAGO_CON_REP_VIVO/.test(String(err ?? ""));
 }
 
 export async function eliminarPagoFactura(id: string): Promise<void> {
