@@ -126,18 +126,18 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     return ok;
   };
 
-  const manejarErrorRevalidacion = (err: unknown, method: string): boolean => {
+  const manejarErrorRevalidacion = (err: unknown, _method: string): boolean => {
     if (err instanceof RevalidacionRequeridaError) {
       notifyWarning(toast, {
         title: "Tarifa desactualizada",
         description:
           "La tarifa de esta cotización cambió o venció. Usa el botón \"Crear embarque\" del detalle para revalidar (mantener, refrescar, sustituir o pedir reaprobación).",
-        method,
       });
       return true;
     }
     return false;
   };
+
 
   const handleGenerarEmbarques = async () => {
     if (!cotizacion) return;
