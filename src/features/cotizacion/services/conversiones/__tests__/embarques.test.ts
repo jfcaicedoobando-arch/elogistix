@@ -223,17 +223,12 @@ describe("Fase R.6 (Bug 18) — gate de revalidación de tarifa", () => {
   });
 
   it("crearEmbarqueBorradorDesdeCotizacion re-mapea LC_TARIFA_REQUIERE_REVALIDACION del trigger", async () => {
+    // El pre-check pasa (sin_cambios por default del mock), pero la RPC devuelve
+    // el token de BD — se debe re-lanzar como RevalidacionRequeridaError.
     mock.setTableResult("cotizaciones", { data: { tipo_documento: "real" }, error: null });
-    // El pre-check pasa (sin_cambios), pero la RPC devuelve el token de BD.
-    const revalidCalls: unknown[] = [];
-    let call = 0;
-    mock.setRpcResult("revalidar_tarifa_cotizacion", () => {
-      call += 1;
-      revalidCalls.push(call);
-      if (call === 1) {
-        return { data: { severidad: "sin_cambios", cambios: [], umbral_pct: 5, max_delta_pct: 0 }, error: null };
-      }
-      return { data: { severidad: "bloqueante", cambios: [], umbral_pct: 5, max_delta_pct: 12 }, error: null };
+    mock.setRpcResult("revalidar_tarifa_cotizacion", {
+      data: { severidad: "sin_cambios", cambios: [], umbral_pct: 5, max_delta_pct: 0 },
+      error: null,
     });
     mock.setRpcResult("crear_embarque_borrador_desde_cotizacion", {
       data: null,
@@ -244,5 +239,6 @@ describe("Fase R.6 (Bug 18) — gate de revalidación de tarifa", () => {
     );
   });
 });
+
 
 });
