@@ -21,7 +21,7 @@ interface Props {
 
 function nivel(porcentaje: number): { color: string; icon: typeof TrendingUp } {
   if (porcentaje >= 15) return { color: "[color:hsl(var(--success))]", icon: TrendingUp };
-  if (porcentaje >= 5) return { color: "text-amber-600 dark:text-amber-400", icon: Minus };
+  if (porcentaje >= 5) return { color: "text-warning", icon: Minus };
   return { color: "text-destructive", icon: TrendingDown };
 }
 
