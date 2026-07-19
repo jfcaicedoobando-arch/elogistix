@@ -3,6 +3,7 @@
  * Consume la RPC `proveedor_salud`.
  */
 import { Card, CardContent } from "@/components/ui/card";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,19 +12,6 @@ import {
 import { useProveedorSalud } from "@/features/cxp/hooks/useProveedorSalud";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-
-function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "good" | "warn" | "bad" }) {
-  const toneCls = tone === "good" ? "text-success" : tone === "warn" ? "text-warning" : tone === "bad" ? "text-destructive" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn("text-xl font-semibold tabular-nums mt-1", toneCls)}>{value}</p>
-        {sub && <p className="text-label text-muted-foreground mt-0.5">{sub}</p>}
-      </CardContent>
-    </Card>
-  );
-}
 
 function semaforoToneFromPct(pct: number | null): "good" | "warn" | "bad" {
   if (pct == null) return "warn";
@@ -60,19 +48,19 @@ export function ProveedorSaludTab({ proveedorId }: { proveedorId: string }) {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <Kpi label="Facturas últimos 12m" value={String(data.facturas_12m)} sub={formatCurrencyCompact(data.monto_12m, "MXN")} />
-        <Kpi label="Saldo actual" value={formatCurrency(data.saldo_actual, "MXN")} tone={data.saldo_actual > 0 ? "warn" : "good"} />
-        <Kpi
+        <KpiCard label="Facturas últimos 12m" value={String(data.facturas_12m)} sublabel={formatCurrencyCompact(data.monto_12m, "MXN")} />
+        <KpiCard label="Saldo actual" value={formatCurrency(data.saldo_actual, "MXN")} variant={data.saldo_actual > 0 ? "warning" : "success"} />
+        <KpiCard
           label="% Pagadas a tiempo"
           value={data.pct_pagadas_a_tiempo == null ? "—" : `${data.pct_pagadas_a_tiempo.toFixed(0)}%`}
-          tone={tonePct}
+          variant={tonePct === "good" ? "success" : tonePct === "warn" ? "warning" : "destructive"}
         />
-        <Kpi
+        <KpiCard
           label="Días promedio de pago"
           value={data.dias_promedio_pago == null ? "—" : `${data.dias_promedio_pago.toFixed(0)} d`}
         />
-        <Kpi label="Notas de crédito" value={String(data.notas_credito_count)} sub={formatCurrency(data.notas_credito_monto, "MXN")} />
-        <Kpi label="Embarques activos" value={String(data.embarques_activos)} />
+        <KpiCard label="Notas de crédito" value={String(data.notas_credito_count)} sublabel={formatCurrency(data.notas_credito_monto, "MXN")} />
+        <KpiCard label="Embarques activos" value={String(data.embarques_activos)} />
       </div>
 
       <Card>

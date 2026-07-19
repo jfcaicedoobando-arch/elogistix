@@ -1,9 +1,9 @@
 /**
- * Tira de KPIs compacta para la matriz de tarifas marítimas.
- * v13.135.52: rediseño compacto (~56px) con indicador de filtro activo.
+ * Tira de KPIs para la matriz de tarifas marítimas, con indicador de filtro activo.
+ * Migrada al KpiCard canónico para cohesión con el resto del ERP.
  */
 import { CheckCircle2, Clock, AlertTriangle, Route } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { KpiCard, type KpiVariant } from "@/components/shared/KpiCard";
 import { cn } from "@/lib/utils";
 
 interface TarifaLike {
@@ -28,52 +28,16 @@ function daysUntil(date: string): number {
   return Math.floor((target - today) / DAY_MS);
 }
 
-type Tone = "success" | "warning" | "info" | "neutral";
-
-const toneIcon: Record<Tone, string> = {
-  success: "text-success",
-  warning: "text-warning",
-  info: "text-primary",
-  neutral: "text-muted-foreground",
+/** Anillo de "filtro activo" con el mismo token semántico que la variant de la card. */
+const activeRing: Record<KpiVariant, string> = {
+  default: "ring-2 ring-muted-foreground/40",
+  success: "ring-2 ring-success/60",
+  warning: "ring-2 ring-warning/60",
+  destructive: "ring-2 ring-destructive/60",
+  info: "ring-2 ring-info/60",
+  accent: "ring-2 ring-accent/60",
+  secondary: "ring-2 ring-secondary/60",
 };
-
-const toneActive: Record<Tone, string> = {
-  success: "border-success/60 bg-success/5",
-  warning: "border-warning/60 bg-warning/5",
-  info: "border-primary/60 bg-primary/5",
-  neutral: "border-muted",
-};
-
-interface KpiProps {
-  label: string;
-  value: number | string;
-  icon: LucideIcon;
-  tone: Tone;
-  onClick?: () => void;
-  active?: boolean;
-}
-
-function Kpi({ label, value, icon: Icon, tone, onClick, active }: KpiProps) {
-  const interactive = !!onClick;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!interactive}
-      className={cn(
-        "flex items-center gap-2.5 rounded-md border px-3 py-2 text-left transition-colors",
-        interactive ? "hover:bg-muted/50 cursor-pointer" : "cursor-default",
-        active ? toneActive[tone] : "border-border bg-card",
-      )}
-    >
-      <Icon className={cn("size-4 shrink-0", toneIcon[tone])} />
-      <div className="flex items-baseline gap-1.5 min-w-0">
-        <span className="text-lg font-semibold tabular-nums leading-none">{value}</span>
-        <span className="text-xs text-muted-foreground truncate">{label}</span>
-      </div>
-    </button>
-  );
-}
 
 export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer, activeKpi }: Props) {
   const today = new Date().setHours(0, 0, 0, 0);
@@ -94,25 +58,31 @@ export function TarifasKpis({ tarifas, onFilterPendientes, onFilterPorVencer, ac
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Kpi label="vigentes hoy" value={vigentes} icon={CheckCircle2} tone="success" active={activeKpi === "vigentes"} />
-      <Kpi
-        label="por vencer ≤ 7 días"
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <KpiCard
+        label="Vigentes hoy"
+        value={vigentes}
+        icon={CheckCircle2}
+        variant="success"
+        className={cn(activeKpi === "vigentes" && activeRing.success)}
+      />
+      <KpiCard
+        label="Por vencer ≤ 7 días"
         value={porVencer}
         icon={Clock}
-        tone="warning"
+        variant="warning"
         onClick={porVencer > 0 ? onFilterPorVencer : undefined}
-        active={activeKpi === "porVencer"}
+        className={cn(activeKpi === "porVencer" && activeRing.warning)}
       />
-      <Kpi
-        label="pendientes aprobación"
+      <KpiCard
+        label="Pendientes aprobación"
         value={pendientes}
         icon={AlertTriangle}
-        tone="info"
+        variant="info"
         onClick={pendientes > 0 ? onFilterPendientes : undefined}
-        active={activeKpi === "pendientes"}
+        className={cn(activeKpi === "pendientes" && activeRing.info)}
       />
-      <Kpi label="rutas cubiertas" value={rutas.size} icon={Route} tone="neutral" />
+      <KpiCard label="Rutas cubiertas" value={rutas.size} icon={Route} />
     </div>
   );
 }

@@ -1,54 +1,57 @@
-## Verificación Ola 2 (v13.302.2)
 
-- Lint 0 warnings y `vitest` 8/8 verdes tras cerrar la ola anterior.
-- `features/embarques/components/pnl/KpiCard.tsx` eliminado; sus 2 consumidores (`TabPnl`, `TablaPnlPorMoneda`) apuntan al canónico `@/components/shared/KpiCard` con el mapeo `tone → variant`.
-- Test de regresión en `primitives.test.tsx` cubre `PageContainer width="wide"`.
-- Sin bugs abiertos ni tests faltantes para esta ola.
+## Veredicto de la auditoría
 
-## Sprint 2 · Ola 3 — Consolidar `features/operaciones/components/KpiCard.tsx`
+La auditoría es **sólida y coherente** con el trabajo de Ola 3/4. Cierra exactamente los dos pendientes que quedaban abiertos:
 
-Este clon lo usan **5 consumidores** (`Operaciones`, `Cotizaciones`, `AdminOrgDetalle`, `ReportesKpiCards`, `ClienteSummaryCards`) y tiene 3 features que el canónico no soporta hoy: tooltip sobre el valor, slot de `children`, icono con chip tintado y tipografía adaptativa hasta `text-3xl`. Migrar 1:1 perdería pulido visual (Operaciones muestra "USD 1.2M" con tooltip completo, y "20 / 25 TEU" con children), así que primero enriquezco el canónico y luego migro.
+1. **9 clones de KPI card** migrados al `KpiCard` canónico (elimina ~190 líneas duplicadas, uniformiza `gap-3` y las semánticas `warn→warning`, `bad→destructive`, `sub→sublabel`, hints→`valueTooltip`).
+2. **3 colores hardcodeados** reales reemplazados por tokens (`slate-100→border`, `blue-500→info`, `cyan-500/600→primary`).
+3. **Justificaciones aceptables**:
+   - `LogoPreview.tsx`: sujeto de prueba del logo sobre lienzos fijos — no tocar.
+   - `DialogDetallePagosProveedor.parts.tsx → Kpi`: es un stat-cell dentro de diálogo, no un KPI de página — no migrar.
 
-### Paso 1 — Enriquecer `@/components/shared/KpiCard`
-Aditivos, sin romper la API actual:
-- `valueTooltip?: string` — se aplica al `title` del `<p>` de valor.
-- `children?: React.ReactNode` — se renderiza debajo del sublabel dentro del `CardContent`.
-- `iconVariant?: "inline" | "chip"` (default `inline` = comportamiento actual). En `chip` renderiza el icono en un div tintado a la izquierda usando `kpiIconChipClasses(tone)` de `@/lib/ui/kpiTones`, con `tone` derivado del `variant` (`info→info`, `success→success`, `warning→warning`, `destructive→danger`, `default→neutral`, más alias `accent`).
-- Ampliar `KpiVariant` con `"accent"` (violeta) para cubrir el color del clon.
-- Escalones de `valueSize` amplían a `text-3xl` cuando `iconVariant="chip"` y el valor es ≤8 chars (paridad con el clon de operaciones).
+Diseño y convenciones alineados con lo establecido en Sprint 2 (Ola 3 enriqueció `KpiCard` con `iconVariant="chip"`, `valueTooltip`, `sublabel`, variants `accent`/`secondary`). No detecto conflictos con memoria del proyecto ni con el design system.
 
-### Paso 2 — Migrar los 5 consumidores
-Mapping común: `titulo→label`, `valor→value`, `valorTooltip→valueTooltip`, `subtitulo→sublabel`, `icono→icon`, `children→children`. Tabla de tonos:
+## Plan de aplicación
 
-```text
-blue    → info
-violet  → accent
-emerald → success
-red     → destructive
-info    → info
-accent  → accent
-success → success
-danger  → destructive
-```
+### 1. Aplicar el patch
+Aplicar `cierre_parciales_ui.patch` tal cual. Toca 13 archivos (+137 / −327):
 
-Los 5 consumidores usan `iconVariant="chip"` para conservar el look actual.
+- **Migraciones KPI (9)**: `bandejas/CxpPorCapturar`, `comisiones/Comisiones`, `compras/ComprasPorAprobar` (+ borra `ComprasPorAprobar.kpi.tsx`), `costeo/TarifasKpis`, `cxp/CxpKpiCards`, `facturacion/DashboardEjecutivoFacturacion`, `presupuesto/TabVsReal`, `proveedor/ProveedorSaludTab`, `tesoreria/TesoreriaFlujo`.
+- **Colores (3)**: `cotizacion/TablaCostosLocal.tsx`, `lib/ui/estadoConfig.ts`, `dashboard/statusCards/ArribosCard.tsx`.
 
-### Paso 3 — Borrar el clon
-Eliminar `src/features/operaciones/components/KpiCard.tsx` y verificar con `rg` que no queda ningún import.
+### 2. Verificación tras aplicar
+- `bun run lint -- --max-warnings 0`
+- `bun run ci:fast` (typecheck + tests fast). Especial atención a:
+  - `no-legacy-color-literals.test.ts` — validar que no queden entradas en el allowlist para los 3 archivos corregidos.
+  - Tests que puedan estar snapshotenando `Kpi`/`KPICard` locales (poco probable, pero revisar).
+- Smoke visual en `/compras/por-aprobar`, `/tesoreria/flujo`, `/comisiones`, `/proveedores/:id` (tab Salud), `/presupuesto` (tab vs Real) y el dashboard ejecutivo de facturación.
 
-### Paso 4 — Tests y CI
-- Extender `src/components/shared/__tests__/KpiCard.test.tsx` con casos: `iconVariant="chip"` renderiza el icono, `valueTooltip` se refleja en `title`, `children` se renderiza, y `variant="accent"` aplica clases correspondientes.
-- Correr `bun run lint -- --max-warnings 0` y `bun run test`.
+### 3. Podar allowlist de colores
+Editar `src/__tests__/architecture/no-legacy-color-literals.test.ts` para retirar (si estaban listados) las 3 rutas ahora limpias.
 
-### Paso 5 — Versionado
-- Bump `APP_VERSION` a `13.302.3`.
-- Entrada en `CHANGELOG.md` describiendo la consolidación y el enriquecimiento de la API (no-breaking).
+### 4. Nota de entorno (no bloqueante)
+La auditoría menciona que `npm ci` falla por `@eslint/js@^10.0.1` vs `eslint@9.32.0`. En este proyecto usamos **bun**, así que no aplica al pipeline nuestro. Registrar en `.lovable/audit-todos.md` como observación para futura alineación de `package.json` si migramos.
 
-## Detalles técnicos (por si interesa)
+### 5. Cambios de versión y changelog
+- `APP_VERSION` → `13.302.5`.
+- Entrada en `CHANGELOG.md`:
+  ```
+  ## [13.302.5] - 2026-07-19
+  - Sprint 2 Ola 4: 9 clones `KpiCard` migrados al canónico (~190 líneas duplicadas eliminadas).
+  - Colores hardcodeados residuales reemplazados por tokens semánticos (`slate-100`, `blue-500`, `cyan-500/600`).
+  - `LogoPreview` y stat-cell de diálogo justificados como no migrables.
+  ```
 
-- `KpiCard` canónico añade dos props opcionales + un `iconVariant` opcional; los ~9 consumidores existentes no cambian de comportamiento porque los defaults preservan la variante `inline`.
-- El `variant="accent"` se agrega a `variantStyles`/`iconStyles` con tokens semánticos ya definidos (`--accent`, `text-accent-foreground`) para no introducir literales.
-- Riesgo: si algún consumidor del canónico depende del tamaño exacto (`text-2xl`), no cambia porque `text-3xl` sólo aplica cuando `iconVariant="chip"`.
+## Detalles técnicos
 
-## Fuera de alcance de esta ola
-- Migrar los ~7 clones restantes (`KpiTile`, mini-tarjetas de Dashboard, tarjetas de Facturación) — se abordan en la Ola 4 tras validar visualmente Ola 3.
+- **Anillo de "filtro activo"** en `TarifasKpis`: la auditoría lo resuelve con `ring-2 ring-<token>/60` mapeado por `KpiVariant`, sin tocar el componente compartido. Buena solución sin ensuciar la API.
+- **`DashboardEjecutivoFacturacion`**: cambia strip `divide-x` por grid de `KpiCard` + usa `valueTooltip` en lugar de `Tooltip` manual (borra `TooltipProvider` innecesario). Alineado con memoria de tooltips inline.
+- **`CxpKpiCards`**: el `count` se pliega al label vía helper `countLabel` porque el canónico no expone slot para contador secundario — trade-off aceptable (evita hinchar la API).
+
+## Riesgos y qué podría romperse
+
+- **Bajo**: cambios puramente presentacionales, sin tocar lógica ni servicios.
+- **Posible regresión visual** en anchos donde `TarifasKpis` pasaba de flex-wrap a grid `md:grid-cols-4` — verificar en 1280 y 1920.
+- **Snapshot tests** de las 9 páginas migradas: si existen, hay que aceptar snapshots nuevos.
+
+¿Aplico el patch?

@@ -56,7 +56,7 @@ export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
   // ───── Estados de embarque ─────
   Confirmado: {
     badge: "bg-info/15 text-info border border-info/30",
-    borderLeft: "border-l-blue-500",
+    borderLeft: "border-l-info",
     bar: "bg-info",
     icon: Anchor,
     gradient: "from-info to-info/80",

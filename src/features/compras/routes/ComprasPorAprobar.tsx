@@ -14,7 +14,7 @@ import { useAprobarFacturasLote } from "@/features/cxp/hooks/useAprobarFacturasL
 import { buildCxPColumns } from "@/features/cxp/components/cxpColumns";
 import { DialogDetallePagosProveedor } from "@/features/cxp/components/DialogDetallePagosProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
-import { KPICard } from "./ComprasPorAprobar.kpi";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { sumaMxn, sumaUsd } from "./ComprasPorAprobar.helpers";
 import { buildSelectionColumn } from "./ComprasPorAprobar.selectionCol";
 import { ConfirmarAprobacionLoteDialog } from "./ComprasPorAprobar.confirmDialog";
@@ -72,20 +72,20 @@ export default function ComprasPorAprobar() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPICard
+        <KpiCard
           icon={ClipboardCheck}
           label="Pendientes"
-          count={pendientes.length}
-          monto={`${formatCurrency(sumaMxn(pendientes), "MXN")} · ${formatCurrency(sumaUsd(pendientes), "USD")}`}
-          tone="warn"
+          value={`${pendientes.length} ${pendientes.length === 1 ? "factura" : "facturas"}`}
+          sublabel={`${formatCurrency(sumaMxn(pendientes), "MXN")} · ${formatCurrency(sumaUsd(pendientes), "USD")}`}
+          variant="warning"
         />
-        <KPICard icon={CheckCircle2} label="Aprobadas" count={aprobadas.length} tone="success" />
-        <KPICard icon={XCircle} label="Rechazadas" count={rechazadas.length} tone="danger" />
-        <KPICard
+        <KpiCard icon={CheckCircle2} label="Aprobadas" value={`${aprobadas.length} ${aprobadas.length === 1 ? "factura" : "facturas"}`} variant="success" />
+        <KpiCard icon={XCircle} label="Rechazadas" value={`${rechazadas.length} ${rechazadas.length === 1 ? "factura" : "facturas"}`} variant="destructive" />
+        <KpiCard
           icon={ClipboardCheck}
           label={`Total en vista (${aprobacion})`}
-          count={rows.length}
-          monto={`${formatCurrency(currentTotalMxn, "MXN")} · ${formatCurrency(currentTotalUsd, "USD")}`}
+          value={`${rows.length} ${rows.length === 1 ? "factura" : "facturas"}`}
+          sublabel={`${formatCurrency(currentTotalMxn, "MXN")} · ${formatCurrency(currentTotalUsd, "USD")}`}
         />
       </div>
 

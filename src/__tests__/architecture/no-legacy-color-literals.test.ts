@@ -40,13 +40,11 @@ const LITERAL_COLOR = /(?<![\w-])(?:text|bg|border|ring|from|to|via)-(?:red|gree
  * y documentarse en `.lovable/plan.md`.
  */
 const ALLOWLIST: readonly string[] = [
-  // Lote 3B (deuda P&L cotización): heatmap de márgenes usa emerald/red literales
-  // en escala continua — requiere token gradiente antes de tokenizar.
-  "src/features/cotizacion/components/TablaCostosLocal.tsx",
   // Marketing/landing: preview interno del logo, no forma parte del ERP.
-  // Se mantiene con paleta cruda intencionalmente.
+  // Se mantiene con paleta cruda intencionalmente (simula lienzos de marca fijos).
   "src/features/marketing/routes/LogoPreview.tsx",
 ];
+
 
 describe("architecture — no legacy tailwind color literals", () => {
   it("solo la allowlist puede usar literales de color (text/bg/border-{paleta}-{tono})", () => {

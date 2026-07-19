@@ -7,7 +7,9 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { formatCurrency } from "@/lib/formatters/numbers";
 import { useFlujoProyectado } from "@/features/tesoreria/hooks";
@@ -16,17 +18,6 @@ import { PageContainer } from "@/components/shared/PageContainer";
 const GraficoFlujoProyectado = lazy(() => import("@/features/tesoreria/components/GraficoFlujoProyectado"));
 const TablaFlujoSemanal = lazy(() => import("@/features/tesoreria/components/TablaFlujoSemanal"));
 
-function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" | "success" | "warn" }) {
-  const tt = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : tone === "warn" ? "text-warning" : "text-foreground";
-  return (
-    <Card>
-      <CardContent density="tight">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-lg font-semibold tabular-nums ${tt}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function TesoreriaFlujo() {
   const { data, isLoading } = useFlujoProyectado(90);
@@ -47,14 +38,14 @@ export default function TesoreriaFlujo() {
         <KpiGridSkeleton count={4} heightClass="h-20" />
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Kpi label="Saldo hoy (MXN aprox)" value={formatCurrency(data.saldo_inicial_mxn, "MXN")} />
-            <Kpi label="Entradas 90 días" value={formatCurrency(data.total_entradas_mxn, "MXN")} tone="success" />
-            <Kpi label="Salidas 90 días" value={formatCurrency(data.total_salidas_mxn, "MXN")} tone="warn" />
-            <Kpi
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <KpiCard label="Saldo hoy (MXN aprox)" value={formatCurrency(data.saldo_inicial_mxn, "MXN")} />
+            <KpiCard label="Entradas 90 días" value={formatCurrency(data.total_entradas_mxn, "MXN")} variant="success" />
+            <KpiCard label="Salidas 90 días" value={formatCurrency(data.total_salidas_mxn, "MXN")} variant="warning" />
+            <KpiCard
               label="Saldo final proyectado"
               value={formatCurrency(data.saldo_final_mxn, "MXN")}
-              tone={data.saldo_final_mxn >= 0 ? "success" : "danger"}
+              variant={data.saldo_final_mxn >= 0 ? "success" : "destructive"}
             />
           </div>
 

@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { FileText, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/shared/skeletons";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -24,17 +25,6 @@ import type { FilaVsReal } from "@/features/presupuesto/services";
 type SortKey = "categoria" | "presupuesto" | "real" | "variacion" | "cumplimiento";
 type SortDir = "asc" | "desc";
 
-function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "danger" | "success" }) {
-  const t = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-lg font-semibold tabular-nums ${t}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 function ThSort({ label, active, dir, onClick, align = "left" }: {
   label: string; active: boolean; dir: SortDir; onClick: () => void; align?: "left" | "right";
@@ -138,18 +128,18 @@ export function TabVsReal() {
               </CardContent>
             </Card>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-            <Kpi label="Total presupuesto" value={formatCurrency(data.total_presupuesto_mxn, "MXN")} />
-            <Kpi label="Total real" value={formatCurrency(data.total_real_mxn, "MXN")} />
-            <Kpi
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <KpiCard label="Total presupuesto" value={formatCurrency(data.total_presupuesto_mxn, "MXN")} />
+            <KpiCard label="Total real" value={formatCurrency(data.total_real_mxn, "MXN")} />
+            <KpiCard
               label="Variación neta"
               value={formatCurrency(data.variacion_neta_mxn, "MXN")}
-              tone={sinPresupuestoGlobal ? "default" : data.variacion_neta_mxn <= 0 ? "success" : "danger"}
+              variant={sinPresupuestoGlobal ? "default" : data.variacion_neta_mxn <= 0 ? "success" : "destructive"}
             />
-            <Kpi
+            <KpiCard
               label="Categorías en exceso"
               value={data.categorias_en_exceso.toString()}
-              tone={data.categorias_en_exceso > 0 ? "danger" : "success"}
+              variant={data.categorias_en_exceso > 0 ? "destructive" : "success"}
             />
           </div>
 
