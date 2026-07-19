@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 import { KpiBodyChip, KpiBodyInline, type KpiBodyProps } from "./KpiCardBody";
 import {
   kpiVariantStyles,
