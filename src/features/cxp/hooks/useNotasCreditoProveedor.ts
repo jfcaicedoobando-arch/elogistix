@@ -3,6 +3,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { queryKeys } from "@/lib/query";
 import {
   aplicarNotaCredito,
+  aprobarNotaCredito,
   cancelarNotaCredito,
   crearNotaCreditoProveedor,
   fetchNotasCreditoFactura,
@@ -48,6 +49,20 @@ export function useAplicarNotaCredito(facturaId: string | undefined) {
     },
     onError: (error: Error) => notifyError(undefined, {
       title: `No se pudo aplicar la NC: ${error.message}`, error, method: "APLICAR_NC_PROVEEDOR",
+    }),
+  });
+}
+
+export function useAprobarNotaCredito(facturaId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => aprobarNotaCredito(id),
+    onSuccess: () => {
+      invalidate(qc, facturaId);
+      notifySuccess(undefined, { title: "Nota de crédito aprobada" });
+    },
+    onError: (error: Error) => notifyError(undefined, {
+      title: `No se pudo aprobar la NC: ${error.message}`, error, method: "APROBAR_NC_PROVEEDOR",
     }),
   });
 }

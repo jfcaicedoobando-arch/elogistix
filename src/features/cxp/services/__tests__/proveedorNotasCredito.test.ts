@@ -9,8 +9,10 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 import {
   fetchNotasCreditoFactura,
   crearNotaCreditoProveedor,
+  aprobarNotaCredito,
   aplicarNotaCredito,
   cancelarNotaCredito,
+  NcProveedorTransicionInvalidaError,
 } from "../proveedorNotasCredito";
 
 describe("proveedorNotasCredito service", () => {
@@ -72,5 +74,32 @@ describe("proveedorNotasCredito service", () => {
     await expect(
       crearNotaCreditoProveedor({ proveedor_factura_id: "f1" } as Parameters<typeof crearNotaCreditoProveedor>[0]),
     ).rejects.toMatchObject({ message: "x" });
+  });
+
+  it("aprobarNotaCredito setea estado=Aprobada con timestamp", async () => {
+    mock.setTableResult("proveedor_notas_credito", { data: null, error: null });
+    await aprobarNotaCredito("nc1");
+    const payload = mock.getMutationPayload("proveedor_notas_credito", "update") as Record<string, unknown>;
+    expect(payload.estado).toBe("Aprobada");
+    expect(typeof payload.aprobada_at).toBe("string");
+  });
+
+  it("aplicarNotaCredito traduce LC_NC_PROV_TRANSICION_INVALIDA a error tipado", async () => {
+    mock.setTableResult("proveedor_notas_credito", {
+      data: null,
+      error: { message: "LC_NC_PROV_TRANSICION_INVALIDA\nHINT: No se puede pasar de Borrador a Aplicada.", code: "P0001" },
+    });
+    const err = await aplicarNotaCredito("nc1").catch((e) => e);
+    expect(err).toBeInstanceOf(NcProveedorTransicionInvalidaError);
+    expect((err as NcProveedorTransicionInvalidaError).hint).toBe("No se puede pasar de Borrador a Aplicada.");
+  });
+
+  it("cancelarNotaCredito traduce LC_NC_PROV_ESTADO_TERMINAL a error tipado", async () => {
+    mock.setTableResult("proveedor_notas_credito", {
+      data: null,
+      error: { message: "LC_NC_PROV_ESTADO_TERMINAL\nHINT: La nota de crédito está Cancelada y no admite cambios de estado.", code: "P0001" },
+    });
+    const err = await cancelarNotaCredito("nc1").catch((e) => e);
+    expect(err).toBeInstanceOf(NcProveedorTransicionInvalidaError);
   });
 });

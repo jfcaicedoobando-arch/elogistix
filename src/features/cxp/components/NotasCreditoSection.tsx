@@ -4,13 +4,13 @@
  */
 import { useState } from "react";
 import { format } from "date-fns";
-import { Plus, Check, X } from "lucide-react";
+import { Plus, Check, X, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { formatCurrency } from "@/lib/formatters";
 import {
-  useNotasCreditoFactura, useAplicarNotaCredito, useCancelarNotaCredito,
+  useNotasCreditoFactura, useAplicarNotaCredito, useAprobarNotaCredito, useCancelarNotaCredito,
 } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import { DialogNotaCreditoProveedor } from "./DialogNotaCreditoProveedor";
 import type { Tables } from "@/integrations/supabase/types";
@@ -34,6 +34,7 @@ function NcEstadoBadge({ estado }: { estado: string }) {
 export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, canEdit }: Props) {
   const { data: notas = [], isLoading } = useNotasCreditoFactura(facturaId);
   const aplicar = useAplicarNotaCredito(facturaId);
+  const aprobar = useAprobarNotaCredito(facturaId);
   const cancelar = useCancelarNotaCredito(facturaId);
   const [openNueva, setOpenNueva] = useState(false);
 
@@ -74,7 +75,18 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                   <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>
                   <td className="px-3 py-2 text-center"><NcEstadoBadge estado={n.estado} /></td>
                   <td className="px-2 py-2 text-right space-x-1">
-                    {canEdit && n.estado !== "Aplicada" && n.estado !== "Cancelada" && (
+                    {canEdit && n.estado === "Borrador" && (
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 text-info hover:bg-info/10"
+                        onClick={() => aprobar.mutate(n.id)}
+                        disabled={aprobar.isPending}
+                        title="Aprobar"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {canEdit && n.estado === "Aprobada" && (
                       <Button
                         size="sm" variant="ghost"
                         className="h-7 text-success hover:bg-success/10"
