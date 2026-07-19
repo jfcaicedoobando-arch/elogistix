@@ -1,81 +1,56 @@
+# Revisión Fase M + Plan Fase N
 
-## Verificación Fase L (v13.301.83) — todo verde
+## Revisión Fase M (v13.301.84)
 
-- Columna `pagos_proveedor.monto_en_moneda_factura numeric(18,4)` viva con CHECK `pagos_proveedor_monto_convertido_no_null` VALIDATE.
-- Backfill 22/22 pagos con la columna poblada; vista `v_proveedor_facturas_saldo` devuelve saldos coherentes en muestra (`total = pagado + saldo`).
-- Trigger BEFORE `trg_pagos_proveedor_monto_convertido` + trigger `trg_check_no_sobrepago` recreado con nueva comparación.
-- Guardrail `cxp-multimoneda-fase-l.test.ts`: **6/6 pass**.
-- Changelog + `APP_VERSION 13.301.83` actualizados.
+Corrí los guardrails de Fases L y M juntos:
 
-Sin bugs detectados. Nota menor (no bloquea Fase L): `pagosProveedor.ts` sigue llamando `recalcularEstadoFactura` cliente-side — se resolverá en Fase N (Bug 22).
+- ✅ **Fase M** (`cerrar-factura-proveedor-rol-fase-m.test.ts`): 5/5 verdes. RPC exige rol, `LC_CERRAR_FACTURA_SIN_ROL` con `ERRCODE 42501`, bitácora con `rol_ejecutor`, `REVOKE/GRANT` correctos.
+- ⚠️ **Regresión en Fase L**: 1/5 falló. `cxp-multimoneda-fase-l.test.ts` línea 55 busca `CREATE OR REPLACE VIEW public.v_proveedor_facturas_saldo` en "la última migración que contiene `v_proveedor_facturas_saldo`", y la migración de Fase M ahora contiene ese texto (en el `SELECT saldo FROM public.v_proveedor_facturas_saldo`), pero no recrea la vista.
 
----
+El bug es del test, no del código: `readLatestContaining` usa una substring demasiado permisiva. La vista sigue correcta en la migración de Fase L — la lógica multi-moneda no está rota.
 
-## Fase M (v13.301.84) — Bug 20: gate de rol en `cerrar_factura_proveedor_sin_pago`
+## Fix del guardrail (parte del entregable Fase N)
 
-### Diagnóstico verificado
+Cambiar el marker de línea 54 de `"v_proveedor_facturas_saldo"` a `"CREATE OR REPLACE VIEW public.v_proveedor_facturas_saldo"` (y análogamente el de `check_no_sobrepago_proveedor` a `"CREATE OR REPLACE FUNCTION public.check_no_sobrepago_proveedor"`) para que apunte a la migración que *define* el objeto, no a cualquiera que lo mencione.
 
-`public.cerrar_factura_proveedor_sin_pago(uuid, text, text)` es `SECURITY DEFINER`, `GRANT EXECUTE TO authenticated`, y sólo valida:
+## Plan Fase N — Bugs 21 y 22 (mover recálculo a la BD)
 
-```sql
-IF NOT (v_org = current_user_org_id() OR has_role(v_uid,'super_admin')) THEN
-  RAISE '42501';
-END IF;
-```
+**Analogía**: hoy el semáforo de "Factura Pagada/Vigente" lo pinta el navegador después de registrar el pago. Si dos personas pagan al mismo tiempo, o si alguien llama a la BD desde otro cliente (SQL, script, edge function futura), el semáforo puede quedar en el color equivocado. Vamos a mover ese semáforo al motor de la base de datos, para que sea físicamente imposible que quede desincronizado.
 
-**Falta**: exigir un rol autorizado. Hoy cualquier miembro de la organización (viewer, operador, vendedor, customer_service…) puede cerrar contablemente una factura de proveedor con saldo pendiente — operación equivalente a "cancelar deuda" que sólo debería estar en manos de contabilidad/tesorería/admin.
+### Bug 22 — Recálculo client-side de estado de factura de proveedor
 
-### Cambio
+Actualmente `recalcularEstadoFactura(facturaId)` en `pagosProveedor.ts` hace dos queries + un update tras cada `INSERT/UPDATE` de `pagos_proveedor`. Problemas:
+1. No es transaccional: si el cliente muere entre INSERT del pago y UPDATE del estado, la factura queda inconsistente.
+2. Cualquier código nuevo que inserte pagos (edge functions, RPCs futuras, scripts) tiene que replicar la lógica.
+3. Race conditions bajo concurrencia.
 
-Migración `20260719_fase_m_cerrar_factura_proveedor_rol.sql`:
+**Fix**: crear trigger `AFTER INSERT/UPDATE/DELETE` en `pagos_proveedor` que recalcule `proveedor_facturas.estado` usando la misma regla (`saldo ≤ 0.01 → Pagada`, respeta `Cancelada`/`Borrador`).
 
-1. `CREATE OR REPLACE FUNCTION public.cerrar_factura_proveedor_sin_pago(...)` sustituyendo el bloque de permiso por:
+### Bug 21 — Máquina de estado de NC en UI
 
-   ```sql
-   IF NOT (
-     public.has_role(v_uid, 'super_admin')
-     OR (
-       v_org = public.current_user_org_id()
-       AND (
-         public.has_role(v_uid, 'admin')
-         OR public.has_role(v_uid, 'admin_org')
-         OR public.has_role(v_uid, 'contador')
-         OR public.has_role(v_uid, 'tesorero')
-       )
-     )
-   ) THEN
-     RAISE EXCEPTION 'LC_CERRAR_FACTURA_SIN_ROL: sólo admin, admin_org, contador o tesorero pueden cerrar una factura sin pago.'
-       USING ERRCODE = '42501',
-             HINT = json_build_object(
-               'rol_requerido', array['admin','admin_org','contador','tesorero'],
-               'factura_id', p_factura_id
-             )::text;
-   END IF;
-   ```
+Las notas de crédito de proveedor (`proveedor_notas_credito`) impactan el saldo vía la vista `v_proveedor_facturas_saldo`, pero el estado de la factura no se recalcula cuando se aplica/cancela una NC — la UI depende de que el usuario vuelva a abrir la factura o que se registre otro pago. Consecuencia: una factura totalmente cubierta por NC puede seguir apareciendo "Vigente" hasta que se ejecute otra acción.
 
-   Se aprovecha `has_role()` (mismo agrupador que RLS) — un `super_admin` sigue bypasseando; `auxiliar_contable` NO cierra (sólo captura).
+**Fix**: mismo trigger, extendido a `proveedor_notas_credito` — cuando se inserta/actualiza/elimina una NC aplicada a una factura, recalcula el estado de la factura afectada.
 
-2. `REVOKE EXECUTE ... FROM PUBLIC, anon` (defensa en profundidad, aunque el default de authenticated ya limita).
-3. Bitácora: agregar `rol_ejecutor` al `INSERT INTO bitacora_actividad` que la RPC ya hace, para auditar quién cerró.
+### Entregables Fase N (v13.301.85)
 
-### Cliente
+1. **Migración** con:
+   - `public.tg_recalcular_estado_factura_proveedor()` (SECURITY DEFINER, search_path=public) — lee saldo desde `v_proveedor_facturas_saldo`, respeta `Cancelada`/`Borrador`, usa la misma tolerancia 0.01, hace `UPDATE ... WHERE estado IS DISTINCT FROM nuevo` para evitar loops.
+   - Trigger `AFTER INSERT/UPDATE OF monto,monto_en_moneda_factura,deleted_at/DELETE` en `pagos_proveedor`.
+   - Trigger `AFTER INSERT/UPDATE/DELETE` en `proveedor_notas_credito` (columnas relevantes: `proveedor_factura_id`, `estado`, `monto`).
+   - Backfill: `UPDATE proveedor_facturas SET estado = ...` para reconciliar el universo actual (cubre facturas cuya NC ya las liquidó pero seguían "Vigente").
 
-`useCerrarFacturaProveedor.onError` (o el mutation hook equivalente) mapea `LC_CERRAR_FACTURA_SIN_ROL` a un toast dedicado: "Sólo Contabilidad, Tesorería o un administrador pueden cerrar facturas sin pago." — evita el 42501 crudo.
+2. **Cliente**: retirar la llamada a `recalcularEstadoFactura` de `pagosProveedor.ts` (crear/eliminar pago). Mantener `decidirEstadoFactura` como pura para reuso en cálculos de UI, pero marcarla `@deprecated` para escrituras. El servicio ya no ejecuta el UPDATE del estado — confía en el trigger.
 
-### Guardrail
+3. **Guardrail tests**:
+   - `cxp-recalculo-estado-fase-n.test.ts` — asserts sobre la migración: existen ambos triggers, la función respeta `Cancelada`/`Borrador`, usa tolerancia 0.01, GRANT/REVOKE correcto.
+   - Fix del test de Fase L (marker estricto para View/Function definitions).
 
-`src/lib/__tests__/cerrar-factura-proveedor-rol-fase-m.test.ts`:
+4. **CHANGELOG** con analogía y detalles técnicos.
+5. **APP_VERSION** → `13.301.85`.
 
-- La última migración de `cerrar_factura_proveedor_sin_pago` levanta `LC_CERRAR_FACTURA_SIN_ROL`.
-- El bloque `IF NOT (...)` lista `admin`, `admin_org`, `contador`, `tesorero` (y `super_admin` como bypass).
-- **No** lista `operador`, `vendedor`, `viewer`, `customer_service`, `auxiliar_contable`.
-- Conserva `REVOKE ... FROM PUBLIC` + `GRANT ... TO authenticated`.
+## Detalles técnicos
 
-### Entregables
-
-- 1 migración BD.
-- 1 archivo TS del hook (mapeo de error).
-- 1 guardrail test nuevo.
-- Changelog `[13.301.84]` + bump `APP_VERSION`.
-
-Sin cambios de esquema, sin backfill de datos. Bajo riesgo.
+- Tratamiento defensivo del backfill: `UPDATE proveedor_facturas pf SET estado = 'Pagada' FROM v_proveedor_facturas_saldo v WHERE v.proveedor_factura_id = pf.id AND pf.estado = 'Vigente' AND v.saldo <= 0.01;` y análogo para el caso inverso (una NC anulada podría reabrir un saldo, pero **no** reabriremos facturas ya Pagadas manualmente si tienen pago real — sólo la trigger fresh maneja transacciones futuras; el backfill sólo mueve `Vigente → Pagada`, nunca al revés, para no sorprender al usuario).
+- La trigger es `SECURITY DEFINER` porque `pagos_proveedor` y `proveedor_notas_credito` los inserta el usuario final (RLS activa) pero necesita `UPDATE` sobre `proveedor_facturas` sin depender de la política del usuario que lo disparó.
+- No tocaré Fase L: el bug era del test, no de la migración.
