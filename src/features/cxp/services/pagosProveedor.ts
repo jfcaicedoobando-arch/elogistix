@@ -52,6 +52,26 @@ export interface RegistrarPagoProveedorInput {
   diferencia_cambiaria_mxn?: number | null;
 }
 
+/**
+ * Error tipado cuando la BD rechaza un pago porque la factura no está aprobada.
+ * Se lanza tanto desde defensa temprana en el cliente como desde el mapeo del
+ * error del trigger BD `trg_pago_requiere_aprobacion` (token
+ * `LC_PAGO_SIN_APROBACION`).
+ */
+export class PagoRequiereAprobacionError extends Error {
+  code = "LC_PAGO_SIN_APROBACION" as const;
+  constructor(message = "La factura debe estar aprobada antes de registrar un pago.") {
+    super(message);
+    this.name = "PagoRequiereAprobacionError";
+  }
+}
+
+function esErrorPagoSinAprobacion(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const rec = err as { message?: unknown };
+  return typeof rec.message === "string" && rec.message.includes("LC_PAGO_SIN_APROBACION");
+}
+
 export async function registrarPagoProveedor(
   input: RegistrarPagoProveedorInput,
   userId: string | null,
@@ -64,7 +84,7 @@ export async function registrarPagoProveedor(
   // Sentry JAVASCRIPT-REACT-W).
   const { data: fact, error: errFact } = await supabase
     .from("proveedor_facturas")
-    .select("organization_id")
+    .select("organization_id, estado_aprobacion")
     .eq("id", input.proveedor_factura_id)
     .maybeSingle();
   if (errFact) throw errFact;
@@ -79,6 +99,11 @@ export async function registrarPagoProveedor(
   const orgActual = (orgActualRow as string | null) ?? null;
   if (orgActual && orgActual !== fact.organization_id) {
     throw Object.assign(new Error("ORG_MISMATCH"), { code: "ORG_MISMATCH" });
+  }
+
+  // Fase R.4 · Bug 24: defensa temprana antes de golpear la BD.
+  if (fact.estado_aprobacion !== "aprobada") {
+    throw new PagoRequiereAprobacionError();
   }
 
   const payload: TablesInsert<"pagos_proveedor"> = {
@@ -100,7 +125,13 @@ export async function registrarPagoProveedor(
     .insert(payload)
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    if (esErrorPagoSinAprobacion(error)) {
+      throw new PagoRequiereAprobacionError();
+    }
+    throw error;
+  }
+
 
   // Recalcular estado de la factura origen
   await recalcularEstadoFactura(input.proveedor_factura_id);
