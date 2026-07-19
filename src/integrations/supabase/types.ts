@@ -7163,6 +7163,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      convertir_proformas_a_factura_check_embarque_vivo: {
+        Args: { p_proforma_ids: string[] }
+        Returns: undefined
+      }
       cotizaciones_listado: {
         Args: {
           p_cliente_id?: string
