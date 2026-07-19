@@ -12,9 +12,33 @@ import {
   construirCostosRows,
   parsearVentasJsonb,
 } from "./embarquesHelpers";
+import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
+import {
+  RevalidacionRequeridaError,
+  type ResultadoRevalidacion,
+} from "@/features/cotizacion/domain/revalidacionTarifa";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type EmbarqueInsert = TablesInsert<"embarques">;
+
+/**
+ * Fase R.6 (Bug 18): pre-check en cliente. Bloquea la conversión si la tarifa
+ * de la cotización cambió, venció o quedó por fuera del umbral. La misma
+ * validación está reforzada en BD dentro de la RPC 1-arg
+ * `crear_embarque_borrador_desde_cotizacion(uuid)` mediante
+ * `enforce_revalidacion_sin_cambios`.
+ */
+async function assertTarifaSinCambios(cotizacionId: string): Promise<ResultadoRevalidacion> {
+  const r = await revalidarTarifa(cotizacionId);
+  if (r.severidad !== "sin_cambios") {
+    throw new RevalidacionRequeridaError(
+      r,
+      "La tarifa de la cotización cambió o venció. Usa el flujo de revalidación (Crear embarque) para mantener, refrescar, sustituir o pedir reaprobación antes de generar el embarque.",
+    );
+  }
+  return r;
+}
+
 
 /** Inserta costos en lotes (BL una vez, por contenedor para el resto). */
 async function insertarCostosEmbarque(
