@@ -30,7 +30,7 @@ describe("Fase L — Multi-moneda CxP", () => {
   });
 
   it("existe la función de conversión con guard MXN↔USD y rechazo de EUR cruzado", () => {
-    const sql = readLatestContaining("convertir_monto_pago_a_factura");
+    const sql = readLatestContaining("CREATE OR REPLACE FUNCTION public.convertir_monto_pago_a_factura");
     expect(sql).toMatch(/LC_PAGO_TC_REQUERIDO/);
     expect(sql).toMatch(/LC_PAGO_CRUCE_NO_SOPORTADO/);
     // GRANT restringido
