@@ -245,3 +245,11 @@
   --ring: 217 91% 60%;
 }
 
+
+@layer components {
+  /* Etiqueta densa (patrón dominante: text-label uppercase tracking-wide
+     text-muted-foreground). Ola 8 · Auditoría UI 1080p. */
+  .text-overline {
+    @apply text-label uppercase tracking-wide text-muted-foreground;
+  }
+}
