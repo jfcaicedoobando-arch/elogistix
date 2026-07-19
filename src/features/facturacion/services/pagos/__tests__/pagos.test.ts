@@ -79,39 +79,15 @@ describe("eliminarPagoFactura", () => {
   });
 
   it("R.5 · Bug 8 — mapea LC_PAGO_CON_REP_VIVO del trigger a PagoConRepVivoError", async () => {
-    // Primer llamado (select) sin REP → pasa la defensa temprana; el trigger
-    // simula que entre la lectura y el update apareció un REP.
-    let call = 0;
-    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: null, rep_cancelado_en: null }, error: null });
-    const original = mock.supabase.from;
-    (mock.supabase as unknown as { from: typeof original }).from = ((table: string) => {
-      call += 1;
-      if (call === 2) {
-        mock.setTableResult("pagos_factura", { data: null, error: { message: "LC_PAGO_CON_REP_VIVO: no permitido" } });
-      }
-      return original(table);
-    }) as typeof original;
-    try {
-      await expect(eliminarPagoFactura("p-1")).rejects.toBeInstanceOf(PagoConRepVivoError);
-    } finally {
-      (mock.supabase as unknown as { from: typeof original }).from = original;
-    }
+    // El SELECT devuelve error (data null), la defensa temprana lo ignora y
+    // procede al UPDATE, que también recibe el mismo error del trigger; el
+    // catch en el service debe traducirlo al error tipado.
+    mock.setTableResult("pagos_factura", { data: null, error: { message: "LC_PAGO_CON_REP_VIVO: no permitido" } });
+    await expect(eliminarPagoFactura("p-1")).rejects.toBeInstanceOf(PagoConRepVivoError);
   });
 
   it("propaga errores genéricos de supabase al eliminar", async () => {
-    // La defensa temprana pasa (uuid_rep null), luego el update falla.
-    let call = 0;
-    mock.setTableResult("pagos_factura", { data: { id: "p-1", uuid_rep: null, rep_cancelado_en: null }, error: null });
-    const original = mock.supabase.from;
-    (mock.supabase as unknown as { from: typeof original }).from = ((table: string) => {
-      call += 1;
-      if (call === 2) mock.setTableResult("pagos_factura", { data: null, error: { message: "rls" } });
-      return original(table);
-    }) as typeof original;
-    try {
-      await expect(eliminarPagoFactura("p-1")).rejects.toThrow();
-    } finally {
-      (mock.supabase as unknown as { from: typeof original }).from = original;
-    }
+    mock.setTableResult("pagos_factura", { data: null, error: { message: "rls" } });
+    await expect(eliminarPagoFactura("p-1")).rejects.toThrow();
   });
 });
