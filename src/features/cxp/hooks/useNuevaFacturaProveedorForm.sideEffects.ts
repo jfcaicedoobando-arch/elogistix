@@ -62,13 +62,14 @@ export async function vincularSafe(params: {
 
   if (lineas.length > 0) {
     try {
-      const res = await vincularFacturaAConceptos({
+      await vincularFacturaAConceptos({
         facturaId, organizationId,
         folio: values.folio.trim(),
         fechaEmision: values.emision,
         lineas,
       });
-      return { liquidados: res.liquidados.length };
+      // Fase P.3: la liquidación la determina el trigger en BD a partir de pagos.
+      return { liquidados: 0 };
     } catch (linkErr) {
       const err = linkErr as { message?: string };
       toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
