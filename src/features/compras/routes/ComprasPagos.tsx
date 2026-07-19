@@ -96,7 +96,7 @@ export default function ComprasPagos() {
   };
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         icon={<Landmark className="h-6 w-6 text-accent" />}
         title="Pagos a proveedor"

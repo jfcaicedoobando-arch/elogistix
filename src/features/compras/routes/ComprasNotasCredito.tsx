@@ -92,7 +92,7 @@ export default function ComprasNotasCredito() {
   };
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         icon={<ReceiptText className="h-6 w-6 text-accent" />}
         title="Notas de crédito de proveedor"

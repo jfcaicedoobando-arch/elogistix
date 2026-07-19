@@ -65,7 +65,7 @@ export default function ComprasConciliacion() {
 
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         icon={<GitCompare className="h-6 w-6" />}
         title="Conciliación con embarques"

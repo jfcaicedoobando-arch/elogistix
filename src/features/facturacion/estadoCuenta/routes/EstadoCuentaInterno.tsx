@@ -9,7 +9,7 @@ export default function EstadoCuentaInterno() {
   const { clienteId = "" } = useParams<{ clienteId: string }>();
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         icon={<Wallet className="h-6 w-6 text-primary" />}
         title="Estado de cuenta"

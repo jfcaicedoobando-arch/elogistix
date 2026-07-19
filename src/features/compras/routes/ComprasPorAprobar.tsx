@@ -64,7 +64,7 @@ export default function ComprasPorAprobar() {
   };
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <PageHeader
         icon={<ShieldCheck className="h-6 w-6 text-accent" />}
         title="Por aprobar"
