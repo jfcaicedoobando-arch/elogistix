@@ -3,6 +3,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { queryKeys } from "@/lib/query";
 import {
   aplicarNotaCredito,
+  aprobarNotaCredito,
   cancelarNotaCredito,
   crearNotaCreditoProveedor,
   fetchNotasCreditoFactura,
