@@ -29,7 +29,7 @@ describe("eliminar_embarque_completo bloquea proformas en borrador", () => {
     const idx = body.lastIndexOf("eliminar_embarque_completo");
     const slice = body.slice(idx);
     expect(slice).toMatch(
-      /estado_proforma[^)]*NOT\s+IN\s*\(\s*'cancelada'\s*,\s*'facturada'\s*\)/i,
+      /estado_proforma[\s\S]{0,120}NOT\s+IN\s*\(\s*'cancelada'\s*,\s*'facturada'\s*\)/i,
     );
   });
 });
