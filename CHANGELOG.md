@@ -3,7 +3,17 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.5] - 2026-07-19
+- **Sprint 2 · Ola 4 — Cierre de parciales UI (KPI clones + colores residuales)**:
+  - 9 clones locales de KPI card migrados al `KpiCard` canónico: `bandejas/CxpPorCapturar`, `comisiones/Comisiones`, `compras/ComprasPorAprobar` (+ borrado `ComprasPorAprobar.kpi.tsx`), `costeo/TarifasKpis`, `cxp/CxpKpiCards`, `facturacion/DashboardEjecutivoFacturacion`, `presupuesto/TabVsReal`, `proveedor/ProveedorSaludTab`, `tesoreria/TesoreriaFlujo`. ~190 líneas duplicadas eliminadas.
+  - Convenciones unificadas: `warn→warning`, `bad→destructive`, `sub→sublabel`, hints → `valueTooltip`, grids a `gap-3`.
+  - `TarifasKpis`: anillo de filtro activo via `ring-2 ring-<token>/60` mapeado por `KpiVariant` — sin ensuciar la API del componente compartido.
+  - `DashboardEjecutivoFacturacion`: strip `divide-x` → grid de `KpiCard`; se elimina `TooltipProvider` innecesario.
+  - Colores hardcoded residuales tokenizados: `slate-100 → border` (`TablaCostosLocal`), `blue-500 → info` (`estadoConfig` Confirmado), `cyan-500/600 → primary` (`ArribosCard`).
+  - `no-legacy-color-literals`: retirada `TablaCostosLocal.tsx` de la allowlist (queda solo `LogoPreview.tsx`, justificado como sujeto de prueba).
+
 ## [13.302.4] - 2026-07-19
+
 - **CI green-up post Ola 3**:
   - `KpiCard.tsx` (255 líneas) dividido en `KpiCard.tsx` (102) + `KpiCardBody.tsx` + `kpiCard.tokens.ts` para respetar Power-of-10 (≤200 líneas) y evitar warnings de `react-refresh/only-export-components`.
   - `no-legacy-color-literals` allowlist: eliminadas 4 entradas obsoletas de `cotizacion/*` que Sprint 1 ya tokenizó.
