@@ -11,7 +11,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-import { listarPagosFactura, registrarPagoFactura, eliminarPagoFactura } from "../index";
+import { listarPagosFactura, registrarPagoFactura, eliminarPagoFactura, PagoConRepVivoError } from "../index";
 
 const validInput = {
   factura_id: "fac-1",
