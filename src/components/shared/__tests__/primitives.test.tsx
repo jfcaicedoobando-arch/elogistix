@@ -17,6 +17,13 @@ describe("<PageContainer />", () => {
     render(<PageContainer noSpacing data-testid="pc">child</PageContainer>);
     expect(screen.getByTestId("pc").className).not.toMatch(/space-y-6/);
   });
+
+  it("aplica ancho wide (1720px) cuando width='wide'", () => {
+    render(<PageContainer width="wide" data-testid="pc">child</PageContainer>);
+    const cls = screen.getByTestId("pc").className;
+    expect(cls).toMatch(/max-w-\[1720px\]/);
+    expect(cls).not.toMatch(/max-w-screen-2xl/);
+  });
 });
 
 describe("<LoadingState />", () => {
