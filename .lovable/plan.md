@@ -1,67 +1,61 @@
-## Ronda de cierre: bugs 7, 8, 15, 21, 24 + residual Fase B
+# Fase R.4 — Bug 24 · Pagar sin aprobación
 
-Cerramos los pendientes que quedaron parciales/abiertos de rondas anteriores. Cada fix incluye migración + guardrail test + entrada en CHANGELOG y bump de `APP_VERSION`.
+## Contexto verificado
 
-### Fase R.1 — Bug 7 completo (eliminar embarque + proformas huérfanas) · v13.301.92
+- `proveedor_facturas.estado_aprobacion` (enum `pendiente | aprobada | rechazada`) existe y se cambia sólo desde el RPC `aprobar_factura_proveedor` (con permisos).
+- **No hay guarda BD** en `pagos_proveedor` ni en `_recalc_estado_proveedor_factura` que impida registrar pagos cuando la factura sigue `pendiente` o `rechazada` (grep confirmado en migraciones).
+- En cliente, `registrarPagoProveedor` (`src/features/cxp/services/pagosProveedor.ts`) inserta sin leer `estado_aprobacion`; la UI (`DialogRegistrarPagoProveedor.tsx`) tampoco lo revisa.
+- Riesgo (analogía): es como poder firmar un cheque antes de que el jefe autorice el gasto — la contabilidad ya se movió, pero nadie dio el visto bueno.
 
-**Problema:** `eliminar_embarque_completo` no cuenta proformas vivas como dependencia, y `convertir_proformas_a_factura` no valida que el embarque siga vivo. Vía abierta: borrar embarque con proforma sin facturar → la proforma queda huérfana pero facturable.
+## Objetivo
 
-- Migración:
-  - Agregar count de `proformas` (estado_aprobacion ≠ 'borrador' vacío, no facturadas) al bloque de motivos en `eliminar_embarque_completo`. Extender `MotivosBloqueoEmbarque` (server + cliente) con `proformas`.
-  - En `convertir_proformas_a_factura`, `RAISE` si el embarque asociado tiene `deleted_at IS NOT NULL` (código `LC_EMBARQUE_ELIMINADO`).
-- Cliente:
-  - Extender `MotivosBloqueoEmbarque` en `services` y el adaptador `motivosADependencias`.
-  - Renderizar la nueva categoría en `DialogEmbarqueBloqueadoAlert`.
-- Tests: guardrail SQL que confirma el nuevo count y el `RAISE` en la RPC de conversión.
+Que la BD sea la fuente de verdad: no se puede insertar/reactivar un pago si la factura no está `aprobada`. La UI acompaña con feedback claro.
 
-### Fase R.2 — Bug 15 completo (guarda DB para re-cotizar) · v13.301.93
+## Cambios
 
-**Problema:** UI ya oculta el botón, pero `recotizar_cotizacion` no valida en BD → un cliente API puede versionar una cotización con embarques vinculados.
+### 1. Migración BD (nueva)
 
-- Migración: en `recotizar_cotizacion`, verificar `EXISTS (SELECT 1 FROM embarques WHERE cotizacion_id = p_cotizacion_id AND deleted_at IS NULL)` y `RAISE` con código `LC_COTIZACION_CON_EMBARQUES`.
-- Servicio `versionado/index.ts`: mapear el error a una clase de dominio (`CotizacionConEmbarquesError`) para que el modal lo muestre traducido.
-- Tests: guardrail que verifica presencia del check en la migración más reciente + test unitario del servicio.
+Archivo: `supabase/migrations/<timestamp>_r4_pago_requiere_aprobacion.sql`
 
-### Fase R.3 — Bug 21 completo (transiciones NC proveedor en BD) · v13.301.94
+- Función `public.check_pago_proveedor_factura_aprobada()` `SECURITY DEFINER`:
+  - En `INSERT` (o `UPDATE` que quite `deleted_at`, i.e. "revivir" un pago): leer `estado_aprobacion` de la factura.
+  - Si `<> 'aprobada'`, `RAISE EXCEPTION 'LC_PAGO_SIN_APROBACION: la factura % está en estado %', v_folio, v_estado;`
+- Trigger `trg_pago_requiere_aprobacion` `BEFORE INSERT OR UPDATE OF deleted_at ON public.pagos_proveedor`.
+- `GRANT EXECUTE` no aplica (trigger). Mantener `search_path = public`.
 
-**Problema:** El estado (`Borrador → Vigente → Aplicada/Cancelada`) sólo se enforce en cliente. API puede aplicar una NC en 'Borrador' o 'Cancelada'.
+### 2. Servicio cliente
 
-- Migración: trigger `BEFORE UPDATE` en `proveedor_notas_credito` que valide la matriz de transiciones (`transicion_nc_proveedor_valida`), similar al pattern de Fase G para embarques. Bloquea también `Aplicada → *` (inmutable).
-- Además, trigger `BEFORE INSERT` en la tabla puente `proveedor_nc_aplicaciones` (o equivalente) que exija `estado = 'Vigente'` en la NC padre.
-- Tests: guardrail SQL + unit test asegurando que se levantan los errores esperados.
+`src/features/cxp/services/pagosProveedor.ts`
 
-### Fase R.4 — Bug 24 real (aprobación previa a pago proveedor) · v13.301.95
+- Añadir clase `PagoRequiereAprobacionError extends Error` con `code = "LC_PAGO_SIN_APROBACION"`.
+- En `registrarPagoProveedor` y `eliminarPagoProveedor` (para el caso de reactivación), envolver el `throw error` con detección del token `LC_PAGO_SIN_APROBACION` → lanzar el error tipado.
+- Como defensa temprana (menos roundtrips), al inicio de `registrarPagoProveedor` extender la lectura de la factura para incluir `estado_aprobacion` y lanzar el error tipado antes del `INSERT` si es `<> 'aprobada'`.
 
-**Problema:** `pagos_proveedor` no valida `estado_aprobacion = 'aprobada'` en el INSERT. La mitigación por RLS admin-only no impide que un admin pague una factura aún no aprobada.
+### 3. UI
 
-- Migración: trigger `BEFORE INSERT` en `pagos_proveedor` que verifique `proveedor_facturas.estado_aprobacion = 'aprobada'` (y `<> 'cancelada'`). Código `LC_CXP_SIN_APROBACION`.
-- Cliente: mapear error en `useRegistrarPagoProveedor` + toast.
-- Tests: guardrail + RLS fixture.
+`src/features/cxp/components/DialogRegistrarPagoProveedor.tsx` (o el disparador equivalente en `PagoProveedorFormBody` / botón "Registrar pago" del detalle CxP):
 
-### Fase R.5 — Bug 8 (eliminar pago con REP timbrado) · v13.301.96
+- Recibir/leer `estado_aprobacion` de la factura.
+- Si `!== "aprobada"`: deshabilitar el botón "Registrar pago" con `Tooltip` "Requiere aprobación de la factura".
+- En el submit, si el error mapeado es `PagoRequiereAprobacionError`, mostrar toast rojo con el copy: "No se puede registrar el pago: la factura aún no está aprobada."
 
-**Problema:** Se puede borrar un `pagos_factura` cuyo REP ya está `Timbrado` sin cancelar antes el CFDI de pago.
+### 4. Tests
 
-- Migración: trigger `BEFORE UPDATE` en `pagos_factura` que, cuando `NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL`, verifique `OLD.estado_rep NOT IN ('Timbrado','EnCancelacion')`. Código `LC_PAGO_CON_REP_TIMBRADO`.
-- UI: en `FacturaPagosSection`, ocultar/deshabilitar el botón "Eliminar" cuando `estado_rep IN ('Timbrado','EnCancelacion')` con tooltip explicativo.
-- Tests: guardrail SQL + test de UI (RTL) que oculta el botón.
+- `src/features/cxp/services/__tests__/pagosProveedor.test.ts`:
+  - Caso: factura `pendiente` → `registrarPagoProveedor` lanza `PagoRequiereAprobacionError` sin hacer `insert`.
+  - Caso: BD devuelve error con `LC_PAGO_SIN_APROBACION` → se mapea al error tipado.
+  - Caso: factura `aprobada` → flujo actual funciona (regresión).
+- Test opcional en componente para verificar botón deshabilitado cuando `estado_aprobacion !== 'aprobada'` (si el patrón del feature ya usa RTL para dialogs; si no, se omite y se cubre por unit del servicio).
 
-### Fase R.6 — Residual Fase B (revert cancelación considera borradores vivos) · v13.301.97
+### 5. Versionado & changelog
 
-**Problema:** En `revertir_proforma_al_cancelar_sustitucion`, el check de "facturas vivas" excluye `'Borrador'`. Escenario documentado: MXN timbrada + borrador USD vivo → cancelar MXN libera la proforma → re-conversión duplica.
+- Bump `APP_VERSION` → `13.301.95`.
+- Añadir bullet en `CHANGELOG.md`:
+  `[13.301.95] - 2026-07-19 · Fase R.4 (Bug 24): guarda BD LC_PAGO_SIN_APROBACION en pagos_proveedor + UI deshabilita "Registrar pago" en facturas no aprobadas.`
 
-- Migración: incluir `'Borrador'` en la lista de estados vivos para el sibling-check del revert (mismo criterio que `eliminar_factura_borrador` de Fase C). Filtrar por conceptos_factura.proforma_id_origen compartido.
-- Backfill: query de diagnóstico (no destructivo) para detectar proformas actualmente en `pendiente` con borradores USD vivos consumiéndolas — reportar count, no mutar.
-- Tests: guardrail SQL que asegura `'Borrador'` presente en el check, y test de dominio que reproduce el escenario MXN timbrada + borrador USD.
+## Criterios de aceptación
 
-### Detalles técnicos comunes
-
-- Cada migración usa `ALTER FUNCTION`/`CREATE OR REPLACE FUNCTION` con `SECURITY DEFINER` y `SET search_path = public` según convención del repo.
-- Todos los `RAISE EXCEPTION` usan códigos `LC_*` para que `mapSupabaseError` los traduzca en UI.
-- CHANGELOG: una entrada por fase, formato `## [X.Y.Z] - YYYY-MM-DD`.
-- Bump `APP_VERSION` una vez por fase.
-- Guardrails vitest ubicados en `src/lib/__tests__/` siguiendo el patrón `*-fase-*.test.ts`.
-
-### Orden de ejecución
-
-R.1 → R.2 → R.3 → R.4 → R.5 → R.6, verificando `bun run ci:fast` entre cada fase (como en rondas anteriores). Después de cada fase espero tu "revisa y continúa" antes de saltar a la siguiente.
+1. Intentar `INSERT` directo con SQL en `pagos_proveedor` para una factura `pendiente` falla con `LC_PAGO_SIN_APROBACION`.
+2. Aprobar la factura y luego registrar pago funciona.
+3. Al rechazar/desaprobar una factura vía trigger (si aplica en flujos futuros), no se pueden crear pagos nuevos.
+4. `bun run ci:fast` verde (lint + typecheck + tests unitarios).
