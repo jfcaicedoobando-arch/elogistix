@@ -1,81 +1,47 @@
-# Fase R.7 — Residual Fase B + bordes menores
+## Fase R.8 — Fixes de auditoría ronda 5
 
-Analogía: la Fase B libera la proforma cuando cancelas la factura MXN "buena", pero se olvida que hay un borrador USD en la despensa consumiendo los mismos conceptos. Al ver "vivas" ignora los borradores → la proforma vuelve a `pendiente`, y si la re-conviertes duplicas conceptos en el borrador USD. Fix simétrico al de Fase C: contar borradores como facturas vivas.
+Aplicar el paquete de 3 migraciones que subiste (REG-1, REG-2, N-3), verificar y bumpear versión.
 
-## Verificación previa (hecho)
+### 1. Migración `fix_reg1_revalidacion_deadlock` (showstopper)
 
-- `supabase/migrations/20260718195258_...sql` línea 66: `WHERE f.estado NOT IN ('Cancelada','Sustituida','Borrador')` — confirmado.
-- Fase C ya excluye sólo `('Cancelada','Sustituida')` al bloquear borrado del embarque.
-- Test `src/lib/__tests__/revertir-proforma-multi-source.test.ts` usa regex `NOT IN ('Cancelada','Sustituida'` (no exige `Borrador`), así que el fix no lo rompe.
+Reescribir la guarda de revalidación de tarifa para desbloquear el flujo cotización→embarque:
 
-## Cambios
+- `enforce_revalidacion_sin_cambios(uuid)`: solo lanza en severidad `bloqueante`; corto-circuito si `estado_revalidacion='reaprobada'`. `informativa` deja pasar.
+- Extraer el cuerpo del 1-arg a `crear_embarque_borrador_core(uuid)` (privado, solo `service_role`).
+- 1-arg público = guarda + core (vía directa).
+- 4-arg con `p_decision`: cuando la decisión es explícita (`refrescada` / `mantenida_por_operaciones` / `sustituida` / `reaprobada_ventas`) **es** la resolución: convierte, registra `tarifa_decision` + tarifa aplicada + delta, y marca la cotización `reaprobada` si estaba `pendiente_reaprobacion`. Registra bitácora `tarifa_decision_aplicada`.
 
-### 1. Fix principal — Bug 3 residual (CRÍTICO)
+Efecto: los 4 valores de decisión dejan de ser código muerto y los drifts `informativa` ya no bloquean.
 
-Nueva migración `supabase/migrations/<ts>_r7_revertir_proforma_cuenta_borradores.sql`:
+### 2. Migración `fix_reg2_cxc_monto_convertido`
 
-- `CREATE OR REPLACE FUNCTION public.revertir_proforma_al_cancelar_sustitucion` idéntica a la actual **excepto**:
-  - Línea 66 → `WHERE f.estado NOT IN ('Cancelada','Sustituida')` (quitar `'Borrador'`).
-- Mantener firma `RETURNS uuid[]`, `SECURITY DEFINER`, `search_path = public`.
-- `COMMENT ON FUNCTION` explicando que los borradores cuentan como vivos (consumen conceptos y pueden timbrarse).
+Blindar `pagos_factura.monto_aplicado_factura` en BD (espejo del patrón de Fase L en CxP):
 
-### 2. Bug menor A — INSERT directo salta máquina de estados NC proveedor
+- Trigger `BEFORE INSERT OR UPDATE OF monto/moneda/tipo_cambio/factura_id` que recalcula vía `convertir_monto_pago_a_factura`, tratando `tipo_cambio=1` en cruce de monedas como placeholder ausente.
+- Backfill defensivo de pagos con cruce de monedas (por fila con `EXCEPTION WHEN OTHERS`; los que no tengan TC caen a WARNING para revisión manual).
 
-Reforzar el trigger existente en `proveedor_notas_credito`:
+Efecto: cierra el bypass de sobrepago vía API directa y arregla saldos multi-moneda que consumen `saldo_factura()` y `assert_factura_viva_para_pago`.
 
-- Recrear `enforce_nc_proveedor_estado_transicion()` para disparar también en `BEFORE INSERT`.
-- En INSERT: si `NEW.estado` ∉ `('Borrador')`, `RAISE EXCEPTION 'LC_NC_PROV_INSERT_ESTADO_INVALIDO'` con `HINT` "Una nota de crédito debe crearse en estado Borrador".
-- Trigger:
-  ```sql
-  DROP TRIGGER IF EXISTS trg_nc_prov_estado_machine ON public.proveedor_notas_credito;
-  CREATE TRIGGER trg_nc_prov_estado_machine
-    BEFORE INSERT OR UPDATE OF estado ON public.proveedor_notas_credito
-    FOR EACH ROW EXECUTE FUNCTION public.enforce_nc_proveedor_estado_transicion();
-  ```
-- Cliente (`src/features/cxp/services/proveedorNotasCredito.ts`): mapear el nuevo token dentro de `mapEstadoError` a `NcProveedorTransicionInvalidaError` reutilizando el hint.
+### 3. Migración `fix_n3_comisiones_factura_cancelada`
 
-### 3. Bug menor B — Proformas en borrador no bloquean eliminar embarque
+Trigger `AFTER UPDATE OF estado` en `facturas`:
 
-Actualizar `eliminar_embarque_completo` (revisada en Fase R.1):
+- Cuando la factura pasa a `Cancelada` o `Sustituida`, marca sus `comisiones_devengadas` con estado `Devengada` como `Cancelada` y agrega nota `[auto] factura Cancelada/Sustituida (núm. XXX)`.
+- Las `Liquidada` no se tocan (ese dinero ya se pagó al vendedor).
 
-- Ampliar el conteo de proformas bloqueantes de `estado_proforma IN ('aprobada','facturada')` a **cualquier `estado_proforma <> 'cancelada' AND deleted_at IS NULL`** (incluye `pendiente` y `borrador`).
-- Mensaje sigue siendo `LC_EMBARQUE_CON_PROFORMAS_VIVAS` con lista de folios.
-- Alternativa considerada (soft-delete cascada): descartada — dejaría facturas vacías si el usuario luego re-convertía; bloquear es más seguro.
+Efecto: no quedan comisiones vivas sobre CFDIs muertos.
 
-### 4. Bug menor C — Soft-delete de proforma facturada solo en UI
+### 4. Verificación y cierre
 
-Nuevo trigger en `proformas`:
+- Correr `bun run ci:fast` para confirmar que lint/typecheck/vitest siguen verdes (los servicios cliente ya toleran los cambios; no requieren edición en este paquete).
+- Bump `APP_VERSION` → `13.301.99`.
+- Actualizar `CHANGELOG.md` con la entrada de Fase R.8 (los 3 fixes + qué desbloquean).
 
-- `enforce_proforma_no_soft_delete_facturada()` `BEFORE UPDATE OF deleted_at`:
-  - Si `OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL AND OLD.estado_proforma = 'facturada'` → `RAISE EXCEPTION 'LC_PROFORMA_FACTURADA_NO_ELIMINABLE'`.
-- Trigger `trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas`.
-- No hace falta cambio en cliente (la UI ya lo evita); el trigger es defensa en profundidad.
+### Fuera de alcance (backlog explícito del documento)
 
-### 5. Tests
+- Residual Fase B (`revertir_proforma_al_cancelar_sustitucion` excluyendo `'Borrador'`) — nota: ya lo cerramos en R.7 vía guardrail `revertir-proforma-borrador-vivo.test.ts`; lo verifico y si aplica lo confirmo en el changelog, sin nueva migración.
+- N-1 conciliación movimiento↔pago, N-2 anticipos de clientes, N-4 pre-check local de REPs vivos.
 
-- `src/lib/__tests__/revertir-proforma-borrador-vivo.test.ts` (nuevo, estilo lectura de SQL como los existentes):
-  - Verifica que la última definición de `revertir_proforma_al_cancelar_sustitucion` **NO** incluye `'Borrador'` en el `NOT IN`.
-- `src/features/cxp/services/__tests__/proveedorNotasCredito.test.ts`:
-  - Agregar caso: BD devuelve `LC_NC_PROV_INSERT_ESTADO_INVALIDO` en `crearNotaCreditoProveedor` con `estado='Aplicada'` → se mapea a `NcProveedorTransicionInvalidaError` (si no existe el archivo, crearlo con mocks del patrón thenable).
-- `src/lib/__tests__/eliminar-embarque-proformas-borrador.test.ts` (nuevo, lectura SQL):
-  - La última definición de `eliminar_embarque_completo` cuenta proformas con `estado_proforma <> 'cancelada'` (o equivalente que incluya `'borrador'`).
-- `src/lib/__tests__/proforma-facturada-no-soft-delete.test.ts` (nuevo, lectura SQL):
-  - Existe el trigger `trg_proforma_no_soft_delete_facturada` y el `RAISE EXCEPTION` con token esperado.
+### Detalles técnicos
 
-### 6. Versionado & changelog
-
-- Bump `APP_VERSION` → `13.301.97`.
-- `CHANGELOG.md`:
-  ```
-  ## [13.301.97] - 2026-07-19
-  - Fase R.7 (Bug 3 residual): `revertir_proforma_al_cancelar_sustitucion` ahora cuenta borradores como facturas vivas — cancelar una factura ya no libera proformas si aún hay borradores consumiendo sus conceptos.
-  - Fase R.7 (bordes menores): trigger `LC_NC_PROV_INSERT_ESTADO_INVALIDO` bloquea crear NC proveedor fuera de estado Borrador; `eliminar_embarque_completo` incluye proformas en borrador en el bloqueo; nuevo trigger `LC_PROFORMA_FACTURADA_NO_ELIMINABLE` evita soft-delete de proformas facturadas.
-  ```
-
-## Criterios de aceptación
-
-1. Con factura MXN timbrada + borrador USD sobre la misma proforma, cancelar la MXN deja `estado_proforma = 'facturada'` (no `pendiente`).
-2. `INSERT INTO proveedor_notas_credito (..., estado) VALUES (..., 'Aplicada')` falla con `LC_NC_PROV_INSERT_ESTADO_INVALIDO`.
-3. Intentar eliminar un embarque con una proforma en borrador falla con `LC_EMBARQUE_CON_PROFORMAS_VIVAS`.
-4. `UPDATE proformas SET deleted_at=now() WHERE estado_proforma='facturada'` falla con `LC_PROFORMA_FACTURADA_NO_ELIMINABLE`.
-5. `bun run ci:fast` verde (los tests existentes de multi-source siguen pasando).
+Se emite una sola migración con los 3 bloques SQL en orden (REG-1 → REG-2 → N-3). Todo idempotente (`CREATE OR REPLACE`, `DROP TRIGGER IF EXISTS`). Los `GRANT`/`REVOKE` sobre las nuevas funciones se aplican en el mismo bloque. El backfill de REG-2 corre en un `DO $$` con conteo `NOTICE` para trazabilidad.
