@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
 
+// v13.301.90 (Fase Q.1): portal no expone `deleted_at`/`deleted_by`.
 interface Props {
-  eventos: Tables<"eventos_embarque">[];
+  eventos: Omit<Tables<"eventos_embarque">, "deleted_at" | "deleted_by">[];
 }
 
 const ICONO_EVENTO_LUCIDE: Record<string, LucideIcon> = {
