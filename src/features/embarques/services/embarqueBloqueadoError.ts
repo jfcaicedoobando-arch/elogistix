@@ -59,6 +59,8 @@ function safeParseMotivos(raw: string): MotivosBloqueoEmbarque | null {
       notas_credito_cxc: Number(parsed.notas_credito_cxc) || 0,
       notas_credito_cxp: Number(parsed.notas_credito_cxp) || 0,
       comisiones_definitivas: Number(parsed.comisiones_definitivas) || 0,
+      proformas: Number(parsed.proformas) || 0,
+
       cerrado: Boolean(parsed.cerrado),
       expediente: parsed.expediente,
     };
