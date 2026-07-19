@@ -140,23 +140,25 @@ function TablaBody({ filas, expandidos, onToggle, onVincular }: {
 
 function TotalesMonedaFooter({ totalesPorMoneda }: { totalesPorMoneda: TotalesMoneda }) {
   return (
-    <div className="mt-3 space-y-1">
-      {totalesPorMoneda.map((t) => (
-        <div
-          key={t.moneda}
-          className="rounded-md border bg-muted/30 px-3 py-2 grid grid-cols-5 gap-2 text-xs tabular-nums"
-        >
-          <div className="font-semibold">TOTAL {t.moneda}</div>
-          <div className="text-right">{formatCurrency(t.cotizado, t.moneda)}</div>
-          <div className="text-right">{formatCurrency(t.real, t.moneda)}</div>
-          <div className={`text-right font-medium ${classFromNumber(t.diferencia)}`}>
-            {formatCurrency(t.diferencia, t.moneda)}
+    <div className="mt-3 overflow-x-auto [scrollbar-width:thin]">
+      <div className="min-w-[560px] space-y-1">
+        {totalesPorMoneda.map((t) => (
+          <div
+            key={t.moneda}
+            className="rounded-md border bg-muted/30 px-3 py-2 grid grid-cols-5 gap-2 text-xs tabular-nums"
+          >
+            <div className="font-semibold">TOTAL {t.moneda}</div>
+            <div className="text-right">{formatCurrency(t.cotizado, t.moneda)}</div>
+            <div className="text-right">{formatCurrency(t.real, t.moneda)}</div>
+            <div className={`text-right font-medium ${classFromNumber(t.diferencia)}`}>
+              {formatCurrency(t.diferencia, t.moneda)}
+            </div>
+            <div className={`text-right ${classFromNumber(t.desviacion_pct)}`}>
+              {t.desviacion_pct.toFixed(1)}%
+            </div>
           </div>
-          <div className={`text-right ${classFromNumber(t.desviacion_pct)}`}>
-            {t.desviacion_pct.toFixed(1)}%
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

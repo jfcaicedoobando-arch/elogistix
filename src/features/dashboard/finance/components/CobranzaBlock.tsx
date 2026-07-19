@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { AgingBuckets } from "@/features/dashboard/finance/hooks/useFinanceDashboard";
 
@@ -67,8 +67,11 @@ export function CobranzaBlock({ aging, facturasVencidas, loading }: Props) {
                     />
                   </div>
                   <p className="text-2xs text-muted-foreground text-center">{label}</p>
-                  <p className="text-xs font-semibold text-center tabular-nums truncate">
-                    {formatCurrency(value, "MXN")}
+                  <p
+                    className="text-xs font-semibold text-center tabular-nums truncate"
+                    title={formatCurrency(value, "MXN")}
+                  >
+                    {formatCurrencyCompact(value, "MXN")}
                   </p>
                 </div>
               );

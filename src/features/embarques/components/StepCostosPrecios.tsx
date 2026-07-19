@@ -121,9 +121,12 @@ export function StepCostosPrecios(props: Props) {
                 <p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p>
                 <Input type="number" {...register('tipoCambioEUR')} className="text-center mt-1" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p>
-                <p className={`text-xl font-bold mt-2 ${utilidadCalculada >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <p
+                  className={`text-lg sm:text-xl font-bold mt-2 tabular-nums truncate ${utilidadCalculada >= 0 ? 'text-success' : 'text-destructive'}`}
+                  title={formatCurrency(utilidadCalculada, 'USD')}
+                >
                   {formatCurrency(utilidadCalculada, 'USD')}
                 </p>
               </div>

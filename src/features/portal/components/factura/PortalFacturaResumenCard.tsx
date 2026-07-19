@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { MoneyCell } from "@/components/shared/MoneyCell";
 
 interface Props {
   factura: {
@@ -42,9 +43,9 @@ export default function PortalFacturaResumenCard({ factura }: Props) {
         </div>
 
         <div className="grid grid-cols-3 gap-3 border-t pt-4">
-          <Total label="Subtotal" value={formatCurrency(factura.subtotal, factura.moneda)} />
-          <Total label="IVA" value={formatCurrency(factura.iva, factura.moneda)} />
-          <Total label="Total" value={formatCurrency(factura.total, factura.moneda)} highlight />
+          <MoneyCell label="Subtotal" value={formatCurrency(factura.subtotal, factura.moneda)} />
+          <MoneyCell label="IVA" value={formatCurrency(factura.iva, factura.moneda)} />
+          <MoneyCell label="Total" value={formatCurrency(factura.total, factura.moneda)} highlight />
         </div>
 
         {factura.notas && (
@@ -67,11 +68,3 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
   );
 }
 
-function Total({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className={`rounded-lg border px-3 py-2 ${highlight ? "bg-accent/5 border-accent/20" : ""}`}>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`font-bold tabular-nums ${highlight ? "text-base text-accent" : "text-sm"}`}>{value}</p>
-    </div>
-  );
-}
