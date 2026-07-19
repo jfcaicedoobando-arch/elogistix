@@ -6364,6 +6364,10 @@ export type Database = {
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
+      _cxp_validar_aprobacion: {
+        Args: { p_factura_id: string }
+        Returns: undefined
+      }
       _docs_requeridos_por_estado: {
         Args: { p_estado: string; p_modo: string }
         Returns: string[]

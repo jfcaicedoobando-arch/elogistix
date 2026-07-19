@@ -46,6 +46,37 @@ const ERROR_RULES: readonly RuleMatch[] = [
     message: "La factura ya no existe o fue eliminada.",
     matches: (raw, code) => code === "PGRST116" || raw.includes("not_found") || raw.includes("no rows"),
   },
+  // Fase O — validaciones de cuadre y consistencia.
+  {
+    code: "LC_CXP_SIN_CONCEPTOS",
+    message: "Captura los conceptos de la factura antes de aprobar.",
+    matches: (raw) => raw.includes("lc_cxp_sin_conceptos"),
+  },
+  {
+    code: "LC_CXP_DESCUADRE",
+    message: "Los conceptos capturados no cuadran con el subtotal de la factura. Revisa la captura.",
+    matches: (raw) => raw.includes("lc_cxp_descuadre"),
+  },
+  {
+    code: "LC_CXP_EMBARQUE_CANCELADO",
+    message: "El embarque asociado está cancelado. No se puede aprobar esta factura.",
+    matches: (raw) => raw.includes("lc_cxp_embarque_cancelado"),
+  },
+  {
+    code: "LC_CXP_EMBARQUE_ORG_MISMATCH",
+    message: "El embarque asociado pertenece a otra organización.",
+    matches: (raw) => raw.includes("lc_cxp_embarque_org_mismatch"),
+  },
+  {
+    code: "LC_CXP_EMBARQUE_NO_EXISTE",
+    message: "El embarque asociado no existe.",
+    matches: (raw) => raw.includes("lc_cxp_embarque_no_existe"),
+  },
+  {
+    code: "LC_CXP_UUID_NO_VERIFICADO",
+    message: "Verifica el UUID en el SAT antes de aprobar.",
+    matches: (raw) => raw.includes("lc_cxp_uuid_no_verificado"),
+  },
   {
     code: "INVALID_STATE",
     message: "Esta factura ya fue procesada. Recarga la página para ver su estado actual.",

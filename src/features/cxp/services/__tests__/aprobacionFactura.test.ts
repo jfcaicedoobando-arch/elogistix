@@ -78,6 +78,13 @@ describe("aprobarFacturaProveedor - RPC", () => {
     [{ message: "estado inválido: already_approved" }, "INVALID_STATE"],
     [{ message: "network error fetch failed" }, "NETWORK"],
     [{ message: "boom desconocido" }, "UNKNOWN"],
+    // Fase O — validaciones de cuadre y consistencia.
+    [{ message: "LC_CXP_SIN_CONCEPTOS: Captura los conceptos" }, "LC_CXP_SIN_CONCEPTOS"],
+    [{ message: "LC_CXP_DESCUADRE: 100 vs 90" }, "LC_CXP_DESCUADRE"],
+    [{ message: "LC_CXP_EMBARQUE_CANCELADO: embarque X" }, "LC_CXP_EMBARQUE_CANCELADO"],
+    [{ message: "LC_CXP_EMBARQUE_ORG_MISMATCH: X" }, "LC_CXP_EMBARQUE_ORG_MISMATCH"],
+    [{ message: "LC_CXP_EMBARQUE_NO_EXISTE: X" }, "LC_CXP_EMBARQUE_NO_EXISTE"],
+    [{ message: "LC_CXP_UUID_NO_VERIFICADO: verifica" }, "LC_CXP_UUID_NO_VERIFICADO"],
   ])("mapea error RPC %j → %s", async (rpcError, expectedCode) => {
     mock.setRpcResult("aprobar_factura_proveedor", { data: null, error: rpcError });
     await expect(aprobarFacturaProveedor(VALID_ID, true)).rejects.toMatchObject({
