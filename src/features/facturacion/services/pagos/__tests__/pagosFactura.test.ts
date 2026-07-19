@@ -89,9 +89,11 @@ describe("services/pagos-factura", () => {
   });
 
   it("eliminarPagoFactura hace soft delete con deleted_by", async () => {
-    mock.setTableResult("pagos_factura", { data: null, error: null });
+    mock.setTableResult("pagos_factura", { data: { id: "p1", uuid_rep: null, rep_cancelado_en: null }, error: null });
     await eliminarPagoFactura("p1");
-    const payload = mock.tableCalls[0].opArgs[mock.tableCalls[0].ops.indexOf("update")]?.[0] as Record<string, unknown>;
+    const updateCall = mock.tableCalls.find((c) => c.ops.includes("update"));
+    expect(updateCall).toBeDefined();
+    const payload = updateCall!.opArgs[updateCall!.ops.indexOf("update")]?.[0] as Record<string, unknown>;
     expect(payload.deleted_by).toBe("user-1");
     expect(typeof payload.deleted_at).toBe("string");
   });
