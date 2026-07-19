@@ -11,9 +11,11 @@ import {
 } from "@/features/cotizacion/hooks/useCotizaciones";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { tieneCostosCargados } from "@/features/cotizacion/services/candadoCostos";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
 import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
+import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
+
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
