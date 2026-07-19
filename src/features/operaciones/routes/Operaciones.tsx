@@ -8,7 +8,7 @@ import { TrendingUp, AlertTriangle, Container, Ship, RefreshCw } from "lucide-re
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/features/operaciones/hooks";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
-import { KpiCard } from "@/features/operaciones/components/KpiCard";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/features/operaciones/components/DesempenoOperadores";
 import { useOperacionesPageController } from "@/features/operaciones/hooks";
@@ -59,18 +59,19 @@ export default function Operaciones() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Ship} color="info" loading={isLoading} />
-        <KpiCard titulo="Contenedores (TEU)" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
+        <KpiCard label="Cargas activas" value={global.totalActivas} icon={Ship} variant="info" iconVariant="chip" loading={isLoading} />
+        <KpiCard label="Contenedores (TEU)" value={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icon={Container} variant="accent" iconVariant="chip" loading={isLoading}>
           {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>
-        <KpiCard titulo="Profit USD" valor={formatCurrencyCompact(global.totalProfit, "USD")} valorTooltip={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="success" loading={isLoading} />
-        <KpiCard titulo="Alertas" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="danger" loading={isLoading} />
+        <KpiCard label="Profit USD" value={formatCurrencyCompact(global.totalProfit, "USD")} valueTooltip={formatCurrency(global.totalProfit, "USD")} icon={TrendingUp} variant="success" iconVariant="chip" loading={isLoading} />
+        <KpiCard label="Alertas" value={totalAlertas} sublabel={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icon={AlertTriangle} variant="destructive" iconVariant="chip" loading={isLoading} />
         <KpiCard
-          titulo="Tarifas a re-aprobar"
-          valor={pendientesReaprob}
-          subtitulo={pendientesReaprob > 0 ? "Cotizaciones esperando ventas" : "Al día"}
-          icono={RefreshCw}
-          color={pendientesReaprob > 0 ? "danger" : "info"}
+          label="Tarifas a re-aprobar"
+          value={pendientesReaprob}
+          sublabel={pendientesReaprob > 0 ? "Cotizaciones esperando ventas" : "Al día"}
+          icon={RefreshCw}
+          variant={pendientesReaprob > 0 ? "destructive" : "info"}
+          iconVariant="chip"
           loading={isLoading}
         />
       </div>

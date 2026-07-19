@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDuplicarCotizacion } from "@/features/cotizacion/hooks/useCotizacionVersiones";
 import { Plus, TrendingUp, CheckCircle, XCircle, BarChart3, AlertTriangle, Archive } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import { KpiCard } from "@/features/operaciones/components/KpiCard";
+import { KpiCard } from "@/components/shared/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDataTable";
@@ -93,10 +93,10 @@ export default function Cotizaciones() {
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground">KPIs · Últimos 30 días</p>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard titulo="Total cotizaciones" valor={c.kpis.total} icono={BarChart3} color="blue" />
-          <KpiCard titulo="Aceptadas" valor={c.kpis.aceptadas} icono={CheckCircle} color="emerald" />
-          <KpiCard titulo="Rechazadas" valor={c.kpis.rechazadas} icono={XCircle} color="red" />
-          <KpiCard titulo="Tasa de conversión" valor={`${c.kpis.tasa}%`} icono={TrendingUp} color="violet" />
+          <KpiCard label="Total cotizaciones" value={c.kpis.total} icon={BarChart3} variant="info" iconVariant="chip" />
+          <KpiCard label="Aceptadas" value={c.kpis.aceptadas} icon={CheckCircle} variant="success" iconVariant="chip" />
+          <KpiCard label="Rechazadas" value={c.kpis.rechazadas} icon={XCircle} variant="destructive" iconVariant="chip" />
+          <KpiCard label="Tasa de conversión" value={`${c.kpis.tasa}%`} icon={TrendingUp} variant="accent" iconVariant="chip" />
         </div>
       </div>
 
