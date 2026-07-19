@@ -7456,6 +7456,10 @@ export type Database = {
           total_count: number
         }[]
       }
+      enforce_revalidacion_sin_cambios: {
+        Args: { p_cotizacion_id: string }
+        Returns: undefined
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
