@@ -89,6 +89,164 @@ export type Database = {
         }
         Relationships: []
       }
+      anticipos_aplicaciones: {
+        Row: {
+          anticipo_id: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          fecha_aplicacion: string
+          id: string
+          moneda_aplicada: Database["public"]["Enums"]["moneda"]
+          monto_aplicado: number
+          organization_id: string
+          pago_proveedor_id: string
+          proveedor_factura_id: string
+          updated_at: string
+        }
+        Insert: {
+          anticipo_id: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_aplicacion?: string
+          id?: string
+          moneda_aplicada: Database["public"]["Enums"]["moneda"]
+          monto_aplicado: number
+          organization_id: string
+          pago_proveedor_id: string
+          proveedor_factura_id: string
+          updated_at?: string
+        }
+        Update: {
+          anticipo_id?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fecha_aplicacion?: string
+          id?: string
+          moneda_aplicada?: Database["public"]["Enums"]["moneda"]
+          monto_aplicado?: number
+          organization_id?: string
+          pago_proveedor_id?: string
+          proveedor_factura_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anticipos_aplicaciones_anticipo_id_fkey"
+            columns: ["anticipo_id"]
+            isOneToOne: false
+            referencedRelation: "anticipos_proveedor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anticipos_aplicaciones_pago_proveedor_id_fkey"
+            columns: ["pago_proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "pagos_proveedor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anticipos_aplicaciones_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "proveedor_facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anticipos_aplicaciones_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedor_facturas_saldo"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+        ]
+      }
+      anticipos_proveedor: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          estado: string
+          fecha_anticipo: string
+          id: string
+          metodo_pago: string | null
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo_cancelacion: string | null
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          referencia: string | null
+          saldo_disponible: number
+          tipo_cambio_usd: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          estado?: string
+          fecha_anticipo?: string
+          id?: string
+          metodo_pago?: string | null
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo_cancelacion?: string | null
+          notas?: string | null
+          organization_id: string
+          proveedor_id: string
+          referencia?: string | null
+          saldo_disponible: number
+          tipo_cambio_usd?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cuenta_bancaria_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          estado?: string
+          fecha_anticipo?: string
+          id?: string
+          metodo_pago?: string | null
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          motivo_cancelacion?: string | null
+          notas?: string | null
+          organization_id?: string
+          proveedor_id?: string
+          referencia?: string | null
+          saldo_disponible?: number
+          tipo_cambio_usd?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anticipos_proveedor_cuenta_bancaria_id_fkey"
+            columns: ["cuenta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anticipos_proveedor_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_logs: {
         Row: {
           fn: string
@@ -4733,6 +4891,7 @@ export type Database = {
           deleted_by: string | null
           diferencia_cambiaria_mxn: number | null
           es_ajuste: boolean
+          es_anticipo_aplicado: boolean
           fecha_pago: string
           id: string
           metodo_pago: string
@@ -4755,6 +4914,7 @@ export type Database = {
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
           es_ajuste?: boolean
+          es_anticipo_aplicado?: boolean
           fecha_pago?: string
           id?: string
           metodo_pago?: string
@@ -4777,6 +4937,7 @@ export type Database = {
           deleted_by?: string | null
           diferencia_cambiaria_mxn?: number | null
           es_ajuste?: boolean
+          es_anticipo_aplicado?: boolean
           fecha_pago?: string
           id?: string
           metodo_pago?: string
@@ -6383,6 +6544,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _recalc_anticipo_saldo: {
+        Args: { p_anticipo_id: string }
+        Returns: undefined
+      }
       _recalc_estado_proveedor_factura: {
         Args: { p_factura_id: string }
         Returns: undefined
@@ -6416,6 +6581,35 @@ export type Database = {
             Returns: undefined
           }
       alertas_sistema_pending_count: { Args: never; Returns: number }
+      aplicar_anticipo_a_factura: {
+        Args: {
+          p_anticipo_id: string
+          p_factura_id: string
+          p_fecha_aplicacion?: string
+          p_monto: number
+        }
+        Returns: {
+          anticipo_id: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          fecha_aplicacion: string
+          id: string
+          moneda_aplicada: Database["public"]["Enums"]["moneda"]
+          monto_aplicado: number
+          organization_id: string
+          pago_proveedor_id: string
+          proveedor_factura_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "anticipos_aplicaciones"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       aplicar_plantilla_cotizacion: {
         Args: { _plantilla_id: string }
         Returns: Json
@@ -6655,6 +6849,36 @@ export type Database = {
         Returns: boolean
       }
       can_view_financials: { Args: { _user_id: string }; Returns: boolean }
+      cancelar_anticipo_proveedor: {
+        Args: { p_id: string; p_motivo: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          estado: string
+          fecha_anticipo: string
+          id: string
+          metodo_pago: string | null
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo_cancelacion: string | null
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          referencia: string | null
+          saldo_disponible: number
+          tipo_cambio_usd: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "anticipos_proveedor"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       cancelar_factura_proveedor: {
         Args: { p_factura_id: string; p_motivo: string }
         Returns: undefined
@@ -7671,6 +7895,46 @@ export type Database = {
       recotizar_cotizacion: {
         Args: { p_cotizacion_id: string; p_motivo: string }
         Returns: Json
+      }
+      registrar_anticipo_proveedor: {
+        Args: {
+          p_cuenta_bancaria_id?: string
+          p_fecha_anticipo?: string
+          p_metodo_pago?: string
+          p_moneda: Database["public"]["Enums"]["moneda"]
+          p_monto: number
+          p_notas?: string
+          p_proveedor_id: string
+          p_referencia?: string
+          p_tipo_cambio_usd?: number
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          cuenta_bancaria_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          estado: string
+          fecha_anticipo: string
+          id: string
+          metodo_pago: string | null
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          motivo_cancelacion: string | null
+          notas: string | null
+          organization_id: string
+          proveedor_id: string
+          referencia: string | null
+          saldo_disponible: number
+          tipo_cambio_usd: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "anticipos_proveedor"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       reportes_resumen: {
         Args: {
