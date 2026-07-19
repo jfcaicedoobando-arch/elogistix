@@ -3429,6 +3429,60 @@ export type Database = {
           },
         ]
       }
+      embarque_garantias_historial: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          estado_anterior: string | null
+          estado_nuevo: string
+          garantia_id: string
+          id: string
+          monto_deposito_usd: number | null
+          notas: string | null
+          organization_id: string
+          referencia_deposito: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          estado_anterior?: string | null
+          estado_nuevo: string
+          garantia_id: string
+          id?: string
+          monto_deposito_usd?: number | null
+          notas?: string | null
+          organization_id: string
+          referencia_deposito?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          estado_anterior?: string | null
+          estado_nuevo?: string
+          garantia_id?: string
+          id?: string
+          monto_deposito_usd?: number | null
+          notas?: string | null
+          organization_id?: string
+          referencia_deposito?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embarque_garantias_historial_garantia_id_fkey"
+            columns: ["garantia_id"]
+            isOneToOne: false
+            referencedRelation: "embarque_garantias_contenedor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_historial_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       embarques: {
         Row: {
           aerolinea: string | null
@@ -8007,6 +8061,41 @@ export type Database = {
         Args: { p_ambiente: string; p_api_key: string; p_org_id: string }
         Returns: undefined
       }
+      set_garantia_estado: {
+        Args: {
+          p_estado?: string
+          p_fecha_deposito?: string
+          p_fecha_liberacion?: string
+          p_id: string
+          p_monto?: number
+          p_notas?: string
+          p_referencia?: string
+        }
+        Returns: {
+          created_at: string
+          embarque_contenedor_id: string
+          embarque_id: string
+          estado: string
+          fecha_deposito: string | null
+          fecha_liberacion: string | null
+          fecha_limite_devolucion: string | null
+          id: string
+          monto_deposito_usd: number
+          naviera_id: string | null
+          notas: string | null
+          organization_id: string
+          proveedor_factura_id: string | null
+          referencia_deposito: string | null
+          tiene_carta_garantia: boolean
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "embarque_garantias_contenedor"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       sidebar_alert_counts: {
@@ -8076,6 +8165,10 @@ export type Database = {
           p_actual: Database["public"]["Enums"]["estado_embarque"]
           p_nuevo: Database["public"]["Enums"]["estado_embarque"]
         }
+        Returns: boolean
+      }
+      transicion_garantia_valida: {
+        Args: { next: string; prev: string }
         Returns: boolean
       }
       validar_cierre_embarque: {
