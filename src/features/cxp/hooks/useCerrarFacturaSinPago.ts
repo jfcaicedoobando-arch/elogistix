@@ -33,11 +33,23 @@ export function useCerrarFacturaProveedorSinPago() {
       qc.invalidateQueries({ queryKey: queryKeys.cxp.aging() });
       qc.invalidateQueries({ queryKey: queryKeys.bandejas.all });
     },
-    onError: (err: Error) =>
+    onError: (err: Error) => {
+      // Fase M (v13.301.84): mapeo dedicado para el gate de rol.
+      if (err.message?.includes("LC_CERRAR_FACTURA_SIN_ROL")) {
+        notifyError(toast, {
+          title: "No tienes permiso para cerrar esta factura",
+          description:
+            "Sólo Contabilidad, Tesorería o un administrador pueden cerrar facturas de proveedor sin registrar un pago real.",
+          error: err,
+          method: "FEATURES_CXP_HOOKS_USECERRARFACTURASINPAGO",
+        });
+        return;
+      }
       notifyError(toast, {
         title: `No se pudo cerrar la factura: ${err.message}`,
         error: err,
         method: "FEATURES_CXP_HOOKS_USECERRARFACTURASINPAGO",
-      }),
+      });
+    },
   });
 }
