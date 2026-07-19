@@ -18,9 +18,11 @@ export interface MotivosBloqueoEmbarque {
   notas_credito_cxc: number;
   notas_credito_cxp: number;
   comisiones_definitivas: number;
+  proformas: number;
   cerrado: boolean;
   expediente: string;
 }
+
 
 export class EmbarqueBloqueadoError extends Error {
   motivos: MotivosBloqueoEmbarque;
