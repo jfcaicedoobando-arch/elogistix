@@ -8,6 +8,7 @@ import {
   PORTAL_EVENTO_COLUMNS,
   PORTAL_DOCUMENTO_COLUMNS,
   PORTAL_COTIZACION_LIST_COLUMNS,
+  PORTAL_COTIZACION_DETAIL_COLUMNS,
   PORTAL_FACTURA_LIST_COLUMNS,
   PORTAL_FACTURA_DETAIL_COLUMNS,
   PORTAL_PAGO_FACTURA_COLUMNS,
@@ -52,6 +53,8 @@ export async function fetchPortalEventos(embarqueId: string) {
       .from("eventos_embarque")
       .select(PORTAL_EVENTO_COLUMNS)
       .eq("embarque_id", embarqueId)
+      // v13.301.90 (Fase Q.1): ocultar eventos borrados al cliente.
+      .is("deleted_at", null)
       .order("fecha", { ascending: false })
       .limit(PORTAL_RELATED_MAX),
     [],
@@ -64,6 +67,8 @@ export async function fetchPortalDocumentos(embarqueId: string) {
       .from("documentos_embarque")
       .select(PORTAL_DOCUMENTO_COLUMNS)
       .eq("embarque_id", embarqueId)
+      // v13.301.90 (Fase Q.1): ocultar documentos borrados al cliente.
+      .is("deleted_at", null)
       .order("created_at", { ascending: true })
       .limit(PORTAL_RELATED_MAX),
     [],
@@ -107,8 +112,14 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
 
 export async function fetchPortalCotizacion(id: string) {
   // Sin join embebido: RLS distinta en embarques puede colapsar .single() a PGRST116.
+  // v13.301.90 (Fase Q.1): whitelist explícita en lugar de `select("*")` para
+  // no exponer 30+ campos internos (tarifa, revalidación, prospecto, IDs de staff).
   const data = await unwrap(
-    supabase.from("cotizaciones").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("cotizaciones")
+      .select(PORTAL_COTIZACION_DETAIL_COLUMNS)
+      .eq("id", id)
+      .maybeSingle(),
   );
   if (!data) return null;
 

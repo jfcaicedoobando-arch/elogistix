@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Tables } from "@/types/db";
 
-type Doc = Tables<"documentos_embarque">;
+// v13.301.90 (Fase Q.1): portal no expone `deleted_at`/`deleted_by`.
+type Doc = Omit<Tables<"documentos_embarque">, "deleted_at" | "deleted_by">;
 
 const DOC_ESTADO_ICON: Record<string, { icon: typeof FileCheck; color: string }> = {
   Pendiente: { icon: FileX, color: "text-warning" },

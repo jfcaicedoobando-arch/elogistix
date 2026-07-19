@@ -30,14 +30,18 @@ describe("Portal column constants", () => {
     }
   });
 
-  it("PORTAL_EVENTO_COLUMNS incluye soft-delete (deleted_at/deleted_by)", () => {
+  // v13.301.90 (Fase Q.1): `deleted_at`/`deleted_by` YA NO se exponen al portal;
+  // las queries filtran por `deleted_at IS NULL` para ocultar borrados al cliente.
+  it("PORTAL_EVENTO_COLUMNS NO expone deleted_at ni deleted_by (Fase Q.1)", () => {
     const c = cols(PORTAL_EVENTO_COLUMNS);
-    expect(c).toEqual(expect.arrayContaining(["deleted_at", "deleted_by"]));
+    expect(c).not.toContain("deleted_at");
+    expect(c).not.toContain("deleted_by");
   });
 
-  it("PORTAL_DOCUMENTO_COLUMNS incluye soft-delete", () => {
+  it("PORTAL_DOCUMENTO_COLUMNS NO expone deleted_at ni deleted_by (Fase Q.1)", () => {
     const c = cols(PORTAL_DOCUMENTO_COLUMNS);
-    expect(c).toEqual(expect.arrayContaining(["deleted_at", "deleted_by"]));
+    expect(c).not.toContain("deleted_at");
+    expect(c).not.toContain("deleted_by");
   });
 
   it("PORTAL_COTIZACION_LIST_COLUMNS incluye embarque_id para resolver expediente", () => {
