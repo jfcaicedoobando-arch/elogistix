@@ -76,11 +76,16 @@ export interface VincularFacturaInput {
   lineas: LineaVinculo[];
 }
 
-/** Devuelve los IDs de conceptos marcados como Liquidados (>= 99% cubierto). */
+/**
+ * Fase P.3 (v13.301.89): la liquidación de `conceptos_costo` la determina el
+ * trigger `tg_pfc_recalc_liq` en la BD a partir de pagos reales. Este servicio
+ * ya no marca conceptos como Pagado desde el cliente para evitar semánticas
+ * divergentes (cliente marcaba al facturar; BD marca al pagar).
+ */
 export async function vincularFacturaAConceptos(
   input: VincularFacturaInput,
-): Promise<{ insertadas: number; liquidados: string[] }> {
-  if (input.lineas.length === 0) return { insertadas: 0, liquidados: [] };
+): Promise<{ insertadas: number }> {
+  if (input.lineas.length === 0) return { insertadas: 0 };
 
   const inserts = input.lineas.map((l) => ({
     proveedor_factura_id: input.facturaId,
@@ -94,22 +99,5 @@ export async function vincularFacturaAConceptos(
     .from("proveedor_facturas_conceptos")
     .insert(inserts);
   if (errIns) throw errIns;
-
-  const liquidables = input.lineas.filter(
-    (l) => l.montoOriginal > 0 && l.monto >= l.montoOriginal * 0.99,
-  );
-  if (liquidables.length === 0) {
-    return { insertadas: inserts.length, liquidados: [] };
-  }
-  const ids = liquidables.map((l) => l.conceptoCostoId);
-  const { error: errUp } = await supabase
-    .from("conceptos_costo")
-    .update({
-      estado_liquidacion: "Pagado",
-      fecha_pago: input.fechaEmision,
-      referencia_pago: input.folio,
-    })
-    .in("id", ids);
-  if (errUp) throw errUp;
-  return { insertadas: inserts.length, liquidados: ids };
+  return { insertadas: inserts.length };
 }
