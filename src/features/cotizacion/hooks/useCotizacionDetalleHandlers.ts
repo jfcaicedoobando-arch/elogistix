@@ -11,9 +11,11 @@ import {
 } from "@/features/cotizacion/hooks/useCotizaciones";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { tieneCostosCargados } from "@/features/cotizacion/services/candadoCostos";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess, notifyWarning } from "@/components/shared/utils/appFeedback";
 import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/features/crm/services/vincularCotizacion";
 import type { ClienteFormData } from "@/features/cliente/types/clienteForm";
+import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
+
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
@@ -124,6 +126,19 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     return ok;
   };
 
+  const manejarErrorRevalidacion = (err: unknown, _method: string): boolean => {
+    if (err instanceof RevalidacionRequeridaError) {
+      notifyWarning(toast, {
+        title: "Tarifa desactualizada",
+        description:
+          "La tarifa de esta cotización cambió o venció. Usa el botón \"Crear embarque\" del detalle para revalidar (mantener, refrescar, sustituir o pedir reaprobación).",
+      });
+      return true;
+    }
+    return false;
+  };
+
+
   const handleGenerarEmbarques = async () => {
     if (!cotizacion) return;
     const ok = await validarCostosOBloquear(cotizacion.id, "generar_embarques");
@@ -133,6 +148,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       notifySuccess(toast, { title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
       setShowConfirmarConvertir(false);
     } catch (err: unknown) {
+      if (manejarErrorRevalidacion(err, "HANDLE_GENERAR_EMBARQUES")) return;
       notifyError(toast, { title: "Error al generar embarques", description: getErrorMessage(err), error: err, method: "HANDLE_GENERAR_EMBARQUES" });
     }
   };
@@ -146,9 +162,11 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       notifySuccess(toast, { title: "Embarque borrador creado", description: "Complétalo y confírmalo cuando esté listo." });
       navigate(`/embarques/${embarqueId}`);
     } catch (err: unknown) {
+      if (manejarErrorRevalidacion(err, "HANDLE_CREAR_BORRADOR")) return;
       notifyError(toast, { title: "Error al crear el borrador", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR_BORRADOR" });
     }
   };
+
 
   const irACargarCostos = () => {
     if (!cotizacion) return;

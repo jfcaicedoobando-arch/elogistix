@@ -12,9 +12,33 @@ import {
   construirCostosRows,
   parsearVentasJsonb,
 } from "./embarquesHelpers";
+import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
+import {
+  RevalidacionRequeridaError,
+  type ResultadoRevalidacion,
+} from "@/features/cotizacion/domain/revalidacionTarifa";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type EmbarqueInsert = TablesInsert<"embarques">;
+
+/**
+ * Fase R.6 (Bug 18): pre-check en cliente. Bloquea la conversión si la tarifa
+ * de la cotización cambió, venció o quedó por fuera del umbral. La misma
+ * validación está reforzada en BD dentro de la RPC 1-arg
+ * `crear_embarque_borrador_desde_cotizacion(uuid)` mediante
+ * `enforce_revalidacion_sin_cambios`.
+ */
+async function assertTarifaSinCambios(cotizacionId: string): Promise<ResultadoRevalidacion> {
+  const r = await revalidarTarifa(cotizacionId);
+  if (r.severidad !== "sin_cambios") {
+    throw new RevalidacionRequeridaError(
+      r,
+      "La tarifa de la cotización cambió o venció. Usa el flujo de revalidación (Crear embarque) para mantener, refrescar, sustituir o pedir reaprobación antes de generar el embarque.",
+    );
+  }
+  return r;
+}
+
 
 /** Inserta costos en lotes (BL una vez, por contenedor para el resto). */
 async function insertarCostosEmbarque(
@@ -48,6 +72,9 @@ export async function convertirCotizacionAEmbarques(
   if (cotizacion.tipo_documento === "informativa") {
     throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
   }
+  // Fase R.6 (Bug 18): revalidación de tarifa obligatoria antes de insertar.
+  await assertTarifaSinCambios(cotizacion.id);
+
   const { data: costos, error: errorCostos } = await supabase
     .from("cotizacion_costos")
     .select("*")
@@ -140,10 +167,20 @@ export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string)
   if (cot?.tipo_documento === "informativa") {
     throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
   }
+  // Fase R.6 (Bug 18): pre-check + mapeo del token `LC_TARIFA_REQUIERE_REVALIDACION`.
+  await assertTarifaSinCambios(cotizacionId);
   const { data, error } = await supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
     p_cotizacion_id: cotizacionId,
   });
-  if (error) throw error;
+  if (error) {
+    if (typeof error.message === "string" && /LC_TARIFA_REQUIERE_REVALIDACION/.test(error.message)) {
+      // La revalidación cambió entre el pre-check y la RPC — rehidratar para el modal.
+      const r = await revalidarTarifa(cotizacionId).catch(() => null);
+      if (r) throw new RevalidacionRequeridaError(r);
+    }
+    throw error;
+  }
   if (!data) throw new Error("La función no devolvió un embarque");
   return data as string;
+
 }

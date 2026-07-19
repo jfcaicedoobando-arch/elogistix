@@ -9,7 +9,9 @@ import {
   convertirCotizacionAEmbarques,
   crearEmbarqueBorradorDesdeCotizacion,
 } from "@/features/cotizacion/services/conversiones/embarques";
+import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
 import type { CotizacionRow } from "@/features/cotizacion/types";
+
 
 function makeCot(overrides: Partial<CotizacionRow> = {}): CotizacionRow {
   return {
@@ -190,5 +192,53 @@ describe("conversiones/embarques.ts - final coverage push", () => {
     mock.setTableResult("cotizaciones", { data: { tipo_documento: "real" }, error: null });
     mock.setRpcResult("crear_embarque_borrador_desde_cotizacion", { data: null, error: new Error("rpc-fail") });
     await expect(crearEmbarqueBorradorDesdeCotizacion("cot-1")).rejects.toThrow("rpc-fail");
+});
+
+describe("Fase R.6 (Bug 18) — gate de revalidación de tarifa", () => {
+  it("convertirCotizacionAEmbarques lanza RevalidacionRequeridaError si severidad != sin_cambios", async () => {
+    mock.setRpcResult("revalidar_tarifa_cotizacion", {
+      data: { severidad: "informativa", cambios: [], umbral_pct: 5, max_delta_pct: 8 },
+      error: null,
+    });
+    await expect(convertirCotizacionAEmbarques(makeCot())).rejects.toBeInstanceOf(
+      RevalidacionRequeridaError,
+    );
+    // No debe intentar crear el embarque.
+    expect(mock.tableCalls.some((c) => c.table === "embarques")).toBe(false);
   });
+
+  it("crearEmbarqueBorradorDesdeCotizacion lanza RevalidacionRequeridaError en el pre-check", async () => {
+    mock.setTableResult("cotizaciones", { data: { tipo_documento: "real" }, error: null });
+    mock.setRpcResult("revalidar_tarifa_cotizacion", {
+      data: { severidad: "bloqueante", cambios: [], umbral_pct: 5, max_delta_pct: 42 },
+      error: null,
+    });
+    await expect(crearEmbarqueBorradorDesdeCotizacion("cot-1")).rejects.toBeInstanceOf(
+      RevalidacionRequeridaError,
+    );
+    // No debe invocar la RPC de creación.
+    expect(
+      mock.rpcCalls.some((c) => c.fn === "crear_embarque_borrador_desde_cotizacion"),
+    ).toBe(false);
+  });
+
+  it("crearEmbarqueBorradorDesdeCotizacion re-mapea LC_TARIFA_REQUIERE_REVALIDACION del trigger", async () => {
+    // El pre-check pasa (sin_cambios por default del mock), pero la RPC devuelve
+    // el token de BD — se debe re-lanzar como RevalidacionRequeridaError.
+    mock.setTableResult("cotizaciones", { data: { tipo_documento: "real" }, error: null });
+    mock.setRpcResult("revalidar_tarifa_cotizacion", {
+      data: { severidad: "sin_cambios", cambios: [], umbral_pct: 5, max_delta_pct: 0 },
+      error: null,
+    });
+    mock.setRpcResult("crear_embarque_borrador_desde_cotizacion", {
+      data: null,
+      error: { message: "LC_TARIFA_REQUIERE_REVALIDACION severidad=bloqueante max_delta_pct=12" },
+    });
+    await expect(crearEmbarqueBorradorDesdeCotizacion("cot-1")).rejects.toBeInstanceOf(
+      RevalidacionRequeridaError,
+    );
+  });
+});
+
+
 });
