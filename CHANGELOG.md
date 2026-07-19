@@ -3,6 +3,13 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.0] - 2026-07-19
+- **Ola 8 · Auditoría UI 1080p — Sprint 1 (tipografía + color cotización)**:
+  - Nuevo token tipográfico `text-label` (0.6875rem / 11px) en `tailwind.config.ts` y utilidad `.text-overline` en `src/index.css` (patrón `text-label uppercase tracking-wide text-muted-foreground`).
+  - Barrido masivo (105 archivos): `text-[11px]→text-label` (129 usos), `text-[10px]→text-2xs` (31), `text-[9px]→text-3xs` (4), `text-[8px]→text-3xs` (1). Cero residuales fuera de `src/pdf/` (que usa inline styles por requisito de react-pdf).
+  - Clúster P&L cotización: `ResumenPL.tsx`, `SeccionCostosInternosPLDetalle.tsx`, `SeccionCostosInternosPLLocal.tsx`, `WizardTotalsBar.tsx` migran de `violet-*`/`amber-*` a tokens semánticos (`--primary`, `--warning`). El aviso LCL vs FCL usa `border-warning/40 bg-warning/10 text-foreground`.
+  - Analogía: antes había 165 tamaños de fuente "escritos a mano" en la app; ahora todos usan la misma tabla de medidas, así que si algún día cambiamos "chico=11px" a "chico=12px", cambia en un solo lugar y se propaga.
+
 ## [13.301.99] - 2026-07-19
 - **Fase R.8 — Fixes auditoría ronda 5 (REG-1, REG-2, N-3)**:
   - **REG-1 (showstopper) — deadlock de conversión cotización→embarque**: R.6 dejaba a `enforce_revalidacion_sin_cambios` bloqueando *toda* severidad distinta de `sin_cambios`, incluida `informativa`, y el overload de 4-arg con `p_decision` delegaba al 1-arg que ya bloqueaba → las decisiones `refrescada`/`mantenida_por_operaciones`/`sustituida`/`reaprobada_ventas` eran código muerto. **Fix**: (1) la guarda sólo lanza en severidad `bloqueante` y hace cortocircuito si `cotizaciones.estado_revalidacion = 'reaprobada'`. (2) Se extrae el cuerpo original a `crear_embarque_borrador_core(uuid)` (privado, sólo `service_role`) y el 1-arg público queda como `guarda + core`. (3) El overload de 4-arg con decisión ≠ `sin_cambios` **es** la resolución: llama al core, escribe `tarifa_id_original`/`tarifa_id_aplicada`/`tarifa_delta_jsonb`/`tarifa_decision`/`tarifa_revalidada_{en,por}` en el embarque, marca la cotización `reaprobada` si estaba `pendiente_reaprobacion`, y registra bitácora `Embarques.tarifa_decision_aplicada`. Efecto: drifts `informativa` pasan directo; drifts `bloqueante` sólo se resuelven vía el flujo de decisión (RevalidarTarifaModal); las decisiones dejan de ser código muerto.
