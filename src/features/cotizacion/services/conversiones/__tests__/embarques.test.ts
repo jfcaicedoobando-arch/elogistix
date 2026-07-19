@@ -9,7 +9,9 @@ import {
   convertirCotizacionAEmbarques,
   crearEmbarqueBorradorDesdeCotizacion,
 } from "@/features/cotizacion/services/conversiones/embarques";
+import { RevalidacionRequeridaError } from "@/features/cotizacion/domain/revalidacionTarifa";
 import type { CotizacionRow } from "@/features/cotizacion/types";
+
 
 function makeCot(overrides: Partial<CotizacionRow> = {}): CotizacionRow {
   return {
