@@ -60,9 +60,16 @@ export async function fetchNotasCreditoFactura(
 export async function crearNotaCreditoProveedor(
   payload: TablesInsert<"proveedor_notas_credito">,
 ): Promise<NotaCreditoProveedor> {
-  const data = await unwrap(
-    supabase.from("proveedor_notas_credito").insert(payload).select().single(),
-  );
+  const { data, error } = await supabase
+    .from("proveedor_notas_credito")
+    .insert(payload)
+    .select()
+    .single();
+  if (error) {
+    const mapped = mapEstadoError(error);
+    if (mapped) throw mapped;
+    throw error;
+  }
   await registrarActividad({
     modulo: "cxp",
     accion: "crear_nota_credito",
