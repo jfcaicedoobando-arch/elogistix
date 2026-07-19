@@ -24,15 +24,7 @@ export const PORTAL_COTIZACION_LIST_COLUMNS =
 // `prospecto_*`, `deleted_by`, `revalidacion_*`, etc.). Sólo se listan campos
 // consumidos por la UI del portal.
 export const PORTAL_COTIZACION_DETAIL_COLUMNS =
-  'id, folio, cliente_id, cliente_nombre, modo, tipo, tipo_embarque, tipo_contenedor,' +
-  ' tipo_peso, tipo_carga, sector_economico, estado, moneda, subtotal, incoterm,' +
-  ' origen, destino, ruta_texto, frecuencia, tiempo_transito_dias, punto_intermedio,' +
-  ' descripcion_mercancia, descripcion_adicional, peso_kg, volumen_m3, piezas,' +
-  ' msds_archivo, dimensiones_lcl, dimensiones_aereas, conceptos_venta,' +
-  ' notas, comentario_cliente, seguro, valor_seguro_usd, carta_garantia,' +
-  ' num_contenedores, modalidad_equipo, dias_almacenaje, dias_libres_destino,' +
-  ' tipo_unidad, tipo_movimiento, tipo_documento, fecha_envio, fecha_aceptacion,' +
-  ' fecha_rechazo, fecha_vigencia, embarque_id, created_at, updated_at' as const;
+  'id, folio, cliente_id, cliente_nombre, modo, tipo, tipo_embarque, tipo_contenedor, tipo_peso, tipo_carga, sector_economico, estado, moneda, subtotal, incoterm, origen, destino, ruta_texto, frecuencia, tiempo_transito_dias, punto_intermedio, descripcion_mercancia, descripcion_adicional, peso_kg, volumen_m3, piezas, msds_archivo, dimensiones_lcl, dimensiones_aereas, conceptos_venta, notas, comentario_cliente, seguro, valor_seguro_usd, carta_garantia, num_contenedores, modalidad_equipo, dias_almacenaje, dias_libres_destino, tipo_unidad, tipo_movimiento, tipo_documento, fecha_envio, fecha_aceptacion, fecha_rechazo, fecha_vigencia, embarque_id, created_at, updated_at' as const;
 
 export const PORTAL_FACTURA_LIST_COLUMNS =
   'id, numero, expediente, cliente_nombre, estado, moneda, subtotal, iva, total, fecha_emision, fecha_vencimiento' as const;
