@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Users, Ship, UserCheck, ClipboardList } from "lucide-react";
-import { KpiCard } from "@/features/operaciones/components/KpiCard";
+import { KpiCard } from "@/components/shared/KpiCard";
 import CrearMiembroOrgDialog from "@/features/admin/components/CrearMiembroOrgDialog";
 import { OrgHeader } from "@/features/admin/components/orgDetalle/OrgHeader";
 import { OrgInfoCard } from "@/features/admin/components/orgDetalle/OrgInfoCard";
@@ -45,10 +45,10 @@ export default function AdminOrgDetalle() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard titulo="Miembros" valor={memberCount} icono={Users} color="blue" />
-        <KpiCard titulo="Embarques" valor={embarqueCount} icono={Ship} color="violet" />
-        <KpiCard titulo="Clientes" valor={clienteCount} icono={UserCheck} color="emerald" />
-        <KpiCard titulo="Cotizaciones" valor={cotizacionCount} icono={ClipboardList} color="red" />
+        <KpiCard label="Miembros" value={memberCount} icon={Users} variant="info" iconVariant="chip" />
+        <KpiCard label="Embarques" value={embarqueCount} icon={Ship} variant="accent" iconVariant="chip" />
+        <KpiCard label="Clientes" value={clienteCount} icon={UserCheck} variant="success" iconVariant="chip" />
+        <KpiCard label="Cotizaciones" value={cotizacionCount} icon={ClipboardList} variant="destructive" iconVariant="chip" />
       </div>
 
       <OrgInfoCard
