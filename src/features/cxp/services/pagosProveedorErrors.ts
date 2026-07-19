@@ -19,9 +19,14 @@ type Regla = (e: ErrorLike) => string | null;
 
 const REGLAS: Regla[] = [
   (e) =>
+    e.code === "LC_PAGO_SIN_APROBACION" || (e.message && e.message.includes("LC_PAGO_SIN_APROBACION"))
+      ? "La factura debe estar aprobada antes de registrar pagos."
+      : null,
+  (e) =>
     e.code === "ORG_MISMATCH" || e.message === "ORG_MISMATCH"
       ? "La factura pertenece a otra organización. Cambia a la organización correcta y vuelve a intentarlo."
       : null,
+
   (e) =>
     e.code === "42501"
       ? "No tienes permiso para registrar pagos a proveedor en esta organización. Verifica tu rol o la organización activa."
