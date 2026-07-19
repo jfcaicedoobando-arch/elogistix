@@ -111,7 +111,7 @@ describe("Fase G — grafo de transiciones de estado de embarque", () => {
     expect(idxUpdate).toBeGreaterThan(idxAssert);
   });
 
-  it("otorga EXECUTE sólo a authenticated y service_role", () => {
+  it("otorga EXECUTE de las funciones de transición sólo a authenticated y service_role", () => {
     expect(sql).toMatch(
       /GRANT EXECUTE ON FUNCTION public\.transicion_embarque_valida[^;]+TO authenticated, service_role/,
     );
