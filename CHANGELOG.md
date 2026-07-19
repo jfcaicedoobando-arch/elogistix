@@ -3,6 +3,14 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.3] - 2026-07-19
+- **Ola 8 · Auditoría UI 1080p — Sprint 2, Ola 3 (KpiCard operaciones)**:
+  - `@/components/shared/KpiCard` ahora acepta `iconVariant="chip"` (icono con chip tintado a la izquierda), `valueTooltip` (tooltip nativo sobre el valor), `children` (slot debajo del cuerpo) y variants `accent`/`secondary`. Los defaults preservan el look inline previo, así que los ~9 consumidores existentes no cambian visualmente.
+  - Migrados 5 consumidores al canónico: `Operaciones`, `Cotizaciones`, `AdminOrgDetalle`, `ReportesKpiCards`, `ClienteSummaryCards`. Mapping: `titulo→label`, `valor→value`, `valorTooltip→valueTooltip`, `subtitulo→sublabel`, `icono→icon`; tonos `blue/violet/emerald/red/danger` → `info/accent/success/destructive/destructive`.
+  - Eliminado `features/operaciones/components/KpiCard.tsx` (clon local); `rg` confirma 0 imports residuales.
+  - Tests adicionales en `KpiCard.test.tsx`: `valueTooltip`, `children`, `iconVariant="chip"` con chip tintado.
+  - Analogía: teníamos otra "tarjeta de KPI" con la misma cara pero cableada por su cuenta; ahora todo el sistema usa una sola tarjeta y basta cambiar un lugar para actualizar el estilo en operaciones, cotizaciones, reportes, clientes y admin.
+
 ## [13.302.2] - 2026-07-19
 - **Ola 8 · Auditoría UI 1080p — Sprint 2, Ola 2 (KpiCard PnL + test wide)**:
   - Consolidados los 2 consumidores de `features/embarques/components/pnl/KpiCard.tsx` al canónico `@/components/shared/KpiCard` (rename 1:1 de `tone` → `variant`). Se elimina el clon local.

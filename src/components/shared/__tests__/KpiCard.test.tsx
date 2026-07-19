@@ -37,10 +37,33 @@ describe("<KpiCard />", () => {
 
   it("variant default no aplica bordes de color semántico", () => {
     const { container } = render(<KpiCard label="X" value="1" />);
-    // La variant default no debe pintar borde de color (destructive/warning/info/success).
     expect(container.querySelector(".border-destructive\\/30")).toBeNull();
     expect(container.querySelector(".border-warning\\/30")).toBeNull();
     expect(container.querySelector(".border-info\\/30")).toBeNull();
     expect(container.querySelector(".border-success\\/30")).toBeNull();
+  });
+
+  it("valueTooltip se expone en el atributo title del valor", () => {
+    render(
+      <KpiCard label="Profit" value="USD 1.2M" valueTooltip="USD 1,234,567.89" />,
+    );
+    expect(screen.getByText("USD 1.2M").getAttribute("title")).toBe("USD 1,234,567.89");
+  });
+
+  it("renderiza children debajo del cuerpo", () => {
+    render(
+      <KpiCard label="TEU" value="20 / 25">
+        <div data-testid="kpi-child">progress</div>
+      </KpiCard>,
+    );
+    expect(screen.getByTestId("kpi-child")).toBeInTheDocument();
+  });
+
+  it("iconVariant='chip' pinta el icono en un chip tintado", () => {
+    const { container } = render(
+      <KpiCard label="X" value="1" icon={TrendingUp} variant="accent" iconVariant="chip" />,
+    );
+    // El chip usa las clases utilitarias `bg-kpi-accent-soft text-kpi-accent`.
+    expect(container.querySelector(".bg-kpi-accent-soft")).not.toBeNull();
   });
 });
