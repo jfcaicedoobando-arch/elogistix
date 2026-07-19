@@ -8,6 +8,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import {
+  CotizacionConEmbarqueError,
   CotizacionYaAceptadaError,
   MotivoRequeridoError,
 } from "@/features/cotizacion/domain/versionadoCotizacion";
