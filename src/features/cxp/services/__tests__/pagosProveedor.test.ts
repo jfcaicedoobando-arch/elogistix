@@ -19,9 +19,8 @@ describe("pagosProveedor service", () => {
     expect(call?.ops).toContain("eq");
   });
 
-  it("registrarPagoProveedor inserta payload con organization_id heredado del padre y recalcula factura", async () => {
+  it("registrarPagoProveedor inserta payload con organization_id heredado del padre (recalculo lo hace el trigger)", async () => {
     mock.setTableResult("pagos_proveedor", { data: { id: "p1" }, error: null });
-    mock.setTableResult("v_proveedor_facturas_saldo", { data: { saldo: 0 }, error: null });
     mock.setTableResult("proveedor_facturas", { data: { organization_id: "org-1", estado: "Vigente" }, error: null });
     mock.setRpcResult("current_user_org_id", { data: "org-1", error: null });
 
@@ -47,7 +46,9 @@ describe("pagosProveedor service", () => {
       moneda: "MXN",
       metodo_pago: "Transferencia",
     });
-    expect(mock.tableCalls.some(c => c.table === "v_proveedor_facturas_saldo")).toBe(true);
+    // Fase N: el recálculo de estado lo dispara `trg_pagos_proveedor_recalcular_estado`,
+    // no el cliente. Verificamos que YA NO se consulta la vista desde el servicio.
+    expect(mock.tableCalls.some(c => c.table === "v_proveedor_facturas_saldo")).toBe(false);
   });
 
   it("aborta con ORG_MISMATCH si la org actual difiere de la del padre", async () => {

@@ -99,7 +99,7 @@ describe("Fase P.1 — Anticipos a proveedor", () => {
     expect(sql).toMatch(/FROM public\.anticipos_aplicaciones\s+WHERE anticipo_id = p_id AND deleted_at IS NULL/);
   });
 
-  it("revoca EXECUTE de PUBLIC/anon y otorga a authenticated + service_role", () => {
+  it("revoca EXECUTE de PUBLIC/anon y otorga a authenticated + service_role (RPCs anticipos)", () => {
     for (const fn of [
       "registrar_anticipo_proveedor\\(uuid,numeric,public\\.moneda,date,numeric,text,text,uuid,text\\)",
       "aplicar_anticipo_a_factura\\(uuid,uuid,numeric,date\\)",
