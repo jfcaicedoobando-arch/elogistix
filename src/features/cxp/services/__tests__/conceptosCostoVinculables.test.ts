@@ -63,10 +63,10 @@ describe("vincularFacturaAConceptos", () => {
       facturaId: "f-1", organizationId: "o-1", folio: "A-1",
       fechaEmision: "2026-06-12", lineas: [],
     });
-    expect(res).toEqual({ insertadas: 0, liquidados: [] });
+    expect(res).toEqual({ insertadas: 0 });
   });
 
-  it("inserta líneas y marca como Pagados los conceptos cubiertos ≥99%", async () => {
+  it("inserta las líneas vinculadas sin tocar conceptos_costo (Fase P.3: liquidación via trigger BD)", async () => {
     const res = await vincularFacturaAConceptos({
       facturaId: "f-1", organizationId: "o-1", folio: "A-1",
       fechaEmision: "2026-06-12",
@@ -76,20 +76,17 @@ describe("vincularFacturaAConceptos", () => {
       ],
     });
     expect(res.insertadas).toBe(2);
-    expect(res.liquidados).toEqual(["cc-1"]); // sólo cc-1 cubre ≥99%
-    const updatePayload = mock.getMutationPayload("conceptos_costo", "update") as
-      { estado_liquidacion: string; referencia_pago: string } | null;
-    expect(updatePayload?.estado_liquidacion).toBe("Pagado");
-    expect(updatePayload?.referencia_pago).toBe("A-1");
+    // Fase P.3: ya no hay update directo a conceptos_costo desde el cliente.
+    expect(mock.getMutationPayload("conceptos_costo", "update")).toBeNull();
   });
 
-  it("no llama al update si ningún concepto se cubre", async () => {
+  it("no llama al update de conceptos_costo aunque una línea cubra el 100%", async () => {
     const res = await vincularFacturaAConceptos({
       facturaId: "f-1", organizationId: "o-1", folio: "A-1",
       fechaEmision: "2026-06-12",
-      lineas: [{ conceptoCostoId: "cc-1", descripcion: "X", monto: 100, montoOriginal: 1000 }],
+      lineas: [{ conceptoCostoId: "cc-1", descripcion: "X", monto: 1000, montoOriginal: 1000 }],
     });
-    expect(res).toEqual({ insertadas: 1, liquidados: [] });
+    expect(res).toEqual({ insertadas: 1 });
     expect(mock.getMutationPayload("conceptos_costo", "update")).toBeNull();
   });
 });
