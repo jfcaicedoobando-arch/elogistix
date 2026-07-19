@@ -38,7 +38,7 @@ export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmisi
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="md:col-span-2 min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">UUID fiscal</p>
+            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">UUID fiscal</p>
             <div className="flex items-center gap-1">
               <p className="font-mono text-sm truncate">{uuidFiscal}</p>
               <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={copiarUuid}>
@@ -47,15 +47,15 @@ export function FacturaTimbradoCard({ uuidFiscal, folioFiscal, serie, fechaEmisi
             </div>
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Folio</p>
+            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Folio</p>
             <p className="font-mono text-sm">{folioFiscal ?? "—"}</p>
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Serie</p>
+            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Serie</p>
             <p className="font-mono text-sm">{serie || "—"}</p>
           </div>
           <div className="min-w-0 md:col-span-4">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Fecha de emisión</p>
+            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Fecha de emisión</p>
             <p className="text-sm font-medium">{fechaEmision ? formatDate(fechaEmision) : "—"}</p>
           </div>
         </div>

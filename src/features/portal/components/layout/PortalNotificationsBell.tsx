@@ -87,7 +87,7 @@ export function PortalNotificationsBell() {
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium truncate">{n.titulo}</p>
                         {n.mensaje && (
-                          <p className="text-[11px] text-muted-foreground line-clamp-2">{n.mensaje}</p>
+                          <p className="text-label text-muted-foreground line-clamp-2">{n.mensaje}</p>
                         )}
                         <p className="text-2xs text-muted-foreground mt-0.5 tabular-nums">
                           {formatDateTimeShort(n.created_at)}

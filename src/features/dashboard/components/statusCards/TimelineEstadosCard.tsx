@@ -58,7 +58,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     )}
                   </div>
 
-                  <span className="text-2xs sm:text-[11px] font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1">
+                  <span className="text-2xs sm:text-label font-medium mt-0.5 text-muted-foreground text-center truncate max-w-full px-1">
                     {estado}
                   </span>
 

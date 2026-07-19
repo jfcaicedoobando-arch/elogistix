@@ -40,7 +40,7 @@ export function PasoAmbiente({ ambiente, onChange }: Props) {
             Producción
           </span>
         </div>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-label text-muted-foreground">
           Selección actual: <strong>{ambiente === "live" ? "Producción" : "Sandbox"}</strong>.
           Podrás cambiarlo después desde la tarjeta de FacturApi.
         </p>

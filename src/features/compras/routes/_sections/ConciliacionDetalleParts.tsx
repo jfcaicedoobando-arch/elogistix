@@ -19,7 +19,7 @@ export function ResumenTile({
     : "text-foreground";
   return (
     <div className="rounded-md border p-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`text-sm font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );

@@ -21,7 +21,7 @@ interface Props {
 
 function nivel(porcentaje: number): { color: string; icon: typeof TrendingUp } {
   if (porcentaje >= 15) return { color: "[color:hsl(var(--success))]", icon: TrendingUp };
-  if (porcentaje >= 5) return { color: "text-amber-600 dark:text-amber-400", icon: Minus };
+  if (porcentaje >= 5) return { color: "text-warning", icon: Minus };
   return { color: "text-destructive", icon: TrendingDown };
 }
 
@@ -60,7 +60,7 @@ export function WizardTotalsBar({ plUSD, plMXN, totalVentaMXN }: Props) {
 function Metric({ label, mxn, usd }: { label: string; mxn: number; usd: number }) {
   return (
     <div className="flex flex-col leading-tight">
-      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-2xs uppercase tracking-wide text-muted-foreground">{label}</span>
       <div className="flex items-center gap-2">
         <span className="font-medium tabular-nums">{formatCurrency(mxn, "MXN")}</span>
         {usd > 0 && (

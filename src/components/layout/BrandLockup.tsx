@@ -105,7 +105,7 @@ export function BrandLockup({
           {BRAND.name}
         </span>
         {subtitle && (
-          <span className="text-[11px] text-muted-foreground truncate">{subtitle}</span>
+          <span className="text-label text-muted-foreground truncate">{subtitle}</span>
         )}
       </div>
     </div>

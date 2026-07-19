@@ -38,7 +38,7 @@ export function MiniSerie({ titulo, data, meses, colorClass }: Props) {
           </div>
           <div className="flex gap-1">
             {meses.map((m, i) => (
-              <span key={i} className="w-2.5 text-center text-[8px] text-muted-foreground leading-none">
+              <span key={i} className="w-2.5 text-center text-3xs text-muted-foreground leading-none">
                 {m.charAt(0)}
               </span>
             ))}

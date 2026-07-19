@@ -44,8 +44,8 @@ function RetBadges({ isr, iva }: { isr: number; iva: number }) {
   if (!isr && !iva) return <span className="text-xs text-muted-foreground">—</span>;
   return (
     <div className="flex flex-wrap gap-1 justify-center">
-      {isr > 0 && <Badge variant="outline" className="text-[10px]">ISR {(isr * 100).toFixed(isr === 0.1 ? 0 : 2)}%</Badge>}
-      {iva > 0 && <Badge variant="outline" className="text-[10px]">IVA {(iva * 100).toFixed(iva === 0.04 ? 0 : 2)}%</Badge>}
+      {isr > 0 && <Badge variant="outline" className="text-2xs">ISR {(isr * 100).toFixed(isr === 0.1 ? 0 : 2)}%</Badge>}
+      {iva > 0 && <Badge variant="outline" className="text-2xs">IVA {(iva * 100).toFixed(iva === 0.04 ? 0 : 2)}%</Badge>}
     </div>
   );
 }

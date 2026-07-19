@@ -8,7 +8,7 @@ interface Props {
 
 export function AsignacionExistenteInfo({ revisionExistente }: Props) {
   return (
-    <div className="rounded-md border bg-muted/40 p-2 text-[11px] space-y-0.5">
+    <div className="rounded-md border bg-muted/40 p-2 text-label space-y-0.5">
       <div className="flex items-center gap-1.5">
         <span className="text-muted-foreground">Estado actual:</span>{" "}
         <Badge variant="outline" className="text-2xs capitalize">

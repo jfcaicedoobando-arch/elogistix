@@ -108,7 +108,7 @@ export default function Ayuda() {
                     <div className="flex flex-col gap-1 min-w-0">
                       <span>{modulo.titulo}</span>
                       {modulo.audiencia && modulo.audiencia.length > 0 && (
-                        <span className="text-[11px] font-normal text-muted-foreground">
+                        <span className="text-label font-normal text-muted-foreground">
                           Para: {modulo.audiencia.join(" · ")}
                         </span>
                       )}

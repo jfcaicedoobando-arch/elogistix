@@ -60,7 +60,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
             style={{ width: `${profitBarPct}%` }}
           />
         </div>
-        <div className="mt-1 flex justify-between text-[9px] text-muted-foreground uppercase tracking-wide">
+        <div className="mt-1 flex justify-between text-3xs text-muted-foreground uppercase tracking-wide">
           <span>Costo</span>
           <span>{profitPositivo ? "Profit" : "Pérdida"}</span>
         </div>
@@ -71,7 +71,7 @@ export function ProfitTooltipContent({ data }: { data: ArribosEsteMes }) {
           <div className="text-2xs uppercase tracking-wide text-muted-foreground mb-1">
             Desglose por moneda origen
           </div>
-          <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-0.5 text-[11px]">
+          <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-0.5 text-label">
             <span className="text-2xs uppercase text-muted-foreground">Origen</span>
             <span className="text-2xs uppercase text-muted-foreground text-right">Venta MXN</span>
             <span className="text-2xs uppercase text-muted-foreground text-right">Costo MXN</span>
@@ -115,19 +115,19 @@ export function CoberturaTooltipContent({
         <span className="tabular-nums font-medium text-right">{formatCurrency(gastos, "MXN")}</span>
       </div>
       {sinGastos ? (
-        <p className="text-[11px] text-muted-foreground italic border-t pt-1.5">
+        <p className="text-label text-muted-foreground italic border-t pt-1.5">
           Aún no hay gastos fijos capturados este mes.
         </p>
       ) : perdida ? (
-        <p className="text-[11px] text-destructive border-t pt-1.5">
+        <p className="text-label text-destructive border-t pt-1.5">
           Pérdida proyectada: aún no cubres nada de los gastos fijos.
         </p>
       ) : pctReal >= 100 ? (
-        <p className="text-[11px] text-success border-t pt-1.5">
+        <p className="text-label text-success border-t pt-1.5">
           Ya cubriste tus gastos fijos del mes. El excedente es utilidad neta.
         </p>
       ) : (
-        <p className="text-[11px] text-muted-foreground border-t pt-1.5">
+        <p className="text-label text-muted-foreground border-t pt-1.5">
           Faltan <span className="font-semibold text-foreground">{formatCurrency(faltante, "MXN")}</span> de profit para cubrir tus gastos fijos.
         </p>
       )}

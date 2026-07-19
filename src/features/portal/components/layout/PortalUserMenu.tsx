@@ -30,7 +30,7 @@ export function PortalUserMenu({ initials, clienteName, email, onSignOut }: Prop
           aria-label="Menú de usuario"
         >
           <Avatar className="h-7 w-7">
-            <AvatarFallback className="bg-primary text-primary-foreground text-[11px] font-semibold">
+            <AvatarFallback className="bg-primary text-primary-foreground text-label font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -41,7 +41,7 @@ export function PortalUserMenu({ initials, clienteName, email, onSignOut }: Prop
           {clienteName && (
             <span className="text-sm font-semibold leading-tight">{clienteName}</span>
           )}
-          <span className="text-[11px] font-normal text-muted-foreground truncate">
+          <span className="text-label font-normal text-muted-foreground truncate">
             {email}
           </span>
         </DropdownMenuLabel>

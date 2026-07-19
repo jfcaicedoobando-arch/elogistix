@@ -69,7 +69,7 @@ export default function AlertasSistemaPanel() {
                     </div>
                     <p className="text-sm font-medium break-words">{a.message}</p>
                     {a.payload && Object.keys(a.payload).length > 0 && (
-                      <pre className="text-[11px] bg-muted rounded p-2 mt-2 overflow-auto max-h-32">
+                      <pre className="text-label bg-muted rounded p-2 mt-2 overflow-auto max-h-32">
                         {JSON.stringify(a.payload, null, 2)}
                       </pre>
                     )}

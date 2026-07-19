@@ -90,11 +90,11 @@ export function TarifaFila({
         <div className={`text-base font-semibold ${esMejor ? "text-success" : ""}`}>
           {usd(t.total_comparable)}
         </div>
-        <div className="text-[11px] text-muted-foreground">
+        <div className="text-label text-muted-foreground">
           Flete {usd(Number(t.flete_base))} · Recargos {usd(t.recargos_total)}
         </div>
         {delta > 0 && (
-          <div className="text-[11px] text-muted-foreground">+{usd(delta)} vs mejor</div>
+          <div className="text-label text-muted-foreground">+{usd(delta)} vs mejor</div>
         )}
       </div>
       <div className="flex items-center justify-end gap-1.5">
@@ -123,7 +123,7 @@ export function TarifaFila({
 
 export function TarifaColumnHeader() {
   return (
-    <div className={`${FILA_GRID} py-2 text-[11px] uppercase tracking-wide text-muted-foreground bg-muted/20 border-y`}>
+    <div className={`${FILA_GRID} py-2 text-label uppercase tracking-wide text-muted-foreground bg-muted/20 border-y`}>
       <div>Agente · Naviera</div>
       <div>Vigencia</div>
       <div className="text-left">Estado</div>

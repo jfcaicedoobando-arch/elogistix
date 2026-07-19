@@ -111,7 +111,7 @@ export default function FacturapiCredencialesCard() {
             <p className="text-sm font-medium">
               {configurado ? "Reconfigurar conexión" : "Asistente paso a paso"}
             </p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               {configurado
                 ? "Vuelve a ejecutar el wizard si cambiaste de ambiente o rotaste tus keys."
                 : "Te guiamos en 3 pasos para vincular tu cuenta de FacturApi."}

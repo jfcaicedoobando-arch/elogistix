@@ -19,7 +19,7 @@ function Kpi({ label, value, sub, tone }: { label: string; value: string; sub?: 
       <CardContent className="p-4">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className={cn("text-xl font-semibold tabular-nums mt-1", toneCls)}>{value}</p>
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
+        {sub && <p className="text-label text-muted-foreground mt-0.5">{sub}</p>}
       </CardContent>
     </Card>
   );

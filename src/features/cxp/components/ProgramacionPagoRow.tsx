@@ -42,14 +42,14 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
     <div className="mt-3 pt-3 border-t">
       <div className="flex items-center gap-2 mb-2">
         <CalendarClock className="h-4 w-4 text-muted-foreground" />
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+        <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
           Programación de pago
         </span>
         {bonita && !yaSaldada && (
-          <Badge variant="secondary" className="text-[10px]">Programada · {bonita}</Badge>
+          <Badge variant="secondary" className="text-2xs">Programada · {bonita}</Badge>
         )}
         {yaSaldada && (
-          <Badge variant="outline" className="text-[10px]">Sin saldo</Badge>
+          <Badge variant="outline" className="text-2xs">Sin saldo</Badge>
         )}
       </div>
       <div className="flex items-center gap-2 flex-wrap">

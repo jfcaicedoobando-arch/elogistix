@@ -94,7 +94,7 @@ function EtaLabelAdornment({
         type="button"
         variant="ghost"
         size="sm"
-        className="h-6 px-2 text-[11px] gap-1"
+        className="h-6 px-2 text-label gap-1"
         onClick={recalcular}
         aria-label={`Aplicar ETA sugerida (${sugerencia})`}
       >

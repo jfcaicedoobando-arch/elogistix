@@ -49,7 +49,7 @@ export function FacturaDetalleHeader(props: Props) {
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total</p>
+        <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Total</p>
         <p className="text-lg font-semibold tabular-nums text-foreground">
           {formatCurrency(total, moneda)}
         </p>

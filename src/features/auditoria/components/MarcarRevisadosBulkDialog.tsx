@@ -72,7 +72,7 @@ export function MarcarRevisadosBulkDialog({ open, hallazgos, onOpenChange, onSuc
           disabled={bulk.isPending}
           autoFocus
         />
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-label text-muted-foreground">
           Esta misma nota se guardará en cada hallazgo seleccionado. Mínimo 3 caracteres.
         </p>
       </div>

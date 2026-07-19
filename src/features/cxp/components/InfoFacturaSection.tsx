@@ -39,7 +39,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 px-2 text-[11px] text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+            className="h-7 px-2 text-label text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setOpenCancel(true)}
           >
             <Ban className="h-3.5 w-3.5 mr-1" />
@@ -92,7 +92,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
       </div>
 
       <div className="mt-4 pt-3 border-t">
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium block mb-2">
+        <span className="text-label uppercase tracking-wider text-muted-foreground font-medium block mb-2">
           CFDI adjuntos
         </span>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -108,7 +108,7 @@ export function InfoFacturaSection({ factura: f }: Props) {
 
       {f.notas && (
         <div className="mt-3 pt-3 border-t">
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+          <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
             Notas
           </span>
           <p className="text-sm text-foreground whitespace-pre-wrap mt-1">{f.notas}</p>

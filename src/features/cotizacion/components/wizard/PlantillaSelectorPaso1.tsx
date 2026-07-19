@@ -103,7 +103,7 @@ export function PlantillaSelectorPaso1({ organizationId, form, onApplied }: Prop
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
+                      <span className="text-2xs text-muted-foreground shrink-0">
                         {p.veces_usada > 0 ? `${p.veces_usada}×` : "Nueva"}
                       </span>
                     </CommandItem>

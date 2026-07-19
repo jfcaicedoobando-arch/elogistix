@@ -80,7 +80,7 @@ export function ResumenGrid({
         />
       </div>
       <div className="rounded-md border p-3">
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
+        <div className="text-2xs uppercase tracking-wide text-muted-foreground mb-2">
           Renglones por estatus
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -89,7 +89,7 @@ export function ResumenGrid({
           <EstatusCount label="Conciliado" count={resumenEstatus.conciliado} tone="success" />
           <EstatusCount label="Excedente" count={resumenEstatus.excedente} tone="destructive" />
         </div>
-        <div className="mt-2 pt-2 border-t text-[11px] text-muted-foreground flex justify-between">
+        <div className="mt-2 pt-2 border-t text-label text-muted-foreground flex justify-between">
           <span>Partidas huérfanas</span>
           <span className={huerfanas > 0 ? "text-destructive font-semibold" : "font-semibold"}>
             {huerfanas}
@@ -110,7 +110,7 @@ function TablaBody({ filas, expandidos, onToggle, onVincular }: {
   return (
     <div className="rounded-md border overflow-hidden">
       <table className="w-full text-xs">
-        <thead className="bg-muted/50 text-[10px] uppercase tracking-wide text-muted-foreground">
+        <thead className="bg-muted/50 text-2xs uppercase tracking-wide text-muted-foreground">
           <tr>
             <th className="w-6 p-2"></th>
             <th className="text-left p-2">Concepto</th>

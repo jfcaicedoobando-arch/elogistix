@@ -62,7 +62,7 @@ export function FacturaResumenCard({ factura }: Props) {
 
         {factura.notas && (
           <div className="border-t pt-4">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Notas</p>
+            <p className="text-label font-medium uppercase tracking-wide text-muted-foreground mb-1">Notas</p>
             <p className="text-sm whitespace-pre-wrap">{factura.notas}</p>
           </div>
         )}
@@ -74,7 +74,7 @@ export function FacturaResumenCard({ factura }: Props) {
 function Field({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
       <div className={`text-sm font-medium truncate ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
   );

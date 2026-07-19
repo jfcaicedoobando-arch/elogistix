@@ -144,7 +144,7 @@ export function PagosTable({ pagos, isLoading, canEdit, onEliminarPago }: PagosT
   return (
     <div className="overflow-x-auto rounded-md border">
       <table className="w-full text-sm">
-        <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <thead className="bg-muted/40 text-label uppercase tracking-wider text-muted-foreground">
           <tr>
             <th className="text-left px-4 py-3 font-bold">Fecha</th>
             <th className="text-left px-4 py-3 font-bold">Método</th>

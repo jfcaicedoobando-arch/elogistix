@@ -117,7 +117,7 @@ export function buildTarifasColumns(deps: TarifasColumnsDeps): ColumnDef<TarifaR
           <div>
             <div className={`font-semibold ${esMejor ? "text-success" : ""}`}>{usd(t.total_comparable)}</div>
             {delta > 0 && (
-              <div className="text-[11px] text-muted-foreground">+{usd(delta)} vs mejor</div>
+              <div className="text-label text-muted-foreground">+{usd(delta)} vs mejor</div>
             )}
           </div>
         );

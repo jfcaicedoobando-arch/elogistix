@@ -42,7 +42,7 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
         </td>
         <td className="p-2 align-top">
           <div className="font-medium">{fila.concepto}</div>
-          <div className="text-[10px] text-muted-foreground">{fila.proveedor_nombre || "—"}</div>
+          <div className="text-2xs text-muted-foreground">{fila.proveedor_nombre || "—"}</div>
         </td>
         <td className="p-2 text-right tabular-nums align-top">
           {formatCurrency(fila.cotizado, fila.moneda)}
@@ -57,7 +57,7 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
           {fila.desviacion_pct.toFixed(1)}%
         </td>
         <td className="p-2 align-top">
-          <Badge variant={meta.variant} className="gap-1 text-[10px]">
+          <Badge variant={meta.variant} className="gap-1 text-2xs">
             <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
             {meta.label}
           </Badge>
@@ -67,7 +67,7 @@ export function FilaRenglon({ fila, expandido, onToggle, onVincular }: Props) {
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 px-2 text-[11px]"
+              className="h-6 px-2 text-label"
               onClick={onVincular}
             >
               <Link2 className="mr-1 h-3 w-3" /> Vincular
@@ -86,7 +86,7 @@ function SubTablaPartidas({ fila }: { fila: FilaReconciliacion }) {
   return (
     <tr className="bg-muted/20">
       <td colSpan={8} className="px-3 py-2">
-        <table className="w-full text-[11px]">
+        <table className="w-full text-label">
           <thead className="text-muted-foreground">
             <tr>
               <th className="text-left py-1 font-normal">Folio</th>

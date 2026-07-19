@@ -31,7 +31,7 @@ export function AccionTab({ ctrl, revisionExistente }: Props) {
       </div>
 
       {ctrl.yaRevisado && revisionExistente && (
-        <div className="rounded-md border bg-muted/40 p-2 text-[11px] space-y-0.5">
+        <div className="rounded-md border bg-muted/40 p-2 text-label space-y-0.5">
           <div>
             <span className="text-muted-foreground">Revisado por:</span>{" "}
             <span className="font-medium">{revisionExistente.revisado_por_email}</span>

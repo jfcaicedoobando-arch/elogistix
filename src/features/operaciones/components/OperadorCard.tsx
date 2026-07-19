@@ -32,7 +32,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold truncate">{nombreDesdeEmail(operador.nombre)}</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-label text-muted-foreground">
               {operador.cargasActivas} embarques activos
             </p>
           </div>
@@ -63,7 +63,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
               aria-label={interactive ? `Ver ${count} embarques en ${estado}` : `Sin embarques en ${estado}`}
               title={interactive ? `Ver detalle de ${estado}` : undefined}
             >
-              <div className="flex items-center justify-between text-[11px]">
+              <div className="flex items-center justify-between text-label">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
                   <Icon className="h-3 w-3" style={{ color: ESTADO_COLOR[estado] }} />
                   {estado}
@@ -95,7 +95,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
           Clientes
         </p>
         {operador.clientesDesglose.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground italic">Sin clientes activos</p>
+          <p className="text-label text-muted-foreground italic">Sin clientes activos</p>
         ) : (
           <>
             <ul className="space-y-0.5 max-h-56 overflow-y-auto">

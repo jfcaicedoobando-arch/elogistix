@@ -100,7 +100,7 @@ export function DialogCategoria({ open, onOpenChange, categoria }: Props) {
               ))}
             </SelectContent>
           </Select>
-          {tipoActual && <p className="text-[11px] text-muted-foreground mt-1">{tipoActual.descripcion}</p>}
+          {tipoActual && <p className="text-label text-muted-foreground mt-1">{tipoActual.descripcion}</p>}
         </div>
         <div>
           <Label>Orden</Label>

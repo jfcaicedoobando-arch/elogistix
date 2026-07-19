@@ -68,7 +68,7 @@ export function LandingHero() {
           <div className="w-full max-w-md rounded-2xl border border-primary-foreground/15 bg-primary-foreground/[0.06] p-5 shadow-2xl backdrop-blur-sm">
             <div className="mb-4 flex items-center justify-between border-b border-primary-foreground/10 pb-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/80">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-primary-foreground/80">
                   Embarque · FCL
                 </p>
                 <p className="font-mono text-sm font-semibold">LCG-2026-0142</p>
@@ -80,11 +80,11 @@ export function LandingHero() {
 
             <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
               <div className="rounded-lg bg-primary-foreground/[0.06] p-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/75">BL Master</p>
+                <p className="text-2xs uppercase tracking-wider text-primary-foreground/75">BL Master</p>
                 <p className="font-mono text-sm font-semibold">MAEU-794821</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/[0.06] p-2.5">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/75">Naviera</p>
+                <p className="text-2xs uppercase tracking-wider text-primary-foreground/75">Naviera</p>
                 <p className="text-sm font-semibold">Maersk</p>
               </div>
             </div>
@@ -92,12 +92,12 @@ export function LandingHero() {
             {/* Ruta */}
             <div className="mb-4 flex items-center gap-2 text-xs">
               <div className="flex-1 text-left">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/80">Origen</p>
+                <p className="text-2xs uppercase tracking-wider text-primary-foreground/80">Origen</p>
                 <p className="font-semibold text-primary-foreground">Shanghái CNSHA</p>
               </div>
               <Ship className="h-4 w-4 text-primary-foreground" />
               <div className="flex-1 text-right">
-                <p className="text-[10px] uppercase tracking-wider text-primary-foreground/80">Destino</p>
+                <p className="text-2xs uppercase tracking-wider text-primary-foreground/80">Destino</p>
                 <p className="font-semibold text-primary-foreground">Manzanillo MZLO</p>
               </div>
             </div>
@@ -138,7 +138,7 @@ export function LandingHero() {
 
           <div className="space-y-4">
             <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-6">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/55 sm:w-40 sm:shrink-0 sm:text-right">
+              <span className="text-2xs font-semibold uppercase tracking-wider text-primary-foreground/55 sm:w-40 sm:shrink-0 sm:text-right">
                 Navieras que rastreamos
               </span>
               <div className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-2">
@@ -151,7 +151,7 @@ export function LandingHero() {
             </div>
 
             <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-6">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/55 sm:w-40 sm:shrink-0 sm:text-right">
+              <span className="text-2xs font-semibold uppercase tracking-wider text-primary-foreground/55 sm:w-40 sm:shrink-0 sm:text-right">
                 Estándares que cumplimos
               </span>
               <div className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-2">
@@ -164,7 +164,7 @@ export function LandingHero() {
             </div>
           </div>
 
-          <p className="mt-5 text-center text-[10px] text-primary-foreground/50">
+          <p className="mt-5 text-center text-2xs text-primary-foreground/50">
             {PROOF_DISCLAIMER}
           </p>
         </div>

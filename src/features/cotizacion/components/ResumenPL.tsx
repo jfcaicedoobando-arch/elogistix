@@ -29,9 +29,9 @@ export default function ResumenPL({
   if (!tieneUSD && !tieneMXN) return null;
 
   const renderCard = (moneda: "USD" | "MXN", totales: TotalesMoneda) => (
-    <Card className="border-violet-100">
+    <Card className="border-primary/20">
       <CardContent className="p-4 space-y-2">
-        <p className="text-sm font-semibold text-violet-600">{moneda}</p>
+        <p className="text-sm font-semibold text-primary">{moneda}</p>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Total Costo</span>
           <span>{formatCurrency(totales.totalCosto, moneda)}</span>
@@ -59,7 +59,7 @@ export default function ResumenPL({
         <CollapsibleTrigger className="w-full">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-violet-500" />
+              <TrendingUp className="h-4 w-4 text-primary" />
               Resumen P&L
               <div className="ml-auto flex items-center gap-2">
                 {mostrarRentabilidadGlobal && (

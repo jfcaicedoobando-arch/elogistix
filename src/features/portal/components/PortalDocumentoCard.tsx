@@ -56,7 +56,7 @@ export function PortalDocumentoCard({ doc, downloadingId, onDownload }: Props) {
             Descargar
           </Button>
         ) : (
-          <p className="text-[11px] text-muted-foreground text-center py-1">
+          <p className="text-label text-muted-foreground text-center py-1">
             Sin archivo disponible
           </p>
         )}

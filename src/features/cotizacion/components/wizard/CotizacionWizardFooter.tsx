@@ -93,9 +93,9 @@ export function CotizacionWizardFooter({
               <span className="font-medium">
                 {currentStep === 4 ? "Guardar" : "Siguiente"}
               </span>
-              <kbd className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono">Ctrl</kbd>
-              <span className="mx-0.5 text-[10px]">+</span>
-              <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono">↵</kbd>
+              <kbd className="ml-2 rounded bg-muted px-1.5 py-0.5 text-2xs font-mono">Ctrl</kbd>
+              <span className="mx-0.5 text-2xs">+</span>
+              <kbd className="rounded bg-muted px-1.5 py-0.5 text-2xs font-mono">↵</kbd>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

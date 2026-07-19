@@ -51,7 +51,7 @@ export function PagoFila({ pago: p, canEdit, onEliminar }: Props) {
         <div className="flex flex-col">
           <span className="font-medium text-foreground">{p.metodo_pago}</span>
           {p.referencia && (
-            <span className="text-[11px] text-muted-foreground">Ref: {p.referencia}</span>
+            <span className="text-label text-muted-foreground">Ref: {p.referencia}</span>
           )}
         </div>
       </td>

@@ -146,7 +146,7 @@ export default function AgenteLayout() {
         </div>
 
         {orgName && (
-          <div className="md:hidden border-t bg-muted/30 px-3 py-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="md:hidden border-t bg-muted/30 px-3 py-1 flex items-center gap-1.5 text-label text-muted-foreground">
             <Building2 className="h-3 w-3 shrink-0" />
             <span className="truncate font-medium text-foreground">{orgName}</span>
           </div>
@@ -180,7 +180,7 @@ export default function AgenteLayout() {
       </main>
 
       <footer className="border-t bg-card/40 mt-auto">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between text-label text-muted-foreground">
           <span>© {new Date().getFullYear()} {orgName ?? "Libre Carga"} · Portal del Agente</span>
           <span className="tabular-nums">v{APP_VERSION}</span>
         </div>

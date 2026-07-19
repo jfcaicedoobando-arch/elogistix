@@ -139,7 +139,7 @@ export function EmailChipsField({
             )}
           </span>
           {c.tag && (
-            <span className="rounded bg-background/60 px-1 text-[10px] uppercase tracking-wide">
+            <span className="rounded bg-background/60 px-1 text-2xs uppercase tracking-wide">
               {c.tag}
             </span>
           )}

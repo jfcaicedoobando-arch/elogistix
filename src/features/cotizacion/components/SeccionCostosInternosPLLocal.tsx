@@ -128,7 +128,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   return (
     <div className="space-y-4">
       {mostrarAvisoLclFcl && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
           <AlertTriangle className="size-4 mt-0.5 shrink-0" />
           <span>
             La tarifa vinculada está capturada para contenedor (<strong>{tarifa?.tipo_contenedor_nombre}</strong>), pero esta cotización es <strong>LCL</strong>.
@@ -156,12 +156,12 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
 
       <TablaCostosLocal
         filas={filas} filasMoneda={filasUSD} moneda="USD"
-        title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-violet-500" />}
+        title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-primary" />}
         totales={totalesUSD} onUpdate={updateFila} onAdd={addFila} onRemove={removeFila}
       />
       <TablaCostosLocal
         filas={filas} filasMoneda={filasMXN} moneda="MXN"
-        title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-violet-500" />}
+        title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-primary" />}
         totales={totalesMXN} onUpdate={updateFila} onAdd={addFila} onRemove={removeFila}
       />
       <ResumenPL

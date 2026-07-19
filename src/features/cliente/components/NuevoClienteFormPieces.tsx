@@ -104,7 +104,7 @@ export function ModoAltaTabs({ modo, onChange }: ModoTabsProps) {
 /** Badge "Prellenado desde CSF" usado junto al label cuando el campo vino del PDF. */
 export function PrellenadoBadge() {
   return (
-    <Badge variant="secondary" className="ml-2 text-[9px] gap-0.5 px-1.5 py-0 h-4 font-medium">
+    <Badge variant="secondary" className="ml-2 text-3xs gap-0.5 px-1.5 py-0 h-4 font-medium">
       <Sparkles className="h-2.5 w-2.5" /> CSF
     </Badge>
   );
@@ -141,7 +141,7 @@ export function ClienteField({
         onChange={(e) => onChange(field, e.target.value)}
         className={cn("mt-1", errorMsg && "border-destructive focus-visible:ring-destructive")}
       />
-      {errorMsg && <p className="text-[11px] text-destructive mt-1">{errorMsg}</p>}
+      {errorMsg && <p className="text-label text-destructive mt-1">{errorMsg}</p>}
     </div>
   );
 }

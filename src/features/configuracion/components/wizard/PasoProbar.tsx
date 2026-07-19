@@ -99,7 +99,7 @@ export function PasoProbar({ ambiente, resultado, probando, onProbar }: Props) {
       )}
 
       {!resultado && !probando && (
-        <p className="text-[11px] text-muted-foreground text-center">
+        <p className="text-label text-muted-foreground text-center">
           Aún no has probado la conexión.
         </p>
       )}

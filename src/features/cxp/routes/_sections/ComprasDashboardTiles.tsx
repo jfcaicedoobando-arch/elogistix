@@ -42,7 +42,7 @@ export function KpiCard({
           )}
         </div>
         <p className={cn("text-2xl font-semibold tabular-nums mt-1", toneCls)}>{value}</p>
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5 tabular-nums">{sub}</p>}
+        {sub && <p className="text-label text-muted-foreground mt-0.5 tabular-nums">{sub}</p>}
       </CardContent>
     </Card>
   );

@@ -141,7 +141,7 @@ export default function Embarques() {
                         <div className="text-xs text-muted-foreground truncate mt-0.5">
                           {toTitleCase(e.cliente_nombre)}
                         </div>
-                        <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                        <div className="text-label text-muted-foreground truncate mt-0.5">
                           {shortName(getOrigen(e))} → {shortName(getDestino(e))}
                           {e.eta ? ` · ETA ${formatDate(e.eta)}` : ""}
                         </div>
