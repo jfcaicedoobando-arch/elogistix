@@ -14,27 +14,39 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-function readLatestEliminarEmbarqueMigration(): string {
+function readAllEliminarEmbarqueMigrations(): string {
+  // Extraemos SÓLO los bloques que definen `public.eliminar_embarque_completo`
+  // (desde `CREATE OR REPLACE FUNCTION ...` hasta la sentencia `$$;` de cierre,
+  // más los GRANT y COMMENT ON FUNCTION inmediatos). Concatenar migraciones
+  // enteras contaminaría con código de funciones vecinas (p.ej. restaurar_embarque).
   const dir = path.resolve(__dirname, "../../../supabase/migrations");
   const files = fs
     .readdirSync(dir)
     .filter((f) => f.endsWith(".sql"))
-    .sort()
-    .reverse();
+    .sort();
+  const blocks: string[] = [];
+  const fnRegex =
+    /CREATE OR REPLACE FUNCTION public\.eliminar_embarque_completo[\s\S]*?\$\$;/g;
+  const grantRegex =
+    /GRANT EXECUTE ON FUNCTION public\.eliminar_embarque_completo[^;]*;/g;
   for (const f of files) {
     const body = fs.readFileSync(path.join(dir, f), "utf8");
-    if (body.includes("FUNCTION public.eliminar_embarque_completo")) return body;
+    for (const m of body.matchAll(fnRegex)) blocks.push(m[0]);
+    for (const m of body.matchAll(grantRegex)) blocks.push(m[0]);
   }
-  throw new Error("No se encontró migración con FUNCTION public.eliminar_embarque_completo");
+  if (blocks.length === 0) {
+    throw new Error("No se encontró FUNCTION public.eliminar_embarque_completo");
+  }
+  return blocks.join("\n\n-- ── siguiente bloque ──\n\n");
 }
 
 describe("Fase E — eliminar_embarque_completo bloquea por dependencias fiscales", () => {
-  const sql = readLatestEliminarEmbarqueMigration();
+  const sql = readAllEliminarEmbarqueMigrations();
 
   it("recolecta los 6 contadores + estado cerrado antes de decidir", () => {
-    // facturas vivas (excluye Cancelada|Sustituida)
+    // facturas vivas (excluye Cancelada|Sustituida). Tolerante a espacios.
     expect(sql).toMatch(
-      /FROM public\.facturas[\s\S]{0,200}estado NOT IN \('Cancelada', 'Sustituida'\)/,
+      /FROM public\.facturas[\s\S]{0,200}estado NOT IN \('Cancelada',\s*'Sustituida'\)/,
     );
     // proveedor_facturas vivas
     expect(sql).toMatch(

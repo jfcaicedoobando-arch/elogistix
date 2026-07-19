@@ -42,11 +42,7 @@ const LITERAL_COLOR = /(?<![\w-])(?:text|bg|border|ring|from|to|via)-(?:red|gree
 const ALLOWLIST: readonly string[] = [
   // Lote 3B (deuda P&L cotización): heatmap de márgenes usa emerald/red literales
   // en escala continua — requiere token gradiente antes de tokenizar.
-  "src/features/cotizacion/components/ResumenPL.tsx",
-  "src/features/cotizacion/components/SeccionCostosInternosPLDetalle.tsx",
-  "src/features/cotizacion/components/SeccionCostosInternosPLLocal.tsx",
   "src/features/cotizacion/components/TablaCostosLocal.tsx",
-  "src/features/cotizacion/components/wizard/WizardTotalsBar.tsx",
   // Marketing/landing: preview interno del logo, no forma parte del ERP.
   // Se mantiene con paleta cruda intencionalmente.
   "src/features/marketing/routes/LogoPreview.tsx",

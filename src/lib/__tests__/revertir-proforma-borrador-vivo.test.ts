@@ -27,7 +27,7 @@ function findLatestBody(): string {
 describe("revertir_proforma_al_cancelar_sustitucion cuenta borradores como vivos", () => {
   const body = findLatestBody();
 
-  it("existe al menos una migración que redefine la RPC", () => {
+  it("existe al menos una migración que redefine la RPC (borrador-vivo)", () => {
     expect(body.length).toBeGreaterThan(0);
   });
 
