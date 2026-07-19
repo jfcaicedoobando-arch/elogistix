@@ -50,7 +50,16 @@ export async function recotizarCotizacion(
     p_cotizacion_id: cotizacionId,
     p_motivo: motivo.trim(),
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.message?.includes("LC_COTIZACION_CON_EMBARQUE")) {
+      // Postgres serializa el HINT dentro del mensaje; extraemos el expediente
+      // si viene delimitado, y si no dejamos el mensaje "vacío".
+      const match = error.message.match(/HINT:\s*([^\n]+)/i);
+      const expediente = (match?.[1] ?? "").trim();
+      throw new CotizacionConEmbarqueError(expediente);
+    }
+    throw new Error(error.message);
+  }
   const d = (data ?? {}) as Record<string, unknown>;
   return {
     version_anterior: Number(d.version_anterior ?? 0),
