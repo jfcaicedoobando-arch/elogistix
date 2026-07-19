@@ -93,7 +93,19 @@ export async function fetchEmbarqueDependenciasFinancieras(
     cxc.map((f) => f.id),
     cxp.map((f) => f.id),
   );
-  const tieneDependencias = cxcCount > 0 || cxpCount > 0 || notasCredito > 0 || pagos > 0;
+
+  const { count: proformasCount, error: proformasErr } = await supabase
+    .from('proformas')
+    .select('id', { count: 'exact', head: true })
+    .eq('embarque_id', embarqueId)
+    .is('deleted_at', null)
+    .neq('estado_aprobacion', 'borrador')
+    .eq('estado_proforma', 'pendiente');
+  if (proformasErr) throw proformasErr;
+  const proformas = proformasCount ?? 0;
+
+  const tieneDependencias =
+    cxcCount > 0 || cxpCount > 0 || notasCredito > 0 || pagos > 0 || proformas > 0;
 
   return {
     tieneDependencias,
@@ -101,5 +113,7 @@ export async function fetchEmbarqueDependenciasFinancieras(
     cxp: { count: cxpCount, facturas: cxp },
     notasCredito,
     pagos,
+    proformas,
   };
 }
+
