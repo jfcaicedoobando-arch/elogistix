@@ -40,6 +40,9 @@ export default {
         // Reemplazan los ~25 usos de `text-[10px]` y aislados `text-[9px]` en `src/features/**`.
         "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
         "3xs": ["0.5625rem", { lineHeight: "0.75rem" }],
+        // Ola 8 · Auditoría UI 1080p — reemplaza los ~129 usos de `text-[11px]`
+        // en chips, footers de tabla y etiquetas densas.
+        label: ["0.6875rem", { lineHeight: "1rem" }],
       },
 
       colors: {
