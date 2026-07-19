@@ -59,15 +59,19 @@ export default function DialogEliminarEmbarqueBloqueado({ expediente, deps }: Pr
         </div>
       )}
 
-      {(deps.notasCredito > 0 || deps.pagos > 0) && (
+      {(deps.notasCredito > 0 || deps.pagos > 0 || deps.proformas > 0) && (
         <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 text-warning" />
           <div>
+            {deps.proformas > 0 && (
+              <p>Proformas listas para facturar: <strong>{deps.proformas}</strong></p>
+            )}
             {deps.notasCredito > 0 && <p>Notas de crédito ligadas: <strong>{deps.notasCredito}</strong></p>}
             {deps.pagos > 0 && <p>Pagos registrados: <strong>{deps.pagos}</strong></p>}
           </div>
         </div>
       )}
+
 
       <p className="text-xs text-muted-foreground">
         Una vez que canceles o desliges estos documentos del embarque, podrás intentar la eliminación nuevamente.

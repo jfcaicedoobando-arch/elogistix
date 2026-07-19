@@ -200,6 +200,8 @@ describe("eliminarEmbarqueRpc", () => {
       notas_credito_cxc: 0,
       notas_credito_cxp: 0,
       comisiones_definitivas: 0,
+      proformas: 0,
+
       cerrado: false,
       expediente: "ELIMP00099",
     };
