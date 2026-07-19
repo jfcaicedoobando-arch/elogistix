@@ -1,61 +1,81 @@
-# Fase R.4 — Bug 24 · Pagar sin aprobación
+# Fase R.7 — Residual Fase B + bordes menores
 
-## Contexto verificado
+Analogía: la Fase B libera la proforma cuando cancelas la factura MXN "buena", pero se olvida que hay un borrador USD en la despensa consumiendo los mismos conceptos. Al ver "vivas" ignora los borradores → la proforma vuelve a `pendiente`, y si la re-conviertes duplicas conceptos en el borrador USD. Fix simétrico al de Fase C: contar borradores como facturas vivas.
 
-- `proveedor_facturas.estado_aprobacion` (enum `pendiente | aprobada | rechazada`) existe y se cambia sólo desde el RPC `aprobar_factura_proveedor` (con permisos).
-- **No hay guarda BD** en `pagos_proveedor` ni en `_recalc_estado_proveedor_factura` que impida registrar pagos cuando la factura sigue `pendiente` o `rechazada` (grep confirmado en migraciones).
-- En cliente, `registrarPagoProveedor` (`src/features/cxp/services/pagosProveedor.ts`) inserta sin leer `estado_aprobacion`; la UI (`DialogRegistrarPagoProveedor.tsx`) tampoco lo revisa.
-- Riesgo (analogía): es como poder firmar un cheque antes de que el jefe autorice el gasto — la contabilidad ya se movió, pero nadie dio el visto bueno.
+## Verificación previa (hecho)
 
-## Objetivo
-
-Que la BD sea la fuente de verdad: no se puede insertar/reactivar un pago si la factura no está `aprobada`. La UI acompaña con feedback claro.
+- `supabase/migrations/20260718195258_...sql` línea 66: `WHERE f.estado NOT IN ('Cancelada','Sustituida','Borrador')` — confirmado.
+- Fase C ya excluye sólo `('Cancelada','Sustituida')` al bloquear borrado del embarque.
+- Test `src/lib/__tests__/revertir-proforma-multi-source.test.ts` usa regex `NOT IN ('Cancelada','Sustituida'` (no exige `Borrador`), así que el fix no lo rompe.
 
 ## Cambios
 
-### 1. Migración BD (nueva)
+### 1. Fix principal — Bug 3 residual (CRÍTICO)
 
-Archivo: `supabase/migrations/<timestamp>_r4_pago_requiere_aprobacion.sql`
+Nueva migración `supabase/migrations/<ts>_r7_revertir_proforma_cuenta_borradores.sql`:
 
-- Función `public.check_pago_proveedor_factura_aprobada()` `SECURITY DEFINER`:
-  - En `INSERT` (o `UPDATE` que quite `deleted_at`, i.e. "revivir" un pago): leer `estado_aprobacion` de la factura.
-  - Si `<> 'aprobada'`, `RAISE EXCEPTION 'LC_PAGO_SIN_APROBACION: la factura % está en estado %', v_folio, v_estado;`
-- Trigger `trg_pago_requiere_aprobacion` `BEFORE INSERT OR UPDATE OF deleted_at ON public.pagos_proveedor`.
-- `GRANT EXECUTE` no aplica (trigger). Mantener `search_path = public`.
+- `CREATE OR REPLACE FUNCTION public.revertir_proforma_al_cancelar_sustitucion` idéntica a la actual **excepto**:
+  - Línea 66 → `WHERE f.estado NOT IN ('Cancelada','Sustituida')` (quitar `'Borrador'`).
+- Mantener firma `RETURNS uuid[]`, `SECURITY DEFINER`, `search_path = public`.
+- `COMMENT ON FUNCTION` explicando que los borradores cuentan como vivos (consumen conceptos y pueden timbrarse).
 
-### 2. Servicio cliente
+### 2. Bug menor A — INSERT directo salta máquina de estados NC proveedor
 
-`src/features/cxp/services/pagosProveedor.ts`
+Reforzar el trigger existente en `proveedor_notas_credito`:
 
-- Añadir clase `PagoRequiereAprobacionError extends Error` con `code = "LC_PAGO_SIN_APROBACION"`.
-- En `registrarPagoProveedor` y `eliminarPagoProveedor` (para el caso de reactivación), envolver el `throw error` con detección del token `LC_PAGO_SIN_APROBACION` → lanzar el error tipado.
-- Como defensa temprana (menos roundtrips), al inicio de `registrarPagoProveedor` extender la lectura de la factura para incluir `estado_aprobacion` y lanzar el error tipado antes del `INSERT` si es `<> 'aprobada'`.
+- Recrear `enforce_nc_proveedor_estado_transicion()` para disparar también en `BEFORE INSERT`.
+- En INSERT: si `NEW.estado` ∉ `('Borrador')`, `RAISE EXCEPTION 'LC_NC_PROV_INSERT_ESTADO_INVALIDO'` con `HINT` "Una nota de crédito debe crearse en estado Borrador".
+- Trigger:
+  ```sql
+  DROP TRIGGER IF EXISTS trg_nc_prov_estado_machine ON public.proveedor_notas_credito;
+  CREATE TRIGGER trg_nc_prov_estado_machine
+    BEFORE INSERT OR UPDATE OF estado ON public.proveedor_notas_credito
+    FOR EACH ROW EXECUTE FUNCTION public.enforce_nc_proveedor_estado_transicion();
+  ```
+- Cliente (`src/features/cxp/services/proveedorNotasCredito.ts`): mapear el nuevo token dentro de `mapEstadoError` a `NcProveedorTransicionInvalidaError` reutilizando el hint.
 
-### 3. UI
+### 3. Bug menor B — Proformas en borrador no bloquean eliminar embarque
 
-`src/features/cxp/components/DialogRegistrarPagoProveedor.tsx` (o el disparador equivalente en `PagoProveedorFormBody` / botón "Registrar pago" del detalle CxP):
+Actualizar `eliminar_embarque_completo` (revisada en Fase R.1):
 
-- Recibir/leer `estado_aprobacion` de la factura.
-- Si `!== "aprobada"`: deshabilitar el botón "Registrar pago" con `Tooltip` "Requiere aprobación de la factura".
-- En el submit, si el error mapeado es `PagoRequiereAprobacionError`, mostrar toast rojo con el copy: "No se puede registrar el pago: la factura aún no está aprobada."
+- Ampliar el conteo de proformas bloqueantes de `estado_proforma IN ('aprobada','facturada')` a **cualquier `estado_proforma <> 'cancelada' AND deleted_at IS NULL`** (incluye `pendiente` y `borrador`).
+- Mensaje sigue siendo `LC_EMBARQUE_CON_PROFORMAS_VIVAS` con lista de folios.
+- Alternativa considerada (soft-delete cascada): descartada — dejaría facturas vacías si el usuario luego re-convertía; bloquear es más seguro.
 
-### 4. Tests
+### 4. Bug menor C — Soft-delete de proforma facturada solo en UI
 
-- `src/features/cxp/services/__tests__/pagosProveedor.test.ts`:
-  - Caso: factura `pendiente` → `registrarPagoProveedor` lanza `PagoRequiereAprobacionError` sin hacer `insert`.
-  - Caso: BD devuelve error con `LC_PAGO_SIN_APROBACION` → se mapea al error tipado.
-  - Caso: factura `aprobada` → flujo actual funciona (regresión).
-- Test opcional en componente para verificar botón deshabilitado cuando `estado_aprobacion !== 'aprobada'` (si el patrón del feature ya usa RTL para dialogs; si no, se omite y se cubre por unit del servicio).
+Nuevo trigger en `proformas`:
 
-### 5. Versionado & changelog
+- `enforce_proforma_no_soft_delete_facturada()` `BEFORE UPDATE OF deleted_at`:
+  - Si `OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL AND OLD.estado_proforma = 'facturada'` → `RAISE EXCEPTION 'LC_PROFORMA_FACTURADA_NO_ELIMINABLE'`.
+- Trigger `trg_proforma_no_soft_delete_facturada BEFORE UPDATE OF deleted_at ON public.proformas`.
+- No hace falta cambio en cliente (la UI ya lo evita); el trigger es defensa en profundidad.
 
-- Bump `APP_VERSION` → `13.301.95`.
-- Añadir bullet en `CHANGELOG.md`:
-  `[13.301.95] - 2026-07-19 · Fase R.4 (Bug 24): guarda BD LC_PAGO_SIN_APROBACION en pagos_proveedor + UI deshabilita "Registrar pago" en facturas no aprobadas.`
+### 5. Tests
+
+- `src/lib/__tests__/revertir-proforma-borrador-vivo.test.ts` (nuevo, estilo lectura de SQL como los existentes):
+  - Verifica que la última definición de `revertir_proforma_al_cancelar_sustitucion` **NO** incluye `'Borrador'` en el `NOT IN`.
+- `src/features/cxp/services/__tests__/proveedorNotasCredito.test.ts`:
+  - Agregar caso: BD devuelve `LC_NC_PROV_INSERT_ESTADO_INVALIDO` en `crearNotaCreditoProveedor` con `estado='Aplicada'` → se mapea a `NcProveedorTransicionInvalidaError` (si no existe el archivo, crearlo con mocks del patrón thenable).
+- `src/lib/__tests__/eliminar-embarque-proformas-borrador.test.ts` (nuevo, lectura SQL):
+  - La última definición de `eliminar_embarque_completo` cuenta proformas con `estado_proforma <> 'cancelada'` (o equivalente que incluya `'borrador'`).
+- `src/lib/__tests__/proforma-facturada-no-soft-delete.test.ts` (nuevo, lectura SQL):
+  - Existe el trigger `trg_proforma_no_soft_delete_facturada` y el `RAISE EXCEPTION` con token esperado.
+
+### 6. Versionado & changelog
+
+- Bump `APP_VERSION` → `13.301.97`.
+- `CHANGELOG.md`:
+  ```
+  ## [13.301.97] - 2026-07-19
+  - Fase R.7 (Bug 3 residual): `revertir_proforma_al_cancelar_sustitucion` ahora cuenta borradores como facturas vivas — cancelar una factura ya no libera proformas si aún hay borradores consumiendo sus conceptos.
+  - Fase R.7 (bordes menores): trigger `LC_NC_PROV_INSERT_ESTADO_INVALIDO` bloquea crear NC proveedor fuera de estado Borrador; `eliminar_embarque_completo` incluye proformas en borrador en el bloqueo; nuevo trigger `LC_PROFORMA_FACTURADA_NO_ELIMINABLE` evita soft-delete de proformas facturadas.
+  ```
 
 ## Criterios de aceptación
 
-1. Intentar `INSERT` directo con SQL en `pagos_proveedor` para una factura `pendiente` falla con `LC_PAGO_SIN_APROBACION`.
-2. Aprobar la factura y luego registrar pago funciona.
-3. Al rechazar/desaprobar una factura vía trigger (si aplica en flujos futuros), no se pueden crear pagos nuevos.
-4. `bun run ci:fast` verde (lint + typecheck + tests unitarios).
+1. Con factura MXN timbrada + borrador USD sobre la misma proforma, cancelar la MXN deja `estado_proforma = 'facturada'` (no `pendiente`).
+2. `INSERT INTO proveedor_notas_credito (..., estado) VALUES (..., 'Aplicada')` falla con `LC_NC_PROV_INSERT_ESTADO_INVALIDO`.
+3. Intentar eliminar un embarque con una proforma en borrador falla con `LC_EMBARQUE_CON_PROFORMAS_VIVAS`.
+4. `UPDATE proformas SET deleted_at=now() WHERE estado_proforma='facturada'` falla con `LC_PROFORMA_FACTURADA_NO_ELIMINABLE`.
+5. `bun run ci:fast` verde (los tests existentes de multi-source siguen pasando).
