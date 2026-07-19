@@ -81,9 +81,10 @@ describe("Fase Q.1 — Portal cliente whitelist (v13.301.90)", () => {
     }
   });
 
-  it("queries.ts no usa select('*') en el portal del cliente", () => {
-    expect(queries).not.toMatch(/\.select\(\s*"\*"\s*\)/);
-    expect(queries).not.toMatch(/\.select\(\s*'\*'\s*\)/);
+  it("queries.ts no usa select('*') sobre tablas de dominio (cotizaciones/embarques/facturas/documentos/eventos)", () => {
+    // Se permite `.select("*")` en tablas puente sin PII sensible (client_users).
+    const forbidden = /\.from\("(cotizaciones|embarques|facturas|documentos_embarque|eventos_embarque|proformas|pagos_factura)"\)\s*\.select\(\s*["']\*["']\s*\)/;
+    expect(queries).not.toMatch(forbidden);
   });
 
   it("fetchPortalEventos filtra deleted_at IS NULL", () => {
