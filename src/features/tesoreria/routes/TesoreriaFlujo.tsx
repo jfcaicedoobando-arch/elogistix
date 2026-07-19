@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
