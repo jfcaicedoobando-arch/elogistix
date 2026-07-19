@@ -12,6 +12,7 @@ import {
   obtenerCostosCotizacionVersion,
 } from "@/features/cotizacion/services/versionado";
 import {
+  CotizacionConEmbarqueError,
   CotizacionYaAceptadaError,
   MotivoRequeridoError,
 } from "@/features/cotizacion/domain/versionadoCotizacion";
