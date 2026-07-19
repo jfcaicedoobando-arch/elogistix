@@ -12,7 +12,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 export function Field({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
-      <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+      <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
         {label}
       </span>
       <span className={`text-sm text-foreground truncate ${mono ? "font-mono" : ""}`}>
@@ -94,7 +94,7 @@ export function UuidFiscalField({
     estatus === "Vigente" ? "default" : estatus === "Cancelado" ? "destructive" : "secondary";
   return (
     <div className="flex flex-col gap-1 min-w-0 col-span-2 md:col-span-1">
-      <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+      <span className="text-label uppercase tracking-wider text-muted-foreground font-medium">
         UUID fiscal (CFDI)
       </span>
       <span className="text-sm text-foreground truncate font-mono">
@@ -103,12 +103,12 @@ export function UuidFiscalField({
       {uuid && (
         <div className="flex items-center gap-2 flex-wrap mt-0.5">
           {estatus && (
-            <Badge variant={variant} className="text-[10px]">
+            <Badge variant={variant} className="text-2xs">
               SAT: {estatus}
             </Badge>
           )}
           {verifDate && (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-2xs text-muted-foreground">
               Verificado {verifDate}
             </span>
           )}
@@ -116,7 +116,7 @@ export function UuidFiscalField({
             type="button"
             variant="outline"
             size="sm"
-            className="h-6 px-2 text-[11px]"
+            className="h-6 px-2 text-label"
             disabled={isPending}
             onClick={onVerify}
           >

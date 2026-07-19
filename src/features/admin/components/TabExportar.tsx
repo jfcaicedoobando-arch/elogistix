@@ -63,7 +63,7 @@ export default function TabExportar() {
                   {grupo}{" "}
                   <span className="text-muted-foreground font-normal">({tablas.length})</span>
                 </p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed font-mono break-words">
+                <p className="text-label text-muted-foreground leading-relaxed font-mono break-words">
                   {tablas.join(", ")}
                 </p>
               </div>

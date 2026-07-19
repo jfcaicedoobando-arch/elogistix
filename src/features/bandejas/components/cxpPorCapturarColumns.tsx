@@ -71,7 +71,7 @@ export function buildCxpPorCapturarColumns(opts: BuildOpts): ColumnDef<RowData, 
               <Progress value={pct} className="h-2 flex-1" />
               <span className="text-xs tabular-nums text-muted-foreground w-9 text-right">{pct}%</span>
             </div>
-            <div className="text-[11px] text-muted-foreground tabular-nums mt-0.5 space-y-0.5">
+            <div className="text-label text-muted-foreground tabular-nums mt-0.5 space-y-0.5">
               {presupMxn > 0 && (
                 <div>{formatCurrency(factMxn, "MXN")} / {formatCurrency(presupMxn, "MXN")}</div>
               )}

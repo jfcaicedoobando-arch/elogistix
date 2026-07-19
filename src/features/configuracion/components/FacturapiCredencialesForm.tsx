@@ -103,7 +103,7 @@ function ApiKeyRow({
           Probar
         </Button>
       </div>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-label text-muted-foreground">
         La key se guarda cifrada en el servidor. Aquí sólo ves los últimos 4 dígitos.
       </p>
     </div>
@@ -142,7 +142,7 @@ export default function FacturapiCredencialesForm(props: Props) {
             />
             <span className={ambiente === "live" ? "font-medium" : "text-muted-foreground"}>Producción</span>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Define qué API key usar al timbrar. Empieza siempre en Sandbox.
           </p>
         </div>
@@ -167,14 +167,14 @@ export default function FacturapiCredencialesForm(props: Props) {
         <div className="flex items-center justify-between rounded border p-3">
           <div>
             <Label className="text-sm">Datos fiscales</Label>
-            <p className="text-[11px] text-muted-foreground">RFC, régimen, domicilio</p>
+            <p className="text-label text-muted-foreground">RFC, régimen, domicilio</p>
           </div>
           <Switch checked={datosFiscales} onCheckedChange={setDatosFiscales} />
         </div>
         <div className="flex items-center justify-between rounded border p-3">
           <div>
             <Label className="text-sm">CSD cargado</Label>
-            <p className="text-[11px] text-muted-foreground">En FacturApi</p>
+            <p className="text-label text-muted-foreground">En FacturApi</p>
           </div>
           <Switch checked={csdCargado} onCheckedChange={setCsdCargado} />
         </div>

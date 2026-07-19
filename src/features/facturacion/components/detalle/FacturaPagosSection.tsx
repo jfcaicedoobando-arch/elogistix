@@ -157,11 +157,11 @@ export function FacturaPagosSection({
 
           <div className="border-t pt-3 grid grid-cols-2 gap-2">
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Pagado</p>
+              <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Pagado</p>
               <p className="text-base font-semibold tabular-nums">{formatCurrency(totalPagado, moneda)}</p>
             </div>
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Saldo</p>
+              <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Saldo</p>
               <p className={`text-base font-semibold tabular-nums ${liquidada ? "text-success" : "text-accent"}`}>
                 {formatCurrency(saldo, moneda)}
               </p>

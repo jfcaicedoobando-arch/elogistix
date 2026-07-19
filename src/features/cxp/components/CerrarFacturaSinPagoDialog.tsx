@@ -105,7 +105,7 @@ export function CerrarFacturaSinPagoDialog({
           </SelectContent>
         </Select>
         {descripcionMotivo && (
-          <p className="text-[11px] text-muted-foreground pt-0.5">{descripcionMotivo}</p>
+          <p className="text-label text-muted-foreground pt-0.5">{descripcionMotivo}</p>
         )}
       </div>
 

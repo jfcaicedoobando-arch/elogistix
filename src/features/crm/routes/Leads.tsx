@@ -144,7 +144,7 @@ export default function Leads() {
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm truncate">{toTitleCase(l.empresa)}</div>
                   <div className="text-xs text-muted-foreground truncate mt-0.5">{toTitleCase(l.contacto ?? "") || l.email || "—"}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{l.fuente}{typeof l.score === "number" ? ` · score ${l.score}` : ""}</div>
+                  <div className="text-label text-muted-foreground mt-0.5">{l.fuente}{typeof l.score === "number" ? ` · score ${l.score}` : ""}</div>
                 </div>
                 <StatusBadge domain="lead" status={l.estado} />
               </div>

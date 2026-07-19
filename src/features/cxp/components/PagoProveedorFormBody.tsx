@@ -112,7 +112,7 @@ export function PagoProveedorFormBody(p: Props) {
           <Label>Referencia</Label>
           <Input value={p.referencia} onChange={(e) => p.setReferencia(e.target.value)}
             placeholder={referenciaHint(p.metodo)} />
-          <p className="text-[11px] text-muted-foreground">{referenciaHint(p.metodo)}</p>
+          <p className="text-label text-muted-foreground">{referenciaHint(p.metodo)}</p>
         </div>
         <div className="space-y-1">
           <Label>Notas</Label>

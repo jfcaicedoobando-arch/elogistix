@@ -20,7 +20,7 @@ function StatStripItem({ icon: Icon, label, value }: { icon: typeof Target; labe
     <Card className="flex items-center gap-3 px-4 h-14 rounded-md sm:rounded-none sm:border-0 sm:border-r last:sm:border-r-0 sm:shadow-none">
       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
       <div className="min-w-0">
-        <div className="text-[11px] text-muted-foreground truncate">{label}</div>
+        <div className="text-label text-muted-foreground truncate">{label}</div>
         <div className="text-base font-semibold tabular-nums truncate">{value}</div>
       </div>
     </Card>

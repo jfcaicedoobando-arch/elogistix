@@ -94,7 +94,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
                 />
               ) : null}
             </div>
-            <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap text-right">
+            <span className="text-label text-muted-foreground tabular-nums whitespace-nowrap text-right">
               {hasGlobal ? (
                 <>
                   {pctRedondeado}%<span className="hidden md:inline"> del total</span>

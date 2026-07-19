@@ -88,7 +88,7 @@ export function HallazgosTabla(props: Props) {
         if (!responsable) {
           return (
             <Button size="sm" variant="ghost"
-              className="h-7 text-[11px] gap-1 text-muted-foreground hover:text-foreground"
+              className="h-7 text-label gap-1 text-muted-foreground hover:text-foreground"
               onClick={(e) => { e.stopPropagation(); onAsignarResponsable(h); }}
             >
               <UserPlus className="h-3.5 w-3.5" /> Asignar
@@ -120,7 +120,7 @@ export function HallazgosTabla(props: Props) {
         if (revision?.estado_revision === "revisado") {
           return (
             <Button size="sm" variant="ghost"
-              className="h-7 text-[11px] gap-1 text-success hover:text-success dark:text-success"
+              className="h-7 text-label gap-1 text-success hover:text-success dark:text-success"
               onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}
               title={`Por: ${revision.revisado_por_email ?? "—"}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada ?? ""}`}
             >
@@ -131,7 +131,7 @@ export function HallazgosTabla(props: Props) {
         if (revision?.estado_revision === "en_progreso") {
           return (
             <Button size="sm" variant="outline"
-              className="h-7 text-[11px] border-warning/40 text-warning"
+              className="h-7 text-label border-warning/40 text-warning"
               onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}
             >
               En progreso
@@ -139,7 +139,7 @@ export function HallazgosTabla(props: Props) {
           );
         }
         return (
-          <Button size="sm" variant="outline" className="h-7 text-[11px]"
+          <Button size="sm" variant="outline" className="h-7 text-label"
             onClick={(e) => { e.stopPropagation(); onMarcarRevisado(h); }}
           >
             Marcar revisado

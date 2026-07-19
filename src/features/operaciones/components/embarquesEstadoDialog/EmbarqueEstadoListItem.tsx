@@ -36,7 +36,7 @@ export function EmbarqueEstadoListItem({ e, estado, onNavigate }: Props) {
             <Badge variant="outline" className="text-2xs h-4 px-1.5">{subt.join(" · ")}</Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
+        <div className="flex items-center gap-3 text-label text-muted-foreground mt-0.5 flex-wrap">
           {ruta && <span className="truncate">{ruta}</span>}
           {e.etd && <span>ETD {formatDate(e.etd)}</span>}
           {e.eta && <span>ETA {formatDate(e.eta)}</span>}

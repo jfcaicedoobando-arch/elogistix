@@ -182,7 +182,7 @@ export function FacturaProveedorFormFields({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             Un mismo proveedor puede emitir facturas para distintas categorías (COGS, gastos operativos, OpEx).
           </p>
           <FieldError msg={errors.categoriaId} />

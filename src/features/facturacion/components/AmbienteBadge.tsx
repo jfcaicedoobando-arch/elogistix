@@ -17,7 +17,7 @@ interface Props {
 
 export function AmbienteBadge({ ambiente, size = "sm", className }: Props) {
   if (ambiente !== "sandbox") return null;
-  const sizeCls = size === "md" ? "text-xs px-2 py-0.5" : "text-[10px] px-1.5 py-0";
+  const sizeCls = size === "md" ? "text-xs px-2 py-0.5" : "text-2xs px-1.5 py-0";
   return (
     <Tooltip>
       <TooltipTrigger asChild>

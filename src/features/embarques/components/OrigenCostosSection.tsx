@@ -54,7 +54,7 @@ function DeltaTable({ cambios }: { cambios: DeltaConcepto[] }) {
   const sufijo = cambios.length === 1 ? "" : "s";
   return (
     <div className="border rounded-md overflow-hidden">
-      <p className="px-3 py-1.5 text-[11px] uppercase bg-muted/50 text-muted-foreground">
+      <p className="px-3 py-1.5 text-label uppercase bg-muted/50 text-muted-foreground">
         Snapshot del delta al convertir ({cambios.length} concepto{sufijo})
       </p>
       <table className="w-full text-xs">
@@ -151,16 +151,16 @@ function TarifaChip({
 
   return (
     <div className="p-2 rounded border bg-muted/30" title={id ?? undefined}>
-      <p className="text-[11px] uppercase text-muted-foreground">{label}</p>
+      <p className="text-label uppercase text-muted-foreground">{label}</p>
       {!id ? (
         <p className="text-xs text-muted-foreground">—</p>
       ) : resumen ? (
         <>
           <p className="text-sm font-medium">
             {resumen.naviera_nombre} · {resumen.puerto_origen_nombre} → {resumen.puerto_destino_nombre}
-            {suffix && <span className="ml-2 text-[11px] font-normal text-muted-foreground">{suffix}</span>}
+            {suffix && <span className="ml-2 text-label font-normal text-muted-foreground">{suffix}</span>}
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-label text-muted-foreground">
             {resumen.tipo_contenedor_nombre}
             {resumen.vigente_desde && resumen.vigente_hasta && (
               <>

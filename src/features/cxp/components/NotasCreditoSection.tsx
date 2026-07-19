@@ -56,7 +56,7 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-muted/20 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <thead className="bg-muted/20 text-label uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="text-left px-3 py-2">Folio</th>
                 <th className="text-left px-3 py-2">Fecha</th>

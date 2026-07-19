@@ -126,7 +126,7 @@ export function ProformaFooterFields({
             placeholder="0 = Contado"
             className="mt-1"
           />
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-label text-muted-foreground mt-1">
             Por defecto se toma del cliente. 0 = Contado.
           </p>
         </div>

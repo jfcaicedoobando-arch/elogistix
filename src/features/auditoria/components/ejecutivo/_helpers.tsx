@@ -29,7 +29,7 @@ export function DrillKpi({
       <div className={cn("text-2xl font-bold tabular-nums", tone)}>
         {formatNumber(value)}
       </div>
-      <div className="text-[11px] text-muted-foreground uppercase tracking-wider">
+      <div className="text-label text-muted-foreground uppercase tracking-wider">
         {label}
       </div>
     </Comp>

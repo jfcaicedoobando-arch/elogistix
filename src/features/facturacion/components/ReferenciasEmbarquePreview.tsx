@@ -63,7 +63,7 @@ export function ReferenciasEmbarquePreview({ factura, primeraDescripcion }: Prop
         <span className="font-medium text-foreground"> "Referencias del embarque"</span> al pie del PDF.
       </div>
       {ejemplo ? (
-        <div className="rounded bg-background/60 p-2 font-mono text-[11px] leading-tight break-words">
+        <div className="rounded bg-background/60 p-2 font-mono text-label leading-tight break-words">
           {ejemplo}
         </div>
       ) : null}

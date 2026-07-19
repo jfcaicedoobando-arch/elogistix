@@ -132,7 +132,7 @@ export default function Cotizaciones() {
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm truncate">{r.folio}</div>
                   <div className="text-xs text-muted-foreground truncate mt-0.5">{r.cliente_nombre ?? ""}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                  <div className="text-label text-muted-foreground mt-0.5">
                     {r.created_at ? formatDate(r.created_at) : ""}
                     {typeof r.subtotal === "number" ? ` · ${formatCurrency(r.subtotal, r.moneda ?? "USD")}` : ""}
                   </div>

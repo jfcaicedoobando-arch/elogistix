@@ -48,7 +48,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
                 <UserPlus className="h-4 w-4 mr-2" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm truncate">{h.title}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{h.subtitle}</div>
+                  <div className="text-label text-muted-foreground truncate">{h.subtitle}</div>
                 </div>
               </CommandItem>
             ))}
@@ -61,7 +61,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
                 <Target className="h-4 w-4 mr-2" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm truncate">{h.title}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{h.subtitle}</div>
+                  <div className="text-label text-muted-foreground truncate">{h.subtitle}</div>
                 </div>
               </CommandItem>
             ))}
@@ -74,7 +74,7 @@ export default function CrmCommandPalette({ open, onOpenChange }: Props) {
                 <ClipboardList className="h-4 w-4 mr-2" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm truncate">{h.title}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{h.subtitle}</div>
+                  <div className="text-label text-muted-foreground truncate">{h.subtitle}</div>
                 </div>
               </CommandItem>
             ))}

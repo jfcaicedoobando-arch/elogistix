@@ -79,7 +79,7 @@ export function FinanceHeader({
             {chips.map((c) => (
               <span
                 key={c.label}
-                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium tabular-nums ${c.className}`}
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-label font-medium tabular-nums ${c.className}`}
               >
                 {c.icon}
                 {c.label}

@@ -88,7 +88,7 @@ export function NuevoUsuarioAccesoSection({
               <div key={group.label}>
                 {gi > 0 && <SelectSeparator />}
                 <SelectGroup>
-                  <SelectLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <SelectLabel className="text-label uppercase tracking-wide text-muted-foreground">
                     {group.label}
                   </SelectLabel>
                   {group.roles.map((r) => (

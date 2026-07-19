@@ -28,7 +28,7 @@ function MoneyWithBreakdown({ e, value }: { e: EmbarqueConProfit; value: number 
             <div className="font-semibold border-b pb-1 mb-1">Desglose homologado a MXN</div>
             <div className="flex justify-between gap-3"><span className="text-muted-foreground">Venta:</span><span className="tabular-nums">{formatCurrency(e.ventaMXN, "MXN")}</span></div>
             <div className="flex justify-between gap-3"><span className="text-muted-foreground">Costo:</span><span className="tabular-nums">{formatCurrency(e.costoMXN, "MXN")}</span></div>
-            <div className="border-t pt-1 mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+            <div className="border-t pt-1 mt-1 space-y-0.5 text-label text-muted-foreground">
               <div className="flex justify-between gap-3"><span>USD → MXN:</span><span className="tabular-nums">V {formatCurrency(e.ventaMxnFromUsd, "MXN")} · C {formatCurrency(e.costoMxnFromUsd, "MXN")}</span></div>
               <div className="flex justify-between gap-3"><span>EUR → MXN:</span><span className="tabular-nums">V {formatCurrency(e.ventaMxnFromEur, "MXN")} · C {formatCurrency(e.costoMxnFromEur, "MXN")}</span></div>
               <div className="flex justify-between gap-3"><span>MXN nativo:</span><span className="tabular-nums">V {formatCurrency(e.ventaMxnNative, "MXN")} · C {formatCurrency(e.costoMxnNative, "MXN")}</span></div>

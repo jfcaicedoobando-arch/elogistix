@@ -36,7 +36,7 @@ function ContactoRow({
           {c.tipo && (
             <Badge
               variant={esPrincipal ? "default" : "outline"}
-              className="text-[10px] uppercase tracking-wide"
+              className="text-2xs uppercase tracking-wide"
             >
               {c.tipo}
             </Badge>

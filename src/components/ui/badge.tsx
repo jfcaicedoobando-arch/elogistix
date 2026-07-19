@@ -17,7 +17,7 @@ const badgeVariants = cva(
         info: "border-transparent bg-info/15 [color:hsl(var(--info))] hover:bg-info/20",
         neutral: "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
       },
-      // Ola 7 · Lote A — reemplaza los ~12 sitios con `text-[10px] h-4 px-1.5` inline.
+      // Ola 7 · Lote A — reemplaza los ~12 sitios con `text-2xs h-4 px-1.5` inline.
       size: {
         default: "px-2 py-0.5 text-xs",
         xs: "px-1.5 py-0 text-2xs h-4",

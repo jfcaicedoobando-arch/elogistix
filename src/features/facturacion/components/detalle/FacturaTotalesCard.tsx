@@ -33,7 +33,7 @@ export function FacturaTotalesCard({ subtotal, iva, total, moneda }: Props) {
 function Cell({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className={`rounded-lg border px-3 py-3 ${highlight ? "bg-accent/5 border-accent/40 ring-1 ring-accent/20" : ""}`}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className={`text-base font-semibold tabular-nums ${highlight ? "text-accent" : "text-foreground"}`}>{value}</p>
     </div>
   );

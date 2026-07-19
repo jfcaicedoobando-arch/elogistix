@@ -38,7 +38,7 @@ function Kpi({ label, value, tone = "default", hint }: { label: string; value: s
   ) : label;
   return (
     <div className="min-w-0 px-3 py-2">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wide truncate">{labelNode}</p>
+      <p className="text-label text-muted-foreground uppercase tracking-wide truncate">{labelNode}</p>
       <p className={`text-lg font-semibold tabular-nums ${cls}`}>{value}</p>
     </div>
   );
@@ -108,7 +108,7 @@ export function DashboardEjecutivoFacturacion() {
         {tendencia.length > 0 && (
           <Card>
             <CardContent className="p-3">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-2">
+              <p className="text-label text-muted-foreground uppercase tracking-wide mb-2">
                 Tendencia · Últimos 6 meses (MXN)
               </p>
               <div className="flex items-start gap-6">

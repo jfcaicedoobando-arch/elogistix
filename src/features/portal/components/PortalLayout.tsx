@@ -50,7 +50,7 @@ export default function PortalLayout() {
       </main>
 
       <footer className="hidden md:block border-t bg-card/40 mt-auto">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted-foreground">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-label text-muted-foreground">
           <span>
             © {new Date().getFullYear()} {orgName ?? "Libre Carga"} · Portal de Cliente
           </span>

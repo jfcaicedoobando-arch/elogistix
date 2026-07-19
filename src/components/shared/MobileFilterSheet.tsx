@@ -58,7 +58,7 @@ export function MobileFilterSheet({
             <Filter className="h-4 w-4" />
             Filtros
             {activeCount > 0 && (
-              <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[11px]">
+              <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-label">
                 {activeCount}
               </Badge>
             )}

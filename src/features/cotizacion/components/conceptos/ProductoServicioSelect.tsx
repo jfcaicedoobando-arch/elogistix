@@ -87,7 +87,7 @@ export function ProductoServicioSelect({ value, onSelect, placeholder = "Selecci
                       />
                       <div className="flex-1">
                         <div className="font-medium">{p.nombre}</div>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-label text-muted-foreground">
                           SAT {p.clave_sat} · {p.clave_unidad_sat} ·{" "}
                           {p.tipo_iva === "gravado_16" ? "IVA 16%" : p.tipo_iva === "tasa_0" ? "IVA 0%" : "Exento"}
                         </div>

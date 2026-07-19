@@ -94,7 +94,7 @@ export function ResumenHerenciaCotizacion() {
         {rows.map((r) => (
           <Row key={r.label} label={r.label} value={r.value} />
         ))}
-        <p className="text-[11px] text-muted-foreground mt-3">
+        <p className="text-label text-muted-foreground mt-3">
           Estos campos se guardarán automáticamente con el embarque al crearlo.
         </p>
       </CardContent>

@@ -14,5 +14,5 @@ export function TcOrigenHint({ origen, fechaAplicada }: { origen: TcOrigen; fech
       : origen === "cfdi"
         ? "Del CFDI del proveedor"
         : "Capturado manualmente";
-  return <p className="text-[11px] text-muted-foreground">{text}</p>;
+  return <p className="text-label text-muted-foreground">{text}</p>;
 }

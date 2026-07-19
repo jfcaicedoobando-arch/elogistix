@@ -48,7 +48,7 @@ export function SidebarUserMenu({
             aria-label="Menú de usuario"
           >
             <Avatar className="h-8 w-8 shrink-0 ring-1 ring-sidebar-border">
-              <AvatarFallback className="bg-muted text-foreground text-[11px] font-semibold">
+              <AvatarFallback className="bg-muted text-foreground text-label font-semibold">
                 {initials}
               </AvatarFallback>
             </Avatar>

@@ -15,7 +15,7 @@ export const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { 
     <li>
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger className="w-full group">
-          <div className="flex items-center justify-between text-[11px] gap-2 py-1 px-1 rounded hover:bg-muted/60 transition-colors">
+          <div className="flex items-center justify-between text-label gap-2 py-1 px-1 rounded hover:bg-muted/60 transition-colors">
             <span className="flex items-center gap-1 min-w-0 text-foreground">
               <ChevronRight
                 className={`h-3 w-3 text-muted-foreground shrink-0 transition-transform duration-200 ${

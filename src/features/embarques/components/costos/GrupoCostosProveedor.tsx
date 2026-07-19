@@ -99,7 +99,7 @@ export function GrupoCostosProveedor({
                         ? `${f.diferencia >= 0 ? "+" : ""}${formatCurrency(f.diferencia, f.moneda)}`
                         : <span className="text-muted-foreground">—</span>}
                       {f.facturas.length > 0 && Math.abs(f.desviacion_pct) >= 0.1 && (
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-2xs text-muted-foreground">
                           {f.desviacion_pct >= 0 ? "+" : ""}{f.desviacion_pct.toFixed(1)}%
                         </div>
                       )}

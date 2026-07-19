@@ -137,13 +137,13 @@ export default function LogoPreview() {
                 <span className={`text-xs font-medium uppercase tracking-wider ${s.subClass}`}>
                   {s.label}
                 </span>
-                <span className={`text-[10px] ${s.subClass}`}>3 estados · 3 tamaños</span>
+                <span className={`text-2xs ${s.subClass}`}>3 estados · 3 tamaños</span>
               </div>
 
               <div className="grid gap-6 px-5 py-8 sm:grid-cols-3">
                 {STATES.map((state) => (
                   <div key={state.id} className="flex flex-col items-start gap-4">
-                    <span className={`text-[11px] uppercase tracking-wider ${s.subClass}`}>
+                    <span className={`text-label uppercase tracking-wider ${s.subClass}`}>
                       {state.label}
                     </span>
                     <Lockup textClass={s.textClass} subClass={s.subClass} state={state.id} size="sm" />

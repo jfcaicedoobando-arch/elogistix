@@ -43,7 +43,7 @@ function labelUsoCfdi(clave: string | null | undefined): string {
 function Row({ label, ok, value, missingLabel }: { label: string; ok: boolean; value: string; missingLabel: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
       <p className={`text-sm font-medium truncate flex items-center gap-1 ${ok ? "" : "text-destructive italic"}`}>
@@ -93,7 +93,7 @@ export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Pr
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="min-w-0 md:col-span-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Cliente</p>
+              <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Cliente</p>
               <p className="text-sm font-medium truncate">
                 <Link to={`/clientes/${clienteId}`} className="text-accent hover:underline">
                   {toTitleCase(clienteNombre)}

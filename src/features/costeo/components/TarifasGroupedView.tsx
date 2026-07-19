@@ -117,7 +117,7 @@ export function TarifasGroupedView({ tarifas, onEditar, onDuplicar, onEliminar }
                 </div>
               </div>
               {g.elegiblesCount >= 2 && g.promedio != null && g.deltaMax != null && (
-                <div className="hidden md:block text-right text-[11px] text-muted-foreground tabular-nums leading-tight mr-1">
+                <div className="hidden md:block text-right text-label text-muted-foreground tabular-nums leading-tight mr-1">
                   <div>Promedio {usd(g.promedio)}</div>
                   <div>Δ máx {usd(g.deltaMax)}</div>
                 </div>
