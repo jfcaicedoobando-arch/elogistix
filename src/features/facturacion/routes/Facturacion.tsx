@@ -108,7 +108,7 @@ export default function Facturacion() {
   if (redirectTo) return <Navigate to={redirectTo} replace />;
 
   return (
-    <PageContainer>
+    <PageContainer width="wide">
       <TooltipProvider delayDuration={150}>
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <PageHeader

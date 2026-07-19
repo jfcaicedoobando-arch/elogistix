@@ -14,19 +14,28 @@ export interface PageContainerProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   /** Desactiva el `space-y-6` cuando la página necesita layout custom. */
   noSpacing?: boolean;
+  /**
+   * `default` (max-w-screen-2xl, 1536px) para páginas normales.
+   * `wide` (max-w-[1720px]) para listados densos: Facturación, Cobranza, CxP,
+   *  donde columnas fijas + acciones dejan las tablas apretadas en 1440-1600.
+   *  Introducido en Sprint 2 (v13.302.1) de la auditoría UI/UX.
+   */
+  width?: "default" | "wide";
 }
 
 export function PageContainer({
   children,
   className,
   noSpacing = false,
+  width = "default",
   ...rest
 }: PageContainerProps) {
   return (
     <div
       {...rest}
       className={cn(
-        "mx-auto w-full max-w-screen-2xl p-4 sm:p-6",
+        "mx-auto w-full p-4 sm:p-6",
+        width === "wide" ? "max-w-[1720px]" : "max-w-screen-2xl",
         !noSpacing && "space-y-6",
         className,
       )}
@@ -35,3 +44,4 @@ export function PageContainer({
     </div>
   );
 }
+
