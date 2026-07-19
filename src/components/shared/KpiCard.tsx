@@ -1,18 +1,15 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import { KpiBodyChip, KpiBodyInline, type KpiBodyProps } from "./KpiCardBody";
 import {
-  KpiBodyChip,
-  KpiBodyInline,
   kpiVariantStyles,
-  type KpiBodyProps,
   type KpiDeltaVariant,
   type KpiIconVariant,
   type KpiVariant,
-} from "./KpiCardBody";
+} from "./kpiCard.tokens";
 
-export type { KpiVariant, KpiIconVariant } from "./KpiCardBody";
+export type { KpiVariant, KpiIconVariant } from "./kpiCard.tokens";
 
 interface KpiCardProps {
   label: string;
