@@ -7197,14 +7197,18 @@ export type Database = {
           total_count: number
         }[]
       }
+      crear_embarque_borrador_core: {
+        Args: { p_cotizacion_id: string }
+        Returns: string
+      }
       crear_embarque_borrador_desde_cotizacion:
         | { Args: { p_cotizacion_id: string }; Returns: string }
         | {
             Args: {
               p_cotizacion_id: string
-              p_decision: string
-              p_delta_jsonb: Json
-              p_tarifa_id_aplicada: string
+              p_decision?: string
+              p_delta_jsonb?: Json
+              p_tarifa_id_aplicada?: string
             }
             Returns: string
           }
