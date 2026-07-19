@@ -9,7 +9,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { registrarActividad } from "@/lib/domain/bitacora/registrar";
-import { run, unwrap, unwrapOr } from "@/lib/supabase/response";
+import { unwrap, unwrapOr } from "@/lib/supabase/response";
 
 export type NotaCreditoProveedor = Tables<"proveedor_notas_credito">;
 
