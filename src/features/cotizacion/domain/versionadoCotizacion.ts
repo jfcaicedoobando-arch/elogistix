@@ -128,3 +128,20 @@ export class MotivoRequeridoError extends Error {
     this.name = "MotivoRequeridoError";
   }
 }
+
+/**
+ * La cotización tiene un embarque vivo vinculado, así que no puede re-cotizarse
+ * (Bug 15). El expediente se preserva para mostrar contexto en la UI.
+ */
+export class CotizacionConEmbarqueError extends Error {
+  readonly expediente: string;
+  constructor(expediente: string) {
+    super(
+      expediente
+        ? `Esta cotización ya está vinculada al embarque ${expediente}. Elimina el embarque antes de re-cotizar.`
+        : "Esta cotización ya está vinculada a un embarque activo.",
+    );
+    this.name = "CotizacionConEmbarqueError";
+    this.expediente = expediente;
+  }
+}

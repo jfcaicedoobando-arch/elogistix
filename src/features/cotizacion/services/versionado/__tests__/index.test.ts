@@ -12,6 +12,7 @@ import {
   obtenerCostosCotizacionVersion,
 } from "@/features/cotizacion/services/versionado";
 import {
+  CotizacionConEmbarqueError,
   CotizacionYaAceptadaError,
   MotivoRequeridoError,
 } from "@/features/cotizacion/domain/versionadoCotizacion";
@@ -40,6 +41,19 @@ describe("recotizarCotizacion", () => {
   it("propaga error de la RPC recotizar_cotizacion", async () => {
     mock.setRpcResult("recotizar_cotizacion", { data: null, error: { message: "boom" } });
     await expect(recotizarCotizacion("c1", "x")).rejects.toThrow("boom");
+  });
+
+  it("traduce LC_COTIZACION_CON_EMBARQUE a CotizacionConEmbarqueError con expediente", async () => {
+    mock.setRpcResult("recotizar_cotizacion", {
+      data: null,
+      error: {
+        message: "LC_COTIZACION_CON_EMBARQUE\nHINT: EL00100042",
+        code: "P0001",
+      },
+    });
+    const err = await recotizarCotizacion("c1", "x").catch((e) => e);
+    expect(err).toBeInstanceOf(CotizacionConEmbarqueError);
+    expect((err as CotizacionConEmbarqueError).expediente).toBe("EL00100042");
   });
 });
 
