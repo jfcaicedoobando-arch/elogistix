@@ -1,4 +1,7 @@
 # Changelog
+## [13.303.8] - 2026-07-20
+- **Fix Sentry `JAVASCRIPT-REACT-30`** (`record "v_emb" has no field "pnl"`, `/embarques`) — el rewrite de `validar_cierre_embarque` en v13.303.0 dejó `(v_emb.pnl->>'utilidad')` accediendo a `embarques.pnl`, que no existe como columna (el P&L se calcula vía RPC `pnl_financiero_embarque`). El detalle de embarque tronaba al cargar `cierre-validacion`.
+  - Migración: `validar_cierre_embarque` ahora llama a `public.pnl_financiero_embarque(p_embarque_id)` dentro de un `BEGIN/EXCEPTION` y toma `utilidad_mxn` (fallback `utilidad`, luego `0`).
 ## [13.303.7] - 2026-07-20
 - **Fix crash Dashboard `TimelineEstadosCard`** (`TypeError: Cannot read properties of undefined (reading 'icon')`, event `0ed9964a…`) — la tarjeta iteraba `ESTADOS_FILTRO` (que incluye `Cotización`, `En Proceso`, `Llegada`) y accedía directamente a `ESTADO_CONFIG[estado]`; esas 3 claves no existían en el mapa y devolvían `undefined`.
   - `TimelineEstadosCard.tsx` ahora usa `getEstadoVisual(estado)` (fallback seguro a `DEFAULT_VISUAL`).
