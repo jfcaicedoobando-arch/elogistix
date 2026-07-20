@@ -1,5 +1,8 @@
 # Changelog
 # Changelog
+## [13.303.32] - 2026-07-20
+- Inputs numéricos: al enfocar un campo con valor `0` se limpia automáticamente para escribir sin el cero inicial; si queda vacío al salir, se restaura a `0`.
+
 ## [13.303.31] - 2026-07-20
 - **UX · la rueda del mouse ya no cambia el valor de inputs numéricos.** Se parchó el componente base `src/components/ui/input.tsx` para que, cuando `type="number"`, el handler `onWheel` desenfoque momentáneamente el campo y lo re-enfoque en el siguiente tick. Con esto se elimina el cambio accidental de montos, cantidades o tasas al scrollear la página con el cursor sobre un campo. Aplica globalmente a los 77 inputs numéricos de la app sin tocarlos uno por uno.
 
