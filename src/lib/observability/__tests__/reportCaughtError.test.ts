@@ -105,5 +105,26 @@ describe("reportCaughtError", () => {
     reportCaughtError(pgError, { feature: "embarques", op: "create" });
     await flush();
     expect(mocks.captureException).not.toHaveBeenCalled();
+
+  it("descarta P0001 con prefijo LC_ (errores de dominio esperados)", async () => {
+    const pgError = {
+      code: "P0001",
+      message: "LC_TRANSICION_INVALIDA: no se permite pasar de Borrador a Confirmado",
+      hint: '{"expediente":"ELIMP00331"}',
+    };
+    reportCaughtError(pgError, { feature: "embarques", op: "avanzar_estado" });
+    await flush();
+    expect(mocks.captureException).not.toHaveBeenCalled();
+  });
+
+  it("NO descarta P0001 sin prefijo LC_ (regresión: raises genéricos siguen llegando)", async () => {
+    const pgError = {
+      code: "P0001",
+      message: "algo inesperado ocurrió en un trigger sin categorizar",
+    };
+    reportCaughtError(pgError, { feature: "embarques", op: "otro" });
+    await flush();
+    expect(mocks.captureException).toHaveBeenCalledTimes(1);
   });
 });
+
