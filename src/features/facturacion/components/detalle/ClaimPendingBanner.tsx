@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
 interface Props {
   facturaId: string;
