@@ -94,7 +94,7 @@ export default function EmbarquesFiltros(props: Props) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos los estados</SelectItem>
-              {ESTADOS_EMBARQUE.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+              {ESTADOS_EMBARQUE.map((e) => <SelectItem key={e} value={e}>{labelEstadoEmbarque(e)}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterCliente} onValueChange={onFilterClienteChange}>
