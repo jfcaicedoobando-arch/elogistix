@@ -23,6 +23,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 
 
@@ -139,11 +140,11 @@ export default function CxpPorPagar() {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="cxp-from">Vencimiento desde</Label>
-              <Input id="cxp-from" type="date" value={paged.dateFrom} onChange={(e) => paged.setDateFrom(e.target.value)} />
+              <DatePickerMx value={paged.dateFrom} onChange={paged.setDateFrom} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cxp-to">Vencimiento hasta</Label>
-              <Input id="cxp-to" type="date" value={paged.dateTo} onChange={(e) => paged.setDateTo(e.target.value)} />
+              <DatePickerMx value={paged.dateTo} onChange={paged.setDateTo} />
             </div>
           </div>
         }

@@ -28,6 +28,7 @@ import {
 } from "@/features/compras/services/pagosGlobal";
 import { buildPagosColumns } from "./_sections/pagosColumns";
 import { todayLocalISO } from "@/lib/date/today";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
@@ -119,11 +120,11 @@ export default function ComprasPagos() {
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="space-y-1">
             <Label htmlFor="p-desde" className="text-xs">Desde</Label>
-            <Input id="p-desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+            <DatePickerMx value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="p-hasta" className="text-xs">Hasta</Label>
-            <Input id="p-hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+            <DatePickerMx value={hasta} onChange={setHasta} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Moneda</Label>

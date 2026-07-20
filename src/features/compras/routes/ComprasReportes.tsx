@@ -26,6 +26,7 @@ import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { fetchFacturasReporte } from "./_sections/reportesFetch";
 import { todayLocalISO } from "@/lib/date/today";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
@@ -106,11 +107,11 @@ export default function ComprasReportes() {
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="rep-desde" className="text-xs">Desde</Label>
-            <Input id="rep-desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+            <DatePickerMx value={desde} onChange={setDesde} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="rep-hasta" className="text-xs">Hasta</Label>
-            <Input id="rep-hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+            <DatePickerMx value={hasta} onChange={setHasta} />
           </div>
         </CardContent>
       </Card>
