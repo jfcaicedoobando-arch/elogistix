@@ -1,38 +1,32 @@
-## Diagnóstico (bug real)
+## Diagnóstico
 
-El botón **"Registrar llegada"** en el tab Tracking dispara `actualizarFechaLlegadaRealEmbarque(...)`, que hace un update directo a la BD poniendo `estado = 'Arribo'`. Pero la máquina de estados de BD (migración `20260718214722`, vigente desde el 18-jul) sólo permite:
+El embarque **ELIMP00331** está en estado `Borrador` con ETD ya vencido. El hook `useAutoSyncEstadoEmbarque` corre `calcularEstadoEmbarque(...)`, que sólo excluye del auto-cálculo los estados en `ESTADOS_MANUALES = ["Arribo","En Aduana","Entregado","EIR","Cerrado"]`. `Borrador` y `Cotización` **no** están en esa lista, así que la función los trata como "En Tránsito" en cuanto `hoy >= ETD`, y dispara `syncEstadoMutate` con `Borrador → En Tránsito`. La máquina de estados de BD sólo permite `Borrador → {Cotización, Cancelado}`, por eso rebota con `LC_TRANSICION_INVALIDA`.
 
-```
-En Tránsito → { En Aduana, En Proceso, Llegada }
-Llegada     → { Arribo, En Aduana }
-Arribo      → { Entregado, Llegada }
-```
-
-`En Tránsito → Arribo` **no existe**. El trigger lanza `LC_TRANSICION_INVALIDA` y la UI muestra el error. Este error sí es un bug (no ruido), por eso hoy pasó el filtro `LC_*` que agregamos en v13.302.7.
-
-Analogía: el botón se llama "llegada" pero está intentando saltarse un paso — como marcar un paquete "entregado" cuando apenas llegó a la sucursal.
+Analogía: el "piloto automático" que ajusta el estado según fechas está confundiendo un embarque que todavía está en el escritorio de ventas (Borrador) con uno ya confirmado en tránsito, e intenta saltarse toda la fase comercial.
 
 ## Fix
 
-### 1. `src/features/embarques/services/embarqueDirectMutations.ts`
-Cambiar `estado: 'Arribo'` → `estado: 'Llegada'` en `actualizarFechaLlegadaRealEmbarque`. Semánticamente correcto: "marcar llegada" registra `fecha_llegada_real` y avanza al estado `Llegada` (llegada al puerto). `Arribo` es un paso posterior (disposición / almacén) que se transiciona desde `Llegada`. Actualizar el JSDoc.
+### 1. `src/features/embarques/domain/embarque.ts`
+Agregar un allowlist explícito de estados sujetos a auto-cálculo: **sólo** `Confirmado`, `En Tránsito` y `Llegada` participan del cómputo por fechas. Cualquier otro estado (`Borrador`, `Cotización`, `Cancelado`, además de los ya listados en `ESTADOS_MANUALES`) devuelve `estadoActual` sin tocar. Es la única forma limpia porque el hook de sync es un `useEffect` genérico que corre en cualquier detalle de embarque.
 
-### 2. Copys UI
-- `src/features/embarques/components/tracking/MarcarLlegadaForm.tsx` — línea 63: `"Al guardar, el embarque avanza a Arribo."` → `"Al guardar, el embarque avanza a Llegada."`
-- `src/features/embarques/components/tracking/TrackingNuevoEventoForm.tsx` — comentarios doc (líneas 10-11) y ayuda (línea 86) alineadas a `Llegada`.
-- El evento de bitácora `"Arribo a Puerto"` que se registra tras la mutación seguirá llamándose así (es un texto de evento, no un estado).
+```ts
+const ESTADOS_AUTO_CALCULABLES = new Set(["Confirmado", "En Tránsito", "Llegada"]);
+if (!ESTADOS_AUTO_CALCULABLES.has(estadoActual)) return estadoActual;
+```
+(Reemplaza al chequeo actual de `ESTADOS_MANUALES` — es más seguro por defecto.)
 
-### 3. Cache invalidation / react-query
-Ninguna — la misma mutación ya invalida las queries del detalle.
+### 2. Test unitario
+Ampliar `src/features/embarques/domain/__tests__/embarque.test.ts` (o crearlo si falta) con:
+- `Borrador + ETD vencido → Borrador` (regresión directa del requestId `d3b726f5`).
+- `Cotización + ETD vencido → Cotización`.
+- `Cancelado + cualquier fecha → Cancelado`.
+- Mantener los happy paths existentes (`Confirmado → En Tránsito`, `En Tránsito + ETA vencida sin llegada real → En Tránsito`, `En Tránsito + llegada real → Arribo` cuando aplique — cuidado: hoy `calcularEstadoEmbarque` devuelve `"Arribo"` para `En Tránsito` con `fecha_llegada_real`. Se conserva porque `En Tránsito` está en el allowlist).
 
-### 4. Test de regresión
-Extender `src/features/embarques/services/__tests__/mutations.test.ts` (o crear archivo hermano `embarqueDirectMutations.test.ts` si no existe) con un test que verifique que `actualizarFechaLlegadaRealEmbarque` manda `estado: 'Llegada'`. Blindar contra futura reversión.
-
-### 5. Housekeeping
-- Bump `APP_VERSION` → `13.302.8`
-- Entrada en `CHANGELOG.md` con referencia al `requestId` del reporte del usuario.
+### 3. Housekeeping
+- Bump `APP_VERSION` → `13.302.9`.
+- Entrada en `CHANGELOG.md` referenciando `requestId d3b726f5-998d-4798-9793-b0e68a0b98a8` y explicando el allowlist.
 
 ## Fuera de alcance
-- No se toca la máquina de estados (la vigente es la correcta según el flujo modelado).
-- No se toca `useDocsFaltantesParaEstado.ts` — la lista de estados que exige documentos es correcta.
-- No se agrega ningún nuevo estado ni se altera el enum `estado_embarque`.
+- No se toca la máquina de estados de BD ni `useEmbarqueEstadoActions` (avance manual sigue igual — el usuario nunca puede clickear "avanzar" de `Borrador` a `En Tránsito`; `getSiguienteEstado("Borrador")` retorna `Cotización`).
+- No se agregan nuevos estados ni se altera el enum.
+- No se modifica el UI del tab tracking (el bug es 100% de auto-sync en background).
