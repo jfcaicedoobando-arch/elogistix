@@ -90,6 +90,7 @@ export default function EditarEmbarque() {
             onMsdsUpload={handleMsdsUpload}
             cotizacionVinculada={cotizacionVinculada}
             cotizacionesAceptadas={cotizacionesAceptadas}
+            mostrarSelectorExpediente={false}
           />
         )}
         {currentStep === 2 && <StepDatosRuta />}
