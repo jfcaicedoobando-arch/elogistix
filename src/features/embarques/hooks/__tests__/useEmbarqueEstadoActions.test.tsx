@@ -49,13 +49,22 @@ const embarque = {
 
 describe("getSiguienteEstado", () => {
   it("retorna el siguiente estado concreto en la secuencia oficial", () => {
-    expect(getSiguienteEstado("Borrador")).toBe("Confirmado");
+    // Secuencia oficial v13.302.10/11:
+    // Borrador → Cotización → Confirmado → En Tránsito → En Aduana →
+    // Llegada → Arribo → Entregado → EIR → Cerrado.
+    expect(getSiguienteEstado("Borrador")).toBe("Cotización");
+    expect(getSiguienteEstado("Cotización")).toBe("Confirmado");
     expect(getSiguienteEstado("Confirmado")).toBe("En Tránsito");
-    expect(getSiguienteEstado("En Tránsito")).toBe("Arribo");
-    expect(getSiguienteEstado("Arribo")).toBe("En Aduana");
-    expect(getSiguienteEstado("En Aduana")).toBe("Entregado");
+    expect(getSiguienteEstado("En Tránsito")).toBe("En Aduana");
+    expect(getSiguienteEstado("En Aduana")).toBe("Llegada");
+    expect(getSiguienteEstado("Llegada")).toBe("Arribo");
+    expect(getSiguienteEstado("Arribo")).toBe("Entregado");
     expect(getSiguienteEstado("Entregado")).toBe("EIR");
     expect(getSiguienteEstado("EIR")).toBe("Cerrado");
+  });
+
+  it("resuelve el lateral En Proceso → En Aduana (v13.302.11)", () => {
+    expect(getSiguienteEstado("En Proceso")).toBe("En Aduana");
   });
 
   it("retorna null para el último estado o un estado desconocido", () => {

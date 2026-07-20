@@ -52,6 +52,8 @@ const CRITICAL = [
   "supabase/functions/facturapi-reconciliar-cancelaciones/index.ts",
   // 13.301.11 — Consulta en vivo + reconciliación puntual de una factura
   "supabase/functions/facturapi-consultar/index.ts",
+  // 13.303.2 — Recuperación de claims huérfanos PENDING:<uuid>
+  "supabase/functions/facturapi-recuperar-claim/index.ts",
 ];
 
 describe("Edge functions críticas envueltas con wrapEdgeHandler", () => {
