@@ -1,7 +1,11 @@
 # Changelog
 # Changelog
+## [13.303.30] - 2026-07-20
+- **UX · inputs numéricos de mercancía en editar embarque ya no muestran flechas de incremento/decremento.** Se aplicó el patrón anti-spinner de Tailwind (`[appearance:textfield]`) a los campos de Peso (kg), Volumen (m³) y Piezas en `BloqueMercancia.tsx`, alineándose con el estilo ya usado en `TarifaNumerosVigenciaFields.tsx`. No se cambia el tipo de input ni el flujo de `react-hook-form`.
+
 ## [13.303.29] - 2026-07-20
 - **Hardening CI: alineadas las columnas de tarifa en `cotizaciones` con las que ya viven en `embarques`.** Producción tenía `dias_almacenaje`, `carta_garantia`, `dias_libres_destino`, `seguro`, `valor_seguro_usd` y `tarifa_id` agregadas fuera de migraciones, así que cualquier entorno reconstruido desde cero (CI snapshot RLS, staging fresh) rompía la RPC `crear_embarque_borrador_core` con `column c.dias_almacenaje does not exist`. Nueva migración idempotente (`ADD COLUMN IF NOT EXISTS`) que no toca datos y deja el esquema oficial parejo con producción.
+
 
 ## [13.303.28] - 2026-07-20
 - **Fusión de tipos de contacto del cliente: "Proveedor" desaparece, todo queda como "Exportador".** En jerga de forwarder son sinónimos (el que embarca desde origen). Migración: 22 contactos existentes con `tipo='Proveedor'` reetiquetados a `Exportador`; enum `tipo_contacto` reducido a `('Exportador','Importador')`. UI del alta/edición de contacto, tabla de contactos del cliente y filtro Shipper del wizard ya sólo hablan de Exportador/Importador. No afecta a la tabla `proveedores` (nuestros proveedores logísticos), que vive en otro dominio.
