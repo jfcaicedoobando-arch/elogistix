@@ -25,7 +25,25 @@ const NO_RESTRICTED_SYNTAX_BASE = [
 
 
 export default tseslint.config(
-  { ignores: ["dist", "coverage"] },
+  // v13.303.5 — Ignores ampliados: además de `dist`/`coverage` (build output),
+  // excluimos artefactos que nunca deberían pasar por el parser TS de ESLint:
+  //   · `.vitest-reports/`, `reports/`, `playwright-report/`, `test-results/` — outputs de test.
+  //   · `node_modules/`, `.cache/` — deps y caches.
+  //   · `public/`, `supabase/migrations/` — assets estáticos y SQL puro.
+  //   · `**/*.md` — markdown (no procesable por el parser TS).
+  { ignores: [
+    "dist",
+    "coverage",
+    ".vitest-reports",
+    "reports",
+    "playwright-report",
+    "test-results",
+    "node_modules",
+    "**/.cache/**",
+    "public",
+    "supabase/migrations",
+    "**/*.md",
+  ] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

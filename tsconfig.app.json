@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsc/tsconfig.app.tsbuildinfo",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
