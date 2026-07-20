@@ -229,7 +229,9 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   try {
     invoice = await facturapi.invoices.create(payload) as FapiInvoice;
   } catch (err) {
+    await releaseClaim();
     const { status, detail } = describeFacturapiError(err);
+
     await registrarBitacoraEdge(supabase, {
       organizationId: factura.organization_id,
       usuarioId: userData.user.id,
