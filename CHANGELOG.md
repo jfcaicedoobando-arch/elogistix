@@ -1,4 +1,16 @@
 # Changelog
+## [13.303.5] - 2026-07-20
+- **Optimización CI + ESLint** — reducción esperada del wall-time de PR de ~14 min a ~6-7 min y ~50% menos minutos-runner facturados:
+  - **`.github/workflows/ci.yml`**: el job monolítico `quality` (serial, ~12 min) se dividió en 5 jobs paralelos: `lint`, `typecheck`, `knip`, `audits`, `build`. El wall-time queda dominado por el job más lento (~3 min) en vez de la suma.
+  - **ESLint con cache incremental**: `package.json` → `"lint": "eslint . --cache --cache-location node_modules/.cache/eslint/"`; el workflow cachea `node_modules/.cache/eslint` con key derivada de `eslint.config.js` + `bun.lockb`. Verificado local: primera corrida completa 45s → segunda corrida incremental 4s.
+  - **TypeScript incremental**: `tsconfig.app.json` y `tsconfig.node.json` agregan `incremental: true` + `tsBuildInfoFile: node_modules/.cache/tsc/…`. `package.json` cambia `typecheck` a `tsc -b`. El workflow cachea `node_modules/.cache/tsc`.
+  - **Duplicados eliminados**: se dropea el paso `bun run lint:unused` (era subset del strict). Los architecture gating tests dejan de correr en el matrix de vitest y se ejecutan sólo en el job `audits`. Los 3 audits (`arch`, `casts`, `tests`) corren en paralelo (`&` + `wait`) dentro del mismo job.
+  - **Matrix de tests 20 → 10 shards**: con `setup + install + cache warm ≈ 40 s × 20` el overhead de arranque dominaba sobre el tiempo real. 10 shards conservan el paralelismo útil y bajan ~50% los minutos-runner. Purge de blobs regexp ajustado a 1..10.
+  - **Bundle analyzer sólo en `push` a `main`**: los PRs corren build limpio; el snapshot histórico de `bundle-stats.html` sigue generándose y subiéndose en merges a `main`.
+  - **`eslint.config.js` — ignores ampliados**: además de `dist`/`coverage`, se ignoran `.vitest-reports/`, `reports/`, `playwright-report/`, `test-results/`, `node_modules/`, `**/.cache/**`, `public/`, `supabase/migrations/` y `**/*.md`. Evita que el parser TS toque artefactos y acelera la primera pasada.
+  - **Aggregator `ci-success`**: actualizado para requerir los 8 jobs nuevos (branch protection sigue siendo un único required check).
+- Verificación local: `bun run typecheck` (verde, escribe `tsconfig.app.tsbuildinfo`) + `bun run lint -- --max-warnings 0` (verde, warm cache 4s).
+
 ## [13.303.4] - 2026-07-20
 - **Revisión de la fase v13.303.3 (refactor lint)** — auditoría del release anterior:
   - **Bug detectado — test arquitectónico roto**: `supabase/functions/facturapi-emitir/index_test.ts` verificaba el orden `auth → load → resolveKey → SDK` buscando `.from("facturas")` y `facturapi.invoices.create` en `index.ts`; ambos símbolos se mudaron a `emitir.ts` en v13.303.3, así que el test fallaba en `deno test`. Fix: el test ahora valida el orden de las llamadas del handler (`loadFactura → getFacturapiClient → emitirYActualizar`) y comprueba que el string `facturapi.invoices.create` viva en `emitir.ts` (nunca inline en el handler).
