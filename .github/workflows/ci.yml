@@ -20,12 +20,91 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# v13.303.5 — Split `quality` (antes serial ~12 min) en 5 jobs paralelos.
+# Cada job comparte el cache de Bun (via `./.github/actions/setup-bun`).
+# Cache adicional por job cuando aplica (ESLint, tsc incremental, Vite).
 
 jobs:
-  quality:
-    name: Lint, typecheck, unused code & build
+  # ---------------------------------------------------------------------
+  # 1) LINT — ESLint con cache incremental. Antes ~90 s; con cache ~10-15 s.
+  # ---------------------------------------------------------------------
+  lint:
+    name: ESLint
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      - name: Cache ESLint
+        # v13.303.5 — Cache de resultados de ESLint entre corridas.
+        # Key incluye el hash de la config: si cambian reglas, se invalida.
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: node_modules/.cache/eslint
+          key: ${{ runner.os }}-eslint-${{ hashFiles('eslint.config.js', 'bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-eslint-
+
+      # 13.274.0 — ESLint enforce React 19 discipline (fail-fast con
+      # `--max-warnings 0`; `react-compiler` cuenta warnings como errores).
+      - name: ESLint (max-warnings 0)
+        run: bun run lint -- --max-warnings 0
+
+  # ---------------------------------------------------------------------
+  # 2) TYPECHECK — tsc en modo build (`-b`) con `tsBuildInfoFile` cacheado.
+  # ---------------------------------------------------------------------
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      - name: Cache tsc incremental
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: node_modules/.cache/tsc
+          key: ${{ runner.os }}-tsc-${{ hashFiles('tsconfig*.json', 'bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-tsc-
+
+      - name: TypeScript typecheck (incremental)
+        run: bun run typecheck
+
+  # ---------------------------------------------------------------------
+  # 3) KNIP — sólo modo strict (superset del relajado, evita duplicar trabajo).
+  # ---------------------------------------------------------------------
+  knip:
+    name: Unused code (knip strict)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      # v13.303.5 — Antes corríamos `lint:unused` + `lint:unused:strict` en serie.
+      # El strict es superset del relajado, así que dropeamos el paso extra.
+      - name: Strict unused exports & types
+        run: bun run lint:unused:strict
+
+  # ---------------------------------------------------------------------
+  # 4) AUDITS + ARCH TESTS — audits en paralelo (bash `&`) + gating tests.
+  # ---------------------------------------------------------------------
+  audits:
+    name: Architecture & audits
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -34,38 +113,25 @@ jobs:
         id: setup-bun
         uses: ./.github/actions/setup-bun
 
-      # 13.274.0 — ESLint enforce React 19 discipline:
-      #  · `react-hooks/exhaustive-deps` (error) — no stale closures.
-      #  · `no-restricted-syntax` — prohíbe `supabase.*` / `fetch()` dentro
-      #    de `useEffect` (obliga a usar `useQuery`/`useMutation`).
-      #  · `react-compiler/react-compiler` (warn) — Rules of React que
-      #    romperían el opt-in de `"use memo"`.
-      #  · Fail-fast con `--max-warnings 0` (los warnings de `react-compiler`
-      #    cuentan como errores en CI).
-      - name: ESLint (max-warnings 0)
-        run: bun run lint -- --max-warnings 0
+      # v13.303.5 — Los 3 audits son procesos tsx independientes: paralelizamos.
+      - name: Audits en paralelo (arch + casts + test hygiene)
+        run: |
+          set -e
+          bun run audit:arch  > /tmp/audit-arch.log  2>&1 &
+          A=$!
+          bun run audit:casts > /tmp/audit-casts.log 2>&1 &
+          C=$!
+          bun run audit:tests > /tmp/audit-tests.log 2>&1 &
+          T=$!
+          fail=0
+          wait $A || { echo '❌ audit:arch';  cat /tmp/audit-arch.log;  fail=1; }
+          wait $C || { echo '❌ audit:casts'; cat /tmp/audit-casts.log; fail=1; }
+          wait $T || { echo '❌ audit:tests'; cat /tmp/audit-tests.log; fail=1; }
+          exit $fail
 
-      - name: TypeScript typecheck
-        run: bun run typecheck
-
-      - name: Unused code check (knip)
-        run: bun run lint:unused
-
-      - name: Strict unused exports & types
-        # 13.162.0 — Se quitó `if: always()`. Antes se corría aunque `lint:unused`
-        # hubiera fallado, ocultando el error real. Si el modo relajado falla,
-        # este step ya no se ejecuta.
-        run: bun run lint:unused:strict
-
-      - name: Test hygiene (no skip/only/todo, no duplicate titles)
-        run: bun run audit:tests
-
-      - name: Architecture audit
-        run: bun run audit:arch
-
-      - name: Casts audit
-        run: bun run audit:casts
-
+      # v13.303.5 — Los architecture gating tests se sacaron del matrix de
+      # Vitest (excluidos vía `test:coverage:shard`) y se corren SÓLO aquí.
+      # Antes se ejecutaban en `quality` Y también en algún shard del matrix.
       - name: Architecture gating tests (oversized, casts, layers, shadow folders)
         run: bunx vitest run src/lib/__tests__/architecture.test.ts src/lib/__tests__/architecture-baseline.test.ts src/__tests__/audit-report.test.ts src/__tests__/audit-casts-classifier.test.ts
 
@@ -87,6 +153,20 @@ jobs:
             reports/audit-report.json
           retention-days: 30
 
+  # ---------------------------------------------------------------------
+  # 5) BUILD — Vite build. Bundle analyzer sólo en push a main.
+  # ---------------------------------------------------------------------
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
       - name: Cache Vite build
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
@@ -96,9 +176,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vite-
 
-      - name: Build (with bundle analyzer)
+      # v13.303.5 — `ANALYZE=true` (rollup-plugin-visualizer) es costoso.
+      # Sólo lo activamos en push a `main` para tener el snapshot histórico.
+      # En PRs corremos build "limpio" y ahorramos ~30-45 s.
+      - name: Build
         env:
-          ANALYZE: "true"
+          ANALYZE: ${{ github.event_name == 'push' && 'true' || 'false' }}
         run: bun run build
 
       - name: Bundle size gate (entry chunk gzipped)
@@ -107,7 +190,7 @@ jobs:
         run: bash scripts/check-bundle-size.sh
 
       - name: Upload bundle stats
-        if: always()
+        if: always() && github.event_name == 'push'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bundle-stats
@@ -116,6 +199,9 @@ jobs:
           retention-days: 14
 
 
+  # ---------------------------------------------------------------------
+  # 6) EDGE FUNCTIONS — Deno tests, sólo si cambian archivos relevantes.
+  # ---------------------------------------------------------------------
   edge-functions:
     name: Edge Functions (Deno tests)
     runs-on: ubuntu-24.04
@@ -154,6 +240,9 @@ jobs:
             --no-check \
             "${tests[@]}"
 
+  # ---------------------------------------------------------------------
+  # 7) TESTS — matrix de 10 shards (antes 20; overhead de arranque dominaba).
+  # ---------------------------------------------------------------------
   tests:
     name: Tests (shard ${{ matrix.shard }}/${{ matrix.total }})
     runs-on: ubuntu-24.04
@@ -161,8 +250,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-        total: [20]
+        # v13.303.5 — Antes 20 shards. Con setup Bun + install + cache warm
+        # ≈ 40 s × 20 = 13 min de billing dominados por overhead. A 10 shards
+        # bajamos ~50% de minutos-runner sin subir el wall-time del shard más
+        # lento por encima del timeout.
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        total: [10]
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -178,9 +271,9 @@ jobs:
         with:
           path: |
             node_modules/.vitest
-          key: ${{ runner.os }}-vitest-v4-${{ matrix.shard }}-${{ hashFiles('bun.lockb', 'vitest.config.ts') }}
+          key: ${{ runner.os }}-vitest-v5-${{ matrix.shard }}-${{ hashFiles('bun.lockb', 'vitest.config.ts') }}
           restore-keys: |
-            ${{ runner.os }}-vitest-v4-${{ matrix.shard }}-
+            ${{ runner.os }}-vitest-v5-${{ matrix.shard }}-
 
 
       - name: Prepare blob output directory (reset)
@@ -191,7 +284,7 @@ jobs:
       #     package.json). Un shard aislado NO tiene datos suficientes para
       #     validar un piso global.
       #   - El gate real se aplica en el job `coverage` (`test:coverage:merge`)
-      #     tras mergear los 20 blobs. Los thresholds efectivos viven en
+      #     tras mergear los blobs. Los thresholds efectivos viven en
       #     `vitest.config.ts` (lines/statements 38, functions 30, branches 34).
       - name: Tests + coverage (shard ${{ matrix.shard }}/${{ matrix.total }})
         run: bun run test:coverage:shard -- --shard=${{ matrix.shard }}/${{ matrix.total }} --outputFile=.vitest-reports/blob-${{ matrix.shard }}.json
@@ -221,6 +314,9 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # ---------------------------------------------------------------------
+  # 8) COVERAGE — merge de blobs y reporte.
+  # ---------------------------------------------------------------------
   coverage:
     name: Coverage merge & report
     needs: tests
@@ -247,9 +343,7 @@ jobs:
           merge-multiple: true
 
       - name: Purge stale blobs (Vitest version mismatch guard)
-        # 13.138.2 — sólo aceptamos blobs con nombre exacto `blob-<N>.json` (1..20).
-        # Cualquier blob con sufijos legacy (`blob-3-12.json`, `blob-9-20b.json`, etc.)
-        # viene de matrices anteriores y rompe `mergeReports` por mezclar v3.2.4 con v4.1.9.
+        # v13.303.5 — matrix pasó de 20 → 10; aceptamos sólo `blob-<N>.json` (1..10).
         run: |
           find .vitest-reports/ -maxdepth 1 -type f ! -regex '.*/blob-[0-9]+\.json' -print -delete || true
           ls -la .vitest-reports/ || echo "empty"
@@ -301,9 +395,12 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  # ---------------------------------------------------------------------
+  # 9) CI SUCCESS — aggregator para branch protection.
+  # ---------------------------------------------------------------------
   ci-success:
     name: CI Success (aggregator)
-    needs: [quality, edge-functions, tests, coverage]
+    needs: [lint, typecheck, knip, audits, build, edge-functions, tests, coverage]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 1
@@ -313,15 +410,25 @@ jobs:
           # Falla si cualquier job requerido falló o fue cancelado.
           # Úsalo como único required check en branch protection: así puedes
           # cambiar la matriz de shards sin tocar la configuración del repo.
-          if [ "${{ needs.quality.result }}" != "success" ] \
-            || [ "${{ needs.edge-functions.result }}" != "success" ] \
-            || [ "${{ needs.tests.result }}" != "success" ] \
-            || [ "${{ needs.coverage.result }}" != "success" ]; then
+          fail=0
+          for job in lint typecheck knip audits build edge-functions tests coverage; do
+            case "$job" in
+              lint)           result="${{ needs.lint.result }}" ;;
+              typecheck)      result="${{ needs.typecheck.result }}" ;;
+              knip)           result="${{ needs.knip.result }}" ;;
+              audits)         result="${{ needs.audits.result }}" ;;
+              build)          result="${{ needs.build.result }}" ;;
+              edge-functions) result="${{ needs.edge-functions.result }}" ;;
+              tests)          result="${{ needs.tests.result }}" ;;
+              coverage)       result="${{ needs.coverage.result }}" ;;
+            esac
+            echo "$job=$result"
+            if [ "$result" != "success" ]; then
+              fail=1
+            fi
+          done
+          if [ "$fail" != "0" ]; then
             echo "::error::Uno o más jobs requeridos no terminaron en success."
-            echo "quality=${{ needs.quality.result }}"
-            echo "edge-functions=${{ needs.edge-functions.result }}"
-            echo "tests=${{ needs.tests.result }}"
-            echo "coverage=${{ needs.coverage.result }}"
             exit 1
           fi
           echo "Todos los jobs requeridos pasaron."
