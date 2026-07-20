@@ -8,10 +8,10 @@ export function getDocsForMode(modo: string): string[] {
   return ['Carta Porte', 'Factura', 'Lista de Empaque'];
 }
 
-// v13.302.10 — Sincronizado con el grafo de la máquina de estados de BD
-// (mig. `20260718214722`). El orden debe coincidir con el happy path para que
-// `getSiguienteEstado` (UI "Avanzar estado") nunca proponga una transición
-// inválida. Ver `estados-embarque-sync.test.ts`.
+// v13.303.21 — Estado intermedio `Cotización` (Propuesta) eliminado del
+// workflow: Borrador ahora avanza directo a Confirmado. El valor se mantiene
+// en el enum de BD como deprecado para no romper reportes históricos, pero
+// no aparece en el happy path lineal ni en filtros por defecto.
 //
 // v13.302.11 — `En Proceso` es un estado lateral del grafo (arista
 // `En Tránsito → En Proceso → {En Aduana, Llegada, Arribo}`). NO forma parte
@@ -19,12 +19,12 @@ export function getDocsForMode(modo: string): string[] {
 // una transición de salida via `getSiguienteEstado` para que el operador no
 // quede atorado. Ver `useEmbarqueEstadoActions.helpers.ts`.
 export const ESTADOS_EMBARQUE = [
-  'Borrador', 'Cotización', 'Confirmado', 'En Tránsito',
+  'Borrador', 'Confirmado', 'En Tránsito',
   'En Aduana', 'Llegada', 'Arribo', 'Entregado', 'EIR', 'Cerrado',
 ] as const;
 
 export const ESTADOS_ACTIVOS = [
-  'Cotización', 'Confirmado', 'En Tránsito', 'En Proceso', 'En Aduana', 'Llegada', 'Arribo', 'Entregado',
+  'Confirmado', 'En Tránsito', 'En Proceso', 'En Aduana', 'Llegada', 'Arribo', 'Entregado',
 ] as const;
 
 

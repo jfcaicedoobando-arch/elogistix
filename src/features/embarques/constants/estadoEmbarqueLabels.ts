@@ -1,22 +1,21 @@
 /**
- * v13.303.17 — Mapa de etiquetas visibles para los estados del embarque.
+ * v13.303.21 — Mapa de etiquetas visibles para los estados del embarque.
  *
- * Motivación: el enum `estado_embarque` en BD usa el valor `'Cotización'`
- * para el estado intermedio entre `Borrador` y `Confirmado`. Ese nombre
- * choca con el documento previo del módulo Cotizaciones (COT-XXXX), y en
- * el stepper del detalle se lee como si el embarque retrocediera a la
- * cotización.
- *
- * Solución cosmética: el valor de BD se mantiene ('Cotización'), pero en
- * la UI mostramos 'Propuesta'. La máquina de estados, RLS, RPCs y filtros
- * de datos siguen usando el valor original.
+ * Historia:
+ * - v13.303.17: renombramos cosméticamente `Cotización` → `Propuesta` para
+ *   evitar la colisión con el documento comercial COT-XXXX en el stepper.
+ * - v13.303.21: eliminamos el estado del workflow (Borrador salta directo a
+ *   Confirmado). El valor `Cotización` sigue existiendo en el enum de BD
+ *   como deprecado; si aparece por dato legacy, lo etiquetamos como
+ *   "Propuesta (deprecado)" para que el operador identifique que debe
+ *   avanzarlo o regresarlo.
  */
 import { ESTADOS_EMBARQUE } from "./embarqueConstants";
 
 export type EstadoEmbarque = typeof ESTADOS_EMBARQUE[number];
 
 export const ESTADO_EMBARQUE_LABELS: Record<string, string> = {
-  Cotización: "Propuesta",
+  Cotización: "Propuesta (deprecado)",
 };
 
 /**

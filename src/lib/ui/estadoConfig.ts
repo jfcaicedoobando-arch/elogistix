@@ -57,6 +57,8 @@ const DEFAULT_VISUAL: EstadoVisual = {
 
 export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
   // ───── Estados de embarque ─────
+  // v13.303.21 — "Cotización" (Propuesta) eliminado del workflow. Se conserva
+  // la entrada como fallback visual por si aparece por dato legacy.
   "Cotización": {
     ...DEFAULT_VISUAL,
     badge: "bg-muted text-muted-foreground border border-border",

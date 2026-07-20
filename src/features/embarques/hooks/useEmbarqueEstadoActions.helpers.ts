@@ -9,6 +9,10 @@ import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstan
  */
 const SIGUIENTE_LATERAL: Record<string, string> = {
   "En Proceso": "En Aduana",
+  // v13.303.21 — `Cotización` (Propuesta) fue eliminado del happy path.
+  // Si un embarque legacy sigue en este estado, ofrecer avanzar a Confirmado
+  // para desatorarlo. La transición está permitida en la máquina de estados BD.
+  "Cotización": "Confirmado",
 };
 
 export function getSiguienteEstado(estadoActual: string) {
