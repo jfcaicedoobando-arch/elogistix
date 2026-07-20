@@ -6,6 +6,7 @@ import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE } from "../facturapi-emitir/helpers.ts";
+import { withFacturapiTimeout, FacturapiTimeoutError } from "../_shared/facturapiClient.ts";
 
 export const MIN_EDAD_MINUTOS = 3;
 
