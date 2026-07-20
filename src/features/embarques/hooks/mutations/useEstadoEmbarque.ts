@@ -74,7 +74,20 @@ export function useSyncEstadoEmbarque() {
   const queryClient = useQueryClient();
   return useMutationWithFeedback<void, Error, SyncEstadoInput>({
     mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: SyncEstadoInput) => {
-      await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
+      try {
+        await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // v13.302.11 — traducir LC_TRANSICION_INVALIDA a un mensaje humano
+        // para el toast del wrapper (`useMutationWithFeedback` usa
+        // `err.message` como description del toast de error).
+        if (msg.includes("LC_TRANSICION_INVALIDA")) {
+          throw new Error(
+            "El estado del embarque cambió en otra sesión. Recarga la página para ver el estado actual.",
+          );
+        }
+        throw err;
+      }
       await insertarEventoTracking(
         embarqueId,
         nuevoEstado,
@@ -92,15 +105,6 @@ export function useSyncEstadoEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
     errorTitle: "Error al sincronizar estado",
-    // v13.302.11 — traducir LC_TRANSICION_INVALIDA a un mensaje humano para
-    // que el operador entienda que el estado cambió en otra pestaña/sesión.
-    errorDescription: (err) => {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("LC_TRANSICION_INVALIDA")) {
-        return "El estado del embarque cambió en otra sesión. Recarga la página para ver el estado actual.";
-      }
-      return msg;
-    },
     errorMethod: "SYNC_EMBARQUE_STATE",
   });
 }
