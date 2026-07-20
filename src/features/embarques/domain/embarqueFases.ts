@@ -80,7 +80,7 @@ export function calcularFasesEmbarque(
   const fases: FaseEmbarque[] = [
     {
       id: "cotizacion",
-      label: "Cotización",
+      label: "Propuesta",
       icono: "📝",
       fecha: cotizacionCreatedAt ?? null,
       estado: cotizacionCompletada ? "completada" : "pendiente",
