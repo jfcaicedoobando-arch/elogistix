@@ -1,4 +1,9 @@
 # Changelog
+## [13.303.7] - 2026-07-20
+- **Fix crash Dashboard `TimelineEstadosCard`** (`TypeError: Cannot read properties of undefined (reading 'icon')`, event `0ed9964a…`) — la tarjeta iteraba `ESTADOS_FILTRO` (que incluye `Cotización`, `En Proceso`, `Llegada`) y accedía directamente a `ESTADO_CONFIG[estado]`; esas 3 claves no existían en el mapa y devolvían `undefined`.
+  - `TimelineEstadosCard.tsx` ahora usa `getEstadoVisual(estado)` (fallback seguro a `DEFAULT_VISUAL`).
+  - `estadoConfig.ts` agrega entradas visuales para `Cotización` (FileText), `En Proceso` (Loader2, warning) y `Llegada` (MapPin, state-arribo).
+
 ## [13.303.6] - 2026-07-20
 - **Fix CI `audits`** — `FacturaDetalleView.tsx` (209 líneas) superaba el límite Power-of-10. Se extrajo `FacturaDetalleBody.tsx` con las secciones intermedias (Emisor/Receptor, Resumen, Timbrado, Editables, Conceptos, Totales, Pagos, NC, Bitácora). La vista raíz queda en ~90 líneas sin cambios de lógica ni de props públicas.
 
