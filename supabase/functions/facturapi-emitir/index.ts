@@ -126,7 +126,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
   if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
 
-  const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid);
+  const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid, claim.claimTag);
   if (context instanceof Response) return context;
 
   return emitirYActualizar({
