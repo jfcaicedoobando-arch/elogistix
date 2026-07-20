@@ -1,4 +1,10 @@
 # Changelog
+## [13.303.24] - 2026-07-20
+- **CI · fix snapshot RLS: migración `20260720222427` ya no referencia `cotizaciones.dias_almacenaje` (columna inexistente).** Antes, `Apply migrations` reventaba con `ERROR: column c.dias_almacenaje does not exist` y abortaba el snapshot, dejando sin correr todas las suites RLS.
+  - **Migración parchada:** se quitaron las referencias a `v_cot.dias_almacenaje` en el INSERT de `crear_embarque_borrador_core` y la línea `dias_almacenaje = COALESCE(e.dias_almacenaje, c.dias_almacenaje)` del backfill de COT-2026-0138.
+  - **Impacto en prod:** ninguno — la RPC final vive en la migración posterior `20260720224257` (que ya excluye el campo) y el backfill con `COALESCE` es idempotente.
+  - **Fuera de alcance:** no se toca `dias_almacenaje` en `embarques` (queda con default `0` como ya estaba).
+
 ## [13.303.23] - 2026-07-20
 - **Bugfix · el wizard de editar embarque ya reconoce la cotización vinculada.** Antes, al abrir un embarque creado desde una cotización (ej. ELIMP00333 ← COT-2026-0138), la pantalla mostraba el banner rojo "Cotización requerida" y un buscador vacío, como si el embarque no tuviera cotización. Ahora aparece el badge verde "✓ Vinculada a COT-XXXX" con la cotización real y desaparece el banner.
   - **Hidratación (`useEditarEmbarqueWizard`):** el hook ahora carga `cotizacionVinculada` desde `embarque.cotizacion_id` con `useCotizacion`, y expone `cotizacionesAceptadas` para que `StepDatosGenerales` pueda renderizar el bloque de vinculación.
