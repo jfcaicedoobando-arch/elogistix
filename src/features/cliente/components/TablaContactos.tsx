@@ -11,11 +11,11 @@ type TipoContacto = Enums<'tipo_contacto'>;
 
 const tipoBadgeVariant = (tipo: TipoContacto) => {
   switch (tipo) {
-    case 'Proveedor': return 'default' as const;
     case 'Exportador': return 'secondary' as const;
     case 'Importador': return 'outline' as const;
   }
 };
+
 
 interface Props {
   contactos: ContactoCliente[];
@@ -72,7 +72,8 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
             <EmptyState
               icon={UserX}
               title="Sin contactos registrados"
-              description="Agrega proveedores, exportadores o importadores para usarlos al crear embarques."
+              description="Agrega exportadores o importadores para usarlos al crear embarques."
+
               primaryAction={canEdit ? { label: "Agregar Contacto", onClick: onAdd } : undefined}
             />
           </div>
@@ -84,7 +85,7 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" />Proveedores / Exportadores</CardTitle>
+        <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" />Exportadores / Importadores</CardTitle>
         {canEdit && <Button size="sm" onClick={onAdd}><Plus className="h-4 w-4 mr-1" />Agregar Contacto</Button>}
       </CardHeader>
       <CardContent className="p-0">{renderBody()}</CardContent>
