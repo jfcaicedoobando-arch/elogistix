@@ -24,9 +24,11 @@ describe("validateWizardStep", () => {
       documentosArchivos: {},
       conceptosVenta: [],
       conceptosCosto: [],
+      cotizacionVinculadaId: "cot-1",
     });
     expect(errors).toEqual({});
   });
+
 
   it("step 3: archivo válido (PDF pequeño) no genera errores", () => {
     const errors = validateWizardStep({
