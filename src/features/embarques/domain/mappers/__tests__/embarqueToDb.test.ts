@@ -35,7 +35,7 @@ const baseValues = {
 describe("buildEmbarquePayload (toDb)", () => {
   it("resuelve shipper desde catálogo y consignatario = cliente", () => {
     const p = buildEmbarquePayload(baseValues, contactos, "Cliente SA", "operador@x.com");
-    expect(p.shipper).toBe("Shipper Co — Proveedor (CN)");
+    expect(p.shipper).toBe("Shipper Co — Exportador (CN)");
     expect(p.consignatario).toBe("Cliente SA");
     expect(p.cliente_nombre).toBe("Cliente SA");
     expect(p.operador).toBe("operador@x.com");

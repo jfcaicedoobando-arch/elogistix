@@ -26,7 +26,7 @@ describe("resolverValorContactoDesdeTexto", () => {
 
   it("resuelve a contacto.id cuando coincide el formato completo", () => {
     expect(
-      resolverValorContactoDesdeTexto("HEBEI LONGDA — Proveedor (CHINA)", contactos, null),
+      resolverValorContactoDesdeTexto("HEBEI LONGDA — Exportador (CHINA)", contactos, null),
     ).toEqual({ value: "c1", manual: "" });
   });
 
