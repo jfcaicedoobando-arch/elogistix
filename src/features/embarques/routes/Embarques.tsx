@@ -27,7 +27,7 @@ function buildDescription(contenedoresCount: number, expedientesCount: number, e
 
 export default function Embarques() {
   const {
-    state, clientes, operadoresUnicos, columns, isLoading, isEmptyState, canEdit,
+    state, clientes, operadoresUnicos, columns, isLoading, isEmptyState,
     exportarCsv, exportandoCsv,
     navigate, prefetchEmbarque,
   } = useEmbarquesPageController();

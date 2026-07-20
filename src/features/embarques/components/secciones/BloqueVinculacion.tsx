@@ -43,7 +43,7 @@ export function BloqueVinculacion({
   onModoExpedienteChange,
   expedienteSeleccionado,
   onSeleccionarExpediente,
-  requiereCotizacion = false,
+  requiereCotizacion: _requiereCotizacion = true,
   permiteExpediente = true,
 }: Props) {
   const [comboboxOpen, setComboboxOpen] = useState(false);
