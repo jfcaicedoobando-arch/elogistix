@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import { CalendarClock, Loader2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useProgramarPagoProveedor } from "@/features/cxp/hooks/useProgramarPagoProveedor";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
