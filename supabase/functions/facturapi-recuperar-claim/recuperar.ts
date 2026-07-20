@@ -84,9 +84,12 @@ export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: stri
   }
 }
 
-export async function promoverFactura(
-  supabase: SupabaseClient, factura: FacturaRow, match: FapiInvoice, claimTag: string, user: UserIdentity, ambiente: string,
-): Promise<Response> {
+export interface PromoverInput {
+  supabase: SupabaseClient; factura: FacturaRow; match: FapiInvoice; claimTag: string; user: UserIdentity; ambiente: string;
+}
+
+export async function promoverFactura(input: PromoverInput): Promise<Response> {
+  const { supabase, factura, match, claimTag, user, ambiente } = input;
   const facturapiId = match.id!;
   const uuid = match.uuid!;
   const folio = match.folio_number ?? 0;
