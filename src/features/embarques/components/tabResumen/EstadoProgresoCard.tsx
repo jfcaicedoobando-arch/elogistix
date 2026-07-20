@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
+import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 
 interface Props {
   currentStepIndex: number;
@@ -13,9 +14,10 @@ interface Props {
  */
 export function EstadoProgresoCard({ currentStepIndex, arribado = false }: Props) {
   const total = ESTADOS_EMBARQUE.length;
-  const estadoActual = ESTADOS_EMBARQUE[currentStepIndex] ?? ESTADOS_EMBARQUE[0];
+  const estadoActual = labelEstadoEmbarque(ESTADOS_EMBARQUE[currentStepIndex] ?? ESTADOS_EMBARQUE[0]);
   const progreso = total > 1 ? (currentStepIndex / (total - 1)) * 100 : 0;
-  const siguiente = ESTADOS_EMBARQUE[currentStepIndex + 1];
+  const siguienteRaw = ESTADOS_EMBARQUE[currentStepIndex + 1];
+  const siguiente = siguienteRaw ? labelEstadoEmbarque(siguienteRaw) : null;
 
   return (
     <Card data-testid="estado-progreso" data-arrived={arribado ? "true" : "false"}>
