@@ -32,13 +32,13 @@ export * from "./dashboardTypes";
 export function parseConteoPorEstado(stats: DashboardStats): Record<EstadoFiltro, number> {
   if (!stats?.conteoPorEstado) return EMPTY_CONTEO;
   const raw = stats.conteoPorEstado as Record<string, number>;
+  // v13.303.22 — `Llegada` (deprecado) se suma a `Arribo` para no perder conteos legacy.
   return {
     Confirmado: Number(raw["Confirmado"] ?? 0),
     "En Tránsito": Number(raw["En Tránsito"] ?? 0),
     "En Proceso": Number(raw["En Proceso"] ?? 0),
+    Arribo: Number(raw["Arribo"] ?? 0) + Number(raw["Llegada"] ?? 0),
     "En Aduana": Number(raw["En Aduana"] ?? 0),
-    Llegada: Number(raw["Llegada"] ?? 0),
-    Arribo: Number(raw["Arribo"] ?? 0),
     Entregado: Number(raw["Entregado"] ?? 0),
     EIR: Number(raw["EIR"] ?? 0),
   };
