@@ -97,7 +97,7 @@ BEGIN
     aeropuerto_origen, aeropuerto_destino,
     ciudad_origen, ciudad_destino,
     tarifa_id, tarifa_id_original, tarifa_id_aplicada,
-    carta_garantia, dias_libres_destino, dias_almacenaje,
+    carta_garantia, dias_libres_destino,
     seguro, valor_seguro_usd
   )
   VALUES (
@@ -110,7 +110,7 @@ BEGIN
     v_aero_o, v_aero_d,
     v_ciudad_o, v_ciudad_d,
     v_cot.tarifa_id, v_cot.tarifa_id, v_cot.tarifa_id,
-    v_cot.carta_garantia, v_cot.dias_libres_destino, v_cot.dias_almacenaje,
+    v_cot.carta_garantia, v_cot.dias_libres_destino,
     v_cot.seguro, v_cot.valor_seguro_usd
   )
   RETURNING id INTO v_embarque_id;
@@ -246,7 +246,6 @@ SET
   tarifa_id_aplicada  = COALESCE(e.tarifa_id_aplicada, c.tarifa_id),
   carta_garantia      = COALESCE(e.carta_garantia,     c.carta_garantia),
   dias_libres_destino = COALESCE(e.dias_libres_destino, c.dias_libres_destino),
-  dias_almacenaje     = COALESCE(e.dias_almacenaje,    c.dias_almacenaje),
   seguro              = COALESCE(e.seguro,             c.seguro),
   valor_seguro_usd    = COALESCE(e.valor_seguro_usd,   c.valor_seguro_usd),
   updated_at          = now()
