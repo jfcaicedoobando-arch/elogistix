@@ -146,3 +146,45 @@ export function extractFacturapiMessage(detail: unknown, status: number | string
 export function __resetFacturapiClientCacheForTests(): void {
   clientCache.clear();
 }
+
+/**
+ * FIX-04/32 (v13.303.12) — Timeout defensivo para llamadas al SDK FacturApi.
+ *
+ * El SDK `facturapi@4.18.0` no expone `AbortSignal`; si la red de FacturApi
+ * cuelga, la promesa nunca resuelve y la Edge Function se queda ocupada hasta
+ * que Deno la mata (~150 s). Cuando el call es el timbrado, el claim
+ * `PENDING:<uuid>` queda tomado y la factura no se puede re-timbrar hasta que
+ * `facturapi-recuperar-claim` la libere manualmente.
+ *
+ * Envuelve TODA llamada al SDK con `withFacturapiTimeout("op", sdkPromise)`.
+ * Si el timeout dispara antes que el SDK responda, se rechaza con
+ * `FacturapiTimeoutError` (HTTP 504 al cliente); el caller sigue siendo
+ * responsable de liberar cualquier claim.
+ */
+export const FACTURAPI_SDK_TIMEOUT_MS = 30_000;
+
+export class FacturapiTimeoutError extends Error {
+  readonly status = 504;
+  readonly op: string;
+  readonly timeoutMs: number;
+  constructor(op: string, timeoutMs: number) {
+    super(`FacturApi no respondió en ${timeoutMs} ms (op=${op})`);
+    this.name = "FacturapiTimeoutError";
+    this.op = op;
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+export function withFacturapiTimeout<T>(
+  op: string,
+  promise: Promise<T>,
+  timeoutMs: number = FACTURAPI_SDK_TIMEOUT_MS,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new FacturapiTimeoutError(op, timeoutMs)), timeoutMs);
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
