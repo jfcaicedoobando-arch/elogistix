@@ -1,4 +1,9 @@
 # Changelog
+## [13.303.17] - 2026-07-20
+- **UX · el stepper del embarque mostraba "Cotización" como paso 2 y confundía con el documento previo (COT-XXXX).** El enum `estado_embarque` de BD reutiliza el nombre "Cotización" para el estado intermedio entre `Borrador` y `Confirmado`, por lo que en el detalle del embarque parecía que retrocedía a la cotización origen. Reportado sobre COT-2026-0138 / ELIMP00333.
+  - **UI:** nuevo mapa `ESTADO_EMBARQUE_LABELS` (`src/features/embarques/constants/estadoEmbarqueLabels.ts`) que renombra sólo la etiqueta visible a **"Propuesta"**. Aplicado en `EstadoProgresoCard`, `EmbarqueStatusChip`, filtro de estado de `EmbarquesFiltros`, `embarqueFases` (fase inicial del timeline de tracking) y el texto de ayuda del dashboard.
+  - **BD:** sin cambios. El enum, la máquina de estados (`transicion_embarque_valida`), las RPCs, los filtros por estado y los reportes siguen usando el valor `'Cotización'`. Es un renombrado cosmético.
+
 ## [13.303.16] - 2026-07-20
 - **Fix · cotización se queda en "Aceptada" tras convertirla en borrador de embarque.** El wizard tradicional promovía el estado a `En operación`, pero la RPC `crear_embarque_borrador_core` (botón "Convertir a borrador") sólo escribía `embarque_id` y dejaba el estado en `Aceptada`. La tabla de cotizaciones mostraba el chip equivocado y la auditoría reportaba 50 cotizaciones inconsistentes. Caso reportado: COT-2026-0138 → ELIMP00333.
   - **RPC:** ahora el `UPDATE public.cotizaciones` final también fija `estado = 'En operación'` en la misma transacción que crea el borrador.
