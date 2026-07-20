@@ -139,7 +139,7 @@ export function DatePickerMx({
   const selectedDate = isoToDate(value);
   const minDate = min ? isoToDate(min) : undefined;
   const maxDate = max ? isoToDate(max) : undefined;
-  const dayDisabled: Array<{ before?: Date; after?: Date }> = [];
+  const dayDisabled: Array<{ before: Date } | { after: Date }> = [];
   if (minDate) dayDisabled.push({ before: minDate });
   if (maxDate) dayDisabled.push({ after: maxDate });
 
