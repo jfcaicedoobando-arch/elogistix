@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState, useCallback, useId } from "react";
-import { Calendar as CalendarIcon, X } from "lucide-react";
-import { es } from "date-fns/locale";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover, PopoverContent, PopoverTrigger,
-} from "@/components/ui/popover";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  isoToDisplay, isoToDate, dateToIso, applyMask, parseDisplay, parseFlexible,
+  isoToDisplay, applyMask, parseDisplay, parseFlexible,
 } from "./date-picker-mx-helpers";
+import { DatePickerMxCalendar } from "./date-picker-mx-calendar";
 
 interface DatePickerMxProps {
   /** ISO date string YYYY-MM-DD (o vacío) */
@@ -17,17 +13,11 @@ interface DatePickerMxProps {
   placeholder?: string;
   className?: string;
   title?: string;
-  /** Deshabilita todos los controles (input, botones, popover). */
   disabled?: boolean;
-  /** Solo lectura (permite abrir el picker pero no editar). */
   readOnly?: boolean;
-  /** ISO mínimo permitido (inclusivo). */
   min?: string;
-  /** ISO máximo permitido (inclusivo). */
   max?: string;
-  /** Mensaje visible bajo el input (además del estado inválido interno). */
   errorText?: string | null;
-  /** id/name para labels externos y RHF. */
   id?: string;
   name?: string;
 }
@@ -78,10 +68,8 @@ export function DatePickerMx({
       if (value) onChange("");
       return;
     }
-    // 1) intento estricto DD/MM/YYYY.
     const strict = parseDisplay(trimmed);
     if (strict) { emitIfValid(strict); return; }
-    // 2) fallback tolerante (D/M/YYYY, ISO, "13 de marzo de 2026").
     const flex = parseFlexible(trimmed);
     if (flex) {
       setText(isoToDisplay(flex));
@@ -104,13 +92,6 @@ export function DatePickerMx({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      commit(text);
-    }
-  };
-
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
     const pegado = e.clipboardData.getData("text");
@@ -123,10 +104,6 @@ export function DatePickerMx({
     }
   };
 
-  const handleBlur = () => {
-    commit(text);
-  };
-
   const clear = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -136,12 +113,15 @@ export function DatePickerMx({
     onChange("");
   };
 
-  const selectedDate = isoToDate(value);
-  const minDate = min ? isoToDate(min) : undefined;
-  const maxDate = max ? isoToDate(max) : undefined;
-  const dayDisabled: Array<{ before: Date } | { after: Date }> = [];
-  if (minDate) dayDisabled.push({ before: minDate });
-  if (maxDate) dayDisabled.push({ after: maxDate });
+  const onPick = (iso: string) => {
+    setText(isoToDisplay(iso));
+    emitIfValid(iso);
+  };
+  const onCalendarClear = () => {
+    setText("");
+    setInvalid(false);
+    onChange("");
+  };
 
   const showError = invalid || !!errorText;
   const describedBy = showError ? errorId : undefined;
@@ -158,45 +138,16 @@ export function DatePickerMx({
           disabled && "opacity-50 cursor-not-allowed bg-muted",
         )}
       >
-        <Popover open={open} onOpenChange={(o) => { if (!disabled) setOpen(o); }}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              disabled={disabled}
-              title={title ?? "Abrir calendario"}
-              aria-label="Abrir calendario"
-              className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:hover:bg-transparent"
-            >
-              <CalendarIcon className="h-4 w-4" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              defaultMonth={selectedDate ?? maxDate ?? minDate}
-              disabled={dayDisabled.length ? dayDisabled : undefined}
-              onSelect={(d) => {
-                if (!d) {
-                  setText("");
-                  setInvalid(false);
-                  onChange("");
-                } else {
-                  const iso = dateToIso(d);
-                  setText(isoToDisplay(iso));
-                  emitIfValid(iso);
-                }
-                setOpen(false);
-              }}
-              autoFocus
-              locale={es}
-              captionLayout="dropdown"
-              startMonth={new Date(1900, 0)}
-              endMonth={new Date(2100, 11)}
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
+        <DatePickerMxCalendar
+          value={value}
+          min={min}
+          max={max}
+          open={open}
+          disabled={disabled}
+          setOpen={setOpen}
+          onPick={onPick}
+          onClear={onCalendarClear}
+        />
 
         <input
           ref={inputRef}
@@ -207,9 +158,9 @@ export function DatePickerMx({
           autoComplete="off"
           value={text}
           onChange={handleChange}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(text); } }}
           onPaste={handlePaste}
-          onBlur={handleBlur}
+          onBlur={() => commit(text)}
           placeholder={placeholder}
           disabled={disabled}
           readOnly={readOnly}
