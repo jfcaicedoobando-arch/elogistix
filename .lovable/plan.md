@@ -1,38 +1,55 @@
-## Bug: cotización no se libera al eliminar (soft) el embarque
+## Problema
 
-### Diagnóstico (verificado en BD)
-- COT-2026-0138 (`5fe12c7f…`): estado ya volvió a **`Aceptada`** ✅, pero `cotizaciones.embarque_id` **sigue apuntando** al embarque soft-deleted `69d42cb4…` (expediente `ELIMP00332`, estado `Borrador`, `deleted_at` seteado).
-- El embarque soft-deleted **conserva** `cotizacion_id = 5fe12c7f…`.
-- La UI (`CotizacionDetalle.tsx:100`) bloquea "Convertir a embarque" cuando `cotizacion.embarque_id` no es null **o** cuando `fetchEmbarquesVinculados` regresa filas. Este último **no filtra `deleted_at IS NULL`**, así que también cuenta el embarque borrado.
+Al convertir COT-2026-0138 en embarque (E-ELIMP00333), el borrador se creó pero **muchos campos que la cotización sí tenía quedaron vacíos**:
 
-Causas:
-1. `eliminar_embarque_completo` revierte `estado` pero no limpia `cotizaciones.embarque_id` ni `embarques.cotizacion_id` en el soft-delete.
-2. `fetchEmbarquesVinculados` no excluye `deleted_at`.
+Verificado contra la BD:
 
-### Cambios
+| Campo | Cotización 0138 | Embarque generado |
+|---|---|---|
+| Origen | `Ningbo, China (CNNGB)` | `puerto_origen = NULL` |
+| Destino | `Ensenada, México (MXESE)` | `puerto_destino = NULL` |
+| Tarifa aplicada | `tarifa_id` presente | `tarifa_id = NULL` |
+| Peso | (0 en esta cot) | 0 ✓ |
+| Cliente / Incoterm / Modo / Tipo / Tipo contenedor | ✓ | ✓ (sí copiados) |
 
-**1. Fix de datos (insert tool)**
-- `UPDATE cotizaciones SET embarque_id = NULL WHERE id = '5fe12c7f…' AND embarque_id = '69d42cb4…'`
-- `UPDATE embarques SET cotizacion_id = NULL WHERE id = '69d42cb4…'`
+Causa raíz: `public.crear_embarque_borrador_core` (RPC transaccional) sólo mapea un subconjunto de columnas en el `INSERT INTO embarques (...)`. **No mapea puertos/aeropuertos/ciudades, tarifa, ni datos logísticos** (carta garantía, días libres, seguro, valor seguro), aunque todos existen en ambas tablas.
 
-**2. Migración: endurecer `eliminar_embarque_completo`**
-Dentro del bloque `IF v_cotizacion_id IS NOT NULL … IF v_remaining = 0`, además de setear `estado='Aceptada'`:
-- `UPDATE cotizaciones SET embarque_id = NULL WHERE id = v_cotizacion_id AND embarque_id = p_embarque_id;`
-- `UPDATE embarques SET cotizacion_id = NULL WHERE id = p_embarque_id;`
+Además, `cotizaciones.origen`/`destino` son texto libre tipo `"Ningbo, China (CNNGB)"`, y `embarques` los guarda separados según `modo` (`puerto_*` para Marítimo, `aeropuerto_*` para Aéreo, `ciudad_*` para Terrestre). Hay que parsear el código UN/LOCODE (los 5 chars dentro del paréntesis) y volcarlo al campo correcto según `modo`.
 
-Así, el próximo soft-delete deja la cotización totalmente libre para re-convertirse.
+## Alcance
 
-**3. Código: `fetchEmbarquesVinculados`**
-Agregar `.is("deleted_at", null)` para que la vinculación sólo considere embarques vivos. Defensa en profundidad por si algún registro histórico quedó con FK sucia.
+Ampliar el mapeo de la RPC para que el borrador arranque con todo lo que ya se conocía en la cotización. Sin cambios de UI.
 
-**4. Guardrails**
-- Test de `eliminar_embarque_completo`: la migración incluye `UPDATE public.cotizaciones SET embarque_id = NULL`.
-- Test unitario de `fetchEmbarquesVinculados`: la query aplica `.is("deleted_at", null)`.
+## Cambios
 
-**5. Housekeeping**
-- Bump `APP_VERSION` (patch).
-- Entrada en `CHANGELOG.md` describiendo el fix.
+### 1. Migración: `crear_embarque_borrador_core` extendida
 
-### Notas
-- No se toca lógica de negocio adicional (transición de estados, RLS, etc.).
-- El fix de datos usa el insert tool; la migración solamente redefine la función.
+Dentro del `INSERT INTO public.embarques (...)`, añadir:
+
+- **Ruta** — parsear `v_cot.origen` / `v_cot.destino` extrayendo el código entre paréntesis (fallback: guardar el texto completo si no hay paréntesis):
+  - `modo = 'Marítimo'` → `puerto_origen`, `puerto_destino`
+  - `modo = 'Aéreo'` → `aeropuerto_origen`, `aeropuerto_destino`
+  - `modo = 'Terrestre'` → `ciudad_origen`, `ciudad_destino`
+- **Tarifa**: `tarifa_id`, `tarifa_id_original`, `tarifa_id_aplicada` ← `v_cot.tarifa_id`
+- **Logística**: `carta_garantia`, `dias_libres_destino`, `dias_almacenaje`, `seguro`, `valor_seguro_usd`
+- **Vendedora** (si existe en la oportunidad vinculada): dejar en fase posterior; no en este alcance.
+
+### 2. Backfill para el embarque existente (E-ELIMP00333)
+
+Un `UPDATE` en la misma migración que rellene `puerto_origen`, `puerto_destino` y `tarifa_id` para el embarque 375ec92f… con los datos de COT-2026-0138, de modo que el usuario ya vea el borrador correcto sin recrearlo.
+
+### 3. Tests
+
+- `src/lib/__tests__/crear-embarque-borrador-precarga.test.ts`: dado un mock/fixture con cot Marítimo con `origen="X (ABCDE)"` y `tarifa_id`, verificar que el embarque insertado tenga `puerto_origen='ABCDE'` y `tarifa_id` copiada.
+- Caso Aéreo → `aeropuerto_*`. Caso Terrestre → `ciudad_*`.
+- Caso `origen` sin paréntesis → se guarda el texto completo.
+
+### 4. Changelog y APP_VERSION
+
+- `CHANGELOG.md`: nueva entrada `## [13.303.15] - 2026-07-20` describiendo el fix y el backfill de E-ELIMP00333.
+- Bump de `APP_VERSION` a `13.303.15`.
+
+## Fuera de alcance
+
+- Rediseño de `cotizaciones.origen/destino` a columnas estructuradas (proyecto mayor).
+- Copiar conceptos de venta al embarque (ya se copian los costos; venta se maneja en proforma).
