@@ -71,7 +71,11 @@ export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: stri
     let page = 1;
     const maxPages = 5;
     while (page <= maxPages) {
-      const res = await client.invoices.list({ page, limit: 50, "date[gt]": desde });
+      // FIX-04/32 — timeout defensivo en el SDK.
+      const res = await withFacturapiTimeout(
+        "invoices.list",
+        client.invoices.list({ page, limit: 50, "date[gt]": desde }),
+      );
       const items = res.data ?? [];
       const match = items.find((inv) => inv.external_id === claimTag) ?? null;
       if (match) return match;
@@ -80,6 +84,9 @@ export async function buscarCfdiPorExternalId(client: FapiClient, claimTag: stri
     }
     return null;
   } catch (err) {
+    if (err instanceof FacturapiTimeoutError) {
+      return jsonResponse({ error: "facturapi_timeout", message: err.message, timeout_ms: err.timeoutMs }, 504);
+    }
     const detail = err instanceof Error ? err.message : String(err);
     return jsonResponse({ error: "facturapi_error", message: detail }, 502);
   }
