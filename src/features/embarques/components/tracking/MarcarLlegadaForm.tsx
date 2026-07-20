@@ -60,7 +60,7 @@ export function MarcarLlegadaForm({
             />
             {errors.fecha && <p className="text-xs text-destructive">{errors.fecha.message}</p>}
             <p className="text-xs text-muted-foreground">
-              Al guardar, el embarque avanza a "Arribo".
+              Al guardar, el embarque avanza a "Llegada".
             </p>
           </div>
           <div className="space-y-2">
