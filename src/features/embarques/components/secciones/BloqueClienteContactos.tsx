@@ -122,8 +122,9 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
               {contactosShipper.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
               <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
             </SelectContent>
-
+          </Select>
         )} />
+
         {errors.shipper && <p className="text-xs text-destructive">{errors.shipper}</p>}
         {shipper === '__otro__' && <Input aria-label="Nombre del exportador" placeholder="Nombre del exportador" {...register('shipperManual')} className="mt-2" />}
       </div>
@@ -140,9 +141,13 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
             </SelectTrigger>
             <SelectContent>
               {clienteNombre && <SelectItem value="__cliente__">Mismo cliente ({clienteNombre})</SelectItem>}
-              {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
+              {contactosConsignatario.length === 0 && (
+                <SelectItem value="__empty__" disabled>Sin importadores registrados — usa "Mismo cliente" u "Otro"</SelectItem>
+              )}
+              {contactosConsignatario.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
               <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
             </SelectContent>
+
           </Select>
         )} />
         {errors.consignatario && <p className="text-xs text-destructive">{errors.consignatario}</p>}
