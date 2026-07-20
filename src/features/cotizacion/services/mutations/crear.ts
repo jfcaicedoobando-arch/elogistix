@@ -5,17 +5,16 @@ import { cotizacionDraftInputSchema, parseOrThrow } from "@/lib/validation/mutat
 import { buildCotizacionInsertPayload } from "./payloadBuilders";
 
 /**
- * v13.303.0 (FIX-05): el folio se obtiene vía RPC `siguiente_folio_cotizacion`
- * (atómica, usa `folio_secuencias`). Antes se leía el máximo con `.order("folio")`
- * lexicográfico, lo que:
- *   - generaba race conditions (dos usos concurrentes → mismo folio), y
- *   - fallaba con `COT-YYYY-9999` porque el orden por texto devolvía 9999
- *     para siempre (`10000` < `9999` lexicográficamente).
+ * v13.303.0 (FIX-05): folio atómico vía RPC `siguiente_folio_cotizacion()`.
+ * La RPC deriva la organización del `current_user_org_id()` — no hace falta
+ * pasarla desde el cliente. Antes el folio se calculaba con `MAX + 1`
+ * lexicográfico, con dos bugs:
+ *   - race condition (dos altas concurrentes → mismo folio), y
+ *   - `10000` < `9999` en orden por texto → tras `COT-YYYY-9999` todos
+ *     los folios nuevos colisionaban en `COT-YYYY-10000`.
  */
-async function generarFolioAtomico(organizationId: string): Promise<string> {
-  const { data, error } = await supabase.rpc("siguiente_folio_cotizacion", {
-    p_org_id: organizationId,
-  });
+async function generarFolioAtomico(): Promise<string> {
+  const { data, error } = await supabase.rpc("siguiente_folio_cotizacion");
   if (error) throw error;
   if (!data || typeof data !== "string") {
     throw new Error("No se pudo generar el folio de cotización");
@@ -25,10 +24,7 @@ async function generarFolioAtomico(organizationId: string): Promise<string> {
 
 export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
   parseOrThrow(cotizacionDraftInputSchema, input, "Cotización");
-  if (!input.organization_id) {
-    throw new Error("Falta organization_id para generar folio de cotización");
-  }
-  const folio = await generarFolioAtomico(input.organization_id);
+  const folio = await generarFolioAtomico();
   const fechaVigencia = new Date();
   fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
   const payload = buildCotizacionInsertPayload(
