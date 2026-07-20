@@ -17,7 +17,9 @@ import {
 } from "@/features/cotizacion/services/queries";
 
 beforeEach(() => {
+  mock.resetResults();
   mock.tableCalls.length = 0;
+  mock.rpcCalls.length = 0;
 });
 
 describe("services/cotizacion/queries", () => {
@@ -26,33 +28,24 @@ describe("services/cotizacion/queries", () => {
     expect(COTIZACION_ACEPTADA_COLUMNS).toMatch(/incoterm/);
   });
 
-  it("generarFolioCotizacion arranca en 0001 sin filas", async () => {
-    mock.setTableResult("cotizaciones", { data: [], error: null });
+  // v13.303.0 (FIX-05): el folio se pide a la RPC atómica, no a `MAX(folio)`.
+  it("generarFolioCotizacion devuelve el folio de la RPC", async () => {
+    mock.setRpcResult("siguiente_folio_cotizacion", { data: "COT-2026-0042", error: null });
     const f = await generarFolioCotizacion();
-    expect(f).toMatch(/^COT-\d{4}-0001$/);
+    expect(f).toBe("COT-2026-0042");
+    expect(mock.rpcCalls[0].fn).toBe("siguiente_folio_cotizacion");
   });
 
-  it("generarFolioCotizacion incrementa desde último folio", async () => {
-    const anio = new Date().getFullYear();
-    mock.setTableResult("cotizaciones", {
-      data: [{ folio: `COT-${anio}-0042` }],
-      error: null,
-    });
-    const f = await generarFolioCotizacion();
-    expect(f).toBe(`COT-${anio}-0043`);
+  it("generarFolioCotizacion falla si la RPC devuelve payload vacío", async () => {
+    mock.setRpcResult("siguiente_folio_cotizacion", { data: null, error: null });
+    await expect(generarFolioCotizacion()).rejects.toThrow(/folio/i);
   });
 
-  it("generarFolioCotizacion fallback a 0001 si parse falla", async () => {
-    const anio = new Date().getFullYear();
-    mock.setTableResult("cotizaciones", { data: [{ folio: `COT-${anio}-XXXX` }], error: null });
-    const f = await generarFolioCotizacion();
-    expect(f).toBe(`COT-${anio}-0001`);
-  });
-
-  it("generarFolioCotizacion propaga error", async () => {
-    mock.setTableResult("cotizaciones", { data: null, error: { message: "x" } });
+  it("generarFolioCotizacion propaga error de la RPC", async () => {
+    mock.setRpcResult("siguiente_folio_cotizacion", { data: null, error: { message: "x" } });
     await expect(generarFolioCotizacion()).rejects.toThrow();
   });
+
 
   it("fetchCotizaciones devuelve lista", async () => {
     mock.setTableResult("cotizaciones", { data: [{ id: "c1" }], error: null });
