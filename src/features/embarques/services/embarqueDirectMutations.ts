@@ -20,15 +20,15 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
 }
 
 /**
- * Actualiza la fecha de llegada real del embarque y avanza el estado a "Llegada"
- * únicamente cuando el estado actual lo permite según la máquina de estados
- * de BD (mig. `20260718214722`: `En Tránsito → Llegada`, `En Aduana → Llegada`,
- * `En Proceso → Llegada`). En cualquier otro estado sólo se actualiza el
- * campo `fecha_llegada_real` para respetar estados ya avanzados
- * (`Arribo`/`Entregado`/`EIR`/`Cerrado`) o comerciales previos y evitar
- * `LC_TRANSICION_INVALIDA`. v13.302.11.
+ * Actualiza la fecha de llegada real del embarque y avanza el estado a
+ * "Arribo" cuando el estado actual lo permite según la máquina de estados de
+ * BD (v13.303.22: `En Tránsito → Arribo`, `En Proceso → Arribo`). En estados
+ * ya avanzados (`En Aduana`/`Entregado`/`EIR`/`Cerrado`) o comerciales
+ * previos, sólo se actualiza `fecha_llegada_real` para evitar
+ * `LC_TRANSICION_INVALIDA`. v13.303.22 (antes: avanzaba a `Llegada`, ya
+ * deprecado).
  */
-const ESTADOS_QUE_AVANZAN_A_LLEGADA = new Set(["En Tránsito", "En Aduana", "En Proceso"]);
+const ESTADOS_QUE_AVANZAN_A_ARRIBO = new Set(["En Tránsito", "En Proceso"]);
 
 export async function actualizarFechaLlegadaRealEmbarque(
   embarqueId: string,
@@ -40,10 +40,10 @@ export async function actualizarFechaLlegadaRealEmbarque(
     .eq('id', embarqueId)
     .maybeSingle();
   const debeAvanzar = current?.estado
-    ? ESTADOS_QUE_AVANZAN_A_LLEGADA.has(current.estado)
+    ? ESTADOS_QUE_AVANZAN_A_ARRIBO.has(current.estado)
     : false;
   const patch: Partial<EmbarqueInsert> = { fecha_llegada_real: fechaIso };
-  if (debeAvanzar) patch.estado = 'Llegada' as EmbarqueInsert['estado'];
+  if (debeAvanzar) patch.estado = 'Arribo' as EmbarqueInsert['estado'];
   await run(supabase.from('embarques').update(patch).eq('id', embarqueId));
 }
 

@@ -239,7 +239,7 @@ describe("actualizarEstadoEmbarque", () => {
 });
 
 describe("actualizarFechaLlegadaRealEmbarque", () => {
-  it("avanza a 'Llegada' cuando el estado actual es 'En Tránsito' (v13.302.8)", async () => {
+  it("avanza a 'Arribo' cuando el estado actual es 'En Tránsito' (v13.303.22)", async () => {
     mock.setTableResult("embarques", { data: { estado: "En Tránsito" }, error: null });
     await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
     const { assertUpdatePayload, assertEq, findTableCall } = await import(
@@ -247,16 +247,16 @@ describe("actualizarFechaLlegadaRealEmbarque", () => {
     );
     // El último tableCall es el UPDATE (después del SELECT del estado actual).
     const updateCall = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"));
-    assertUpdatePayload(updateCall!, { estado: "Llegada", fecha_llegada_real: "2026-07-20" });
+    assertUpdatePayload(updateCall!, { estado: "Arribo", fecha_llegada_real: "2026-07-20" });
     assertEq(updateCall!, "id", UUID);
     void findTableCall;
   });
 
-  // v13.302.11 — antes se forzaba `estado: 'Llegada'` sin validar el estado
-  // actual, disparando LC_TRANSICION_INVALIDA para estados posteriores
-  // (Arribo/Entregado/EIR/Cerrado) o comerciales previos.
-  it("NO cambia estado cuando el actual es 'Arribo' (regresión Sentry c80465e4)", async () => {
-    mock.setTableResult("embarques", { data: { estado: "Arribo" }, error: null });
+  // v13.303.22 — antes se forzaba `estado: 'Llegada'` (ya deprecado). Estados
+  // posteriores (En Aduana/Entregado/EIR/Cerrado) o comerciales previos no
+  // deben tocarse para evitar LC_TRANSICION_INVALIDA.
+  it("NO cambia estado cuando el actual es 'En Aduana' (regresión Sentry c80465e4)", async () => {
+    mock.setTableResult("embarques", { data: { estado: "En Aduana" }, error: null });
     await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
     const updateCall = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"));
     const updateArgIdx = updateCall!.ops.indexOf("update");

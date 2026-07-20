@@ -8,11 +8,14 @@ import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstan
  * "Avanzar estado" desaparece dejando al operador atorado. v13.302.11.
  */
 const SIGUIENTE_LATERAL: Record<string, string> = {
-  "En Proceso": "En Aduana",
+  // v13.303.22 — `En Proceso` desemboca ahora en Arribo (nuevo orden).
+  "En Proceso": "Arribo",
   // v13.303.21 — `Cotización` (Propuesta) fue eliminado del happy path.
   // Si un embarque legacy sigue en este estado, ofrecer avanzar a Confirmado
   // para desatorarlo. La transición está permitida en la máquina de estados BD.
   "Cotización": "Confirmado",
+  // v13.303.22 — `Llegada` deprecado; rescate hacia Arribo.
+  "Llegada": "Arribo",
 };
 
 export function getSiguienteEstado(estadoActual: string) {

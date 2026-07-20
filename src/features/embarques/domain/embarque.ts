@@ -17,12 +17,11 @@ export function calcularEstadoEmbarque(
   estadoActual: string,
   fechaLlegadaReal?: string | null,
 ): string {
-  // v13.302.9 — Allowlist explícito de estados sujetos a auto-cálculo por
-  // fechas. Cualquier estado fuera de este set (Borrador, Cotización,
-  // Cancelado, En Aduana, Arribo, Entregado, EIR, Cerrado) se devuelve tal
-  // cual para evitar transiciones inválidas contra la máquina de estados de
-  // BD (mig. 20260718214722). Ver requestId d3b726f5.
-  const ESTADOS_AUTO_CALCULABLES = new Set(["Confirmado", "En Tránsito", "Llegada"]);
+  // v13.303.22 — Allowlist de estados sujetos a auto-cálculo por fechas.
+  // `Llegada` sale del allowlist (estado deprecado). Cualquier otro estado
+  // (Borrador, Cotización, Cancelado, Arribo, En Aduana, Entregado, EIR,
+  // Cerrado) se devuelve tal cual para evitar `LC_TRANSICION_INVALIDA`.
+  const ESTADOS_AUTO_CALCULABLES = new Set(["Confirmado", "En Tránsito"]);
   if (!ESTADOS_AUTO_CALCULABLES.has(estadoActual)) return estadoActual;
 
   // Solo calcula automático para importaciones marítimas
