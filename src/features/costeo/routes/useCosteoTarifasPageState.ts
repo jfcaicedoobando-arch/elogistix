@@ -11,6 +11,7 @@ import type { CosteoTarifaRow } from "@/features/costeo/types";
 import {
   buildInitialFromTarifa, type EstadoFiltro, type AprobacionFiltro,
 } from "./CosteoTarifas.helpers";
+import { todayLocalISO } from "@/lib/date/today";
 
 export type ViewMode = "agrupada" | "tabla";
 
@@ -111,7 +112,7 @@ export function useCosteoTarifasPageState() {
     if (!t) return;
     openFormFrom(undefined, {
       ...buildInitialFromTarifa(t),
-      vigente_desde: new Date().toISOString().slice(0, 10),
+      vigente_desde: todayLocalISO(),
     });
   }, [findTarifa, openFormFrom]);
 

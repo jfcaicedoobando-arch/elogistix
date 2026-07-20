@@ -22,6 +22,7 @@ import type { ConceptoManualInput } from "@/features/facturacion/services/factur
 import { FacturaManualDatosFiscales, type DatosFiscalesValue } from "./FacturaManualDatosFiscales";
 import { FacturaManualConceptosTable } from "./FacturaManualConceptosTable";
 import { queryKeys } from "@/lib/query";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   open: boolean;
@@ -37,7 +38,7 @@ interface ClienteOpt {
   uso_cfdi_default: string | null;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayLocalISO();
 
 const INITIAL_FISCAL: DatosFiscalesValue = {
   serie: "A", fechaEmision: today(), diasCredito: 0, moneda: "MXN",

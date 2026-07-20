@@ -26,6 +26,7 @@ async function obtenerBytes(stored: string | null, facturaId: string, tipo: "pdf
 }
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { todayLocalISO } from "@/lib/date/today";
 interface Props {
   selectedIds: Set<string>;
   onClear: () => void;
@@ -64,7 +65,7 @@ export function FacturasMasivasToolbar({ selectedIds, onClear }: Props) {
         } catch { /* skip */ }
       }
       const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
-      saveAs(blob, `facturas-${new Date().toISOString().slice(0, 10)}.zip`);
+      saveAs(blob, `facturas-${todayLocalISO()}.zip`);
       toast.success(`${count} factura(s) descargadas`);
     } catch (e) {
       notifyError(toast, { title: `Error al generar ZIP: ${(e as Error).message}`, error: e, method: "FEATURES_FACTURACION_COMPONENTS_FACTURASMASIVASTOOLBAR_1" });

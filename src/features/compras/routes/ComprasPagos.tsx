@@ -27,6 +27,7 @@ import {
   listarPagosProveedorGlobal,
 } from "@/features/compras/services/pagosGlobal";
 import { buildPagosColumns } from "./_sections/pagosColumns";
+import { todayLocalISO } from "@/lib/date/today";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 
@@ -35,7 +36,7 @@ function firstOfMonth(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocalISO();
 }
 
 export default function ComprasPagos() {

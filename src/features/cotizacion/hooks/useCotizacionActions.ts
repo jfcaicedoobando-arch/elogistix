@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeleteCotizacion, usePrefetchCotizacion } from "@/features/cotizacion/hooks/useCotizaciones";
 import { exportToCsv } from "@/generators/exportCsv";
+import { todayLocalISO } from "@/lib/date/today";
 
 export interface CotizacionExportRow {
   folio: string;
@@ -45,7 +46,7 @@ export function useCotizacionActions() {
 
   const exportar = (filas: CotizacionExportRow[]) => {
     exportToCsv(
-      `cotizaciones_${new Date().toISOString().slice(0, 10)}.csv`,
+      `cotizaciones_${todayLocalISO()}.csv`,
       [
         { key: "folio", label: "Folio" },
         { key: "cliente", label: "Cliente" },

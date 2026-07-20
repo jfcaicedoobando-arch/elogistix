@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/formatters";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import type { CotizacionListItem } from "@/features/cotizacion/hooks";
+import { todayLocalISO } from "@/lib/date/today";
 
 function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
   const fechaStr = formatDate(fechaVigencia);
@@ -36,7 +37,7 @@ function buildVigenciaNode(fechaVigencia: string, estado: string): ReactNode {
 function isTarifaVencida(estado: string, vigHasta: string | null | undefined): boolean {
   if (!vigHasta) return false;
   if (estado.toLowerCase() !== "aceptada") return false;
-  return new Date(vigHasta) < new Date(new Date().toISOString().slice(0, 10));
+  return new Date(vigHasta) < new Date(todayLocalISO());
 }
 
 /**

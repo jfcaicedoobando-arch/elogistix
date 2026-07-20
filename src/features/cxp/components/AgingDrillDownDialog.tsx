@@ -22,6 +22,7 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 import { bucketDeDias, BUCKET_LABELS, BUCKET_TONES, type CubetaAging } from "./agingBuckets";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   proveedor: CxpAgingRow | null;
@@ -118,7 +119,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
     const a = document.createElement("a");
     a.href = url;
     const slug = proveedor.proveedor_nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30);
-    a.download = `aging-${slug}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `aging-${slug}-${todayLocalISO()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

@@ -24,6 +24,7 @@ import {
   type NotaCreditoRow,
 } from "@/features/compras/services/notasCreditoGlobal";
 import { buildNotasCreditoColumns } from "./_sections/notasCreditoColumns";
+import { todayLocalISO } from "@/lib/date/today";
 
 type MonedaFiltro = "todas" | "MXN" | "USD";
 type EstadoFiltro = "todos" | NotaCreditoRow["estado"];
@@ -32,7 +33,7 @@ function firstOfYear(): string {
   return `${new Date().getFullYear()}-01-01`;
 }
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocalISO();
 }
 
 export default function ComprasNotasCredito() {

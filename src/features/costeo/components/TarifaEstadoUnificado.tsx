@@ -7,6 +7,7 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   estado: CosteoTarifaEstado;
@@ -19,7 +20,7 @@ interface BadgeCfg { label: string; cls: string; pulse?: boolean }
 
 function resolveCfg(props: Props): BadgeCfg {
   const ap = props.estadoAprobacion ?? "vigente";
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocalISO();
   const vencida = props.vigenteHasta < hoy;
 
   if (ap === "rechazada") {

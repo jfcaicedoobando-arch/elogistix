@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { formatPhoneMx } from "@/lib/formatters/phone";
 import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface DemoLead {
   id: string;
@@ -80,7 +81,7 @@ export default function AdminDemoLeads() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `demo-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `demo-leads-${todayLocalISO()}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

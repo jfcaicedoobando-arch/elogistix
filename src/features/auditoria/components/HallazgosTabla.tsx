@@ -18,6 +18,7 @@ import {
 import { ExplicarHallazgoButton } from "./ExplicarHallazgoButton";
 import { HallazgoDetalleCell } from "./HallazgoDetalleCell";
 import { buildSelectColumn } from "./hallazgosTablaSelectColumn";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   visibles: HallazgoAuditoria[];
@@ -35,7 +36,7 @@ interface Props {
 
 function isVencida(fechaLimite: string | null): boolean {
   if (!fechaLimite) return false;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocalISO();
   return fechaLimite < today;
 }
 

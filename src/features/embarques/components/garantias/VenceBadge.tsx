@@ -1,10 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/formatters";
 import { diffDias } from "./garantiasUtils";
+import { todayLocalISO } from "@/lib/date/today";
 
 export function VenceBadge({ fechaLimite }: { fechaLimite: string | null }) {
   if (!fechaLimite) return <span className="text-muted-foreground">—</span>;
-  const hoyIso = new Date().toISOString().slice(0, 10);
+  const hoyIso = todayLocalISO();
   const dias = diffDias(hoyIso, fechaLimite);
   if (dias < 0) {
     return <Badge className="bg-destructive/15 text-destructive border-destructive/30">Vencido hace {Math.abs(dias)}d</Badge>;

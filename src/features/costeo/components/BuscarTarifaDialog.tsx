@@ -17,6 +17,7 @@ import { useTopTarifas } from "@/features/costeo/hooks/useTopTarifas";
 import { TarifaResultCard } from "./TarifaResultCard";
 import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import type { TopTarifaRow } from "@/features/costeo/types";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   open: boolean;
@@ -84,7 +85,7 @@ export function BuscarTarifaDialog({
   const [origen, setOrigen] = useState(initial?.puertoOrigenId ?? "");
   const [destino, setDestino] = useState(initial?.puertoDestinoId ?? "");
   const [tipo, setTipo] = useState(initial?.tipoContenedorId ?? "");
-  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [fecha, setFecha] = useState(todayLocalISO());
 
   useEffect(() => {
     if (open) {

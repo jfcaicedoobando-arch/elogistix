@@ -25,10 +25,11 @@ import { descargarBlob } from "@/lib/downloadBlob";
 import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import { fetchFacturasReporte } from "./_sections/reportesFetch";
+import { todayLocalISO } from "@/lib/date/today";
 
 
 function firstOfYear(): string { return `${new Date().getFullYear()}-01-01`; }
-function today(): string { return new Date().toISOString().slice(0, 10); }
+function today(): string { return todayLocalISO(); }
 
 export default function ComprasReportes() {
   const [desde, setDesde] = useState<string>(firstOfYear());

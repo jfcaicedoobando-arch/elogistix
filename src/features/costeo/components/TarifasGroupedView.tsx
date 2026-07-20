@@ -12,6 +12,7 @@ import { TarifaFila, TarifaColumnHeader, type FilaTarifa } from "./TarifaFila";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
 import { usd, vigenciaHint } from "../routes/CosteoTarifas.helpers";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface TarifaRow extends FilaTarifa {
   puerto_origen_nombre: string;
@@ -57,7 +58,7 @@ function buildGrupos(tarifas: TarifaRow[]): Grupo[] {
     }
     g.rows.push(t);
   }
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocalISO();
   for (const g of map.values()) {
     g.rows.sort((a, b) => a.total_comparable - b.total_comparable);
     const elegibles = g.rows.filter(

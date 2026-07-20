@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateSeguro, useUpdateSeguro } from "@/features/embarques/hooks/useSegurosEmbarque";
 import type { MonedaSeguro, SeguroEmbarque, SeguroEmbarqueInput } from "@/features/embarques/services/seguros";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   open: boolean;
@@ -31,8 +32,8 @@ const emptyState = (): FormState => ({
   deducible: 0,
   prima: 0,
   moneda: "MXN",
-  vigencia_desde: new Date().toISOString().slice(0, 10),
-  vigencia_hasta: new Date().toISOString().slice(0, 10),
+  vigencia_desde: todayLocalISO(),
+  vigencia_hasta: todayLocalISO(),
   contacto: null,
   notas: null,
 });

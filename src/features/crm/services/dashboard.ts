@@ -13,6 +13,7 @@ import {
   type TopDeal,
   type EmbudoRow,
 } from "@/features/crm/domain/dashboardAggregates";
+import { todayLocalISO } from "@/lib/date/today";
 
 export interface CrmDashboardData {
   kpis: {
@@ -77,7 +78,7 @@ export async function fetchCrmDashboard(userId: string | undefined): Promise<Crm
       .from("crm_oportunidades")
       .select("id, nombre, cliente_nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, crm_etapas_pipeline!inner(tipo)")
       .eq("crm_etapas_pipeline.tipo", "abierta")
-      .gte("fecha_estimada_cierre", new Date().toISOString().slice(0, 10))
+      .gte("fecha_estimada_cierre", todayLocalISO())
       .lte("fecha_estimada_cierre", isoDaysFromNow(7))
       .order("fecha_estimada_cierre", { ascending: true })
       .limit(10),

@@ -17,6 +17,7 @@ import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { todayLocalISO } from "@/lib/date/today";
 export function useSnoozeHallazgo() {
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
@@ -33,7 +34,7 @@ export function useSnoozeHallazgo() {
 
       // Validación cliente (espejo del trigger BD `validar_snooze_auditoria`):
       // fechas pasadas se rechazan y snooze > 30 días exige motivo >= 20 chars.
-      const hoyIso = new Date().toISOString().slice(0, 10);
+      const hoyIso = todayLocalISO();
       if (snoozedUntil < hoyIso) {
         throw new Error("No se puede silenciar un hallazgo en el pasado");
       }

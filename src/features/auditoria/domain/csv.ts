@@ -5,6 +5,7 @@
 import { exportToCsv } from "@/generators/exportCsv";
 import { reglaShortLabel } from "@/features/auditoria/domain/reglaLabels";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
+import { todayLocalISO } from "@/lib/date/today";
 
 const COLUMNS = [
   { key: "severidad", label: "Severidad" },
@@ -30,6 +31,6 @@ export function exportHallazgosCsv(hallazgos: HallazgoAuditoria[]): void {
     detalle: h.detalle,
     documentos_faltantes: (h.documentos_faltantes || []).join(" | "),
   }));
-  const fecha = new Date().toISOString().slice(0, 10);
+  const fecha = todayLocalISO();
   exportToCsv(`auditoria_${fecha}.csv`, [...COLUMNS], rows);
 }

@@ -10,6 +10,7 @@ import { TarifaQuickApprovalButtons } from "./TarifaQuickApprovalButtons";
 import { VigenciaBar } from "./VigenciaBar";
 import { usd } from "../routes/CosteoTarifas.helpers";
 import type { CosteoTarifaEstado } from "@/features/costeo/types";
+import { todayLocalISO } from "@/lib/date/today";
 
 export interface FilaTarifa {
   id: string;
@@ -55,7 +56,7 @@ export function TarifaFila({
   onEditar, onDuplicar, onEliminar, onAprobar, onRechazar, onReactivar, pending,
 }: Props) {
   const ap = t.estado_aprobacion ?? "vigente";
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocalISO();
   const atenuar = !esMejor && (t.vigente_hasta < hoy || t.estado === "vencida" || t.estado === "reemplazada");
   const delta = mejorTotal != null && !esMejor && t.total_comparable > mejorTotal
     ? t.total_comparable - mejorTotal : 0;

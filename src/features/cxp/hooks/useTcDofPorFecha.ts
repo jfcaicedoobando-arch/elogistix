@@ -11,6 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchExchangeRates } from "@/features/catalogos/services";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { todayLocalISO } from "@/lib/date/today";
 
 export type MonedaTc = "USD" | "EUR";
 
@@ -31,7 +32,7 @@ const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function isFechaEmisionValida(fecha: string): boolean {
   if (!ISO_RE.test(fecha)) return false;
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocalISO();
   if (fecha > hoy) return false; // no consultamos fechas futuras
   return true;
 }
