@@ -1,5 +1,13 @@
 # Changelog
+## [13.303.2] - 2026-07-20
+- **FIX-04.1 — Recuperación de claims `PENDING:<uuid>` huérfanos en `facturas.facturapi_id`**: cuando `facturapi-emitir` moría entre el claim atómico y el `UPDATE` final, la factura quedaba bloqueada (no dejaba retimbrar y sin `uuid_fiscal`). Ahora:
+  - **Migración**: nueva columna `facturas.facturapi_claim_at` (timestamp del claim), índice parcial `idx_facturas_facturapi_pending` para el sweep, y RPC `public.liberar_claim_facturapi_huerfano(factura_id, min_edad_minutos default 5)` `SECURITY DEFINER` que sólo libera si el claim ya rebasó el umbral y el usuario es miembro de la organización.
+  - **`facturapi-emitir`**: escribe `facturapi_claim_at` en el claim y lo limpia en el UPDATE final / en `releaseClaim`. Envía `external_id: <claimTag>` a FacturAPI para poder correlacionar el CFDI si perdemos la respuesta.
+  - **Nueva edge function `facturapi-recuperar-claim`**: recibe `{ factura_id }`, valida membresía, lista las últimas 250 facturas del org en FacturAPI desde `claim_at - 5 min` y busca por `external_id`. Si aparece → **promueve** la fila con el CFDI real (facturapi_id, uuid, folio, urls). Si no aparece y el claim ya tiene ≥ 3 min → **libera** vía RPC. Bitácora en ambos casos.
+  - **UI · `ClaimPendingBanner`**: banner destacado en el detalle de factura cuando `facturapi_id` empieza con `PENDING:`; muestra la edad del claim y un botón "Verificar y recuperar" que invoca la edge function y refresca la query.
+
 ## [13.303.1] - 2026-07-20
+
 - **Revisión de Fase A · Sprint 0**: al auditar el release `13.303.0` aparecieron dos huecos y varias inexactitudes en el registro:
   - **Bug real — folio buggy seguía vivo en 2 flujos**: `crearCotizacion` sí pasó a la RPC atómica, pero `useCrearCotizacionDesdeOportunidad` (CRM: convertir oportunidad → cotización) y `crearCotizacionInformativa` seguían llamando a la vieja `generarFolioCotizacion` con `MAX(folio)` lexicográfico. Fix: la función `generarFolioCotizacion` de `services/cotizacion/queries.ts` ahora delega en `supabase.rpc("siguiente_folio_cotizacion")`; los dos callers quedan cubiertos sin cambiarles nada.
   - **Tests desactualizados**: `crear.test.ts` mockeaba el helper viejo — su assertion `toHaveBeenCalledOnce()` habría dado falso verde. Rehecho contra `mock.setRpcResult("siguiente_folio_cotizacion", …)`; añadidos casos para payload vacío, error de la RPC y para confirmar que ni la RPC ni el insert se llaman si zod falla. `queries.test.ts` reemplaza los tests de `MAX+1` por casos que verifican el nuevo camino RPC.
