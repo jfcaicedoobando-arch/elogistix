@@ -1,6 +1,10 @@
 # Changelog
 # Changelog
+## [13.303.34] - 2026-07-20
+- Tests: se alinean fixtures de `embarqueWizardStepValidator` y `useNuevoEmbarqueWizard` con la política tarifa-first (v13.303.26) — ahora incluyen `cotizacionVinculadaId`/`cotizacionVinculada` para que los casos "válidos" no fallen por la validación obligatoria de cotización. Corrige CI shards 3 y 7.
+
 ## [13.303.33] - 2026-07-20
+
 - Embarques marítimos: peso, volumen y piezas totales ya no se capturan en el paso 1; se calculan automáticamente sumando los datos por contenedor del paso 2. Aéreo y terrestre mantienen los campos como antes.
 
 ## [13.303.32] - 2026-07-20
