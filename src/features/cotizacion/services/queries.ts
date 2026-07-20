@@ -17,25 +17,24 @@ export const COTIZACION_ACEPTADA_COLUMNS =
   "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas" as const;
 
 // ─── Folio helper ───────────────────────────────────────────────────────────
+/**
+ * v13.303.0 (FIX-05): folio atómico vía RPC `siguiente_folio_cotizacion()`.
+ * Antes se calculaba con `MAX(folio) + 1` en orden lexicográfico, con dos
+ * bugs: race condition entre altas concurrentes y colisión al pasar de
+ * `COT-YYYY-9999` a `COT-YYYY-10000` (porque `"10000" < "9999"` como texto).
+ *
+ * Se mantiene el wrapper por compatibilidad — lo usan `informativa.ts` y el
+ * flujo CRM `useCrearCotizacionDesdeOportunidad`.
+ */
 export async function generarFolioCotizacion(): Promise<string> {
-  const anio = new Date().getFullYear();
-  const prefijo = `COT-${anio}-`;
-  const data = await unwrapOr(
-    supabase
-      .from("cotizaciones")
-      .select("folio")
-      .like("folio", `${prefijo}%`)
-      .order("folio", { ascending: false })
-      .limit(1),
-    [] as Array<{ folio: string }>,
-  );
-  let siguiente = 1;
-  if (data.length > 0) {
-    const numero = parseInt(data[0].folio.replace(prefijo, ""), 10);
-    if (!isNaN(numero)) siguiente = numero + 1;
+  const { data, error } = await supabase.rpc("siguiente_folio_cotizacion");
+  if (error) throw error;
+  if (!data || typeof data !== "string") {
+    throw new Error("No se pudo generar el folio de cotización");
   }
-  return `${prefijo}${String(siguiente).padStart(4, "0")}`;
+  return data;
 }
+
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 export async function fetchCotizaciones(organizationId: string | null) {
