@@ -17,12 +17,18 @@ export function calcularEstadoEmbarque(
   estadoActual: string,
   fechaLlegadaReal?: string | null,
 ): string {
-  const ESTADOS_MANUALES = ["Arribo", "En Aduana", "Entregado", "EIR", "Cerrado"];
-  if (ESTADOS_MANUALES.includes(estadoActual)) return estadoActual;
+  // v13.302.9 — Allowlist explícito de estados sujetos a auto-cálculo por
+  // fechas. Cualquier estado fuera de este set (Borrador, Cotización,
+  // Cancelado, En Aduana, Arribo, Entregado, EIR, Cerrado) se devuelve tal
+  // cual para evitar transiciones inválidas contra la máquina de estados de
+  // BD (mig. 20260718214722). Ver requestId d3b726f5.
+  const ESTADOS_AUTO_CALCULABLES = new Set(["Confirmado", "En Tránsito", "Llegada"]);
+  if (!ESTADOS_AUTO_CALCULABLES.has(estadoActual)) return estadoActual;
 
   // Solo calcula automático para importaciones marítimas
   if (modo !== "Marítimo" || tipo !== "Importación") return estadoActual;
   if (!etd || !eta) return estadoActual;
+
 
   // Comparar fechas en UTC para coincidir con `current_date` del backend
   // (Postgres en UTC). Evita desfases por zona horaria del navegador donde
