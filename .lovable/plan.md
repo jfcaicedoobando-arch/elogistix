@@ -1,47 +1,41 @@
-## Veredicto
+## Diagnóstico
 
-La auditoría es **correcta y aplicable**. Los 7 hallazgos son reales y todos comparten una sola raíz: montos completos en celdas estrechas (~66–115 px) a 402 px de ancho. La solución propuesta (`MoneyCell` canónico + formato compacto con `title`) es consistente con lo que ya hicimos en Sprint 2 (KpiCard adaptativa, `formatCurrencyCompact`, tokens semánticos). No detecto conflictos con memoria del proyecto.
+Los 2 únicos issues abiertos en Sentry (últimos 7 días) son **validaciones de negocio esperadas**, no bugs:
 
-## Plan de aplicación
+| Issue | Mensaje | pg_code |
+|---|---|---|
+| `JAVASCRIPT-REACT-2W` | `LC_TRANSICION_INVALIDA: no se permite pasar de En Tránsito a Arribo` | P0001 |
+| `JAVASCRIPT-REACT-2V` | `LC_TRANSICION_INVALIDA: no se permite pasar de Borrador a Confirmado` | P0001 |
 
-### 1. Nuevo componente canónico
-- `src/components/shared/MoneyCell.tsx` — celda `min-w-0` + `truncate` + `title` con `fullValue`, tipografía `text-sm sm:text-base`, variante `highlight` para totales. Cierra los bugs 1.1–1.4 de raíz.
+Ambos vienen de guardas de máquina de estados en BD (`RAISE EXCEPTION 'LC_TRANSICION_INVALIDA…'`). La UI ya los captura y muestra el toast **"Transición de estado no permitida"** con instrucción de refrescar la página. Son ruido — mismo patrón que la regla que ya tenemos para `23514` (check constraints) en `reportCaughtError.ts`.
 
-### 2. Fixes 🔴 críticos
-- **1.1** `dashboard/finance/components/CobranzaBlock.tsx` → montos aging con `formatCurrencyCompact` + `title=formatCurrency`.
-- **1.2** `facturacion/components/detalle/FacturaTotalesCard.tsx` → migrar a `MoneyCell`.
-- **1.3** `portal/components/factura/PortalFacturaResumenCard.tsx` → migrar a `MoneyCell` (portal = pantalla más usada en móvil).
+Analogía: es como si tu app te avisara que "no puedes retirar dinero sin saldo" y a la vez enviara una alarma a soporte. El usuario ya vio el mensaje bonito; soporte no necesita enterarse.
 
-### 3. Fixes 🟠 y 🟡
-- **1.4** `dashboard/finance/components/CierreAdminBlock.tsx` → `Tile` con compacto + `title`.
-- **1.5** `compras/routes/_sections/ConciliacionDetalleSections.tsx` (`TotalesMonedaFooter`) → wrap en `overflow-x-auto` + `min-w-[560px]`.
-- **1.6** `embarques/components/StepCostosPrecios.tsx` → Utilidad Estimada `text-lg sm:text-xl` + `truncate` + `title`.
-- **1.7** `components/ui/dialog.tsx` → `w-[calc(100vw-2rem)]` + `rounded-xl` (quitar `sm:rounded-xl`). Cambio de sistema: aplica a **todos los diálogos**; validar smoke en 3–4 modales representativos (form dialogs, alerts, wizard).
+## Cambio
 
-### 4. Pulido 🟢 (opcional, mismo turno)
-- Selects de filtro en 4 archivos → `w-full sm:w-[Npx]`:
-  - `ReportesFiltros`, `ProveedoresFiltros`, `TesoreriaConciliacion`, `PeriodoMensualToolbar`.
+### 1. `src/lib/observability/reportCaughtError.ts`
+Extender el filtro `EXPECTED_PG_CODES` para descartar también errores P0001 cuyo `message` empiece con el prefijo `LC_` (convención del proyecto para errores de dominio lanzados desde BD).
 
-### 5. Verificación
-- `bun run ci:fast` (lint + typecheck + tests fast).
-- Smoke visual con Playwright a **402×874**: `/portal/facturas/:id`, `/facturacion/:id`, `/inicio` (Cobranza + Cierre), `/compras/conciliacion/:id`, wizard embarque Step Costos.
-- Verificar que ningún snapshot rompa por el cambio de `dialog.tsx`.
+```ts
+// Antes: Set<string> con solo "23514"
+// Después: función isExpectedBusinessError(classified) que:
+//   - descarta 23514 (check constraint)
+//   - descarta P0001 cuando message.startsWith("LC_")
+```
 
-### 6. Changelog y versión
-- `APP_VERSION` → `13.302.6`.
-- Entrada `## [13.302.6] - 2026-07-19`:
-  - Nuevo `MoneyCell` canónico + adopción en 4 tarjetas de dinero (Cobranza, Cierre admin, Totales factura, Portal factura).
-  - Fix overflow: footer conciliación, utilidad estimada Step Costos.
-  - `Dialog` con margen de 16 px y radio en todos los tamaños.
-  - Selects de filtro full-width en móvil (4 toolbars).
+Otros P0001 (raise genéricos sin prefijo `LC_`) siguen llegando a Sentry — no queremos ocultarlos por accidente.
 
-## Riesgos
-- **Bajo/medio**: `dialog.tsx` toca todos los modales; el cambio es puramente presentacional pero pide smoke visual.
-- **Bajo**: `MoneyCell` no altera datos; el resto son classes/wrappers.
-- Sin cambios de lógica de negocio ni de servicios.
+### 2. `src/lib/observability/__tests__/reportCaughtError.test.ts`
+Añadir 2 tests:
+- descarta P0001 con mensaje `LC_TRANSICION_INVALIDA…`
+- **NO** descarta P0001 con mensaje sin prefijo `LC_` (regresión)
 
-## Alcance excluido
-- No tocar `LogoPreview` ni stat-cells de diálogos (ya justificados en cierre anterior).
-- No refactor masivo de otros footers con `grid-cols-N`; solo los detectados.
+### 3. Cerrar issues en Sentry
+Marcar `JAVASCRIPT-REACT-2W` y `JAVASCRIPT-REACT-2V` como `resolved` vía `update_issue`, referenciando la versión del fix (por memoria `mem://preferences/sentry-resolve`).
 
-¿Aplico?
+### 4. Housekeeping
+- Bump `APP_VERSION` → `13.302.7`
+- Entrada en `CHANGELOG.md` referenciando ambos issueIds
+
+## Fuera de alcance
+No se toca la lógica de transiciones ni los toasts existentes — el usuario ya recibe el mensaje correcto. Solo se silencia el reporte duplicado a Sentry.

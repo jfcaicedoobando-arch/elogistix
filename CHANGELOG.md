@@ -3,7 +3,14 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.7] - 2026-07-20
+- **Sentry — silenciar errores de dominio `LC_*` (P0001)**:
+  - `reportCaughtError` ahora descarta violaciones `P0001` cuyo `message` empieza con `LC_` (convención de guardas de BD: máquinas de estado, bloqueos fiscales, etc.). La UI ya muestra un toast contextual — reportarlos a Sentry duplica ruido.
+  - Cierra `JAVASCRIPT-REACT-2W` (`LC_TRANSICION_INVALIDA: En Tránsito → Arribo`) y `JAVASCRIPT-REACT-2V` (`LC_TRANSICION_INVALIDA: Borrador → Confirmado`).
+  - Tests añadidos: descarta `P0001` con prefijo `LC_`; **no** descarta `P0001` genéricos (regresión).
+
 ## [13.302.6] - 2026-07-19
+
 - **Auditoría móvil 402×874 — cierre de familia de bugs de "montos truncados"**:
   - Nuevo `MoneyCell` canónico (`components/shared/MoneyCell.tsx`) con `min-w-0` + `truncate` + `title=fullValue`, tipografía `text-sm sm:text-base` y variante `highlight`.
   - Adopción en `FacturaTotalesCard` y `PortalFacturaResumenCard` (elimina helper `Total` duplicado).

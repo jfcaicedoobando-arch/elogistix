@@ -51,6 +51,23 @@ export interface ReportExtra {
  */
 const EXPECTED_PG_CODES = new Set(["23514"]);
 
+/**
+ * Errores lanzados desde funciones/triggers de BD con `RAISE EXCEPTION 'LC_…'`
+ * son parte del contrato de dominio (máquinas de estado, guardas fiscales,
+ * bloqueos de eliminación). La UI ya muestra un toast contextual — se
+ * descartan de Sentry para evitar ruido. Ver mem plan Sentry 13.302.7.
+ */
+function isExpectedBusinessError(
+  pgCode: string | undefined,
+  message: string | undefined,
+): boolean {
+  if (pgCode && EXPECTED_PG_CODES.has(pgCode)) return true;
+  if (pgCode === "P0001" && typeof message === "string" && message.startsWith("LC_")) {
+    return true;
+  }
+  return false;
+}
+
 /** Convierte cualquier `unknown` en un Error real para que Sentry
  *  agrupe por mensaje en vez de mostrar el título minificado
  *  "Object captured as exception with keys". */
@@ -62,6 +79,7 @@ function toError(err: unknown): { error: Error; original: unknown } {
   return { error: new Error(text), original: err };
 }
 
+
 export function reportCaughtError(
   err: unknown,
   tags: ReportTags,
@@ -70,8 +88,10 @@ export function reportCaughtError(
   const ctx = getErrorContext();
   const classified = classifyError(err);
 
-  // Skip: validaciones de negocio esperadas (mem plan Sentry 13.300.21).
-  if (classified.pgCode && EXPECTED_PG_CODES.has(classified.pgCode)) return;
+  // Skip: validaciones de negocio esperadas (mem plan Sentry 13.302.7).
+  const errMessage = (err as { message?: unknown } | null | undefined)?.message;
+  if (isExpectedBusinessError(classified.pgCode, typeof errMessage === "string" ? errMessage : undefined)) return;
+
 
   const enrichedTags: Record<string, string> = {
     ...(tags as Record<string, string>),
