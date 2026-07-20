@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { cn } from "@/lib/utils";
+import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 import { resolveFinancieroInfo, type CobroStatus } from "./embarqueStatusChip.helpers";
 
 interface Props {
