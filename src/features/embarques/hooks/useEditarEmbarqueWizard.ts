@@ -175,5 +175,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     isPending: updateEmbarque.isPending,
     navigate,
     conceptosForm,
+    cotizacionVinculada,
+    cotizacionesAceptadas,
   };
 }

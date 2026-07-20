@@ -24,6 +24,7 @@ export default function EditarEmbarque() {
     embarque, isLoading, methods, currentStep, setCurrentStep,
     clientes, proveedoresDb, contactos, selectedCliente,
     handleMsdsUpload, handleSave, isPending, navigate, conceptosForm,
+    cotizacionVinculada, cotizacionesAceptadas,
   } = useEditarEmbarqueWizard(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
@@ -87,6 +88,8 @@ export default function EditarEmbarque() {
             clienteNombre={selectedCliente?.nombre || ''}
             contactos={contactos}
             onMsdsUpload={handleMsdsUpload}
+            cotizacionVinculada={cotizacionVinculada}
+            cotizacionesAceptadas={cotizacionesAceptadas}
           />
         )}
         {currentStep === 2 && <StepDatosRuta />}
