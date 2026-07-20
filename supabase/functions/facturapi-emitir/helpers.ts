@@ -45,7 +45,14 @@ export interface FacturaContext {
   sustituye_uuid?: string | null;
   /** v13.208.0 — Expediente y BLs del embarque para propagar al CFDI y al PDF. */
   referencias?: ReferenciasEmbarque | null;
+  /**
+   * v13.303.2 (FIX-04.1) — Tag de correlación que se envía como `external_id` a
+   * FacturAPI. Coincide con el `PENDING:<uuid>` que el edge function usa para
+   * reclamar la fila; permite recuperar el CFDI cuando perdemos la respuesta.
+   */
+  external_id?: string | null;
 }
+
 
 
 export interface FacturapiPayload {
