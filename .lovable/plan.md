@@ -1,55 +1,32 @@
-## Objetivo
-Eliminar el "escape hatch" que permite a algunos roles crear embarques sin cotización vinculada. Regla dura post-cambio: **todo embarque nuevo nace de una cotización aceptada**, sin importar el rol. Los embarques legacy sin cotización siguen intactos (159/219 en BD).
+## Problema
 
-## Analogía
-Hoy la app tiene un botón secreto "Nuevo embarque desde cero" que sólo ven los gerentes — como una puerta trasera al almacén. Vamos a tapiar esa puerta: todos, incluso el jefe, entran por la puerta principal (empezando desde una cotización aceptada).
+En el wizard de crear/editar embarque, los selects **Shipper (Exportador)** y **Consignatario** muestran la lista completa de `contactos_cliente` del cliente, incluidos los contactos marcados como **Proveedor**. Un "Proveedor" en `contactos_cliente` (enum `tipo_contacto`: `Proveedor | Exportador | Importador`) es un proveedor del cliente en su cadena de suministro y **no** debe aparecer como consignatario ni como shipper de un embarque.
 
-## Cambios
+Nota: esto no es la tabla `proveedores` (nuestros proveedores logísticos). Son contactos del cliente clasificados con `tipo = 'Proveedor'`.
 
-1. **Permiso — `src/hooks/shared/usePermissions.ts`**
-   - Borrar la constante `CREAR_EMBARQUE_LIBRE` y la propiedad `canCrearEmbarqueLibre` del objeto retornado.
+## Cambio propuesto
 
-2. **Ruta wizard — `src/features/embarques/routes/NuevoEmbarque.tsx`**
-   - Quitar el import y el `useEffect` del guard.
-   - Nuevo guard simple: si NO llega con `cotizacionPrevinculadaId` en `location.state`, `toast` "Selecciona primero una cotización aceptada" y `navigate("/cotizaciones", { replace: true })`.
+Filtrar la lista de contactos que se pasa a cada `Select` en `src/features/embarques/components/secciones/BloqueClienteContactos.tsx`:
 
-3. **Listado — `src/features/embarques/routes/Embarques.tsx`**
-   - Quitar el botón "Nuevo embarque" (ya no hay entrada libre al wizard). Deja el botón sólo para acciones que sigan aplicando; si el único CTA era ese, el bloque se elimina completo.
-   - Alternativa (a validar en implementación al leer el archivo): reemplazarlo por un CTA "Nueva cotización" que lleve a `/cotizaciones/nueva`. Si la página ya lo tiene en otro lado, sólo se elimina.
+- **Shipper**: mostrar sólo contactos con `tipo === 'Exportador'`.
+- **Consignatario**: mostrar sólo contactos con `tipo === 'Importador'`, conservando las opciones especiales `"Mismo cliente (…)"` y `"Otro (escribir manualmente)"`.
 
-4. **Wizard hook — `src/features/embarques/hooks/useNuevoEmbarqueWizard.ts`**
-   - Quitar `usePermissions()` y la variable `canCrearEmbarqueLibre`.
-   - `requiereCotizacion` pasa a ser siempre `true` en la llamada al validador.
-   - El chequeo `if (!canCrearEmbarqueLibre && !cotVinc.cotizacionVinculada?.id)` queda como `if (!cotVinc.cotizacionVinculada?.id)`.
-   - Actualizar deps de `useCallback`.
+Si la lista filtrada queda vacía, mostrar un `SelectItem` deshabilitado con el texto "Sin contactos de este tipo — usa 'Otro'" para dar contexto al usuario y evitar un dropdown en blanco.
 
-5. **Validador — `src/features/embarques/domain/embarqueWizardStepValidator.ts`**
-   - `requiereCotizacion` deja de ser opcional; validación de step 1 siempre exige `cotizacionVinculadaId`. Se elimina la rama "sin requerimiento" y su test asociado.
+No se cambia el modelo de datos, ni el mapper `embarqueToDb/FromDb`, ni la hidratación: si un embarque legacy ya tiene guardado el id de un contacto tipo "Proveedor" como shipper/consignatario, `resolverValorContactoDesdeTexto` lo seguirá resolviendo (se busca por id, no por tipo). Sólo restringimos qué se ofrece al elegir de nuevo.
 
-6. **StepDatosGenerales — `src/features/embarques/components/StepDatosGenerales.tsx`**
-   - Quitar `usePermissions()` y derivar `requiereCotizacion = true`. El banner "Cotización requerida" ya no depende del rol.
+## Archivos a tocar
 
-7. **BloqueVinculacion — `src/features/embarques/components/secciones/BloqueVinculacion.tsx`**
-   - Eliminar la prop `requiereCotizacion` y la rama que renderiza el label como "opcional". Siempre se rotula "Vincular cotización Aceptada (obligatorio)" y aplica estilo `text-destructive` si falta.
-
-8. **Header detalle — `src/features/embarques/components/EmbarqueDetalleHeader.tsx`**
-   - Se conserva el badge "Sin cotización vinculada" (aplica a legacy). Sólo actualizar el `title` a "Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)".
-
-9. **Tests**
-   - `useNuevoEmbarqueWizard.test.tsx`: eliminar mock `canCrearEmbarqueLibre: true` (ya no existe).
-   - `embarqueWizardStepValidator.test.ts`: eliminar el caso "requiereCotizacion=false (admin) no exige cotización" y consolidar los dos casos restantes en tests que asumen la regla dura.
-
-10. **No BD**
-    - `embarques.cotizacion_id` queda **nullable** — hay 159 embarques legacy que rompería un `NOT NULL`. La regla se enforcea sólo en frontend + en el flujo de creación. Los RPCs actuales (`crear_embarque_borrador_core`) ya reciben un `cotizacion_id` obligatorio desde el flujo cotización→embarque, así que no hay cambio de contrato.
-
-11. **Versión y changelog**
-    - `APP_VERSION` → `13.303.26`.
-    - `CHANGELOG.md`: entrada `## [13.303.26]` explicando que se cerró el escape hatch, mencionando que datos legacy quedan intactos y que la política queda alineada con la memoria `wizard-cotizacion-flujo`.
+- `src/features/embarques/components/secciones/BloqueClienteContactos.tsx` — dos `.filter(...)` sobre `contactos` antes de mapear a `SelectItem`, más el fallback vacío.
+- `src/constants/appVersion.ts` — bump patch a `13.303.27`.
+- `CHANGELOG.md` — entrada breve.
 
 ## Fuera de alcance
-- No se migran ni se "adoptan" los 159 embarques legacy a cotizaciones ficticias.
-- No se toca la creación desde el detalle de una cotización (`/cotizaciones/:id → Generar embarque`), que ya es el único camino válido.
-- No se cambia RLS ni RPCs.
 
-## Riesgos
-- Si algún gerente confiaba en el botón libre para un caso de rescate, deja de tenerlo. Se documenta en el changelog para que operaciones sepa que ahora *tienen* que crear una cotización primero (aunque sea mínima) antes del embarque.
+- No se toca el CRUD de contactos ni el enum en BD.
+- No se filtran otros consumidores de `useContactosCliente` (portal, CRM, envíos de documentos): ese cambio requeriría análisis aparte por cada caso de uso.
+- No se migran embarques legacy con consignatario "Proveedor" ya guardado.
+
+## Analogía
+
+Es como el formulario de una boda: en "novio" y "novia" no deberían aparecer los invitados. Antes el sistema listaba a toda la agenda del cliente; ahora sólo mostramos exportadores en Shipper e importadores en Consignatario.
