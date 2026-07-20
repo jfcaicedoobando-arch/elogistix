@@ -1,5 +1,13 @@
 # Changelog
-## [13.303.22] - 2026-07-20
+## [13.303.23] - 2026-07-20
+- **Bugfix · el wizard de editar embarque ya reconoce la cotización vinculada.** Antes, al abrir un embarque creado desde una cotización (ej. ELIMP00333 ← COT-2026-0138), la pantalla mostraba el banner rojo "Cotización requerida" y un buscador vacío, como si el embarque no tuviera cotización. Ahora aparece el badge verde "✓ Vinculada a COT-XXXX" con la cotización real y desaparece el banner.
+  - **Hidratación (`useEditarEmbarqueWizard`):** el hook ahora carga `cotizacionVinculada` desde `embarque.cotizacion_id` con `useCotizacion`, y expone `cotizacionesAceptadas` para que `StepDatosGenerales` pueda renderizar el bloque de vinculación.
+  - **Backend query (`fetchCotizacionesAceptadas`):** el buscador de vinculación pasó de `.eq("estado", "Aceptada")` a `.in("estado", ["Aceptada", "En operación"])`. Motivo: cuando un embarque se crea desde una cotización, su estado sube a `En operación` (v13.303.16); sin este cambio, la cotización desaparecía del combobox y era imposible re-vincularla si el usuario la desvinculaba por accidente.
+  - **UI (`EditarEmbarque` → `StepDatosGenerales`):** ahora recibe `cotizacionVinculada` y `cotizacionesAceptadas` como props (antes venían siempre vacíos), replicando el contrato del wizard de "Nuevo embarque".
+  - **Tests:** `queries.test.ts` actualizado para verificar el filtro `.in(["Aceptada","En operación"])`.
+  - **Fuera de alcance:** no se toca la máquina de estados de cotizaciones ni las políticas de rol que hacen obligatoria la cotización en la creación.
+
+
 - **UX/Workflow · corregimos el orden del ciclo de vida del embarque y deprecamos el estado `Llegada`.** El happy path ahora es `Borrador → Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado`: **Arribo va antes que En Aduana** (antes estaba invertido) y el estado intermedio `Llegada` sale del workflow porque duplicaba a `Arribo` sin aportar información operativa.
   - **BD (`transicion_embarque_valida`):** nuevo grafo con `En Tránsito → Arribo`, `Arribo → En Aduana`, `En Aduana → Entregado`, `En Proceso → {En Tránsito, Arribo, En Aduana}`. `Llegada` queda en el enum como deprecado con salida de rescate a `Arribo`/`En Aduana`. Migración de dato: el único embarque atorado en `Llegada` fue movido a `Arribo`.
   - **Stepper del detalle de embarque:** ahora muestra **8 pasos con EIR visible como fase propia** (antes se agrupaba en "llegada" y desaparecía visualmente). `calcularFasesEmbarque` renderiza `Propuesta → Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado`.

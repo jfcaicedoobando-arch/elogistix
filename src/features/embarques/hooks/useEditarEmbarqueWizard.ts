@@ -13,7 +13,11 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { useConceptosForm } from "@/features/cotizacion/hooks";
+import {
+  useConceptosForm,
+  useCotizacion,
+  useCotizacionesAceptadas,
+} from "@/features/cotizacion/hooks";
 import { useEmbarqueForm } from "@/features/embarques/hooks/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
 import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
@@ -38,6 +42,11 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const { data: contenedoresDb = [], isLoading: cargandoContenedores } = useContenedoresEmbarque(id);
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
+  // v13.303.23 — Hidratamos la cotización vinculada al embarque para que el
+  // wizard de edición muestre el badge verde en lugar del banner "Cotización
+  // requerida" y no obligue a re-seleccionar. Incluye estado `En operación`.
+  const { data: cotizacionVinculada = null } = useCotizacion(embarque?.cotizacion_id ?? undefined);
+  const { data: cotizacionesAceptadas = [] } = useCotizacionesAceptadas();
   const updateEmbarque = useUpdateEmbarque();
   const registrarActividad = useRegistrarActividad();
 
@@ -166,5 +175,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     isPending: updateEmbarque.isPending,
     navigate,
     conceptosForm,
+    cotizacionVinculada,
+    cotizacionesAceptadas,
   };
 }

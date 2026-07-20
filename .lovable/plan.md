@@ -1,70 +1,67 @@
+## Diagnóstico
 
-## Ciclo canónico acordado
+**Analogía:** El embarque ELIMP00333 sí tiene "novia" (COT-2026-0138) — la vinculación existe en BD. El problema es que el formulario de **editar** llega a la pantalla como si estuviera soltero y encima el buscador sólo muestra "solteras disponibles" (estado `Aceptada`), no las que ya están casadas con un embarque (estado `En operación`).
+
+### Verificado con lecturas previas
+
+- **BD:** `embarques.cotizacion_id = 5fe12c7f-…` apunta correctamente a COT-2026-0138.
+- **COT-2026-0138** está en estado `En operación` (correcto — así quedó desde v13.303.16 cuando se creó el embarque).
+- **`EditarEmbarque.tsx`** llama a `StepDatosGenerales` **sin pasar** `cotizacionVinculada`, `cotizacionesAceptadas`, ni los handlers de vincular/desvincular. Sin esos props:
+  - `cotizacionVinculada` queda `undefined` → aparece el banner "Cotización requerida" y el label rojo.
+  - El botón "Buscar cotización aceptada…" se muestra vacío.
+- **`fetchCotizacionesAceptadas`** filtra `.eq("estado", "Aceptada")` — como COT-2026-0138 ya está en `En operación`, nunca aparecería en el dropdown aunque el edit lo llenara.
+
+### Causa raíz
+
+El wizard de "Editar embarque" **nunca hidrata la vinculación de cotización**. Fue diseñado como si la vinculación sólo existiera al crear. Al agregar en v13.303.16 el cambio de estado `Aceptada → En operación`, el problema se hizo visible: no hay forma de "re-vincular" la misma cotización porque ya no está en la lista de aceptadas.
+
+---
+
+## Plan de arreglo (v13.303.23)
+
+### 1. Hidratar la cotización vinculada al editar
+
+En `useEditarEmbarqueWizard`:
+- Leer `embarque.cotizacion_id`.
+- Con `useCotizacion(embarque.cotizacion_id)` obtener el registro completo.
+- Exponer `cotizacionVinculada` (y opcionalmente `handleDesvincularCotizacion` reutilizando `useNuevoEmbarqueCotVinculada` o un helper equivalente).
+
+En `EditarEmbarque.tsx`:
+- Pasar `cotizacionVinculada`, `cotizacionesAceptadas` (vía `useCotizacionesAceptadas`) y los handlers a `StepDatosGenerales`.
+
+Resultado: el usuario ve el badge verde "✓ Vinculada a COT-2026-0138 — Cliente" y el banner de "Cotización requerida" desaparece.
+
+### 2. Incluir cotizaciones "En operación" en el buscador
+
+En `fetchCotizacionesAceptadas` (`src/features/cotizacion/services/queries.ts`):
+- Cambiar `.eq("estado", "Aceptada")` por `.in("estado", ["Aceptada", "En operación"])`.
+
+Motivo: si el usuario **desvincula** en el edit y quiere re-vincular la misma cotización, debe seguir apareciendo. También cubre el caso de re-uso legítimo cuando un embarque se elimina y la cotización queda "En operación" temporalmente.
+
+### 3. Ajustar tests afectados
+
+- `src/features/cotizacion/services/__tests__/queries.test.ts`: actualizar assertion del `.eq("estado", …)` → `.in("estado", […])`.
+- Agregar test en `EditarEmbarque` / `useEditarEmbarqueWizard` que verifique que `cotizacionVinculada` se hidrata desde `embarque.cotizacion_id`.
+
+### 4. Versión y changelog
+
+- `APP_VERSION` → `13.303.23`.
+- Entrada en `CHANGELOG.md`.
+
+### Archivos a tocar
 
 ```text
-Borrador → Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado
-                                                              (+ Cancelado desde cualquier estado)
+src/features/embarques/hooks/useEditarEmbarqueWizard.ts   ← hidratar cotización + handlers
+src/features/embarques/routes/EditarEmbarque.tsx          ← pasar props al Step
+src/features/cotizacion/services/queries.ts               ← .in(["Aceptada","En operación"])
+src/features/cotizacion/services/__tests__/queries.test.ts
+src/features/embarques/hooks/__tests__/useEditarEmbarqueWizard.test.tsx  (nuevo o extendido)
+src/constants/appVersion.ts
+CHANGELOG.md
 ```
 
-Esto **difiere de la BD actual** (v13.303.21), que tiene:
+### Fuera de alcance
 
-```text
-Borrador → Confirmado → En Tránsito → En Aduana → Llegada → Arribo → Entregado → EIR → Cerrado
-```
-
-Diferencias a corregir:
-1. **Orden invertido:** hoy es `En Aduana → Arribo`, debe ser `Arribo → En Aduana`.
-2. **Estado `Llegada`:** desaparece del flujo. Se conserva como valor deprecado del enum con salida de rescate hacia `Arribo`/`En Aduana` (mismo patrón que usamos con `Cotización`).
-
-## Cambios propuestos
-
-### 1. Base de datos (migración `v13.303.22`)
-Reescribir `transicion_embarque_valida` con el nuevo grafo:
-
-```text
-Borrador     → Confirmado
-Confirmado   → En Tránsito | Borrador
-En Tránsito  → Arribo | En Proceso
-Arribo       → En Aduana | En Tránsito
-En Aduana    → Entregado | Arribo
-Entregado    → EIR | En Aduana
-EIR          → Cerrado | Entregado
-Cerrado      → EIR
-Cancelado    → (cerrado)
-Cotización   → Confirmado | Borrador   -- deprecado (rescate)
-Llegada      → Arribo | En Aduana       -- deprecado (rescate)
-En Proceso   → En Tránsito | Arribo | En Aduana
-```
-
-Migración de datos: mover cualquier embarque en `Llegada` a `Arribo` (verifico con `SELECT count(*) FROM embarques WHERE estado='Llegada'` antes de decidir destino).
-
-Comentario del function bump a v13.303.22 explicando el cambio de orden y la deprecación de `Llegada`.
-
-### 2. Frontend — fuente única del ciclo
-- Crear `src/features/embarques/domain/cicloEmbarque.ts` con:
-  ```ts
-  export const CICLO_EMBARQUE = [
-    "Borrador", "Confirmado", "En Tránsito",
-    "Arribo", "En Aduana", "Entregado", "EIR", "Cerrado",
-  ] as const;
-  ```
-- Consumido por `embarqueFases.ts`, `AvanzarEstadoButton`, `EstadoProgresoCard`, `labelEstadoEmbarque`, filtros del dashboard.
-
-### 3. `embarqueFases.ts` (stepper visual del detalle)
-- Actualizar comentario de cabecera al nuevo ciclo.
-- Reemplazar los 5 chips actuales (`cotizacion/confirmado/en_transito/llegada/cerrado`) por los **8 pasos canónicos** para que **EIR y En Aduana sean visibles como fase propia**.
-- Corregir orden en `ESTADOS_POST_TRANSITO`/`POST_LLEGADA` (que hoy listan Arribo antes de En Aduana — ahora sí es el orden correcto, pero completar con EIR).
-- `labelEstadoEmbarque("Llegada")` → "Llegada (deprecado)".
-
-### 4. Verificación
-- Verificar en preview la ruta actual `/embarques/375ec92f-…` con Playwright/HD para confirmar el nuevo stepper de 8 pasos con sidebar abierto.
-- Actualizar tests: `embarqueFases.test.ts`, cualquier test que valide `transicion_embarque_valida` (usar `psql` no aplica; buscar specs afectados).
-- Correr `bun run lint` y vitest.
-
-### 5. Docs
-- `CHANGELOG.md` — entrada `## [13.303.22]`: nuevo orden Arribo→En Aduana, deprecación de `Llegada`, stepper visual de 8 pasos con EIR.
-- Bump `APP_VERSION` → `13.303.22`.
-
-## Fuera de alcance
-- No se toca el enum `estado_embarque` (los valores deprecados quedan en el enum por seguridad de datos históricos, igual que hicimos con `Cotización`).
-- No se rediseñan reglas de negocio dependientes del arribo (`yaLlegaron`, `estados_bloqueantes`, alertas de sidebar): los conjuntos siguen siendo semánticamente correctos, solo actualizo comentarios.
+- No se toca la máquina de estados de cotizaciones ni la BD.
+- No se cambia el comportamiento del wizard "Nuevo embarque".
+- No se modifica la política de qué roles requieren cotización obligatoria.

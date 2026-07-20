@@ -61,11 +61,14 @@ export async function fetchCotizaciones(organizationId: string | null) {
   return fromDb<Array<CotizacionRow & { cotizacion_costos_count: number; tarifa_vigente_hasta: string | null }>>(flattened);
 }
 
+// v13.303.23 — Incluimos también `En operación` para que el buscador de
+// vinculación en el wizard de editar embarque siga mostrando la cotización
+// ya vinculada (que pasa a `En operación` tras crear el embarque).
 export async function fetchCotizacionesAceptadas(organizationId: string | null) {
   let query = supabase
     .from("cotizaciones")
     .select(COTIZACION_ACEPTADA_COLUMNS)
-    .eq("estado", "Aceptada")
+    .in("estado", ["Aceptada", "En operación"])
     .order("created_at", { ascending: false });
   if (organizationId) query = query.eq("organization_id", organizationId);
   const data = await unwrap(query);
