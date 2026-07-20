@@ -1,32 +1,17 @@
-## Problema
+## Causa raíz
 
-CI (job `audits`) falla: `FacturaDetalleView.tsx` tiene 209 líneas, superando el límite Power-of-10 de 200 (por 9 líneas). Es sólo composición JSX — no hay lógica que refactorizar.
+`TimelineEstadosCard` recorre `ESTADOS_FILTRO = [...ESTADOS_ACTIVOS, "EIR"]`, que hoy incluye `Cotización`, `En Proceso` y `Llegada`. Estos tres estados **no** existen como clave en `ESTADO_CONFIG` (`src/lib/ui/estadoConfig.ts`), así que `ESTADO_CONFIG[estado]` devuelve `undefined` y `cfg.icon` explota.
 
-## Solución
+El archivo ya expone un `DEFAULT_VISUAL` y un helper `getEstadoVisual(estado)` justamente para este caso, pero la tarjeta accede al mapa directo.
 
-Extraer un subcomponente presentacional que agrupe los bloques ya independientes del cuerpo, dejando la vista raíz por debajo de 200 líneas sin tocar props ni comportamiento.
+## Fix
 
-### Cambios
+1. **`src/features/dashboard/components/statusCards/TimelineEstadosCard.tsx`** — reemplazar `ESTADO_CONFIG[estado]` por `getEstadoVisual(estado)` (import del mismo módulo). Blindaje contra futuros estados sin config.
 
-1. **Crear `FacturaDetalleBody.tsx`** (~120 líneas) con las secciones intermedias que hoy viven inline en `FacturaDetalleView`:
-   - Grid Emisor/Receptor
-   - `FacturaResumenCard`
-   - `FacturaTimbradoCard`
-   - `FacturaDetalleEditableSections`
-   - `FacturaConceptosTable`
-   - `FacturaTotalesCard`
-   - `FacturaPagosSection`
-   - `FacturaNotasCreditoSeccion`
-   - `FacturaBitacoraCard`
+2. **`src/lib/ui/estadoConfig.ts`** — agregar entradas visuales para los tres estados faltantes con iconos apropiados de lucide (`FileText` para Cotización, `Loader2` para En Proceso, `Anchor`/`MapPin` para Llegada) y clases coherentes con el resto de la paleta (info/warning/state-arribo).
 
-   Recibe `factura`, `canEdit`, `conceptosVivos`, `puedeEditarBorrador`, `onRegistrarPago` como props.
+3. **Bump** `APP_VERSION` → `13.303.7` + entrada en `CHANGELOG.md`.
 
-2. **Adelgazar `FacturaDetalleView.tsx`** a ~90 líneas, quedándose con: header, banners, `ActionsBar`, `<FacturaDetalleBody />`, y los dos bloques de modales al final.
+4. **Sentry**: marcar el issue como resolved al terminar.
 
-3. **Bump `APP_VERSION`** a `13.303.6` + entrada breve en `CHANGELOG.md`.
-
-No se cambia lógica, tipos públicos ni tests. Sólo split cosmético para cumplir el baseline.
-
-## Verificación
-
-Correr `bun run audit:arch` local: `oversized` debe quedar en 0.
+No se toca lógica de datos ni tests existentes.
