@@ -1,5 +1,14 @@
 # Changelog
-## [13.303.21] - 2026-07-20
+## [13.303.22] - 2026-07-20
+- **UX/Workflow · corregimos el orden del ciclo de vida del embarque y deprecamos el estado `Llegada`.** El happy path ahora es `Borrador → Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado`: **Arribo va antes que En Aduana** (antes estaba invertido) y el estado intermedio `Llegada` sale del workflow porque duplicaba a `Arribo` sin aportar información operativa.
+  - **BD (`transicion_embarque_valida`):** nuevo grafo con `En Tránsito → Arribo`, `Arribo → En Aduana`, `En Aduana → Entregado`, `En Proceso → {En Tránsito, Arribo, En Aduana}`. `Llegada` queda en el enum como deprecado con salida de rescate a `Arribo`/`En Aduana`. Migración de dato: el único embarque atorado en `Llegada` fue movido a `Arribo`.
+  - **Stepper del detalle de embarque:** ahora muestra **8 pasos con EIR visible como fase propia** (antes se agrupaba en "llegada" y desaparecía visualmente). `calcularFasesEmbarque` renderiza `Propuesta → Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado`.
+  - **UI:** `ESTADOS_EMBARQUE`, `ESTADOS_ACTIVOS`, `EMPTY_CONTEO`, `parseConteoPorEstado`, filtros, `AvanzarEstadoButton` y helpers reflejan el nuevo orden. `labelEstadoEmbarque` etiqueta a `Llegada` como "Llegada (deprecado)" para datos legacy. `parseConteoPorEstado` suma los conteos legacy de `Llegada` a `Arribo` para no perder KPIs históricos.
+  - **Mutaciones:** `actualizarFechaLlegadaRealEmbarque` ahora avanza a `Arribo` en lugar de `Llegada`; `calcularEstadoEmbarque` saca `Llegada` del allowlist auto-calculable; `getSiguienteEstado` incluye rescate `Llegada → Arribo` y `En Proceso → Arribo`.
+  - **Tests actualizados:** `estados-embarque-sync`, `useEmbarqueEstadoActions.helpers`, `useEmbarqueEstadoActions`, `mutations`, `grafo-transiciones-embarque-fase-g` (ahora lee la migración v13.303.22 vigente).
+  - **Fuera de alcance:** los charts de operaciones (`desempenoChart`) conservan la clave `Llegada` como bucket (queda en cero post-migración); su renombrado es un refactor separado.
+
+
 - **UX/Workflow · eliminado el estado intermedio "Propuesta" (antes "Cotización") del ciclo de vida del embarque.** El paso no representaba una aprobación real, solo agregaba clics y contaminaba reportes; además su nombre coincidía con el documento comercial COT-XXXX y generaba confusión en el stepper. Nuevo flujo: `Borrador → Confirmado → En Tránsito → En Aduana → Llegada → Arribo → Entregado → EIR → Cerrado`.
   - **BD:** `transicion_embarque_valida` ahora permite `Borrador → Confirmado` directo y elimina `Borrador → Cotización` y `Confirmado → Cotización`. El valor `Cotización` se conserva en el enum como deprecado; los embarques legacy que caigan ahí tienen salida de rescate a `Borrador` o `Confirmado`.
   - **Migración de datos:** el único embarque que vivía en `Cotización` fue regresado a `Borrador` (preserva editabilidad).

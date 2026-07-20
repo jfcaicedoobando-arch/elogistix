@@ -8,23 +8,27 @@ export function getDocsForMode(modo: string): string[] {
   return ['Carta Porte', 'Factura', 'Lista de Empaque'];
 }
 
-// v13.303.21 — Estado intermedio `Cotización` (Propuesta) eliminado del
-// workflow: Borrador ahora avanza directo a Confirmado. El valor se mantiene
-// en el enum de BD como deprecado para no romper reportes históricos, pero
-// no aparece en el happy path lineal ni en filtros por defecto.
+// v13.303.22 — Nuevo orden del happy path: Arribo va antes de En Aduana
+// (Borrador → Confirmado → En Tránsito → Arribo → En Aduana → Entregado →
+// EIR → Cerrado). El estado `Llegada` queda deprecado (sale del workflow) y
+// sólo persiste en el enum de BD para respetar históricos, con rescate a
+// Arribo/En Aduana.
 //
-// v13.302.11 — `En Proceso` es un estado lateral del grafo (arista
-// `En Tránsito → En Proceso → {En Aduana, Llegada, Arribo}`). NO forma parte
+// v13.303.21 — Estado intermedio `Cotización` (Propuesta) eliminado del
+// workflow: Borrador salta directo a Confirmado. El valor sigue en el enum
+// como deprecado.
+//
+// v13.302.11 — `En Proceso` es un estado lateral del grafo. NO forma parte
 // del happy path lineal, pero SÍ debe aparecer en filtros/conteos y tener
-// una transición de salida via `getSiguienteEstado` para que el operador no
-// quede atorado. Ver `useEmbarqueEstadoActions.helpers.ts`.
+// una transición de salida via `getSiguienteEstado`. Ver
+// `useEmbarqueEstadoActions.helpers.ts`.
 export const ESTADOS_EMBARQUE = [
   'Borrador', 'Confirmado', 'En Tránsito',
-  'En Aduana', 'Llegada', 'Arribo', 'Entregado', 'EIR', 'Cerrado',
+  'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado',
 ] as const;
 
 export const ESTADOS_ACTIVOS = [
-  'Confirmado', 'En Tránsito', 'En Proceso', 'En Aduana', 'Llegada', 'Arribo', 'Entregado',
+  'Confirmado', 'En Tránsito', 'En Proceso', 'Arribo', 'En Aduana', 'Entregado',
 ] as const;
 
 

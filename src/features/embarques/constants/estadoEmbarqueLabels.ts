@@ -1,14 +1,12 @@
 /**
- * v13.303.21 — Mapa de etiquetas visibles para los estados del embarque.
+ * v13.303.22 — Mapa de etiquetas visibles para los estados del embarque.
  *
  * Historia:
- * - v13.303.17: renombramos cosméticamente `Cotización` → `Propuesta` para
- *   evitar la colisión con el documento comercial COT-XXXX en el stepper.
- * - v13.303.21: eliminamos el estado del workflow (Borrador salta directo a
- *   Confirmado). El valor `Cotización` sigue existiendo en el enum de BD
- *   como deprecado; si aparece por dato legacy, lo etiquetamos como
- *   "Propuesta (deprecado)" para que el operador identifique que debe
- *   avanzarlo o regresarlo.
+ * - v13.303.17: renombramos cosméticamente `Cotización` → `Propuesta`.
+ * - v13.303.21: eliminamos `Cotización` del workflow (rescate en UI).
+ * - v13.303.22: reordenamos Arribo antes de En Aduana y sacamos `Llegada`
+ *   del workflow. Ambos deprecados persisten en el enum de BD para no romper
+ *   históricos y se etiquetan con el sufijo "(deprecado)" en pantalla.
  */
 import { ESTADOS_EMBARQUE } from "./embarqueConstants";
 
@@ -16,6 +14,7 @@ export type EstadoEmbarque = typeof ESTADOS_EMBARQUE[number];
 
 export const ESTADO_EMBARQUE_LABELS: Record<string, string> = {
   Cotización: "Propuesta (deprecado)",
+  Llegada: "Llegada (deprecado)",
 };
 
 /**

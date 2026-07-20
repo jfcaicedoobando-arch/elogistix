@@ -2,13 +2,13 @@ import { describe, it, expect } from "vitest";
 import { getSiguienteEstado } from "@/features/embarques/hooks/useEmbarqueEstadoActions.helpers";
 
 /**
- * v13.303.21 — `getSiguienteEstado` debe respetar el happy path actual de la
- * máquina de estados de BD: Borrador → Confirmado → En Tránsito → En Aduana →
- * Llegada → Arribo → Entregado → EIR → Cerrado. (Estado intermedio
- * `Cotización` / Propuesta eliminado del workflow.)
+ * v13.303.22 — `getSiguienteEstado` debe respetar el happy path actual de la
+ * máquina de estados de BD: Borrador → Confirmado → En Tránsito → Arribo →
+ * En Aduana → Entregado → EIR → Cerrado. (Estados deprecados: `Cotización`,
+ * `Llegada`.)
  */
 describe("getSiguienteEstado — happy path alineado con máquina de estados BD", () => {
-  it("Borrador → Confirmado (v13.303.21: sin escala en Propuesta)", () => {
+  it("Borrador → Confirmado", () => {
     expect(getSiguienteEstado("Borrador")).toBe("Confirmado");
   });
   it("Cotización → Confirmado (rescate de embarques legacy)", () => {
@@ -17,17 +17,17 @@ describe("getSiguienteEstado — happy path alineado con máquina de estados BD"
   it("Confirmado → En Tránsito", () => {
     expect(getSiguienteEstado("Confirmado")).toBe("En Tránsito");
   });
-  it("En Tránsito → En Aduana", () => {
-    expect(getSiguienteEstado("En Tránsito")).toBe("En Aduana");
+  it("En Tránsito → Arribo (nuevo orden v13.303.22)", () => {
+    expect(getSiguienteEstado("En Tránsito")).toBe("Arribo");
   });
-  it("En Aduana → Llegada (regresión requestId c80465e4)", () => {
-    expect(getSiguienteEstado("En Aduana")).toBe("Llegada");
+  it("Arribo → En Aduana (nuevo orden v13.303.22)", () => {
+    expect(getSiguienteEstado("Arribo")).toBe("En Aduana");
   });
-  it("Llegada → Arribo", () => {
+  it("En Aduana → Entregado (nuevo orden v13.303.22)", () => {
+    expect(getSiguienteEstado("En Aduana")).toBe("Entregado");
+  });
+  it("Llegada → Arribo (rescate de embarques legacy)", () => {
     expect(getSiguienteEstado("Llegada")).toBe("Arribo");
-  });
-  it("Arribo → Entregado", () => {
-    expect(getSiguienteEstado("Arribo")).toBe("Entregado");
   });
   it("Entregado → EIR", () => {
     expect(getSiguienteEstado("Entregado")).toBe("EIR");
@@ -41,10 +41,7 @@ describe("getSiguienteEstado — happy path alineado con máquina de estados BD"
   it("estado desconocido retorna null", () => {
     expect(getSiguienteEstado("Inexistente")).toBeNull();
   });
-  // v13.302.11 — `En Proceso` es un estado lateral del grafo BD. Si
-  // getSiguienteEstado retornara null el botón "Avanzar estado" desaparecería
-  // dejando al operador atorado.
-  it("En Proceso → En Aduana (estado lateral del grafo BD)", () => {
-    expect(getSiguienteEstado("En Proceso")).toBe("En Aduana");
+  it("En Proceso → Arribo (estado lateral del grafo BD, v13.303.22)", () => {
+    expect(getSiguienteEstado("En Proceso")).toBe("Arribo");
   });
 });
