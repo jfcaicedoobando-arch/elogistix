@@ -265,8 +265,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // v13.146.0 — el `numero` interno se asigna aquí, no al crear el borrador.
   // FacturAPI es source of truth para folio y serie. El formato mantiene
   // `<serie><folio>` para compatibilidad con reportes/búsquedas existentes.
+  // v13.303.0 (FIX-04): el UPDATE final está condicionado a `facturapi_id = claimTag`
+  // para cerrar el claim atómico y no pisar accidentalmente otro timbrado.
   const numeroFinal = `${serieTimbrada}${folio}`;
-  const { error: updErr } = await supabase
+  const { error: updErr, data: updRow } = await supabase
     .from("facturas")
     .update({
       numero: numeroFinal,
@@ -282,8 +284,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       timbrado_en: new Date().toISOString(),
       timbrado_por: userData.user.id,
     })
-    .eq("id", body.factura_id);
+    .eq("id", body.factura_id)
+    .eq("facturapi_id", claimTag)
+    .select("id")
+    .maybeSingle();
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
+  if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; verifica el estado en Facturapi.", facturapi_id: facturapiId, uuid }, 409);
+
 
   await registrarBitacoraEdge(supabase, {
     organizationId: factura.organization_id,
