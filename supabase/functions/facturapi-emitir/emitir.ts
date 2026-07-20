@@ -88,6 +88,35 @@ export async function resolverSustitucion(supabase: SupabaseClient, factura: Fac
 export async function cargarContexto(
   supabase: SupabaseClient, facturaId: string, factura: FacturaRow, sustituyeUuid: string | null, claimTag: string,
 ): Promise<FacturaContext | Response> {
+  const base = await cargarBaseContexto(supabase, facturaId, factura);
+  if (base instanceof Response) return base;
+  const refs = await cargarReferenciasEmbarque(supabase, factura);
+  const ctx: FacturaContext = {
+    serie: factura.serie ?? null,
+    forma_pago: factura.forma_pago ?? "",
+    metodo_pago: factura.metodo_pago ?? "PUE",
+    uso_cfdi: factura.uso_cfdi ?? base.cliente.uso_cfdi_default ?? "",
+    moneda: factura.moneda ?? "MXN",
+    tipo_cambio: Number(factura.tipo_cambio ?? 1),
+    receptor: { legal_name: base.cliente.nombre, tax_id: factura.rfc_cliente ?? base.cliente.rfc ?? "", tax_system: base.cliente.regimen_fiscal ?? "", address: { zip: base.cliente.codigo_postal ?? "" }, email: base.contactoEmail },
+    conceptos: base.conceptos,
+    sustituye_uuid: sustituyeUuid,
+    referencias: refs,
+    external_id: claimTag,
+  };
+
+  const issues = validateContext(ctx);
+  if (issues.length > 0) return jsonResponse({ error: "validation_failed", issues }, 422);
+  return ctx;
+}
+
+interface BaseContexto {
+  cliente: ClienteRow;
+  contactoEmail: string | null;
+  conceptos: FacturaContext["conceptos"];
+}
+
+async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, factura: FacturaRow): Promise<BaseContexto | Response> {
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
     .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
@@ -113,15 +142,9 @@ export async function cargarContexto(
     .eq("es_principal", true)
     .maybeSingle();
 
-  const refs = await cargarReferenciasEmbarque(supabase, factura);
-  const ctx: FacturaContext = {
-    serie: factura.serie ?? null,
-    forma_pago: factura.forma_pago ?? "",
-    metodo_pago: factura.metodo_pago ?? "PUE",
-    uso_cfdi: factura.uso_cfdi ?? cliente.uso_cfdi_default ?? "",
-    moneda: factura.moneda ?? "MXN",
-    tipo_cambio: Number(factura.tipo_cambio ?? 1),
-    receptor: { legal_name: cliente.nombre, tax_id: factura.rfc_cliente ?? cliente.rfc ?? "", tax_system: cliente.regimen_fiscal ?? "", address: { zip: cliente.codigo_postal ?? "" }, email: contactoData?.email ?? null },
+  return {
+    cliente,
+    contactoEmail: contactoData?.email ?? null,
     conceptos: (conceptos ?? []).map((c) => ({
       descripcion: c.descripcion, cantidad: Number(c.cantidad), precio_unitario: Number(c.precio_unitario), clave_sat: c.clave_sat,
       clave_unidad: c.clave_unidad ?? "E48", unidad: "Unidad de servicio",
@@ -130,14 +153,7 @@ export async function cargarContexto(
       tasa_ret_isr: c.tasa_ret_isr != null ? Number(c.tasa_ret_isr) : 0,
       tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
     })),
-    sustituye_uuid: sustituyeUuid,
-    referencias: refs,
-    external_id: claimTag,
   };
-
-  const issues = validateContext(ctx);
-  if (issues.length > 0) return jsonResponse({ error: "validation_failed", issues }, 422);
-  return ctx;
 }
 
 async function cargarReferenciasEmbarque(supabase: SupabaseClient, factura: FacturaRow): Promise<FacturaContext["referencias"]> {
