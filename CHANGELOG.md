@@ -3,6 +3,13 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.11] - 2026-07-20
+- **Fix — estado lateral `En Proceso` faltaba en UI + mutaciones directas forzaban `Llegada`**:
+  - `ESTADOS_ACTIVOS`, `EMPTY_CONTEO` y `parseConteoPorEstado` no listaban `En Proceso` (nodo lateral del grafo BD `En Tránsito → En Proceso → {En Aduana, Llegada, Arribo}`), así que los embarques en ese estado desaparecían de filtros/conteos y el botón "Avanzar estado" quedaba sin siguiente. Se agregó al catálogo y se implementó `SIGUIENTE_LATERAL` en `useEmbarqueEstadoActions.helpers.ts` para que avance a `En Aduana`.
+  - `actualizarFechaLlegadaRealEmbarque` seteaba `estado: 'Llegada'` sin validar el actual: para embarques en `Arribo`/`Entregado`/`EIR`/`Cerrado` o comerciales previos (`Borrador`/`Cotización`), la mutación disparaba `LC_TRANSICION_INVALIDA`. Ahora sólo avanza si el estado actual está en `{En Tránsito, En Aduana, En Proceso}`; en cualquier otro caso sólo persiste `fecha_llegada_real`.
+  - `useSyncEstadoEmbarque` traduce `LC_TRANSICION_INVALIDA` a un mensaje humano ("El estado cambió en otra sesión…") para que el toast del wrapper deje de mostrar el código crudo.
+  - Nuevos tests: `mutations.test.ts` (regresión Sentry `c80465e4`, no toca `estado` cuando ya está en `Arribo`) y `useEmbarqueEstadoActions.helpers.test.ts` (`En Proceso → En Aduana`).
+
 ## [13.302.10] - 2026-07-20
 - **Fix — "Avanzar estado" proponía `En Aduana → Entregado` (inválido)**:
   - `ESTADOS_EMBARQUE` (UI) estaba desincronizada con la máquina de estados de BD (mig. `20260718214722`): faltaban `Cotización` y `Llegada`, y el orden entre `En Tránsito`, `En Aduana`, `Llegada` y `Arribo` estaba mal. `getSiguienteEstado('En Aduana')` devolvía `Entregado` y la BD rebotaba con `LC_TRANSICION_INVALIDA`.
