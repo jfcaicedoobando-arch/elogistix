@@ -17,9 +17,11 @@ import {
   duplicarEmbarqueRpc,
   eliminarEmbarqueRpc,
   actualizarEstadoEmbarque,
+  actualizarFechaLlegadaRealEmbarque,
   insertarNotaEmbarque,
   reabrirEmbarqueRpc,
 } from "@/features/embarques/services/mutations";
+
 
 const UUID = "11111111-1111-4111-8111-111111111111";
 const UUID2 = "22222222-2222-4222-8222-222222222222";
@@ -235,6 +237,24 @@ describe("actualizarEstadoEmbarque", () => {
     assertEq(call, "id", UUID);
   });
 });
+
+describe("actualizarFechaLlegadaRealEmbarque", () => {
+  it("avanza el estado a 'Llegada' — no 'Arribo' (regresión v13.302.8)", async () => {
+    mock.setTableResult("embarques", { data: null, error: null });
+    await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
+    const { assertUpdatePayload, assertEq, findTableCall } = await import(
+      "@/test/helpers/assertMutation"
+    );
+    const call = findTableCall(mock, "embarques");
+    // La máquina de estados de BD sólo permite `En Tránsito → Llegada`.
+    // `Arribo` es un estado posterior — antes de v13.302.8 se enviaba
+    // directamente y disparaba `LC_TRANSICION_INVALIDA`.
+    assertUpdatePayload(call, { estado: "Llegada", fecha_llegada_real: "2026-07-20" });
+    assertEq(call, "id", UUID);
+  });
+});
+
+
 
 describe("insertarNotaEmbarque", () => {
   it("inserta una nota válida", async () => {

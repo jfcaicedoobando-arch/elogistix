@@ -7,8 +7,9 @@
  *      toda la app) y se registra un evento `Cambio de ETA` en la bitácora.
  *      El `eta_original` queda congelado por trigger de BD.
  *   2. **Marcar Llegada real** — única vía para avanzar el embarque de
- *      "En Tránsito" a "Arribo". Se actualiza `fecha_llegada_real` y
- *      `estado='Arribo'`, y se registra un evento `Arribo a Puerto`.
+ *      "En Tránsito" a "Llegada". Se actualiza `fecha_llegada_real` y
+ *      `estado='Llegada'`, y se registra un evento `Arribo a Puerto`.
+
  *
  * Los otros tipos de evento históricos (Zarpe, Transbordo, Descarga, etc.)
  * se retiran del UI. Los eventos ya persistidos siguen visibles en el timeline.
@@ -83,7 +84,7 @@ export function TrackingNuevoEventoForm({
             <div>
               <div className="font-medium text-sm">Marcar Llegada real</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Fecha en que llegó el contenedor. Avanza el embarque a "Arribo".
+                Fecha en que llegó el contenedor. Avanza el embarque a "Llegada".
               </div>
             </div>
           </button>

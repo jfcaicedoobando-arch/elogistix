@@ -20,9 +20,11 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
 }
 
 /**
- * Actualiza la fecha de llegada real del embarque y avanza el estado a "Arribo".
- * v13.214.0: única vía UI para marcar el arribo del embarque, invocada desde
- * el tab de Tracking. RLS aplica tenancy automáticamente.
+ * Actualiza la fecha de llegada real del embarque y avanza el estado a "Llegada".
+ * v13.302.8: la máquina de estados vigente (migración 20260718214722) sólo
+ * permite `En Tránsito → Llegada`. Antes se seteaba `Arribo` directamente, lo
+ * que disparaba `LC_TRANSICION_INVALIDA` desde el trigger de BD. `Arribo` es
+ * un estado posterior que se alcanza desde `Llegada`.
  */
 export async function actualizarFechaLlegadaRealEmbarque(
   embarqueId: string,
@@ -33,11 +35,12 @@ export async function actualizarFechaLlegadaRealEmbarque(
       .from('embarques')
       .update({
         fecha_llegada_real: fechaIso,
-        estado: 'Arribo' as EmbarqueInsert['estado'],
+        estado: 'Llegada' as EmbarqueInsert['estado'],
       })
       .eq('id', embarqueId),
   );
 }
+
 
 /**
  * Actualiza el ETA vigente del embarque. El `eta_original` queda congelado

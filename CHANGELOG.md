@@ -3,7 +3,15 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.8] - 2026-07-20
+- **Fix — "Marcar llegada" fallaba con `LC_TRANSICION_INVALIDA`**:
+  - `actualizarFechaLlegadaRealEmbarque` seteaba `estado='Arribo'`, pero la máquina de estados vigente (mig. `20260718214722`) sólo permite `En Tránsito → Llegada`. `Arribo` es un estado posterior alcanzable desde `Llegada`.
+  - Ahora se avanza a `Llegada`. Copys en `MarcarLlegadaForm` y `TrackingNuevoEventoForm` actualizados.
+  - Test de regresión en `mutations.test.ts` que blinda el estado destino.
+  - Reporte del usuario: `requestId 05e6a0ab-0e26-4821-8d8d-f0428e1b4d43`.
+
 ## [13.302.7] - 2026-07-20
+
 - **Sentry — silenciar errores de dominio `LC_*` (P0001)**:
   - `reportCaughtError` ahora descarta violaciones `P0001` cuyo `message` empieza con `LC_` (convención de guardas de BD: máquinas de estado, bloqueos fiscales, etc.). La UI ya muestra un toast contextual — reportarlos a Sentry duplica ruido.
   - Cierra `JAVASCRIPT-REACT-2W` (`LC_TRANSICION_INVALIDA: En Tránsito → Arribo`) y `JAVASCRIPT-REACT-2V` (`LC_TRANSICION_INVALIDA: Borrador → Confirmado`).
