@@ -1,13 +1,16 @@
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, Calculator } from "lucide-react";
 import { useFormContext, Controller } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatNumber } from "@/lib/formatters/numbers";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
+import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { LabelHeredable } from "./LabelHeredable";
+
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
