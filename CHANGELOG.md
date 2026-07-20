@@ -1,4 +1,9 @@
 # Changelog
+## [13.303.11] - 2026-07-20
+- **Fix CI (2 guardas desactualizadas)** — sin cambios de producto.
+  - `ClaimPendingBanner.tsx`: reemplazado `toast.error(...)` por `notifyError(...)` para cumplir el estándar del proyecto (enganche Sentry + botón "Ver detalles").
+  - `tipo-cambio-conversion-fase-i.test.ts`: la aserción ya no lee sólo `facturapi-emitir/index.ts`; concatena todos los `.ts` de la carpeta para tolerar la modularización de v13.303.3 (la validación `tcFactura === 1` vive en `emitir.ts`).
+
 ## [13.303.10] - 2026-07-20
 - **Fix CI (4 tests desactualizados)** — sincronizadas las guardas con cambios previos ya integrados; sin cambios de producto.
   - `sentry-edge-coverage.test.ts` / `sentry-edge-wrapping.test.ts`: agregado `facturapi-recuperar-claim` (v13.303.2) a `WRAPPED_COVERAGE` y `CRITICAL`.

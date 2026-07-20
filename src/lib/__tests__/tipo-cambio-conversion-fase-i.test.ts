@@ -44,8 +44,15 @@ describe("Fase I — tipo de cambio obligatorio en facturas extranjeras", () => 
   });
 
   it("edge function facturapi-emitir rechaza TC === 1 para moneda no-MXN", () => {
-    const fnPath = path.resolve(__dirname, "../../../supabase/functions/facturapi-emitir/index.ts");
-    const body = fs.readFileSync(fnPath, "utf8");
+    // v13.303.3 modularizó `facturapi-emitir`: la validación vive en `emitir.ts`
+    // / `helpers.ts`. Concatenamos todos los .ts de la carpeta para no acoplar
+    // la guarda al layout de archivos.
+    const dir = path.resolve(__dirname, "../../../supabase/functions/facturapi-emitir");
+    const body = fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith(".ts") && !f.endsWith("_test.ts") && !f.endsWith(".test.ts"))
+      .map((f) => fs.readFileSync(path.join(dir, f), "utf8"))
+      .join("\n");
     expect(body).toMatch(/tcFactura\s*===\s*1/);
     expect(body).toMatch(/tipo_cambio_requerido/);
   });
