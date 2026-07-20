@@ -1,4 +1,10 @@
 # Changelog
+## [13.303.15] - 2026-07-20
+- **Fix · borrador de embarque desde cotización no precargaba puertos, tarifa ni datos logísticos.** `crear_embarque_borrador_core` sólo mapeaba cliente/incoterm/modo/tipo/tipo_contenedor. Los campos ruta (`puerto_*` / `aeropuerto_*` / `ciudad_*`), `tarifa_id` y logística (`carta_garantia`, `dias_libres_destino`, `dias_almacenaje`, `seguro`, `valor_seguro_usd`) quedaban en NULL, aunque la cotización los tuviera. Caso reportado: COT-2026-0138 → ELIMP00333 (Ningbo/Ensenada perdidos).
+  - **RPC:** la RPC ahora parsea el código UN/LOCODE de `cotizaciones.origen`/`destino` (entre paréntesis) y lo escribe en el campo correcto según `modo` (Marítimo → puertos, Aéreo → aeropuertos, Terrestre → ciudades). Fallback: texto completo si no hay paréntesis.
+  - **RPC:** también copia `tarifa_id` (a `tarifa_id`, `tarifa_id_original`, `tarifa_id_aplicada`) y los 5 campos logísticos.
+  - **Backfill:** rellenados los datos faltantes en ELIMP00333.
+
 ## [13.303.14] - 2026-07-20
 - **Fix · cotización queda "atrapada" tras eliminar (soft) su embarque borrador.** Al eliminar un embarque en `Borrador`, `eliminar_embarque_completo` revertía `cotizaciones.estado` a `Aceptada` pero **no** limpiaba los FKs bidireccionales (`cotizaciones.embarque_id` y `embarques.cotizacion_id`). Como el borrado es soft (`deleted_at`), el `ON DELETE SET NULL` de la FK nunca disparaba. La UI (`CotizacionDetalle.tsx`) bloqueaba "Convertir a embarque" porque `cotizacion.embarque_id` seguía apuntando al embarque fantasma, y `fetchEmbarquesVinculados` también lo contaba (no filtraba `deleted_at`). Caso reportado: COT-2026-0138 / ELIMP00332.
   - **BD (`eliminar_embarque_completo`):** cuando `v_remaining = 0`, además de revertir el estado ahora ejecuta `UPDATE cotizaciones SET embarque_id = NULL WHERE id = v_cotizacion_id AND embarque_id = p_embarque_id` y `UPDATE embarques SET cotizacion_id = NULL WHERE id = p_embarque_id`. El próximo soft-delete deja la cotización totalmente libre.
