@@ -45,19 +45,21 @@ Deno.test("facturapi-emitir: persistSession=false en el cliente Supabase", () =>
   assertStringIncludes(indexSource, "persistSession: false");
 });
 
-Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → llamada externa", () => {
+Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → emitir", () => {
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
-  // pagada por requests no autorizadas. El getFacturapiClient debe ir entre
-  // load y la llamada SDK para que multi-tenant (v13.136.4) elija la org correcta.
-  const authIdx = combinedSource.indexOf("supabase.auth.getUser");
-  const loadIdx = combinedSource.indexOf('.from("facturas")');
-  const resolveIdx = combinedSource.indexOf("getFacturapiClient(");
-  const fapiIdx = combinedSource.indexOf("facturapi.invoices.create");
-  if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || fapiIdx <= resolveIdx) {
+  // pagada por requests no autorizadas. En v13.303.3 la lógica se movió a
+  // `emitir.ts`; el handler debe orquestar en este orden exacto.
+  const authIdx = indexSource.indexOf("supabase.auth.getUser");
+  const loadIdx = indexSource.indexOf("loadFactura(");
+  const resolveIdx = indexSource.indexOf("getFacturapiClient(");
+  const emitirIdx = indexSource.indexOf("emitirYActualizar(");
+  if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || emitirIdx <= resolveIdx) {
     throw new Error(
-      `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} fapi=${fapiIdx}`,
+      `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} emitir=${emitirIdx}`,
     );
   }
+  // Y la llamada real al SDK debe vivir sólo en emitir.ts (nunca inline en index).
+  assertStringIncludes(emitirSource, "facturapi.invoices.create");
 });
 
 Deno.test("facturapi-emitir: wrapped en Sentry", () => {
