@@ -102,4 +102,16 @@ describe("services/cotizacion/queries", () => {
     const r = await fetchEmbarquesVinculados("c1");
     expect(r).toEqual([]);
   });
+
+  // v13.303.14: los embarques soft-deleted (deleted_at != null) NO deben
+  // bloquear la re-conversión de la cotización.
+  it("fetchEmbarquesVinculados filtra soft-deleted (deleted_at is null)", async () => {
+    mock.setTableResult("embarques", { data: [], error: null });
+    await fetchEmbarquesVinculados("c1");
+    const call = mock.tableCalls[0];
+    const isIdx = call.ops.indexOf("is");
+    expect(isIdx).toBeGreaterThanOrEqual(0);
+    expect(call.opArgs[isIdx]).toEqual(["deleted_at", null]);
+  });
 });
+

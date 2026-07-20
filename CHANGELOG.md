@@ -1,4 +1,11 @@
 # Changelog
+## [13.303.14] - 2026-07-20
+- **Fix · cotización queda "atrapada" tras eliminar (soft) su embarque borrador.** Al eliminar un embarque en `Borrador`, `eliminar_embarque_completo` revertía `cotizaciones.estado` a `Aceptada` pero **no** limpiaba los FKs bidireccionales (`cotizaciones.embarque_id` y `embarques.cotizacion_id`). Como el borrado es soft (`deleted_at`), el `ON DELETE SET NULL` de la FK nunca disparaba. La UI (`CotizacionDetalle.tsx`) bloqueaba "Convertir a embarque" porque `cotizacion.embarque_id` seguía apuntando al embarque fantasma, y `fetchEmbarquesVinculados` también lo contaba (no filtraba `deleted_at`). Caso reportado: COT-2026-0138 / ELIMP00332.
+  - **BD (`eliminar_embarque_completo`):** cuando `v_remaining = 0`, además de revertir el estado ahora ejecuta `UPDATE cotizaciones SET embarque_id = NULL WHERE id = v_cotizacion_id AND embarque_id = p_embarque_id` y `UPDATE embarques SET cotizacion_id = NULL WHERE id = p_embarque_id`. El próximo soft-delete deja la cotización totalmente libre.
+  - **Servicio (`fetchEmbarquesVinculados`):** agrega `.is("deleted_at", null)` para no contar embarques borrados.
+  - **Datos:** limpieza puntual del vínculo residual de COT-2026-0138 ↔ ELIMP00332.
+
+
 ## [13.303.13] - 2026-07-20
 - **Fix dashboard · chip EIR en 0 para operadores en scope "Mis embarques".** Para roles operadores (coordinador logístico, etc.) el dashboard entra por defecto al scope `mios`, y ahí el `conteoPorEstado` se recalcula en el cliente a partir de las listas de `dashboard_details()`. Esas listas se alimentan del CTE `activos` del RPC, que excluye `EIR`/`Cerrado`, así que la casilla EIR de la timeline salía siempre en 0 aunque el operador tuviera embarques EIR asignados (caso reportado: Valeria con 20 embarques EIR).
   - **BD:** `dashboard_details()` ahora expone `embarquesEir` (id + operador + estadoReal, límite 500, sin desglose financiero) tomado directamente de `embarques_base` sin filtrar por `activos`.
