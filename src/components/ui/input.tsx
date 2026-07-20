@@ -2,7 +2,22 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Input = ({ ref, className, type, ...props }: React.ComponentProps<"input"> & { ref?: React.Ref<HTMLInputElement> }) => {
+const Input = ({ ref, className, type, onWheel, ...props }: React.ComponentProps<"input"> & { ref?: React.Ref<HTMLInputElement> }) => {
+    const handleWheel = React.useCallback(
+      (e: React.WheelEvent<HTMLInputElement>) => {
+        // Evita que la rueda del mouse cambie el valor en inputs numéricos
+        // (comportamiento nativo del navegador). Desenfocamos y re-enfocamos
+        // para mantener el cursor sin modificar el valor.
+        if (type === "number" && e.currentTarget === document.activeElement) {
+          const target = e.currentTarget;
+          target.blur();
+          setTimeout(() => target?.focus({ preventScroll: true }), 0);
+        }
+        onWheel?.(e);
+      },
+      [type, onWheel],
+    );
+
     return (
       <input
         type={type}
@@ -11,6 +26,7 @@ const Input = ({ ref, className, type, ...props }: React.ComponentProps<"input">
           className,
         )}
         ref={ref}
+        onWheel={handleWheel}
         {...props}
       />
     );
