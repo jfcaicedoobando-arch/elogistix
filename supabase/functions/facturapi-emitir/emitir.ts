@@ -3,7 +3,7 @@
  * con el límite de líneas y funciones. No contiene routing ni HTTP.
  */
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getFacturapiClient, describeFacturapiError, type FacturapiClient } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
