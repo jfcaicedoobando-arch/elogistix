@@ -2,7 +2,14 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Input = ({ ref, className, type, onWheel, ...props }: React.ComponentProps<"input"> & { ref?: React.Ref<HTMLInputElement> }) => {
+const setNativeInputValue = (el: HTMLInputElement, value: string) => {
+  const proto = Object.getPrototypeOf(el) as HTMLInputElement;
+  const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+  setter?.call(el, value);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+};
+
+const Input = ({ ref, className, type, onWheel, onFocus, onBlur, ...props }: React.ComponentProps<"input"> & { ref?: React.Ref<HTMLInputElement> }) => {
     const handleWheel = React.useCallback(
       (e: React.WheelEvent<HTMLInputElement>) => {
         // Evita que la rueda del mouse cambie el valor en inputs numéricos
@@ -18,6 +25,33 @@ const Input = ({ ref, className, type, onWheel, ...props }: React.ComponentProps
       [type, onWheel],
     );
 
+    const handleFocus = React.useCallback(
+      (e: React.FocusEvent<HTMLInputElement>) => {
+        // Limpia el "0" inicial al enfocar inputs numéricos para que el
+        // usuario pueda escribir directamente sin quedar con "05".
+        if (type === "number") {
+          const raw = e.currentTarget.value;
+          if (raw === "0" || Number(raw) === 0) {
+            setNativeInputValue(e.currentTarget, "");
+          }
+        }
+        onFocus?.(e);
+      },
+      [type, onFocus],
+    );
+
+    const handleBlur = React.useCallback(
+      (e: React.FocusEvent<HTMLInputElement>) => {
+        // Si el usuario deja el campo numérico vacío, restauramos "0"
+        // para no romper cálculos/validaciones que asumen número.
+        if (type === "number" && e.currentTarget.value === "") {
+          setNativeInputValue(e.currentTarget, "0");
+        }
+        onBlur?.(e);
+      },
+      [type, onBlur],
+    );
+
     return (
       <input
         type={type}
@@ -27,10 +61,13 @@ const Input = ({ ref, className, type, onWheel, ...props }: React.ComponentProps
         )}
         ref={ref}
         onWheel={handleWheel}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         {...props}
       />
     );
   };
+
 Input.displayName = "Input";
 
 export { Input };
