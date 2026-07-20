@@ -45,7 +45,14 @@ export interface FacturaContext {
   sustituye_uuid?: string | null;
   /** v13.208.0 — Expediente y BLs del embarque para propagar al CFDI y al PDF. */
   referencias?: ReferenciasEmbarque | null;
+  /**
+   * v13.303.2 (FIX-04.1) — Tag de correlación que se envía como `external_id` a
+   * FacturAPI. Coincide con el `PENDING:<uuid>` que el edge function usa para
+   * reclamar la fila; permite recuperar el CFDI cuando perdemos la respuesta.
+   */
+  external_id?: string | null;
 }
+
 
 
 export interface FacturapiPayload {
@@ -56,6 +63,7 @@ export interface FacturapiPayload {
   payment_method: string;
   currency: string;
   exchange?: number;
+  external_id?: string;
   related_documents?: Array<{ relationship: string; documents: string[] }>;
   /** v13.208.0 — Bloque HTML libre que FacturAPI imprime al pie del PDF. */
   pdf_custom_section?: string;
@@ -66,6 +74,7 @@ export interface FacturapiPayload {
     address: { zip: string };
     email?: string;
   };
+
   items: Array<{
     quantity: number;
     product: {
@@ -161,6 +170,9 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
   if (ctx.serie) payload.series = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
+  // v13.303.2 (FIX-04.1) — tag de correlación para recuperar CFDIs "huérfanos".
+  if (ctx.external_id) payload.external_id = ctx.external_id;
+
   if (ctx.sustituye_uuid) {
     // SAT relación 04 = "Sustitución de los CFDI previos".
     // FacturAPI v2 (endpoint /v2/invoices) espera el shape agrupado:

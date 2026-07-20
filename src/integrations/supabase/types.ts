@@ -4253,6 +4253,7 @@ export type Database = {
           factura_pdf_url: string | null
           factura_xml_backup_path: string | null
           factura_xml_url: string | null
+          facturapi_claim_at: string | null
           facturapi_id: string | null
           fecha_emision: string
           fecha_vencimiento: string
@@ -4312,6 +4313,7 @@ export type Database = {
           factura_pdf_url?: string | null
           factura_xml_backup_path?: string | null
           factura_xml_url?: string | null
+          facturapi_claim_at?: string | null
           facturapi_id?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
@@ -4371,6 +4373,7 @@ export type Database = {
           factura_pdf_url?: string | null
           factura_xml_backup_path?: string | null
           factura_xml_url?: string | null
+          facturapi_claim_at?: string | null
           facturapi_id?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
@@ -7121,6 +7124,7 @@ export type Database = {
           factura_pdf_url: string | null
           factura_xml_backup_path: string | null
           factura_xml_url: string | null
+          facturapi_claim_at: string | null
           facturapi_id: string | null
           fecha_emision: string
           fecha_vencimiento: string
@@ -7691,6 +7695,10 @@ export type Database = {
       }
       is_sales: { Args: { _user_id: string }; Returns: boolean }
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
+      liberar_claim_facturapi_huerfano: {
+        Args: { p_factura_id: string; p_min_edad_minutos?: number }
+        Returns: boolean
+      }
       liberar_conceptos_de_proforma: {
         Args: { p_proforma_id: string }
         Returns: number

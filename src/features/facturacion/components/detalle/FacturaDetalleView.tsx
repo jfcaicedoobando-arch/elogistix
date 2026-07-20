@@ -17,6 +17,8 @@ import { FacturaDetalleHeader } from "@/features/facturacion/components/detalle/
 import { FacturaDetalleModales } from "@/features/facturacion/components/detalle/FacturaDetalleModales";
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
+import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/ClaimPendingBanner";
+
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Tipos amplios: la ruta ya validó que factura no es null y agrupa hooks/dialogs.
@@ -84,12 +86,19 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         ambiente={factura.ambiente}
       />
 
+      <ClaimPendingBanner
+        facturaId={factura.id}
+        facturapiId={factura.facturapi_id ?? null}
+        facturapiClaimAt={factura.facturapi_claim_at ?? null}
+      />
+
       {mostrarSustitutaCancelada && (
         <SustitutaCanceladaBanner
           sustitutaId={factura.sustituida_por}
           sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
         />
       )}
+
 
       <FacturaDetalleActionsBar
         factura={factura}
