@@ -1,32 +1,40 @@
-## Problema
+## Contexto
 
-En el wizard de crear/editar embarque, los selects **Shipper (Exportador)** y **Consignatario** muestran la lista completa de `contactos_cliente` del cliente, incluidos los contactos marcados como **Proveedor**. Un "Proveedor" en `contactos_cliente` (enum `tipo_contacto`: `Proveedor | Exportador | Importador`) es un proveedor del cliente en su cadena de suministro y **no** debe aparecer como consignatario ni como shipper de un embarque.
+Enum `tipo_contacto` = `('Proveedor', 'Exportador', 'Importador')`. En la jerga de forwarder "Proveedor" y "Exportador" son sinónimos (el que embarca la mercancía desde origen). Datos actuales: 22 filas `Proveedor` + 1 fila `Exportador`.
 
-Nota: esto no es la tabla `proveedores` (nuestros proveedores logísticos). Son contactos del cliente clasificados con `tipo = 'Proveedor'`.
+## Cambio
 
-## Cambio propuesto
+Unificar en un solo valor canónico: **`Exportador`**. Se elimina `Proveedor` del enum.
 
-Filtrar la lista de contactos que se pasa a cada `Select` en `src/features/embarques/components/secciones/BloqueClienteContactos.tsx`:
+### Migración BD (una sola)
 
-- **Shipper**: mostrar sólo contactos con `tipo === 'Exportador'`.
-- **Consignatario**: mostrar sólo contactos con `tipo === 'Importador'`, conservando las opciones especiales `"Mismo cliente (…)"` y `"Otro (escribir manualmente)"`.
+1. `UPDATE contactos_cliente SET tipo = 'Exportador' WHERE tipo = 'Proveedor'` (23 filas quedarán como Exportador).
+2. Rename enum: crear `tipo_contacto_new AS ENUM ('Exportador','Importador')`, alterar columna con cast, dropear enum viejo, renombrar el nuevo a `tipo_contacto`.
+3. No hay CHECK constraints ni triggers que dependan del literal — verificado que no hay más usos en BD (sólo la columna `contactos_cliente.tipo`).
 
-Si la lista filtrada queda vacía, mostrar un `SelectItem` deshabilitado con el texto "Sin contactos de este tipo — usa 'Otro'" para dar contexto al usuario y evitar un dropdown en blanco.
+### Frontend
 
-No se cambia el modelo de datos, ni el mapper `embarqueToDb/FromDb`, ni la hidratación: si un embarque legacy ya tiene guardado el id de un contacto tipo "Proveedor" como shipper/consignatario, `resolverValorContactoDesdeTexto` lo seguirá resolviendo (se busca por id, no por tipo). Sólo restringimos qué se ofrece al elegir de nuevo.
+- `src/features/cliente/components/DialogContacto.tsx`
+  - `TIPOS_CONTACTO` → `['Exportador', 'Importador']`.
+  - Default `tipo: 'Exportador'`.
+  - Descripción: "Exportador o importador asociado a este cliente."
+- `src/features/cliente/components/TablaContactos.tsx`
+  - Remover `case 'Proveedor'` del `switch` de badge.
+  - Renombrar título de la tarjeta `Proveedores / Exportadores` → `Exportadores`.
+- `src/features/embarques/components/secciones/BloqueClienteContactos.tsx` — sin cambios; ya filtra por `Exportador` (v13.303.27).
+- Test `src/features/cliente/domain/__tests__/resolverValorContactoDesdeTexto.test.ts` — actualizar fixture y aserción a `Exportador`.
+- Types autogenerados (`src/integrations/supabase/types.ts`) — se regeneran tras la migración; no se editan manualmente.
 
-## Archivos a tocar
+### Bump y changelog
 
-- `src/features/embarques/components/secciones/BloqueClienteContactos.tsx` — dos `.filter(...)` sobre `contactos` antes de mapear a `SelectItem`, más el fallback vacío.
-- `src/constants/appVersion.ts` — bump patch a `13.303.27`.
-- `CHANGELOG.md` — entrada breve.
+- `APP_VERSION` → `13.303.28`.
+- Entrada en `CHANGELOG.md`.
 
 ## Fuera de alcance
 
-- No se toca el CRUD de contactos ni el enum en BD.
-- No se filtran otros consumidores de `useContactosCliente` (portal, CRM, envíos de documentos): ese cambio requeriría análisis aparte por cada caso de uso.
-- No se migran embarques legacy con consignatario "Proveedor" ya guardado.
+- Enum `tipo_proveedor` de la tabla `proveedores` (nuestros proveedores logísticos): NO se toca, es otro dominio.
+- No se ofrece un flag de "rollback" — los 22 registros históricos quedan como `Exportador` sin distintivo especial. Si el usuario luego quiere separarlos con un tag, se abordará aparte.
 
 ## Analogía
 
-Es como el formulario de una boda: en "novio" y "novia" no deberían aparecer los invitados. Antes el sistema listaba a toda la agenda del cliente; ahora sólo mostramos exportadores en Shipper e importadores en Consignatario.
+Teníamos dos etiquetas en la agenda del cliente que decían lo mismo ("Proveedor" y "Exportador"). Las juntamos en una sola: **Exportador**. Es como fusionar los grupos "Móvil" y "Celular" en tu libreta de contactos.

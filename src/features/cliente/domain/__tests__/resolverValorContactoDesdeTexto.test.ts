@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { resolverValorContactoDesdeTexto } from "../contacto";
 
 const contactos = [
-  { id: "c1", nombre: "HEBEI LONGDA", tipo: "Proveedor", pais: "CHINA" },
+  { id: "c1", nombre: "HEBEI LONGDA", tipo: "Exportador", pais: "CHINA" },
   { id: "c2", nombre: "ACME", tipo: "Cliente", pais: "MEX" },
 ];
 
@@ -26,7 +26,7 @@ describe("resolverValorContactoDesdeTexto", () => {
 
   it("resuelve a contacto.id cuando coincide el formato completo", () => {
     expect(
-      resolverValorContactoDesdeTexto("HEBEI LONGDA — Proveedor (CHINA)", contactos, null),
+      resolverValorContactoDesdeTexto("HEBEI LONGDA — Exportador (CHINA)", contactos, null),
     ).toEqual({ value: "c1", manual: "" });
   });
 

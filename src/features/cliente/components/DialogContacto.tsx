@@ -11,11 +11,12 @@ import type { Tables, Enums } from "@/types/db";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 
-const TIPOS_CONTACTO: TipoContacto[] = ['Proveedor', 'Exportador', 'Importador'];
+const TIPOS_CONTACTO: TipoContacto[] = ['Exportador', 'Importador'];
 
 const emptyForm = {
-  nombre: '', rfc: '', tipo: 'Proveedor' as TipoContacto, pais: '', ciudad: '', direccion: '', contacto: '', email: '', telefono: '',
+  nombre: '', rfc: '', tipo: 'Exportador' as TipoContacto, pais: '', ciudad: '', direccion: '', contacto: '', email: '', telefono: '',
 };
+
 
 interface Props {
   open: boolean;
@@ -53,7 +54,7 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
       onOpenChange={onOpenChange}
       icon={User}
       title={contacto ? 'Editar Contacto' : 'Nuevo Contacto'}
-      description="Proveedor, exportador o importador asociado a este cliente."
+      description="Exportador o importador asociado a este cliente."
       size="lg"
       footer={
         <>
