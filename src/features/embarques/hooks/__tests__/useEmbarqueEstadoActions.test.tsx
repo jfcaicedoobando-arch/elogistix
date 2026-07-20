@@ -49,11 +49,10 @@ const embarque = {
 
 describe("getSiguienteEstado", () => {
   it("retorna el siguiente estado concreto en la secuencia oficial", () => {
-    // Secuencia oficial v13.302.10/11:
-    // Borrador → Cotización → Confirmado → En Tránsito → En Aduana →
-    // Llegada → Arribo → Entregado → EIR → Cerrado.
-    expect(getSiguienteEstado("Borrador")).toBe("Cotización");
-    expect(getSiguienteEstado("Cotización")).toBe("Confirmado");
+    // Secuencia oficial v13.303.21 (Propuesta eliminada del workflow):
+    // Borrador → Confirmado → En Tránsito → En Aduana → Llegada →
+    // Arribo → Entregado → EIR → Cerrado.
+    expect(getSiguienteEstado("Borrador")).toBe("Confirmado");
     expect(getSiguienteEstado("Confirmado")).toBe("En Tránsito");
     expect(getSiguienteEstado("En Tránsito")).toBe("En Aduana");
     expect(getSiguienteEstado("En Aduana")).toBe("Llegada");
@@ -61,6 +60,10 @@ describe("getSiguienteEstado", () => {
     expect(getSiguienteEstado("Arribo")).toBe("Entregado");
     expect(getSiguienteEstado("Entregado")).toBe("EIR");
     expect(getSiguienteEstado("EIR")).toBe("Cerrado");
+  });
+
+  it("rescata embarques legacy en Cotización → Confirmado", () => {
+    expect(getSiguienteEstado("Cotización")).toBe("Confirmado");
   });
 
   it("resuelve el lateral En Proceso → En Aduana (v13.302.11)", () => {

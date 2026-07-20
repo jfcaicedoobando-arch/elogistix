@@ -95,8 +95,8 @@ export interface ArribosEsteMes {
 export const ESTADOS_FILTRO = [...ESTADOS_ACTIVOS, "EIR"] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
+// v13.303.21 — `Cotización` (Propuesta) eliminado del workflow y del conteo.
 export const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
-  "Cotización": 0,
   Confirmado: 0,
   "En Tránsito": 0,
   "En Proceso": 0,

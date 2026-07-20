@@ -1,4 +1,12 @@
 # Changelog
+## [13.303.21] - 2026-07-20
+- **UX/Workflow · eliminado el estado intermedio "Propuesta" (antes "Cotización") del ciclo de vida del embarque.** El paso no representaba una aprobación real, solo agregaba clics y contaminaba reportes; además su nombre coincidía con el documento comercial COT-XXXX y generaba confusión en el stepper. Nuevo flujo: `Borrador → Confirmado → En Tránsito → En Aduana → Llegada → Arribo → Entregado → EIR → Cerrado`.
+  - **BD:** `transicion_embarque_valida` ahora permite `Borrador → Confirmado` directo y elimina `Borrador → Cotización` y `Confirmado → Cotización`. El valor `Cotización` se conserva en el enum como deprecado; los embarques legacy que caigan ahí tienen salida de rescate a `Borrador` o `Confirmado`.
+  - **Migración de datos:** el único embarque que vivía en `Cotización` fue regresado a `Borrador` (preserva editabilidad).
+  - **UI:** `ESTADOS_EMBARQUE`, `ESTADOS_ACTIVOS`, `EMPTY_CONTEO`, `parseConteoPorEstado`, filtros y stepper ya no incluyen `Cotización`. `labelEstadoEmbarque` muestra "Propuesta (deprecado)" como fallback para dato legacy. `AvanzarEstadoButton` propone `Borrador → Confirmado`. Rescate lateral en `useEmbarqueEstadoActions.helpers`: `Cotización → Confirmado`.
+  - **Tests actualizados:** `estados-embarque-sync`, `useEmbarqueEstadoActions.helpers`, `useEmbarqueEstadoActions`, `dashboard` parser y `useDashboardController`.
+  - **Fuera de alcance:** no se toca la conversión COT→Embarque (nace en `Borrador` como hoy) ni el módulo de Cotizaciones (documento comercial).
+
 ## [13.303.20] - 2026-07-20
 - **Fix · el botón "Avanzar a Cotización" del header del embarque seguía mostrando el nombre crudo del enum de BD.** v13.303.17 renombró cosméticamente el estado a "Propuesta" en stepper/filtros/chips, pero `AvanzarEstadoButton` interpolaba `siguienteEstado`/`estadoVisual` sin pasar por `labelEstadoEmbarque`. Ahora el botón, el tooltip, el diálogo de confirmación y el alert de documentos faltantes muestran "Propuesta". Sin cambios en la lógica de transición: props siguen recibiendo el valor de BD ("Cotización").
 

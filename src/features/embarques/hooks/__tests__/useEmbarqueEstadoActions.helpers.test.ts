@@ -2,16 +2,16 @@ import { describe, it, expect } from "vitest";
 import { getSiguienteEstado } from "@/features/embarques/hooks/useEmbarqueEstadoActions.helpers";
 
 /**
- * v13.302.10 — Regresión requestId c80465e4.
- * `getSiguienteEstado` debe respetar el happy path de la máquina de estados
- * de BD (mig. 20260718214722): Borrador → Cotización → Confirmado → En
- * Tránsito → En Aduana → Llegada → Arribo → Entregado → EIR → Cerrado.
+ * v13.303.21 — `getSiguienteEstado` debe respetar el happy path actual de la
+ * máquina de estados de BD: Borrador → Confirmado → En Tránsito → En Aduana →
+ * Llegada → Arribo → Entregado → EIR → Cerrado. (Estado intermedio
+ * `Cotización` / Propuesta eliminado del workflow.)
  */
 describe("getSiguienteEstado — happy path alineado con máquina de estados BD", () => {
-  it("Borrador → Cotización", () => {
-    expect(getSiguienteEstado("Borrador")).toBe("Cotización");
+  it("Borrador → Confirmado (v13.303.21: sin escala en Propuesta)", () => {
+    expect(getSiguienteEstado("Borrador")).toBe("Confirmado");
   });
-  it("Cotización → Confirmado", () => {
+  it("Cotización → Confirmado (rescate de embarques legacy)", () => {
     expect(getSiguienteEstado("Cotización")).toBe("Confirmado");
   });
   it("Confirmado → En Tránsito", () => {

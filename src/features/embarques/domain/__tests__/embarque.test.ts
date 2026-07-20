@@ -49,7 +49,7 @@ describe("calcularEstadoEmbarque — allowlist de estados auto-calculables (v13.
     ).toBe("Borrador");
   });
 
-  it("Cotización con ETD vencido NO se transiciona", () => {
+  it("Cotización legacy con ETD vencido NO se transiciona (v13.303.21: estado deprecado)", () => {
     expect(
       calcularEstadoEmbarque("Marítimo", "Importación", PASADO, FUTURO, "Cotización"),
     ).toBe("Cotización");

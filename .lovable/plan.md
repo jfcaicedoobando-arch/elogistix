@@ -1,29 +1,73 @@
-## Problema
 
-El botón "Avanzar a Cotización" en el header del embarque sigue mostrando el valor crudo de BD (`Cotización`) en vez de la etiqueta cosmética `Propuesta` introducida en v13.303.17.
+## Objetivo
 
-## Causa
+Simplificar el ciclo de vida del embarque eliminando el paso administrativo **Propuesta** (valor DB `Cotización`). Nuevo flujo:
 
-`src/features/embarques/components/header/AvanzarEstadoButton.tsx` interpola directamente `siguienteEstado` (que viene de `getSiguienteEstado` → valor de enum de BD) sin pasarlo por `labelEstadoEmbarque(...)`. También se interpola crudo en el diálogo de confirmación, el diálogo de "Faltan documentos" y el tooltip.
+```text
+Borrador → Confirmado → En Tránsito → En Aduana → Arribo → Entregado → Cerrado
+```
 
-`estadoVisual` sufre lo mismo dentro del texto "cambiar el estado de X a Y".
+Motivo: el estado no representa una aprobación real; solo agrega clics y contamina reportes. Además coincide en nombre con el documento comercial COT-XXXX, lo que genera confusión.
+
+## Alcance
+
+Cambio de **workflow** (máquina de estados + UI). No tocamos negocio financiero, RLS ni permisos.
+
+## Estrategia con el enum
+
+El enum `public.estado_embarque` conserva el valor `'Cotización'` como **deprecado** (quitarlo requiere reescribir 100+ referencias y regenerar tipos con riesgo). En su lugar:
+- La máquina de estados en BD lo rechaza como destino.
+- La UI no lo ofrece en filtros, steppers ni acciones.
+- Los embarques existentes en ese estado se migran a `Borrador` (más seguro: preservan editabilidad; el usuario decide cuándo confirmar).
 
 ## Cambios
 
-Único archivo tocado: `src/features/embarques/components/header/AvanzarEstadoButton.tsx`.
+### 1. Datos (migración con `supabase--insert`)
+- `UPDATE public.embarques SET estado = 'Borrador' WHERE estado = 'Cotización'` (afecta 1 fila hoy).
+- Registrar el cambio en `bitacora_actividad` con motivo "Eliminación estado Propuesta v13.303.21".
 
-1. Importar `labelEstadoEmbarque` desde `@/features/embarques/constants/estadoEmbarqueLabels`.
-2. Calcular una sola vez al inicio del componente:
-   - `const siguienteLabel = labelEstadoEmbarque(siguienteEstado);`
-   - `const actualLabel = labelEstadoEmbarque(estadoVisual);`
-3. Sustituir todas las apariciones de `{siguienteEstado}` por `{siguienteLabel}` (botón principal, tooltip, título del alert de documentos faltantes) y `{estadoVisual}` por `{actualLabel}` en la descripción del confirm dialog.
-4. Se conservan las props `siguienteEstado` / `estadoVisual` con el valor de BD (para no romper llamadores ni la lógica interna) — sólo cambia lo mostrado.
+### 2. Máquina de estados (migración schema)
+Reemplazar la función que valida transiciones (`20260718214722_...`) para que:
+- `Borrador → Confirmado` (transición directa nueva).
+- Eliminar `Borrador → Cotización` y `Cotización → *`.
+- Si algún registro llega con `estado = 'Cotización'` (edge case), permitir sólo `→ Borrador` o `→ Confirmado` como salida de rescate.
 
-## Sin cambios
+### 3. Constantes / helpers UI
+- `src/features/embarques/constants/embarqueConstants.ts`: quitar `'Cotización'` de los arrays de orden (`ORDEN_ESTADOS`, stepper visual, filtros por defecto).
+- `src/features/embarques/constants/estadoEmbarqueLabels.ts`: eliminar el mapeo `Cotización → "Propuesta"` (ya no se muestra). Dejar helper `labelEstadoEmbarque` tolerante por si aparece dato viejo (fallback: "Propuesta (deprecado)").
+- `AvanzarEstadoButton.tsx`: siguiente estado desde Borrador ahora es Confirmado.
 
-- No se toca `getSiguienteEstado`, ni RPCs, ni el mapa `ESTADO_EMBARQUE_LABELS`.
-- No se afecta lógica de negocio ni de permisos.
+### 4. Dashboards y parsers
+- `src/features/dashboard/domain/parsers/dashboard.ts` + `dashboardTypes.ts`: quitar `Cotización` del conteo por estado (o mantener con 0 hasta la próxima limpieza — decidir en implementación por compat de gráficas).
+- `src/lib/ui/estadoConfig.ts`: quitar entrada `Cotización` de la config visual.
 
-## Versión
+### 5. Tests
+- `src/features/embarques/constants/__tests__/estados-embarque-sync.test.ts`: ajustar snapshot.
+- `src/features/dashboard/domain/parsers/__tests__/dashboard.test.ts`: recalcular llaves esperadas.
+- `src/features/dashboard/hooks/__tests__/useDashboardController.test.tsx`: igual.
+- Nuevo test unitario: `Borrador → Confirmado` es transición válida; `Borrador → Cotización` es inválida.
 
-Bump `APP_VERSION` a `13.303.20` + entrada breve en `CHANGELOG.md` describiendo el fix de la etiqueta del botón.
+### 6. Documentación / versión
+- Bump `APP_VERSION` a `13.303.21`.
+- Entrada en `CHANGELOG.md` explicando el cambio y la migración del embarque afectado.
+
+## Fuera de alcance (explícito)
+
+- **No** se elimina el valor `'Cotización'` del enum `estado_embarque` (deuda técnica documentada).
+- **No** se tocan RPCs de conversión COT→Embarque; el embarque nace en `Borrador` como hoy.
+- **No** se modifica el módulo de Cotizaciones (documento comercial COT-XXXX).
+
+## Riesgos y mitigación
+
+| Riesgo | Mitigación |
+|---|---|
+| Reportes históricos que agrupan por `Cotización` | Se mantiene la llave con conteo 0; sin ruptura visual. |
+| Código externo que aún escriba `Cotización` | La máquina de estados en BD rechaza la transición. |
+| Snapshots/tests con el estado viejo | Actualizados en esta misma entrega. |
+
+## Verificación post-implementación
+
+1. `bun run lint -- --max-warnings 0`
+2. `bunx vitest run` (particular atención a dashboard y estados).
+3. Manual: abrir un embarque en Borrador → botón dice "Avanzar a Confirmado".
+4. Query: `SELECT COUNT(*) FROM embarques WHERE estado = 'Cotización'` debe devolver 0.
