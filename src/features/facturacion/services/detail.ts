@@ -87,6 +87,8 @@ const COLUMNS = [
   "folio_fiscal",
   "serie",
   "facturapi_id",
+  "facturapi_claim_at",
+
   "dias_credito",
   "ambiente",
   "acuse_cancelacion_xml",
