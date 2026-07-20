@@ -281,6 +281,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .update({
       numero: numeroFinal,
       facturapi_id: facturapiId,
+      facturapi_claim_at: null,
       uuid_fiscal: uuid,
       folio_fiscal: folio,
       serie: serieTimbrada,
@@ -296,6 +297,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     .eq("facturapi_id", claimTag)
     .select("id")
     .maybeSingle();
+
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
   if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; verifica el estado en Facturapi.", facturapi_id: facturapiId, uuid }, 409);
 
