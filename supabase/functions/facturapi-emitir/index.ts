@@ -16,14 +16,9 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 // `getFacturapiClient`.
 import { resolveFacturapiKey } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
-import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
-import {
-  FACTURAPI_BASE, buildFacturapiPayload, validateContext,
-  type FacturaContext,
-} from "./helpers.ts";
-import { respaldarXmlEmitido } from "./respaldarXml.ts";
-import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
+import { getFacturapiClient } from "../_shared/facturapiClient.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { loadFactura, validarTipoCambio, claimFactura, resolverSustitucion, cargarContexto, emitirYActualizar, type FacturaRow } from "./emitir.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -37,8 +32,6 @@ interface ReqBody { factura_id?: string }
 Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
-
-
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return jsonResponse({ error: "unauthorized" }, 401);
@@ -54,271 +47,38 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   const body = (await req.json().catch(() => ({}))) as ReqBody;
   if (!body.factura_id) return jsonResponse({ error: "factura_id_required" }, 400);
 
-  // Cargar factura + cliente + conceptos
-  const { data: factura, error: fErr } = await supabase
-    .from("facturas")
-    .select("id, numero, serie, estado, moneda, tipo_cambio, uso_cfdi, forma_pago, metodo_pago, cliente_id, rfc_cliente, organization_id, facturapi_id, sustituye_a, embarque_id, expediente, referencia_bl")
-    .eq("id", body.factura_id)
-    .maybeSingle();
-  if (fErr || !factura) return jsonResponse({ error: "factura_not_found", detail: fErr?.message }, 404);
+  const factura = await loadFactura(supabase, body.factura_id);
+  if (factura instanceof Response) return factura;
   if (factura.facturapi_id) return jsonResponse({ error: "ya_timbrada", message: "Esta factura ya fue timbrada en Facturapi." }, 409);
 
   if (!(await authorizeOrgMembership(supabase, userData.user.id, factura.organization_id))) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
-  // v13.171.0 / Fase I v13.301.80 — Guard: facturas en moneda extranjera requieren
-  // TC real capturado. Se rechaza NULL, ≤0 y TC == 1 exacto (que suele venir del
-  // borrador y saldría al SAT como CFDI subvaluado).
-  const monedaFactura = factura.moneda ?? "MXN";
-  const tcFactura = factura.tipo_cambio == null ? null : Number(factura.tipo_cambio);
-  const tcInvalido =
-    tcFactura == null || !Number.isFinite(tcFactura) || tcFactura <= 0 || tcFactura === 1;
-  if (monedaFactura !== "MXN" && tcInvalido) {
-    return jsonResponse({
-      error: "tipo_cambio_requerido",
-      message: `Captura el tipo de cambio del día (DOF) antes de timbrar la factura en ${monedaFactura}.`,
-    }, 422);
-  }
+  const tcCheck = validarTipoCambio(factura);
+  if (tcCheck) return tcCheck;
 
-  // v13.303.0 (FIX-04): CLAIM ATÓMICO anti doble-timbrado.
-  // El guard previo (`if factura.facturapi_id`) no protege contra dos requests
-  // concurrentes: ambos leen `null` y timbran dos CFDI. Reclamamos la fila con
-  // un UUID temporal `PENDING:<uuid>` en la MISMA columna que después llevará
-  // el id real. El índice único `uq_facturas_facturapi_id` garantiza que sólo
-  // un caller gana; el resto ve 0 filas actualizadas y responde 409. Si falla
-  // el timbrado o el UPDATE final, liberamos el claim.
-  const claimTag = `PENDING:${crypto.randomUUID()}`;
-  const claimAt = new Date().toISOString();
-  const { data: claimed, error: claimErr } = await supabase
-    .from("facturas")
-    .update({ facturapi_id: claimTag, facturapi_claim_at: claimAt })
-    .eq("id", body.factura_id)
-    .is("facturapi_id", null)
-    .select("id")
-    .maybeSingle();
-  if (claimErr) return jsonResponse({ error: "claim_failed", detail: claimErr.message }, 500);
-  if (!claimed) return jsonResponse({ error: "ya_timbrada", message: "Otro usuario ya está timbrando esta factura." }, 409);
+  const claim = await claimFactura(supabase, body.factura_id);
+  if (claim instanceof Response) return claim;
 
-  // A partir de aquí, cualquier salida temprana debe liberar el claim.
-  // v13.303.2 (FIX-04.1): también limpia `facturapi_claim_at` para que el sweep
-  // no considere el claim como huérfano.
-  const releaseClaim = async () => {
-    await supabase
-      .from("facturas")
-      .update({ facturapi_id: null, facturapi_claim_at: null })
-      .eq("id", body.factura_id)
-      .eq("facturapi_id", claimTag);
-  };
+  const sustituyeUuid = await resolverSustitucion(supabase, factura, claim.release);
+  if (sustituyeUuid instanceof Response) return sustituyeUuid;
 
-
-  // Si esta factura sustituye a otra, resolver su UUID para relación SAT 04.
-  let sustituyeUuid: string | null = null;
-  if (factura.sustituye_a) {
-    const { data: prev } = await supabase
-      .from("facturas").select("uuid_fiscal").eq("id", factura.sustituye_a).maybeSingle();
-    if (!prev?.uuid_fiscal) {
-      await releaseClaim();
-      return jsonResponse({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422);
-    }
-    sustituyeUuid = prev.uuid_fiscal as string;
-  }
-
-
-
-
-  // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
   const resolved = await getFacturapiClient(supabase, factura.organization_id);
   if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
-  const facturapi = resolved.data.client;
 
+  const context = await cargarContexto(supabase, body.factura_id, factura, sustituyeUuid, claim.claimTag);
+  if (context instanceof Response) return context;
 
-
-  const { data: cliente, error: cErr } = await supabase
-    .from("clientes")
-    .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default")
-    .eq("id", factura.cliente_id)
-    .maybeSingle();
-  if (cErr || !cliente) return jsonResponse({ error: "cliente_not_found", detail: cErr?.message }, 404);
-
-  const { data: conceptos, error: conErr } = await supabase
-    .from("conceptos_factura")
-    .select("descripcion, cantidad, precio_unitario, clave_sat, clave_unidad, tipo_iva, tasa_iva_aplicada, tasa_ret_isr, tasa_ret_iva")
-    .eq("factura_id", body.factura_id);
-  if (conErr) return jsonResponse({ error: "conceptos_query_failed", detail: conErr.message }, 500);
-
-  // α.1 — Validación estricta de claves SAT: no permitir timbrar con clave vacía.
-  // Antes había fallback silencioso a "81141601" que hacía que todos los CFDIs
-  // salieran con clave incorrecta sin avisar al usuario.
-  const conceptosSinClave = (conceptos ?? []).filter((c) => !c.clave_sat || String(c.clave_sat).trim() === "");
-  if (conceptosSinClave.length > 0) {
-    return jsonResponse({
-      error: "clave_sat_faltante",
-      message: `Hay ${conceptosSinClave.length} concepto(s) sin clave SAT (c_ClaveProdServ). Asigna la clave correcta antes de timbrar.`,
-    }, 422);
-  }
-
-  const { data: contactoData } = await supabase
-    .from("contactos_cliente")
-    .select("email")
-    .eq("cliente_id", factura.cliente_id)
-    .eq("es_principal", true)
-    .maybeSingle();
-
-  // v13.208.0 — Referencias del embarque: expediente + BL Master + BL House.
-  // Prioridad: datos del embarque vinculado → fallback a los campos snapshot
-  // en la propia factura (`facturas.expediente`, `facturas.referencia_bl`).
-  let refExpediente: string | null = factura.expediente ?? null;
-  let refBlMaster: string | null = null;
-  let refBlHouse: string | null = factura.referencia_bl ?? null;
-  if (factura.embarque_id) {
-    const { data: emb } = await supabase
-      .from("embarques")
-      .select("expediente, bl_master, bl_house")
-      .eq("id", factura.embarque_id)
-      .maybeSingle();
-    if (emb) {
-      refExpediente = emb.expediente ?? refExpediente;
-      refBlMaster = emb.bl_master ?? null;
-      refBlHouse = emb.bl_house ?? refBlHouse;
-    }
-  }
-
-  const ctx: FacturaContext = {
-    serie: factura.serie ?? null,
-    forma_pago: factura.forma_pago ?? "",
-    metodo_pago: factura.metodo_pago ?? "PUE",
-    uso_cfdi: factura.uso_cfdi ?? cliente.uso_cfdi_default ?? "",
-    moneda: factura.moneda ?? "MXN",
-    tipo_cambio: Number(factura.tipo_cambio ?? 1),
-    receptor: {
-      legal_name: cliente.nombre,
-      tax_id: factura.rfc_cliente ?? cliente.rfc ?? "",
-      tax_system: cliente.regimen_fiscal ?? "",
-      address: { zip: cliente.codigo_postal ?? "" },
-      email: contactoData?.email ?? null,
-    },
-    conceptos: (conceptos ?? []).map((c) => ({
-      descripcion: c.descripcion,
-      cantidad: Number(c.cantidad),
-      precio_unitario: Number(c.precio_unitario),
-      clave_sat: c.clave_sat,
-      // α.1 — Lee clave_unidad de la fila; helpers todavía usa "E48" como fallback defensivo
-      // en caso de que la fila legacy no tenga el campo poblado.
-      clave_unidad: (c as { clave_unidad?: string | null }).clave_unidad ?? "E48",
-      unidad: "Unidad de servicio",
-      tipo_iva: (c.tipo_iva as "gravado_16" | "tasa_0" | "exento" | null) ?? "gravado_16",
-      tasa_iva: c.tasa_iva_aplicada != null ? Number(c.tasa_iva_aplicada) : 0.16,
-      tasa_ret_isr: c.tasa_ret_isr != null ? Number(c.tasa_ret_isr) : 0,
-      tasa_ret_iva: c.tasa_ret_iva != null ? Number(c.tasa_ret_iva) : 0,
-    })),
-    sustituye_uuid: sustituyeUuid,
-    referencias: {
-      expediente: refExpediente,
-      bl_master: refBlMaster,
-      bl_house: refBlHouse,
-    },
-    // v13.303.2 (FIX-04.1) — se envía a FacturAPI como `external_id` para poder
-    // recuperar el CFDI si perdemos la respuesta antes del UPDATE final.
-    external_id: claimTag,
-  };
-
-
-
-  const issues = validateContext(ctx);
-  if (issues.length > 0) { await releaseClaim(); return jsonResponse({ error: "validation_failed", issues }, 422); }
-
-
-  const payload = buildFacturapiPayload(ctx);
-
-  // Emisión vía SDK oficial facturapi-node.
-  interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
-  let invoice: FapiInvoice;
-  try {
-    invoice = await facturapi.invoices.create(payload) as FapiInvoice;
-  } catch (err) {
-    await releaseClaim();
-    const { status, detail } = describeFacturapiError(err);
-
-    await registrarBitacoraEdge(supabase, {
-      organizationId: factura.organization_id,
-      usuarioId: userData.user.id,
-      usuarioEmail: userData.user.email,
-      modulo: "facturacion",
-      accion: "facturapi_emitir_failed",
-      entidadId: body.factura_id,
-      entidadNombre: factura.numero ?? "",
-      detalles: { status, response: detail },
-    });
-    const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
-    return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
-  }
-  const fapiJson = invoice;
-
-  const facturapiId: string = fapiJson.id;
-  const uuid: string = fapiJson.uuid;
-  const folio: number = fapiJson.folio_number ?? fapiJson.folio ?? 0;
-  const serieTimbrada: string = fapiJson.series ?? ctx.serie ?? "";
-  const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
-  const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
-
-  // Ola 3 · Item 5 — Respaldo automático del XML al bucket `facturas`.
-  // Best-effort: no bloquea el timbrado si falla; se puede reintentar después.
-  const respaldo = await respaldarXmlEmitido({
-    supabase, apiKey: resolved.data.apiKey,
-    facturapiId, organizationId: factura.organization_id,
-    facturaId: body.factura_id, uuid,
-  });
-
-  // v13.146.0 — el `numero` interno se asigna aquí, no al crear el borrador.
-  // FacturAPI es source of truth para folio y serie. El formato mantiene
-  // `<serie><folio>` para compatibilidad con reportes/búsquedas existentes.
-  // v13.303.0 (FIX-04): el UPDATE final está condicionado a `facturapi_id = claimTag`
-  // para cerrar el claim atómico y no pisar accidentalmente otro timbrado.
-  const numeroFinal = `${serieTimbrada}${folio}`;
-  const { error: updErr, data: updRow } = await supabase
-    .from("facturas")
-    .update({
-      numero: numeroFinal,
-      facturapi_id: facturapiId,
-      facturapi_claim_at: null,
-      uuid_fiscal: uuid,
-      folio_fiscal: folio,
-      serie: serieTimbrada,
-      factura_pdf_url: pdfUrl,
-      factura_xml_url: xmlUrl,
-      factura_xml_backup_path: respaldo.path,
-      estado: "Emitida",
-      ambiente: resolved.data.ambiente,
-      timbrado_en: new Date().toISOString(),
-      timbrado_por: userData.user.id,
-    })
-    .eq("id", body.factura_id)
-    .eq("facturapi_id", claimTag)
-    .select("id")
-    .maybeSingle();
-
-  if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
-  if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; verifica el estado en Facturapi.", facturapi_id: facturapiId, uuid }, 409);
-
-
-  await registrarBitacoraEdge(supabase, {
-    organizationId: factura.organization_id,
-    usuarioId: userData.user.id,
-    usuarioEmail: userData.user.email,
-    modulo: "facturacion",
-    accion: "facturapi_emitida",
-    entidadId: body.factura_id,
-    entidadNombre: numeroFinal,
-    detalles: {
-      uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
-      xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null },
-    },
-  });
-
-  return jsonResponse({
-    uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId,
-    pdf_url: pdfUrl, xml_url: xmlUrl,
-    xml_backup: respaldo,
+  return emitirYActualizar({
+    supabase,
+    facturapi: resolved.data.client,
+    apiKey: resolved.data.apiKey,
+    ambiente: resolved.data.ambiente,
+    ctx: context,
+    factura: factura as FacturaRow,
+    facturaId: body.factura_id,
+    user: { id: userData.user.id, email: userData.user.email ?? "" },
+    claim,
   });
 }));

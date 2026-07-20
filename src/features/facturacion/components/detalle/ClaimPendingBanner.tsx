@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
 interface Props {
   facturaId: string;
@@ -61,7 +62,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt }:
       if (info.tono === "success") toast.success(info.titulo, { description });
       else if (info.tono === "error") toast.error(info.titulo, { description });
       else toast.info(info.titulo, { description });
-      await qc.invalidateQueries({ queryKey: ["factura", facturaId] });
+      await qc.invalidateQueries({ queryKey: facturasKeys.detail(facturaId) });
     } catch (err) {
       toast.error("No se pudo recuperar el timbrado", {
         description: err instanceof Error ? err.message : String(err),
