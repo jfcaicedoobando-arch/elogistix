@@ -41,6 +41,8 @@ interface Props {
   onModoExpedienteChange?: (modo: 'nuevo' | 'existente') => void;
   expedienteSeleccionado?: ExpedienteCliente | null;
   onSeleccionarExpediente?: (exp: ExpedienteCliente) => void;
+  /** Cuando es false, se oculta el bloque de expediente (crear/asociar). Default: true. */
+  mostrarSelectorExpediente?: boolean;
 }
 
 export function StepDatosGenerales({
