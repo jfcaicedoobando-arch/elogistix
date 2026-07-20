@@ -123,7 +123,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                       </td>
                       <td className="py-1.5 px-2">
                         {c.tipo_contenedor
-                          ? <Badge variant="secondary">{c.tipo_contenedor}</Badge>
+                          ? <Badge variant="secondary">{resolveTipoContenedorNombre(c.tipo_contenedor, tiposContenedor)}</Badge>
                           : <span className="text-muted-foreground">—</span>}
                       </td>
                       {mostrarBLHouse && (
