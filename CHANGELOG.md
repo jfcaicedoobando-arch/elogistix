@@ -1,4 +1,17 @@
 # Changelog
+## [13.303.9] - 2026-07-20
+- **Fix captura de fechas (auditoría UX)** — usuarios reportaban que "batallan para ingresar fecha". Se corrigen 4 bugs transversales:
+  - **`todayLocalISO()` (nuevo)** en `src/lib/date/today.ts` reemplaza al patrón `new Date().toISOString().slice(0, 10)` en 46 archivos de producción (defaults de formularios, filtros, vencimientos, exports CSV). El patrón viejo devolvía el día en UTC → entre 18:00 y 23:59 hora local de México (UTC−6) ya caía en el día siguiente, corriendo "hoy" un día durante ~6 h diarias en `VenceBadge`, `HallazgosTabla`, `useSnoozeHallazgo`, `MarcarLlegadaForm`, `DialogRegistrarPago`, `Cxp*`, `Costeo*`, dashboards CRM y otros.
+  - **`isoToDisplay` / `isoToDate` defensivos** (`date-picker-mx-helpers.ts`): si a `DatePickerMx` le llega un timestamp `YYYY-MM-DDTHH:MM:SSZ` (p.ej. desde columnas `timestamptz`), antes mostraba basura tipo `20T00:00:00+00:00/07/2026`. Ahora recorta al head fecha y valida el patrón antes de renderizar.
+  - **`DatePickerMx` — props nuevas** (`disabled`, `readOnly`, `min`, `max`, `errorText`, `id`, `name`): los formularios pueden bloquear el picker durante `isPending`, limitar el rango (`max={hoy}` para llegadas/pagos, `min={hoy}` para ETAs) y mostrar el mensaje de error debajo del input en lugar de solo `sr-only`. Cableado en `ActualizarEtaForm` y `MarcarLlegadaForm`.
+  - **Blur tolerante**: escribir `2/3/2026` (sin ceros) ahora se acepta al perder foco vía `parseFlexible` — antes solo se aceptaba al pegar; al teclear se revertía silenciosamente.
+  - **Calendario con selector de año/mes** (`Calendar` shadcn): `captionLayout="dropdown"` + `startMonth={1900}` / `endMonth={2100}` para saltar rápido a fechas históricas o futuras sin miles de clics.
+  - **Migración de 7 `<input type="date">` nativos** a `DatePickerMx` (formato del SO ≠ formato de la app): `Cartera.tsx`, `CxpPorPagar.tsx`, `ComprasNotasCredito.tsx`, `ComprasPagos.tsx`, `ComprasReportes.tsx`, `FacturapiCredencialesForm.tsx`, `ProgramacionPagoRow.tsx`.
+  - **Fix `TrackingNuevoEventoForm`**: dejó de convertir `YYYY-MM-DD` → `Date` local → `toISOString()` antes de guardar `fecha_llegada_real` (la columna es `date`, no `timestamptz`). Ese round-trip agregaba +6 h y corrompía re-lecturas posteriores del picker.
+  - **Refactor**: `DatePickerMx` (240 líneas) → `date-picker-mx.tsx` (191) + `date-picker-mx-calendar.tsx` (68) para respetar el límite Power-of-10.
+  - **Tests**: `today.test.ts` (regresión "hoy 23:30 local ≠ mañana UTC") y `datePickerMxHelpers.test.ts` ampliado (defensivo ante `T`/zona).
+
+
 ## [13.303.8] - 2026-07-20
 - **Fix Sentry `JAVASCRIPT-REACT-30`** (`record "v_emb" has no field "pnl"`, `/embarques`) — el rewrite de `validar_cierre_embarque` en v13.303.0 dejó `(v_emb.pnl->>'utilidad')` accediendo a `embarques.pnl`, que no existe como columna (el P&L se calcula vía RPC `pnl_financiero_embarque`). El detalle de embarque tronaba al cargar `cierre-validacion`.
   - Migración: `validar_cierre_embarque` ahora llama a `public.pnl_financiero_embarque(p_embarque_id)` dentro de un `BEGIN/EXCEPTION` y toma `utilidad_mxn` (fallback `utilidad`, luego `0`).
