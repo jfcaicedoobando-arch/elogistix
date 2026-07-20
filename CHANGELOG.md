@@ -1,4 +1,10 @@
 # Changelog
+## [13.303.12] - 2026-07-20
+- **Sprint 0 · Cierre de bugs residuales (FIX-04/32, FIX-06, FIX-07).**
+  - **FIX-04/32 (timeout FacturApi):** el SDK `facturapi@4.18.0` no soporta `AbortSignal`; una red colgada dejaba la Edge Function ocupada ~150 s y el claim `PENDING:<uuid>` bloqueado. Nuevo helper `withFacturapiTimeout(op, promise, 30_000)` + clase `FacturapiTimeoutError` en `supabase/functions/_shared/facturapiClient.ts`. Se envolvieron `invoices.create` (`facturapi-emitir/emitir.ts`, con liberación de claim + bitácora `facturapi_emitir_timeout` y respuesta HTTP 504) e `invoices.list` (`facturapi-recuperar-claim/recuperar.ts`, HTTP 504).
+  - **FIX-06 (`.env` en git):** `.gitignore` ahora bloquea `.env` y `.env.*` (excepto `.env.example`). El archivo sigue trackeado en el historial; ejecutar `git rm --cached .env` fuera del sandbox y rotar cualquier secreto que haya vivido allí. Los valores de producción viven en Lovable Cloud (secrets de edge functions), no en `.env`.
+  - **FIX-07 (path legacy de conversión):** eliminada la función `convertirCotizacionAEmbarques` (6 awaits sin transacción desde el cliente) junto con sus helpers `insertarCostosEmbarque` / `insertarVentasEmbarque`, el hook `useConvertirCotizacionAEmbarques`, el handler `handleGenerarEmbarques` y sus re-exports/tests. Toda conversión pasa ahora exclusivamente por `useCrearEmbarqueBorrador` → RPC transaccional `crear_embarque_borrador_desde_cotizacion(uuid)` (idempotente + protegida por `uq_cotizaciones_embarque_unico`).
+
 ## [13.303.11] - 2026-07-20
 - **Fix CI (2 guardas desactualizadas)** — sin cambios de producto.
   - `ClaimPendingBanner.tsx`: reemplazado `toast.error(...)` por `notifyError(...)` para cumplir el estándar del proyecto (enganche Sentry + botón "Ver detalles").
