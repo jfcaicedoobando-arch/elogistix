@@ -81,14 +81,46 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
     }, 422);
   }
 
+  // v13.303.0 (FIX-04): CLAIM ATÓMICO anti doble-timbrado.
+  // El guard previo (`if factura.facturapi_id`) no protege contra dos requests
+  // concurrentes: ambos leen `null` y timbran dos CFDI. Reclamamos la fila con
+  // un UUID temporal `PENDING:<uuid>` en la MISMA columna que después llevará
+  // el id real. El índice único `uq_facturas_facturapi_id` garantiza que sólo
+  // un caller gana; el resto ve 0 filas actualizadas y responde 409. Si falla
+  // el timbrado o el UPDATE final, liberamos el claim.
+  const claimTag = `PENDING:${crypto.randomUUID()}`;
+  const { data: claimed, error: claimErr } = await supabase
+    .from("facturas")
+    .update({ facturapi_id: claimTag })
+    .eq("id", body.factura_id)
+    .is("facturapi_id", null)
+    .select("id")
+    .maybeSingle();
+  if (claimErr) return jsonResponse({ error: "claim_failed", detail: claimErr.message }, 500);
+  if (!claimed) return jsonResponse({ error: "ya_timbrada", message: "Otro usuario ya está timbrando esta factura." }, 409);
+
+  // A partir de aquí, cualquier salida temprana debe liberar el claim.
+  const releaseClaim = async () => {
+    await supabase
+      .from("facturas")
+      .update({ facturapi_id: null })
+      .eq("id", body.factura_id)
+      .eq("facturapi_id", claimTag);
+  };
+
   // Si esta factura sustituye a otra, resolver su UUID para relación SAT 04.
   let sustituyeUuid: string | null = null;
   if (factura.sustituye_a) {
     const { data: prev } = await supabase
       .from("facturas").select("uuid_fiscal").eq("id", factura.sustituye_a).maybeSingle();
-    if (!prev?.uuid_fiscal) return jsonResponse({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422);
+    if (!prev?.uuid_fiscal) {
+      await releaseClaim();
+      return jsonResponse({ error: "sustituida_sin_uuid", message: "La factura sustituida no tiene UUID fiscal." }, 422);
+    }
     sustituyeUuid = prev.uuid_fiscal as string;
   }
+
+
 
 
   // Multi-tenant: instanciar SDK de FacturApi para esta organización (v13.136.4).
