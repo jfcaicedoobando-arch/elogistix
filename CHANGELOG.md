@@ -1,5 +1,8 @@
 # Changelog
 # Changelog
+## [13.303.31] - 2026-07-20
+- **UX · la rueda del mouse ya no cambia el valor de inputs numéricos.** Se parchó el componente base `src/components/ui/input.tsx` para que, cuando `type="number"`, el handler `onWheel` desenfoque momentáneamente el campo y lo re-enfoque en el siguiente tick. Con esto se elimina el cambio accidental de montos, cantidades o tasas al scrollear la página con el cursor sobre un campo. Aplica globalmente a los 77 inputs numéricos de la app sin tocarlos uno por uno.
+
 ## [13.303.30] - 2026-07-20
 - **UX · inputs numéricos de mercancía en editar embarque ya no muestran flechas de incremento/decremento.** Se aplicó el patrón anti-spinner de Tailwind (`[appearance:textfield]`) a los campos de Peso (kg), Volumen (m³) y Piezas en `BloqueMercancia.tsx`, alineándose con el estilo ya usado en `TarifaNumerosVigenciaFields.tsx`. No se cambia el tipo de input ni el flujo de `react-hook-form`.
 
