@@ -1,4 +1,7 @@
 # Changelog
+## [13.303.20] - 2026-07-20
+- **Fix · el botón "Avanzar a Cotización" del header del embarque seguía mostrando el nombre crudo del enum de BD.** v13.303.17 renombró cosméticamente el estado a "Propuesta" en stepper/filtros/chips, pero `AvanzarEstadoButton` interpolaba `siguienteEstado`/`estadoVisual` sin pasar por `labelEstadoEmbarque`. Ahora el botón, el tooltip, el diálogo de confirmación y el alert de documentos faltantes muestran "Propuesta". Sin cambios en la lógica de transición: props siguen recibiendo el valor de BD ("Cotización").
+
 ## [13.303.19] - 2026-07-20
 - **Fix · CI (RLS suite) fallaba en rojo por migración inaplicable.** La migración `20260720222427` (parte de v13.303.15) referenciaba `c.dias_almacenaje` en `crear_embarque_borrador_core` y en el backfill de COT-2026-0138, pero esa columna sólo existe en `public.embarques`, no en `public.cotizaciones`. Resultado: `Apply migrations` fallaba con `ERROR: column c.dias_almacenaje does not exist` y el job `rls-suites` quedaba en `skipped`, marcando el workflow como fallido.
   - **Nueva migración:** recrea la RPC sin `dias_almacenaje` (el campo del embarque queda en su default `0`, como antes de v13.303.15) y re-ejecuta el backfill de COT-2026-0138 sin la línea ofensiva.
