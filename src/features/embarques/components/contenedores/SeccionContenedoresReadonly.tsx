@@ -37,6 +37,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [], isLoading, error } =
     useContenedoresEmbarque(embarqueId);
+  const { data: tiposContenedor = [] } = useTiposContenedor();
 
   const irAEditar = () => navigate(`/embarques/${embarqueId}/editar?step=2`);
 
