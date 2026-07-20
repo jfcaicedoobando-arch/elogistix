@@ -1,5 +1,6 @@
 /**
- * Tests para `crearCotizacion` — boundary zod, folio, error propagation.
+ * Tests para `crearCotizacion` — boundary zod, folio atómico vía RPC, error propagation.
+ * v13.303.0: folio se genera vía `supabase.rpc("siguiente_folio_cotizacion")`.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -8,12 +9,8 @@ const mock = await vi.hoisted(async () => {
   return createSupabaseMock();
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
-vi.mock("../../queries", () => ({
-  generarFolioCotizacion: vi.fn().mockResolvedValue("COT-2026-0001"),
-}));
 
 import { crearCotizacion } from "../crear";
-import { generarFolioCotizacion } from "../../queries";
 import type { CreateCotizacionInput } from "@/features/cotizacion/types";
 
 const baseInput: CreateCotizacionInput = {
@@ -48,12 +45,14 @@ const baseInput: CreateCotizacionInput = {
 };
 
 beforeEach(() => {
+  mock.resetResults();
   mock.tableCalls.length = 0;
-  vi.mocked(generarFolioCotizacion).mockClear().mockResolvedValue("COT-2026-0001");
+  mock.rpcCalls.length = 0;
+  mock.setRpcResult("siguiente_folio_cotizacion", { data: "COT-2026-0001", error: null });
 });
 
 describe("crearCotizacion", () => {
-  it("happy path: genera folio, inserta y devuelve la cotización", async () => {
+  it("happy path: pide folio a la RPC, inserta y devuelve la cotización", async () => {
     mock.setTableResult("cotizaciones", {
       data: { id: "cot-1", folio: "COT-2026-0001", estado: "Borrador" },
       error: null,
@@ -61,7 +60,21 @@ describe("crearCotizacion", () => {
     const r = await crearCotizacion(baseInput);
     expect(r.id).toBe("cot-1");
     expect(r.folio).toBe("COT-2026-0001");
-    expect(generarFolioCotizacion).toHaveBeenCalledOnce();
+    expect(mock.rpcCalls).toHaveLength(1);
+    expect(mock.rpcCalls[0].fn).toBe("siguiente_folio_cotizacion");
+  });
+
+  it("falla si la RPC devuelve error", async () => {
+    mock.setRpcResult("siguiente_folio_cotizacion", {
+      data: null,
+      error: { message: "LC_ORG_NO_RESUELTA" },
+    });
+    await expect(crearCotizacion(baseInput)).rejects.toThrow();
+  });
+
+  it("falla si la RPC devuelve payload vacío o no-string", async () => {
+    mock.setRpcResult("siguiente_folio_cotizacion", { data: null, error: null });
+    await expect(crearCotizacion(baseInput)).rejects.toThrow(/folio/i);
   });
 
   it("propaga error de Supabase en el insert", async () => {
@@ -98,9 +111,9 @@ describe("crearCotizacion", () => {
     await expect(crearCotizacion({ ...baseInput, modo: "" })).rejects.toThrow(/Modo/);
   });
 
-  it("no llama insert si la validación falla", async () => {
+  it("no pide folio ni insert si la validación falla", async () => {
     await expect(crearCotizacion({ ...baseInput, cliente_nombre: "" })).rejects.toThrow();
     expect(mock.tableCalls).toHaveLength(0);
-    expect(generarFolioCotizacion).not.toHaveBeenCalled();
+    expect(mock.rpcCalls).toHaveLength(0);
   });
 });
