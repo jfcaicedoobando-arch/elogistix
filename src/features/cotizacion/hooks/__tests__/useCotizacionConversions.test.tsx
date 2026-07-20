@@ -8,12 +8,10 @@ afterEach(() => {
 
 
 const convertirProspectoACliente = vi.hoisted(() => vi.fn());
-const convertirCotizacionAEmbarques = vi.hoisted(() => vi.fn());
 const crearEmbarqueBorradorDesdeCotizacion = vi.hoisted(() => vi.fn());
 
 vi.mock("@/features/cotizacion/services", () => ({
   convertirProspectoACliente,
-  convertirCotizacionAEmbarques,
   crearEmbarqueBorradorDesdeCotizacion,
 }));
 
@@ -31,7 +29,6 @@ vi.mock("@/lib/query", () => ({
 
 import {
   useConvertirProspectoACliente,
-  useConvertirCotizacionAEmbarques,
   useCrearEmbarqueBorrador,
 } from "../useCotizacionConversions";
 
@@ -45,14 +42,8 @@ describe("useConvertirProspectoACliente", () => {
   });
 });
 
-describe("useConvertirCotizacionAEmbarques", () => {
-  it("error path: propaga el error", async () => {
-    convertirCotizacionAEmbarques.mockRejectedValueOnce(new Error("fail"));
-    const { result } = renderHook(() => useConvertirCotizacionAEmbarques(), { wrapper: createWrapper() });
-    result.current.mutate({ id: "cot-1", num_contenedores: 1 } as never);
-    await waitFor(() => expect(result.current.isError).toBe(true));
-  });
-});
+// FIX-07 (v13.303.12) — el hook `useConvertirCotizacionAEmbarques` se eliminó;
+// toda conversión pasa por `useCrearEmbarqueBorrador` (RPC transaccional).
 
 describe("useCrearEmbarqueBorrador", () => {
   it("happy path: llama al servicio con cotizacionId", async () => {
