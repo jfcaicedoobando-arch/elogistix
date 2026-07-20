@@ -17,6 +17,9 @@ import {
   Warehouse,
   PackageCheck,
   FileCheck,
+  FileText,
+  Loader2,
+  MapPin,
   ClipboardCheck,
   Archive,
   XCircle,
@@ -54,6 +57,32 @@ const DEFAULT_VISUAL: EstadoVisual = {
 
 export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
   // ───── Estados de embarque ─────
+  "Cotización": {
+    ...DEFAULT_VISUAL,
+    badge: "bg-muted text-muted-foreground border border-border",
+    icon: FileText,
+    gradient: "from-muted to-muted/80",
+  },
+  "En Proceso": {
+    badge: "bg-warning/15 text-warning border border-warning/30",
+    borderLeft: "border-l-warning",
+    bar: "bg-warning",
+    icon: Loader2,
+    gradient: "from-warning to-warning/80",
+    border: "border-warning",
+    text: "text-warning",
+    glow: "shadow-[0_0_20px_hsl(var(--warning)/0.25)]",
+  },
+  "Llegada": {
+    badge: "bg-state-arribo/15 text-state-arribo border border-state-arribo/30",
+    borderLeft: "border-l-state-arribo",
+    bar: "bg-state-arribo",
+    icon: MapPin,
+    gradient: "from-state-arribo to-state-arribo/80",
+    border: "border-state-arribo",
+    text: "text-state-arribo",
+    glow: "shadow-[0_0_20px_hsl(var(--state-arribo)/0.25)]",
+  },
   Confirmado: {
     badge: "bg-info/15 text-info border border-info/30",
     borderLeft: "border-l-info",
