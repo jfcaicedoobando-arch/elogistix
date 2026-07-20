@@ -101,7 +101,7 @@ export function BloqueVinculacion({
         )}
       </div>
 
-      {clienteId && tieneExpedientes && (
+      {permiteExpediente && clienteId && tieneExpedientes && (
         <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
           <Label className="text-sm font-medium">Expediente</Label>
           <RadioGroup
