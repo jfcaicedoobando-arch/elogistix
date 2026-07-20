@@ -58,9 +58,8 @@ vi.mock("@/components/shared/utils/appFeedback", () => ({
 vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
-vi.mock("@/hooks/shared/usePermissions", () => ({
-  usePermissions: () => ({ canCrearEmbarqueLibre: true }),
-}));
+// v13.303.26 — canCrearEmbarqueLibre eliminado; se conserva mock vacío por si hay imports transitivos.
+
 vi.mock("../useNuevoEmbarqueExpediente", () => ({
   useNuevoEmbarqueExpediente: () => ({
     modoExpediente: "nuevo",
