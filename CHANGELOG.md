@@ -1,5 +1,8 @@
 # Changelog
 # Changelog
+## [13.303.33] - 2026-07-20
+- Embarques marítimos: peso, volumen y piezas totales ya no se capturan en el paso 1; se calculan automáticamente sumando los datos por contenedor del paso 2. Aéreo y terrestre mantienen los campos como antes.
+
 ## [13.303.32] - 2026-07-20
 - Inputs numéricos: al enfocar un campo con valor `0` se limpia automáticamente para escribir sin el cero inicial; si queda vacío al salir, se restaura a `0`.
 
