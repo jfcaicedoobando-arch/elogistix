@@ -37,16 +37,19 @@ export function EstadoProgresoCard({ currentStepIndex, arribado = false }: Props
         </div>
 
         <div className="mt-2 flex items-center gap-1.5">
-          {ESTADOS_EMBARQUE.map((estado, i) => (
-            <div
-              key={estado}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i <= currentStepIndex ? "bg-accent" : "bg-muted"
-              }`}
-              title={estado}
-              aria-label={estado}
-            />
-          ))}
+          {ESTADOS_EMBARQUE.map((estado, i) => {
+            const label = labelEstadoEmbarque(estado);
+            return (
+              <div
+                key={estado}
+                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                  i <= currentStepIndex ? "bg-accent" : "bg-muted"
+                }`}
+                title={label}
+                aria-label={label}
+              />
+            );
+          })}
         </div>
 
         {/* Fallback accesible: barra continua */}
