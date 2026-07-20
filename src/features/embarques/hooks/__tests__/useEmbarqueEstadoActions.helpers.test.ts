@@ -1,40 +1,44 @@
 import { describe, it, expect } from "vitest";
-import { resolveCierreGate, clasificarBloqueoAvance } from "../useEmbarqueEstadoActions.helpers";
+import { getSiguienteEstado } from "@/features/embarques/hooks/useEmbarqueEstadoActions.helpers";
 
-describe("resolveCierreGate", () => {
-  it("devuelve null cuando el cierre no es visible", () => {
-    expect(resolveCierreGate(false, true, true)).toBeNull();
+/**
+ * v13.302.10 — Regresión requestId c80465e4.
+ * `getSiguienteEstado` debe respetar el happy path de la máquina de estados
+ * de BD (mig. 20260718214722): Borrador → Cotización → Confirmado → En
+ * Tránsito → En Aduana → Llegada → Arribo → Entregado → EIR → Cerrado.
+ */
+describe("getSiguienteEstado — happy path alineado con máquina de estados BD", () => {
+  it("Borrador → Cotización", () => {
+    expect(getSiguienteEstado("Borrador")).toBe("Cotización");
   });
-  it("devuelve 'rol' cuando el cierre es visible y el rol no puede cerrar", () => {
-    expect(resolveCierreGate(true, false, true)).toBe("rol");
+  it("Cotización → Confirmado", () => {
+    expect(getSiguienteEstado("Cotización")).toBe("Confirmado");
   });
-  it("devuelve 'checklist' cuando el rol puede pero la validación no pasa", () => {
-    expect(resolveCierreGate(true, true, false)).toBe("checklist");
+  it("Confirmado → En Tránsito", () => {
+    expect(getSiguienteEstado("Confirmado")).toBe("En Tránsito");
   });
-  it("devuelve null cuando todo está OK", () => {
-    expect(resolveCierreGate(true, true, true)).toBeNull();
+  it("En Tránsito → En Aduana", () => {
+    expect(getSiguienteEstado("En Tránsito")).toBe("En Aduana");
   });
-});
-
-describe("clasificarBloqueoAvance", () => {
-  const base = { docsBloqueantes: false, docsFaltantesCount: 0, siguiente: "Confirmado", bloqueoCierreMotivo: null, fechaLlegadaReal: null };
-  it("block_docs cuando docs son bloqueantes y faltan", () => {
-    expect(clasificarBloqueoAvance({ ...base, docsBloqueantes: true, docsFaltantesCount: 2 })).toBe("block_docs");
+  it("En Aduana → Llegada (regresión requestId c80465e4)", () => {
+    expect(getSiguienteEstado("En Aduana")).toBe("Llegada");
   });
-  it("warn_docs cuando docs no son bloqueantes pero faltan", () => {
-    expect(clasificarBloqueoAvance({ ...base, docsBloqueantes: false, docsFaltantesCount: 1 })).toBe("warn_docs");
+  it("Llegada → Arribo", () => {
+    expect(getSiguienteEstado("Llegada")).toBe("Arribo");
   });
-  it("gate_cierre cuando siguiente es Cerrado y hay bloqueo de cierre", () => {
-    expect(clasificarBloqueoAvance({ ...base, siguiente: "Cerrado", bloqueoCierreMotivo: "checklist" })).toBe("gate_cierre");
+  it("Arribo → Entregado", () => {
+    expect(getSiguienteEstado("Arribo")).toBe("Entregado");
   });
-  it("block_fecha_llegada cuando siguiente es Arribo y falta fecha_llegada_real", () => {
-    expect(clasificarBloqueoAvance({ ...base, siguiente: "Arribo", fechaLlegadaReal: null })).toBe("block_fecha_llegada");
+  it("Entregado → EIR", () => {
+    expect(getSiguienteEstado("Entregado")).toBe("EIR");
   });
-  it("ok cuando siguiente es Arribo y hay fecha_llegada_real", () => {
-    expect(clasificarBloqueoAvance({ ...base, siguiente: "Arribo", fechaLlegadaReal: "2026-07-01" })).toBe("ok");
+  it("EIR → Cerrado", () => {
+    expect(getSiguienteEstado("EIR")).toBe("Cerrado");
   });
-  it("ok cuando no hay bloqueos", () => {
-    expect(clasificarBloqueoAvance(base)).toBe("ok");
+  it("Cerrado no tiene siguiente", () => {
+    expect(getSiguienteEstado("Cerrado")).toBeNull();
   });
-
+  it("estado desconocido retorna null", () => {
+    expect(getSiguienteEstado("Inexistente")).toBeNull();
+  });
 });
