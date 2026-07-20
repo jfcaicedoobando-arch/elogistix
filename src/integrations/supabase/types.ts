@@ -8122,6 +8122,10 @@ export type Database = {
           garantias_atoradas: number
         }[]
       }
+      siguiente_folio_cotizacion: {
+        Args: { p_org_id: string }
+        Returns: string
+      }
       siguiente_folio_proveedor: { Args: { p_org_id: string }; Returns: string }
       sincronizar_contenedores_embarque: {
         Args: { p_contenedores: Json; p_embarque_id: string }
