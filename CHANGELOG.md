@@ -3,6 +3,14 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.10] - 2026-07-20
+- **Fix — "Avanzar estado" proponía `En Aduana → Entregado` (inválido)**:
+  - `ESTADOS_EMBARQUE` (UI) estaba desincronizada con la máquina de estados de BD (mig. `20260718214722`): faltaban `Cotización` y `Llegada`, y el orden entre `En Tránsito`, `En Aduana`, `Llegada` y `Arribo` estaba mal. `getSiguienteEstado('En Aduana')` devolvía `Entregado` y la BD rebotaba con `LC_TRANSICION_INVALIDA`.
+  - Constante alineada al happy path canónico: `Borrador → Cotización → Confirmado → En Tránsito → En Aduana → Llegada → Arribo → Entregado → EIR → Cerrado`. `ESTADOS_ACTIVOS` también incluye ahora `Cotización` y `Llegada`.
+  - `EMPTY_CONTEO` y `parseConteoPorEstado` del dashboard actualizados con las nuevas llaves.
+  - Nuevos tests: `useEmbarqueEstadoActions.helpers.test.ts` (cobertura completa del happy path) y guardrail `estados-embarque-sync.test.ts` para blindar futuras desincronizaciones.
+  - Reporte del usuario: `requestId c80465e4-58c1-4e54-a601-82f25b011e97`.
+
 ## [13.302.9] - 2026-07-20
 - **Fix — auto-sync de estado forzaba `Borrador → En Tránsito`**:
   - `calcularEstadoEmbarque` sólo excluía estados terminales (`ESTADOS_MANUALES`), así que un embarque en `Borrador` o `Cotización` con ETD vencido se recalculaba como `En Tránsito`. El `useAutoSyncEstadoEmbarque` disparaba entonces una transición inválida y la máquina de estados (mig. `20260718214722`) rebotaba con `LC_TRANSICION_INVALIDA: Borrador → En Tránsito`.
