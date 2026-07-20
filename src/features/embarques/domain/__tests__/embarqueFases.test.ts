@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { calcularFasesEmbarque, type EmbarqueFasesInput } from "../embarqueFases";
 
 const base: EmbarqueFasesInput = {
@@ -14,10 +14,11 @@ const base: EmbarqueFasesInput = {
 };
 
 describe("calcularFasesEmbarque", () => {
-  it("devuelve 5 fases en orden canónico", () => {
+  it("devuelve 8 fases en orden canónico v13.303.22", () => {
     const fases = calcularFasesEmbarque(base);
     expect(fases.map((f) => f.id)).toEqual([
-      "cotizacion", "confirmado", "en_transito", "llegada", "cerrado",
+      "cotizacion", "confirmado", "en_transito",
+      "arribo", "en_aduana", "entregado", "eir", "cerrado",
     ]);
   });
 
@@ -31,19 +32,29 @@ describe("calcularFasesEmbarque", () => {
     expect(fases[0].estado).toBe("completada");
   });
 
-  it("marca llegada completada cuando hay fecha_llegada_real", () => {
+  it("marca arribo como actual cuando estado=Arribo y hay fecha_llegada_real", () => {
     const fases = calcularFasesEmbarque({
       ...base,
       estado: "Arribo",
       fecha_llegada_real: "2026-02-01",
     });
+    // Índice 3 = "arribo" en el nuevo orden.
     expect(fases[3].estado).toBe("actual");
+  });
+
+  it("marca EIR como fase propia (v13.303.22)", () => {
+    const fases = calcularFasesEmbarque({ ...base, estado: "EIR" });
+    // Índice 6 = "eir".
+    expect(fases[6].estado).toBe("actual");
+    // Y todas las anteriores completadas.
+    expect(fases[5].estado).toBe("completada");
   });
 
   it("marca cerrado actual cuando estado=Cerrado", () => {
     const fases = calcularFasesEmbarque({ ...base, estado: "Cerrado" });
-    expect(fases[4].estado).toBe("actual");
-    expect(fases[4].fecha).toBe(base.updated_at);
+    // Índice 7 = "cerrado" en el nuevo orden.
+    expect(fases[7].estado).toBe("actual");
+    expect(fases[7].fecha).toBe(base.updated_at);
   });
 
   it("marca en_transito como actual con etd pasado y eta futuro (marítimo importación)", () => {
