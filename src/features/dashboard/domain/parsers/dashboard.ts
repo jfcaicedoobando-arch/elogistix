@@ -36,6 +36,7 @@ export function parseConteoPorEstado(stats: DashboardStats): Record<EstadoFiltro
     "Cotización": Number(raw["Cotización"] ?? 0),
     Confirmado: Number(raw["Confirmado"] ?? 0),
     "En Tránsito": Number(raw["En Tránsito"] ?? 0),
+    "En Proceso": Number(raw["En Proceso"] ?? 0),
     "En Aduana": Number(raw["En Aduana"] ?? 0),
     Llegada: Number(raw["Llegada"] ?? 0),
     Arribo: Number(raw["Arribo"] ?? 0),

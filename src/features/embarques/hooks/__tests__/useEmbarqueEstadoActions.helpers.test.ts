@@ -41,4 +41,10 @@ describe("getSiguienteEstado — happy path alineado con máquina de estados BD"
   it("estado desconocido retorna null", () => {
     expect(getSiguienteEstado("Inexistente")).toBeNull();
   });
+  // v13.302.11 — `En Proceso` es un estado lateral del grafo BD. Si
+  // getSiguienteEstado retornara null el botón "Avanzar estado" desaparecería
+  // dejando al operador atorado.
+  it("En Proceso → En Aduana (estado lateral del grafo BD)", () => {
+    expect(getSiguienteEstado("En Proceso")).toBe("En Aduana");
+  });
 });

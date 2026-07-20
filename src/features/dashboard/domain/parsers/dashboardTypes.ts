@@ -99,6 +99,7 @@ export const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
   "Cotización": 0,
   Confirmado: 0,
   "En Tránsito": 0,
+  "En Proceso": 0,
   "En Aduana": 0,
   Llegada: 0,
   Arribo: 0,

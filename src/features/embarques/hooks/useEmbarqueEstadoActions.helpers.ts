@@ -1,6 +1,18 @@
 import { ESTADOS_EMBARQUE } from "@/features/embarques/constants/embarqueConstants";
 
+/**
+ * Estados laterales del grafo que no forman parte del happy path lineal en
+ * `ESTADOS_EMBARQUE` pero que sí deben poder avanzar por UI. Mapean al
+ * siguiente estado válido según `transicion_embarque_valida` (mig.
+ * `20260718214722`). Sin esto, `getSiguienteEstado` retorna null y el botón
+ * "Avanzar estado" desaparece dejando al operador atorado. v13.302.11.
+ */
+const SIGUIENTE_LATERAL: Record<string, string> = {
+  "En Proceso": "En Aduana",
+};
+
 export function getSiguienteEstado(estadoActual: string) {
+  if (SIGUIENTE_LATERAL[estadoActual]) return SIGUIENTE_LATERAL[estadoActual];
   const idx = (ESTADOS_EMBARQUE as readonly string[]).indexOf(estadoActual);
   if (idx < 0 || idx >= ESTADOS_EMBARQUE.length - 1) return null;
   return ESTADOS_EMBARQUE[idx + 1];
