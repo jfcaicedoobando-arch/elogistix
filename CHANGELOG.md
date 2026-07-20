@@ -1,4 +1,11 @@
 # Changelog
+## [13.303.1] - 2026-07-20
+- **Revisión de Fase A · Sprint 0**: al auditar el release `13.303.0` aparecieron dos huecos y varias inexactitudes en el registro:
+  - **Bug real — folio buggy seguía vivo en 2 flujos**: `crearCotizacion` sí pasó a la RPC atómica, pero `useCrearCotizacionDesdeOportunidad` (CRM: convertir oportunidad → cotización) y `crearCotizacionInformativa` seguían llamando a la vieja `generarFolioCotizacion` con `MAX(folio)` lexicográfico. Fix: la función `generarFolioCotizacion` de `services/cotizacion/queries.ts` ahora delega en `supabase.rpc("siguiente_folio_cotizacion")`; los dos callers quedan cubiertos sin cambiarles nada.
+  - **Tests desactualizados**: `crear.test.ts` mockeaba el helper viejo — su assertion `toHaveBeenCalledOnce()` habría dado falso verde. Rehecho contra `mock.setRpcResult("siguiente_folio_cotizacion", …)`; añadidos casos para payload vacío, error de la RPC y para confirmar que ni la RPC ni el insert se llaman si zod falla. `queries.test.ts` reemplaza los tests de `MAX+1` por casos que verifican el nuevo camino RPC.
+  - **CHANGELOG del 13.303.0 corregido**: los nombres reales de los índices son `uq_cotizaciones_org_folio` y `uq_cotizaciones_embarque_id` (no `uq_cotizaciones_folio_org` / `uq_cotizaciones_embarque_unico`); no existe `uq_proformas_facturada_unica` — la protección anti doble-conversión de proformas se apoya en `SELECT … FOR UPDATE` + guard `estado_proforma = 'facturada'` + `idempotency_claim` dentro de la RPC, no en un índice.
+  - **Recomendaciones no aplicadas todavía** (documentadas para el siguiente sprint): (a) no hay recuperación de claims huérfanos `PENDING:<uuid>` en `facturas.facturapi_id` si el edge function muere entre el claim y el UPDATE final — hoy se resuelve manualmente; conviene un cron / RPC que libere claims con más de N minutos que no aparezcan en Facturapi. (b) falta test de integración para el claim atómico en `facturapi-emitir` (mock del SDK para probar 409 en carrera y liberación en error de FacturApi).
+
 
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
