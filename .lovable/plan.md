@@ -1,67 +1,30 @@
-## Diagnóstico
+## Objetivo
+Ocultar el bloque "Crear nuevo expediente / Asociar a expediente existente" cuando se está **editando** un embarque. En la edición ese bebé ya está bautizado: mostrar de nuevo los radios solo confunde y además no tienen handlers funcionales en `EditarEmbarque.tsx`.
 
-**Analogía:** El embarque ELIMP00333 sí tiene "novia" (COT-2026-0138) — la vinculación existe en BD. El problema es que el formulario de **editar** llega a la pantalla como si estuviera soltero y encima el buscador sólo muestra "solteras disponibles" (estado `Aceptada`), no las que ya están casadas con un embarque (estado `En operación`).
+En **crear-embarque** el bloque se mantiene tal cual.
 
-### Verificado con lecturas previas
+## Cambios
 
-- **BD:** `embarques.cotizacion_id = 5fe12c7f-…` apunta correctamente a COT-2026-0138.
-- **COT-2026-0138** está en estado `En operación` (correcto — así quedó desde v13.303.16 cuando se creó el embarque).
-- **`EditarEmbarque.tsx`** llama a `StepDatosGenerales` **sin pasar** `cotizacionVinculada`, `cotizacionesAceptadas`, ni los handlers de vincular/desvincular. Sin esos props:
-  - `cotizacionVinculada` queda `undefined` → aparece el banner "Cotización requerida" y el label rojo.
-  - El botón "Buscar cotización aceptada…" se muestra vacío.
-- **`fetchCotizacionesAceptadas`** filtra `.eq("estado", "Aceptada")` — como COT-2026-0138 ya está en `En operación`, nunca aparecería en el dropdown aunque el edit lo llenara.
+1. **`StepDatosGenerales.tsx`**
+   - Añadir prop opcional `mostrarSelectorExpediente?: boolean` (default `true`).
+   - Pasarla a `BloqueVinculacion` como `permiteExpediente`.
 
-### Causa raíz
+2. **`BloqueVinculacion.tsx`**
+   - Aceptar `permiteExpediente?: boolean` (default `true`).
+   - Cuando sea `false`, no renderizar la sección de Expediente (radios "Crear nuevo" / "Asociar existente" y su input asociado).
+   - La sección de Cotización sigue visible en ambos flujos.
 
-El wizard de "Editar embarque" **nunca hidrata la vinculación de cotización**. Fue diseñado como si la vinculación sólo existiera al crear. Al agregar en v13.303.16 el cambio de estado `Aceptada → En operación`, el problema se hizo visible: no hay forma de "re-vincular" la misma cotización porque ya no está en la lista de aceptadas.
+3. **`EditarEmbarque.tsx`**
+   - Pasar `mostrarSelectorExpediente={false}` al `StepDatosGenerales`.
 
----
+4. **`APP_VERSION`** → `13.303.25`.
 
-## Plan de arreglo (v13.303.23)
+5. **`CHANGELOG.md`** (root): entrada `## [13.303.25]` con bullet:
+   - UX: al editar un embarque se oculta el selector de expediente (crear/asociar), que ya no aplica una vez el embarque está asignado.
 
-### 1. Hidratar la cotización vinculada al editar
+## Fuera de alcance
+- No se toca la lógica de creación de expedientes en el flujo de nuevo embarque.
+- No se elimina código de `BloqueVinculacion`; solo se hace condicional para poder reutilizarlo.
 
-En `useEditarEmbarqueWizard`:
-- Leer `embarque.cotizacion_id`.
-- Con `useCotizacion(embarque.cotizacion_id)` obtener el registro completo.
-- Exponer `cotizacionVinculada` (y opcionalmente `handleDesvincularCotizacion` reutilizando `useNuevoEmbarqueCotVinculada` o un helper equivalente).
-
-En `EditarEmbarque.tsx`:
-- Pasar `cotizacionVinculada`, `cotizacionesAceptadas` (vía `useCotizacionesAceptadas`) y los handlers a `StepDatosGenerales`.
-
-Resultado: el usuario ve el badge verde "✓ Vinculada a COT-2026-0138 — Cliente" y el banner de "Cotización requerida" desaparece.
-
-### 2. Incluir cotizaciones "En operación" en el buscador
-
-En `fetchCotizacionesAceptadas` (`src/features/cotizacion/services/queries.ts`):
-- Cambiar `.eq("estado", "Aceptada")` por `.in("estado", ["Aceptada", "En operación"])`.
-
-Motivo: si el usuario **desvincula** en el edit y quiere re-vincular la misma cotización, debe seguir apareciendo. También cubre el caso de re-uso legítimo cuando un embarque se elimina y la cotización queda "En operación" temporalmente.
-
-### 3. Ajustar tests afectados
-
-- `src/features/cotizacion/services/__tests__/queries.test.ts`: actualizar assertion del `.eq("estado", …)` → `.in("estado", […])`.
-- Agregar test en `EditarEmbarque` / `useEditarEmbarqueWizard` que verifique que `cotizacionVinculada` se hidrata desde `embarque.cotizacion_id`.
-
-### 4. Versión y changelog
-
-- `APP_VERSION` → `13.303.23`.
-- Entrada en `CHANGELOG.md`.
-
-### Archivos a tocar
-
-```text
-src/features/embarques/hooks/useEditarEmbarqueWizard.ts   ← hidratar cotización + handlers
-src/features/embarques/routes/EditarEmbarque.tsx          ← pasar props al Step
-src/features/cotizacion/services/queries.ts               ← .in(["Aceptada","En operación"])
-src/features/cotizacion/services/__tests__/queries.test.ts
-src/features/embarques/hooks/__tests__/useEditarEmbarqueWizard.test.tsx  (nuevo o extendido)
-src/constants/appVersion.ts
-CHANGELOG.md
-```
-
-### Fuera de alcance
-
-- No se toca la máquina de estados de cotizaciones ni la BD.
-- No se cambia el comportamiento del wizard "Nuevo embarque".
-- No se modifica la política de qué roles requieren cotización obligatoria.
+## Analogía
+En "crear embarque" el expediente es el bautizo: eliges nombre nuevo o lo apellidas con una familia existente. En "editar embarque" el bebé ya está bautizado — repetir esos radios solo confunde. Los ocultamos ahí.
