@@ -84,11 +84,14 @@ export async function fetchCotizacionById(id: string): Promise<CotizacionRow | n
 }
 
 export async function fetchEmbarquesVinculados(cotizacionId: string) {
+  // Sólo embarques vivos: si un embarque fue soft-deleted (deleted_at != null),
+  // no debe seguir bloqueando la re-conversión de la cotización.
   return unwrapOr(
     supabase
       .from("embarques")
       .select("id, expediente, estado, created_at")
       .eq("cotizacion_id", cotizacionId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: true }),
     [],
   );
