@@ -1,4 +1,11 @@
 # Changelog
+## [13.303.10] - 2026-07-20
+- **Fix CI (4 tests desactualizados)** — sincronizadas las guardas con cambios previos ya integrados; sin cambios de producto.
+  - `sentry-edge-coverage.test.ts` / `sentry-edge-wrapping.test.ts`: agregado `facturapi-recuperar-claim` (v13.303.2) a `WRAPPED_COVERAGE` y `CRITICAL`.
+  - `useEmbarqueEstadoActions.test.tsx > getSiguienteEstado`: expectativas actualizadas a la secuencia oficial `Borrador → Cotización → Confirmado → En Tránsito → En Aduana → Llegada → Arribo → Entregado → EIR → Cerrado` (v13.302.10) + aserción del lateral `En Proceso → En Aduana` (v13.302.11).
+  - `dashboard.test.ts > parseConteoPorEstado`: `toEqual` extendido a las 9 llaves de `EMPTY_CONTEO` (incluye `Cotización`, `En Proceso`, `Llegada`).
+  - `cxp-multimoneda-fase-l.test.ts`: marker más específico (`ADD COLUMN IF NOT EXISTS monto_en_moneda_factura`) para que `readLatestContaining` no resuelva al `validar_cierre_embarque` de v13.303.8 que sólo referencia la columna en un SELECT.
+
 ## [13.303.9] - 2026-07-20
 - **Fix captura de fechas (auditoría UX)** — usuarios reportaban que "batallan para ingresar fecha". Se corrigen 4 bugs transversales:
   - **`todayLocalISO()` (nuevo)** en `src/lib/date/today.ts` reemplaza al patrón `new Date().toISOString().slice(0, 10)` en 46 archivos de producción (defaults de formularios, filtros, vencimientos, exports CSV). El patrón viejo devolvía el día en UTC → entre 18:00 y 23:59 hora local de México (UTC−6) ya caía en el día siguiente, corriendo "hoy" un día durante ~6 h diarias en `VenceBadge`, `HallazgosTabla`, `useSnoozeHallazgo`, `MarcarLlegadaForm`, `DialogRegistrarPago`, `Cxp*`, `Costeo*`, dashboards CRM y otros.
