@@ -105,6 +105,9 @@ describe("reportCaughtError", () => {
     reportCaughtError(pgError, { feature: "embarques", op: "create" });
     await flush();
     expect(mocks.captureException).not.toHaveBeenCalled();
+  });
+
+
 
   it("descarta P0001 con prefijo LC_ (errores de dominio esperados)", async () => {
     const pgError = {
