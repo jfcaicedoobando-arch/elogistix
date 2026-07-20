@@ -1,4 +1,7 @@
 # Changelog
+## [13.303.6] - 2026-07-20
+- **Fix CI `audits`** — `FacturaDetalleView.tsx` (209 líneas) superaba el límite Power-of-10. Se extrajo `FacturaDetalleBody.tsx` con las secciones intermedias (Emisor/Receptor, Resumen, Timbrado, Editables, Conceptos, Totales, Pagos, NC, Bitácora). La vista raíz queda en ~90 líneas sin cambios de lógica ni de props públicas.
+
 ## [13.303.5] - 2026-07-20
 - **Optimización CI + ESLint** — reducción esperada del wall-time de PR de ~14 min a ~6-7 min y ~50% menos minutos-runner facturados:
   - **`.github/workflows/ci.yml`**: el job monolítico `quality` (serial, ~12 min) se dividió en 5 jobs paralelos: `lint`, `typecheck`, `knip`, `audits`, `build`. El wall-time queda dominado por el job más lento (~3 min) en vez de la suma.
