@@ -53,7 +53,9 @@ Deno.serve(wrapEdgeHandler("facturapi-recuperar-claim", async (req) => {
 
   const match = await buscarCfdiPorExternalId(resolved.data.client as FapiClient, claimTag, factura.facturapi_claim_at);
   if (match instanceof Response) return match;
-  if (match?.id && match.uuid) return promoverFactura(supabase, factura, match, claimTag, user, resolved.data.ambiente);
+  if (match?.id && match.uuid) {
+    return promoverFactura({ supabase, factura, match, claimTag, user, ambiente: resolved.data.ambiente });
+  }
 
   return liberarClaim(supabase, factura, claimTag, edadMin, user);
 }));
