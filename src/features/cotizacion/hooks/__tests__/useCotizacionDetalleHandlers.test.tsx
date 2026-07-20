@@ -11,7 +11,7 @@ import { createWrapper } from "@/test/utils/queryWrapper";
 const {
   navigateMock, toastFn,
   actualizarEstadoMutateAsync, convertirProspectoMutateAsync,
-  convertirAEmbarquesMutateAsync, crearBorradorMutateAsync,
+  crearBorradorMutateAsync,
   sincronizarEtapaMock, propagarConversionMock,
   notifyErrorMock, notifySuccessMock,
   registrarActividadMutate,
@@ -21,7 +21,6 @@ const {
   toastFn: vi.fn(),
   actualizarEstadoMutateAsync: vi.fn(),
   convertirProspectoMutateAsync: vi.fn(),
-  convertirAEmbarquesMutateAsync: vi.fn(),
   crearBorradorMutateAsync: vi.fn(),
   sincronizarEtapaMock: vi.fn(),
   propagarConversionMock: vi.fn(),
@@ -48,7 +47,6 @@ vi.mock("@/integrations/supabase/client", () => ({
 vi.mock("@/features/cotizacion/hooks/useCotizaciones", () => ({
   useUpdateEstadoCotizacion: () => ({ mutateAsync: actualizarEstadoMutateAsync }),
   useConvertirProspectoACliente: () => ({ mutateAsync: convertirProspectoMutateAsync, isPending: false }),
-  useConvertirCotizacionAEmbarques: () => ({ mutateAsync: convertirAEmbarquesMutateAsync, isPending: false }),
   useCrearEmbarqueBorrador: () => ({ mutateAsync: crearBorradorMutateAsync, isPending: false }),
 }));
 vi.mock("@/features/crm/services/vincularCotizacion", () => ({
@@ -125,15 +123,9 @@ describe("useCotizacionDetalleHandlers", () => {
     expect(result.current.showConvertir).toBe(false);
   });
 
-  it("handleGenerarEmbarques cierra confirmación al éxito", async () => {
-    convertirAEmbarquesMutateAsync.mockResolvedValue(undefined);
-    const { result } = renderHook(() => useCotizacionDetalleHandlers(cot()), { wrapper: createWrapper() });
-    act(() => result.current.setShowConfirmarConvertir(true));
-    await act(async () => { await result.current.handleGenerarEmbarques(); });
-    expect(convertirAEmbarquesMutateAsync).toHaveBeenCalled();
-    expect(result.current.showConfirmarConvertir).toBe(false);
-    expect(notifySuccessMock).toHaveBeenCalled();
-  });
+  // FIX-07 (v13.303.12) — `handleGenerarEmbarques` (path legacy multi-await)
+  // se eliminó del hook; toda conversión pasa ahora por `handleCrearBorrador`
+  // (RPC transaccional). Ya no hay test para el path removido.
 
   it("handleCrearBorrador navega al embarque creado", async () => {
     crearBorradorMutateAsync.mockResolvedValue("emb-99");
