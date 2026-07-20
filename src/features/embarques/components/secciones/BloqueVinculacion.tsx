@@ -24,6 +24,8 @@ interface Props {
   onSeleccionarExpediente?: (exp: ExpedienteCliente) => void;
   /** Cuando es true, vincular cotización es obligatorio (controlado por rol del usuario). */
   requiereCotizacion?: boolean;
+  /** Cuando es false, se oculta el bloque de expediente (crear/asociar). Default: true. */
+  permiteExpediente?: boolean;
 }
 
 export function BloqueVinculacion({
