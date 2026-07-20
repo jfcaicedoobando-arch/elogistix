@@ -2,6 +2,15 @@
 
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
+## [13.303.0] - 2026-07-20
+- **Fase A · Sprint 0 de la auditoría de código y business logic** (basada en `correcciones-elogistix-lovable.md`):
+  - **FIX-01/06 — Higiene de credenciales**: se eliminaron los scripts `debug-login*.cjs` y `audit-tmp.cjs` que quedaron en la raíz con credenciales de prueba embebidas, y se añadió `.env.example` con placeholders seguros para documentar las variables públicas de Vite.
+  - **FIX-05 — Folio de cotización atómico** (bug latente): la generación anterior tomaba `MAX(folio)` en orden lexicográfico, lo que causaba race conditions y hacía que `COT-YYYY-10000` colisionara con `COT-YYYY-9999` (porque `"10000" < "9999"` como texto). Migración: RPC `public.siguiente_folio_cotizacion()` `SECURITY DEFINER` respaldada por `folio_secuencias` (`UPSERT ... RETURNING ultimo_numero`), deduplicación previa de folios duplicados existentes en `cotizaciones` (renombrados con sufijo `-DUP-<n>` para no perderlos) e índice único parcial `uq_cotizaciones_folio_org` sobre `(organization_id, folio) WHERE deleted_at IS NULL`. `crearCotizacion` ahora llama a la RPC.
+  - **FIX-04 — Claim atómico anti doble-timbrado**: `facturapi-emitir` marcaba el guard `factura.facturapi_id` con un `SELECT` previo, pero dos requests concurrentes podían pasar el guard y timbrar dos CFDI. Migración: índice único `uq_facturas_facturapi_id` sobre `(facturapi_id) WHERE facturapi_id IS NOT NULL`. Edge Function: antes de llamar al SDK se reclama la fila con `UPDATE ... SET facturapi_id = 'PENDING:<uuid>' WHERE facturapi_id IS NULL`; si 0 filas → 409. En error o validación fallida se libera el claim; el UPDATE final está condicionado a `facturapi_id = claimTag` para no pisar otro timbrado.
+  - **FIX-16 — `validar_cierre_embarque` reforzada**: la RPC ahora suma pagos a proveedor en la moneda facturada real (no siempre MXN), excluye conceptos borrados y facturas canceladas de proveedor, y muestra el detalle por concepto en el desglose que ve el usuario.
+  - **FIX-03 — Anti-duplicado en conversión de proformas a factura**: `convertir_proformas_a_factura` marca cada proforma origen con `estado='facturada'` y `facturada_en=now()` en la misma transacción; nuevo índice único parcial `uq_proformas_facturada_unica` evita que la misma proforma se vuelva a convertir mientras esté viva.
+  - **FIX-07/21 — Anti doble conversión cotización → embarque**: índice único parcial `uq_cotizaciones_embarque_unico` sobre `(id) WHERE embarque_id IS NOT NULL AND deleted_at IS NULL`, para bloquear a nivel BD el escenario en el que dos usuarios convierten la misma cotización a embarques distintos.
+
 
 ## [13.302.12] - 2026-07-20
 - **Fix — `validar_cierre_embarque` truena con `column pp.factura_id does not exist`** (Sentry `JAVASCRIPT-REACT-2Y`):
