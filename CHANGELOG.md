@@ -1,4 +1,7 @@
 # Changelog
+## [13.303.28] - 2026-07-20
+- **Fusión de tipos de contacto del cliente: "Proveedor" desaparece, todo queda como "Exportador".** En jerga de forwarder son sinónimos (el que embarca desde origen). Migración: 22 contactos existentes con `tipo='Proveedor'` reetiquetados a `Exportador`; enum `tipo_contacto` reducido a `('Exportador','Importador')`. UI del alta/edición de contacto, tabla de contactos del cliente y filtro Shipper del wizard ya sólo hablan de Exportador/Importador. No afecta a la tabla `proveedores` (nuestros proveedores logísticos), que vive en otro dominio.
+
 ## [13.303.27] - 2026-07-20
 - **Filtro semántico en Shipper/Consignatario del wizard de embarque.** Los dropdowns ya no listan a los contactos del cliente marcados como "Proveedor" (cadena de suministro del cliente): Shipper sólo muestra `Exportador`, Consignatario sólo `Importador`. Se conservan "Mismo cliente" y "Otro (escribir manualmente)". Si no hay contactos del tipo esperado, se muestra un item deshabilitado guiando al usuario a "Otro". No se migran embarques legacy — los ids ya guardados se siguen resolviendo por id, sin importar el tipo.
 
