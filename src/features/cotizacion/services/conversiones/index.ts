@@ -3,6 +3,6 @@
  */
 export { convertirProspectoACliente } from "./prospecto";
 export type { ProspectoAClienteInput } from "./prospecto";
-export { convertirCotizacionAEmbarques, crearEmbarqueBorradorDesdeCotizacion } from "./embarques";
+export { crearEmbarqueBorradorDesdeCotizacion } from "./embarques";
 export { portalResponderCotizacion } from "./portal";
 

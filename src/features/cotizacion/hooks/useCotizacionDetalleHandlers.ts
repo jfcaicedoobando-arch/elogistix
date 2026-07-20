@@ -5,7 +5,6 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
-  useConvertirCotizacionAEmbarques,
   useCrearEmbarqueBorrador,
   type CotizacionRow,
 } from "@/features/cotizacion/hooks/useCotizaciones";
@@ -29,7 +28,6 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
   const navigate = useNavigate();
   const actualizarEstado = useUpdateEstadoCotizacion();
   const convertirProspecto = useConvertirProspectoACliente();
-  const convertirAEmbarques = useConvertirCotizacionAEmbarques();
   const crearBorrador = useCrearEmbarqueBorrador();
   const registrarActividad = useRegistrarActividad();
 
@@ -139,19 +137,9 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
   };
 
 
-  const handleGenerarEmbarques = async () => {
-    if (!cotizacion) return;
-    const ok = await validarCostosOBloquear(cotizacion.id, "generar_embarques");
-    if (!ok) return;
-    try {
-      await convertirAEmbarques.mutateAsync(cotizacion);
-      notifySuccess(toast, { title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
-      setShowConfirmarConvertir(false);
-    } catch (err: unknown) {
-      if (manejarErrorRevalidacion(err, "HANDLE_GENERAR_EMBARQUES")) return;
-      notifyError(toast, { title: "Error al generar embarques", description: getErrorMessage(err), error: err, method: "HANDLE_GENERAR_EMBARQUES" });
-    }
-  };
+  // FIX-07 (v13.303.12) — `handleGenerarEmbarques` (multi-await sin
+  // transacción) se removió. La UI usa `handleCrearBorrador` que llama a la
+  // RPC transaccional `crear_embarque_borrador_desde_cotizacion`.
 
   const handleCrearBorrador = async () => {
     if (!cotizacion) return;
@@ -182,11 +170,9 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     handleCambiarEstado,
     abrirDialogConvertir,
     handleConvertir,
-    handleGenerarEmbarques,
     handleCrearBorrador,
     irACargarCostos,
     convertirProspecto,
-    convertirAEmbarques,
     crearBorrador,
   };
 }

@@ -3,7 +3,7 @@
  * con el límite de líneas y funciones. No contiene routing ni HTTP.
  */
 import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getFacturapiClient, describeFacturapiError, type FacturapiClient } from "../_shared/facturapiClient.ts";
+import { getFacturapiClient, describeFacturapiError, withFacturapiTimeout, FacturapiTimeoutError, type FacturapiClient } from "../_shared/facturapiClient.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
 import {
@@ -174,9 +174,19 @@ export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
   interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
   let invoice: FapiInvoice;
   try {
-    invoice = await facturapi.invoices.create(payload) as FapiInvoice;
+    // FIX-04/32 — timeout defensivo: si FacturApi cuelga, liberamos el claim
+    // y devolvemos 504 en vez de dejar la Edge Function ocupada 150 s.
+    invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
   } catch (err) {
     await claim.release();
+    if (err instanceof FacturapiTimeoutError) {
+      await registrarBitacoraEdge(supabase, {
+        organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
+        accion: "facturapi_emitir_timeout", entidadId: facturaId, entidadNombre: factura.numero ?? "",
+        detalles: { op: err.op, timeout_ms: err.timeoutMs },
+      });
+      return jsonResponse({ error: "facturapi_timeout", message: err.message, timeout_ms: err.timeoutMs }, 504);
+    }
     const { status, detail } = describeFacturapiError(err);
     await registrarBitacoraEdge(supabase, {
       organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",

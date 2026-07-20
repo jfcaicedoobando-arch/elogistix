@@ -1,10 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { queryKeys } from '@/lib/query';
-import type { CotizacionRow } from '@/features/cotizacion/types';
 import {
   convertirProspectoACliente,
-  convertirCotizacionAEmbarques,
   crearEmbarqueBorradorDesdeCotizacion,
   type ProspectoAClienteInput,
 } from '@/features/cotizacion/services';
@@ -33,23 +31,11 @@ export function useConvertirProspectoACliente() {
   });
 }
 
-/** Convierte una cotización en uno o más embarques según num_contenedores */
-export function useConvertirCotizacionAEmbarques() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (cotizacion: CotizacionRow) => convertirCotizacionAEmbarques(cotizacion),
-    onSuccess: (_data, cotizacion) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacion.id) });
-      notifySuccess(undefined, { title: "Cotización convertida a embarques" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al convertir cotización: ${error.message}`, error, method: "CONVERT_COTIZACION_EMBARQUES" });
-    },
-  });
-}
+// FIX-07 (v13.303.12) — La mutación legacy `useConvertirCotizacionAEmbarques`
+// (6 awaits sin transacción desde el cliente) se eliminó. Toda conversión
+// pasa por `useCrearEmbarqueBorrador`, que llama a la RPC transaccional
+// `crear_embarque_borrador_desde_cotizacion(uuid)` (idempotente + protegida
+// por el índice único `uq_cotizaciones_embarque_unico`).
 
 /** Crea un embarque borrador (1 clic) desde una cotización Aceptada vía RPC. */
 export function useCrearEmbarqueBorrador() {

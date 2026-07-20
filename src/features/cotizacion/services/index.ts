@@ -37,7 +37,7 @@ export type { CotizacionCostoLookup } from "./costos";
 // Conversiones (prospecto→cliente / cotización→embarques / portal)
 export {
   convertirProspectoACliente,
-  convertirCotizacionAEmbarques,
+  
   crearEmbarqueBorradorDesdeCotizacion,
   portalResponderCotizacion,
 } from "./conversiones";
