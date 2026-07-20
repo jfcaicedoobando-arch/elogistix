@@ -23,7 +23,11 @@ function readLatestContaining(marker: string): string {
 
 describe("Fase L — Multi-moneda CxP", () => {
   it("agrega la columna monto_en_moneda_factura a pagos_proveedor", () => {
-    const sql = readLatestContaining("monto_en_moneda_factura");
+    // v13.303.10: marker más específico. Otras migraciones posteriores (p.ej.
+    // `validar_cierre_embarque` en v13.303.8) referencian la columna en SELECTs
+    // sin definir el ALTER TABLE, lo que hacía que `readLatestContaining` con
+    // marker genérico resolviera al archivo equivocado.
+    const sql = readLatestContaining("ADD COLUMN IF NOT EXISTS monto_en_moneda_factura");
     expect(sql).toMatch(
       /ALTER TABLE public\.pagos_proveedor[\s\S]*ADD COLUMN IF NOT EXISTS monto_en_moneda_factura/i,
     );

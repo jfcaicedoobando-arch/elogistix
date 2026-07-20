@@ -60,6 +60,8 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-reconciliar-cancelaciones/index.ts",
   // 13.301.11 — Consulta en vivo + reconciliación puntual
   "supabase/functions/facturapi-consultar/index.ts",
+  // 13.303.2 — Recuperación de claims huérfanos PENDING:<uuid>
+  "supabase/functions/facturapi-recuperar-claim/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia

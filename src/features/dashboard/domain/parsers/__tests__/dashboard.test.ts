@@ -37,7 +37,18 @@ describe("dashboardParsers", () => {
       const result = parseConteoPorEstado({
         conteoPorEstado: { Confirmado: 5, "En Tránsito": 3, Arribo: 1, "En Aduana": 2, Entregado: 7, EIR: 4 },
       });
-      expect(result).toEqual({ Confirmado: 5, "En Tránsito": 3, Arribo: 1, "En Aduana": 2, Entregado: 7, EIR: 4 });
+      // EMPTY_CONTEO incluye 9 llaves (v13.302.11: Cotización, En Proceso, Llegada).
+      expect(result).toEqual({
+        "Cotización": 0,
+        Confirmado: 5,
+        "En Tránsito": 3,
+        "En Proceso": 0,
+        "En Aduana": 2,
+        Llegada: 0,
+        Arribo: 1,
+        Entregado: 7,
+        EIR: 4,
+      });
     });
 
     it("usa 0 como default para estados ausentes", () => {
