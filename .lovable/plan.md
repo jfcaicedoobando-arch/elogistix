@@ -1,73 +1,46 @@
-# Cotizaciones estancadas en "Aceptada" con embarque activo
+## Contexto
 
-## Diagnóstico
+El stepper del detalle del embarque muestra `Borrador → Cotización → Confirmado → …` porque así está el enum `estado_embarque` en la base de datos y la máquina de transiciones. El problema es de **nomenclatura**: "Cotización" también es el nombre del documento previo (COT-2026-XXXX) que genera el embarque, así que ver "Paso 2: Cotización" después de "Borrador" da la impresión de que el embarque retrocede a la cotización.
 
-La COT-2026-0138 (y otras 49) sigue en **Aceptada** aunque ya tiene un embarque vinculado (ELIMP00333 – Borrador).
-
-Causa: hay dos caminos para crear el embarque desde una cotización y sólo uno actualiza el estado.
-
-| Camino | ¿Actualiza `estado` a "En operación"? |
-|---|---|
-| Wizard "Nuevo embarque" (`useEmbarqueSubmitOrchestrator`) | ✅ Sí (línea 136) |
-| Botón "Convertir a borrador" → RPC `crear_embarque_borrador_core` | ❌ No — sólo hace `SET embarque_id = v_embarque_id` |
-
-Auditoría de la tabla `cotizaciones`:
-
-- **50** filas en `Aceptada` con `embarque_id` apuntando a un embarque **no** borrado → deberían estar en `En operación`.
-- **3** filas en `En operación` con `embarque_id = NULL` (COT-2026-0016 / 0030 / 0033) → embarque borrado antes del fix v13.303.14, quedó huérfano. Deberían volver a `Aceptada`.
-- **0** filas apuntando a un embarque soft-deleted (el fix reciente ya nulifica el vínculo).
+Solución acordada: **cambio cosmético**. La base de datos, el enum, las policies y la máquina de estados siguen usando el valor `'Cotización'`. Solo cambia lo que ve el usuario: la etiqueta pasa a **"Propuesta"**.
 
 ## Cambios
 
-### 1. RPC `crear_embarque_borrador_core`
+### 1. Nuevo mapa de etiquetas visibles
+Crear `src/features/embarques/constants/estadoEmbarqueLabels.ts`:
 
-Agregar dentro del mismo `UPDATE public.cotizaciones` que ya fija `embarque_id`:
+- Exporta `ESTADO_EMBARQUE_LABELS: Record<EstadoEmbarque, string>` con `'Cotización' → 'Propuesta'` y el resto igual.
+- Exporta helper `labelEstadoEmbarque(estado)` que hace fallback al valor original si no está mapeado.
 
-```sql
-UPDATE public.cotizaciones
-   SET embarque_id = v_embarque_id,
-       estado      = 'En operación'::estado_cotizacion,
-       updated_at  = now()
- WHERE id = p_cotizacion_id;
-```
+### 2. Consumir el mapa en los puntos donde el usuario lee el estado
 
-Con eso, cualquier conversión futura promueve el estado atómicamente en la misma transacción que crea el borrador.
+- `src/features/embarques/components/tabResumen/EstadoProgresoCard.tsx` — nombres del stepper y del "Siguiente".
+- `src/lib/ui/estadoConfig.ts` (entrada `"Cotización"`) — badge del listado y del header.
+- `src/features/embarques/domain/embarqueFases.ts` (línea 83) — label de la fase.
+- Filtros/selects de estado del listado de embarques y del tab Tracking (se identifican durante la implementación buscando iteraciones sobre `ESTADOS_EMBARQUE`).
+- Leyendas del dashboard donde se muestre la clave `"Cotización"` como texto (los `Record` que usan la clave como *dato* no se tocan, solo el render).
 
-### 2. Backfill de datos existentes
+### 3. Header del detalle
+En `EmbarqueDetalleHeader.tsx`, la línea "Cotización origen: COT-…" se mantiene tal cual (ahí sí se refiere al documento previo, no al estado). Sin cambios.
 
-Migración de datos (mismo archivo de migración) que corrige las inconsistencias detectadas:
+### 4. Tests
 
-```sql
--- Promover Aceptada → En operación cuando ya hay embarque vivo
-UPDATE public.cotizaciones c
-   SET estado = 'En operación', updated_at = now()
-  FROM public.embarques e
- WHERE c.embarque_id = e.id
-   AND e.deleted_at IS NULL
-   AND c.estado = 'Aceptada';
+- Ajustar snapshots/expectativas que asertaban el string `'Cotización'` como etiqueta visible del estado del embarque (los que asertan el valor de BD siguen igual).
+- Añadir test unitario para `labelEstadoEmbarque('Cotización') === 'Propuesta'` y que el resto de estados no cambia.
 
--- Revertir En operación → Aceptada si el embarque ya no existe
-UPDATE public.cotizaciones
-   SET estado = 'Aceptada', updated_at = now()
- WHERE estado = 'En operación'
-   AND embarque_id IS NULL;
-```
+### 5. Versión y changelog
 
-### 3. Verificación
+- `APP_VERSION` → `13.303.17`.
+- Entrada en `CHANGELOG.md` explicando el renombrado cosmético y que la BD no cambia.
 
-Después de aplicar la migración:
+## Detalles técnicos
 
-- COT-2026-0138 debe mostrar chip **En operación** en la tabla.
-- Las 3 cotizaciones huérfanas vuelven a **Aceptada** y pueden convertirse de nuevo.
-- El wizard tradicional sigue funcionando (ya usaba `updateEstadoCotizacion` a "En operación"; queda idempotente).
-
-### 4. Changelog
-
-`APP_VERSION` → `13.303.16` + entrada en `CHANGELOG.md`:
-
-> Fix: al convertir una cotización aceptada en borrador de embarque, la cotización ahora avanza automáticamente al estado "En operación". Backfill de 50 cotizaciones que estaban estancadas en "Aceptada" y 3 con vínculo roto.
+- **No se toca** el enum `estado_embarque`, la RPC de transiciones, RLS ni el parser del dashboard (`dashboardTypes.ts`, `dashboard.ts`) porque usan `"Cotización"` como *clave de dato*, no como texto visible.
+- Riesgo: bajo. Es un cambio de presentación. El único riesgo real es que un filtro compare el label visible en vez del valor; el barrido en el paso 2 lo previene.
+- Al terminar: `bun run lint` + `bun run typecheck` + tests de embarques.
 
 ## Fuera de alcance
 
-- No se toca la máquina de estados de embarques.
-- No se agrega trigger genérico; la promoción sigue viviendo en los dos puntos de entrada (wizard y RPC) para mantener el control explícito del flujo.
+- Renombrar el enum en BD.
+- Eliminar el paso del flujo o reordenarlo.
+- Cambios en el módulo de Cotizaciones (documento COT).

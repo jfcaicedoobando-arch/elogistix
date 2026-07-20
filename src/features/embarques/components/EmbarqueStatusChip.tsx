@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { cn } from "@/lib/utils";
+import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 import { resolveFinancieroInfo, type CobroStatus } from "./embarqueStatusChip.helpers";
 
 interface Props {
@@ -30,6 +31,7 @@ export function EmbarqueStatusChip({
   className,
 }: Props) {
   const fin = resolveFinancieroInfo(tieneProforma, cobroStatus);
+  const estadoLabel = labelEstadoEmbarque(estado);
 
   return (
     <Badge
@@ -38,12 +40,12 @@ export function EmbarqueStatusChip({
         getEstadoColor(estado),
         className,
       )}
-      aria-label={`Estado ${estado}, modo ${modo}, ${fin.label}`}
+      aria-label={`Estado ${estadoLabel}, modo ${modo}, ${fin.label}`}
     >
       <ModoIcon modo={modo} size={12} />
       <span>{modo}</span>
       <Separator />
-      <span className="font-semibold">{estado}</span>
+      <span className="font-semibold">{estadoLabel}</span>
       <Separator />
       <span
         className={cn(

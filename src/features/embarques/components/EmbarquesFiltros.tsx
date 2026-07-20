@@ -13,6 +13,7 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/features/embarques/constants/embarqueConstants";
+import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 import { formatDate } from "@/lib/formatters";
 
 interface ClienteOption { id: string; nombre: string }
@@ -93,7 +94,7 @@ export default function EmbarquesFiltros(props: Props) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos los estados</SelectItem>
-              {ESTADOS_EMBARQUE.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+              {ESTADOS_EMBARQUE.map((e) => <SelectItem key={e} value={e}>{labelEstadoEmbarque(e)}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={filterCliente} onValueChange={onFilterClienteChange}>
