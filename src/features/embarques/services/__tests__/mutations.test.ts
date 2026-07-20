@@ -239,18 +239,30 @@ describe("actualizarEstadoEmbarque", () => {
 });
 
 describe("actualizarFechaLlegadaRealEmbarque", () => {
-  it("avanza el estado a 'Llegada' — no 'Arribo' (regresión v13.302.8)", async () => {
-    mock.setTableResult("embarques", { data: null, error: null });
+  it("avanza a 'Llegada' cuando el estado actual es 'En Tránsito' (v13.302.8)", async () => {
+    mock.setTableResult("embarques", { data: { estado: "En Tránsito" }, error: null });
     await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
     const { assertUpdatePayload, assertEq, findTableCall } = await import(
       "@/test/helpers/assertMutation"
     );
-    const call = findTableCall(mock, "embarques");
-    // La máquina de estados de BD sólo permite `En Tránsito → Llegada`.
-    // `Arribo` es un estado posterior — antes de v13.302.8 se enviaba
-    // directamente y disparaba `LC_TRANSICION_INVALIDA`.
-    assertUpdatePayload(call, { estado: "Llegada", fecha_llegada_real: "2026-07-20" });
-    assertEq(call, "id", UUID);
+    // El último tableCall es el UPDATE (después del SELECT del estado actual).
+    const updateCall = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"));
+    assertUpdatePayload(updateCall!, { estado: "Llegada", fecha_llegada_real: "2026-07-20" });
+    assertEq(updateCall!, "id", UUID);
+    void findTableCall;
+  });
+
+  // v13.302.11 — antes se forzaba `estado: 'Llegada'` sin validar el estado
+  // actual, disparando LC_TRANSICION_INVALIDA para estados posteriores
+  // (Arribo/Entregado/EIR/Cerrado) o comerciales previos.
+  it("NO cambia estado cuando el actual es 'Arribo' (regresión Sentry c80465e4)", async () => {
+    mock.setTableResult("embarques", { data: { estado: "Arribo" }, error: null });
+    await actualizarFechaLlegadaRealEmbarque(UUID, "2026-07-20");
+    const updateCall = [...mock.tableCalls].reverse().find((c) => c.ops.includes("update"));
+    const updateArgIdx = updateCall!.ops.indexOf("update");
+    const payload = updateCall!.opArgs[updateArgIdx][0] as Record<string, unknown>;
+    expect(payload).toEqual({ fecha_llegada_real: "2026-07-20" });
+    expect(payload).not.toHaveProperty("estado");
   });
 });
 
