@@ -13,6 +13,7 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import type { ChipItem } from "@/hooks/shared/useTableFilters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/features/embarques/constants/embarqueConstants";
+import { labelEstadoEmbarque } from "@/features/embarques/constants/estadoEmbarqueLabels";
 import { formatDate } from "@/lib/formatters";
 
 interface ClienteOption { id: string; nombre: string }
