@@ -33,10 +33,12 @@ export function parseConteoPorEstado(stats: DashboardStats): Record<EstadoFiltro
   if (!stats?.conteoPorEstado) return EMPTY_CONTEO;
   const raw = stats.conteoPorEstado as Record<string, number>;
   return {
+    "Cotización": Number(raw["Cotización"] ?? 0),
     Confirmado: Number(raw["Confirmado"] ?? 0),
     "En Tránsito": Number(raw["En Tránsito"] ?? 0),
-    Arribo: Number(raw["Arribo"] ?? 0),
     "En Aduana": Number(raw["En Aduana"] ?? 0),
+    Llegada: Number(raw["Llegada"] ?? 0),
+    Arribo: Number(raw["Arribo"] ?? 0),
     Entregado: Number(raw["Entregado"] ?? 0),
     EIR: Number(raw["EIR"] ?? 0),
   };
