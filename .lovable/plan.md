@@ -1,27 +1,44 @@
-## Plan: Quitar flechas de inputs numéricos en edición de embarque
+## Bloquear cambio de valor con la rueda del mouse en inputs numéricos
 
-### Objetivo
-Eliminar los botones de incremento/decremento (spinners) que aparecen por defecto en los campos de **Peso (kg)**, **Volumen (m³)** y **Piezas** del formulario de editar embarque.
+### Problema
 
-### Cambios propuestos
+Los spinners ya están ocultos por CSS, pero el navegador sigue permitiendo cambiar el valor de un `<input type="number">` al girar la rueda del mouse cuando el campo está enfocado. Esto provoca cambios accidentales de montos, cantidades, tasas, etc.
 
-1. **Aplicar clases anti-spinner en `BloqueMercancia.tsx`**
-   - Agregar la clase utilitaria Tailwind ya existente en el proyecto:
-     `[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`
-   - Aplicarla a los tres `<Input type="number" />` de `pesoKg`, `volumenM3` y `piezas`.
-   - Preservar la prop `className` combinada con `fieldErrorProps` para no perder el borde de error.
+### Causa
 
-2. **Actualizar versionado y changelog**
-   - Bump de `APP_VERSION` y entrada en `CHANGELOG.md` según las reglas del proyecto.
+Comportamiento nativo del navegador: cualquier `input[type="number"]` con foco intercepta el `wheel` y modifica el valor. No se puede desactivar con CSS.
 
-3. **Verificación visual (build + preview)**
-   - Confirmar que los spinners desaparecen en los tres campos en la página de editar embarque.
-   - Asegurar que no hay regresión de lint/typecheck/tests.
+### Solución (mínima, global)
 
-### Notas técnicas
-- No se reemplaza el componente `Input` por `NumericInput` para mantener el comportamiento actual de `react-hook-form register` y evitar efectos secundarios no solicitados.
-- Se usa el mismo patrón anti-spinner que ya existe en `src/features/costeo/components/TarifaNumerosVigenciaFields.tsx`, garantizando consistencia.
+Parchar el componente base `src/components/ui/input.tsx` (único punto por donde pasan todos los inputs de la app, incluidos los 77 `type="number"` y los que ya usan `NumericInput`) para que, cuando `type === "number"`, se llame a `blur()` en el `onWheel`. Es el patrón estándar recomendado:
 
-### Entregables
-- `src/features/embarques/components/secciones/BloqueMercancia.tsx` modificado.
-- `src/constants/appVersion.ts` y `CHANGELOG.md` actualizados.
+```tsx
+onWheel={(e) => {
+  if (type === "number" && e.currentTarget === document.activeElement) {
+    e.currentTarget.blur();
+    // re-enfocar en el siguiente tick para no perder la posición del cursor
+    setTimeout(() => e.currentTarget?.focus({ preventScroll: true }), 0);
+  }
+  props.onWheel?.(e);
+}}
+```
+
+Ventajas:
+- Un solo archivo tocado.
+- No cambia el tipo del input ni la validación.
+- No rompe el scroll de la página (sólo desenfoca momentáneamente).
+- Respeta cualquier `onWheel` que un consumidor haya pasado.
+
+### Alternativa considerada (descartada)
+
+`e.preventDefault()` dentro del handler no funciona porque React registra listeners pasivos por defecto en `wheel`; requeriría `addEventListener` manual con `{ passive: false }`. Más ruido por poca ganancia. El patrón de `blur()` es más simple y ampliamente usado.
+
+### Versionado
+
+- `APP_VERSION` → `13.303.31`
+- Entrada en `CHANGELOG.md` describiendo el fix.
+
+### Fuera de alcance
+
+- No se migran inputs a `NumericInput`.
+- No se toca validación ni RHF.
