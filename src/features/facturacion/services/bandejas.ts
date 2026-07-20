@@ -9,6 +9,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { FECHA_INICIO_TIMBRADO_SISTEMA } from "@/features/facturacion/domain/facturaFlags";
+import { todayLocalISO } from "@/lib/date/today";
 
 export interface FilaPorTimbrar {
   id: string;
@@ -124,7 +125,7 @@ export interface BandejaConteos {
  * `useHuecoFacturacion` que ya calcula su total.
  */
 export async function fetchBandejaConteos(orgId: string): Promise<BandejaConteos> {
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocalISO();
   const [porTimbrar, timbradas, envios, porCobrar, vencidas, reps] = await Promise.all([
     supabase
       .from("facturas")

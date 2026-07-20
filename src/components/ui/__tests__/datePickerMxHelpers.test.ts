@@ -1,5 +1,25 @@
 import { describe, it, expect } from "vitest";
-import { parseFlexible, parseDisplay, applyMask } from "@/components/ui/date-picker-mx-helpers";
+import { parseFlexible, parseDisplay, applyMask, isoToDisplay, isoToDate } from "@/components/ui/date-picker-mx-helpers";
+
+describe("isoToDisplay (defensivo)", () => {
+  it("acepta ISO puro", () => {
+    expect(isoToDisplay("2026-07-20")).toBe("20/07/2026");
+  });
+  it("recorta timestamps con hora/zona (no corrompe display)", () => {
+    expect(isoToDisplay("2026-07-20T00:00:00+00:00")).toBe("20/07/2026");
+    expect(isoToDisplay("2026-07-20T12:34:56Z")).toBe("20/07/2026");
+  });
+  it("devuelve vacío para inputs no-fecha", () => {
+    expect(isoToDisplay("")).toBe("");
+    expect(isoToDisplay("basura")).toBe("");
+    expect(isoToDisplay("2026-7-1")).toBe(""); // no zero-padded, no ISO válido
+  });
+  it("isoToDate también es defensivo ante timestamps", () => {
+    expect(isoToDate("2026-07-20T00:00:00+00:00")?.getDate()).toBe(20);
+    expect(isoToDate("basura")).toBeUndefined();
+  });
+});
+
 
 describe("parseFlexible", () => {
   it("ISO YYYY-MM-DD", () => {

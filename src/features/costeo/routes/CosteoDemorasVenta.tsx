@@ -16,8 +16,9 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ConfirmDeleteAlert } from "@/features/costeo/components/ConfirmDeleteAlert";
 import { NuevaTarifaDemoraDialog } from "@/features/costeo/components/NuevaTarifaDemoraDialog";
+import { todayLocalISO } from "@/lib/date/today";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayLocalISO();
 const EMPTY: DemoraVentaTarifaInput = {
   tipo_contenedor_id: "",
   desde_dia: 1,

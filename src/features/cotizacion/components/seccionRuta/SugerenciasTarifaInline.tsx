@@ -26,6 +26,7 @@ import { resolverPuertoId, resolverTipoId } from "./resolverCatalogos";
 import type { CotizacionFormValues } from "@/features/cotizacion/types";
 import type { TopTarifaRow } from "@/features/costeo/types";
 import type { FilaCostoLocal } from "@/features/cotizacion/types";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface SugerenciasTarifaInlineProps {
   /** Si la cotización ya está persistida, se pasa para bitácora. */
@@ -70,7 +71,7 @@ export default function SugerenciasTarifaInline({
     puertoOrigenId,
     puertoDestinoId,
     tipoContenedorId,
-    fecha: new Date().toISOString().slice(0, 10),
+    fecha: todayLocalISO(),
   });
 
   const aplicarOptions: AplicarTarifaOptions = { onAutocargaCostos, markup, cantidad };

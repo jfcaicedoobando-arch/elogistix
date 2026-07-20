@@ -8,8 +8,8 @@ import { useState, useEffect } from "react";
 import { CalendarClock, Loader2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useProgramarPagoProveedor } from "@/features/cxp/hooks/useProgramarPagoProveedor";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 interface Props {
   facturaId: string;
@@ -53,10 +53,9 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
         )}
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <Input
-          type="date"
+        <DatePickerMx
           value={valor}
-          onChange={(e) => setValor(e.target.value)}
+          onChange={setValor}
           disabled={yaSaldada || prog.isPending}
           className="h-8 w-auto max-w-[180px] text-xs"
         />

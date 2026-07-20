@@ -17,6 +17,7 @@ import {
   type FiltroResponsable,
   type FiltroRevision,
 } from "./hallazgosTablaFilters";
+import { todayLocalISO } from "@/lib/date/today";
 
 export type { FiltroRevision, FiltroResponsable } from "./hallazgosTablaFilters";
 
@@ -72,7 +73,7 @@ export function useHallazgosTablaState(
       q: search.trim().toLowerCase(),
       desde: etaDesde ? etaDesde.toISOString().slice(0, 10) : null,
       hasta: etaHasta ? etaHasta.toISOString().slice(0, 10) : null,
-      today: new Date().toISOString().slice(0, 10),
+      today: todayLocalISO(),
       filtroRegla,
       filtroSev,
       filtroCliente,

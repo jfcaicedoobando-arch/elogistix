@@ -14,6 +14,7 @@ import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys
 import { SelectorSustituta } from "@/features/facturacion/components/cancelacion/SelectorSustituta";
 import { BannersCondicionesSAT } from "@/features/facturacion/components/cancelacion/BannersCondicionesSAT";
 import { DialogConsultarFacturapi } from "@/features/facturacion/components/detalle/DialogConsultarFacturapi";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   facturaId: string | null;
@@ -38,7 +39,7 @@ function evaluarCondicionesSAT(params: {
   total: number | null | undefined;
   rfc: string | null | undefined;
 }): { mismoDia: boolean; montoBajo: boolean; rfcGenerico: boolean; requiereAceptacion: boolean } {
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocalISO();
   const fecha = params.fechaEmision?.slice(0, 10) ?? null;
   const mismoDia = fecha !== null && fecha === hoy;
   const montoBajo = (params.total ?? Infinity) <= 1000;

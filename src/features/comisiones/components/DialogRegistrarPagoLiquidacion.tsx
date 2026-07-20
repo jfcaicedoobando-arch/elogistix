@@ -11,12 +11,13 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { formatCurrency } from "@/lib/formatters";
 import { useRegistrarPagoLiquidacion } from "@/features/comisiones/hooks";
 import type { LiquidacionRow } from "@/features/comisiones/services";
+import { todayLocalISO } from "@/lib/date/today";
 
 
 export function DialogRegistrarPagoLiquidacion({
   open, onOpenChange, liq,
 }: { open: boolean; onOpenChange: (o: boolean) => void; liq: LiquidacionRow | null }) {
-  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [fecha, setFecha] = useState(todayLocalISO());
   const [metodo, setMetodo] = useState("Transferencia");
   const [referencia, setReferencia] = useState("");
   const reg = useRegistrarPagoLiquidacion();

@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CosteoRuta } from "@/features/costeo/types";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface RawTarifaAggregate {
   estado: string;
@@ -25,7 +26,7 @@ export async function fetchCosteoRutas(organizationId: string): Promise<CosteoRu
     )
     .eq("organization_id", organizationId);
   if (error) throw error;
-  const hoyIso = new Date().toISOString().slice(0, 10);
+  const hoyIso = todayLocalISO();
   return ((data ?? []) as RawRuta[]).map((r) => {
     const vigentes = (r.costeo_tarifas ?? []).filter(
       (t) => t.estado === "vigente" && (!t.vigente_hasta || t.vigente_hasta >= hoyIso),

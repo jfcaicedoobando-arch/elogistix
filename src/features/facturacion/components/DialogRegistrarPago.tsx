@@ -15,6 +15,7 @@ import { usePagosFactura } from "@/features/facturacion/hooks";
 import { useRegistrarPagoSubmit } from "@/features/facturacion/hooks/useRegistrarPagoSubmit";
 import { PagoFormFields, type PagoFormValues } from "./PagoFormFields";
 import { ResumenSaldo, FooterAcciones, NotasPago } from "./DialogRegistrarPagoParts";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Factura {
   id: string;
@@ -45,7 +46,7 @@ function convertirAMonedaFactura(
   return enMxn / factorFactura;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayLocalISO();
 
 export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
   const { data: rates } = useExchangeRates();

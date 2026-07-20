@@ -29,6 +29,7 @@ export {
   type ExportTableResult,
   type ExportManifestInput,
 } from "./exportOrg.manifest";
+import { todayLocalISO } from "@/lib/date/today";
 
 const PAGE = 1000;
 
@@ -106,6 +107,6 @@ export async function exportOrganizationZip(
   onProgress?.({ step: total, total, current: "manifest.json", rows: 0 });
   files["manifest.json"] = buildExportManifest({ organizationId, orgNombre, results });
   const safe = orgNombre.replace(/[^a-z0-9]/gi, "_");
-  const fecha = new Date().toISOString().slice(0, 10);
+  const fecha = todayLocalISO();
   await downloadZip(`export-${safe}`, files, `libre-carga-export-${safe}-${fecha}.zip`);
 }

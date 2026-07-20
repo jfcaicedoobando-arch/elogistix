@@ -26,6 +26,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { AgingDrillDownDialog } from "@/features/cxp/components/AgingDrillDownDialog";
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
+import { todayLocalISO } from "@/lib/date/today";
 
 function KpiBucket({ label, value, tone = "default" }: { label: string; value: number; tone?: "default" | "warn" | "danger" }) {
   const toneCls =
@@ -56,7 +57,7 @@ function exportarCsv(rows: readonly CxpAgingRow[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `aging-cxp-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `aging-cxp-${todayLocalISO()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

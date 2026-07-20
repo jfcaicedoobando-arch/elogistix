@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Inbox } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
@@ -21,6 +20,7 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { DataTable } from "@/components/shared/DataTable";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { CarteraMobileList } from "./_sections/CarteraMobileList";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 /** Formatea saldos nativos como "$X MXN · $Y USD" (omite ceros). */
 function formatNativos(b: SaldosPorMonedaCartera): string {
@@ -121,21 +121,11 @@ export default function Cartera() {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="cartera-from">Vencimiento desde</Label>
-              <Input
-                id="cartera-from"
-                type="date"
-                value={paged.dateFrom}
-                onChange={(e) => paged.setDateFrom(e.target.value)}
-              />
+              <DatePickerMx value={paged.dateFrom} onChange={paged.setDateFrom} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="cartera-to">Vencimiento hasta</Label>
-              <Input
-                id="cartera-to"
-                type="date"
-                value={paged.dateTo}
-                onChange={(e) => paged.setDateTo(e.target.value)}
-              />
+              <DatePickerMx value={paged.dateTo} onChange={paged.setDateTo} />
             </div>
           </div>
         }

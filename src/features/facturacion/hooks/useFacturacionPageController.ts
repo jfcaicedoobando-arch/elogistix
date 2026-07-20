@@ -10,6 +10,7 @@ import { usePermissions } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { todayLocalISO } from "@/lib/date/today";
 /**
  * Controller para la página de Facturación.
  * Encapsula filtros, búsqueda, paginación, mutaciones y export CSV.
@@ -90,7 +91,7 @@ export function useFacturacionPageController(opts?: {
 
   const exportarFacturasCsv = useCallback(() => {
     exportToCsv(
-      `facturas_${new Date().toISOString().slice(0, 10)}.csv`,
+      `facturas_${todayLocalISO()}.csv`,
       [
         { key: "numero", label: "# Factura" },
         { key: "expediente", label: "Expediente" },

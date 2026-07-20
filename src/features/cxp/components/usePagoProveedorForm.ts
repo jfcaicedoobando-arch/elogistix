@@ -6,11 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
 import { defaultMetodo, metodosFor } from "./pagoProveedorHelpers";
+import { todayLocalISO } from "@/lib/date/today";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
 export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocalISO();
 
   const [fecha, setFecha] = useState(today);
   const [monto, setMonto] = useState("");

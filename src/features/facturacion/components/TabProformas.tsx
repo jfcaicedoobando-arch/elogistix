@@ -11,6 +11,7 @@ import ProformasFiltros from "./ProformasFiltros";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
 import { usePermissions } from "@/hooks/shared";
 import { useMemo } from "react";
+import { todayLocalISO } from "@/lib/date/today";
 
 
 export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
@@ -60,7 +61,7 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
               variant="outline"
               disabled={c.filtered.length === 0}
               onClick={() => exportToCsv(
-                `proformas_${new Date().toISOString().slice(0, 10)}.csv`,
+                `proformas_${todayLocalISO()}.csv`,
                 c.csvColumns,
                 c.csvRows(),
               )}

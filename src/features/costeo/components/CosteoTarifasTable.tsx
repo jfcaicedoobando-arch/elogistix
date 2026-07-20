@@ -10,6 +10,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { DialogRechazarTarifa } from "./DialogRechazarTarifa";
 import { useAprobacionTarifa } from "../hooks/useAprobacionTarifa";
 import { buildTarifasColumns, type TarifaRow } from "./_sections/tarifasColumns";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
   tarifas: TarifaRow[];
@@ -24,7 +25,7 @@ export function CosteoTarifasTable({ tarifas, isLoading, onEditar, onDuplicar, o
   const [rechazandoId, setRechazandoId] = useState<string | null>(null);
 
   const mejorPorGrupo = useMemo(() => {
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = todayLocalISO();
     const map = new Map<string, number>();
     for (const t of tarifas) {
       const ap = t.estado_aprobacion ?? "vigente";

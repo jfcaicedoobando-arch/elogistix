@@ -3,6 +3,7 @@
  * Devuelve antigüedad de saldos por proveedor en cubetas estándar (vigente, 1-30, 31-60, 61-90, >90 días).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { todayLocalISO } from "@/lib/date/today";
 
 export interface CxpAgingRow {
   proveedor_id: string;
@@ -27,7 +28,7 @@ export interface CxpAgingTotals {
 
 export async function fetchCxpAging(fecha?: string): Promise<CxpAgingRow[]> {
   const { data, error } = await supabase.rpc("cxp_aging_proveedores", {
-    p_fecha: fecha ?? new Date().toISOString().slice(0, 10),
+    p_fecha: fecha ?? todayLocalISO(),
   });
   if (error) throw error;
   return (data ?? []).map((r) => ({

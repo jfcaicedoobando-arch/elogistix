@@ -11,6 +11,7 @@ import { ReporteTesoreriaDocument } from "@/pdf/documents/ReporteTesoreriaDocume
 import { PageContainer } from "@/components/shared/PageContainer";
 import { withOrgPrefix } from "@/lib/filenames";
 import { ROUTES } from "@/constants/routes";
+import { todayLocalISO } from "@/lib/date/today";
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "warn" | "danger" | "success" }) {
   const t = tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
@@ -29,7 +30,7 @@ export default function Tesoreria() {
 
   const handlePdf = async () => {
     if (!data) return;
-    const fecha = new Date().toISOString().slice(0, 10);
+    const fecha = todayLocalISO();
     await descargarPdf(
       <ReporteTesoreriaDocument
         fechaCorte={fecha}

@@ -20,6 +20,7 @@ import { computeRankingMeta } from "@/features/costeo/utils/rankingLabels";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { LoadingState } from "@/components/shared/states/LoadingState";
+import { todayLocalISO } from "@/lib/date/today";
 
 export default function CosteoBuscar() {
   const { data: puertos = [] } = usePuertos();
@@ -27,7 +28,7 @@ export default function CosteoBuscar() {
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
   const [tipo, setTipo] = useState("");
-  const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [fecha, setFecha] = useState(todayLocalISO());
 
   const { data: tarifas = [], isFetching } = useTopTarifas({
     puertoOrigenId: origen,

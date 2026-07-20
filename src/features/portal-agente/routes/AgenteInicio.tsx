@@ -9,13 +9,14 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { useAgenteContext, useAgenteTarifas, useAgenteEmbarques } from "@/features/portal-agente/hooks";
 import { ROUTES } from "@/constants/routes";
+import { todayLocalISO } from "@/lib/date/today";
 
 export default function AgenteInicio() {
   const { data: ctx } = useAgenteContext();
   const { data: tarifas = [] } = useAgenteTarifas();
   const { data: embarques = [] } = useAgenteEmbarques();
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocalISO();
   const vigentes = tarifas.filter((t) => t.estado_aprobacion === "vigente" && t.vigente_hasta >= hoy).length;
   const borradores = tarifas.filter((t) => t.estado_aprobacion === "borrador").length;
   const rechazadas = tarifas.filter((t) => t.estado_aprobacion === "rechazada").length;

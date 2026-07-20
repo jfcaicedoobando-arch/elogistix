@@ -13,6 +13,7 @@ import {
 } from "@/features/embarques/types/garantia";
 import { VenceBadge } from "./VenceBadge";
 import { useUpdateGarantia } from "@/features/embarques/hooks/useGarantiasContenedor";
+import { todayLocalISO } from "@/lib/date/today";
 
 interface Row extends GarantiaContenedor {
   numero_contenedor: string;
@@ -33,7 +34,7 @@ export function useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal }: P
 
   const handleChangeEstado = useCallback((id: string, estado: EstadoGarantia) => {
     const patch: Parameters<typeof updateMut.mutate>[0] = { id, estado };
-    const hoy = new Date().toISOString().slice(0, 10);
+    const hoy = todayLocalISO();
     if (estado === 'depositado') {
       patch.fecha_deposito = fechaLlegadaReal && fechaLlegadaReal.length > 0
         ? fechaLlegadaReal.slice(0, 10)

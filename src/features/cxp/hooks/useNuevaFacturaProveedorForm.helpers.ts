@@ -5,6 +5,7 @@
  */
 import type { Database } from "@/integrations/supabase/types";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
+import { todayLocalISO } from "@/lib/date/today";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -33,7 +34,7 @@ export function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export const today = () => new Date().toISOString().slice(0, 10);
+export const today = () => todayLocalISO();
 
 export function initialValues(): FacturaFormValues {
   const t = today();

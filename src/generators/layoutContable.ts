@@ -9,6 +9,7 @@
  */
 import { exportToCsv } from "@/generators/exportCsv";
 import { fetchLayoutContableData, type FacturaListItem } from "@/features/facturacion/services";
+import { todayLocalISO } from "@/lib/date/today";
 
 const HEADERS = [
   { key: "folio", label: "Folio" },
@@ -66,7 +67,7 @@ export async function exportarLayoutContable(facturas: FacturaListItem[]): Promi
   });
 
   exportToCsv(
-    `layout_contable_${new Date().toISOString().slice(0, 10)}.csv`,
+    `layout_contable_${todayLocalISO()}.csv`,
     HEADERS,
     csvRows,
   );

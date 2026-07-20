@@ -155,14 +155,16 @@ export function TrackingNuevoEventoForm({
             });
             return;
           }
-          const fechaIso = new Date(`${fecha}T00:00:00`).toISOString();
-          await actualizarFechaLlegada.mutateAsync({ embarqueId, fechaIso });
+          // `fecha` ya es ISO `YYYY-MM-DD` (columna `date` en BD).
+          // No re-serializar a UTC: rompía `isoToDisplay` en re-lecturas
+          // y desfasaba el día en hora local de México.
+          await actualizarFechaLlegada.mutateAsync({ embarqueId, fechaIso: fecha });
           await crearEvento.mutateAsync({
             embarqueId,
             tipo: "Arribo a Puerto",
             descripcion: `Llegada real registrada: ${formatDate(fecha, "dd/MM/yyyy")}`,
             ubicacion: ubicacion?.trim() ?? "",
-            fecha: fechaIso,
+            fecha: new Date().toISOString(),
             usuario: user?.email ?? "",
           });
           notifySuccess(toast, { title: "Llegada real registrada" });

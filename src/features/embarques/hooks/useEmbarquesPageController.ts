@@ -16,6 +16,7 @@ import { fetchEmbarquesParaExport } from "@/features/embarques/services";
 import { useOrgFilter } from "@/hooks/shared";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { todayLocalISO } from "@/lib/date/today";
 /**
  * Controller que centraliza estado, queries y handlers de la página de Embarques.
  * Mantiene la página enfocada únicamente en JSX/composición.
@@ -85,7 +86,7 @@ export function useEmbarquesPageController() {
       }
 
       exportToCsv(
-        `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
+        `embarques_${todayLocalISO()}.csv`,
         [
           { key: "expediente", label: "Expediente" },
           { key: "bl_master", label: "BL Master" },

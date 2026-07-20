@@ -18,6 +18,7 @@ import {
   useClearFacturapiApiKey,
   useProbarFacturapiConexion,
 } from "@/features/configuracion/hooks/useFacturapiCredenciales";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 type Props = {
   orgId: string;
@@ -180,12 +181,7 @@ export default function FacturapiCredencialesForm(props: Props) {
         </div>
         <div className="space-y-1">
           <Label htmlFor="csd_vence" className="text-sm">CSD vence</Label>
-          <Input
-            id="csd_vence"
-            type="date"
-            value={csdVence}
-            onChange={(e) => setCsdVence(e.target.value)}
-          />
+          <DatePickerMx value={csdVence} onChange={setCsdVence} />
         </div>
       </div>
     </>
