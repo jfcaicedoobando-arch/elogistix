@@ -18,6 +18,16 @@ function fieldErrorProps(error?: string) {
   };
 }
 
+function numberInputProps(error?: string) {
+  return {
+    "aria-invalid": error ? (true as const) : undefined,
+    className: cn(
+      error && "border-destructive",
+      "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    ),
+  };
+}
+
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
   return <p className="text-xs text-destructive">{msg}</p>;
@@ -126,7 +136,7 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
         <LabelHeredable field="pesoKg" getter={(c) => String(c.peso_kg || "")} htmlFor="emb-peso-kg">
           Peso (kg) *
         </LabelHeredable>
-        <Input id="emb-peso-kg" type="number" placeholder="0" {...fieldErrorProps(errors.pesoKg)} {...register("pesoKg")} />
+        <Input id="emb-peso-kg" type="number" placeholder="0" {...numberInputProps(errors.pesoKg)} {...register("pesoKg")} />
         <FieldError msg={errors.pesoKg} />
       </div>
 
@@ -134,7 +144,7 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
         <LabelHeredable field="volumenM3" getter={(c) => String(c.volumen_m3 || "")} htmlFor="emb-volumen-m3">
           Volumen (m³) *
         </LabelHeredable>
-        <Input id="emb-volumen-m3" type="number" placeholder="0" {...fieldErrorProps(errors.volumenM3)} {...register("volumenM3")} />
+        <Input id="emb-volumen-m3" type="number" placeholder="0" {...numberInputProps(errors.volumenM3)} {...register("volumenM3")} />
         <FieldError msg={errors.volumenM3} />
       </div>
 
@@ -142,7 +152,7 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
         <LabelHeredable field="piezas" getter={(c) => String(c.piezas || "")} htmlFor="emb-piezas">
           Piezas *
         </LabelHeredable>
-        <Input id="emb-piezas" type="number" placeholder="0" {...fieldErrorProps(errors.piezas)} {...register("piezas")} />
+        <Input id="emb-piezas" type="number" placeholder="0" {...numberInputProps(errors.piezas)} {...register("piezas")} />
         <FieldError msg={errors.piezas} />
       </div>
     </div>
