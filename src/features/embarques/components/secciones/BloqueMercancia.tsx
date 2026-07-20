@@ -18,6 +18,16 @@ function fieldErrorProps(error?: string) {
   };
 }
 
+function numberInputProps(error?: string) {
+  return {
+    "aria-invalid": error ? (true as const) : undefined,
+    className: cn(
+      error && "border-destructive",
+      "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    ),
+  };
+}
+
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
   return <p className="text-xs text-destructive">{msg}</p>;
