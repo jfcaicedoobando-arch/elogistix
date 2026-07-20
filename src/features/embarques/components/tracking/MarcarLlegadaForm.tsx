@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import { Anchor } from "lucide-react";
+import { todayLocalISO } from "@/lib/date/today";
 
 const llegadaSchema = z.object({
   fecha: z.string().min(1, "Fecha requerida"),
@@ -28,10 +29,11 @@ export function MarcarLlegadaForm({
   onSubmit,
   onCancel,
 }: Props) {
+  const hoy = todayLocalISO();
   const { control, handleSubmit, formState: { errors, isValid } } = useForm<LlegadaForm>({
     resolver: zodResolver(llegadaSchema),
     defaultValues: {
-      fecha: fechaLlegadaActual ?? new Date().toISOString().slice(0, 10),
+      fecha: (fechaLlegadaActual ?? "").slice(0, 10) || hoy,
       ubicacion: destinoDefault,
     },
     mode: "onChange",
@@ -55,10 +57,16 @@ export function MarcarLlegadaForm({
               control={control}
               name="fecha"
               render={({ field }) => (
-                <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
+                <DatePickerMx
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  className="w-full"
+                  max={hoy}
+                  disabled={isPending}
+                  errorText={errors.fecha?.message ?? null}
+                />
               )}
             />
-            {errors.fecha && <p className="text-xs text-destructive">{errors.fecha.message}</p>}
             <p className="text-xs text-muted-foreground">
               Al guardar, el embarque avanza a "Llegada".
             </p>
@@ -69,7 +77,7 @@ export function MarcarLlegadaForm({
               control={control}
               name="ubicacion"
               render={({ field }) => (
-                <Input {...field} placeholder="Puerto o punto de arribo" maxLength={120} />
+                <Input {...field} placeholder="Puerto o punto de arribo" maxLength={120} disabled={isPending} />
               )}
             />
             {errors.ubicacion && <p className="text-xs text-destructive">{errors.ubicacion.message}</p>}
@@ -87,3 +95,4 @@ export function MarcarLlegadaForm({
     </Card>
   );
 }
+

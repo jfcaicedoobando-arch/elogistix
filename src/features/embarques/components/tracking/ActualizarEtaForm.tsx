@@ -22,9 +22,10 @@ interface Props {
 }
 
 export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: Props) {
+  const etaActualIso = (etaActual ?? "").slice(0, 10);
   const { control, handleSubmit, formState: { errors, isValid } } = useForm<EtaForm>({
     resolver: zodResolver(etaSchema),
-    defaultValues: { fecha: etaActual ?? "", fuente: "" },
+    defaultValues: { fecha: etaActualIso, fuente: "" },
     mode: "onChange",
   });
 
@@ -46,12 +47,17 @@ export function ActualizarEtaForm({ etaActual, isPending, onSubmit, onCancel }: 
               control={control}
               name="fecha"
               render={({ field }) => (
-                <DatePickerMx value={field.value ?? ""} onChange={field.onChange} className="w-full" />
+                <DatePickerMx
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  className="w-full"
+                  disabled={isPending}
+                  errorText={errors.fecha?.message ?? null}
+                />
               )}
             />
-            {errors.fecha && <p className="text-xs text-destructive">{errors.fecha.message}</p>}
             <p className="text-xs text-muted-foreground">
-              ETA anterior: {etaActual ? formatDate(etaActual, "dd/MM/yyyy") : "—"}
+              ETA anterior: {etaActualIso ? formatDate(etaActualIso, "dd/MM/yyyy") : "—"}
             </p>
           </div>
           <div className="space-y-2">
