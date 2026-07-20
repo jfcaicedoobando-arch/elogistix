@@ -89,9 +89,10 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   // un caller gana; el resto ve 0 filas actualizadas y responde 409. Si falla
   // el timbrado o el UPDATE final, liberamos el claim.
   const claimTag = `PENDING:${crypto.randomUUID()}`;
+  const claimAt = new Date().toISOString();
   const { data: claimed, error: claimErr } = await supabase
     .from("facturas")
-    .update({ facturapi_id: claimTag })
+    .update({ facturapi_id: claimTag, facturapi_claim_at: claimAt })
     .eq("id", body.factura_id)
     .is("facturapi_id", null)
     .select("id")
@@ -100,13 +101,16 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
   if (!claimed) return jsonResponse({ error: "ya_timbrada", message: "Otro usuario ya está timbrando esta factura." }, 409);
 
   // A partir de aquí, cualquier salida temprana debe liberar el claim.
+  // v13.303.2 (FIX-04.1): también limpia `facturapi_claim_at` para que el sweep
+  // no considere el claim como huérfano.
   const releaseClaim = async () => {
     await supabase
       .from("facturas")
-      .update({ facturapi_id: null })
+      .update({ facturapi_id: null, facturapi_claim_at: null })
       .eq("id", body.factura_id)
       .eq("facturapi_id", claimTag);
   };
+
 
   // Si esta factura sustituye a otra, resolver su UUID para relación SAT 04.
   let sustituyeUuid: string | null = null;
