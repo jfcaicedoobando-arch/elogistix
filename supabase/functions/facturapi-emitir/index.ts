@@ -218,7 +218,11 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
       bl_master: refBlMaster,
       bl_house: refBlHouse,
     },
+    // v13.303.2 (FIX-04.1) — se envía a FacturAPI como `external_id` para poder
+    // recuperar el CFDI si perdemos la respuesta antes del UPDATE final.
+    external_id: claimTag,
   };
+
 
 
   const issues = validateContext(ctx);
