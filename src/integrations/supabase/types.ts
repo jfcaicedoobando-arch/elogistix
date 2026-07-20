@@ -8334,7 +8334,7 @@ export type Database = {
         | "CostoDirectoEmbarque"
         | "Venta"
         | "Administracion"
-      tipo_contacto: "Proveedor" | "Exportador" | "Importador"
+      tipo_contacto: "Exportador" | "Importador"
       tipo_evento_tracking:
         | "Zarpe"
         | "Transbordo"
@@ -8640,7 +8640,7 @@ export const Constants = {
         "Venta",
         "Administracion",
       ],
-      tipo_contacto: ["Proveedor", "Exportador", "Importador"],
+      tipo_contacto: ["Exportador", "Importador"],
       tipo_evento_tracking: [
         "Zarpe",
         "Transbordo",
