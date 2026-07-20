@@ -1,13 +1,16 @@
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, Calculator } from "lucide-react";
 import { useFormContext, Controller } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatNumber } from "@/lib/formatters/numbers";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
+import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { LabelHeredable } from "./LabelHeredable";
+
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -93,6 +96,22 @@ interface Props {
 export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
   const { register, watch } = useFormContext<EmbarqueFormValues>();
   const tipoCarga = watch("tipoCarga");
+  const modo = watch("modo");
+  const contenedores = (watch("contenedores") ?? []) as ContenedorBorrador[];
+  const esMaritimo = modo === "Marítimo";
+
+  const totales = esMaritimo
+    ? contenedores.reduce(
+        (acc, c) => ({
+          peso: acc.peso + (Number(c.peso_kg) || 0),
+          volumen: acc.volumen + (Number(c.volumen_m3) || 0),
+          piezas: acc.piezas + (Number(c.piezas) || 0),
+        }),
+        { peso: 0, volumen: 0, piezas: 0 },
+      )
+    : null;
+  const hayContenedoresConDatos =
+    esMaritimo && totales !== null && (totales.peso > 0 || totales.volumen > 0 || totales.piezas > 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,29 +151,52 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
 
       {tipoCarga === "Mercancía Peligrosa" && <MsdsUploadSection onMsdsUpload={onMsdsUpload} />}
 
-      <div className="space-y-2">
-        <LabelHeredable field="pesoKg" getter={(c) => String(c.peso_kg || "")} htmlFor="emb-peso-kg">
-          Peso (kg) *
-        </LabelHeredable>
-        <Input id="emb-peso-kg" type="number" placeholder="0" {...numberInputProps(errors.pesoKg)} {...register("pesoKg")} />
-        <FieldError msg={errors.pesoKg} />
-      </div>
+      {esMaritimo ? (
+        <div className="md:col-span-2 rounded-md border border-dashed bg-muted/40 p-3">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <Calculator className="h-3.5 w-3.5" aria-hidden />
+            Totales calculados desde contenedores
+          </div>
+          {hayContenedoresConDatos ? (
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm tabular-nums">
+              <span><span className="font-semibold">{formatNumber(totales!.peso)}</span> kg</span>
+              <span><span className="font-semibold">{formatNumber(totales!.volumen, { decimals: 2 })}</span> m³</span>
+              <span><span className="font-semibold">{formatNumber(totales!.piezas)}</span> piezas</span>
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Captura peso, volumen y piezas por contenedor en el paso 2 (Ruta). Los totales del embarque se calculan automáticamente.
+            </p>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <LabelHeredable field="pesoKg" getter={(c) => String(c.peso_kg || "")} htmlFor="emb-peso-kg">
+              Peso (kg) *
+            </LabelHeredable>
+            <Input id="emb-peso-kg" type="number" placeholder="0" {...numberInputProps(errors.pesoKg)} {...register("pesoKg")} />
+            <FieldError msg={errors.pesoKg} />
+          </div>
 
-      <div className="space-y-2">
-        <LabelHeredable field="volumenM3" getter={(c) => String(c.volumen_m3 || "")} htmlFor="emb-volumen-m3">
-          Volumen (m³) *
-        </LabelHeredable>
-        <Input id="emb-volumen-m3" type="number" placeholder="0" {...numberInputProps(errors.volumenM3)} {...register("volumenM3")} />
-        <FieldError msg={errors.volumenM3} />
-      </div>
+          <div className="space-y-2">
+            <LabelHeredable field="volumenM3" getter={(c) => String(c.volumen_m3 || "")} htmlFor="emb-volumen-m3">
+              Volumen (m³) *
+            </LabelHeredable>
+            <Input id="emb-volumen-m3" type="number" placeholder="0" {...numberInputProps(errors.volumenM3)} {...register("volumenM3")} />
+            <FieldError msg={errors.volumenM3} />
+          </div>
 
-      <div className="space-y-2">
-        <LabelHeredable field="piezas" getter={(c) => String(c.piezas || "")} htmlFor="emb-piezas">
-          Piezas *
-        </LabelHeredable>
-        <Input id="emb-piezas" type="number" placeholder="0" {...numberInputProps(errors.piezas)} {...register("piezas")} />
-        <FieldError msg={errors.piezas} />
-      </div>
+          <div className="space-y-2">
+            <LabelHeredable field="piezas" getter={(c) => String(c.piezas || "")} htmlFor="emb-piezas">
+              Piezas *
+            </LabelHeredable>
+            <Input id="emb-piezas" type="number" placeholder="0" {...numberInputProps(errors.piezas)} {...register("piezas")} />
+            <FieldError msg={errors.piezas} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
+
