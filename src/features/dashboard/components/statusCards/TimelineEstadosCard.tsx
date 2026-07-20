@@ -25,7 +25,7 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
             <div className="absolute top-5 sm:top-6 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-info via-warning to-success opacity-30" />
 
             {ESTADOS_FILTRO.map((estado, idx) => {
-              const cfg = ESTADO_CONFIG[estado];
+              const cfg = getEstadoVisual(estado);
               const Icon = cfg.icon;
               const count = conteoPorEstado[estado];
 
