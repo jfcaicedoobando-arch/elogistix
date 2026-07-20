@@ -1,4 +1,9 @@
 # Changelog
+## [13.303.16] - 2026-07-20
+- **Fix · cotización se queda en "Aceptada" tras convertirla en borrador de embarque.** El wizard tradicional promovía el estado a `En operación`, pero la RPC `crear_embarque_borrador_core` (botón "Convertir a borrador") sólo escribía `embarque_id` y dejaba el estado en `Aceptada`. La tabla de cotizaciones mostraba el chip equivocado y la auditoría reportaba 50 cotizaciones inconsistentes. Caso reportado: COT-2026-0138 → ELIMP00333.
+  - **RPC:** ahora el `UPDATE public.cotizaciones` final también fija `estado = 'En operación'` en la misma transacción que crea el borrador.
+  - **Backfill:** 50 cotizaciones `Aceptada` con embarque vivo promovidas a `En operación`; 3 cotizaciones `En operación` con `embarque_id = NULL` (huérfanas pre-v13.303.14: COT-2026-0016, 0030, 0033) revertidas a `Aceptada` para que puedan volver a convertirse.
+
 ## [13.303.15] - 2026-07-20
 - **Fix · borrador de embarque desde cotización no precargaba puertos, tarifa ni datos logísticos.** `crear_embarque_borrador_core` sólo mapeaba cliente/incoterm/modo/tipo/tipo_contenedor. Los campos ruta (`puerto_*` / `aeropuerto_*` / `ciudad_*`), `tarifa_id` y logística (`carta_garantia`, `dias_libres_destino`, `dias_almacenaje`, `seguro`, `valor_seguro_usd`) quedaban en NULL, aunque la cotización los tuviera. Caso reportado: COT-2026-0138 → ELIMP00333 (Ningbo/Ensenada perdidos).
   - **RPC:** la RPC ahora parsea el código UN/LOCODE de `cotizaciones.origen`/`destino` (entre paréntesis) y lo escribe en el campo correcto según `modo` (Marítimo → puertos, Aéreo → aeropuertos, Terrestre → ciudades). Fallback: texto completo si no hay paréntesis.
