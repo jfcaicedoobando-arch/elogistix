@@ -49,10 +49,10 @@ Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → ll
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
   // pagada por requests no autorizadas. El getFacturapiClient debe ir entre
   // load y la llamada SDK para que multi-tenant (v13.136.4) elija la org correcta.
-  const authIdx = indexSource.indexOf("supabase.auth.getUser");
-  const loadIdx = indexSource.indexOf('.from("facturas")');
-  const resolveIdx = indexSource.indexOf("getFacturapiClient(");
-  const fapiIdx = indexSource.indexOf("facturapi.invoices.create");
+  const authIdx = combinedSource.indexOf("supabase.auth.getUser");
+  const loadIdx = combinedSource.indexOf('.from("facturas")');
+  const resolveIdx = combinedSource.indexOf("getFacturapiClient(");
+  const fapiIdx = combinedSource.indexOf("facturapi.invoices.create");
   if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || fapiIdx <= resolveIdx) {
     throw new Error(
       `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} fapi=${fapiIdx}`,
