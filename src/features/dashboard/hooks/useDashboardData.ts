@@ -11,10 +11,12 @@ import {
   parseProfitArribosEsteMes,
   parseCargasPorCliente,
   parseCargasActivasTotal,
+  parseEmbarquesEir,
   combinarActivos,
   type AlertaDemora,
   type ProximoArribo,
   type EmbarqueConProfit,
+  type EmbarqueEirLite,
   type EmbarqueMesSiguiente,
 } from "@/features/dashboard/domain/parsers/dashboard";
 
