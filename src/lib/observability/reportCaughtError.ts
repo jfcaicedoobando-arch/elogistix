@@ -88,8 +88,10 @@ export function reportCaughtError(
   const ctx = getErrorContext();
   const classified = classifyError(err);
 
-  // Skip: validaciones de negocio esperadas (mem plan Sentry 13.300.21).
-  if (classified.pgCode && EXPECTED_PG_CODES.has(classified.pgCode)) return;
+  // Skip: validaciones de negocio esperadas (mem plan Sentry 13.302.7).
+  const errMessage = (err as { message?: unknown } | null | undefined)?.message;
+  if (isExpectedBusinessError(classified.pgCode, typeof errMessage === "string" ? errMessage : undefined)) return;
+
 
   const enrichedTags: Record<string, string> = {
     ...(tags as Record<string, string>),
