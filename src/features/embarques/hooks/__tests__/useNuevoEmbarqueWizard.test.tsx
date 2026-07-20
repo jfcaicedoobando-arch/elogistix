@@ -71,11 +71,12 @@ vi.mock("../useNuevoEmbarqueExpediente", () => ({
 }));
 vi.mock("../useNuevoEmbarqueCotVinculada", () => ({
   useNuevoEmbarqueCotVinculada: () => ({
-    cotizacionVinculada: null,
+    cotizacionVinculada: { id: "cot-1", folio: "COT-1" },
     handleVincularCotizacion: vi.fn(),
     handleDesvincularCotizacion: vi.fn(),
   }),
 }));
+
 
 import { useNuevoEmbarqueWizard } from "../useNuevoEmbarqueWizard";
 
