@@ -3,7 +3,15 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.9] - 2026-07-20
+- **Fix — auto-sync de estado forzaba `Borrador → En Tránsito`**:
+  - `calcularEstadoEmbarque` sólo excluía estados terminales (`ESTADOS_MANUALES`), así que un embarque en `Borrador` o `Cotización` con ETD vencido se recalculaba como `En Tránsito`. El `useAutoSyncEstadoEmbarque` disparaba entonces una transición inválida y la máquina de estados (mig. `20260718214722`) rebotaba con `LC_TRANSICION_INVALIDA: Borrador → En Tránsito`.
+  - Se reemplazó por un allowlist explícito `ESTADOS_AUTO_CALCULABLES = {Confirmado, En Tránsito, Llegada}`. Cualquier otro estado se devuelve tal cual — más seguro por defecto.
+  - Tests de regresión en `embarque.test.ts` cubren `Borrador`, `Cotización`, `Cancelado`, además de los happy paths.
+  - Reporte del usuario: `requestId d3b726f5-998d-4798-9793-b0e68a0b98a8`.
+
 ## [13.302.8] - 2026-07-20
+
 - **Fix — "Marcar llegada" fallaba con `LC_TRANSICION_INVALIDA`**:
   - `actualizarFechaLlegadaRealEmbarque` seteaba `estado='Arribo'`, pero la máquina de estados vigente (mig. `20260718214722`) sólo permite `En Tránsito → Llegada`. `Arribo` es un estado posterior alcanzable desde `Llegada`.
   - Ahora se avanza a `Llegada`. Copys en `MarcarLlegadaForm` y `TrackingNuevoEventoForm` actualizados.
