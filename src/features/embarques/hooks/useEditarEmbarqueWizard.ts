@@ -42,6 +42,11 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const { data: contenedoresDb = [], isLoading: cargandoContenedores } = useContenedoresEmbarque(id);
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
+  // v13.303.23 — Hidratamos la cotización vinculada al embarque para que el
+  // wizard de edición muestre el badge verde en lugar del banner "Cotización
+  // requerida" y no obligue a re-seleccionar. Incluye estado `En operación`.
+  const { data: cotizacionVinculada = null } = useCotizacion(embarque?.cotizacion_id ?? undefined);
+  const { data: cotizacionesAceptadas = [] } = useCotizacionesAceptadas();
   const updateEmbarque = useUpdateEmbarque();
   const registrarActividad = useRegistrarActividad();
 
