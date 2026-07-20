@@ -22,11 +22,15 @@ interface Props {
   onModoExpedienteChange?: (modo: 'nuevo' | 'existente') => void;
   expedienteSeleccionado?: ExpedienteCliente | null;
   onSeleccionarExpediente?: (exp: ExpedienteCliente) => void;
-  /** Cuando es true, vincular cotización es obligatorio (controlado por rol del usuario). */
+  /**
+   * v13.303.26: vincular cotización es siempre obligatorio (política tarifa-first).
+   * La prop se conserva por compatibilidad de llamadas pero ya no altera el label.
+   */
   requiereCotizacion?: boolean;
   /** Cuando es false, se oculta el bloque de expediente (crear/asociar). Default: true. */
   permiteExpediente?: boolean;
 }
+
 
 export function BloqueVinculacion({
   cotizacionesAceptadas,
@@ -50,11 +54,10 @@ export function BloqueVinculacion({
   return (
     <>
       <div className="space-y-2">
-        <Label className={requiereCotizacion && !cotizacionVinculada ? "text-destructive" : undefined}>
-          {requiereCotizacion
-            ? "Vincular cotización Aceptada (obligatorio)"
-            : "¿Vincular a cotización existente? (opcional)"}
+        <Label className={!cotizacionVinculada ? "text-destructive" : undefined}>
+          Vincular cotización Aceptada (obligatorio)
         </Label>
+
         {cotizacionVinculada ? (
           <div className="flex items-center gap-2">
             <Badge variant="success" className="px-3 py-1.5 text-sm">

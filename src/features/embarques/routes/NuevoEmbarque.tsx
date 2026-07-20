@@ -9,7 +9,6 @@ import { StepDocumentos } from "@/features/embarques/components/StepDocumentos";
 import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPrecios";
 import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
 import { CotizacionVinculadaProvider } from "@/features/embarques/hooks/useHeredadoCotizacion";
-import { usePermissions } from "@/hooks/shared/usePermissions";
 
 import { notifyError } from "@/components/shared/utils/appFeedback";
 const steps = [
@@ -22,19 +21,19 @@ const steps = [
 export default function NuevoEmbarque() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { canCrearEmbarqueLibre } = usePermissions();
   const llegaConCotizacion = Boolean(
     (location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId,
   );
 
-  // Guard: roles sin permiso de crear embarque libre sólo pueden entrar
-  // si vienen del flujo Cotización → Generar embarque.
+  // v13.303.26 — política tarifa-first: todo embarque nuevo debe nacer de una
+  // cotización aceptada. Si el usuario cae aquí sin cotización previnculada,
+  // lo devolvemos al listado de cotizaciones.
   useEffect(() => {
-    if (!canCrearEmbarqueLibre && !llegaConCotizacion) {
-      notifyError(toast, { title: "Tu rol requiere iniciar el embarque desde una cotización Aceptada.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
-      navigate("/embarques", { replace: true });
+    if (!llegaConCotizacion) {
+      notifyError(toast, { title: "Selecciona primero una cotización Aceptada para crear el embarque.", method: "FEATURES_EMBARQUES_ROUTES_NUEVOEMBARQUE_1" });
+      navigate("/cotizaciones", { replace: true });
     }
-  }, [canCrearEmbarqueLibre, llegaConCotizacion, navigate]);
+  }, [llegaConCotizacion, navigate]);
 
   const w = useNuevoEmbarqueWizard();
 

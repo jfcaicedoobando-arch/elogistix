@@ -63,12 +63,9 @@ const COTIZAR_SIN_DESGLOSE: readonly AppRole[] = [
   "gerente_operaciones",
 ];
 
-const CREAR_EMBARQUE_LIBRE: readonly AppRole[] = [
-  "super_admin",
-  "admin_org",
-  "admin",
-  "gerente_operaciones",
-];
+// v13.303.26 — eliminado `CREAR_EMBARQUE_LIBRE`: la política tarifa-first no admite excepciones,
+// todo embarque nuevo nace de una cotización aceptada (incluidos super_admin/admin_org).
+
 
 const OVERRIDE_TARIFA_PRICING: readonly AppRole[] = [
   "super_admin",
@@ -154,7 +151,7 @@ export function usePermissions() {
   const canViewFinancials = has(FINANCE_VIEWERS, roleStr);
   const canEditSales = has(SALES, roleStr);
   const canCotizarSinDesglose = has(COTIZAR_SIN_DESGLOSE, roleStr);
-  const canCrearEmbarqueLibre = has(CREAR_EMBARQUE_LIBRE, roleStr);
+  // v13.303.26 — `canCrearEmbarqueLibre` eliminado.
   const canOverrideTarifaPricing = has(OVERRIDE_TARIFA_PRICING, roleStr);
 
   // Bloque Q
@@ -185,7 +182,7 @@ export function usePermissions() {
     canEditFinance,
     canEditSales,
     canCotizarSinDesglose,
-    canCrearEmbarqueLibre,
+    
     canOverrideTarifaPricing,
     canEmitirFactura,
     canCapturarFacturaProveedor,

@@ -24,8 +24,9 @@ export interface ValidateStepInput {
   conceptosVenta: ConceptoVentaValidacion[];
   conceptosCosto: ConceptoCostoValidacion[];
   /**
-   * v13.39.0: cuando es `true`, el paso 1 exige una cotización vinculada.
-   * Lo controla `usePermissions().canCrearEmbarqueLibre` (negado) desde el wizard.
+   * v13.303.26: siempre obligatorio para step 1. Se mantiene el flag para no
+   * romper llamadas y para permitir tests que aíslan validaciones base sin
+   * exigir la cotización. Default `true` (política tarifa-first).
    */
   requiereCotizacion?: boolean;
   /** Id de la cotización vinculada en el wizard (si existe). */
@@ -40,16 +41,17 @@ interface StepCostosValues {
 export function validateWizardStep(input: ValidateStepInput): StepValidationErrors {
   const {
     step, values, documentosArchivos, conceptosVenta, conceptosCosto,
-    requiereCotizacion = false, cotizacionVinculadaId = null,
+    requiereCotizacion = true, cotizacionVinculadaId = null,
   } = input;
 
   if (step === 1) {
     const errors = validateStepDatosGenerales(values as Parameters<typeof validateStepDatosGenerales>[0]);
     if (requiereCotizacion && !cotizacionVinculadaId) {
-      errors.cotizacion = "Tu rol requiere iniciar el embarque desde una cotización Aceptada.";
+      errors.cotizacion = "Debes iniciar el embarque desde una cotización Aceptada.";
     }
     return errors;
   }
+
   if (step === 2) {
     return validateStepRuta(values as StepRutaInput);
   }

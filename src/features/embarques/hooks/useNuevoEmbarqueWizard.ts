@@ -25,14 +25,14 @@ import { useCotizacionesAceptadas } from "@/features/cotizacion/hooks";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/features/embarques/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/components/shared/utils/appFeedback";
-import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useNuevoEmbarqueWizard() {
   const { toast } = useToast();
-  const { canCrearEmbarqueLibre } = usePermissions();
+  // v13.303.26 — sin excepciones de rol: cotización siempre obligatoria.
+
 
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
@@ -71,7 +71,7 @@ export function useNuevoEmbarqueWizard() {
         documentosArchivos: form.documentosArchivos,
         conceptosVenta: conceptos.conceptosVenta,
         conceptosCosto: conceptos.conceptosCosto,
-        requiereCotizacion: !canCrearEmbarqueLibre,
+        requiereCotizacion: true,
         cotizacionVinculadaId: cotVinc.cotizacionVinculada?.id ?? null,
       });
 
@@ -83,8 +83,9 @@ export function useNuevoEmbarqueWizard() {
       }
       return true;
     },
-    [methods, form.documentosArchivos, conceptos.conceptosVenta, conceptos.conceptosCosto, toast, canCrearEmbarqueLibre, cotVinc.cotizacionVinculada],
+    [methods, form.documentosArchivos, conceptos.conceptosVenta, conceptos.conceptosCosto, toast, cotVinc.cotizacionVinculada],
   );
+
 
   // Compatibilidad con consumidores antiguos
   const validateStep1 = useCallback(() => validateStep(1), [validateStep]);
@@ -96,18 +97,19 @@ export function useNuevoEmbarqueWizard() {
   const wizardStartedAt = useRef<number>(Date.now());
 
   const handleFinish = async () => {
-    // Guard final defense-in-depth: si el rol exige cotización y no hay vinculada,
-    // abortamos antes del orquestador para evitar bypasses por errores parcheados/saltados.
-    if (!canCrearEmbarqueLibre && !cotVinc.cotizacionVinculada?.id) {
+    // v13.303.26 — guard defense-in-depth: sin cotización vinculada abortamos
+    // antes del orquestador para evitar bypasses por errores parcheados/saltados.
+    if (!cotVinc.cotizacionVinculada?.id) {
       setCurrentStep(1);
       notifyError(toast, {
         step: 1,
-        errors: { cotizacion: "Tu rol requiere iniciar el embarque desde una cotización Aceptada." },
+        errors: { cotizacion: "Debes iniciar el embarque desde una cotización Aceptada." },
         method: "USE_NUEVO_EMBARQUE_WIZARD",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
       return;
     }
+
 
     for (const step of [1, 2, 3, 4]) {
       if (!validateStep(step)) {
