@@ -11,14 +11,19 @@ export const MAX_YEAR = 2100;
 
 export function isoToDisplay(iso: string): string {
   if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  if (!y || !m || !d) return "";
+  // Defensivo: si viene un timestamp (`YYYY-MM-DDTHH:MM:SS...` o con zona),
+  // recortar al head fecha; si no parece fecha ISO, devolver "".
+  const head = iso.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(head)) return "";
+  const [y, m, d] = head.split("-");
   return `${d}/${m}/${y}`;
 }
 
 export function isoToDate(iso: string): Date | undefined {
   if (!iso) return undefined;
-  const [y, m, d] = iso.split("-").map(Number);
+  const head = iso.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(head)) return undefined;
+  const [y, m, d] = head.split("-").map(Number);
   if (!y || !m || !d) return undefined;
   return new Date(y, m - 1, d);
 }
