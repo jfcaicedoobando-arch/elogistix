@@ -3,7 +3,16 @@
 Registro de cambios de Libre Carga en formato [Keep a Changelog](https://keepachangelog.com/).
 Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arriba).
 
+## [13.302.12] - 2026-07-20
+- **Fix — `validar_cierre_embarque` truena con `column pp.factura_id does not exist`** (Sentry `JAVASCRIPT-REACT-2Y`):
+  - La RPC usaba `pagos_proveedor pp JOIN proveedor_facturas pf ON pf.id = pp.factura_id`, pero la columna real es `pp.proveedor_factura_id`. Al abrir el detalle de cualquier embarque el Tab Cierre disparaba el error en `queryKey ["embarque", …, "cierre-validacion"]`.
+  - Nueva migración `CREATE OR REPLACE FUNCTION public.validar_cierre_embarque` con el JOIN corregido; el resto de las 8 reglas de cierre queda intacto.
+- **Sentry housekeeping**:
+  - `JAVASCRIPT-REACT-2X` (`Borrador → En Tránsito`) resuelto en `v13.302.9` (allowlist `ESTADOS_AUTO_CALCULABLES`).
+  - `JAVASCRIPT-REACT-2V` (`En Aduana → Entregado`) resuelto en `v13.302.10` (sincronización de `ESTADOS_EMBARQUE`).
+
 ## [13.302.11] - 2026-07-20
+
 - **Fix — estado lateral `En Proceso` faltaba en UI + mutaciones directas forzaban `Llegada`**:
   - `ESTADOS_ACTIVOS`, `EMPTY_CONTEO` y `parseConteoPorEstado` no listaban `En Proceso` (nodo lateral del grafo BD `En Tránsito → En Proceso → {En Aduana, Llegada, Arribo}`), así que los embarques en ese estado desaparecían de filtros/conteos y el botón "Avanzar estado" quedaba sin siguiente. Se agregó al catálogo y se implementó `SIGUIENTE_LATERAL` en `useEmbarqueEstadoActions.helpers.ts` para que avance a `En Aduana`.
   - `actualizarFechaLlegadaRealEmbarque` seteaba `estado: 'Llegada'` sin validar el actual: para embarques en `Arribo`/`Entregado`/`EIR`/`Cerrado` o comerciales previos (`Borrador`/`Cotización`), la mutación disparaba `LC_TRANSICION_INVALIDA`. Ahora sólo avanza si el estado actual está en `{En Tránsito, En Aduana, En Proceso}`; en cualquier otro caso sólo persiste `fecha_llegada_real`.
