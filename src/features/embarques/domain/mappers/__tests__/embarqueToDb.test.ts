@@ -7,7 +7,7 @@ import {
 import { DEFAULT_EMBARQUE_VALUES } from "../embarqueFromDb";
 
 const contactos = [
-  { id: "ct1", nombre: "Shipper Co", tipo: "Proveedor" as const, pais: "CN" },
+  { id: "ct1", nombre: "Shipper Co", tipo: "Exportador" as const, pais: "CN" },
 ];
 
 const baseValues = {
