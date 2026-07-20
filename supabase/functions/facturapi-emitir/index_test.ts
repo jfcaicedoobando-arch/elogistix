@@ -8,10 +8,9 @@
 import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+// v13.303.3: la lógica de load/emit se extrajo a `emitir.ts`. El handler
+// (`index.ts`) sólo orquesta; el SDK real vive en `emitir.ts`.
 const emitirSource = await Deno.readTextFile(new URL("./emitir.ts", import.meta.url));
-// v13.303.3: la lógica de load/emit se extrajo a `emitir.ts`; para las
-// invariantes de orden concatenamos ambos y usamos el offset acumulado.
-const combinedSource = indexSource + "\n/* --- emitir.ts --- */\n" + emitirSource;
 
 Deno.test("facturapi-emitir: rechaza método != POST (405)", () => {
   // GET con body abierto sería un vector de cache poisoning.
