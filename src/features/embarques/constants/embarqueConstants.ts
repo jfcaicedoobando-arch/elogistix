@@ -8,9 +8,18 @@ export function getDocsForMode(modo: string): string[] {
   return ['Carta Porte', 'Factura', 'Lista de Empaque'];
 }
 
-export const ESTADOS_EMBARQUE = ['Borrador', 'Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado'] as const;
+// v13.302.10 — Sincronizado con el grafo de la máquina de estados de BD
+// (mig. `20260718214722`). El orden debe coincidir con el happy path para que
+// `getSiguienteEstado` (UI "Avanzar estado") nunca proponga una transición
+// inválida. Ver `estados-embarque-sync.test.ts`.
+export const ESTADOS_EMBARQUE = [
+  'Borrador', 'Cotización', 'Confirmado', 'En Tránsito',
+  'En Aduana', 'Llegada', 'Arribo', 'Entregado', 'EIR', 'Cerrado',
+] as const;
 
-export const ESTADOS_ACTIVOS = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado'] as const;
+export const ESTADOS_ACTIVOS = [
+  'Cotización', 'Confirmado', 'En Tránsito', 'En Aduana', 'Llegada', 'Arribo', 'Entregado',
+] as const;
 
 
 
