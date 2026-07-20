@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/errors";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
+import { useTiposContenedor } from "@/features/catalogos/hooks";
+import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 import { formatNumber } from "@/lib/formatters";
 
 interface Props {
@@ -35,6 +37,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
   const navigate = useNavigate();
   const { data: contenedores = [], isLoading, error } =
     useContenedoresEmbarque(embarqueId);
+  const { data: tiposContenedor = [] } = useTiposContenedor();
 
   const irAEditar = () => navigate(`/embarques/${embarqueId}/editar?step=2`);
 
@@ -120,7 +123,7 @@ export function SeccionContenedoresReadonly({ embarqueId }: Props) {
                       </td>
                       <td className="py-1.5 px-2">
                         {c.tipo_contenedor
-                          ? <Badge variant="secondary">{c.tipo_contenedor}</Badge>
+                          ? <Badge variant="secondary">{resolveTipoContenedorNombre(c.tipo_contenedor, tiposContenedor)}</Badge>
                           : <span className="text-muted-foreground">—</span>}
                       </td>
                       {mostrarBLHouse && (
