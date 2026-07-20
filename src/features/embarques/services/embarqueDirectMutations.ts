@@ -20,25 +20,31 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
 }
 
 /**
- * Actualiza la fecha de llegada real del embarque y avanza el estado a "Llegada".
- * v13.302.8: la máquina de estados vigente (migración 20260718214722) sólo
- * permite `En Tránsito → Llegada`. Antes se seteaba `Arribo` directamente, lo
- * que disparaba `LC_TRANSICION_INVALIDA` desde el trigger de BD. `Arribo` es
- * un estado posterior que se alcanza desde `Llegada`.
+ * Actualiza la fecha de llegada real del embarque y avanza el estado a "Llegada"
+ * únicamente cuando el estado actual lo permite según la máquina de estados
+ * de BD (mig. `20260718214722`: `En Tránsito → Llegada`, `En Aduana → Llegada`,
+ * `En Proceso → Llegada`). En cualquier otro estado sólo se actualiza el
+ * campo `fecha_llegada_real` para respetar estados ya avanzados
+ * (`Arribo`/`Entregado`/`EIR`/`Cerrado`) o comerciales previos y evitar
+ * `LC_TRANSICION_INVALIDA`. v13.302.11.
  */
+const ESTADOS_QUE_AVANZAN_A_LLEGADA = new Set(["En Tránsito", "En Aduana", "En Proceso"]);
+
 export async function actualizarFechaLlegadaRealEmbarque(
   embarqueId: string,
   fechaIso: string,
 ): Promise<void> {
-  await run(
-    supabase
-      .from('embarques')
-      .update({
-        fecha_llegada_real: fechaIso,
-        estado: 'Llegada' as EmbarqueInsert['estado'],
-      })
-      .eq('id', embarqueId),
-  );
+  const { data: current } = await supabase
+    .from('embarques')
+    .select('estado')
+    .eq('id', embarqueId)
+    .maybeSingle();
+  const debeAvanzar = current?.estado
+    ? ESTADOS_QUE_AVANZAN_A_LLEGADA.has(current.estado)
+    : false;
+  const patch: Partial<EmbarqueInsert> = { fecha_llegada_real: fechaIso };
+  if (debeAvanzar) patch.estado = 'Llegada' as EmbarqueInsert['estado'];
+  await run(supabase.from('embarques').update(patch).eq('id', embarqueId));
 }
 
 
