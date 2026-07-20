@@ -1,40 +1,43 @@
-## Contexto
+## Diagnóstico
 
-Enum `tipo_contacto` = `('Proveedor', 'Exportador', 'Importador')`. En la jerga de forwarder "Proveedor" y "Exportador" son sinónimos (el que embarca la mercancía desde origen). Datos actuales: 22 filas `Proveedor` + 1 fila `Exportador`.
+CI vuelve a caer en el snapshot RLS con:
 
-## Cambio
+```
+ERROR: column c.dias_almacenaje does not exist
+▶ 20260720222427_9c9f2a48....sql
+```
 
-Unificar en un solo valor canónico: **`Exportador`**. Se elimina `Proveedor` del enum.
+Estado real del repo:
 
-### Migración BD (una sola)
+- `20260720222427` ya está limpia (0 referencias a `dias_almacenaje`) — el fix previo (v13.303.24) sí está en disco. Ese ERROR proviene de un run de CI encolado con la versión anterior. Un re-run limpiaría 222427.
+- **Pero hay una bomba de tiempo real**: `20260720222825` y `20260720223911` definen `crear_embarque_borrador_core` con `INSERT ... VALUES (..., v_cot.dias_almacenaje, ...)`. La columna `cotizaciones.dias_almacenaje` **no existe en la secuencia de migraciones** (sólo se agregó a `embarques` en `20260616071906`, y luego se metió a mano a `cotizaciones` en producción).
+  - Consecuencia CI: las funciones se crean sin error (plpgsql no valida columnas al `CREATE`), pero al primer llamado real revientan igual que el UPDATE viejo.
+  - Consecuencia producción: hoy funciona sólo porque la columna se agregó fuera de migraciones — cualquier restore/entorno nuevo queda roto.
 
-1. `UPDATE contactos_cliente SET tipo = 'Exportador' WHERE tipo = 'Proveedor'` (23 filas quedarán como Exportador).
-2. Rename enum: crear `tipo_contacto_new AS ENUM ('Exportador','Importador')`, alterar columna con cast, dropear enum viejo, renombrar el nuevo a `tipo_contacto`.
-3. No hay CHECK constraints ni triggers que dependan del literal — verificado que no hay más usos en BD (sólo la columna `contactos_cliente.tipo`).
+## Fix
 
-### Frontend
+**Nueva migración** que empareja `cotizaciones` con los campos ya presentes en `embarques` (todos los que las RPC `v_cot.*` esperan):
 
-- `src/features/cliente/components/DialogContacto.tsx`
-  - `TIPOS_CONTACTO` → `['Exportador', 'Importador']`.
-  - Default `tipo: 'Exportador'`.
-  - Descripción: "Exportador o importador asociado a este cliente."
-- `src/features/cliente/components/TablaContactos.tsx`
-  - Remover `case 'Proveedor'` del `switch` de badge.
-  - Renombrar título de la tarjeta `Proveedores / Exportadores` → `Exportadores`.
-- `src/features/embarques/components/secciones/BloqueClienteContactos.tsx` — sin cambios; ya filtra por `Exportador` (v13.303.27).
-- Test `src/features/cliente/domain/__tests__/resolverValorContactoDesdeTexto.test.ts` — actualizar fixture y aserción a `Exportador`.
-- Types autogenerados (`src/integrations/supabase/types.ts`) — se regeneran tras la migración; no se editan manualmente.
+```sql
+ALTER TABLE public.cotizaciones
+  ADD COLUMN IF NOT EXISTS dias_almacenaje integer NOT NULL DEFAULT 0;
+```
 
-### Bump y changelog
+Auditar en la misma migración los otros campos que las RPCs leen de `v_cot` y confirmar con `information_schema` que ya existen (`carta_garantia`, `dias_libres_destino`, `seguro`, `valor_seguro_usd`, `tarifa_id`). Si alguno faltara, se agrega con `IF NOT EXISTS`.
 
-- `APP_VERSION` → `13.303.28`.
-- Entrada en `CHANGELOG.md`.
+Con esto:
 
-## Fuera de alcance
+- CI snapshot deja de depender del re-run: la columna existe cuando las funciones se llamen y el UPDATE de 222427 (ya limpio en disco) no reintroduce el bug.
+- Entornos nuevos (staging fresh, RLS tests) quedan consistentes con producción.
 
-- Enum `tipo_proveedor` de la tabla `proveedores` (nuestros proveedores logísticos): NO se toca, es otro dominio.
-- No se ofrece un flag de "rollback" — los 22 registros históricos quedan como `Exportador` sin distintivo especial. Si el usuario luego quiere separarlos con un tag, se abordará aparte.
+## Entregables
+
+1. `supabase/migrations/<timestamp>_align_cotizaciones_columnas_tarifa.sql` — `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` (idempotente, no toca datos).
+2. Bump `APP_VERSION` → `13.303.29`.
+3. Entrada en `CHANGELOG.md` explicando el desfase snapshot vs. producción y el hardening.
+
+Sin cambios de UI ni de lógica de negocio.
 
 ## Analogía
 
-Teníamos dos etiquetas en la agenda del cliente que decían lo mismo ("Proveedor" y "Exportador"). Las juntamos en una sola: **Exportador**. Es como fusionar los grupos "Móvil" y "Celular" en tu libreta de contactos.
+Producción tenía un cuarto extra que se construyó "por fuera del plano". Cuando el CI reconstruye la casa desde los planos oficiales, ese cuarto no aparece y las tuberías (RPC) que llegan hasta ahí revientan. Esta migración añade el cuarto al plano oficial.
