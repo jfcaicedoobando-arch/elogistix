@@ -110,70 +110,14 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         onDownload={handleDownload}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <FacturaEmisorCard />
-        {mostrarReceptor && (
-          <FacturaReceptorCard
-            clienteId={factura.cliente_id}
-            clienteNombre={factura.cliente_nombre}
-            rfcFactura={factura.rfc_cliente}
-          />
-        )}
-      </div>
-
-      <FacturaResumenCard factura={factura} />
-
-      {mostrarTimbrado && (
-        <FacturaTimbradoCard
-          uuidFiscal={factura.uuid_fiscal}
-          folioFiscal={factura.folio_fiscal}
-          serie={factura.serie}
-          fechaEmision={factura.fecha_emision}
-          ambiente={factura.ambiente}
-        />
-      )}
-
-      <FacturaDetalleEditableSections
+      <FacturaDetalleBody
         factura={factura}
         canEdit={canEdit}
         puedeEditarBorrador={puedeEditarBorrador}
         conceptosVivos={conceptosVivos}
-      />
-
-      {mostrarConceptos && (
-        <FacturaConceptosTable
-          snapshot={factura.snapshot_emision}
-          moneda={factura.moneda}
-          conceptos={conceptosVivos}
-        />
-      )}
-
-      <FacturaTotalesCard
-        subtotal={Number(factura.subtotal)}
-        iva={Number(factura.iva)}
-        total={Number(factura.total)}
-        moneda={factura.moneda}
-      />
-
-      <FacturaPagosSection
-        facturaId={factura.id}
-        facturaNumero={factura.numero}
-        totalFactura={Number(factura.total)}
-        moneda={factura.moneda}
-        canEdit={canEdit}
         onRegistrarPago={() => setPagoOpen(true)}
       />
-      <FacturaNotasCreditoSeccion
-        facturaId={factura.id}
-        facturaNumero={factura.numero}
-        monedaFactura={factura.moneda}
-        tipoCambioFactura={Number(factura.tipo_cambio ?? 1)}
-        saldoFactura={Number(factura.total)}
-        uuidFacturaOriginal={factura.uuid_fiscal ?? null}
-        snapshotEmision={factura.snapshot_emision}
-        canEdit={canEdit}
-      />
-      <FacturaBitacoraCard facturaId={factura.id} />
+
 
       <FacturaDetalleModales
         factura={factura}
