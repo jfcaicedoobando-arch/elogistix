@@ -96,10 +96,12 @@ export const ESTADOS_FILTRO = [...ESTADOS_ACTIVOS, "EIR"] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
 export const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
+  "Cotización": 0,
   Confirmado: 0,
   "En Tránsito": 0,
-  Arribo: 0,
   "En Aduana": 0,
+  Llegada: 0,
+  Arribo: 0,
   Entregado: 0,
   EIR: 0,
 };
