@@ -1,4 +1,9 @@
 # Changelog
+## [13.303.19] - 2026-07-20
+- **Fix · CI (RLS suite) fallaba en rojo por migración inaplicable.** La migración `20260720222427` (parte de v13.303.15) referenciaba `c.dias_almacenaje` en `crear_embarque_borrador_core` y en el backfill de COT-2026-0138, pero esa columna sólo existe en `public.embarques`, no en `public.cotizaciones`. Resultado: `Apply migrations` fallaba con `ERROR: column c.dias_almacenaje does not exist` y el job `rls-suites` quedaba en `skipped`, marcando el workflow como fallido.
+  - **Nueva migración:** recrea la RPC sin `dias_almacenaje` (el campo del embarque queda en su default `0`, como antes de v13.303.15) y re-ejecuta el backfill de COT-2026-0138 sin la línea ofensiva.
+  - **Sin impacto funcional visible:** el resto del mapeo (puertos/aeropuertos/ciudades, tarifa, carta_garantia, dias_libres_destino, seguro, valor_seguro_usd, estado `En operación`, contenedores con `code` legible) se preserva íntegro.
+
 ## [13.303.18] - 2026-07-20
 - **Fix · la carta de contenedores mostraba un UUID (p.ej. `8014e97d-37a6-4e99-9238-fd507543c340`) en la columna "Tipo".** La cotización guarda `tipo_contenedor` como UUID del catálogo `tipos_contenedor`; la RPC `crear_embarque_borrador_core` copiaba ese UUID tal cual a `embarque_contenedores.tipo_contenedor`, mientras que la UI (`FilaContenedor`) espera el `code` (`40HC`, `20DRY`, …). Resultado: contenedores creados desde el flujo "Convertir a borrador" mostraban el UUID crudo.
   - **RPC `crear_embarque_borrador_core`:** ahora resuelve el UUID contra `tipos_contenedor` y guarda el `code` legible en los contenedores hijos (y también en `embarques.tipo_contenedor`). Si el valor no es UUID, se conserva tal cual (compat).

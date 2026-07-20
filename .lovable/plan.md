@@ -1,46 +1,40 @@
-## Contexto
+## Problema
 
-El stepper del detalle del embarque muestra `Borrador → Cotización → Confirmado → …` porque así está el enum `estado_embarque` en la base de datos y la máquina de transiciones. El problema es de **nomenclatura**: "Cotización" también es el nombre del documento previo (COT-2026-XXXX) que genera el embarque, así que ver "Paso 2: Cotización" después de "Borrador" da la impresión de que el embarque retrocede a la cotización.
+La migración `20260720222427_9c9f2a48-…sql` (parte de v13.303.15) hace referencia a `c.dias_almacenaje` (columna de `cotizaciones`) en dos lugares, pero esa columna **sólo existe en `embarques`**, no en `cotizaciones`. Resultado en CI:
 
-Solución acordada: **cambio cosmético**. La base de datos, el enum, las policies y la máquina de estados siguen usando el valor `'Cotización'`. Solo cambia lo que ve el usuario: la etiqueta pasa a **"Propuesta"**.
+```
+ERROR:  column c.dias_almacenaje does not exist
+HINT:   Perhaps you meant to reference the column "e.dias_almacenaje".
+```
+
+Esto revienta “Prepare RLS database snapshot → Apply migrations”, lo cual salta el job `rls-suites` (queda como `skipped`) y el agregador reporta:
+
+```
+##[error]Una o más suites RLS fallaron (resultado: skipped)
+```
+
+Columnas realmente existentes en `cotizaciones` (verificado): `carta_garantia`, `dias_libres_destino`, `seguro`, `valor_seguro_usd`. **No** existen `dias_almacenaje` ni `tarifa_id_original`/`tarifa_id_aplicada` en cotizaciones.
+
+## Analogía
+
+Es como copiar campos de un formulario A a otro B usando una etiqueta que sólo vive en B: al leerla del A, Postgres se queja porque ese casillero nunca existió allá.
 
 ## Cambios
 
-### 1. Nuevo mapa de etiquetas visibles
-Crear `src/features/embarques/constants/estadoEmbarqueLabels.ts`:
+1. **Nueva migración `supabase/migrations/<timestamp>_fix_crear_embarque_borrador_core_dias_almacenaje.sql`** que:
+   - Recrea `public.crear_embarque_borrador_core(uuid)` idéntica a la actual pero eliminando `v_cot.dias_almacenaje` del `INSERT INTO public.embarques`. `dias_almacenaje` en embarques queda en su default (`0`), consistente con el flujo previo a v13.303.15 (no hay origen para ese dato en la cotización).
+   - Re-ejecuta el backfill de `COT-2026-0138 → E-ELIMP00333` sin la línea `dias_almacenaje = COALESCE(e.dias_almacenaje, c.dias_almacenaje)` (se conserva el valor actual en embarques).
 
-- Exporta `ESTADO_EMBARQUE_LABELS: Record<EstadoEmbarque, string>` con `'Cotización' → 'Propuesta'` y el resto igual.
-- Exporta helper `labelEstadoEmbarque(estado)` que hace fallback al valor original si no está mapeado.
+2. **Bump de versión**: `APP_VERSION` → `13.303.19` + entrada en `CHANGELOG.md` (root) explicando el fix de la migración rota y su impacto (CI RLS suite volvía a rojo).
 
-### 2. Consumir el mapa en los puntos donde el usuario lee el estado
+## Sin cambios
 
-- `src/features/embarques/components/tabResumen/EstadoProgresoCard.tsx` — nombres del stepper y del "Siguiente".
-- `src/lib/ui/estadoConfig.ts` (entrada `"Cotización"`) — badge del listado y del header.
-- `src/features/embarques/domain/embarqueFases.ts` (línea 83) — label de la fase.
-- Filtros/selects de estado del listado de embarques y del tab Tracking (se identifican durante la implementación buscando iteraciones sobre `ESTADOS_EMBARQUE`).
-- Leyendas del dashboard donde se muestre la clave `"Cotización"` como texto (los `Record` que usan la clave como *dato* no se tocan, solo el render).
+- No se toca UI, ni la RPC en su lógica de negocio (misma firma y comportamiento salvo el campo eliminado).
+- No se altera el resto de columnas del backfill (tarifa, carta_garantia, dias_libres_destino, seguro, valor_seguro_usd) — esas sí existen en cotizaciones.
+- No se modifica la migración fallida en sitio (la política del repo es migraciones inmutables); se corrige con una migración posterior.
 
-### 3. Header del detalle
-En `EmbarqueDetalleHeader.tsx`, la línea "Cotización origen: COT-…" se mantiene tal cual (ahí sí se refiere al documento previo, no al estado). Sin cambios.
+## Verificación esperada
 
-### 4. Tests
-
-- Ajustar snapshots/expectativas que asertaban el string `'Cotización'` como etiqueta visible del estado del embarque (los que asertan el valor de BD siguen igual).
-- Añadir test unitario para `labelEstadoEmbarque('Cotización') === 'Propuesta'` y que el resto de estados no cambia.
-
-### 5. Versión y changelog
-
-- `APP_VERSION` → `13.303.17`.
-- Entrada en `CHANGELOG.md` explicando el renombrado cosmético y que la BD no cambia.
-
-## Detalles técnicos
-
-- **No se toca** el enum `estado_embarque`, la RPC de transiciones, RLS ni el parser del dashboard (`dashboardTypes.ts`, `dashboard.ts`) porque usan `"Cotización"` como *clave de dato*, no como texto visible.
-- Riesgo: bajo. Es un cambio de presentación. El único riesgo real es que un filtro compare el label visible en vez del valor; el barrido en el paso 2 lo previene.
-- Al terminar: `bun run lint` + `bun run typecheck` + tests de embarques.
-
-## Fuera de alcance
-
-- Renombrar el enum en BD.
-- Eliminar el paso del flujo o reordenarlo.
-- Cambios en el módulo de Cotizaciones (documento COT).
+- `Apply migrations` termina en verde.
+- Job agregador `RLS tests result` reporta `success`.
+- No queda referencia a `c.dias_almacenaje` en `supabase/migrations/` (grep de control).
