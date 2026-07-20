@@ -1,4 +1,11 @@
 # Changelog
+## [13.303.13] - 2026-07-20
+- **Fix dashboard · chip EIR en 0 para operadores en scope "Mis embarques".** Para roles operadores (coordinador logístico, etc.) el dashboard entra por defecto al scope `mios`, y ahí el `conteoPorEstado` se recalcula en el cliente a partir de las listas de `dashboard_details()`. Esas listas se alimentan del CTE `activos` del RPC, que excluye `EIR`/`Cerrado`, así que la casilla EIR de la timeline salía siempre en 0 aunque el operador tuviera embarques EIR asignados (caso reportado: Valeria con 20 embarques EIR).
+  - **BD:** `dashboard_details()` ahora expone `embarquesEir` (id + operador + estadoReal, límite 500, sin desglose financiero) tomado directamente de `embarques_base` sin filtrar por `activos`.
+  - **Parser (`domain/parsers/dashboard.ts`):** nuevo `EmbarqueEirLite` + `parseEmbarquesEir`.
+  - **Hook (`useDashboardData.ts`):** expone `embarquesEir`.
+  - **Controller (`useDashboardController.ts`):** en `scope === "mios"` filtra `embarquesEir` por `operador === user.email` y suma al `conteoPorEstado.EIR` (con dedupe propio, sin tocar `totalActivos`).
+
 ## [13.303.12] - 2026-07-20
 - **Sprint 0 · Cierre de bugs residuales (FIX-04/32, FIX-06, FIX-07).**
   - **FIX-04/32 (timeout FacturApi):** el SDK `facturapi@4.18.0` no soporta `AbortSignal`; una red colgada dejaba la Edge Function ocupada ~150 s y el claim `PENDING:<uuid>` bloqueado. Nuevo helper `withFacturapiTimeout(op, promise, 30_000)` + clase `FacturapiTimeoutError` en `supabase/functions/_shared/facturapiClient.ts`. Se envolvieron `invoices.create` (`facturapi-emitir/emitir.ts`, con liberación de claim + bitácora `facturapi_emitir_timeout` y respuesta HTTP 504) e `invoices.list` (`facturapi-recuperar-claim/recuperar.ts`, HTTP 504).

@@ -11,10 +11,12 @@ import {
   parseProfitArribosEsteMes,
   parseCargasPorCliente,
   parseCargasActivasTotal,
+  parseEmbarquesEir,
   combinarActivos,
   type AlertaDemora,
   type ProximoArribo,
   type EmbarqueConProfit,
+  type EmbarqueEirLite,
   type EmbarqueMesSiguiente,
 } from "@/features/dashboard/domain/parsers/dashboard";
 
@@ -99,6 +101,12 @@ export function useDashboardData() {
   }, [stats]);
   const cargasActivasTotal = useMemo(() => parseCargasActivasTotal(stats), [stats]);
 
+  // v13.303.13 · Listado ligero de EIR para el scope "mios" (chip EIR).
+  const embarquesEir = useMemo<EmbarqueEirLite[]>(
+    () => parseEmbarquesEir(stats),
+    [stats],
+  );
+
   const resumenMesSiguiente = useMemo(() => parseResumenMesSiguiente(stats), [stats]);
 
   const activos = useMemo(
@@ -115,6 +123,7 @@ export function useDashboardData() {
     proximosArribos,
     profitArribosEsteMes,
     embarquesMesSiguiente,
+    embarquesEir,
     resumenMesSiguiente,
     arribosEsteMes,
     cargasPorCliente,

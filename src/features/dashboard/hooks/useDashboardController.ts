@@ -58,6 +58,9 @@ export function useDashboardController() {
     const pa = data.proximosArribos.filter((e) => mine(e.operador));
     const pf = data.profitArribosEsteMes.filter((e) => mine(e.operador));
     const em = data.embarquesMesSiguiente.filter((e) => mine(e.operador));
+    // v13.303.13 · EIR se excluye del CTE `activos` del RPC, por eso viene
+    // en su propia lista `embarquesEir`. Sumamos al conteo (no al total activos).
+    const eir = data.embarquesEir.filter((e) => mine(e.operador));
 
     const activos = [...ad, ...pa, ...pf, ...em];
     const seen = new Set<string>();
@@ -66,6 +69,13 @@ export function useDashboardController() {
       if (seen.has(e.id)) continue;
       seen.add(e.id);
       if (e.estadoReal in conteo) conteo[e.estadoReal] += 1;
+    }
+    // EIR se cuenta por separado (nunca colisiona con `activos`).
+    const eirSeen = new Set<string>();
+    for (const e of eir) {
+      if (eirSeen.has(e.id)) continue;
+      eirSeen.add(e.id);
+      conteo.EIR += 1;
     }
 
     const arribosScoped = {

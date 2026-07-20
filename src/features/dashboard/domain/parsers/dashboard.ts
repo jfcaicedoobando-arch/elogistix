@@ -108,6 +108,29 @@ export function parseCargasActivasTotal(stats: DashboardStats): number {
   return typeof v === "number" ? v : Number(v ?? 0);
 }
 
+/**
+ * v13.303.13 · Listado ligero de embarques EIR expuesto por `dashboard_details()`
+ * para que el scope "mis embarques" pueda contarlos por operador. EIR está
+ * excluido del CTE `activos` del RPC, así que este es el único canal.
+ */
+export type EmbarqueEirLite = {
+  id: string;
+  operador: string | null;
+  estadoReal: "EIR";
+};
+
+export function parseEmbarquesEir(stats: DashboardStats): EmbarqueEirLite[] {
+  const raw = stats?.embarquesEir;
+  if (!Array.isArray(raw)) return [];
+  return (raw as Array<Record<string, unknown>>)
+    .filter((r) => r && typeof r.id === "string")
+    .map((r) => ({
+      id: String(r.id),
+      operador: r.operador == null ? null : String(r.operador),
+      estadoReal: "EIR" as const,
+    }));
+}
+
 export function parseCargasPorCliente(stats: DashboardStats): CargaPorCliente[] {
   if (!stats?.cargasPorCliente) return [];
   const raw = stats.cargasPorCliente;
