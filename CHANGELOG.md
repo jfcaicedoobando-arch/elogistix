@@ -1,4 +1,7 @@
 # Changelog
+## [13.303.25] - 2026-07-20
+- **UX · al editar un embarque se oculta el selector de expediente (crear/asociar).** El bloque solo aplica en el wizard de creación: al editar, el embarque ya está asignado a un expediente y los radios "Crear nuevo" / "Asociar existente" no tenían handlers en `EditarEmbarque.tsx`, así que solo agregaban ruido visual. Se agregó `permiteExpediente` a `BloqueVinculacion` y `mostrarSelectorExpediente` a `StepDatosGenerales` (default `true`); `EditarEmbarque` lo pasa en `false`. El bloque de vinculación de cotización sigue visible en ambos flujos.
+
 ## [13.303.24] - 2026-07-20
 - **CI · fix snapshot RLS: migración `20260720222427` ya no referencia `cotizaciones.dias_almacenaje` (columna inexistente).** Antes, `Apply migrations` reventaba con `ERROR: column c.dias_almacenaje does not exist` y abortaba el snapshot, dejando sin correr todas las suites RLS.
   - **Migración parchada:** se quitaron las referencias a `v_cot.dias_almacenaje` en el INSERT de `crear_embarque_borrador_core` y la línea `dias_almacenaje = COALESCE(e.dias_almacenaje, c.dias_almacenaje)` del backfill de COT-2026-0138.

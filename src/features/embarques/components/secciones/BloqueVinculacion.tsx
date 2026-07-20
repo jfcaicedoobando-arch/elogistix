@@ -24,6 +24,8 @@ interface Props {
   onSeleccionarExpediente?: (exp: ExpedienteCliente) => void;
   /** Cuando es true, vincular cotización es obligatorio (controlado por rol del usuario). */
   requiereCotizacion?: boolean;
+  /** Cuando es false, se oculta el bloque de expediente (crear/asociar). Default: true. */
+  permiteExpediente?: boolean;
 }
 
 export function BloqueVinculacion({
@@ -38,6 +40,7 @@ export function BloqueVinculacion({
   expedienteSeleccionado,
   onSeleccionarExpediente,
   requiereCotizacion = false,
+  permiteExpediente = true,
 }: Props) {
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [expedienteComboOpen, setExpedienteComboOpen] = useState(false);
@@ -98,7 +101,7 @@ export function BloqueVinculacion({
         )}
       </div>
 
-      {clienteId && tieneExpedientes && (
+      {permiteExpediente && clienteId && tieneExpedientes && (
         <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
           <Label className="text-sm font-medium">Expediente</Label>
           <RadioGroup
