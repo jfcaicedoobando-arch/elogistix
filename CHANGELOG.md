@@ -1,4 +1,9 @@
 # Changelog
+## [13.303.18] - 2026-07-20
+- **Fix · la carta de contenedores mostraba un UUID (p.ej. `8014e97d-37a6-4e99-9238-fd507543c340`) en la columna "Tipo".** La cotización guarda `tipo_contenedor` como UUID del catálogo `tipos_contenedor`; la RPC `crear_embarque_borrador_core` copiaba ese UUID tal cual a `embarque_contenedores.tipo_contenedor`, mientras que la UI (`FilaContenedor`) espera el `code` (`40HC`, `20DRY`, …). Resultado: contenedores creados desde el flujo "Convertir a borrador" mostraban el UUID crudo.
+  - **RPC `crear_embarque_borrador_core`:** ahora resuelve el UUID contra `tipos_contenedor` y guarda el `code` legible en los contenedores hijos (y también en `embarques.tipo_contenedor`). Si el valor no es UUID, se conserva tal cual (compat).
+  - **UI `SeccionContenedoresReadonly`:** usa `resolveTipoContenedorNombre` con el catálogo `useTiposContenedor` como defensa adicional (si aparece un UUID por datos legacy, se traduce en pantalla).
+  - **Backfill:** los 8 contenedores existentes con UUID en `tipo_contenedor` fueron actualizados al `code` correspondiente.
 ## [13.303.17] - 2026-07-20
 - **UX · el stepper del embarque mostraba "Cotización" como paso 2 y confundía con el documento previo (COT-XXXX).** El enum `estado_embarque` de BD reutiliza el nombre "Cotización" para el estado intermedio entre `Borrador` y `Confirmado`, por lo que en el detalle del embarque parecía que retrocedía a la cotización origen. Reportado sobre COT-2026-0138 / ELIMP00333.
   - **UI:** nuevo mapa `ESTADO_EMBARQUE_LABELS` (`src/features/embarques/constants/estadoEmbarqueLabels.ts`) que renombra sólo la etiqueta visible a **"Propuesta"**. Aplicado en `EstadoProgresoCard`, `EmbarqueStatusChip`, filtro de estado de `EmbarquesFiltros`, `embarqueFases` (fase inicial del timeline de tracking) y el texto de ayuda del dashboard.
