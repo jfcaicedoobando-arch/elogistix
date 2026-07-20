@@ -84,6 +84,7 @@ export function useSyncEstadoEmbarque() {
         if (msg.includes("LC_TRANSICION_INVALIDA")) {
           throw new Error(
             "El estado del embarque cambió en otra sesión. Recarga la página para ver el estado actual.",
+            { cause: err },
           );
         }
         throw err;
