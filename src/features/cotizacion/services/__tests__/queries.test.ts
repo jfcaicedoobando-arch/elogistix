@@ -64,13 +64,13 @@ describe("services/cotizacion/queries", () => {
     await expect(fetchCotizaciones("org1")).rejects.toThrow();
   });
 
-  it("fetchCotizacionesAceptadas filtra por estado", async () => {
+  it("fetchCotizacionesAceptadas filtra por estados Aceptada o En operación", async () => {
     mock.setTableResult("cotizaciones", { data: [{ id: "c1" }], error: null });
     const r = await fetchCotizacionesAceptadas("org1");
     expect(r).toHaveLength(1);
     const call = mock.tableCalls[0];
-    const eqIdx = call.ops.indexOf("eq");
-    expect(call.opArgs[eqIdx]).toEqual(["estado", "Aceptada"]);
+    const inIdx = call.ops.indexOf("in");
+    expect(call.opArgs[inIdx]).toEqual(["estado", ["Aceptada", "En operación"]]);
   });
 
   it("fetchCotizacionById devuelve cotización", async () => {
