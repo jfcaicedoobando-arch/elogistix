@@ -1,8 +1,10 @@
 # Changelog
 ## [13.303.3] - 2026-07-20
-- **Fix lint — `bun run lint -- --max-warnings 0` sin errores**:
+- **Fix lint — `bun run lint -- --max-warnings 0` sin errores ni warnings**:
   - `src/features/embarques/hooks/mutations/useEstadoEmbarque.ts`: ahora adjunta `{ cause: err }` al re-lanzar el error de `LC_TRANSICION_INVALIDA`, preservando la traza original para Sentry y cumpliendo la regla `preserve-caught-error`.
-  - `supabase/functions/facturapi-emitir/index.ts`: refactor del handler para bajar de 212 líneas a menos de 200. Se extrajeron helpers puros (`loadFactura`, `validarTipoCambio`, `claimFactura`, `resolverSustitucion`, `cargarContexto`, `cargarReferenciasEmbarque`, `emitirYActualizar`) sin cambiar lógica de negocio ni el flujo atómico de claim.
+  - `supabase/functions/facturapi-emitir/index.ts`: refactor del handler para bajar de 212 líneas a menos de 200. Se extrajeron helpers puros (`loadFactura`, `validarTipoCambio`, `claimFactura`, `resolverSustitucion`, `cargarContexto`, `emitirYActualizar`) sin cambiar lógica de negocio ni el flujo atómico de claim.
+  - `supabase/functions/facturapi-recuperar-claim/index.ts`: se redujo la complejidad ciclomática (39 → ≤ 16) extrayendo la lógica a `recuperar.ts`.
+  - `src/features/facturacion/components/detalle/ClaimPendingBanner.tsx`: usa `facturas.detail(facturaId)` en lugar de `queryKey` inline.
 
 ## [13.303.2] - 2026-07-20
 - **FIX-04.1 — Recuperación de claims `PENDING:<uuid>` huérfanos en `facturas.facturapi_id`**: cuando `facturapi-emitir` moría entre el claim atómico y el `UPDATE` final, la factura quedaba bloqueada (no dejaba retimbrar y sin `uuid_fiscal`). Ahora:
