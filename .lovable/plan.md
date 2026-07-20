@@ -1,55 +1,73 @@
-## Problema
+# Cotizaciones estancadas en "Aceptada" con embarque activo
 
-Al convertir COT-2026-0138 en embarque (E-ELIMP00333), el borrador se creó pero **muchos campos que la cotización sí tenía quedaron vacíos**:
+## Diagnóstico
 
-Verificado contra la BD:
+La COT-2026-0138 (y otras 49) sigue en **Aceptada** aunque ya tiene un embarque vinculado (ELIMP00333 – Borrador).
 
-| Campo | Cotización 0138 | Embarque generado |
-|---|---|---|
-| Origen | `Ningbo, China (CNNGB)` | `puerto_origen = NULL` |
-| Destino | `Ensenada, México (MXESE)` | `puerto_destino = NULL` |
-| Tarifa aplicada | `tarifa_id` presente | `tarifa_id = NULL` |
-| Peso | (0 en esta cot) | 0 ✓ |
-| Cliente / Incoterm / Modo / Tipo / Tipo contenedor | ✓ | ✓ (sí copiados) |
+Causa: hay dos caminos para crear el embarque desde una cotización y sólo uno actualiza el estado.
 
-Causa raíz: `public.crear_embarque_borrador_core` (RPC transaccional) sólo mapea un subconjunto de columnas en el `INSERT INTO embarques (...)`. **No mapea puertos/aeropuertos/ciudades, tarifa, ni datos logísticos** (carta garantía, días libres, seguro, valor seguro), aunque todos existen en ambas tablas.
+| Camino | ¿Actualiza `estado` a "En operación"? |
+|---|---|
+| Wizard "Nuevo embarque" (`useEmbarqueSubmitOrchestrator`) | ✅ Sí (línea 136) |
+| Botón "Convertir a borrador" → RPC `crear_embarque_borrador_core` | ❌ No — sólo hace `SET embarque_id = v_embarque_id` |
 
-Además, `cotizaciones.origen`/`destino` son texto libre tipo `"Ningbo, China (CNNGB)"`, y `embarques` los guarda separados según `modo` (`puerto_*` para Marítimo, `aeropuerto_*` para Aéreo, `ciudad_*` para Terrestre). Hay que parsear el código UN/LOCODE (los 5 chars dentro del paréntesis) y volcarlo al campo correcto según `modo`.
+Auditoría de la tabla `cotizaciones`:
 
-## Alcance
-
-Ampliar el mapeo de la RPC para que el borrador arranque con todo lo que ya se conocía en la cotización. Sin cambios de UI.
+- **50** filas en `Aceptada` con `embarque_id` apuntando a un embarque **no** borrado → deberían estar en `En operación`.
+- **3** filas en `En operación` con `embarque_id = NULL` (COT-2026-0016 / 0030 / 0033) → embarque borrado antes del fix v13.303.14, quedó huérfano. Deberían volver a `Aceptada`.
+- **0** filas apuntando a un embarque soft-deleted (el fix reciente ya nulifica el vínculo).
 
 ## Cambios
 
-### 1. Migración: `crear_embarque_borrador_core` extendida
+### 1. RPC `crear_embarque_borrador_core`
 
-Dentro del `INSERT INTO public.embarques (...)`, añadir:
+Agregar dentro del mismo `UPDATE public.cotizaciones` que ya fija `embarque_id`:
 
-- **Ruta** — parsear `v_cot.origen` / `v_cot.destino` extrayendo el código entre paréntesis (fallback: guardar el texto completo si no hay paréntesis):
-  - `modo = 'Marítimo'` → `puerto_origen`, `puerto_destino`
-  - `modo = 'Aéreo'` → `aeropuerto_origen`, `aeropuerto_destino`
-  - `modo = 'Terrestre'` → `ciudad_origen`, `ciudad_destino`
-- **Tarifa**: `tarifa_id`, `tarifa_id_original`, `tarifa_id_aplicada` ← `v_cot.tarifa_id`
-- **Logística**: `carta_garantia`, `dias_libres_destino`, `dias_almacenaje`, `seguro`, `valor_seguro_usd`
-- **Vendedora** (si existe en la oportunidad vinculada): dejar en fase posterior; no en este alcance.
+```sql
+UPDATE public.cotizaciones
+   SET embarque_id = v_embarque_id,
+       estado      = 'En operación'::estado_cotizacion,
+       updated_at  = now()
+ WHERE id = p_cotizacion_id;
+```
 
-### 2. Backfill para el embarque existente (E-ELIMP00333)
+Con eso, cualquier conversión futura promueve el estado atómicamente en la misma transacción que crea el borrador.
 
-Un `UPDATE` en la misma migración que rellene `puerto_origen`, `puerto_destino` y `tarifa_id` para el embarque 375ec92f… con los datos de COT-2026-0138, de modo que el usuario ya vea el borrador correcto sin recrearlo.
+### 2. Backfill de datos existentes
 
-### 3. Tests
+Migración de datos (mismo archivo de migración) que corrige las inconsistencias detectadas:
 
-- `src/lib/__tests__/crear-embarque-borrador-precarga.test.ts`: dado un mock/fixture con cot Marítimo con `origen="X (ABCDE)"` y `tarifa_id`, verificar que el embarque insertado tenga `puerto_origen='ABCDE'` y `tarifa_id` copiada.
-- Caso Aéreo → `aeropuerto_*`. Caso Terrestre → `ciudad_*`.
-- Caso `origen` sin paréntesis → se guarda el texto completo.
+```sql
+-- Promover Aceptada → En operación cuando ya hay embarque vivo
+UPDATE public.cotizaciones c
+   SET estado = 'En operación', updated_at = now()
+  FROM public.embarques e
+ WHERE c.embarque_id = e.id
+   AND e.deleted_at IS NULL
+   AND c.estado = 'Aceptada';
 
-### 4. Changelog y APP_VERSION
+-- Revertir En operación → Aceptada si el embarque ya no existe
+UPDATE public.cotizaciones
+   SET estado = 'Aceptada', updated_at = now()
+ WHERE estado = 'En operación'
+   AND embarque_id IS NULL;
+```
 
-- `CHANGELOG.md`: nueva entrada `## [13.303.15] - 2026-07-20` describiendo el fix y el backfill de E-ELIMP00333.
-- Bump de `APP_VERSION` a `13.303.15`.
+### 3. Verificación
+
+Después de aplicar la migración:
+
+- COT-2026-0138 debe mostrar chip **En operación** en la tabla.
+- Las 3 cotizaciones huérfanas vuelven a **Aceptada** y pueden convertirse de nuevo.
+- El wizard tradicional sigue funcionando (ya usaba `updateEstadoCotizacion` a "En operación"; queda idempotente).
+
+### 4. Changelog
+
+`APP_VERSION` → `13.303.16` + entrada en `CHANGELOG.md`:
+
+> Fix: al convertir una cotización aceptada en borrador de embarque, la cotización ahora avanza automáticamente al estado "En operación". Backfill de 50 cotizaciones que estaban estancadas en "Aceptada" y 3 con vínculo roto.
 
 ## Fuera de alcance
 
-- Rediseño de `cotizaciones.origen/destino` a columnas estructuradas (proyecto mayor).
-- Copiar conceptos de venta al embarque (ya se copian los costos; venta se maneja en proforma).
+- No se toca la máquina de estados de embarques.
+- No se agrega trigger genérico; la promoción sigue viviendo en los dos puntos de entrada (wizard y RPC) para mantener el control explícito del flujo.
