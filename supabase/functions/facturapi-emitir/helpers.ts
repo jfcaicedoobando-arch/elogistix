@@ -170,6 +170,9 @@ export function buildFacturapiPayload(ctx: FacturaContext): FacturapiPayload {
   if (ctx.serie) payload.series = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) payload.exchange = ctx.tipo_cambio;
+  // v13.303.2 (FIX-04.1) — tag de correlación para recuperar CFDIs "huérfanos".
+  if (ctx.external_id) payload.external_id = ctx.external_id;
+
   if (ctx.sustituye_uuid) {
     // SAT relación 04 = "Sustitución de los CFDI previos".
     // FacturAPI v2 (endpoint /v2/invoices) espera el shape agrupado:
