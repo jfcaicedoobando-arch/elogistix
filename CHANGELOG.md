@@ -1,4 +1,16 @@
 # Changelog
+## [13.303.26] - 2026-07-20
+- **Regla dura · todo embarque nuevo nace de una cotización Aceptada (política tarifa-first, sin excepciones).** Se elimina el escape hatch `canCrearEmbarqueLibre` que permitía a `super_admin`, `admin_org`, `admin` y `gerente_operaciones` crear embarques sueltos desde `/embarques/nuevo`. Motivo: contradecía la memoria `wizard-cotizacion-flujo` y ensuciaba la trazabilidad tarifa → cotización → embarque.
+  - **Permiso removido:** `CREAR_EMBARQUE_LIBRE` y `canCrearEmbarqueLibre` desaparecen de `usePermissions`.
+  - **UI del listado (`Embarques.tsx`):** se oculta el CTA "Nuevo embarque" y el FAB. El único camino es `Cotizaciones → Aceptada → Generar embarque`.
+  - **Ruta `/embarques/nuevo`:** si no llega con `cotizacionPrevinculadaId`, redirige a `/cotizaciones` con toast informativo.
+  - **Wizard (`useNuevoEmbarqueWizard`):** valida siempre `cotizacion_id` y bloquea `handleFinish` sin excepciones.
+  - **Validador (`embarqueWizardStepValidator`):** `requiereCotizacion` default `true`; tests actualizados.
+  - **UI wizard:** `StepDatosGenerales` y `BloqueVinculacion` ya no consultan permisos; el label es siempre "Vincular cotización Aceptada (obligatorio)".
+  - **BD:** `embarques.cotizacion_id` sigue nullable — 159/219 embarques legacy no la tienen y un `NOT NULL` los rompería. La regla se enforcea sólo para creaciones nuevas desde frontend.
+  - **Detalle:** el badge "Sin cotización vinculada" (embarques legacy) se conserva, con tooltip actualizado explicando que son pre-política.
+  - **Fuera de alcance:** no se migran ni se adoptan embarques legacy; no se toca RLS ni RPCs.
+
 ## [13.303.25] - 2026-07-20
 - **UX · al editar un embarque se oculta el selector de expediente (crear/asociar).** El bloque solo aplica en el wizard de creación: al editar, el embarque ya está asignado a un expediente y los radios "Crear nuevo" / "Asociar existente" no tenían handlers en `EditarEmbarque.tsx`, así que solo agregaban ruido visual. Se agregó `permiteExpediente` a `BloqueVinculacion` y `mostrarSelectorExpediente` a `StepDatosGenerales` (default `true`); `EditarEmbarque` lo pasa en `false`. El bloque de vinculación de cotización sigue visible en ambos flujos.
 

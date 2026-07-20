@@ -14,7 +14,6 @@ import { EmbarquesEmptyState } from "@/features/embarques/components/EmbarquesEm
 import { EmbarquesSortIndicator } from "@/features/embarques/components/EmbarquesSortIndicator";
 import { EmbarquesHeaderActions } from "@/features/embarques/components/EmbarquesHeaderActions";
 import { useEmbarquesPageController, calcularEstadoEmbarque } from "@/features/embarques/hooks";
-import { usePermissions } from "@/hooks/shared/usePermissions";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
@@ -28,12 +27,14 @@ function buildDescription(contenedoresCount: number, expedientesCount: number, e
 
 export default function Embarques() {
   const {
-    state, clientes, operadoresUnicos, columns, isLoading, isEmptyState, canEdit,
+    state, clientes, operadoresUnicos, columns, isLoading, isEmptyState,
     exportarCsv, exportandoCsv,
     navigate, prefetchEmbarque,
   } = useEmbarquesPageController();
-  const { canCrearEmbarqueLibre } = usePermissions();
-  const canCrear = canEdit && canCrearEmbarqueLibre;
+  // v13.303.26 — el CTA "Nuevo embarque" desaparece: los embarques sólo se crean
+  // desde una cotización Aceptada (política tarifa-first, sin excepciones).
+  const canCrear = false;
+
 
 
   const {

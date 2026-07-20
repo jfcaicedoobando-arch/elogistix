@@ -97,9 +97,10 @@ export function EmbarqueDetalleHeader({
               <span className="text-xs">Cotización origen no disponible</span>
             )
           ) : (
-            <span className="text-xs text-warning" title="Embarque creado sin cotización vinculada">
+            <span className="text-xs text-warning" title="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
               Sin cotización vinculada
             </span>
+
           )}
         </p>
       </div>

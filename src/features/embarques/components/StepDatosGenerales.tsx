@@ -6,7 +6,7 @@ import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { CotizacionRow } from "@/features/cotizacion/hooks";
 import { useExpedientesCliente, type ExpedienteCliente } from "@/features/embarques/hooks";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+// v13.303.26 — se removió `usePermissions`: la política tarifa-first exige cotización siempre.
 import { BloqueClienteContactos } from "./secciones/BloqueClienteContactos";
 import { BloqueMercancia } from "./secciones/BloqueMercancia";
 import { BloqueVinculacion } from "./secciones/BloqueVinculacion";
@@ -64,9 +64,9 @@ export function StepDatosGenerales({
   const { watch } = useFormContext<EmbarqueFormValues>();
   const clienteId = watch('clienteId');
   const { data: expedientesCliente = [] } = useExpedientesCliente(clienteId || undefined);
-  const { canCrearEmbarqueLibre } = usePermissions();
-  const requiereCotizacion = !canCrearEmbarqueLibre;
-  const faltaCotizacion = requiereCotizacion && !cotizacionVinculada;
+  const requiereCotizacion = true;
+  const faltaCotizacion = !cotizacionVinculada;
+
 
   const errorsRecord = errors as Record<string, string>;
   const hasErrors = Object.keys(errorsRecord).length > 0;
