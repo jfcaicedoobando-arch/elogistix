@@ -218,7 +218,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir", async (req) => {
 
 
   const issues = validateContext(ctx);
-  if (issues.length > 0) return jsonResponse({ error: "validation_failed", issues }, 422);
+  if (issues.length > 0) { await releaseClaim(); return jsonResponse({ error: "validation_failed", issues }, 422); }
+
 
   const payload = buildFacturapiPayload(ctx);
 
