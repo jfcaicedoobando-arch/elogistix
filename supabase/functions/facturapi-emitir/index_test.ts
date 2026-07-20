@@ -8,6 +8,9 @@
 import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 const indexSource = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+// v13.303.3: la lógica de load/emit se extrajo a `emitir.ts`. El handler
+// (`index.ts`) sólo orquesta; el SDK real vive en `emitir.ts`.
+const emitirSource = await Deno.readTextFile(new URL("./emitir.ts", import.meta.url));
 
 Deno.test("facturapi-emitir: rechaza método != POST (405)", () => {
   // GET con body abierto sería un vector de cache poisoning.
@@ -41,19 +44,21 @@ Deno.test("facturapi-emitir: persistSession=false en el cliente Supabase", () =>
   assertStringIncludes(indexSource, "persistSession: false");
 });
 
-Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → llamada externa", () => {
+Deno.test("facturapi-emitir: orden estricto auth → load → resolve key → emitir", () => {
   // Si la llamada a Facturapi ocurre antes del auth check, consumimos cuota
-  // pagada por requests no autorizadas. El getFacturapiClient debe ir entre
-  // load y la llamada SDK para que multi-tenant (v13.136.4) elija la org correcta.
+  // pagada por requests no autorizadas. En v13.303.3 la lógica se movió a
+  // `emitir.ts`; el handler debe orquestar en este orden exacto.
   const authIdx = indexSource.indexOf("supabase.auth.getUser");
-  const loadIdx = indexSource.indexOf('.from("facturas")');
+  const loadIdx = indexSource.indexOf("loadFactura(");
   const resolveIdx = indexSource.indexOf("getFacturapiClient(");
-  const fapiIdx = indexSource.indexOf("facturapi.invoices.create");
-  if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || fapiIdx <= resolveIdx) {
+  const emitirIdx = indexSource.indexOf("emitirYActualizar(");
+  if (authIdx <= 0 || loadIdx <= authIdx || resolveIdx <= loadIdx || emitirIdx <= resolveIdx) {
     throw new Error(
-      `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} fapi=${fapiIdx}`,
+      `Orden inválido: getUser=${authIdx} load=${loadIdx} resolve=${resolveIdx} emitir=${emitirIdx}`,
     );
   }
+  // Y la llamada real al SDK debe vivir sólo en emitir.ts (nunca inline en index).
+  assertStringIncludes(emitirSource, "facturapi.invoices.create");
 });
 
 Deno.test("facturapi-emitir: wrapped en Sentry", () => {

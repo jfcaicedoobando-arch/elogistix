@@ -1,4 +1,10 @@
 # Changelog
+## [13.303.4] - 2026-07-20
+- **Revisión de la fase v13.303.3 (refactor lint)** — auditoría del release anterior:
+  - **Bug detectado — test arquitectónico roto**: `supabase/functions/facturapi-emitir/index_test.ts` verificaba el orden `auth → load → resolveKey → SDK` buscando `.from("facturas")` y `facturapi.invoices.create` en `index.ts`; ambos símbolos se mudaron a `emitir.ts` en v13.303.3, así que el test fallaba en `deno test`. Fix: el test ahora valida el orden de las llamadas del handler (`loadFactura → getFacturapiClient → emitirYActualizar`) y comprueba que el string `facturapi.invoices.create` viva en `emitir.ts` (nunca inline en el handler).
+  - **Cobertura nueva — `facturapi-recuperar-claim`**: se agregó `recuperar_test.ts` con casos para las cuatro ramas de `validarClaim` (sin `PENDING`, dentro de gracia → 425, edad ≥ umbral autoriza, `claim_at` nulo trata edad como infinita). Antes de este release la lógica de recuperación de claims FIX-04.1 no tenía tests unitarios.
+- Verificación: `deno test` verde (13 casos entre `facturapi-emitir` y `facturapi-recuperar-claim`).
+
 ## [13.303.3] - 2026-07-20
 - **Fix lint — `bun run lint -- --max-warnings 0` sin errores ni warnings**:
   - `src/features/embarques/hooks/mutations/useEstadoEmbarque.ts`: ahora adjunta `{ cause: err }` al re-lanzar el error de `LC_TRANSICION_INVALIDA`, preservando la traza original para Sentry y cumpliendo la regla `preserve-caught-error`.
