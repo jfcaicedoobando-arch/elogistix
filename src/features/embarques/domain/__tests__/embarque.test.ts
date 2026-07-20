@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import {
   tipoEventoParaEstado,
   descripcionEventoCambioEstado,
   ESTADO_A_EVENTO_TRACKING,
+  calcularEstadoEmbarque,
 } from "@/features/embarques/domain/embarque";
+
 
 describe("tipoEventoParaEstado", () => {
   it("mapea estados conocidos al tipo de evento correcto", () => {
