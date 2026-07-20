@@ -209,6 +209,7 @@ async function cargarContexto(
   facturaId: string,
   factura: FacturaRow,
   sustituyeUuid: string | null,
+  claimTag: string,
 ): Promise<FacturaContext | Response> {
   const { data: cliente, error: cErr } = await supabase
     .from("clientes")
