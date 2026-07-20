@@ -1,4 +1,7 @@
 # Changelog
+## [13.303.27] - 2026-07-20
+- **Filtro semántico en Shipper/Consignatario del wizard de embarque.** Los dropdowns ya no listan a los contactos del cliente marcados como "Proveedor" (cadena de suministro del cliente): Shipper sólo muestra `Exportador`, Consignatario sólo `Importador`. Se conservan "Mismo cliente" y "Otro (escribir manualmente)". Si no hay contactos del tipo esperado, se muestra un item deshabilitado guiando al usuario a "Otro". No se migran embarques legacy — los ids ya guardados se siguen resolviendo por id, sin importar el tipo.
+
 ## [13.303.26] - 2026-07-20
 - **Regla dura · todo embarque nuevo nace de una cotización Aceptada (política tarifa-first, sin excepciones).** Se elimina el escape hatch `canCrearEmbarqueLibre` que permitía a `super_admin`, `admin_org`, `admin` y `gerente_operaciones` crear embarques sueltos desde `/embarques/nuevo`. Motivo: contradecía la memoria `wizard-cotizacion-flujo` y ensuciaba la trazabilidad tarifa → cotización → embarque.
   - **Permiso removido:** `CREAR_EMBARQUE_LIBRE` y `canCrearEmbarqueLibre` desaparecen de `usePermissions`.

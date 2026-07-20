@@ -32,6 +32,13 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
   const shipper = watch('shipper');
   const consignatario = watch('consignatario');
 
+  // v13.303.27 — filtrar por tipo: Shipper=Exportador, Consignatario=Importador.
+  // "Proveedor" es un contacto de la cadena de suministro del cliente y no aplica aquí.
+  const contactosShipper = contactos.filter(ct => ct.tipo === 'Exportador');
+  const contactosConsignatario = contactos.filter(ct => ct.tipo === 'Importador');
+
+
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,11 +116,15 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
               <SelectValue placeholder="Seleccionar shipper" />
             </SelectTrigger>
             <SelectContent>
-              {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
+              {contactosShipper.length === 0 && (
+                <SelectItem value="__empty__" disabled>Sin exportadores registrados — usa "Otro"</SelectItem>
+              )}
+              {contactosShipper.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
               <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
             </SelectContent>
           </Select>
         )} />
+
         {errors.shipper && <p className="text-xs text-destructive">{errors.shipper}</p>}
         {shipper === '__otro__' && <Input aria-label="Nombre del exportador" placeholder="Nombre del exportador" {...register('shipperManual')} className="mt-2" />}
       </div>
@@ -130,9 +141,13 @@ export function BloqueClienteContactos({ clientes, clienteNombre, contactos, err
             </SelectTrigger>
             <SelectContent>
               {clienteNombre && <SelectItem value="__cliente__">Mismo cliente ({clienteNombre})</SelectItem>}
-              {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
+              {contactosConsignatario.length === 0 && (
+                <SelectItem value="__empty__" disabled>Sin importadores registrados — usa "Mismo cliente" u "Otro"</SelectItem>
+              )}
+              {contactosConsignatario.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
               <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
             </SelectContent>
+
           </Select>
         )} />
         {errors.consignatario && <p className="text-xs text-destructive">{errors.consignatario}</p>}
