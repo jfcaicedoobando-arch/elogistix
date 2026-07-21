@@ -1,87 +1,9 @@
--- Actualiza actualizar_embarque_completo y crear_embarque_completo para
--- persistir agente_id y naviera_id junto con los textos legacy.
-
-CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo(p_embarque_id uuid, p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb)
- RETURNS void
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public'
-AS $function$
-DECLARE
-  v_org_id uuid;
-  v_caller_org uuid;
-  cv jsonb;
-  cc jsonb;
-BEGIN
-  SELECT organization_id INTO v_org_id FROM embarques WHERE id = p_embarque_id;
-  IF v_org_id IS NULL THEN
-    RAISE EXCEPTION 'Embarque no encontrado';
-  END IF;
-  v_caller_org := current_user_org_id();
-  IF v_org_id <> v_caller_org AND NOT has_role(auth.uid(), 'super_admin'::app_role) THEN
-    RAISE EXCEPTION 'Forbidden: cross-organization access denied';
-  END IF;
-
-  UPDATE embarques SET
-    cliente_id = COALESCE((p_embarque->>'cliente_id')::uuid, cliente_id),
-    cliente_nombre = COALESCE(p_embarque->>'cliente_nombre', cliente_nombre),
-    modo = COALESCE((p_embarque->>'modo')::modo_transporte, modo),
-    tipo = COALESCE((p_embarque->>'tipo')::tipo_operacion, tipo),
-    incoterm = COALESCE((p_embarque->>'incoterm')::incoterm, incoterm),
-    bl_master = CASE WHEN p_embarque ? 'bl_master' THEN p_embarque->>'bl_master' ELSE bl_master END,
-    bl_house = CASE WHEN p_embarque ? 'bl_house' THEN p_embarque->>'bl_house' ELSE bl_house END,
-    naviera = CASE WHEN p_embarque ? 'naviera' THEN p_embarque->>'naviera' ELSE naviera END,
-    naviera_id = CASE WHEN p_embarque ? 'naviera_id' THEN NULLIF(p_embarque->>'naviera_id','')::uuid ELSE naviera_id END,
-    puerto_origen = CASE WHEN p_embarque ? 'puerto_origen' THEN p_embarque->>'puerto_origen' ELSE puerto_origen END,
-    puerto_destino = CASE WHEN p_embarque ? 'puerto_destino' THEN p_embarque->>'puerto_destino' ELSE puerto_destino END,
-    aeropuerto_origen = CASE WHEN p_embarque ? 'aeropuerto_origen' THEN p_embarque->>'aeropuerto_origen' ELSE aeropuerto_origen END,
-    aeropuerto_destino = CASE WHEN p_embarque ? 'aeropuerto_destino' THEN p_embarque->>'aeropuerto_destino' ELSE aeropuerto_destino END,
-    ciudad_origen = CASE WHEN p_embarque ? 'ciudad_origen' THEN p_embarque->>'ciudad_origen' ELSE ciudad_origen END,
-    ciudad_destino = CASE WHEN p_embarque ? 'ciudad_destino' THEN p_embarque->>'ciudad_destino' ELSE ciudad_destino END,
-    aerolinea = CASE WHEN p_embarque ? 'aerolinea' THEN p_embarque->>'aerolinea' ELSE aerolinea END,
-    transportista = CASE WHEN p_embarque ? 'transportista' THEN p_embarque->>'transportista' ELSE transportista END,
-    agente = CASE WHEN p_embarque ? 'agente' THEN p_embarque->>'agente' ELSE agente END,
-    agente_id = CASE WHEN p_embarque ? 'agente_id' THEN NULLIF(p_embarque->>'agente_id','')::uuid ELSE agente_id END,
-    shipper = COALESCE(p_embarque->>'shipper', shipper),
-    consignatario = COALESCE(p_embarque->>'consignatario', consignatario),
-    descripcion_mercancia = COALESCE(p_embarque->>'descripcion_mercancia', descripcion_mercancia),
-    tipo_carga = COALESCE(p_embarque->>'tipo_carga', tipo_carga),
-    tipo_servicio = CASE WHEN p_embarque ? 'tipo_servicio' THEN (p_embarque->>'tipo_servicio')::tipo_servicio_maritimo ELSE tipo_servicio END,
-    operador = COALESCE(p_embarque->>'operador', operador),
-    contenedor = CASE WHEN p_embarque ? 'contenedor' THEN p_embarque->>'contenedor' ELSE contenedor END,
-    tipo_contenedor = CASE WHEN p_embarque ? 'tipo_contenedor' THEN p_embarque->>'tipo_contenedor' ELSE tipo_contenedor END,
-    peso_kg = COALESCE((p_embarque->>'peso_kg')::numeric, peso_kg),
-    volumen_m3 = COALESCE((p_embarque->>'volumen_m3')::numeric, volumen_m3),
-    piezas = COALESCE((p_embarque->>'piezas')::int, piezas),
-    mawb = CASE WHEN p_embarque ? 'mawb' THEN p_embarque->>'mawb' ELSE mawb END,
-    hawb = CASE WHEN p_embarque ? 'hawb' THEN p_embarque->>'hawb' ELSE hawb END,
-    carta_porte = CASE WHEN p_embarque ? 'carta_porte' THEN p_embarque->>'carta_porte' ELSE carta_porte END,
-    etd = CASE WHEN p_embarque ? 'etd' THEN (p_embarque->>'etd')::date ELSE etd END,
-    eta = CASE WHEN p_embarque ? 'eta' THEN (p_embarque->>'eta')::date ELSE eta END,
-    tipo_cambio_usd = COALESCE((p_embarque->>'tipo_cambio_usd')::numeric, tipo_cambio_usd),
-    tipo_cambio_eur = COALESCE((p_embarque->>'tipo_cambio_eur')::numeric, tipo_cambio_eur),
-    msds_archivo = CASE WHEN p_embarque ? 'msds_archivo' THEN p_embarque->>'msds_archivo' ELSE msds_archivo END,
-    updated_at = now()
-  WHERE id = p_embarque_id;
-
-  DELETE FROM conceptos_venta WHERE embarque_id = p_embarque_id;
-  FOR cv IN SELECT * FROM jsonb_array_elements(p_conceptos_venta)
-  LOOP
-    INSERT INTO conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id)
-    VALUES (p_embarque_id, cv->>'descripcion', (cv->>'cantidad')::int, (cv->>'precio_unitario')::numeric, (cv->>'moneda')::moneda, (cv->>'total')::numeric, v_org_id);
-  END LOOP;
-
-  DELETE FROM conceptos_costo WHERE embarque_id = p_embarque_id;
-  FOR cc IN SELECT * FROM jsonb_array_elements(p_conceptos_costo)
-  LOOP
-    INSERT INTO conceptos_costo (embarque_id, concepto, proveedor_nombre, proveedor_id, moneda, monto, organization_id)
-    VALUES (p_embarque_id, cc->>'concepto', COALESCE(cc->>'proveedor_nombre', ''),
-      CASE WHEN cc->>'proveedor_id' IS NOT NULL AND cc->>'proveedor_id' != '' THEN (cc->>'proveedor_id')::uuid ELSE NULL END,
-      (cc->>'moneda')::moneda, (cc->>'monto')::numeric, v_org_id);
-  END LOOP;
-END;
-$function$;
-
+-- v13.303.39: sobrescrita para eliminar el patrón DELETE+INSERT sobre
+-- conceptos_venta/conceptos_costo que reintroducía la regresión ELIMP00195.
+-- La lógica correcta (merge-por-id no destructivo + agente_id/naviera_id) vive
+-- en la migración 20260721004936. Aquí se deja únicamente el UPDATE de
+-- columnas de embarques para preservar la intención original de la migración
+-- (persistir agente_id/naviera_id vía crear_embarque_completo).
 
 CREATE OR REPLACE FUNCTION public.crear_embarque_completo(p_embarque jsonb, p_conceptos_venta jsonb DEFAULT '[]'::jsonb, p_conceptos_costo jsonb DEFAULT '[]'::jsonb, p_documentos jsonb DEFAULT '[]'::jsonb)
  RETURNS jsonb

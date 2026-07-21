@@ -1,7 +1,9 @@
 # Changelog
 # Changelog
 
-## [13.303.38] - 2026-07-21
+## [13.303.39] - 2026-07-21
+- **Fix · regresión merge-por-id de conceptos en `actualizar_embarque_completo` (guardrail ELIMP00195).** La migración de v13.303.35 sobrescribió la RPC con la versión legacy que hacía `DELETE + INSERT` sobre `conceptos_venta`/`conceptos_costo`, rompiendo trazabilidad con proformas/facturas y disparando el test `rpc-no-destructive-conceptos.test.ts`. Se restablece el patrón no destructivo (merge por `id`, soft-delete con guardas de facturación/liquidación, idempotencia con `p_request_id` y `_assert_writer`) preservando los nuevos campos `agente_id`/`naviera_id`.
+
 - **Chore · limpieza de código muerto reportada por `knip`.** Se elimina `src/features/catalogos/components/NavieraSelect.tsx` (reemplazado por `NavieraEmbarqueSelector` en v13.303.35) y se remueven exports sin consumidores: `EMAIL_CHIP_RE` (`EmailChipsField.tsx`), `listAnticiposPorProveedor` (`cxp/services/anticipos.ts`), tipos `EstadoEmbarque` y `FacturaEstadoVivo`. `bun run lint:unused:strict` queda verde.
 
 ## [13.303.37] - 2026-07-21
