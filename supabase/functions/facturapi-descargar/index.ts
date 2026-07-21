@@ -20,8 +20,8 @@ import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import { resolveFacturapiKey, FACTURAPI_BASE, basicAuthHeader } from "../_shared/facturapiAuth.ts";
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { extractFacturapiMessage } from "../_shared/facturapiClient.ts";
-import { fetchOrgSlug } from "../_shared/orgSlug.ts";
 import { jsonResponse } from "../_shared/response.ts";
+import { buildFilename, type CfdiTipoDoc } from "../_shared/facturaFilename.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -36,7 +36,10 @@ interface ReqBody {
 interface ResolvedTarget {
   facturapiId: string;
   organizationId: string;
-  filename: string;
+  tipoDoc: CfdiTipoDoc;
+  folioSerie: string;
+  cliente: string | null;
+  fecha: string | null;
 }
 
 type Resolved =
@@ -48,14 +51,36 @@ async function resolveFromNc(
 ): Promise<Resolved> {
   const { data: nc, error } = await supabase
     .from("factura_notas_credito")
-    .select("facturapi_id, folio, serie, organization_id")
+    .select("facturapi_id, folio, serie, organization_id, fecha_emision, factura_id")
     .eq("id", id).maybeSingle();
   if (error || !nc) return { ok: false, status: 404, body: { error: "nota_credito_not_found" } };
   const ncId = nc.facturapi_id as string | null;
   if (!ncId) return { ok: false, status: 422, body: { error: "nc_no_timbrada" } };
-  const serie = nc.serie ?? "";
-  const folio = nc.folio ?? "NC";
-  return { ok: true, data: { facturapiId: ncId, organizationId: nc.organization_id as string, filename: `NC-${serie}${folio}` } };
+  const serie = (nc.serie as string | null) ?? "";
+  const folio = (nc.folio as string | null) ?? "";
+  // Cliente/fecha se heredan de la factura padre si no vienen en la NC.
+  let cliente: string | null = null;
+  let fecha: string | null = (nc.fecha_emision as string | null) ?? null;
+  const facturaIdPadre = nc.factura_id as string | null;
+  if (facturaIdPadre) {
+    const { data: padre } = await supabase
+      .from("facturas")
+      .select("cliente_nombre, fecha_emision")
+      .eq("id", facturaIdPadre).maybeSingle();
+    cliente = (padre?.cliente_nombre as string | null) ?? null;
+    if (!fecha) fecha = (padre?.fecha_emision as string | null) ?? null;
+  }
+  return {
+    ok: true,
+    data: {
+      facturapiId: ncId,
+      organizationId: nc.organization_id as string,
+      tipoDoc: "NotaCredito",
+      folioSerie: `${serie}${folio}`,
+      cliente,
+      fecha,
+    },
+  };
 }
 
 async function resolveFromPago(
@@ -63,14 +88,34 @@ async function resolveFromPago(
 ): Promise<Resolved> {
   const { data: pago, error } = await supabase
     .from("pagos_factura")
-    .select("facturapi_rep_id, folio_rep, serie_rep, organization_id, factura_id")
+    .select("facturapi_rep_id, folio_rep, serie_rep, organization_id, factura_id, fecha_pago")
     .eq("id", id).maybeSingle();
   if (error || !pago) return { ok: false, status: 404, body: { error: "pago_not_found" } };
   const repId = pago.facturapi_rep_id as string | null;
   if (!repId) return { ok: false, status: 422, body: { error: "rep_no_timbrado" } };
-  const folio = pago.folio_rep ?? "REP";
-  const serie = pago.serie_rep ?? "";
-  return { ok: true, data: { facturapiId: repId, organizationId: pago.organization_id as string, filename: `REP-${serie}${folio}` } };
+  const folio = (pago.folio_rep as string | null) ?? "";
+  const serie = (pago.serie_rep as string | null) ?? "";
+  // Cliente se hereda de la factura padre; fecha usa fecha_pago del REP.
+  let cliente: string | null = null;
+  const facturaIdPadre = pago.factura_id as string | null;
+  if (facturaIdPadre) {
+    const { data: padre } = await supabase
+      .from("facturas")
+      .select("cliente_nombre")
+      .eq("id", facturaIdPadre).maybeSingle();
+    cliente = (padre?.cliente_nombre as string | null) ?? null;
+  }
+  return {
+    ok: true,
+    data: {
+      facturapiId: repId,
+      organizationId: pago.organization_id as string,
+      tipoDoc: "REP",
+      folioSerie: `${serie}${folio}`,
+      cliente,
+      fecha: (pago.fecha_pago as string | null) ?? null,
+    },
+  };
 }
 
 async function resolveFromFactura(
@@ -78,14 +123,26 @@ async function resolveFromFactura(
 ): Promise<Resolved> {
   const { data: factura, error } = await supabase
     .from("facturas")
-    .select("facturapi_id, folio_fiscal, serie, organization_id")
+    .select("facturapi_id, folio_fiscal, serie, organization_id, cliente_nombre, fecha_emision, numero")
     .eq("id", id).maybeSingle();
   if (error || !factura) return { ok: false, status: 404, body: { error: "factura_not_found" } };
   const fId = factura.facturapi_id as string | null;
   if (!fId) return { ok: false, status: 422, body: { error: "factura_no_timbrada" } };
-  const folio = factura.folio_fiscal ?? "S/F";
-  const serie = factura.serie ?? "";
-  return { ok: true, data: { facturapiId: fId, organizationId: factura.organization_id as string, filename: `${serie}${folio}` } };
+  const numero = (factura.numero as string | null) ?? "";
+  const serie = (factura.serie as string | null) ?? "";
+  const folio = (factura.folio_fiscal as string | null) ?? "";
+  const folioSerie = numero || `${serie}${folio}`;
+  return {
+    ok: true,
+    data: {
+      facturapiId: fId,
+      organizationId: factura.organization_id as string,
+      tipoDoc: "Factura",
+      folioSerie,
+      cliente: (factura.cliente_nombre as string | null) ?? null,
+      fecha: (factura.fecha_emision as string | null) ?? null,
+    },
+  };
 }
 
 async function resolveTarget(
