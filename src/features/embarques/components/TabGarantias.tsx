@@ -7,10 +7,14 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
-import { ShieldCheck } from "lucide-react";
-import { useGarantiasContenedor } from "@/features/embarques/hooks/useGarantiasContenedor";
+import { ShieldCheck, RefreshCw } from "lucide-react";
+import {
+  useGarantiasContenedor,
+  useRefrescarGarantiasDesdeTarifa,
+} from "@/features/embarques/hooks/useGarantiasContenedor";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { diffDias } from "./garantias/garantiasUtils";
 import { GarantiasKpiCards } from "./garantias/GarantiasKpiCards";
