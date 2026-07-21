@@ -165,6 +165,26 @@ export default function PlantillasMensajeEditor() {
           </ul>
         )}
       </CardContent>
+
+      <ConfirmActionDialog
+        open={aEliminar !== null}
+        onOpenChange={(v) => { if (!v) setAEliminar(null); }}
+        title="Eliminar plantilla"
+        description={
+          <>
+            Vas a eliminar la plantilla <strong>{aEliminar?.nombre}</strong>. Esta acción no se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar"
+        variant="destructive"
+        isPending={eliminar.isPending}
+        onConfirm={async () => {
+          if (!aEliminar) return;
+          await eliminar.mutateAsync(aEliminar.id);
+          setAEliminar(null);
+        }}
+      />
     </Card>
   );
 }
+
