@@ -145,7 +145,7 @@ export function useUpdateCliente() {
     onSuccess: (clienteActualizado) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.detail(clienteActualizado.id) });
-      notifySuccess(undefined, { title: "Cliente actualizado" });
+      // Toast lo emite el caller (handler) para incluir contexto; evitar doble notificación.
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al actualizar cliente: ${error.message}`, error, method: "UPDATE_CLIENTE" });
