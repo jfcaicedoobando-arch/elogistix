@@ -741,6 +741,7 @@ export type Database = {
           estado: string
           forma_pago_default: string | null
           id: string
+          limite_credito_mxn: number | null
           metodo_pago_default: string | null
           nombre: string
           organization_id: string
@@ -766,6 +767,7 @@ export type Database = {
           estado?: string
           forma_pago_default?: string | null
           id?: string
+          limite_credito_mxn?: number | null
           metodo_pago_default?: string | null
           nombre: string
           organization_id?: string
@@ -791,6 +793,7 @@ export type Database = {
           estado?: string
           forma_pago_default?: string | null
           id?: string
+          limite_credito_mxn?: number | null
           metodo_pago_default?: string | null
           nombre?: string
           organization_id?: string
@@ -7654,6 +7657,19 @@ export type Database = {
       }
       get_current_agente_org_nombre: { Args: never; Returns: string }
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
+      get_exposicion_credito_cliente: {
+        Args: { p_cliente_id: string }
+        Returns: {
+          cliente_id: string
+          dias_credito: number
+          disponible_mxn: number
+          en_uso_mxn: number
+          excedido: boolean
+          facturas_vivas: number
+          limite_mxn: number
+          organization_id: string
+        }[]
+      }
       get_facturapi_api_key_internal: {
         Args: { p_ambiente: string; p_org_id: string }
         Returns: string
