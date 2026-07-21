@@ -114,3 +114,47 @@ export function contenedoresPorExpediente(rows: EmbarqueRow[]): Record<string, n
   }
   return map;
 }
+
+import { calcularEstadoEmbarque } from "@/features/embarques/hooks/useEmbarques";
+
+interface ApplyClientFiltersArgs {
+  estadoFilterActivo: boolean;
+  alertaFilterActivo: boolean;
+  alertIdSet: Set<string> | null;
+  filterEstado: string;
+}
+
+export function applyClientFilters(rows: EmbarqueRow[], args: ApplyClientFiltersArgs): EmbarqueRow[] {
+  const { estadoFilterActivo, alertaFilterActivo, alertIdSet, filterEstado } = args;
+  let all = rows;
+  if (estadoFilterActivo) {
+    all = all.filter(
+      (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real) === filterEstado,
+    );
+  }
+  if (alertaFilterActivo && alertIdSet) {
+    all = all.filter((e) => alertIdSet.has(e.id));
+  }
+  return all;
+}
+
+interface SinFiltrosArgs {
+  debouncedSearch: string;
+  filterModo: string;
+  filterEstado: string;
+  filterCliente: string;
+  filterOperador: string;
+  filterAlerta: string;
+  fechaDesde: string;
+  fechaHasta: string;
+}
+
+export function computeSinFiltros(a: SinFiltrosArgs): boolean {
+  return (
+    !a.debouncedSearch &&
+    [a.filterModo, a.filterEstado, a.filterCliente, a.filterOperador].every((v) => v === "todos") &&
+    a.filterAlerta === "todos" &&
+    !a.fechaDesde &&
+    !a.fechaHasta
+  );
+}
