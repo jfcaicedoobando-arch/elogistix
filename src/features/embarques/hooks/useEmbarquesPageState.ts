@@ -1,14 +1,7 @@
 /**
  * Estado y filtros de la página de listado de Embarques.
- *
- * v8.153.2 — Cuando hay filtro por estado, se trae el set COMPLETO (sin paginar
- * server-side) porque el estado real se calcula client-side a partir de
- * etd/eta/estado. Sobre ese set se filtra, se agrupa por expediente, se
- * ordena y se pagina.
- *
- * 11.14.0: helpers puros (compareBy, computeCounts, resolveExtras,
- * buildFullSetFilters, dedupePorExpediente, contenedoresPorExpediente)
- * movidos a `lib/embarque/embarquesPageHelpers`.
+ * v8.153.2 — con filtro por estado se trae el set completo (client-side).
+ * 11.14.0 — helpers puros en `domain/embarquesPageHelpers`.
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
