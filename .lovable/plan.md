@@ -1,40 +1,26 @@
-# Fix: CFDI de proveedor no cuadra por tope artificial de conceptos
+## Diagnóstico
 
-## Analogía
+Analogía: el arreglo de subir el cupo de 10 a 200 conceptos (v13.303.63) sí está en el código, pero la "sucursal" del backend que procesa el CFDI (edge function `parse-cfdi-xml`) sigue trabajando con la versión vieja. El cliente le manda 11 conceptos, ella devuelve sólo 10 (le corta el último de $203.85 USD) y por eso el cuadre falla exactamente por esa diferencia.
 
-Es como si al capturar una nota del súper con 11 renglones, la caja registradora sólo leyera los primeros 10 y luego se quejara de que "la suma no da". El XML está sano; nosotros lo estamos recortando.
+Evidencia:
+- El XML trae 11 conceptos que suman `11268.49` (subtotal exacto).
+- El toast dice suma `11064.64` = `11268.49 − 203.85` (el último concepto).
+- Los logs recientes de `parse-cfdi-xml` muestran `conceptos_count: 10`, aunque el archivo `supabase/functions/parse-cfdi-xml/parser.ts` en el repo ya tiene `.slice(0, 200)`.
+- Regex probado localmente contra el XML: encuentra los 11 conceptos correctamente.
 
-## Diagnóstico (verificado)
+Conclusión: el archivo local es correcto; el fix no llegó al runtime desplegado.
 
-- El XML subido trae **11 conceptos** cuya suma de `Importe` = **11,268.49 USD** = `SubTotal` = `Total`. El CFDI cuadra perfectamente.
-- `validarCuadreCfdi` (front) recibe sólo **10 conceptos** que suman **11,064.64** (falta el último: "VERIFIED GROSS WEIGHT" 203.85). Diferencia = 203.85 → mismo número que reporta el toast.
-- Causa: en `supabase/functions/parse-cfdi-xml/parser.ts:167` el edge function hace `findConceptoBlocks(xml).slice(0, 10)` como cap "anti-DoS". Los totales (`SubTotal`, `IVA`, `IEPS`) sí se leen del `<Comprobante>` completo, así que el desglose truncado nunca puede cuadrar contra el subtotal cuando hay >10 líneas.
-- Es un patrón normal en facturación marítima (fletes desglosan BAF, THC, DOC, etc.) — 11–30 líneas es común y no es abuso.
+## Cambios propuestos
 
-## Cambio propuesto (1 archivo)
-
-`supabase/functions/parse-cfdi-xml/parser.ts`
-- Subir el tope a `200` conceptos (protección DoS razonable; un CFDI 4.0 real rara vez pasa de ~50).
-- Mantener el `slice` como salvaguarda, sólo con umbral realista.
-
-`supabase/functions/parse-cfdi-xml/parser_test.ts`
-- Ajustar el test `"parseCfdi limita conceptos a 10 (anti-DoS)"` para reflejar el nuevo tope (probar con >200 y esperar `length === 200`, o con 11 y esperar `length === 11`).
-
-Nota: el AI prompt (`sugerirCategoria`) ya sólo usa `descripcion`, así que 200 líneas no lo revientan; si acaso, dentro de `sugerirCategoria` podemos hacer un `slice(0, 30)` local sólo para el prompt del modelo, sin afectar la respuesta al front. Lo incluyo en el mismo edit para mantener costo/latencia del LLM acotados.
-
-## Verificación
-
-1. Re-parsear el XML adjunto: `conceptos.length === 11`, suma = 11,268.49, `validarCuadreCfdi` → `ok: true`.
-2. `deno test supabase/functions/parse-cfdi-xml/` en verde.
-3. Deploy del edge function (`parse-cfdi-xml`) para que el fix tome efecto (los edge functions no se recompilan solos con el bundle del front).
-
-## Housekeeping
-
-- Bump `APP_VERSION` a `13.303.63`.
-- Entrada en `CHANGELOG.md` referenciando el requestId `040d7609-0969-4560-821c-ee21221a7cb5`.
-- No hay issues de Sentry abiertos ligados (es error controlado del validador, no excepción).
+1. Redeploy de la edge function `parse-cfdi-xml` (sin tocar código, sólo forzar despliegue) usando `supabase--deploy_edge_functions`.
+2. Verificación:
+   - Revisar en logs de `parse-cfdi-xml` que la próxima invocación reporte `conceptos_count: 11` para este XML.
+   - Confirmar en la UI que el CFDI se puede registrar sin el toast rojo de cuadre.
+3. Como salvaguarda contra regresiones futuras, añadir en `supabase/functions/parse-cfdi-xml/parser_test.ts` un caso "fixture con 11 conceptos" que verifique que el parser devuelve los 11 y no 10 (fuerza a que cualquier degradación del cap se detecte en CI).
+4. Bump de `APP_VERSION` a `13.303.66` y entrada en `CHANGELOG.md` describiendo el redeploy + test de regresión.
 
 ## Fuera de alcance
 
-- Rediseñar `validarCuadreCfdi` — funciona bien; el problema era el input truncado.
-- Cambios en UI del modal de captura.
+- No cambia lógica de negocio ni de UI.
+- No cambia la validación `validarCuadreCfdi`.
+- No toca el flujo doble-toast (ya arreglado en 13.303.65).
