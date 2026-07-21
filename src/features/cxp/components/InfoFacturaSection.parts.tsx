@@ -38,24 +38,27 @@ export function AdjuntoRow({
   label, icon, path, tipo,
 }: { label: string; icon: React.ReactNode; path: string | null; tipo: "XML" | "PDF" }) {
   const adjunto = !!path;
+  const badgeCls = tipo === "XML"
+    ? "bg-accent/10 text-accent"
+    : "bg-destructive/10 text-destructive";
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border bg-background px-3 py-2">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-muted-foreground">{icon}</span>
-        <span className="text-sm font-medium">{label}</span>
-        {adjunto ? (
-          <Badge variant="default" className="bg-success hover:bg-success">Adjunto</Badge>
-        ) : (
-          <Badge variant="secondary">No adjunto</Badge>
-        )}
+    <div
+      className={`group flex items-center justify-between gap-3 rounded-md border bg-muted/30 hover:bg-background transition-colors px-3 py-2 ${adjunto ? "cursor-pointer" : "opacity-70"}`}
+      onClick={() => { if (adjunto) handleAbrir(path, tipo); }}
+      role={adjunto ? "button" : undefined}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold ${badgeCls}`}>
+          {icon}
+          {label}
+        </span>
+        <span className="text-xs text-muted-foreground truncate">
+          {adjunto ? "Adjunto" : "No adjunto"}
+        </span>
       </div>
       {adjunto && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleAbrir(path, tipo)}
-          className="h-8"
-        >
+        <Button variant="ghost" size="sm" className="h-7 px-2 opacity-60 group-hover:opacity-100"
+          onClick={(e) => { e.stopPropagation(); handleAbrir(path, tipo); }}>
           <ExternalLink className="h-3.5 w-3.5 mr-1" /> Abrir
         </Button>
       )}
