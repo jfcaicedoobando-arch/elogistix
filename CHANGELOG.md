@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.82] - 2026-07-21
+- **Garantías precargadas desde la tarifa del embarque.** El trigger `crear_garantia_contenedor` ahora resuelve la naviera priorizando `embarques.tarifa_id_aplicada → costeo_tarifas.naviera_id`, y sólo cae al match por nombre (`embarques.naviera`) cuando el embarque es legacy sin tarifa. `calc_fecha_limite_devolucion_garantia` prefiere `costeo_tarifas.dias_libres_demoras` sobre `costeo_navieras_condiciones.dias_libres_demoras_default`. Se agrega RPC `refrescar_garantia_desde_tarifa(embarque_id)` (SECURITY DEFINER, sólo toca filas `pendiente`) y un botón "Precargar desde tarifa" en la pestaña Garantías del detalle de embarque para reprocesar filas ya creadas. No pisa depósitos ya movidos (el trigger `_garantia_congelar_monto_trg` sigue vigente). Analogía: antes copiábamos el precio del catálogo general de la marca; ahora primero mira el contrato específico que se cotizó y sólo si no existe cae al catálogo general.
+
 ## [13.303.81] - 2026-07-21
 - **Lint (complexity) verde.** `crearEmbarqueBorradorConDecision` bajó de complejidad 18 → dentro del umbral extrayendo el mapeo de errores RPC a un helper `mapCrearEmbarqueError` con tabla `RPC_ERROR_MAP`. Mismo comportamiento observable.
 
