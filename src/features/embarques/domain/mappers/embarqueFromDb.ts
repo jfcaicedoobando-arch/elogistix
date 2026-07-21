@@ -28,6 +28,7 @@ export interface EmbarqueFormValues {
   puertoOrigen: string;
   puertoDestino: string;
   naviera: string;
+  navieraId: string | null;
   tipoServicio: string;
   contenedor: string;
   tipoContenedor: string;
@@ -38,6 +39,7 @@ export interface EmbarqueFormValues {
    */
   contenedores: ContenedorBorrador[];
   agente: string;
+  agenteId: string | null;
   blMaster: string;
   blHouse: string;
   aeropuertoOrigen: string;
