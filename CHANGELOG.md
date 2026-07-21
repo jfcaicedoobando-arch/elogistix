@@ -1,7 +1,11 @@
 # Changelog
 
 ## [13.303.75] - 2026-07-21
-- **fix(ux) · Fase 1 · Red silenciosa + timezone de vencimiento.** (1) `addDays` en CxP recalculaba `vencimiento` con `new Date(iso).toISOString()`, restando un día en `America/Mexico_City` (FIX-UX-08). Ahora usa aritmética `Date.UTC` y devuelve `""` si la emisión no es un `YYYY-MM-DD` válido. (2) `vitest` fija `TZ=America/Mexico_City` para que los tests de fecha den lo mismo en CI y local. (3) `QueryClient` ahora emite `toast.error` (dedupe por queryKey) al fallar cualquier query — antes sólo se reportaba a Sentry y la UI mostraba "Sin resultados" (FIX-UX-01). (4) `DataTable` acepta `isError` + `onRetry` y muestra `ErrorStateInline` en lugar del empty-state. (5) Rutas `Embarques` y `CxP` distinguen error de red vs. lista vacía y ofrecen "Reintentar".
+- **fix(ux) · Fases 1-4 · Red silenciosa, timezone, captura de dinero y ADR.**
+  - **Fase 1 (P0):** `addDays` reescrito con `Date.UTC`, valida que la regex `YYYY-MM-DD` no acepte rollovers (`2026-13-40` → `""`, FIX-UX-08). `vitest` fija `TZ=America/Mexico_City`. `QueryClient.QueryCache.onError` emite `toast.error` con dedupe por root de queryKey (FIX-UX-01). `DataTable` acepta `isError`+`onRetry` y pinta `ErrorStateInline`; rutas `Embarques` y `CxP` propagan `isError`. Bug adicional descubierto en `useFacturacionDateRange.toIsoDate`: usaba getters locales y con TZ México partía dates UTC un día antes; migrado a `getUTC*`.
+  - **Fase 2 (P1):** Sustituidas 4 zonas críticas de captura de dinero (`PagoFormFields`, `FacturaManualConceptosTable`, `FacturaConceptosEditorRows`, `NotaCreditoConceptosEditor`) de `<Input type="number">` a `NumericInput` — sin spinners, sin wheel-scroll accidental, sin perder decimales al teclear (FIX-UX-04). `Label` con `htmlFor` en el campo Monto de pagos.
+  - **Fase 3 (P2):** `DataTable` ahora es la puerta única para estados de error en listas server-side. Tests: `queryClient.toast.test.ts` (2), `DataTable.isError.test.tsx` (2), y regresión de `addDays` con fechas inválidas cubierta por la suite existente.
+  - **Fase 4 (P3):** ADR-001 documenta el contrato de errores de red (`docs/adr/ADR-001-network-error-handling.md`).
 
 ## [13.303.74] - 2026-07-21
 
