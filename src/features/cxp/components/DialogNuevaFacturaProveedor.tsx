@@ -5,6 +5,7 @@
  *  - Footer compuesto: resumen Subtotal/IVA/Ret arriba + acciones abajo.
  * Estado/submit en `useNuevaFacturaProveedorForm` (Power-of-10).
  */
+import { useMemo } from "react";
 import { Loader2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -16,6 +17,8 @@ import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
+import { CuadreConceptosBar } from "./CuadreConceptosBar";
+import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import type { EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 
 interface Props {
