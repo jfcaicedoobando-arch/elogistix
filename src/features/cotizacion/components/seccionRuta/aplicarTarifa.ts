@@ -56,6 +56,11 @@ function aplicarCamposBase(setValue: UseFormSetValue<CotizacionFormValues>, row:
   setValue("tiempoTransitoDias", row.transit_time_dias ?? undefined, OPTS);
   setValue("diasLibresDestino", row.dias_libres_demoras ?? 0, OPTS);
   setValue("cartaGarantia", !!row.naviera_carta_garantia_activa, OPTS);
+  // v13.303.35 — Herencia de agente y naviera desde la tarifa (fuente de verdad).
+  setValue("agenteId", row.agente_id ?? null, OPTS);
+  setValue("agenteNombre", row.agente_nombre ?? "", OPTS);
+  setValue("navieraId", row.naviera_id ?? null, OPTS);
+  setValue("navieraNombre", row.naviera_nombre ?? "", OPTS);
   if (row.tipo_contenedor_id) {
     setValue("tipoContenedor", row.tipo_contenedor_id, OPTS);
   }
