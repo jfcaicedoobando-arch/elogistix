@@ -5,7 +5,7 @@
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/features/embarques/hooks/useEmbarques";
+import { useEmbarquesPaginados } from "@/features/embarques/hooks/useEmbarques";
 import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
 import type { SortableEmbarqueColumn } from "@/features/embarques/services/queries";
 import { SORT_KEY_TO_COLUMN } from "@/features/embarques/services/queries";
@@ -21,11 +21,14 @@ import {
   buildFullSetFilters,
   dedupePorExpediente,
   contenedoresPorExpediente as computeContenedoresPorExpediente,
+  applyClientFilters,
+  computeSinFiltros,
   type SortDir,
 } from "@/features/embarques/domain/embarquesPageHelpers";
 import { buildEmbarquesPageActions } from "@/features/embarques/hooks/useEmbarquesPageActions";
 
 export type { SortDir };
+
 
 
 export function useEmbarquesPageState() {
