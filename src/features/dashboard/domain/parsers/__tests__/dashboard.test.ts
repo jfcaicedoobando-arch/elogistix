@@ -37,11 +37,10 @@ describe("dashboardParsers", () => {
       const result = parseConteoPorEstado({
         conteoPorEstado: { Confirmado: 5, "En Tránsito": 3, Arribo: 1, "En Aduana": 2, Entregado: 7, EIR: 4 },
       });
-      // EMPTY_CONTEO incluye 7 llaves (v13.303.22: Llegada deprecado y removido del conteo).
+      // v13.303.41 — `En Proceso` removido del filtro visual del dashboard.
       expect(result).toEqual({
         Confirmado: 5,
         "En Tránsito": 3,
-        "En Proceso": 0,
         "En Aduana": 2,
         Arribo: 1,
         Entregado: 7,
