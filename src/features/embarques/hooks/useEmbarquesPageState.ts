@@ -194,7 +194,7 @@ export function useEmbarquesPageState() {
       setPageRaw(null);
     },
     embarques, filtered, totalCount: totalCountServer, displayCount,
-    expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
+    expedientesCount, contenedoresCount, totalPages, isLoading, isError, refetch, isEmptyState,
     contenedoresPorExpediente,
     extras,
     alertasResumen, alertIdSet,
