@@ -1,98 +1,86 @@
-# Extracción por IA de facturas PDF (proveedores internacionales)
 
-Actualmente el modal "Nueva factura de proveedor" tiene dos modos: **Captura manual** y **Cargar XML CFDI (México)**. Este plan agrega un tercer modo **Cargar PDF (Internacional)** que usa Lovable AI (Gemini) para extraer cabecera y conceptos del PDF y prellenar el formulario igual que hace el CFDI.
+# Mejorar los estatus de facturas de proveedor (CxP)
 
-## Alcance
+## Diagnóstico: hoy hay 4 "estatus" mezclados
 
-- Solo se activa cuando el proveedor seleccionado es **internacional** (no MX) — cuando el proveedor es mexicano se sigue mostrando XML CFDI.
-- El PDF se guarda como adjunto de la factura (misma ruta de storage que usa el PDF opcional del CFDI hoy).
-- El usuario **siempre** revisa/edita los campos extraídos antes de guardar. La IA prellena, no aprueba.
+Analogía: hoy el semáforo tiene cuatro colores encendidos a la vez y el usuario no sabe cuál mirar.
 
-## UX del modal
+En la BD y la UI conviven cuatro dimensiones que se muestran revueltas en un solo chip:
 
-`CargaCfdiSection.tsx` pasa a tener 3 pestañas condicionales:
+| Dimensión | Dónde vive hoy | Valores actuales | Problema |
+|---|---|---|---|
+| Ciclo de vida | `proveedor_facturas.estado` (enum) | Borrador, Vigente, Pagada (y Cancelada) | Mezcla "pagada" con el ciclo administrativo |
+| Captura | `estado_captura` (text) | pendiente_xml, capturada, conciliada, pagada | Duplica "pagada" con `estado`; nadie lo mira |
+| Aprobación | `estado_aprobacion` (enum) | pendiente, aprobada, rechazada | No se muestra en la lista |
+| Vencimiento | Derivado en `clasificar()` | Vigente / Por vencer / Vencida / Pagada / Sin saldo | Se pisa con el ciclo de vida y con aprobación |
+| SAT | `uuid_estatus_sat` | Vigente, Cancelado, No Encontrado, Error | Vive aparte, aunque es crítico |
+
+Consecuencias observadas:
+- El chip `EstatusCxP` muestra "Vigente" a una factura **rechazada** o **cancelada en SAT** → falso positivo.
+- "Sin saldo" y "Pagada" conviven sin criterio claro (una factura saldada 100% por NC queda "Sin saldo").
+- "Por vencer" sólo cubre 3 días, insuficiente para tesorería.
+- No hay estatus para "En cancelación" ni "Rechazada" en la lista.
+
+## Propuesta: separar en 3 ejes + 1 estatus resumen
+
+Un chip por eje en el detalle, y un solo **chip primario derivado** en la tabla que sigue una regla de prioridad clara.
 
 ```text
-┌─ Manual ─┬─ XML CFDI (MX) ─┬─ PDF por IA (Intl) ─┐
+Eje 1  CICLO       Borrador → Vigente → Pagada → Cancelada
+Eje 2  APROBACIÓN  Pendiente → Aprobada / Rechazada
+Eje 3  PAGO        Sin pagar → Parcial → Saldada  (+ Vencida / Por vencer)
+Extra  SAT         Vigente / Cancelado / No verificado
 ```
 
-- Cuando `proveedor.pais_codigo === "MX"` (o no hay proveedor aún): se muestran Manual + XML.
-- Cuando proveedor internacional: se muestran Manual + PDF por IA. El toggle recuerda selección.
-- Dropzone del PDF (máx 10 MB, `application/pdf`), botón "Procesar con IA" con spinner.
-- Al terminar: banner verde igual al de CFDI ("PDF procesado. Los campos fueron prellenados — puedes editarlos.") + los conceptos se listan en la tabla ya existente.
+### Regla de prioridad para el chip primario (tabla)
 
-## Backend: nueva Edge Function `parse-invoice-pdf`
+```text
+1. Cancelada            (estado = Cancelada)         → gris
+2. Rechazada            (aprobacion = rechazada)     → rojo
+3. Borrador             (estado = Borrador)          → ámbar suave
+4. Pendiente aprobación (aprobacion = pendiente)     → ámbar
+5. SAT cancelado        (uuid_estatus_sat=Cancelado) → rojo (badge extra)
+6. Pagada               (estado = Pagada)            → verde
+7. Vencida              (dias > 0 y saldo > 0)       → rojo
+8. Por vencer           (0 ≥ dias ≥ -7)              → ámbar
+9. Parcial              (0 < pagado < total)         → azul
+10. Vigente             (default)                    → neutro
+```
 
-Nueva función `supabase/functions/parse-invoice-pdf/index.ts`:
+Cambios respecto a hoy:
+- Ventana "Por vencer" pasa de 3 → **7 días** (configurable).
+- Nuevo estatus **Parcial** (pagos aplicados pero no saldada).
+- Se elimina **"Sin saldo"** como categoría separada: si el saldo llegó a 0 vía NC, se muestra **Saldada** y en el detalle se ve que fue por NC.
+- Chips independientes visibles en el detalle: **Aprobación** y **SAT** siempre.
+- Filtros CxP se dividen en dos selects: **Estatus** (los 10 de arriba) y **Aprobación** (pendiente/aprobada/rechazada).
 
-1. Recibe `multipart/form-data` con `pdf` y `categorias[]` (mismo contrato que `parse-cfdi-xml`).
-2. Valida JWT, tamaño ≤ 10 MB, MIME `application/pdf`.
-3. Convierte a base64 y llama a Lovable AI Gateway (`google/gemini-3.5-flash`) vía `/v1/chat/completions` con contenido multimodal `{type:"file", file:{filename, file_data:"data:application/pdf;base64,..."}}` y **structured output** (tool call con `strict:true`) usando este schema:
+### Limpieza de columnas duplicadas
 
-   ```json
-   {
-     "invoice": {
-       "invoice_number", "issue_date" (ISO YYYY-MM-DD),
-       "currency" (ISO 4217), "exchange_rate" (nullable),
-       "subtotal", "tax_total", "retention_total", "total",
-       "supplier": { "name", "tax_id" },
-       "customer": { "name", "tax_id" },
-       "line_items": [{ "description", "quantity", "unit_price", "amount", "tax", "retention" }]
-     },
-     "ai": { "categoria_id" (nullable), "notas" }
-   }
-   ```
+- `estado_captura` se **deprecia**: nadie lo consume en UI y duplica `estado` + `origen_carga`. Se deja la columna, se para de escribir, se retira del tipo TS.
+- `estado` gana un valor faltante que la UI ya asume: `Cancelada` (verificar que el enum ya lo tenga; si no, agregarlo).
 
-4. Mapea la respuesta al mismo shape que `CfdiParsedResponse` (adaptando `uuid=""`, `serie=""`, `folio=invoice_number`, `emisor.rfc=tax_id`, etc.) para que el hook `useNuevaFacturaProveedorForm` funcione sin cambios.
-5. Devuelve JSON con breadcrumbs de Sentry, timeouts y manejo 402/429 idénticos a `parse-cfdi-xml`.
+## Alcance de la implementación
 
-## Frontend
+Frontend:
+1. Nuevo tipo `EstatusCxP` con los 10 valores anteriores + helper `clasificarFactura(f)` que aplica la prioridad.
+2. Nuevo `<CxpEstatusChip />` con colores tokens (`bg-destructive`, `bg-warning`, `bg-primary`, `bg-muted`).
+3. Detalle de factura: agregar chips separados `AprobacionChip` y `SatChip` junto al header.
+4. `CxpFiltros`: separar filtro de estatus y filtro de aprobación; ampliar opciones.
+5. `cxpKpis`: recalcular "Vencidas" y "Por vencer 7d" con la nueva regla; agregar KPI "Pendientes de aprobación".
 
-Archivos nuevos:
+Backend (migración corta):
+1. Añadir valor `Cancelada` a `estado_proveedor_factura` si no existe.
+2. Comentar `estado_captura` como deprecated.
+3. Índice parcial `(organization_id, estado, fecha_vencimiento)` para acelerar el nuevo filtro (si falta).
 
-- `src/features/cxp/services/parsePdfInvoice.ts` — cliente HTTP con misma estructura que `parseCfdi.ts` (reintentos, `CfdiUploadError` reutilizado o nuevo `PdfInvoiceUploadError`).
-- `src/features/cxp/services/parsePdfInvoice.invoke.ts` — single-attempt invoker.
-- `src/features/cxp/hooks/useCargaPdfIa.ts` — espejo de `useCargaCfdi` para PDF (validación, timeout 30s por PDF).
-- `src/features/cxp/components/CargaPdfIaSection.tsx` — dropzone PDF + botón procesar.
+Fuera de alcance (para no crecer el cambio):
+- Rediseño visual del módulo (ya cerrado en v13.303.98).
+- Migrar reportes de contabilidad que consumen `estado_captura`.
 
-Cambios:
+## Preguntas antes de codear
 
-- `CargaCfdiSection.tsx` → renombrar a `CargaFacturaSection.tsx` (envoltura con 3 tabs) o agregar la tercera pestaña. Mantener < 200 líneas extrayendo cada tab a su propio archivo.
-- `DialogNuevaFacturaProveedor.tsx` → pasar `proveedor?.pais_codigo` para decidir qué pestañas mostrar; mantener export estable.
-- `useNuevaFacturaProveedorForm.ts` → aceptar `origen: "manual" | "cfdi" | "pdf_ia"` y guardar el flag en `factura_proveedor.origen_carga` para trazabilidad.
+1. ¿Ventana "Por vencer" en 7 días o prefieres 5 / 10?
+2. ¿Mostramos el chip de SAT siempre en la lista o solo en el detalle?
+3. ¿"Rechazada" debe seguir contando en el saldo/aging o excluirse (hoy cuenta)?
 
-## Base de datos
-
-Migración: agregar columna `origen_carga text default 'manual' check (origen_carga in ('manual','cfdi','pdf_ia'))` a `factura_proveedor`. Esto permite auditar y contar cuántas facturas se capturan por IA.
-
-## Storage / adjuntos
-
-Reutilizar el bucket y carpeta actuales del PDF opcional del CFDI. El PDF procesado por IA se guarda con el mismo naming `{Tipo}_{FolioSerie}_{Cliente}_{Fecha}.pdf`.
-
-## Copy
-
-- Título de pestaña: **PDF por IA** · Badge `Internacional`.
-- Ayuda: "Sube el PDF de la factura del proveedor extranjero. La IA extraerá folio, fechas, moneda, subtotales y conceptos. Revisa siempre los campos antes de guardar."
-- Toast éxito: "Factura procesada por IA — revisa los datos antes de guardar".
-- Errores 402/429 con mensaje humano existente.
-
-## QA
-
-- Test unitario de mapeo Gemini→`CfdiParsedResponse` con fixture de invoice en inglés y en chino.
-- Test del hook `useCargaPdfIa` (mock del edge, timeout, error 402).
-- Test de que el toggle esconde XML cuando `pais_codigo !== "MX"`.
-- Verificación manual: subir un PDF real de proveedor USD, confirmar prellenado, editar un concepto, guardar, ver `origen_carga='pdf_ia'` y el PDF en storage.
-
-## Detalles técnicos
-
-- Modelo: `google/gemini-3.5-flash` (rápido, multimodal, gratis vía Gateway). Fallback opcional a `google/gemini-2.5-pro` si el schema strict falla.
-- Tokens: PDFs > 20 MB rechazados; > 50 páginas advertencia (Gemini soporta pero se degrada).
-- Reintentos: 3 con backoff 1s/3s (igual que CFDI).
-- Sin cambios en RLS ni en el flujo de aprobación posterior.
-- `APP_VERSION` bump + entrada en `CHANGELOG.md`.
-
-## Fuera de alcance
-
-- OCR de facturas escaneadas de baja calidad (Gemini lo hace nativamente, pero no se agrega postproceso manual).
-- Detección automática de duplicados por número de factura extranjera (se puede añadir después con índice único sobre `emisor_rfc + folio`).
-- Auto-aprobación: siempre requiere revisión humana.
+Confírmame estas tres y ajusto el plan antes de pasar a build.
