@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.66] - 2026-07-21
+- **fix(cxp) · Redeploy `parse-cfdi-xml`: aún truncaba conceptos a 10 en runtime.** El fix de v13.303.63 subió el tope a 200 en el código (`parser.ts`), pero la edge function desplegada seguía con el cap viejo, así que un CFDI con 11 conceptos (subtotal `11268.49` USD) volvía a fallar con "los importes suman 11064.64" (diferencia = último concepto de `203.85`). Redesplegada la función; el test de regresión con 11 conceptos ya vive en `parser_test.ts`. Reportado con requestId `2706e9cf-c3f9-4119-b692-1d0c4d1fa8d4`.
+
 ## [13.303.65] - 2026-07-21
 - **fix(cxp) · Doble toast al subir CFDI (verde "procesado" + rojo "no cuadra").** `useCargaCfdi.procesar()` disparaba `toast.success("CFDI procesado")` inmediatamente después de invocar `onParsed`, sin esperar su resultado; el consumidor (`handleCfdiParsed`) validaba el cuadre fiscal asíncronamente y podía emitir un error, quedando ambos toasts en pantalla. Ahora `onParsed` puede devolver `false` para señalar rechazo y el hook suprime el toast de éxito en ese caso.
 
