@@ -4268,6 +4268,33 @@ export type Database = {
           },
         ]
       }
+      facturapi_webhook_eventos: {
+        Row: {
+          event_id: string
+          event_type: string
+          id: string
+          organization_id: string
+          payload: Json | null
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          id?: string
+          organization_id: string
+          payload?: Json | null
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          id?: string
+          organization_id?: string
+          payload?: Json | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       facturas: {
         Row: {
           acuse_cancelacion_fecha: string | null
