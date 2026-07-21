@@ -70,6 +70,8 @@ describe("useClienteDetalleController", () => {
       telefono: "123",
       regimen_fiscal: "601",
       uso_cfdi_default: "G03",
+      dias_credito: null,
+      limite_credito_mxn: null,
     };
 
     await act(async () => {

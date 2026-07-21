@@ -14,6 +14,8 @@ interface Cliente {
   telefono: string;
   regimen_fiscal: string;
   uso_cfdi_default: string;
+  dias_credito: number | null;
+  limite_credito_mxn: number | null;
 }
 
 interface Props {

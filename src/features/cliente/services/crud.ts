@@ -12,7 +12,7 @@ export type Cliente = Tables<"clientes">;
 
 
 export const CLIENTE_DETAIL_COLUMNS =
-  "id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, regimen_fiscal, uso_cfdi_default, organization_id, created_at, updated_at" as const;
+  "id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, regimen_fiscal, uso_cfdi_default, dias_credito, limite_credito_mxn, organization_id, created_at, updated_at" as const;
 
 
 // ============================================================
@@ -139,6 +139,43 @@ export async function fetchDiasCreditoCliente(
       .maybeSingle(),
   );
   return data?.dias_credito ?? null;
+}
+
+// ============================================================
+// Exposición de crédito (fuente única de verdad)
+// ============================================================
+
+export interface ExposicionCreditoCliente {
+  clienteId: string;
+  organizationId: string | null;
+  diasCredito: number | null;
+  limiteMxn: number | null;
+  enUsoMxn: number;
+  disponibleMxn: number | null;
+  excedido: boolean;
+  facturasVivas: number;
+}
+
+/** Exposición de crédito consolidada del cliente (RPC `get_exposicion_credito_cliente`). */
+export async function fetchExposicionCreditoCliente(
+  clienteId: string,
+): Promise<ExposicionCreditoCliente | null> {
+  const { data, error } = await supabase.rpc("get_exposicion_credito_cliente", {
+    p_cliente_id: clienteId,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return {
+    clienteId: row.cliente_id,
+    organizationId: row.organization_id ?? null,
+    diasCredito: row.dias_credito ?? null,
+    limiteMxn: row.limite_mxn == null ? null : Number(row.limite_mxn),
+    enUsoMxn: Number(row.en_uso_mxn ?? 0),
+    disponibleMxn: row.disponible_mxn == null ? null : Number(row.disponible_mxn),
+    excedido: Boolean(row.excedido),
+    facturasVivas: Number(row.facturas_vivas ?? 0),
+  };
 }
 
 // ============================================================

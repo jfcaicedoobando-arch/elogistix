@@ -72,6 +72,7 @@ export const SENSITIVE_FIELDS = {
     "estado",
     "cp",
     "dias_credito",
+    "limite_credito_mxn",
     "regimen_fiscal",
     "uso_cfdi_default",
   ] as const,
