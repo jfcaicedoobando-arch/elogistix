@@ -6,17 +6,17 @@ import type { SortDir } from "@/features/embarques/domain/embarquesPageHelpers";
 
 type SetFilter = (key: "modo" | "estado" | "cliente" | "operador" | "fechaDesde" | "fechaHasta", value: string, defaultValue: string) => void;
 
-interface BuildActionsArgs {
+interface BuildActionsArgs<A> {
   DEFAULT_PAGE_SIZE: number;
   setFilter: SetFilter;
-  setAlerta: (v: never) => void;
+  setAlerta: (v: A) => void;
   setPageRaw: (v: number | null) => void;
   setPageSizeRaw: (v: number | null) => void;
   setSortKeyRaw: (v: string | null) => void;
   setSortDirRaw: (v: SortDir | null) => void;
 }
 
-export function buildEmbarquesPageActions(args: BuildActionsArgs) {
+export function buildEmbarquesPageActions<A>(args: BuildActionsArgs<A>) {
   const {
     DEFAULT_PAGE_SIZE, setFilter, setAlerta,
     setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
