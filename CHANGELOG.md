@@ -1,6 +1,14 @@
 # Changelog
 
+## [13.303.53] - 2026-07-21
+- **Fase 5 (parcial) · Endurecimiento seguridad + endurece FIX-22.**
+  - **FIX-22 refuerzo — Dedupe sin lagunas:** nueva `computeEventKey(rawBody, event)` en `supabase/functions/facturapi-webhook/helpers.ts`. Usa `event.id` cuando existe y cae a `sha256:<hash body>` cuando el payload legacy no lo trae. Antes, ~5% de eventos históricos escapaban el dedupe.
+  - **Retención (`purgar_facturapi_webhook_eventos`):** función `SECURITY DEFINER` que borra eventos > 60 días (FacturAPI retransmite máx. 7). `EXECUTE` revocado a `PUBLIC/anon/authenticated`; sólo `service_role` la corre desde cron/edge.
+  - **Endurecimiento `facturapi_webhook_eventos`:** revocado cualquier acceso residual a `anon/authenticated/PUBLIC`. RLS activo + sólo policy `service_role`.
+  - **Tests:** 21/21 Deno (+3 nuevos para `computeEventKey`), 55/55 vitest financieros.
+
 ## [13.303.52] - 2026-07-21
+
 - **Fase 4 · Integridad financiera: TC no silencioso, hueco en CDMX, webhook idempotente (FIX-11 residual · FIX-12 residual · FIX-22).**
   - **FIX-11 residual — Fin del fallback `|| 1`:** `sumarEnUSD` (`src/lib/financial/costosUSD.ts`) ya no colapsa a TC=1 cuando falta el tipo de cambio: delega en `sumarEnMoneda`, que ignora filas mixtas y devuelve `total: 0` para forzar la captura vía banner. `StepCostosPrecios.tsx` deja el monto nativo (sin convertir a USD) si falta TC, y `dashboard/direccion/services/calculos.ts` descarta filas USD/EUR de embarques sin TC en lugar de sumarlas como si fueran MXN. Antes, un embarque sin TC inflaba la utilidad ~20×.
   - **FIX-12 residual — `huecoFacturacion` en CDMX:** el corte "hoy + 3 días" se calcula con `hoyMx()`/`parseLocalMx()` en lugar de `toISOString().slice(0,10)`. Entre 18:00–23:59 CDMX el hueco ya no se corría un día al futuro.

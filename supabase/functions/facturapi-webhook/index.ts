@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 import {
+  computeEventKey,
   computeSignature,
   mapEventToFacturaPatch,
   mapEventToReceiptPatch,
@@ -120,26 +121,23 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
   let event: FacturapiWebhookEvent;
   try { event = JSON.parse(rawBody); } catch { return jsonResponse({ error: "invalid_json" }, 400); }
 
-  // FIX-22 · Dedupe: FacturAPI reintenta hasta 10× ante 5xx. Sin idempotencia,
-  // un update de estado o un pago se replicaría. La UNIQUE (org, event_id)
-  // bloquea inserciones repetidas y las respondemos como ok/ignored.
-  const eventId = (event as { id?: string }).id ?? null;
-  if (eventId) {
-    const { error: dupErr } = await supabase
-      .from("facturapi_webhook_eventos")
-      .insert({
-        organization_id: orgId,
-        event_id: eventId,
-        event_type: event.type,
-        payload: event as unknown as Record<string, unknown>,
-      });
-    if (dupErr) {
-      // 23505 = unique_violation → evento ya procesado
-      if ((dupErr as { code?: string }).code === "23505") {
-        return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventId });
-      }
-      return jsonResponse({ error: "dedupe_insert_failed", detail: dupErr.message }, 500);
+  // FIX-22 · Dedupe: FacturAPI reintenta hasta 10× ante 5xx. `computeEventKey`
+  // usa `event.id` y cae a `sha256:<hash del body>` cuando falta, para que
+  // ningún evento — legacy o moderno — se procese dos veces.
+  const eventKey = await computeEventKey(rawBody, event);
+  const { error: dupErr } = await supabase
+    .from("facturapi_webhook_eventos")
+    .insert({
+      organization_id: orgId,
+      event_id: eventKey,
+      event_type: event.type,
+      payload: event as unknown as Record<string, unknown>,
+    });
+  if (dupErr) {
+    if ((dupErr as { code?: string }).code === "23505") {
+      return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventKey });
     }
+    return jsonResponse({ error: "dedupe_insert_failed", detail: dupErr.message }, 500);
   }
 
   const receipt = mapEventToReceiptPatch(event);
