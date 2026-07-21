@@ -1,32 +1,51 @@
 ## Problema
 
-Cuando un toast de Sonner aparece encima de un modal y el usuario hace clic en él (para cerrarlo o usar su acción), Radix Dialog interpreta ese clic como "clic fuera" y cierra el modal. Los toasts se renderizan en un portal hermano al del Dialog, así que técnicamente están fuera del `DialogContent`.
-
-## Causa (analogía)
-
-Imagina el modal como una habitación con guardia: si tocas algo que no sea la habitación, el guardia cierra la puerta. El toast es un post-it flotando en el pasillo — al tocarlo, el guardia cree que tocaste el pasillo y cierra.
+1. En el modal "Registrar pago a proveedor" el campo **Monto** es un `<Input type="number">` pelón: no muestra el símbolo `$` ni contexto de moneda, y visualmente parece un campo de cantidad genérico.
+2. Todos los `<Input type="number">` de la app muestran las flechitas nativas (spin buttons) del navegador. Ya interceptamos el scroll wheel en `src/components/ui/input.tsx`, pero las flechas siguen ahí y son ruido visual (39 archivos las usan).
 
 ## Solución
 
-Interceptar `onPointerDownOutside` y `onInteractOutside` en `DialogContent` (y `AlertDialogContent`) para ignorar eventos cuyo `target` esté dentro de `[data-sonner-toaster]`. Es un fix global, una sola línea de lógica, aplica a todos los modales del sistema sin tocar cada uno.
+### Parte 1 — Símbolo `$` en el input de Monto (y el de Tipo de Cambio y Diferencia cambiaria, por consistencia)
 
-## Cambios
+En `src/features/cxp/components/PagoProveedorFormBody.tsx`:
 
-1. **`src/components/ui/dialog.tsx`** — En `DialogContent`, agregar handlers por defecto que:
-   - Detectan si `event.target` (o su ancestro) tiene `[data-sonner-toaster]`.
-   - Si sí, llaman `event.preventDefault()` para que Radix no cierre el modal.
-   - Se permite override si el consumidor pasa sus propios handlers.
+- Envolver el input de **Monto** en un contenedor `relative` con un `<span>` absolute-positioned a la izquierda que muestra `$` (color muted). El `<Input>` recibe `pl-7` para que el texto no encime el símbolo.
+- Aplicar el mismo patrón al input de **Diferencia cambiaria MXN** (también es dinero).
+- El campo **Tipo de cambio** NO lleva `$` (es un ratio, no un monto) — se deja igual.
+- Mantener `type="number"` y el flujo actual (`setMonto` sigue recibiendo string). No se cambia lógica, sólo presentación.
 
-2. **`src/components/ui/alert-dialog.tsx`** — Mismo patrón en `AlertDialogContent` (confirmaciones, DoubleConfirmDeleteDialog, etc.).
+Alcance mínimo: sólo este modal. Si más adelante se quiere en otros lugares se replica el patrón, pero el usuario reportó específicamente este.
 
-3. **`CHANGELOG.md` + `APP_VERSION`** → `13.303.88`, bullet breve.
+### Parte 2 — Eliminar spinners de todos los `type="number"` de la app (fix global)
+
+Agregar reglas CSS globales en `src/index.css` para ocultar los spin buttons:
+
+```css
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;   /* Firefox */
+  appearance: textfield;
+}
+```
+
+Esto aplica a los 39 archivos que usan `type="number"` sin tocar ninguno. Los inputs siguen validando como número y aceptando `inputMode="decimal"/"numeric"` para mostrar teclado apropiado en móvil.
+
+### Versión / Changelog
+
+- Bump `APP_VERSION` a `13.303.89`.
+- Bullet en `CHANGELOG.md` con analogía breve.
 
 ## Verificación
 
-- Test manual en preview: abrir cualquier modal (ej. crear factura de proveedor), disparar un toast de error, hacer clic en la X del toast — el modal debe seguir abierto.
-- Correr `bunx vitest run` en pruebas de arquitectura para asegurar que no rompe guardrails.
+- Abrir el modal en `/compras/facturas` → registrar pago → confirmar que el input muestra `$` a la izquierda y que ya no hay flechitas.
+- Revisar visualmente 2–3 pantallas más con `type="number"` (Configuración → Operaciones, Cotización → Tarifa, Comisiones) para confirmar que también perdieron las flechas.
 
 ## Fuera de alcance
 
-- No cambio la lógica de toasts ni de modales individuales.
-- No modifico Sonner ni su Toaster (ya se ajustó en v13.303.72).
+- No migro los 39 inputs a `NumericInput` (ese componente ya existe y usa `type="text"`, pero migrar todo sería un refactor grande no solicitado).
+- No cambio la lógica de captura/validación del monto (sigue siendo string → `Number`).
+- No añado formato de miles con comas mientras se escribe (rompería `type="number"`). Sólo el símbolo `$` como prefijo visual.
