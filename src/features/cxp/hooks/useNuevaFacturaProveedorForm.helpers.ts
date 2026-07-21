@@ -9,11 +9,14 @@ import { todayLocalISO } from "@/lib/date/today";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
+export type OrigenCarga = "manual" | "cfdi" | "pdf_ia";
+
 export interface PendingCfdi {
   uuid: string;
   rfcEmisor: string;
-  xmlFile: File;
+  xmlFile: File | null;
   pdfFile: File | null;
+  origen: Exclude<OrigenCarga, "manual">;
 }
 
 export interface VinculoLinea {
