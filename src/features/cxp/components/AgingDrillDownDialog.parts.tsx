@@ -13,15 +13,6 @@ import type { CubetaAging } from "./agingBuckets";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 
-export const CUBETA_CHIPS: Array<{ value: CubetaAging | "todas"; label: string }> = [
-  { value: "todas", label: "Todas" },
-  { value: "vigente", label: "Vigente" },
-  { value: "d_1_30", label: "1-30 d" },
-  { value: "d_31_60", label: "31-60 d" },
-  { value: "d_61_90", label: "61-90 d" },
-  { value: "mas_90", label: ">90 d" },
-];
-
 export function AgingActionBar({
   cubeta, onChange, onExport, exportDisabled, exportCount,
 }: {
@@ -31,6 +22,14 @@ export function AgingActionBar({
   exportDisabled: boolean;
   exportCount: number;
 }) {
+  const CUBETA_CHIPS: Array<{ value: CubetaAging | "todas"; label: string }> = [
+    { value: "todas", label: "Todas" },
+    { value: "vigente", label: "Vigente" },
+    { value: "d_1_30", label: "1-30 d" },
+    { value: "d_31_60", label: "31-60 d" },
+    { value: "d_61_90", label: "61-90 d" },
+    { value: "mas_90", label: ">90 d" },
+  ];
   return (
     <div className="px-6 py-3 border-b bg-accent/5 flex items-center justify-between gap-3 flex-wrap">
       <div className="flex items-center gap-1.5 flex-wrap">
