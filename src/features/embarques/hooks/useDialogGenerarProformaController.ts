@@ -160,7 +160,7 @@ export function useDialogGenerarProformaController(
   return {
     paso, setPaso,
     seleccionados, ivaPorConcepto, notas, diasCredito,
-    setNotas, setDiasCredito,
+    setNotas,
     toggle, toggleAll, toggleIva,
     conceptosSeleccionados,
     conceptosVisibles,
@@ -172,4 +172,5 @@ export function useDialogGenerarProformaController(
     totalSeleccionados: seleccionados.size,
   };
 }
+
 
