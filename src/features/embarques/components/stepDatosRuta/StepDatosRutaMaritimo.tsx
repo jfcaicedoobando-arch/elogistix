@@ -4,7 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PortSelect from "@/features/catalogos/components/PortSelect";
-import NavieraSelect from "@/features/catalogos/components/NavieraSelect";
+import {
+  AgenteEmbarqueSelector,
+  NavieraEmbarqueSelector,
+} from "@/features/embarques/components/stepDatosRuta/AgenteNavieraHeredados";
 import { ListaContenedoresEditable } from "@/features/embarques/components/contenedores/ListaContenedoresEditable";
 import { crearContenedorVacio } from "@/features/embarques/types/contenedor";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
@@ -14,6 +17,9 @@ const errClass = "text-xs text-destructive mt-1";
 
 interface Props {
   errors: StepValidationErrors;
+  /** IDs originales heredados desde la cotización (para badge/restaurar). */
+  cotizacionAgenteId?: string | null;
+  cotizacionNavieraId?: string | null;
 }
 
 /** Filtra errores de filas de contenedores para no duplicar mensajes. */
@@ -26,7 +32,7 @@ function filaErrores(errors: StepValidationErrors, index: number): string[] {
   return out;
 }
 
-export function StepDatosRutaMaritimo({ errors }: Props) {
+export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNavieraId }: Props) {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
   const tipoServicio = watch('tipoServicio');
   const contenedores = watch('contenedores') ?? [];
@@ -69,19 +75,8 @@ export function StepDatosRutaMaritimo({ errors }: Props) {
         )} />
         {errors.puertoDestino && <p className={errClass}>{errors.puertoDestino}</p>}
       </div>
-      <div className="space-y-2">
-        <Label>Naviera *</Label>
-        <Controller name="naviera" render={({ field }) => (
-          <NavieraSelect
-            value={field.value}
-            onValueChange={field.onChange}
-            className={cn(errors.naviera && 'border-destructive')}
-            aria-invalid={errors.naviera ? true : undefined}
-          />
-        )} />
-        {errors.naviera && <p className={errClass}>{errors.naviera}</p>}
-      </div>
-      <div className="space-y-2"><Label htmlFor="emb-agente">Agente</Label><Input id="emb-agente" placeholder="Nombre del agente" {...register('agente')} /></div>
+      <NavieraEmbarqueSelector cotizacionNavieraId={cotizacionNavieraId} />
+      <AgenteEmbarqueSelector cotizacionAgenteId={cotizacionAgenteId} />
       <div className="space-y-2"><Label htmlFor="emb-bl-master"># BL Master</Label><Input id="emb-bl-master" placeholder="Número de BL" {...register('blMaster')} /></div>
       <div className="space-y-2"><Label htmlFor="emb-bl-house"># BL House</Label><Input id="emb-bl-house" {...register('blHouse')} /></div>
       <div className="space-y-2">

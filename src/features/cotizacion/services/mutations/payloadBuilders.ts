@@ -66,6 +66,10 @@ function partesComercialInsert(input: CreateCotizacionInput) {
     carta_garantia: input.carta_garantia ?? false,
     tarifa_id: input.tarifa_id ?? null,
     tarifa_override: toDbJson(input.tarifa_override ?? {}),
+    agente_id: input.agente_id ?? null,
+    agente_nombre: input.agente_nombre ?? null,
+    naviera_id: input.naviera_id ?? null,
+    naviera_nombre: input.naviera_nombre ?? null,
   };
 }
 

@@ -80,6 +80,12 @@ export interface CotizacionFormValues {
   sinDesgloseCostos: boolean;
   /** Flete LCL capturado manualmente (usado sólo cuando no hay tarifa vinculada). */
   lclFleteManual: LclFleteManual;
+  /** Agente heredado de la tarifa (FK a costeo_agentes). */
+  agenteId: string | null;
+  agenteNombre: string;
+  /** Naviera heredada de la tarifa (FK a navieras). */
+  navieraId: string | null;
+  navieraNombre: string;
 }
 
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
@@ -127,6 +133,10 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   tarifaOverride: {},
   sinDesgloseCostos: false,
   lclFleteManual: DEFAULT_LCL_FLETE_MANUAL,
+  agenteId: null,
+  agenteNombre: "",
+  navieraId: null,
+  navieraNombre: "",
 };
 
 export interface CotizacionInitialData {
@@ -179,6 +189,10 @@ export interface CotizacionInitialData {
   lcl_minimo_flete?: number | null;
   lcl_dias_libres_almacenaje?: number | null;
   lcl_consolidador_id?: string | null;
+  agente_id?: string | null;
+  agente_nombre?: string | null;
+  naviera_id?: string | null;
+  naviera_nombre?: string | null;
 }
 
 export interface CotizacionInitialCosto {

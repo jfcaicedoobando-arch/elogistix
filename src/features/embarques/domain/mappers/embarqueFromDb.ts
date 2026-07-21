@@ -28,6 +28,7 @@ export interface EmbarqueFormValues {
   puertoOrigen: string;
   puertoDestino: string;
   naviera: string;
+  navieraId: string | null;
   tipoServicio: string;
   contenedor: string;
   tipoContenedor: string;
@@ -38,6 +39,7 @@ export interface EmbarqueFormValues {
    */
   contenedores: ContenedorBorrador[];
   agente: string;
+  agenteId: string | null;
   blMaster: string;
   blHouse: string;
   aeropuertoOrigen: string;
@@ -69,7 +71,8 @@ export const DEFAULT_EMBARQUE_VALUES: EmbarqueFormValues = {
   consignatario: "", consignatarioManual: "", incoterm: "FOB", descripcionMercancia: "",
   pesoKg: "", volumenM3: "", piezas: "", tipoCarga: "Carga General",
   msdsArchivo: null, subiendoMsds: false,
-  puertoOrigen: "", puertoDestino: "", naviera: "", agente: "", tipoServicio: "",
+  puertoOrigen: "", puertoDestino: "", naviera: "", navieraId: null,
+  agente: "", agenteId: null, tipoServicio: "",
   contenedor: "", tipoContenedor: "", contenedores: [], blMaster: "", blHouse: "",
   aeropuertoOrigen: "", aeropuertoDestino: "", aerolinea: "", mawb: "", hawb: "",
   ciudadOrigen: "", ciudadDestino: "", transportista: "", cartaPorte: "",
@@ -104,11 +107,16 @@ function mapDatosGenerales(e: EmbarqueRow) {
 }
 
 function mapMaritimo(e: EmbarqueRow) {
+  // SAFE-CAST: naviera_id/agente_id son columnas nuevas (v13.303.35) que aún
+  // pueden no aparecer en los tipos generados.
+  const row = e as unknown as Record<string, unknown>;
   return {
     puertoOrigen: str(e.puerto_origen),
     puertoDestino: str(e.puerto_destino),
     naviera: str(e.naviera),
+    navieraId: (row.naviera_id as string | null) ?? null,
     agente: str(e.agente),
+    agenteId: (row.agente_id as string | null) ?? null,
     tipoServicio: str(e.tipo_servicio),
     contenedor: str(e.contenedor),
     tipoContenedor: str(e.tipo_contenedor),

@@ -94,4 +94,8 @@ export interface CreateCotizacionInput {
   punto_intermedio?: string | null;
   tarifa_id?: string | null;
   tarifa_override?: Record<string, boolean>;
+  agente_id?: string | null;
+  agente_nombre?: string | null;
+  naviera_id?: string | null;
+  naviera_nombre?: string | null;
 }

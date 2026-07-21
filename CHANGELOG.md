@@ -1,6 +1,11 @@
 # Changelog
 # Changelog
+
+## [13.303.35] - 2026-07-21
+- **Herencia de Agente y Naviera desde la tarifa/cotización al embarque.** Se agregan columnas `agente_id` y `naviera_id` (FK a `costeo_agentes` / `navieras`) en `cotizaciones` y `embarques`. Al elegir tarifa en la cotización, `aplicarTarifa` siembra ambos IDs; al crear o editar el borrador de embarque las RPC (`crear_embarque_borrador_core`, `crear_embarque_completo`, `actualizar_embarque_completo`) y el mapper `buildPackBUpdates` los propagan. El paso 2 de "Datos de ruta" (marítimo) reemplaza el input libre de agente y el `NavieraSelect` por dos nuevos selectores (`AgenteEmbarqueSelector`, `NavieraEmbarqueSelector`) enlazados al catálogo, con permiso de override y opción de restaurar el valor heredado. Los textos legacy (`agente`, `naviera`) se mantienen sincronizados para compatibilidad con reportes.
+
 ## [13.303.34] - 2026-07-20
+
 - Tests: se alinean fixtures de `embarqueWizardStepValidator` y `useNuevoEmbarqueWizard` con la política tarifa-first (v13.303.26) — ahora incluyen `cotizacionVinculadaId`/`cotizacionVinculada` para que los casos "válidos" no fallen por la validación obligatoria de cotización. Corrige CI shards 3 y 7.
 
 ## [13.303.33] - 2026-07-20

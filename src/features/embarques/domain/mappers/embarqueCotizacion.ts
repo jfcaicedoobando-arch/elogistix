@@ -40,6 +40,10 @@ export interface CotizacionParaVincular {
   seguro?: boolean | null;
   valor_seguro_usd?: number | null;
   notas?: string | null;
+  agente_id?: string | null;
+  agente_nombre?: string | null;
+  naviera_id?: string | null;
+  naviera_nombre?: string | null;
 }
 
 export type DesvincularModo = "limpiar" | "conservar" | "solo-conceptos";
@@ -138,6 +142,11 @@ export function buildPackBUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
     ["seguro", Boolean(cot.seguro)],
     ["valorSeguroUsd", cot.valor_seguro_usd != null ? String(cot.valor_seguro_usd) : ""],
     ["notas", cot.notas ?? ""],
+    // v13.303.35 — Agente y naviera se heredan de la tarifa vía cotización.
+    ["agenteId", cot.agente_id ?? null],
+    ["agente", cot.agente_nombre ?? ""],
+    ["navieraId", cot.naviera_id ?? null],
+    ["naviera", cot.naviera_nombre ?? ""],
   ];
 }
 

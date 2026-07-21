@@ -148,6 +148,10 @@ export function buildPaso1Data(
     tarifa_id: values.tarifaId ?? null,
     tarifa_override: values.tarifaOverride ?? {},
     sin_desglose_costos: values.sinDesgloseCostos ?? false,
+    agente_id: values.agenteId ?? null,
+    agente_nombre: values.agenteNombre || null,
+    naviera_id: values.navieraId ?? null,
+    naviera_nombre: values.navieraNombre || null,
     ...partesLclManual(values),
   };
 }
