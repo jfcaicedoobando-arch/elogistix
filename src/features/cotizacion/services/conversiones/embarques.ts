@@ -41,8 +41,38 @@ async function assertTarifaSinCambios(cotizacionId: string): Promise<ResultadoRe
  * Crea un embarque borrador desde una cotización aceptada usando la RPC
  * `crear_embarque_borrador_desde_cotizacion`. Idempotente (devuelve el embarque
  * existente si la cotización ya tiene uno vinculado).
+ *
+ * @deprecated Fase S.4: usar `crearEmbarqueBorradorConDecision` para pasar
+ *   la decisión de revalidación explícitamente. Este wrapper delega asumiendo
+ *   `decision='sin_cambios'` y la BD sigue bloqueando si la tarifa cambió.
  */
 export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string): Promise<string> {
+  return crearEmbarqueBorradorConDecision({ cotizacionId, decision: "sin_cambios" });
+}
+
+export type DecisionRevalidacion =
+  | "sin_cambios"
+  | "refrescada"
+  | "mantenida_por_operaciones"
+  | "sustituida"
+  | "reaprobada_ventas";
+
+export interface CrearBorradorInput {
+  cotizacionId: string;
+  decision: DecisionRevalidacion;
+  tarifaAplicada?: string | null;
+  delta?: Record<string, unknown> | null;
+}
+
+/**
+ * Fase S.4 — API estricta para conversión cotización→embarque.
+ * Exige `decision` explícita para que la observabilidad y la bitácora reciban
+ * la razón por la que la tarifa se mantiene/refresca/sustituye/reaprueba.
+ * - `sin_cambios` → RPC 1-arg (BD refuerza que la tarifa realmente no cambió).
+ * - otras → RPC 4-arg que registra la decisión en `embarques.tarifa_decision`.
+ */
+export async function crearEmbarqueBorradorConDecision(input: CrearBorradorInput): Promise<string> {
+  const { cotizacionId, decision } = input;
   const { data: cot, error: errCot } = await supabase
     .from("cotizaciones")
     .select("tipo_documento")
@@ -52,18 +82,24 @@ export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string)
   if (cot?.tipo_documento === "informativa") {
     throw new Error("Las cotizaciones informativas (tarifarios) no pueden convertirse a embarques");
   }
-  // Fase R.6 (Bug 18): pre-check + mapeo del token `LC_TARIFA_REQUIERE_REVALIDACION`.
-  await assertTarifaSinCambios(cotizacionId);
-  const { data, error } = await supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
-    p_cotizacion_id: cotizacionId,
-  });
+  if (decision === "sin_cambios") {
+    await assertTarifaSinCambios(cotizacionId);
+  }
+  const rpc = decision === "sin_cambios"
+    ? supabase.rpc("crear_embarque_borrador_desde_cotizacion", { p_cotizacion_id: cotizacionId })
+    : supabase.rpc("crear_embarque_borrador_desde_cotizacion", {
+        p_cotizacion_id: cotizacionId,
+        p_decision: decision,
+        p_tarifa_aplicada: input.tarifaAplicada ?? null,
+        p_delta: input.delta ?? null,
+      } as never);
+  const { data, error } = await rpc;
   if (error) {
     const msg = typeof error.message === "string" ? error.message : "";
     if (/LC_TARIFA_REQUIERE_REVALIDACION/.test(msg)) {
       const r = await revalidarTarifa(cotizacionId).catch(() => null);
       if (r) throw new RevalidacionRequeridaError(r);
     }
-    // FIX-21: mapear tokens LC_* a mensajes claros en es-MX.
     if (/LC_COT_ELIMINADA/.test(msg)) {
       throw new Error("Esta cotización fue eliminada y no puede convertirse en embarque.");
     }
@@ -83,6 +119,6 @@ export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string)
   }
   if (!data) throw new Error("La función no devolvió un embarque");
   return data as string;
-
 }
+
 
