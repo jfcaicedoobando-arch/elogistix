@@ -5,6 +5,7 @@
  *  - Footer compuesto: resumen Subtotal/IVA/Ret arriba + acciones abajo.
  * Estado/submit en `useNuevaFacturaProveedorForm` (Power-of-10).
  */
+import { useMemo } from "react";
 import { Loader2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
@@ -16,6 +17,8 @@ import { CargaCfdiSection } from "./CargaCfdiSection";
 import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
+import { CuadreConceptosBar } from "./CuadreConceptosBar";
+import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import type { EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 
 interface Props {
@@ -33,6 +36,14 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
   const ieps = Number(ctl.values.ieps) || 0;
   const ret = Number(ctl.values.retenciones) || 0;
   const moneda = ctl.values.moneda;
+
+  const conceptosParaCuadre = useMemo<ConceptoParaCuadre[]>(() => {
+    if (ctl.cfdiConceptos.length > 0) {
+      return ctl.cfdiConceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
+    }
+    return Object.values(ctl.vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
+  }, [ctl.cfdiConceptos, ctl.vinculos]);
+  const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
 
   const headerAside = (
     <>
@@ -116,6 +127,8 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           embarqueAdHoc={ctl.embarqueAdHoc}
           onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
         />
+
+        <CuadreConceptosBar resultado={cuadre} subtotal={sub} moneda={moneda} />
       </FormDialogShell>
 
       {ctl.askCrearProv && (
