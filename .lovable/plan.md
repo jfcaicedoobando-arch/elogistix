@@ -1,21 +1,32 @@
-Mejorar el copy de la carta "Demoras por contenedor" en `src/features/embarques/components/TabDemoras.tsx` para que sea más claro, conciso y amigable para el usuario operativo.
+## Problema
 
-**Copy actual (líneas 94-100):**
-> Captura la fecha real de descarga y devolución de cada contenedor para que el sistema calcule las demoras con el tabulador escalonado de la naviera. Si los campos quedan vacíos se usan las fechas del timeline del embarque. El override de días libres sobreescribe el default configurado en la naviera. Al guardar, los conceptos de demoras automáticos se recalculan.
+Cuando un toast de Sonner aparece encima de un modal y el usuario hace clic en él (para cerrarlo o usar su acción), Radix Dialog interpreta ese clic como "clic fuera" y cierra el modal. Los toasts se renderizan en un portal hermano al del Dialog, así que técnicamente están fuera del `DialogContent`.
 
-**Problemas detectados:**
-- Oraciones largas y densas.
-- Lenguaje técnico innecesario ("override", "default", "tabulador escalonado").
-- No explica qué pasa si se deja vacío el campo de días libres (sobreescribe vs. solo si se captura).
-- Falta claridad sobre la acción automática al guardar.
+## Causa (analogía)
 
-**Copy propuesto:**
-> Captura la fecha real de descarga y devolución de cada contenedor para calcular las demoras con el tabulador de la naviera. Si dejas un campo vacío, usamos las fechas del timeline del embarque. El campo "Días libres" solo sobreescribe el default de la naviera cuando lo capturas. Al guardar, recalculamos automáticamente los conceptos de demora.
+Imagina el modal como una habitación con guardia: si tocas algo que no sea la habitación, el guardia cierra la puerta. El toast es un post-it flotando en el pasillo — al tocarlo, el guardia cree que tocaste el pasillo y cierra.
 
-**Cambios técnicos:**
-- Reemplazar el `<p>` en `TabDemoras.tsx` por el copy propuesto.
-- Verificar que el texto no rompa la estructura de la card ni exceda el espacio visual en la preview.
-- Actualizar `APP_VERSION` y `CHANGELOG.md` según el flujo del proyecto.
+## Solución
 
-**Validación:**
-- Revisar visualmente en la preview que el copy se lea completo y no se sature la card.
+Interceptar `onPointerDownOutside` y `onInteractOutside` en `DialogContent` (y `AlertDialogContent`) para ignorar eventos cuyo `target` esté dentro de `[data-sonner-toaster]`. Es un fix global, una sola línea de lógica, aplica a todos los modales del sistema sin tocar cada uno.
+
+## Cambios
+
+1. **`src/components/ui/dialog.tsx`** — En `DialogContent`, agregar handlers por defecto que:
+   - Detectan si `event.target` (o su ancestro) tiene `[data-sonner-toaster]`.
+   - Si sí, llaman `event.preventDefault()` para que Radix no cierre el modal.
+   - Se permite override si el consumidor pasa sus propios handlers.
+
+2. **`src/components/ui/alert-dialog.tsx`** — Mismo patrón en `AlertDialogContent` (confirmaciones, DoubleConfirmDeleteDialog, etc.).
+
+3. **`CHANGELOG.md` + `APP_VERSION`** → `13.303.88`, bullet breve.
+
+## Verificación
+
+- Test manual en preview: abrir cualquier modal (ej. crear factura de proveedor), disparar un toast de error, hacer clic en la X del toast — el modal debe seguir abierto.
+- Correr `bunx vitest run` en pruebas de arquitectura para asegurar que no rompe guardrails.
+
+## Fuera de alcance
+
+- No cambio la lógica de toasts ni de modales individuales.
+- No modifico Sonner ni su Toaster (ya se ajustó en v13.303.72).
