@@ -225,11 +225,25 @@ export async function prepareAttachments(
   ]);
   await uploadToBucket(admin, pdfPath, pdfBytes, 'application/pdf');
   await uploadToBucket(admin, xmlPath, xmlBytes, 'application/xml');
-  const safeNumero = sanitizeDownloadFilename(factura.numero ?? 'factura');
-  const orgSlug = await fetchOrgSlug(admin, factura.organization_id);
+  // Se mantiene la carga de orgSlug por compatibilidad con otros consumidores
+  // aunque ya no se prefija al nombre descargable.
+  await fetchOrgSlug(admin, factura.organization_id);
+  const folioSerie = factura.numero || `${factura.serie ?? ''}${factura.folio_fiscal ?? ''}`;
   const [pdfLink, xmlLink] = await Promise.all([
-    signUrl(admin, pdfPath, `${orgSlug}_Factura-${safeNumero}.pdf`),
-    signUrl(admin, xmlPath, `${orgSlug}_Factura-${safeNumero}.xml`),
+    signUrl(admin, pdfPath, buildFilename({
+      tipo: 'Factura',
+      folioSerie,
+      cliente: factura.cliente_nombre,
+      fecha: factura.fecha_emision,
+      ext: 'pdf',
+    })),
+    signUrl(admin, xmlPath, buildFilename({
+      tipo: 'Factura',
+      folioSerie,
+      cliente: factura.cliente_nombre,
+      fecha: factura.fecha_emision,
+      ext: 'xml',
+    })),
   ]);
   return { pdfPath, xmlPath, pdfLink, xmlLink };
 }
