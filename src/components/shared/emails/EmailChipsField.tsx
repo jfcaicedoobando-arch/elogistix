@@ -16,7 +16,6 @@ import { Lock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SPLIT_RE = /[,;\s]+/;
 
 export interface EmailChip {
