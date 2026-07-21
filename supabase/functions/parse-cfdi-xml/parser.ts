@@ -172,8 +172,11 @@ export function parseCfdi(xml: string): CfdiParsed {
   // razonable: un CFDI 4.0 legítimo casi nunca los excede.
   const conceptos: CfdiConcepto[] = findConceptoBlocks(xml).slice(0, 200).map((c) => {
     const imp = extractImpuestosConcepto(c);
+    const cantidad = num(attr(c, "Cantidad"));
     return {
       descripcion: attr(c, "Descripcion"),
+      cantidad: cantidad > 0 ? cantidad : 1,
+      clave_unidad: attr(c, "ClaveUnidad"),
       importe: num(attr(c, "Importe")),
       iva: imp.iva,
       ieps: imp.ieps,
