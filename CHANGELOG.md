@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.303.48] - 2026-07-21
+- **Fase 4 · Lote C · Factura manual cuadrada al centavo + NaN en costos (FIX-17 / FIX-18 auditoría v3).**
+  - `facturaManual.ts`: subtotal, IVA y total se calculan con `subtotalLinea` + `sumarMontos`, garantizando que el encabezado sea Σ exacto de los renglones (evita drift de float en facturas multi-línea que hacía diferir centavos entre `facturas.total` y la suma de `conceptos_factura.total`).
+  - Validación estricta por concepto: rechaza `cantidad` no finita o ≤ 0 y `precio_unitario` no finito o negativo, con mensaje que menciona el índice y el campo — antes se colaban `NaN`/`Infinity` a la BD.
+  - Folio borrador con entropía: `BORRADOR-<timestamp36>-<uuid6>` en lugar de sólo timestamp, evitando colisiones bajo carga concurrente.
+  - `TablaCostosLocal.tsx`: nuevo helper `parseInputNumero` que degrada `""`, `"."`, `"1.2.3"`, `"abc"` a `0` en los tres inputs (cantidad/costo/venta) antes de propagarlos al form.
+  - Tests nuevos: 4 casos en `facturaManual.test.ts` (montos difíciles, NaN, Infinity, formato folio) y `parseInputNumero.test.ts`.
+
 ## [13.303.47] - 2026-07-21
 - **Fase 4 · Lote B · Pago CxP cross-currency validado en moneda de factura (FIX-14 auditoría v3).** `usePagoProveedorForm` ahora convierte el monto a la moneda de la factura vía `tcValido` antes de validar: pagar MXN 19,500 una factura USD 1,000 con TC 19.5 liquida correctamente, y MXN 20,000 se rechaza como excedente. Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC, el monto se pre-rellena automáticamente a `saldo * tc`. Si no hay TC válido, `bloqueadoPorTc` deshabilita el botón y muestra un hint pidiendo capturar el TC. El body del formulario muestra un renglón "≈ USD X" con el equivalente en moneda de la factura. Tests nuevos en `usePagoProveedorForm.test.ts` (4 casos).
 

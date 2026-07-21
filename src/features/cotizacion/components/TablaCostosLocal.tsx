@@ -13,6 +13,19 @@ import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalo
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
 
+/**
+ * FIX-18 — parseo defensivo de inputs numéricos. Convierte cualquier string
+ * a un número finito ≥ 0; entradas basura (`"."`, `"1.2.3"`, `"abc"`, `""`)
+ * degradan a 0 en vez de propagar `NaN` a la BD.
+ */
+export function parseInputNumero(raw: string): number {
+  if (raw === "" || raw === ".") return 0;
+  // Rechaza strings que no representen un número completo (p.ej. "1.2.3", "abc", "-5").
+  if (!/^\d+(\.\d+)?$/.test(raw)) return 0;
+  const n = parseFloat(raw);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
 
 function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: number) {
   let count = 0;
@@ -118,9 +131,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                       onChange={e => {
                         const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
                         setEditingQty({ idx: gi, raw });
-                        const num = parseFloat(raw);
-                        if (!isNaN(num)) onUpdate(gi, "cantidad", num);
-                        else if (raw === '') onUpdate(gi, "cantidad", 0);
+                        onUpdate(gi, "cantidad", parseInputNumero(raw));
                       }}
                       onBlur={() => { setEditingQty(null); if (fila.cantidad === 0 || isNaN(fila.cantidad)) onUpdate(gi, "cantidad", 1); }}
                       className="h-8 text-sm text-right w-[80px]"
@@ -130,7 +141,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                     <span className="text-xs text-muted-foreground">Costo</span>
                     <Input type="text" inputMode="decimal" value={fila.costo_unitario === 0 ? '' : fila.costo_unitario}
                       onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
-                      onChange={e => { const raw = e.target.value.replace(/[^0-9.]/g, ''); onUpdate(gi, "costo_unitario", raw === '' ? 0 : parseFloat(raw)); }}
+                      onChange={e => { const raw = e.target.value.replace(/[^0-9.]/g, ''); onUpdate(gi, "costo_unitario", parseInputNumero(raw)); }}
                       onBlur={e => { if (e.target.value === '') onUpdate(gi, "costo_unitario", 0); }}
                       className="h-8 text-sm text-right w-[110px]"
                     />
@@ -139,7 +150,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                     <span className="text-xs text-muted-foreground">Venta</span>
                     <Input type="text" inputMode="decimal" value={fila.precio_venta === 0 ? '' : fila.precio_venta}
                       onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
-                      onChange={e => { const raw = e.target.value.replace(/[^0-9.]/g, ''); onUpdate(gi, "precio_venta", raw === '' ? 0 : parseFloat(raw)); }}
+                      onChange={e => { const raw = e.target.value.replace(/[^0-9.]/g, ''); onUpdate(gi, "precio_venta", parseInputNumero(raw)); }}
                       onBlur={e => { if (e.target.value === '') onUpdate(gi, "precio_venta", 0); }}
                       className="h-8 text-sm text-right w-[110px]"
                     />
