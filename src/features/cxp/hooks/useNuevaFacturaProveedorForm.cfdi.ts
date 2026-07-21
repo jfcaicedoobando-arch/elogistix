@@ -61,5 +61,6 @@ export async function procesarCfdiParsed(
     tcOrigen: usaTcCfdi ? "cfdi" : "vacio",
     tcFechaAplicada: usaTcCfdi ? c.fecha : undefined,
     askCrearProv,
+    conceptos: c.conceptos ?? [],
   };
 }
