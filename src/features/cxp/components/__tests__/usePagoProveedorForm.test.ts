@@ -40,10 +40,8 @@ describe("usePagoProveedorForm · FIX-14", () => {
 
   it("MXN 20,000 excede el saldo USD 1,000 con TC 19.5", () => {
     const { result } = renderHook(() => usePagoProveedorForm(facturaUsd, true));
-    act(() => {
-      result.current.setMoneda("MXN");
-      result.current.setMonto("20000");
-    });
+    act(() => { result.current.setMoneda("MXN"); });
+    act(() => { result.current.setMonto("20000"); });
     expect(result.current.excede).toBe(true);
   });
 
