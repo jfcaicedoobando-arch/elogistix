@@ -72,7 +72,7 @@ export function PortalProximosArribosCard({ items }: Props) {
 function ArriboRow({ e }: { e: ArriboItem }) {
   const nav = useDrilldownRow({
     href: `/portal/embarques/${e.id}`,
-    ariaLabel: `Ver embarque ${e.expediente}`,
+    ariaLabel: `Ver embarque ${labelExpediente(e.expediente, e.id)}`,
   });
   return (
     <div
