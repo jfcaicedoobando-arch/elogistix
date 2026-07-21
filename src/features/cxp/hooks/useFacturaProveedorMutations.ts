@@ -21,9 +21,9 @@ export function useCrearFacturaProveedor() {
       // terminar todo el flujo (insert + storage + vínculos), para evitar el
       // doble toast reportado en 13.218.1 (Karol, captura de factura).
     },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear factura proveedor: ${error.message}`, error, method: "CREATE_FACTURA_PROVEEDOR" });
-    },
+    // v13.303.85 — NO emitir toast en onError: `runSubmit` ya llama a
+    // `handleSubmitError`, que traduce el `23505 uuid_fiscal` a un mensaje
+    // amigable ("CFDI duplicado"). Un toast aquí generaba doble notificación.
   });
 }
 
