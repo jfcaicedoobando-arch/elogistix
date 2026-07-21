@@ -33,4 +33,18 @@ describe("portalResponderCotizacion", () => {
       portalResponderCotizacion("cot-2", "Rechazada", ""),
     ).rejects.toThrow("rpc-failed");
   });
+
+  it.each([
+    ["LC_COT_ELIMINADA", /ya no está disponible/i],
+    ["LC_COT_NO_RESPONDIBLE", /ya no puede responderse/i],
+    ["LC_COT_NO_ENCONTRADA", /no encontrada|sin acceso/i],
+  ])("mapea %s a mensaje es-MX legible", async (token, matcher) => {
+    mock.setRpcResult("portal_responder_cotizacion", {
+      data: null,
+      error: new Error(`postgres: ${token} algo pasó`),
+    });
+    await expect(
+      portalResponderCotizacion("cot-x", "Aceptada", ""),
+    ).rejects.toThrow(matcher);
+  });
 });
