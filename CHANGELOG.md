@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.303.73] - 2026-07-21
+- **fix(layout/header) · Search bar global recortado a cuadrado.** El contenedor de acciones del header aplicaba `h-9/w-9` a cualquier `button[aria-label]`, y el trigger de `GlobalSearch` tiene `aria-label="Abrir búsqueda global"`, por lo que se comprimía y truncaba "Buscar…" + el chip ⌘K. Se excluyó el trigger del selector con `:not([data-testid=global-search-trigger])` para que conserve su ancho natural. Verificado visualmente en Full HD.
+
+
+
 ## [13.303.72] - 2026-07-21
 - **fix(ui/toaster) · Botón "X" del toast no era clickeable.** El `closeButton` de Sonner venía con opacidad 0 y sólo se mostraba en hover; en toasts con acción "Ver detalles" y `duration: Infinity` (errores) el área quedaba tapada por el botón de acción. Ahora el close se muestra siempre (`!opacity-100`), se ancla al esquina superior derecha y tiene tap target de 24 px con hover discreto.
 
