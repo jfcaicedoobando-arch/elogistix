@@ -9,16 +9,9 @@ import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
 import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
-import type {
-  DataTablePagination,
-  TableDensity,
-  SortDir,
-} from "@/components/shared/dataTable/types";
+import type { DataTablePagination, TableDensity, SortDir } from "@/components/shared/dataTable/types";
 
-
-// API pública estable: re-exports de tipos/helpers consumidos por todo el proyecto.
-// Esta convención (componente + helpers en el mismo archivo) está allowlisted
-// en eslint.config.js → react-refresh override, igual que `src/components/ui/**`.
+// API pública estable (componente + helpers) — allowlisted en eslint react-refresh override.
 export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
 export type { ColumnDef, VisibilityState } from "@tanstack/react-table";
