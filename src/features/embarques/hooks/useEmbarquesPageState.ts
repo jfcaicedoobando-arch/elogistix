@@ -156,14 +156,14 @@ export function useEmbarquesPageState() {
 
   const displayCount = expedientesCount;
 
-  const sinFiltros =
-    !debouncedSearch &&
-    [filterModo, filterEstado, filterCliente, filterOperador].every((v) => v === "todos") &&
-    filterAlerta === "todos" &&
-    !fechaDesde &&
-    !fechaHasta;
+  const sinFiltros = computeSinFiltros({
+    debouncedSearch,
+    filterModo, filterEstado, filterCliente, filterOperador,
+    filterAlerta, fechaDesde, fechaHasta,
+  });
   // v13.303.75 · un fallo de red NO es un "sin resultados": exigimos !isError.
   const isEmptyState = !isLoading && !isError && containersForView.length === 0 && sinFiltros;
+
 
   const actions = buildEmbarquesPageActions({
     DEFAULT_PAGE_SIZE,
