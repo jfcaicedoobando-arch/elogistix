@@ -32,7 +32,7 @@ function filaErrores(errors: StepValidationErrors, index: number): string[] {
   return out;
 }
 
-export function StepDatosRutaMaritimo({ errors }: Props) {
+export function StepDatosRutaMaritimo({ errors, cotizacionAgenteId, cotizacionNavieraId }: Props) {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
   const tipoServicio = watch('tipoServicio');
   const contenedores = watch('contenedores') ?? [];
@@ -75,19 +75,8 @@ export function StepDatosRutaMaritimo({ errors }: Props) {
         )} />
         {errors.puertoDestino && <p className={errClass}>{errors.puertoDestino}</p>}
       </div>
-      <div className="space-y-2">
-        <Label>Naviera *</Label>
-        <Controller name="naviera" render={({ field }) => (
-          <NavieraSelect
-            value={field.value}
-            onValueChange={field.onChange}
-            className={cn(errors.naviera && 'border-destructive')}
-            aria-invalid={errors.naviera ? true : undefined}
-          />
-        )} />
-        {errors.naviera && <p className={errClass}>{errors.naviera}</p>}
-      </div>
-      <div className="space-y-2"><Label htmlFor="emb-agente">Agente</Label><Input id="emb-agente" placeholder="Nombre del agente" {...register('agente')} /></div>
+      <NavieraEmbarqueSelector cotizacionNavieraId={cotizacionNavieraId} />
+      <AgenteEmbarqueSelector cotizacionAgenteId={cotizacionAgenteId} />
       <div className="space-y-2"><Label htmlFor="emb-bl-master"># BL Master</Label><Input id="emb-bl-master" placeholder="Número de BL" {...register('blMaster')} /></div>
       <div className="space-y-2"><Label htmlFor="emb-bl-house"># BL House</Label><Input id="emb-bl-house" {...register('blHouse')} /></div>
       <div className="space-y-2">

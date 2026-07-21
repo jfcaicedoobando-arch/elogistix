@@ -22,12 +22,6 @@ import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { useCosteoAgentes } from "@/features/costeo/hooks/useCosteoAgentes";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 
-interface HeredadoProps {
-  /** Valor original heredado de la cotización/tarifa. */
-  cotizacionAgenteId?: string | null;
-  cotizacionNavieraId?: string | null;
-}
-
 const NONE = "__none__";
 
 function BadgeHerencia({ heredado }: { heredado: boolean }) {
