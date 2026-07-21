@@ -14,6 +14,3 @@ export function labelExpediente(
   return PLACEHOLDER;
 }
 
-export function tieneFolio(expediente: string | null | undefined): boolean {
-  return typeof expediente === "string" && expediente.trim().length > 0;
-}
