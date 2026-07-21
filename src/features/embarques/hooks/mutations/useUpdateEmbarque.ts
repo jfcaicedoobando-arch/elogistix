@@ -12,7 +12,7 @@ import { actualizarEmbarqueRpc } from '@/features/embarques/services';
 import { sincronizarContenedores } from '@/features/embarques/services/contenedores';
 import type { ContenedorBorrador } from '@/features/embarques/types/contenedor';
 import { newRequestId } from '@/lib/idempotency';
-import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
+import { notifyError } from '@/components/shared/utils/appFeedback';
 import { invalidateProfitDependencies } from '@/features/profit/hooks/invalidateProfitDependencies';
 
 type EmbarqueRow = Tables<'embarques'>;
