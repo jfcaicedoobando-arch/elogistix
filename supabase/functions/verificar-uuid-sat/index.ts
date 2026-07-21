@@ -82,19 +82,26 @@ interface CfdiParaVerificar {
   organization_id: string | null;
 }
 
+async function fetchOrgRfc(admin: ReturnType<typeof createClient>, orgId: string | null): Promise<string> {
+  if (!orgId) return "";
+  const { data } = await admin.from("organizations").select("rfc").eq("id", orgId).maybeSingle();
+  return ((data as { rfc?: string } | null)?.rfc ?? "").trim().toUpperCase();
+}
+
 async function loadFacturaCxp(admin: ReturnType<typeof createClient>, facturaId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
   const { data, error } = await admin
     .from("proveedor_facturas")
-    .select("id, uuid_fiscal, rfc_proveedor, total, organization_id, organizations:organization_id(rfc)")
+    .select("id, uuid_fiscal, rfc_proveedor, total, organization_id")
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { data: null, error };
-  const row = data as { uuid_fiscal: string | null; rfc_proveedor: string | null; total: number; organization_id: string | null; organizations?: { rfc?: string } | null };
+  const row = data as { uuid_fiscal: string | null; rfc_proveedor: string | null; total: number; organization_id: string | null };
+  const rfcReceptor = await fetchOrgRfc(admin, row.organization_id);
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
       rfc_emisor: (row.rfc_proveedor ?? "").trim().toUpperCase(),
-      rfc_receptor: (row.organizations?.rfc ?? "").trim().toUpperCase(),
+      rfc_receptor: rfcReceptor,
       total: Number(row.total ?? 0),
       organization_id: row.organization_id,
     },
@@ -106,15 +113,16 @@ async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId:
   // α.1 — CFDI emitido: emisor = org, receptor = cliente (por rfc_cliente).
   const { data, error } = await admin
     .from("facturas")
-    .select("id, uuid_fiscal, rfc_cliente, total, organization_id, organizations:organization_id(rfc)")
+    .select("id, uuid_fiscal, rfc_cliente, total, organization_id")
     .eq("id", facturaId)
     .maybeSingle();
   if (error || !data) return { data: null, error };
-  const row = data as { uuid_fiscal: string | null; rfc_cliente: string | null; total: number; organization_id: string | null; organizations?: { rfc?: string } | null };
+  const row = data as { uuid_fiscal: string | null; rfc_cliente: string | null; total: number; organization_id: string | null };
+  const rfcEmisor = await fetchOrgRfc(admin, row.organization_id);
   return {
     data: {
       uuid_fiscal: row.uuid_fiscal,
-      rfc_emisor: (row.organizations?.rfc ?? "").trim().toUpperCase(),
+      rfc_emisor: rfcEmisor,
       rfc_receptor: (row.rfc_cliente ?? "").trim().toUpperCase(),
       total: Number(row.total ?? 0),
       organization_id: row.organization_id,
