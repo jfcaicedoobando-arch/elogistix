@@ -1,7 +1,7 @@
 /**
  * Tipos y constantes vacíos del payload `dashboard_stats()`.
  */
-import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstants";
+
 
 export interface EmbarqueConEstado {
   id: string;
