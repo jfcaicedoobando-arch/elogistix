@@ -32,7 +32,7 @@ describe("useValidarLimiteCredito", () => {
   it("marca rebasa=true cuando enUso + adicional > limite", async () => {
     mockFetch.mockResolvedValue(baseExp);
     const { result } = renderHook(() => useValidarLimiteCredito());
-    let out: Awaited<ReturnType<typeof result.current>>;
+    let out: Awaited<ReturnType<typeof result.current>> | undefined;
     await act(async () => {
       out = await result.current({ clienteId: "c1", montoAdicionalMxn: 30_000 });
     });
@@ -45,7 +45,7 @@ describe("useValidarLimiteCredito", () => {
   it("marca rebasa=false cuando cabe dentro del límite", async () => {
     mockFetch.mockResolvedValue(baseExp);
     const { result } = renderHook(() => useValidarLimiteCredito());
-    let out: Awaited<ReturnType<typeof result.current>>;
+    let out: Awaited<ReturnType<typeof result.current>> | undefined;
     await act(async () => {
       out = await result.current({ clienteId: "c1", montoAdicionalMxn: 15_000 });
     });
@@ -56,7 +56,7 @@ describe("useValidarLimiteCredito", () => {
   it("devuelve null cuando el cliente no tiene límite configurado", async () => {
     mockFetch.mockResolvedValue({ ...baseExp, limiteMxn: null });
     const { result } = renderHook(() => useValidarLimiteCredito());
-    let out: Awaited<ReturnType<typeof result.current>>;
+    let out: Awaited<ReturnType<typeof result.current>> | undefined;
     await act(async () => {
       out = await result.current({ clienteId: "c1", montoAdicionalMxn: 1_000_000 });
     });
@@ -66,7 +66,7 @@ describe("useValidarLimiteCredito", () => {
   it("trata montos negativos como 0 (no reduce la exposición)", async () => {
     mockFetch.mockResolvedValue(baseExp);
     const { result } = renderHook(() => useValidarLimiteCredito());
-    let out: Awaited<ReturnType<typeof result.current>>;
+    let out: Awaited<ReturnType<typeof result.current>> | undefined;
     await act(async () => {
       out = await result.current({ clienteId: "c1", montoAdicionalMxn: -50_000 });
     });
