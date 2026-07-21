@@ -10,8 +10,10 @@ import {
   listarMovimientos,
   sugerirCandidatos,
   conciliarConPago,
+  MovimientoVinculoError,
   type MovimientoBBVA,
 } from "../conciliacion";
+
 
 function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
   const base: MovimientoBBVA = {
