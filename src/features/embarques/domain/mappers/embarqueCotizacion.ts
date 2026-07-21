@@ -142,6 +142,11 @@ export function buildPackBUpdates(cot: CotizacionParaVincular): FieldUpdate[] {
     ["seguro", Boolean(cot.seguro)],
     ["valorSeguroUsd", cot.valor_seguro_usd != null ? String(cot.valor_seguro_usd) : ""],
     ["notas", cot.notas ?? ""],
+    // v13.303.35 — Agente y naviera se heredan de la tarifa vía cotización.
+    ["agenteId", cot.agente_id ?? null],
+    ["agente", cot.agente_nombre ?? ""],
+    ["navieraId", cot.naviera_id ?? null],
+    ["naviera", cot.naviera_nombre ?? ""],
   ];
 }
 
