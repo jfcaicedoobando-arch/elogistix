@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.69] - 2026-07-21
+- **fix(edge/verificar-uuid-sat) · Embed inexistente hacia `organizations`.** `proveedor_facturas` no tiene FK a `organizations`, así que `select("...organizations:organization_id(rfc)")` reventaba con `PGRST200` ("Could not find a relationship... in the schema cache"), devolviendo 404 `factura_not_found`. Reemplazado el embed por una consulta separada `fetchOrgRfc(orgId)` en `loadFacturaCxp` y `loadFacturaCxc`.
+
 ## [13.303.68] - 2026-07-21
 - **fix(rls) · Borrado suave bloqueado por la propia política que lo escondía.** Las 28 políticas `Hide soft deleted <tabla>` (proveedor_facturas, embarques, cotizaciones, facturas, CRM, etc.) tenían `WITH CHECK (deleted_at IS NULL)`, así que al hacer soft delete (UPDATE `deleted_at = now()`) PostgREST rechazaba la fila resultante con `42501`. Reportado en `/compras/facturas` con requestId `eb6376c1-d566-47b8-b3bb-8916f5fc20cc`. Ajustado `WITH CHECK` a `true` en las 28 políticas: siguen ocultando (`USING deleted_at IS NULL`) pero permiten marcar como eliminado. Los permisos por tenant/rol no cambian (están en la política hermana `Tenant CRUD *`).
 
