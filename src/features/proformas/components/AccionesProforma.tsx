@@ -10,14 +10,21 @@
  */
 import { useState } from "react";
 import {
-  Download, Ship, Receipt, Mail, CheckCircle2, XCircle,
+  Download, Ship, Receipt, Mail, CheckCircle2, XCircle, AlertTriangle,
 } from "lucide-react";
 import { DetalleActionBar, type DetalleActionItem } from "@/components/shared/DetalleActionBar";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { EnviarProformaDialog } from "@/features/proformas/components/EnviarProformaDialog";
 import { RespuestaClienteManualDialog } from "@/features/proformas/components/RespuestaClienteManualDialog";
 import { useConvertirProformaDirecto } from "@/features/proformas/hooks/useConvertirProformaDirecto";
+import {
+  useValidarLimiteCredito,
+  registrarExcesoCredito,
+  type ValidarLimiteResultado,
+} from "@/features/cliente/hooks/useValidarLimiteCredito";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
