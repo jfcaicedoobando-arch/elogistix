@@ -164,7 +164,11 @@ export function parseCfdi(xml: string): CfdiParsed {
 
   const { iva, ieps, retenciones } = extractImpuestos(xml);
 
-  const conceptos: CfdiConcepto[] = findConceptoBlocks(xml).slice(0, 10).map((c) => {
+  // Tope defensivo anti-DoS. Antes era 10, pero CFDIs reales de fletes marítimos
+  // suelen desglosar 10-30 líneas (BAF, THC, DOC, VGM, etc.); truncar rompía el
+  // cuadre subtotal↔conceptos en `validarCuadreCfdi`. 200 sigue siendo un tope
+  // razonable: un CFDI 4.0 legítimo casi nunca los excede.
+  const conceptos: CfdiConcepto[] = findConceptoBlocks(xml).slice(0, 200).map((c) => {
     const imp = extractImpuestosConcepto(c);
     return {
       descripcion: attr(c, "Descripcion"),

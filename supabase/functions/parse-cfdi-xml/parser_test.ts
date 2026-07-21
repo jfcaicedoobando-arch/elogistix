@@ -132,12 +132,12 @@ Deno.test("parseCfdi rechaza XML vacío o no-CFDI", () => {
   assertThrows(() => parseCfdi("<foo/>"), Error, "CFDI válido");
 });
 
-Deno.test("parseCfdi limita conceptos a 10 (anti-DoS)", () => {
-  const conceptos = Array.from({ length: 25 }, (_, i) =>
+Deno.test("parseCfdi limita conceptos a 200 (anti-DoS)", () => {
+  const conceptos = Array.from({ length: 250 }, (_, i) =>
     `<cfdi:Concepto Descripcion="C${i}" Importe="10.00"/>`,
   ).join("\n");
   const x = `<?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="50" Fecha="2025-03-14T10:00:00" SubTotal="250.00" Total="250.00" Moneda="MXN">
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="50" Fecha="2025-03-14T10:00:00" SubTotal="2500.00" Total="2500.00" Moneda="MXN">
   <cfdi:Emisor Rfc="ACM010101AAA" Nombre="ACME" RegimenFiscal="601"/>
   <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
   <cfdi:Conceptos>${conceptos}</cfdi:Conceptos>
@@ -146,9 +146,26 @@ Deno.test("parseCfdi limita conceptos a 10 (anti-DoS)", () => {
   </cfdi:Complemento>
 </cfdi:Comprobante>`;
   const r = parseCfdi(x);
-  assertEquals(r.conceptos.length, 10);
+  assertEquals(r.conceptos.length, 200);
   assertEquals(r.conceptos[0].descripcion, "C0");
-  assertEquals(r.conceptos[9].descripcion, "C9");
+  assertEquals(r.conceptos[199].descripcion, "C199");
+});
+
+Deno.test("parseCfdi conserva los 11 conceptos de un CFDI real de flete", () => {
+  const conceptos = Array.from({ length: 11 }, (_, i) =>
+    `<cfdi:Concepto Descripcion="Linea ${i}" Importe="100.00"/>`,
+  ).join("\n");
+  const x = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="51" Fecha="2025-03-14T10:00:00" SubTotal="1100.00" Total="1100.00" Moneda="MXN">
+  <cfdi:Emisor Rfc="ACM010101AAA" Nombre="ACME" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
+  <cfdi:Conceptos>${conceptos}</cfdi:Conceptos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="cccccccc-dddd-eeee-ffff-111111111111"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+  const r = parseCfdi(x);
+  assertEquals(r.conceptos.length, 11);
 });
 
 Deno.test("parseCfdi default: tipo_cambio=1 y moneda=MXN cuando faltan atributos", () => {

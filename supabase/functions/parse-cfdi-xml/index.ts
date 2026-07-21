@@ -62,7 +62,10 @@ async function sugerirCategoria(
   if (categorias.length === 0 || conceptos.length === 0) {
     return { result: fallbackResult(conceptos), outcome: "skipped", latency_ms: 0, status_code: null };
   }
-  const prompt = `Categorías disponibles (id | nombre):\n${categorias.map(c => `${c.id} | ${c.nombre}`).join("\n")}\n\nConceptos de la factura:\n${conceptos.map(c => `- ${c.descripcion}`).join("\n")}\n\nElige el id de la categoría que mejor matchea. Si nada matchea claramente, devuelve cadena vacía en categoria_id.`;
+  // Sólo mandamos las primeras 30 descripciones al LLM: ya son suficientes
+  // para sugerir categoría y evita inflar prompt/latencia en CFDIs con >30 líneas.
+  const conceptosPrompt = conceptos.slice(0, 30);
+  const prompt = `Categorías disponibles (id | nombre):\n${categorias.map(c => `${c.id} | ${c.nombre}`).join("\n")}\n\nConceptos de la factura:\n${conceptosPrompt.map(c => `- ${c.descripcion}`).join("\n")}\n\nElige el id de la categoría que mejor matchea. Si nada matchea claramente, devuelve cadena vacía en categoria_id.`;
 
   let status_code: number | null = null;
   let outcome: AiOutcome = "ok";
