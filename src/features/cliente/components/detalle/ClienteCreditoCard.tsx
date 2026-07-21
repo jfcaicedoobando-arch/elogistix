@@ -47,11 +47,11 @@ export function ClienteCreditoCard({ clienteId }: Props) {
           <Field label="Días de crédito" value={dias == null ? "—" : `${dias} días`} />
           <Field
             label="Límite (MXN)"
-            value={limite == null ? "Sin límite" : formatMoney(limite, "MXN")}
+            value={limite == null ? "Sin límite" : formatMXN(limite)}
           />
           <Field
             label="En uso"
-            value={isLoading ? "…" : formatMoney(enUso, "MXN")}
+            value={isLoading ? "…" : formatMXN(enUso)}
             tone={excedido ? "danger" : "default"}
           />
           <Field
@@ -59,7 +59,7 @@ export function ClienteCreditoCard({ clienteId }: Props) {
             value={
               disponible == null
                 ? "—"
-                : formatMoney(disponible, "MXN")
+                : formatMXN(disponible)
             }
             tone={disponible != null && disponible < 0 ? "danger" : "default"}
           />
