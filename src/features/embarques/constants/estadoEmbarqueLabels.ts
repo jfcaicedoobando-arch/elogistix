@@ -8,9 +8,6 @@
  *   del workflow. Ambos deprecados persisten en el enum de BD para no romper
  *   históricos y se etiquetan con el sufijo "(deprecado)" en pantalla.
  */
-import { ESTADOS_EMBARQUE } from "./embarqueConstants";
-
-export type EstadoEmbarque = typeof ESTADOS_EMBARQUE[number];
 
 export const ESTADO_EMBARQUE_LABELS: Record<string, string> = {
   Cotización: "Propuesta (deprecado)",

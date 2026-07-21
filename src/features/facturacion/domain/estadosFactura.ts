@@ -14,4 +14,4 @@ export const FACTURA_ESTADOS_VIVOS = [
   "Vencida",
 ] as const;
 
-export type FacturaEstadoVivo = (typeof FACTURA_ESTADOS_VIVOS)[number];
+

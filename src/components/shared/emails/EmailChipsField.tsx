@@ -173,5 +173,3 @@ export function EmailChipsField({
     </div>
   );
 }
-
-export { EMAIL_RE as EMAIL_CHIP_RE };
