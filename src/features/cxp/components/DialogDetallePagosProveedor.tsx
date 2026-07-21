@@ -57,34 +57,12 @@ export function DialogDetallePagosProveedor({
     <TooltipProvider delayDuration={150}>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className={cn(dialogSize["3xl"], "max-h-[90vh] flex flex-col gap-0 p-0")}>
-          <DialogHeader className="px-6 pt-5 pb-4 border-b bg-muted/30 space-y-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <DialogTitle className="text-lg font-bold text-primary">
-                Detalle de factura de proveedor
-              </DialogTitle>
-              {f?.folio_interno && (
-                <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
-                  {f.folio_interno}
-                </span>
-              )}
-            </div>
-            {f && (
-              <p className="text-xs text-muted-foreground">
-                Folio prov. <span className="font-mono">{f.folio_proveedor}</span>
-                {" — "}{f.proveedor_nombre}
-              </p>
-            )}
-          </DialogHeader>
+          <HeaderSection f={f} />
 
           {f && (
             <StatusActionBar
-              factura={f}
-              canEdit={canEdit}
-              puedeAprobar={puedeAprobar}
-              flags={flags}
-              onPagar={onPagar}
-              onEditar={onEditar}
-              onEliminar={onEliminar}
+              factura={f} canEdit={canEdit} puedeAprobar={puedeAprobar} flags={flags}
+              onPagar={onPagar} onEditar={onEditar} onEliminar={onEliminar}
               onCerrarSinPago={setACerrarSinPago}
               onCancelar={() => setOpenCancel(true)}
             />
@@ -92,30 +70,17 @@ export function DialogDetallePagosProveedor({
 
           {f && <FacturaResumen f={f} pagosCount={pagos.length} />}
 
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-            {f && <InfoFacturaSection factura={f} />}
-            {f && <HistorialFacturaSection facturaId={f.id} />}
-            <PagosTable
-              pagos={pagos}
-              isLoading={isLoading}
-              canEdit={canEdit}
-              onEliminarPago={setPagoAEliminar}
-            />
-            {f && (
-              <NotasCreditoSection
-                facturaId={f.id}
-                monedaFactura={f.moneda}
-                saldoFactura={f.saldo}
-                canEdit={canEdit}
-              />
-            )}
-          </div>
+          <BodySections
+            f={f} pagos={pagos} isLoading={isLoading} canEdit={canEdit}
+            onEliminarPago={setPagoAEliminar}
+          />
 
           <div className="px-6 py-3 border-t flex justify-end bg-background">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
           </div>
         </DialogContent>
       </Dialog>
+
 
       <ActionDialogs
         f={f}
