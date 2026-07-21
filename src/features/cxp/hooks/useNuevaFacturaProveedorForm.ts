@@ -7,7 +7,7 @@ import { toggleVinculoReducer, setVinculoMontoReducer, aplicarSugerenciasReducer
 import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import type { CfdiParsedResponse, ConceptoCostoAbierto } from "@/features/cxp/services";
+import type { CfdiParsedResponse, ConceptoCostoAbierto, CfdiConceptoParsed } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
