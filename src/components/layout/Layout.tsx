@@ -49,7 +49,7 @@ export function Layout() {
             )}
             <div className="h-5 w-px bg-border shrink-0" aria-hidden />
             <Breadcrumbs />
-            <div className="ml-auto flex items-center gap-0.5 sm:gap-2 shrink-0 [&_button[aria-label]]:h-11 [&_button[aria-label]]:w-11 sm:[&_button[aria-label]]:h-9 sm:[&_button[aria-label]]:w-9">
+            <div className="ml-auto flex items-center gap-0.5 sm:gap-2 shrink-0 [&_button[aria-label]:not([data-testid=global-search-trigger])]:h-11 [&_button[aria-label]:not([data-testid=global-search-trigger])]:w-11 sm:[&_button[aria-label]:not([data-testid=global-search-trigger])]:h-9 sm:[&_button[aria-label]:not([data-testid=global-search-trigger])]:w-9">
               <GlobalSearch />
               <NotificacionesPopover />
               <div className="hidden sm:contents">
