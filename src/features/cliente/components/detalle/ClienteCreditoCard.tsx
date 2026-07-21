@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CreditCard } from "lucide-react";
 import { useExposicionCreditoCliente } from "@/features/cliente/hooks/useExposicionCreditoCliente";
-import { useExposicionCreditoCliente } from "@/features/cliente/hooks/useExposicionCreditoCliente";
 
 function formatMXN(v: number) {
   return v.toLocaleString("es-MX", {
