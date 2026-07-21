@@ -187,6 +187,7 @@ describe("useNuevaFacturaProveedorForm.helpers", () => {
         rfcEmisor: "ABC010101AAA",
         xmlFile: new File([""], "x.xml"),
         pdfFile: null,
+        origen: "cfdi",
       };
       const payload = buildPayload({
         values: initialValues(),
