@@ -1,6 +1,13 @@
 # Changelog
 
-## [13.303.45] - 2026-07-21
+## [13.303.46] - 2026-07-21
+- **Fase 4 · Lote A · Fechas de negocio en America/Mexico_City (FIX-12 auditoría v3).** Nuevo helper `src/lib/date/mx.ts` con `hoyMx()`, `ymMx()` y `parseLocalMx()` — única forma correcta de derivar la fecha del día para lógica de negocio. Antes usábamos `toISOString().slice(0,10)`, que devuelve la fecha UTC; entre las 18:00–23:59 CDMX ya estamos en el día siguiente en UTC y eso corría los buckets del dashboard, hacía "vencer" facturas un día antes en los recordatorios de CxC y hacía disparar el banner "ETA vencida" antes de tiempo. Sitios parchados:
+  - `dashboardEjecutivo.ts` (KPIs "Facturado del mes" y tendencia de 6 meses).
+  - `exchange-rates/index.ts` `resolverFecha()` (validación de fecha del DOF: ya no acepta "mañana" durante la tarde CDMX).
+  - `cxc-recordatorios/index.ts` (cálculo del bucket `T-3/T+7/T+15`).
+  - `TabTracking.tsx` `isEtaVencida` (parseo local de `eta` YYYY-MM-DD como fin del día, no como medianoche UTC).
+- **Tests.** `src/lib/date/__tests__/mx.test.ts` cubre los 3 helpers con casos reales de 22:00 CDMX y borde de mes.
+
 - **Fix crítico comisiones · EUR ya no se suma como MXN (FIX-13 auditoría).** `calcular_comision_pago` usaba `CASE WHEN moneda='USD' THEN tc ELSE 1 END`: cualquier venta o costo en EUR se contaba con TC=1, subvaluando la comisión (y ocultando pérdidas en costos). Ahora usa `public.convertir_a_mxn(monto, moneda, tc_usd, tc_eur)` del embarque tanto para ingresos como para costos. También añade nota "Tipos de cambio del embarque incompletos" si falta algún TC, para que Comisiones/Contabilidad detecten el hueco antes de liquidar.
 - **Fix crítico datos · bloqueo optimista al editar embarques (FIX-15 auditoría).** `actualizar_embarque_completo` acepta un nuevo parámetro `p_expected_updated_at`: el wizard envía el `updated_at` que leyó al abrir, y si otro operador guardó antes, la RPC rechaza con `LC_CONFLICTO_CONCURRENCIA` (ERRCODE `40001`). El wizard muestra un mensaje humano pidiendo recargar en lugar de pisar los cambios en silencio. Se hace `SELECT ... FOR UPDATE` sobre `embarques` antes de la verificación para evitar carreras. Se eliminan las sobrecargas legacy del RPC.
 - **Fix · `|| 1` silencioso eliminado en más callsites (FIX-11 continuación).** `direccion/services/mxn.ts` ahora usa `tcValido`: sin TC válido devuelve 0 en vez de tratar USD/EUR como MXN. `DialogRegistrarPago.tsx` bloquea la conversión de moneda cuando faltan tasas (antes convertía 1:1). El parser CFDI (`parse-cfdi-xml/parser.ts`) devuelve `tipo_cambio: null` para CFDIs USD/EUR sin `TipoCambio`; MXN sigue colapsando a 1. Se propagó el tipo `number | null` a `CfdiParsedResponse` y `mapCfdiToValues`. Test Deno añadido para el caso USD-sin-TC.
