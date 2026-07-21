@@ -1,7 +1,12 @@
 # Changelog
 # Changelog
 
+## [13.303.43] - 2026-07-21
+- **Fix crítico · sobrepago CxC/CxP ignoraba notas de crédito (FIX-08 auditoría).** `assert_factura_viva_para_pago` calculaba el saldo disponible con `saldo_factura_bruto` (total − pagos vivos), sin restar las NCs `Aplicada`. Una factura de $10,000 con NC de $4,000 aceptaba un pago de $10,000 y quedaba con saldo neto −$4,000 (fantasma). Ahora el trigger resta explícitamente `SUM(factura_notas_credito.monto WHERE estado='Aplicada')` y el HINT del error incluye `notas_credito_aplicadas`. Se aplica la misma corrección en `check_no_sobrepago_proveedor` (CxP) y se agrega `SELECT ... FOR UPDATE` sobre la factura padre en ambos triggers (**FIX-23**) para serializar pagos concurrentes y evitar carreras entre dos operadores pagando al mismo tiempo.
+- **Fix · Notas de crédito sin `|| 1` silencioso en tipo de cambio (FIX-11 auditoría).** `useNotaCreditoDraft` sustituía `tipo_cambio` faltante por `1`, corrompiendo NCs en USD cuando el TC no había cargado (por ejemplo tras un error de Banxico). Ahora exige TC válido (>0) para monedas ≠ MXN y arroja `LC_TC_NO_DISPONIBLE` para que el usuario refresque antes de emitir.
+
 ## [13.303.42] - 2026-07-21
+
 - **Folios diferidos de embarque.** El `expediente` deja de asignarse al crear el borrador desde una cotización: se reserva `NULL` en BD y sólo se genera cuando el borrador pasa a `Confirmado` (RPCs `crear_embarque_borrador_core` y `avanzar_estado_embarque`). Se agrega `labelExpediente(expediente, id)` como único helper de UI para etiquetar el folio (fallback `Borrador <id8>` / `Sin folio`) y se propaga por listados de embarques, tabla de cliente, dashboards del operador y portal (`EmbarqueCard`, `PortalProximosArribosCard`, `PortalEmbarquesRecientesCard`, `MiOperacionSection`), agrupador de expedientes por cliente (`fetchExpedientesCliente` ya ignora borradores sin folio), diálogo de eliminar embarque, header de detalle y toasts de wizard/estado. Con esto no se queman folios en borradores que nunca avanzan.
 
 ## [13.303.41] - 2026-07-21
