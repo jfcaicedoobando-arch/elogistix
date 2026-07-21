@@ -55,6 +55,12 @@ export interface ActualizarEmbarqueRpcInput {
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
   /** Idempotency key (A.3): si llega el mismo id dos veces, no se reescriben los conceptos. */
   requestId?: string;
+  /**
+   * FIX-15 · Bloqueo optimista: timestamp `updated_at` que el cliente leyó al
+   * abrir el wizard. Si al momento del guardado la fila ya cambió en BD, la
+   * RPC devuelve `LC_CONFLICTO_CONCURRENCIA` para que la UI pida recargar.
+   */
+  expectedUpdatedAt?: string | null;
 }
 
 export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): Promise<void> {
@@ -64,15 +70,22 @@ export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): 
   const { operador: _op, created_by_email: _cbe, created_by: _cb, ...embarqueSinCreador } = input.embarque;
   void _op; void _cbe; void _cb;
   await run(
-    supabase.rpc('actualizar_embarque_completo', {
+    // SAFE-CAST: la firma de 6 args con p_expected_updated_at aún no está
+    // regenerada en `types.ts`; el schema real en BD la acepta.
+    (supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: unknown }>)('actualizar_embarque_completo', {
       p_embarque_id: input.id,
       p_embarque: toDbJson(embarqueSinCreador),
       p_conceptos_venta: toDbJson(input.conceptosVenta),
       p_conceptos_costo: toDbJson(input.conceptosCosto),
       p_request_id: input.requestId,
+      p_expected_updated_at: input.expectedUpdatedAt ?? null,
     }),
   );
 }
+
 
 export interface AvanzarEstadoEmbarqueInput {
   embarqueId: string;
