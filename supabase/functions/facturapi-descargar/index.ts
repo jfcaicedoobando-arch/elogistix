@@ -204,9 +204,14 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
   }
 
   const contentType = tipo === "pdf" ? "application/pdf" : "application/xml";
-  const ext = tipo === "pdf" ? "pdf" : "xml";
-  const orgSlug = await fetchOrgSlug(supabase, target.data.organizationId);
-  const filename = `${orgSlug}_${target.data.filename}.${ext}`;
+  const ext: "pdf" | "xml" = tipo === "pdf" ? "pdf" : "xml";
+  const filename = buildFilename({
+    tipo: target.data.tipoDoc,
+    folioSerie: target.data.folioSerie,
+    cliente: target.data.cliente,
+    fecha: target.data.fecha,
+    ext,
+  });
 
   return new Response(fapiRes.body, {
     status: 200,
