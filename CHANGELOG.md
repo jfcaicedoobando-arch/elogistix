@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.91] - 2026-07-21
+- **ux(facturación) — Nombres de archivo descriptivos al descargar PDF/XML.** Antes las descargas salían como `LibreCarga_F971.pdf` — sin distinguir si era factura, nota de crédito o REP, sin cliente y sin fecha. Ahora la edge function `facturapi-descargar` arma el nombre con el patrón `{Tipo}_{FolioSerie}_{Cliente}_{Fecha}.{ext}`, ej. `Factura_F971_Cliente_Acme_2026-07-21.pdf`, `NotaCredito_A10_Cliente_Acme_2026-07-21.xml`, `REP_A5_Cliente_Acme_2026-07-21.pdf`. La lógica se aisló en `_shared/facturaFilename.ts` (con `slugifyForFilename` sin acentos ni caracteres inseguros + `toFechaYmd` UTC + `buildFilename` que omite segmentos vacíos sin dejar `__` doble), con Deno tests para acentos, límites de 40 chars, fechas nulas y todos los edge cases. NC y REP heredan cliente/fecha del CFDI padre cuando no vienen directos. Analogía: antes las fotos del celular se guardaban como "Foto.jpg" y tenías que abrirlas para saber qué era; ahora cada archivo dice de un vistazo qué tipo de documento, de quién y de cuándo.
+
 ## [13.303.90] - 2026-07-21
 - **fix(cxp) — Rueda del mouse en dropdown de proveedor dentro del modal "Capturar factura".** El `PopoverContent` con el `Command` de `cmdk` vive en un portal hermano al del `Dialog` modal; el `wheel` burbujeaba al contenedor del Dialog (con scroll-lock) y se lo comía antes de que la lista scrollable lo procesara. Se agrega `onWheel={e => e.stopPropagation()}` + `overscroll-contain` en el `CommandList` de `ProveedorCombobox` para atrapar la rueda dentro de la lista. Analogía: los clics tenían pase VIP, pero el "empujón" de la rueda se lo quedaba la puerta del Dialog; ahora la lista lo atrapa primero y por fin scrollea.
 
