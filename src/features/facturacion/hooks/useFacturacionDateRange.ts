@@ -28,9 +28,13 @@ function parseIsoDate(value: string | null): Date | null {
 
 function toIsoDate(d: Date | null | undefined): string | null {
   if (!d || Number.isNaN(d.getTime())) return null;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+  // v13.303.75 · Los rangos fiscales viven como fechas-calendario, no como
+  // timestamps: si usamos getFullYear/getMonth/getDate (locales) con un `Date`
+  // creado desde `"YYYY-MM-DD"` (que se parsea como UTC midnight), zonas al
+  // oeste de UTC devuelven el día previo.
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
