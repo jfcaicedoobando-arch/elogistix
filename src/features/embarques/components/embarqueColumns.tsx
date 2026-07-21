@@ -87,7 +87,7 @@ export function buildEmbarqueColumns({
         <ContenedorCell
           embarque={row.original}
           info={contenedoresInfoMap[row.original.id]}
-          legacyCount={contenedoresPorExpediente[row.original.expediente]}
+          legacyCount={contenedoresPorExpediente[row.original.expediente ?? ""]}
         />
       ),
     },
