@@ -127,6 +127,8 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           embarqueAdHoc={ctl.embarqueAdHoc}
           onEmbarqueAdHoc={ctl.setEmbarqueAdHoc}
         />
+
+        <CuadreConceptosBar resultado={cuadre} subtotal={sub} moneda={moneda} />
       </FormDialogShell>
 
       {ctl.askCrearProv && (
