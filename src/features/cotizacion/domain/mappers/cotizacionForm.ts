@@ -89,10 +89,33 @@ function partesLclFleteManual(d: CotizacionInitialData) {
   };
 }
 
-function partesExtras(d: CotizacionInitialData) {
+function partesSeguro(d: CotizacionInitialData) {
   return {
     seguro: d.seguro ?? false,
     valorSeguroUsd: d.valor_seguro_usd ?? 0,
+  };
+}
+
+function partesTarifa(d: CotizacionInitialData) {
+  return {
+    tarifaId: d.tarifa_id ?? null,
+    tarifaOverride: (d.tarifa_override ?? {}) as Record<string, boolean>,
+    sinDesgloseCostos: d.sin_desglose_costos ?? false,
+  };
+}
+
+function partesAgenteNaviera(d: CotizacionInitialData) {
+  return {
+    agenteId: d.agente_id ?? null,
+    agenteNombre: d.agente_nombre ?? "",
+    navieraId: d.naviera_id ?? null,
+    navieraNombre: d.naviera_nombre ?? "",
+  };
+}
+
+function partesExtras(d: CotizacionInitialData) {
+  return {
+    ...partesSeguro(d),
     diasLibresDestino: d.dias_libres_destino ?? 0,
     diasAlmacenaje: d.dias_almacenaje ?? 0,
     cartaGarantia: d.carta_garantia ?? false,
@@ -100,14 +123,9 @@ function partesExtras(d: CotizacionInitialData) {
     numContenedores: d.num_contenedores ?? 1,
     modalidadEquipo: d.modalidad_equipo ?? "",
     puntoIntermedio: d.punto_intermedio ?? "",
-    tarifaId: d.tarifa_id ?? null,
-    tarifaOverride: (d.tarifa_override ?? {}) as Record<string, boolean>,
-    sinDesgloseCostos: d.sin_desglose_costos ?? false,
+    ...partesTarifa(d),
     lclFleteManual: partesLclFleteManual(d),
-    agenteId: d.agente_id ?? null,
-    agenteNombre: d.agente_nombre ?? "",
-    navieraId: d.naviera_id ?? null,
-    navieraNombre: d.naviera_nombre ?? "",
+    ...partesAgenteNaviera(d),
   };
 }
 
