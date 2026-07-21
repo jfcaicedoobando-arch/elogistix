@@ -68,7 +68,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
       />
 
       <Card>
-        <CardHeader className="pb-2 flex flex-row items-start justify-between">
+        <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
           <div>
             <CardTitle className="text-sm">Garantías por contenedor</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
@@ -77,6 +77,19 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
               referencia bancaria del depósito.
             </p>
           </div>
+          {canEdit && rows.some((r) => r.estado === "pendiente") && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => refrescarMut.mutate()}
+              disabled={refrescarMut.isPending}
+              className="shrink-0"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${refrescarMut.isPending ? "animate-spin" : ""}`} />
+              Precargar desde tarifa
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <DataTable
