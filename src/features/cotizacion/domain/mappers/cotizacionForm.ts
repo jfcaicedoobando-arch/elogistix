@@ -104,6 +104,10 @@ function partesExtras(d: CotizacionInitialData) {
     tarifaOverride: (d.tarifa_override ?? {}) as Record<string, boolean>,
     sinDesgloseCostos: d.sin_desglose_costos ?? false,
     lclFleteManual: partesLclFleteManual(d),
+    agenteId: d.agente_id ?? null,
+    agenteNombre: d.agente_nombre ?? "",
+    navieraId: d.naviera_id ?? null,
+    navieraNombre: d.naviera_nombre ?? "",
   };
 }
 
