@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.303.51] - 2026-07-21
+- **Fase 3 · Búsquedas seguras, logs sin PII y credenciales de test (FIX-24 · FIX-42 · FIX-01 residual · auditoría v2-2).**
+  - **FIX-24 — Escape de `ilike`:** nuevo módulo `src/lib/search/ilike.ts` con `escapeIlike()`, `ilikePattern()` y `orIlike()`. Escapa `\`, `%`, `_` para tratar el input del usuario como literal, y envuelve valores con `,`/`(`/`)`/`"` entre comillas dobles (escapando internas como `""`) para no romper el parser de `.or()` de PostgREST. Migrados 8 call-sites: `facturacion/services/cobranza.ts`, `cxp/services/proveedorFacturas.ts`, `crm/services/search.ts`, `crm/services/prospectoSearch.ts`, `crm/services/oportunidades.ts`, `crm/services/leads/queries.ts`, `crm/services/actividades.ts`, `admin/services/observability.ts`. Antes: un usuario tecleando `%`, `_` o `,` obtenía resultados incorrectos o rompía la query; ahora búsqueda literal siempre.
+  - **FIX-42 — Redacción de PII y secretos en logs:** nuevo `src/lib/logging/redact.ts` (enmascara `authorization`, `api_key`, `token`, `access_token`, `refresh_token`, `password`, `cookie`, `rfc`, `email`, `curp`, `telefono` en objetos anidados hasta 6 niveles; trunca strings > 500 chars; enmascara emails embebidos como `h***@dominio`), más `safeLog.warn/error(msg, ctx)` que aplica `redact` antes de escribir en consola. Idempotente y defensivo (nunca lanza).
+  - **FIX-01 residual — Credenciales hardcodeadas:** `scripts/visual-audit/capture.mjs` y `capture.py` ya no traen el password `1234567890` como default. Ahora abortan con exit code claro si `AUDIT_EMAIL` / `AUDIT_PASSWORD` no están definidos, y el README lo documenta.
+  - **Tests:** `src/lib/search/__tests__/ilike.test.ts` (7 casos: comodines, comas, paréntesis, comillas dobles) + `src/lib/logging/__tests__/redact.test.ts` (5 casos: keys sensibles, emails embebidos, idempotencia, anidamiento) + cobertura de tokens `LC_*` en `portal.test.ts` (3 casos nuevos).
+
+
+
 ## [13.303.50] - 2026-07-21
 - **Fase 2 · Guards de estado y confirmaciones destructivas (FIX-21 · FIX-25 · FIX-34/37 · auditoría v2-2).**
   - **BD — `crear_embarque_borrador_core`:** ahora rechaza cotizaciones eliminadas (`LC_COT_ELIMINADA`), acepta estados `Aceptada` y `En operación` (`LC_COT_ESTADO_INVALIDO` para el resto), y detecta embarques huérfanos (con `cotizacion_id` pero sin link inverso) devolviendo el existente en vez de duplicar. Todos los errores usan tokens `LC_*` estables (`LC_COT_NO_ENCONTRADA`, `LC_COT_SIN_CLIENTE`, `LC_NO_AUTORIZADO`). Preserva la lógica de inserción completa; sólo se endurecen guards + idempotencia.

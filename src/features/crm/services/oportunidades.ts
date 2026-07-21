@@ -2,6 +2,7 @@
  * Servicio CRM — Oportunidades. Capa de I/O para `crm_oportunidades`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { orIlike } from "@/lib/search/ilike";
 import { unwrap, run } from "@/lib/supabase/response";
 import { buildOportunidadInsertPayload } from "@/features/crm/domain/oportunidadPayload";
 export type { CrmOportunidadRow, Moneda, OportunidadInput } from "@/features/crm/types/oportunidades";
@@ -24,8 +25,7 @@ export async function listOportunidades(p: ListOportunidadesParams): Promise<{ d
     .select(COLS, { count: "exact" })
     .order("created_at", { ascending: false });
   if (p.search.trim()) {
-    const t = `%${p.search.trim()}%`;
-    q = q.or(`nombre.ilike.${t},cliente_nombre.ilike.${t}`);
+    q = q.or(orIlike(["nombre", "cliente_nombre"], p.search));
   }
   if (p.etapaId !== "todas") q = q.eq("etapa_id", p.etapaId);
   if (p.vendedorId !== "todos") q = q.eq("vendedor_id", p.vendedorId);

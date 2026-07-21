@@ -2,6 +2,7 @@
  * Servicio CRM — Actividades. Capa de I/O para `crm_actividades`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { ilikePattern } from "@/lib/search/ilike";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -37,7 +38,7 @@ export async function listActividades(p: ListActividadesParams): Promise<{ data:
     .from("crm_actividades")
     .select(COLS, { count: "exact" })
     .order(sortKey, { ascending: sortDir === "asc", nullsFirst: false });
-  if (p.search.trim()) q = q.ilike("asunto", `%${p.search.trim()}%`);
+  if (p.search.trim()) q = q.ilike("asunto", ilikePattern(p.search));
   if (p.tipo !== "todos") q = q.eq("tipo", p.tipo);
   if (p.estado === "pendientes") q = q.is("fecha_completada", null);
   if (p.estado === "completadas") q = q.not("fecha_completada", "is", null);

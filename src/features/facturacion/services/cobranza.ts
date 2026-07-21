@@ -13,6 +13,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { orIlike } from "@/lib/search/ilike";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
@@ -94,7 +95,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
   if (filtros.cliente_id) query = query.eq("cliente_id", filtros.cliente_id);
   if (filtros.moneda && filtros.moneda !== "todas") query = query.eq("moneda", filtros.moneda);
   if (filtros.search) {
-    query = query.or(`numero.ilike.%${filtros.search}%,cliente_nombre.ilike.%${filtros.search}%`);
+    query = query.or(orIlike(["numero", "cliente_nombre"], filtros.search));
   }
 
   const { data, error } = await query;

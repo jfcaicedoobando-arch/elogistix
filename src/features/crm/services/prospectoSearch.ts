@@ -6,6 +6,7 @@
  * de imports directos a Supabase (regla de capas).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { orIlike } from "@/lib/search/ilike";
 
 export interface ProspectoMatch {
   kind: "lead" | "oportunidad";
@@ -27,18 +28,17 @@ type OpHit = {
 };
 
 export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> {
-  const like = `%${term}%`;
   const [leadsRes, opsRes] = await Promise.all([
     supabase
       .from("crm_leads")
       .select("id, empresa, contacto, email, telefono")
-      .or(`empresa.ilike.${like},contacto.ilike.${like},email.ilike.${like}`)
+      .or(orIlike(["empresa", "contacto", "email"], term))
       .neq("estado", "Convertido")
       .limit(8),
     supabase
       .from("crm_oportunidades")
       .select("id, nombre, lead_id, cliente_nombre, etapa:crm_etapas_pipeline!etapa_id(nombre)")
-      .or(`nombre.ilike.${like},cliente_nombre.ilike.${like}`)
+      .or(orIlike(["nombre", "cliente_nombre"], term))
       .is("cliente_id", null)
       .limit(8),
   ]);

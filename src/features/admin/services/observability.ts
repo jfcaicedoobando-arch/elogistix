@@ -3,6 +3,7 @@
  * Lectura RLS-aware (super_admin ve todo, admin org ve su scope).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { ilikePattern } from "@/lib/search/ilike";
 import type { Database } from "@/integrations/supabase/types";
 
 export interface AlertaSistema {
@@ -73,7 +74,7 @@ export async function fetchAppLogs(args: AppLogsQueryInput): Promise<AppLogsQuer
     .order("ts", { ascending: false });
   if (level !== "todos") q = q.eq("level", level);
   if (fn !== "todos") q = q.eq("fn", fn);
-  if (search.trim()) q = q.ilike("msg", `%${search.trim()}%`);
+  if (search.trim()) q = q.ilike("msg", ilikePattern(search));
   if (from) q = q.gte("ts", `${from}T00:00:00.000Z`);
   if (to) q = q.lte("ts", `${to}T23:59:59.999Z`);
   const fromIdx = (page - 1) * pageSize;

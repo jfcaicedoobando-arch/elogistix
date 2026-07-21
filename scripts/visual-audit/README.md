@@ -20,10 +20,13 @@ El dev server ya está corriendo en `http://localhost:8080` y Playwright/Chromiu
 vienen preinstalados. Basta con:
 
 ```bash
-AUDIT_EMAIL=hector@lopezbenavides.com \
-AUDIT_PASSWORD=1234567890 \
+AUDIT_EMAIL=<usuario-de-pruebas> \
+AUDIT_PASSWORD=<password-de-pruebas> \
 node scripts/visual-audit/capture.mjs --out=/tmp/visual-snapshots
 ```
+
+Consulta `mem://reference/audit-login` para el usuario de pruebas o pídeselo al owner del proyecto.
+Los scripts abortan si `AUDIT_EMAIL` / `AUDIT_PASSWORD` no están definidos — no llevan defaults hardcodeados.
 
 ## Variables
 
@@ -31,8 +34,8 @@ node scripts/visual-audit/capture.mjs --out=/tmp/visual-snapshots
 |---|---|---|
 | `--base` / `AUDIT_BASE_URL` | `http://localhost:8080` | URL del preview |
 | `--out` | `./visual-snapshots` | Carpeta de salida |
-| `AUDIT_EMAIL` | `hector@lopezbenavides.com` | Usuario de pruebas (ver `mem://reference/audit-login`) |
-| `AUDIT_PASSWORD` | `1234567890` | Password del usuario de pruebas |
+| `AUDIT_EMAIL` | — (obligatoria) | Usuario de pruebas |
+| `AUDIT_PASSWORD` | — (obligatoria) | Password del usuario de pruebas |
 
 ## Qué produce
 

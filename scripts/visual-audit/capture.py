@@ -129,8 +129,10 @@ def main() -> None:
     ap.add_argument("--out", default="./visual-snapshots")
     args = ap.parse_args()
 
-    email = os.environ.get("AUDIT_EMAIL", "hector@lopezbenavides.com")
-    password = os.environ.get("AUDIT_PASSWORD", "1234567890")
+    email = os.environ.get("AUDIT_EMAIL")
+    password = os.environ.get("AUDIT_PASSWORD")
+    if not email or not password:
+        raise SystemExit("Faltan AUDIT_EMAIL / AUDIT_PASSWORD en el entorno. Ver scripts/visual-audit/README.md")
 
     asyncio.run(run(args.base, Path(args.out).resolve(), email, password))
 

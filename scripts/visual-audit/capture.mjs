@@ -29,8 +29,12 @@ const argv = Object.fromEntries(
 
 const BASE = argv.base ?? process.env.AUDIT_BASE_URL ?? "http://localhost:8080";
 const OUT = path.resolve(argv.out ?? "./visual-snapshots");
-const EMAIL = process.env.AUDIT_EMAIL ?? "hector@lopezbenavides.com";
-const PASSWORD = process.env.AUDIT_PASSWORD ?? "1234567890";
+const EMAIL = process.env.AUDIT_EMAIL;
+const PASSWORD = process.env.AUDIT_PASSWORD;
+if (!EMAIL || !PASSWORD) {
+  console.error("Faltan AUDIT_EMAIL / AUDIT_PASSWORD en el entorno. Ver scripts/visual-audit/README.md");
+  process.exit(2);
+}
 
 /**
  * Rutas críticas por dominio funcional. Un slug estable por ruta se usa como
