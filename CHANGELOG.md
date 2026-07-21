@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.62] - 2026-07-21
+- **fix(cotizacion) · PGRST204 al crear cotización.** `partesAgenteNavieraInsert` intentaba escribir `agente_nombre` y `naviera_nombre` en `public.cotizaciones`, columnas que sólo existen en las vistas (JOIN con `costeo_agentes` / `navieras`). Se removieron del payload de insert; el vínculo persiste vía `agente_id` / `naviera_id`. Resuelve Sentry `JAVASCRIPT-REACT-32`, `JAVASCRIPT-REACT-33` y `JAVASCRIPT-REACT-1V`.
+
 ## [13.303.61] - 2026-07-21
 - **chore(ci) · suite verde.** Divididos `DialogNuevaFacturaManual.tsx`, `DialogEditarCliente.tsx`, `crud.ts` y `TabTracking.tsx` bajo 200 líneas (Power of 10). Extraídos `calcularTotalMxn`, `useClientesFiscalOpts` (query wrapper) + `services/clientesFiscalOpts` (sin `supabase` en hooks), `CondicionesCreditoSection` y `exposicionCredito`. Corregido `parseLocalMx` para operar en UTC 12:00 y añadido `addDaysMx`, eliminando desfase de zona horaria en `huecoFacturacion`.
 
