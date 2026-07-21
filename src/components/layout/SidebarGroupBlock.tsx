@@ -30,8 +30,8 @@ interface Props {
   pathname: string;
 }
 
-function isActive(pathname: string, path: string): boolean {
-  if (path === "/") return pathname === "/";
+function isActive(pathname: string, path: string, exact: boolean): boolean {
+  if (path === "/" || exact) return pathname === path;
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
@@ -55,7 +55,10 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname }: Props) {
         <SidebarGroupContent>
           <SidebarMenu>
             {items.map((item) => {
-              const active = isActive(pathname, item.url);
+              // Si otro item del mismo grupo es hijo de este (p. ej. /compras vs /compras/facturas),
+              // este item sólo debe activarse en match exacto para evitar 2 seleccionados a la vez.
+              const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
+              const active = isActive(pathname, item.url, exact);
               const badge = item.badgeCount ?? 0;
               return (
                 <SidebarMenuItem key={item.title}>
