@@ -46,7 +46,8 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.contenedores(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       invalidateProfitDependencies(queryClient);
-      notifySuccess(undefined, { title: "Embarque actualizado" });
+      // Nota: el toast de éxito lo dispara el caller (p. ej. useEditarEmbarqueWizard)
+      // con una descripción más específica; evitamos duplicar aquí.
     },
     onError: (error: Error) => {
       notifyError(undefined, { title: `Error al actualizar embarque: ${error.message}`, error, method: "UPDATE_EMBARQUE" });
