@@ -177,13 +177,19 @@ export function parseCfdi(xml: string): CfdiParsed {
   const fechaRaw = attr(comprobante, "Fecha"); // 2025-03-14T10:22:01
   const fecha = fechaRaw.slice(0, 10);
 
+  const monedaCfdi = attr(comprobante, "Moneda") || "MXN";
+  const tcRaw = num(attr(comprobante, "TipoCambio"));
+  // FIX-11: sólo colapsamos a 1 cuando la moneda es MXN. Para USD/EUR sin TC
+  // válido devolvemos null: el caller decide si rechazar o pedir captura manual.
+  const tcCfdi = monedaCfdi === "MXN" ? 1 : (Number.isFinite(tcRaw) && tcRaw > 0 ? tcRaw : null);
+
   return {
     uuid,
     serie: attr(comprobante, "Serie"),
     folio: attr(comprobante, "Folio"),
     fecha,
-    moneda: attr(comprobante, "Moneda") || "MXN",
-    tipo_cambio: num(attr(comprobante, "TipoCambio")) || 1,
+    moneda: monedaCfdi,
+    tipo_cambio: tcCfdi,
     subtotal: num(attr(comprobante, "SubTotal")),
     total: num(attr(comprobante, "Total")),
     iva_trasladado: iva,

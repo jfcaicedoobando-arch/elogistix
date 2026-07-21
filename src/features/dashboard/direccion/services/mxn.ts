@@ -1,20 +1,30 @@
 /**
  * Helpers de conversión a MXN reutilizados por los servicios de dirección.
+ * FIX-11: usa `tcValido` — nunca colapsa a 1 para monedas extranjeras.
  */
 import { convertirAMXN, type Moneda } from "@/lib/financial/financialUtils";
+import { tcValido } from "@/lib/financial/tcValido";
 
 export function toMxn(monto: number | null | undefined, moneda: string | null | undefined, tcUsd: number, tcEur: number): number {
   const m = Number(monto ?? 0);
   const mon = (moneda ?? "MXN") as Moneda;
-  return convertirAMXN(m, mon, tcUsd || 1, tcEur || 1);
+  if (mon === "MXN") return m;
+  const tcU = tcValido(tcUsd);
+  const tcE = tcValido(tcEur);
+  // FIX-11: si el TC de la moneda no es válido, devolvemos 0 en vez de
+  // multiplicar por 1 y contaminar los KPIs con USD/EUR sumados como MXN.
+  if (mon === "USD" && !tcU) return 0;
+  if (mon === "EUR" && !tcE) return 0;
+  return convertirAMXN(m, mon, tcU ?? 0, tcE ?? 0);
 }
 
-/** MXN equivalente para facturas: usa `tipo_cambio` de la factura; si es <=1 (USD/EUR sin TC), usa fallback. */
+/** MXN equivalente para facturas: usa `tipo_cambio` de la factura; si es inválido, cae al fallback (USD). */
 export function mxnFactura(monto: number, moneda: string, tipoCambio: number | null, fallbackUsd: number): number {
   if (moneda === "MXN") return Number(monto);
-  const tc = Number(tipoCambio) || 0;
-  if (tc > 1) return Number(monto) * tc;
-  if (fallbackUsd > 0) return Number(monto) * fallbackUsd;
+  const tc = tcValido(tipoCambio);
+  if (tc) return Number(monto) * tc;
+  const fb = tcValido(fallbackUsd);
+  if (fb) return Number(monto) * fb;
   return 0;
 }
 
