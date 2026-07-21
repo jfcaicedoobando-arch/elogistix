@@ -1,6 +1,9 @@
 # Changelog
 # Changelog
 
+## [13.303.38] - 2026-07-21
+- **Chore · limpieza de código muerto reportada por `knip`.** Se elimina `src/features/catalogos/components/NavieraSelect.tsx` (reemplazado por `NavieraEmbarqueSelector` en v13.303.35) y se remueven exports sin consumidores: `EMAIL_CHIP_RE` (`EmailChipsField.tsx`), `listAnticiposPorProveedor` (`cxp/services/anticipos.ts`), tipos `EstadoEmbarque` y `FacturaEstadoVivo`. `bun run lint:unused:strict` queda verde.
+
 ## [13.303.37] - 2026-07-21
 - **Fix · doble toast al guardar embarque.** `useUpdateEmbarque` disparaba `notifySuccess("Embarque actualizado")` además del toast descriptivo de `useEditarEmbarqueWizard` (`ELIMPXXXXX guardado correctamente.`). Se elimina el toast del mutation base; ahora solo el caller (wizard/detalle) es responsable del feedback visual.
 
