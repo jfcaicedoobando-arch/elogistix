@@ -1,58 +1,101 @@
-# Fase 3 auditoría — Sprint 1 (v13.303.45)
 
-Continúa la remediación del documento subido. Fases previas ya cerradas en repo:
-FIX-01…07 (Sprint 0), FIX-08+23 (sobrepago con NCs + locks), FIX-10 (fallback TC marcado + rechazado), FIX-11 (helper `tcValido` + guard NC). Falta migrar los `|| 1` restantes y avanzar con los ítems que la nota final del doc marca como críticos ("FIX-10 antes que FIX-11", "FIX-08 define estados canónicos que usan FIX-09").
+# Fase 4 · Auditoría v3 — Sprint 1 restante
 
-## Alcance de esta fase (3 fixes)
+## Estado del documento subido
 
-### 1. FIX-13 · Comisiones multi-moneda
-- **Bug:** `calcular_comision_pago` (migración `20260616231916`) usa `CASE WHEN moneda='USD' THEN tc ELSE 1 END`. Ventas y costos en EUR se suman como MXN → comisión inflada.
-- **Fix:** migración que redefine `calcular_comision_pago` reemplazando el CASE por `public.convertir_a_mxn(monto, moneda, v_tc_usd, v_tc_eur)` (helper ya existente) tanto en ingresos como en costos.
-- **Guard:** si `pagos_factura.tipo_cambio IS NULL` en pago no-MXN, tomar el TC del embarque; si sigue nulo, `RAISE 'LC_COMISION_TC_FALTANTE'`.
-- **Test:** SQL fixture con venta EUR y costo USD → comisión = `%` × (ventaEUR·tcEUR − costoUSD·tcUSD).
+El doc v3 trae 78 fixes en 4 sprints. Muchos ya se cerraron en fases previas (v13.303.12–v13.303.45):
 
-### 2. FIX-15 · Optimistic locking en editar embarque
-- **Bug:** `actualizar_embarque_completo` no valida versión. Dos operadores editando pisan cambios; el DELETE+INSERT de conceptos hace la pérdida silenciosa.
-- **Fix DB:** migración que añade parámetro `p_expected_updated_at timestamptz DEFAULT NULL` (compatible hacia atrás). Si viene y `embarques.updated_at <> p_expected_updated_at` → `RAISE 'LC_CONFLICTO_CONCURRENCIA'` con `ERRCODE = 'serialization_failure'`.
-- **Fix UI:** en `useEditarEmbarqueWizard.ts` leer `updated_at` al abrir el wizard, pasarlo a la mutation, y al recibir `LC_CONFLICTO_CONCURRENCIA` mostrar `AlertDialog` "Otro usuario modificó este embarque · Recargar".
-- **Tests:** unit del handler de error + integration del RPC (dos updates seguidos, el 2º debe fallar).
+**Ya remediados (no re-abrir):**
+- FIX-01, 06 (credenciales y `.env`) → Sprint 0 v13.303.12
+- FIX-02, 16 (validar_cierre_embarque + moneda CxP) → Fase M
+- FIX-03 (proforma facturada + índice único) → Fase G
+- FIX-04 (claim atómico timbrado) → Fase K
+- FIX-05 (folio cotización atómico + `siguiente_folio`) → migración previa
+- FIX-07, 21 (RPC transaccional cotización→embarque + guards) → Fase v13.303.16
+- FIX-08, 23 (sobrepago con NC + FOR UPDATE) → **v13.303.43**
+- FIX-09 (PNL excluye Sustituida) → Fase P
+- FIX-10 (fallback Banxico bloqueado) → **v13.303.44**
+- FIX-11 (helper `tcValido` propagado) → **v13.303.44 + v13.303.45**
+- FIX-13 (comisiones convertir_a_mxn) → **v13.303.45**
+- FIX-15 (optimistic locking embarque) → **v13.303.45**
+- FIX-24 (`escapeOrIlike`) → Fase R
+- FIX-25 (cotización vencida) → Fase R
 
-### 3. FIX-11 (continuación) · Migrar `|| 1` restantes a `tcValido`
-Aplicar el helper creado en la fase pasada a los sitios listados en el doc (línea 188):
-- `src/features/embarques/domain/embarqueKpis.ts:24-47`
-- `src/features/facturacion/services/proyeccionFacturacion/conversion.ts:22`
-- `src/features/dashboard/direccion/services/mxn.ts:9`
-- `src/features/embarques/services/costosUSD.ts:113-116`
-- `src/features/facturacion/components/DialogRegistrarPago.tsx:41`
-- `supabase/functions/parse-cfdi-xml/parser.ts:186`
+**Pendientes reales** — objeto de esta fase.
 
-Patrón: cuando `tcValido(v)` devuelve `null` → no convertir; propagar bandera `tcMissing` al KPI/UI para mostrar "TC faltante" (patrón ya usado en `useCostosPreciosCalc`).
+---
 
-## Fuera de alcance (siguientes fases)
-- FIX-09 (PNL sustituidas + pendientes reales) — necesita definir "estados canónicos de NC" que aún no hemos consolidado.
-- FIX-12 (timezone MX en dashboard/exchange-rates/TabTracking).
-- FIX-14 (pago CxP MXN de factura USD).
-- FIX-17…32 restantes de Sprint 1.
-- Sprint 2 (UX) y Sprint 3 (gobierno).
+## Alcance Fase 4
+
+Ejecutamos los pendientes de mayor impacto financiero/operativo del Sprint 1, en 5 lotes atómicos.
+
+### Lote A · Fechas de negocio America/Mexico_City (FIX-12)
+Crear helper único `src/lib/date/mx.ts` con `hoyMX()` y `ymMX()` (Intl `en-CA` + `timeZone`). Reemplazar `toISOString().slice(0,10)` / `slice(0,7)` en:
+- `supabase/functions/exchange-rates/index.ts` (elección de FIX del DOF)
+- `supabase/functions/cxc-recordatorios/index.ts` (fecha vencimiento)
+- `src/features/facturacion/services/dashboardEjecutivo.ts` (buckets mes)
+- `src/features/embarques/components/TabTracking.tsx` (parseo de fechas locales)
+
+**Verifica:** entre 18:00–23:59 CDMX, TC y "Facturado del mes" corresponden al día local.
+
+### Lote B · CxP pago cross-currency correcto (FIX-14)
+`src/features/cxp/components/usePagoProveedorForm.ts`:
+- Aplicar `tcValido` (ya existe).
+- Calcular `montoEnMonedaFactura = esUsdPagadoEnMxn && tc ? monto/tc : monto`.
+- Bloquear submit si `esUsdPagadoEnMxn && !tc`.
+- Prefill al cambiar moneda a MXN: `setMonto((saldo * tc).toFixed(2))`.
+- Mostrar equivalente en UI ("≈ USD 1,000.00").
+
+### Lote C · Factura manual íntegra (FIX-17) + NaN en costos (FIX-18)
+- `src/features/facturacion/services/facturaManual.ts`: usar `sumarMontos` para el encabezado; validar `Number.isFinite` por concepto; folio borrador `BORRADOR-${Date.now()}-${uuid.slice(0,6)}`; si falla insert de conceptos → marcar `estado='Error'`.
+- `src/features/cotizacion/components/TablaCostosLocal.tsx`: sanitizar input numérico (regex `[^0-9.]`), `parseFloat` con fallback 0.
+- Migración: `COALESCE(...,0)` en RPC `actualizar_cotizacion_costos` para `costo_unitario` y `cantidad`.
+
+### Lote D · IVA por línea con trigger BD (FIX-19)
+Migración:
+- Trigger `AFTER INSERT/UPDATE/DELETE` en `conceptos_factura` → recalcula `facturas.subtotal/iva/total`.
+- Guardar `monto_iva` por concepto (columna nueva si no existe).
+- Corregir `calc_pago_retenciones`: prorratear sobre `total`, no sobre `subtotal+iva`.
+- Cliente `recalcularTotalesFactura.ts` queda como cálculo optimista pre-guardado; BD es fuente de verdad.
+
+### Lote E · TC embarque desde fuente viva (FIX-20)
+Migración: `ALTER TABLE embarques ALTER COLUMN tipo_cambio_usd DROP DEFAULT` (idem EUR). En el hook de creación, setear TC vigente vía `exchange-rates`; si no hay TC, dejar NULL (UI ya muestra "TC faltante" tras FIX-11).
+
+### Lote F · Webhook FacturAPI: dedupe y límite body (FIX-22)
+Migración: tabla `facturapi_webhook_events(event_id PK, org_id, procesado_at)`.
+`facturapi-webhook/index.ts`:
+- `if (body.length > 256*1024) return 413`.
+- Insertar `event_id`; si viola PK → 200 (ya procesado).
+
+### Lote G · Higiene menor (FIX-26, 27, 28, 30, 31, 32)
+- **FIX-26** parser CFDI: quitar `slice(0,10)` del cuadre (mantener solo en resumen AI).
+- **FIX-27** import BBVA: conservar signo, año siglo, dedupe con normalización.
+- **FIX-28** conciliación: índices únicos parciales `uq_bbva_pago_factura` / `uq_bbva_pago_proveedor`; guard en update.
+- **FIX-30** tarifas: RPC transaccional + validación monto > 0 en UI (quitar `filter` silencioso).
+- **FIX-31** docs huérfanos storage: cleanup en `catch` del orchestrator.
+- **FIX-32** `exchange-rates`: LRU 200 en `cacheHistorico` + validar componentes de fecha (rechazar 2025-02-30).
+
+---
+
+## Estrategia de ejecución
+
+Ejecuto lotes A → G **en orden**, uno por commit lógico, con:
+1. Cambios de código/migración.
+2. Tests unitarios nuevos por lote (`tcValido`, `hoyMX`, cuadre CFDI, triggers IVA, dedupe webhook, conciliación única).
+3. `bunx vitest run` de tests afectados + `bun run lint`.
+4. Entrada en `CHANGELOG.md` + bump `APP_VERSION` (una versión por lote: v13.303.46 → v13.303.52).
+
+Después de cada lote pauso brevemente para reporte antes del siguiente, para que puedas cancelar o reordenar.
+
+## Fuera de alcance de esta fase
+
+- Sprint 2 completo (FIX-33 a 39: UX sistémico) — plan separado tras terminar Sprint 1.
+- Sprint 3 (FIX-40 a 48: gobierno/seguridad dura) — requiere revisión aparte, incluye cambios a CI y hosting.
+- FIX-29 exports/imports con límites — depende del refactor de `DataTable`, se hace con Sprint 2.
 
 ## Detalles técnicos
 
-**Migración única** con:
-1. `CREATE OR REPLACE FUNCTION public.calcular_comision_pago` (FIX-13).
-2. `CREATE OR REPLACE FUNCTION public.actualizar_embarque_completo` con nueva firma que agrega `p_expected_updated_at timestamptz DEFAULT NULL` al final (para no romper llamadas existentes).
-
-**Frontend:**
-- `useEditarEmbarqueWizard.ts`: leer `updated_at` del fetch inicial, guardarlo en ref, enviarlo en el `mutateAsync`.
-- Nuevo `DialogConflictoConcurrencia.tsx` (reutilizando `AlertDialog` shadcn) para mostrar el aviso.
-- Actualizar `useUpdateEmbarque.ts` para detectar `LC_CONFLICTO_CONCURRENCIA` y abrir el diálogo.
-
-**Cierre:**
-- Bump `APP_VERSION` a `13.303.45`.
-- Entradas en `CHANGELOG.md` (FIX-13, FIX-15, FIX-11 continuación).
-- Ejecutar suite afectada: comisiones, embarques wizard, KPIs.
-
-## Fixes ya cerrados (confirmar en review, no re-hacer)
-```text
-Sprint 0:  01 · 02 · 03 · 04 · 05 · 06 · 07
-Sprint 1:  08 · 10 · 11(parcial) · 23
-```
+- Migraciones respetan el patrón GRANT+RLS ya establecido.
+- Se preserva `SECURITY DEFINER` / `SET search_path = public` en todas las funciones nuevas.
+- Todos los helpers nuevos ≤200 líneas (Power of 10).
+- Ningún cambio toca `src/components/ui/`, `types.ts` ni `.env`.
