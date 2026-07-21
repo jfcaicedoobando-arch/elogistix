@@ -1,6 +1,9 @@
 # Changelog
 # Changelog
 
+## [13.303.42] - 2026-07-21
+- **Folios diferidos de embarque.** El `expediente` deja de asignarse al crear el borrador desde una cotización: se reserva `NULL` en BD y sólo se genera cuando el borrador pasa a `Confirmado` (RPCs `crear_embarque_borrador_core` y `avanzar_estado_embarque`). Se agrega `labelExpediente(expediente, id)` como único helper de UI para etiquetar el folio (fallback `Borrador <id8>` / `Sin folio`) y se propaga por listados de embarques, tabla de cliente, dashboards del operador y portal (`EmbarqueCard`, `PortalProximosArribosCard`, `PortalEmbarquesRecientesCard`, `MiOperacionSection`), agrupador de expedientes por cliente (`fetchExpedientesCliente` ya ignora borradores sin folio), diálogo de eliminar embarque, header de detalle y toasts de wizard/estado. Con esto no se queman folios en borradores que nunca avanzan.
+
 ## [13.303.41] - 2026-07-21
 - **UX · Dashboard: ocultar estado "En Proceso".** `ESTADOS_FILTRO`, `EMPTY_CONTEO` y `parseConteoPorEstado` dejan de exponer la clave `"En Proceso"`, por lo que la timeline y las tarjetas de estados del dashboard ya no lo listan. El estado sigue vivo en BD y en `ESTADOS_ACTIVOS` (usado por Operaciones); "Avanzar estado" en el detalle del embarque lo sigue moviendo directo a Arribo.
 
