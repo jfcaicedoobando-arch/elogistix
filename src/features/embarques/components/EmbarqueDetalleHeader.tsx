@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 
 import { toTitleCase } from "@/lib/formatters";
 import { EmbarqueStatusChip } from "./EmbarqueStatusChip";
