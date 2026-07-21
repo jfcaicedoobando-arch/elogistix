@@ -125,8 +125,6 @@ function DataTableInner<T>({
     typeof footer === "function" ? (footer as (d: T[]) => React.ReactNode)(orderedData) : footer;
   const showFooter = Boolean(renderedFooter) && !isLoading && orderedData.length > 0;
 
-  const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
-
   return (
     <div className={className}>
       {isError ? (
@@ -135,38 +133,28 @@ function DataTableInner<T>({
           onRetry={onRetry}
         />
       ) : (
-      <div className="relative">
-        <div
-          ref={scrollRef}
-          data-testid="datatable-scroll"
-          className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
-        >
-          {/* min-w-max obliga a respetar anchos por columna (F-06 auditoría 3). */}
-          <Table className={tableClassName}>
-            <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
-            <DataTableBody
-              table={table}
-              isLoading={isLoading}
-              skeletonRows={skeletonRows}
-              density={density}
-              striped={striped}
-              hoverable={hoverable}
-              bordered={bordered}
-              emptyMessage={emptyMessage}
-              emptyHint={emptyHint}
-              emptyIcon={emptyIcon}
-              emptyState={emptyState}
-              rowClassName={rowClassName}
-              onRowClick={onRowClick}
-              onRowMouseEnter={onRowMouseEnter}
-              getRowHref={getRowHref}
-              getRowAriaLabel={getRowAriaLabel}
-            />
-            {showFooter && <TableFooter>{renderedFooter}</TableFooter>}
-          </Table>
-        </div>
-        <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
-      </div>
+        <DataTableContent
+          table={table}
+          tableClassName={tableClassName}
+          striped={striped}
+          bordered={bordered}
+          hoverable={hoverable}
+          stickyHeader={stickyHeader}
+          density={density}
+          isLoading={isLoading}
+          skeletonRows={skeletonRows}
+          emptyMessage={emptyMessage}
+          emptyHint={emptyHint}
+          emptyIcon={emptyIcon}
+          emptyState={emptyState}
+          rowClassName={rowClassName}
+          onRowClick={onRowClick}
+          onRowMouseEnter={onRowMouseEnter}
+          getRowHref={getRowHref}
+          getRowAriaLabel={getRowAriaLabel}
+          renderedFooter={renderedFooter}
+          showFooter={showFooter}
+        />
       )}
 
       {!isError && pagination && (
@@ -183,6 +171,7 @@ function DataTableInner<T>({
     </div>
   );
 }
+
 
 /**
  * DataTable — tabla genérica del ERP. API única: `ColumnDef<T, unknown>[]`.
