@@ -74,8 +74,10 @@ const opOf = (k: unknown): string | undefined => {
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (err, query) =>
-      reportQueryError(err, "query", rootOf(query.queryKey), { queryKey: query.queryKey }),
+    onError: (err, query) => {
+      reportQueryError(err, "query", rootOf(query.queryKey), { queryKey: query.queryKey });
+      notifyQueryFailure(err, query);
+    },
   }),
   mutationCache: new MutationCache({
     onError: (err, _vars, _ctx, mutation) =>
