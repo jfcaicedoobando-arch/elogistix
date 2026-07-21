@@ -28,6 +28,7 @@ interface RunSubmitParams {
   userId: string | undefined;
   organizationId: string | null;
   pendingCfdi: PendingCfdi | null;
+  cfdiConceptos: ReadonlyArray<CfdiConceptoParsed>;
   vinculos: Record<string, VinculoLinea>;
   embarqueAdHoc: EmbarqueSeleccionado | null;
   crearMutateAsync: (payload: ReturnType<typeof buildPayload>) => Promise<{ id?: string } | null | undefined>;
@@ -57,6 +58,9 @@ export async function runSubmit(p: RunSubmitParams): Promise<boolean> {
     let sideResult = {};
     if (created?.id) {
       await uploadCfdiSafe({ facturaId: created.id, organizationId: p.organizationId, pendingCfdi: p.pendingCfdi });
+      await persistirConceptosCfdiSafe({
+        facturaId: created.id, organizationId: p.organizationId, conceptos: p.cfdiConceptos,
+      });
       sideResult = await vincularSafe({
         facturaId: created.id, organizationId: p.organizationId,
         values: p.values, total: p.total, vinculos: p.vinculos, embarqueAdHoc: p.embarqueAdHoc,
