@@ -87,15 +87,3 @@ export async function cancelarAnticipo(id: string, motivo: string): Promise<Anti
   // SAFE-CAST: RPC devuelve fila de anticipos_proveedor (validado por schema DB).
   return data as unknown as Anticipo;
 }
-
-export async function listAnticiposPorProveedor(proveedorId: string): Promise<Anticipo[]> {
-  assertUuid(proveedorId, "INVALID_ID");
-  const { data, error } = await supabase
-    .from("anticipos_proveedor")
-    .select("*")
-    .eq("proveedor_id", proveedorId)
-    .is("deleted_at", null)
-    .order("fecha_anticipo", { ascending: false });
-  if (error) throw mapApiError(error);
-  return (data ?? []) as Anticipo[];
-}
