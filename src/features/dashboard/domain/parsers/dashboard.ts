@@ -36,7 +36,7 @@ export function parseConteoPorEstado(stats: DashboardStats): Record<EstadoFiltro
   return {
     Confirmado: Number(raw["Confirmado"] ?? 0),
     "En Tránsito": Number(raw["En Tránsito"] ?? 0),
-    "En Proceso": Number(raw["En Proceso"] ?? 0),
+    // v13.303.41 — `En Proceso` fue removido del filtro visual del dashboard.
     Arribo: Number(raw["Arribo"] ?? 0) + Number(raw["Llegada"] ?? 0),
     "En Aduana": Number(raw["En Aduana"] ?? 0),
     Entregado: Number(raw["Entregado"] ?? 0),
