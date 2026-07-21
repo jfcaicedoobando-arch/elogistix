@@ -2217,6 +2217,7 @@ export type Database = {
         Row: {
           aceptada_en: string | null
           aceptada_por: string | null
+          agente_id: string | null
           carta_garantia: boolean
           cliente_id: string | null
           cliente_nombre: string
@@ -2256,6 +2257,7 @@ export type Database = {
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda: Database["public"]["Enums"]["moneda"]
           msds_archivo: string | null
+          naviera_id: string | null
           notas: string | null
           num_contenedores: number
           operador: string
@@ -2302,6 +2304,7 @@ export type Database = {
         Insert: {
           aceptada_en?: string | null
           aceptada_por?: string | null
+          agente_id?: string | null
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
@@ -2341,6 +2344,7 @@ export type Database = {
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
           msds_archivo?: string | null
+          naviera_id?: string | null
           notas?: string | null
           num_contenedores?: number
           operador?: string
@@ -2387,6 +2391,7 @@ export type Database = {
         Update: {
           aceptada_en?: string | null
           aceptada_por?: string | null
+          agente_id?: string | null
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
@@ -2426,6 +2431,7 @@ export type Database = {
           modo?: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
           msds_archivo?: string | null
+          naviera_id?: string | null
           notas?: string | null
           num_contenedores?: number
           operador?: string
@@ -2471,6 +2477,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "cotizaciones_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_agentes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cotizaciones_cliente_id_fkey"
             columns: ["cliente_id"]
             isOneToOne: false
@@ -2496,6 +2509,13 @@ export type Database = {
             columns: ["lcl_consolidador_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
             referencedColumns: ["id"]
           },
           {
@@ -3489,6 +3509,7 @@ export type Database = {
           aeropuerto_destino: string | null
           aeropuerto_origen: string | null
           agente: string | null
+          agente_id: string | null
           bl_house: string | null
           bl_master: string | null
           carta_garantia: boolean
@@ -3529,6 +3550,7 @@ export type Database = {
           modo: Database["public"]["Enums"]["modo_transporte"]
           msds_archivo: string | null
           naviera: string | null
+          naviera_id: string | null
           notas: string | null
           operador: string
           organization_id: string
@@ -3568,6 +3590,7 @@ export type Database = {
           aeropuerto_destino?: string | null
           aeropuerto_origen?: string | null
           agente?: string | null
+          agente_id?: string | null
           bl_house?: string | null
           bl_master?: string | null
           carta_garantia?: boolean
@@ -3608,6 +3631,7 @@ export type Database = {
           modo: Database["public"]["Enums"]["modo_transporte"]
           msds_archivo?: string | null
           naviera?: string | null
+          naviera_id?: string | null
           notas?: string | null
           operador?: string
           organization_id?: string
@@ -3647,6 +3671,7 @@ export type Database = {
           aeropuerto_destino?: string | null
           aeropuerto_origen?: string | null
           agente?: string | null
+          agente_id?: string | null
           bl_house?: string | null
           bl_master?: string | null
           carta_garantia?: boolean
@@ -3687,6 +3712,7 @@ export type Database = {
           modo?: Database["public"]["Enums"]["modo_transporte"]
           msds_archivo?: string | null
           naviera?: string | null
+          naviera_id?: string | null
           notas?: string | null
           operador?: string
           organization_id?: string
@@ -3723,6 +3749,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "embarques_agente_id_fkey"
+            columns: ["agente_id"]
+            isOneToOne: false
+            referencedRelation: "costeo_agentes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "embarques_cliente_id_fkey"
             columns: ["cliente_id"]
             isOneToOne: false
@@ -3734,6 +3767,13 @@ export type Database = {
             columns: ["cotizacion_id"]
             isOneToOne: false
             referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_naviera_id_fkey"
+            columns: ["naviera_id"]
+            isOneToOne: false
+            referencedRelation: "navieras"
             referencedColumns: ["id"]
           },
           {
