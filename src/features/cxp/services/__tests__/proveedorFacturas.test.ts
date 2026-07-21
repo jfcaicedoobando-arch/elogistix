@@ -120,16 +120,16 @@ describe("proveedorFacturas service", () => {
   });
 
   describe("softDeleteFacturaProveedor", () => {
-    it("actualiza deleted_at y deleted_by", async () => {
-      mock.setTableResult("proveedor_facturas", { data: null, error: null });
+    it("invoca RPC soft_delete_proveedor_factura con id y userId", async () => {
+      mock.setRpcResult("soft_delete_proveedor_factura", { data: null, error: null });
       await softDeleteFacturaProveedor("f1", "u1");
-      const payload = mock.getMutationPayload("proveedor_facturas", "update") as any;
-      expect(payload.deleted_by).toBe("u1");
-      expect(payload.deleted_at).toBeDefined();
+      const call = mock.rpcCalls.find(c => c.fn === "soft_delete_proveedor_factura");
+      expect(call).toBeDefined();
+      expect(call?.args).toMatchObject({ p_factura_id: "f1", p_deleted_by: "u1" });
     });
 
     it("lanza error si falla softDeleteFacturaProveedor", async () => {
-      mock.setTableResult("proveedor_facturas", { data: null, error: { message: "Error delete" } });
+      mock.setRpcResult("soft_delete_proveedor_factura", { data: null, error: { message: "Error delete" } });
       await expect(softDeleteFacturaProveedor("f1", "u1")).rejects.toThrow("Error delete");
     });
   });
