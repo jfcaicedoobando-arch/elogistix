@@ -1,68 +1,75 @@
-## Contexto
+## Objetivo
 
-Ayer arreglamos que las descargas de PDF/XML **desde el detalle de la factura** salieran con nombre descriptivo (`Factura_F975_Cliente_2026-07-21.pdf`) — primero cambiando el edge function `facturapi-descargar` y ayer exponiendo `Content-Disposition` vía CORS.
+Aplicar la dirección **v2 "Card grid estructurada"** al modal `DialogDetallePagosProveedor` sin cambiar datos, RPCs ni comportamiento. Todo es refactor visual y de jerarquía usando tokens semánticos del sistema (`--primary`, `--accent`, `--muted`, etc.), sin hex hardcoded en componentes.
 
-Me pediste revisar que "esto no pase" también en:
-1. Los correos que le mandamos al cliente.
-2. Los XMLs.
+## Cambios por archivo
 
-## Qué revisé
+### 1. `DialogDetallePagosProveedor.tsx`
+- Header: `DialogTitle` en fila con un chip de folio interno (`FP-000037`) monospace pequeño al lado del título. El resto del descriptor (Folio prov. + proveedor) baja a una segunda línea muted.
+- Reemplazar la fila de descripción actual por: título + folio-chip a la izquierda; a la derecha nada (las acciones bajan a la nueva "action bar").
+- Quitar el `border-b` extra entre bloques que crea líneas duplicadas.
 
-| Camino | Estado hoy | Acción |
-|---|---|---|
-| XML descargado desde detalle de factura (ícono ⬇️ XML) | Ya usa `buildFilename(...)` con `ext: "xml"` y ya recibe el fix de CORS `Access-Control-Expose-Headers` de ayer | ✅ Ya cubierto — no hay que tocar nada |
-| Correo enviado por FacturApi (`facturapi-enviar-email`) | FacturApi arma y manda el correo con los adjuntos del lado de ellos; el nombre de los adjuntos lo controla FacturApi | ⚠️ Fuera de nuestro control — no se puede cambiar |
-| Correo branded (`enviar-factura-email`) — el que usa la plantilla `factura-enviada` con links a PDF/XML firmados | ❌ **Gap real**: en `helpers.ts` línea 227–232 firma las URLs con `download: '${orgSlug}_Factura-${safeNumero}.{pdf,xml}'` (patrón viejo, sin cliente ni fecha, y sin distinguir NotaCredito/REP) | 🔧 Alinear al mismo formato |
+### 2. `DialogDetallePagosProveedor.sections.tsx` → `FacturaToolbar`
+- Convertirse en una **Status & Primary Action Bar**: fondo `bg-accent/5`, `border-b border-accent/10`.
+- Izquierda: dot + label del estado de aprobación ("Pendiente", "Aprobada", "Rechazada", "Cancelada") con color por tono (warning/success/destructive/muted) — reemplaza al chip suelto que hoy vive dentro de `BotonesAprobacionFactura`.
+- Derecha: acción **primaria contextual** según flags:
+  - `pendiente` → `Aprobar` (primary) + `Rechazar` (soft destructive outline).
+  - `aprobada` con saldo > 0 → `Registrar pago` (primary).
+  - `aprobada` sin saldo o `pagada` → botón oculto, sólo estado.
+- Acciones secundarias (`Editar`, `Cerrar sin pago`) van a un menú `⋯` overflow al final de la barra.
+- **Eliminar factura** y **Cancelar factura** dejan de ser botones destacados: van dentro del overflow menu con separador y estilo destructivo discreto. Se elimina la duplicación actual ("Cancelar factura" aparece hoy dos veces: en toolbar-área y dentro de `InfoFacturaSection`).
 
-Analogía: los archivos que el cliente descarga desde el detalle de la app ya llevan etiqueta clara; los que descarga desde el link del correo todavía llevan la etiqueta vieja de FedEx.
+### 3. `FacturaResumen` → nueva grilla de KPIs
+- Grid `grid-cols-2 md:grid-cols-4 gap-3`, cada Kpi con `border border-border rounded-lg p-4 bg-card`.
+- Aplicar `ring-2 ring-accent/20` al KPI dominante según estado:
+  - Saldo > 0 → resalta **Saldo pendiente**.
+  - Saldo = 0 → resalta **Total pagado**.
+- Ajustar `Kpi` (en `.parts.tsx`) para aceptar prop `emphasis?: boolean`.
+- Quitar el bloque anterior "aprobación separado + KPIs" (la aprobación ya vive en la action bar).
 
-## Cambios propuestos
+### 4. `InfoFacturaSection.tsx`
+- Título "Información de la factura" con `border-b` fino y sin el botón "Cancelar factura" a la derecha (esa acción migra al overflow del toolbar).
+- Grid `grid-cols-3 gap-y-4 gap-x-8 text-sm` con labels `text-xs text-muted-foreground` y valores `font-semibold`.
+- Mover **CFDI adjuntos** y **Programación de pago** a una fila `grid-cols-2 gap-6` DEBAJO del bloque de información, no dentro del mismo card.
+- Notas: card con `bg-muted/30` y texto sm; sólo se muestra si existe (ya lo hace).
+- `AdjuntoRow` compacto: badge XML/PDF (colores `bg-accent/10 text-accent` para XML, `bg-destructive/10 text-destructive` para PDF), nombre truncado, ícono de descarga a la derecha en hover.
 
-### 1) `supabase/functions/enviar-factura-email/helpers.ts`
+### 5. `HistorialFacturaSection.tsx`
+- Convertir la sección a un colapsable cerrado por default: header con ícono reloj + "Historial de movimientos" + chevron. Al abrir muestra timeline vertical existente.
+- Reducir densidad (líneas más apretadas, timestamp mono `text-xs text-muted-foreground`).
 
-En `prepareAttachments(...)`:
-- Importar el helper compartido `buildFilename` de `../_shared/facturaFilename.ts` (ya existe, ya tiene tests Deno).
-- Reemplazar la línea que arma el nombre a descargar:
+### 6. Footer
+- Mantener `Cerrar` a la derecha. Retirar cualquier acción destructiva del footer (ya no hay).
 
-```ts
-// antes
-signUrl(admin, pdfPath, `${orgSlug}_Factura-${safeNumero}.pdf`)
-signUrl(admin, xmlPath, `${orgSlug}_Factura-${safeNumero}.xml`)
+## Diseño visual (tokens)
 
-// después
-const folioSerie = factura.numero || `${factura.serie ?? ""}${factura.folio_fiscal ?? ""}`;
-signUrl(admin, pdfPath, buildFilename({
-  tipo: "Factura",
-  folioSerie,
-  cliente: factura.cliente_nombre,
-  fecha: factura.fecha_emision,
-  ext: "pdf",
-}))
-signUrl(admin, xmlPath, buildFilename({ ... ext: "xml" }))
-```
+- Fondos: header modal `bg-muted/30`, action bar `bg-accent/5`, KPIs `bg-card`, sección info `bg-background`, notas `bg-muted/30`.
+- Bordes: `border-border` con `rounded-lg` en KPIs y adjuntos.
+- Estado dots: `bg-warning` (pendiente), `bg-success` (aprobada), `bg-destructive` (rechazada/cancelada), `bg-muted-foreground` (borrador).
+- Tipografía: título `text-lg font-bold text-primary`, section headings `text-xs font-bold uppercase tracking-wide text-primary`, labels `text-xs text-muted-foreground`, valores `text-sm font-semibold text-foreground`, montos con `tabular-nums`.
+- Sin hex crudos en el TSX; todo vía tokens Tailwind ya definidos.
 
-- Quitar la función local `sanitizeDownloadFilename` (queda muerta) si no la usa otro sitio; si sí, dejarla.
-- `orgSlug` deja de ser prefijo del filename, pero se sigue usando en `basePath` del bucket (privado), así que se conserva la carga de `fetchOrgSlug`.
+## Verificación
 
-### 2) Tests
-
-- Añadir un caso Deno en `helpers_test.ts` (si existe) que verifique que la URL firmada se pide con `download` = `Factura_F975_Cliente_Acme_2026-07-21.pdf` para un input controlado.
-- El helper `buildFilename` ya tiene coverage propio, no se duplica.
-
-### 3) Sin cambios
-
-- `facturapi-descargar` — ya correcto (fix de ayer).
-- `facturapi-enviar-email` — FacturApi controla los adjuntos.
-- Plantilla de correo `factura-enviada` — sigue apuntando a `pdf_link` y `xml_link`; sólo cambia lo que el navegador guarda al hacer clic, no el link.
-- Bucket `facturas-pdf` — sin cambios en policies ni en la ruta interna.
-
-### 4) Versionado
-
-- `APP_VERSION` → `13.303.93`.
-- Entrada en `CHANGELOG.md` explicando que los links del correo branded ahora descargan con el mismo nombre descriptivo que el detalle.
+1. `bunx vitest run src/lib/__tests__/architecture-baseline.test.ts` — asegurar que los archivos siguen ≤ 200 líneas.
+2. Playwright headless a 1920×1080 abriendo dos facturas (una `pendiente` y una `aprobada con saldo`), screenshot y comparar contra el prototipo v2.
+3. `bun run lint -- --max-warnings 0`.
 
 ## Notas técnicas
 
-- El `download` de `createSignedUrl` mete el nombre en el `Content-Disposition` del response de Supabase Storage — ahí no hay problema de CORS porque el navegador navega directo al link (no es fetch cross-origin desde JS).
-- `numero` en `facturas` suele venir tipo `F975`; si viene vacío, `serie + folio_fiscal` es fallback razonable (mismo criterio que `resolveFromFactura` en `facturapi-descargar`).
-- Notas de crédito y REPs branded: hoy `enviar-factura-email` sólo maneja factura completa (no NC ni REP branded), así que no hay más callsites por migrar.
+- No se toca `useFacturaProveedor`, `usePagosProveedor`, `usePermissions`, ni ninguna RPC.
+- El chip de estado de aprobación se extrae de `BotonesAprobacionFactura` a un helper `EstadoAprobacionDot` reusable (nuevo archivo `EstadoAprobacionDot.tsx` ~40 líneas) para que `BotonesAprobacionFactura` siga siendo la única entrada a `aprobar_factura_proveedor` RPC.
+- El overflow `⋯` usa `DropdownMenu` de shadcn ya existente.
+- Bump `APP_VERSION` a `13.303.94` y entrada en `CHANGELOG.md`.
+
+## Archivos tocados
+
+- `src/features/cxp/components/DialogDetallePagosProveedor.tsx`
+- `src/features/cxp/components/DialogDetallePagosProveedor.sections.tsx`
+- `src/features/cxp/components/DialogDetallePagosProveedor.parts.tsx`
+- `src/features/cxp/components/InfoFacturaSection.tsx`
+- `src/features/cxp/components/InfoFacturaSection.parts.tsx`
+- `src/features/cxp/components/HistorialFacturaSection.tsx`
+- `src/features/cxp/components/BotonesAprobacionFactura.tsx` (extraer chip)
+- Nuevo: `src/features/cxp/components/EstadoAprobacionDot.tsx`
+- `src/lib/appVersion.ts` + `CHANGELOG.md`
