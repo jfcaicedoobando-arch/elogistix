@@ -78,13 +78,10 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
           totales={c.totales}
           tasaIva={c.tasaIva}
           notas={c.notas}
-          diasCredito={c.diasCredito}
-          operadorEmbarque={embarque.operador}
           onToggle={c.toggle}
           onToggleAll={c.toggleAll}
           onToggleIva={c.toggleIva}
           onNotasChange={c.setNotas}
-          onDiasCreditoChange={c.setDiasCredito}
         />
       ) : (
         <PasoConfirmacionProforma
@@ -93,10 +90,9 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
           totales={c.totales}
           tasaIva={c.tasaIva}
           notas={c.notas}
-          diasCredito={c.diasCredito}
-          operadorEmbarque={embarque.operador}
         />
       )}
+
     </FormDialogShell>
   );
 }
