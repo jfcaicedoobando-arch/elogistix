@@ -1,25 +1,53 @@
 ## Objetivo
+Dejar de reservar folio (`expediente`, tipo `ELIMP00335`) cuando se crea un **borrador** de embarque desde una cotización. El folio se reserva únicamente cuando el borrador avanza a **Confirmado**. Así ya no se queman consecutivos en borradores que nunca se materializan.
 
-Ocultar el estado **"En Proceso"** de las tarjetas y conteos del dashboard, sin eliminarlo de la base de datos ni de la máquina de estados (sigue siendo un estado válido lateral en BD).
+## Cambios en base de datos
 
-## Cambios
+1. **`crear_embarque_borrador_core` (RPC)** — quitar la llamada a `public.generar_expediente(...)` y guardar `expediente = NULL` en el `INSERT` de `public.embarques`. Ajustar el mensaje de bitácora para decir `"Se generó un borrador de embarque desde la cotización <folio_cot>"` (sin expediente).
 
-1. **`src/features/dashboard/domain/parsers/dashboardTypes.ts`**
-   - Redefinir `ESTADOS_FILTRO` para excluir `"En Proceso"` (dejar sólo `Confirmado`, `En Tránsito`, `Arribo`, `En Aduana`, `Entregado`, `EIR`).
-   - Quitar la clave `"En Proceso": 0` de `EMPTY_CONTEO`.
+2. **`avanzar_estado_embarque` (RPC)** — cuando la transición sea `Borrador → Confirmado` y el embarque tenga `expediente IS NULL`, reservar el folio con `public.generar_expediente(tipo)` dentro de la misma transacción, actualizar `embarques.expediente` y registrarlo en la nota/evento. Idempotente vía el `p_request_id` existente.
 
-2. **`src/features/dashboard/domain/parsers/dashboard.ts`**
-   - En `parseConteoPorEstado`, eliminar la línea `"En Proceso": Number(raw["En Proceso"] ?? 0)`. Los embarques en ese estado siguen existiendo pero no aparecen en la timeline del dashboard.
+3. **`embarques.expediente`** — permitir `NULL` (verificar la columna; si tiene `NOT NULL`, migrar a nullable). Mantener el `UNIQUE (organization_id, expediente)` — Postgres ya permite múltiples `NULL` en un índice único.
 
-3. **Tests**
-   - `src/features/dashboard/domain/parsers/__tests__/dashboard.test.ts` y `src/features/dashboard/hooks/__tests__/useDashboardController.test.tsx`: quitar la clave `"En Proceso"` de los fixtures del conteo esperado.
+4. **`eliminar_embarque_completo`** — sin cambios estructurales; sigue funcionando con `expediente NULL`.
 
-4. **Changelog + versión**
-   - Bump `APP_VERSION` a `v13.303.41`.
-   - Entrada en `CHANGELOG.md` explicando que "En Proceso" ya no se muestra en el dashboard (sigue vivo en BD como estado lateral; el botón "Avanzar estado" en el detalle del embarque lo sigue moviendo a Arribo).
+## Cambios en frontend
 
-## Fuera de alcance
+Los borradores tienen que ser identificables aunque no tengan folio. Se define un **label derivado**:
 
-- No se toca la máquina de estados de BD ni las transiciones.
-- No se modifican `ESTADOS_ACTIVOS` (que se usa en otros módulos como Operaciones), sólo el filtro visual del dashboard.
-- No se hace migración de datos: los embarques que hoy están "En Proceso" seguirán allí; simplemente no se contarán en la timeline del dashboard hasta que avancen a Arribo.
+```text
+expediente ?? `Borrador ${embarque.id.slice(0, 8)}`
+```
+
+Puntos a tocar (todos consumen el mismo helper nuevo `labelExpediente(embarque)` en `src/features/embarques/domain/labelExpediente.ts`):
+
+- `src/features/embarques/services/columns.ts` — columna "Expediente" de la tabla.
+- `src/features/embarques/hooks/useEditarEmbarqueWizard.ts` — toast `"<expediente> guardado correctamente"`.
+- `src/features/embarques/hooks/useNuevoEmbarqueWizard.ts` y `useNuevoEmbarqueExpediente.ts` — encabezados/toasts.
+- `src/features/embarques/services/bitacoraEmbarque.ts`, `dashboardOperador.ts`, `tracking/*`, `documentos.ts` — cualquier plantilla de texto que hoy asuma `expediente` no-nulo.
+- Detalle de embarque (breadcrumb/título) — mostrar `"Borrador — sin folio"` cuando aplique, y un badge sutil `"Folio pendiente"`.
+- Búsqueda global (`buscar_global` RPC) — ya filtra por `folio`/`expediente`; verificar que no se rompe con `NULL` (`ILIKE` sobre `NULL` da falso, es seguro).
+
+## Tests
+
+- **Unit / RPC:** nueva prueba en `supabase/tests` (o el equivalente de vitest sobre mocks) verificando:
+  - `crear_embarque_borrador_core` produce `expediente = NULL`.
+  - `avanzar_estado_embarque` con `estado_nuevo = 'Confirmado'` sobre un borrador sin folio asigna un `expediente` no nulo y consecutivo.
+  - Segunda invocación con mismo `p_request_id` no reserva un segundo folio (idempotencia).
+- **Regression E2E (Playwright):** `quote-to-shipment.spec.ts` — crear borrador → verificar UI muestra "Borrador — sin folio" → avanzar a Confirmado → verificar folio `ELIMP…` aparece.
+- **Guardrail:** test que asegura que dos borradores creados en secuencia y luego confirmados en orden inverso reciben folios en el orden en que se confirman (no en el que se crearon).
+
+## Bitácora y notas
+- Al crear borrador: `"Borrador creado desde cotización COT-2026-XXXX"` (sin expediente).
+- Al confirmar: `"Folio ELIMP00XXX asignado al confirmar el embarque"`.
+
+## Migración de datos existentes
+No se toca lo ya creado. Los borradores actuales conservan su `expediente` reservado. La nueva política solo aplica a borradores creados a partir del despliegue.
+
+## Versionado
+`APP_VERSION` → `13.303.42`. Entrada en `CHANGELOG.md` describiendo la nueva política de reserva de folio.
+
+## Riesgos y notas
+- **Búsqueda / links directos:** cualquier lugar que resuelva un embarque por `expediente` seguirá funcionando; solo hay que evitar que la UI intente copiar/compartir folio cuando aún no existe (se oculta el botón "Copiar folio" en borradores).
+- **Reportes y exports:** columnas de expediente mostrarán `—` en borradores; ya se maneja en el helper `labelExpediente`.
+- **No aplica al modo "crear embarque libre"** porque ya fue eliminado en v13.303.26 (tarifa-first).
