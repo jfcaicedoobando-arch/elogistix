@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.303.80] - 2026-07-21
+- **Modal Generar Proforma sin campos duplicados.** Se retiran del wizard los campos "Días de crédito" (input editable) y "Ejecutivo de Operaciones" (display readonly): ahora se leen únicamente de la fuente de verdad — `clientes.dias_credito` vía `useDiasCreditoCliente` y `embarques.operador` — y se aplican de forma automática al generar la proforma. El controller ya no expone `setDiasCredito`; `diasCredito` es un valor derivado. La confirmación también deja de mostrarlos (viven en el expediente del cliente y del embarque). Analogía: como el nombre del cliente en una factura, no lo tecleas cada vez — se hereda del expediente.
+
 ## [13.303.79] - 2026-07-21
+
 - **Fase S.4 · API estricta de conversión cotización→embarque.** Nuevo wrapper `crearEmbarqueBorradorConDecision({cotizacionId, decision, tarifaAplicada?, delta?})` que exige la `decision` de revalidación explícita (`sin_cambios` | `refrescada` | `mantenida_por_operaciones` | `sustituida` | `reaprobada_ventas`). Delega a la RPC 1-arg cuando `decision='sin_cambios'` (la BD refuerza que la tarifa realmente no cambió) y a la RPC 4-arg cuando la decisión registra bitácora de revalidación. El wrapper antiguo `crearEmbarqueBorradorDesdeCotizacion(cotizacionId)` queda como `@deprecated` y delega al nuevo con `decision='sin_cambios'` para no romper llamadores existentes. Cierra la deuda de la Fase R.7.
 
 ## [13.303.78] - 2026-07-21
