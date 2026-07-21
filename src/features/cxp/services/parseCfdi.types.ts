@@ -12,7 +12,7 @@ export interface CfdiParsedResponse {
     folio: string;
     fecha: string;
     moneda: string;
-    tipo_cambio: number;
+    tipo_cambio: number | null; // FIX-11: null cuando el CFDI USD/EUR no trae TC.
     subtotal: number;
     total: number;
     iva_trasladado: number;
