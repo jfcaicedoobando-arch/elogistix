@@ -76,10 +76,12 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname }: Props) {
                   >
                     <NavLink
                       to={item.url}
-                      end={item.url === "/"}
+                      end={item.url === "/" || items.some((other) => other !== item && other.url.startsWith(`${item.url}/`))}
                       onClick={handleNavigate}
-                      className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
-                      activeClassName="bg-sidebar-accent/10 text-sidebar-foreground font-semibold"
+                      className={cn(
+                        "hover:bg-sidebar-accent/10 hover:text-sidebar-foreground",
+                        active && "bg-sidebar-accent/10 text-sidebar-foreground font-semibold",
+                      )}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
