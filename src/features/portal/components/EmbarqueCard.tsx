@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getEstadoColor, getEstadoBorderColor, getModoCircleStyle, getModoLucideIcon } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { MapPin, CalendarClock } from "lucide-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export interface EmbarqueCardData {
   id: string;
-  expediente: string;
+  expediente: string | null;
   modo: string;
   tipo: string;
   estado: string;
@@ -56,7 +57,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
   const etaCls = etaProximityClass(e.eta);
   const rowNav = useDrilldownRow({
     href: `/portal/embarques/${e.id}`,
-    ariaLabel: `Ver embarque ${e.expediente}`,
+    ariaLabel: `Ver embarque ${labelExpediente(e.expediente, e.id)}`,
   });
 
   return (
@@ -69,7 +70,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
                 {(() => { const Icon = getModoLucideIcon(e.modo); return <Icon className="h-5 w-5" />; })()}
               </div>
               <p className="font-semibold text-sm truncate font-mono tabular-nums">
-                {e.expediente}{e.contenedor ? ` — ${e.contenedor}` : ""}
+                {labelExpediente(e.expediente, e.id)}{e.contenedor ? ` — ${e.contenedor}` : ""}
               </p>
             </div>
             <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 text-xs px-2.5 py-0.5`}>

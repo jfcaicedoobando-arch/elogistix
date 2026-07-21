@@ -4,7 +4,7 @@ import { formatDate, formatCurrency, shortName, getOrigen, getDestino } from "@/
 
 export type EmbarqueCliente = {
   id: string;
-  expediente: string;
+  expediente: string | null;
   modo: string;
   estado: string;
   etd: string | null;

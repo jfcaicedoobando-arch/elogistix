@@ -8,6 +8,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate } from "@/lib/formatters";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 
 function etaProximityClass(eta: string | null | undefined): string {
@@ -25,7 +26,7 @@ function etaProximityClass(eta: string | null | undefined): string {
 
 interface ArriboItem {
   id: string;
-  expediente: string;
+  expediente: string | null;
   modo: string;
   eta?: string | null;
   puerto_destino?: string | null;
@@ -71,7 +72,7 @@ export function PortalProximosArribosCard({ items }: Props) {
 function ArriboRow({ e }: { e: ArriboItem }) {
   const nav = useDrilldownRow({
     href: `/portal/embarques/${e.id}`,
-    ariaLabel: `Ver embarque ${e.expediente}`,
+    ariaLabel: `Ver embarque ${labelExpediente(e.expediente, e.id)}`,
   });
   return (
     <div
@@ -81,7 +82,7 @@ function ArriboRow({ e }: { e: ArriboItem }) {
       <div className="flex items-center gap-3 min-w-0">
         <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
         <div className="min-w-0">
-          <p className="font-medium text-sm truncate font-mono tabular-nums">{e.expediente}</p>
+          <p className="font-medium text-sm truncate font-mono tabular-nums">{labelExpediente(e.expediente, e.id)}</p>
           <p className="text-xs text-muted-foreground truncate">
             {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
           </p>

@@ -98,7 +98,7 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     embarqueId: embarque.id,
     clienteId: embarque.cliente_id,
     clienteNombre: embarque.cliente_nombre,
-    expediente: embarque.expediente,
+    expediente: embarque.expediente ?? "",
     blMaster: embarque.bl_master,
     conceptoIds: Array.from(seleccionados),
     totales,

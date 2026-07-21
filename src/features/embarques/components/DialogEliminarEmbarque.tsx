@@ -9,6 +9,7 @@ import {
   type EmbarqueRow,
 } from "@/features/embarques/hooks";
 import { EmbarqueBloqueadoError, type MotivosBloqueoEmbarque } from "@/features/embarques/services";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
@@ -64,6 +65,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
   const depsBloqueado: EmbarqueDependenciasFinancieras | null =
     bloqueoServidor !== null ? motivosADependencias(bloqueoServidor) : deps ?? null;
 
+  const label = labelExpediente(embarque.expediente, embarque.id);
   const handleEliminar = async () => {
     const res = await ejecutarEliminacion(embarque.id, (id) => eliminarEmbarque.mutateAsync(id));
     if (res.tipo === "ok") {
@@ -71,12 +73,12 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
         accion: 'eliminar',
         modulo: 'embarques',
         entidad_id: embarque.id,
-        entidad_nombre: embarque.expediente,
+        entidad_nombre: label,
         detalles: { cliente: embarque.cliente_nombre, modo: embarque.modo, tipo: embarque.tipo },
       });
       notifySuccess(toast, {
         title: "Embarque eliminado",
-        description: `${embarque.expediente} fue eliminado permanentemente.`,
+        description: `${label} fue eliminado permanentemente.`,
       });
       navigate("/embarques");
       onOpenChange(false);
@@ -99,7 +101,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
     return (
       <DialogEmbarqueBloqueadoAlert
         open={open}
-        expediente={embarque.expediente}
+        expediente={label}
         deps={depsBloqueado}
         onClose={() => { setBloqueoServidor(null); onOpenChange(false); }}
       />
@@ -127,13 +129,13 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
         if (!v) setDependenciasVerificadas(false);
         onOpenChange(v);
       }}
-      entityName={`embarque ${embarque.expediente}`}
+      entityName={`embarque ${label}`}
       description={
         <p>¿Estás seguro de que deseas eliminar este embarque? Esta acción no se puede deshacer.</p>
       }
       finalDescription={
         <>
-          Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente todos los documentos, costos, conceptos de venta y notas asociados al embarque <strong>{embarque.expediente}</strong>.
+          Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente todos los documentos, costos, conceptos de venta y notas asociados al embarque <strong>{label}</strong>.
         </>
       }
       isPending={eliminarEmbarque.isPending}

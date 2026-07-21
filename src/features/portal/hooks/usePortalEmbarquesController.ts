@@ -8,7 +8,7 @@ type EmbarqueRow = ReturnType<typeof usePortalEmbarques>["data"] extends Readonl
 function embarqueMatchesSearch(e: EmbarqueRow, estadoVisual: string, q: string): boolean {
   const ruta = `${e.puerto_origen || ""} ${e.puerto_destino || ""} ${e.aeropuerto_origen || ""} ${e.aeropuerto_destino || ""} ${e.ciudad_origen || ""} ${e.ciudad_destino || ""}`.toLowerCase();
   return (
-    e.expediente.toLowerCase().includes(q) ||
+    (e.expediente ?? "").toLowerCase().includes(q) ||
     e.cliente_nombre.toLowerCase().includes(q) ||
     ruta.includes(q) ||
     estadoVisual.toLowerCase().includes(q) ||

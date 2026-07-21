@@ -38,7 +38,7 @@ export type EmbarqueProp = ResumenProps["embarque"]
   & FacturacionProps["embarque"]
   & TrackingProps["embarque"]
   & {
-    expediente: string;
+    expediente: string | null;
     modo: string;
     created_by_email?: string | null;
     created_at: string;

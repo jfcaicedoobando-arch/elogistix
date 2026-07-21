@@ -14,6 +14,7 @@ import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFa
 import { useValidacionCierre } from "@/features/embarques/hooks/useCierreEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import { useEffect, useState, useCallback } from "react";
 import {
   getSiguienteEstado,
@@ -98,7 +99,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: siguiente, usuarioEmail });
       registrarActividad.mutate({
         accion: 'cambiar_estado', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: embarque.expediente,
+        entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
         detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
       });
       notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
@@ -162,7 +163,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       await reabrirEmbarque.mutateAsync({ embarqueId: id, usuarioEmail });
       registrarActividad.mutate({
         accion: 'reabrir_embarque', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: embarque.expediente,
+        entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
         detalles: { estado_anterior: 'Cerrado', estado_nuevo: 'Entregado' },
       });
       notifySuccess(toast, { title: "Embarque reabierto", description: "Ahora puedes generar la proforma o ajustar facturación." });

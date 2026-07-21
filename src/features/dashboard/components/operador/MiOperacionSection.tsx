@@ -83,7 +83,7 @@ export const MiOperacionSection = memo(function MiOperacionSection({
               onClick={() => navigate(`/embarques/${d.id}`)}
               badge={`${d.pendientes}`}
               badgeClass="bg-destructive"
-              title={d.expediente}
+              title={d.expediente ?? "Sin folio"}
               subtitle={toTitleCase(d.cliente_nombre)}
             />
           ))}

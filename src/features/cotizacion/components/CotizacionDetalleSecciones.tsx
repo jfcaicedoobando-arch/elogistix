@@ -14,7 +14,7 @@ import { CrearEmbarqueConRevalidacion } from "@/features/cotizacion/components/r
 
 interface EmbarqueVinculado {
   id: string;
-  expediente: string;
+  expediente: string | null;
   estado: string;
   created_at: string;
 }

@@ -18,7 +18,7 @@ import { ESTADOS_ACTIVOS } from "@/features/embarques/constants/embarqueConstant
 
 export interface OperadorEmbarqueLite {
   id: string;
-  expediente: string;
+  expediente: string | null;
   cliente_nombre: string;
   estado: string;
   eta: string | null;

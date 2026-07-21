@@ -26,6 +26,7 @@ export async function fetchExpedientesCliente(
   if (error) throw error;
   const map = new Map<string, ExpedienteCliente>();
   for (const row of data ?? []) {
+    if (!row.expediente) continue;
     const existing = map.get(row.expediente);
     if (existing) {
       existing.total_embarques++;

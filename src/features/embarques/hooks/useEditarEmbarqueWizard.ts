@@ -13,6 +13,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import {
   useConceptosForm,
   useCotizacion,
@@ -142,7 +143,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
         accion: 'editar',
         modulo: 'embarques',
         entidad_id: id,
-        entidad_nombre: embarque.expediente,
+        entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
         detalles: buildBitacoraDetallesEdit({
           clienteNombre: selectedCliente?.nombre ?? '',
           modo: v.modo,
@@ -153,7 +154,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
         }),
       });
 
-      notifySuccess(toast, { title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
+      notifySuccess(toast, { title: "Embarque actualizado", description: `${labelExpediente(embarque.expediente, embarque.id)} guardado correctamente.` });
       navigate(`/embarques/${id}`);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al actualizar", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE" });
