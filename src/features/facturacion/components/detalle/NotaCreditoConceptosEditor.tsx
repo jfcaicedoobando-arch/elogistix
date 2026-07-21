@@ -5,6 +5,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
 import type { ConceptoNotaCredito } from "@/features/facturacion/services/notasCredito";
 
@@ -41,16 +42,22 @@ export function NotaCreditoConceptosEditor(props: Props) {
             </div>
             <div className="col-span-3 sm:col-span-2 space-y-1">
               <Label className="text-xs">Cant.</Label>
-              <Input
-                type="number" min="0.01" step="0.01" value={c.cantidad}
-                onChange={(e) => onUpdate(i, { cantidad: Number(e.target.value) })}
+              <NumericInput
+                aria-label="Cantidad"
+                decimals
+                value={c.cantidad || 0}
+                onChange={(n) => onUpdate(i, { cantidad: n })}
+                className="h-10"
               />
             </div>
             <div className="col-span-5 sm:col-span-2 space-y-1">
               <Label className="text-xs">P. Unitario</Label>
-              <Input
-                type="number" min="0" step="0.01" value={c.precio_unitario}
-                onChange={(e) => onUpdate(i, { precio_unitario: Number(e.target.value) })}
+              <NumericInput
+                aria-label="Precio unitario"
+                decimals
+                value={c.precio_unitario || 0}
+                onChange={(n) => onUpdate(i, { precio_unitario: n })}
+                className="h-10"
               />
             </div>
             <div className="col-span-3 sm:col-span-2 space-y-1">

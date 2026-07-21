@@ -35,6 +35,8 @@ export function addDays(iso: string, days: number): string {
   const [y, m, d] = iso.split("-").map(Number);
   const utc = new Date(Date.UTC(y, m - 1, d));
   if (Number.isNaN(utc.getTime())) return "";
+  // La regex acepta "2026-13-40"; validamos que Date no haya rodado el mes/día.
+  if (utc.getUTCFullYear() !== y || utc.getUTCMonth() !== m - 1 || utc.getUTCDate() !== d) return "";
   utc.setUTCDate(utc.getUTCDate() + days);
   return utc.toISOString().slice(0, 10);
 }

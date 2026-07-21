@@ -6,6 +6,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/shared/NumericInput";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -80,18 +81,21 @@ export function FacturaManualConceptosTable({ conceptos, moneda, tasaIva, onChan
             </div>
             <div className="col-span-1">
               <Label className="text-xs">Cant.</Label>
-              <Input
-                type="number" min={1}
-                value={c.cantidad}
-                onChange={(e) => update(idx, { cantidad: Number(e.target.value) || 1 })}
+              <NumericInput
+                aria-label="Cantidad"
+                value={c.cantidad || 0}
+                onChange={(n) => update(idx, { cantidad: n || 1 })}
+                className="h-10"
               />
             </div>
             <div className="col-span-2">
               <Label className="text-xs">P. unitario</Label>
-              <Input
-                type="number" step="0.01" min={0}
-                value={c.precio_unitario}
-                onChange={(e) => update(idx, { precio_unitario: Number(e.target.value) || 0 })}
+              <NumericInput
+                aria-label="Precio unitario"
+                decimals
+                value={c.precio_unitario || 0}
+                onChange={(n) => update(idx, { precio_unitario: n })}
+                className="h-10"
               />
             </div>
             <div className="col-span-2">
