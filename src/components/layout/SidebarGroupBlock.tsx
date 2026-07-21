@@ -30,9 +30,9 @@ interface Props {
   pathname: string;
 }
 
-function isActive(pathname: string, path: string): boolean {
-  if (path === "/") return pathname === "/";
-  return pathname.startsWith(path);
+function isActive(pathname: string, path: string, exact: boolean): boolean {
+  if (path === "/" || exact) return pathname === path;
+  return pathname === path || pathname.startsWith(`${path}/`);
 }
 
 /**
@@ -55,7 +55,10 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname }: Props) {
         <SidebarGroupContent>
           <SidebarMenu>
             {items.map((item) => {
-              const active = isActive(pathname, item.url);
+              // Si otro item del mismo grupo es hijo de este (p. ej. /compras vs /compras/facturas),
+              // este item sólo debe activarse en match exacto para evitar 2 seleccionados a la vez.
+              const exact = items.some((other) => other !== item && other.url.startsWith(`${item.url}/`));
+              const active = isActive(pathname, item.url, exact);
               const badge = item.badgeCount ?? 0;
               return (
                 <SidebarMenuItem key={item.title}>
@@ -76,10 +79,12 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname }: Props) {
                   >
                     <NavLink
                       to={item.url}
-                      end={item.url === "/"}
+                      end={item.url === "/" || items.some((other) => other !== item && other.url.startsWith(`${item.url}/`))}
                       onClick={handleNavigate}
-                      className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
-                      activeClassName="bg-sidebar-accent/10 text-sidebar-foreground font-semibold"
+                      className={cn(
+                        "hover:bg-sidebar-accent/10 hover:text-sidebar-foreground",
+                        active && "bg-sidebar-accent/10 text-sidebar-foreground font-semibold",
+                      )}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="flex-1 truncate">{item.title}</span>}

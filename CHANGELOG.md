@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.74] - 2026-07-21
+- **fix(sidebar) · Dos ítems marcados como activos a la vez.** En rutas hijas de `/compras` (p. ej. `/compras/facturas`) se resaltaban simultáneamente "Dashboard" (`/compras`) y "Facturas" porque el helper `isActive` usaba `startsWith` sin distinguir padre/hijo, y el `NavLink` interno aplicaba además su propio match de prefijo. Ahora `isActive` fuerza match exacto cuando existe un ítem hijo en el mismo grupo, y el `NavLink` recibe `end` en esos casos. Verificado visualmente en Full HD (`/compras/facturas` sólo resalta "Facturas").
+
 ## [13.303.73] - 2026-07-21
 - **fix(layout/header) · Search bar global recortado a cuadrado.** El contenedor de acciones del header aplicaba `h-9/w-9` a cualquier `button[aria-label]`, y el trigger de `GlobalSearch` tiene `aria-label="Abrir búsqueda global"`, por lo que se comprimía y truncaba "Buscar…" + el chip ⌘K. Se excluyó el trigger del selector con `:not([data-testid=global-search-trigger])` para que conserve su ancho natural. Verificado visualmente en Full HD.
 
