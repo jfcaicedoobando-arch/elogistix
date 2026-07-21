@@ -7,7 +7,7 @@
  * proveedor por RFC y calcula los valores a inyectar. La UI decide cómo
  * reaccionar al resultado (mostrar error, pedir crear proveedor, etc.).
  */
-import type { CfdiParsedResponse } from "@/features/cxp/services";
+import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
 import { validarCuadreCfdi } from "@/features/cxp/services";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
@@ -23,6 +23,7 @@ export type ProcesarCfdiResult =
       tcOrigen: TcOrigen;
       tcFechaAplicada?: string;
       askCrearProv: { rfc: string; nombre: string } | null;
+      conceptos: CfdiConceptoParsed[];
     };
 
 export async function procesarCfdiParsed(
@@ -60,5 +61,6 @@ export async function procesarCfdiParsed(
     tcOrigen: usaTcCfdi ? "cfdi" : "vacio",
     tcFechaAplicada: usaTcCfdi ? c.fecha : undefined,
     askCrearProv,
+    conceptos: c.conceptos ?? [],
   };
 }

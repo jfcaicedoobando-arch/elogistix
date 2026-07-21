@@ -9,10 +9,34 @@ import {
   subirArchivosCfdiFactura,
   vincularFacturaAConceptos,
   crearConceptoCostoYVincular,
+  insertarConceptosCfdi,
+  type CfdiConceptoParsed,
 } from "@/features/cxp/services";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import type { PendingCfdi, VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
+
+/**
+ * Persiste los conceptos del XML CFDI como líneas informativas de la factura.
+ * Best-effort: si falla, la factura queda guardada y se muestra warning.
+ */
+export async function persistirConceptosCfdiSafe(params: {
+  facturaId: string;
+  organizationId: string | null;
+  conceptos: ReadonlyArray<CfdiConceptoParsed>;
+}): Promise<void> {
+  if (!params.organizationId || !params.conceptos.length) return;
+  try {
+    await insertarConceptosCfdi({
+      facturaId: params.facturaId,
+      organizationId: params.organizationId,
+      conceptos: params.conceptos,
+    });
+  } catch (e) {
+    const err = e as { message?: string };
+    toast.warning(`Factura guardada pero no se registraron los conceptos del XML: ${err.message ?? "error"}`);
+  }
+}
 
 export async function uploadCfdiSafe(params: {
   facturaId: string;

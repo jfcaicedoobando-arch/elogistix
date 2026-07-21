@@ -13,6 +13,7 @@ import { usePresupuestoCategorias } from "@/features/presupuesto/hooks";
 import { useNuevaFacturaProveedorForm } from "@/features/cxp/hooks";
 import { FacturaProveedorFormFields } from "./FacturaProveedorFormFields";
 import { CargaCfdiSection } from "./CargaCfdiSection";
+import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import type { EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
@@ -84,6 +85,8 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           onParsed={ctl.handleCfdiParsed}
           cfdiReady={!!ctl.pendingCfdi}
         />
+
+        <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
 
         <FacturaProveedorFormFields
           values={ctl.values}

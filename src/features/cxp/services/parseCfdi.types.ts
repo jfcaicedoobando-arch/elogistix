@@ -1,5 +1,9 @@
 export interface CfdiConceptoParsed {
   descripcion: string;
+  /** Cantidad; opcional para compatibilidad con CFDIs previos al parser v2. */
+  cantidad?: number;
+  /** Clave SAT de unidad (H87, KGM, etc.); opcional. */
+  clave_unidad?: string;
   importe: number;
   iva: number;
   ieps: number;

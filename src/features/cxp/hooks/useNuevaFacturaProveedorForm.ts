@@ -7,7 +7,7 @@ import { toggleVinculoReducer, setVinculoMontoReducer, aplicarSugerenciasReducer
 import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
-import type { CfdiParsedResponse, ConceptoCostoAbierto } from "@/features/cxp/services";
+import type { CfdiParsedResponse, ConceptoCostoAbierto, CfdiConceptoParsed } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
@@ -32,6 +32,7 @@ export function useNuevaFacturaProveedorForm(
   const [errors, setErrors] = useState<Partial<Record<keyof FacturaFormValues, string>>>({});
   const [mode, setMode] = useState<CargaMode>("manual");
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
+  const [cfdiConceptos, setCfdiConceptos] = useState<CfdiConceptoParsed[]>([]);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
   const [vinculos, setVinculos] = useState<VinculosState>({});
   const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(
@@ -137,6 +138,7 @@ export function useNuevaFacturaProveedorForm(
     setErrors({});
     setMode("manual");
     setPendingCfdi(null);
+    setCfdiConceptos([]);
     setAskCrearProv(null);
     setVinculos({});
     setEmbarqueAdHoc(initialEmbarqueAdHoc ?? null);
@@ -144,8 +146,6 @@ export function useNuevaFacturaProveedorForm(
     setTcFechaAplicada(undefined);
     manualTcRef.current = false;
   };
-
-
   const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }): Promise<boolean> => {
     const result = await procesarCfdiParsed(data, files, organizationId);
     if (!result.ok) {
@@ -159,20 +159,18 @@ export function useNuevaFacturaProveedorForm(
     setValues(result.values);
     setErrors({});
     setPendingCfdi(result.pendingCfdi);
+    setCfdiConceptos(result.conceptos);
     setAskCrearProv(result.askCrearProv);
     setTcOrigen(result.tcOrigen);
     setTcFechaAplicada(result.tcFechaAplicada);
     manualTcRef.current = false;
     return true;
   };
-
-
   const validate = (): boolean => {
     const next = validateFactura(values, total);
     setErrors(next);
     return Object.keys(next).length === 0;
   };
-
   const submit = async () => {
     if (!validate()) {
       notifyError(toast, { title: "Revisa los campos marcados", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_3" });
@@ -180,20 +178,18 @@ export function useNuevaFacturaProveedorForm(
     }
     const ok = await runSubmit({
       values, total, userId: user?.id, organizationId,
-      pendingCfdi, vinculos, embarqueAdHoc,
+      pendingCfdi, cfdiConceptos, vinculos, embarqueAdHoc,
       crearMutateAsync: crear.mutateAsync,
       setFolioError: () => setErrors((e) => ({ ...e, folio: "Ya existe una factura con este folio para este proveedor en esta fecha." })),
     });
     if (ok) { reset(); onDone(); }
   };
-
   return {
-    values, errors, mode, setMode, total, pendingCfdi, askCrearProv, setAskCrearProv,
+    values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit, isPending: crear.isPending, organizationId,
     tcOrigen, tcFechaAplicada, obtenerDofManual, dofLoading: tcDof.isPending,
   };
-
 }
