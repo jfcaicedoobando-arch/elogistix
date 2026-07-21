@@ -167,7 +167,8 @@ export function useEmbarquesPageState() {
     filterAlerta === "todos" &&
     !fechaDesde &&
     !fechaHasta;
-  const isEmptyState = !isLoading && containersForView.length === 0 && sinFiltros;
+  // v13.303.75 · un fallo de red NO es un "sin resultados": exigimos !isError.
+  const isEmptyState = !isLoading && !isError && containersForView.length === 0 && sinFiltros;
 
   return {
     search,
