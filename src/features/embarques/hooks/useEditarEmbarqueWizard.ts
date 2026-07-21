@@ -13,6 +13,7 @@ import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedbac
 import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import {
   useConceptosForm,
   useCotizacion,
