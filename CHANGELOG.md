@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.90] - 2026-07-21
+- **fix(cxp) — Rueda del mouse en dropdown de proveedor dentro del modal "Capturar factura".** El `PopoverContent` con el `Command` de `cmdk` vive en un portal hermano al del `Dialog` modal; el `wheel` burbujeaba al contenedor del Dialog (con scroll-lock) y se lo comía antes de que la lista scrollable lo procesara. Se agrega `onWheel={e => e.stopPropagation()}` + `overscroll-contain` en el `CommandList` de `ProveedorCombobox` para atrapar la rueda dentro de la lista. Analogía: los clics tenían pase VIP, pero el "empujón" de la rueda se lo quedaba la puerta del Dialog; ahora la lista lo atrapa primero y por fin scrollea.
+
 ## [13.303.89] - 2026-07-21
 - **ui(cxp) · Prefijo `$` en Monto de "Registrar pago a proveedor" + spinners fuera.** El input de Monto (y el de Diferencia cambiaria MXN) ahora muestra `$` como adorno a la izquierda para dejar claro que es dinero, con `text-right tabular-nums` para alinear números. En paralelo se ocultan las flechitas nativas de todos los `<input type="number">` de la app vía CSS global en `src/index.css` (Chrome/Safari `::-webkit-*-spin-button` + Firefox `-moz-appearance: textfield`) — un solo cambio limpia los 39 archivos que las usaban sin tocar cada uno. El scroll-wheel ya se intercepta desde antes en `Input`. Analogía: al cajero del banco le pusimos un letrero "$" en la ventanilla, y le quitamos las palanquitas de "sube/baja" que nadie usaba y confundían al cliente.
 
