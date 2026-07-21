@@ -8071,6 +8071,10 @@ export type Database = {
         Args: { p_cotizacion_id: string; p_motivo: string }
         Returns: Json
       }
+      refrescar_garantia_desde_tarifa: {
+        Args: { p_embarque_id: string }
+        Returns: number
+      }
       registrar_anticipo_proveedor: {
         Args: {
           p_cuenta_bancaria_id?: string

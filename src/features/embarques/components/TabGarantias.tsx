@@ -7,10 +7,14 @@
  */
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/shared/DataTable";
 import EmptyState from "@/components/empty/EmptyState";
-import { ShieldCheck } from "lucide-react";
-import { useGarantiasContenedor } from "@/features/embarques/hooks/useGarantiasContenedor";
+import { ShieldCheck, RefreshCw } from "lucide-react";
+import {
+  useGarantiasContenedor,
+  useRefrescarGarantiasDesdeTarifa,
+} from "@/features/embarques/hooks/useGarantiasContenedor";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { diffDias } from "./garantias/garantiasUtils";
 import { GarantiasKpiCards } from "./garantias/GarantiasKpiCards";
@@ -51,6 +55,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
   }, [rows]);
 
   const { columns } = useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal });
+  const refrescarMut = useRefrescarGarantiasDesdeTarifa(embarqueId);
 
   if (isLoading) return <div className="text-sm text-muted-foreground p-6">Cargando garantías…</div>;
 
@@ -64,7 +69,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
       />
 
       <Card>
-        <CardHeader className="pb-2 flex flex-row items-start justify-between">
+        <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
           <div>
             <CardTitle className="text-sm">Garantías por contenedor</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
@@ -73,6 +78,19 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
               referencia bancaria del depósito.
             </p>
           </div>
+          {canEdit && rows.some((r) => r.estado === "pendiente") && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => refrescarMut.mutate()}
+              disabled={refrescarMut.isPending}
+              className="shrink-0"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${refrescarMut.isPending ? "animate-spin" : ""}`} />
+              Precargar desde tarifa
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           <DataTable

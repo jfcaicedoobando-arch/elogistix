@@ -1,54 +1,86 @@
-# Plan · Modal Generar Proforma sin `diasCredito` ni `operador` en UI
+## Contexto
 
-## Diagnóstico (verificado)
+En la pestaña **Garantías** del embarque, la columna 4 ("Depósito USD") es un input editable enlazado a `embarque_garantias_contenedor.monto_deposito_usd`. Hoy la fila de garantía se crea automáticamente cuando se agrega un contenedor mediante el trigger `crear_garantia_contenedor()`, que **sólo mira `costeo_navieras_condiciones`** matcheando por `naviera_id` a partir del nombre `embarques.naviera`. Nunca consulta la tarifa (`costeo_tarifas`) que se usó al convertir la cotización en embarque, aunque el embarque sí guarda `tarifa_id_aplicada` / `tarifa_id_original`.
 
-Hoy el modal `DialogGenerarProforma` muestra dos campos que ya existen como **fuente única de verdad** en otras tablas:
+Verificado en BD para el embarque abierto en el preview (`e7558e76…`):
+- `naviera = "WHLC"`, `tarifa_id_aplicada = NULL`, `tarifa_id_original = NULL`, `cotizacion.tarifa_id = NULL` (embarque legacy sin tarifa formal).
+- No existe fila en `costeo_navieras_condiciones` para Wan Hai en la organización → por eso la columna aparece vacía.
 
-- **Días de crédito** — input editable (`<Input type="number">`) en `ProformaFooterFields` (línea 120-128 de `PasoSeleccionConceptos.parts.tsx`). El default se lee de `useDiasCreditoCliente(embarque.cliente_id)` en el controller (línea 44 de `useDialogGenerarProformaController.ts`), pero luego el usuario puede sobrescribirlo. **La SoT es `clientes.dias_credito`.**
-- **Ejecutivo de Operaciones** — display readonly en `ProformaFooterFields` (línea 134-138). Se pasa desde `embarque.operador`. **La SoT es `embarques.operador`.**
+**Analogía:** hoy es como si al abrir un pedido nuevo copiáramos el precio del catálogo general de la marca; queremos que primero mire el contrato específico (la tarifa) que se cotizó, y sólo si no hay contrato caiga al catálogo general.
 
-Ambos también aparecen en `PasoConfirmacionProforma.tsx` (líneas 62 y 67) como parte del resumen.
+## Cambios propuestos
 
-Al aceptar edición del campo de crédito, la proforma puede quedar con condiciones distintas a las del cliente sin que nadie se entere → riesgo de descuadre entre CxC del cliente y política crediticia.
+### 1. Extender la fuente de precarga en el trigger de garantías
 
-## Cambios
+Modificar `crear_garantia_contenedor()` (función usada por el trigger `trg_crear_garantia_contenedor` de `embarque_contenedores`) para resolver los datos en este orden de prioridad:
 
-**1. UI — quitar ambos campos del modal**
+1. **Tarifa aplicada al embarque** (`embarques.tarifa_id_aplicada` → `costeo_tarifas`) para obtener `naviera_id` sin depender del match por texto y para leer `dias_libres_demoras` específico.
+2. **Condición de la naviera** (`costeo_navieras_condiciones` por ese `naviera_id`) para `deposito_contenedor_usd`, `tiene_carta_garantia`, `carta_garantia_vigente_hasta` y `dias_libres_demoras_default` como fallback.
+3. Comportamiento actual (match por nombre en `embarques.naviera`) como último fallback, para no romper embarques legacy sin tarifa.
 
-- `src/features/embarques/components/proforma/PasoSeleccionConceptos.parts.tsx`
-  - Reducir `ProformaFooterFields` para que renderice **solo el `<Textarea>` de notas**. Eliminar el grid con "Días de crédito" y "Ejecutivo de Operaciones", los props `diasCredito`, `operadorEmbarque` y `onDiasCreditoChange`.
-- `src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx`
-  - Quitar props `diasCredito`, `operadorEmbarque`, `onDiasCreditoChange` de la interfaz y del render de `ProformaFooterFields`.
-- `src/features/embarques/components/proforma/PasoConfirmacionProforma.tsx`
-  - Quitar del resumen las líneas "Operador" y "Días de crédito" y sus props. El resumen queda con conceptos, totales y notas.
-- `src/features/embarques/components/DialogGenerarProforma.tsx`
-  - No pasar ya `diasCredito`, `operadorEmbarque`, `onDiasCreditoChange` a los dos pasos.
+Reglas mantenidas:
+- Si hay carta garantía vigente → `monto=0`, `estado='liberado'`.
+- Si no hay ninguna fuente → `monto=0`, `estado='pendiente'` (igual que hoy).
 
-**2. Controller — dejar `diasCredito` y operador como valores derivados internos, no como estado editable**
+### 2. Alinear el cálculo de "fecha límite devolución"
 
-- `src/features/embarques/hooks/useDialogGenerarProformaController.ts`
-  - Eliminar `useState` de `diasCredito` y `setDiasCredito`, y el `useEffect` que lo sincroniza (líneas 51, 94-97).
-  - Al construir el payload de submit, resolver `diasCredito` **en el momento** desde `useDiasCreditoCliente(embarque.cliente_id)` (ya está cargado) y `operador` desde `embarque.operador`. Nunca se exponen al UI ni se permiten sobrescribir.
+Ajustar `calc_fecha_limite_devolucion_garantia()` para preferir `costeo_tarifas.dias_libres_demoras` (per-tarifa) sobre `costeo_navieras_condiciones.dias_libres_demoras_default` (per-naviera org-wide) cuando el embarque tenga tarifa aplicada. Esto respeta overrides de tarifa que hoy se ignoran silenciosamente.
 
-**3. Submit — sin cambios de contrato hacia la BD**
+### 3. RPC de repoblado manual (para filas ya creadas)
 
-- `src/features/embarques/services/submitProformaDialog.ts` sigue recibiendo `diasCredito` como string y `embarque.operador`. Cambia solo la fuente en el controller: la string proviene siempre de `clientes.dias_credito` (o `""` si null), no de un input editable. La lógica de parseo (`diasCredito.trim() === "" ? null : Number(...)`) se conserva.
+Nueva RPC `refrescar_garantia_desde_tarifa(p_embarque_id uuid)` (SECURITY DEFINER, permisos por membresía) que:
+- Recorre las garantías del embarque cuyo `estado = 'pendiente'` (para no pisar depósitos ya movidos; el trigger `_garantia_congelar_monto_trg` ya bloquea cambios en otros estados).
+- Aplica la misma lógica de resolución (tarifa → condición → nombre) y actualiza `monto_deposito_usd`, `tiene_carta_garantia`, `naviera_id`.
 
-**4. Tests**
+Esto permite "reprocesar" embarques legacy o casos donde la tarifa/condición se configura después.
 
-- `src/features/embarques/hooks/__tests__/useProformaDialog.test.tsx` y `src/features/embarques/services/__tests__/submitProformaDialog.test.ts`: actualizar mocks/aserciones que aún referencien `setDiasCredito` u `onDiasCreditoChange`. Añadir un test que verifique que aunque `useDiasCreditoCliente` regrese `30`, el submit siempre manda `30` (no hay manera de que el usuario mande otro valor).
+### 4. UI: botón "Precargar desde tarifa" en la tab
 
-**5. Changelog + bump**
+En `TabGarantias.tsx`, agregar un botón secundario visible cuando `canEdit` y exista al menos una garantía en estado `pendiente`. Al hacer clic:
+- Llama a `refrescar_garantia_desde_tarifa`.
+- Invalida el query `garantias(embarqueId)` para refrescar la tabla.
+- Toast con resumen (`N filas actualizadas` / mensaje si no hubo cambios).
 
-- `CHANGELOG.md` bajo `## [13.303.80] - 2026-07-21` con nota corta explicando que se retiran los campos del modal y quedan como SoT.
-- `src/constants/appVersion.ts` → `13.303.80`.
+Si el embarque no tiene tarifa aplicada ni condición configurada para la naviera, el botón sigue funcionando pero el toast indica "No hay tarifa ni condición configurada para precargar" — evitando pisar valores capturados manualmente.
 
-## Fuera de alcance
+### 5. Changelog + versión
 
-- No se modifica la tabla `proformas` ni sus columnas `dias_credito` / `operador` — se siguen persistiendo, solo cambia dónde se leen.
-- No se toca la lógica de cálculo de vencimiento ni las políticas de crédito.
-- Si en el futuro se quiere permitir override justificado (con bitácora), sería un feature aparte con confirmación y motivo.
+Bump `APP_VERSION` a `13.303.82` y agregar entrada en `CHANGELOG.md`.
 
-## Analogía para ti
+## Detalles técnicos
 
-Es como el nombre del cliente en una factura: no lo tecleas cada vez, lo hereda el sistema. Igual aquí: los días de crédito los pone el expediente del cliente y el ejecutivo lo pone el expediente del embarque. Si están mal, se corrigen en su lugar (una sola vez), no en cada proforma.
+**Migración SQL** (una sola migración con dos `CREATE OR REPLACE FUNCTION` + una `CREATE OR REPLACE FUNCTION` para el RPC):
+
+```text
+crear_garantia_contenedor():
+  v_tarifa_id  := SELECT tarifa_id_aplicada FROM embarques WHERE id = NEW.embarque_id
+  IF v_tarifa_id IS NOT NULL:
+      SELECT naviera_id, dias_libres_demoras
+      FROM costeo_tarifas WHERE id = v_tarifa_id
+  ELSE:
+      resolver naviera_id por nombre (comportamiento actual)
+  SELECT cnc.* FROM costeo_navieras_condiciones cnc
+    WHERE naviera_id = v_naviera_id AND organization_id = v_org
+  → prefill monto_deposito_usd, tiene_carta_garantia, estado
+
+calc_fecha_limite_devolucion_garantia():
+  usar COALESCE(costeo_tarifas.dias_libres_demoras,
+                costeo_navieras_condiciones.dias_libres_demoras_default, 0)
+
+refrescar_garantia_desde_tarifa(p_embarque_id uuid) RETURNS int:
+  SECURITY DEFINER, valida membresía org, sólo toca estado='pendiente'.
+```
+
+**Frontend**:
+- `src/features/embarques/services/garantias.ts`: agregar `refrescarGarantiasDesdeTarifa(embarqueId)` (wrapper de `supabase.rpc(...)`).
+- `src/features/embarques/components/TabGarantias.tsx`: botón + `useMutation` que invalide `['garantias', embarqueId]`.
+- Sin cambios en columnas ni en `useGarantiasColumns`.
+
+**No cambia:**
+- Guardrails de congelación de monto (`_garantia_congelar_monto_trg`) ni transiciones de estado.
+- Tabla `costeo_demoras_venta_tarifa` (venta al cliente) — es otro flujo (facturación de demoras) y no toca el depósito.
+
+## Fuera de alcance (documentado, no se implementa aquí)
+
+- Backfill masivo de embarques legacy sin tarifa: se resuelve caso por caso con el botón; un job de backfill queda para una fase futura.
+- Editar el trigger para tocar filas ya `depositado/liberado/retenido`: se respeta la congelación existente.
