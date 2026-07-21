@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.63] - 2026-07-21
+- **fix(cxp) · CFDI de proveedor no cuadraba cuando tenía >10 conceptos.** `parse-cfdi-xml` truncaba los conceptos a 10 (`slice(0, 10)`) como tope anti-DoS, pero los totales (`SubTotal`/`IVA`/`IEPS`) se leían del `<Comprobante>` completo, así que `validarCuadreCfdi` siempre reventaba con "los importes por concepto suman X pero el subtotal es Y" en CFDIs marítimos reales (11–30 líneas: BAF, THC, DOC, VGM, etc.). Subido el tope a 200; añadido test de regresión con 11 conceptos + test del nuevo cap. El prompt al LLM sigue acotado a 30 descripciones para no inflar latencia. Reportado con requestId `040d7609-0969-4560-821c-ee21221a7cb5`.
+
 ## [13.303.62] - 2026-07-21
 - **fix(cotizacion) · PGRST204 al crear cotización.** `partesAgenteNavieraInsert` intentaba escribir `agente_nombre` y `naviera_nombre` en `public.cotizaciones`, columnas que sólo existen en las vistas (JOIN con `costeo_agentes` / `navieras`). Se removieron del payload de insert; el vínculo persiste vía `agente_id` / `naviera_id`. Resuelve Sentry `JAVASCRIPT-REACT-32`, `JAVASCRIPT-REACT-33` y `JAVASCRIPT-REACT-1V`.
 
