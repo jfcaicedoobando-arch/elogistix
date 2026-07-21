@@ -1,75 +1,81 @@
-## Objetivo
+## Contexto
 
-Aplicar la dirección **v2 "Card grid estructurada"** al modal `DialogDetallePagosProveedor` sin cambiar datos, RPCs ni comportamiento. Todo es refactor visual y de jerarquía usando tokens semánticos del sistema (`--primary`, `--accent`, `--muted`, etc.), sin hex hardcoded en componentes.
+El rediseño de `DialogDetallePagosProveedor` estableció un lenguaje visual con 5 piezas reutilizables:
 
-## Cambios por archivo
+1. **Header con chip-folio inline** (título + chip mono separado + meta muted en 2ª línea).
+2. **StatusActionBar** contextual (`bg-accent/5`) con dot de estado + acción primaria contextual a la derecha + overflow `⋯` para secundarias.
+3. **KPI grid** con énfasis `ring-2 ring-accent/30` en la métrica dominante según contexto.
+4. **Info agrupada** en 2 columnas (adjuntos + programación) con tarjetas clickables completas y badge de tipo (XML/PDF).
+5. **Historial collapsible** dentro del flujo.
 
-### 1. `DialogDetallePagosProveedor.tsx`
-- Header: `DialogTitle` en fila con un chip de folio interno (`FP-000037`) monospace pequeño al lado del título. El resto del descriptor (Folio prov. + proveedor) baja a una segunda línea muted.
-- Reemplazar la fila de descripción actual por: título + folio-chip a la izquierda; a la derecha nada (las acciones bajan a la nueva "action bar").
-- Quitar el `border-b` extra entre bloques que crea líneas duplicadas.
+Además ya tenemos primitivos reutilizables listos: `EstadoAprobacionDot`, `Kpi` (con `emphasis`), `HeaderWithTooltip` y `StatusActionBar`.
 
-### 2. `DialogDetallePagosProveedor.sections.tsx` → `FacturaToolbar`
-- Convertirse en una **Status & Primary Action Bar**: fondo `bg-accent/5`, `border-b border-accent/10`.
-- Izquierda: dot + label del estado de aprobación ("Pendiente", "Aprobada", "Rechazada", "Cancelada") con color por tono (warning/success/destructive/muted) — reemplaza al chip suelto que hoy vive dentro de `BotonesAprobacionFactura`.
-- Derecha: acción **primaria contextual** según flags:
-  - `pendiente` → `Aprobar` (primary) + `Rechazar` (soft destructive outline).
-  - `aprobada` con saldo > 0 → `Registrar pago` (primary).
-  - `aprobada` sin saldo o `pagada` → botón oculto, sólo estado.
-- Acciones secundarias (`Editar`, `Cerrar sin pago`) van a un menú `⋯` overflow al final de la barra.
-- **Eliminar factura** y **Cancelar factura** dejan de ser botones destacados: van dentro del overflow menu con separador y estilo destructivo discreto. Se elimina la duplicación actual ("Cancelar factura" aparece hoy dos veces: en toolbar-área y dentro de `InfoFacturaSection`).
+Este plan **no toca lógica** — es sólo UI/UX. Cambios acotados a `.tsx` de presentación.
 
-### 3. `FacturaResumen` → nueva grilla de KPIs
-- Grid `grid-cols-2 md:grid-cols-4 gap-3`, cada Kpi con `border border-border rounded-lg p-4 bg-card`.
-- Aplicar `ring-2 ring-accent/20` al KPI dominante según estado:
-  - Saldo > 0 → resalta **Saldo pendiente**.
-  - Saldo = 0 → resalta **Total pagado**.
-- Ajustar `Kpi` (en `.parts.tsx`) para aceptar prop `emphasis?: boolean`.
-- Quitar el bloque anterior "aprobación separado + KPIs" (la aprobación ya vive en la action bar).
+## Modales candidatos (priorizados)
 
-### 4. `InfoFacturaSection.tsx`
-- Título "Información de la factura" con `border-b` fino y sin el botón "Cancelar factura" a la derecha (esa acción migra al overflow del toolbar).
-- Grid `grid-cols-3 gap-y-4 gap-x-8 text-sm` con labels `text-xs text-muted-foreground` y valores `font-semibold`.
-- Mover **CFDI adjuntos** y **Programación de pago** a una fila `grid-cols-2 gap-6` DEBAJO del bloque de información, no dentro del mismo card.
-- Notas: card con `bg-muted/30` y texto sm; sólo se muestra si existe (ya lo hace).
-- `AdjuntoRow` compacto: badge XML/PDF (colores `bg-accent/10 text-accent` para XML, `bg-destructive/10 text-destructive` para PDF), nombre truncado, ícono de descarga a la derecha en hover.
+Barrí el árbol de `src/features/**/components/**/*Dialog*.tsx` y clasifiqué por tipo. Los **formularios/wizards** ya siguen `FormDialogShell` (regla activa en memoria) y quedan fuera de scope. Los **modales de detalle/inspección** son los que sí se benefician:
 
-### 5. `HistorialFacturaSection.tsx`
-- Convertir la sección a un colapsable cerrado por default: header con ícono reloj + "Historial de movimientos" + chevron. Al abrir muestra timeline vertical existente.
-- Reducir densidad (líneas más apretadas, timestamp mono `text-xs text-muted-foreground`).
+### Alta prioridad — mismo patrón "detalle con estado + KPIs + acciones"
 
-### 6. Footer
-- Mantener `Cerrar` a la derecha. Retirar cualquier acción destructiva del footer (ya no hay).
+**A. `DialogRegistrarPagoProveedor` (CxP)** · alto valor
+Es el gemelo funcional del detalle. Hoy es un form plano.
+- Header: chip inline con folio interno de la factura destino + meta (proveedor · saldo).
+- StatusActionBar mini: dot "Aprobada · lista para pagar" + `Registrar pago` como primary submit.
+- KPI grid superior con: Total, Pagado, **Saldo (énfasis)**, Días vencido.
+- Reutiliza `EstadoAprobacionDot`, `Kpi`, `StatusActionBar` (variant read-only).
 
-## Diseño visual (tokens)
+**B. `AgingDrillDownDialog` (CxP)** · alto valor
+Drill-down de aging por proveedor. Hoy título simple + tabla.
+- Header: nombre del proveedor + chip mono con RFC + meta con "N facturas · X cubetas".
+- KPI grid: Total abierto, Vencido, Por vencer, **Cubeta 90+ (énfasis si >0)**.
+- Filtros de cubeta como chips en la StatusActionBar en lugar del select actual.
+- Botón "Exportar CSV" queda en overflow `⋯`.
 
-- Fondos: header modal `bg-muted/30`, action bar `bg-accent/5`, KPIs `bg-card`, sección info `bg-background`, notas `bg-muted/30`.
-- Bordes: `border-border` con `rounded-lg` en KPIs y adjuntos.
-- Estado dots: `bg-warning` (pendiente), `bg-success` (aprobada), `bg-destructive` (rechazada/cancelada), `bg-muted-foreground` (borrador).
-- Tipografía: título `text-lg font-bold text-primary`, section headings `text-xs font-bold uppercase tracking-wide text-primary`, labels `text-xs text-muted-foreground`, valores `text-sm font-semibold text-foreground`, montos con `tabular-nums`.
-- Sin hex crudos en el TSX; todo vía tokens Tailwind ya definidos.
+**C. `EmbarquesEstadoDialog` (Operaciones)** · valor medio
+Lista de embarques por operador/estado. Ya usa `FormDialogShell` pero se puede armonizar.
+- Header ya tiene el ícono de estado + operador + estado + badge de total → migrar a chip-folio pattern + meta muted.
+- Añadir KPI mini: Total, Filtrado (por búsqueda), **Truncado (énfasis si >0)**.
+- `Search` queda en la actionbar (bg-accent/5) en lugar de flotar.
 
-## Verificación
+**D. `DialogConsultarFacturapi` (Facturación)** · valor medio
+Diagnóstico lado-a-lado FacturApi vs Libre Carga.
+- Header con chip inline con `numero` (folio de factura).
+- StatusActionBar: dot con estado inferido del diagnóstico ("Sincronizado" / "Discrepancia" / "Error") + primary `Reintentar consulta`.
+- Los 2 paneles de comparación agrupan como KPI-cards, dominante = el que difiere.
 
-1. `bunx vitest run src/lib/__tests__/architecture-baseline.test.ts` — asegurar que los archivos siguen ≤ 200 líneas.
-2. Playwright headless a 1920×1080 abriendo dos facturas (una `pendiente` y una `aprobada con saldo`), screenshot y comparar contra el prototipo v2.
-3. `bun run lint -- --max-warnings 0`.
+### Media prioridad — armonización de headers y actions
 
-## Notas técnicas
+**E. `FacturaDetalleView` (ruta, no modal)**
+Aunque es una ruta, ya usa `DetalleActionBar`. Podemos alinear:
+- Migrar `FacturaDetalleHeader` a chip-folio pattern (folio como chip mono en vez de `text-2xl font-mono`).
+- Añadir el `EstadoAprobacionDot`-equivalente para timbrar/cancelar (usando `deriveFacturaBadgeEstado` que ya existe).
+- Actualmente el badge de estado ya está bien; el cambio sería sólo la línea muted secundaria y consolidar KPI de Total en un mini card.
+- **Nota:** el usuario preguntó "modales", así que este es opcional — pedir confirmación.
 
-- No se toca `useFacturaProveedor`, `usePagosProveedor`, `usePermissions`, ni ninguna RPC.
-- El chip de estado de aprobación se extrae de `BotonesAprobacionFactura` a un helper `EstadoAprobacionDot` reusable (nuevo archivo `EstadoAprobacionDot.tsx` ~40 líneas) para que `BotonesAprobacionFactura` siga siendo la única entrada a `aprobar_factura_proveedor` RPC.
-- El overflow `⋯` usa `DropdownMenu` de shadcn ya existente.
-- Bump `APP_VERSION` a `13.303.94` y entrada en `CHANGELOG.md`.
+**F. `EmbarqueDetalleHeader` (ruta, no modal)**
+Igual que E: alinear el status chip + folio-chip.
 
-## Archivos tocados
+### Baja prioridad / fuera de scope
 
-- `src/features/cxp/components/DialogDetallePagosProveedor.tsx`
-- `src/features/cxp/components/DialogDetallePagosProveedor.sections.tsx`
-- `src/features/cxp/components/DialogDetallePagosProveedor.parts.tsx`
-- `src/features/cxp/components/InfoFacturaSection.tsx`
-- `src/features/cxp/components/InfoFacturaSection.parts.tsx`
-- `src/features/cxp/components/HistorialFacturaSection.tsx`
-- `src/features/cxp/components/BotonesAprobacionFactura.tsx` (extraer chip)
-- Nuevo: `src/features/cxp/components/EstadoAprobacionDot.tsx`
-- `src/lib/appVersion.ts` + `CHANGELOG.md`
+- `DialogNuevaFacturaProveedor`, `DialogEditarFacturaProveedor`, `DialogSustituirFactura`, `DialogTimbrarFactura`, `DialogCrearNotaCredito` → **formularios/wizards**, ya usan `FormDialogShell`. No aplica.
+- `DialogRegistrarPago`, `DialogEnviarCfdi`, `DialogPreviewCfdiPdf`, `DialogCancelarFactura`, `CerrarFacturaSinPagoDialog`, `CancelarFacturaProveedorDialog` → **confirmaciones/acciones puntuales**, usan `ConfirmActionDialog`/`FormDialogShell`. No aplica.
+- `DemoAccessDialog`, `RoleChangeAlertDialog`, `ForgotPasswordDialog` → **flows de auth/marketing**, otro contexto visual.
+
+## Recomendación
+
+Ejecutar en el siguiente orden y bump de version por lote (2 archivos por lote para mantener PRs auditables):
+
+- **Lote 1** — A (`DialogRegistrarPagoProveedor`) + B (`AgingDrillDownDialog`) → mismo módulo CxP, mismo mental model.
+- **Lote 2** — C (`EmbarquesEstadoDialog`) + D (`DialogConsultarFacturapi`).
+- **Lote 3 (opcional)** — E + F: armonización de headers de rutas (requiere confirmación del usuario).
+
+Cada lote respeta:
+- Reutilizar `EstadoAprobacionDot`, `Kpi`, `StatusActionBar`, `HeaderWithTooltip`, `dialogTokens`.
+- Archivos ≤ 200 líneas (Power of 10).
+- Sin cambios de lógica ni de datos.
+- Actualizar `CHANGELOG.md` y bump `APP_VERSION` por lote.
+
+## Pregunta antes de empezar
+
+¿Con qué lote arrancamos? Si dices "Lote 1" empiezo con A+B en el siguiente turno.

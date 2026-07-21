@@ -2,20 +2,17 @@
  * Diálogo drill-down de aging: al abrir una fila de proveedor en /compras/aging
  * muestra sus facturas con saldo abierto, con badge de cubeta y exporta a CSV.
  *
- * v13.205.0 · Ola B · B1
+ * v13.303.95 · Rediseño al design language del detalle CxP:
+ * chip-folio inline, filtro de cubetas como chips en action bar y export en overflow.
  */
-import { useMemo } from "react";
-import { Download, FileText, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { FileText, X, AlertTriangle } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
@@ -23,6 +20,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 import { bucketDeDias, BUCKET_LABELS, BUCKET_TONES, type CubetaAging } from "./agingBuckets";
 import { todayLocalISO } from "@/lib/date/today";
+import { AgingActionBar, AgingKpiRow } from "./AgingDrillDownDialog.parts";
 
 interface Props {
   proveedor: CxpAgingRow | null;
@@ -32,71 +30,50 @@ interface Props {
 }
 
 export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInicial = "todas" }: Props) {
+  const [cubeta, setCubeta] = useState<CubetaAging | "todas">(cubetaInicial);
   const { data: facturas = [], isLoading } = useFacturasCxP(
     proveedor ? { proveedor_id: proveedor.proveedor_id } : {},
   );
 
-  const abiertas = useMemo(
-    () => facturas.filter((f) => f.saldo > 0),
-    [facturas],
-  );
-
+  const abiertas = useMemo(() => facturas.filter((f) => f.saldo > 0), [facturas]);
   const filtradas = useMemo(() => {
-    if (cubetaInicial === "todas") return abiertas;
-    return abiertas.filter((f) => bucketDeDias(f.dias_vencido) === cubetaInicial);
-  }, [abiertas, cubetaInicial]);
+    if (cubeta === "todas") return abiertas;
+    return abiertas.filter((f) => bucketDeDias(f.dias_vencido) === cubeta);
+  }, [abiertas, cubeta]);
 
-  const columns = useMemo(
-    () =>
-      defineColumns<FacturaCxP>([
-        {
-          id: "folio_prov",
-          header: "Folio prov.",
-          cell: ({ row }) => (
-            <span className="font-mono text-xs">{row.original.folio_proveedor}</span>
-          ),
-        },
-        {
-          id: "emision",
-          header: "Emisión",
-          cell: ({ row }) => formatDate(row.original.fecha_emision),
-        },
-        {
-          id: "vencimiento",
-          header: "Vencimiento",
-          cell: ({ row }) =>
-            row.original.fecha_vencimiento
-              ? formatDate(row.original.fecha_vencimiento)
-              : "—",
-        },
-        {
-          id: "dias",
-          header: "Días",
-          cell: ({ row }) => {
-            const dias = row.original.dias_vencido;
-            const bucket = bucketDeDias(dias);
-            return (
-              <div className="flex items-center gap-1.5">
-                <span className="tabular-nums text-sm">{dias > 0 ? `+${dias}` : dias}</span>
-                <Badge className={BUCKET_TONES[bucket]} variant="outline">
-                  {BUCKET_LABELS[bucket]}
-                </Badge>
-              </div>
-            );
-          },
-        },
-        {
-          id: "saldo",
-          header: "Saldo",
-          cell: ({ row }) => (
-            <span className="tabular-nums font-medium">
-              {formatCurrency(row.original.saldo, row.original.moneda)}
+  const columns = useMemo(() => defineColumns<FacturaCxP>([
+    {
+      id: "folio_prov", header: "Folio prov.",
+      cell: ({ row }) => <span className="font-mono text-xs">{row.original.folio_proveedor}</span>,
+    },
+    { id: "emision", header: "Emisión", cell: ({ row }) => formatDate(row.original.fecha_emision) },
+    {
+      id: "vencimiento", header: "Vencimiento",
+      cell: ({ row }) => row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
+    },
+    {
+      id: "dias", header: "Días",
+      cell: ({ row }) => {
+        const bucket = bucketDeDias(row.original.dias_vencido);
+        return (
+          <div className="flex items-center gap-1.5">
+            <span className="tabular-nums text-sm">
+              {row.original.dias_vencido > 0 ? `+${row.original.dias_vencido}` : row.original.dias_vencido}
             </span>
-          ),
-        },
-      ]),
-    [],
-  );
+            <Badge className={BUCKET_TONES[bucket]} variant="outline">{BUCKET_LABELS[bucket]}</Badge>
+          </div>
+        );
+      },
+    },
+    {
+      id: "saldo", header: "Saldo",
+      cell: ({ row }) => (
+        <span className="tabular-nums font-medium">
+          {formatCurrency(row.original.saldo, row.original.moneda)}
+        </span>
+      ),
+    },
+  ]), []);
 
   const handleExport = () => {
     if (filtradas.length === 0 || !proveedor) return;
@@ -105,12 +82,8 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
       const bucket = bucketDeDias(f.dias_vencido);
       return [
         `"${f.folio_proveedor.replace(/"/g, '""')}"`,
-        f.fecha_emision,
-        f.fecha_vencimiento ?? "",
-        f.dias_vencido,
-        BUCKET_LABELS[bucket],
-        f.moneda,
-        f.saldo,
+        f.fecha_emision, f.fecha_vencimiento ?? "",
+        f.dias_vencido, BUCKET_LABELS[bucket], f.moneda, f.saldo,
       ].join(",");
     });
     const csv = [headers.join(","), ...lines].join("\n");
@@ -125,46 +98,65 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-accent" />
-            Facturas con saldo · {proveedor?.proveedor_nombre ?? "—"}
-          </DialogTitle>
-          <DialogDescription>
-            {proveedor
-              ? `${proveedor.num_facturas} factura(s) abiertas · Saldo total ${formatCurrency(proveedor.saldo_total, "MXN")}`
-              : "Selecciona un proveedor."}
-          </DialogDescription>
-        </DialogHeader>
+    <TooltipProvider delayDuration={150}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col gap-0 p-0">
+          <DialogHeader className="px-6 pt-5 pb-4 border-b bg-muted/30 space-y-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <FileText className="h-5 w-5 text-accent" aria-hidden />
+              <DialogTitle className="text-lg font-bold text-primary">
+                Facturas con saldo
+              </DialogTitle>
+              {proveedor && (
+                <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
+                  {proveedor.num_facturas} factura{proveedor.num_facturas === 1 ? "" : "s"}
+                </span>
+              )}
+            </div>
+            {proveedor && (
+              <p className="text-xs text-muted-foreground">{proveedor.proveedor_nombre}</p>
+            )}
+          </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto">
-          <DataTable<FacturaCxP>
-            columns={columns}
-            data={filtradas}
-            isLoading={isLoading}
-            rowKey={(f) => f.id}
-            emptyMessage="Este proveedor no tiene facturas con saldo abierto"
-            density="compact"
-            striped
-            hoverable
-          />
-        </div>
+          {proveedor && (
+            <AgingActionBar
+              cubeta={cubeta}
+              onChange={setCubeta}
+              onExport={handleExport}
+              exportDisabled={filtradas.length === 0}
+              exportCount={filtradas.length}
+            />
+          )}
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-            <X className="h-4 w-4 mr-1" /> Cerrar
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleExport}
-            disabled={filtradas.length === 0}
-          >
-            <Download className="h-4 w-4 mr-1" /> Exportar CSV ({filtradas.length})
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          {proveedor && <AgingKpiRow proveedor={proveedor} />}
+
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {!proveedor ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+                <AlertTriangle className="h-4 w-4" />
+                Selecciona un proveedor.
+              </div>
+            ) : (
+              <DataTable<FacturaCxP>
+                columns={columns}
+                data={filtradas}
+                isLoading={isLoading}
+                rowKey={(f) => f.id}
+                emptyMessage="Este proveedor no tiene facturas con saldo en esta cubeta"
+                density="compact"
+                striped
+                hoverable
+              />
+            )}
+          </div>
+
+          <div className="px-6 py-3 border-t flex justify-end bg-background">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <X className="h-4 w-4 mr-1" /> Cerrar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </TooltipProvider>
   );
 }
