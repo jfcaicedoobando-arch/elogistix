@@ -2,6 +2,7 @@
  * Leads — lecturas (lista paginada y detalle).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { orIlike } from "@/lib/search/ilike";
 import {
   LEAD_COLUMNS,
   type CrmLeadRow,
@@ -26,8 +27,7 @@ export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
     .order(sortKey, { ascending: sortDir === "asc" });
 
   if (search.trim()) {
-    const term = `%${search.trim()}%`;
-    q = q.or(`empresa.ilike.${term},contacto.ilike.${term},email.ilike.${term}`);
+    q = q.or(orIlike(["empresa", "contacto", "email"], search));
   }
   if (estado !== "todos") q = q.eq("estado", estado);
   if (fuente !== "todos") q = q.eq("fuente", fuente);
