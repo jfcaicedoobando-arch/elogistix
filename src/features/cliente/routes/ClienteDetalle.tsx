@@ -16,6 +16,7 @@ import {
   ClienteNotFoundState,
 } from "@/features/cliente/components/detalle/ClienteDetalleHeader";
 import { ClienteInformacionCard } from "@/features/cliente/components/detalle/ClienteInformacionCard";
+import { ClienteCreditoCard } from "@/features/cliente/components/detalle/ClienteCreditoCard";
 import { useClienteDetalleController } from "@/features/cliente/hooks";
 import { useRegisterBreadcrumbLabel } from "@/lib/contexts/BreadcrumbContext";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -101,6 +102,8 @@ export default function ClienteDetalle() {
             telefono={cliente.telefono}
           />
 
+          <ClienteCreditoCard clienteId={cliente.id} />
+
           <TablaContactos
             contactos={contactos}
             isLoading={loadingContactos}
@@ -165,6 +168,8 @@ export default function ClienteDetalle() {
           telefono: cliente.telefono,
           regimen_fiscal: cliente.regimen_fiscal ?? "",
           uso_cfdi_default: cliente.uso_cfdi_default ?? "",
+          dias_credito: cliente.dias_credito ?? null,
+          limite_credito_mxn: cliente.limite_credito_mxn ?? null,
         }}
         contactDialogOpen={contactDialogOpen}
         setContactDialogOpen={setContactDialogOpen}
