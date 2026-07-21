@@ -9,6 +9,11 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // v13.303.75 · Fija TZ para todos los tests. Antes, los tests sensibles
+    // a timezone (`addDays`, `todayLocalISO`, `parseLocalMx`) sólo pasaban
+    // cuando el runner corría en `America/Mexico_City`. Con esto CI y locales
+    // en otra TZ producen los mismos resultados.
+    env: { TZ: "America/Mexico_City" },
     // Excluimos defaults de Vitest + tests de performance que sólo deben
     // correr bajo demanda (consumen mucha memoria y enmascaran timeouts).
     exclude: [

@@ -62,7 +62,7 @@ export function useEmbarquesPageState() {
     : undefined;
 
   // ---------- Rama A: sin filtro de estado → paginación server-side ----------
-  const { data: resultadoServer, isLoading: loadingServer } = useEmbarquesPaginados({
+  const { data: resultadoServer, isLoading: loadingServer, isError: errorServer, refetch: refetchServer } = useEmbarquesPaginados({
     search: debouncedSearch,
     filterModo,
     filterEstado: "todos",
@@ -83,7 +83,7 @@ export function useEmbarquesPageState() {
     filterModo, filterCliente, filterOperador,
     fechaDesde, fechaHasta,
   });
-  const { data: resultadoFull, isLoading: loadingFull } = useQuery({
+  const { data: resultadoFull, isLoading: loadingFull, isError: errorFull, refetch: refetchFull } = useQuery({
     queryKey: queryKeys.embarques.fullForEstadoFilter(fullSetFilters),
     queryFn: () => fetchEmbarquesParaExport(fullSetFilters),
     enabled: fullSetActivo,
@@ -91,6 +91,8 @@ export function useEmbarquesPageState() {
   });
 
   const isLoading = fullSetActivo ? loadingFull : loadingServer;
+  const isError = fullSetActivo ? errorFull : errorServer;
+  const refetch = fullSetActivo ? refetchFull : refetchServer;
 
   const alertIdSet = useMemo(() => {
     if (!alertaFilterActivo || !alertasResumen) return null;
@@ -165,7 +167,8 @@ export function useEmbarquesPageState() {
     filterAlerta === "todos" &&
     !fechaDesde &&
     !fechaHasta;
-  const isEmptyState = !isLoading && containersForView.length === 0 && sinFiltros;
+  // v13.303.75 · un fallo de red NO es un "sin resultados": exigimos !isError.
+  const isEmptyState = !isLoading && !isError && containersForView.length === 0 && sinFiltros;
 
   return {
     search,
@@ -191,7 +194,7 @@ export function useEmbarquesPageState() {
       setPageRaw(null);
     },
     embarques, filtered, totalCount: totalCountServer, displayCount,
-    expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
+    expedientesCount, contenedoresCount, totalPages, isLoading, isError, refetch, isEmptyState,
     contenedoresPorExpediente,
     extras,
     alertasResumen, alertIdSet,

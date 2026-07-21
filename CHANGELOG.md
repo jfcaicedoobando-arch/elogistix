@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.303.75] - 2026-07-21
+- **fix(ux) · Fase 1 · Red silenciosa + timezone de vencimiento.** (1) `addDays` en CxP recalculaba `vencimiento` con `new Date(iso).toISOString()`, restando un día en `America/Mexico_City` (FIX-UX-08). Ahora usa aritmética `Date.UTC` y devuelve `""` si la emisión no es un `YYYY-MM-DD` válido. (2) `vitest` fija `TZ=America/Mexico_City` para que los tests de fecha den lo mismo en CI y local. (3) `QueryClient` ahora emite `toast.error` (dedupe por queryKey) al fallar cualquier query — antes sólo se reportaba a Sentry y la UI mostraba "Sin resultados" (FIX-UX-01). (4) `DataTable` acepta `isError` + `onRetry` y muestra `ErrorStateInline` en lugar del empty-state. (5) Rutas `Embarques` y `CxP` distinguen error de red vs. lista vacía y ofrecen "Reintentar".
+
 ## [13.303.74] - 2026-07-21
+
 - **fix(sidebar) · Dos ítems marcados como activos a la vez.** En rutas hijas de `/compras` (p. ej. `/compras/facturas`) se resaltaban simultáneamente "Dashboard" (`/compras`) y "Facturas" porque el helper `isActive` usaba `startsWith` sin distinguir padre/hijo, y el `NavLink` interno aplicaba además su propio match de prefijo. Ahora `isActive` fuerza match exacto cuando existe un ítem hijo en el mismo grupo, y el `NavLink` recibe `end` en esos casos. Verificado visualmente en Full HD (`/compras/facturas` sólo resalta "Facturas").
 
 ## [13.303.73] - 2026-07-21

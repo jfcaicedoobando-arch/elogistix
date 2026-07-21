@@ -7,6 +7,7 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
 import { EmbarquesAlertasPanel } from "@/features/embarques/components/EmbarquesAlertasPanel";
@@ -27,7 +28,7 @@ function buildDescription(contenedoresCount: number, expedientesCount: number, e
 
 export default function Embarques() {
   const {
-    state, clientes, operadoresUnicos, columns, isLoading, isEmptyState,
+    state, clientes, operadoresUnicos, columns, isLoading, isError, refetch, isEmptyState,
     exportarCsv, exportandoCsv,
     navigate, prefetchEmbarque,
   } = useEmbarquesPageController();
@@ -74,7 +75,13 @@ export default function Embarques() {
         }
       />
 
-      {isEmptyState ? (
+      {isError ? (
+        <ErrorState
+          title="No pudimos cargar los embarques"
+          description="Revisa tu conexión e intenta de nuevo."
+          onRetry={() => refetch()}
+        />
+      ) : isEmptyState ? (
         <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
       ) : (
         <>

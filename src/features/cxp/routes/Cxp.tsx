@@ -39,7 +39,7 @@ export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
 
-  const { data = [], isLoading, kpis } = useFacturasCxP(f.queryArgs);
+  const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
   const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
 
@@ -144,6 +144,8 @@ export default function Cxp() {
               columns={columns}
               data={data}
               isLoading={isLoading}
+              isError={isError}
+              onRetry={() => refetch()}
               emptyMessage="No hay facturas que coincidan con los filtros"
               rowKey={(f) => f.id}
               density="compact"

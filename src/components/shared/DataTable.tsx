@@ -2,6 +2,7 @@ import React from "react";
 import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import type { LucideIcon } from "lucide-react";
 import { Table, TableFooter } from "@/components/ui/table";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
 import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
@@ -28,6 +29,11 @@ interface DataTableProps<T> {
   columns: ReadonlyArray<ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
+  /** v13.303.75 · Rama de error: cuando la query falla, mostramos un
+   *  bloque compacto con "Reintentar" en lugar del empty-state ("Sin
+   *  resultados") que confunde al usuario con una carga fallida. */
+  isError?: boolean;
+  onRetry?: () => void;
   emptyMessage?: string;
   emptyHint?: string;
   /** LucideIcon (recomendado) o ReactNode custom para el empty state built-in. */
@@ -76,6 +82,8 @@ function DataTableInner<T>({
   columns,
   data,
   isLoading = false,
+  isError = false,
+  onRetry,
   emptyMessage = "Sin resultados",
   emptyHint,
   emptyIcon,
@@ -131,6 +139,12 @@ function DataTableInner<T>({
 
   return (
     <div className={className}>
+      {isError ? (
+        <ErrorStateInline
+          message="No pudimos cargar la información. Revisa tu conexión e intenta de nuevo."
+          onRetry={onRetry}
+        />
+      ) : (
       <div className="relative">
         <div
           ref={scrollRef}
@@ -163,8 +177,9 @@ function DataTableInner<T>({
         </div>
         <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
       </div>
+      )}
 
-      {pagination && (
+      {!isError && pagination && (
         <PaginationControls
           page={pagination.page}
           totalPages={pagination.totalPages}
