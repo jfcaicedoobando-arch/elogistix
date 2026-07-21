@@ -118,7 +118,10 @@ describe("conciliacion service", () => {
         pago_proveedor_id: "p2",
         pago_factura_id: null,
         estado_conciliacion: "Conciliado",
+      });
     });
+
+
 
     it("mapea LC_MOVIMIENTO_ORG_MISMATCH del trigger a MovimientoVinculoError", async () => {
       mock.setTableResult("bbva_movimientos", {
