@@ -87,6 +87,7 @@ function mergeDataTableProps<T>(raw: DataTableProps<T>) {
   for (const [k, v] of Object.entries(raw)) {
     if (v !== undefined) merged[k] = v;
   }
+  // SAFE-CAST: merge de defaults con props tipadas; el shape resultante es compatible por construcción.
   return merged as unknown as DataTableProps<T> & typeof DATA_TABLE_DEFAULTS;
 }
 
