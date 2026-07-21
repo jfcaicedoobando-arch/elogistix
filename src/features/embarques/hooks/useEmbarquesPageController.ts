@@ -32,7 +32,7 @@ export function useEmbarquesPageController() {
   const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
-  const { isLoading, isEmptyState, contenedoresPorExpediente, extras, embarques } = state;
+  const { isLoading, isError, refetch, isEmptyState, contenedoresPorExpediente, extras, embarques } = state;
 
   const visibleIds = useMemo(() => embarques.map((e) => e.id), [embarques]);
   const { data: contenedoresInfoMap = {} } = useContenedoresInfoMap(visibleIds);
