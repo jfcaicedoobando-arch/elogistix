@@ -115,7 +115,7 @@ export function contenedoresPorExpediente(rows: EmbarqueRow[]): Record<string, n
   return map;
 }
 
-import { calcularEstadoEmbarque } from "@/features/embarques/hooks/useEmbarques";
+import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
 
 interface ApplyClientFiltersArgs {
   estadoFilterActivo: boolean;
