@@ -105,4 +105,47 @@ describe("crearFacturaManual", () => {
     await expect(crearFacturaManual(baseInput)).rejects.toThrow(/Error al crear conceptos: no/);
     expect(deleteEq).toHaveBeenCalledWith("id", "F-1");
   });
+
+  it("FIX-17 — totales cuadran al centavo con montos difíciles (0.1, 33.333, 1/3)", async () => {
+    await crearFacturaManual({
+      ...baseInput,
+      conceptos: [
+        { descripcion: "a", cantidad: 1, precio_unitario: 0.1, clave_sat: "12345678" },
+        { descripcion: "b", cantidad: 3, precio_unitario: 33.333, clave_sat: "12345678" },
+        { descripcion: "c", cantidad: 1, precio_unitario: 1 / 3, clave_sat: "12345678" },
+        { descripcion: "d", cantidad: 2, precio_unitario: 99.995, clave_sat: "12345678" },
+        { descripcion: "e", cantidad: 7, precio_unitario: 12.345, clave_sat: "12345678" },
+      ],
+    });
+    const rows = conceptosPayload as Array<{ total: number }>;
+    const p = insertPayload as Record<string, number>;
+    const sumLineas = rows.reduce((s, r) => s + r.total, 0);
+    // El encabezado debe ser Σ exacto de líneas (al centavo).
+    expect(Math.round(p.subtotal * 100)).toBe(Math.round(sumLineas * 100));
+    expect(Math.round((p.subtotal + p.iva) * 100)).toBe(Math.round(p.total * 100));
+  });
+
+  it("FIX-17 — rechaza cantidad NaN mencionando el campo", async () => {
+    await expect(
+      crearFacturaManual({
+        ...baseInput,
+        conceptos: [{ descripcion: "x", cantidad: NaN, precio_unitario: 10, clave_sat: "12345678" }],
+      }),
+    ).rejects.toThrow(/cantidad/i);
+  });
+
+  it("FIX-17 — rechaza precio_unitario Infinity", async () => {
+    await expect(
+      crearFacturaManual({
+        ...baseInput,
+        conceptos: [{ descripcion: "x", cantidad: 1, precio_unitario: Infinity, clave_sat: "12345678" }],
+      }),
+    ).rejects.toThrow(/precio_unitario/i);
+  });
+
+  it("FIX-17 — folio borrador incluye entropía UUID", async () => {
+    await crearFacturaManual(baseInput);
+    const p = insertPayload as Record<string, string>;
+    expect(p.numero).toMatch(/^BORRADOR-[0-9a-z]+-[0-9a-f]{6}$/);
+  });
 });
