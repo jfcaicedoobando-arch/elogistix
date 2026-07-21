@@ -27,11 +27,16 @@ export function addDays(iso: string, days: number): string {
   // Blindaje: si la emisión viene vacía o no es un ISO YYYY-MM-DD, devolvemos ""
   // en lugar de crashear con RangeError: Invalid time value.
   // Sentry: JAVASCRIPT-REACT-29.
+  // v13.303.75 · TZ-safe: aritmética con `Date.UTC` para evitar que
+  // `toISOString()` reste un día en zonas al oeste de UTC (America/Mexico_City).
+  // Antes: `new Date(iso+"T00:00:00")` era local, `toISOString()` lo pasaba a
+  // UTC → `vencimiento` salía un día antes en México.
   if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "";
-  const d = new Date(iso + "T00:00:00");
-  if (Number.isNaN(d.getTime())) return "";
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  const [y, m, d] = iso.split("-").map(Number);
+  const utc = new Date(Date.UTC(y, m - 1, d));
+  if (Number.isNaN(utc.getTime())) return "";
+  utc.setUTCDate(utc.getUTCDate() + days);
+  return utc.toISOString().slice(0, 10);
 }
 
 export const today = () => todayLocalISO();
