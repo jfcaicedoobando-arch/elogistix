@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.303.58] - 2026-07-21
+- **feat(clientes) · Perfil de crédito como fuente única de verdad (Fase 1-2).**
+  - **BD:** nueva columna `clientes.limite_credito_mxn` (MXN, opcional) con constraint no-negativo; nueva RPC `get_exposicion_credito_cliente(cliente_id)` que devuelve días, límite, uso, disponible y bandera `excedido`. El "en uso" se calcula sumando saldos de facturas vivas (`Emitida`, `Vencida`, `Parcialmente pagada`, `Pagada`) menos pagos aplicados (`pagos_factura.monto_aplicado_factura`) y NC aplicadas (`factura_notas_credito.estado='Aplicada'`), convertidos a MXN al TC de cada factura. `SECURITY DEFINER` con filtro por `organization_id` + `has_role('owner')`; `EXECUTE` sólo a `authenticated`/`service_role`.
+  - **UI perfil cliente:** el modal "Editar cliente" (`DialogEditarCliente.tsx`) suma la sección **Condiciones de crédito** con los campos "Días de crédito" y "Límite de crédito (MXN)" (vacío = sin límite). Nueva tarjeta `ClienteCreditoCard.tsx` en la pestaña Información muestra días, límite, en uso, disponible y badge "Límite excedido" cuando aplica; consume la RPC vía nuevo hook `useExposicionCreditoCliente` con caché de 60s.
+  - **Auditoría:** `SENSITIVE_FIELDS.cliente` ahora incluye `limite_credito_mxn`, así los cambios quedan registrados en bitácora.
+  - **Validación:** `clienteInsertSchema`/`clienteUpdateSchema` aceptan el nuevo campo con rango 0…1_000_000_000.
+  - Pendiente Fase 3-4: aplicar el límite al emitir proforma/factura y mostrar badges en tablas globales.
+
+
+
 ## [13.303.57] - 2026-07-21
 - **fix(clientes) · Doble toast "Cliente actualizado".** Al guardar cambios en detalle de cliente aparecían dos notificaciones porque tanto `useUpdateCliente` (mutación) como `useClienteDetalleHandlers.handleSaveCliente` disparaban `notifySuccess`. Se removió el toast del hook de mutación; el handler queda como única fuente para conservar el contexto (registro en bitácora + cierre del modal).
 
