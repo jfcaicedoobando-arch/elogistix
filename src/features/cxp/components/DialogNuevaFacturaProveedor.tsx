@@ -37,6 +37,14 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
   const ret = Number(ctl.values.retenciones) || 0;
   const moneda = ctl.values.moneda;
 
+  const conceptosParaCuadre = useMemo<ConceptoParaCuadre[]>(() => {
+    if (ctl.cfdiConceptos.length > 0) {
+      return ctl.cfdiConceptos.map((c) => ({ monto: Number(c.importe) || 0, cantidad: c.cantidad }));
+    }
+    return Object.values(ctl.vinculos).map((v) => ({ monto: Number(v.monto) || 0 }));
+  }, [ctl.cfdiConceptos, ctl.vinculos]);
+  const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
+
   const headerAside = (
     <>
       <div className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Total {moneda}</div>
