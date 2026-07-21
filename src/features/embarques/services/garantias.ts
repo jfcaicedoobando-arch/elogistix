@@ -46,3 +46,20 @@ export async function updateGarantia(input: UpdateGarantiaInput): Promise<void> 
   });
   if (error) throw mapApiError(error);
 }
+
+/**
+ * Fase v13.303.82 — Repobla garantías `pendiente` de un embarque usando la
+ * tarifa aplicada (o, en su defecto, la condición de la naviera por nombre).
+ * Devuelve el número de filas actualizadas.
+ */
+export async function refrescarGarantiasDesdeTarifa(embarqueId: string): Promise<number> {
+  // SAFE-CAST: RPC nueva, aún no reflejada en tipos generados (migración 2026-07-21).
+  const rpc = supabase.rpc as unknown as (
+    name: "refrescar_garantia_desde_tarifa",
+    args: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: { message?: string } | null }>;
+  const { data, error } = await rpc("refrescar_garantia_desde_tarifa", { p_embarque_id: embarqueId });
+  if (error) throw mapApiError(error);
+  return typeof data === "number" ? data : Number(data ?? 0);
+}
+
