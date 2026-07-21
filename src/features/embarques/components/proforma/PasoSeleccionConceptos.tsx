@@ -111,11 +111,9 @@ export function PasoSeleccionConceptos({
 
       <ProformaFooterFields
         notas={notas}
-        diasCredito={diasCredito}
-        operadorEmbarque={operadorEmbarque}
         onNotasChange={onNotasChange}
-        onDiasCreditoChange={onDiasCreditoChange}
       />
+
     </div>
   );
 }
