@@ -58,10 +58,26 @@ export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string)
     p_cotizacion_id: cotizacionId,
   });
   if (error) {
-    if (typeof error.message === "string" && /LC_TARIFA_REQUIERE_REVALIDACION/.test(error.message)) {
-      // La revalidación cambió entre el pre-check y la RPC — rehidratar para el modal.
+    const msg = typeof error.message === "string" ? error.message : "";
+    if (/LC_TARIFA_REQUIERE_REVALIDACION/.test(msg)) {
       const r = await revalidarTarifa(cotizacionId).catch(() => null);
       if (r) throw new RevalidacionRequeridaError(r);
+    }
+    // FIX-21: mapear tokens LC_* a mensajes claros en es-MX.
+    if (/LC_COT_ELIMINADA/.test(msg)) {
+      throw new Error("Esta cotización fue eliminada y no puede convertirse en embarque.");
+    }
+    if (/LC_COT_ESTADO_INVALIDO/.test(msg)) {
+      throw new Error("Solo se pueden convertir cotizaciones en estado Aceptada o En operación.");
+    }
+    if (/LC_COT_SIN_CLIENTE/.test(msg)) {
+      throw new Error("Convierte el prospecto a cliente antes de crear el borrador de embarque.");
+    }
+    if (/LC_COT_NO_ENCONTRADA/.test(msg)) {
+      throw new Error("La cotización no existe o fue eliminada.");
+    }
+    if (/LC_NO_AUTORIZADO/.test(msg)) {
+      throw new Error("No tienes permisos para crear un borrador desde esta cotización.");
     }
     throw error;
   }
@@ -69,3 +85,4 @@ export async function crearEmbarqueBorradorDesdeCotizacion(cotizacionId: string)
   return data as string;
 
 }
+

@@ -20,7 +20,21 @@ export async function portalResponderCotizacion(
     p_respuesta: respuesta,
     p_comentario: comentario,
   });
-  if (error) throw error;
+  if (error) {
+    const msg = typeof error.message === "string" ? error.message : "";
+    // FIX-25: tokens LC_* → mensajes claros en es-MX.
+    if (/LC_COT_ELIMINADA/.test(msg)) {
+      throw new Error("Esta cotización ya no está disponible.");
+    }
+    if (/LC_COT_NO_RESPONDIBLE/.test(msg)) {
+      throw new Error("Esta cotización ya no puede responderse (ya fue respondida o cambió de estado).");
+    }
+    if (/LC_COT_NO_ENCONTRADA/.test(msg)) {
+      throw new Error("Cotización no encontrada o sin acceso.");
+    }
+    throw error;
+  }
+
 
   try {
     await supabase.functions.invoke("notificar-respuesta-cotizacion", {

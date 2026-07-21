@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
 import {
@@ -25,6 +26,7 @@ import {
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 const VARIABLES = ["{{contacto}}", "{{empresa}}", "{{vendedor}}", "{{monto}}", "{{moneda}}", "{{etapa}}"];
 
+
 export default function PlantillasMensajeEditor() {
   const { data = [], isLoading } = usePlantillasMensaje(undefined, false);
   const crear = useCrearPlantilla();
@@ -33,6 +35,8 @@ export default function PlantillasMensajeEditor() {
   const { toast } = useToast();
 
   const [nuevo, setNuevo] = useState({ nombre: "", canal: "email" as PlantillaCanal, asunto: "", cuerpo: "" });
+  const [aEliminar, setAEliminar] = useState<{ id: string; nombre: string } | null>(null);
+
 
   const handleCrear = async () => {
     if (!nuevo.nombre.trim() || !nuevo.cuerpo.trim()) {
@@ -128,12 +132,11 @@ export default function PlantillasMensajeEditor() {
                       size="icon"
                       variant="ghost"
                       className="h-8 w-8 text-destructive"
-                      onClick={() => {
-                        if (confirm(`¿Eliminar plantilla "${p.nombre}"?`)) eliminar.mutate(p.id);
-                      }}
+                      onClick={() => setAEliminar({ id: p.id, nombre: p.nombre })}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
+
                   </div>
                 </div>
                 {p.canal === "email" && (
@@ -162,6 +165,26 @@ export default function PlantillasMensajeEditor() {
           </ul>
         )}
       </CardContent>
+
+      <ConfirmActionDialog
+        open={aEliminar !== null}
+        onOpenChange={(v) => { if (!v) setAEliminar(null); }}
+        title="Eliminar plantilla"
+        description={
+          <>
+            Vas a eliminar la plantilla <strong>{aEliminar?.nombre}</strong>. Esta acción no se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar"
+        variant="destructive"
+        isPending={eliminar.isPending}
+        onConfirm={async () => {
+          if (!aEliminar) return;
+          await eliminar.mutateAsync(aEliminar.id);
+          setAEliminar(null);
+        }}
+      />
     </Card>
   );
 }
+

@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.303.50] - 2026-07-21
+- **Fase 2 · Guards de estado y confirmaciones destructivas (FIX-21 · FIX-25 · FIX-34/37 · auditoría v2-2).**
+  - **BD — `crear_embarque_borrador_core`:** ahora rechaza cotizaciones eliminadas (`LC_COT_ELIMINADA`), acepta estados `Aceptada` y `En operación` (`LC_COT_ESTADO_INVALIDO` para el resto), y detecta embarques huérfanos (con `cotizacion_id` pero sin link inverso) devolviendo el existente en vez de duplicar. Todos los errores usan tokens `LC_*` estables (`LC_COT_NO_ENCONTRADA`, `LC_COT_SIN_CLIENTE`, `LC_NO_AUTORIZADO`). Preserva la lógica de inserción completa; sólo se endurecen guards + idempotencia.
+  - **BD — `portal_responder_cotizacion`:** es idempotente — si el cliente ya respondió (`Aceptada`/`Rechazada`/`En operación`), devuelve la respuesta previa con `idempotente: true` en lugar de fallar. Rechaza cotizaciones eliminadas (`LC_COT_ELIMINADA`). Cambia errores a tokens `LC_COT_NO_RESPONDIBLE` / `LC_COT_NO_ENCONTRADA` / `LC_RESPUESTA_INVALIDA`. Añade `FOR UPDATE` para evitar dobles respuestas concurrentes.
+  - **UI — `conversiones/embarques.ts` y `conversiones/portal.ts`:** mapean los tokens `LC_*` a mensajes claros en es-MX ("Esta cotización fue eliminada…", "Solo se pueden convertir cotizaciones en estado Aceptada o En operación…", etc.) antes de propagar al toast.
+  - **UI — `PlantillasMensajeEditor.tsx`:** reemplazado el último `confirm()` nativo de la app por `ConfirmActionDialog` (variante destructiva). Ya no queda ningún prompt bloqueante del navegador en el código de aplicación.
+
+
+
 ## [13.303.49] - 2026-07-21
 - **Fase 1 · Higiene de repositorio (FIX-46 / FIX-47 / FIX-48 parciales · auditoría v2-2).**
   - Eliminados dumps y lockfiles obsoletos: `all_exports.txt`, `all_tests.txt`, `exported_files.txt`, `audit_tests.py`, `find_empty_tests.py`, `bun.lockb`, `package-lock.json`. Único lockfile válido = `bun.lock`.
