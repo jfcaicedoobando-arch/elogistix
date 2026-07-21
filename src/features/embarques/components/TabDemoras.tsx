@@ -92,11 +92,10 @@ export function TabDemoras({ embarqueId, canEdit }: Props) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Demoras por contenedor</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Captura la fecha real de descarga y devolución de cada contenedor para que el sistema
-            calcule las demoras con el tabulador escalonado de la naviera. Si los campos quedan
-            vacíos se usan las fechas del timeline del embarque. El override de días libres
-            sobreescribe el default configurado en la naviera. Al guardar, los conceptos de
-            demoras automáticos se recalculan.
+            Captura la fecha real de descarga y devolución de cada contenedor para calcular las
+            demoras con el tabulador de la naviera. Si dejas un campo vacío, usamos las fechas del
+            timeline del embarque. El campo "Días libres" solo sobreescribe el default de la naviera
+            cuando lo capturas. Al guardar, recalculamos automáticamente los conceptos de demora.
           </p>
         </CardHeader>
         <CardContent className="p-0">
