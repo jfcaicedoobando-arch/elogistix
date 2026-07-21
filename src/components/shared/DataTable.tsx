@@ -177,8 +177,9 @@ function DataTableInner<T>({
         </div>
         <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
       </div>
+      )}
 
-      {pagination && (
+      {!isError && pagination && (
         <PaginationControls
           page={pagination.page}
           totalPages={pagination.totalPages}
