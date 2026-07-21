@@ -48,8 +48,11 @@ export function useDialogGenerarProformaController(
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   const [ivaPorConcepto, setIvaPorConcepto] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
-  const [diasCredito, setDiasCredito] = useState<string>("");
   const [filtroContenedor, setFiltroContenedor] = useState<FiltroContenedor>("todos");
+
+  // v13.303.80: diasCredito y operador NO son editables en el modal — provienen
+  // de la fuente única de verdad (clientes.dias_credito / embarques.operador).
+  const diasCredito = diasCreditoDefault != null ? String(diasCreditoDefault) : "";
 
   // Conceptos visibles según el filtro de contenedor
   const conceptosVisibles = useMemo(
@@ -71,7 +74,6 @@ export function useDialogGenerarProformaController(
       setSeleccionados(init.seleccionados);
       setIvaPorConcepto(init.ivaPorConcepto);
       setNotas("");
-      setDiasCredito("");
     } else if (!open && wasOpenRef.current) {
       wasOpenRef.current = false;
     }
@@ -89,12 +91,6 @@ export function useDialogGenerarProformaController(
     });
   }, [open, filtroContenedor, conceptosVisibles]);
 
-  // Precarga días de crédito del cliente cuando el query se resuelve
-  useEffect(() => {
-    if (open && diasCreditoDefault != null) {
-      setDiasCredito(String(diasCreditoDefault));
-    }
-  }, [open, diasCreditoDefault]);
 
   const toggle = (id: string) => {
     setSeleccionados((prev) => {
