@@ -9,6 +9,7 @@ import {
   subirArchivosCfdiFactura,
   vincularFacturaAConceptos,
   crearConceptoCostoYVincular,
+  crearAjustesFacturaProveedor,
   insertarConceptosCfdi,
   type CfdiConceptoParsed,
 } from "@/features/cxp/services";
@@ -64,6 +65,7 @@ export async function uploadCfdiSafe(params: {
 export interface VincularSafeResult {
   liquidados?: number;
   conceptoAdHocExpediente?: string;
+  ajustesCreados?: number;
 }
 
 export async function vincularSafe(params: {
@@ -92,8 +94,27 @@ export async function vincularSafe(params: {
         fechaEmision: values.emision,
         lineas,
       });
+      // v13.303.97: Reflejar diferencias factura vs devengado como ajustes de costo en el embarque.
+      let ajustesCreados = 0;
+      if (values.provId) {
+        try {
+          const r = await crearAjustesFacturaProveedor({
+            facturaId, organizationId,
+            folio: values.folio.trim(),
+            fechaEmision: values.emision,
+            moneda: values.moneda,
+            proveedorId: values.provId,
+            proveedorNombre: values.provNombre,
+            vinculos,
+          });
+          ajustesCreados = r.ajustesCreados;
+        } catch (ajErr) {
+          const err = ajErr as { message?: string };
+          toast.warning(`Factura guardada pero los ajustes de costo fallaron: ${err.message ?? "error"}`);
+        }
+      }
       // Fase P.3: la liquidación la determina el trigger en BD a partir de pagos.
-      return { liquidados: 0 };
+      return { liquidados: 0, ajustesCreados };
     } catch (linkErr) {
       const err = linkErr as { message?: string };
       toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
@@ -125,13 +146,15 @@ export async function vincularSafe(params: {
 }
 
 export function buildFacturaSuccessDescription(r: VincularSafeResult): string | undefined {
+  const parts: string[] = [];
   if (r.liquidados && r.liquidados > 0) {
-    return r.liquidados === 1
-      ? "1 concepto marcado como pagado"
-      : `${r.liquidados} conceptos marcados como pagados`;
+    parts.push(r.liquidados === 1 ? "1 concepto marcado como pagado" : `${r.liquidados} conceptos marcados como pagados`);
   }
   if (r.conceptoAdHocExpediente) {
-    return `Concepto creado en embarque ${r.conceptoAdHocExpediente}`;
+    parts.push(`Concepto creado en embarque ${r.conceptoAdHocExpediente}`);
   }
-  return undefined;
+  if (r.ajustesCreados && r.ajustesCreados > 0) {
+    parts.push(r.ajustesCreados === 1 ? "1 ajuste aplicado al embarque" : `${r.ajustesCreados} ajustes aplicados al embarque`);
+  }
+  return parts.length ? parts.join(" · ") : undefined;
 }

@@ -1,59 +1,77 @@
-# Validación en vivo del cuadre conceptos ↔ subtotal (CxP)
+# Ajustes de costo en embarque desde factura de proveedor
 
 ## Problema
 
-Hoy el error `LC_CXP_DESCUADRE` sólo aparece al **aprobar** la factura, cuando el usuario ya cerró el editor de conceptos y cambió de contexto. La regla de negocio existe en el trigger de BD (`aprobar_factura_proveedor`), pero la UI no la refleja mientras se captura.
+Hoy la utilidad del embarque se calcula sumando `conceptos_costo.monto` — los costos que se **devengaron** al cotizar/crear el embarque. Cuando llega la factura real del proveedor con un monto distinto (típicamente menor, por un descuento como el caso FP-000039: cotizado 19,150 vs facturado 18,639.60, delta −510.40 USD), la diferencia se guarda solamente en `proveedor_facturas_conceptos` como puente. **No toca `conceptos_costo`**, así que el embarque muestra el costo viejo y la utilidad queda subestimada por 510.40 USD.
 
-Meta: que el usuario **vea el descuadre en tiempo real** dentro del editor de conceptos y no pueda guardar/aprobar hasta que la suma neta cuadre con el subtotal de la factura.
+## Modelo elegido
 
-## Alcance
+Cuando existe un delta entre lo devengado y lo facturado, se **agrega un renglón nuevo** en `conceptos_costo` del mismo embarque etiquetado como "Ajuste factura {folio}". Signo:
 
-Solo UI del editor de conceptos de CxP. No se toca el trigger de BD ni el flujo de aprobación (siguen siendo la última línea de defensa).
+- Delta negativo (facturado < devengado) → renglón negativo → **utilidad sube**.
+- Delta positivo (facturado > devengado) → renglón positivo → utilidad baja.
 
-Archivos objetivo (a confirmar al pasar a build):
-- `src/features/cxp/components/DialogDetallePagosProveedor.parts.tsx` (sección "Conceptos / Desglose contable")
-- El componente que renderiza el editor de renglones dentro del detalle (típicamente `ConceptosEditor*` en `src/features/cxp/components/`)
-- Reutiliza `Kpi` / chip existentes del rediseño reciente para consistencia visual
+Se conserva el concepto original intacto (historial) y el ajuste queda auditable como fila propia.
 
-## Diseño funcional
+## Cambios
 
-1. **Barra de cuadre sticky** arriba de la tabla de conceptos con 3 valores:
-   - Subtotal factura (fuente de verdad, read-only)
-   - Suma de conceptos (live)
-   - Diferencia = Subtotal − Suma
-2. **Estados visuales** de la barra:
-   - Verde ✅ "Cuadrado" cuando `|diferencia| ≤ 0.01`
-   - Ámbar ⚠️ "Faltan $X.XX" cuando la suma es menor
-   - Rojo ⛔ "Sobran $X.XX" cuando la suma es mayor
-3. **Bloqueo de guardado**:
-   - Botón "Guardar conceptos" deshabilitado mientras no cuadre, con tooltip explicando la diferencia exacta.
-   - Al pasar el mouse, muestra los dos valores para que el usuario sepa hacia dónde ajustar.
-4. **Ayuda contextual** (una línea muted):
-   - "¿Descuento del proveedor? Agrega un renglón con importe negativo por la diferencia."
-5. **Soporte de importes negativos**:
-   - Permitir `-` en el input numérico de importe (ya usa `NumericInput`; confirmar que acepta negativos, si no, agregar prop `allowNegative`).
-   - IVA del renglón negativo por defecto 0, editable.
-6. **Precisión**:
-   - Comparación con tolerancia `0.01` usando `currency.js` (ya es estándar del proyecto según `financialUtils.ts`).
-   - Redondeo a 2 decimales sólo para display; los cálculos internos usan la lib.
+### 1. Nuevo servicio `crearAjustesFacturaProveedor`
+`src/features/cxp/services/crearAjustesFacturaProveedor.ts`
 
-## Fuera de alcance
+Recibe la factura recién guardada + la información de captura. Genera:
 
-- No se toca el flujo XML (ya trae el cuadre garantizado por SAT).
-- No se modifica el trigger de BD ni el mensaje `LC_CXP_DESCUADRE` (siguen protegiendo si el usuario burla la UI).
-- No se agregan tests E2E; sí un test unitario del helper de cuadre.
+- **Por cada `vinculo` con `monto ≠ montoOriginal`**: inserta un `concepto_costo` en el mismo `embarque_id` con:
+  - `monto = monto - montoOriginal` (firmado)
+  - `origen = 'ajuste_factura_proveedor'`
+  - `concepto = 'Ajuste factura {folio}: {concepto_original}'`
+  - `proveedor_id`, `moneda`, `tasa_iva_aplicada` heredados del original
+  - Además crea la fila puente en `proveedor_facturas_conceptos` para trazabilidad y para que el trigger `tg_pfc_recalc_liq` propague el estado de liquidación desde los pagos reales.
+
+- **En flujo CFDI con `embarqueAdHoc`**: si el XML trae **múltiples líneas** (por ej. 19,150 + −510.40), crear un `concepto_costo` por cada línea (firmado), en vez de uno solo por el total como hoy hace `crearConceptoCostoYVincular`. Así los descuentos aparecen como filas negativas.
+
+### 2. Wire en el submit
+`src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts`
+
+Después de `vincularSafe`, llamar `crearAjustesFacturaProveedor` best-effort (toast.warning si falla, la factura ya quedó guardada). Extender `VincularSafeResult` con `ajustesCreados` para incluirlo en el toast de éxito ("2 ajustes de costo aplicados al embarque").
+
+### 3. Reversibilidad
+`src/features/cxp/services/cancelarFacturaProveedor.ts`
+
+Al cancelar la factura, soft-delete de los `conceptos_costo` con `origen='ajuste_factura_proveedor'` referenciados por esta factura vía `proveedor_facturas_conceptos`. Sin esto, un descuento cancelado dejaría al embarque con una utilidad falsamente inflada.
+
+### 4. UI — Distinguir el ajuste en el detalle del embarque
+Tab de costos del embarque: agregar un badge "Ajuste" (`variant="secondary"`, muted) cuando `origen === 'ajuste_factura_proveedor'` para que el usuario entienda por qué hay un renglón negativo/positivo pequeño junto al concepto original.
+
+### 5. Feedback en captura
+`src/features/cxp/components/CuadreConceptosBar.tsx`
+
+Cuando el estado es "cuadrado" y hay al menos un `vinculo` con delta ≠ 0, agregar una línea de ayuda: "Se aplicará un ajuste de {X} USD al embarque {expediente}". Preview del efecto en utilidad antes de guardar.
+
+### 6. Tests
+- `crearAjustesFacturaProveedor.test.ts`: delta positivo, negativo, cero (no crea), múltiples vínculos, CFDI multi-línea con embarqueAdHoc, cancelación revierte ajustes.
+- Verificar que `estadoResultados.ts` incorpora naturalmente los ajustes (ya suma todos los `conceptos_costo` sin filtro por `origen`).
+
+### 7. Versión + changelog
+`APP_VERSION` → `13.303.97`. Entry en `CHANGELOG.md` con analogía y caso FP-000039 concreto.
+
+## No hace falta
+
+- Migración de esquema: `conceptos_costo.origen` ya es `text` libre, no enum.
+- Cambio al motor de utilidad: `estado_resultados` ya suma todos los `conceptos_costo` no eliminados, así que ajustes con montos firmados se incorporan automáticamente.
 
 ## Detalles técnicos
 
-- **Helper puro**: `calcularCuadreConceptos(subtotal, conceptos)` → `{ suma, diferencia, estado: 'cuadrado'|'faltante'|'sobrante' }` en un archivo nuevo bajo `src/features/cxp/utils/`. Test unitario con fixture del caso real (19,150 + −510.40 vs 18,639.60).
-- **Hook**: `useCuadreConceptos(subtotal, conceptos)` que memoiza el cálculo y devuelve además `puedeGuardar: boolean`.
-- **Componente**: `<CuadreConceptosBar />` reutilizando `Kpi` con variante `emphasis` cuando está en rojo/ámbar.
-- **CHANGELOG + APP_VERSION** bump patch (`13.303.96`).
-- **Reglas del proyecto respetadas**: archivo ≤ 200 líneas, sin `any`, sin colores hardcodeados (usa tokens `--destructive`, `--warning`, `--success` ya existentes), `useEffect` no aplica (todo derivado).
+**Fórmula final de utilidad del embarque**:
+```
+utilidad = Σ conceptos_venta.monto − Σ conceptos_costo.monto (deleted_at IS NULL)
+```
+Con los ajustes firmados, el segundo sumando se corrige solo. Ej. FP-000039:
+```
+Antes:  costos = 19,150.00 → utilidad = ingresos − 19,150.00
+Después: costos = 19,150.00 + (−510.40) = 18,639.60
+         utilidad = ingresos − 18,639.60  (+510.40 vs antes)
+```
 
-## Criterio de aceptación
+**Idempotencia**: si el usuario re-vincula (edición futura), el servicio debe detectar ajustes previos de la misma factura y actualizarlos en lugar de duplicar. Se identifican con `origen='ajuste_factura_proveedor'` + puente en `proveedor_facturas_conceptos` con la misma `proveedor_factura_id`.
 
-- Al abrir el editor de conceptos con la factura del ejemplo (FP-000039), la barra muestra ⚠️ "Faltan $-510.40" en rojo/ámbar y el botón Guardar está deshabilitado.
-- Al agregar un renglón por `-510.40`, la barra pasa a ✅ verde y Guardar se habilita.
-- Si el usuario intenta poner `-600`, la barra pasa a "Sobran $89.60" y bloquea de nuevo.
-- Aprobar la factura después de guardar cuadrado ya no dispara `LC_CXP_DESCUADRE`.
+**Multi-moneda**: el ajuste hereda la moneda del concepto original. Si la factura viene en otra moneda que el concepto (edge case), se preserva la del concepto y se documenta como limitación.
