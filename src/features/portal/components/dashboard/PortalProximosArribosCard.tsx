@@ -25,7 +25,7 @@ function etaProximityClass(eta: string | null | undefined): string {
 
 interface ArriboItem {
   id: string;
-  expediente: string;
+  expediente: string | null;
   modo: string;
   eta?: string | null;
   puerto_destino?: string | null;
