@@ -24,6 +24,8 @@ export default function DireccionDashboard() {
         description="¿Ganamos dinero, quién nos debe, y vamos según meta?"
       />
 
+      <TipoCambioFallbackBanner />
+
       {error && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
