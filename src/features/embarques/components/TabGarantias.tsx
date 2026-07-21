@@ -55,6 +55,7 @@ export function TabGarantias({ embarqueId, canEdit, fechaLlegadaReal }: Props) {
   }, [rows]);
 
   const { columns } = useGarantiasColumns({ embarqueId, canEdit, fechaLlegadaReal });
+  const refrescarMut = useRefrescarGarantiasDesdeTarifa(embarqueId);
 
   if (isLoading) return <div className="text-sm text-muted-foreground p-6">Cargando garantías…</div>;
 
