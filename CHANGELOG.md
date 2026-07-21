@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.89] - 2026-07-21
+- **ui(cxp) · Prefijo `$` en Monto de "Registrar pago a proveedor" + spinners fuera.** El input de Monto (y el de Diferencia cambiaria MXN) ahora muestra `$` como adorno a la izquierda para dejar claro que es dinero, con `text-right tabular-nums` para alinear números. En paralelo se ocultan las flechitas nativas de todos los `<input type="number">` de la app vía CSS global en `src/index.css` (Chrome/Safari `::-webkit-*-spin-button` + Firefox `-moz-appearance: textfield`) — un solo cambio limpia los 39 archivos que las usaban sin tocar cada uno. El scroll-wheel ya se intercepta desde antes en `Input`. Analogía: al cajero del banco le pusimos un letrero "$" en la ventanilla, y le quitamos las palanquitas de "sube/baja" que nadie usaba y confundían al cliente.
+
 ## [13.303.88] - 2026-07-21
 - **fix(ui) — Clic en toast cerraba el modal abierto.** Cuando un toast de Sonner aparecía encima de un modal, al hacer clic en su X (o en cualquier parte del toast) Radix Dialog lo interpretaba como "clic fuera" y cerraba el modal, porque el toast vive en un portal hermano al del Dialog. Se interceptan `onPointerDownOutside` y `onInteractOutside` en `DialogContent` para llamar `preventDefault()` cuando el `target` está dentro de `[data-sonner-toaster]`. Fix global: aplica a todos los modales sin tocar cada uno. `AlertDialog` no necesita cambio: Radix ya bloquea el cierre por clic fuera en alerts. Analogía: el guardia del modal ya no confunde un post-it flotando en el pasillo con "el usuario salió de la habitación".
 
