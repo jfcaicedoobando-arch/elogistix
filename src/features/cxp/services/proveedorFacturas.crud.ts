@@ -62,9 +62,11 @@ export async function existeFacturaDuplicada(
 export async function softDeleteFacturaProveedor(id: string, userId: string | null) {
   await run(
     supabase
-      .from("proveedor_facturas")
-      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-      .eq("id", id),
+      // SAFE-CAST: los tipos se regeneran después de la migración; el RPC ya existe en BD.
+      .rpc("soft_delete_proveedor_factura" as never, {
+        p_factura_id: id,
+        p_deleted_by: userId,
+      } as never),
   );
   await registrarActividad({
     modulo: "cxp",

@@ -8257,6 +8257,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      soft_delete_proveedor_factura: {
+        Args: { p_deleted_by?: string; p_factura_id: string }
+        Returns: undefined
+      }
       soft_delete_record: {
         Args: { _id: string; _table: string }
         Returns: undefined

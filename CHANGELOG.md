@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.71] - 2026-07-21
+- **fix(cxp/rls) · Eliminación de factura proveedor para `admin_org`.** El `UPDATE` directo seguía fallando con `42501` porque PostgREST revalida la fila después de poner `deleted_at` y ésta ya no cumple la política restrictiva de lectura `Hide soft deleted proveedor_facturas`. Se agregó el RPC seguro `soft_delete_proveedor_factura`, que valida usuario firmado + membresía/rol de la organización y marca el soft delete desde backend. También se alineó `Tenant CRUD proveedor_facturas` con roles efectivos por organización (`admin_org`, contabilidad y tesorería). Reportado con requestId `33f9150b-b0bc-46ac-9471-e3f1c8b53a54`.
+
 ## [13.303.70] - 2026-07-21
 - **fix(rls) · Soft delete de `proveedor_facturas` volvía a fallar.** El fix de v13.303.68 dejó `WITH CHECK = true`, pero la política `Hide soft deleted proveedor_facturas` seguía siendo `FOR ALL RESTRICTIVE`, así que en el UPDATE de soft-delete PostgREST seguía marcando `42501 "new row violates row-level security policy"` (requestId `3f004730-3d80-47ca-bf13-8cac37bcc8a8`). Convertida la política a `FOR SELECT` (su intención real: ocultar filas borradas en lecturas). Los permisos de escritura por tenant/rol siguen viviendo en `Tenant CRUD proveedor_facturas`.
 
