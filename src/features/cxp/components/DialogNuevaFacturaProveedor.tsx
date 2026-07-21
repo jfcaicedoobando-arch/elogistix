@@ -86,6 +86,8 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           cfdiReady={!!ctl.pendingCfdi}
         />
 
+        <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />
+
         <FacturaProveedorFormFields
           values={ctl.values}
           onChange={ctl.handleChange}
