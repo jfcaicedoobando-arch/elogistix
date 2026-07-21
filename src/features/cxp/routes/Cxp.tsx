@@ -39,7 +39,7 @@ export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
 
-  const { data = [], isLoading, kpis } = useFacturasCxP(f.queryArgs);
+  const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
   const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
 
