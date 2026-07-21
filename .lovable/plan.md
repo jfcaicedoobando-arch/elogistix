@@ -1,57 +1,68 @@
 ## Contexto
 
-Todas las descargas de PDF/XML desde el detalle de factura (factura, nota de crédito y REP/complemento de pago) pasan por la edge function `supabase/functions/facturapi-descargar/index.ts`, que arma el `Content-Disposition` y determina el nombre final. Hoy queda así:
+Ayer arreglamos que las descargas de PDF/XML **desde el detalle de la factura** salieran con nombre descriptivo (`Factura_F975_Cliente_2026-07-21.pdf`) — primero cambiando el edge function `facturapi-descargar` y ayer exponiendo `Content-Disposition` vía CORS.
 
-- Factura: `LibreCarga_F971.pdf`
-- Nota de crédito: `LibreCarga_NC-NCA10.pdf`
-- REP: `LibreCarga_REP-A5.pdf`
+Me pediste revisar que "esto no pase" también en:
+1. Los correos que le mandamos al cliente.
+2. Los XMLs.
 
-Problemas: no se distingue si es factura o NC/REP a simple vista, no incluye cliente ni fecha, y el prefijo de la org repite algo obvio para quien descarga desde su propia cuenta.
+## Qué revisé
 
-## Nuevo esquema de nombres
+| Camino | Estado hoy | Acción |
+|---|---|---|
+| XML descargado desde detalle de factura (ícono ⬇️ XML) | Ya usa `buildFilename(...)` con `ext: "xml"` y ya recibe el fix de CORS `Access-Control-Expose-Headers` de ayer | ✅ Ya cubierto — no hay que tocar nada |
+| Correo enviado por FacturApi (`facturapi-enviar-email`) | FacturApi arma y manda el correo con los adjuntos del lado de ellos; el nombre de los adjuntos lo controla FacturApi | ⚠️ Fuera de nuestro control — no se puede cambiar |
+| Correo branded (`enviar-factura-email`) — el que usa la plantilla `factura-enviada` con links a PDF/XML firmados | ❌ **Gap real**: en `helpers.ts` línea 227–232 firma las URLs con `download: '${orgSlug}_Factura-${safeNumero}.{pdf,xml}'` (patrón viejo, sin cliente ni fecha, y sin distinguir NotaCredito/REP) | 🔧 Alinear al mismo formato |
 
-```text
-{Tipo}_{FolioSerie}_{Cliente}_{Fecha}.{ext}
+Analogía: los archivos que el cliente descarga desde el detalle de la app ya llevan etiqueta clara; los que descarga desde el link del correo todavía llevan la etiqueta vieja de FedEx.
+
+## Cambios propuestos
+
+### 1) `supabase/functions/enviar-factura-email/helpers.ts`
+
+En `prepareAttachments(...)`:
+- Importar el helper compartido `buildFilename` de `../_shared/facturaFilename.ts` (ya existe, ya tiene tests Deno).
+- Reemplazar la línea que arma el nombre a descargar:
+
+```ts
+// antes
+signUrl(admin, pdfPath, `${orgSlug}_Factura-${safeNumero}.pdf`)
+signUrl(admin, xmlPath, `${orgSlug}_Factura-${safeNumero}.xml`)
+
+// después
+const folioSerie = factura.numero || `${factura.serie ?? ""}${factura.folio_fiscal ?? ""}`;
+signUrl(admin, pdfPath, buildFilename({
+  tipo: "Factura",
+  folioSerie,
+  cliente: factura.cliente_nombre,
+  fecha: factura.fecha_emision,
+  ext: "pdf",
+}))
+signUrl(admin, xmlPath, buildFilename({ ... ext: "xml" }))
 ```
 
-Ejemplos:
-- `Factura_F971_ClienteAcme_2026-07-21.pdf`
-- `NotaCredito_NC-A10_ClienteAcme_2026-07-21.xml`
-- `REP_A5_ClienteAcme_2026-07-21.pdf`
+- Quitar la función local `sanitizeDownloadFilename` (queda muerta) si no la usa otro sitio; si sí, dejarla.
+- `orgSlug` deja de ser prefijo del filename, pero se sigue usando en `basePath` del bucket (privado), así que se conserva la carga de `fetchOrgSlug`.
 
-Reglas:
-- `Tipo`: `Factura`, `NotaCredito` o `REP`.
-- `FolioSerie`: preferir `numero` (folio interno consolidado) si existe; si no, `serie+folio_fiscal`. Fallback `SF` (sin folio).
-- `Cliente`: `cliente_nombre` slugificado (misma normalización que `slugifyOrg`: sin acentos, `[^a-zA-Z0-9]→_`, máx 40 chars). Si viene vacío, se omite ese segmento.
-- `Fecha`: `fecha_emision` (o `acuse_cancelacion_fecha` para NC/REP sólo si `fecha_emision` no existe) en `YYYY-MM-DD` UTC.
-- Se elimina el prefijo `{orgSlug}_` del nombre visible — la organización queda implícita porque el usuario descarga desde su propia sesión. (Se conserva `slugifyOrg` porque otras edge functions siguen usándolo.)
+### 2) Tests
 
-## Cambios técnicos
+- Añadir un caso Deno en `helpers_test.ts` (si existe) que verifique que la URL firmada se pide con `download` = `Factura_F975_Cliente_Acme_2026-07-21.pdf` para un input controlado.
+- El helper `buildFilename` ya tiene coverage propio, no se duplica.
 
-1. **`supabase/functions/facturapi-descargar/index.ts`**
-   - Ampliar el `select` de cada `resolveFrom*` para traer `cliente_nombre`, `fecha_emision` y `numero` cuando aplique (para `pagos_factura` se hará un join ligero contra `facturas` vía el `factura_id` que ya se lee, para heredar cliente/fecha del CFDI padre; para NC lo mismo si `factura_notas_credito` no los tiene directamente).
-   - Cada `resolveFrom*` devolverá además `cliente`, `fecha` y `tipo` (`Factura` | `NotaCredito` | `REP`).
-   - Nueva helper local `buildFilename({ tipo, folioSerie, cliente, fecha, ext })` que aplica slugify a `cliente` y concatena solo los segmentos no vacíos separados por `_`.
-   - Reemplazar la línea `const filename = ${orgSlug}_${target.data.filename}.${ext}` por el resultado del builder.
+### 3) Sin cambios
 
-2. **Tests** — actualizar `src/features/facturacion/services/__tests__/descargarCfdiFacturapi.test.ts` y `src/features/facturacion/hooks/__tests__/useDescargarCfdi.test.tsx` si mockean el `Content-Disposition`; agregar un test unitario nuevo para `buildFilename` (edge function → mover el helper a `_shared/facturaFilename.ts` para testearlo desde el sandbox sin Deno). Cubrir: cliente vacío, folio vacío, caracteres con acentos, fecha nula.
+- `facturapi-descargar` — ya correcto (fix de ayer).
+- `facturapi-enviar-email` — FacturApi controla los adjuntos.
+- Plantilla de correo `factura-enviada` — sigue apuntando a `pdf_link` y `xml_link`; sólo cambia lo que el navegador guarda al hacer clic, no el link.
+- Bucket `facturas-pdf` — sin cambios en policies ni en la ruta interna.
 
-3. **Versionado**
-   - `APP_VERSION` → `13.303.91`.
-   - Entrada en `CHANGELOG.md` root con analogía.
+### 4) Versionado
 
-## Fuera de alcance
+- `APP_VERSION` → `13.303.93`.
+- Entrada en `CHANGELOG.md` explicando que los links del correo branded ahora descargan con el mismo nombre descriptivo que el detalle.
 
-- Descarga de XML de facturas **de proveedor** (módulo CxP) — usa otra ruta y otro naming; no se toca en este cambio.
-- Envío por email (usa `slugifyOrg` con otro propósito) — no se modifica.
+## Notas técnicas
 
-## Verificación
-
-- Desde `/facturacion/{id}`: descargar PDF y XML de una factura timbrada, de una nota de crédito y de un REP; confirmar los nombres siguen el nuevo patrón.
-- Cliente con acentos y espacios: verificar que se convierten a `_` sin acentos.
-- Factura sin `cliente_nombre` (edge case): que el nombre no tenga doble guion bajo consecutivo.
-- Correr `bunx vitest run` sobre los archivos de tests tocados.
-
-## Analogía (para el resumen final)
-
-Antes el archivo descargado se llamaba como si guardaras todas las fotos del celular con el nombre "Foto.jpg": tenías que abrirlas para saber qué era. Ahora cada archivo dice de un vistazo *qué tipo* de documento es, *de quién* y *de cuándo*.
+- El `download` de `createSignedUrl` mete el nombre en el `Content-Disposition` del response de Supabase Storage — ahí no hay problema de CORS porque el navegador navega directo al link (no es fetch cross-origin desde JS).
+- `numero` en `facturas` suele venir tipo `F975`; si viene vacío, `serie + folio_fiscal` es fallback razonable (mismo criterio que `resolveFromFactura` en `facturapi-descargar`).
+- Notas de crédito y REPs branded: hoy `enviar-factura-email` sólo maneja factura completa (no NC ni REP branded), así que no hay más callsites por migrar.
