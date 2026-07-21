@@ -116,11 +116,11 @@ export function FormRow({ draft, setDraft, onCancel, onSave, busy }: FormProps) 
       </div>
       <div className="col-span-1">
         <Label className="text-xs">Cant.</Label>
-        <Input type="number" min={1} value={draft.cantidad} onChange={(e) => patch({ cantidad: Number(e.target.value) || 1 })} />
+        <NumericInput aria-label="Cantidad" value={draft.cantidad || 0} onChange={(n) => patch({ cantidad: n || 1 })} className="h-10" />
       </div>
       <div className="col-span-3">
         <Label className="text-xs">P. unitario</Label>
-        <Input type="number" step="0.01" min={0} value={draft.precio_unitario} onChange={(e) => patch({ precio_unitario: Number(e.target.value) || 0 })} />
+        <NumericInput aria-label="Precio unitario" decimals value={draft.precio_unitario || 0} onChange={(n) => patch({ precio_unitario: n })} className="h-10" />
       </div>
       <div className="col-span-2">
         <Label className="text-xs">IVA</Label>
