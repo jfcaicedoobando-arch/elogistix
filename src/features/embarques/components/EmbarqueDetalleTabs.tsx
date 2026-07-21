@@ -146,7 +146,7 @@ export function EmbarqueDetalleTabs({
         </div>
         {pnlView === "global"
           ? <TabPnl embarqueId={embarqueId} />
-          : <TabPnlContenedor embarqueId={embarqueId} expediente={embarque.expediente} />}
+          : <TabPnlContenedor embarqueId={embarqueId} expediente={embarque.expediente ?? ""} />}
       </TabsContent>
 
       <TabsContent value="cierre" className="space-y-6">
