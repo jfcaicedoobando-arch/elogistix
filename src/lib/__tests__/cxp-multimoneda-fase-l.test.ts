@@ -69,7 +69,7 @@ describe("Fase L — Multi-moneda CxP", () => {
     const idx = sql.lastIndexOf("CREATE OR REPLACE FUNCTION public.check_no_sobrepago_proveedor");
     expect(idx, "no se encontró CREATE OR REPLACE FUNCTION").toBeGreaterThan(-1);
     const chunk = sql.slice(idx, idx + 4000);
-    expect(chunk).toMatch(/SUM\(monto_en_moneda_factura\)/);
+    expect(chunk).toMatch(/SUM\((?:pp\.)?monto_en_moneda_factura\)/);
     expect(chunk).toMatch(/NEW\.monto_en_moneda_factura/);
   });
 
