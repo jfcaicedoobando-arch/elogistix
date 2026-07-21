@@ -1,53 +1,70 @@
-# Fase 2 · Guards de estado + confirmaciones destructivas
+## Auditoría Fase 2 (v13.303.50)
 
-## Auditoría Fase 1 (v13.303.49) — sin bugs
+**Estado**: ✅ Sin bugs funcionales. Los mapeos `LC_*` → mensajes es-MX están correctos en `embarques.ts` y `portal.ts`. El `ConfirmActionDialog` en `PlantillasMensajeEditor` cierra bien el estado `aEliminar`. RPCs endurecidos con guards + `FOR UPDATE`.
 
-Verificado:
-- ✅ Todos los dumps/lockfiles borrados (ni `bun.lockb` ni `package-lock.json` presentes).
-- ✅ `.gitignore` con `.lovable/` y `reports/junit.xml`.
-- ✅ Gitleaks corre en push a main.
-- ✅ `vitest.config.ts` sólo tiene UNA ocurrencia de `isolate: true` (línea 43).
-- ✅ ESLint sin overrides a rutas inexistentes.
-- ✅ Sólo queda **1** `confirm()` nativo en toda la app: `PlantillasMensajeEditor.tsx:132` (menos de lo estimado — la mayoría ya migró).
+**Deuda menor detectada** (se cubre al inicio de Fase 3):
+- `portal.test.ts` y `embarques.test.ts` no cubren las nuevas ramas de tokens `LC_*` — agregar 6 casos (3 por archivo).
+- Sin regresiones en `confirm()` nativo (0 restantes).
 
-Sin regresiones. No hace falta tests nuevos porque Fase 1 sólo tocó config/tooling.
+---
 
-**Nota `.lovable/` en `.gitignore`:** este plan lo agregué yo, por lo que este archivo (`.lovable/plan.md`) no persistirá entre commits. ¿Quieres que quitemos `.lovable/` del `.gitignore` para futuras fases? (No bloqueante.)
+## Fase 3 · Búsquedas, Dinero y Logs seguros
 
-## Fase 2 — Alcance
+Objetivo: cerrar tres fixes horizontales de la auditoría v2-2 más higiene de credenciales de test.
 
-Guards de estado en BD + higiene de confirmaciones destructivas. Todo trivial a medio, sin riesgo financiero.
+### Lote F · FIX-24 · Escape de `ilike`
+Los filtros de búsqueda de texto (clientes, proveedores, embarques, facturas, proformas) usan `.ilike('%${q}%')` directo. Un usuario que teclee `%` o `_` obtiene resultados incorrectos y — más importante — cualquier string con `,` o `)` puede romper el operador compuesto `or()` de PostgREST.
 
-### Lote D · FIX-21 + FIX-25 (migración SQL)
-Guardas en RPCs para prevenir transiciones inválidas silenciosas.
+- Crear `src/lib/search/ilike.ts` con `escapeIlike(q)` (escapa `\`, `%`, `_`) y `orIlike(cols, q)` (construye la string `or=` con escape + comillas dobles).
+- Migrar los ~15 call-sites detectados (grep `\.ilike\(` y `\.or\(.*ilike`) a los helpers.
+- Test unitario con cadenas maliciosas (`%`, `_`, `,`, `)`, `"`).
 
-- `crear_embarque_borrador_desde_cotizacion` / `crear_embarque_borrador_core`:
-  - Rechazar cotización si `estado NOT IN ('Aceptada','En operación')` con `LC_COT_ESTADO_INVALIDO`.
-  - Rechazar si `deleted_at IS NOT NULL`.
-  - Rechazar si ya existe embarque activo (no eliminado) apuntando a esa cotización → `LC_COT_YA_TIENE_EMBARQUE`.
-  - `FOR UPDATE` sobre la cotización para evitar doble creación concurrente.
-- `portal_responder_cotizacion`:
-  - Rechazar respuesta si cotización `estado NOT IN ('Enviada')` → `LC_COT_NO_RESPONDIBLE`.
-  - Rechazar si `token` expirado o cotización `deleted_at IS NOT NULL`.
-  - Idempotencia: si ya está `Aceptada`/`Rechazada`, devolver estado actual sin re-escribir.
+### Lote G · FIX-36 · `NumericInput` unificado
+Ya existe el parche global en `ui/input.tsx` (wheel + focus-clear-zero). Falta consolidar los ~8 inputs numéricos que además parsean (`parseInputNumero` en `TablaCostosLocal`, y variantes ad-hoc en pagos, proformas, comisiones).
 
-### Lote E · FIX-34 + FIX-37 (UI confirmaciones)
-- `src/features/crm/components/PlantillasMensajeEditor.tsx:132` — reemplazar `confirm()` nativo por `AlertDialog` de shadcn.
-- Auditar destructivas sin confirmación en:
-  - `NotasCreditoSection.tsx` (borrar borrador NC).
-  - `CatalogoClavesSATCard.tsx` (borrar clave SAT).
-  - `FacturaConceptosEditor.tsx` (borrar concepto en borrador).
-  - Añadir `AlertDialog` donde falte.
+- Extraer `src/components/ui/NumericInput.tsx` que envuelva `Input type="number"`, aplique `parseInputNumero`, acepte `min/max/step/decimales`, y emita `onValueChange(number | null)`.
+- Reemplazar los inputs numéricos en: `TablaCostosLocal`, `BloqueMercancia`, `PagoProveedorFormBody`, `DialogRegistrarPago`, `NotaCreditoForm`, `AnticipoForm`.
+- Test de comportamiento (clear-zero, wheel-blur, parse defensivo, decimales).
 
-### Tests
-- `plantillasMensajeEditor.test.tsx`: verifica que el `AlertDialog` aparece y sólo elimina tras confirmar.
-- Test SQL sintáctico vía migración (los guards se validan en el próximo test de RPCs si hay cobertura existente; si no, no forzamos test dedicado ya que las policies existentes ya cubren happy path).
+### Lote H · FIX-42 · Redacción de PII/secretos en logs
+`console.warn`/`console.error` y edge-function logs actualmente pueden imprimir tokens, RFCs, emails completos, payloads FacturAPI. Riesgo: fuga en Sentry breadcrumbs y en logs de Cloud.
 
-### Detalles técnicos
-- Errores nuevos: `LC_COT_ESTADO_INVALIDO`, `LC_COT_YA_TIENE_EMBARQUE`, `LC_COT_NO_RESPONDIBLE` — mapear en `src/lib/errors/lcErrorMap.ts` con mensajes es-MX.
-- `AvanzarEstadoButton` y wizard ya manejan `LC_*` genéricos, así que sólo hay que agregar entradas al mapa.
-- Bump `APP_VERSION` → `13.303.50`, entrada en `CHANGELOG.md`.
+- Crear `src/lib/logging/redact.ts`: función `redact(obj)` que recorre y enmascara claves sensibles (`authorization`, `api_key`, `token`, `password`, `rfc`, `email`, `curp`, `access_token`, `refresh_token`) y trunca strings > 200 chars.
+- Wrapper `safeLog.warn/error(msg, ctx)` que aplica `redact` antes de pasar a `console` o a Sentry.
+- Migrar los ~20 `console.warn/error` del código de aplicación (dejar los de edge functions para fase posterior — sólo agregar utilidad server-side equivalente en `supabase/functions/_shared/redact.ts`).
+- Config Sentry: `beforeSend` con `redact` sobre `event.extra` y `event.request`.
 
-## Fuera de alcance (Fase 3+)
-- Residuos `|| 1` (FIX-11) y `toISOString().slice()` (FIX-12) → Fase 4 junto con FIX-19/20/22.
-- Credenciales hardcoded en `scripts/visual-audit/` → Fase 3 (higiene de scripts).
+### Lote I · FIX-01 residual · Limpieza de credenciales hardcodeadas
+`scripts/visual-audit/capture.mjs` y `capture.py` traen `1234567890` como password de test.
+
+- Mover a env vars `VISUAL_AUDIT_USER` / `VISUAL_AUDIT_PASS`.
+- Fallback: leer de `.env.local` con `dotenv` (ya usado en scripts).
+- Documentar en `scripts/visual-audit/README.md`.
+
+### Cierre
+- Bump `APP_VERSION` → `13.303.51`.
+- Entrada `CHANGELOG.md`.
+- Corridas: `bunx vitest run` (nuevos tests) + `bun run lint`.
+
+### Detalle técnico
+
+```text
+src/lib/search/ilike.ts          ← nuevo
+src/lib/search/__tests__/        ← nuevo
+src/lib/logging/redact.ts        ← nuevo
+src/lib/logging/safeLog.ts       ← nuevo
+src/components/ui/NumericInput.tsx ← nuevo
+supabase/functions/_shared/redact.ts ← nuevo
+
+Editados (~30 archivos):
+  - Servicios de búsqueda (clientes, proveedores, embarques, facturas, proformas)
+  - Formularios numéricos (6 archivos)
+  - Sitios de console.warn/error (~20)
+  - scripts/visual-audit/capture.{mjs,py}
+  - src/config/sentry.ts (beforeSend)
+  - src/features/cotizacion/services/conversiones/__tests__/ (cobertura LC_*)
+```
+
+**Impacto**: cero cambios funcionales visibles al usuario. Endurece búsquedas, unifica entrada numérica y protege PII en logs/Sentry.
+
+**Riesgos**: los reemplazos de `.ilike/.or` requieren revisión cuidadosa del contrato con PostgREST (comillas dobles para valores con `,`). Se agrega test por cada call-site migrado.
