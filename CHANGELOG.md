@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.303.72] - 2026-07-21
+- **fix(ui/toaster) · Botón "X" del toast no era clickeable.** El `closeButton` de Sonner venía con opacidad 0 y sólo se mostraba en hover; en toasts con acción "Ver detalles" y `duration: Infinity` (errores) el área quedaba tapada por el botón de acción. Ahora el close se muestra siempre (`!opacity-100`), se ancla al esquina superior derecha y tiene tap target de 24 px con hover discreto.
+
+
+
 ## [13.303.71] - 2026-07-21
 - **fix(cxp/rls) · Eliminación de factura proveedor para `admin_org`.** El `UPDATE` directo seguía fallando con `42501` porque PostgREST revalida la fila después de poner `deleted_at` y ésta ya no cumple la política restrictiva de lectura `Hide soft deleted proveedor_facturas`. Se agregó el RPC seguro `soft_delete_proveedor_factura`, que valida usuario firmado + membresía/rol de la organización y marca el soft delete desde backend. También se alineó `Tenant CRUD proveedor_facturas` con roles efectivos por organización (`admin_org`, contabilidad y tesorería). Reportado con requestId `33f9150b-b0bc-46ac-9471-e3f1c8b53a54`.
 
