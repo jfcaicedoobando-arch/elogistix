@@ -1,22 +1,56 @@
 /**
- * Subcomponentes pequeños del DialogRegistrarPagoProveedor (header info + saldo summary).
+ * Subcomponentes pequeños del DialogRegistrarPagoProveedor.
+ * v13.303.95 · Rediseño alineado al design language del detalle CxP:
+ * chip-folio inline + dot de estado + KPI grid con énfasis en Saldo.
  */
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { Kpi } from "./DialogDetallePagosProveedor.parts";
+import { EstadoAprobacionDot } from "./EstadoAprobacionDot";
 
 export function PagoFacturaHeaderInfo({ factura }: { factura: FacturaCxP }) {
+  const conSaldo = factura.saldo > 0.01;
+  const vencida = factura.dias_vencido > 0;
   return (
-    <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-      <span>Saldo: <strong className="text-foreground tabular-nums">
-        {formatCurrency(factura.saldo, factura.moneda)}
-      </strong></span>
-      <span>Total: <strong className="text-foreground tabular-nums">
-        {formatCurrency(factura.total, factura.moneda)}
-      </strong></span>
+    <div className="space-y-3 -mt-1">
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
+          {factura.folio_interno}
+        </span>
+        <span className="text-xs text-muted-foreground truncate">
+          Folio prov. <span className="font-mono">{factura.folio_proveedor}</span> · {factura.proveedor_nombre}
+        </span>
+      </div>
+      <div className="flex items-center gap-3 flex-wrap px-3 py-2 rounded-md bg-accent/5 border">
+        <EstadoAprobacionDot estado={factura.estado_aprobacion} cancelada={factura.estado === "Cancelada"} />
+        {vencida && (
+          <>
+            <span className="h-4 w-px bg-border" aria-hidden />
+            <span className="text-xs font-semibold text-destructive uppercase tracking-wide">
+              Vencida · {factura.dias_vencido} d
+            </span>
+          </>
+        )}
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+        <Kpi label="Total" value={formatCurrency(factura.total, factura.moneda)} />
+        <Kpi label="Pagado" value={formatCurrency(factura.pagado, factura.moneda)} tone="success" />
+        <Kpi
+          label="Saldo pendiente"
+          value={formatCurrency(factura.saldo, factura.moneda)}
+          tone={conSaldo ? "warn" : "default"}
+          emphasis={conSaldo}
+        />
+        <Kpi
+          label="Moneda"
+          value={factura.moneda + (factura.tipo_cambio_usd > 0 && factura.moneda !== "MXN" ? ` · TC ${factura.tipo_cambio_usd.toFixed(2)}` : "")}
+        />
+      </div>
     </div>
   );
 }
+
 
 export function PagoSaldoRestante({
   factura, saldoRestante, excede,
