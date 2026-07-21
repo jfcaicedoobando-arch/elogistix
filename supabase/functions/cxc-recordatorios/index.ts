@@ -84,8 +84,12 @@ Deno.serve(async (req) => {
     const { data, error } = await query;
     if (error) throw error;
 
-    const hoy = new Date();
-    hoy.setUTCHours(0, 0, 0, 0);
+    // FIX-12 · Anclar "hoy" a la fecha local de CDMX (no UTC): entre 18:00–23:59
+    // CDMX el `setUTCHours(0)` avanzaba al día siguiente y una factura que vencía
+    // ese mismo día aparecía como "vencida" antes de tiempo.
+    const hoyMxIso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(new Date());
+    const [hy, hm, hd] = hoyMxIso.split("-").map(Number);
+    const hoy = new Date(Date.UTC(hy, hm - 1, hd));
 
     const buckets: Record<string, Array<Record<string, unknown>>> = { "T-3": [], "T+7": [], "T+15": [] };
 

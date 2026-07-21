@@ -87,7 +87,12 @@ function isArribado(embarque?: EmbarqueTrackingProps | null): boolean {
 function isEtaVencida(embarque?: EmbarqueTrackingProps | null): boolean {
   if (!embarque?.eta) return false;
   if (isArribado(embarque)) return false;
-  return new Date(embarque.eta).getTime() < Date.now();
+  // FIX-12 · `new Date("YYYY-MM-DD")` se parsea como UTC — una ETA capturada
+  // "hoy" quedaba como ayer 18:00 CDMX y se marcaba vencida un día antes.
+  const [y, m, d] = embarque.eta.split("-").map(Number);
+  if (!y || !m || !d) return false;
+  const finDelDiaEtaLocal = new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+  return finDelDiaEtaLocal < Date.now();
 }
 
 function EtaVencidaBanner({ eta }: { eta: string }) {
