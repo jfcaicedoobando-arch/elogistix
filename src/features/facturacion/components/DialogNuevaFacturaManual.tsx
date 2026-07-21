@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FilePlus2 } from "lucide-react";
+import { FilePlus2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
@@ -21,6 +22,11 @@ import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFact
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import { FacturaManualDatosFiscales, type DatosFiscalesValue } from "./FacturaManualDatosFiscales";
 import { FacturaManualConceptosTable } from "./FacturaManualConceptosTable";
+import {
+  useValidarLimiteCredito,
+  registrarExcesoCredito,
+  type ValidarLimiteResultado,
+} from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { queryKeys } from "@/lib/query";
 import { todayLocalISO } from "@/lib/date/today";
 
