@@ -8,7 +8,7 @@
  * respaldo auditable del desglose fiscal recibido.
  */
 import { FileText } from "lucide-react";
-import { FormDialogSection } from "@/components/shared/FormDialogShell";
+import { FormSection } from "./facturaFormPrimitives";
 import { formatCurrency } from "@/lib/formatters";
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
