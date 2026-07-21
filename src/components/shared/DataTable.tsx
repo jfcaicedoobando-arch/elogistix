@@ -2,6 +2,7 @@ import React from "react";
 import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import type { LucideIcon } from "lucide-react";
 import { Table, TableFooter } from "@/components/ui/table";
+import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
 import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
