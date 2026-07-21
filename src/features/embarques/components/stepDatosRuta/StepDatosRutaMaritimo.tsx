@@ -4,7 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PortSelect from "@/features/catalogos/components/PortSelect";
-import NavieraSelect from "@/features/catalogos/components/NavieraSelect";
+import {
+  AgenteEmbarqueSelector,
+  NavieraEmbarqueSelector,
+} from "@/features/embarques/components/stepDatosRuta/AgenteNavieraHeredados";
 import { ListaContenedoresEditable } from "@/features/embarques/components/contenedores/ListaContenedoresEditable";
 import { crearContenedorVacio } from "@/features/embarques/types/contenedor";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
@@ -14,6 +17,9 @@ const errClass = "text-xs text-destructive mt-1";
 
 interface Props {
   errors: StepValidationErrors;
+  /** IDs originales heredados desde la cotización (para badge/restaurar). */
+  cotizacionAgenteId?: string | null;
+  cotizacionNavieraId?: string | null;
 }
 
 /** Filtra errores de filas de contenedores para no duplicar mensajes. */
