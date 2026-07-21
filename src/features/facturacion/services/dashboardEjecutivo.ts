@@ -32,12 +32,17 @@ export interface DashboardEjecutivoKpis {
   facturas_sin_tc: number;
 }
 
+// FIX-12 · Buckets de mes en zona America/Mexico_City: entre 18:00–23:59 CDMX
+// el `toISOString()` retornaba el día siguiente en UTC y las facturas del día
+// aparecían en el mes que no era.
+import { hoyMx, ymMx } from "@/lib/date/mx";
+
 function ymd(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return hoyMx(d);
 }
 
 function ym(d: Date): string {
-  return d.toISOString().slice(0, 7);
+  return ymMx(d);
 }
 
 function inicioMes(d: Date): Date {

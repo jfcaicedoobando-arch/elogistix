@@ -188,7 +188,9 @@ async function fetchEurBanxico(
  */
 export async function resolverFecha(req: Request): Promise<{ fecha: Date; esHoy: boolean; key: string }> {
   const hoy = new Date();
-  const hoyIso = hoy.toISOString().slice(0, 10);
+  // FIX-12 · `toISOString()` da el día en UTC — a las 19:00 CDMX ya es "mañana"
+  // y aceptábamos fechas "futuras" que no eran futuras localmente.
+  const hoyIso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(hoy);
   const url = new URL(req.url);
   let raw = url.searchParams.get("fecha") ?? "";
   if (!raw && req.method === "POST") {
