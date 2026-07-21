@@ -42,22 +42,12 @@ export default function Cxp() {
   const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
 
-  useCxpDeepLinks({
-    data,
-    isLoading,
-    onOpenDetalle: f.setDetalle,
-    onSetAprobacion: f.setAprobacion,
-  });
-
-
+  useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle, onSetAprobacion: f.setAprobacion });
 
   const handlePdf = async () => {
     const fecha = todayLocalISO();
     await descargarPdf(
-      <ReporteCarteraDocument
-        fechaCorte={fecha}
-        cxc={cxc} cxp={data}
-      />,
+      <ReporteCarteraDocument fechaCorte={fecha} cxc={cxc} cxp={data} />,
       await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
     );
   };
