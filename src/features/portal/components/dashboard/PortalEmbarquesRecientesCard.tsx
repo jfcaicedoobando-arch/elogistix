@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface EmbarqueItem {
   id: string;
-  expediente: string;
+  expediente: string | null;
   modo: string;
   tipo?: string | null;
   etd?: string | null;
