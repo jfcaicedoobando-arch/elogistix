@@ -108,13 +108,9 @@ export function sumarEnUSD(
   tcUSD: number,
   tcEUR: number,
 ): number {
-  // Wrapper laxo: si no hay TC todavía (formularios recién montados), evitamos
-  // lanzar y usamos 1 — el indicador visible vive en la UI vía sumarEnMoneda.
-  if (!Number.isFinite(tcUSD) || tcUSD <= 0) {
-    return items
-      .reduce((acc, item) => acc.add(convertirAUSD(item.monto, item.moneda as Moneda, 1, tcEUR || 1)), currency(0, { precision: 2 }))
-      .value;
-  }
+  // FIX-11 (Fase 4): eliminado el fallback silencioso TC=1. Cuando falta el
+  // TC de USD, sólo sumamos filas que YA vienen en USD; el resto se ignora
+  // y la UI muestra el banner `tcMissing` para forzar la captura.
   return sumarEnMoneda(items, 'USD', tcUSD, tcEUR).total;
 }
 
