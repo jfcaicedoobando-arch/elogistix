@@ -22,7 +22,12 @@ const AlertDialogOverlay = ({ ref, className, ...props }: React.ComponentPropsWi
 );
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
-const AlertDialogContent = ({ ref, className, ...props }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content> & { ref?: React.Ref<React.ElementRef<typeof AlertDialogPrimitive.Content>> }) => (
+const isEventInsideSonnerToaster = (event: { target: EventTarget | null }): boolean => {
+  const target = event.target as Element | null;
+  return !!target?.closest?.("[data-sonner-toaster]");
+};
+
+const AlertDialogContent = ({ ref, className, onInteractOutside, ...props }: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content> & { ref?: React.Ref<React.ElementRef<typeof AlertDialogPrimitive.Content>> }) => (
   <AlertDialogPortal>
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
@@ -31,10 +36,15 @@ const AlertDialogContent = ({ ref, className, ...props }: React.ComponentPropsWi
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
         className,
       )}
+      onInteractOutside={(event) => {
+        if (isEventInsideSonnerToaster(event.detail.originalEvent)) event.preventDefault();
+        onInteractOutside?.(event);
+      }}
       {...props}
     />
   </AlertDialogPortal>
 );
+
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
 const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
