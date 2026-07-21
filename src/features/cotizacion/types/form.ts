@@ -80,6 +80,12 @@ export interface CotizacionFormValues {
   sinDesgloseCostos: boolean;
   /** Flete LCL capturado manualmente (usado sólo cuando no hay tarifa vinculada). */
   lclFleteManual: LclFleteManual;
+  /** Agente heredado de la tarifa (FK a costeo_agentes). */
+  agenteId: string | null;
+  agenteNombre: string;
+  /** Naviera heredada de la tarifa (FK a navieras). */
+  navieraId: string | null;
+  navieraNombre: string;
 }
 
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
