@@ -40,7 +40,10 @@ interface Props {
   isSaving: boolean;
 }
 
-type FieldKey = keyof Omit<ClienteData, "regimen_fiscal" | "uso_cfdi_default">;
+type FieldKey = keyof Pick<
+  ClienteData,
+  "nombre" | "rfc" | "direccion" | "ciudad" | "estado" | "cp" | "contacto" | "email" | "telefono"
+>;
 
 function TextField({
   label, field, form, setForm, full, required,
