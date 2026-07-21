@@ -9,6 +9,7 @@ export const clientes = {
   embarques: (id: string) => ['clientes', 'embarques', id] as const,
   cotizaciones: (id: string) => ['clientes', 'cotizaciones', id] as const,
   diasCredito: (id: string) => ['clientes', 'dias_credito', id] as const,
+  exposicionCredito: (id: string) => ['clientes', 'exposicion_credito', id] as const,
   paraPdf: (id: string) => ['clientes', 'para_pdf', id] as const,
 } as const;
 
