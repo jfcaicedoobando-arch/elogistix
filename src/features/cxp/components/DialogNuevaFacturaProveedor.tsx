@@ -80,7 +80,9 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           onModeChange={ctl.setMode}
           categorias={cats.data ?? []}
           onParsed={ctl.handleCfdiParsed}
-          cfdiReady={!!ctl.pendingCfdi}
+          onPdfIaParsed={ctl.handlePdfIaParsed}
+          cfdiReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "cfdi"}
+          pdfIaReady={!!ctl.pendingCfdi && ctl.pendingCfdi.origen === "pdf_ia"}
         />
 
         <CfdiConceptosPreview conceptos={ctl.cfdiConceptos} moneda={ctl.values.moneda} />

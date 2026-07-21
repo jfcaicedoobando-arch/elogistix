@@ -18,6 +18,7 @@ import {
   addDays, initialValues, calcularTotal, validateFactura,
 } from "./useNuevaFacturaProveedorForm.helpers";
 import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
+import { procesarPdfIaParsed } from "./useNuevaFacturaProveedorForm.pdfIa";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
@@ -166,6 +167,18 @@ export function useNuevaFacturaProveedorForm(
     manualTcRef.current = false;
     return true;
   };
+  const handlePdfIaParsed = async (data: CfdiParsedResponse, files: { pdf: File }): Promise<boolean> => {
+    const result = await procesarPdfIaParsed(data, files, organizationId);
+    setValues(result.values);
+    setErrors({});
+    setPendingCfdi(result.pendingCfdi);
+    setCfdiConceptos(result.conceptos);
+    setAskCrearProv(result.askCrearProv);
+    setTcOrigen(result.tcOrigen);
+    setTcFechaAplicada(result.tcFechaAplicada);
+    manualTcRef.current = false;
+    return true;
+  };
   const validate = (): boolean => {
     const next = validateFactura(values, total);
     setErrors(next);
@@ -186,7 +199,7 @@ export function useNuevaFacturaProveedorForm(
   };
   return {
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
-    handleChange, handleProveedor, handleCfdiParsed,
+    handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
     reset, submit, isPending: crear.isPending, organizationId,

@@ -9,11 +9,14 @@ import { todayLocalISO } from "@/lib/date/today";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
+export type OrigenCarga = "manual" | "cfdi" | "pdf_ia";
+
 export interface PendingCfdi {
   uuid: string;
   rfcEmisor: string;
-  xmlFile: File;
+  xmlFile: File | null;
   pdfFile: File | null;
+  origen: Exclude<OrigenCarga, "manual">;
 }
 
 export interface VinculoLinea {
@@ -113,6 +116,7 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
     uuid_fiscal: pendingCfdi?.uuid ?? null,
     rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
     embarque_id: embarqueIdUnico(vinculos),
+    origen_carga: (pendingCfdi?.origen ?? "manual") as OrigenCarga,
   };
 }
 
