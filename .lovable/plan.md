@@ -1,81 +1,59 @@
-## Contexto
+# Validación en vivo del cuadre conceptos ↔ subtotal (CxP)
 
-El rediseño de `DialogDetallePagosProveedor` estableció un lenguaje visual con 5 piezas reutilizables:
+## Problema
 
-1. **Header con chip-folio inline** (título + chip mono separado + meta muted en 2ª línea).
-2. **StatusActionBar** contextual (`bg-accent/5`) con dot de estado + acción primaria contextual a la derecha + overflow `⋯` para secundarias.
-3. **KPI grid** con énfasis `ring-2 ring-accent/30` en la métrica dominante según contexto.
-4. **Info agrupada** en 2 columnas (adjuntos + programación) con tarjetas clickables completas y badge de tipo (XML/PDF).
-5. **Historial collapsible** dentro del flujo.
+Hoy el error `LC_CXP_DESCUADRE` sólo aparece al **aprobar** la factura, cuando el usuario ya cerró el editor de conceptos y cambió de contexto. La regla de negocio existe en el trigger de BD (`aprobar_factura_proveedor`), pero la UI no la refleja mientras se captura.
 
-Además ya tenemos primitivos reutilizables listos: `EstadoAprobacionDot`, `Kpi` (con `emphasis`), `HeaderWithTooltip` y `StatusActionBar`.
+Meta: que el usuario **vea el descuadre en tiempo real** dentro del editor de conceptos y no pueda guardar/aprobar hasta que la suma neta cuadre con el subtotal de la factura.
 
-Este plan **no toca lógica** — es sólo UI/UX. Cambios acotados a `.tsx` de presentación.
+## Alcance
 
-## Modales candidatos (priorizados)
+Solo UI del editor de conceptos de CxP. No se toca el trigger de BD ni el flujo de aprobación (siguen siendo la última línea de defensa).
 
-Barrí el árbol de `src/features/**/components/**/*Dialog*.tsx` y clasifiqué por tipo. Los **formularios/wizards** ya siguen `FormDialogShell` (regla activa en memoria) y quedan fuera de scope. Los **modales de detalle/inspección** son los que sí se benefician:
+Archivos objetivo (a confirmar al pasar a build):
+- `src/features/cxp/components/DialogDetallePagosProveedor.parts.tsx` (sección "Conceptos / Desglose contable")
+- El componente que renderiza el editor de renglones dentro del detalle (típicamente `ConceptosEditor*` en `src/features/cxp/components/`)
+- Reutiliza `Kpi` / chip existentes del rediseño reciente para consistencia visual
 
-### Alta prioridad — mismo patrón "detalle con estado + KPIs + acciones"
+## Diseño funcional
 
-**A. `DialogRegistrarPagoProveedor` (CxP)** · alto valor
-Es el gemelo funcional del detalle. Hoy es un form plano.
-- Header: chip inline con folio interno de la factura destino + meta (proveedor · saldo).
-- StatusActionBar mini: dot "Aprobada · lista para pagar" + `Registrar pago` como primary submit.
-- KPI grid superior con: Total, Pagado, **Saldo (énfasis)**, Días vencido.
-- Reutiliza `EstadoAprobacionDot`, `Kpi`, `StatusActionBar` (variant read-only).
+1. **Barra de cuadre sticky** arriba de la tabla de conceptos con 3 valores:
+   - Subtotal factura (fuente de verdad, read-only)
+   - Suma de conceptos (live)
+   - Diferencia = Subtotal − Suma
+2. **Estados visuales** de la barra:
+   - Verde ✅ "Cuadrado" cuando `|diferencia| ≤ 0.01`
+   - Ámbar ⚠️ "Faltan $X.XX" cuando la suma es menor
+   - Rojo ⛔ "Sobran $X.XX" cuando la suma es mayor
+3. **Bloqueo de guardado**:
+   - Botón "Guardar conceptos" deshabilitado mientras no cuadre, con tooltip explicando la diferencia exacta.
+   - Al pasar el mouse, muestra los dos valores para que el usuario sepa hacia dónde ajustar.
+4. **Ayuda contextual** (una línea muted):
+   - "¿Descuento del proveedor? Agrega un renglón con importe negativo por la diferencia."
+5. **Soporte de importes negativos**:
+   - Permitir `-` en el input numérico de importe (ya usa `NumericInput`; confirmar que acepta negativos, si no, agregar prop `allowNegative`).
+   - IVA del renglón negativo por defecto 0, editable.
+6. **Precisión**:
+   - Comparación con tolerancia `0.01` usando `currency.js` (ya es estándar del proyecto según `financialUtils.ts`).
+   - Redondeo a 2 decimales sólo para display; los cálculos internos usan la lib.
 
-**B. `AgingDrillDownDialog` (CxP)** · alto valor
-Drill-down de aging por proveedor. Hoy título simple + tabla.
-- Header: nombre del proveedor + chip mono con RFC + meta con "N facturas · X cubetas".
-- KPI grid: Total abierto, Vencido, Por vencer, **Cubeta 90+ (énfasis si >0)**.
-- Filtros de cubeta como chips en la StatusActionBar en lugar del select actual.
-- Botón "Exportar CSV" queda en overflow `⋯`.
+## Fuera de alcance
 
-**C. `EmbarquesEstadoDialog` (Operaciones)** · valor medio
-Lista de embarques por operador/estado. Ya usa `FormDialogShell` pero se puede armonizar.
-- Header ya tiene el ícono de estado + operador + estado + badge de total → migrar a chip-folio pattern + meta muted.
-- Añadir KPI mini: Total, Filtrado (por búsqueda), **Truncado (énfasis si >0)**.
-- `Search` queda en la actionbar (bg-accent/5) en lugar de flotar.
+- No se toca el flujo XML (ya trae el cuadre garantizado por SAT).
+- No se modifica el trigger de BD ni el mensaje `LC_CXP_DESCUADRE` (siguen protegiendo si el usuario burla la UI).
+- No se agregan tests E2E; sí un test unitario del helper de cuadre.
 
-**D. `DialogConsultarFacturapi` (Facturación)** · valor medio
-Diagnóstico lado-a-lado FacturApi vs Libre Carga.
-- Header con chip inline con `numero` (folio de factura).
-- StatusActionBar: dot con estado inferido del diagnóstico ("Sincronizado" / "Discrepancia" / "Error") + primary `Reintentar consulta`.
-- Los 2 paneles de comparación agrupan como KPI-cards, dominante = el que difiere.
+## Detalles técnicos
 
-### Media prioridad — armonización de headers y actions
+- **Helper puro**: `calcularCuadreConceptos(subtotal, conceptos)` → `{ suma, diferencia, estado: 'cuadrado'|'faltante'|'sobrante' }` en un archivo nuevo bajo `src/features/cxp/utils/`. Test unitario con fixture del caso real (19,150 + −510.40 vs 18,639.60).
+- **Hook**: `useCuadreConceptos(subtotal, conceptos)` que memoiza el cálculo y devuelve además `puedeGuardar: boolean`.
+- **Componente**: `<CuadreConceptosBar />` reutilizando `Kpi` con variante `emphasis` cuando está en rojo/ámbar.
+- **CHANGELOG + APP_VERSION** bump patch (`13.303.96`).
+- **Reglas del proyecto respetadas**: archivo ≤ 200 líneas, sin `any`, sin colores hardcodeados (usa tokens `--destructive`, `--warning`, `--success` ya existentes), `useEffect` no aplica (todo derivado).
 
-**E. `FacturaDetalleView` (ruta, no modal)**
-Aunque es una ruta, ya usa `DetalleActionBar`. Podemos alinear:
-- Migrar `FacturaDetalleHeader` a chip-folio pattern (folio como chip mono en vez de `text-2xl font-mono`).
-- Añadir el `EstadoAprobacionDot`-equivalente para timbrar/cancelar (usando `deriveFacturaBadgeEstado` que ya existe).
-- Actualmente el badge de estado ya está bien; el cambio sería sólo la línea muted secundaria y consolidar KPI de Total en un mini card.
-- **Nota:** el usuario preguntó "modales", así que este es opcional — pedir confirmación.
+## Criterio de aceptación
 
-**F. `EmbarqueDetalleHeader` (ruta, no modal)**
-Igual que E: alinear el status chip + folio-chip.
-
-### Baja prioridad / fuera de scope
-
-- `DialogNuevaFacturaProveedor`, `DialogEditarFacturaProveedor`, `DialogSustituirFactura`, `DialogTimbrarFactura`, `DialogCrearNotaCredito` → **formularios/wizards**, ya usan `FormDialogShell`. No aplica.
-- `DialogRegistrarPago`, `DialogEnviarCfdi`, `DialogPreviewCfdiPdf`, `DialogCancelarFactura`, `CerrarFacturaSinPagoDialog`, `CancelarFacturaProveedorDialog` → **confirmaciones/acciones puntuales**, usan `ConfirmActionDialog`/`FormDialogShell`. No aplica.
-- `DemoAccessDialog`, `RoleChangeAlertDialog`, `ForgotPasswordDialog` → **flows de auth/marketing**, otro contexto visual.
-
-## Recomendación
-
-Ejecutar en el siguiente orden y bump de version por lote (2 archivos por lote para mantener PRs auditables):
-
-- **Lote 1** — A (`DialogRegistrarPagoProveedor`) + B (`AgingDrillDownDialog`) → mismo módulo CxP, mismo mental model.
-- **Lote 2** — C (`EmbarquesEstadoDialog`) + D (`DialogConsultarFacturapi`).
-- **Lote 3 (opcional)** — E + F: armonización de headers de rutas (requiere confirmación del usuario).
-
-Cada lote respeta:
-- Reutilizar `EstadoAprobacionDot`, `Kpi`, `StatusActionBar`, `HeaderWithTooltip`, `dialogTokens`.
-- Archivos ≤ 200 líneas (Power of 10).
-- Sin cambios de lógica ni de datos.
-- Actualizar `CHANGELOG.md` y bump `APP_VERSION` por lote.
-
-## Pregunta antes de empezar
-
-¿Con qué lote arrancamos? Si dices "Lote 1" empiezo con A+B en el siguiente turno.
+- Al abrir el editor de conceptos con la factura del ejemplo (FP-000039), la barra muestra ⚠️ "Faltan $-510.40" en rojo/ámbar y el botón Guardar está deshabilitado.
+- Al agregar un renglón por `-510.40`, la barra pasa a ✅ verde y Guardar se habilita.
+- Si el usuario intenta poner `-600`, la barra pasa a "Sobran $89.60" y bloquea de nuevo.
+- Aprobar la factura después de guardar cuadrado ya no dispara `LC_CXP_DESCUADRE`.
