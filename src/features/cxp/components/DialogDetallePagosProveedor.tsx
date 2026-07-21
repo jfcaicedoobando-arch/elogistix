@@ -152,3 +152,52 @@ function ActionDialogs({
     </>
   );
 }
+
+function HeaderSection({ f }: { f: FacturaCxP | null }) {
+  return (
+    <DialogHeader className="px-6 pt-5 pb-4 border-b bg-muted/30 space-y-1">
+      <div className="flex items-center gap-3 flex-wrap">
+        <DialogTitle className="text-lg font-bold text-primary">
+          Detalle de factura de proveedor
+        </DialogTitle>
+        {f?.folio_interno && (
+          <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
+            {f.folio_interno}
+          </span>
+        )}
+      </div>
+      {f && (
+        <p className="text-xs text-muted-foreground">
+          Folio prov. <span className="font-mono">{f.folio_proveedor}</span>
+          {" — "}{f.proveedor_nombre}
+        </p>
+      )}
+    </DialogHeader>
+  );
+}
+
+function BodySections({
+  f, pagos, isLoading, canEdit, onEliminarPago,
+}: {
+  f: FacturaCxP | null;
+  pagos: Parameters<typeof PagosTable>[0]["pagos"];
+  isLoading: boolean;
+  canEdit: boolean;
+  onEliminarPago: (id: string) => void;
+}) {
+  return (
+    <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+      {f && <InfoFacturaSection factura={f} />}
+      {f && <HistorialFacturaSection facturaId={f.id} />}
+      <PagosTable pagos={pagos} isLoading={isLoading} canEdit={canEdit} onEliminarPago={onEliminarPago} />
+      {f && (
+        <NotasCreditoSection
+          facturaId={f.id}
+          monedaFactura={f.moneda}
+          saldoFactura={f.saldo}
+          canEdit={canEdit}
+        />
+      )}
+    </div>
+  );
+}
