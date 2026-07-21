@@ -117,6 +117,35 @@ export function DialogDetallePagosProveedor({
         </DialogContent>
       </Dialog>
 
+      <ActionDialogs
+        f={f}
+        pagoAEliminar={pagoAEliminar} setPagoAEliminar={setPagoAEliminar} eliminar={eliminar}
+        aCerrarSinPago={aCerrarSinPago} setACerrarSinPago={setACerrarSinPago} cerrarSinPago={cerrarSinPago}
+        openCancel={openCancel} setOpenCancel={setOpenCancel} cancelar={cancelar}
+      />
+    </TooltipProvider>
+  );
+}
+
+function ActionDialogs({
+  f,
+  pagoAEliminar, setPagoAEliminar, eliminar,
+  aCerrarSinPago, setACerrarSinPago, cerrarSinPago,
+  openCancel, setOpenCancel, cancelar,
+}: {
+  f: FacturaCxP | null;
+  pagoAEliminar: string | null;
+  setPagoAEliminar: (v: string | null) => void;
+  eliminar: ReturnType<typeof useEliminarPagoProveedor>;
+  aCerrarSinPago: FacturaCxP | null;
+  setACerrarSinPago: (v: FacturaCxP | null) => void;
+  cerrarSinPago: ReturnType<typeof useCerrarFacturaProveedorSinPago>;
+  openCancel: boolean;
+  setOpenCancel: (v: boolean) => void;
+  cancelar: ReturnType<typeof useCancelarFacturaProveedor>;
+}) {
+  return (
+    <>
       <DoubleConfirmDeleteDialog
         open={!!pagoAEliminar}
         onOpenChange={(o) => { if (!o) setPagoAEliminar(null); }}
@@ -155,6 +184,6 @@ export function DialogDetallePagosProveedor({
           }}
         />
       )}
-    </TooltipProvider>
+    </>
   );
 }
