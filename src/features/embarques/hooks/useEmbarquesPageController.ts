@@ -144,6 +144,8 @@ export function useEmbarquesPageController() {
     operadoresUnicos,
     columns,
     isLoading,
+    isError,
+    refetch,
     isEmptyState,
     canEdit,
     exportarCsv,
