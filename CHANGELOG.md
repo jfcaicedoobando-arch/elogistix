@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.92] - 2026-07-21
+- **fix(facturación) — Descargas seguían saliendo como `cfdi.pdf` en vez del nombre `{Tipo}_{Folio}_{Cliente}_{Fecha}`.** La edge function `facturapi-descargar` ya armaba el filename correcto en `Content-Disposition`, pero CORS oculta ese header a JavaScript por default: el `fetch()` del cliente no podía leerlo, el regex no matcheaba y caía al fallback `cfdi.pdf`. Se agrega `Access-Control-Expose-Headers: Content-Disposition` en la respuesta. Analogía: el paquete llegaba con la etiqueta bien puesta, pero la aduana (CORS) no dejaba leerla salvo que el remitente marque "esta etiqueta es visible" — ya está marcada.
+
 ## [13.303.91] - 2026-07-21
 - **ux(facturación) — Nombres de archivo descriptivos al descargar PDF/XML.** Antes las descargas salían como `LibreCarga_F971.pdf` — sin distinguir si era factura, nota de crédito o REP, sin cliente y sin fecha. Ahora la edge function `facturapi-descargar` arma el nombre con el patrón `{Tipo}_{FolioSerie}_{Cliente}_{Fecha}.{ext}`, ej. `Factura_F971_Cliente_Acme_2026-07-21.pdf`, `NotaCredito_A10_Cliente_Acme_2026-07-21.xml`, `REP_A5_Cliente_Acme_2026-07-21.pdf`. La lógica se aisló en `_shared/facturaFilename.ts` (con `slugifyForFilename` sin acentos ni caracteres inseguros + `toFechaYmd` UTC + `buildFilename` que omite segmentos vacíos sin dejar `__` doble), con Deno tests para acentos, límites de 40 chars, fechas nulas y todos los edge cases. NC y REP heredan cliente/fecha del CFDI padre cuando no vienen directos. Analogía: antes las fotos del celular se guardaban como "Foto.jpg" y tenías que abrirlas para saber qué era; ahora cada archivo dice de un vistazo qué tipo de documento, de quién y de cuándo.
 
