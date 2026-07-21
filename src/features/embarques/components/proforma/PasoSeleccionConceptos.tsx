@@ -31,22 +31,20 @@ interface Props {
   totales: TotalesProforma;
   tasaIva: number;
   notas: string;
-  diasCredito: string;
-  operadorEmbarque: string | null;
   onToggle: (id: string) => void;
   onToggleAll: () => void;
   onToggleIva: (id: string, moneda: string) => void;
   onNotasChange: (v: string) => void;
-  onDiasCreditoChange: (v: string) => void;
 }
 
 export function PasoSeleccionConceptos({
   conceptosPendientes, conceptosVisibles, contenedores,
   filtroContenedor, onFiltroContenedorChange,
   seleccionados, ivaPorConcepto, totales, tasaIva,
-  notas, diasCredito, operadorEmbarque,
-  onToggle, onToggleAll, onToggleIva, onNotasChange, onDiasCreditoChange,
+  notas,
+  onToggle, onToggleAll, onToggleIva, onNotasChange,
 }: Props) {
+
   const visiblesIds = conceptosVisibles.map((c) => c.id);
   const seleccionadosVisibles = visiblesIds.filter((id) => seleccionados.has(id)).length;
   const allSelected = visiblesIds.length > 0 && seleccionadosVisibles === visiblesIds.length;
