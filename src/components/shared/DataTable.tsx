@@ -82,6 +82,8 @@ function DataTableInner<T>({
   columns,
   data,
   isLoading = false,
+  isError = false,
+  onRetry,
   emptyMessage = "Sin resultados",
   emptyHint,
   emptyIcon,
