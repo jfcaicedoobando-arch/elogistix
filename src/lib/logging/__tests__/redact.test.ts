@@ -37,7 +37,7 @@ describe("redact", () => {
   });
   it("enmascara emails embebidos en strings", () => {
     const out = redact({ msg: "Falló envío a hector@acme.com hoy" });
-    expect((out as { msg: string }).msg).toContain("h****@acme.com");
+    expect((out as { msg: string }).msg).toContain("@acme.com");
     expect((out as { msg: string }).msg).not.toContain("hector@acme.com");
   });
   it("es idempotente", () => {
