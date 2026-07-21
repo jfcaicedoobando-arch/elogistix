@@ -1,12 +1,15 @@
 /**
  * Estado y validación para DialogRegistrarPagoProveedor.
  * Extraído v12.95.23 para mantener el dialog ≤200 LOC.
+ * FIX-14 (auditoría v3): al pagar en MXN una factura USD/EUR, validar
+ * y prefilear en la moneda de la factura usando tcValido; sin TC → bloquear.
  */
 import { useEffect, useMemo, useState } from "react";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
 import { defaultMetodo, metodosFor } from "./pagoProveedorHelpers";
 import { todayLocalISO } from "@/lib/date/today";
+import { tcValido } from "@/lib/financial/tcValido";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -40,13 +43,38 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
   );
 
   const montoNum = Number(monto) || 0;
+  const tcNum = tcValido(tc);
+  const monedaFacturaExtranjera = !!factura && factura.moneda !== "MXN";
+  const esUsdPagadoEnMxn = monedaFacturaExtranjera && moneda === "MXN";
+  const showTc = moneda !== "MXN" || esUsdPagadoEnMxn;
+
+  // Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC,
+  // recalcular el prefill del monto para saldar exactamente en MXN.
+  useEffect(() => {
+    if (!factura || !open) return;
+    if (esUsdPagadoEnMxn && tcNum) {
+      setMonto((factura.saldo * tcNum).toFixed(2));
+    } else if (!esUsdPagadoEnMxn && moneda === factura.moneda) {
+      setMonto(factura.saldo.toFixed(2));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esUsdPagadoEnMxn, moneda, factura?.id]);
+
+  // Monto expresado en la moneda de la factura (para validar contra saldo).
+  const montoEnMonedaFactura = useMemo(() => {
+    if (!factura) return 0;
+    if (moneda === factura.moneda) return montoNum;
+    if (esUsdPagadoEnMxn && tcNum) return montoNum / tcNum;
+    return montoNum; // otros cruces: se valida en la RPC
+  }, [factura, moneda, montoNum, esUsdPagadoEnMxn, tcNum]);
+
   const saldoRestante = useMemo(
-    () => Math.max(0, (factura?.saldo ?? 0) - montoNum),
-    [factura, montoNum],
+    () => Math.max(0, (factura?.saldo ?? 0) - montoEnMonedaFactura),
+    [factura, montoEnMonedaFactura],
   );
-  const esUsdPagadoEnMxn = factura?.moneda === "USD" && moneda === "MXN";
-  const showTc = moneda !== "MXN";
-  const excede = factura ? montoNum > factura.saldo + 0.01 : false;
+
+  const bloqueadoPorTc = esUsdPagadoEnMxn && !tcNum;
+  const excede = factura ? montoEnMonedaFactura > factura.saldo + 0.01 : false;
 
   return {
     fecha, setFecha, monto, setMonto, moneda, setMoneda,
@@ -54,5 +82,6 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
     notas, setNotas, diffMxn, setDiffMxn,
     metodosDisponibles, montoNum, saldoRestante,
     esUsdPagadoEnMxn, showTc, excede,
+    montoEnMonedaFactura, bloqueadoPorTc, tcNum,
   };
 }

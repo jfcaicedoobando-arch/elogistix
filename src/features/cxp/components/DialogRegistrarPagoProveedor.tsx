@@ -29,7 +29,8 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
     if (!factura) return;
     if (noAprobada) return notifyError(toast, { title: "La factura debe estar aprobada antes de registrar pagos", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_0" });
     if (f.montoNum <= 0) return notifyError(toast, { title: "El monto debe ser mayor a 0", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_1" });
-    if (f.excede) return notifyError(toast, { title: "El monto excede el saldo pendiente", method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
+    if (f.bloqueadoPorTc) return notifyError(toast, { title: `Captura un tipo de cambio válido para pagar en MXN una factura ${factura.moneda}`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_4" });
+    if (f.excede) return notifyError(toast, { title: `El monto excede el saldo pendiente (${factura.moneda})`, method: "FEATURES_CXP_COMPONENTS_DIALOGREGISTRARPAGOPROVEEDOR_2" });
     try {
       await registrar.mutateAsync({
         proveedor_factura_id: factura.id,
@@ -57,8 +58,8 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
       </Button>
       <Button
         onClick={submit}
-        disabled={registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada}
-        title={noAprobada ? "Requiere aprobación" : undefined}
+        disabled={registrar.isPending || f.excede || f.montoNum <= 0 || noAprobada || f.bloqueadoPorTc}
+        title={noAprobada ? "Requiere aprobación" : f.bloqueadoPorTc ? "Captura el TC" : undefined}
       >
         {registrar.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         {registrar.isPending ? "Guardando…" : "Registrar pago"}
