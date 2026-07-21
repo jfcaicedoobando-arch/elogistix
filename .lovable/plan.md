@@ -1,72 +1,54 @@
-# Fase S — Cierre del backlog de Auditoría Profunda
+# Plan · Modal Generar Proforma sin `diasCredito` ni `operador` en UI
 
-Retomo los 4 pendientes que quedaron documentados en el CHANGELOG (líneas 529 y 543) como "fuera de alcance" de las Fases R.1–R.7. Cada sub-fase es **1 migración + servicio TS + UI mínima + tests**, sin cambios visuales fuera del contexto de cada bug.
+## Diagnóstico (verificado)
 
-## Fase S.1 — N-1: guards de vínculo `bbva_movimientos` ↔ pagos
+Hoy el modal `DialogGenerarProforma` muestra dos campos que ya existen como **fuente única de verdad** en otras tablas:
 
-**Bug**: hoy se pueden vincular pagos a movimientos bancarios sin ninguna validación de que el movimiento pertenezca a la misma organización, que la divisa cuadre, o que un movimiento ya haya sido consumido por otro pago (doble aplicación silenciosa).
+- **Días de crédito** — input editable (`<Input type="number">`) en `ProformaFooterFields` (línea 120-128 de `PasoSeleccionConceptos.parts.tsx`). El default se lee de `useDiasCreditoCliente(embarque.cliente_id)` en el controller (línea 44 de `useDialogGenerarProformaController.ts`), pero luego el usuario puede sobrescribirlo. **La SoT es `clientes.dias_credito`.**
+- **Ejecutivo de Operaciones** — display readonly en `ProformaFooterFields` (línea 134-138). Se pasa desde `embarque.operador`. **La SoT es `embarques.operador`.**
 
-**Fix**:
-- **BD**: función `assert_movimiento_pago_consistente()` + trigger `BEFORE INSERT OR UPDATE OF bbva_movimiento_id` en `pagos_factura` y `pagos_proveedor`. Valida:
-  1. `movimiento.organization_id = pago.organization_id`.
-  2. `movimiento.moneda = pago.moneda` (o conversión explícita registrada).
-  3. Un movimiento no puede estar vinculado a >1 pago vivo (índice único parcial `WHERE deleted_at IS NULL AND bbva_movimiento_id IS NOT NULL`).
-- **Servicio**: nuevas clases `MovimientoOrgMismatchError`, `MovimientoDivisaMismatchError`, `MovimientoYaVinculadoError`.
-- **UI**: en el selector de movimientos (`SelectorMovimientoBanco`) filtrar por org y moneda; tooltip cuando el movimiento ya está vinculado.
-- **Tests**: `pagos.test.ts` + `pagosProveedor.test.ts` — 3 casos por servicio.
+Ambos también aparecen en `PasoConfirmacionProforma.tsx` (líneas 62 y 67) como parte del resumen.
 
-## Fase S.2 — N-2: saldo a favor de anticipos de clientes
+Al aceptar edición del campo de crédito, la proforma puede quedar con condiciones distintas a las del cliente sin que nadie se entere → riesgo de descuadre entre CxC del cliente y política crediticia.
 
-**Bug**: los anticipos de clientes (`anticipos_aplicaciones` / `pagos_factura` con `es_anticipo=true`) generan saldo a favor cuando el pago > total facturado, pero no hay flujo para aplicarlo a facturas futuras: el saldo queda "flotando" en la cuenta del cliente sin trazabilidad.
+## Cambios
 
-**Fix**:
-- **BD**: vista `v_saldo_favor_cliente(cliente_id, moneda, saldo_disponible)` que agrega anticipos vivos menos aplicaciones. Función `aplicar_saldo_favor_a_factura(p_factura_id, p_monto)` (`SECURITY DEFINER`) que:
-  1. Valida que la factura no esté cancelada/sustituida.
-  2. Consume del saldo disponible del cliente (FIFO por fecha de anticipo).
-  3. Genera pagos `origen='saldo_favor'` con `anticipo_origen_id` para trazabilidad.
-- **Servicio**: `aplicarSaldoFavor(facturaId, monto)` + hook `useAplicarSaldoFavor` + query `useSaldoFavorCliente(clienteId, moneda)`.
-- **UI**: en el header de detalle de factura, banner "Cliente tiene $X de saldo a favor · Aplicar" cuando `saldo_disponible > 0`.
-- **Tests**: `saldoFavor.test.ts` — happy path, factura cancelada, saldo insuficiente, FIFO order.
+**1. UI — quitar ambos campos del modal**
 
-## Fase S.3 — N-4: pre-check local de REPs vivos antes de cancelar factura
+- `src/features/embarques/components/proforma/PasoSeleccionConceptos.parts.tsx`
+  - Reducir `ProformaFooterFields` para que renderice **solo el `<Textarea>` de notas**. Eliminar el grid con "Días de crédito" y "Ejecutivo de Operaciones", los props `diasCredito`, `operadorEmbarque` y `onDiasCreditoChange`.
+- `src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx`
+  - Quitar props `diasCredito`, `operadorEmbarque`, `onDiasCreditoChange` de la interfaz y del render de `ProformaFooterFields`.
+- `src/features/embarques/components/proforma/PasoConfirmacionProforma.tsx`
+  - Quitar del resumen las líneas "Operador" y "Días de crédito" y sus props. El resumen queda con conceptos, totales y notas.
+- `src/features/embarques/components/DialogGenerarProforma.tsx`
+  - No pasar ya `diasCredito`, `operadorEmbarque`, `onDiasCreditoChange` a los dos pasos.
 
-**Bug**: al cancelar una factura con REPs (Recibos Electrónicos de Pago) vivos, la BD ya lanza `LC_FACTURA_CON_REP_VIVO` (guarda existente de la Fase R), pero la UI muestra un error rojo genérico después del roundtrip. El usuario no sabe cuántos REPs debe cancelar primero.
+**2. Controller — dejar `diasCredito` y operador como valores derivados internos, no como estado editable**
 
-**Fix**:
-- **Servicio**: en `cancelarFactura` hacer pre-check `SELECT COUNT(*) FROM pagos_factura WHERE factura_id = $1 AND uuid_rep IS NOT NULL AND rep_cancelado_en IS NULL AND deleted_at IS NULL`. Si `> 0`, lanzar `FacturaConRepsVivosError` con `cantidad` sin roundtrip.
-- **UI**: el botón "Cancelar factura" muestra badge `N REPs vivos` cuando aplica, y al abrir el modal de cancelación aparece checklist de REPs pendientes con link a la sección REP. El submit queda deshabilitado hasta 0.
-- **BD**: sin cambios (la guarda ya existe).
-- **Tests**: `facturas.cancelar.test.ts` — 2 casos (0 REPs vivos, 3 REPs vivos).
+- `src/features/embarques/hooks/useDialogGenerarProformaController.ts`
+  - Eliminar `useState` de `diasCredito` y `setDiasCredito`, y el `useEffect` que lo sincroniza (líneas 51, 94-97).
+  - Al construir el payload de submit, resolver `diasCredito` **en el momento** desde `useDiasCreditoCliente(embarque.cliente_id)` (ya está cargado) y `operador` desde `embarque.operador`. Nunca se exponen al UI ni se permiten sobrescribir.
 
-## Fase S.4 — R.7-deuda: prohibir firma corta de conversión cotización→embarque
+**3. Submit — sin cambios de contrato hacia la BD**
 
-**Bug**: el RPC `crear_embarque_borrador_desde_cotizacion(uuid)` (1-arg) sigue existiendo y sigue siendo llamado por `useCrearEmbarqueBorrador`. Después de R.6 ya no salta la revalidación (la BD la fuerza), pero los llamadores TS no reciben metadatos de decisión de tarifa — el flujo queda "invisible" para observabilidad.
+- `src/features/embarques/services/submitProformaDialog.ts` sigue recibiendo `diasCredito` como string y `embarque.operador`. Cambia solo la fuente en el controller: la string proviene siempre de `clientes.dias_credito` (o `""` si null), no de un input editable. La lógica de parseo (`diasCredito.trim() === "" ? null : Number(...)`) se conserva.
 
-**Fix**:
-- **TS types**: marcar la firma 1-arg como `@deprecated` en `types.ts` (auto-gen no, pero sí en un wrapper en `services/conversiones/embarques.ts`).
-- **Servicio**: `crearEmbarqueBorradorDesdeCotizacion` exige ahora `{ cotizacionId, decision, tarifaAplicada?, delta? }` — si `decision='sin_cambios'` internamente llama 1-arg; si otra, llama 4-arg. Los llamadores pasan siempre por este wrapper.
-- **UI**: `useCotizacionDetalleHandlers.handleCrearBorrador` pasa siempre por `RevalidarTarifaModal` cuando la revalidación devuelve severidad ≠ `sin_cambios`; el flujo actual ya lo hace tras R.6, sólo se remueve el catch fallback.
-- **BD**: opcional — `REVOKE EXECUTE` del 1-arg al role `authenticated` y dejar sólo `service_role` (defensa en profundidad).
-- **Tests**: `conversiones.embarques.test.ts` — firma nueva, error si falta `decision`, delegación correcta al 1/4-arg.
+**4. Tests**
 
-## Entregables
+- `src/features/embarques/hooks/__tests__/useProformaDialog.test.tsx` y `src/features/embarques/services/__tests__/submitProformaDialog.test.ts`: actualizar mocks/aserciones que aún referencien `setDiasCredito` u `onDiasCreditoChange`. Añadir un test que verifique que aunque `useDiasCreditoCliente` regrese `30`, el submit siempre manda `30` (no hay manera de que el usuario mande otro valor).
 
-- 3 migraciones nuevas (S.1, S.2, S.4).
-- 4–6 servicios/hooks nuevos.
-- Ajustes UI puntuales (banner saldo a favor, badge REPs vivos, tooltip movimiento vinculado).
-- ~12 tests unitarios nuevos.
-- CHANGELOG: 4 entries `[13.303.77]` a `[13.303.80]`, uno por sub-fase.
-- Bump final `APP_VERSION → 13.303.80`.
+**5. Changelog + bump**
 
-## Notas de riesgo
+- `CHANGELOG.md` bajo `## [13.303.80] - 2026-07-21` con nota corta explicando que se retiran los campos del modal y quedan como SoT.
+- `src/constants/appVersion.ts` → `13.303.80`.
 
-- **S.1** rompe cualquier vínculo ya duplicado en producción — la migración incluye una consulta de sanity `SELECT bbva_movimiento_id, COUNT(*) FROM pagos_factura WHERE deleted_at IS NULL AND bbva_movimiento_id IS NOT NULL GROUP BY 1 HAVING COUNT(*) > 1` que sólo reporta; el índice único parcial se crea `NOT VALID` inicialmente si hay filas ofensoras.
-- **S.2** el FIFO de anticipos asume `anticipos_proveedor.fecha_registro` como orden estable; hay que confirmar la columna real de anticipos de **cliente**.
-- **S.4** puede romper llamadores externos (webhooks, scripts) — se mantiene el 1-arg en BD, sólo se cierra a nivel TS.
+## Fuera de alcance
 
-## Orden de commits
+- No se modifica la tabla `proformas` ni sus columnas `dias_credito` / `operador` — se siguen persistiendo, solo cambia dónde se leen.
+- No se toca la lógica de cálculo de vencimiento ni las políticas de crédito.
+- Si en el futuro se quiere permitir override justificado (con bitácora), sería un feature aparte con confirmación y motivo.
 
-1. `S.1` (independiente, más aislado).
-2. `S.2` (necesita vista + RPC, mayor cirugía).
-3. `S.3` (sólo cliente, menos riesgo).
-4. `S.4` (cambio de firma, mayor blast radius si se hace mal).
+## Analogía para ti
+
+Es como el nombre del cliente en una factura: no lo tecleas cada vez, lo hereda el sistema. Igual aquí: los días de crédito los pone el expediente del cliente y el ejecutivo lo pone el expediente del embarque. Si están mal, se corrigen en su lugar (una sola vez), no en cada proforma.
