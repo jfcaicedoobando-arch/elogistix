@@ -10,8 +10,10 @@ import {
   listarMovimientos,
   sugerirCandidatos,
   conciliarConPago,
+  MovimientoVinculoError,
   type MovimientoBBVA,
 } from "../conciliacion";
+
 
 function makeMov(partial: Partial<MovimientoBBVA>): MovimientoBBVA {
   const base: MovimientoBBVA = {
@@ -118,5 +120,26 @@ describe("conciliacion service", () => {
         estado_conciliacion: "Conciliado",
       });
     });
+
+
+
+    it("mapea LC_MOVIMIENTO_ORG_MISMATCH del trigger a MovimientoVinculoError", async () => {
+      mock.setTableResult("bbva_movimientos", {
+        data: null,
+        error: { code: "P0001", message: "LC_MOVIMIENTO_ORG_MISMATCH: el pago pertenece a otra organización" },
+      });
+      await expect(conciliarConPago("m1", "cxc", "p1", "u1")).rejects.toBeInstanceOf(MovimientoVinculoError);
+    });
+
+    it("mapea 23505 sobre uq_bbva_movimientos_pago_factura a LC_MOVIMIENTO_YA_VINCULADO", async () => {
+      mock.setTableResult("bbva_movimientos", {
+        data: null,
+        error: { code: "23505", message: 'duplicate key value violates unique constraint "uq_bbva_movimientos_pago_factura"' },
+      });
+      await expect(conciliarConPago("m1", "cxc", "p1", "u1")).rejects.toMatchObject({
+        code: "LC_MOVIMIENTO_YA_VINCULADO",
+      });
+    });
   });
 });
+

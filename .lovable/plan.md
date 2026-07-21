@@ -1,102 +1,72 @@
-# Plan · Correcciones UI/UX (basado en `instrucciones-lovable-uiux.md`)
+# Fase S — Cierre del backlog de Auditoría Profunda
 
-## Verificación previa
+Retomo los 4 pendientes que quedaron documentados en el CHANGELOG (líneas 529 y 543) como "fuera de alcance" de las Fases R.1–R.7. Cada sub-fase es **1 migración + servicio TS + UI mínima + tests**, sin cambios visuales fuera del contexto de cada bug.
 
-He auditado el repo antes de planear. Los hallazgos son bugs reales:
+## Fase S.1 — N-1: guards de vínculo `bbva_movimientos` ↔ pagos
 
-- **FIX-UX-01 (errores de red silenciosos):** el `QueryCache.onError` en `src/lib/query/queryClient.ts:74-88` solo llama a `reportQueryError` (Sentry); no dispara toast. `rg -l isError src/features -g "*.tsx"` devuelve **29** archivos → la gran mayoría de rutas nunca renderiza estado de error.
-- **FIX-UX-08 (timezone en `addDays`):** confirmado en `src/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers.ts:26-35`. Se parsea local (`new Date(iso + "T00:00:00")`) y se serializa con `toISOString()` (UTC) → al oeste de UTC (America/Mexico_City, -06/-07) se resta un día al `vencimiento`.
-- **FIX-UX-04:** `rg -l 'type="number"' src` da **44** archivos, y el sustituto (`NumericInput`) solo aparece en ~9. Coincide con la auditoría.
-- **FIX-UX-02 / 03 / 05 / 06 / 07 / 09:** los archivos citados existen y siguen sin diálogos, sin `htmlFor`, sin `aria-label` o con grids no responsivas. Son bugs reales.
+**Bug**: hoy se pueden vincular pagos a movimientos bancarios sin ninguna validación de que el movimiento pertenezca a la misma organización, que la divisa cuadre, o que un movimiento ya haya sido consumido por otro pago (doble aplicación silenciosa).
 
-Dado el tamaño, propongo ejecutarlo en 4 fases entregables (cada fase pasa `typecheck + lint + tests` y bump de `APP_VERSION` + `CHANGELOG.md`).
+**Fix**:
+- **BD**: función `assert_movimiento_pago_consistente()` + trigger `BEFORE INSERT OR UPDATE OF bbva_movimiento_id` en `pagos_factura` y `pagos_proveedor`. Valida:
+  1. `movimiento.organization_id = pago.organization_id`.
+  2. `movimiento.moneda = pago.moneda` (o conversión explícita registrada).
+  3. Un movimiento no puede estar vinculado a >1 pago vivo (índice único parcial `WHERE deleted_at IS NULL AND bbva_movimiento_id IS NOT NULL`).
+- **Servicio**: nuevas clases `MovimientoOrgMismatchError`, `MovimientoDivisaMismatchError`, `MovimientoYaVinculadoError`.
+- **UI**: en el selector de movimientos (`SelectorMovimientoBanco`) filtrar por org y moneda; tooltip cuando el movimiento ya está vinculado.
+- **Tests**: `pagos.test.ts` + `pagosProveedor.test.ts` — 3 casos por servicio.
 
----
+## Fase S.2 — N-2: saldo a favor de anticipos de clientes
 
-## Fase 1 — Bugs críticos y de bajo costo (P0)
+**Bug**: los anticipos de clientes (`anticipos_aplicaciones` / `pagos_factura` con `es_anticipo=true`) generan saldo a favor cuando el pago > total facturado, pero no hay flujo para aplicarlo a facturas futuras: el saldo queda "flotando" en la cuenta del cliente sin trazabilidad.
 
-**Objetivo:** cero riesgo de datos incorrectos y visibilidad inmediata de fallas de red.
+**Fix**:
+- **BD**: vista `v_saldo_favor_cliente(cliente_id, moneda, saldo_disponible)` que agrega anticipos vivos menos aplicaciones. Función `aplicar_saldo_favor_a_factura(p_factura_id, p_monto)` (`SECURITY DEFINER`) que:
+  1. Valida que la factura no esté cancelada/sustituida.
+  2. Consume del saldo disponible del cliente (FIFO por fecha de anticipo).
+  3. Genera pagos `origen='saldo_favor'` con `anticipo_origen_id` para trazabilidad.
+- **Servicio**: `aplicarSaldoFavor(facturaId, monto)` + hook `useAplicarSaldoFavor` + query `useSaldoFavorCliente(clienteId, moneda)`.
+- **UI**: en el header de detalle de factura, banner "Cliente tiene $X de saldo a favor · Aplicar" cuando `saldo_disponible > 0`.
+- **Tests**: `saldoFavor.test.ts` — happy path, factura cancelada, saldo insuficiente, FIFO order.
 
-1. **FIX-UX-08 · `addDays` timezone-safe**
-  - Reescribir sin `toISOString()`: aritmética por componentes con `date-fns/format` (o string-math) para devolver siempre `YYYY-MM-DD` local.
-  - Añadir `env: { TZ: "America/Mexico_City" }` a `vitest.config.ts`.
-  - Test unitario que corra con `TZ=UTC` y `TZ=America/Los_Angeles`.
-2. **FIX-UX-01 · Errores visibles con reintento**
-  - En `queryClient.ts` `QueryCache.onError`: además de Sentry, `toast.error(...)`, respetando `meta.silentError`.
-  - Extender `DataTable` con props opcionales `isError`/`onRetry` que renderice `ErrorStateInline`.
-  - Aplicar rama `if (isError) return <ErrorState ... onRetry={refetch} />` en las páginas de alto impacto listadas:
-    - `useEmbarquesPageState.ts` (`isEmptyState && !isError`)
-    - `features/cxp/routes/Cxp.tsx`
-    - `features/facturacion/routes/FacturaDetalle.tsx` (distinguir "no existe" vs error de red)
-    - `features/dashboard/hooks/useDashboardData.ts` (consumidores)
-    - `features/portal/routes/PortalFacturas.tsx` + otras 6 rutas del portal (`/portal/*`)
-  - No tocamos las ~180 páginas restantes en esta fase; queda documentado como deuda.
+## Fase S.3 — N-4: pre-check local de REPs vivos antes de cancelar factura
 
-**Aceptación fase 1:** DevTools offline → cada ruta del listado muestra `ErrorState` con "Reintentar". Tests TZ pasan con cualquier TZ del runner. Toast aparece una sola vez por error (dedupe por meta).
+**Bug**: al cancelar una factura con REPs (Recibos Electrónicos de Pago) vivos, la BD ya lanza `LC_FACTURA_CON_REP_VIVO` (guarda existente de la Fase R), pero la UI muestra un error rojo genérico después del roundtrip. El usuario no sabe cuántos REPs debe cancelar primero.
 
----
+**Fix**:
+- **Servicio**: en `cancelarFactura` hacer pre-check `SELECT COUNT(*) FROM pagos_factura WHERE factura_id = $1 AND uuid_rep IS NOT NULL AND rep_cancelado_en IS NULL AND deleted_at IS NULL`. Si `> 0`, lanzar `FacturaConRepsVivosError` con `cantidad` sin roundtrip.
+- **UI**: el botón "Cancelar factura" muestra badge `N REPs vivos` cuando aplica, y al abrir el modal de cancelación aparece checklist de REPs pendientes con link a la sección REP. El submit queda deshabilitado hasta 0.
+- **BD**: sin cambios (la guarda ya existe).
+- **Tests**: `facturas.cancelar.test.ts` — 2 casos (0 REPs vivos, 3 REPs vivos).
 
-## Fase 2 — Confirmaciones destructivas + captura de dinero (P1)
+## Fase S.4 — R.7-deuda: prohibir firma corta de conversión cotización→embarque
 
-3. **FIX-UX-02 · `ConfirmActionDialog` en acciones destructivas**
-  - Cancelar NC (`cxp/components/NotasCreditoSection.tsx`)
-  - Eliminar en `TabPuertos`, `TabNavieras`, `TabTiposContenedor`, `CatalogoClavesSATCard`
-  - Eliminar concepto en `FacturaConceptosEditor`
-  - Donde el registro esté referenciado por embarques/facturas, deshabilitar botón + tooltip "En uso" (una sola consulta previa por catálogo).
-4. **FIX-UX-04 · `NumericInput` para dinero**
-  - Extender `NumericInput` si falta: formateo `1,234.56` en blur, parseo tolerante al pegar, permite vacío, valida `Number.isFinite`.
-  - Migrar los 5 archivos de mayor uso listados en la auditoría; el resto queda como "seguir migrando por módulo" en Fase 4.
-  - Añadir regla eslint custom o `no-restricted-syntax` que prohíba `type="number"` en `src/features/**/*.tsx` (con excepciones documentadas).
+**Bug**: el RPC `crear_embarque_borrador_desde_cotizacion(uuid)` (1-arg) sigue existiendo y sigue siendo llamado por `useCrearEmbarqueBorrador`. Después de R.6 ya no salta la revalidación (la BD la fuerza), pero los llamadores TS no reciben metadatos de decisión de tarifa — el flujo queda "invisible" para observabilidad.
 
-**Aceptación fase 2:** 0 acciones destructivas sin diálogo en los archivos listados; scroll sobre campos de dinero no muta el valor; se puede vaciar el campo.
+**Fix**:
+- **TS types**: marcar la firma 1-arg como `@deprecated` en `types.ts` (auto-gen no, pero sí en un wrapper en `services/conversiones/embarques.ts`).
+- **Servicio**: `crearEmbarqueBorradorDesdeCotizacion` exige ahora `{ cotizacionId, decision, tarifaAplicada?, delta? }` — si `decision='sin_cambios'` internamente llama 1-arg; si otra, llama 4-arg. Los llamadores pasan siempre por este wrapper.
+- **UI**: `useCotizacionDetalleHandlers.handleCrearBorrador` pasa siempre por `RevalidarTarifaModal` cuando la revalidación devuelve severidad ≠ `sin_cambios`; el flujo actual ya lo hace tras R.6, sólo se remueve el catch fallback.
+- **BD**: opcional — `REVOKE EXECUTE` del 1-arg al role `authenticated` y dejar sólo `service_role` (defensa en profundidad).
+- **Tests**: `conversiones.embarques.test.ts` — firma nueva, error si falta `decision`, delegación correcta al 1/4-arg.
 
----
+## Entregables
 
-## Fase 3 — Accesibilidad y responsive (P2)
+- 3 migraciones nuevas (S.1, S.2, S.4).
+- 4–6 servicios/hooks nuevos.
+- Ajustes UI puntuales (banner saldo a favor, badge REPs vivos, tooltip movimiento vinculado).
+- ~12 tests unitarios nuevos.
+- CHANGELOG: 4 entries `[13.303.77]` a `[13.303.80]`, uno por sub-fase.
+- Bump final `APP_VERSION → 13.303.80`.
 
-5. **FIX-UX-03 · Labels `htmlFor**`
-  - Refactor de `components/shared/FormField.tsx` para generar `useId()` y propagarlo al hijo control vía `cloneElement`, pasando `htmlFor` al `Label`.
-  - Activar `eslint-plugin-jsx-a11y` con `label-has-associated-control` en warning primero (para no romper CI), y corregir por módulo: facturación → cotización → CxP.
-6. **FIX-UX-05 · `aria-label` en botones-ícono**
-  - Corregir los 3 archivos listados.
-  - Activar regla `jsx-a11y/control-has-associated-label` / `button-has-aria-label` en el mismo commit.
-7. **FIX-UX-06 · Tablas con scroll**
-  - Migrar `TablaFlujoSemanal.tsx` y `CrmDashboard.tsx` a `DataTable` (o envolver en `overflow-x-auto` si no aplica).
-  - ADR corto en `ARCHITECTURE.md` declarando `DataTable` como puerta única.
-8. **FIX-UX-07 · Grids financieros responsive**
-  - Ajustar los 4 archivos citados a `grid-cols-1 sm:grid-cols-2 lg:grid-cols-N`, reutilizando `KpiStrip` donde aplique.
+## Notas de riesgo
 
-**Aceptación fase 3:** lint a11y sin errores nuevos; a 375 px ninguna de las páginas listadas presenta overflow horizontal; `<table>` cruda queda solo en módulos aún no migrados (documentado).
+- **S.1** rompe cualquier vínculo ya duplicado en producción — la migración incluye una consulta de sanity `SELECT bbva_movimiento_id, COUNT(*) FROM pagos_factura WHERE deleted_at IS NULL AND bbva_movimiento_id IS NOT NULL GROUP BY 1 HAVING COUNT(*) > 1` que sólo reporta; el índice único parcial se crea `NOT VALID` inicialmente si hay filas ofensoras.
+- **S.2** el FIFO de anticipos asume `anticipos_proveedor.fecha_registro` como orden estable; hay que confirmar la columna real de anticipos de **cliente**.
+- **S.4** puede romper llamadores externos (webhooks, scripts) — se mantiene el 1-arg en BD, sólo se cierra a nivel TS.
 
----
+## Orden de commits
 
-## Fase 4 — Pulido y limpieza (P3, opcional)
-
-9. **FIX-UX-09**
-  - Migrar `Loader2` de nivel-página a `PageSkeleton`/`LoadingState` (por módulo, no bloqueante).
-  - `mode: "onBlur"` en los `useForm` sin `mode`.
-  - Ampliar touch targets `h-6/h-7/h-8` en celdas a `h-10 w-10` o padding clicable.
-  - Decidir `"use memo"`: quitar directivas muertas.
-  - `manualChunks` para `xlsx`, `remotion`, `recharts` en `vite.config.ts`.
-10. **FIX-UX-10 · ADR i18n**
-  - `docs/adr/0001-es-mx-hardcoded.md` con la decisión.
-
----
-
-## Detalles técnicos clave
-
-- **Toast dedupe (fase 1):** `sonner` ya deduplica por `id`; usaremos `id: "query-error-" + queryKey[0]` para no spamear si varias queries fallan en cascada.
-- **Distinguir "no existe" vs error de red en `FacturaDetalle`:** el hook actual ya sabe si vino `data === null` con status ok (PGRST 200 vacío) vs `error`. Renderizar 404 solo si `!isError && !data`, sino `ErrorState`.
-- `**NumericInput` sin regresiones:** exponer prop `allowEmpty` (default true). Los consumidores actuales pasan `value ?? ""`; blindarlos.
-- **eslint plugin a11y:** se instala `eslint-plugin-jsx-a11y` (Fase 3), con reglas nuevas en `warn` primero y luego `error` una vez limpio.
-- **CHANGELOG / APP_VERSION:** un bump por fase (`13.303.75`, `.76`, `.77`, `.78`).
-
-## Fuera de alcance
-
-- No tocaremos las 200+ rutas restantes sin `isError` en fase 1 (solo las críticas del listado); el resto se abre como deuda para migrar por módulo.
-- No cambiaremos el motor de queries ni introduciremos ErrorBoundary por ruta (ya existe global).
-- No haremos i18n real (fase 4 sólo documenta la decisión).
-
-## Preguntas antes de ejecutar
-
-Puedo arrancar por Fase 1 (bugs P0) para minimizar riesgo, o ejecutar las 4 fases seguidas. ¿Confirmas orden `1 → 2 → 3 → 4` y que puedo empezar por Fase 1 en el próximo turno? Ejecuta todas las fases
+1. `S.1` (independiente, más aislado).
+2. `S.2` (necesita vista + RPC, mayor cirugía).
+3. `S.3` (sólo cliente, menos riesgo).
+4. `S.4` (cambio de firma, mayor blast radius si se hace mal).
