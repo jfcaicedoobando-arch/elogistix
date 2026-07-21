@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.303.49] - 2026-07-21
+- **Fase 1 · Higiene de repositorio (FIX-46 / FIX-47 / FIX-48 parciales · auditoría v2-2).**
+  - Eliminados dumps y lockfiles obsoletos: `all_exports.txt`, `all_tests.txt`, `exported_files.txt`, `audit_tests.py`, `find_empty_tests.py`, `bun.lockb`, `package-lock.json`. Único lockfile válido = `bun.lock`.
+  - `vitest.config.ts`: quitada la clave duplicada `isolate: true` (segunda ocurrencia era ignorada por JS y ruidosa en revisiones).
+  - `eslint.config.js`: quitadas excepciones huérfanas (`src/data/changelogData.ts`, `src/content/changelog/**` no existen) para que el override de reglas no aplique a paths inexistentes.
+  - `.github/workflows/gitleaks.yml`: gitleaks ahora también corre en `push` a `main`, no sólo en PRs (defensa contra fuerzas de push directo).
+  - `.gitignore`: añadidos `.lovable/` y `reports/junit.xml` (artefactos generados que no deben trackear).
+  - **Auditoría Fase 0 completada** — resultados por fix: FIX-01✅ (limpieza de credenciales pendiente en `scripts/visual-audit/`, arrastra a Fase 3), FIX-02/16✅, FIX-03✅, FIX-04✅ (claimTag activo), FIX-05✅, FIX-06✅, FIX-07✅, FIX-08/23✅, FIX-11⚠️ (residuos `|| 1` en `costosUSD.ts` y factura manual, se aborda en Fase 4), FIX-12⚠️ (residuos `toISOString().slice()` en `facturaManual`, `huecoCsv`, `huecoFacturacion`, se aborda en Fase 4), FIX-13✅, FIX-14✅, FIX-15✅, FIX-17/18✅.
+
+
+
 ## [13.303.48] - 2026-07-21
 - **Fase 4 · Lote C · Factura manual cuadrada al centavo + NaN en costos (FIX-17 / FIX-18 auditoría v3).**
   - `facturaManual.ts`: subtotal, IVA y total se calculan con `subtotalLinea` + `sumarMontos`, garantizando que el encabezado sea Σ exacto de los renglones (evita drift de float en facturas multi-línea que hacía diferir centavos entre `facturas.total` y la suma de `conceptos_factura.total`).
