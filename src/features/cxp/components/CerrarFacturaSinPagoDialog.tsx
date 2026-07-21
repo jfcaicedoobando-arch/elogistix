@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/formatters";
+import { FacturaContextoBand } from "./FacturaContextoBand";
 import type { FacturaCxP } from "@/features/cxp/services";
 import {
   MOTIVOS_CIERRE_SIN_PAGO,
@@ -70,12 +70,10 @@ export function CerrarFacturaSinPagoDialog({
         return onConfirm({ motivo, comentario: comentario.trim() || undefined });
       }}
       description={
-        <div className="space-y-2 text-sm">
-          <p>
-            Vas a saldar la factura <strong>{factura?.folio_proveedor}</strong> de{" "}
-            <strong>{factura?.proveedor_nombre}</strong> por un saldo de{" "}
-            <strong>{factura ? formatCurrency(factura.saldo, factura.moneda) : "—"}</strong>{" "}
-            sin registrar un pago real de dinero.
+        <div className="space-y-3 text-sm">
+          {factura && <FacturaContextoBand factura={factura} variant="compact" emphasis="saldo" />}
+          <p className="text-xs text-muted-foreground">
+            Vas a saldar esta factura sin registrar un pago real de dinero.
           </p>
           <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-1">
             <li>Se creará un ajuste tipificado en el histórico de pagos (marcado como ajuste, no como pago).</li>

@@ -12,6 +12,7 @@ import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDi
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { FacturaContextoBand } from "./FacturaContextoBand";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
@@ -48,11 +49,8 @@ export function CancelarFacturaProveedorDialog({
       isPending={isPending}
       onConfirm={() => onConfirm(motivo.trim())}
       description={
-        <div className="space-y-2 text-sm">
-          <p>
-            Vas a cancelar la factura <strong>{factura?.folio_proveedor}</strong> de{" "}
-            <strong>{factura?.proveedor_nombre}</strong>.
-          </p>
+        <div className="space-y-3 text-sm">
+          {factura && <FacturaContextoBand factura={factura} variant="compact" emphasis="saldo" />}
           <ul className="list-disc pl-5 text-muted-foreground text-xs space-y-1">
             <li>Las notas de crédito asociadas se cancelarán automáticamente.</li>
             <li>Los conceptos del embarque dejarán de contarla como liquidada.</li>
