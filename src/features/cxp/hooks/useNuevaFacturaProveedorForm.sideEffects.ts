@@ -65,6 +65,7 @@ export async function uploadCfdiSafe(params: {
 export interface VincularSafeResult {
   liquidados?: number;
   conceptoAdHocExpediente?: string;
+  ajustesCreados?: number;
 }
 
 export async function vincularSafe(params: {
