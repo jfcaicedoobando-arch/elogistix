@@ -15,7 +15,7 @@ export interface CfdiParsed {
   folio: string;
   fecha: string;            // ISO YYYY-MM-DD
   moneda: string;           // MXN / USD / EUR
-  tipo_cambio: number;
+  tipo_cambio: number | null;  // FIX-11: null cuando la moneda es USD/EUR y el CFDI no trae TC válido.
   subtotal: number;
   total: number;
   iva_trasladado: number;
