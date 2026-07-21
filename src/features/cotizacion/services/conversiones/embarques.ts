@@ -64,6 +64,24 @@ export interface CrearBorradorInput {
   delta?: Record<string, unknown> | null;
 }
 
+const RPC_ERROR_MAP: ReadonlyArray<[RegExp, string]> = [
+  [/LC_COT_ELIMINADA/, "Esta cotización fue eliminada y no puede convertirse en embarque."],
+  [/LC_COT_ESTADO_INVALIDO/, "Solo se pueden convertir cotizaciones en estado Aceptada o En operación."],
+  [/LC_COT_SIN_CLIENTE/, "Convierte el prospecto a cliente antes de crear el borrador de embarque."],
+  [/LC_COT_NO_ENCONTRADA/, "La cotización no existe o fue eliminada."],
+  [/LC_NO_AUTORIZADO/, "No tienes permisos para crear un borrador desde esta cotización."],
+];
+
+async function mapCrearEmbarqueError(error: { message?: string }, cotizacionId: string): Promise<Error> {
+  const msg = typeof error.message === "string" ? error.message : "";
+  if (/LC_TARIFA_REQUIERE_REVALIDACION/.test(msg)) {
+    const r = await revalidarTarifa(cotizacionId).catch(() => null);
+    if (r) return new RevalidacionRequeridaError(r);
+  }
+  const match = RPC_ERROR_MAP.find(([re]) => re.test(msg));
+  return match ? new Error(match[1]) : (error as Error);
+}
+
 /**
  * Fase S.4 — API estricta para conversión cotización→embarque.
  * Exige `decision` explícita para que la observabilidad y la bitácora reciban
@@ -94,31 +112,10 @@ export async function crearEmbarqueBorradorConDecision(input: CrearBorradorInput
         p_delta: input.delta ?? null,
       } as never);
   const { data, error } = await rpc;
-  if (error) {
-    const msg = typeof error.message === "string" ? error.message : "";
-    if (/LC_TARIFA_REQUIERE_REVALIDACION/.test(msg)) {
-      const r = await revalidarTarifa(cotizacionId).catch(() => null);
-      if (r) throw new RevalidacionRequeridaError(r);
-    }
-    if (/LC_COT_ELIMINADA/.test(msg)) {
-      throw new Error("Esta cotización fue eliminada y no puede convertirse en embarque.");
-    }
-    if (/LC_COT_ESTADO_INVALIDO/.test(msg)) {
-      throw new Error("Solo se pueden convertir cotizaciones en estado Aceptada o En operación.");
-    }
-    if (/LC_COT_SIN_CLIENTE/.test(msg)) {
-      throw new Error("Convierte el prospecto a cliente antes de crear el borrador de embarque.");
-    }
-    if (/LC_COT_NO_ENCONTRADA/.test(msg)) {
-      throw new Error("La cotización no existe o fue eliminada.");
-    }
-    if (/LC_NO_AUTORIZADO/.test(msg)) {
-      throw new Error("No tienes permisos para crear un borrador desde esta cotización.");
-    }
-    throw error;
-  }
+  if (error) throw await mapCrearEmbarqueError(error, cotizacionId);
   if (!data) throw new Error("La función no devolvió un embarque");
   return data as string;
 }
+
 
 
