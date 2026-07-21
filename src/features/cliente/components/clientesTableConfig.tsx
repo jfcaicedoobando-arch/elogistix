@@ -8,6 +8,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
+import { Badge } from "@/components/ui/badge";
 
 export type ClienteRow = {
   id: string;
@@ -17,6 +18,8 @@ export type ClienteRow = {
   estado: string;
   contacto: string;
   telefono: string;
+  limite_credito_mxn?: number | null;
+  saldo_pendiente_mxn?: number | null;
 };
 
 export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
