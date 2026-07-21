@@ -6,6 +6,9 @@
  * v13.205.5: la edge ahora consulta SF43718 (USD) y SF46410 (EUR) en un rango
  * de 10 días y selecciona explícitamente el FIX del día hábil ANTERIOR a hoy,
  * que es la Publicación DOF vigente para CFDI emitidos hoy (Art. 20 CFF).
+ * v13.303.44 (FIX-10 auditoría): si la edge responde con `esFallback: true`
+ * (Banxico caído o sin token) NO se propaga el TC ni se auto-guarda en la
+ * factura; se muestra error accionable para que el usuario reintente.
  */
 
 import { useMutation } from "@tanstack/react-query";
@@ -26,6 +29,12 @@ export function useBanxicoTipoCambio(moneda: string, onTC: (tc: number | null) =
   return useMutation({
     mutationFn: async (): Promise<BanxicoTcResult> => {
       const rates = await fetchExchangeRates();
+      // FIX-10: el fallback jamás se usa en flujos fiscales; forzar reintento.
+      if (rates.esFallback) {
+        throw new Error(
+          "LC_TC_DOF_NO_DISPONIBLE: Banxico no respondió con el TC del DOF. Intenta más tarde; no se guardó ningún valor en la factura.",
+        );
+      }
       const tipoCambio =
         moneda === "USD" ? rates.usdMxn :
         moneda === "EUR" ? rates.eurMxn : 1;

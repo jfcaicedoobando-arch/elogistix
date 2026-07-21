@@ -1,6 +1,12 @@
 # Changelog
 # Changelog
 
+## [13.303.44] - 2026-07-21
+- **Fix crítico fiscal · fallback de Banxico ya nunca se guarda como TC "real" (FIX-10 auditoría).** La edge `exchange-rates` marca todas sus respuestas de fallback (sin token, Banxico caído, USD faltante) con `es_fallback: true`. `fetchExchangeRates` propaga el flag como `esFallback` y `useBanxicoTipoCambio` lo rechaza en el mutation: no se invoca `onTC`, no se auto-guarda 17.25 en la factura y se muestra `LC_TC_DOF_NO_DISPONIBLE` pidiendo reintentar. Antes, tras un timeout de Banxico, la factura quedaba timbrada con TC ficticio (~17.25) y utilidad distorsionada.
+- **Nuevo helper `tcValido` (FIX-11 auditoría) en `src/lib/financial/tcValido.ts`.** Único punto autorizado para validar tipos de cambio: devuelve `null` si el valor no es finito y positivo — nunca colapsa a `1`. Incluye `tcParaMoneda(moneda, tc)` que devuelve `1` sólo para MXN. Migración progresiva de los `|| 1` restantes se hará en fixes siguientes.
+- **Tests nuevos.** `tcValido.test.ts` (helper), `useBanxicoTipoCambio.test.ts` (bloqueo de fallback), `useNotaCreditoDraft.tc.test.ts` (bloqueo de NC en USD sin TC + happy-path MXN). Se ajustan `exchangeRates.sentry.test.ts` para el nuevo campo `esFallback`.
+
+
 ## [13.303.43] - 2026-07-21
 - **Fix crítico · sobrepago CxC/CxP ignoraba notas de crédito (FIX-08 auditoría).** `assert_factura_viva_para_pago` calculaba el saldo disponible con `saldo_factura_bruto` (total − pagos vivos), sin restar las NCs `Aplicada`. Una factura de $10,000 con NC de $4,000 aceptaba un pago de $10,000 y quedaba con saldo neto −$4,000 (fantasma). Ahora el trigger resta explícitamente `SUM(factura_notas_credito.monto WHERE estado='Aplicada')` y el HINT del error incluye `notas_credito_aplicadas`. Se aplica la misma corrección en `check_no_sobrepago_proveedor` (CxP) y se agrega `SELECT ... FOR UPDATE` sobre la factura padre en ambos triggers (**FIX-23**) para serializar pagos concurrentes y evitar carreras entre dos operadores pagando al mismo tiempo.
 - **Fix · Notas de crédito sin `|| 1` silencioso en tipo de cambio (FIX-11 auditoría).** `useNotaCreditoDraft` sustituía `tipo_cambio` faltante por `1`, corrompiendo NCs en USD cuando el TC no había cargado (por ejemplo tras un error de Banxico). Ahora exige TC válido (>0) para monedas ≠ MXN y arroja `LC_TC_NO_DISPONIBLE` para que el usuario refresque antes de emitir.
