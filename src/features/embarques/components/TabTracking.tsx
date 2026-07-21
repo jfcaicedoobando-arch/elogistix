@@ -14,26 +14,11 @@ import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
 
 
-type EmbarqueTrackingProps = Pick<
-  Tables<"embarques">,
-  | "modo"
-  | "tipo"
-  | "estado"
-  | "etd"
-  | "eta"
-  | "fecha_llegada_real"
-  | "fecha_creacion"
-  | "cotizacion_id"
-  | "updated_at"
-  | "naviera"
-  | "aerolinea"
-  | "bl_master"
-  | "mawb"
-  | "expediente"
-  | "puerto_destino"
-  | "aeropuerto_destino"
-  | "ciudad_destino"
->;
+type EmbarqueTrackingProps = Pick<Tables<"embarques">,
+  | "modo" | "tipo" | "estado" | "etd" | "eta" | "fecha_llegada_real"
+  | "fecha_creacion" | "cotizacion_id" | "updated_at" | "naviera" | "aerolinea"
+  | "bl_master" | "mawb" | "expediente" | "puerto_destino" | "aeropuerto_destino"
+  | "ciudad_destino">;
 
 interface Props {
   embarqueId: string;
