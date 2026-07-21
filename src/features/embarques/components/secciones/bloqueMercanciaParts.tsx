@@ -1,26 +1,8 @@
 import { Upload, FileText } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
-
-export function fieldErrorProps(error?: string) {
-  return {
-    "aria-invalid": error ? (true as const) : undefined,
-    className: cn(error && "border-destructive"),
-  };
-}
-
-export function numberInputProps(error?: string) {
-  return {
-    "aria-invalid": error ? (true as const) : undefined,
-    className: cn(
-      error && "border-destructive",
-      "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-    ),
-  };
-}
 
 export function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;

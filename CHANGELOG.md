@@ -1,6 +1,9 @@
 # Changelog
 # Changelog
 
+## [13.303.36] - 2026-07-21
+- **UX · se elimina la carta informativa de "Totales calculados desde contenedores" en `BloqueMercancia.tsx`.** El resumen de peso/volumen/piezas y el mensaje explicativo se quitan del paso 1 del wizard; los totales marítimos siguen calculándose internamente a partir de los contenedores del paso 2, pero ya no ocupan espacio en la UI. Ajuste menor en la condición de render para que los campos manuales solo aparezcan en modos aéreo/terrestre.
+
 ## [13.303.35] - 2026-07-21
 - **Herencia de Agente y Naviera desde la tarifa/cotización al embarque.** Se agregan columnas `agente_id` y `naviera_id` (FK a `costeo_agentes` / `navieras`) en `cotizaciones` y `embarques`. Al elegir tarifa en la cotización, `aplicarTarifa` siembra ambos IDs; al crear o editar el borrador de embarque las RPC (`crear_embarque_borrador_core`, `crear_embarque_completo`, `actualizar_embarque_completo`) y el mapper `buildPackBUpdates` los propagan. El paso 2 de "Datos de ruta" (marítimo) reemplaza el input libre de agente y el `NavieraSelect` por dos nuevos selectores (`AgenteEmbarqueSelector`, `NavieraEmbarqueSelector`) enlazados al catálogo, con permiso de override y opción de restaurar el valor heredado. Los textos legacy (`agente`, `naviera`) se mantienen sincronizados para compatibilidad con reportes.
 

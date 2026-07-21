@@ -46,7 +46,7 @@ function partesMercanciaInsert(input: CreateCotizacionInput) {
   };
 }
 
-function partesComercialInsert(input: CreateCotizacionInput) {
+function partesComercialBase(input: CreateCotizacionInput) {
   return {
     conceptos_venta: toDbJson(input.conceptos_venta),
     subtotal: input.subtotal,
@@ -61,15 +61,39 @@ function partesComercialInsert(input: CreateCotizacionInput) {
     ruta_texto: input.ruta_texto || "",
     validez_propuesta: input.validez_propuesta ?? null,
     tipo_movimiento: input.tipo_movimiento || "",
+  };
+}
+
+function partesSeguroInsert(input: CreateCotizacionInput) {
+  return {
     seguro: input.seguro ?? false,
     valor_seguro_usd: input.valor_seguro_usd ?? 0,
     carta_garantia: input.carta_garantia ?? false,
+  };
+}
+
+function partesTarifaInsert(input: CreateCotizacionInput) {
+  return {
     tarifa_id: input.tarifa_id ?? null,
     tarifa_override: toDbJson(input.tarifa_override ?? {}),
+  };
+}
+
+function partesAgenteNavieraInsert(input: CreateCotizacionInput) {
+  return {
     agente_id: input.agente_id ?? null,
     agente_nombre: input.agente_nombre ?? null,
     naviera_id: input.naviera_id ?? null,
     naviera_nombre: input.naviera_nombre ?? null,
+  };
+}
+
+function partesComercialInsert(input: CreateCotizacionInput) {
+  return {
+    ...partesComercialBase(input),
+    ...partesSeguroInsert(input),
+    ...partesTarifaInsert(input),
+    ...partesAgenteNavieraInsert(input),
   };
 }
 
