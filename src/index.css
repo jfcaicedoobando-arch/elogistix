@@ -253,3 +253,17 @@
     @apply text-label uppercase tracking-wide text-muted-foreground;
   }
 }
+
+/* v13.303.89 — Ocultar spin buttons nativos en <input type="number"> global.
+   El scroll-wheel ya se intercepta en src/components/ui/input.tsx. */
+@layer base {
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
