@@ -27,6 +27,14 @@ export function ClienteCreditoCard({ clienteId }: Props) {
   const enUso = data?.enUsoMxn ?? 0;
   const disponible = data?.disponibleMxn;
   const excedido = data?.excedido ?? false;
+  const facturasVivas = data?.facturasVivas ?? 0;
+
+  const diasLabel = dias == null ? "—" : `${dias} días`;
+  const limiteLabel = limite == null ? "Sin límite" : formatMXN(limite);
+  const enUsoLabel = isLoading ? "…" : formatMXN(enUso);
+  const disponibleLabel = disponible == null ? "—" : formatMXN(disponible);
+  const disponibleTone = disponible != null && disponible < 0 ? "danger" : "default";
+  const enUsoTone = excedido ? "danger" : "default";
 
   return (
     <Card>
@@ -44,29 +52,14 @@ export function ClienteCreditoCard({ clienteId }: Props) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <Field label="Días de crédito" value={dias == null ? "—" : `${dias} días`} />
-          <Field
-            label="Límite (MXN)"
-            value={limite == null ? "Sin límite" : formatMXN(limite)}
-          />
-          <Field
-            label="En uso"
-            value={isLoading ? "…" : formatMXN(enUso)}
-            tone={excedido ? "danger" : "default"}
-          />
-          <Field
-            label="Disponible"
-            value={
-              disponible == null
-                ? "—"
-                : formatMXN(disponible)
-            }
-            tone={disponible != null && disponible < 0 ? "danger" : "default"}
-          />
+          <Field label="Días de crédito" value={diasLabel} />
+          <Field label="Límite (MXN)" value={limiteLabel} />
+          <Field label="En uso" value={enUsoLabel} tone={enUsoTone} />
+          <Field label="Disponible" value={disponibleLabel} tone={disponibleTone} />
         </div>
-        {data && data.facturasVivas > 0 && (
+        {facturasVivas > 0 && (
           <p className="text-xs text-muted-foreground mt-3">
-            Calculado sobre {data.facturasVivas} factura(s) vigente(s) con saldo.
+            Calculado sobre {facturasVivas} factura(s) vigente(s) con saldo.
           </p>
         )}
       </CardContent>
