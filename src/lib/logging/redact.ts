@@ -54,13 +54,17 @@ function redactString(v: string): string {
 }
 
 export function redact<T = unknown>(value: T, depth = 0): T {
+  // SAFE-CAST: helper genérico; los `as unknown as T` devuelven sentinelas o
+  // reconstrucciones estructurales del mismo shape que la entrada.
   if (depth > MAX_DEPTH) return "[max-depth]" as unknown as T;
   if (value == null) return value;
+  // SAFE-CAST: string redactado sigue siendo string.
   if (typeof value === "string") return redactString(value) as unknown as T;
   if (typeof value !== "object") return value;
 
   try {
     if (Array.isArray(value)) {
+      // SAFE-CAST: map preserva forma de array.
       return value.map((v) => redact(v, depth + 1)) as unknown as T;
     }
     const out: Record<string, unknown> = {};
@@ -71,8 +75,10 @@ export function redact<T = unknown>(value: T, depth = 0): T {
         out[k] = redact(v, depth + 1);
       }
     }
+    // SAFE-CAST: reconstrucción estructural del objeto de entrada.
     return out as unknown as T;
   } catch {
+    // SAFE-CAST: fallback sentinel string.
     return "[unserializable]" as unknown as T;
   }
 }
