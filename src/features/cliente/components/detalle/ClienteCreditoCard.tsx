@@ -8,6 +8,14 @@ import { AlertTriangle, CreditCard } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 import { useExposicionCreditoCliente } from "@/features/cliente/hooks/useExposicionCreditoCliente";
 
+function formatMXN(v: number) {
+  return v.toLocaleString("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 2,
+  });
+}
+
 interface Props {
   clienteId: string;
 }
