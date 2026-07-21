@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.47] - 2026-07-21
+- **Fase 4 · Lote B · Pago CxP cross-currency validado en moneda de factura (FIX-14 auditoría v3).** `usePagoProveedorForm` ahora convierte el monto a la moneda de la factura vía `tcValido` antes de validar: pagar MXN 19,500 una factura USD 1,000 con TC 19.5 liquida correctamente, y MXN 20,000 se rechaza como excedente. Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC, el monto se pre-rellena automáticamente a `saldo * tc`. Si no hay TC válido, `bloqueadoPorTc` deshabilita el botón y muestra un hint pidiendo capturar el TC. El body del formulario muestra un renglón "≈ USD X" con el equivalente en moneda de la factura. Tests nuevos en `usePagoProveedorForm.test.ts` (4 casos).
+
 ## [13.303.46] - 2026-07-21
 - **Fase 4 · Lote A · Fechas de negocio en America/Mexico_City (FIX-12 auditoría v3).** Nuevo helper `src/lib/date/mx.ts` con `hoyMx()`, `ymMx()` y `parseLocalMx()` — única forma correcta de derivar la fecha del día para lógica de negocio. Antes usábamos `toISOString().slice(0,10)`, que devuelve la fecha UTC; entre las 18:00–23:59 CDMX ya estamos en el día siguiente en UTC y eso corría los buckets del dashboard, hacía "vencer" facturas un día antes en los recordatorios de CxC y hacía disparar el banner "ETA vencida" antes de tiempo. Sitios parchados:
   - `dashboardEjecutivo.ts` (KPIs "Facturado del mes" y tendencia de 6 meses).
