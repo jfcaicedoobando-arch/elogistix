@@ -82,6 +82,14 @@ const DATA_TABLE_DEFAULTS = {
   stickyHeader: false,
 };
 
+function mergeDataTableProps<T>(raw: DataTableProps<T>) {
+  const merged: Record<string, unknown> = { ...DATA_TABLE_DEFAULTS };
+  for (const [k, v] of Object.entries(raw)) {
+    if (v !== undefined) merged[k] = v;
+  }
+  return merged as DataTableProps<T> & typeof DATA_TABLE_DEFAULTS;
+}
+
 function DataTableInner<T>(rawProps: DataTableProps<T>) {
   const {
     columns, data, onRetry, emptyHint, emptyIcon, emptyState,
@@ -89,11 +97,10 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
     rowKey, rowClassName, controlledSort, onSortChange, initialSort,
     footer, pagination, className, columnVisibility, onColumnVisibilityChange,
     rowSelection, onRowSelectionChange, enableRowSelection,
-    isLoading = DATA_TABLE_DEFAULTS.isLoading,
-    isError = DATA_TABLE_DEFAULTS.isError,
-    emptyMessage = DATA_TABLE_DEFAULTS.emptyMessage,
-    skeletonRows = DATA_TABLE_DEFAULTS.skeletonRows,
-    sortMode = DATA_TABLE_DEFAULTS.sortMode,
+    isLoading, isError, emptyMessage, skeletonRows, sortMode, density,
+    striped, hoverable, bordered, tableClassName, stickyHeader,
+  } = mergeDataTableProps(rawProps);
+
     density = DATA_TABLE_DEFAULTS.density,
     striped = DATA_TABLE_DEFAULTS.striped,
     hoverable = DATA_TABLE_DEFAULTS.hoverable,
