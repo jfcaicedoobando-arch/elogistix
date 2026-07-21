@@ -165,29 +165,23 @@ export function useEmbarquesPageState() {
   // v13.303.75 · un fallo de red NO es un "sin resultados": exigimos !isError.
   const isEmptyState = !isLoading && !isError && containersForView.length === 0 && sinFiltros;
 
+  const actions = buildEmbarquesPageActions({
+    DEFAULT_PAGE_SIZE,
+    setFilter,
+    setAlerta,
+    setPageRaw,
+    setPageSizeRaw,
+    setSortKeyRaw,
+    setSortDirRaw,
+  });
+
   return {
     search,
     filterModo, filterEstado, filterCliente, filterOperador, filterAlerta,
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
     setSearch,
-    setFilterModo: (v: string) => setFilter("modo", v, "todos"),
-    setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
-    setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
-    setFilterOperador: (v: string) => setFilter("operador", v, "todos"),
-    setFilterAlerta: setAlerta,
-    setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
-    setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
-    setPage: (p: number) => setPageRaw(p === 0 ? null : p),
-    setPageSize: (s: number) => {
-      setPageSizeRaw(s === DEFAULT_PAGE_SIZE ? null : s);
-      setPageRaw(null);
-    },
-    handleSortChange: (key: string | null, dir: SortDir) => {
-      setSortKeyRaw(!key || key === "expediente" ? null : key);
-      setSortDirRaw(dir === "desc" ? null : dir);
-      setPageRaw(null);
-    },
+    ...actions,
     embarques, filtered, totalCount: totalCountServer, displayCount,
     expedientesCount, contenedoresCount, totalPages, isLoading, isError, refetch, isEmptyState,
     contenedoresPorExpediente,
@@ -195,3 +189,4 @@ export function useEmbarquesPageState() {
     alertasResumen, alertIdSet,
   };
 }
+
