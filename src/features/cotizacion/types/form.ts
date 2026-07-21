@@ -133,6 +133,10 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   tarifaOverride: {},
   sinDesgloseCostos: false,
   lclFleteManual: DEFAULT_LCL_FLETE_MANUAL,
+  agenteId: null,
+  agenteNombre: "",
+  navieraId: null,
+  navieraNombre: "",
 };
 
 export interface CotizacionInitialData {
