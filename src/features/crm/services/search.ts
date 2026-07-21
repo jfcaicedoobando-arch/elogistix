@@ -2,6 +2,7 @@
  * Servicio CRM — búsqueda rápida (leads, oportunidades, actividades).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { ilikePattern, orIlike } from "@/lib/search/ilike";
 import { CRM_ACTIVIDADES_COLUMNS_SEARCH } from "./crmActividadesColumns";
 
 export type CrmSearchHit =
@@ -10,13 +11,13 @@ export type CrmSearchHit =
   | { kind: "actividad"; id: string; title: string; subtitle: string };
 
 export async function searchCrm(term: string): Promise<CrmSearchHit[]> {
-  const like = `%${term}%`;
+  const like = ilikePattern(term);
   const [leadsRes, opsRes, actsRes] = await Promise.all([
     supabase.from("crm_leads").select("id, empresa, contacto, email").ilike("empresa", like).limit(6),
     supabase
       .from("crm_oportunidades")
       .select("id, nombre, cliente_nombre")
-      .or(`nombre.ilike.${like},cliente_nombre.ilike.${like}`)
+      .or(orIlike(["nombre", "cliente_nombre"], term))
       .limit(6),
     supabase
       .from("crm_actividades")
