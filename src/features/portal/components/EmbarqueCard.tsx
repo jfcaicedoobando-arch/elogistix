@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export interface EmbarqueCardData {
   id: string;
-  expediente: string;
+  expediente: string | null;
   modo: string;
   tipo: string;
   estado: string;
