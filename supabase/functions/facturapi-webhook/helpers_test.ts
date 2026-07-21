@@ -1,5 +1,28 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { computeSignature, mapEventToFacturaPatch, mapEventToReceiptPatch, safeEqual } from "./helpers.ts";
+import { computeEventKey, computeSignature, mapEventToFacturaPatch, mapEventToReceiptPatch, safeEqual } from "./helpers.ts";
+
+Deno.test("computeEventKey: usa event.id cuando existe", async () => {
+  const key = await computeEventKey('{"id":"evt_abc","type":"invoice.status_updated"}', {
+    type: "invoice.status_updated",
+    ...({ id: "evt_abc" } as Record<string, unknown>),
+  });
+  assertEquals(key, "evt_abc");
+});
+
+Deno.test("computeEventKey: fallback sha256 cuando falta id, determinista", async () => {
+  const body = '{"type":"invoice.status_updated","data":{"object":{"id":"fa_x"}}}';
+  const k1 = await computeEventKey(body, { type: "invoice.status_updated" });
+  const k2 = await computeEventKey(body, { type: "invoice.status_updated" });
+  assertEquals(k1, k2);
+  assert(k1.startsWith("sha256:"));
+  assertEquals(k1.length, 7 + 64);
+});
+
+Deno.test("computeEventKey: bodies distintos producen claves distintas", async () => {
+  const a = await computeEventKey('{"a":1}', { type: "x" });
+  const b = await computeEventKey('{"a":2}', { type: "x" });
+  assert(a !== b);
+});
 
 Deno.test("safeEqual: igualdad y desigualdad", () => {
   assert(safeEqual("abc", "abc"));
