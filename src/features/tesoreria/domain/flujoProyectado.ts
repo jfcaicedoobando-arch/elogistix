@@ -43,7 +43,9 @@ export function inicioSemana(d: Date): Date {
 }
 
 export function isoWeekKey(d: Date): string {
-  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  // v13.303.84 — usar getUTC* al construir la fecha base para no cambiar de
+  // semana ISO cuando el runner corre en TZ negativa (America/Mexico_City).
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const dayNum = t.getUTCDay() || 7;
   t.setUTCDate(t.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
