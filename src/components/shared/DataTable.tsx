@@ -139,6 +139,12 @@ function DataTableInner<T>({
 
   return (
     <div className={className}>
+      {isError ? (
+        <ErrorStateInline
+          message="No pudimos cargar la información. Revisa tu conexión e intenta de nuevo."
+          onRetry={onRetry}
+        />
+      ) : (
       <div className="relative">
         <div
           ref={scrollRef}
