@@ -37,7 +37,9 @@ const DESVINCULAR_DEFAULTS: Array<FieldUpdate> = [
   ["notas", ""],
   // Heredados desde tarifa (v13.303.35)
   ["agenteId", null],
+  ["agente", ""],
   ["navieraId", null],
+  ["naviera", ""],
 ];
 
 /**
