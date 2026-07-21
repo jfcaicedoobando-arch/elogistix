@@ -1,9 +1,8 @@
 /**
  * Captura de factura de proveedor — soporta captura manual y carga de XML CFDI.
- * Adopta el `FormDialogShell` para alinearse con Cliente/Proveedor:
- *  - Header con icon-tile + chip de Total.
- *  - Footer compuesto: resumen Subtotal/IVA/Ret arriba + acciones abajo.
- * Estado/submit en `useNuevaFacturaProveedorForm` (Power-of-10).
+ * v13.303.98 · Design language "Card grid estructurada": KPI grid superior
+ * (Total con emphasis, Subtotal, IVA, Retenciones) reemplaza al headerAside
+ * de texto plano y a la fila de totales del footer.
  */
 import { useMemo } from "react";
 import { Loader2, FileSpreadsheet } from "lucide-react";
@@ -18,6 +17,7 @@ import { CfdiConceptosPreview } from "./CfdiConceptosPreview";
 import { CrearProveedorDesdeCfdiDialog } from "./CrearProveedorDesdeCfdiDialog";
 import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
+import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
 import type { EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 
@@ -45,36 +45,16 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
   }, [ctl.cfdiConceptos, ctl.vinculos]);
   const cuadre = useMemo(() => calcularCuadreConceptos(sub, conceptosParaCuadre), [sub, conceptosParaCuadre]);
 
-  const headerAside = (
-    <>
-      <div className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Total {moneda}</div>
-      <div className="text-2xl font-bold tabular-nums leading-tight">
-        {formatCurrency(ctl.total, moneda)}
-      </div>
-    </>
-  );
-
   const footer = (
-    <div className="w-full flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-xs tabular-nums">
-        <span className="text-muted-foreground">Subtotal: <span className="text-foreground font-medium">{formatCurrency(sub, moneda)}</span></span>
-        <span className="text-muted-foreground">IVA: <span className="text-foreground font-medium">{formatCurrency(iva, moneda)}</span></span>
-        {ieps > 0 && (
-          <span className="text-muted-foreground">IEPS: <span className="text-foreground font-medium">{formatCurrency(ieps, moneda)}</span></span>
-        )}
-        <span className="text-muted-foreground">Ret: <span className="text-foreground font-medium">{formatCurrency(ret, moneda)}</span></span>
-        <span className="text-muted-foreground">Total <span className="font-medium">{moneda}</span>: <span className="text-foreground text-base font-bold">{formatCurrency(ctl.total, moneda)}</span></span>
-      </div>
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
-          Cancelar
-        </Button>
-        <Button onClick={ctl.submit} disabled={ctl.isPending}>
-          {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          {ctl.isPending ? "Guardando…" : "Guardar factura"}
-        </Button>
-      </div>
-    </div>
+    <>
+      <Button variant="outline" onClick={() => onOpenChange(false)} disabled={ctl.isPending}>
+        Cancelar
+      </Button>
+      <Button onClick={ctl.submit} disabled={ctl.isPending}>
+        {ctl.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+        {ctl.isPending ? "Guardando…" : "Guardar factura"}
+      </Button>
+    </>
   );
 
   return (
@@ -86,9 +66,15 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
         title="Capturar factura de proveedor"
         description="Registra la factura recibida. Si es de un proveedor mexicano, sube el XML CFDI y se prellenará automáticamente."
         size="xl"
-        headerAside={headerAside}
         footer={footer}
       >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 -mt-1">
+          <Kpi label="Subtotal" value={formatCurrency(sub, moneda)} />
+          <Kpi label="IVA" value={formatCurrency(iva, moneda)} />
+          <Kpi label={ieps > 0 ? "IEPS" : "Retenciones"} value={formatCurrency(ieps > 0 ? ieps : ret, moneda)} />
+          <Kpi label={`Total ${moneda}`} value={formatCurrency(ctl.total, moneda)} emphasis />
+        </div>
+
         <CargaCfdiSection
           mode={ctl.mode}
           onModeChange={ctl.setMode}
@@ -111,7 +97,6 @@ export function DialogNuevaFacturaProveedor({ open, onOpenChange, initialEmbarqu
           onObtenerDof={ctl.obtenerDofManual}
           dofLoading={ctl.dofLoading}
         />
-
 
         <VincularEmbarqueSection
           proveedorId={ctl.values.provId}

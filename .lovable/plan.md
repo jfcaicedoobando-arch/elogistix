@@ -1,77 +1,75 @@
-# Ajustes de costo en embarque desde factura de proveedor
+# Design Language uniforme — Modales de Compras
 
-## Problema
+## Contexto
 
-Hoy la utilidad del embarque se calcula sumando `conceptos_costo.monto` — los costos que se **devengaron** al cotizar/crear el embarque. Cuando llega la factura real del proveedor con un monto distinto (típicamente menor, por un descuento como el caso FP-000039: cotizado 19,150 vs facturado 18,639.60, delta −510.40 USD), la diferencia se guarda solamente en `proveedor_facturas_conceptos` como puente. **No toca `conceptos_costo`**, así que el embarque muestra el costo viejo y la utilidad queda subestimada por 510.40 USD.
+En `v13.303.94` se estableció el design language "Card grid estructurada" en `DialogDetallePagosProveedor`. En `v13.303.95` (Lote 1) se extendió a `DialogRegistrarPagoProveedor` y `AgingDrillDownDialog`. Falta homologar el resto de modales del módulo `/compras`.
 
-## Modelo elegido
+**Piezas del design language a propagar:**
 
-Cuando existe un delta entre lo devengado y lo facturado, se **agrega un renglón nuevo** en `conceptos_costo` del mismo embarque etiquetado como "Ajuste factura {folio}". Signo:
+1. **Chip-folio inline** con el título (badge mono, uppercase, `bg-muted border`).
+2. **Banda de contexto** (`bg-accent/5 border`) con dot de estado + alertas breves (vencida, cancelada, no aprobada).
+3. **KPI grid** de 2–4 columnas usando el componente `Kpi` (`DialogDetallePagosProveedor.parts.tsx`) con `tone` (`default | success | warn | destructive`) y `emphasis` (ring) en la métrica dominante.
+4. Secciones estructuradas y tipografía consistente (`text-2xs uppercase tracking-wide` en labels de KPIs).
 
-- Delta negativo (facturado < devengado) → renglón negativo → **utilidad sube**.
-- Delta positivo (facturado > devengado) → renglón positivo → utilidad baja.
+## Alcance — modales a homologar
 
-Se conserva el concepto original intacto (historial) y el ajuste queda auditable como fila propia.
+### 1. `DialogNuevaFacturaProveedor.tsx`
+- Header: reemplazar el `headerAside` de "Total" texto plano por un mini-KPI grid embebido — Total (emphasis), Subtotal, IVA, Retenciones — usando `Kpi`.
+- Eliminar la fila de totales del footer (queda redundante) y dejar sólo las acciones Cancelar/Guardar.
+- La barra `CuadreConceptosBar` ya cumple el rol de banda de contexto; mantenerla al final del body.
 
-## Cambios
+### 2. `DialogEditarFacturaProveedor.tsx`
+- Header: mover folio interno + folio proveedor a **chip-folio** inline con el título.
+- Reemplazar `headerAside` por KPI grid (Total emphasis, Subtotal, IVA, Ret, Moneda).
+- Sustituir los banners custom `BannerPagos` / `BannerReaprobacion` por la **banda de contexto** unificada (`bg-accent/5 border` con icono + texto), colocada arriba del formulario. El banner de pagos usa tono `warning`; el de re-aprobación tono `primary`.
+- Simplificar footer igual que Nueva.
 
-### 1. Nuevo servicio `crearAjustesFacturaProveedor`
-`src/features/cxp/services/crearAjustesFacturaProveedor.ts`
+### 3. `DialogNotaCreditoProveedor.tsx`
+- Header: chip-folio (factura origen) + subtítulo con proveedor.
+- Añadir KPI grid superior: **Saldo factura** (emphasis, `warn` si > 0), Moneda, Motivo seleccionado. `description` deja de mostrar el saldo (queda en KPI).
+- Subir tamaño de `md` → `lg` para acomodar la banda superior sin comprimir el form.
+- Convertir el warning inline "excede el saldo" en la misma banda de contexto (`bg-destructive/5`).
 
-Recibe la factura recién guardada + la información de captura. Genera:
+### 4. `CancelarFacturaProveedorDialog.tsx` (ConfirmActionDialog)
+- Insertar como primer child (encima del textarea de motivo) una **banda de contexto** compacta con: chip-folio interno, folio prov., proveedor, y KPI mini (Total, Pagado, Saldo, Moneda). Ayuda a decidir antes de tipear CANCELAR.
+- Mantener el flujo destructivo actual.
 
-- **Por cada `vinculo` con `monto ≠ montoOriginal`**: inserta un `concepto_costo` en el mismo `embarque_id` con:
-  - `monto = monto - montoOriginal` (firmado)
-  - `origen = 'ajuste_factura_proveedor'`
-  - `concepto = 'Ajuste factura {folio}: {concepto_original}'`
-  - `proveedor_id`, `moneda`, `tasa_iva_aplicada` heredados del original
-  - Además crea la fila puente en `proveedor_facturas_conceptos` para trazabilidad y para que el trigger `tg_pfc_recalc_liq` propague el estado de liquidación desde los pagos reales.
+### 5. `CerrarFacturaSinPagoDialog.tsx` (ConfirmActionDialog)
+- Misma banda superior que Cancelar, con `emphasis` en **Saldo**.
+- Reemplazar el `formatCurrency(factura.saldo, ...)` embebido en el `description` por texto conceptual (ya lo cubre la KPI band).
 
-- **En flujo CFDI con `embarqueAdHoc`**: si el XML trae **múltiples líneas** (por ej. 19,150 + −510.40), crear un `concepto_costo` por cada línea (firmado), en vez de uno solo por el total como hoy hace `crearConceptoCostoYVincular`. Así los descuentos aparecen como filas negativas.
+### 6. `EliminarFacturaCxpDialog.tsx`
+- Añadir chip-folio + una KPI mini de una sola línea (Folio prov., Total, Estado) para dar contexto antes de eliminar.
 
-### 2. Wire en el submit
-`src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts`
+## Reutilización
 
-Después de `vincularSafe`, llamar `crearAjustesFacturaProveedor` best-effort (toast.warning si falla, la factura ya quedó guardada). Extender `VincularSafeResult` con `ajustesCreados` para incluirlo en el toast de éxito ("2 ajustes de costo aplicados al embarque").
-
-### 3. Reversibilidad
-`src/features/cxp/services/cancelarFacturaProveedor.ts`
-
-Al cancelar la factura, soft-delete de los `conceptos_costo` con `origen='ajuste_factura_proveedor'` referenciados por esta factura vía `proveedor_facturas_conceptos`. Sin esto, un descuento cancelado dejaría al embarque con una utilidad falsamente inflada.
-
-### 4. UI — Distinguir el ajuste en el detalle del embarque
-Tab de costos del embarque: agregar un badge "Ajuste" (`variant="secondary"`, muted) cuando `origen === 'ajuste_factura_proveedor'` para que el usuario entienda por qué hay un renglón negativo/positivo pequeño junto al concepto original.
-
-### 5. Feedback en captura
-`src/features/cxp/components/CuadreConceptosBar.tsx`
-
-Cuando el estado es "cuadrado" y hay al menos un `vinculo` con delta ≠ 0, agregar una línea de ayuda: "Se aplicará un ajuste de {X} USD al embarque {expediente}". Preview del efecto en utilidad antes de guardar.
-
-### 6. Tests
-- `crearAjustesFacturaProveedor.test.ts`: delta positivo, negativo, cero (no crea), múltiples vínculos, CFDI multi-línea con embarqueAdHoc, cancelación revierte ajustes.
-- Verificar que `estadoResultados.ts` incorpora naturalmente los ajustes (ya suma todos los `conceptos_costo` sin filtro por `origen`).
-
-### 7. Versión + changelog
-`APP_VERSION` → `13.303.97`. Entry en `CHANGELOG.md` con analogía y caso FP-000039 concreto.
-
-## No hace falta
-
-- Migración de esquema: `conceptos_costo.origen` ya es `text` libre, no enum.
-- Cambio al motor de utilidad: `estado_resultados` ya suma todos los `conceptos_costo` no eliminados, así que ajustes con montos firmados se incorporan automáticamente.
+Todos los modales importarán:
+- `Kpi` desde `./DialogDetallePagosProveedor.parts`.
+- Un nuevo helper compartido `FacturaContextoBand` en `src/features/cxp/components/FacturaContextoBand.tsx` que encapsula: **chip-folio + banda + KPI grid** parametrizados (`variant: "full" | "compact"`, `emphasis: "total" | "saldo" | null`). Esto evita duplicar markup entre los 6 modales y facilita futuros modales de CxP.
 
 ## Detalles técnicos
 
-**Fórmula final de utilidad del embarque**:
-```
-utilidad = Σ conceptos_venta.monto − Σ conceptos_costo.monto (deleted_at IS NULL)
-```
-Con los ajustes firmados, el segundo sumando se corrige solo. Ej. FP-000039:
-```
-Antes:  costos = 19,150.00 → utilidad = ingresos − 19,150.00
-Después: costos = 19,150.00 + (−510.40) = 18,639.60
-         utilidad = ingresos − 18,639.60  (+510.40 vs antes)
-```
+- Sin cambios en hooks, RPCs, servicios ni tests de lógica. Es un refactor puramente presentacional.
+- Cada archivo se mantiene ≤ 200 líneas (regla Power of 10); extraer sub-componentes si un modal crece.
+- Tests: agregar snapshot ligero de `FacturaContextoBand` (render en dos variantes) para prevenir regresiones visuales.
+- `APP_VERSION` → `13.303.98`.
+- `CHANGELOG.md`: entrada breve "Design language uniforme en modales de Compras".
 
-**Idempotencia**: si el usuario re-vincula (edición futura), el servicio debe detectar ajustes previos de la misma factura y actualizarlos en lugar de duplicar. Se identifican con `origen='ajuste_factura_proveedor'` + puente en `proveedor_facturas_conceptos` con la misma `proveedor_factura_id`.
+## Fuera de alcance
 
-**Multi-moneda**: el ajuste hereda la moneda del concepto original. Si la factura viene en otra moneda que el concepto (edge case), se preserva la del concepto y se documenta como limitación.
+- `CrearProveedorDesdeCfdiDialog` (crear proveedor, no gira en torno a una factura → no aplica el chip-folio/KPI de factura).
+- `AgingDrillDownDialog` y `DialogRegistrarPagoProveedor` (ya homologados en Lote 1).
+- Cambios funcionales en cancelación, cierre, NC, edición o creación.
+
+## Diagrama de la banda unificada
+
+```text
++--------------------------------------------------------------+
+| [FP-000039]  Folio prov. A-123 · Proveedor SA                |
++--------------------------------------------------------------+
+| ● Por aprobar   |   Vencida · 12 d                           |
++--------------------------------------------------------------+
+| Total          | Pagado        | Saldo (emph) | Moneda · TC   |
+| $19,150.00 USD | $0.00         | $19,150.00   | USD · 17.85   |
++--------------------------------------------------------------+
+```

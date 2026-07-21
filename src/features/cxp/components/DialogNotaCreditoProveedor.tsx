@@ -1,6 +1,7 @@
 /**
- * Dialog para registrar una nueva nota de crédito de proveedor contra una factura.
- * Migrado a `FormDialogShell` (v13.120.0).
+ * Registrar una nueva nota de crédito de proveedor contra una factura.
+ * v13.303.98 · Design language "Card grid estructurada": KPI grid superior
+ * con Saldo (emphasis · warn), Moneda y Motivo seleccionado.
  */
 import { useState } from "react";
 import { format } from "date-fns";
@@ -14,6 +15,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
+import { Kpi } from "./DialogDetallePagosProveedor.parts";
+import { formatCurrency } from "@/lib/formatters";
 import { useCrearNotaCredito } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -46,7 +49,9 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const crear = useCrearNotaCredito(facturaId);
 
   const montoNum = Number(monto);
-  const valido = folio.trim() && fecha && montoNum > 0 && montoNum <= saldoFactura + 0.01;
+  const excede = montoNum > saldoFactura + 0.01;
+  const valido = folio.trim() && fecha && montoNum > 0 && !excede;
+  const motivoLabel = MOTIVOS.find((m) => m.value === motivo)?.label ?? "—";
 
   const reset = () => {
     setFolio(""); setFecha(format(new Date(), "yyyy-MM-dd")); setMonto("");
@@ -83,10 +88,27 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       onOpenChange={handleOpenChange}
       icon={FileMinus}
       title="Registrar nota de crédito"
-      description={<>Saldo actual: <strong className="tabular-nums">{saldoFactura.toFixed(2)} {monedaFactura}</strong></>}
-      size="md"
+      description="Emite una NC contra el saldo pendiente de la factura seleccionada."
+      size="lg"
       footer={footer}
     >
+      <div className="grid grid-cols-3 gap-2.5 -mt-1">
+        <Kpi
+          label="Saldo factura"
+          value={formatCurrency(saldoFactura, monedaFactura)}
+          tone={saldoFactura > 0.01 ? "warn" : "default"}
+          emphasis
+        />
+        <Kpi label="Moneda" value={monedaFactura} />
+        <Kpi label="Motivo" value={motivoLabel} />
+      </div>
+
+      {excede && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+          El monto de la nota de crédito excede el saldo pendiente de la factura.
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="nc-folio">Folio NC *</Label>
@@ -103,9 +125,6 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
           id="nc-monto" type="number" step="0.01" min="0.01" max={saldoFactura}
           value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00"
         />
-        {montoNum > saldoFactura + 0.01 && (
-          <p className="text-xs text-destructive">El monto excede el saldo de la factura.</p>
-        )}
       </div>
       <div className="space-y-1.5">
         <Label>Motivo *</Label>
