@@ -15,6 +15,7 @@ import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
 import { CsfDropZone } from "@/features/cliente/components/NuevoClienteFormPieces";
 import { parseCsf } from "@/features/cliente/services/csf";
 import { notifyError } from "@/components/shared/utils/appFeedback";
+import { CondicionesCreditoSection } from "./CondicionesCreditoSection";
 
 interface ClienteData {
   nombre: string;
@@ -182,46 +183,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
         <TextField label="Teléfono" field="telefono" form={form} setForm={setForm} />
       </FormDialogSection>
 
-      <FormDialogSection
-        title="Condiciones de crédito"
-        description="Fuente única de verdad. Aplica a proformas y facturas emitidas al cliente."
-      >
-        <div>
-          <Label className="text-xs">Días de crédito</Label>
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={365}
-            value={form.dias_credito ?? ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              setForm((p) => ({ ...p, dias_credito: v === "" ? null : Math.max(0, Number(v)) }));
-            }}
-            placeholder="Ej. 30"
-            className="mt-1"
-          />
-        </div>
-        <div>
-          <Label className="text-xs">Límite de crédito (MXN)</Label>
-          <Input
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.01"
-            value={form.limite_credito_mxn ?? ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              setForm((p) => ({
-                ...p,
-                limite_credito_mxn: v === "" ? null : Math.max(0, Number(v)),
-              }));
-            }}
-            placeholder="Vacío = sin límite"
-            className="mt-1"
-          />
-        </div>
-      </FormDialogSection>
+      <CondicionesCreditoSection form={form} setForm={setForm} />
     </FormDialogShell>
   );
 }

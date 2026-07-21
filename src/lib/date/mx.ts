@@ -26,11 +26,17 @@ export function ymMx(base: Date = new Date()): string {
 }
 
 /**
- * Convierte un string "YYYY-MM-DD" en un Date que representa la medianoche
- * LOCAL (CDMX). No usamos `new Date("YYYY-MM-DD")` porque el parser lo trata
- * como UTC y sale corrido un día en producción.
+ * Convierte "YYYY-MM-DD" en un Date que representa mediodía UTC. Usar mediodía
+ * (no medianoche local) evita que la aritmética de días + `hoyMx()` se corra
+ * un día en runners con TZ != CDMX (p.ej. UTC en CI).
  */
 export function parseLocalMx(fecha: string): Date {
   const [y, m, d] = fecha.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
+  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0, 0));
+}
+
+/** Suma `dias` naturales a una fecha "YYYY-MM-DD" en zona CDMX. */
+export function addDaysMx(fecha: string, dias: number): string {
+  const base = parseLocalMx(fecha);
+  return hoyMx(new Date(base.getTime() + dias * 86_400_000));
 }

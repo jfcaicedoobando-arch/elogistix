@@ -4,7 +4,6 @@
  * Migrado a `FormDialogShell` (v13.120.0).
  */
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,10 +14,11 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { CreditoExcesoConfirmDialog } from "./CreditoExcesoConfirmDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFacturaManual";
+import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
+import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import { FacturaManualDatosFiscales, type DatosFiscalesValue } from "./FacturaManualDatosFiscales";
 import { FacturaManualConceptosTable } from "./FacturaManualConceptosTable";
@@ -27,7 +27,6 @@ import {
   registrarExcesoCredito,
   type ValidarLimiteResultado,
 } from "@/features/cliente/hooks/useValidarLimiteCredito";
-import { queryKeys } from "@/lib/query";
 import { todayLocalISO } from "@/lib/date/today";
 
 interface Props {
@@ -35,21 +34,8 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-interface ClienteOpt {
-  id: string;
-  nombre: string;
-  rfc: string | null;
-  codigo_postal: string | null;
-  regimen_fiscal: string | null;
-  uso_cfdi_default: string | null;
-  dias_credito: number | null;
-  limite_credito_mxn: number | null;
-}
-
-const today = () => todayLocalISO();
-
 const INITIAL_FISCAL: DatosFiscalesValue = {
-  serie: "A", fechaEmision: today(), diasCredito: 0, moneda: "MXN",
+  serie: "A", fechaEmision: todayLocalISO(), diasCredito: 0, moneda: "MXN",
   usoCfdi: "G03", formaPago: "99", metodoPago: "PPD", tipoCambio: 1,
 };
 
@@ -57,44 +43,12 @@ const INITIAL_CONCEPTOS: ConceptoManualInput[] = [
   { descripcion: "", cantidad: 1, precio_unitario: 0, clave_sat: "78101800", tipo_iva: "gravado_16" },
 ];
 
-
-function calcularTotalMxn(conceptos: ConceptoManualInput[], moneda: "MXN" | "USD", tipoCambio: number, tasaIva: number): number {
-  const subtotal = conceptos.reduce((acc, c) => {
-    const cant = Number(c.cantidad) || 0;
-    const precio = Number(c.precio_unitario) || 0;
-    return acc + cant * precio;
-  }, 0);
-  const conIva = conceptos.reduce((acc, c) => {
-    const cant = Number(c.cantidad) || 0;
-    const precio = Number(c.precio_unitario) || 0;
-    const base = cant * precio;
-    const iva = c.tipo_iva === "gravado_16" ? base * tasaIva : 0;
-    return acc + base + iva;
-  }, 0);
-  const total = conIva || subtotal;
-  const tc = moneda === "MXN" ? 1 : Math.max(0, Number(tipoCambio) || 1);
-  return total * tc;
-}
-
 export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
   const { organizationId } = useAuth();
   const tasaIva = useTasaIVA();
   const crear = useCrearFacturaManual();
   const validarLimite = useValidarLimiteCredito();
-
-  const { data: clientes = [] } = useQuery<ClienteOpt[]>({
-    queryKey: queryKeys.facturacion.clientesFiscalOpts(organizationId),
-    enabled: open && !!organizationId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("id, nombre, rfc, codigo_postal, regimen_fiscal, uso_cfdi_default, dias_credito, limite_credito_mxn")
-        .order("nombre")
-        .limit(2000);
-      if (error) throw error;
-      return (data ?? []) as ClienteOpt[];
-    },
-  });
+  const { data: clientes = [] } = useClientesFiscalOpts(organizationId, open);
 
   const [clienteId, setClienteId] = useState<string>("");
   const [fiscal, setFiscal] = useState<DatosFiscalesValue>(INITIAL_FISCAL);
@@ -112,7 +66,6 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
     setFiscal((prev) => ({
       ...prev,
       usoCfdi: c?.uso_cfdi_default ?? prev.usoCfdi,
-      // Los días de crédito son fuente única desde el perfil del cliente (Fase 3).
       diasCredito: c?.dias_credito ?? 0,
     }));
   };
@@ -155,29 +108,23 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
 
   const handleSubmit = async (timbrarAlGuardar: boolean) => {
     if (!cliente || !organizationId) return;
-    // Fase 3: validar límite de crédito antes de emitir.
     const totalMxn = calcularTotalMxn(conceptos, fiscal.moneda, fiscal.tipoCambio, tasaIva);
     try {
       const resultado = await validarLimite({
-        clienteId: cliente.id,
-        clienteNombre: cliente.nombre,
-        montoAdicionalMxn: totalMxn,
+        clienteId: cliente.id, clienteNombre: cliente.nombre, montoAdicionalMxn: totalMxn,
       });
       if (resultado?.rebasa) {
         setCreditoAlerta({ ...resultado, timbrar: timbrarAlGuardar });
         return;
       }
-    } catch {
-      // Fail-open: no bloqueamos si la validación falla.
-    }
+    } catch { /* fail-open */ }
     ejecutarSubmit(timbrarAlGuardar);
   };
 
   const onConfirmarExceso = async () => {
     if (!creditoAlerta || !cliente) return;
     await registrarExcesoCredito({
-      clienteId: cliente.id,
-      clienteNombre: cliente.nombre,
+      clienteId: cliente.id, clienteNombre: cliente.nombre,
       totalProyectadoMxn: creditoAlerta.totalProyectadoMxn,
       limiteMxn: creditoAlerta.exposicion.limiteMxn ?? 0,
       excedenteMxn: creditoAlerta.excedentePotencialMxn,
@@ -202,13 +149,10 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
 
   return (
     <FormDialogShell
-      open={open}
-      onOpenChange={onOpenChange}
-      icon={FilePlus2}
+      open={open} onOpenChange={onOpenChange} icon={FilePlus2}
       title="Nueva factura manual"
       description="Para anticipos, servicios extra o cobros que no provienen de un embarque cerrado. Lo normal es facturar desde una proforma aprobada."
-      size="xl"
-      footer={footer}
+      size="xl" footer={footer}
     >
       <div>
         <Label>Cliente *</Label>
@@ -233,21 +177,12 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
       </div>
 
       <FacturaManualDatosFiscales
-        value={fiscal}
-        onChange={updateFiscal}
-        diasReadonly={!!cliente}
-        diasReadonlyReason={
-          cliente
-            ? "Los días de crédito se toman del perfil del cliente. Cámbialos en el detalle del cliente."
-            : undefined
-        }
+        value={fiscal} onChange={updateFiscal} diasReadonly={!!cliente}
+        diasReadonlyReason={cliente ? "Los días de crédito se toman del perfil del cliente. Cámbialos en el detalle del cliente." : undefined}
       />
 
       <FacturaManualConceptosTable
-        conceptos={conceptos}
-        moneda={fiscal.moneda}
-        tasaIva={tasaIva}
-        onChange={setConceptos}
+        conceptos={conceptos} moneda={fiscal.moneda} tasaIva={tasaIva} onChange={setConceptos}
       />
 
       <div>
@@ -256,8 +191,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
       </div>
 
       <CreditoExcesoConfirmDialog
-        alerta={creditoAlerta}
-        clienteNombre={cliente?.nombre}
+        alerta={creditoAlerta} clienteNombre={cliente?.nombre}
         onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
         onConfirm={onConfirmarExceso}
       />
