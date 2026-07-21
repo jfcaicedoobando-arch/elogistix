@@ -162,6 +162,21 @@ Deno.test("parseCfdi default: tipo_cambio=1 y moneda=MXN cuando faltan atributos
 </cfdi:Comprobante>`;
   const r = parseCfdi(x);
   assertEquals(r.moneda, "MXN");
+  // FIX-11: MXN sigue colapsando a 1; sólo USD/EUR sin TC devuelven null.
   assertEquals(r.tipo_cambio, 1);
+});
+
+Deno.test("parseCfdi: tipo_cambio=null cuando CFDI USD viene sin atributo TipoCambio", () => {
+  const x = `<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Folio="61" Fecha="2025-03-14T10:00:00" SubTotal="100.00" Total="100.00" Moneda="USD">
+  <cfdi:Emisor Rfc="ACM010101AAA" Nombre="ACME" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="XAXX010101000" Nombre="X"/>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" UUID="dddddddd-eeee-ffff-0000-111111111111"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>`;
+  const r = parseCfdi(x);
+  assertEquals(r.moneda, "USD");
+  assertEquals(r.tipo_cambio, null);
 });
 

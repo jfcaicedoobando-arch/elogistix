@@ -110,7 +110,7 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
 }
 
 export function mapCfdiToValues(
-  data: { cfdi: { moneda: string; serie: string | null; folio: string | null; uuid: string; fecha: string; tipo_cambio: number; subtotal: number; iva_trasladado: number; ieps_trasladado?: number; retenciones: number }; ai: { categoria_id: string | null; notas: string | null } },
+  data: { cfdi: { moneda: string; serie: string | null; folio: string | null; uuid: string; fecha: string; tipo_cambio: number | null; subtotal: number; iva_trasladado: number; ieps_trasladado?: number; retenciones: number }; ai: { categoria_id: string | null; notas: string | null } },
   provId: string,
   provNombre: string,
 ): FacturaFormValues {
@@ -124,7 +124,7 @@ export function mapCfdiToValues(
     diasCredito: 30,
     vencimiento: addDays(c.fecha || today(), 30),
     moneda: monedaValida,
-    tc: monedaValida === "MXN" ? "" : String(c.tipo_cambio || ""),
+    tc: monedaValida === "MXN" ? "" : String(c.tipo_cambio ?? ""),
     subtotal: String(c.subtotal || ""),
     iva: String(c.iva_trasladado || ""),
     ieps: ieps ? String(ieps) : "",
