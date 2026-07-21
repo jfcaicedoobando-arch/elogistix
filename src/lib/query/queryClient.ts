@@ -58,6 +58,24 @@ function reportQueryError(
     .catch(() => undefined);
 }
 
+/**
+ * v13.303.75 · Notifica al usuario cuando una query falla. Antes sólo se
+ * reportaba a Sentry y la UI mostraba un empty-state falso ("Sin resultados")
+ * cuando en realidad falló la red. Ahora emitimos un toast con `id` estable
+ * por queryKey para deduplicar cascadas y respetamos `meta.silentError` para
+ * queries que ya manejan su propio feedback.
+ */
+function notifyQueryFailure(err: unknown, query: Query): void {
+  if (isExpectedBusinessError(err)) return;
+  const meta = query.meta as { silentError?: boolean } | undefined;
+  if (meta?.silentError) return;
+  const root = rootOf(query.queryKey) ?? "data";
+  toast.error("No pudimos cargar la información", {
+    id: `query-error:${root}`,
+    description: "Revisa tu conexión e intenta de nuevo.",
+  });
+}
+
 const rootOf = (k: unknown): string | undefined => {
   const arr = k as unknown[] | undefined;
   if (!Array.isArray(arr) || arr.length === 0) return undefined;
