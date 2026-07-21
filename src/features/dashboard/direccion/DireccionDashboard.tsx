@@ -12,6 +12,7 @@ import { HeroCards } from "@/features/dashboard/direccion/components/HeroCards";
 import { RentabilidadSection } from "@/features/dashboard/direccion/components/RentabilidadSection";
 import { CarteraSection } from "@/features/dashboard/direccion/components/CarteraSection";
 import { PulsoSection } from "@/features/dashboard/direccion/components/PulsoSection";
+import { TipoCambioFallbackBanner } from "@/features/dashboard/direccion/components/TipoCambioFallbackBanner";
 
 export default function DireccionDashboard() {
   const { data, isLoading, error } = useDireccionKpis();
