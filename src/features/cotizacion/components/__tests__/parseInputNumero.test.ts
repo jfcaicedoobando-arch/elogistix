@@ -2,7 +2,7 @@
  * FIX-18 — helper defensivo para inputs numéricos de costos/venta/cantidad.
  */
 import { describe, it, expect } from "vitest";
-import { parseInputNumero } from "../TablaCostosLocal";
+import { parseInputNumero } from "../../utils/parseInputNumero";
 
 describe("parseInputNumero", () => {
   it("degrada entradas basura a 0", () => {

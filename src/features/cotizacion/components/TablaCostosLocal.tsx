@@ -12,19 +12,7 @@ import { UnidadMedidaSelect } from "@/features/cotizacion/components/conceptos/U
 import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
-
-/**
- * FIX-18 — parseo defensivo de inputs numéricos. Convierte cualquier string
- * a un número finito ≥ 0; entradas basura (`"."`, `"1.2.3"`, `"abc"`, `""`)
- * degradan a 0 en vez de propagar `NaN` a la BD.
- */
-export function parseInputNumero(raw: string): number {
-  if (raw === "" || raw === ".") return 0;
-  // Rechaza strings que no representen un número completo (p.ej. "1.2.3", "abc", "-5").
-  if (!/^\d+(\.\d+)?$/.test(raw)) return 0;
-  const n = parseFloat(raw);
-  return Number.isFinite(n) && n >= 0 ? n : 0;
-}
+import { parseInputNumero } from "../utils/parseInputNumero";
 
 
 function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: number) {

@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FilePlus2, AlertTriangle } from "lucide-react";
+import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { CreditoExcesoConfirmDialog } from "./CreditoExcesoConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
@@ -57,9 +57,6 @@ const INITIAL_CONCEPTOS: ConceptoManualInput[] = [
   { descripcion: "", cantidad: 1, precio_unitario: 0, clave_sat: "78101800", tipo_iva: "gravado_16" },
 ];
 
-function fmtMxn(v: number): string {
-  return v.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
-}
 
 function calcularTotalMxn(conceptos: ConceptoManualInput[], moneda: "MXN" | "USD", tipoCambio: number, tasaIva: number): number {
   const subtotal = conceptos.reduce((acc, c) => {
@@ -258,29 +255,11 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
         <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
       </div>
 
-      <ConfirmActionDialog
-        open={!!creditoAlerta}
+      <CreditoExcesoConfirmDialog
+        alerta={creditoAlerta}
+        clienteNombre={cliente?.nombre}
         onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
-        title="Límite de crédito excedido"
-        titleIcon={<AlertTriangle className="h-5 w-5 text-warning" />}
-        confirmLabel="Continuar de todas formas"
-        cancelLabel="Cancelar"
-        size="md"
         onConfirm={onConfirmarExceso}
-        description={creditoAlerta ? (
-          <div className="space-y-1 text-sm">
-            <p>
-              <strong>{cliente?.nombre ?? "El cliente"}</strong> excederá su límite en
-              {" "}<strong>{fmtMxn(creditoAlerta.excedentePotencialMxn)}</strong>.
-            </p>
-            <p className="text-muted-foreground">
-              Límite: {fmtMxn(creditoAlerta.exposicion.limiteMxn ?? 0)} · En uso: {fmtMxn(creditoAlerta.exposicion.enUsoMxn)} · Nueva: {fmtMxn(creditoAlerta.totalProyectadoMxn - creditoAlerta.exposicion.enUsoMxn)}
-            </p>
-            <p className="text-xs text-muted-foreground pt-2">
-              Se registrará en bitácora que continuaste a pesar del exceso.
-            </p>
-          </div>
-        ) : null}
       />
     </FormDialogShell>
   );

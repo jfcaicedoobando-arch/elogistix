@@ -37,9 +37,9 @@ describe("useValidarLimiteCredito", () => {
       out = await result.current({ clienteId: "c1", montoAdicionalMxn: 30_000 });
     });
     expect(out!).not.toBeNull();
-    expect(out!!.rebasa).toBe(true);
-    expect(out!!.excedentePotencialMxn).toBe(10_000);
-    expect(out!!.totalProyectadoMxn).toBe(110_000);
+    expect(out!.rebasa).toBe(true);
+    expect(out!.excedentePotencialMxn).toBe(10_000);
+    expect(out!.totalProyectadoMxn).toBe(110_000);
   });
 
   it("marca rebasa=false cuando cabe dentro del límite", async () => {
@@ -49,8 +49,8 @@ describe("useValidarLimiteCredito", () => {
     await act(async () => {
       out = await result.current({ clienteId: "c1", montoAdicionalMxn: 15_000 });
     });
-    expect(out!!.rebasa).toBe(false);
-    expect(out!!.excedentePotencialMxn).toBe(0);
+    expect(out!.rebasa).toBe(false);
+    expect(out!.excedentePotencialMxn).toBe(0);
   });
 
   it("devuelve null cuando el cliente no tiene límite configurado", async () => {
@@ -70,7 +70,7 @@ describe("useValidarLimiteCredito", () => {
     await act(async () => {
       out = await result.current({ clienteId: "c1", montoAdicionalMxn: -50_000 });
     });
-    expect(out!!.totalProyectadoMxn).toBe(80_000);
-    expect(out!!.rebasa).toBe(false);
+    expect(out!.totalProyectadoMxn).toBe(80_000);
+    expect(out!.rebasa).toBe(false);
   });
 });

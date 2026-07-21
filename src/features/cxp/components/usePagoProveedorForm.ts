@@ -50,15 +50,17 @@ export function usePagoProveedorForm(factura: FacturaCxP | null, open: boolean) 
 
   // Cuando se cambia la moneda de pago a MXN sobre factura extranjera y hay TC,
   // recalcular el prefill del monto para saldar exactamente en MXN.
+  const facturaId = factura?.id;
+  const facturaSaldo = factura?.saldo;
+  const facturaMoneda = factura?.moneda;
   useEffect(() => {
-    if (!factura || !open) return;
+    if (!open || facturaId == null || facturaSaldo == null) return;
     if (esUsdPagadoEnMxn && tcNum) {
-      setMonto((factura.saldo * tcNum).toFixed(2));
-    } else if (!esUsdPagadoEnMxn && moneda === factura.moneda) {
-      setMonto(factura.saldo.toFixed(2));
+      setMonto((facturaSaldo * tcNum).toFixed(2));
+    } else if (!esUsdPagadoEnMxn && moneda === facturaMoneda) {
+      setMonto(facturaSaldo.toFixed(2));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [esUsdPagadoEnMxn, moneda, factura?.id]);
+  }, [esUsdPagadoEnMxn, moneda, facturaId, facturaSaldo, facturaMoneda, tcNum, open]);
 
   // Monto expresado en la moneda de la factura (para validar contra saldo).
   const montoEnMonedaFactura = useMemo(() => {

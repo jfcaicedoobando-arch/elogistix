@@ -19,14 +19,41 @@ interface Props {
   clienteId: string;
 }
 
-export function ClienteCreditoCard({ clienteId }: Props) {
-  const { data, isLoading } = useExposicionCreditoCliente(clienteId);
+interface Vista {
+  diasLabel: string;
+  limiteLabel: string;
+  enUsoLabel: string;
+  disponibleLabel: string;
+  disponibleTone: "default" | "danger";
+  enUsoTone: "default" | "danger";
+  excedido: boolean;
+  facturasVivas: number;
+}
 
-  const dias = data?.diasCredito ?? null;
-  const limite = data?.limiteMxn ?? null;
+function buildVista(
+  data: ReturnType<typeof useExposicionCreditoCliente>["data"],
+  isLoading: boolean,
+): Vista {
+  const dias = data?.diasCredito;
+  const limite = data?.limiteMxn;
   const enUso = data?.enUsoMxn ?? 0;
   const disponible = data?.disponibleMxn;
-  const excedido = data?.excedido ?? false;
+  const excedido = data?.excedido === true;
+  return {
+    diasLabel: dias == null ? "—" : `${dias} días`,
+    limiteLabel: limite == null ? "Sin límite" : formatMXN(limite),
+    enUsoLabel: isLoading ? "…" : formatMXN(enUso),
+    disponibleLabel: disponible == null ? "—" : formatMXN(disponible),
+    disponibleTone: disponible != null && disponible < 0 ? "danger" : "default",
+    enUsoTone: excedido ? "danger" : "default",
+    excedido,
+    facturasVivas: data?.facturasVivas ?? 0,
+  };
+}
+
+export function ClienteCreditoCard({ clienteId }: Props) {
+  const { data, isLoading } = useExposicionCreditoCliente(clienteId);
+  const v = buildVista(data, isLoading);
 
   return (
     <Card>
@@ -34,7 +61,7 @@ export function ClienteCreditoCard({ clienteId }: Props) {
         <CardTitle className="text-base flex items-center gap-2">
           <CreditCard className="h-4 w-4 text-primary" />
           Condiciones de crédito
-          {excedido && (
+          {v.excedido && (
             <Badge variant="destructive" className="ml-auto gap-1">
               <AlertTriangle className="h-3 w-3" />
               Límite excedido
@@ -44,29 +71,14 @@ export function ClienteCreditoCard({ clienteId }: Props) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <Field label="Días de crédito" value={dias == null ? "—" : `${dias} días`} />
-          <Field
-            label="Límite (MXN)"
-            value={limite == null ? "Sin límite" : formatMXN(limite)}
-          />
-          <Field
-            label="En uso"
-            value={isLoading ? "…" : formatMXN(enUso)}
-            tone={excedido ? "danger" : "default"}
-          />
-          <Field
-            label="Disponible"
-            value={
-              disponible == null
-                ? "—"
-                : formatMXN(disponible)
-            }
-            tone={disponible != null && disponible < 0 ? "danger" : "default"}
-          />
+          <Field label="Días de crédito" value={v.diasLabel} />
+          <Field label="Límite (MXN)" value={v.limiteLabel} />
+          <Field label="En uso" value={v.enUsoLabel} tone={v.enUsoTone} />
+          <Field label="Disponible" value={v.disponibleLabel} tone={v.disponibleTone} />
         </div>
-        {data && data.facturasVivas > 0 && (
+        {v.facturasVivas > 0 && (
           <p className="text-xs text-muted-foreground mt-3">
-            Calculado sobre {data.facturasVivas} factura(s) vigente(s) con saldo.
+            Calculado sobre {v.facturasVivas} factura(s) vigente(s) con saldo.
           </p>
         )}
       </CardContent>

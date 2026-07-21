@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.303.60] - 2026-07-21
+- **chore(lint) · 0 warnings restaurado.** Movido `parseInputNumero` a `src/features/cotizacion/utils/` (fast-refresh), reducida la complejidad de `ClienteCreditoCard` extrayendo `buildVista`, extraído `CreditoExcesoConfirmDialog.tsx` desde `DialogNuevaFacturaManual` (líneas y complejidad), y quitado el `eslint-disable` de `usePagoProveedorForm` explicitando dependencias del `useEffect` de re-cálculo de monto.
+
+
 ## [13.303.59] - 2026-07-21
 - **feat(clientes) · Perfil de crédito como fuente única de verdad (Fase 3-4).**
   - **Emisión bloqueada por límite:** al convertir una proforma a factura (`AccionesProforma.tsx`) y al crear/timbrar una factura manual (`DialogNuevaFacturaManual.tsx`), se valida el límite MXN del cliente vía `useValidarLimiteCredito`. Si la nueva emisión rebasa el límite, se abre `ConfirmActionDialog` con desglose (límite, en uso, monto nuevo, excedente). El operador puede continuar; se registra en `bitacora_actividad` la acción `excede_credito` con `origen` (`proforma_convertir` | `factura_manual`) para auditoría.
