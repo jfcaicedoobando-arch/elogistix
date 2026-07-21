@@ -107,7 +107,7 @@ export function EmbarqueDetalleHeader({
       </div>
 
       <EmbarqueDetalleHeaderActions
-        expediente={embarque.expediente}
+        expediente={labelExpediente(embarque.expediente, embarque.id)}
         estadoVisual={estadoVisual}
         siguienteEstado={siguienteEstado}
         canEdit={canEdit}
