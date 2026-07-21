@@ -32,8 +32,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
 
-// NOTE: CxpFiltros retiene su API propia (9 props + hooks de proveedores/categorías).
-// UnifiedFiltersBar no cabe limpio sin refactorizar el estado de página — pendiente Oleada 5.
+// CxpFiltros retiene su API propia (pendiente Oleada 5).
 
 export default function Cxp() {
   const { canEdit } = usePermissions();
@@ -43,22 +42,12 @@ export default function Cxp() {
   const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
 
-  useCxpDeepLinks({
-    data,
-    isLoading,
-    onOpenDetalle: f.setDetalle,
-    onSetAprobacion: f.setAprobacion,
-  });
-
-
+  useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle, onSetAprobacion: f.setAprobacion });
 
   const handlePdf = async () => {
     const fecha = todayLocalISO();
     await descargarPdf(
-      <ReporteCarteraDocument
-        fechaCorte={fecha}
-        cxc={cxc} cxp={data}
-      />,
+      <ReporteCarteraDocument fechaCorte={fecha} cxc={cxc} cxp={data} />,
       await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
     );
   };
