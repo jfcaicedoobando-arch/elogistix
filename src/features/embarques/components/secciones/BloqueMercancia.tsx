@@ -1,11 +1,8 @@
-import { Calculator } from "lucide-react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatNumber } from "@/lib/formatters/numbers";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
-import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { LabelHeredable } from "./LabelHeredable";
 import { FieldError, MsdsUploadSection, fieldErrorProps, numberInputProps } from "./bloqueMercanciaParts";
 
