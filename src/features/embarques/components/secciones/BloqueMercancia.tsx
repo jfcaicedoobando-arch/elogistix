@@ -4,7 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
 import { LabelHeredable } from "./LabelHeredable";
-import { FieldError, MsdsUploadSection, fieldErrorProps, numberInputProps } from "./bloqueMercanciaParts";
+import { FieldError, MsdsUploadSection } from "./bloqueMercanciaParts";
+import { fieldErrorProps, numberInputProps } from "./bloqueMercanciaHelpers";
 
 interface Props {
   errors: EmbarqueValidationErrors;
