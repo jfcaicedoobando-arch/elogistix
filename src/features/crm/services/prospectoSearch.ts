@@ -6,6 +6,7 @@
  * de imports directos a Supabase (regla de capas).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { orIlike } from "@/lib/search/ilike";
 
 export interface ProspectoMatch {
   kind: "lead" | "oportunidad";
