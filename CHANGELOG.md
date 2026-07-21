@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.303.67] - 2026-07-21
+- **feat(cxp) · Conceptos del CFDI: vista previa + persistencia automática.** Al subir el XML se muestra una tabla "Conceptos del CFDI (N)" con descripción, cantidad, importe, IVA e IEPS (con totales al pie) antes de guardar. Al confirmar la factura se hace bulk-insert de las líneas en `proveedor_facturas_conceptos` con `concepto_costo_id = NULL` (best-effort: si falla, la factura queda registrada y se muestra warning). Coexiste con los vínculos manuales a `conceptos_costo` de embarque (ésos siguen con `concepto_costo_id` poblado). Parser extendido para exponer `cantidad` y `clave_unidad`; edge function `parse-cfdi-xml` redesplegada.
+
+
 ## [13.303.66] - 2026-07-21
 - **fix(cxp) · Redeploy `parse-cfdi-xml`: aún truncaba conceptos a 10 en runtime.** El fix de v13.303.63 subió el tope a 200 en el código (`parser.ts`), pero la edge function desplegada seguía con el cap viejo, así que un CFDI con 11 conceptos (subtotal `11268.49` USD) volvía a fallar con "los importes suman 11064.64" (diferencia = último concepto de `203.85`). Redesplegada la función; el test de regresión con 11 conceptos ya vive en `parser_test.ts`. Reportado con requestId `2706e9cf-c3f9-4119-b692-1d0c4d1fa8d4`.
 
