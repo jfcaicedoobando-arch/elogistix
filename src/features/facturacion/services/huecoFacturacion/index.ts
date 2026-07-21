@@ -28,6 +28,7 @@ import {
   type FilaHueco,
 } from "./buildFilas";
 import { HUECO_ETA_BUFFER_DIAS, MS_POR_DIA } from "./constants";
+import { hoyMx, parseLocalMx } from "@/lib/date/mx";
 
 export type { FilaHueco } from "./buildFilas";
 
