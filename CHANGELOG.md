@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.81] - 2026-07-21
+- **Lint (complexity) verde.** `crearEmbarqueBorradorConDecision` bajó de complejidad 18 → dentro del umbral extrayendo el mapeo de errores RPC a un helper `mapCrearEmbarqueError` con tabla `RPC_ERROR_MAP`. Mismo comportamiento observable.
+
 ## [13.303.80] - 2026-07-21
 - **Modal Generar Proforma sin campos duplicados.** Se retiran del wizard los campos "Días de crédito" (input editable) y "Ejecutivo de Operaciones" (display readonly): ahora se leen únicamente de la fuente de verdad — `clientes.dias_credito` vía `useDiasCreditoCliente` y `embarques.operador` — y se aplican de forma automática al generar la proforma. El controller ya no expone `setDiasCredito`; `diasCredito` es un valor derivado. La confirmación también deja de mostrarlos (viven en el expediente del cliente y del embarque). Analogía: como el nombre del cliente en una factura, no lo tecleas cada vez — se hereda del expediente.
 
