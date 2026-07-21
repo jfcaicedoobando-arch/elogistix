@@ -40,6 +40,10 @@ export interface CotizacionParaVincular {
   seguro?: boolean | null;
   valor_seguro_usd?: number | null;
   notas?: string | null;
+  agente_id?: string | null;
+  agente_nombre?: string | null;
+  naviera_id?: string | null;
+  naviera_nombre?: string | null;
 }
 
 export type DesvincularModo = "limpiar" | "conservar" | "solo-conceptos";
