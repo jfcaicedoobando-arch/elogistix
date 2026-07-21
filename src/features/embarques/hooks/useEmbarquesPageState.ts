@@ -96,17 +96,14 @@ export function useEmbarquesPageState() {
 
   const containersForView: EmbarqueRow[] = useMemo(() => {
     if (!fullSetActivo) return resultadoServer?.data ?? [];
-    let all = resultadoFull ?? [];
-    if (estadoFilterActivo) {
-      all = all.filter(
-        (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real) === filterEstado,
-      );
-    }
-    if (alertaFilterActivo && alertIdSet) {
-      all = all.filter((e) => alertIdSet.has(e.id));
-    }
-    return all;
+    return applyClientFilters(resultadoFull ?? [], {
+      estadoFilterActivo,
+      alertaFilterActivo,
+      alertIdSet,
+      filterEstado,
+    });
   }, [fullSetActivo, estadoFilterActivo, alertaFilterActivo, alertIdSet, resultadoServer, resultadoFull, filterEstado]);
+
 
   const contenedoresPorExpediente = useMemo(
     () => computeContenedoresPorExpediente(containersForView),
