@@ -41,6 +41,8 @@ interface Props {
   setReferencia: (v: string) => void;
   notas: string;
   setNotas: (v: string) => void;
+  montoEnMonedaFactura: number;
+  bloqueadoPorTc: boolean;
 }
 
 export function PagoProveedorFormBody(p: Props) {
