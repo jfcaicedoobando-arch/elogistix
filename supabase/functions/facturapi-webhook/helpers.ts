@@ -194,3 +194,18 @@ export function safeEqual(a: string, b: string): boolean {
   for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return out === 0;
 }
+
+/**
+ * FIX-22 · Clave estable de idempotencia por evento. FacturAPI a veces omite
+ * `event.id` en payloads antiguos; en ese caso derivamos SHA-256 del body para
+ * seguir bloqueando retransmisiones exactas. La clave se prefija con `sha256:`
+ * cuando es fallback para poder auditarlo desde la BD.
+ */
+export async function computeEventKey(rawBody: string, event: FacturapiWebhookEvent): Promise<string> {
+  const id = (event as { id?: unknown }).id;
+  if (typeof id === "string" && id.length > 0) return id;
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawBody));
+  return "sha256:" + Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
