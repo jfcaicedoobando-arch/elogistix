@@ -1,12 +1,12 @@
 /**
- * Detalle de pagos de una factura de proveedor.
- * Toolbar, resumen, tabla y fila están en `.sections.tsx` para mantener este
- * archivo ≤ 200 líneas y complejidad ≤ 16.
+ * Detalle de factura de proveedor (modal).
+ * v13.303.94 — Rediseño "Card grid estructurada": header inline con folio-chip,
+ * StatusActionBar contextual, KPIs con énfasis, secciones agrupadas.
  */
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
@@ -15,13 +15,16 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
 import { useCerrarFacturaProveedorSinPago } from "@/features/cxp/hooks/useCerrarFacturaSinPago";
 import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
+import { useCancelarFacturaProveedor } from "@/features/cxp/hooks/useCancelarFacturaProveedor";
 import type { FacturaCxP } from "@/features/cxp/services";
-import {
-  FacturaToolbar, FacturaResumen, PagosTable,
-} from "./DialogDetallePagosProveedor.sections";
+import { FacturaResumen, PagosTable } from "./DialogDetallePagosProveedor.sections";
+import { StatusActionBar } from "./DialogDetallePagosProveedor.actionbar";
 import { computeFacturaFlags } from "./DialogDetallePagosProveedor.flags";
 import { NotasCreditoSection } from "./NotasCreditoSection";
 import { CerrarFacturaSinPagoDialog } from "./CerrarFacturaSinPagoDialog";
+import { CancelarFacturaProveedorDialog } from "./CancelarFacturaProveedorDialog";
+import { InfoFacturaSection } from "./InfoFacturaSection";
+import { HistorialFacturaSection } from "./HistorialFacturaSection";
 import { usePermissions } from "@/hooks/shared";
 
 interface Props {
@@ -34,76 +37,70 @@ interface Props {
   onEliminar?: (f: FacturaCxP) => void;
 }
 
-function tituloDescripcion(f: FacturaCxP | null): string {
-  if (!f) return "";
-  return `${f.folio_interno} · Folio prov. ${f.folio_proveedor} — ${f.proveedor_nombre}`;
-}
-
 export function DialogDetallePagosProveedor({
   open, onOpenChange, factura, canEdit, onPagar, onEditar, onEliminar,
 }: Props) {
-  // Observamos la factura por id para que el badge de aprobación y el saldo
-  // se mantengan frescos aunque la lista filtrada haya descartado la fila.
   const { data: facturaFresh } = useFacturaProveedor(factura?.id, factura ?? undefined);
   const f = facturaFresh ?? factura;
   const { data: pagos = [], isLoading } = usePagosProveedor(f?.id);
   const eliminar = useEliminarPagoProveedor(f?.id ?? "");
   const cerrarSinPago = useCerrarFacturaProveedorSinPago();
+  const cancelar = useCancelarFacturaProveedor();
   const [pagoAEliminar, setPagoAEliminar] = useState<string | null>(null);
   const [aCerrarSinPago, setACerrarSinPago] = useState<FacturaCxP | null>(null);
+  const [openCancel, setOpenCancel] = useState(false);
   const { canEditFinance, isAdmin } = usePermissions();
   const puedeAprobar = canEditFinance || isAdmin;
   const flags = computeFacturaFlags(f, canEdit);
-
-  const handleConfirmEliminar = async () => {
-    if (!pagoAEliminar) return;
-    await eliminar.mutateAsync(pagoAEliminar);
-    setPagoAEliminar(null);
-  };
-
-  const handleConfirmCerrarSinPago = async (
-    params: { motivo: import("@/features/cxp/services/cerrarFacturaSinPago").MotivoCierreSinPago; comentario?: string },
-  ) => {
-    if (!aCerrarSinPago) return;
-    await cerrarSinPago.mutateAsync({ ...params, facturaId: aCerrarSinPago.id });
-    setACerrarSinPago(null);
-  };
 
   return (
     <TooltipProvider delayDuration={150}>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className={cn(dialogSize["3xl"], "max-h-[90vh] flex flex-col gap-0 p-0")}>
-          <DialogHeader className="px-6 pt-6 pb-4 border-b">
-            <DialogTitle>Detalle de factura de proveedor</DialogTitle>
-            <DialogDescription className="font-mono uppercase tracking-wider text-xs">
-              {tituloDescripcion(f)}
-            </DialogDescription>
+          <DialogHeader className="px-6 pt-5 pb-4 border-b bg-muted/30 space-y-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <DialogTitle className="text-lg font-bold text-primary">
+                Detalle de factura de proveedor
+              </DialogTitle>
+              {f?.folio_interno && (
+                <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs font-mono font-semibold uppercase tracking-wider border">
+                  {f.folio_interno}
+                </span>
+              )}
+            </div>
+            {f && (
+              <p className="text-xs text-muted-foreground">
+                Folio prov. <span className="font-mono">{f.folio_proveedor}</span>
+                {" — "}{f.proveedor_nombre}
+              </p>
+            )}
           </DialogHeader>
 
           {f && (
-            <FacturaToolbar
+            <StatusActionBar
               factura={f}
               canEdit={canEdit}
+              puedeAprobar={puedeAprobar}
               flags={flags}
               onPagar={onPagar}
               onEditar={onEditar}
               onEliminar={onEliminar}
               onCerrarSinPago={setACerrarSinPago}
+              onCancelar={() => setOpenCancel(true)}
             />
           )}
 
-          {f && (
-            <FacturaResumen f={f} pagosCount={pagos.length} puedeAprobar={puedeAprobar} />
-          )}
+          {f && <FacturaResumen f={f} pagosCount={pagos.length} />}
 
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+            {f && <InfoFacturaSection factura={f} />}
+            {f && <HistorialFacturaSection facturaId={f.id} />}
             <PagosTable
               pagos={pagos}
               isLoading={isLoading}
               canEdit={canEdit}
               onEliminarPago={setPagoAEliminar}
             />
-
             {f && (
               <NotasCreditoSection
                 facturaId={f.id}
@@ -114,7 +111,7 @@ export function DialogDetallePagosProveedor({
             )}
           </div>
 
-          <div className="px-6 py-4 border-t flex justify-end bg-background">
+          <div className="px-6 py-3 border-t flex justify-end bg-background">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
           </div>
         </DialogContent>
@@ -127,7 +124,11 @@ export function DialogDetallePagosProveedor({
         description="El pago será eliminado y el saldo de la factura se recalculará."
         finalDescription="Esta acción no se puede deshacer fácilmente."
         isPending={eliminar.isPending}
-        onConfirm={handleConfirmEliminar}
+        onConfirm={async () => {
+          if (!pagoAEliminar) return;
+          await eliminar.mutateAsync(pagoAEliminar);
+          setPagoAEliminar(null);
+        }}
       />
 
       <CerrarFacturaSinPagoDialog
@@ -135,8 +136,25 @@ export function DialogDetallePagosProveedor({
         open={!!aCerrarSinPago}
         onOpenChange={(o) => { if (!o) setACerrarSinPago(null); }}
         isPending={cerrarSinPago.isPending}
-        onConfirm={handleConfirmCerrarSinPago}
+        onConfirm={async (params) => {
+          if (!aCerrarSinPago) return;
+          await cerrarSinPago.mutateAsync({ ...params, facturaId: aCerrarSinPago.id });
+          setACerrarSinPago(null);
+        }}
       />
+
+      {f && (
+        <CancelarFacturaProveedorDialog
+          factura={f}
+          open={openCancel}
+          onOpenChange={setOpenCancel}
+          isPending={cancelar.isPending}
+          onConfirm={async (motivo) => {
+            await cancelar.mutateAsync({ facturaId: f.id, motivo });
+            setOpenCancel(false);
+          }}
+        />
+      )}
     </TooltipProvider>
   );
 }

@@ -4,15 +4,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export type KpiTone = "default" | "success" | "warn";
 
-export function Kpi({ label, value, tone = "default" }: {
-  label: string; value: string; tone?: KpiTone;
+export function Kpi({ label, value, tone = "default", emphasis = false }: {
+  label: string; value: string; tone?: KpiTone; emphasis?: boolean;
 }) {
   const valueCls =
     tone === "success" ? "text-success"
     : tone === "warn" ? "text-warning"
     : "text-foreground";
   return (
-    <div className="rounded-lg border bg-muted/30 p-3">
+    <div className={cn(
+      "rounded-lg border bg-card p-4 transition-all",
+      emphasis && "ring-2 ring-accent/30 border-accent/30",
+    )}>
       <p className="text-2xs font-bold uppercase tracking-tight text-muted-foreground mb-1">
         {label}
       </p>
