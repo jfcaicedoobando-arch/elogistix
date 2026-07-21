@@ -74,7 +74,7 @@ export function EmbarqueDetalleHeader({
     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
+          <h1 className="text-2xl font-bold truncate">{labelExpediente(embarque.expediente, embarque.id)}</h1>
           <EmbarqueStatusChip
             estado={estadoVisual}
             modo={embarque.modo}
