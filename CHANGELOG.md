@@ -1,6 +1,11 @@
 # Changelog
 
-## [13.303.54] - 2026-07-21
+## [13.303.55] - 2026-07-21
+- **Fase 5 · FIX-45 arreglo real (bug de la fase anterior).**
+  - **Bug:** la migración de v13.303.54 solo revocaba `EXECUTE` al rol `anon`, pero Postgres otorga `EXECUTE` a `PUBLIC` por default y `anon` hereda de ahí. Resultado: ninguna función quedó realmente protegida.
+  - **Fix:** nueva migración que por cada `SECURITY DEFINER` fuera de whitelist ejecuta `REVOKE EXECUTE ... FROM PUBLIC`, `REVOKE ... FROM anon`, y re-otorga a `authenticated` y `service_role` explícitamente. Verificado: pasó de ~85 funciones expuestas a solo las 7 de la whitelist (`portal_*`, `get_tracking_public`, `log_client_error_v1`, `check_ratelimit`, `handle_new_user_signup`, `is_demo_user`).
+  - **Test de regresión:** nuevo `supabase/tests/fix45_anon_execute_whitelist.sql` que consulta `pg_proc` + `has_function_privilege` y hace `RAISE EXCEPTION` si aparece cualquier función fuera de whitelist. Ejecuta OK contra la BD actual.
+
 - **Fases 5-7 cerradas · Seguridad, UX y observabilidad.**
   - **FIX-45 (Fase 5) · Cerrado acceso anónimo a RPCs internos.** Migración `20260721*` revoca `EXECUTE` del rol `anon` sobre ~80 funciones `SECURITY DEFINER` de negocio (embarques, cotizaciones, facturación, CxP, CRM, garantías, comisiones y triggers). Se conservó `EXECUTE` a `anon` solo en la whitelist pública: `portal_obtener_proforma_por_token`, `portal_responder_por_token`, `get_tracking_public`, `log_client_error_v1`, `check_ratelimit`, `handle_new_user_signup`, `is_demo_user`.
   - **Fase 6 UX · Banner TC fallback en Dashboard Dirección.** Nuevo `TipoCambioFallbackBanner.tsx` en `src/features/dashboard/direccion/components/`. Se muestra automáticamente cuando `useExchangeRates().data.esFallback === true` (Banxico caído / sin token), advirtiendo al usuario que los importes MXN son estimados antes de tomar decisiones.
