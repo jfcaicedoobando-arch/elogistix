@@ -1,90 +1,102 @@
-## Objetivo
+# Plan · Correcciones UI/UX (basado en `instrucciones-lovable-uiux.md`)
 
-Cuando el usuario sube un XML de CFDI en el diálogo "Nueva factura de proveedor":
+## Verificación previa
 
-1. Mostrar una **vista previa** de los conceptos extraídos del XML antes de confirmar.
-2. Al guardar la factura, **persistir automáticamente los conceptos** como líneas en `proveedor_facturas_conceptos` (hoy sólo se guardan totales agregados).
+He auditado el repo antes de planear. Los hallazgos son bugs reales:
 
-Alcance limitado a captura de facturas de proveedor vía XML (CxP). No modifica captura manual ni edición posterior.
+- **FIX-UX-01 (errores de red silenciosos):** el `QueryCache.onError` en `src/lib/query/queryClient.ts:74-88` solo llama a `reportQueryError` (Sentry); no dispara toast. `rg -l isError src/features -g "*.tsx"` devuelve **29** archivos → la gran mayoría de rutas nunca renderiza estado de error.
+- **FIX-UX-08 (timezone en `addDays`):** confirmado en `src/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers.ts:26-35`. Se parsea local (`new Date(iso + "T00:00:00")`) y se serializa con `toISOString()` (UTC) → al oeste de UTC (America/Mexico_City, -06/-07) se resta un día al `vencimiento`.
+- **FIX-UX-04:** `rg -l 'type="number"' src` da **44** archivos, y el sustituto (`NumericInput`) solo aparece en ~9. Coincide con la auditoría.
+- **FIX-UX-02 / 03 / 05 / 06 / 07 / 09:** los archivos citados existen y siguen sin diálogos, sin `htmlFor`, sin `aria-label` o con grids no responsivas. Son bugs reales.
 
----
-
-## Flujo propuesto
-
-```text
-Usuario sube XML
-   → parse-cfdi-xml devuelve cfdi.conceptos (ya funciona)
-   → procesarCfdiParsed valida cuadre (ya funciona)
-   → NUEVO: se guardan conceptos en el estado del hook
-   → NUEVO: DialogNuevaFacturaProveedor muestra tabla "Conceptos del CFDI"
-             (descripción, cantidad, importe, IVA, IEPS) — solo lectura
-   → Usuario revisa/confirma resto del formulario y da "Registrar"
-   → runSubmit crea la factura (como hoy)
-   → NUEVO: tras crear, se hace bulk-insert en proveedor_facturas_conceptos
-             con concepto_costo_id = NULL (la vinculación a conceptos_costo
-             sigue siendo manual mediante los "vínculos" ya existentes)
-```
-
-### Coexistencia con vínculos existentes
-
-Hoy `vincularSafe` inserta filas en `proveedor_facturas_conceptos` **solo** cuando el usuario vincula un concepto de costo del embarque. Esas filas llevan `concepto_costo_id` poblado.
-
-Los nuevos registros del CFDI son distintos: representan las **líneas fiscales del XML** y llevarán `concepto_costo_id = NULL`. Ambos tipos conviven en la misma tabla — es exactamente el diseño actual (la columna ya es nullable).
-
-Para evitar duplicados cuando el usuario también vincula un concepto de costo del embarque al mismo importe: las líneas del CFDI son informativas (con `concepto_costo_id = NULL`) y las vinculadas son adicionales. Se documenta en comentario del código.
+Dado el tamaño, propongo ejecutarlo en 4 fases entregables (cada fase pasa `typecheck + lint + tests` y bump de `APP_VERSION` + `CHANGELOG.md`).
 
 ---
 
-## Cambios técnicos
+## Fase 1 — Bugs críticos y de bajo costo (P0)
 
-### 1. Tipos y estado del hook
+**Objetivo:** cero riesgo de datos incorrectos y visibilidad inmediata de fallas de red.
 
-- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.cfdi.ts`: agregar `conceptos: CfdiConceptoParsed[]` (+ `cantidad` y `clave_unidad` si el parser los devuelve — validar) al `ProcesarCfdiResult` ok.
-- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts`:
-  - Nuevo estado `cfdiConceptos: CfdiConceptoParsed[]`.
-  - `handleCfdiParsed` guarda los conceptos.
-  - `reset()` los limpia.
-  - Exportarlos en el retorno del hook.
+1. **FIX-UX-08 · `addDays` timezone-safe**
+  - Reescribir sin `toISOString()`: aritmética por componentes con `date-fns/format` (o string-math) para devolver siempre `YYYY-MM-DD` local.
+  - Añadir `env: { TZ: "America/Mexico_City" }` a `vitest.config.ts`.
+  - Test unitario que corra con `TZ=UTC` y `TZ=America/Los_Angeles`.
+2. **FIX-UX-01 · Errores visibles con reintento**
+  - En `queryClient.ts` `QueryCache.onError`: además de Sentry, `toast.error(...)`, respetando `meta.silentError`.
+  - Extender `DataTable` con props opcionales `isError`/`onRetry` que renderice `ErrorStateInline`.
+  - Aplicar rama `if (isError) return <ErrorState ... onRetry={refetch} />` en las páginas de alto impacto listadas:
+    - `useEmbarquesPageState.ts` (`isEmptyState && !isError`)
+    - `features/cxp/routes/Cxp.tsx`
+    - `features/facturacion/routes/FacturaDetalle.tsx` (distinguir "no existe" vs error de red)
+    - `features/dashboard/hooks/useDashboardData.ts` (consumidores)
+    - `features/portal/routes/PortalFacturas.tsx` + otras 6 rutas del portal (`/portal/*`)
+  - No tocamos las ~180 páginas restantes en esta fase; queda documentado como deuda.
 
-### 2. Parser (verificar cantidad/clave_unidad)
-
-- `supabase/functions/parse-cfdi-xml/parser.ts` y `parseCfdi.types.ts`: si aún no exponen `cantidad` y `clave_unidad`, agregarlos al tipo `CfdiConceptoParsed` y al parser. (La tabla destino tiene ambas columnas.) Redesplegar edge function.
-
-### 3. Nueva UI de vista previa
-
-- Nuevo componente `src/features/cxp/components/CfdiConceptosPreview.tsx` (≤200 líneas):
-  - Tabla compacta con columnas: Descripción, Cantidad, Importe, IVA, IEPS.
-  - Fila total al pie.
-  - Se muestra sólo cuando `mode === "cfdi"` y hay conceptos.
-- `DialogNuevaFacturaProveedor.tsx`: renderizarlo después de `CargaCfdiSection` y antes del bloque de datos generales.
-
-### 4. Persistencia en submit
-
-- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts`: nueva función `insertarConceptosCfdi({ facturaId, organizationId, conceptos })` que hace bulk-insert en `proveedor_facturas_conceptos` con `concepto_costo_id: null`. Envolver en try/catch al estilo `uploadCfdiSafe` (falla no revierte la factura, sólo agrega warning al toast final).
-- `src/features/cxp/hooks/useNuevaFacturaProveedorForm.submit.ts`: llamar `insertarConceptosCfdi` cuando `pendingCfdi` existe y hay conceptos.
-- Pasar `cfdiConceptos` desde el hook al `runSubmit`.
-
-### 5. Tests
-
-- Unit test para `insertarConceptosCfdi` (mock Supabase): valida payload correcto y captura de errores sin lanzar.
-- Test en `useNuevaFacturaProveedorForm.test.tsx`: tras `handleCfdiParsed`, `cfdiConceptos` queda poblado; tras `reset()` queda vacío.
-- Test de parser: si se agregan `cantidad`/`clave_unidad`, extenderlo (regresión).
-
-### 6. Changelog y versión
-
-- Bump `APP_VERSION` (`13.303.67`) y entrada en `CHANGELOG.md`.
+**Aceptación fase 1:** DevTools offline → cada ruta del listado muestra `ErrorState` con "Reintentar". Tests TZ pasan con cualquier TZ del runner. Toast aparece una sola vez por error (dedupe por meta).
 
 ---
 
-## No hace
+## Fase 2 — Confirmaciones destructivas + captura de dinero (P1)
 
-- No cambia RLS ni schema (la tabla ya existe, columnas ya nullable, GRANTs ya presentes).
-- No auto-vincula a `conceptos_costo`. El matching sugerido sigue siendo manual mediante `SugerirEmbarqueBlock` / vínculos.
-- No modifica la edición posterior de la factura (`useEditarFacturaProveedorForm`). Si quieres editar/agregar conceptos después, lo hacemos en una segunda fase.
-- No toca el flujo de captura manual (sin XML).
+3. **FIX-UX-02 · `ConfirmActionDialog` en acciones destructivas**
+  - Cancelar NC (`cxp/components/NotasCreditoSection.tsx`)
+  - Eliminar en `TabPuertos`, `TabNavieras`, `TabTiposContenedor`, `CatalogoClavesSATCard`
+  - Eliminar concepto en `FacturaConceptosEditor`
+  - Donde el registro esté referenciado por embarques/facturas, deshabilitar botón + tooltip "En uso" (una sola consulta previa por catálogo).
+4. **FIX-UX-04 · `NumericInput` para dinero**
+  - Extender `NumericInput` si falta: formateo `1,234.56` en blur, parseo tolerante al pegar, permite vacío, valida `Number.isFinite`.
+  - Migrar los 5 archivos de mayor uso listados en la auditoría; el resto queda como "seguir migrando por módulo" en Fase 4.
+  - Añadir regla eslint custom o `no-restricted-syntax` que prohíba `type="number"` en `src/features/**/*.tsx` (con excepciones documentadas).
+
+**Aceptación fase 2:** 0 acciones destructivas sin diálogo en los archivos listados; scroll sobre campos de dinero no muta el valor; se puede vaciar el campo.
 
 ---
 
-## Preguntas abiertas
+## Fase 3 — Accesibilidad y responsive (P2)
 
-Ninguna bloqueante. Si prefieres que la vista previa sea **editable** (permitir corregir descripciones/importes antes de guardar) en lugar de solo lectura, dímelo y lo ampliamos — pero eso rompe la garantía fiscal del XML original. NO
+5. **FIX-UX-03 · Labels `htmlFor**`
+  - Refactor de `components/shared/FormField.tsx` para generar `useId()` y propagarlo al hijo control vía `cloneElement`, pasando `htmlFor` al `Label`.
+  - Activar `eslint-plugin-jsx-a11y` con `label-has-associated-control` en warning primero (para no romper CI), y corregir por módulo: facturación → cotización → CxP.
+6. **FIX-UX-05 · `aria-label` en botones-ícono**
+  - Corregir los 3 archivos listados.
+  - Activar regla `jsx-a11y/control-has-associated-label` / `button-has-aria-label` en el mismo commit.
+7. **FIX-UX-06 · Tablas con scroll**
+  - Migrar `TablaFlujoSemanal.tsx` y `CrmDashboard.tsx` a `DataTable` (o envolver en `overflow-x-auto` si no aplica).
+  - ADR corto en `ARCHITECTURE.md` declarando `DataTable` como puerta única.
+8. **FIX-UX-07 · Grids financieros responsive**
+  - Ajustar los 4 archivos citados a `grid-cols-1 sm:grid-cols-2 lg:grid-cols-N`, reutilizando `KpiStrip` donde aplique.
+
+**Aceptación fase 3:** lint a11y sin errores nuevos; a 375 px ninguna de las páginas listadas presenta overflow horizontal; `<table>` cruda queda solo en módulos aún no migrados (documentado).
+
+---
+
+## Fase 4 — Pulido y limpieza (P3, opcional)
+
+9. **FIX-UX-09**
+  - Migrar `Loader2` de nivel-página a `PageSkeleton`/`LoadingState` (por módulo, no bloqueante).
+  - `mode: "onBlur"` en los `useForm` sin `mode`.
+  - Ampliar touch targets `h-6/h-7/h-8` en celdas a `h-10 w-10` o padding clicable.
+  - Decidir `"use memo"`: quitar directivas muertas.
+  - `manualChunks` para `xlsx`, `remotion`, `recharts` en `vite.config.ts`.
+10. **FIX-UX-10 · ADR i18n**
+  - `docs/adr/0001-es-mx-hardcoded.md` con la decisión.
+
+---
+
+## Detalles técnicos clave
+
+- **Toast dedupe (fase 1):** `sonner` ya deduplica por `id`; usaremos `id: "query-error-" + queryKey[0]` para no spamear si varias queries fallan en cascada.
+- **Distinguir "no existe" vs error de red en `FacturaDetalle`:** el hook actual ya sabe si vino `data === null` con status ok (PGRST 200 vacío) vs `error`. Renderizar 404 solo si `!isError && !data`, sino `ErrorState`.
+- `**NumericInput` sin regresiones:** exponer prop `allowEmpty` (default true). Los consumidores actuales pasan `value ?? ""`; blindarlos.
+- **eslint plugin a11y:** se instala `eslint-plugin-jsx-a11y` (Fase 3), con reglas nuevas en `warn` primero y luego `error` una vez limpio.
+- **CHANGELOG / APP_VERSION:** un bump por fase (`13.303.75`, `.76`, `.77`, `.78`).
+
+## Fuera de alcance
+
+- No tocaremos las 200+ rutas restantes sin `isError` en fase 1 (solo las críticas del listado); el resto se abre como deuda para migrar por módulo.
+- No cambiaremos el motor de queries ni introduciremos ErrorBoundary por ruta (ya existe global).
+- No haremos i18n real (fase 4 sólo documenta la decisión).
+
+## Preguntas antes de ejecutar
+
+Puedo arrancar por Fase 1 (bugs P0) para minimizar riesgo, o ejecutar las 4 fases seguidas. ¿Confirmas orden `1 → 2 → 3 → 4` y que puedo empezar por Fase 1 en el próximo turno? Ejecuta todas las fases
