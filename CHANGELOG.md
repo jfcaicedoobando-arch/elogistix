@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.303.68] - 2026-07-21
+- **fix(rls) · Borrado suave bloqueado por la propia política que lo escondía.** Las 28 políticas `Hide soft deleted <tabla>` (proveedor_facturas, embarques, cotizaciones, facturas, CRM, etc.) tenían `WITH CHECK (deleted_at IS NULL)`, así que al hacer soft delete (UPDATE `deleted_at = now()`) PostgREST rechazaba la fila resultante con `42501`. Reportado en `/compras/facturas` con requestId `eb6376c1-d566-47b8-b3bb-8916f5fc20cc`. Ajustado `WITH CHECK` a `true` en las 28 políticas: siguen ocultando (`USING deleted_at IS NULL`) pero permiten marcar como eliminado. Los permisos por tenant/rol no cambian (están en la política hermana `Tenant CRUD *`).
+
+
 ## [13.303.67] - 2026-07-21
 - **feat(cxp) · Conceptos del CFDI: vista previa + persistencia automática.** Al subir el XML se muestra una tabla "Conceptos del CFDI (N)" con descripción, cantidad, importe, IVA e IEPS (con totales al pie) antes de guardar. Al confirmar la factura se hace bulk-insert de las líneas en `proveedor_facturas_conceptos` con `concepto_costo_id = NULL` (best-effort: si falla, la factura queda registrada y se muestra warning). Coexiste con los vínculos manuales a `conceptos_costo` de embarque (ésos siguen con `concepto_costo_id` poblado). Parser extendido para exponer `cantidad` y `clave_unidad`; edge function `parse-cfdi-xml` redesplegada.
 
