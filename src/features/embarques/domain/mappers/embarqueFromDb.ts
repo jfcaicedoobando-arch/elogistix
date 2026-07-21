@@ -107,11 +107,16 @@ function mapDatosGenerales(e: EmbarqueRow) {
 }
 
 function mapMaritimo(e: EmbarqueRow) {
+  // SAFE-CAST: naviera_id/agente_id son columnas nuevas (v13.303.35) que aún
+  // pueden no aparecer en los tipos generados.
+  const row = e as unknown as Record<string, unknown>;
   return {
     puertoOrigen: str(e.puerto_origen),
     puertoDestino: str(e.puerto_destino),
     naviera: str(e.naviera),
+    navieraId: (row.naviera_id as string | null) ?? null,
     agente: str(e.agente),
+    agenteId: (row.agente_id as string | null) ?? null,
     tipoServicio: str(e.tipo_servicio),
     contenedor: str(e.contenedor),
     tipoContenedor: str(e.tipo_contenedor),
