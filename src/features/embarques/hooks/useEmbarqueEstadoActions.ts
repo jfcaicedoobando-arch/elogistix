@@ -99,7 +99,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: siguiente, usuarioEmail });
       registrarActividad.mutate({
         accion: 'cambiar_estado', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: embarque.expediente,
+        entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
         detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
       });
       notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
