@@ -9,6 +9,7 @@ import {
   type EmbarqueRow,
 } from "@/features/embarques/hooks";
 import { EmbarqueBloqueadoError, type MotivosBloqueoEmbarque } from "@/features/embarques/services";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
