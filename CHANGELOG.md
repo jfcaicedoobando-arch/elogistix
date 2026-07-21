@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.303.56] - 2026-07-21
+- **fix(facturación) · Convertir proforma a factura fallaba con `42883` (Sentry JAVASCRIPT-REACT-31 / JAVASCRIPT-REACT-1M).** La RPC `convertir_proformas_a_factura` invocaba `public.idempotency_commit(uuid, jsonb)`, función que no existe — la correcta es `public.idempotency_store(uuid, jsonb)`. Migración recrea la función cambiando únicamente esa línea; resto del cuerpo intacto. Idempotencia sigue funcionando gracias a `idempotency_claim` al inicio. Issues Sentry resueltos: JAVASCRIPT-REACT-31, JAVASCRIPT-REACT-1M.
+
+
+
 ## [13.303.55] - 2026-07-21
 - **Fase 5 · FIX-45 arreglo real (bug de la fase anterior).**
   - **Bug:** la migración de v13.303.54 solo revocaba `EXECUTE` al rol `anon`, pero Postgres otorga `EXECUTE` a `PUBLIC` por default y `anon` hereda de ahí. Resultado: ninguna función quedó realmente protegida.
