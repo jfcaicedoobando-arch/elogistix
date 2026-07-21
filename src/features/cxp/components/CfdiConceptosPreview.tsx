@@ -30,7 +30,7 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
   const hayIeps = totIeps > 0;
 
   return (
-    <FormDialogSection
+    <FormSection
       icon={FileText}
       title={`Conceptos del CFDI (${conceptos.length})`}
       description="Vista previa del desglose recibido del SAT. Se guardará junto con la factura."
@@ -75,6 +75,6 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
           </table>
         </div>
       </div>
-    </FormDialogSection>
+    </FormSection>
   );
 }
