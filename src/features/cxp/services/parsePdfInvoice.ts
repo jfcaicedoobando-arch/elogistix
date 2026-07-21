@@ -71,6 +71,43 @@ async function invokeOnce(file: File, categorias: { id: string; nombre: string }
   }
 }
 
+async function invokeWithRetry(
+  file: File,
+  categorias: { id: string; nombre: string }[],
+): Promise<{ data: CfdiParsedResponse; latencyMs: number; attempts: number }> {
+  const t0 = performance.now();
+  let last: Attempt | null = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const r = await invokeOnce(file, categorias);
+    if (r.ok && r.data) {
+      return { data: r.data, latencyMs: Math.round(performance.now() - t0), attempts: attempt };
+    }
+    last = r;
+    if (!r.retryable || attempt === MAX_ATTEMPTS) break;
+    await new Promise<void>((res) => setTimeout(res, BACKOFF_MS));
+  }
+  const latencyMs = Math.round(performance.now() - t0);
+  const err = new CfdiUploadError(
+    last?.message ?? "No se pudo procesar el PDF con IA",
+    {
+      attemptCount: MAX_ATTEMPTS,
+      latencyMs,
+      online: typeof navigator !== "undefined" ? navigator.onLine : true,
+      xmlSize: file.size,
+      xmlName: file.name,
+      lastStatus: last?.status ?? null,
+      phase: last?.phase ?? "request",
+      errorName: "PdfIaUploadError",
+    },
+    last?.cause ?? null,
+  );
+  Sentry.captureException(err, {
+    tags: { feature: "pdf_ia_upload", phase: err.context.phase },
+    contexts: { pdf_ia: { pdf_size: file.size, latency_ms: latencyMs, ...err.context } },
+  });
+  throw err;
+}
+
 export async function parsePdfInvoice(
   file: File,
   categorias: { id: string; nombre: string }[],
@@ -87,41 +124,12 @@ export async function parsePdfInvoice(
     throw new Error(AUTH_ERROR_MESSAGES.csfSessionRequired);
   }
 
-  const t0 = performance.now();
-  let last: Attempt | null = null;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const r = await invokeOnce(file, categorias);
-    if (r.ok && r.data) {
-      Sentry.addBreadcrumb({
-        category: "pdf_ia",
-        message: "parse_invoice_pdf.ok",
-        level: "info",
-        data: { latency_ms: Math.round(performance.now() - t0), attempts: attempt },
-      });
-      return r.data;
-    }
-    last = r;
-    if (!r.retryable || attempt === MAX_ATTEMPTS) break;
-    await new Promise<void>((res) => setTimeout(res, BACKOFF_MS));
-  }
-
-  const err = new CfdiUploadError(
-    last?.message ?? "No se pudo procesar el PDF con IA",
-    {
-      attemptCount: MAX_ATTEMPTS,
-      latencyMs: Math.round(performance.now() - t0),
-      online: typeof navigator !== "undefined" ? navigator.onLine : true,
-      xmlSize: file.size,
-      xmlName: file.name,
-      lastStatus: last?.status ?? null,
-      phase: last?.phase ?? "request",
-      errorName: "PdfIaUploadError",
-    },
-    last?.cause ?? null,
-  );
-  Sentry.captureException(err, {
-    tags: { feature: "pdf_ia_upload", phase: err.context.phase },
-    contexts: { pdf_ia: { pdf_size: file.size, latency_ms: err.context.latencyMs, ...err.context } },
+  const { data, latencyMs, attempts } = await invokeWithRetry(file, categorias);
+  Sentry.addBreadcrumb({
+    category: "pdf_ia",
+    message: "parse_invoice_pdf.ok",
+    level: "info",
+    data: { latency_ms: latencyMs, attempts },
   });
-  throw err;
+  return data;
 }
