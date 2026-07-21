@@ -9,8 +9,9 @@ import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPri
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { buildPayload, type PendingCfdi, type VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
 import {
-  uploadCfdiSafe, vincularSafe, buildFacturaSuccessDescription,
+  uploadCfdiSafe, vincularSafe, persistirConceptosCfdiSafe, buildFacturaSuccessDescription,
 } from "./useNuevaFacturaProveedorForm.sideEffects";
+import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
 export function handleSubmitError(e: unknown) {
   const err = e as { message?: string; code?: string };
