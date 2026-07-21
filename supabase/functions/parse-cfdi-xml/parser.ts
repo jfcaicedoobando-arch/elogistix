@@ -4,6 +4,8 @@
 
 export interface CfdiConcepto {
   descripcion: string;
+  cantidad: number;
+  clave_unidad: string;
   importe: number;
   iva: number;
   ieps: number;
