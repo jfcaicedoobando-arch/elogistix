@@ -20,6 +20,8 @@ import type { TotalesPL } from "@/lib/financial/profitUtils";
  */
 export function parseInputNumero(raw: string): number {
   if (raw === "" || raw === ".") return 0;
+  // Rechaza strings que no representen un número completo (p.ej. "1.2.3", "abc", "-5").
+  if (!/^\d+(\.\d+)?$/.test(raw)) return 0;
   const n = parseFloat(raw);
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
