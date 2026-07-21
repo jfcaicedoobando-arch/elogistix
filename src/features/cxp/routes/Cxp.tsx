@@ -144,6 +144,8 @@ export default function Cxp() {
               columns={columns}
               data={data}
               isLoading={isLoading}
+              isError={isError}
+              onRetry={() => refetch()}
               emptyMessage="No hay facturas que coincidan con los filtros"
               rowKey={(f) => f.id}
               density="compact"
