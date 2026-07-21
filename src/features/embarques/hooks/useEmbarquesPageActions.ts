@@ -9,7 +9,7 @@ type SetFilter = (key: "modo" | "estado" | "cliente" | "operador" | "fechaDesde"
 interface BuildActionsArgs {
   DEFAULT_PAGE_SIZE: number;
   setFilter: SetFilter;
-  setAlerta: (v: string) => void;
+  setAlerta: (v: never) => void;
   setPageRaw: (v: number | null) => void;
   setPageSizeRaw: (v: number | null) => void;
   setSortKeyRaw: (v: string | null) => void;
