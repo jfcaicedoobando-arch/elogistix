@@ -28,6 +28,8 @@ interface ClienteData {
   telefono: string;
   regimen_fiscal: string;
   uso_cfdi_default: string;
+  dias_credito: number | null;
+  limite_credito_mxn: number | null;
 }
 
 interface Props {
@@ -175,6 +177,47 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
         <TextField label="Contacto" field="contacto" form={form} setForm={setForm} />
         <TextField label="Email" field="email" form={form} setForm={setForm} />
         <TextField label="Teléfono" field="telefono" form={form} setForm={setForm} />
+      </FormDialogSection>
+
+      <FormDialogSection
+        title="Condiciones de crédito"
+        description="Fuente única de verdad. Aplica a proformas y facturas emitidas al cliente."
+      >
+        <div>
+          <Label className="text-xs">Días de crédito</Label>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={365}
+            value={form.dias_credito ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setForm((p) => ({ ...p, dias_credito: v === "" ? null : Math.max(0, Number(v)) }));
+            }}
+            placeholder="Ej. 30"
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Límite de crédito (MXN)</Label>
+          <Input
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            value={form.limite_credito_mxn ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setForm((p) => ({
+                ...p,
+                limite_credito_mxn: v === "" ? null : Math.max(0, Number(v)),
+              }));
+            }}
+            placeholder="Vacío = sin límite"
+            className="mt-1"
+          />
+        </div>
       </FormDialogSection>
     </FormDialogShell>
   );
