@@ -1,6 +1,8 @@
 # Changelog
 
-## [13.303.84] - 2026-07-21
+## [13.303.85] - 2026-07-21
+- **fix(cxp) — Doble toast al capturar factura de proveedor con UUID duplicado.** `useCrearFacturaProveedor` emitía un `notifyError` genérico en `onError` y, en paralelo, `runSubmit`/`handleSubmitError` mostraba el toast traducido ("CFDI duplicado"). Se elimina el toast del `onError` de la mutación; el flujo de submit ya centraliza el mensaje con contexto (código `23505` / `uuid_fiscal`). Analogía: teníamos dos meseros gritando el mismo pedido; ahora sólo grita el que sabe la receta traducida. Ref Sentry request `3e7fcca6`.
+
 - **fix(tests · CI) — 4 guardrails en verde.** `mesKey` (CRM forecast) e `isoWeekKey` (Tesorería flujo proyectado) ahora leen la fecha en UTC (`getUTC*`), evitando que un runner en `America/Mexico_City` mueva días fronterizos al mes/semana anterior. La allowlist de `no-raw-table` se sincroniza con el split del DataTable (se removió `DataTable.tsx`, se agregó `dataTable/DataTableContent.tsx`). `queryClient.ts` queda en la allowlist de `error-toasts-use-notifyError` (dedupe por queryKey, no queremos duración infinita ni "Ver detalles" en cada hiccup de red). Analogía: como un reloj que se puso en hora universal para que todos los relojes locales digan lo mismo.
 
 ## [13.303.83] - 2026-07-21
