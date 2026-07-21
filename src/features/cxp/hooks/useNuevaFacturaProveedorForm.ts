@@ -32,6 +32,7 @@ export function useNuevaFacturaProveedorForm(
   const [errors, setErrors] = useState<Partial<Record<keyof FacturaFormValues, string>>>({});
   const [mode, setMode] = useState<CargaMode>("manual");
   const [pendingCfdi, setPendingCfdi] = useState<PendingCfdi | null>(null);
+  const [cfdiConceptos, setCfdiConceptos] = useState<CfdiConceptoParsed[]>([]);
   const [askCrearProv, setAskCrearProv] = useState<{ rfc: string; nombre: string } | null>(null);
   const [vinculos, setVinculos] = useState<VinculosState>({});
   const [embarqueAdHoc, setEmbarqueAdHoc] = useState<EmbarqueSeleccionado | null>(
