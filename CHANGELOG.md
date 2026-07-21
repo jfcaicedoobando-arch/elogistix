@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.303.76] - 2026-07-21
+- **chore(lint) · Complejidad ciclomática ≤ 16.** Reducida la complejidad de `DataTableInner` (18→<16) extrayendo `DataTableContent` + `mergeDataTableProps`, y de `useEmbarquesPageState` (19→<16) extrayendo `buildEmbarquesPageActions`, `applyClientFilters` y `computeSinFiltros`. Sin cambios de lógica ni de UI.
+
 ## [13.303.75] - 2026-07-21
+
 - **fix(ux) · Fases 1-4 · Red silenciosa, timezone, captura de dinero y ADR.**
   - **Fase 1 (P0):** `addDays` reescrito con `Date.UTC`, valida que la regex `YYYY-MM-DD` no acepte rollovers (`2026-13-40` → `""`, FIX-UX-08). `vitest` fija `TZ=America/Mexico_City`. `QueryClient.QueryCache.onError` emite `toast.error` con dedupe por root de queryKey (FIX-UX-01). `DataTable` acepta `isError`+`onRetry` y pinta `ErrorStateInline`; rutas `Embarques` y `CxP` propagan `isError`. Bug adicional descubierto en `useFacturacionDateRange.toIsoDate`: usaba getters locales y con TZ México partía dates UTC un día antes; migrado a `getUTC*`.
   - **Fase 2 (P1):** Sustituidas 4 zonas críticas de captura de dinero (`PagoFormFields`, `FacturaManualConceptosTable`, `FacturaConceptosEditorRows`, `NotaCreditoConceptosEditor`) de `<Input type="number">` a `NumericInput` — sin spinners, sin wheel-scroll accidental, sin perder decimales al teclear (FIX-UX-04). `Label` con `htmlFor` en el campo Monto de pagos.

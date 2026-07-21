@@ -1,20 +1,17 @@
 import React from "react";
 import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import type { LucideIcon } from "lucide-react";
-import { Table, TableFooter } from "@/components/ui/table";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
-import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
-import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
+import { DataTableContent } from "@/components/shared/dataTable/DataTableContent";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
-import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
-import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
 import type { DataTablePagination, TableDensity, SortDir } from "@/components/shared/dataTable/types";
 
 // API pública estable (componente + helpers) — allowlisted en eslint react-refresh override.
 export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
 export type { ColumnDef, VisibilityState } from "@tanstack/react-table";
+
 
 interface DataTableProps<T> {
   /** API única: `ColumnDef<T, unknown>[]` de TanStack. Construir con
@@ -71,42 +68,41 @@ interface DataTableProps<T> {
   enableRowSelection?: boolean;
 }
 
-function DataTableInner<T>({
-  columns,
-  data,
-  isLoading = false,
-  isError = false,
-  onRetry,
-  emptyMessage = "Sin resultados",
-  emptyHint,
-  emptyIcon,
-  emptyState,
-  skeletonRows = 5,
-  onRowClick,
-  onRowMouseEnter,
-  getRowHref,
-  getRowAriaLabel,
-  rowKey,
-  rowClassName,
-  sortMode = "client",
-  controlledSort,
-  onSortChange,
-  initialSort,
-  density = "comfortable",
-  striped = true,
-  hoverable = true,
-  bordered = false,
-  footer,
-  pagination,
-  className,
-  tableClassName = "min-w-max",
-  stickyHeader = false,
-  columnVisibility,
-  onColumnVisibilityChange,
-  rowSelection,
-  onRowSelectionChange,
-  enableRowSelection,
-}: DataTableProps<T>) {
+const DATA_TABLE_DEFAULTS = {
+  isLoading: false,
+  isError: false,
+  emptyMessage: "Sin resultados",
+  skeletonRows: 5,
+  sortMode: "client" as const,
+  density: "comfortable" as TableDensity,
+  striped: true,
+  hoverable: true,
+  bordered: false,
+  tableClassName: "min-w-max",
+  stickyHeader: false,
+};
+
+function mergeDataTableProps<T>(raw: DataTableProps<T>) {
+  const merged: Record<string, unknown> = { ...DATA_TABLE_DEFAULTS };
+  for (const [k, v] of Object.entries(raw)) {
+    if (v !== undefined) merged[k] = v;
+  }
+  return merged as unknown as DataTableProps<T> & typeof DATA_TABLE_DEFAULTS;
+}
+
+function DataTableInner<T>(rawProps: DataTableProps<T>) {
+  const {
+    columns, data, onRetry, emptyHint, emptyIcon, emptyState,
+    onRowClick, onRowMouseEnter, getRowHref, getRowAriaLabel,
+    rowKey, rowClassName, controlledSort, onSortChange, initialSort,
+    footer, pagination, className, columnVisibility, onColumnVisibilityChange,
+    rowSelection, onRowSelectionChange, enableRowSelection,
+    isLoading, isError, emptyMessage, skeletonRows, sortMode, density,
+    striped, hoverable, bordered, tableClassName, stickyHeader,
+  } = mergeDataTableProps(rawProps);
+
+
+
   const table = useTableInstance<T>({
     data,
     columns,
@@ -128,8 +124,6 @@ function DataTableInner<T>({
     typeof footer === "function" ? (footer as (d: T[]) => React.ReactNode)(orderedData) : footer;
   const showFooter = Boolean(renderedFooter) && !isLoading && orderedData.length > 0;
 
-  const { ref: scrollRef, atStart, atEnd, overflowing } = useHorizontalScrollEdges<HTMLDivElement>();
-
   return (
     <div className={className}>
       {isError ? (
@@ -138,38 +132,28 @@ function DataTableInner<T>({
           onRetry={onRetry}
         />
       ) : (
-      <div className="relative">
-        <div
-          ref={scrollRef}
-          data-testid="datatable-scroll"
-          className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]"
-        >
-          {/* min-w-max obliga a respetar anchos por columna (F-06 auditoría 3). */}
-          <Table className={tableClassName}>
-            <DataTableHeaderRow table={table} striped={striped} bordered={bordered} stickyHeader={stickyHeader} />
-            <DataTableBody
-              table={table}
-              isLoading={isLoading}
-              skeletonRows={skeletonRows}
-              density={density}
-              striped={striped}
-              hoverable={hoverable}
-              bordered={bordered}
-              emptyMessage={emptyMessage}
-              emptyHint={emptyHint}
-              emptyIcon={emptyIcon}
-              emptyState={emptyState}
-              rowClassName={rowClassName}
-              onRowClick={onRowClick}
-              onRowMouseEnter={onRowMouseEnter}
-              getRowHref={getRowHref}
-              getRowAriaLabel={getRowAriaLabel}
-            />
-            {showFooter && <TableFooter>{renderedFooter}</TableFooter>}
-          </Table>
-        </div>
-        <HorizontalScrollFades overflowing={overflowing} atStart={atStart} atEnd={atEnd} />
-      </div>
+        <DataTableContent
+          table={table}
+          tableClassName={tableClassName}
+          striped={striped}
+          bordered={bordered}
+          hoverable={hoverable}
+          stickyHeader={stickyHeader}
+          density={density}
+          isLoading={isLoading}
+          skeletonRows={skeletonRows}
+          emptyMessage={emptyMessage}
+          emptyHint={emptyHint}
+          emptyIcon={emptyIcon}
+          emptyState={emptyState}
+          rowClassName={rowClassName}
+          onRowClick={onRowClick}
+          onRowMouseEnter={onRowMouseEnter}
+          getRowHref={getRowHref}
+          getRowAriaLabel={getRowAriaLabel}
+          renderedFooter={renderedFooter}
+          showFooter={showFooter}
+        />
       )}
 
       {!isError && pagination && (
@@ -186,6 +170,7 @@ function DataTableInner<T>({
     </div>
   );
 }
+
 
 /**
  * DataTable — tabla genérica del ERP. API única: `ColumnDef<T, unknown>[]`.

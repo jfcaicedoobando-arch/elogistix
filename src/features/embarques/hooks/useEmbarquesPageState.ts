@@ -5,7 +5,7 @@
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/features/embarques/hooks/useEmbarques";
+import { useEmbarquesPaginados } from "@/features/embarques/hooks/useEmbarques";
 import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
 import type { SortableEmbarqueColumn } from "@/features/embarques/services/queries";
 import { SORT_KEY_TO_COLUMN } from "@/features/embarques/services/queries";
@@ -21,10 +21,15 @@ import {
   buildFullSetFilters,
   dedupePorExpediente,
   contenedoresPorExpediente as computeContenedoresPorExpediente,
+  applyClientFilters,
+  computeSinFiltros,
   type SortDir,
 } from "@/features/embarques/domain/embarquesPageHelpers";
+import { buildEmbarquesPageActions } from "@/features/embarques/hooks/useEmbarquesPageActions";
 
 export type { SortDir };
+
+
 
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
@@ -94,17 +99,14 @@ export function useEmbarquesPageState() {
 
   const containersForView: EmbarqueRow[] = useMemo(() => {
     if (!fullSetActivo) return resultadoServer?.data ?? [];
-    let all = resultadoFull ?? [];
-    if (estadoFilterActivo) {
-      all = all.filter(
-        (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real) === filterEstado,
-      );
-    }
-    if (alertaFilterActivo && alertIdSet) {
-      all = all.filter((e) => alertIdSet.has(e.id));
-    }
-    return all;
+    return applyClientFilters(resultadoFull ?? [], {
+      estadoFilterActivo,
+      alertaFilterActivo,
+      alertIdSet,
+      filterEstado,
+    });
   }, [fullSetActivo, estadoFilterActivo, alertaFilterActivo, alertIdSet, resultadoServer, resultadoFull, filterEstado]);
+
 
   const contenedoresPorExpediente = useMemo(
     () => computeContenedoresPorExpediente(containersForView),
@@ -154,14 +156,24 @@ export function useEmbarquesPageState() {
 
   const displayCount = expedientesCount;
 
-  const sinFiltros =
-    !debouncedSearch &&
-    [filterModo, filterEstado, filterCliente, filterOperador].every((v) => v === "todos") &&
-    filterAlerta === "todos" &&
-    !fechaDesde &&
-    !fechaHasta;
+  const sinFiltros = computeSinFiltros({
+    debouncedSearch,
+    filterModo, filterEstado, filterCliente, filterOperador,
+    filterAlerta, fechaDesde, fechaHasta,
+  });
   // v13.303.75 · un fallo de red NO es un "sin resultados": exigimos !isError.
   const isEmptyState = !isLoading && !isError && containersForView.length === 0 && sinFiltros;
+
+
+  const actions = buildEmbarquesPageActions({
+    DEFAULT_PAGE_SIZE,
+    setFilter,
+    setAlerta,
+    setPageRaw,
+    setPageSizeRaw,
+    setSortKeyRaw,
+    setSortDirRaw,
+  });
 
   return {
     search,
@@ -169,23 +181,7 @@ export function useEmbarquesPageState() {
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
     setSearch,
-    setFilterModo: (v: string) => setFilter("modo", v, "todos"),
-    setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
-    setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
-    setFilterOperador: (v: string) => setFilter("operador", v, "todos"),
-    setFilterAlerta: setAlerta,
-    setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
-    setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
-    setPage: (p: number) => setPageRaw(p === 0 ? null : p),
-    setPageSize: (s: number) => {
-      setPageSizeRaw(s === DEFAULT_PAGE_SIZE ? null : s);
-      setPageRaw(null);
-    },
-    handleSortChange: (key: string | null, dir: SortDir) => {
-      setSortKeyRaw(!key || key === "expediente" ? null : key);
-      setSortDirRaw(dir === "desc" ? null : dir);
-      setPageRaw(null);
-    },
+    ...actions,
     embarques, filtered, totalCount: totalCountServer, displayCount,
     expedientesCount, contenedoresCount, totalPages, isLoading, isError, refetch, isEmptyState,
     contenedoresPorExpediente,
@@ -193,3 +189,4 @@ export function useEmbarquesPageState() {
     alertasResumen, alertIdSet,
   };
 }
+
