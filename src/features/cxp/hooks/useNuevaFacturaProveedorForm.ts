@@ -147,7 +147,7 @@ export function useNuevaFacturaProveedorForm(
   };
 
 
-  const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => {
+  const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }): Promise<boolean> => {
     const result = await procesarCfdiParsed(data, files, organizationId);
     if (!result.ok) {
       notifyError(toast, {
@@ -155,7 +155,7 @@ export function useNuevaFacturaProveedorForm(
         description: result.cuadreError,
         method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CUADRE",
       });
-      return;
+      return false;
     }
     setValues(result.values);
     setErrors({});
@@ -164,6 +164,7 @@ export function useNuevaFacturaProveedorForm(
     setTcOrigen(result.tcOrigen);
     setTcFechaAplicada(result.tcFechaAplicada);
     manualTcRef.current = false;
+    return true;
   };
 
 
