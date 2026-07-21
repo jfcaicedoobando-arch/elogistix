@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { CheckCircle2 } from "lucide-react";
-import { formatCurrency, formatDiasCredito } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 
@@ -13,12 +13,10 @@ interface Props {
   totales: TotalesProforma;
   tasaIva: number;
   notas: string;
-  diasCredito: string;
-  operadorEmbarque: string | null;
 }
 
 export function PasoConfirmacionProforma({
-  conceptosSeleccionados, ivaPorConcepto, totales, tasaIva, notas, diasCredito, operadorEmbarque,
+  conceptosSeleccionados, ivaPorConcepto, totales, tasaIva, notas,
 }: Props) {
   return (
     <div className="space-y-4">
@@ -56,18 +54,7 @@ export function PasoConfirmacionProforma({
 
       </div>
 
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-md border p-3 bg-muted/20">
-          <p className="text-xs text-muted-foreground">Ejecutivo de Operaciones</p>
-          <p className="font-semibold mt-0.5">{operadorEmbarque || "—"}</p>
-        </div>
-        <div className="rounded-md border p-3 bg-muted/20">
-          <p className="text-xs text-muted-foreground">Días de crédito</p>
-          <p className="font-semibold mt-0.5">
-            {formatDiasCredito(diasCredito)}
-          </p>
-        </div>
-      </div>
+
 
       <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
         <h4 className="font-semibold text-sm mb-2">Totales finales</h4>
