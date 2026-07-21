@@ -23,7 +23,7 @@ const RAW_TABLE_IMPORT = /from\s+["']@\/components\/ui\/table["']/;
 /** Archivos autorizados a importar `@/components/ui/table` directamente. */
 const ALLOWLIST: readonly string[] = [
   // Implementación misma del DataTable — consume las primitivas.
-  "src/components/shared/DataTable.tsx",
+  "src/components/shared/dataTable/DataTableContent.tsx",
   "src/components/shared/dataTable/DataTableBody.tsx",
   "src/components/shared/dataTable/DataTableBodyEmpty.tsx",
   "src/components/shared/dataTable/DataTableBodySkeleton.tsx",
