@@ -7996,6 +7996,7 @@ export type Database = {
         Args: { p_embarque_id: string }
         Returns: undefined
       }
+      purgar_facturapi_webhook_eventos: { Args: never; Returns: number }
       purge_app_logs_old: { Args: never; Returns: number }
       purge_record: {
         Args: { _id: string; _table: string }
