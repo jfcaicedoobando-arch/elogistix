@@ -54,7 +54,7 @@ export function Toaster() {
           cancelButton:
             "!min-h-11 !min-w-[44px] !px-3 !py-2 !bg-muted !text-muted-foreground !rounded-md",
           closeButton:
-            "!bg-card !border-border !text-muted-foreground hover:!text-foreground",
+            "!opacity-100 !h-6 !w-6 !left-auto !right-2 !top-2 !bg-card !border !border-border !text-muted-foreground hover:!text-foreground hover:!bg-muted !transition-colors",
         },
       }}
     />
