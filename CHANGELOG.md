@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.303.59] - 2026-07-21
+- **feat(clientes) · Perfil de crédito como fuente única de verdad (Fase 3-4).**
+  - **Emisión bloqueada por límite:** al convertir una proforma a factura (`AccionesProforma.tsx`) y al crear/timbrar una factura manual (`DialogNuevaFacturaManual.tsx`), se valida el límite MXN del cliente vía `useValidarLimiteCredito`. Si la nueva emisión rebasa el límite, se abre `ConfirmActionDialog` con desglose (límite, en uso, monto nuevo, excedente). El operador puede continuar; se registra en `bitacora_actividad` la acción `excede_credito` con `origen` (`proforma_convertir` | `factura_manual`) para auditoría.
+  - **Días de crédito readonly en factura manual:** `FacturaManualDatosFiscales` acepta prop `diasReadonly`; el diálogo la activa cuando hay cliente, precargando `dias_credito` del perfil (fuente única). Se muestra hint bajo el input.
+  - **Badge "Crédito excedido" en tabla de clientes:** `clientes_listado` RPC ahora devuelve `limite_credito_mxn` y `saldo_pendiente_mxn`; la columna Nombre en `clientesTableConfig.tsx` muestra badge rojo cuando el saldo pendiente rebasa el límite, sin RPC por fila.
+  - **Servicios:** `fetchClientesPaginados` y `ClienteListItem` incluyen los nuevos campos.
+
+
+
 ## [13.303.58] - 2026-07-21
 - **feat(clientes) · Perfil de crédito como fuente única de verdad (Fase 1-2).**
   - **BD:** nueva columna `clientes.limite_credito_mxn` (MXN, opcional) con constraint no-negativo; nueva RPC `get_exposicion_credito_cliente(cliente_id)` que devuelve días, límite, uso, disponible y bandera `excedido`. El "en uso" se calcula sumando saldos de facturas vivas (`Emitida`, `Vencida`, `Parcialmente pagada`, `Pagada`) menos pagos aplicados (`pagos_factura.monto_aplicado_factura`) y NC aplicadas (`factura_notas_credito.estado='Aplicada'`), convertidos a MXN al TC de cada factura. `SECURITY DEFINER` con filtro por `organization_id` + `has_role('owner')`; `EXECUTE` sólo a `authenticated`/`service_role`.
