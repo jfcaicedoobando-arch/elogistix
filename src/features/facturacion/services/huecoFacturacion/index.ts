@@ -93,10 +93,11 @@ export async function fetchHuecoFacturacion({
   organizationId: string | null;
   hoy?: Date;
 }): Promise<HuecoFacturacionResult> {
-  // v13.217.0 — ampliamos el límite a hoy + 3 días naturales para dar buffer
-  // al agente aduanal antes del arribo real del contenedor.
-  const limite = new Date(hoy.getTime() + HUECO_ETA_BUFFER_DIAS * MS_POR_DIA);
-  const limiteEtaIso = limite.toISOString().slice(0, 10);
+  // FIX-12 (Fase 4): buffer sobre el "hoy" en CDMX. Antes usábamos
+  // toISOString UTC y entre 18:00-23:59 CDMX se corría 1 día.
+  const hoyLocal = parseLocalMx(hoyMx(hoy));
+  const limite = new Date(hoyLocal.getTime() + HUECO_ETA_BUFFER_DIAS * MS_POR_DIA);
+  const limiteEtaIso = hoyMx(limite);
 
   const arr = await fetchEmbarquesParaHueco(organizationId, limiteEtaIso);
 

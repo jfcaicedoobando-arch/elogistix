@@ -30,15 +30,27 @@ export function agregarEmbarques(
       mes: fecha.slice(0, 7),
     });
   }
-  const tc = new Map(embarques.map((e) => [e.id, { usd: Number(e.tipo_cambio_usd) || 1, eur: Number(e.tipo_cambio_eur) || 1 }]));
+  // FIX-11 (Fase 4): sin fallback silencioso a TC=1. Si el embarque no tiene
+  // TC capturado, sólo agregamos filas ya en MXN; USD/EUR se ignoran para no
+  // inflar la utilidad. El dashboard exhibe el hueco vía `facturas_sin_tc`.
+  const tc = new Map(embarques.map((e) => {
+    const usd = Number(e.tipo_cambio_usd);
+    const eur = Number(e.tipo_cambio_eur);
+    return [e.id, {
+      usd: Number.isFinite(usd) && usd > 0 ? usd : 0,
+      eur: Number.isFinite(eur) && eur > 0 ? eur : 0,
+    }];
+  }));
   for (const v of ventas) {
     const a = map.get(v.embarque_id); if (!a) continue;
     const t = tc.get(v.embarque_id)!;
+    if (v.moneda !== 'MXN' && t.usd <= 0) continue;
     a.venta += toMxn(v.total, v.moneda, t.usd, t.eur);
   }
   for (const c of costos) {
     const a = map.get(c.embarque_id); if (!a) continue;
     const t = tc.get(c.embarque_id)!;
+    if (c.moneda !== 'MXN' && t.usd <= 0) continue;
     a.costo += toMxn(c.monto, c.moneda, t.usd, t.eur);
   }
   return Array.from(map.values());
