@@ -48,9 +48,17 @@ export function StepCostosPrecios(props: Props) {
   } = props;
 
   const { watch, register } = useFormContext<EmbarqueFormValues>();
-  const tcUSD = parseFloat(watch('tipoCambioUSD')) || 1;
-  const tcEUR = parseFloat(watch('tipoCambioEUR')) || 1;
-  const toUSD = (monto: number, moneda: string) => aUSD(monto, moneda, tcUSD, tcEUR);
+  // FIX-11 (Fase 4): sin fallback silencioso a 1. Cuando falta TC, `toUSD` deja
+  // el monto sin convertir y el banner `showTcWarning` fuerza la captura.
+  const tcUSDraw = parseFloat(watch('tipoCambioUSD'));
+  const tcEURraw = parseFloat(watch('tipoCambioEUR'));
+  const tcUSD = Number.isFinite(tcUSDraw) && tcUSDraw > 0 ? tcUSDraw : 0;
+  const tcEUR = Number.isFinite(tcEURraw) && tcEURraw > 0 ? tcEURraw : 0;
+  const toUSD = (monto: number, moneda: string) => {
+    if (moneda === 'USD') return monto;
+    if (tcUSD <= 0) return monto; // sin TC: muestra el nativo, banner alerta
+    return aUSD(monto, moneda, tcUSD, tcEUR);
+  };
 
   const { costoCalc, ventaCalc, costoMixtoIdx, ventaMixtoIdx } =
     useCostosPreciosCalc(conceptosCosto, conceptosVenta, tcUSD, tcEUR);

@@ -1,6 +1,14 @@
 # Changelog
 
+## [13.303.52] - 2026-07-21
+- **Fase 4 · Integridad financiera: TC no silencioso, hueco en CDMX, webhook idempotente (FIX-11 residual · FIX-12 residual · FIX-22).**
+  - **FIX-11 residual — Fin del fallback `|| 1`:** `sumarEnUSD` (`src/lib/financial/costosUSD.ts`) ya no colapsa a TC=1 cuando falta el tipo de cambio: delega en `sumarEnMoneda`, que ignora filas mixtas y devuelve `total: 0` para forzar la captura vía banner. `StepCostosPrecios.tsx` deja el monto nativo (sin convertir a USD) si falta TC, y `dashboard/direccion/services/calculos.ts` descarta filas USD/EUR de embarques sin TC en lugar de sumarlas como si fueran MXN. Antes, un embarque sin TC inflaba la utilidad ~20×.
+  - **FIX-12 residual — `huecoFacturacion` en CDMX:** el corte "hoy + 3 días" se calcula con `hoyMx()`/`parseLocalMx()` en lugar de `toISOString().slice(0,10)`. Entre 18:00–23:59 CDMX el hueco ya no se corría un día al futuro.
+  - **FIX-22 — Idempotencia de webhooks FacturAPI:** nueva tabla `public.facturapi_webhook_eventos (organization_id, event_id UNIQUE)` con RLS y sólo acceso `service_role`. La edge function `facturapi-webhook` intenta el `INSERT` antes de procesar el evento y, si Postgres devuelve `23505` (unique_violation), responde `{ ok: true, ignored: "duplicate_event" }`. FacturAPI reintenta hasta 10× ante 5xx; ahora estados de factura y pagos REP no se duplican.
+  - **Tests:** 55/55 pasan en `costosUSD` + `useCostosPreciosCalc`. Typecheck limpio.
+
 ## [13.303.51] - 2026-07-21
+
 - **Fase 3 · Búsquedas seguras, logs sin PII y credenciales de test (FIX-24 · FIX-42 · FIX-01 residual · auditoría v2-2).**
   - **FIX-24 — Escape de `ilike`:** nuevo módulo `src/lib/search/ilike.ts` con `escapeIlike()`, `ilikePattern()` y `orIlike()`. Escapa `\`, `%`, `_` para tratar el input del usuario como literal, y envuelve valores con `,`/`(`/`)`/`"` entre comillas dobles (escapando internas como `""`) para no romper el parser de `.or()` de PostgREST. Migrados 8 call-sites: `facturacion/services/cobranza.ts`, `cxp/services/proveedorFacturas.ts`, `crm/services/search.ts`, `crm/services/prospectoSearch.ts`, `crm/services/oportunidades.ts`, `crm/services/leads/queries.ts`, `crm/services/actividades.ts`, `admin/services/observability.ts`. Antes: un usuario tecleando `%`, `_` o `,` obtenía resultados incorrectos o rompía la query; ahora búsqueda literal siempre.
   - **FIX-42 — Redacción de PII y secretos en logs:** nuevo `src/lib/logging/redact.ts` (enmascara `authorization`, `api_key`, `token`, `access_token`, `refresh_token`, `password`, `cookie`, `rfc`, `email`, `curp`, `telefono` en objetos anidados hasta 6 niveles; trunca strings > 500 chars; enmascara emails embebidos como `h***@dominio`), más `safeLog.warn/error(msg, ctx)` que aplica `redact` antes de escribir en consola. Idempotente y defensivo (nunca lanza).
