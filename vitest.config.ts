@@ -43,7 +43,6 @@ export default defineConfig({
     isolate: true,
     execArgv: ["--max-old-space-size=8192", "--expose-gc"],
     fileParallelism: false,
-    isolate: true,
     sequence: { shuffle: false },
     coverage: {
       provider: "v8",
