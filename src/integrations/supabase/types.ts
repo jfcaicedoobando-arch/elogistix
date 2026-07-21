@@ -7059,8 +7059,10 @@ export type Database = {
           email: string
           estado: string
           id: string
+          limite_credito_mxn: number
           nombre: string
           rfc: string
+          saldo_pendiente_mxn: number
           telefono: string
           total_cotizaciones: number
           total_count: number
