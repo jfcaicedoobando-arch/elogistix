@@ -32,17 +32,19 @@ export interface DashboardEjecutivoKpis {
   facturas_sin_tc: number;
 }
 
-// FIX-12 · Buckets de mes en zona America/Mexico_City: entre 18:00–23:59 CDMX
-// el `toISOString()` retornaba el día siguiente en UTC y las facturas del día
-// aparecían en el mes que no era.
-import { hoyMx, ymMx } from "@/lib/date/mx";
+// FIX-12 · Los helpers `ymd`/`ym` operan sobre `Date` construidos con `Date.UTC(...)`
+// (inicios de mes UTC), así que deben leerse en UTC — de lo contrario CDMX corre
+// "junio 01 00:00Z" a "mayo 31" y las etiquetas de rango se desalinean.
+// La corrección real de zona horaria se aplica al `hoy` de negocio en el caller
+// (parseLocalMx(hoyMx()) antes de derivar rangos).
+import { hoyMx, parseLocalMx } from "@/lib/date/mx";
 
 function ymd(d: Date): string {
-  return hoyMx(d);
+  return d.toISOString().slice(0, 10);
 }
 
 function ym(d: Date): string {
-  return ymMx(d);
+  return d.toISOString().slice(0, 7);
 }
 
 function inicioMes(d: Date): Date {
@@ -117,7 +119,12 @@ export async function fetchDashboardEjecutivoFacturacion(
   fallbackUsdMxn: number | null = null,
   hoy: Date = new Date(),
 ): Promise<DashboardEjecutivoKpis> {
-  const { desde, rangos } = ultimosNMeses(6, hoy);
+  // FIX-12 · Ancla "hoy" al día CDMX antes de derivar los rangos de mes.
+  // A las 22:00 CDMX del último día del mes, el `new Date()` en UTC ya está en
+  // el mes siguiente, y "Facturado del mes" arrancaba en el mes equivocado.
+  const hoyLocal = parseLocalMx(hoyMx(hoy));
+  const hoyUtc = new Date(Date.UTC(hoyLocal.getFullYear(), hoyLocal.getMonth(), hoyLocal.getDate()));
+  const { desde, rangos } = ultimosNMeses(6, hoyUtc);
   const desdeIso = ymd(desde);
   const fallback = Number(fallbackUsdMxn ?? 0) || 0;
 
