@@ -94,8 +94,27 @@ export async function vincularSafe(params: {
         fechaEmision: values.emision,
         lineas,
       });
+      // v13.303.97: Reflejar diferencias factura vs devengado como ajustes de costo en el embarque.
+      let ajustesCreados = 0;
+      if (values.provId) {
+        try {
+          const r = await crearAjustesFacturaProveedor({
+            facturaId, organizationId,
+            folio: values.folio.trim(),
+            fechaEmision: values.emision,
+            moneda: values.moneda,
+            proveedorId: values.provId,
+            proveedorNombre: values.provNombre,
+            vinculos,
+          });
+          ajustesCreados = r.ajustesCreados;
+        } catch (ajErr) {
+          const err = ajErr as { message?: string };
+          toast.warning(`Factura guardada pero los ajustes de costo fallaron: ${err.message ?? "error"}`);
+        }
+      }
       // Fase P.3: la liquidación la determina el trigger en BD a partir de pagos.
-      return { liquidados: 0 };
+      return { liquidados: 0, ajustesCreados };
     } catch (linkErr) {
       const err = linkErr as { message?: string };
       toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
