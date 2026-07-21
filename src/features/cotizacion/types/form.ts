@@ -189,6 +189,10 @@ export interface CotizacionInitialData {
   lcl_minimo_flete?: number | null;
   lcl_dias_libres_almacenaje?: number | null;
   lcl_consolidador_id?: string | null;
+  agente_id?: string | null;
+  agente_nombre?: string | null;
+  naviera_id?: string | null;
+  naviera_nombre?: string | null;
 }
 
 export interface CotizacionInitialCosto {
