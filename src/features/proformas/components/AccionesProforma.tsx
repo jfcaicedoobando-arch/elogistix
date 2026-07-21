@@ -59,12 +59,18 @@ function computarFlags(
   };
 }
 
+function fmtMxn(v: number): string {
+  return v.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+}
+
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {
   const cargando = downloadingId === proforma.id;
   const [enviarOpen, setEnviarOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState<null | "aceptada" | "rechazada">(null);
+  const [creditoAlerta, setCreditoAlerta] = useState<ValidarLimiteResultado | null>(null);
   const { canEmitirFactura, canResponderProformaManual } = usePermissions();
   const { convertir, isPending: convirtiendo } = useConvertirProformaDirecto();
+  const validarLimite = useValidarLimiteCredito();
 
   const { facturada, puedeConvertir, puedeResponder, mostrarHint } = computarFlags(
     proforma,
@@ -72,11 +78,48 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
     canResponderProformaManual,
   );
 
-  const onConvertir = () => convertir({
-    proformaIds: [proforma.id],
-    organizationId: proforma.organization_id,
-    diasCredito: proforma.dias_credito ?? 0,
-  });
+  const ejecutarConversion = () =>
+    convertir({
+      proformaIds: [proforma.id],
+      organizationId: proforma.organization_id,
+      diasCredito: proforma.dias_credito ?? 0,
+    });
+
+  const onConvertir = async () => {
+    if (!proforma.cliente_id) {
+      ejecutarConversion();
+      return;
+    }
+    try {
+      const resultado = await validarLimite({
+        clienteId: proforma.cliente_id,
+        clienteNombre: proforma.cliente_nombre,
+        montoAdicionalMxn: Number(proforma.total_mxn ?? 0),
+      });
+      if (resultado?.rebasa) {
+        setCreditoAlerta(resultado);
+        return;
+      }
+    } catch (err) {
+      // Falla silenciosa: no bloqueamos la conversión por un error de validación.
+      notifyError(undefined, { title: "No se pudo validar el límite de crédito", error: err });
+    }
+    ejecutarConversion();
+  };
+
+  const onConfirmarExceso = async () => {
+    if (!creditoAlerta || !proforma.cliente_id) return;
+    await registrarExcesoCredito({
+      clienteId: proforma.cliente_id,
+      clienteNombre: proforma.cliente_nombre,
+      totalProyectadoMxn: creditoAlerta.totalProyectadoMxn,
+      limiteMxn: creditoAlerta.exposicion.limiteMxn ?? 0,
+      excedenteMxn: creditoAlerta.excedentePotencialMxn,
+      origen: "proforma_convertir",
+    });
+    setCreditoAlerta(null);
+    ejecutarConversion();
+  };
 
   const primary: DetalleActionItem | null = puedeConvertir
     ? { id: "convertir", label: "Convertir a factura", icon: Receipt, onClick: onConvertir, loading: convirtiendo }
@@ -125,6 +168,30 @@ export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props
           modo={manualOpen}
         />
       )}
+      <ConfirmActionDialog
+        open={!!creditoAlerta}
+        onOpenChange={(o) => { if (!o) setCreditoAlerta(null); }}
+        title="Límite de crédito excedido"
+        titleIcon={<AlertTriangle className="h-5 w-5 text-warning" />}
+        confirmLabel="Facturar de todas formas"
+        cancelLabel="Cancelar"
+        size="md"
+        onConfirm={onConfirmarExceso}
+        description={creditoAlerta ? (
+          <div className="space-y-1 text-sm">
+            <p>
+              <strong>{proforma.cliente_nombre ?? "El cliente"}</strong> excederá su límite en
+              {" "}<strong>{fmtMxn(creditoAlerta.excedentePotencialMxn)}</strong>.
+            </p>
+            <p className="text-muted-foreground">
+              Límite: {fmtMxn(creditoAlerta.exposicion.limiteMxn ?? 0)} · En uso: {fmtMxn(creditoAlerta.exposicion.enUsoMxn)} · Nueva factura: {fmtMxn(Number(proforma.total_mxn ?? 0))}
+            </p>
+            <p className="text-xs text-muted-foreground pt-2">
+              Se registrará en bitácora que continuaste a pesar del exceso.
+            </p>
+          </div>
+        ) : null}
+      />
     </div>
   );
 }
