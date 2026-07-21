@@ -1,6 +1,9 @@
 # Changelog
 # Changelog
 
+## [13.303.37] - 2026-07-21
+- **Fix · doble toast al guardar embarque.** `useUpdateEmbarque` disparaba `notifySuccess("Embarque actualizado")` además del toast descriptivo de `useEditarEmbarqueWizard` (`ELIMPXXXXX guardado correctamente.`). Se elimina el toast del mutation base; ahora solo el caller (wizard/detalle) es responsable del feedback visual.
+
 ## [13.303.36] - 2026-07-21
 - **UX · se elimina la carta informativa de "Totales calculados desde contenedores" en `BloqueMercancia.tsx`.** El resumen de peso/volumen/piezas y el mensaje explicativo se quitan del paso 1 del wizard; los totales marítimos siguen calculándose internamente a partir de los contenedores del paso 2, pero ya no ocupan espacio en la UI. Ajuste menor en la condición de render para que los campos manuales solo aparezcan en modos aéreo/terrestre.
 
