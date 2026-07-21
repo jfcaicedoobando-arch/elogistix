@@ -219,6 +219,9 @@ Deno.serve(wrapEdgeHandler("facturapi-descargar", async (req) => {
       ...corsHeaders,
       "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${filename}"`,
+      // Sin esto, fetch() en el navegador no puede leer Content-Disposition
+      // por CORS y el cliente cae al filename por defecto `cfdi.pdf`.
+      "Access-Control-Expose-Headers": "Content-Disposition",
       "Cache-Control": "private, max-age=0, no-store",
     },
   });
