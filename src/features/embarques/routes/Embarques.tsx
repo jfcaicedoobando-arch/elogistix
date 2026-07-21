@@ -7,6 +7,7 @@ import { ResponsiveDataTable } from "@/components/shared/dataTable/ResponsiveDat
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
+import { ErrorState } from "@/components/shared/states/ErrorState";
 
 import EmbarquesFiltros from "@/features/embarques/components/EmbarquesFiltros";
 import { EmbarquesAlertasPanel } from "@/features/embarques/components/EmbarquesAlertasPanel";
