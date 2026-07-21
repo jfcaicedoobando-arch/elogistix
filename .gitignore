@@ -28,3 +28,7 @@ e2e/.auth/
 playwright-report/
 test-results/
 e2e/.tmp/
+
+# Reports y archivos generados por auditoría (no deben trackear)
+.lovable/
+reports/junit.xml
