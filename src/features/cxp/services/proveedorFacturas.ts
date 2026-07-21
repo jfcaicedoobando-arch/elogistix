@@ -107,7 +107,7 @@ export async function fetchFacturasCxP(filtros: FetchCxPFiltros = {}): Promise<F
   if (filtros.fecha_desde) q = q.gte("fecha_emision", filtros.fecha_desde);
   if (filtros.fecha_hasta) q = q.lte("fecha_emision", filtros.fecha_hasta);
   if (filtros.search) {
-    q = q.or(`folio_interno.ilike.%${filtros.search}%,folio_proveedor.ilike.%${filtros.search}%,proveedor_nombre.ilike.%${filtros.search}%`);
+    q = q.or(orIlike(["folio_interno", "folio_proveedor", "proveedor_nombre"], filtros.search));
   }
 
   const { data, error } = await q;

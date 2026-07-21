@@ -94,7 +94,7 @@ export async function fetchCobranza(filtros: FetchCobranzaFilters = {}): Promise
   if (filtros.cliente_id) query = query.eq("cliente_id", filtros.cliente_id);
   if (filtros.moneda && filtros.moneda !== "todas") query = query.eq("moneda", filtros.moneda);
   if (filtros.search) {
-    query = query.or(`numero.ilike.%${filtros.search}%,cliente_nombre.ilike.%${filtros.search}%`);
+    query = query.or(orIlike(["numero", "cliente_nombre"], filtros.search));
   }
 
   const { data, error } = await query;
