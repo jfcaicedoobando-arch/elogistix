@@ -64,7 +64,7 @@ export function useCargaPdfIa({ categorias, onParsed }: Args) {
       notifyError(toast, {
         title,
         error: e,
-        context: e instanceof CfdiUploadError ? e.context : { pdfName: pdf.name, pdfSize: pdf.size },
+        context: e instanceof CfdiUploadError ? { ...e.context } as Record<string, unknown> : { pdfName: pdf.name, pdfSize: pdf.size },
         method: "FEATURES_CXP_HOOKS_USECARGAPDFIA_ERR",
       });
     } finally {
