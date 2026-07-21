@@ -33,10 +33,20 @@ export function buildClientesColumns(): ColumnDef<ClienteRow, unknown>[] {
       meta: { width: "min-w-[240px]", className: "font-medium", sticky: true },
       cell: ({ row }) => {
         const nombre = toTitleCase(row.original.nombre ?? "");
+        const limite = row.original.limite_credito_mxn ?? null;
+        const saldo = Number(row.original.saldo_pendiente_mxn ?? 0);
+        const excedido = limite != null && limite > 0 && saldo > limite;
         return (
-          <span className="block whitespace-normal break-words leading-snug" title={nombre}>
-            {nombre}
-          </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="block whitespace-normal break-words leading-snug truncate" title={nombre}>
+              {nombre}
+            </span>
+            {excedido && (
+              <Badge variant="destructive" className="shrink-0 text-[10px] px-1.5 py-0">
+                Crédito excedido
+              </Badge>
+            )}
+          </div>
         );
       },
     },
