@@ -163,7 +163,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       await reabrirEmbarque.mutateAsync({ embarqueId: id, usuarioEmail });
       registrarActividad.mutate({
         accion: 'reabrir_embarque', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: embarque.expediente,
+        entidad_id: id, entidad_nombre: labelExpediente(embarque.expediente, embarque.id),
         detalles: { estado_anterior: 'Cerrado', estado_nuevo: 'Entregado' },
       });
       notifySuccess(toast, { title: "Embarque reabierto", description: "Ahora puedes generar la proforma o ajustar facturación." });
