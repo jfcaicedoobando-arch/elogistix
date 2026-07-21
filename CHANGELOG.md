@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.303.61] - 2026-07-21
+- **chore(ci) · suite verde.** Divididos `DialogNuevaFacturaManual.tsx`, `DialogEditarCliente.tsx`, `crud.ts` y `TabTracking.tsx` bajo 200 líneas (Power of 10). Extraídos `calcularTotalMxn`, `useClientesFiscalOpts` (query wrapper) + `services/clientesFiscalOpts` (sin `supabase` en hooks), `CondicionesCreditoSection` y `exposicionCredito`. Corregido `parseLocalMx` para operar en UTC 12:00 y añadido `addDaysMx`, eliminando desfase de zona horaria en `huecoFacturacion`.
+
+
 ## [13.303.60] - 2026-07-21
 - **chore(lint) · 0 warnings restaurado.** Movido `parseInputNumero` a `src/features/cotizacion/utils/` (fast-refresh), reducida la complejidad de `ClienteCreditoCard` extrayendo `buildVista`, extraído `CreditoExcesoConfirmDialog.tsx` desde `DialogNuevaFacturaManual` (líneas y complejidad), y quitado el `eslint-disable` de `usePagoProveedorForm` explicitando dependencias del `useEffect` de re-cálculo de monto.
 
