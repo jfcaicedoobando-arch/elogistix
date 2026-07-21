@@ -6657,16 +6657,26 @@ export type Database = {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
         Returns: Json
       }
-      actualizar_embarque_completo: {
-        Args: {
-          p_conceptos_costo?: Json
-          p_conceptos_venta?: Json
-          p_embarque: Json
-          p_embarque_id: string
-          p_request_id?: string
-        }
-        Returns: Json
-      }
+      actualizar_embarque_completo:
+        | {
+            Args: {
+              p_conceptos_costo?: Json
+              p_conceptos_venta?: Json
+              p_embarque: Json
+              p_embarque_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_conceptos_costo?: Json
+              p_conceptos_venta?: Json
+              p_embarque: Json
+              p_embarque_id: string
+              p_request_id?: string
+            }
+            Returns: Json
+          }
       actualizar_estado_cliente_proforma: {
         Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
         Returns: Json
@@ -7256,16 +7266,26 @@ export type Database = {
             }
             Returns: string
           }
-      crear_embarque_completo: {
-        Args: {
-          p_conceptos_costo?: Json
-          p_conceptos_venta?: Json
-          p_documentos?: Json
-          p_embarque: Json
-          p_request_id?: string
-        }
-        Returns: Json
-      }
+      crear_embarque_completo:
+        | {
+            Args: {
+              p_conceptos_costo?: Json
+              p_conceptos_venta?: Json
+              p_documentos?: Json
+              p_embarque: Json
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_conceptos_costo?: Json
+              p_conceptos_venta?: Json
+              p_documentos?: Json
+              p_embarque: Json
+              p_request_id?: string
+            }
+            Returns: Json
+          }
       crear_proforma_atomica: {
         Args: {
           p_bl_master: string
