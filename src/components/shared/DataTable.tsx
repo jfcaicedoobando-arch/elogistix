@@ -87,7 +87,7 @@ function mergeDataTableProps<T>(raw: DataTableProps<T>) {
   for (const [k, v] of Object.entries(raw)) {
     if (v !== undefined) merged[k] = v;
   }
-  return merged as DataTableProps<T> & typeof DATA_TABLE_DEFAULTS;
+  return merged as unknown as DataTableProps<T> & typeof DATA_TABLE_DEFAULTS;
 }
 
 function DataTableInner<T>(rawProps: DataTableProps<T>) {
