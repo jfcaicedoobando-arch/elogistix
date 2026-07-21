@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.86] - 2026-07-21
+- **fix(crédito) — Validación de límite de crédito rota por rol inexistente.** La RPC `get_exposicion_credito_cliente` intentaba escalar a `has_role(auth.uid(), 'owner'::app_role)`, pero el enum `app_role` no tiene ese valor (el rol dueño de la plataforma es `super_admin`). Postgres devolvía `22P02: invalid input value for enum app_role: "owner"` y el modal de proforma mostraba "No se pudo validar el límite de crédito". Se corrige la función para usar `super_admin`. Analogía: la puerta pedía la llave "dueño", pero en el llavero de la casa esa copia se llama "super_admin"; ahora coinciden. Ref Sentry request `a15fcd7d`.
+
 ## [13.303.85] - 2026-07-21
 - **fix(cxp) — Doble toast al capturar factura de proveedor con UUID duplicado.** `useCrearFacturaProveedor` emitía un `notifyError` genérico en `onError` y, en paralelo, `runSubmit`/`handleSubmitError` mostraba el toast traducido ("CFDI duplicado"). Se elimina el toast del `onError` de la mutación; el flujo de submit ya centraliza el mensaje con contexto (código `23505` / `uuid_fiscal`). Analogía: teníamos dos meseros gritando el mismo pedido; ahora sólo grita el que sabe la receta traducida. Ref Sentry request `3e7fcca6`.
 
