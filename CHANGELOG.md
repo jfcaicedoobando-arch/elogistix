@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.65] - 2026-07-21
+- **fix(cxp) · Doble toast al subir CFDI (verde "procesado" + rojo "no cuadra").** `useCargaCfdi.procesar()` disparaba `toast.success("CFDI procesado")` inmediatamente después de invocar `onParsed`, sin esperar su resultado; el consumidor (`handleCfdiParsed`) validaba el cuadre fiscal asíncronamente y podía emitir un error, quedando ambos toasts en pantalla. Ahora `onParsed` puede devolver `false` para señalar rechazo y el hook suprime el toast de éxito en ese caso.
+
 ## [13.303.64] - 2026-07-21
 - **chore(audit) · Cero casts HIGH/CRITICAL en auditoría.** `redact.ts` usaba 5 `as unknown as T` legítimos (helper genérico que preserva shape del input); añadidos marcadores `// SAFE-CAST:` para degradarlos a LOW por política. Baseline `audit-report` vuelve a verde.
 
