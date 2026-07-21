@@ -94,7 +94,16 @@ export function PagoProveedorFormBody(p: Props) {
         </div>
 
         <PagoSaldoRestante factura={p.factura} saldoRestante={p.saldoRestante} excede={p.excede} />
+
+        {p.esUsdPagadoEnMxn && p.factura && (
+          <p className="text-xs text-muted-foreground">
+            {p.bloqueadoPorTc
+              ? "Captura el tipo de cambio para validar el pago contra el saldo en " + p.factura.moneda + "."
+              : `≈ ${p.factura.moneda} ${p.montoEnMonedaFactura.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al TC capturado.`}
+          </p>
+        )}
       </FormSection>
+
 
       {p.esUsdPagadoEnMxn && (
         <FormSection title="Diferencia cambiaria">
