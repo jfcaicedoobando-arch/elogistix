@@ -114,8 +114,12 @@ export function PagoProveedorFormBody(p: Props) {
         <FormSection title="Diferencia cambiaria">
           <div className="space-y-1">
             <Label>Diferencia cambiaria MXN (opcional)</Label>
-            <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
-              value={p.diffMxn} onChange={(e) => p.setDiffMxn(e.target.value)} />
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+              <Input type="number" step="0.01" inputMode="decimal" placeholder="0.00"
+                className="pl-7 text-right tabular-nums"
+                value={p.diffMxn} onChange={(e) => p.setDiffMxn(e.target.value)} />
+            </div>
             <p className="text-xs text-muted-foreground">
               Captura la diferencia cambiaria entre el TC de la factura y el TC del pago.
             </p>
