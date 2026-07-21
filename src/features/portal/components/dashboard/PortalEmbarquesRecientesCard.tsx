@@ -8,6 +8,7 @@ import { ROUTES } from "@/constants/routes";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
+import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 import { cn } from "@/lib/utils";
