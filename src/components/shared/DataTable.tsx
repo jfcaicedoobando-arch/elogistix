@@ -194,21 +194,9 @@ function DataTableInner<T>({
   );
 }
 
-
-
-
 /**
- * DataTable — tabla genérica del ERP.
- *
- * API única: `ColumnDef<T, unknown>[]` de `@tanstack/react-table` v8.
- * Construir columnas con `defineColumns<T>([...])` para conservar la
- * augmentación de `meta` (`LibreCargaColumnMeta`: width, align, sticky,
- * className, headerClassName).
- *
- * Sort: `sortMode="server"` (default real de los call-sites) delega el
- * orden al RPC vía `controlledSort` + `onSortChange`; `sortMode="client"`
- * usa `getSortedRowModel` de TanStack. En ningún caso debe reaparecer un
- * `useMemo([...data].sort(...))` ni un `useEffect` que rehidrate orden:
- * TanStack es la única fuente de verdad.
+ * DataTable — tabla genérica del ERP. API única: `ColumnDef<T, unknown>[]`.
+ * Construir con `defineColumns<T>([...])` para conservar `meta` extendido.
+ * Sort: `sortMode="server"` delega al RPC vía `controlledSort`+`onSortChange`.
  */
 export const DataTable = DataTableInner;
