@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.70] - 2026-07-21
+- **fix(rls) · Soft delete de `proveedor_facturas` volvía a fallar.** El fix de v13.303.68 dejó `WITH CHECK = true`, pero la política `Hide soft deleted proveedor_facturas` seguía siendo `FOR ALL RESTRICTIVE`, así que en el UPDATE de soft-delete PostgREST seguía marcando `42501 "new row violates row-level security policy"` (requestId `3f004730-3d80-47ca-bf13-8cac37bcc8a8`). Convertida la política a `FOR SELECT` (su intención real: ocultar filas borradas en lecturas). Los permisos de escritura por tenant/rol siguen viviendo en `Tenant CRUD proveedor_facturas`.
+
 ## [13.303.69] - 2026-07-21
 - **fix(edge/verificar-uuid-sat) · Embed inexistente hacia `organizations`.** `proveedor_facturas` no tiene FK a `organizations`, así que `select("...organizations:organization_id(rfc)")` reventaba con `PGRST200` ("Could not find a relationship... in the schema cache"), devolviendo 404 `factura_not_found`. Reemplazado el embed por una consulta separada `fetchOrgRfc(orgId)` en `loadFacturaCxp` y `loadFacturaCxc`.
 
