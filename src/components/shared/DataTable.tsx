@@ -101,13 +101,7 @@ function DataTableInner<T>(rawProps: DataTableProps<T>) {
     striped, hoverable, bordered, tableClassName, stickyHeader,
   } = mergeDataTableProps(rawProps);
 
-    density = DATA_TABLE_DEFAULTS.density,
-    striped = DATA_TABLE_DEFAULTS.striped,
-    hoverable = DATA_TABLE_DEFAULTS.hoverable,
-    bordered = DATA_TABLE_DEFAULTS.bordered,
-    tableClassName = DATA_TABLE_DEFAULTS.tableClassName,
-    stickyHeader = DATA_TABLE_DEFAULTS.stickyHeader,
-  } = rawProps;
+
 
   const table = useTableInstance<T>({
     data,
