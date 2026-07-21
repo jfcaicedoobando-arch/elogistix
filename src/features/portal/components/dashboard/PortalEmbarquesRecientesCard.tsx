@@ -71,7 +71,7 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
 function EmbarqueRecienteRow({ e, estadoVisual }: { e: EmbarqueItem; estadoVisual: string }) {
   const nav = useDrilldownRow({
     href: `/portal/embarques/${e.id}`,
-    ariaLabel: `Ver embarque ${e.expediente}`,
+    ariaLabel: `Ver embarque ${labelExpediente(e.expediente, e.id)}`,
   });
   return (
     <div
@@ -81,7 +81,7 @@ function EmbarqueRecienteRow({ e, estadoVisual }: { e: EmbarqueItem; estadoVisua
       <div className="flex items-center gap-3 min-w-0">
         <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
         <div className="min-w-0">
-          <p className="font-medium text-sm">{e.expediente}</p>
+          <p className="font-medium text-sm">{labelExpediente(e.expediente, e.id)}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Clock className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">
