@@ -41,6 +41,9 @@ export interface ExchangeRates {
   /** Fecha (ISO YYYY-MM-DD) del FIX efectivamente aplicado por Banxico. Sólo
    *  la edge la devuelve; puede quedar undefined si viene del fallback. */
   fechaAplicada?: string;
+  /** FIX-10: `true` si los valores vienen del fallback (Banxico caído, sin token,
+   *  error de red). Los flujos fiscales DEBEN rechazar rates con este flag. */
+  esFallback?: boolean;
 }
 
 // ─── Navieras ────────────────────────────────────────────────────────────────
@@ -106,7 +109,7 @@ export async function deleteTipoContenedor(id: string): Promise<void> {
 
 // ─── Tipo de cambio (edge function) ──────────────────────────────────────────
 
-const EXCHANGE_RATES_FALLBACK: ExchangeRates = { usdMxn: 17.25, eurMxn: 18.5 };
+const EXCHANGE_RATES_FALLBACK: ExchangeRates = { usdMxn: 17.25, eurMxn: 18.5, esFallback: true };
 
 /**
  * @param fecha ISO `YYYY-MM-DD` opcional. Si se provee y es anterior a hoy,
@@ -147,6 +150,8 @@ export async function fetchExchangeRates(fecha?: string): Promise<ExchangeRates>
     usdMxn: data?.usdMxn ?? EXCHANGE_RATES_FALLBACK.usdMxn,
     eurMxn: data?.eurMxn ?? EXCHANGE_RATES_FALLBACK.eurMxn,
     fechaAplicada: data?.fechaAplicada,
+    // FIX-10: la edge usa snake_case (`es_fallback`), el cliente camelCase.
+    esFallback: data?.es_fallback === true,
   };
 }
 

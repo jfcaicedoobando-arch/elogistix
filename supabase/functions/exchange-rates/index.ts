@@ -24,7 +24,13 @@ import { jsonResponse } from "../_shared/response.ts";
 import { createLogger } from "../_shared/logger.ts";
 import { wrapEdgeHandler } from "../_shared/sentry.ts";
 
-export const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5 };
+/**
+ * FIX-10 (auditoría): el fallback jamás debe presentarse como TC "real". Los
+ * consumidores fiscales (facturas, NCs, pagos) deben rechazar `es_fallback:
+ * true` y forzar reintento. Se mantienen los números 17.25/18.5 sólo para
+ * cálculos operativos no fiscales que sí toleran una estimación.
+ */
+export const FALLBACK = { usdMxn: 17.25, eurMxn: 18.5, es_fallback: true } as const;
 const FETCH_TIMEOUT_MS = 6000;
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
 const RANGO_DIAS = 10; // cubre fines de semana y feriados
@@ -235,10 +241,17 @@ Deno.serve(wrapEdgeHandler("exchange-rates", async (req) => {
       fetchUsdDof(token, ctrl.signal, fecha),
       fetchEurBanxico(token, ctrl.signal, fecha, esHoy),
     ]);
+    // FIX-10: si Banxico no devolvió TC USD (fiscal), respondemos fallback marcado
+    // como `es_fallback: true` para que el cliente lo rechace en flujos fiscales.
+    if (usd.tc == null) {
+      log.finish(200, "rates_fallback_usd_missing", { payload: FALLBACK });
+      return jsonResponse(FALLBACK);
+    }
     const rates = {
-      usdMxn: usd.tc ?? FALLBACK.usdMxn,
+      usdMxn: usd.tc,
       eurMxn: eurMxn ?? FALLBACK.eurMxn,
       fechaAplicada: usd.fechaAplicada,
+      es_fallback: false as const,
     };
     if (esHoy) {
       cacheHoyRef = { rates, expiresAt: Date.now() + CACHE_TTL_MS };
