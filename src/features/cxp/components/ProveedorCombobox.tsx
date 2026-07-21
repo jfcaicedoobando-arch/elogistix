@@ -38,7 +38,10 @@ export function ProveedorCombobox({ value, onChange, placeholder = "Selecciona p
       <PopoverContent className="p-0" align="start">
         <Command>
           <CommandInput placeholder="Buscar proveedor…" />
-          <CommandList>
+          <CommandList
+            className="overscroll-contain"
+            onWheel={(e) => e.stopPropagation()}
+          >
             <CommandEmpty>Sin resultados.</CommandEmpty>
             <CommandGroup>
               {items.map((i) => (
