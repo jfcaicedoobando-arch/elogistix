@@ -1,6 +1,9 @@
 # Changelog
 # Changelog
 
+## [13.303.40] - 2026-07-21
+- **Fix · CI shard 2 (`embarqueCotizacion.test.ts`).** El test "desvincular limpia un superset que incluye los campos de vincular (marítimo)" fallaba porque en v13.303.35 se agregaron `agenteId`, `agente`, `navieraId` y `naviera` a `buildVincularCotizacionUpdates` (herencia desde tarifa) pero no se sumaron a `DESVINCULAR_DEFAULTS`. Se agregan los cuatro campos al desvincular (IDs a `null`, textos a `""`) para restaurar la invariante superset y evitar dejar agente/naviera colgados al romper el vínculo.
+
 ## [13.303.39] - 2026-07-21
 - **Fix · regresión merge-por-id de conceptos en `actualizar_embarque_completo` (guardrail ELIMP00195).** La migración de v13.303.35 sobrescribió la RPC con la versión legacy que hacía `DELETE + INSERT` sobre `conceptos_venta`/`conceptos_costo`, rompiendo trazabilidad con proformas/facturas y disparando el test `rpc-no-destructive-conceptos.test.ts`. Se restablece el patrón no destructivo (merge por `id`, soft-delete con guardas de facturación/liquidación, idempotencia con `p_request_id` y `_assert_writer`) preservando los nuevos campos `agente_id`/`naviera_id`.
 
