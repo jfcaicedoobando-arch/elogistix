@@ -22,9 +22,12 @@ export interface DatosFiscalesValue {
 interface Props {
   value: DatosFiscalesValue;
   onChange: (patch: Partial<DatosFiscalesValue>) => void;
+  /** Cuando true, los días de crédito se muestran readonly (source of truth = perfil del cliente). */
+  diasReadonly?: boolean;
+  diasReadonlyReason?: string;
 }
 
-export function FacturaManualDatosFiscales({ value, onChange }: Props) {
+export function FacturaManualDatosFiscales({ value, onChange, diasReadonly, diasReadonlyReason }: Props) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div>
@@ -44,7 +47,13 @@ export function FacturaManualDatosFiscales({ value, onChange }: Props) {
         <Input
           type="number" min={0} max={365} value={value.diasCredito}
           onChange={(e) => onChange({ diasCredito: Math.max(0, Number(e.target.value) || 0) })}
+          readOnly={diasReadonly}
+          disabled={diasReadonly}
+          title={diasReadonly ? diasReadonlyReason : undefined}
         />
+        {diasReadonly && diasReadonlyReason && (
+          <p className="text-[11px] text-muted-foreground mt-1">{diasReadonlyReason}</p>
+        )}
       </div>
       <div>
         <Label>Moneda</Label>

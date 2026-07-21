@@ -36,6 +36,8 @@ export interface ClienteListItem {
   telefono: string;
   email: string;
   dias_credito: number | null;
+  limite_credito_mxn: number | null;
+  saldo_pendiente_mxn: number;
   total_embarques: number;
   total_cotizaciones: number;
   deuda_pendiente: number;
@@ -71,6 +73,8 @@ export async function fetchClientesPaginados({
     telefono: string | null;
     email: string | null;
     dias_credito: number | null;
+    limite_credito_mxn: number | string | null;
+    saldo_pendiente_mxn: number | string | null;
     total_embarques: number | string;
     total_cotizaciones: number | string;
     deuda_pendiente: number | string;
@@ -88,6 +92,8 @@ export async function fetchClientesPaginados({
     telefono: r.telefono ?? "",
     email: r.email ?? "",
     dias_credito: r.dias_credito,
+    limite_credito_mxn: r.limite_credito_mxn == null ? null : Number(r.limite_credito_mxn),
+    saldo_pendiente_mxn: Number(r.saldo_pendiente_mxn ?? 0),
     total_embarques: Number(r.total_embarques),
     total_cotizaciones: Number(r.total_cotizaciones),
     deuda_pendiente: Number(r.deuda_pendiente),
