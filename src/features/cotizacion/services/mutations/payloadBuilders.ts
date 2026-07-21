@@ -80,11 +80,11 @@ function partesTarifaInsert(input: CreateCotizacionInput) {
 }
 
 function partesAgenteNavieraInsert(input: CreateCotizacionInput) {
+  // NOTA: `cotizaciones` sólo tiene `agente_id` y `naviera_id`. Los nombres
+  // se resuelven vía JOIN en las vistas (PGRST204 si se envían). v13.303.62.
   return {
     agente_id: input.agente_id ?? null,
-    agente_nombre: input.agente_nombre ?? null,
     naviera_id: input.naviera_id ?? null,
-    naviera_nombre: input.naviera_nombre ?? null,
   };
 }
 
