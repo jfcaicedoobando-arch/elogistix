@@ -13,6 +13,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { orIlike } from "@/lib/search/ilike";
 
 // Re-export de agregados puros (extraídos a `cobranzaAggregates.ts` en 12.61.18).
 export {
