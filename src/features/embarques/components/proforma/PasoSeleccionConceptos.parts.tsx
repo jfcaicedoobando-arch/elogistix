@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
+
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
