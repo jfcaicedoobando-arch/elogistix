@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.84] - 2026-07-21
+- **fix(tests · CI) — 4 guardrails en verde.** `mesKey` (CRM forecast) e `isoWeekKey` (Tesorería flujo proyectado) ahora leen la fecha en UTC (`getUTC*`), evitando que un runner en `America/Mexico_City` mueva días fronterizos al mes/semana anterior. La allowlist de `no-raw-table` se sincroniza con el split del DataTable (se removió `DataTable.tsx`, se agregó `dataTable/DataTableContent.tsx`). `queryClient.ts` queda en la allowlist de `error-toasts-use-notifyError` (dedupe por queryKey, no queremos duración infinita ni "Ver detalles" en cada hiccup de red). Analogía: como un reloj que se puso en hora universal para que todos los relojes locales digan lo mismo.
+
 ## [13.303.83] - 2026-07-21
 - **fix(ux/copy) · Carta de Demoras por contenedor.** Se reescribió el texto de ayuda para que sea más claro, corto y directo: se elimina el lenguaje técnico redundante ("override", "default", "tabulador escalonado") y se explica que los campos vacíos usan el timeline del embarque y que "Días libres" solo aplica cuando se captura. Afecta `src/features/embarques/components/TabDemoras.tsx`.
 

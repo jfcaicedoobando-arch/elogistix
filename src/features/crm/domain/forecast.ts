@@ -39,7 +39,9 @@ export function mesKey(d: string | null): string {
   if (!d) return "Sin fecha";
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return "Sin fecha";
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+  // v13.303.84 — leer año/mes en UTC para no colar días fronterizos al mes
+  // anterior cuando el runner corre en TZ negativa (America/Mexico_City).
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 export function mesLabel(k: string): string {
