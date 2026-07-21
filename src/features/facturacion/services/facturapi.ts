@@ -67,16 +67,23 @@ export class FacturaConRepsVivosError extends Error {
 }
 
 async function assertSinRepsVivos(facturaId: string): Promise<void> {
-  const { count, error } = await supabase
-    .from("pagos_factura")
-    .select("id", { count: "exact", head: true })
-    .eq("factura_id", facturaId)
-    .not("uuid_rep", "is", null)
-    .is("rep_cancelado_en", null)
-    .is("deleted_at", null);
-  if (error) return; // defensa temprana; si falla, la BD lo bloqueará igual
-  if ((count ?? 0) > 0) throw new FacturaConRepsVivosError(count ?? 0);
+  try {
+    const { count, error } = await supabase
+      .from("pagos_factura")
+      .select("id", { count: "exact", head: true })
+      .eq("factura_id", facturaId)
+      .not("uuid_rep", "is", null)
+      .is("rep_cancelado_en", null)
+      .is("deleted_at", null);
+    if (error) return; // defensa temprana; si falla, la BD lo bloqueará igual
+    if ((count ?? 0) > 0) throw new FacturaConRepsVivosError(count ?? 0);
+  } catch (err) {
+    if (err instanceof FacturaConRepsVivosError) throw err;
+    // Cualquier otro error en el pre-check no debe bloquear la cancelación;
+    // la guarda de BD (LC_FACTURA_CON_REP_VIVO) sigue siendo la fuente de verdad.
+  }
 }
+
 
 export async function cancelarFacturapi(
   facturaId: string,
