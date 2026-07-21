@@ -92,14 +92,19 @@ export interface ArribosEsteMes {
   gastosOperativosMXN: number;
 }
 
-export const ESTADOS_FILTRO = [...ESTADOS_ACTIVOS, "EIR"] as const;
+// v13.303.41 — `En Proceso` (estado lateral del grafo) sale del filtro
+// visual del dashboard. Sigue vivo en BD y en `ESTADOS_ACTIVOS` para
+// otros módulos (Operaciones); simplemente no se cuenta en la timeline
+// del dashboard hasta que el embarque avance a Arribo.
+export const ESTADOS_FILTRO = [
+  "Confirmado", "En Tránsito", "Arribo", "En Aduana", "Entregado", "EIR",
+] as const;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
 // v13.303.22 — `Llegada` deprecado (fuera del workflow) además de `Cotización`.
 export const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
   Confirmado: 0,
   "En Tránsito": 0,
-  "En Proceso": 0,
   Arribo: 0,
   "En Aduana": 0,
   Entregado: 0,
