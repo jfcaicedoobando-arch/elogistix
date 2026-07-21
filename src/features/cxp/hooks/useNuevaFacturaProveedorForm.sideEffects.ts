@@ -146,13 +146,15 @@ export async function vincularSafe(params: {
 }
 
 export function buildFacturaSuccessDescription(r: VincularSafeResult): string | undefined {
+  const parts: string[] = [];
   if (r.liquidados && r.liquidados > 0) {
-    return r.liquidados === 1
-      ? "1 concepto marcado como pagado"
-      : `${r.liquidados} conceptos marcados como pagados`;
+    parts.push(r.liquidados === 1 ? "1 concepto marcado como pagado" : `${r.liquidados} conceptos marcados como pagados`);
   }
   if (r.conceptoAdHocExpediente) {
-    return `Concepto creado en embarque ${r.conceptoAdHocExpediente}`;
+    parts.push(`Concepto creado en embarque ${r.conceptoAdHocExpediente}`);
   }
-  return undefined;
+  if (r.ajustesCreados && r.ajustesCreados > 0) {
+    parts.push(r.ajustesCreados === 1 ? "1 ajuste aplicado al embarque" : `${r.ajustesCreados} ajustes aplicados al embarque`);
+  }
+  return parts.length ? parts.join(" · ") : undefined;
 }
