@@ -1,6 +1,11 @@
 # Changelog
 
-## [13.303.53] - 2026-07-21
+## [13.303.54] - 2026-07-21
+- **Fases 5-7 cerradas · Seguridad, UX y observabilidad.**
+  - **FIX-45 (Fase 5) · Cerrado acceso anónimo a RPCs internos.** Migración `20260721*` revoca `EXECUTE` del rol `anon` sobre ~80 funciones `SECURITY DEFINER` de negocio (embarques, cotizaciones, facturación, CxP, CRM, garantías, comisiones y triggers). Se conservó `EXECUTE` a `anon` solo en la whitelist pública: `portal_obtener_proforma_por_token`, `portal_responder_por_token`, `get_tracking_public`, `log_client_error_v1`, `check_ratelimit`, `handle_new_user_signup`, `is_demo_user`.
+  - **Fase 6 UX · Banner TC fallback en Dashboard Dirección.** Nuevo `TipoCambioFallbackBanner.tsx` en `src/features/dashboard/direccion/components/`. Se muestra automáticamente cuando `useExchangeRates().data.esFallback === true` (Banxico caído / sin token), advirtiendo al usuario que los importes MXN son estimados antes de tomar decisiones.
+  - **Fase 7 Observabilidad · Sentry para duplicados de webhook.** Nueva utilidad `captureEdgeMessage(msg, level, ctx)` en `supabase/functions/_shared/sentry.ts`. Aplicada en `facturapi-webhook`: cada evento duplicado emite un mensaje `info` con `event_id`, `event_type` y `organization_id` para monitorear tasa de retries.
+
 - **Fase 5 (parcial) · Endurecimiento seguridad + endurece FIX-22.**
   - **FIX-22 refuerzo — Dedupe sin lagunas:** nueva `computeEventKey(rawBody, event)` en `supabase/functions/facturapi-webhook/helpers.ts`. Usa `event.id` cuando existe y cae a `sha256:<hash body>` cuando el payload legacy no lo trae. Antes, ~5% de eventos históricos escapaban el dedupe.
   - **Retención (`purgar_facturapi_webhook_eventos`):** función `SECURITY DEFINER` que borra eventos > 60 días (FacturAPI retransmite máx. 7). `EXECUTE` revocado a `PUBLIC/anon/authenticated`; sólo `service_role` la corre desde cron/edge.

@@ -8,7 +8,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "../_shared/cors.ts";
-import { wrapEdgeHandler } from "../_shared/sentry.ts";
+import { wrapEdgeHandler, captureEdgeMessage } from "../_shared/sentry.ts";
 import {
   computeEventKey,
   computeSignature,
@@ -135,6 +135,14 @@ Deno.serve(wrapEdgeHandler("facturapi-webhook", async (req) => {
     });
   if (dupErr) {
     if ((dupErr as { code?: string }).code === "23505") {
+      // Fase 7 · Alerta suave: FacturAPI reintenta ante 5xx, así que algunos
+      // duplicados son esperados. Los enviamos como `info` para dashboard;
+      // si el volumen sube anormalmente, indica que estamos devolviendo 5xx.
+      await captureEdgeMessage("facturapi_webhook_duplicate", "info", {
+        fn: "facturapi-webhook",
+        organization_id: orgId,
+        extra: { event_id: eventKey, event_type: event.type },
+      });
       return jsonResponse({ ok: true, ignored: "duplicate_event", event_id: eventKey });
     }
     return jsonResponse({ error: "dedupe_insert_failed", detail: dupErr.message }, 500);

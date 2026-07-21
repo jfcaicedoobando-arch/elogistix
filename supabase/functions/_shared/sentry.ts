@@ -155,6 +155,34 @@ export async function captureEdgeException(err: unknown, ctx: EdgeErrorContext):
 }
 
 /**
+ * Fase 7 · Observabilidad. Envía un mensaje (no un error) a Sentry con tags
+ * estructurados. Útil para señales tipo "webhook duplicado", "cron sin datos",
+ * etc. — algo que queremos vigilar pero que no es una excepción.
+ */
+export async function captureEdgeMessage(
+  message: string,
+  level: "info" | "warning" | "error",
+  ctx: EdgeErrorContext,
+): Promise<void> {
+  if (!DSN) return;
+  const Sentry = await loadSentry();
+  if (!Sentry) return;
+  try {
+    Sentry.withScope((scope: { setTag: (k: string, v: string) => void; setUser: (u: { id: string }) => void; setExtra: (k: string, v: unknown) => void; setContext: (k: string, v: Record<string, unknown>) => void; setLevel: (l: string) => void }) => {
+      scope.setLevel(level);
+      scope.setTag("fn", ctx.fn);
+      if (ctx.request_id) scope.setTag("request_id", ctx.request_id);
+      if (ctx.organization_id) scope.setTag("organization_id", ctx.organization_id);
+      if (ctx.extra) scope.setContext("edge", truncatedExtra(ctx.extra));
+      Sentry.captureMessage(message);
+    });
+    await Sentry.flush(2000);
+  } catch (e) {
+    console.error(JSON.stringify({ level: "warn", fn: "sentry-edge", msg: "capture_msg_failed", error: String(e) }));
+  }
+}
+
+/**
  * Envuelve un handler de `Deno.serve` agregando captura automática de errores
  * no controlados. Re-lanza el error original para que el caller mantenga su
  * flujo de respuesta existente.
