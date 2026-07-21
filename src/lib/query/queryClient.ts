@@ -65,7 +65,7 @@ function reportQueryError(
  * por queryKey para deduplicar cascadas y respetamos `meta.silentError` para
  * queries que ya manejan su propio feedback.
  */
-function notifyQueryFailure(err: unknown, query: Query): void {
+function notifyQueryFailure(err: unknown, query: Query<unknown, unknown, unknown, readonly unknown[]>): void {
   if (isExpectedBusinessError(err)) return;
   const meta = query.meta as { silentError?: boolean } | undefined;
   if (meta?.silentError) return;
