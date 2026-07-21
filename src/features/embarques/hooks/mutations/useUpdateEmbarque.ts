@@ -26,6 +26,8 @@ interface UpdateEmbarqueInput {
   contenedores?: ContenedorBorrador[];
   /** Idempotency key (A.3). */
   requestId?: string;
+  /** FIX-15 · Bloqueo optimista: `updated_at` leído al abrir el wizard. */
+  expectedUpdatedAt?: string | null;
 }
 
 export function useUpdateEmbarque() {

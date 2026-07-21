@@ -136,6 +136,9 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
         conceptosVenta: nuevosVenta,
         conceptosCosto: nuevosCosto,
         contenedores: contenedoresActuales,
+        // FIX-15 · Enviamos el `updated_at` que leímos al hidratar el wizard
+        // para que la RPC rechace el guardado si alguien más ya guardó.
+        expectedUpdatedAt: embarque.updated_at ?? null,
       });
 
       const v = methods.getValues();
@@ -157,7 +160,18 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       notifySuccess(toast, { title: "Embarque actualizado", description: `${labelExpediente(embarque.expediente, embarque.id)} guardado correctamente.` });
       navigate(`/embarques/${id}`);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al actualizar", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE" });
+      const msg = getErrorMessage(err);
+      // FIX-15 · Conflicto de concurrencia: mensaje humano en vez del código crudo.
+      if (msg.includes("LC_CONFLICTO_CONCURRENCIA")) {
+        notifyError(toast, {
+          title: "Otro usuario modificó este embarque",
+          description: "Recarga la página para ver los cambios más recientes y vuelve a guardar.",
+          error: err,
+          method: "HANDLE_SAVE",
+        });
+        return;
+      }
+      notifyError(toast, { title: "Error al actualizar", description: msg, error: err, method: "HANDLE_SAVE" });
     }
   };
 

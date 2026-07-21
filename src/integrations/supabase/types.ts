@@ -6657,26 +6657,17 @@ export type Database = {
         Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
         Returns: Json
       }
-      actualizar_embarque_completo:
-        | {
-            Args: {
-              p_conceptos_costo?: Json
-              p_conceptos_venta?: Json
-              p_embarque: Json
-              p_embarque_id: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_conceptos_costo?: Json
-              p_conceptos_venta?: Json
-              p_embarque: Json
-              p_embarque_id: string
-              p_request_id?: string
-            }
-            Returns: Json
-          }
+      actualizar_embarque_completo: {
+        Args: {
+          p_conceptos_costo?: Json
+          p_conceptos_venta?: Json
+          p_embarque: Json
+          p_embarque_id: string
+          p_expected_updated_at?: string
+          p_request_id?: string
+        }
+        Returns: Json
+      }
       actualizar_estado_cliente_proforma: {
         Args: { p_motivo?: string; p_proforma_id: string; p_respuesta: string }
         Returns: Json

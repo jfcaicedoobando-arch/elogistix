@@ -1,5 +1,11 @@
 # Changelog
-# Changelog
+
+## [13.303.45] - 2026-07-21
+- **Fix crítico comisiones · EUR ya no se suma como MXN (FIX-13 auditoría).** `calcular_comision_pago` usaba `CASE WHEN moneda='USD' THEN tc ELSE 1 END`: cualquier venta o costo en EUR se contaba con TC=1, subvaluando la comisión (y ocultando pérdidas en costos). Ahora usa `public.convertir_a_mxn(monto, moneda, tc_usd, tc_eur)` del embarque tanto para ingresos como para costos. También añade nota "Tipos de cambio del embarque incompletos" si falta algún TC, para que Comisiones/Contabilidad detecten el hueco antes de liquidar.
+- **Fix crítico datos · bloqueo optimista al editar embarques (FIX-15 auditoría).** `actualizar_embarque_completo` acepta un nuevo parámetro `p_expected_updated_at`: el wizard envía el `updated_at` que leyó al abrir, y si otro operador guardó antes, la RPC rechaza con `LC_CONFLICTO_CONCURRENCIA` (ERRCODE `40001`). El wizard muestra un mensaje humano pidiendo recargar en lugar de pisar los cambios en silencio. Se hace `SELECT ... FOR UPDATE` sobre `embarques` antes de la verificación para evitar carreras. Se eliminan las sobrecargas legacy del RPC.
+- **Fix · `|| 1` silencioso eliminado en más callsites (FIX-11 continuación).** `direccion/services/mxn.ts` ahora usa `tcValido`: sin TC válido devuelve 0 en vez de tratar USD/EUR como MXN. `DialogRegistrarPago.tsx` bloquea la conversión de moneda cuando faltan tasas (antes convertía 1:1). El parser CFDI (`parse-cfdi-xml/parser.ts`) devuelve `tipo_cambio: null` para CFDIs USD/EUR sin `TipoCambio`; MXN sigue colapsando a 1. Se propagó el tipo `number | null` a `CfdiParsedResponse` y `mapCfdiToValues`. Test Deno añadido para el caso USD-sin-TC.
+
+
 
 ## [13.303.44] - 2026-07-21
 - **Fix crítico fiscal · fallback de Banxico ya nunca se guarda como TC "real" (FIX-10 auditoría).** La edge `exchange-rates` marca todas sus respuestas de fallback (sin token, Banxico caído, USD faltante) con `es_fallback: true`. `fetchExchangeRates` propaga el flag como `esFallback` y `useBanxicoTipoCambio` lo rechaza en el mutation: no se invoca `onTC`, no se auto-guarda 17.25 en la factura y se muestra `LC_TC_DOF_NO_DISPONIBLE` pidiendo reintentar. Antes, tras un timeout de Banxico, la factura quedaba timbrada con TC ficticio (~17.25) y utilidad distorsionada.

@@ -39,10 +39,13 @@ function convertirAMonedaFactura(
   rates: { usdMxn: number; eurMxn: number } | undefined,
 ): number {
   if (monedaPago === monedaFactura) return monto;
-  if (!rates || !rates.usdMxn) return monto;
+  // FIX-11: sin TC válido devolvemos 0 en vez de tratar USD/EUR como MXN.
+  if (!rates || !rates.usdMxn || !rates.eurMxn) return 0;
   const toMxn: Record<string, number> = { MXN: 1, USD: rates.usdMxn, EUR: rates.eurMxn };
-  const enMxn = monto * (toMxn[monedaPago] ?? 1);
-  const factorFactura = toMxn[monedaFactura] ?? 1;
+  const factorPago = toMxn[monedaPago];
+  const factorFactura = toMxn[monedaFactura];
+  if (!factorPago || !factorFactura) return 0;
+  const enMxn = monto * factorPago;
   return enMxn / factorFactura;
 }
 
