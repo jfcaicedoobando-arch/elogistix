@@ -83,6 +83,12 @@ export const clienteInsertSchema = z.object({
     .max(365, "Días de crédito: máximo 365.")
     .nullable()
     .optional(),
+  limite_credito_mxn: z
+    .number()
+    .min(0, "Límite de crédito: no puede ser negativo.")
+    .max(1_000_000_000, "Límite de crédito: fuera de rango.")
+    .nullable()
+    .optional(),
   regimen_fiscal: z.string().trim().max(10, "Régimen fiscal: máximo 10 caracteres.").optional().or(z.null()),
   uso_cfdi_default: z.string().trim().max(10, "Uso CFDI: máximo 10 caracteres.").optional().or(z.null()),
   organization_id: uuidSchema.nullable().optional(),
