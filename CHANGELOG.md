@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.303.57] - 2026-07-21
+- **fix(clientes) · Doble toast "Cliente actualizado".** Al guardar cambios en detalle de cliente aparecían dos notificaciones porque tanto `useUpdateCliente` (mutación) como `useClienteDetalleHandlers.handleSaveCliente` disparaban `notifySuccess`. Se removió el toast del hook de mutación; el handler queda como única fuente para conservar el contexto (registro en bitácora + cierre del modal).
+
 ## [13.303.56] - 2026-07-21
+
 - **fix(facturación) · Convertir proforma a factura fallaba con `42883` (Sentry JAVASCRIPT-REACT-31 / JAVASCRIPT-REACT-1M).** La RPC `convertir_proformas_a_factura` invocaba `public.idempotency_commit(uuid, jsonb)`, función que no existe — la correcta es `public.idempotency_store(uuid, jsonb)`. Migración recrea la función cambiando únicamente esa línea; resto del cuerpo intacto. Idempotencia sigue funcionando gracias a `idempotency_claim` al inicio. Issues Sentry resueltos: JAVASCRIPT-REACT-31, JAVASCRIPT-REACT-1M.
 
 
