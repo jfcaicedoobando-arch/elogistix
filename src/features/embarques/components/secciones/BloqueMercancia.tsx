@@ -1,92 +1,13 @@
-import { Upload, FileText, Calculator } from "lucide-react";
+import { Calculator } from "lucide-react";
 import { useFormContext, Controller } from "react-hook-form";
-import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatNumber } from "@/lib/formatters/numbers";
 import type { EmbarqueFormValues } from "@/features/embarques/hooks";
 import type { EmbarqueValidationErrors } from "@/features/embarques/types/embarque";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { LabelHeredable } from "./LabelHeredable";
-
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function fieldErrorProps(error?: string) {
-  return {
-    "aria-invalid": error ? (true as const) : undefined,
-    className: cn(error && "border-destructive"),
-  };
-}
-
-function numberInputProps(error?: string) {
-  return {
-    "aria-invalid": error ? (true as const) : undefined,
-    className: cn(
-      error && "border-destructive",
-      "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-    ),
-  };
-}
-
-function FieldError({ msg }: { msg?: string }) {
-  if (!msg) return null;
-  return <p className="text-xs text-destructive">{msg}</p>;
-}
-
-// ── MsdsUploadSection ──────────────────────────────────────────────────────────
-
-interface MsdsProps {
-  onMsdsUpload: (file: File) => void;
-}
-
-function MsdsUploadSection({ onMsdsUpload }: MsdsProps) {
-  const { watch } = useFormContext<EmbarqueFormValues>();
-  const msdsArchivo = watch("msdsArchivo");
-  const subiendoMsds = watch("subiendoMsds");
-  const msdsNombreArchivo = msdsArchivo ? msdsArchivo.split("/").pop() : null;
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const archivo = e.target.files?.[0];
-    if (archivo) onMsdsUpload(archivo);
-    e.target.value = "";
-  }
-
-  function openPicker() {
-    document.getElementById("msds-file-input")?.click();
-  }
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor="msds-file-input">Hoja de Seguridad (MSDS)</Label>
-      {msdsNombreArchivo ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <FileText className="h-4 w-4" aria-hidden />
-          <span className="truncate">{msdsNombreArchivo}</span>
-          <Button type="button" variant="outline" size="sm" onClick={openPicker}>
-            Cambiar
-          </Button>
-        </div>
-      ) : (
-        <Button type="button" variant="outline" className="w-full" disabled={subiendoMsds} onClick={openPicker}>
-          <Upload className="h-4 w-4 mr-2" aria-hidden />
-          {subiendoMsds ? "Subiendo..." : "Adjuntar MSDS"}
-        </Button>
-      )}
-      <input
-        id="msds-file-input"
-        type="file"
-        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-        className="hidden"
-        onChange={handleChange}
-      />
-    </div>
-  );
-}
-
-// ── BloqueMercancia ────────────────────────────────────────────────────────────
+import { FieldError, MsdsUploadSection, fieldErrorProps, numberInputProps } from "./bloqueMercanciaParts";
 
 interface Props {
   errors: EmbarqueValidationErrors;
@@ -199,4 +120,3 @@ export function BloqueMercancia({ errors, onMsdsUpload }: Props) {
     </div>
   );
 }
-

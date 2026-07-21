@@ -22,13 +22,6 @@ export interface LclFleteManual {
   consolidadorId: string | null;
 }
 
-export const DEFAULT_LCL_FLETE_MANUAL: LclFleteManual = {
-  tarifaWM: 0,
-  minimo: 0,
-  diasLibresAlmacenaje: 0,
-  consolidadorId: null,
-};
-
 export interface CotizacionFormValues {
   esProspecto: boolean;
   clienteId: string;
@@ -88,56 +81,8 @@ export interface CotizacionFormValues {
   navieraNombre: string;
 }
 
-export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
-  esProspecto: false,
-  clienteId: "",
-  prospectoModo: "nuevo",
-  oportunidadId: "",
-  leadId: "",
-  prospectoEmpresa: "",
-  prospectoContacto: "",
-  prospectoEmail: "",
-  prospectoTelefono: "",
-  modo: "",
-  tipo: "",
-  incoterm: "",
-  tipoCarga: "",
-  sectorEconomico: "",
-  descripcionAdicional: "",
-  tipoEmbarque: "",
-  tipoContenedor: "",
-  tipoPeso: "",
-  dimensionesLCL: [],
-  dimensionesAereas: [],
-  pesoKg: 0,
-  volumenM3: 0,
-  piezas: 0,
-  tipoUnidad: "",
-  origen: "",
-  destino: "",
-  tiempoTransitoDias: undefined,
-  frecuencia: "",
-  rutaTexto: "",
-  validezPropuesta: undefined,
-  tipoMovimiento: "",
-  seguro: false,
-  valorSeguroUsd: 0,
-  diasLibresDestino: 0,
-  diasAlmacenaje: 0,
-  cartaGarantia: false,
-  notas: "",
-  numContenedores: 0,
-  modalidadEquipo: "",
-  puntoIntermedio: "",
-  tarifaId: null,
-  tarifaOverride: {},
-  sinDesgloseCostos: false,
-  lclFleteManual: DEFAULT_LCL_FLETE_MANUAL,
-  agenteId: null,
-  agenteNombre: "",
-  navieraId: null,
-  navieraNombre: "",
-};
+export { COTIZACION_FORM_DEFAULTS, DEFAULT_LCL_FLETE_MANUAL } from "./formDefaults";
+
 
 export interface CotizacionInitialData {
   id: string;
