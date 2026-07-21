@@ -40,9 +40,14 @@ export function PagoFormFields({ values, onChange }: Props) {
         </Select>
       </div>
       <div className="space-y-1">
-        <Label>Monto</Label>
-        <Input type="number" step="0.01" min="0"
-          value={values.monto} onChange={(e) => onChange("monto", e.target.value)} />
+        <Label htmlFor="pago-monto">Monto</Label>
+        <NumericInput
+          aria-label="Monto del pago"
+          decimals
+          value={Number(values.monto) || 0}
+          onChange={(n) => onChange("monto", n === 0 ? "" : String(n))}
+          className="h-10 text-right tabular-nums"
+        />
       </div>
       <div className="space-y-1">
         <Label>Moneda</Label>
