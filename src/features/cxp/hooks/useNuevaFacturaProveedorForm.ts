@@ -199,12 +199,6 @@ export function useNuevaFacturaProveedorForm(
   };
   return {
     values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
-    handleChange, handleProveedor, handleCfdiParsed,
-    vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
-    embarqueAdHoc, setEmbarqueAdHoc,
-    reset, submit, isPending: crear.isPending, organizationId,
-  return {
-    values, errors, mode, setMode, total, pendingCfdi, cfdiConceptos, askCrearProv, setAskCrearProv,
     handleChange, handleProveedor, handleCfdiParsed, handlePdfIaParsed,
     vinculos, toggleVinculo, setVinculoMonto, aplicarSugerencias,
     embarqueAdHoc, setEmbarqueAdHoc,
