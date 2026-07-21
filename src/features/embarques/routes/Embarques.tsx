@@ -74,7 +74,13 @@ export default function Embarques() {
         }
       />
 
-      {isEmptyState ? (
+      {isError ? (
+        <ErrorState
+          title="No pudimos cargar los embarques"
+          description="Revisa tu conexión e intenta de nuevo."
+          onRetry={() => refetch()}
+        />
+      ) : isEmptyState ? (
         <EmbarquesEmptyState canEdit={canCrear} onCreate={goNuevo} />
       ) : (
         <>
