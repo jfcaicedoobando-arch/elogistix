@@ -1,6 +1,9 @@
 # Changelog
 # Changelog
 
+## [13.303.41] - 2026-07-21
+- **UX · Dashboard: ocultar estado "En Proceso".** `ESTADOS_FILTRO`, `EMPTY_CONTEO` y `parseConteoPorEstado` dejan de exponer la clave `"En Proceso"`, por lo que la timeline y las tarjetas de estados del dashboard ya no lo listan. El estado sigue vivo en BD y en `ESTADOS_ACTIVOS` (usado por Operaciones); "Avanzar estado" en el detalle del embarque lo sigue moviendo directo a Arribo.
+
 ## [13.303.40] - 2026-07-21
 - **Fix · CI shard 2 (`embarqueCotizacion.test.ts`).** El test "desvincular limpia un superset que incluye los campos de vincular (marítimo)" fallaba porque en v13.303.35 se agregaron `agenteId`, `agente`, `navieraId` y `naviera` a `buildVincularCotizacionUpdates` (herencia desde tarifa) pero no se sumaron a `DESVINCULAR_DEFAULTS`. Se agregan los cuatro campos al desvincular (IDs a `null`, textos a `""`) para restaurar la invariante superset y evitar dejar agente/naviera colgados al romper el vínculo.
 
