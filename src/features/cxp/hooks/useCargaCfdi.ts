@@ -12,7 +12,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 
 interface UseCargaCfdiArgs {
   categorias: { id: string; nombre: string }[];
-  onParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void;
+  onParsed: (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) => void | Promise<void | boolean>;
 }
 
 const MAX_XML_BYTES = 2 * 1024 * 1024;
@@ -56,8 +56,11 @@ export function useCargaCfdi({ categorias, onParsed }: UseCargaCfdiArgs) {
         timeoutId = setTimeout(() => reject(new Error("CLIENT_TIMEOUT")), CLIENT_TIMEOUT_MS);
       });
       const data = await Promise.race([parseCfdiXml(xml, categorias), timeoutPromise]);
-      onParsed(data, { xml, pdf });
-      toast.success("CFDI procesado");
+      // Esperamos al consumidor: si detecta problemas (cuadre fiscal, RFC, etc.)
+      // devuelve `false` y suprimimos el toast de éxito para no contradecir su
+      // propio toast de error.
+      const consumerResult = await onParsed(data, { xml, pdf });
+      if (consumerResult !== false) toast.success("CFDI procesado");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error procesando XML";
       const baseCtx = {
