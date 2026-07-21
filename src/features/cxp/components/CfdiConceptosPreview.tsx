@@ -31,10 +31,12 @@ export function CfdiConceptosPreview({ conceptos, moneda }: Props) {
 
   return (
     <FormSection
-      icon={FileText}
+      icon={<FileText className="h-3.5 w-3.5" />}
       title={`Conceptos del CFDI (${conceptos.length})`}
-      description="Vista previa del desglose recibido del SAT. Se guardará junto con la factura."
     >
+      <p className="text-xs text-muted-foreground -mt-1">
+        Vista previa del desglose recibido del SAT. Se guardará junto con la factura.
+      </p>
       <div className="rounded-md border overflow-hidden">
         <div className="max-h-64 overflow-y-auto">
           <table className="w-full text-xs tabular-nums">
