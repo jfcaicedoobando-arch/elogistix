@@ -7,6 +7,7 @@ import { captureEdgeException } from "../_shared/sentry.ts";
 import { jsonResponse as _jsonResponse } from "../_shared/response.ts";
 import { FACTURAPI_BASE, basicAuthHeader } from '../_shared/facturapiAuth.ts';
 import { fetchOrgSlug } from '../_shared/orgSlug.ts';
+import { buildFilename } from '../_shared/facturaFilename.ts';
 
 export const SIGNED_URL_TTL = 60 * 60 * 24 * 30; // 30 días
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
