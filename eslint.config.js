@@ -158,9 +158,7 @@ export default tseslint.config(
     files: [
       "src/components/ui/**",
       "src/integrations/supabase/**",
-      "src/data/changelogData.ts",
       "src/data/ports.ts",
-      "src/content/changelog/**",
       "src/routes/**",
       "**/*.test.ts",
       "**/*.test.tsx",
