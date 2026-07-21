@@ -83,18 +83,25 @@ export function useNotaCreditoDraft(p: Params) {
   const puedeTimbrar = puedeGuardar && !sinUuid;
 
   const crearMut = useMutation({
-    mutationFn: () => crearNotaCredito({
-      factura_id: p.facturaId,
-      motivo,
-      descripcion: descripcion.trim(),
-      monto,
-      moneda: p.monedaFactura,
-      tipo_cambio: p.tipoCambioFactura || 1,
-      fecha_emision: fecha,
-      uso_cfdi: usoCfdi,
-      forma_pago: formaPago,
-      conceptos,
-    }),
+    mutationFn: () => {
+      // FIX-11: nunca sustituir TC ausente por 1 en monedas ≠ MXN — provoca cálculos MXN silenciosamente erróneos.
+      const tcNormalizado = p.monedaFactura === "MXN" ? 1 : Number(p.tipoCambioFactura);
+      if (!Number.isFinite(tcNormalizado) || tcNormalizado <= 0) {
+        throw new Error("LC_TC_NO_DISPONIBLE: la factura no tiene tipo de cambio válido; refresca antes de emitir la NC.");
+      }
+      return crearNotaCredito({
+        factura_id: p.facturaId,
+        motivo,
+        descripcion: descripcion.trim(),
+        monto,
+        moneda: p.monedaFactura,
+        tipo_cambio: tcNormalizado,
+        fecha_emision: fecha,
+        uso_cfdi: usoCfdi,
+        forma_pago: formaPago,
+        conceptos,
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: facturasKeys.notasCredito(p.facturaId) });
       qc.invalidateQueries({ queryKey: facturasKeys.notasCreditoRecientes() });
