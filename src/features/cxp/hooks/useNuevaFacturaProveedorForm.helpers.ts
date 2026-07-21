@@ -116,6 +116,7 @@ export function buildPayload({ values, total, userId, pendingCfdi, vinculos }: B
     uuid_fiscal: pendingCfdi?.uuid ?? null,
     rfc_proveedor: pendingCfdi?.rfcEmisor ?? null,
     embarque_id: embarqueIdUnico(vinculos),
+    origen_carga: (pendingCfdi?.origen ?? "manual") as OrigenCarga,
   };
 }
 

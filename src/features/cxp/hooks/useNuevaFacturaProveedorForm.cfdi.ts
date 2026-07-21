@@ -50,6 +50,7 @@ export async function procesarCfdiParsed(
   const values = mapCfdiToValues(data, provId, provNombre);
   const pendingCfdi: PendingCfdi = {
     uuid: c.uuid, rfcEmisor: c.emisor.rfc, xmlFile: files.xml, pdfFile: files.pdf,
+    origen: "cfdi",
   };
 
   // El XML del CFDI trae el tipo_cambio oficial del emisor — respetarlo.
