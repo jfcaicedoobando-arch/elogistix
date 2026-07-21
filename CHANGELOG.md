@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.303.87] - 2026-07-21
+- **fix(cxp) — Recapturar factura de proveedor previamente eliminada.** El índice único `(organization_id, proveedor_id, folio_proveedor)` no filtraba `deleted_at`, así que al borrar una factura y volver a capturar el mismo folio del mismo proveedor Postgres lanzaba `23505`. Peor: el handler traducía **cualquier** `23505` a "CFDI duplicado", aunque la factura vieja no tuviera UUID fiscal. Ahora el índice es parcial (`WHERE deleted_at IS NULL`) y el `handleSubmitError` distingue entre choque de `uuid_fiscal`, choque de `folio_proveedor` y cualquier otro duplicado, mostrando el mensaje correcto. Analogía: la lista de asistencia ya no cuenta a los que se dieron de baja, y si hay un choque de nombres el guardia dice cuál campo chocó en vez de gritar siempre "cédula repetida". Ref Sentry request `1170d631`.
+
 ## [13.303.86] - 2026-07-21
 - **fix(crédito) — Validación de límite de crédito rota por rol inexistente.** La RPC `get_exposicion_credito_cliente` intentaba escalar a `has_role(auth.uid(), 'owner'::app_role)`, pero el enum `app_role` no tiene ese valor (el rol dueño de la plataforma es `super_admin`). Postgres devolvía `22P02: invalid input value for enum app_role: "owner"` y el modal de proforma mostraba "No se pudo validar el límite de crédito". Se corrige la función para usar `super_admin`. Analogía: la puerta pedía la llave "dueño", pero en el llavero de la casa esa copia se llama "super_admin"; ahora coinciden. Ref Sentry request `a15fcd7d`.
 

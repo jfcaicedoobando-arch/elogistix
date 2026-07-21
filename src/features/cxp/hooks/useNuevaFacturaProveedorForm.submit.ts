@@ -14,9 +14,14 @@ import {
 import type { CfdiConceptoParsed } from "@/features/cxp/services";
 
 export function handleSubmitError(e: unknown) {
-  const err = e as { message?: string; code?: string };
-  if (err.code === "23505" || /uuid_fiscal/i.test(err.message ?? "")) {
+  const err = e as { message?: string; code?: string; details?: string; constraint?: string };
+  const blob = `${err.message ?? ""} ${err.details ?? ""} ${err.constraint ?? ""}`.toLowerCase();
+  if (err.code === "23505" && /uuid_fiscal/.test(blob)) {
     notifyError(toast, { title: "Ya existe una factura con este UUID fiscal (CFDI duplicado).", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_1" });
+  } else if (err.code === "23505" && /folio/.test(blob)) {
+    notifyError(toast, { title: "Ya existe una factura viva con este folio para el proveedor.", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_FOLIO" });
+  } else if (err.code === "23505") {
+    notifyError(toast, { title: "Registro duplicado", description: err.message ?? undefined, method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_DUP2" });
   } else {
     notifyError(toast, { title: err.message ?? "Error al capturar", method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_2" });
   }
