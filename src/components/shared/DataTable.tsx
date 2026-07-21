@@ -1,20 +1,17 @@
 import React from "react";
 import type { ColumnDef, OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import type { LucideIcon } from "lucide-react";
-import { Table, TableFooter } from "@/components/ui/table";
 import { ErrorStateInline } from "@/components/empty/ErrorStateInline";
 import PaginationControls from "@/components/shared/PaginationControls";
-import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
-import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
+import { DataTableContent } from "@/components/shared/dataTable/DataTableContent";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
-import { useHorizontalScrollEdges } from "@/components/shared/dataTable/useHorizontalScrollEdges";
-import { HorizontalScrollFades } from "@/components/shared/dataTable/HorizontalScrollFades";
 import type { DataTablePagination, TableDensity, SortDir } from "@/components/shared/dataTable/types";
 
 // API pública estable (componente + helpers) — allowlisted en eslint react-refresh override.
 export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
 export type { ColumnDef, VisibilityState } from "@tanstack/react-table";
+
 
 interface DataTableProps<T> {
   /** API única: `ColumnDef<T, unknown>[]` de TanStack. Construir con
