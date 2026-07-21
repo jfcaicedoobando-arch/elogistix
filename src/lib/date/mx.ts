@@ -35,8 +35,3 @@ export function parseLocalMx(fecha: string): Date {
   return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0, 0));
 }
 
-/** Suma `dias` naturales a una fecha "YYYY-MM-DD" en zona CDMX. */
-export function addDaysMx(fecha: string, dias: number): string {
-  const base = parseLocalMx(fecha);
-  return hoyMx(new Date(base.getTime() + dias * 86_400_000));
-}
