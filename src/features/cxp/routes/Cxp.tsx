@@ -32,8 +32,7 @@ import { notifyError } from "@/components/shared/utils/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
 
-// NOTE: CxpFiltros retiene su API propia (9 props + hooks de proveedores/categorías).
-// UnifiedFiltersBar no cabe limpio sin refactorizar el estado de página — pendiente Oleada 5.
+// CxpFiltros retiene su API propia (pendiente Oleada 5).
 
 export default function Cxp() {
   const { canEdit } = usePermissions();
