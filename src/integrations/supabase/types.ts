@@ -5599,6 +5599,7 @@ export type Database = {
           motivo_rechazo: string | null
           notas: string
           organization_id: string
+          origen_carga: string
           proveedor_id: string
           proveedor_nombre: string
           retenciones: number
@@ -5642,6 +5643,7 @@ export type Database = {
           motivo_rechazo?: string | null
           notas?: string
           organization_id?: string
+          origen_carga?: string
           proveedor_id: string
           proveedor_nombre?: string
           retenciones?: number
@@ -5685,6 +5687,7 @@ export type Database = {
           motivo_rechazo?: string | null
           notas?: string
           organization_id?: string
+          origen_carga?: string
           proveedor_id?: string
           proveedor_nombre?: string
           retenciones?: number
@@ -6796,6 +6799,7 @@ export type Database = {
           motivo_rechazo: string | null
           notas: string
           organization_id: string
+          origen_carga: string
           proveedor_id: string
           proveedor_nombre: string
           retenciones: number
