@@ -1,8 +1,4 @@
-/**
- * Wizard de factura manual (sin embarque/proforma).
- * Casos: anticipos, servicios extra, refacturaciones sin embarque cerrado.
- * Migrado a `FormDialogShell` (v13.120.0).
- */
+/** Wizard de factura manual (sin embarque/proforma). FormDialogShell v13.120.0. */
 import { useMemo, useState } from "react";
 import { FilePlus2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
