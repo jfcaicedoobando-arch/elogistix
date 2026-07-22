@@ -15,17 +15,12 @@ import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../../..");
 
-/** Archivos exentos por diseño (helpers y shim). */
 const ALLOWLIST = new Set<string>([
   "src/components/shared/utils/appFeedback.ts",
   "src/hooks/shared/useToast.ts",
   "src/components/ui/ErrorDetailsDialog.tsx",
   "src/components/ui/sonner.tsx",
   "src/lib/observability/reportCaughtError.ts",
-  // v13.303.75 · queryClient centraliza el toast de fallo de red por
-  // queryKey (dedupe con `id`). No usa notifyError porque no queremos
-  // duración infinita ni "Ver detalles" en cada hiccup de red.
-  "src/lib/query/queryClient.ts",
 ]);
 
 describe("Error toasts deben usar notifyError", () => {
