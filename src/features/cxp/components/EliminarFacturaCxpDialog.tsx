@@ -92,36 +92,8 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
 
             {/* Body */}
             <div className="p-6 space-y-4">
-              {/* Financial Grid */}
-              <div className={cn("grid gap-3", showMoneda ? "grid-cols-3" : "grid-cols-2")}>
-                <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total</span>
-                  <div className="text-sm font-bold text-foreground tabular-nums whitespace-nowrap">
-                    {formatMonto(factura.moneda, factura.total)}
-                  </div>
-                </div>
-                <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Saldo pendiente</span>
-                  <div className={cn(
-                    "text-sm font-bold tabular-nums whitespace-nowrap",
-                    factura.saldo > 0 ? "text-warning" : "text-foreground",
-                  )}>
+              <EliminarFacturaFinancialGrid factura={factura} />
 
-                    {formatMonto(factura.moneda, factura.saldo)}
-                  </div>
-                </div>
-                {showMoneda && (
-                  <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Moneda / TC</span>
-                    <div className="leading-tight">
-                      <div className="text-sm font-bold text-foreground">{factura.moneda}</div>
-                      <div className="text-[11px] font-medium text-muted-foreground tabular-nums">
-                        TC {factura.tipo_cambio_usd?.toFixed(2) ?? "—"}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {/* Paso 1: nota de papelera. Paso 2: input ELIMINAR */}
               {!paso2 ? (
