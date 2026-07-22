@@ -1,43 +1,28 @@
-## Objetivo
-Agregar un buscador/filtro **dentro** de la lista de conceptos de costo pendientes en el modal "Capturar factura de proveedor", para encontrar rápido el concepto/embarque a vincular cuando el proveedor trae muchos costos precargados.
+# Ordenar embarques por folio (asc) en "Capturar factura de proveedor"
 
-## Contexto
-`VincularEmbarqueSection.tsx` muestra los `conceptos_costo` pendientes agrupados por embarque (`agruparPorEmbarque`). Hoy no hay forma de filtrar: si el proveedor tiene 30–50 conceptos hay que scrollear.
+Actualmente, dentro del modal **Capturar factura de proveedor → Vincular costos**, los grupos de conceptos pendientes se muestran agrupados por embarque en el orden en que llegan de la consulta (aparentemente por fecha o por concepto), lo que hace difícil ubicar un embarque específico.
 
-En el paso anterior (v13.307.9) agregué un buscador de **otro** embarque ad-hoc. No era lo pedido: se elimina.
+## Cambio
 
-## Cambio propuesto
+Ordenar los grupos por número de expediente de menor a mayor.
 
-### 1) Revertir el bloque ad-hoc agregado en v13.307.9
-En `VincularEmbarqueSection.tsx`:
-- Quitar el `<div className="rounded-md border border-dashed …">` con el botón "Buscar otro embarque" y su `SugerirEmbarqueBlock` embebido.
-- Quitar el estado `mostrarBusqueda` y el import de `Search`.
-- El componente vuelve a comportarse como antes cuando hay conceptos precargados (sólo lista), y sigue mostrando `SugerirEmbarqueBlock` cuando no hay ninguno (caso vacío).
+### Detalle técnico
 
-### 2) Añadir filtro sobre la lista de conceptos pendientes
-En `VincularEmbarqueSection.tsx`:
-- Nuevo estado local `filtro: string`.
-- Input de búsqueda arriba del contenedor `max-h-72 overflow-y-auto`, con ícono lupa y placeholder "Filtrar por concepto, expediente o monto…".
-- Botón "Sólo marcados" (toggle) para reducir la lista a los conceptos ya seleccionados (útil para revisar antes de guardar).
-- Lógica de filtrado (memoizada) que aplica sobre `grupos`:
-  - Si `filtro` tiene texto: se conservan los `items` cuyo `concepto` o `monto` (comparado como string) o cuyo `expediente` del grupo contenga el término (case-insensitive, `trim`).
-  - Si `soloMarcados` está activo: se conservan sólo los `items` con `seleccion[it.id]`.
-  - Los grupos que quedan sin items se ocultan.
-- Contador secundario: `"Mostrando X de Y conceptos"` debajo del input cuando hay filtro/toggle activo.
-- Botón "Limpiar" que resetea `filtro` y `soloMarcados` cuando alguno esté activo.
-- Estado vacío filtrado: mensaje "Ningún concepto coincide con el filtro" dentro del contenedor.
+- Archivo: `src/features/cxp/components/vincularEmbarqueHelpers.ts`
+- Función: `agruparPorEmbarque(items)`
+  - Al final, ordenar `Array.from(map.values())` por `expediente` usando comparación natural (`localeCompare` con `{ numeric: true, sensitivity: "base" }`), para que `EXP-002` vaya antes de `EXP-010`.
+- El orden se preserva a través de `filtrarGrupos` (que sólo filtra, no reordena) y de `VincularListaConceptos` (que hace `map` directo).
 
-### 3) Helper puro
-Extraer `filtrarGrupos(grupos, { texto, soloMarcados, seleccion })` en `vincularEmbarqueHelpers.ts` con test unitario nuevo en `__tests__/vincularEmbarqueHelpers.test.ts` (3–4 casos: sin filtro, por concepto, por expediente, sólo marcados). Mantiene la función pura y facilita cumplir Power-of-10.
+### Tests
+
+- Añadir un caso en `src/features/cxp/components/__tests__/vincularEmbarqueHelpers.test.ts` sobre `agruparPorEmbarque`: dado un arreglo con expedientes `EXP-010`, `EXP-002`, `EXP-001`, el resultado debe salir en orden `EXP-001`, `EXP-002`, `EXP-010`.
+
+### Changelog / versión
+
+- `APP_VERSION` → `13.307.11`.
+- Entrada breve en `CHANGELOG.md` explicando el orden ascendente por folio de embarque.
 
 ## Fuera de alcance
-- No se toca `SugerirEmbarqueBlock` ni el flujo ad-hoc.
-- No se cambia el submit ni servicios (`useNuevaFacturaProveedorForm`, `vincularFacturaAConceptos`).
-- No se agrega paginación server-side; el filtro es puramente cliente sobre lo que ya trae `useConceptosCostoAbiertos` (limit 200).
 
-## Archivos tocados
-- `src/features/cxp/components/VincularEmbarqueSection.tsx` — quitar bloque ad-hoc, agregar input + toggle + memoización.
-- `src/features/cxp/components/vincularEmbarqueHelpers.ts` — nuevo `filtrarGrupos`.
-- `src/features/cxp/components/__tests__/vincularEmbarqueHelpers.test.ts` — casos del nuevo helper.
-- `src/constants/appVersion.ts` → `13.307.10`.
-- `CHANGELOG.md` — entrada nueva.
+- No se toca el orden interno de conceptos dentro de cada embarque.
+- No se agregan controles de orden configurables por el usuario.
