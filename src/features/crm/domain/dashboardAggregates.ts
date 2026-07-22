@@ -3,6 +3,8 @@
  * Extraído de `hooks/crm/useCrmDashboard.ts` (Power of 10: ≤200 LOC, testabilidad).
  */
 
+import { isoUtcDay } from "@/lib/date/mx";
+
 export interface OpRow {
   id: string;
   nombre: string;
@@ -43,7 +45,7 @@ export interface EmbudoRow {
 export function isoDaysFromNow(d: number): string {
   const t = new Date();
   t.setDate(t.getDate() + d);
-  return t.toISOString().slice(0, 10);
+  return isoUtcDay(t);
 }
 
 export function computePipelinePonderado(ops: OpRow[]): number {

@@ -35,3 +35,17 @@ export function parseLocalMx(fecha: string): Date {
   return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0, 0));
 }
 
+/**
+ * YYYY-MM-DD tomando los componentes UTC del Date. Úsalo cuando el Date ya
+ * está anclado a UTC (`new Date(iso + "T00:00:00Z")` + aritmética UTC) y no
+ * quieres que la zona CDMX lo corra 6 h atrás. Para "hoy" real de negocio,
+ * usa `hoyMx()`.
+ */
+export function isoUtcDay(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+

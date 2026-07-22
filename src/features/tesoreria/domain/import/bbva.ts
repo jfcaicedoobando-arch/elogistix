@@ -11,6 +11,7 @@
  *  - Calcula `hash_dedupe = sha1(fecha|concepto|referencia|cargo|abono)` para
  *    evitar duplicados al re-importar el mismo periodo.
  */
+import { isoUtcDay } from "@/lib/date/mx";
 import Papa from "papaparse";
 
 
@@ -44,11 +45,11 @@ function findColIdx(headers: string[], candidates: string[]): number {
 
 function parseFecha(raw: unknown): string | null {
   if (raw == null) return null;
-  if (raw instanceof Date) return raw.toISOString().slice(0, 10);
+  if (raw instanceof Date) return isoUtcDay(raw);
   if (typeof raw === "number") {
     // Excel serial
     const ms = (raw - 25569) * 86_400_000;
-    return new Date(ms).toISOString().slice(0, 10);
+    return isoUtcDay(new Date(ms));
   }
   const s = String(raw).trim();
   if (!s) return null;
@@ -74,13 +75,24 @@ function parseFecha(raw: unknown): string | null {
   return null;
 }
 
+/**
+ * Convierte el valor crudo en número conservando el signo (los cargos suelen
+ * llegar negativos en el estado de cuenta). Devuelve `NaN` cuando el valor no
+ * es parseable para que la fila se descarte con evidencia y no se colapse
+ * silenciosamente a 0.
+ */
 function parseMonto(raw: unknown): number {
   if (raw == null || raw === "") return 0;
-  if (typeof raw === "number") return Math.abs(raw);
-  const s = String(raw).replace(/[$,\s]/g, "").replace(/[()]/g, "");
-  const n = Number(s);
-  return isNaN(n) ? 0 : Math.abs(n);
+  if (typeof raw === "number") return raw;
+  const s = String(raw).replace(/[$,\s]/g, "");
+  // paréntesis contables denotan cargo negativo: (1,234.56) → -1234.56
+  const isParen = /^\(.*\)$/.test(s);
+  const clean = s.replace(/[()]/g, "");
+  const n = Number(clean);
+  if (!Number.isFinite(n)) return NaN;
+  return isParen ? -Math.abs(n) : n;
 }
+
 
 async function sha1(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
@@ -101,20 +113,36 @@ function findHeaderRow(rows: string[][]): number {
 
 interface ColIdx { fecha: number; conc: number; ref: number; cargo: number; abono: number; saldo: number }
 
+function parseMontosRow(row: unknown[], idx: ColIdx):
+  | { cargo: number; abono: number; saldo: number | null }
+  | null {
+  const cargoRaw = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
+  const abonoRaw = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
+  if (Number.isNaN(cargoRaw) || Number.isNaN(abonoRaw)) {
+    console.warn("[bbva] fila descartada: monto no parseable", { row });
+    return null;
+  }
+  const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
+  const saldoNum = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
+  const saldo = saldoNum == null || Number.isNaN(saldoNum) ? null : saldoNum;
+  return { cargo: cargoRaw, abono: abonoRaw, saldo };
+}
+
 async function rowToMovimiento(row: unknown[], idx: ColIdx): Promise<MovimientoParseado | null> {
   if (!row || row.every((c) => c == null || String(c).trim() === "")) return null;
   const fecha = parseFecha(row[idx.fecha]);
   if (!fecha) return null;
   const concepto = String(row[idx.conc] ?? "").trim();
   const referencia = idx.ref >= 0 ? String(row[idx.ref] ?? "").trim() : "";
-  const cargo = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
-  const abono = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
-  const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
-  const saldo = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
+  const montos = parseMontosRow(row, idx);
+  if (!montos) return null;
+  const { cargo, abono, saldo } = montos;
   if (cargo === 0 && abono === 0) return null;
   const hash = await sha1([fecha, concepto, referencia, cargo, abono].join("|"));
   return { fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe: hash };
 }
+
+
 
 async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]> {
   const headerIdx = findHeaderRow(rows);

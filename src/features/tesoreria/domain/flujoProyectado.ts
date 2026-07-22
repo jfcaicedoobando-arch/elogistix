@@ -2,6 +2,7 @@
  * Lógica pura: flujo de caja proyectado por semana ISO a N días.
  * Ver `./resumen.ts` para contexto del refactor (Auditoría Paso 4).
  */
+import { isoUtcDay } from "@/lib/date/mx";
 import type { CobranzaRow, CxpRow, LiquidacionRow, ResumenCuenta } from "./resumen";
 
 export interface DetalleFlujo {
@@ -86,8 +87,8 @@ export function calcularFlujoProyectado(args: {
     const key = isoWeekKey(cursor);
     semanasMap.set(key, {
       semana_iso: key,
-      inicio: cursor.toISOString().slice(0, 10),
-      fin: fin.toISOString().slice(0, 10),
+      inicio: isoUtcDay(cursor),
+      fin: isoUtcDay(fin),
       entradas_mxn: 0, salidas_mxn: 0, flujo_neto_mxn: 0, saldo_proyectado_mxn: 0,
       detalle_entradas: [], detalle_salidas: [],
     });
@@ -166,7 +167,7 @@ function aplicarLiquidaciones(rows: LiquidacionRow[], inWindow: InWindow): void 
     const [y, m] = l.periodo.split("-").map(Number);
     if (!y || !m) continue;
     const dueDate = new Date(y, m, 5);
-    const iso = dueDate.toISOString().slice(0, 10);
+    const iso = isoUtcDay(dueDate);
     const sem = inWindow(iso); if (!sem) continue;
     sem.salidas_mxn += Number(l.total_mxn);
     sem.detalle_salidas.push({

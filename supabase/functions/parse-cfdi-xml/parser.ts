@@ -36,10 +36,21 @@ function attr(tag: string, name: string): string {
   return m ? m[1].trim() : "";
 }
 
+/**
+ * FIX-R2-28: antes silenciaba valores no numéricos devolviendo 0, lo que
+ * ocultaba XML corruptos. Ahora sólo el string vacío se trata como "atributo
+ * ausente"; cualquier otro valor no parseable lanza para dejar rastro.
+ * TODO: migrar el parser regex a un parser DOM real (deno-dom) para robustez.
+ */
 function num(s: string): number {
+  if (s === "" || s == null) return 0;
   const n = Number(s);
-  return Number.isFinite(n) ? n : 0;
+  if (!Number.isFinite(n)) {
+    throw new Error(`LC_XML_NUMERO_INVALIDO: valor no numérico "${s}"`);
+  }
+  return n;
 }
+
 
 function findTag(xml: string, localName: string): string | null {
   // Acepta prefijo (cfdi:, tfd:) o sin prefijo. Toma el primer match.

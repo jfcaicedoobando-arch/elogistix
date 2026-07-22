@@ -3,6 +3,7 @@
  * Extraído de `embarqueWizardSchemas.ts` para mantener cada archivo bajo el
  * límite Power-of-10 (≤200 líneas).
  */
+import { isoUtcDay } from "@/lib/date/mx";
 import { z } from "zod";
 import { msg } from "@/lib/domain/errorCatalog";
 import type { StepValidationErrors } from "./embarqueWizardSchemas";
@@ -165,5 +166,5 @@ export function sugerirETA(
   if (!isValidDateStr(etd) || !diasTransito || diasTransito <= 0) return null;
   const d = new Date(etd!);
   d.setDate(d.getDate() + diasTransito);
-  return d.toISOString().slice(0, 10);
+  return isoUtcDay(d);
 }
