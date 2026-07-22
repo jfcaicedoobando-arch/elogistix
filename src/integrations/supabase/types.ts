@@ -7717,19 +7717,10 @@ export type Database = {
           nombre: string
         }[]
       }
-      generar_expediente:
-        | {
-            Args: { tipo_op: string }
-            Returns: {
-              error: true
-            } & "Could not choose the best candidate function between: public.generar_expediente(tipo_op => text), public.generar_expediente(tipo_op => tipo_operacion). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
-          }
-        | {
-            Args: { tipo_op: Database["public"]["Enums"]["tipo_operacion"] }
-            Returns: {
-              error: true
-            } & "Could not choose the best candidate function between: public.generar_expediente(tipo_op => text), public.generar_expediente(tipo_op => tipo_operacion). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
-          }
+      generar_expediente: {
+        Args: { tipo_op: Database["public"]["Enums"]["tipo_operacion"] }
+        Returns: string
+      }
       generar_liquidacion_comision: {
         Args: {
           p_organization_id: string

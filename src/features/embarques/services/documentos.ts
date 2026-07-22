@@ -23,7 +23,7 @@ export async function resolverExpediente(
   }
 
   const { data, error } = await supabase.rpc('generar_expediente', {
-    tipo_op: tipoOperacion,
+    tipo_op: tipoOperacion as 'Cross Trade' | 'Exportación' | 'Importación' | 'Intra USA' | 'Nacional',
   });
   if (error || !data) {
     throw new Error(error?.message || 'No se pudo generar el número de referencia.');
