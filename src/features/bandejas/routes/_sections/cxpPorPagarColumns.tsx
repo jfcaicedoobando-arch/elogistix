@@ -2,14 +2,21 @@
  * Columnas de la tabla /compras/por-pagar.
  * v13.200.0: sin `<Link>` inline. Navegación por row-click desde el consumer.
  */
-import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
-import { variantDiasParaVencer } from "@/features/bandejas/domain/aggregates";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import type { ChipTone } from "@/features/cxp/lib/badgeTone";
 import type { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 
 export type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];
+
+function toneDiasParaVencer(dias: number): ChipTone {
+  if (dias < 0) return "destructive";
+  if (dias <= 7) return "warning";
+  return "neutral";
+}
+
 
 export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
   return defineColumns<CxpRow>([

@@ -20,10 +20,14 @@ export const BUCKET_LABELS: Record<CubetaAging, string> = {
   mas_90: ">90 d",
 };
 
-export const BUCKET_TONES: Record<CubetaAging, string> = {
-  vigente: "bg-muted text-muted-foreground",
-  d_1_30: "bg-warning/10 text-warning",
-  d_31_60: "bg-warning/20 text-warning",
-  d_61_90: "bg-destructive/10 text-destructive",
-  mas_90: "bg-destructive/20 text-destructive",
+import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+
+/** Tono semántico por cubeta — consumido por `<ToneBadge tone={...} />`. */
+export const BUCKET_TONE: Record<CubetaAging, ChipTone> = {
+  vigente:  "neutral",
+  d_1_30:   "warning",
+  d_31_60:  "warning",
+  d_61_90:  "destructive",
+  mas_90:   "destructive",
 };
+

@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/formatters";
