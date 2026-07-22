@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.306.4] - 2026-07-22
+- **fix(cotizaciones) · Guardrail Fase J restaurado.** `aceptar_cotizacion_version` ahora vuelve a incluir el hint `estados_permitidos=Borrador,Enviada` en el mensaje/HINT de `LC_COTIZACION_ESTADO_INVALIDO`. Corrige el fallo del test `cotizacion-ciclo-fase-j.test.ts` en CI (shard 2). Sin cambios de comportamiento para el usuario final.
+
+
 ## [13.306.3] - 2026-07-22
 - **fix(auth) · FIX-R2-16 · Rol correcto al registrar usuarios.** Cierra el pendiente de la auditoría R2 sobre asignación de roles en el flujo de invitación/auto-registro.
   - **Auto-signup público** (`handle_new_user_signup`): el usuario que crea su propia cuenta ahora recibe rol global `admin_org` (moderno, ámbito organización) y membresía `admin_org` en la organización recién creada. Antes se otorgaba `admin` legacy — que en algunos code paths se interpretaba como admin global cross-tenant.
