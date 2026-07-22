@@ -158,7 +158,7 @@ describe("mapJoinedRow", () => {
     });
     const out = mapJoinedRow(row);
     expect(out.dias_vencido).toBe(0);
-    expect(out.estatus).toBe("Sin saldo");
+    expect(out.estatus).toBe("Pagada");
   });
 
   it("propaga origen del proveedor y categoría", () => {
