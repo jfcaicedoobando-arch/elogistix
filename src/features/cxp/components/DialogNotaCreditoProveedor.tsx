@@ -21,7 +21,7 @@ import { useCrearNotaCredito } from "@/features/cxp/hooks/useNotasCreditoProveed
 import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { CargaXmlNcSection } from "./CargaXmlNcSection";
-import { buildNcPrefillFromCfdi, type NcPrefillValues } from "./ncFromCfdi";
+import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
