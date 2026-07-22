@@ -45,7 +45,7 @@ function TipoAlert({ parsed }: { parsed: CfdiParsedResponse | null }) {
 interface XmlDropProps {
   xml: File | null;
   onFile: (f: File | null) => void;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 function XmlDrop({ xml, onFile, inputRef }: XmlDropProps) {
