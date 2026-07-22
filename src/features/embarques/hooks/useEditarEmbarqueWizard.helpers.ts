@@ -3,10 +3,16 @@
  */
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import type { FieldDiff, ConceptosDiff } from "@/features/auditoria/utils/diffFields";
+import {
+  esNumeroContenedorValido,
+  ISO6346_MENSAJE,
+} from "@/features/embarques/domain/contenedorIso6346";
 
 /**
  * Marítimo exige número + tipo en cada contenedor. Devuelve `null` si OK,
  * o un objeto con el mensaje para mostrar al usuario y el paso a re-abrir.
+ * Además valida que los números con contenido cumplan ISO 6346 antes de
+ * enviar al backend (el CHECK `contenedor_iso6346` los rechaza si no).
  */
 export function validarContenedoresMaritimo(
   modo: string,
@@ -16,11 +22,20 @@ export function validarContenedoresMaritimo(
   const faltan = contenedores.some(
     (c) => !c.numero_contenedor.trim() || !c.tipo_contenedor.trim(),
   );
-  if (!faltan) return null;
-  return {
-    description: "Cada contenedor requiere número y tipo. Revisa el paso 2.",
-    step: 2,
-  };
+  if (faltan) {
+    return {
+      description: "Cada contenedor requiere número y tipo. Revisa el paso 2.",
+      step: 2,
+    };
+  }
+  const invalidos = contenedores.some((c) => !esNumeroContenedorValido(c.numero_contenedor));
+  if (invalidos) {
+    return {
+      description: `Número de contenedor inválido. ${ISO6346_MENSAJE}`,
+      step: 2,
+    };
+  }
+  return null;
 }
 
 interface BitacoraEditInput {
