@@ -1,5 +1,22 @@
 # Changelog
 
+## [13.307.0] - 2026-07-22
+- **fix(db) · Auditoría R3 · bloque consolidado P0/P1/P2 aplicado.**
+  - **FIX-R3-02** · `pagos_proveedor.tipo_cambio_usd` deja de tener DEFAULT `0` y su CHECK pasa a `IS NULL OR > 0`: los pagos MXN sin TC vuelven a insertar sin violar constraints.
+  - **FIX-R3-03** · `contenedor_iso6346` acepta `NULL` o cadena vacía (el borrador desde cotización nace sin número); el formato ISO-6346 se sigue exigiendo cuando el usuario captura un número real. Los índices únicos de contenedores/BL house quedan pendientes de limpieza (5 duplicados históricos detectados al intentar crearlos).
+  - **FIX-R3-05** · `marcar_facturas_vencidas()` fija la marca de sesión `app.recalc_estado_factura=1` antes del `UPDATE`, de modo que el cron diario ya no se autoexcluye por el guard `LC_FAC_ESTADO_CALCULADO`.
+  - **FIX-R3-06** · `validar_cierre_embarque` valida que quien consulta pertenezca a la misma organización que el embarque (o sea `super_admin`); ya no funciona como oráculo cross-org. Se revoca `EXECUTE` público sobre `_recalc_estado_proveedor_factura`.
+  - **FIX-R3-07** · La regla `margen_minimo` ahora sí participa en `puede_cerrar`: si la utilidad MXN queda por debajo del mínimo configurado (`configuracion_global.pnl_margen_minimo_cierre`), el cierre queda bloqueado.
+  - **FIX-R3-11** · Vista `costeo_tarifas_vigentes_v` sólo devuelve tarifas realmente vigentes (`estado='vigente'` + rango `vigente_desde..vigente_hasta` cubriendo `CURRENT_DATE`). Las reemplazadas o vencidas ya no ensucian el ranking.
+  - **FIX-R3-13** · Se elimina la sobrecarga vieja `crear_embarque_borrador_desde_cotizacion(uuid)`; queda sólo la firma completa `(uuid,text,uuid,jsonb)`.
+  - **FIX-R3-15** · `handle_new_user_signup` sale temprano cuando `raw_user_meta_data.skip_auto_org='true'`: las invitaciones ya no crean organización fantasma ni asignan rol global.
+  - **FIX-R3-17** · Nuevo trigger `trg_pago_sin_rep_vivo_delete` en `pagos_factura` bloquea `DELETE` físico si el pago tiene `uuid_rep` y `estado_rep='Timbrado'`, con `LC_PAGO_CON_REP_VIVO` (antes sólo se cubría el soft-delete).
+  - **Pendientes conocidos (R3):** limpieza de datos previa a crear `contenedores_numero_unico`, `contenedores_bl_house_unico` y `facturas_sustituye_a_unico`. Se necesita un migrado de saneo antes de reintentar los índices únicos.
+  - Analogía: cerramos las ventanas por las que entraba viento (pagos MXN rechazados, cierres cross-org, cron vencidas roto) y reforzamos las bisagras, pero antes de poner los candados finales hay que tirar los muebles duplicados que dejaron los inquilinos anteriores.
+
+
+
+
 ## [13.306.4] - 2026-07-22
 - **fix(cotizaciones) · Guardrail Fase J restaurado.** `aceptar_cotizacion_version` ahora vuelve a incluir el hint `estados_permitidos=Borrador,Enviada` en el mensaje/HINT de `LC_COTIZACION_ESTADO_INVALIDO`. Corrige el fallo del test `cotizacion-ciclo-fase-j.test.ts` en CI (shard 2). Sin cambios de comportamiento para el usuario final.
 
