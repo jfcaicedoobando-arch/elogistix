@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.15] - 2026-07-22
+- **ux(eliminar) · Confirmar con Enter tras escribir `ELIMINAR`.** En los modales de eliminación de factura de proveedor (`EliminarFacturaCxpDialog`) y en el genérico de doble confirmación (`DoubleConfirmDeleteDialog`), el input de confirmación ahora escucha la tecla `Enter`: una vez que el texto coincide con `ELIMINAR` y el botón no está en estado de carga, presionar Enter ejecuta la acción destructiva sin tener que hacer clic. Se previene el comportamiento por defecto del evento para evitar submits accidentales. Analogía: antes, después de firmar el formulario de renuncia tenías que buscar el botón rojo; ahora puedes darle "intro" y listo.
+
 ## [13.307.14] - 2026-07-22
 - **fix(cxp) · Folio interno saltado al borrar factura de proveedor.** El trigger `BEFORE INSERT` incrementaba `folio_secuencias.ultimo_numero` al crear, pero el soft-delete (`deleted_at`) no lo tocaba, así que borrar `FP-000046` dejaba la próxima alta en `FP-000047` con un hueco permanente. Nuevo trigger `trg_liberar_folio_proveedor_factura` (AFTER UPDATE OF deleted_at) recalcula el MAX numérico de folios vivos y baja el contador — pero **sólo si no quedan folios activos con número mayor**, así que borrar la última reutiliza el folio y borrar una intermedia no toca nada. Cubre también borrado en cadena de las últimas (46→45→44 seguidos). Compatible con el unique index parcial existente (`WHERE deleted_at IS NULL`), no hay riesgo de choque contra la fila borrada. Guardrail en `folio-proveedor-liberacion.test.ts`. Analogía: la libreta de folios ya no salta números cuando arrancas la última hoja recién estrenada — el contador de la contraportada retrocede al último folio con tinta.
 
