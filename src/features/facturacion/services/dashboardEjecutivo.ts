@@ -37,14 +37,14 @@ export interface DashboardEjecutivoKpis {
 // "junio 01 00:00Z" a "mayo 31" y las etiquetas de rango se desalinean.
 // La corrección real de zona horaria se aplica al `hoy` de negocio en el caller
 // (parseLocalMx(hoyMx()) antes de derivar rangos).
-import { hoyMx, parseLocalMx } from "@/lib/date/mx";
+import { hoyMx, isoUtcDay, parseLocalMx } from "@/lib/date/mx";
 
 function ymd(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return isoUtcDay(d);
 }
 
 function ym(d: Date): string {
-  return d.toISOString().slice(0, 7);
+  return isoUtcDay(d).slice(0, 7);
 }
 
 function inicioMes(d: Date): Date {

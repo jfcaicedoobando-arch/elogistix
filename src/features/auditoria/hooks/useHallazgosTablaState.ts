@@ -18,6 +18,7 @@ import {
   type FiltroRevision,
 } from "./hallazgosTablaFilters";
 import { todayLocalISO } from "@/lib/date/today";
+import { hoyMx } from "@/lib/date/mx";
 
 export type { FiltroRevision, FiltroResponsable } from "./hallazgosTablaFilters";
 
@@ -71,8 +72,8 @@ export function useHallazgosTablaState(
   const filtrados = useMemo(() => {
     const ctx = {
       q: search.trim().toLowerCase(),
-      desde: etaDesde ? etaDesde.toISOString().slice(0, 10) : null,
-      hasta: etaHasta ? etaHasta.toISOString().slice(0, 10) : null,
+      desde: etaDesde ? hoyMx(etaDesde) : null,
+      hasta: etaHasta ? hoyMx(etaHasta) : null,
       today: todayLocalISO(),
       filtroRegla,
       filtroSev,

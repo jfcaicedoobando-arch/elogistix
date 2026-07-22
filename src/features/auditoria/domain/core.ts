@@ -15,6 +15,7 @@ import type {
   ReglaAuditoria,
   SeveridadAuditoria,
 } from "@/features/auditoria/types";
+import { isoUtcDay } from "@/lib/date/mx";
 
 export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
   "docs_faltantes",
@@ -42,7 +43,7 @@ export const REGLAS_AUDITORIA: ReglaAuditoria[] = [
 
 /** YYYY-MM-DD del día indicado (default: hoy) **en UTC**. */
 export function isoDate(date: Date = new Date()): string {
-  return date.toISOString().slice(0, 10);
+  return isoUtcDay(date);
 }
 
 /** Atajo: día actual en UTC (formato YYYY-MM-DD). Punto único para reglas temporales. */

@@ -5,6 +5,7 @@
  */
 import type { FilaHueco } from "@/features/facturacion/services";
 import { formatDate } from "@/lib/formatters";
+import { hoyMx } from "@/lib/date/mx";
 
 export const HUECO_CSV_HEADERS = [
   { key: "expediente", label: "Expediente" },
@@ -20,7 +21,7 @@ export const HUECO_CSV_HEADERS = [
 ] as const;
 
 export function buildHuecoCsvFilename(hoy: Date = new Date()): string {
-  return `hueco_facturacion_${hoy.toISOString().slice(0, 10)}.csv`;
+  return `hueco_facturacion_${hoyMx(hoy)}.csv`;
 }
 
 export function buildHuecoCsvRows(filas: FilaHueco[]): Record<string, unknown>[] {

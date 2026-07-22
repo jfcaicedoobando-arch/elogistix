@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { ymMx } from "@/lib/date/mx";
 
 export type ComisionDevengadaRow = Tables<"comisiones_devengadas">;
 export type EstadoComision = ComisionDevengadaRow["estado"];
@@ -97,7 +98,7 @@ export interface KPIsComisiones {
 }
 
 export function calcularKPIsComisiones(items: ComisionDevengada[]): KPIsComisiones {
-  const mesActual = new Date().toISOString().slice(0, 7);
+  const mesActual = ymMx();
   let dev = 0, pend = 0, liq = 0;
   for (const it of items) {
     const mes = it.created_at.slice(0, 7);

@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.306.2] - 2026-07-22
+- **chore(dates) · Erradicación total de `toISOString().slice(0,10)` en código de producción.** Migrados los 11 archivos restantes al helper canónico (`hoyMx` / `ymMx` para fechas de negocio en CDMX, `isoUtcDay` cuando el `Date` ya está anclado a UTC): `costeo/types/navieraCondicion.ts`, `costeo/components/TarifaForm.helpers.ts`, `facturacion/domain/huecoCsv.ts`, `facturacion/services/facturaManual.ts`, `facturacion/services/dashboardEjecutivo.ts`, `auditoria/domain/core.ts`, `auditoria/domain/ejecutivoAgregados.ts`, `auditoria/hooks/useHallazgosTablaState.ts`, `dashboard/direccion/services/mxn.ts`, `cxp/hooks/useNuevaFacturaProveedorForm.helpers.ts`, `comisiones/services/devengadas.ts` y `comisiones/components/DialogGenerarLiquidacion.tsx`. Cierra el pendiente cosmético reportado tras la verificación de la auditoría R2 (FIX-R2-23).
+  - Analogía: cambiamos todos los relojes viejos que a veces marcaban el día de mañana a las 6pm por un reloj único calibrado a la hora de México.
+
 ## [13.306.1] - 2026-07-22
 - **fix(db+ui) · BLOQUE C (P2) de la auditoría R2 — endurecimiento del motor financiero, integridad y máquinas de estado.**
   - **FIX-R2-18 · Notas de crédito inmutables.** Nuevo trigger `trg_nc_no_delete` en `factura_notas_credito` rechaza cualquier `DELETE` con `LC_NC_INMUTABLE`; hay que cancelar la NC, no borrarla, para preservar la cadena contable.

@@ -9,6 +9,7 @@ import { MonthPickerMx } from "@/components/ui/month-picker-mx";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useGenerarLiquidacion } from "@/features/comisiones/hooks";
+import { ymMx } from "@/lib/date/mx";
 
 interface VendedoraOpt { id: string; nombre: string }
 
@@ -17,7 +18,7 @@ export function DialogGenerarLiquidacion({
 }: { open: boolean; onOpenChange: (o: boolean) => void; vendedoras: VendedoraOpt[] }) {
   const { organizationId } = useOrganization();
   const [vendedoraId, setVendedoraId] = useState("");
-  const [periodo, setPeriodo] = useState(new Date().toISOString().slice(0, 7));
+  const [periodo, setPeriodo] = useState(ymMx());
   const gen = useGenerarLiquidacion();
 
   // 13.85.10 — Toasts viven en `useGenerarLiquidacion`. Aquí sólo cerramos el dialog.

@@ -7,6 +7,7 @@ import type {
   ReglaAuditoria,
   SeveridadAuditoria,
 } from "@/features/auditoria/types";
+import { isoUtcDay } from "@/lib/date/mx";
 
 // `OperadorRanking` / `calcularRanking` viven en `./ejecutivoRanking` (split Power-of-10 #4).
 export { calcularRanking, type OperadorRanking, type RankingResultado } from "./ejecutivoRanking";
@@ -133,8 +134,8 @@ export const REGLAS_CON_VENCIMIENTO_PROPIO: ReglaAuditoria[] = [
 export function calcularVencimientos(pendientes: HallazgoAuditoria[]) {
   // UTC-only: evita drift por TZ local (ver banner core.ts).
   const nowMs = Date.now();
-  const hoyIso = new Date(nowMs).toISOString().slice(0, 10);
-  const en3DiasIso = new Date(nowMs + 3 * 86_400_000).toISOString().slice(0, 10);
+  const hoyIso = isoUtcDay(new Date(nowMs));
+  const en3DiasIso = isoUtcDay(new Date(nowMs + 3 * 86_400_000));
   let pendientesVencidos = 0;
   let pendientesUrgentesPorEta = 0;
   let sumaDias = 0;

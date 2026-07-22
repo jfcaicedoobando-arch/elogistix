@@ -5,6 +5,7 @@
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import { formatUSD } from "@/lib/formatters";
 import { todayLocalISO } from "@/lib/date/today";
+import { hoyMx } from "@/lib/date/mx";
 
 /** Re-export para call-sites del TarifaForm. Delega en el canónico `formatUSD`. */
 export const usdFormatter = formatUSD;
@@ -14,7 +15,7 @@ const todayISO = () => todayLocalISO();
 const plusDays = (n: number) => {
   const d = new Date();
   d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  return hoyMx(d);
 };
 
 const TARIFA_DEFAULTS: TarifaInput = {

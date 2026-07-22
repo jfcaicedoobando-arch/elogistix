@@ -4,6 +4,7 @@
  */
 import { convertirAMXN, type Moneda } from "@/lib/financial/financialUtils";
 import { tcValido } from "@/lib/financial/tcValido";
+import { isoUtcDay } from "@/lib/date/mx";
 
 export function toMxn(monto: number | null | undefined, moneda: string | null | undefined, tcUsd: number, tcEur: number): number {
   const m = Number(monto ?? 0);
@@ -29,7 +30,7 @@ export function mxnFactura(monto: number, moneda: string, tipoCambio: number | n
 }
 
 export function ym(d: Date): string {
-  return d.toISOString().slice(0, 7);
+  return isoUtcDay(d).slice(0, 7);
 }
 
 export function inicioMesUtc(d: Date): Date {

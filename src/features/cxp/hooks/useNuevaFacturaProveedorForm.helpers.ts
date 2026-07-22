@@ -6,6 +6,7 @@
 import type { Database } from "@/integrations/supabase/types";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import { todayLocalISO } from "@/lib/date/today";
+import { isoUtcDay } from "@/lib/date/mx";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -41,7 +42,7 @@ export function addDays(iso: string, days: number): string {
   // La regex acepta "2026-13-40"; validamos que Date no haya rodado el mes/día.
   if (utc.getUTCFullYear() !== y || utc.getUTCMonth() !== m - 1 || utc.getUTCDate() !== d) return "";
   utc.setUTCDate(utc.getUTCDate() + days);
-  return utc.toISOString().slice(0, 10);
+  return isoUtcDay(utc);
 }
 
 export const today = () => todayLocalISO();
