@@ -33,6 +33,16 @@ function NcEstadoBadge({ estado }: { estado: string }) {
   return <Badge variant="outline">Borrador</Badge>;
 }
 
+async function openStoredFile(path: string | null | undefined) {
+  if (!path) return;
+  try {
+    const url = await getFacturaSignedUrl(path);
+    window.open(url, "_blank", "noopener,noreferrer");
+  } catch {
+    toast.error("No se pudo generar la liga de descarga del archivo.");
+  }
+}
+
 export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, canEdit }: Props) {
   const { data: notas = [], isLoading } = useNotasCreditoFactura(facturaId);
   const aplicar = useAplicarNotaCredito(facturaId);
