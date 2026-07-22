@@ -6,10 +6,19 @@
  * primer parámetro `toast` por compatibilidad con los ~70 call sites previos,
  * pero internamente se ignora y se emite siempre vía `sonner.toast.*`.
  *
+ * v13.308.7 — Cobertura 100% de "Ver detalles":
+ *   - `notifyError` (ya lo tenía)
+ *   - `notifySuccess`, `notifyWarning`, `notifyInfo` (nuevo): aceptan
+ *     `error?`, `context?`, `method?`, `payload?`, `requestId?`,
+ *     `showDetails?`. Si viene cualquiera de esos campos, el toast lleva
+ *     acción **"Ver detalles"** que abre `ErrorDetailsDialog` con reporte
+ *     copiable. Sin esos campos, se mantiene el toast minimalista.
+ *
  * Estándar:
- *   - error     → sonner.error (persistente si hay debug, con acción "Ver detalles")
- *   - warning   → sonner.warning
- *   - success   → sonner.success
+ *   - error     → sonner.error (persistente + "Ver detalles", siempre)
+ *   - warning   → sonner.warning ("Ver detalles" si hay debug)
+ *   - success   → sonner.success ("Ver detalles" si hay debug)
+ *   - info      → sonner ("Ver detalles" si hay debug)
  */
 import { toast as sonnerToast } from "sonner";
 import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
@@ -21,8 +30,7 @@ import { reportCaughtError } from "@/lib/observability/reportCaughtError";
  * Firma laxa retenida sólo por compatibilidad con call sites que aún pasan
  * el `toast` del antiguo shadcn `useToast`. El argumento se ignora — usamos
  * `never` en posición contravariante para aceptar cualquier toast (shadcn
- * `{title,...}`, sonner, etc.) bajo `strictFunctionTypes`. La función NUNCA
- * se invoca dentro de los helpers — todo va por `sonner` directo.
+ * `{title,...}`, sonner, etc.) bajo `strictFunctionTypes`.
  */
 export type AnyToastFn = (props: never) => unknown;
 
@@ -41,6 +49,53 @@ export interface ErrorNotifyOptions {
   payload?: unknown;
   /** Correlation ID si el backend lo devolvió. */
   requestId?: string;
+}
+
+/** Opciones comunes para success/warning/info (todas con debug opcional). */
+export interface InfoNotifyOptions {
+  title: string;
+  description?: string;
+  duration?: number;
+  /** ID de dedupe (pasa a sonner). */
+  id?: string | number;
+  /** Si viene `error`/`context`/`method`/`payload`/`requestId` o `showDetails=true`,
+   *  el toast incluye acción "Ver detalles". */
+  error?: unknown;
+  context?: Record<string, unknown>;
+  method?: string;
+  payload?: unknown;
+  requestId?: string;
+  errorCode?: string;
+  /** Fuerza el botón "Ver detalles" aunque no haya error/contexto. */
+  showDetails?: boolean;
+}
+
+function shouldAttachDetails(opts: InfoNotifyOptions): boolean {
+  return Boolean(
+    opts.showDetails
+    || opts.error !== undefined
+    || opts.context !== undefined
+    || opts.method
+    || opts.payload !== undefined
+    || opts.requestId
+    || opts.errorCode,
+  );
+}
+
+function buildDetailsAction(opts: InfoNotifyOptions & { titleFinal: string; phase?: string }) {
+  const debug = buildErrorReport({
+    title: opts.titleFinal,
+    description: opts.description,
+    phase: opts.phase,
+    error: opts.error,
+    context: opts.context,
+    errorCode: opts.errorCode,
+    method: opts.method,
+  });
+  return {
+    label: "Ver detalles",
+    onClick: () => openErrorReport(debug),
+  };
 }
 
 /** Emite un toast bloqueante (error) con payload de debug copiable. */
@@ -83,18 +138,8 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
     },
   });
 
-  // 13.114.20: cierre del gap principal de la auditoría — `notifyError` es el
-  // toast unificado (340 call sites). Antes sólo armaba el payload de debug:
-  // sin que el usuario abriera "Ver detalles" Sentry nunca veía el error.
-  // Reportamos sólo cuando hay `error` real (skip puro form-validation que
-  // pasa `errors`/`message` sin objeto Error, para no inflar la cuota).
-  //
-  // 13.300.7: además, filtramos errores de autorización (RLS/guards del
-  // backend). No son bugs — mostramos el toast pero NO enviamos a Sentry.
-  //
-  // 13.301.59: también filtramos validaciones esperadas de FacturApi/SAT
-  // (razón social vs RFC, RFC no registrado, régimen inválido). El usuario
-  // debe corregir el catálogo — no es bug de código.
+  // 13.114.20 / 13.300.7 / 13.301.59: reportamos a Sentry sólo cuando hay error
+  // real y no es autorización / validación esperada / fallo transitorio de red.
   if (shouldReportToSentry(error)) {
     reportCaughtError(
       error,
@@ -115,8 +160,7 @@ export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOpt
   }
 }
 
-/** Decide si un error debe llegar a Sentry (excluye autorización + validaciones
- *  esperadas SAT + fallos transitorios de red de FacturApi). */
+/** Decide si un error debe llegar a Sentry. */
 function shouldReportToSentry(error: unknown): boolean {
   if (error === undefined || error === null) return false;
   if (isAuthorizationError(error)) return false;
@@ -125,11 +169,6 @@ function shouldReportToSentry(error: unknown): boolean {
   return true;
 }
 
-/**
- * Detecta errores de autorización esperados (guards RLS / RPC del backend).
- * Estos NO deben reportarse a Sentry — son parte del flujo normal cuando un
- * usuario intenta una acción para la que no tiene permisos.
- */
 export function isAuthorizationError(err: unknown): boolean {
   const msg =
     err instanceof Error ? err.message : typeof err === "string" ? err : "";
@@ -138,12 +177,6 @@ export function isAuthorizationError(err: unknown): boolean {
   );
 }
 
-/**
- * Detecta validaciones de negocio esperadas de FacturApi/SAT (dato mal
- * capturado en el catálogo del cliente). Se identifica vía el flag
- * `expected` que expone `FacturapiError` (whitelist regex vive en
- * `services/facturapi.ts`).
- */
 export function isExpectedFacturapiValidation(err: unknown): boolean {
   return (
     typeof err === "object"
@@ -153,12 +186,6 @@ export function isExpectedFacturapiValidation(err: unknown): boolean {
   );
 }
 
-/**
- * Detecta fallos transitorios de red al invocar Edge Functions de FacturApi
- * (típico `FunctionsFetchError` cuando el navegador pierde conexión). No son
- * bugs de código: mostramos toast accionable, el usuario reintenta y listo.
- * Ref audit Sentry JAVASCRIPT-REACT-2T (13.301.60).
- */
 export function isTransientFacturapiNetwork(err: unknown): boolean {
   if (typeof err !== "object" || err === null) return false;
   if ((err as { name?: unknown }).name !== "FacturapiError") return false;
@@ -169,18 +196,50 @@ export function isTransientFacturapiNetwork(err: unknown): boolean {
     .test(msg);
 }
 
-/** Emite un toast de advertencia (no bloquea). */
+/** Emite un toast de advertencia (no bloquea). Puede llevar "Ver detalles". */
 export function notifyWarning(
   _toast: AnyToastFn | undefined,
-  opts: { title: string; description?: string },
+  opts: InfoNotifyOptions,
 ) {
-  sonnerToast.warning(opts.title, { description: opts.description });
+  const action = shouldAttachDetails(opts)
+    ? buildDetailsAction({ ...opts, titleFinal: opts.title })
+    : undefined;
+  sonnerToast.warning(opts.title, {
+    description: opts.description,
+    duration: opts.duration,
+    id: opts.id,
+    action,
+  });
 }
 
-/** Emite un toast de éxito. */
+/** Emite un toast de éxito. Puede llevar "Ver detalles" si se pasa error/context/etc. */
 export function notifySuccess(
   _toast: AnyToastFn | undefined,
-  opts: { title: string; description?: string },
+  opts: InfoNotifyOptions,
 ) {
-  sonnerToast.success(opts.title, { description: opts.description });
+  const action = shouldAttachDetails(opts)
+    ? buildDetailsAction({ ...opts, titleFinal: opts.title })
+    : undefined;
+  sonnerToast.success(opts.title, {
+    description: opts.description,
+    duration: opts.duration,
+    id: opts.id,
+    action,
+  });
+}
+
+/** Emite un toast informativo (neutro). Puede llevar "Ver detalles". */
+export function notifyInfo(
+  _toast: AnyToastFn | undefined,
+  opts: InfoNotifyOptions,
+) {
+  const action = shouldAttachDetails(opts)
+    ? buildDetailsAction({ ...opts, titleFinal: opts.title })
+    : undefined;
+  sonnerToast(opts.title, {
+    description: opts.description,
+    duration: opts.duration,
+    id: opts.id,
+    action,
+  });
 }

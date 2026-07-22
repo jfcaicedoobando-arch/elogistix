@@ -1,57 +1,94 @@
 
-## Bug
+# Auditoría de toasts — cobertura 100% + "Ver detalles" universal
 
-En el tab **Cierre** del embarque 235 (`ELIMP00235`), el check "Cuentas por cobrar al día" muestra **saldo MXN $5,220**, cuando la única factura del embarque es **USD 5,220**.
+## Estado actual (verificado)
 
-### Causa raíz (verificada)
+| Tipo | Call sites | ¿Tiene "Ver detalles"? |
+|---|---|---|
+| `notifyError` | 422 | ✅ Sí (persistente + copia reporte) |
+| `notifySuccess` | 154 | ❌ No |
+| `notifyWarning` | 6 | ❌ No |
+| `toast.success` directo | 74 | ❌ No |
+| `toast.warning` directo | 12 | ❌ No |
+| `toast.info` / `toast(...)` | 45 | ❌ No |
+| `crmToast.success/info/undo` | ~30 | ❌ No |
+| `toast.error` en `queryClient` | 1 | ❌ No (excluido en allowlist) |
 
-1. **Base de datos**: la factura `a5fd3b26…` es `USD 5,220`, estado `Pagada`, sin `pagos_factura` ni notas de crédito. `saldo_factura(...)` devuelve `5220` (numérico, sin moneda).
-2. **RPC `validar_embarque_para_cierre`** (`supabase/migrations/20260722173633_…sql`, líneas 123-140): suma `total`, `pagado`, `notas_credito`, `saldo` en una sola variable numérica **sin separar por moneda** y arma `detalle` sin campo `moneda`. Lo mismo pasa en el check `cxp_pagada` (L102-112).
-3. **Formatter** `fmtCxc` / `fmtCxp` (`src/features/embarques/utils/cierreCheckFormatters.ts`, L12-32) llaman a `formatCurrencySafe(saldo)` sin pasar moneda → cae al default MXN.
+Los guardrails de arquitectura (`error-toasts-use-notifyError.test.ts`) ya impiden `toast.error(...)` directo y `variant:"destructive"`, pero **no existe** un guardrail equivalente para success/warning/info.
 
-Además, el saldo de 5,220 aparece porque la factura está `Pagada` sin `pagos_factura`. No lo tocamos en este cambio (es dato heredado); sólo corregimos que la UI diga la moneda real.
+## Objetivo
 
-## Alcance del cambio
+1. **100% de los toasts** — cualquier severidad — pueden abrir "Ver detalles" con reporte copiable (título, timestamp, ruta, usuario, error real si lo hay, contexto).
+2. **Cerrar huecos**: queryClient, crmToast, catch silenciosos, comportamiento dentro de modales.
+3. **Guardrail arquitectónico** que impida regresiones futuras.
 
-Corregir la UI para que refleje la moneda real, soportando embarques con facturas mixtas MXN + USD.
+## Cambios
 
-### 1. RPC `validar_embarque_para_cierre` (nueva migración)
+### 1 · `appFeedback.ts` — extender helpers con debug opcional
 
-Reescribir los dos bloques (`cxc_cobrada` y `cxp_pagada`) para agrupar por moneda:
+- `notifySuccess(_, opts)` y `notifyWarning(_, opts)` reciben ahora `error?`, `context?`, `method?`, `payload?`, `requestId?` igual que `notifyError`.
+- Cuando se pase cualquiera de esos campos (o siempre, según config), el toast incluye acción **"Ver detalles"** que abre `ErrorDetailsDialog` con el `buildErrorReport`.
+- Nuevo helper interno `attachDebugAction(opts)` reutilizado por los 3 notifiers.
+- Los notifiers también aceptan `showDetails?: boolean` para forzar la acción incluso sin `error` (ej. éxitos con payload interesante como "Factura timbrada" → ver UUID, folio, sello).
+- Éxito y warning **no** son persistentes (duration por defecto), sólo el error mantiene `duration: Infinity`.
 
-- `cxc_cobrada.detalle` pasa de `{ total, pagado, saldo, notas_credito }` a `{ por_moneda: [{ moneda, total, pagado, notas_credito, saldo, facturas_pendientes }], saldo_total_absoluto }`.
-- `cxp_pagada.detalle` análogo: `{ por_moneda: [{ moneda, total, pagado, saldo, facturas_pendientes }] }`.
-- La condición `v_ok` sigue basada en que **todos** los saldos (cualquier moneda) estén ≤ 0.01.
+### 2 · Nuevo helper `notifyInfo` + migración de `toast(...)` plano
 
-Sin cambios de firma del RPC; sólo cambia el shape interno de `detalle` para esas dos reglas.
+- Añadir `notifyInfo(_, opts)` con la misma firma.
+- Migrar los 37 usos de `toast(...)` plano y 8 de `toast.info(...)` a `notifyInfo`.
+- Migrar los 74 `toast.success(...)` y 12 `toast.warning(...)` a `notifySuccess` / `notifyWarning` (edits mecánicos por archivo).
 
-### 2. Formatters `fmtCxc` y `fmtCxp`
+### 3 · `queryClient.ts` — reemplazar `toast.error` por `notifyError`
 
-Actualizar `src/features/embarques/utils/cierreCheckFormatters.ts` para leer `por_moneda[]` y emitir texto tipo:
+- Sustituir el `toast.error("No pudimos cargar la información", …)` por `notifyError` con `error: err`, `method: "QUERY_CACHE"`, `context: { queryKey }`. Mantener `id` dedupe por root usando la key de sonner (pasar `toastId` a través de options extendidas).
+- Quitar `queryClient.ts` del `ALLOWLIST` en el test de guardrail.
 
-```
-2 factura(s) por cobrar · saldo USD $5,220.00
-```
+### 4 · `crmToast.ts` — trazabilidad opcional
 
-o cuando hay mezcla:
+- `success(msg, opts?)` e `info(msg, opts?)` aceptan `{ error?, context?, method? }`. Si se pasa, incluyen "Ver detalles"; si no, se mantienen minimalistas (2s).
+- Documentar en el comment head que ahora sí pueden llevar debug.
 
-```
-saldo MXN $1,200.00 + USD $500.00
-```
+### 5 · Catch silenciosos → notifyError
 
-Mantener retro-compatibilidad: si el detalle viejo (sin `por_moneda`) llega (por caché), seguir usando el path actual con default MXN para no romper.
+- Rastrear con `rg "console\.error\(" src -t ts` los bloques `catch` que no emiten toast (fuera de servicios puros y de `reportCaughtError`).
+- Priorizar hooks/mutations/handlers de UI. Convertir a `notifyError(toast, { error, method: "..." })` conservando el `console.error` sólo cuando el helper ya lo cubra vía Sentry.
+- No tocar servicios de dominio puros ni tests.
 
-### 3. Tests
+### 6 · Toasts dentro de modales (Dialog)
 
-- Ajustar tests unitarios de los formatters (si existen bajo `src/features/embarques/utils/__tests__/`) para cubrir: sola MXN, sola USD, mezcla, y shape legacy.
-- No se requieren cambios en tests de arquitectura.
+- Verificar en `src/components/ui/dialog.tsx` que el overlay no captura pointer-events sobre el contenedor `<Toaster>`.
+- Añadir `pointer-events-auto` explícito al toast en `sonner.tsx` y `z-index` superior al Dialog (`z-[100]` vs `z-50` del overlay Radix).
+- Probar manualmente que "Ver detalles" abre el `ErrorDetailsDialog` **encima** del Dialog abierto (el store ya renderiza a portal root, sólo hay que confirmar z-index).
 
-### 4. Housekeeping
+### 7 · Nuevo guardrail arquitectónico
 
-- `APP_VERSION` → `13.308.5`.
-- Entrada en `CHANGELOG.md`: "Fix: checks CxC/CxP del cierre muestran la moneda real (soporta multi-divisa)."
+Nuevo test `src/__tests__/architecture/all-toasts-use-notify-helpers.test.ts` que prohíbe en `src/features/**` y `src/hooks/**`:
+
+- `toast.success(`, `toast.warning(`, `toast.info(`
+- `toast(` como statement (no como identifier)
+
+Allowlist mínima: shims (`useToast.ts`, `crmToast.ts`, `appFeedback.ts`, `sonner.tsx`) y tests.
+
+### 8 · Changelog + versión
+
+- Bump `APP_VERSION` a `13.308.7`.
+- Entrada en `CHANGELOG.md` describiendo la unificación y el nuevo guardrail.
+
+## Detalles técnicos
+
+- El `ErrorDetailsDialog` ya soporta payloads sin `error` real — muestra "Sin stack trace" y copia el resto del reporte. No requiere cambios.
+- `buildErrorReport` ya tolera `error: undefined`.
+- Los ~250 call sites de `toast.success/warning/info` se migran con búsqueda-reemplazo por archivo (paso incremental, no en un solo write masivo).
+- No hay cambios de backend ni migraciones SQL.
+
+## Riesgos
+
+- **Ruido visual** con "Ver detalles" en toasts de éxito → mitigado: sólo aparece si el caller pasa `error`/`showDetails`/`context`. Migración mecánica NO añade la acción por default.
+- **Regresiones en tests** que asertan sobre `toast.success(...)` — actualizar los que rompan (esperado: pocos, están en `__tests__` que ya usan mocks de sonner).
+- **Cascada de errores de query** — el `id` dedupe se mantiene, sólo cambia el helper.
 
 ## Fuera de alcance
 
-- Reconciliación de la factura `Pagada` sin `pagos_factura` (dato heredado; puede tratarse aparte si el usuario lo pide).
-- Cambios en otros checks del cierre.
+- Rediseñar el `ErrorDetailsDialog`.
+- Traducir/reescribir copy de los toasts existentes.
+- Cambios en el backend o Sentry.

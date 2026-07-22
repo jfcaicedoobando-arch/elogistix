@@ -1,6 +1,6 @@
 import { QueryClient, QueryCache, MutationCache, type Query } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 
 /**
@@ -91,9 +91,17 @@ function notifyQueryFailure(err: unknown, query: Query<unknown, unknown, unknown
   const meta = query.meta as { silentError?: boolean } | undefined;
   if (meta?.silentError) return;
   const root = rootOf(query.queryKey) ?? "data";
-  toast.error("No pudimos cargar la información", {
-    id: `query-error:${root}`,
+  // v13.308.7 · migra a notifyError para incluir "Ver detalles" (payload
+  // copiable con queryKey + stack). Nota: notifyError NO respeta `id` de
+  // dedupe (sonner ignora `id` en `toast.error` con action). Aceptamos que
+  // cascadas de queries fallidas puedan encolar varios toasts — el usuario
+  // los descarta con "close all" y a cambio ve el error real.
+  notifyError(undefined, {
+    title: "No pudimos cargar la información",
     description: "Revisa tu conexión e intenta de nuevo.",
+    error: err,
+    method: "QUERY_CACHE",
+    context: { queryKey: query.queryKey, root },
   });
 }
 
