@@ -131,6 +131,32 @@ async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId:
   };
 }
 
+async function loadNotaCreditoCxp(admin: ReturnType<typeof createClient>, ncId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
+  const { data, error } = await admin
+    .from("proveedor_notas_credito")
+    .select("id, uuid_fiscal, monto, organization_id, proveedor_factura_id, proveedor_facturas:proveedor_factura_id (rfc_proveedor)")
+    .eq("id", ncId)
+    .maybeSingle();
+  if (error || !data) return { data: null, error };
+  const row = data as {
+    uuid_fiscal: string | null;
+    monto: number;
+    organization_id: string | null;
+    proveedor_facturas?: { rfc_proveedor?: string | null } | null;
+  };
+  const rfcReceptor = await fetchOrgRfc(admin, row.organization_id);
+  return {
+    data: {
+      uuid_fiscal: row.uuid_fiscal,
+      rfc_emisor: (row.proveedor_facturas?.rfc_proveedor ?? "").trim().toUpperCase(),
+      rfc_receptor: rfcReceptor,
+      total: Number(row.monto ?? 0),
+      organization_id: row.organization_id,
+    },
+    error: null,
+  };
+}
+
 async function authenticate(req: Request, cors: HeadersInit) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return { error: json(cors, { error: "unauthorized" }, 401) };
@@ -143,11 +169,18 @@ async function authenticate(req: Request, cors: HeadersInit) {
   return { user: data.user };
 }
 
+function parseTipo(raw?: string): Tipo {
+  if (raw === "cxc") return "cxc";
+  if (raw === "cxp_nc") return "cxp_nc";
+  return "cxp";
+}
+
 async function parseBody(req: Request, cors: HeadersInit): Promise<{ id?: string; tipo?: Tipo; error?: Response }> {
-  let body: { factura_id?: string; tipo?: string };
+  let body: { factura_id?: string; nc_id?: string; tipo?: string };
   try { body = await req.json(); } catch { return { error: json(cors, { error: "invalid_json" }, 400) }; }
+  if (body.nc_id && body.tipo === "cxp_nc") return { id: body.nc_id, tipo: "cxp_nc" };
   if (!body.factura_id) return { error: json(cors, { error: "factura_id_required" }, 400) };
-  const tipo: Tipo = body.tipo === "cxc" ? "cxc" : "cxp";
+  const tipo: Tipo = parseTipo(body.tipo);
   return { id: body.factura_id, tipo };
 }
 
