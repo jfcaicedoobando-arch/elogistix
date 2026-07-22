@@ -1,0 +1,1 @@
+ALTER VIEW public.costeo_tarifas_vigentes_v SET (security_invoker = on);

@@ -126,7 +126,7 @@ function BodySections({
 }) {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-      {f && <InfoFacturaSection factura={f} />}
+      {f && <InfoFacturaSection factura={f} canEdit={canEdit} />}
       {f && <HistorialFacturaSection facturaId={f.id} />}
       <PagosTable pagos={pagos} isLoading={isLoading} canEdit={canEdit} onEliminarPago={onEliminarPago} />
       {f && (

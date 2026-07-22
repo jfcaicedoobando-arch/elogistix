@@ -1,5 +1,11 @@
 # Changelog
 
+## [13.307.5] - 2026-07-22
+- **feat(cxp) · Adjuntar / reemplazar / quitar XML y PDF desde el detalle.** El modal "Detalle de factura de proveedor" ahora permite subir un CFDI faltante o reemplazarlo si se cargó incompleto (caso Carol · FP-000042: se guardó XML pero no PDF y no había forma de corregirlo). Nuevos servicios `adjuntarArchivoCfdiFactura` / `quitarArchivoCfdiFactura` y hook `useAdjuntoFacturaProveedor` (mantienen prefijo `{org}/cfdi/{facturaId}/…` para respetar la RLS del bucket `facturas`). Validación por tipo (XML ≤2 MB, PDF ≤10 MB) y confirmaciones antes de reemplazar/quitar. La UI de edición sólo aparece si el usuario tiene permiso y la factura no está cancelada. Analogía: antes la carpeta de la factura estaba pegada con cinta y no se podía abrir para meter la hoja que faltaba; ahora tiene bolsillo con solapa.
+- **security · Vista `costeo_tarifas_vigentes_v` en modo `security_invoker`.** Cierra el hallazgo `SUPA_security_definer_view`: la vista ya respeta las políticas RLS del usuario que consulta, no las del creador.
+
+
+
 ## [13.307.4] - 2026-07-22
 - **fix(observability) · Sentry · filtrar ruido de errores esperados.** `isExpectedBusinessError` en `queryClient.ts` ahora también descarta clases de dominio (`AprobacionFacturaError`, `CreditLimitError`, `ValidationError`, `ZodError`), timeouts de gateway (HTTP 504 / "upstream request timeout") y validaciones de captura conocidas ("Debe seleccionar al menos…"). Cierra los 7 issues abiertos (`REACT-3B/3A/39/1V` timeouts, `REACT-38/37` aprobación, `REACT-2D` validación) sin cambiar la UX: la UI sigue mostrando el toast; sólo dejan de generar issues en Sentry. Analogía: seguimos escuchando la alarma en casa, pero dejamos de llamar a los bomberos cada vez que se quema una tostada.
 
