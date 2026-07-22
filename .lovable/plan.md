@@ -1,60 +1,94 @@
-# Fix: `conceptos_costo_origen_check` bloquea ajustes de factura de proveedor
+# Fix: folio interno se salta al borrar la última factura de proveedor
 
-## Qué pasó (analogía)
+## Diagnóstico (analogía)
 
-Tu cuaderno de gastos tiene dos reglas separadas para cada renglón:
+Imagínate una libreta con folios pre-impresos y un contador en la contraportada. Cada vez que abres una hoja nueva, el contador sube. Hoy, si arrancas la hoja recién abierta, el contador **no baja** — así que la próxima hoja salta de número.
 
-1. **Regla del signo del monto** (`conceptos_costo_monto_signo`) — dice qué tipos de renglón pueden ir en negativo.
-2. **Regla del tipo de renglón** (`conceptos_costo_origen_check`) — dice qué "etiquetas de origen" están permitidas.
+Verificado en DB:
 
-En `v13.307.8` actualizamos la **regla 1** para permitir montos negativos cuando el origen es `ajuste_factura_proveedor` (para los descuentos del proveedor)… pero se nos olvidó agregar esa etiqueta a la **regla 2**. Resultado: el guardado de la factura funciona, pero cuando el sistema intenta crear el renglón de ajuste al vuelo, la BD lo rechaza con `conceptos_costo_origen_check`.
+- Trigger `trg_set_folio_interno_proveedor_factura` (BEFORE INSERT) llama a `siguiente_folio_proveedor`, que hace `ultimo_numero := ultimo_numero + 1` en `folio_secuencias`.
+- Al borrar es *soft delete* (`deleted_at`), y no hay lógica que ajuste `folio_secuencias`.
+- El unique index `proveedor_facturas_folio_interno_org_uq` **ya excluye** filas con `deleted_at IS NOT NULL` (`WHERE deleted_at IS NULL`), o sea que reusar el folio en un alta nueva no choca con la fila borrada.
+- Estado actual observado: `FP-000045` y `FP-000044` están borrados, `FP-000046` está vivo, `ultimo_numero = 46`. Todo correcto por ahora, pero si borras `FP-000046` el siguiente sería `FP-000047`.
 
-Por eso saliste con dos toasts: el verde de "Factura 0046 creada" y el rojo persistente de "los ajustes de costo fallaron".
+## Decisión del usuario
 
-## Estado actual (verificado)
-
-- `conceptos_costo_origen_check` permite hoy: `manual`, `demoras_auto`, `cotizacion`, `costeo_tarifa`.
-- El código (`crearAjustesFacturaProveedor.ts`) y el trigger de reversión (`tg_reverse_ajustes_factura_proveedor`) ya asumen `origen = 'ajuste_factura_proveedor'`.
-- Falta únicamente ampliar el CHECK del origen.
+**Reusar el folio sólo si borraste la última.** Si borras una intermedia, el hueco se queda.
 
 ## Cambios
 
-### Migración (schema)
+### Migración
 
-Reemplazar `conceptos_costo_origen_check` para incluir `ajuste_factura_proveedor`:
+Nueva función y trigger sobre `proveedor_facturas`:
 
 ```sql
-ALTER TABLE public.conceptos_costo
-  DROP CONSTRAINT conceptos_costo_origen_check;
+CREATE OR REPLACE FUNCTION public.tg_liberar_folio_proveedor_factura()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_num      bigint;
+  v_max_vivo bigint;
+BEGIN
+  -- Sólo cuando pasa a borrado (soft delete)
+  IF NEW.deleted_at IS NULL OR OLD.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
 
-ALTER TABLE public.conceptos_costo
-  ADD CONSTRAINT conceptos_costo_origen_check
-  CHECK (origen = ANY (ARRAY[
-    'manual',
-    'demoras_auto',
-    'cotizacion',
-    'costeo_tarifa',
-    'ajuste_factura_proveedor'
-  ]));
+  -- Parsea el número del folio FP-000046 -> 46
+  v_num := NULLIF(regexp_replace(NEW.folio_interno, '\D', '', 'g'), '')::bigint;
+  IF v_num IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Recalcula: MAX de folios activos (no borrados) para esta org
+  SELECT COALESCE(MAX(NULLIF(regexp_replace(folio_interno, '\D', '', 'g'), '')::bigint), 0)
+    INTO v_max_vivo
+    FROM public.proveedor_facturas
+   WHERE organization_id = NEW.organization_id
+     AND deleted_at IS NULL;
+
+  -- Sólo retrocede el contador si NO quedan folios activos con número mayor.
+  -- Así garantizamos "reusar sólo si borraste la última" y también cubre el caso
+  -- de borrar varias últimas en cadena (el contador queda pegado al MAX vivo).
+  UPDATE public.folio_secuencias
+     SET ultimo_numero = v_max_vivo,
+         updated_at    = now()
+   WHERE organization_id = NEW.organization_id
+     AND tipo            = 'factura_proveedor'
+     AND ultimo_numero   > v_max_vivo;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_liberar_folio_proveedor_factura
+AFTER UPDATE OF deleted_at ON public.proveedor_facturas
+FOR EACH ROW
+WHEN (OLD.deleted_at IS DISTINCT FROM NEW.deleted_at)
+EXECUTE FUNCTION public.tg_liberar_folio_proveedor_factura();
 ```
 
-Sin backfill: no hay filas con ese origen todavía (por eso justamente fallaba la inserción).
+Notas:
 
-### Reintento del ajuste para FP-000046
+- Se dispara sólo cuando `deleted_at` pasa de `NULL` → algo (no en restore ni en updates normales).
+- No decrementa a ciegas: recalcula contra `MAX(numero)` de filas vivas. Si borras `FP-000046` (última), baja el contador a 41 (o al que sea el MAX vivo). Si borras `FP-000042` (intermedia), no baja porque hay folios vivos mayores. Cumple exactamente "reusar sólo si borraste la última".
+- Cubre borrado en cadena: si tumbas 46, 41, 40, 37 seguidos, el contador queda pegado al MAX vivo restante.
+- Compatible con el unique index parcial existente — si reasigna un folio, no choca con la fila borrada.
 
-Después de aplicar la migración, la factura 0046 ya quedó guardada pero **sin** los renglones de ajuste, así que la utilidad del embarque vinculado sigue calculada contra el costo devengado original. Opciones:
+### Sin cambios de frontend
 
-- **A (recomendada):** Abrir FP-000046, entrar a "Vincular embarque", y guardar de nuevo. El servicio es idempotente y creará los ajustes esta vez.
-- **B:** Dejarla como está si la diferencia entre devengado y facturado no es material.
+Toda la lógica queda en BD. El servicio `crearFacturaProveedor` sigue llamando al mismo trigger `BEFORE INSERT` que resuelve `siguiente_folio_proveedor` con el contador ya corregido.
 
-Confirmamos contigo cuál prefieres al terminar la migración.
+### Test unitario
+
+- `src/lib/__tests__/folio-proveedor-liberacion.test.ts`: verifica por regex que la migración contiene `tg_liberar_folio_proveedor_factura` y que sólo actualiza cuando `ultimo_numero > v_max_vivo`. (Alineado con el patrón existente `garantias-fase-p3.test.ts`.)
 
 ### Versión / changelog
 
-- `APP_VERSION` → `13.307.13`.
-- Entrada en `CHANGELOG.md` explicando el CHECK faltante y el fix.
+- `APP_VERSION` → `13.307.14`.
+- Entrada en `CHANGELOG.md` explicando el bug (folio saltado al borrar), la decisión de producto (reusar sólo si es la última) y el nuevo trigger.
 
 ## Fuera de alcance
 
-- No se toca la lógica de `crearAjustesFacturaProveedor.ts` ni el trigger de reversión — ambos ya son correctos.
-- No se cambia el toast de "best-effort" (ya tiene `duration: Infinity` desde `v13.307.8`).
+- No se cambia el comportamiento para huecos intermedios (el usuario los deja explícitamente).
+- No se toca `siguiente_folio_proveedor` (sigue igual, ahora el contador que lee ya está corregido).
+- No hay backfill retroactivo: los huecos históricos (por ejemplo si hoy `ultimo_numero=46` pero borras la 46, quedaría en 41) se corrigen en el momento del próximo borrado, no antes.
