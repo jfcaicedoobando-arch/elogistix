@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.307.2] - 2026-07-22
+- **fix(db) · Auditoría R3 · cierre completo del bloque de índices únicos.**
+  - **FIX-R3-03c** · Nuevo índice único parcial `uq_embarques_bl_house_org (organization_id, upper(bl_house))` que excluye a la organización demo `Elogistix` (`00000000-0000-0000-0000-000000000001`). Producción queda con la restricción activa; los 9 duplicados históricos de la demo quedan intactos.
+  - Con esto el plan R3 queda 100% cerrado (todos los P0/P1/P2 aplicados + los 3 índices únicos finales).
+  - Analogía: pusimos el candado en todas las puertas del edificio real y dejamos abierta sólo la bodega de muestras donde ya nadie factura.
+
+
+
 ## [13.307.1] - 2026-07-22
 - **fix(db) · Auditoría R3 · cierre de pendientes: saneamiento e índices únicos parciales.**
   - **FIX-R3-03b** · Se eliminan 2 filas duplicadas de `embarque_contenedores` (sin cargos ni garantías) y se crea el índice único parcial `uq_embarque_contenedor_numero (embarque_id, upper(numero_contenedor))` para evitar que se repita un contenedor dentro del mismo embarque.
