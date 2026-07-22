@@ -7,20 +7,13 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { FileMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePickerMx } from "@/components/ui/date-picker-mx";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { formatCurrency } from "@/lib/formatters";
 import { useCrearNotaCredito } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
-import { CargaXmlNcSection } from "./CargaXmlNcSection";
+import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
 import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import { toast } from "sonner";
@@ -30,8 +23,6 @@ import type { CfdiParsedResponse } from "@/features/cxp/services";
 type MotivoNC = Tables<"proveedor_notas_credito">["motivo"];
 type MonedaNC = Tables<"proveedor_notas_credito">["moneda"];
 
-type CargaMode = "manual" | "cfdi";
-
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -40,33 +31,8 @@ interface Props {
   saldoFactura: number;
 }
 
-const MOTIVOS: { value: MotivoNC; label: string }[] = [
-  { value: "Devolucion", label: "Devolución" },
-  { value: "Bonificacion", label: "Bonificación" },
-  { value: "Descuento", label: "Descuento" },
-  { value: "ErrorFacturacion", label: "Error de facturación" },
-  { value: "Cancelacion", label: "Cancelación" },
-  { value: "Otro", label: "Otro" },
-];
-
-function TabButton({ active, onClick, children }: {
-  active: boolean; onClick: () => void; children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex-1 px-4 py-2.5 text-sm font-medium transition-colors ${
-        active ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, monedaFactura, saldoFactura }: Props) {
-  const [mode, setMode] = useState<CargaMode>("manual");
+  const [mode, setMode] = useState<"manual" | "cfdi">("manual");
   const [folio, setFolio] = useState("");
   const [fecha, setFecha] = useState(format(new Date(), "yyyy-MM-dd"));
   const [monto, setMonto] = useState("");
@@ -81,7 +47,6 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
   const montoNum = Number(monto);
   const excede = montoNum > saldoFactura + 0.01;
   const valido = folio.trim() && fecha && montoNum > 0 && !excede;
-  const motivoLabel = MOTIVOS.find((m) => m.value === motivo)?.label ?? "—";
 
   const reset = () => {
     setMode("manual");
@@ -151,6 +116,10 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
     }
   };
 
+  const motivoLabel = ["Devolución", "Bonificación", "Descuento", "Error de facturación", "Cancelación", "Otro"][
+    ["Devolucion", "Bonificacion", "Descuento", "ErrorFacturacion", "Cancelacion", "Otro"].indexOf(motivo)
+  ] ?? "—";
+
   const footer = (
     <>
       <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
@@ -181,48 +150,24 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
         <Kpi label="Motivo" value={motivoLabel} />
       </div>
 
-      <div className="rounded-lg border bg-muted/30">
-        <div className="flex border-b">
-          <TabButton active={mode === "manual"} onClick={() => setMode("manual")}>Captura manual</TabButton>
-          <TabButton active={mode === "cfdi"} onClick={() => setMode("cfdi")}>Cargar XML CFDI</TabButton>
-        </div>
-        <div className="p-4">
-          {mode === "cfdi" && (
-            <CargaXmlNcSection parsed={parsedCfdi} onParsed={handleCfdiParsed} />
-          )}
-
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="nc-folio">Folio NC *</Label>
-              <Input id="nc-folio" value={folio} onChange={(e) => setFolio(e.target.value)} placeholder="NC-001" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="nc-fecha">Fecha *</Label>
-              <DatePickerMx value={fecha} onChange={setFecha} className="w-full" />
-            </div>
-          </div>
-          <div className="space-y-1.5 mt-3">
-            <Label htmlFor="nc-monto">Monto ({monedaFactura}) *</Label>
-            <Input
-              id="nc-monto" type="number" step="0.01" min="0.01" max={saldoFactura}
-              value={monto} onChange={(e) => setMonto(e.target.value)} placeholder="0.00"
-            />
-          </div>
-          <div className="space-y-1.5 mt-3">
-            <Label>Motivo *</Label>
-            <Select value={motivo} onValueChange={(v) => setMotivo(v as MotivoNC)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {MOTIVOS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5 mt-3">
-            <Label htmlFor="nc-desc">Descripción</Label>
-            <Textarea id="nc-desc" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} rows={3} />
-          </div>
-        </div>
-      </div>
+      <NuevaNotaCreditoFormFields
+        mode={mode}
+        onModeChange={setMode}
+        parsedCfdi={parsedCfdi}
+        onCfdiParsed={handleCfdiParsed}
+        folio={folio}
+        onFolioChange={setFolio}
+        fecha={fecha}
+        onFechaChange={setFecha}
+        monto={monto}
+        onMontoChange={setMonto}
+        motivo={motivo}
+        onMotivoChange={setMotivo}
+        descripcion={descripcion}
+        onDescripcionChange={setDescripcion}
+        monedaFactura={monedaFactura}
+        saldoFactura={saldoFactura}
+      />
 
       {excede && (
         <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
