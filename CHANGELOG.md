@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.305.6] - 2026-07-22
+- **fix(db) · saldo_factura no bloquea triggers de integridad en contexto backend.** El test RLS `test_rls_financiero_critico.sql` insertaba un pago legítimo de 500 sobre una factura de 1160 y fallaba con `LC_PAGO_EXCEDE_SALDO: pago 500.00 excede el saldo disponible 0.00`. Causa: el guard multi-tenant que añadimos a `saldo_factura` en BLOQUE 2 (FIX-BL-06) devuelve 0 cuando `current_user_org_id()` no coincide con la organización de la factura, pero cuando el trigger `tg_pago_factura_no_sobrepago` corre desde una sesión sin JWT (postgres, service_role, tests CI, procesos batch) `auth.uid()` es NULL y `current_user_org_id()` también, así que el guard se disparaba y bloqueaba el insert. Ahora el guard sólo aplica cuando `auth.uid() IS NOT NULL` — contextos backend confiables ven el saldo real. Los usuarios autenticados siguen protegidos: el guard cross-tenant original queda intacto. Analogía: el candado de la caja tenía sensor de tarjeta, pero cuando el gerente entraba por la puerta interna (sin tarjeta) el candado se cerraba solo; ahora reconoce que si no hay tarjeta, es porque viene por el pasillo autorizado.
+
 ## [13.305.5] - 2026-07-22
+
 - **fix(db) · Embarques: TC USD/EUR ahora sí aceptan NULL (arregla test RLS y BLOQUE 3).** En v13.305.2 (BLOQUE 3) se quitó el DEFAULT 17.5/19.0 de `embarques.tipo_cambio_usd` y `.tipo_cambio_eur` para forzar a la UI a mostrar "TC faltante" cuando el operador no captura tipo de cambio, pero se olvidó soltar el NOT NULL de las columnas. Resultado: los tests RLS y cualquier INSERT que no pase TC explícito fallaban con `null value in column "tipo_cambio_usd" violates not-null constraint`. Se aplica `DROP NOT NULL` a ambas columnas para completar el cambio original. Analogía: cambiamos el letrero de "obligatorio" al "opcional pero visible", pero el candado seguía cerrado; ahora ya se puede dejar la casilla en blanco como estaba pensado.
 
 
