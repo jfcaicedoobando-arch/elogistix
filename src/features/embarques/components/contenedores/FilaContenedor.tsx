@@ -18,6 +18,12 @@ import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDi
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import type { TipoContenedor } from "@/features/catalogos/hooks";
+import {
+  esNumeroContenedorValido,
+  ISO6346_MENSAJE,
+  normalizarNumeroContenedor,
+} from "@/features/embarques/domain/contenedorIso6346";
+import { cn } from "@/lib/utils";
 
 interface Props {
   index: number;
@@ -97,9 +103,23 @@ export function FilaContenedor({
             id={`${uid}-num`}
             placeholder="MSCU1234567"
             value={value.numero_contenedor}
-            onChange={(e) => onChange({ numero_contenedor: e.target.value })}
+            onChange={(e) =>
+              onChange({ numero_contenedor: normalizarNumeroContenedor(e.target.value) })
+            }
             disabled={disabled}
+            aria-invalid={!esNumeroContenedorValido(value.numero_contenedor) || undefined}
+            aria-describedby={
+              !esNumeroContenedorValido(value.numero_contenedor) ? `${uid}-num-err` : undefined
+            }
+            className={cn(
+              !esNumeroContenedorValido(value.numero_contenedor) && "border-destructive",
+            )}
           />
+          {!esNumeroContenedorValido(value.numero_contenedor) && (
+            <p id={`${uid}-num-err`} className="text-xs text-destructive">
+              {ISO6346_MENSAJE}
+            </p>
+          )}
         </div>
 
         <div className="space-y-1">
