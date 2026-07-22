@@ -27,6 +27,33 @@ export function agruparPorEmbarque(items: ConceptoCostoAbierto[]): Grupo[] {
   return Array.from(map.values());
 }
 
+export interface FiltrarGruposArgs {
+  texto: string;
+  soloMarcados: boolean;
+  seleccion: Record<string, unknown>;
+}
+
+/**
+ * Filtra `grupos` por texto (concepto, expediente o monto como string) y/o
+ * conservando sólo los items marcados. Grupos que se quedan sin items se omiten.
+ * Función pura, sin dependencias externas.
+ */
+export function filtrarGrupos(grupos: Grupo[], args: FiltrarGruposArgs): Grupo[] {
+  const t = args.texto.trim().toLowerCase();
+  const out: Grupo[] = [];
+  for (const g of grupos) {
+    const items = g.items.filter((it) => {
+      if (args.soloMarcados && !args.seleccion[it.id]) return false;
+      if (!t) return true;
+      if (g.expediente.toLowerCase().includes(t)) return true;
+      if (it.concepto.toLowerCase().includes(t)) return true;
+      if (String(it.monto).includes(t)) return true;
+      return false;
+    });
+    if (items.length > 0) out.push({ ...g, items });
+  }
+  return out;
+
 export function pluralS(n: number, base: string): string {
   return `${n} ${base}${n === 1 ? "" : "s"}`;
 }
