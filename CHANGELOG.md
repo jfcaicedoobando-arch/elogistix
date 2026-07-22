@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.12] - 2026-07-22
+- **design(cxp) · Modal "Eliminar factura de proveedor" rediseñado (dirección "Utilitario denso").** Antes las 3 tarjetas de Total/Saldo/Moneda recortaban los importes (`USD 179.80` se veía como `USD 179.80(`) y la banda de estatus ocupaba todo el ancho como si fuera una alerta. Nuevo layout: header con folio interno (chip) + folio proveedor + proveedor en una sola línea, banda de estatus fina con dot de color según `EstatusCxP`, grid financiero denso (2 columnas si es MXN, 3 si hay TC) con `tabular-nums` + `whitespace-nowrap` para que los importes nunca se corten, y footer con botón destructivo rojo (`variant="destructive"`) en lugar del navy que no comunicaba la severidad. Se conserva el double-confirm (escribir `ELIMINAR`) y toda la información existente. Componente `EliminarFacturaCxpDialog` ahora es standalone (ya no envuelve `DoubleConfirmDeleteDialog`). Analogía: antes el aviso se veía como un formulario apretado con el precio cortado; ahora es una ficha del expediente que se lee de un vistazo y el botón rojo deja claro qué va a pasar.
+
 ## [13.307.11] - 2026-07-22
 - **fix(cxp) · Orden ascendente de embarques al vincular costos.** En "Capturar factura de proveedor → Vincular costos" los grupos de conceptos pendientes ahora salen ordenados por número de expediente de menor a mayor (natural sort: `EXP-002` va antes que `EXP-010`). Antes salían en el orden que devolvía la consulta. Analogía: como acomodar los folders del archivero por número de expediente en vez de dejarlos como cayeron.
 
