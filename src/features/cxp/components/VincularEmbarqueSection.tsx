@@ -7,7 +7,7 @@
  * con el del concepto_costo; el usuario puede editarlo.
  */
 import { useMemo, useState } from "react";
-import { Loader2, Link2, Sparkles } from "lucide-react";
+import { Loader2, Link2, Sparkles, Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
