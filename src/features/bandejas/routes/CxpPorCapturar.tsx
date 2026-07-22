@@ -65,13 +65,11 @@ export default function CxpPorCapturar() {
     }
   };
 
-  // Etiqueta compuesta: muestra la moneda con presupuesto, o ambas si están mezcladas.
-  const presupuestoLabel = (() => {
-    const mxn = totalPresupuestadoMxn > 0 ? formatCurrency(totalPresupuestadoMxn, "MXN") : null;
-    const usd = totalPresupuestadoUsd > 0 ? formatCurrency(totalPresupuestadoUsd, "USD") : null;
-    if (mxn && usd) return `${mxn} · ${usd}`;
-    return mxn ?? usd ?? formatCurrency(0, "MXN");
-  })();
+  // Presupuesto: dividimos MXN y USD para no ahogar la card cuando hay ambas monedas.
+  const presupuestoMxnLabel = totalPresupuestadoMxn > 0 ? formatCurrency(totalPresupuestadoMxn, "MXN") : null;
+  const presupuestoUsdLabel = totalPresupuestadoUsd > 0 ? formatCurrency(totalPresupuestadoUsd, "USD") : null;
+  const presupuestoValue = presupuestoMxnLabel ?? presupuestoUsdLabel ?? formatCurrency(0, "MXN");
+  const presupuestoSublabel = presupuestoMxnLabel && presupuestoUsdLabel ? presupuestoUsdLabel : undefined;
 
   return (
     <PageContainer>
@@ -93,8 +91,10 @@ export default function CxpPorCapturar() {
         <KpiCard
           icon={Coins}
           label="Costo presupuestado"
-          value={presupuestoLabel}
+          value={presupuestoValue}
+          sublabel={presupuestoSublabel}
         />
+
         <KpiCard
           icon={FileStack}
           label="Facturas capturadas"
