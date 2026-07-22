@@ -94,8 +94,9 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
     });
   }
 
-  // v13.307.17 — Máximo 3 chips visibles, el resto colapsa en un chip "+N".
-  const VISIBLE = 3;
+  // v13.308.2 — Hasta 5 chips visibles (Parcial · +N d · NC · SAT ✓ · Prog.),
+  // el resto colapsa en un chip "+N". Antes eran 3 y se ocultaban SAT/Prog.
+  const VISIBLE = 5;
   const overflow = Math.max(0, chips.length - VISIBLE);
   const shown = chips.slice(0, VISIBLE);
 
