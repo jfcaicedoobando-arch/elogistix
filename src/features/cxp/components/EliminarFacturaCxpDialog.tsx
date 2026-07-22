@@ -90,12 +90,13 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
             {/* Status Line */}
             {estatusMeta && (
               <div className="px-6 py-2 bg-muted/40 border-y border-border flex items-center gap-2">
-                <div className={cn("w-2 h-2 rounded-full", estatusMeta.dotClass)} />
-                <span className={cn("text-[11px] font-bold tracking-wide uppercase", estatusMeta.textClass)}>
+                <div className={cn("w-2 h-2 rounded-full", TONE_DOT[estatusMeta.tone])} />
+                <span className={cn("text-[11px] font-bold tracking-wide uppercase", TONE_TEXT[estatusMeta.tone])}>
                   {estatusMeta.label}
                 </span>
               </div>
             )}
+
 
             {/* Body */}
             <div className="p-6 space-y-4">
