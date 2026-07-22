@@ -113,28 +113,35 @@ function findHeaderRow(rows: string[][]): number {
 
 interface ColIdx { fecha: number; conc: number; ref: number; cargo: number; abono: number; saldo: number }
 
+function parseMontosRow(row: unknown[], idx: ColIdx):
+  | { cargo: number; abono: number; saldo: number | null }
+  | null {
+  const cargoRaw = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
+  const abonoRaw = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
+  if (Number.isNaN(cargoRaw) || Number.isNaN(abonoRaw)) {
+    console.warn("[bbva] fila descartada: monto no parseable", { row });
+    return null;
+  }
+  const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
+  const saldoNum = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
+  const saldo = saldoNum == null || Number.isNaN(saldoNum) ? null : saldoNum;
+  return { cargo: cargoRaw, abono: abonoRaw, saldo };
+}
+
 async function rowToMovimiento(row: unknown[], idx: ColIdx): Promise<MovimientoParseado | null> {
   if (!row || row.every((c) => c == null || String(c).trim() === "")) return null;
   const fecha = parseFecha(row[idx.fecha]);
   if (!fecha) return null;
   const concepto = String(row[idx.conc] ?? "").trim();
   const referencia = idx.ref >= 0 ? String(row[idx.ref] ?? "").trim() : "";
-  const cargoRaw = idx.cargo >= 0 ? parseMonto(row[idx.cargo]) : 0;
-  const abonoRaw = idx.abono >= 0 ? parseMonto(row[idx.abono]) : 0;
-  // NaN = valor no parseable; se descarta con log para que el usuario lo revise.
-  if (Number.isNaN(cargoRaw) || Number.isNaN(abonoRaw)) {
-    console.warn("[bbva] fila descartada: monto no parseable", { row });
-    return null;
-  }
-  const cargo = cargoRaw;
-  const abono = abonoRaw;
-  const saldoRaw = idx.saldo >= 0 ? row[idx.saldo] : null;
-  const saldoNum = saldoRaw == null || saldoRaw === "" ? null : parseMonto(saldoRaw);
-  const saldo = saldoNum == null || Number.isNaN(saldoNum) ? null : saldoNum;
+  const montos = parseMontosRow(row, idx);
+  if (!montos) return null;
+  const { cargo, abono, saldo } = montos;
   if (cargo === 0 && abono === 0) return null;
   const hash = await sha1([fecha, concepto, referencia, cargo, abono].join("|"));
   return { fecha, concepto, referencia, cargo, abono, saldo, hash_dedupe: hash };
 }
+
 
 
 async function filasAMovimientos(rows: string[][]): Promise<MovimientoParseado[]> {
