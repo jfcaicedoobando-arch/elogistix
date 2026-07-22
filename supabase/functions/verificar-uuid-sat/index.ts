@@ -72,7 +72,7 @@ async function consultarSat(rfcEmisor: string, rfcReceptor: string, total: numbe
   return { estatus: mapEstatus(estado, codigo), raw: `${codigo} | ${estado}` };
 }
 
-type Tipo = "cxp" | "cxc";
+type Tipo = "cxp" | "cxc" | "cxp_nc";
 
 interface CfdiParaVerificar {
   uuid_fiscal: string | null;
