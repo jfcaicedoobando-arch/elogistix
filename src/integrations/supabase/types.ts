@@ -7810,6 +7810,7 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_org_member: { Args: { p_org: string }; Returns: boolean }
       is_sales: { Args: { _user_id: string }; Returns: boolean }
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
       liberar_claim_facturapi_huerfano: {
