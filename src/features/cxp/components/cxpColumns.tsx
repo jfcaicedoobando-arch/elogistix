@@ -86,7 +86,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       },
       cell: ({ row }) => {
         const fecha = row.original.fecha_programada_pago;
-        const saldada = row.original.estatus === "Pagada" || row.original.estatus === "Sin saldo";
+        const saldada = row.original.estatus === "Pagada";
         if (!fecha || saldada) return <span className="text-muted-foreground">—</span>;
         return (
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-2xs px-1.5 py-0 h-5 font-normal tabular-nums">
@@ -103,7 +103,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       meta: { width: "w-[70px]", align: "right", className: "tabular-nums text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => {
         const f = row.original;
-        const saldada = f.estatus === "Pagada" || f.estatus === "Sin saldo";
+        const saldada = f.estatus === "Pagada";
         if (saldada || f.dias_vencido <= 0) return <span className="text-muted-foreground">—</span>;
         return <span className="text-destructive font-medium">{f.dias_vencido}</span>;
       },
