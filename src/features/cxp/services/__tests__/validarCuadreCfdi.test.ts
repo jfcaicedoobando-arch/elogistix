@@ -8,6 +8,7 @@ function makeCfdi(overrides: Partial<CfdiParsedResponse["cfdi"]> = {}): CfdiPars
     moneda: "MXN", tipo_cambio: 1,
     subtotal: 10000, total: 11832,
     iva_trasladado: 1632, ieps_trasladado: 200, retenciones: 0,
+    tipo_comprobante: "I",
     emisor: { rfc: "X", nombre: "X", regimen: "601" },
     receptor: { rfc: "Y", nombre: "Y" },
     conceptos: [
