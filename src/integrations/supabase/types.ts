@@ -154,6 +154,13 @@ export type Database = {
             foreignKeyName: "anticipos_aplicaciones_proveedor_factura_id_fkey"
             columns: ["proveedor_factura_id"]
             isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+          {
+            foreignKeyName: "anticipos_aplicaciones_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
             referencedRelation: "proveedor_facturas"
             referencedColumns: ["id"]
           },
@@ -3440,6 +3447,13 @@ export type Database = {
             foreignKeyName: "embarque_garantias_contenedor_proveedor_factura_id_fkey"
             columns: ["proveedor_factura_id"]
             isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+          {
+            foreignKeyName: "embarque_garantias_contenedor_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
             referencedRelation: "proveedor_facturas"
             referencedColumns: ["id"]
           },
@@ -5091,6 +5105,13 @@ export type Database = {
             foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
             columns: ["proveedor_factura_id"]
             isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+          {
+            foreignKeyName: "pagos_proveedor_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
             referencedRelation: "proveedor_facturas"
             referencedColumns: ["id"]
           },
@@ -5777,6 +5798,13 @@ export type Database = {
             foreignKeyName: "proveedor_facturas_conceptos_proveedor_factura_id_fkey"
             columns: ["proveedor_factura_id"]
             isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id"]
+          },
+          {
+            foreignKeyName: "proveedor_facturas_conceptos_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
             referencedRelation: "proveedor_facturas"
             referencedColumns: ["id"]
           },
@@ -5863,6 +5891,13 @@ export type Database = {
           uuid_verificado_fecha?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "proveedor_notas_credito_proveedor_factura_id_fkey"
+            columns: ["proveedor_factura_id"]
+            isOneToOne: false
+            referencedRelation: "cxp_alertas_vencimiento"
+            referencedColumns: ["proveedor_factura_id"]
+          },
           {
             foreignKeyName: "proveedor_notas_credito_proveedor_factura_id_fkey"
             columns: ["proveedor_factura_id"]
@@ -6550,6 +6585,30 @@ export type Database = {
             columns: ["tipo_contenedor_id"]
             isOneToOne: false
             referencedRelation: "tipos_contenedor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cxp_alertas_vencimiento: {
+        Row: {
+          dias_a_vencer: number | null
+          estado: string | null
+          fecha_vencimiento: string | null
+          folio_interno: string | null
+          folio_proveedor: string | null
+          moneda: Database["public"]["Enums"]["moneda"] | null
+          organization_id: string | null
+          proveedor_factura_id: string | null
+          proveedor_id: string | null
+          proveedor_nombre: string | null
+          saldo: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proveedor_facturas_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
             referencedColumns: ["id"]
           },
         ]
@@ -7427,6 +7486,28 @@ export type Database = {
           vigente: number
         }[]
       }
+      cxp_alertas_vencimiento: {
+        Args: { p_dias?: number }
+        Returns: {
+          dias_a_vencer: number | null
+          estado: string | null
+          fecha_vencimiento: string | null
+          folio_interno: string | null
+          folio_proveedor: string | null
+          moneda: Database["public"]["Enums"]["moneda"] | null
+          organization_id: string | null
+          proveedor_factura_id: string | null
+          proveedor_id: string | null
+          proveedor_nombre: string | null
+          saldo: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "cxp_alertas_vencimiento"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       cxp_pendientes_aprobacion_count: { Args: never; Returns: number }
       cxp_por_capturar: {
         Args: never
@@ -7876,6 +7957,7 @@ export type Database = {
         }
         Returns: string
       }
+      marcar_facturas_vencidas: { Args: never; Returns: number }
       marcar_proforma_facturada: {
         Args: {
           p_fecha: string
