@@ -12,7 +12,10 @@
  * cancelación (SAT vs manual), saldo, días vencido y NC aplicadas.
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
 import { Badge } from "@/components/ui/badge";
+import { CHIP_BASE } from "@/features/cxp/lib/badgeTone";
+import type { ChipTone } from "@/features/cxp/lib/badgeTone";
 import {
   Tooltip,
   TooltipContent,
@@ -27,17 +30,6 @@ interface Props {
   factura: FacturaCxP;
 }
 
-const CHIP_BASE =
-  "text-2xs px-1.5 py-0 h-4 font-normal leading-none bg-muted text-muted-foreground border-transparent inline-flex items-center gap-1";
-
-type ChipTone = "info" | "warning" | "destructive" | "success" | "neutral";
-const TONE_DOT: Record<ChipTone, string> = {
-  info: "bg-info",
-  warning: "bg-warning",
-  destructive: "bg-destructive",
-  success: "bg-success",
-  neutral: "bg-muted-foreground/60",
-};
 
 function formatProgramada(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("es-MX", {
