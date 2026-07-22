@@ -2,20 +2,24 @@
  * Columnas + badge de estado para `ComprasNotasCredito` — extraídos en
  * v13.182.0 (Wave 2 splits).
  */
-import { Badge } from "@/components/ui/badge";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import type { ChipTone } from "@/features/cxp/lib/badgeTone";
 import { defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { NotaCreditoRow } from "@/features/compras/services/notasCreditoGlobal";
 
+const NC_TONES: Record<string, { tone: ChipTone; label: string }> = {
+  Aplicada:  { tone: "success", label: "Aplicada" },
+  Aprobada:  { tone: "info",    label: "Aprobada" },
+  Cancelada: { tone: "neutral", label: "Cancelada" },
+  Borrador:  { tone: "neutral", label: "Borrador" },
+};
+
 export function EstadoNCBadge({ estado }: { estado: NotaCreditoRow["estado"] }) {
-  if (estado === "Aplicada") {
-    return <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/20">Aplicada</Badge>;
-  }
-  if (estado === "Cancelada") {
-    return <Badge variant="destructive">Cancelada</Badge>;
-  }
-  return <Badge variant="secondary">{estado}</Badge>;
+  const meta = NC_TONES[estado] ?? { tone: "neutral" as ChipTone, label: estado };
+  return <ToneBadge tone={meta.tone} size="md">{meta.label}</ToneBadge>;
 }
+
 
 export function buildNotasCreditoColumns() {
   return defineColumns<NotaCreditoRow>([

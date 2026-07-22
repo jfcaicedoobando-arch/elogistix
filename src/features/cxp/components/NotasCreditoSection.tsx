@@ -6,7 +6,10 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Plus, Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+
+
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { formatCurrency } from "@/lib/formatters";
 import {
@@ -27,12 +30,18 @@ interface Props {
   canEdit: boolean;
 }
 
+const NC_TONES: Record<string, { tone: ChipTone; label: string }> = {
+  Aplicada:  { tone: "success",     label: "Aplicada" },
+  Aprobada:  { tone: "info",        label: "Aprobada" },
+  Cancelada: { tone: "neutral",     label: "Cancelada" },
+  Borrador:  { tone: "neutral",     label: "Borrador" },
+};
+
 function NcEstadoBadge({ estado }: { estado: string }) {
-  if (estado === "Aplicada") return <Badge className="bg-success/15 text-success border-success/30">Aplicada</Badge>;
-  if (estado === "Cancelada") return <Badge variant="secondary">Cancelada</Badge>;
-  if (estado === "Aprobada") return <Badge className="bg-info/15 text-info border-info/30">Aprobada</Badge>;
-  return <Badge variant="outline">Borrador</Badge>;
+  const meta = NC_TONES[estado] ?? { tone: "neutral" as ChipTone, label: estado };
+  return <ToneBadge tone={meta.tone}>{meta.label}</ToneBadge>;
 }
+
 
 async function openStoredFile(path: string | null | undefined) {
   if (!path) return;

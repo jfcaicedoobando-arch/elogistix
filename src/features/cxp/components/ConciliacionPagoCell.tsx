@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { CheckCircle2, Link2, Link2Off, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/formatters";
@@ -86,9 +86,10 @@ export function ConciliacionPagoCell({
   if (movimiento) {
     return (
       <div className="flex items-center gap-2">
-        <Badge className="bg-success hover:bg-success text-2xs px-1.5 py-0 h-5">
-          <CheckCircle2 className="h-3 w-3 mr-1" /> Conciliado
-        </Badge>
+        <ToneBadge tone="success" size="md">
+          <CheckCircle2 className="h-3 w-3" /> Conciliado
+        </ToneBadge>
+
         <div className="flex flex-col text-label text-muted-foreground min-w-0">
           <span className="tabular-nums">{format(new Date(movimiento.fecha + "T00:00:00"), "dd/MM/yy")} · {formatCurrency(Number(movimiento.cargo), "MXN")}</span>
           {movimiento.referencia && <span className="truncate">Ref: {movimiento.referencia}</span>}

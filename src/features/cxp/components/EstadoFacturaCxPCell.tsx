@@ -12,7 +12,10 @@
  * cancelación (SAT vs manual), saldo, días vencido y NC aplicadas.
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
 import { Badge } from "@/components/ui/badge";
+import { CHIP_BASE } from "@/features/cxp/lib/badgeTone";
+import type { ChipTone } from "@/features/cxp/lib/badgeTone";
 import {
   Tooltip,
   TooltipContent,
@@ -27,17 +30,6 @@ interface Props {
   factura: FacturaCxP;
 }
 
-const CHIP_BASE =
-  "text-2xs px-1.5 py-0 h-4 font-normal leading-none bg-muted text-muted-foreground border-transparent inline-flex items-center gap-1";
-
-type ChipTone = "info" | "warning" | "destructive" | "success" | "neutral";
-const TONE_DOT: Record<ChipTone, string> = {
-  info: "bg-info",
-  warning: "bg-warning",
-  destructive: "bg-destructive",
-  success: "bg-success",
-  neutral: "bg-muted-foreground/60",
-};
 
 function formatProgramada(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("es-MX", {
@@ -121,13 +113,7 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
             {shown.length > 0 && (
               <div className="flex flex-wrap items-center gap-1">
                 {shown.map((c) => (
-                  <Badge key={c.key} variant="outline" className={CHIP_BASE}>
-                    <span
-                      aria-hidden
-                      className={`inline-block h-1.5 w-1.5 rounded-full ${TONE_DOT[c.tone]}`}
-                    />
-                    <span className="tabular-nums">{c.label}</span>
-                  </Badge>
+                  <ToneBadge key={c.key} tone={c.tone}>{c.label}</ToneBadge>
                 ))}
                 {overflow > 0 && (
                   <Badge variant="outline" className={CHIP_BASE}>
@@ -136,6 +122,7 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
                 )}
               </div>
             )}
+
           </div>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">

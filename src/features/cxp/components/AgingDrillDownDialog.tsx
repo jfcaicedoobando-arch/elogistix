@@ -11,14 +11,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DataTable, defineColumns } from "@/components/shared/DataTable";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import type { FacturaCxP } from "@/features/cxp/services";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
-import { bucketDeDias, BUCKET_LABELS, BUCKET_TONES, type CubetaAging } from "./agingBuckets";
+import { bucketDeDias, BUCKET_LABELS, BUCKET_TONE, type CubetaAging } from "./agingBuckets";
+import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+
 import { todayLocalISO } from "@/lib/date/today";
 import { AgingActionBar, AgingKpiRow } from "./AgingDrillDownDialog.parts";
 
@@ -60,7 +62,7 @@ export function AgingDrillDownDialog({ proveedor, open, onOpenChange, cubetaInic
             <span className="tabular-nums text-sm">
               {row.original.dias_vencido > 0 ? `+${row.original.dias_vencido}` : row.original.dias_vencido}
             </span>
-            <Badge className={BUCKET_TONES[bucket]} variant="outline">{BUCKET_LABELS[bucket]}</Badge>
+            <ToneBadge tone={BUCKET_TONE[bucket]}>{BUCKET_LABELS[bucket]}</ToneBadge>
           </div>
         );
       },

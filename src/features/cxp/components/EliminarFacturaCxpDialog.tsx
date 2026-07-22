@@ -12,17 +12,20 @@ import { cn } from "@/lib/utils";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { EstatusCxP } from "@/features/cxp/services/proveedorFacturas";
 
-const ESTATUS_META: Record<EstatusCxP, { label: string; dotClass: string; textClass: string }> = {
-  Cancelada:    { label: "Cancelada",    dotClass: "bg-muted-foreground",         textClass: "text-muted-foreground" },
-  Rechazada:    { label: "Rechazada",    dotClass: "bg-destructive",               textClass: "text-destructive" },
-  Borrador:     { label: "Borrador",     dotClass: "bg-muted-foreground",         textClass: "text-muted-foreground" },
-  "Por aprobar":{ label: "Por aprobar",  dotClass: "bg-amber-500",                 textClass: "text-amber-700" },
-  Pagada:       { label: "Pagada",       dotClass: "bg-emerald-500",               textClass: "text-emerald-700" },
-  Vencida:      { label: "Vencida",      dotClass: "bg-destructive",               textClass: "text-destructive" },
-  "Por vencer": { label: "Por vencer",   dotClass: "bg-amber-500",                 textClass: "text-amber-700" },
-  Parcial:      { label: "Parcial",      dotClass: "bg-sky-500",                   textClass: "text-sky-700" },
-  Vigente:      { label: "Pendiente de pago", dotClass: "bg-amber-500",            textClass: "text-amber-700" },
+import { TONE_DOT, TONE_TEXT, type ChipTone } from "@/features/cxp/lib/badgeTone";
+
+const ESTATUS_META: Record<EstatusCxP, { label: string; tone: ChipTone }> = {
+  Cancelada:    { label: "Cancelada",         tone: "neutral" },
+  Rechazada:    { label: "Rechazada",         tone: "destructive" },
+  Borrador:     { label: "Borrador",          tone: "neutral" },
+  "Por aprobar":{ label: "Por aprobar",       tone: "warning" },
+  Pagada:       { label: "Pagada",            tone: "success" },
+  Vencida:      { label: "Vencida",           tone: "destructive" },
+  "Por vencer": { label: "Por vencer",        tone: "warning" },
+  Parcial:      { label: "Parcial",           tone: "info" },
+  Vigente:      { label: "Pendiente de pago", tone: "warning" },
 };
+
 
 interface Props {
   factura: FacturaCxP | null;
@@ -87,12 +90,13 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
             {/* Status Line */}
             {estatusMeta && (
               <div className="px-6 py-2 bg-muted/40 border-y border-border flex items-center gap-2">
-                <div className={cn("w-2 h-2 rounded-full", estatusMeta.dotClass)} />
-                <span className={cn("text-[11px] font-bold tracking-wide uppercase", estatusMeta.textClass)}>
+                <div className={cn("w-2 h-2 rounded-full", TONE_DOT[estatusMeta.tone])} />
+                <span className={cn("text-[11px] font-bold tracking-wide uppercase", TONE_TEXT[estatusMeta.tone])}>
                   {estatusMeta.label}
                 </span>
               </div>
             )}
+
 
             {/* Body */}
             <div className="p-6 space-y-4">
@@ -108,8 +112,9 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Saldo pendiente</span>
                   <div className={cn(
                     "text-sm font-bold tabular-nums whitespace-nowrap",
-                    factura.saldo > 0 ? "text-amber-600" : "text-foreground",
+                    factura.saldo > 0 ? "text-warning" : "text-foreground",
                   )}>
+
                     {formatMonto(factura.moneda, factura.saldo)}
                   </div>
                 </div>
