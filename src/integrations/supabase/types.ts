@@ -5067,7 +5067,7 @@ export type Database = {
           organization_id?: string
           proveedor_factura_id: string
           referencia?: string
-          tipo_cambio_usd?: number
+          tipo_cambio_usd: number
           updated_at?: string
         }
         Update: {
@@ -7360,17 +7360,15 @@ export type Database = {
         Args: { p_cotizacion_id: string }
         Returns: string
       }
-      crear_embarque_borrador_desde_cotizacion:
-        | { Args: { p_cotizacion_id: string }; Returns: string }
-        | {
-            Args: {
-              p_cotizacion_id: string
-              p_decision?: string
-              p_delta_jsonb?: Json
-              p_tarifa_id_aplicada?: string
-            }
-            Returns: string
-          }
+      crear_embarque_borrador_desde_cotizacion: {
+        Args: {
+          p_cotizacion_id: string
+          p_decision?: string
+          p_delta_jsonb?: Json
+          p_tarifa_id_aplicada?: string
+        }
+        Returns: string
+      }
       crear_embarque_completo:
         | {
             Args: {
