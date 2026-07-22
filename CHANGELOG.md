@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.305.14] - 2026-07-22
+- **fix(db) · Hotfix Bloque A: recálculo automático de estado CxP ya no colisiona con `LC_CXP_PAGADA_INMUTABLE`.** El guard `trg_guard_estado_proveedor_factura` (FIX-R2-04) bloquea salir del estado `Pagada` salvo con la marca de sesión `app.recalc_cxp='1'`, pero `_recalc_estado_proveedor_factura` (trigger automático sobre `pagos_proveedor` y `proveedor_notas_credito`) hacía justo esa transición cuando el saldo se reabría (borrado de pago, NC aplicada, ajuste cambiario) y no seteaba la marca, así que abortaba flujos legítimos. Ahora la función interna envuelve su `UPDATE` con `set_config('app.recalc_cxp','1',true)` y lo limpia con `EXCEPTION` de respaldo. El guard sigue vivo para cambios manuales desde la app o SQL. Analogía: pusimos un candado con llave especial en el estado "Pagada", pero al motor interno que reabre saldos se le había olvidado darle la llave; ahora la trae en la mano sólo durante el instante que la necesita.
+
 ## [13.305.13] - 2026-07-22
 - **fix(db) · BLOQUE A de la auditoría R2 (4 P0 críticos).** Correcciones que desbloquean release:
   - **FIX-R2-01 · Cierre de embarques.** `validar_cierre_embarque` volvió a funcionar: (1) la suma de pagos de proveedor usa el JOIN correcto (`pp.proveedor_factura_id`, no la columna inexistente `pp.factura_id`); (2) la utilidad para el margen mínimo se calcula en vivo con `pnl_financiero_embarque(id)->>'utilidad_mxn'` en lugar de leer una columna `pnl` que no existe en `embarques`; (3) el margen mínimo se lee de la clave real `pnl_margen_minimo_cierre` (antes se leía una clave inexistente y siempre resultaba 0).
