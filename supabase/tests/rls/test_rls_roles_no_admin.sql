@@ -52,9 +52,9 @@ BEGIN
     (operador_a, 'operador'),
     (cli_user, 'cliente');
 
-  INSERT INTO public.clientes(id, nombre, organization_id) VALUES
-    (cli_a, 'Cliente NA A', org_a),
-    (cli_b, 'Cliente NA B', org_b);
+  INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
+    (cli_a, 'Cliente NA A', 'XAXX010101000', 'a@test.local', org_a),
+    (cli_b, 'Cliente NA B', 'XAXX010101001', 'b@test.local', org_b);
 
   INSERT INTO public.client_users(cliente_id, user_id, organization_id) VALUES
     (cli_a, cli_user, org_a);

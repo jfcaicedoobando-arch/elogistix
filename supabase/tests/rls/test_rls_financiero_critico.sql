@@ -59,8 +59,8 @@ BEGIN
     VALUES (org_a, user_a, 'admin'), (org_b, user_b, 'admin');
   INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin'), (user_b, 'admin');
 
-  INSERT INTO public.clientes(id, nombre, organization_id)
-    VALUES (cli_a, 'CliFinC A', org_a), (cli_b, 'CliFinC B', org_b);
+  INSERT INTO public.clientes(id, nombre, rfc, email, organization_id)
+    VALUES (cli_a, 'CliFinC A', 'XAXX010101000', 'a@test.local', org_a), (cli_b, 'CliFinC B', 'XAXX010101001', 'b@test.local', org_b);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo, estado, incoterm)
     VALUES
@@ -117,10 +117,10 @@ BEGIN
     categoria_presupuesto_id
   ) VALUES
     (pf_a, org_a, prov_a, 'ProvFC A', emb_a, 'PV-A-001',
-      CURRENT_DATE, 30, 'MXN', 0, 1000, 160, 0, 1160, 'Vigente', '',
+      CURRENT_DATE, 30, 'MXN', 1, 1000, 160, 0, 1160, 'Vigente', '',
       (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_a AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1)),
     (pf_b, org_b, prov_b, 'ProvFC B', emb_b, 'PV-B-001',
-      CURRENT_DATE, 30, 'MXN', 0, 2000, 320, 0, 2320, 'Vigente', '',
+      CURRENT_DATE, 30, 'MXN', 1, 2000, 320, 0, 2320, 'Vigente', '',
       (SELECT id FROM public.presupuesto_categorias WHERE organization_id = org_b AND tipo_contable = 'CostoDirectoEmbarque' LIMIT 1));
 
   PERFORM pg_temp.as_user(user_a);
@@ -205,7 +205,7 @@ BEGIN
     id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
     metodo_pago, referencia, notas
   ) VALUES (
-    pago_prov_a, org_a, pf_a, CURRENT_DATE, 500, 'MXN', 0,
+    pago_prov_a, org_a, pf_a, CURRENT_DATE, 500, 'MXN', NULL,
     'Transferencia', 'REF-PP-A', ''
   );
 
