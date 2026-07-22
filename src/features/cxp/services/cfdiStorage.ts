@@ -1,5 +1,6 @@
 /**
- * Storage de CFDI para CxP — sube XML/PDF y actualiza URLs en proveedor_facturas.
+ * Storage de CFDI para CxP — sube XML/PDF y actualiza URLs en proveedor_facturas
+ * y proveedor_notas_credito.
  * v13.303.99: soporta caso PDF-only (facturas de proveedores internacionales
  * extraídas por IA) cuando `xmlFile` es null.
  */
@@ -8,6 +9,13 @@ import { sanitizeFileName } from "@/lib/storage";
 
 interface SubirArchivosParams {
   facturaId: string;
+  organizationId: string | null | undefined;
+  xmlFile: File | null;
+  pdfFile: File | null;
+}
+
+interface SubirArchivosNcParams {
+  ncId: string;
   organizationId: string | null | undefined;
   xmlFile: File | null;
   pdfFile: File | null;
@@ -40,5 +48,39 @@ export async function subirArchivosCfdiFactura(params: SubirArchivosParams): Pro
   if (Object.keys(update).length === 0) return;
 
   const { error } = await supabase.from("proveedor_facturas").update(update).eq("id", params.facturaId);
+  if (error) throw error;
+}
+
+export async function subirArchivosNcProveedor(params: SubirArchivosNcParams): Promise<void> {
+  const base = `${params.organizationId ?? "org"}/nc/${params.ncId}`;
+  const update: {
+    archivo_xml_url?: string | null;
+    archivo_pdf_url?: string | null;
+  } = {};
+
+  if (params.xmlFile) {
+    const xmlPath = `${base}/${sanitizeFileName(params.xmlFile.name)}`;
+    const xmlUp = await supabase.storage.from("facturas").upload(xmlPath, params.xmlFile, {
+      contentType: "application/xml", upsert: true,
+    });
+    if (xmlUp.error) throw xmlUp.error;
+    update.archivo_xml_url = xmlPath;
+  }
+
+  if (params.pdfFile) {
+    const pdfPath = `${base}/${sanitizeFileName(params.pdfFile.name)}`;
+    const pdfUp = await supabase.storage.from("facturas").upload(pdfPath, params.pdfFile, {
+      contentType: "application/pdf", upsert: true,
+    });
+    if (pdfUp.error) throw pdfUp.error;
+    update.archivo_pdf_url = pdfPath;
+  }
+
+  if (Object.keys(update).length === 0) return;
+
+  const { error } = await supabase
+    .from("proveedor_notas_credito")
+    .update(update)
+    .eq("id", params.ncId);
   if (error) throw error;
 }
