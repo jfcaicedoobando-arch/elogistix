@@ -24,7 +24,7 @@ const TIPO_LABEL: Record<string, string> = {
 };
 
 export function CargaXmlNcSection({ parsed, onParsed }: Props) {
-  const { xml, pdf, loading, setPdf, reset, handleXml, procesar } = useCargaCfdi({
+  const { xml, pdf, loading, setXml, setPdf, reset, handleXml, procesar } = useCargaCfdi({
     categorias: [],
     onParsed: async (data, files) => {
       onParsed(data, files);
