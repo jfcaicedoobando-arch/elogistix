@@ -41,11 +41,7 @@ export function useNuevaFacturaProveedorForm(
   );
   const [tcOrigen, setTcOrigen] = useState<TcOrigen>("vacio");
   const [tcFechaAplicada, setTcFechaAplicada] = useState<string | undefined>();
-  // Marca puesta por el usuario cuando escribe manualmente el TC; evita que el
-  // auto-fetch la sobreescriba en el próximo cambio de fecha.
   const manualTcRef = useRef(false);
-
-  // Mutación que consulta el TC DOF vigente para la fecha de emisión.
   const tcDof = useTcDofPorFecha((r) => {
     setValues((p) => ({ ...p, tc: String(r.tipoCambio) }));
     setTcOrigen("dof");
@@ -53,28 +49,17 @@ export function useNuevaFacturaProveedorForm(
     if (errors.tc) setErrors((e) => ({ ...e, tc: undefined }));
   });
   const total = useMemo(() => calcularTotal(values), [values]);
-
-  // Refs a `tcDof` (mutation) y `tcOrigen` para que el auto-fetch sólo
-  // se re-suscriba al cambiar moneda/emisión, no cuando el origen o el
-  // objeto de mutación cambian de identidad.
   const tcDofRef = useRef(tcDof);
   const tcOrigenRef = useRef(tcOrigen);
   tcDofRef.current = tcDof;
   tcOrigenRef.current = tcOrigen;
-
-  // Auto-fetch del TC DOF cuando hay moneda ≠ MXN + fecha emisión válida.
-  // Se dispara al cambiar moneda o emisión; NO pisa un TC manual ni uno del CFDI.
   useEffect(() => {
     if (values.moneda === "MXN") return;
     if (!isFechaEmisionValida(values.emision)) return;
     const origen = tcOrigenRef.current;
     if (origen === "manual" || origen === "cfdi") return;
     const t = setTimeout(() => {
-      tcDofRef.current.mutate({
-        moneda: values.moneda as MonedaTc,
-        fecha: values.emision,
-        silent: true,
-      });
+      tcDofRef.current.mutate({ moneda: values.moneda as MonedaTc, fecha: values.emision, silent: true });
     }, 250);
     return () => clearTimeout(t);
   }, [values.moneda, values.emision]);
