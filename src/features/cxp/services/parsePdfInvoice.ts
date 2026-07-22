@@ -87,8 +87,12 @@ async function invokeWithRetry(
     await new Promise<void>((res) => setTimeout(res, BACKOFF_MS));
   }
   const latencyMs = Math.round(performance.now() - t0);
+  const serviceUnavailable = last?.phase === "request" && last?.status === null;
+  const friendlyMessage = serviceUnavailable
+    ? "El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de \"Captura manual\" o intentar de nuevo en unos segundos."
+    : (last?.message ?? "No se pudo procesar el PDF con IA");
   const err = new CfdiUploadError(
-    last?.message ?? "No se pudo procesar el PDF con IA",
+    friendlyMessage,
     {
       attemptCount: MAX_ATTEMPTS,
       latencyMs,
@@ -102,10 +106,11 @@ async function invokeWithRetry(
     last?.cause ?? null,
   );
   Sentry.captureException(err, {
-    tags: { feature: "pdf_ia_upload", phase: err.context.phase },
-    contexts: { pdf_ia: { pdf_size: file.size, latency_ms: latencyMs, ...err.context } },
+    tags: { feature: "pdf_ia_upload", phase: err.context.phase, functionName: "parse-invoice-pdf" },
+    contexts: { pdf_ia: { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, ...err.context } },
   });
   throw err;
+
 }
 
 export async function parsePdfInvoice(
