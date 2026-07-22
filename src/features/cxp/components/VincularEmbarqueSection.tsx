@@ -47,7 +47,6 @@ interface Props {
   onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
 }
 
-
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
@@ -56,7 +55,22 @@ export function VincularEmbarqueSection({
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
-  const [mostrarBusqueda, setMostrarBusqueda] = useState<boolean>(!!embarqueAdHoc);
+  const [filtro, setFiltro] = useState<string>("");
+  const [soloMarcados, setSoloMarcados] = useState<boolean>(false);
+
+  const gruposFiltrados = useMemo(
+    () => filtrarGrupos(grupos, { texto: filtro, soloMarcados, seleccion }),
+    [grupos, filtro, soloMarcados, seleccion],
+  );
+  const totalConceptos = useMemo(
+    () => grupos.reduce((n, g) => n + g.items.length, 0),
+    [grupos],
+  );
+  const conceptosVisibles = useMemo(
+    () => gruposFiltrados.reduce((n, g) => n + g.items.length, 0),
+    [gruposFiltrados],
+  );
+  const filtroActivo = filtro.trim().length > 0 || soloMarcados;
 
   const puedeSugerir = calcularPuedeSugerir({
     onAplicar: onAplicarSugerencias,
@@ -131,8 +145,50 @@ export function VincularEmbarqueSection({
           {ultimaSugerencia.length === 1 ? "" : "s"}. Ajusta lo que no cuadre antes de guardar.
         </div>
       )}
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            placeholder="Filtrar por concepto, expediente o monto…"
+            className="pl-8 h-8 text-sm"
+          />
+        </div>
+        <Button
+          type="button"
+          variant={soloMarcados ? "default" : "outline"}
+          size="sm"
+          className="h-8"
+          onClick={() => setSoloMarcados((v) => !v)}
+        >
+          Sólo marcados
+        </Button>
+        {filtroActivo && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8"
+            onClick={() => { setFiltro(""); setSoloMarcados(false); }}
+          >
+            <X className="h-3.5 w-3.5 mr-1" /> Limpiar
+          </Button>
+        )}
+      </div>
+      {filtroActivo && (
+        <p className="text-xs text-muted-foreground">
+          Mostrando {conceptosVisibles} de {totalConceptos} concepto{totalConceptos === 1 ? "" : "s"}
+        </p>
+      )}
+
       <div className="space-y-3 max-h-72 overflow-y-auto rounded-lg border p-2 bg-background">
-        {grupos.map((g) => (
+        {gruposFiltrados.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic px-3 py-4 text-center">
+            Ningún concepto coincide con el filtro.
+          </p>
+        ) : gruposFiltrados.map((g) => (
           <div key={g.embarqueId} className="rounded-md border bg-muted/20">
             <div className="px-3 py-1.5 border-b bg-muted/40 text-xs font-medium">
               Embarque <span className="font-mono">{g.expediente}</span>
@@ -173,33 +229,6 @@ export function VincularEmbarqueSection({
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="rounded-md border border-dashed bg-muted/10 px-3 py-2 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            ¿No aparece el embarque que buscas?
-          </p>
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="h-auto p-0 text-xs"
-            onClick={() => setMostrarBusqueda((v) => !v)}
-          >
-            <Search className="h-3.5 w-3.5 mr-1" />
-            {mostrarBusqueda ? "Ocultar buscador" : "Buscar otro embarque"}
-          </Button>
-        </div>
-        {mostrarBusqueda && (
-          <SugerirEmbarqueBlock
-            proveedorId={proveedorId}
-            proveedorNombre={proveedorNombre}
-            organizationId={organizationId}
-            seleccionado={embarqueAdHoc}
-            onSeleccionar={onEmbarqueAdHoc}
-          />
-        )}
       </div>
     </div>
   );
