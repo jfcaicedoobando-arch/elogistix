@@ -78,11 +78,10 @@ export function CxpFiltrosSheetFields(props: Props) {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <Label>Aprobación</Label>
-            <Select
           {/* v13.307.16 — Aprobación integrada en el chip primario;
               el filtro `?aprobacion=` sigue disponible vía deep-link. */}
+        </>
+      )}
       <div className="space-y-1">
         <Label>Proveedor</Label>
         <Select value={props.proveedorId || "todos"} onValueChange={props.onProveedorChange}>
