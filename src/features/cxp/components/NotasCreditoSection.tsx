@@ -40,7 +40,7 @@ async function openStoredFile(path: string | null | undefined) {
     const url = await getFacturaSignedUrl(path);
     window.open(url, "_blank", "noopener,noreferrer");
   } catch {
-    toast.error("No se pudo generar la liga de descarga del archivo.");
+    notifyError(undefined, { message: "No se pudo generar la liga de descarga del archivo.", method: "openStoredFile" });
   }
 }
 
