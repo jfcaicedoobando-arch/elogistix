@@ -149,9 +149,9 @@ export function buildPaso1Data(
     tarifa_override: values.tarifaOverride ?? {},
     sin_desglose_costos: values.sinDesgloseCostos ?? false,
     agente_id: values.agenteId ?? null,
-    agente_nombre: values.agenteNombre || null,
     naviera_id: values.navieraId ?? null,
-    naviera_nombre: values.navieraNombre || null,
+    // 13.308.6: `agente_nombre` y `naviera_nombre` NO existen en `cotizaciones` (viven en vistas
+    // derivadas vía JOIN). Enviarlos rompía PGRST204. Sentry JAVASCRIPT-REACT-33/32/1V.
     ...partesLclManual(values),
   };
 }
