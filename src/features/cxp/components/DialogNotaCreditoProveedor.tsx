@@ -146,8 +146,8 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       reset();
     } catch (err) {
       // El error ya lo muestra useCrearNotaCredito; no duplicar toast.
-      // eslint-disable-next-line no-console
-      console.error("Error al registrar NC", err);
+      // SAFECAST: no propagamos el error para evitar doble toast.
+      void err;
     }
   };
 
