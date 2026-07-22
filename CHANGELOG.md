@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.305.12] - 2026-07-22
+- **fix(cxp) · `NotasCreditoSection.tsx` usa `notifyError` en lugar de `toast.error` directo.** El guardrail de arquitectura `error-toasts-use-notifyError.test.ts` fallaba porque `openStoredFile` emitía `toast.error("No se pudo generar la liga de descarga del archivo.")`. Se reemplazó por `notifyError(undefined, { message, method: "openStoredFile" })` para que el toast de error incluya el botón "Ver detalles" y cumpla con el estándar de feedback unificado. Analogía: antes la app gritaba el error por un megáfono genérico; ahora lo reporta con el formato oficial que incluye el botón de "copiar reporte".
+
 ## [13.305.11] - 2026-07-22
 - **feature(cxp) · Carga automática de notas de crédito de proveedor desde XML CFDI.** Ahora el diálogo de registrar NC tiene dos pestañas: captura manual y carga de XML. Si se sube un CFDI de tipo "E" (Egreso), el sistema prellena folio, fecha, monto, descripción y UUID fiscal. También se puede adjuntar PDF opcional. Se creó `ncFromCfdi.ts` para mapear los datos del CFDI, `CargaXmlNcSection.tsx` para el dropzone, y `NuevaNotaCreditoFormFields.tsx` para separar el formulario del shell del diálogo (Power of 10). Se agregó `NcSatBadge.tsx` para verificar el estatus SAT de la NC y descargar los adjuntos XML/PDF. Además, se extendió el Edge Function `verificar-uuid-sat` para soportar `tipo: "cxp_nc"` y actualizar `proveedor_notas_credito`. Se añadieron tests unitarios para `buildNcPrefillFromCfdi`. Analogía: antes anotábamos a mano el vale de descuento que nos daba el proveedor; ahora escaneamos el vale y el sistema llena la mayoría de los campos automáticamente.
 
