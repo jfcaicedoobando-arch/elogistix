@@ -6,7 +6,7 @@
 import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as RTooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { hoyMx } from "@/lib/dateUtils";
+import { hoyMx } from "@/lib/date/mx";
 
 export interface CapturaTrendRow { fecha_emision: string | null }
 
