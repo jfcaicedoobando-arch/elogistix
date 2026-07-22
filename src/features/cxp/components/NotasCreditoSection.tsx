@@ -15,7 +15,7 @@ import {
 import { DialogNotaCreditoProveedor } from "./DialogNotaCreditoProveedor";
 import { NcSatBadge } from "./NcSatBadge";
 import { getFacturaSignedUrl } from "@/services/storage/facturas";
-import { toast } from "sonner";
+import { notifyError } from "@/components/shared/utils/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Moneda = Tables<"proveedor_notas_credito">["moneda"];
