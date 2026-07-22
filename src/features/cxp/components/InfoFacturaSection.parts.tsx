@@ -1,23 +1,14 @@
 /**
  * Sub-piezas UI de `InfoFacturaSection` extraídas para mantener el archivo
  * principal < 200 líneas (Power of 10).
- * v13.307.5 — AdjuntoRow ahora permite adjuntar/reemplazar/quitar el archivo
- * cuando el usuario tiene permiso de edición.
+ * v13.307.17 — `AdjuntoRow` movido a su propio archivo (`./AdjuntoRow.tsx`)
+ *              para bajar complejidad ciclomática y respetar `max-lines`.
  */
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import {
-  ExternalLink, Loader2, ShieldCheck, Ban, Upload, RefreshCcw, X,
-} from "lucide-react";
+import { Loader2, ShieldCheck, Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { openFacturaInNewTab } from "@/services/storage/facturas";
-import { notifyError } from "@/components/shared/utils/appFeedback";
-import type { TipoAdjuntoCfdi } from "@/features/cxp/services";
+
+export { AdjuntoRow } from "./AdjuntoRow";
 
 export function Field({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
@@ -28,183 +19,6 @@ export function Field({ label, value, mono = false }: { label: string; value: Re
       <span className={`text-sm text-foreground truncate ${mono ? "font-mono" : ""}`}>
         {value ?? <span className="text-muted-foreground">—</span>}
       </span>
-    </div>
-  );
-}
-
-async function handleAbrir(path: string, tipo: TipoAdjuntoCfdi) {
-  try {
-    await openFacturaInNewTab(path);
-  } catch (e) {
-    notifyError(toast, {
-      title: `No se pudo abrir el ${tipo} del CFDI`,
-      error: e,
-      method: "FEATURES_CXP_INFOFACTURA_OPEN_CFDI",
-    });
-  }
-}
-
-const MAX_BYTES: Record<TipoAdjuntoCfdi, number> = {
-  XML: 2 * 1024 * 1024,
-  PDF: 10 * 1024 * 1024,
-};
-
-function acceptFor(tipo: TipoAdjuntoCfdi): string {
-  return tipo === "XML" ? ".xml,text/xml,application/xml" : "application/pdf";
-}
-
-function validarArchivo(file: File, tipo: TipoAdjuntoCfdi): string | null {
-  const ext = file.name.toLowerCase().split(".").pop();
-  if (tipo === "XML" && ext !== "xml") return "El archivo debe ser .xml";
-  if (tipo === "PDF" && ext !== "pdf") return "El archivo debe ser .pdf";
-  if (file.size > MAX_BYTES[tipo]) {
-    const mb = (MAX_BYTES[tipo] / (1024 * 1024)).toFixed(0);
-    return `El ${tipo} excede ${mb} MB`;
-  }
-  return null;
-}
-
-interface AdjuntoRowProps {
-  label: string;
-  icon: React.ReactNode;
-  path: string | null;
-  tipo: TipoAdjuntoCfdi;
-  canEdit?: boolean;
-  isUploading?: boolean;
-  onUpload?: (file: File, tipo: TipoAdjuntoCfdi) => void;
-  onRemove?: (path: string, tipo: TipoAdjuntoCfdi) => void;
-}
-
-export function AdjuntoRow({
-  label, icon, path, tipo, canEdit = false, isUploading = false, onUpload, onRemove,
-}: AdjuntoRowProps) {
-  const adjunto = !!path;
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [confirmReplace, setConfirmReplace] = useState<File | null>(null);
-  const [confirmRemove, setConfirmRemove] = useState(false);
-  const badgeCls = tipo === "XML"
-    ? "bg-accent/10 text-accent"
-    : "bg-destructive/10 text-destructive";
-
-  const pickFile = () => inputRef.current?.click();
-
-  const handleFile = (file: File | null) => {
-    if (!file || !onUpload) return;
-    const err = validarArchivo(file, tipo);
-    if (err) {
-      notifyError(toast, { title: err, method: "CXP_ADJUNTO_ROW_VALIDATE" });
-      return;
-    }
-    if (adjunto) setConfirmReplace(file);
-    else onUpload(file, tipo);
-  };
-
-  return (
-    <div
-      className={`group flex items-center justify-between gap-3 rounded-md border bg-muted/30 hover:bg-background transition-colors px-3 py-2 ${adjunto ? "cursor-pointer" : "opacity-70"}`}
-      onClick={() => { if (adjunto) handleAbrir(path, tipo); }}
-      role={adjunto ? "button" : undefined}
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold ${badgeCls}`}>
-          {icon}
-          {label}
-        </span>
-        <span className="text-xs text-muted-foreground truncate">
-          {adjunto ? "Adjunto" : "No adjunto"}
-        </span>
-      </div>
-      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-        {adjunto && (
-          <Button variant="ghost" size="sm" className="h-7 px-2 opacity-60 group-hover:opacity-100"
-            onClick={() => handleAbrir(path, tipo)}>
-            <ExternalLink className="h-3.5 w-3.5 mr-1" /> Abrir
-          </Button>
-        )}
-        {canEdit && onUpload && (
-          <>
-            <input
-              ref={inputRef}
-              type="file"
-              accept={acceptFor(tipo)}
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                e.target.value = "";
-                handleFile(f);
-              }}
-            />
-            <Button
-              variant="ghost" size="sm" className="h-7 px-2"
-              disabled={isUploading}
-              onClick={pickFile}
-              title={adjunto ? `Reemplazar ${tipo}` : `Adjuntar ${tipo}`}
-            >
-              {isUploading
-                ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                : adjunto
-                  ? <RefreshCcw className="h-3.5 w-3.5 mr-1" />
-                  : <Upload className="h-3.5 w-3.5 mr-1" />}
-              {adjunto ? "Reemplazar" : "Adjuntar"}
-            </Button>
-          </>
-        )}
-        {canEdit && adjunto && onRemove && (
-          <Button
-            variant="ghost" size="sm" className="h-7 px-2 text-destructive"
-            disabled={isUploading}
-            onClick={() => setConfirmRemove(true)}
-            title={`Quitar ${tipo}`}
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        )}
-      </div>
-
-      <AlertDialog open={!!confirmReplace} onOpenChange={(o) => !o && setConfirmReplace(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Reemplazar el {tipo} actual?</AlertDialogTitle>
-            <AlertDialogDescription>
-              El archivo existente se sobreescribirá con
-              <span className="font-medium"> {confirmReplace?.name}</span>. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (confirmReplace && onUpload) onUpload(confirmReplace, tipo);
-                setConfirmReplace(null);
-              }}
-            >
-              Reemplazar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={confirmRemove} onOpenChange={setConfirmRemove}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Quitar el {tipo} adjunto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              La factura permanecerá, pero ya no tendrá el archivo {tipo}. Podrás adjuntar uno nuevo después.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (path && onRemove) onRemove(path, tipo);
-                setConfirmRemove(false);
-              }}
-            >
-              Quitar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
