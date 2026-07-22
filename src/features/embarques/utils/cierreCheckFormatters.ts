@@ -9,7 +9,38 @@ const fmtMoney = (n: unknown, moneda = "MXN"): string => formatCurrencySafe(n, m
 export const pick = (d: unknown, key: string): unknown =>
   d && typeof d === "object" ? (d as Record<string, unknown>)[key] : undefined;
 
+interface SaldoPorMoneda {
+  moneda?: string;
+  total?: number;
+  pagado?: number;
+  saldo?: number;
+  notas_credito?: number;
+  facturas_pendientes?: number;
+}
+
+function readPorMoneda(d: unknown): SaldoPorMoneda[] | null {
+  const arr = pick(d, "por_moneda");
+  return Array.isArray(arr) ? (arr as SaldoPorMoneda[]) : null;
+}
+
+function fmtSaldoPorMoneda(rows: SaldoPorMoneda[]): string | null {
+  const partes = rows
+    .filter((r) => Number(r.saldo ?? 0) > 0.01)
+    .map((r) => fmtMoney(r.saldo, (r.moneda ?? "MXN").toUpperCase()));
+  return partes.length > 0 ? partes.join(" + ") : null;
+}
+
 export const fmtCxc = (d: unknown): string | null => {
+  const rows = readPorMoneda(d);
+  if (rows) {
+    const pendientes = rows.reduce((n, r) => n + Number(r.facturas_pendientes ?? 0), 0);
+    const saldoTxt = fmtSaldoPorMoneda(rows);
+    const partes: string[] = [];
+    if (pendientes > 0) partes.push(`${pendientes} factura(s) por cobrar`);
+    if (saldoTxt) partes.push(`saldo ${saldoTxt}`);
+    return partes.length > 0 ? partes.join(" · ") : null;
+  }
+  // Legacy shape (retrocompat con caché): asume MXN.
   const total = Number(pick(d, "total") ?? 0);
   const pagado = Number(pick(d, "pagado") ?? 0);
   const saldo = total - pagado;
@@ -21,6 +52,15 @@ export const fmtCxc = (d: unknown): string | null => {
 };
 
 export const fmtCxp = (d: unknown): string | null => {
+  const rows = readPorMoneda(d);
+  if (rows) {
+    const pendientes = rows.reduce((n, r) => n + Number(r.facturas_pendientes ?? 0), 0);
+    const saldoTxt = fmtSaldoPorMoneda(rows);
+    const partes: string[] = [];
+    if (pendientes > 0) partes.push(`${pendientes} factura(s) de proveedor por pagar`);
+    if (saldoTxt) partes.push(`monto ${saldoTxt}`);
+    return partes.length > 0 ? partes.join(" · ") : null;
+  }
   const total = Number(pick(d, "total") ?? 0);
   const pagado = Number(pick(d, "pagado") ?? 0);
   const saldo = total - pagado;
