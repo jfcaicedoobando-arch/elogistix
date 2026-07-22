@@ -112,8 +112,9 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Saldo pendiente</span>
                   <div className={cn(
                     "text-sm font-bold tabular-nums whitespace-nowrap",
-                    factura.saldo > 0 ? "text-amber-600" : "text-foreground",
+                    factura.saldo > 0 ? "text-warning" : "text-foreground",
                   )}>
+
                     {formatMonto(factura.moneda, factura.saldo)}
                   </div>
                 </div>
