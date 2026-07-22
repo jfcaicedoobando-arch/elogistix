@@ -8227,8 +8227,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       sidebar_alert_counts: {
         Args: never
         Returns: {
