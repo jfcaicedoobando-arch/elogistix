@@ -6,6 +6,7 @@
  */
 import { FileCode2, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
 import {
   useAdjuntarArchivoCfdiFactura,
@@ -14,6 +15,7 @@ import {
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
 import { Field, AdjuntoRow, CanceladaBanner, UuidFiscalField } from "./InfoFacturaSection.parts";
 import type { FacturaCxP, TipoAdjuntoCfdi } from "@/features/cxp/services";
+
 
 interface Props {
   factura: FacturaCxP;
