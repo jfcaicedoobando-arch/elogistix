@@ -15,7 +15,8 @@ describe("getEstadoColor", () => {
     expect(getEstadoColor("Entregado")).toContain("text-success");
     expect(getEstadoColor("EIR")).toContain("text-state-eir");
     expect(getEstadoColor("Cerrado")).toContain("text-muted-foreground");
-    expect(getEstadoColor("Pagada")).toContain("text-success");
+    // v13.308.4: Pagada = terminal neutro (design decision — libera el verde para Aprobada/Validado/Completo).
+    expect(getEstadoColor("Pagada")).toContain("text-muted-foreground");
     expect(getEstadoColor("Vencida")).toContain("text-destructive");
   });
   it("retorna default para estado desconocido", () => {
