@@ -68,6 +68,15 @@ describe("vincularEmbarqueHelpers", () => {
     it("array vacío → resultado vacío", () => {
       expect(agruparPorEmbarque([])).toEqual([]);
     });
+
+    it("ordena grupos por expediente ascendente (natural sort)", () => {
+      const grupos = agruparPorEmbarque([
+        concepto({ id: "x", embarque_id: "e10", embarque_expediente: "EXP-010" }),
+        concepto({ id: "y", embarque_id: "e2", embarque_expediente: "EXP-002" }),
+        concepto({ id: "z", embarque_id: "e1", embarque_expediente: "EXP-001" }),
+      ]);
+      expect(grupos.map((g) => g.expediente)).toEqual(["EXP-001", "EXP-002", "EXP-010"]);
+    });
   });
 
   describe("calcularPuedeSugerir", () => {
