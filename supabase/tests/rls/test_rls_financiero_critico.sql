@@ -205,7 +205,7 @@ BEGIN
     id, organization_id, proveedor_factura_id, fecha_pago, monto, moneda, tipo_cambio_usd,
     metodo_pago, referencia, notas
   ) VALUES (
-    pago_prov_a, org_a, pf_a, CURRENT_DATE, 500, 'MXN', 0,
+    pago_prov_a, org_a, pf_a, CURRENT_DATE, 500, 'MXN', NULL,
     'Transferencia', 'REF-PP-A', ''
   );
 
