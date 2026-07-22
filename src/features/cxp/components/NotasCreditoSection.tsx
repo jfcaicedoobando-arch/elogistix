@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { format } from "date-fns";
-import { Plus, Check, X, ShieldCheck } from "lucide-react";
+import { Plus, Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -13,6 +13,8 @@ import {
   useNotasCreditoFactura, useAplicarNotaCredito, useAprobarNotaCredito, useCancelarNotaCredito,
 } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import { DialogNotaCreditoProveedor } from "./DialogNotaCreditoProveedor";
+import { getFacturaSignedUrl } from "@/services/storage/facturas";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Moneda = Tables<"proveedor_notas_credito">["moneda"];
