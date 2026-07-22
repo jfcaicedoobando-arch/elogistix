@@ -118,7 +118,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     notas_credito: nc,
     saldo,
     estado: f.estado,
-    estatus: clasificar(saldo, dv, f.estado),
+    estatus: clasificar(saldo, pagado, dv, f.estado, f.estado_aprobacion),
     tipo_cambio_usd: Number(f.tipo_cambio_usd),
     estado_aprobacion: f.estado_aprobacion,
     motivo_rechazo: f.motivo_rechazo,
