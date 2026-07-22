@@ -1,94 +1,88 @@
-# Fix: folio interno se salta al borrar la última factura de proveedor
 
-## Diagnóstico (analogía)
+# Mejora de estatus y badges — Tabla de facturas de proveedor
 
-Imagínate una libreta con folios pre-impresos y un contador en la contraportada. Cada vez que abres una hoja nueva, el contador sube. Hoy, si arrancas la hoja recién abierta, el contador **no baja** — así que la próxima hoja salta de número.
+## Diagnóstico (qué está mal hoy)
 
-Verificado en DB:
+En `cxpColumns.tsx` la fila muestra **dos columnas de estado** — `Estatus` y `Aprobación` — que se pisan entre sí:
 
-- Trigger `trg_set_folio_interno_proveedor_factura` (BEFORE INSERT) llama a `siguiente_folio_proveedor`, que hace `ultimo_numero := ultimo_numero + 1` en `folio_secuencias`.
-- Al borrar es *soft delete* (`deleted_at`), y no hay lógica que ajuste `folio_secuencias`.
-- El unique index `proveedor_facturas_folio_interno_org_uq` **ya excluye** filas con `deleted_at IS NOT NULL` (`WHERE deleted_at IS NULL`), o sea que reusar el folio en un alta nueva no choca con la fila borrada.
-- Estado actual observado: `FP-000045` y `FP-000044` están borrados, `FP-000046` está vivo, `ultimo_numero = 46`. Todo correcto por ahora, pero si borras `FP-000046` el siguiente sería `FP-000047`.
+| Situación real | Estatus | Aprobación | Problema |
+|---|---|---|---|
+| Recién capturada | "Por aprobar" | "Por aprobar" | Redundante |
+| Rechazada por finanzas | "Rechazada" | "Rechazada" | Redundante |
+| Aprobada, con abono, ya vencida | "Vencida" | "Aprobada" | Se **pierde** que hay pago parcial |
+| Aprobada, con abono, aún vigente | "Parcial" | "Aprobada" | No se ve cuántos días faltan |
+| Cancelada por SAT vs. cancelada manual | "Cancelada" | — | No distingue origen |
+| NC aplicada reduce saldo | (invisible) | — | No hay señal visual |
+| UUID verificado ante SAT | (invisible) | — | No hay señal visual |
 
-## Decisión del usuario
+Además la prioridad en `clasificar()` **enmascara** información: una factura parcial + vencida sólo dice "Vencida", perdiendo el hecho de que ya hay abono. Y los colores actuales dependen sólo del `statusRegistry` genérico, sin acento operativo (rojo para atraso, ámbar para "por vencer", verde para pagada).
 
-**Reusar el folio sólo si borraste la última.** Si borras una intermedia, el hueco se queda.
+## Objetivo
 
-## Cambios
+Un **solo pill principal** por fila (estado de vida del documento) + **chips secundarios** opcionales que sumen contexto financiero/fiscal sin ocupar otra columna. Igual densidad, más información, menos redundancia.
 
-### Migración
+## Modelo de estado propuesto
 
-Nueva función y trigger sobre `proveedor_facturas`:
+**Estado principal** (uno solo, mutuamente excluyente, en orden de prioridad):
 
-```sql
-CREATE OR REPLACE FUNCTION public.tg_liberar_folio_proveedor_factura()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-  v_num      bigint;
-  v_max_vivo bigint;
-BEGIN
-  -- Sólo cuando pasa a borrado (soft delete)
-  IF NEW.deleted_at IS NULL OR OLD.deleted_at IS NOT NULL THEN
-    RETURN NEW;
-  END IF;
-
-  -- Parsea el número del folio FP-000046 -> 46
-  v_num := NULLIF(regexp_replace(NEW.folio_interno, '\D', '', 'g'), '')::bigint;
-  IF v_num IS NULL THEN
-    RETURN NEW;
-  END IF;
-
-  -- Recalcula: MAX de folios activos (no borrados) para esta org
-  SELECT COALESCE(MAX(NULLIF(regexp_replace(folio_interno, '\D', '', 'g'), '')::bigint), 0)
-    INTO v_max_vivo
-    FROM public.proveedor_facturas
-   WHERE organization_id = NEW.organization_id
-     AND deleted_at IS NULL;
-
-  -- Sólo retrocede el contador si NO quedan folios activos con número mayor.
-  -- Así garantizamos "reusar sólo si borraste la última" y también cubre el caso
-  -- de borrar varias últimas en cadena (el contador queda pegado al MAX vivo).
-  UPDATE public.folio_secuencias
-     SET ultimo_numero = v_max_vivo,
-         updated_at    = now()
-   WHERE organization_id = NEW.organization_id
-     AND tipo            = 'factura_proveedor'
-     AND ultimo_numero   > v_max_vivo;
-
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_liberar_folio_proveedor_factura
-AFTER UPDATE OF deleted_at ON public.proveedor_facturas
-FOR EACH ROW
-WHEN (OLD.deleted_at IS DISTINCT FROM NEW.deleted_at)
-EXECUTE FUNCTION public.tg_liberar_folio_proveedor_factura();
+```text
+Borrador → Por aprobar → Rechazada → Cancelada
+                       ↘ Vigente ↔ Por vencer ↔ Vencida → Pagada
 ```
 
-Notas:
+- `Borrador` — captura incompleta (gris)
+- `Por aprobar` — esperando aprobación (ámbar, ícono reloj)
+- `Rechazada` — con `motivo_rechazo` en tooltip (rojo suave, ícono X)
+- `Cancelada` — con sub-tipo en tooltip: "por SAT" si `uuid_estatus_sat = 'Cancelado'`, si no "manual" (gris tachado)
+- `Vigente` — aprobada, sin atraso, sin abonos (azul suave)
+- `Por vencer` — aprobada, ventana ≤5 días (ámbar claro)
+- `Vencida` — días vencido > 0 (rojo)
+- `Pagada` — saldo ≤ 0.01 (verde)
 
-- Se dispara sólo cuando `deleted_at` pasa de `NULL` → algo (no en restore ni en updates normales).
-- No decrementa a ciegas: recalcula contra `MAX(numero)` de filas vivas. Si borras `FP-000046` (última), baja el contador a 41 (o al que sea el MAX vivo). Si borras `FP-000042` (intermedia), no baja porque hay folios vivos mayores. Cumple exactamente "reusar sólo si borraste la última".
-- Cubre borrado en cadena: si tumbas 46, 41, 40, 37 seguidos, el contador queda pegado al MAX vivo restante.
-- Compatible con el unique index parcial existente — si reasigna un folio, no choca con la fila borrada.
+**Chips secundarios** (0..N, sólo si aplican, tamaño `text-2xs h-4`):
 
-### Sin cambios de frontend
+- `Parcial · 45%` — cuando `pagado > 0` y `saldo > 0` (barra fina o %). Se muestra **incluso si el estado principal es "Vencida"**, resolviendo la pérdida de información actual.
+- `+N d` — días de atraso cuando estado = Vencida (chip rojo compacto, reemplaza la columna "Días").
+- `NC $X` — cuando hay notas de crédito aplicadas (chip azul, tooltip: "Nota de crédito aplicada").
+- `SAT ✓` — cuando `uuid_verificado = true` (chip verde outline muy discreto).
+- `Prog. DD/MM` — cuando `fecha_programada_pago` (reutiliza el chip actual, pero pegado al estado en vez de columna aparte).
 
-Toda la lógica queda en BD. El servicio `crearFacturaProveedor` sigue llamando al mismo trigger `BEFORE INSERT` que resuelve `siguiente_folio_proveedor` con el contador ya corregido.
+## Impacto en columnas
 
-### Test unitario
+Antes: `Folio · Folio prov · Proveedor · Emisión · Vencimiento · Prog. pago · Días · Mon · Total · Pagado · Saldo · Estatus · Aprobación` (13)
 
-- `src/lib/__tests__/folio-proveedor-liberacion.test.ts`: verifica por regex que la migración contiene `tg_liberar_folio_proveedor_factura` y que sólo actualiza cuando `ultimo_numero > v_max_vivo`. (Alineado con el patrón existente `garantias-fase-p3.test.ts`.)
+Después: `Folio · Folio prov · Proveedor · Emisión · Vencimiento · Mon · Total · Pagado · Saldo · Estado` (10)
 
-### Versión / changelog
+- Se **elimina** la columna `Aprobación` (Por aprobar/Rechazada quedan absorbidas en el estado principal).
+- Se **elimina** la columna `Días` (chip `+N d` dentro del estado).
+- Se **elimina** la columna `Prog. pago` (chip dentro del estado).
+- La columna `Estado` se ensancha a `w-[180px]` para hospedar pill + chips en dos líneas apiladas.
 
-- `APP_VERSION` → `13.307.14`.
-- Entrada en `CHANGELOG.md` explicando el bug (folio saltado al borrar), la decisión de producto (reusar sólo si es la última) y el nuevo trigger.
+En pantallas <xl la fila queda visiblemente más limpia; en xl+ hay más aire para el Saldo.
+
+## Ajustes en la lógica
+
+- `clasificar()` en `proveedorFacturas.helpers.ts`: mantener el mismo estado primario, pero **no** dejar que "Vencida" o "Por vencer" absorba "Parcial" — el `Parcial` se devuelve aparte como *flag*, no como estado primario.
+- Extender `FacturaCxP` con un `flags: { parcial, ncAplicada, satVerificada, diasVencido, programado, canceladaPor: 'sat'|'manual'|null }` calculado en `mapJoinedRow`.
+- `statusRegistry.factura_cxp`: mapear cada estado a variante semántica explícita (success/warning/destructive/info/muted) en lugar de heredar la variante por defecto — asegura consistencia con el resto de la app (facturas de venta, embarques).
+
+## Componentes nuevos / tocados
+
+- **Nuevo** `src/features/cxp/components/EstadoFacturaCxPCell.tsx` — pill principal + fila de chips, con tooltip único que consolida: motivo de rechazo, sub-tipo de cancelación, saldo, días vencido, NC.
+- **Editado** `cxpColumns.tsx` — quita 3 columnas, monta el nuevo cell.
+- **Editado** `proveedorFacturas.helpers.ts` — devuelve `flags`.
+- **Editado** `statusRegistry.ts` — variantes semánticas por estado de `factura_cxp`.
+- **Editado** filtros existentes en `CxpFiltros.tsx` — el filtro por "Aprobación" desaparece del combobox (ya vive en Estatus).
+
+## Notas técnicas
+
+- No cambia el esquema SQL — todo se deriva client-side desde datos ya cargados.
+- Preservar los `data-testid` actuales de los tests de columnas; agregar `data-testid="cxp-estado-cell"` en el nuevo componente.
+- Bump de `APP_VERSION` y entrada en `CHANGELOG.md` (regla del proyecto).
+- Tests: agregar `EstadoFacturaCxPCell.test.tsx` cubriendo las 6 combinaciones críticas (Vencida+Parcial, Cancelada SAT vs manual, Rechazada con motivo, Pagada con NC, Por vencer con Prog., Borrador puro).
 
 ## Fuera de alcance
 
-- No se cambia el comportamiento para huecos intermedios (el usuario los deja explícitamente).
-- No se toca `siguiente_folio_proveedor` (sigue igual, ahora el contador que lee ya está corregido).
-- No hay backfill retroactivo: los huecos históricos (por ejemplo si hoy `ultimo_numero=46` pero borras la 46, quedaría en 41) se corrigen en el momento del próximo borrado, no antes.
+- KPIs superiores (`CxpKpiCards`) — mantener como están.
+- Vista Aging — usa columnas propias.
+- Cambios de flujo/permisos de aprobación.
