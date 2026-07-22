@@ -120,7 +120,7 @@ export function DialogNotaCreditoProveedor({ open, onOpenChange, facturaId, mone
       moneda: monedaFactura,
       motivo,
       descripcion,
-      estado: "Borrador",
+      estado: "Borrador" as const,
       uuid_fiscal: uuidFiscal,
     };
 
