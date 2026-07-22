@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.7] - 2026-07-22
+- **fix(embarques) · Validación ISO 6346 en captura de contenedores.** El campo "Número" ahora normaliza a mayúsculas y sin espacios al escribir, y muestra un mensaje rojo inline (`"Formato ISO 6346: 4 letras + 7 dígitos (ej. MSCU1234567). Déjalo vacío si aún no lo asignan."`) cuando el valor no cumple el patrón. El wizard de edición bloquea avanzar al guardado si algún contenedor tiene número inválido (antes se enviaba y la BD lo rechazaba con un `check_violation` técnico). Si aún así el backend devuelve `contenedor_iso6346`, `getErrorMessage` lo traduce al mismo texto amigable. Nuevo helper puro `esNumeroContenedorValido` + tests. Analogía: el lector de código de barras del súper ahora te avisa en el momento que tecleas mal, no hasta el final de la fila.
+
 ## [13.307.6] - 2026-07-22
 - **feat(cxp) · Detalle de factura de proveedor con datos fiscales completos.** El modal ahora muestra la **fecha de expedición** y la **fecha de vencimiento** (con badge rojo `+N d` si está vencida), agrupadas en un bloque "Fechas y crédito" junto a los días de crédito. El desglose fiscal se reordenó a `Subtotal → IVA → IEPS → Retenciones → Total`, incluyendo el **Total** que antes sólo existía en el KPI. Se agrega una sección nueva **"Conceptos de la factura"** (`ConceptosFacturaSection` + hook `useConceptosCfdiFactura`) que lee `proveedor_facturas_conceptos` y renderiza el desglose línea por línea (descripción, cantidad, importe, IVA, IEPS, totales al pie) tal como llegó del XML/IA. La fecha de expedición también aparece en el header ("Expedida DD/MM/YYYY") para lectura de un vistazo. Analogía: antes veías la portada de la factura sin fecha ni el detalle de conceptos; ahora tienes la factura completa abierta.
 
