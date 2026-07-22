@@ -1,5 +1,15 @@
 # Changelog
 
+## [13.307.1] - 2026-07-22
+- **fix(db) · Auditoría R3 · cierre de pendientes: saneamiento e índices únicos parciales.**
+  - **FIX-R3-03b** · Se eliminan 2 filas duplicadas de `embarque_contenedores` (sin cargos ni garantías) y se crea el índice único parcial `uq_embarque_contenedor_numero (embarque_id, upper(numero_contenedor))` para evitar que se repita un contenedor dentro del mismo embarque.
+  - **FIX-R3-04** · Nuevo índice único parcial `uq_facturas_sustituye_a_viva (sustituye_a) WHERE estado <> 'Cancelada'`: una factura no puede tener dos sustitutas vivas al mismo tiempo, pero si la sustituta se cancela sí se permite volver a sustituir (regla ya existente en la UI).
+  - **Limpieza demo** · `bl_house = 'NA'` se normaliza a `NULL` (placeholder heredado).
+  - **Pendiente conocido** · Los 9 duplicados reales de `bl_house` en la organización demo quedan sin restricción única: requieren reconciliación manual con el usuario antes de imponerla.
+  - Analogía: sacamos los muebles duplicados que quedaban y ya pusimos dos de los tres candados finales; el tercero espera a que decidas qué hacer con los expedientes demo con BL repetido.
+
+
+
 ## [13.307.0] - 2026-07-22
 - **fix(db) · Auditoría R3 · bloque consolidado P0/P1/P2 aplicado.**
   - **FIX-R3-02** · `pagos_proveedor.tipo_cambio_usd` deja de tener DEFAULT `0` y su CHECK pasa a `IS NULL OR > 0`: los pagos MXN sin TC vuelven a insertar sin violar constraints.
