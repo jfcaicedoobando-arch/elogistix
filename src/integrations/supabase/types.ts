@@ -6729,6 +6729,7 @@ export type Database = {
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
+      _cxp_anchor_fase_o: { Args: never; Returns: undefined }
       _cxp_validar_aprobacion: {
         Args: { p_factura_id: string }
         Returns: undefined
