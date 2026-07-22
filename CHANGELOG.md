@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.9] - 2026-07-22
+- **feat(cxp) · Buscar embarque al vincular factura de proveedor.** En "Capturar factura de proveedor", cuando el proveedor ya tenía costos precargados, sólo podías marcar de esa lista y no había forma de ligar la factura a otro embarque distinto. Ahora al pie de la lista aparece "¿No aparece el embarque que buscas? → Buscar otro embarque", que despliega el mismo buscador (expediente / BL / cliente) que ya usábamos cuando no había costos precargados. Puedes seleccionar un embarque ad-hoc en paralelo a los conceptos marcados; al guardar se crea un `concepto_costo` nuevo en ese embarque. Analogía: antes sólo podías escoger platillos del menú del día; ahora además puedes pedir "algo fuera de carta" sin cerrar el menú.
+
 ## [13.307.8] - 2026-07-22
 - **fix(cxp) · Ajustes de costo negativos permitidos + toasts persistentes.** El CHECK `conceptos_costo_monto_nonneg` bloqueaba montos negativos, así que cuando el proveedor te facturaba menos de lo devengado (descuento) el paso "ajustar utilidad del embarque" tronaba con `check_violation`. Reemplazado por `conceptos_costo_monto_signo`: los renglones normales siguen exigiendo monto≥0, pero los renglones con `origen='ajuste_factura_proveedor'` pueden ser negativos (así el `SUM(monto)` refleja el descuento y la utilidad sube correctamente). Además los tres toasts de "Factura guardada pero X falló" ahora usan `duration: Infinity`, botón de cerrar y acción "Copiar detalle" — antes se auto-cerraban en 4s sin dejarte leer el error. Analogía: tu cuaderno de gastos ya acepta anotar devoluciones con signo negativo, y las notas urgentes se quedan pegadas hasta que las quitas tú.
 

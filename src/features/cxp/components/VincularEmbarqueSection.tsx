@@ -7,7 +7,7 @@
  * con el del concepto_costo; el usuario puede editarlo.
  */
 import { useMemo, useState } from "react";
-import { Loader2, Link2, Sparkles } from "lucide-react";
+import { Loader2, Link2, Sparkles, Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -55,6 +55,7 @@ export function VincularEmbarqueSection({
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
+  const [mostrarBusqueda, setMostrarBusqueda] = useState<boolean>(!!embarqueAdHoc);
 
   const puedeSugerir = calcularPuedeSugerir({
     onAplicar: onAplicarSugerencias,
@@ -171,6 +172,33 @@ export function VincularEmbarqueSection({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="rounded-md border border-dashed bg-muted/10 px-3 py-2 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            ¿No aparece el embarque que buscas?
+          </p>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-xs"
+            onClick={() => setMostrarBusqueda((v) => !v)}
+          >
+            <Search className="h-3.5 w-3.5 mr-1" />
+            {mostrarBusqueda ? "Ocultar buscador" : "Buscar otro embarque"}
+          </Button>
+        </div>
+        {mostrarBusqueda && (
+          <SugerirEmbarqueBlock
+            proveedorId={proveedorId}
+            proveedorNombre={proveedorNombre}
+            organizationId={organizationId}
+            seleccionado={embarqueAdHoc}
+            onSeleccionar={onEmbarqueAdHoc}
+          />
+        )}
       </div>
     </div>
   );

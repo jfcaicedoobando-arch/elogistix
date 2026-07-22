@@ -1,62 +1,32 @@
-## Qué está pasando
+## Objetivo
+Permitir buscar cualquier embarque al vincular una factura de proveedor, incluso cuando el proveedor ya tiene `conceptos_costo` pendientes precargados.
 
-Estás viendo dos síntomas de un mismo bug:
+## Comportamiento actual
+En `VincularEmbarqueSection` (modal "Capturar factura de proveedor"):
+- Si el proveedor tiene costos pendientes → se muestra la lista de conceptos agrupada por embarque, **sin** buscador.
+- Si NO tiene costos pendientes → se muestra `SugerirEmbarqueBlock` con buscador (expediente / BL / cliente) para crear un concepto ad-hoc.
 
-1. **El toast desaparece antes de que puedas hacerle clic.** Nuestro `Toaster` global tiene `duration={4000}`, así que el aviso de `toast.warning(...)` se auto-cierra en 4 s. Para un warning que reporta *"la factura se guardó pero un paso posterior falló"* eso es demasiado corto: es información crítica que el usuario necesita leer completa y poder cerrar manualmente. Además el mensaje viene sin botón de acción, así que no hay nada donde "hacer clic" (sólo la X del corner, que no alcanzas a apretar).
+El problema: cuando sí hay conceptos precargados, el usuario queda atrapado en esa lista y no puede vincular a otro embarque distinto.
 
-2. **La causa real del error**: `crearAjustesFacturaProveedor` inserta en `conceptos_costo` un renglón con `monto = monto_facturado − monto_devengado`. Cuando el proveedor te cobra **menos** de lo devengado (descuento), ese `delta` es **negativo**. Pero la tabla tiene un CHECK `conceptos_costo_monto_nonneg (monto >= 0)` que prohíbe montos negativos, así que el INSERT truena con el error que viste.
+## Cambio propuesto
+Mostrar también un bloque de búsqueda de embarque ad-hoc cuando ya existen conceptos pendientes, plegado por defecto para no saturar la UI.
 
-    En otras palabras: el modelo *dice* "signo negativo = descuento del proveedor → utilidad sube", pero la base de datos nunca aceptó ese contrato. Todo ajuste a la baja está roto hoy.
+### UI
+En `VincularEmbarqueSection.tsx`, debajo de la lista agrupada de conceptos pendientes, agregar:
+- Un separador sutil ("¿No aparece el embarque que buscas?").
+- Un `<Button variant="link" size="sm">` que hace toggle de un bloque expandible.
+- Al expandir, renderizar el `SugerirEmbarqueBlock` existente (mismo componente ya usado en el caso vacío), reutilizando `embarqueAdHoc` / `onEmbarqueAdHoc` que ya recibe la sección.
+- Si el usuario selecciona un embarque ad-hoc, mantener visibles ambos: los conceptos marcados + la tarjeta verde de "Se creará un costo en el embarque X".
 
-    Analogía: es como si tu cuaderno de gastos tuviera una regla "sólo se aceptan cantidades positivas" y quisieras anotar una devolución. No puedes; tienes que cambiar la regla o inventar una columna "tipo: cargo/devolución".
+### Lógica
+- Sin cambios en hooks, servicios ni submit: `useNuevaFacturaProveedorForm` ya sabe manejar `embarqueAdHoc` en paralelo a `seleccion` de conceptos.
+- Solo estado local `mostrarBusqueda` en `VincularEmbarqueSection`; se abre automáticamente si `embarqueAdHoc` ya existe al montar.
 
-## Qué voy a cambiar
-
-### 1. Permitir ajustes negativos en `conceptos_costo` (backend)
-
-Migración que reemplaza el CHECK global por uno condicional:
-
-```sql
--- Los renglones normales siguen exigiendo monto >= 0.
--- Sólo los ajustes de factura de proveedor pueden ser negativos
--- (representan descuentos o notas de crédito sobre lo devengado).
-ALTER TABLE public.conceptos_costo
-  DROP CONSTRAINT IF EXISTS conceptos_costo_monto_nonneg;
-
-ALTER TABLE public.conceptos_costo
-  ADD CONSTRAINT conceptos_costo_monto_signo CHECK (
-    monto >= 0
-    OR origen = 'ajuste_factura_proveedor'
-  );
-```
-
-Verifico con `SELECT SUM(monto) …` en un embarque de prueba que la utilidad ya se calcula sumando (los negativos restan correctamente porque `SUM` respeta el signo).
-
-### 2. Mejorar el toast de error
-
-En `useNuevaFacturaProveedorForm.sideEffects.ts` los dos `toast.warning(...)` de "factura guardada pero X falló" pasan a:
-
-- `duration: Infinity` (no se auto-cierra).
-- Título breve + `description` con el detalle técnico.
-- `action` con botón "Copiar detalle" para que el usuario nos lo comparta si insiste.
-
-Así el usuario alcanza a leer, cerrar con la X, o copiar el mensaje.
-
-### 3. Test de regresión
-
-Test unitario en `crearAjustesFacturaProveedor.test.ts` que valide un caso con `delta < 0` (proveedor factura menos) devuelve `ajustesCreados: 1` sin lanzar.
-
-### 4. Versionado
-
-- `APP_VERSION` → `13.307.8`.
-- Entrada en `CHANGELOG.md` explicando el bug con analogía.
+## Fuera de alcance
+- No se cambia el flujo cuando no hay costos pendientes (sigue mostrando el buscador de una).
+- No se toca lógica de matching, RPCs ni persistencia.
+- No se modifica `SugerirEmbarqueBlock`.
 
 ## Detalles técnicos
-
-- Archivos modificados:
-  - `supabase/migrations/<nuevo>.sql` — reemplaza el CHECK.
-  - `src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts` — dos toasts persistentes.
-  - `src/features/cxp/services/__tests__/crearAjustesFacturaProveedor.test.ts` — caso delta negativo (mock devuelve `{ error: null }`).
-  - `src/constants/appVersion.ts` + `CHANGELOG.md`.
-- No toco el trigger de reversión (`tg_reverse_ajustes_factura_proveedor`) ni la UI de detalle CxP: siguen funcionando igual porque sólo hacen `SUM/UPDATE deleted_at`.
-- No cambio la severidad global del `Toaster` (otros toasts siguen con 4 s, que es lo correcto para éxito/info).
+- Archivo tocado: `src/features/cxp/components/VincularEmbarqueSection.tsx` (≈ +20 líneas, dentro del límite de 200).
+- Bump `APP_VERSION` a `13.307.9` y entrada en `CHANGELOG.md`.
