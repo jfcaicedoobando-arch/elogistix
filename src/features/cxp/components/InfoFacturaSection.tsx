@@ -21,13 +21,26 @@ interface Props {
 }
 
 export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
-
   const showTc = f.moneda !== "MXN";
   const verificar = useVerificarUuidSat();
+  const adjuntar = useAdjuntarArchivoCfdiFactura();
+  const quitar = useQuitarArchivoCfdiFactura();
   const estaCancelada = f.estado === "Cancelada";
   const verifDate = f.uuid_verificado_fecha
     ? new Date(f.uuid_verificado_fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
     : null;
+
+  const puedeEditarAdjuntos = canEdit && !estaCancelada;
+  const handleUpload = (file: File, tipo: TipoAdjuntoCfdi) =>
+    adjuntar.mutate({ facturaId: f.id, organizationId: f.organization_id, tipo, file });
+  const handleRemove = (path: string, tipo: TipoAdjuntoCfdi) =>
+    quitar.mutate({ facturaId: f.id, path, tipo });
+  const uploadingXml = adjuntar.isPending && adjuntar.variables?.tipo === "XML"
+    || quitar.isPending && quitar.variables?.tipo === "XML";
+  const uploadingPdf = adjuntar.isPending && adjuntar.variables?.tipo === "PDF"
+    || quitar.isPending && quitar.variables?.tipo === "PDF";
+
+
 
   return (
     <section className="space-y-4">
