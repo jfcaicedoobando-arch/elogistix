@@ -1,72 +1,74 @@
-## Problema
 
-En el detalle de la factura de proveedor **FP-000042** el PDF no aparece porque nunca se guardó: en la base de datos el campo `archivo_pdf_url` está en NULL y el bucket sólo tiene el XML. Hoy los CFDI adjuntos sólo se pueden cargar al **crear** la factura; después ya no hay forma de subir/reemplazar/quitar un archivo desde el detalle.
+# Mejora del modal "Detalle de factura de proveedor"
 
-## Objetivo
+## Hallazgos de la auditoría
 
-Que cualquier usuario con permiso de editar la factura pueda **subir, reemplazar o quitar** el XML y el PDF desde el modal de detalle, sin tener que volver a crear la factura. Y de paso, arreglar el caso concreto de Carol subiendo el PDF real de FP-000042.
+Revisé `DialogDetallePagosProveedor.tsx` (header + KPIs + `InfoFacturaSection` + pagos + NC + historial) contra el tipo `FacturaCxP` y contra los datos que sí guardamos en la base:
 
-## Plan
+**Datos que YA existen pero NO se muestran hoy:**
+1. `fecha_emision` — la fecha de expedición del CFDI. Hoy no aparece en ningún lugar del modal, solo se usa en filtros y en la tabla de aging.
+2. `fecha_vencimiento` — la fecha límite de pago. Solo se insinúa cuando la factura está vencida (chip "Vencida · N d"), nunca la fecha real.
+3. `dias_credito` — sí se muestra, pero suelto, sin las fechas que lo contextualizan.
+4. **Conceptos del CFDI persistidos** en `proveedor_facturas_conceptos` (los que llegan del XML o del PDF con IA). Hoy solo se ven en el *preview* al capturar la factura; después de guardar desaparecen del detalle.
+5. `total` — está arriba en el KPI, pero no vuelve a aparecer en la sección de Información junto al subtotal/IVA/retenciones, lo que rompe la lectura del desglose fiscal.
 
-### 1. Nuevo control de adjuntos en el detalle
+**Datos secundarios que también podrían sumar (opcional):**
+- Fecha y hora de creación/última actualización de la factura (ya se ve en `HistorialFacturaSection`, así que lo dejamos ahí).
+- Estatus SAT del UUID: ya existe (`UuidFiscalField`), ok.
 
-En `src/features/cxp/components/InfoFacturaSection.parts.tsx` (o un componente hermano), reemplazar el `AdjuntoRow` actual (que sólo muestra "no adjunto") por una versión con acciones:
+## Qué construimos
 
-- Si hay archivo: ver + reemplazar + quitar.
-- Si no hay archivo: botón "Adjuntar XML" / "Adjuntar PDF".
+### 1. Bloque "Fechas y crédito" en `InfoFacturaSection.tsx`
+Reorganizar el grid de 3 columnas para que las fechas queden juntas y visibles siempre:
 
-Reglas UX:
-- Sólo visible si la factura **no** está `Cancelada` y el usuario tiene permiso de edición (mismo flag que ya usa el modal).
-- Confirmación tipo "¿Reemplazar el archivo actual?" antes de sobrescribir.
-- Validación de tipo (`.xml` / `.pdf`) y tamaño (2 MB XML, 10 MB PDF).
+```text
+┌─ Fechas y crédito ─────────────────────────────────────┐
+│ Expedición      Vencimiento       Días de crédito      │
+│ 15/03/2026      14/04/2026        30 días              │
+└────────────────────────────────────────────────────────┘
+```
 
-### 2. Servicio de storage reutilizable
+- Formatear con `formatDate` (DD/MM/YYYY, es-MX) usando `parseLocalMx` para evitar el bug de UTC.
+- Si la factura está vencida y con saldo, `Vencimiento` muestra el badge rojo `+N d` a la derecha (reutiliza el estilo actual del chip).
+- El campo "Días de crédito" se mueve a este bloque (hoy está mezclado con impuestos).
 
-Extender `src/features/cxp/services/cfdiStorage.ts` con dos funciones:
+### 2. Bloque "Desglose fiscal" reordenado
+Mismo grid pero con orden lógico de arriba hacia abajo:
+`Subtotal → IVA → IEPS (si aplica) → Retenciones → Total`
+El `Total` se agrega como campo con emphasis (mono, semibold) para que el desglose cuadre visualmente con lo que muestra el header.
 
-- `adjuntarArchivoCfdiFactura({ facturaId, organizationId, tipo: "XML"|"PDF", file })` — reusa `subirArchivosCfdiFactura` y luego hace `UPDATE proveedor_facturas SET archivo_xml_url|archivo_pdf_url = path`.
-- `quitarArchivoCfdiFactura({ facturaId, path, tipo })` — borra el objeto en `storage` (best-effort) y pone la columna en NULL.
+### 3. Nueva sección "Conceptos de la factura"
+Componente nuevo `ConceptosFacturaSection.tsx` que:
 
-Ambas respetan el prefijo `{organization_id}/cfdi/{facturaId}/…` que exige la RLS del bucket `facturas` (ver `mem://technical/storage-rls-paths`).
+- Hook nuevo `useConceptosCfdiFactura(facturaId)` → `select * from proveedor_facturas_conceptos where proveedor_factura_id = :id order by created_at`.
+- Renderiza la misma tabla visual que `CfdiConceptosPreview` (columnas: #, Descripción, Cantidad, Importe, IVA, IEPS si aplica, con totales al pie), reutilizando su markup para consistencia.
+- Estados: skeleton mientras carga, mensaje suave "Esta factura no tiene conceptos capturados del CFDI" cuando la lista viene vacía (típico en facturas creadas antes de v13.303.67 o cuando el proveedor no manda XML y tampoco se usó IA).
+- Se coloca entre `InfoFacturaSection` y `HistorialFacturaSection` en `DialogDetallePagosProveedor.tsx > BodySections`.
 
-### 3. Hook con invalidación de cache
+### 4. Header del modal
+Añadir la fecha de expedición junto al folio, para que se lea de un vistazo sin bajar:
 
-Nuevo `useAdjuntoFacturaProveedor` que envuelve las mutaciones con React Query e invalida las queries del detalle (`["cxp","factura",facturaId]`, listado y KPIs) para que la UI muestre el archivo sin refrescar la página.
-
-Manejo de errores vía `notifyError` (no `toast.error`, conforme a la regla del proyecto) y `AprobacionFacturaError`-style para mensajes claros de RLS/tamaño.
-
-### 4. Fix de datos para FP-000042
-
-Como paso separado y explícito:
-
-- Pedir a Carol el PDF por chat.
-- Subirlo manualmente al bucket en el path `00000000-…000001/cfdi/6b0467d6…/FCON-B0000016531.pdf`.
-- Actualizar `proveedor_facturas.archivo_pdf_url` de la factura `6b0467d6…` con ese path.
-
-Este paso se puede hacer con las mismas nuevas funciones una vez desplegadas (más limpio que un `UPDATE` a mano).
-
-### 5. Tests
-
-- Extender `src/features/cxp/services/__tests__/cfdiStorage.test.ts` para cubrir `adjuntarArchivoCfdiFactura` (verifica que el path sigue empezando con `organization_id`) y `quitarArchivoCfdiFactura` (verifica delete + `UPDATE ... = NULL`).
-- Test de componente ligero para `AdjuntoRow` verificando que el botón "Reemplazar" pide confirmación.
-
-### 6. Changelog + versión
-
-- Bump `APP_VERSION` a `13.307.5`.
-- Entrada en `CHANGELOG.md` describiendo la nueva capacidad de gestionar adjuntos desde el detalle y el fix puntual de FP-000042.
+```text
+Detalle de factura de proveedor  [FP-000042]
+Folio prov. A-12345 — Transportes ACME · Expedida 15/03/2026
+```
 
 ## Detalles técnicos
 
-- Bucket privado `facturas`, política RLS: primer segmento del path = `organization_id`. Mantener `upsert: true` en `upload` para permitir reemplazos limpios.
-- `storage.remove` puede fallar si el objeto ya no existe: tratarlo como no-op (no romper el flujo si la columna se queda en NULL de todos modos).
-- No tocar `parse-invoice-pdf` ni el flujo de creación — el problema es post-creación.
-
-## Analogía para pilotearlo mental
-
-Hoy la factura es como un sobre que se **sella** al meterlo en el archivero: si olvidaste un papel adentro, ya no puedes abrirlo. Con este cambio el sobre pasa a tener un **clip**: puedes agregar, cambiar o quitar hojas sin romperlo.
+- **Archivos nuevos:**
+  - `src/features/cxp/hooks/useConceptosCfdiFactura.ts` — React Query hook (`queryKey: ["cxp", "conceptos-cfdi", facturaId]`, `enabled: !!facturaId`).
+  - `src/features/cxp/components/ConceptosFacturaSection.tsx` — sección UI (~90 líneas, respeta Power of 10).
+- **Archivos modificados:**
+  - `src/features/cxp/components/InfoFacturaSection.tsx` — nuevo bloque de fechas, campo Total, reorden del grid.
+  - `src/features/cxp/components/DialogDetallePagosProveedor.tsx` — insertar `<ConceptosFacturaSection />` y mostrar fecha en el header.
+- **Sin cambios de esquema, sin nuevas RLS.** La tabla `proveedor_facturas_conceptos` ya está protegida por tenant.
+- **Bump de versión:** `APP_VERSION → 13.307.6` + entrada en `CHANGELOG.md`.
+- **Tests:** unit test del hook (`useConceptosCfdiFactura`) y snapshot render de `ConceptosFacturaSection` (loading, vacío, con datos con y sin IEPS).
 
 ## Fuera de alcance
 
-- No cambia el flujo de creación (tabs Manual/CFDI/PDF IA).
-- No toca notas de crédito de proveedor (misma mejora aplica pero se hace en otro plan si se pide).
-- No re-parsea el XML al reemplazarlo — sólo lo guarda como archivo.
+- Editar los conceptos del CFDI desde el detalle (son fiscales, se preservan tal cual llegan del SAT).
+- Sincronizar con la vinculación a `conceptos_costo` del embarque (eso vive en `VincularEmbarqueSection` y no se toca).
+- Agregar formas/métodos de pago del CFDI (no los tenemos en el tipo `FacturaCxP` hoy — sería otro cambio de servicio).
+
+¿Le doy con esto o quieres que también integre en este mismo turno los datos de forma de pago / método de pago / uso CFDI (requiere extender el `select` de `fetchFacturasCxP` y el tipo)?
