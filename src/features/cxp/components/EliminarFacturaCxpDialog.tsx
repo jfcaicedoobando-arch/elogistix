@@ -52,7 +52,7 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
   };
 
   const canDelete = confirmText.trim().toUpperCase() === "ELIMINAR";
-  const showMoneda = factura?.moneda !== "MXN";
+  
   const estatusMeta = factura ? ESTATUS_META[factura.estatus as EstatusCxP] : null;
 
   return (
