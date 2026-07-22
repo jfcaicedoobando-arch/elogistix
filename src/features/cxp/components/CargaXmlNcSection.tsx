@@ -80,7 +80,7 @@ export function CargaXmlNcSection({ parsed, onParsed }: Props) {
             <span className="text-muted-foreground">({(xml.size / 1024).toFixed(1)} KB)</span>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); reset(); }}
+              onClick={(e) => { e.stopPropagation(); setXml(null); }}
               className="ml-2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
