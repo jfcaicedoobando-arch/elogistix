@@ -1,97 +1,81 @@
-# Auditoría visual — Módulo de Compras (1366×768)
 
-Recorrí las 11 vistas del módulo (`Facturas`, `Por capturar`, `Por aprobar`, `Por pagar`, `Pagos`, `Notas de crédito`, `Aging`, `Reportes`, `Proveedores`, `Conciliación`, `Dashboard`) y crucé lo observado con la fuente de verdad de estilos: `src/lib/ui/estadoConfig.ts` + `src/lib/status/statusExtras.ts`.
+# Costos directos del embarque — narrar el ajuste
 
-## Diagnóstico (por qué se ve inconsistente)
+## Problema
 
-**1. Semántica de color colapsada — mismo tono para conceptos distintos.**
-Hoy en Compras conviven, todos con `warning` (amarillo):
-`Vigente por vencer` · `Por aprobar` · `Parcialmente pagada` · `Pendiente` · `Devengada` · `En cancelación`.
-Y todos con `success` (verde):
-`Pagada` (en algunos lados) · `Aprobada` · `Vigente` · `Validado` · `Recibido` · `Completo`.
-Un usuario que ve la fila "verde SAT ✓ + verde Vigente + verde Pagada" no puede leer qué está pasando.
+En el embarque 302, "Cargos en destino" se cotizó en **$191.80** y el proveedor facturó **$155.00** (ajuste a la baja, ahorro de $36.80). Hoy la card lo muestra correctamente pero de forma muy silenciosa: una columna Δ en verde con `-$36.80` y un `-19.2%` diminuto debajo. El usuario tiene que:
 
-**2. Chips secundarios compiten con el estado primario.**
-`EstadoFacturaCxPCell` mezcla en la misma celda un badge grande (`Vigente/Vencida/…`) con hasta 5 mini-chips (`Parcial · +N d · NC · SAT ✓ · Prog. DD/MM`) sobre fondos `bg-info/10`, `bg-warning/10`, `bg-success/10`. Todos pintan y todos gritan.
+1. Comparar mentalmente dos números.
+2. Recordar que verde = a favor y rojo = en contra.
+3. Deducir que hubo un "ajuste" del proveedor (la palabra no aparece).
 
-**3. KPI cards del módulo usan variantes destructive/warning sin criterio único.**
-En `/compras/facturas` "Vencido" es rojo, "Por vencer" es amarillo, pero en `/compras/por-aprobar` la card "Rechazadas" también es roja y "Aprobadas" verde, y en `/compras/conciliacion` "Sin facturar" es rojo suave y "Conciliadas" verde. Cada página escoge su propia paleta.
+Queremos que el ERP **cuente la historia** en vez de que el usuario la reconstruya.
 
-**4. Sub-encabezados y anchos inconsistentes.**
-- Facturas: título + subtítulo pequeño.
-- Por aprobar / Reportes: título con `<Icon>` + subtítulo.
-- Proveedores: título + subtítulo largo.
-- Conciliación: título muy grande sin icono.
-Las cards de KPI a veces son 3, a veces 5, a veces 4, con paddings distintos (`p-4`, `p-3`, `gap-3`, `gap-4`).
+## Cambios propuestos (solo UI, sin tocar lógica de reconciliación)
 
-## Qué voy a construir
+### 1. Resumen superior de la card — 3 tiles
 
-### A. Refactor de la paleta semántica de Compras (una sola pasada, sin tocar otros módulos)
+Antes del listado por proveedor, agregar un `ResumenAjusteBar` con 3 tiles por moneda:
 
-Reasigno cada estado a un **rol semántico** (no a un color arbitrario) y lo escribo en `statusExtras.ts` + `estadoConfig.ts`. Los 4 roles:
+```text
+┌────────────────┬────────────────┬─────────────────────────┐
+│ Cotizado       │ Facturado      │ Ajuste neto             │
+│ MXN 4,280.50   │ MXN 4,243.70   │ ▼ Ahorro  MXN 36.80     │
+└────────────────┴────────────────┴─────────────────────────┘
+```
 
-| Rol             | Uso                              | Token             | Ejemplos                       |
-|-----------------|----------------------------------|-------------------|--------------------------------|
-| Neutral         | Sin acción, terminal frío        | `muted`           | Borrador, Pagada, Cancelada, Cerrado |
-| Info (azul)     | En curso, requiere seguimiento   | `info`            | Vigente, Emitida, En proceso, Parcial |
-| Atención (ámbar)| Requiere acción del usuario      | `warning`         | Por aprobar, Por vencer, Pendiente |
-| Alerta (rojo)   | Bloqueante / SLA roto            | `destructive`     | Vencida, Rechazada, Sustituida |
-| Éxito (verde)   | Cerrado bien — solo terminal ✅  | `success`         | Aprobada, Validado, Completo   |
+- Tile "Ajuste neto" cambia icono/color: `▼ Ahorro` (success), `▲ Sobrecosto` (destructive), `= Sin ajuste` (muted).
+- Un solo bloque por moneda (MXN / USD apilados).
 
-Cambios concretos:
-- `Vigente` deja de ser verde → **azul info** (aún tiene saldo, no es "listo").
-- `Pagada` unifica a **neutral** en todos los dominios (hoy alterna success/muted).
-- `Parcial`, `Por aprobar`, `Por vencer` = amarillo consistente.
-- `Aprobada` = único verde en el flujo de aprobación.
+### 2. Columna "Ajuste" reemplaza a "Δ"
 
-### B. Consolidar el chip secundario de `EstadoFacturaCxPCell`
+Renombrar la columna y sustituir el número seco por un **chip narrativo**:
 
-- Todos los chips pasan a **una sola convención neutra** (`bg-muted text-muted-foreground border-transparent`) con un punto de color 6×6 px que indica severidad (info/warning/destructive). Así el badge primario manda y los chips acompañan.
-- Reduzco de 5 a 3 chips visibles + `+N` colapsando el resto en tooltip.
+| Cotizado | Facturado | Ajuste |
+|---|---|---|
+| 191.80 | 155.00 | 🟢 `▼ Ahorro 36.80 · 19%` |
+| 500.00 | 620.00 | 🔴 `▲ Sobrecosto 120.00 · 24%` |
+| 300.00 | 300.00 | ⚪ `= Sin ajuste` |
+| 400.00 | — | ⚫ `Sin factura` |
 
-### C. Componente `PageHeader` compartido para Compras
+- Chip con `ToneBadge` (mismo lenguaje visual que unificamos en CxP).
+- Tooltip en el chip: *"El proveedor facturó $36.80 menos de lo cotizado (–19%)."* / *"El proveedor facturó $120.00 más de lo cotizado (+24%)."*
+- Ya no se necesita colorear la celda "Facturado".
 
-- `src/features/cxp/components/shared/ComprasPageHeader.tsx` con firma `{icon, title, subtitle, actions}` y espaciado `pb-4 border-b border-border/60`.
-- Aplico en las 11 páginas.
+### 3. Header del grupo por proveedor
 
-### D. KpiRow homogéneo para Compras
+Reemplazar el resumen actual `MXN 4,280.50 → 4,243.70 (-36.80)` por:
 
-- `src/features/cxp/components/shared/ComprasKpiRow.tsx` que envuelve `KpiCard` con:
-  - Grid fijo `grid-cols-2 xl:grid-cols-5 gap-3`
-  - Variantes limitadas a `default | info | warning | destructive` (nada de verdes en cards no-terminales).
-  - `tabular-nums` en el value.
-- Migración: `CxpKpiCards`, `Por-aprobar`, `Por-pagar`, `Pagos`, `Conciliación`, `Aging`.
+```text
+DHL Global Forwarding  [4 conceptos]           ▼ Ahorro MXN 36.80 · 3 con ajuste, 1 sin factura
+```
 
-### E. Densidad y tipografía
+- Frase corta con misma paleta (▼/▲/=) y contador de renglones con ajuste vs sin factura.
+- Suma por moneda se conserva en tooltip del header.
 
-- Titulares uniformes: `text-2xl font-semibold` con icono `h-6 w-6 text-primary`.
-- Subtítulos: `text-sm text-muted-foreground`.
-- Tablas: cabeceras a `text-xs uppercase tracking-wide text-muted-foreground` (ya existe pero se aplica solo en algunas).
+### 4. Orden de filas dentro del grupo
+
+Ordenar por **|desviación| desc**, luego "sin factura", luego "conciliado exacto". Así los ajustes relevantes quedan arriba y el usuario no los busca.
+
+### 5. Micro-copy y consistencia
+
+- "Δ" → "Ajuste" en encabezado y en cualquier tooltip.
+- Definir un helper `describirAjuste(cotizado, facturado, moneda)` → `{ tono, icono, titulo, detalle }` reutilizable por tile, chip y header. Fuente única de verdad para no divergir.
+
+## Archivos afectados
+
+- `src/features/embarques/components/costos/ConceptosCostoCard.tsx` — reemplaza el bloque "Totales" del pie por `ResumenAjusteBar` arriba de los grupos.
+- `src/features/embarques/components/costos/GrupoCostosProveedor.tsx` — nuevo header narrativo, orden de filas, columna "Ajuste" con chip.
+- `src/features/embarques/components/costos/grupoCostosProveedorHelpers.ts` — agregar `describirAjuste` y `ordenarFilasPorAjuste`.
+- `src/features/embarques/components/costos/ResumenAjusteBar.tsx` **(nuevo, ~60 líneas)** — 3 tiles por moneda.
+- `src/features/embarques/components/costos/AjusteChip.tsx` **(nuevo, ~30 líneas)** — chip narrativo con tooltip, basado en `ToneBadge` de CxP.
 
 ## Fuera de alcance
 
-- No toco lógica de negocio (RPCs, cálculo de saldo, permisos).
-- No cambio los colores de módulos fuera de `/compras/*` (Ventas, Embarques, CRM mantienen su paleta).
-- No refactorizo `StatusBadge` — el registry sigue siendo la fuente de verdad, solo cambio los valores.
+- No se toca `reconciliacionCostos.ts` ni el cálculo de `diferencia`/`desviacion_pct`.
+- No se cambia la tabla real vs cotizada del módulo `/compras/conciliacion` (es otro contexto).
+- No se agrega botón para "aceptar ajuste" ni flujo de aprobación — solo comunicación visual.
 
-## Verificación
+## Bump
 
-1. `bunx vitest run src/lib/__tests__` — cubre los tests de mapeo de estados.
-2. `bun run lint -- --max-warnings 0`.
-3. Playwright: recapturo las 11 pantallas y las comparo lado a lado con el estado actual.
-4. Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
-
-## Detalles técnicos
-
-**Archivos a editar (12)**
-- `src/lib/ui/estadoConfig.ts` — reasignación de tokens para dominio factura/factura_cxp.
-- `src/lib/status/statusExtras.ts` — mismos ajustes en los extras.
-- `src/features/cxp/components/EstadoFacturaCxPCell.tsx` — chips neutros con dot de color.
-- `src/features/cxp/components/CxpKpiCards.tsx` — variantes vía `ComprasKpiRow`.
-- `src/features/cxp/components/shared/ComprasPageHeader.tsx` (nuevo).
-- `src/features/cxp/components/shared/ComprasKpiRow.tsx` (nuevo).
-- Páginas `src/pages/compras/*.tsx` (7 archivos) — adoptan `ComprasPageHeader` + `ComprasKpiRow`.
-- `CHANGELOG.md` + `APP_VERSION` en `src/lib/version.ts`.
-
-**Impacto colateral controlado**
-Cambiar `Vigente` a azul y `Pagada` a neutral se propaga a los mismos badges donde aparezcan fuera de Compras (ej. detalle de factura del cliente). Es coherente con la nueva regla "verde = terminal exitoso" y ya lo validé al leer el registry. Si prefieres aislarlo solo a Compras, lo hago con overrides por dominio en `statusRegistry.ts` en vez de tocar `EXTRA_STATUS_BADGES`.
+`APP_VERSION` → `13.307.20` + entrada en `CHANGELOG.md`.
