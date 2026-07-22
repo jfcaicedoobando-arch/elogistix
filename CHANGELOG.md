@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.4] - 2026-07-22
+- **fix(observability) · Sentry · filtrar ruido de errores esperados.** `isExpectedBusinessError` en `queryClient.ts` ahora también descarta clases de dominio (`AprobacionFacturaError`, `CreditLimitError`, `ValidationError`, `ZodError`), timeouts de gateway (HTTP 504 / "upstream request timeout") y validaciones de captura conocidas ("Debe seleccionar al menos…"). Cierra los 7 issues abiertos (`REACT-3B/3A/39/1V` timeouts, `REACT-38/37` aprobación, `REACT-2D` validación) sin cambiar la UX: la UI sigue mostrando el toast; sólo dejan de generar issues en Sentry. Analogía: seguimos escuchando la alarma en casa, pero dejamos de llamar a los bomberos cada vez que se quema una tostada.
+
 ## [13.307.3] - 2026-07-22
 - **fix(db) · Auditoría R3 · correcciones verificadas contra la BD real.** De los 20 hallazgos reportados, 8 ya estaban corregidos y 6 eran evidencia obsoleta; se aplican solamente los reales:
   - **R3-02** · `pagos_proveedor.tipo_cambio_usd` deja de ser `NOT NULL`. Pagos MXN a facturas MXN ya no fallan; cuando cruzan monedas, el trigger sigue exigiendo TC (`LC_PAGO_TC_REQUERIDO`).
