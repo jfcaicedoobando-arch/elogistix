@@ -16,13 +16,10 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EstadoAprobacionDot } from "./EstadoAprobacionDot";
 import { useAprobarFactura } from "@/features/cxp/hooks/useAprobarFactura";
-import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { ReasonDialog } from "@/components/shared/ReasonDialog";
-import { MOTIVO_RECHAZO_MIN, MOTIVO_RECHAZO_MAX } from "@/features/cxp/services/aprobacionFactura";
 import { useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { FacturaFlags } from "./DialogDetallePagosProveedor.flags";
+import { AprobarRechazarDialogs } from "./DialogDetallePagosProveedor.aprobardialogs";
 
 interface Props {
   factura: FacturaCxP;
