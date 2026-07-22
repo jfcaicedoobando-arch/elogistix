@@ -38,7 +38,7 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
         variant="destructive"
       />
       <KpiCard
-        label={`Por vencer 7 días ${countLabel(porVencer7d)}`}
+        label={`Por vencer 5 días ${countLabel(porVencer7d)}`}
         value={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
         sublabel={formatCurrency(kpis.por_vencer_7d_usd, "USD")}
         variant="warning"
