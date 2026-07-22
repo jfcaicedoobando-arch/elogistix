@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, X } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
-import { formatCurrency } from "@/lib/formatters";
 import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 import type { ConceptoCostoRow } from "@/features/embarques/hooks";
