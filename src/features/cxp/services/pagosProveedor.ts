@@ -43,7 +43,8 @@ export interface RegistrarPagoProveedorInput {
   fecha_pago: string;
   monto: number;
   moneda: PagoProveedor["moneda"];
-  tipo_cambio_usd: number;
+  /** TC MXN por 1 USD. `null` cuando el pago y la factura son MXN (no aplica). Debe ser > 0 si se envía (check `pagos_proveedor_tc_pos`). */
+  tipo_cambio_usd: number | null;
   metodo_pago: string;
   referencia?: string;
   cuenta_bancaria_id?: string | null;
@@ -112,7 +113,10 @@ export async function registrarPagoProveedor(
     fecha_pago: input.fecha_pago,
     monto: input.monto,
     moneda: input.moneda,
-    tipo_cambio_usd: input.tipo_cambio_usd,
+    // v13.308.8: nunca enviar `0` — el CHECK `pagos_proveedor_tc_pos` exige
+    // `IS NULL OR > 0`. Normalizamos aquí como último cinturón de seguridad
+    // por si un caller viejo aún manda 0.
+    tipo_cambio_usd: input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null,
     metodo_pago: input.metodo_pago,
     referencia: input.referencia ?? "",
     cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
