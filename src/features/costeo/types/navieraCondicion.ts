@@ -1,6 +1,7 @@
 /**
  * Tipos: condiciones por naviera y tabulador escalonado de demoras.
  */
+import { hoyMx } from "@/lib/date/mx";
 
 export interface CosteoNavieraCondicion {
   id: string;
@@ -60,7 +61,7 @@ export function calcularEstadoCartaGarantia(
 ): CartaGarantiaEstado {
   if (!tiene || !vigenteHasta) return "sin_carta";
   const venceMs = new Date(vigenteHasta + "T00:00:00").getTime();
-  const hoyMs = new Date(hoy.toISOString().slice(0, 10) + "T00:00:00").getTime();
+  const hoyMs = new Date(hoyMx(hoy) + "T00:00:00").getTime();
   if (venceMs < hoyMs) return "vencida";
   const diff = (venceMs - hoyMs) / (1000 * 60 * 60 * 24);
   return diff <= 30 ? "por_vencer" : "vigente";

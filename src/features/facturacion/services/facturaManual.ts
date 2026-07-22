@@ -11,6 +11,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TASA_IVA, subtotalLinea, sumarMontos } from "@/lib/financial/financialUtils";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
+import { hoyMx } from "@/lib/date/mx";
 
 export interface ConceptoManualInput {
   descripcion: string;
@@ -41,7 +42,7 @@ export interface CrearFacturaManualInput {
 function addDays(yyyyMmDd: string, days: number): string {
   const d = new Date(yyyyMmDd + "T00:00:00");
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return hoyMx(d);
 }
 
 function tasaAplicada(tipo: TipoIvaConcepto | undefined, tasaGlobal: number): number | null {
