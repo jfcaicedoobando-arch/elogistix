@@ -23,6 +23,7 @@ export interface CfdiParsed {
   iva_trasladado: number;
   ieps_trasladado: number;  // Clave SAT 003 — aplica en fletes, maniobras, etc.
   retenciones: number;
+  tipo_comprobante: string; // I=Ingreso, E=Egreso, T=Traslado, N=Nómina, P=Pago
   emisor: { rfc: string; nombre: string; regimen: string };
   receptor: { rfc: string; nombre: string };
   conceptos: CfdiConcepto[];
@@ -204,6 +205,7 @@ export function parseCfdi(xml: string): CfdiParsed {
     iva_trasladado: iva,
     ieps_trasladado: ieps,
     retenciones,
+    tipo_comprobante: attr(comprobante, "TipoDeComprobante") || "I",
     emisor: {
       rfc: attr(emisor, "Rfc"),
       nombre: attr(emisor, "Nombre"),

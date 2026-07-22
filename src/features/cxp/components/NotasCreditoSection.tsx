@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { format } from "date-fns";
-import { Plus, Check, X, ShieldCheck } from "lucide-react";
+import { Plus, Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
@@ -13,6 +13,9 @@ import {
   useNotasCreditoFactura, useAplicarNotaCredito, useAprobarNotaCredito, useCancelarNotaCredito,
 } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import { DialogNotaCreditoProveedor } from "./DialogNotaCreditoProveedor";
+import { NcSatBadge } from "./NcSatBadge";
+import { getFacturaSignedUrl } from "@/services/storage/facturas";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Moneda = Tables<"proveedor_notas_credito">["moneda"];
@@ -29,6 +32,16 @@ function NcEstadoBadge({ estado }: { estado: string }) {
   if (estado === "Cancelada") return <Badge variant="secondary">Cancelada</Badge>;
   if (estado === "Aprobada") return <Badge className="bg-info/15 text-info border-info/30">Aprobada</Badge>;
   return <Badge variant="outline">Borrador</Badge>;
+}
+
+async function openStoredFile(path: string | null | undefined) {
+  if (!path) return;
+  try {
+    const url = await getFacturaSignedUrl(path);
+    window.open(url, "_blank", "noopener,noreferrer");
+  } catch {
+    toast.error("No se pudo generar la liga de descarga del archivo.");
+  }
 }
 
 export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, canEdit }: Props) {
@@ -63,6 +76,9 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                 <th className="text-left px-3 py-2">Motivo</th>
                 <th className="text-right px-3 py-2">Monto</th>
                 <th className="text-center px-3 py-2">Estado</th>
+                <th className="text-center px-3 py-2">SAT</th>
+                <th className="text-center px-3 py-2">XML</th>
+                <th className="text-center px-3 py-2">PDF</th>
                 <th className="w-28" />
               </tr>
             </thead>
@@ -74,6 +90,42 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                   <td className="px-3 py-2 text-muted-foreground">{n.motivo}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>
                   <td className="px-3 py-2 text-center"><NcEstadoBadge estado={n.estado} /></td>
+                  <td className="px-3 py-2 text-center">
+                    <NcSatBadge
+                      facturaId={facturaId}
+                      ncId={n.id}
+                      uuidFiscal={n.uuid_fiscal}
+                      estatus={n.uuid_estatus_sat}
+                    />
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {n.archivo_xml_url ? (
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => openStoredFile(n.archivo_xml_url)}
+                        title="Descargar XML"
+                      >
+                        <FileDigit className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {n.archivo_pdf_url ? (
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => openStoredFile(n.archivo_pdf_url)}
+                        title="Descargar PDF"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
+                  </td>
                   <td className="px-2 py-2 text-right space-x-1">
                     {canEdit && n.estado === "Borrador" && (
                       <Button

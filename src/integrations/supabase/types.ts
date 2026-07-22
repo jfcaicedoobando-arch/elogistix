@@ -5793,6 +5793,8 @@ export type Database = {
         Row: {
           aprobada_at: string | null
           aprobada_por: string | null
+          archivo_pdf_url: string | null
+          archivo_xml_url: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -5808,10 +5810,15 @@ export type Database = {
           organization_id: string
           proveedor_factura_id: string
           updated_at: string
+          uuid_estatus_sat: string | null
+          uuid_fiscal: string | null
+          uuid_verificado_fecha: string | null
         }
         Insert: {
           aprobada_at?: string | null
           aprobada_por?: string | null
+          archivo_pdf_url?: string | null
+          archivo_xml_url?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -5827,10 +5834,15 @@ export type Database = {
           organization_id?: string
           proveedor_factura_id: string
           updated_at?: string
+          uuid_estatus_sat?: string | null
+          uuid_fiscal?: string | null
+          uuid_verificado_fecha?: string | null
         }
         Update: {
           aprobada_at?: string | null
           aprobada_por?: string | null
+          archivo_pdf_url?: string | null
+          archivo_xml_url?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -5846,6 +5858,9 @@ export type Database = {
           organization_id?: string
           proveedor_factura_id?: string
           updated_at?: string
+          uuid_estatus_sat?: string | null
+          uuid_fiscal?: string | null
+          uuid_verificado_fecha?: string | null
         }
         Relationships: [
           {

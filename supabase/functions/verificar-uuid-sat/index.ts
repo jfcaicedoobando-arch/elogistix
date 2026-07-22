@@ -72,7 +72,7 @@ async function consultarSat(rfcEmisor: string, rfcReceptor: string, total: numbe
   return { estatus: mapEstatus(estado, codigo), raw: `${codigo} | ${estado}` };
 }
 
-type Tipo = "cxp" | "cxc";
+type Tipo = "cxp" | "cxc" | "cxp_nc";
 
 interface CfdiParaVerificar {
   uuid_fiscal: string | null;
@@ -131,6 +131,32 @@ async function loadFacturaCxc(admin: ReturnType<typeof createClient>, facturaId:
   };
 }
 
+async function loadNotaCreditoCxp(admin: ReturnType<typeof createClient>, ncId: string): Promise<{ data: CfdiParaVerificar | null; error: unknown }> {
+  const { data, error } = await admin
+    .from("proveedor_notas_credito")
+    .select("id, uuid_fiscal, monto, organization_id, proveedor_factura_id, proveedor_facturas:proveedor_factura_id (rfc_proveedor)")
+    .eq("id", ncId)
+    .maybeSingle();
+  if (error || !data) return { data: null, error };
+  const row = data as {
+    uuid_fiscal: string | null;
+    monto: number;
+    organization_id: string | null;
+    proveedor_facturas?: { rfc_proveedor?: string | null } | null;
+  };
+  const rfcReceptor = await fetchOrgRfc(admin, row.organization_id);
+  return {
+    data: {
+      uuid_fiscal: row.uuid_fiscal,
+      rfc_emisor: (row.proveedor_facturas?.rfc_proveedor ?? "").trim().toUpperCase(),
+      rfc_receptor: rfcReceptor,
+      total: Number(row.monto ?? 0),
+      organization_id: row.organization_id,
+    },
+    error: null,
+  };
+}
+
 async function authenticate(req: Request, cors: HeadersInit) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return { error: json(cors, { error: "unauthorized" }, 401) };
@@ -143,24 +169,39 @@ async function authenticate(req: Request, cors: HeadersInit) {
   return { user: data.user };
 }
 
+function parseTipo(raw?: string): Tipo {
+  if (raw === "cxc") return "cxc";
+  if (raw === "cxp_nc") return "cxp_nc";
+  return "cxp";
+}
+
 async function parseBody(req: Request, cors: HeadersInit): Promise<{ id?: string; tipo?: Tipo; error?: Response }> {
-  let body: { factura_id?: string; tipo?: string };
+  let body: { factura_id?: string; nc_id?: string; tipo?: string };
   try { body = await req.json(); } catch { return { error: json(cors, { error: "invalid_json" }, 400) }; }
+  if (body.nc_id && body.tipo === "cxp_nc") return { id: body.nc_id, tipo: "cxp_nc" };
   if (!body.factura_id) return { error: json(cors, { error: "factura_id_required" }, 400) };
-  const tipo: Tipo = body.tipo === "cxc" ? "cxc" : "cxp";
+  const tipo: Tipo = parseTipo(body.tipo);
   return { id: body.factura_id, tipo };
 }
 
 async function processVerification(
   cors: HeadersInit,
   userId: string,
-  facturaId: string,
+  id: string,
   tipo: Tipo,
 ): Promise<Response> {
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  const { data: fact, error: fErr } = tipo === "cxc"
-    ? await loadFacturaCxc(admin, facturaId)
-    : await loadFacturaCxp(admin, facturaId);
+
+  let fact: CfdiParaVerificar | null = null;
+  let fErr: unknown = null;
+  if (tipo === "cxc") {
+    ({ data: fact, error: fErr } = await loadFacturaCxc(admin, id));
+  } else if (tipo === "cxp_nc") {
+    ({ data: fact, error: fErr } = await loadNotaCreditoCxp(admin, id));
+  } else {
+    ({ data: fact, error: fErr } = await loadFacturaCxp(admin, id));
+  }
+
   if (fErr || !fact) return json(cors, { error: "factura_not_found", detail: (fErr as { message?: string })?.message }, 404);
   if (!fact.organization_id) return json(cors, { error: "factura_sin_organizacion" }, 422);
   const allowed = await authorizeOrgMembership(admin, userId, fact.organization_id);
@@ -178,11 +219,11 @@ async function processVerification(
       fact.uuid_fiscal.trim().toUpperCase(),
     );
   } catch (e) {
-    await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { factura_id: facturaId, tipo } });
+    await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { id, tipo } });
     return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
   }
 
-  const targetTable = tipo === "cxc" ? "facturas" : "proveedor_facturas";
+  const targetTable = tipo === "cxc" ? "facturas" : tipo === "cxp_nc" ? "proveedor_notas_credito" : "proveedor_facturas";
   const { error: uErr } = await admin
     .from(targetTable)
     .update({
@@ -190,7 +231,7 @@ async function processVerification(
       uuid_estatus_sat: result.estatus,
       uuid_verificado_fecha: new Date().toISOString(),
     })
-    .eq("id", facturaId);
+    .eq("id", id);
   if (uErr) return json(cors, { error: "update_failed", detail: uErr.message }, 500);
 
   return json(cors, { estatus: result.estatus, raw: result.raw });
