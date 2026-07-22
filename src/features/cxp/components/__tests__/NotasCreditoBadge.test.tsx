@@ -1,6 +1,8 @@
 /**
- * Smoke test: garantiza que los badges de estado de nota de crédito usen
- * tokens semánticos (success/info) y no literales de paleta Tailwind.
+ * Smoke test: garantiza que los estados de NC estén mapeados a los tonos
+ * semánticos correctos vía la config `NC_TONES` que consume `<ToneBadge>`.
+ * v13.308.4: post-unificación (v13.307.19) los literales `bg-*/15 text-* border-*/30`
+ * ya no viven inline en la sección — se derivan de `badgeTone.ts`.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -12,15 +14,15 @@ const src = readFileSync(
 );
 
 describe("NotasCreditoSection — badges tokenizados", () => {
-  it('badge "Aplicada" usa token success', () => {
-    expect(src).toMatch(/bg-success\/15 text-success border-success\/30/);
+  it('badge "Aplicada" está mapeado al tono success', () => {
+    expect(src).toMatch(/Aplicada:\s*\{\s*tone:\s*"success"/);
   });
 
-  it('badge "Aprobada" usa token info', () => {
-    expect(src).toMatch(/bg-info\/15 text-info border-info\/30/);
+  it('badge "Aprobada" está mapeado al tono info', () => {
+    expect(src).toMatch(/Aprobada:\s*\{\s*tone:\s*"info"/);
   });
 
-  it("no reintroduce literales sky/green de Tailwind", () => {
+  it("no reintroduce literales sky/green/emerald de Tailwind", () => {
     expect(src).not.toMatch(/(bg|text|border)-(sky|green|emerald)-\d{2,3}/);
   });
 });
