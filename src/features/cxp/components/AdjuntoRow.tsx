@@ -10,11 +10,8 @@ import {
   ExternalLink, Loader2, Upload, RefreshCcw, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { openFacturaInNewTab } from "@/services/storage/facturas";
+import { ConfirmReplaceDialog, ConfirmRemoveDialog } from "./AdjuntoRow.dialogs";
 import { notifyError } from "@/components/shared/utils/appFeedback";
 import type { TipoAdjuntoCfdi } from "@/features/cxp/services";
 
