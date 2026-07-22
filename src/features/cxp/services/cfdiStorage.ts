@@ -147,9 +147,13 @@ export async function quitarArchivoCfdiFactura(params: QuitarArchivoParams): Pro
   // No revertimos si el remove falla: el archivo puede estar ya borrado.
   await supabase.storage.from("facturas").remove([cleanPath]).catch(() => undefined);
 
+  const patch = params.tipo === "XML"
+    ? { archivo_xml_url: null }
+    : { archivo_pdf_url: null };
   const { error } = await supabase
     .from("proveedor_facturas")
-    .update({ [columnFor(params.tipo)]: null })
+    .update(patch)
     .eq("id", params.facturaId);
   if (error) throw error;
+
 }
