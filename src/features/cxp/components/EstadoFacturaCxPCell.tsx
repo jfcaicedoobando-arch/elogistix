@@ -19,7 +19,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { fmtMoney } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
+const fmtMoney = (n: number, currency: string) => formatCurrency(n, currency);
 import type { FacturaCxP } from "@/features/cxp/services";
 
 interface Props {
