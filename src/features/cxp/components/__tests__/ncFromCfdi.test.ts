@@ -54,7 +54,7 @@ describe("buildNcPrefillFromCfdi", () => {
 
   it("prioriza notas de IA sobre el concepto", () => {
     const response = makeCfdiResponse();
-    response.ai = { notas: "Nota de crédito por descuento comercial" };
+    response.ai = { categoria_id: null, notas: "Nota de crédito por descuento comercial" };
     const r = buildNcPrefillFromCfdi(response);
     expect(r.descripcion).toBe("Nota de crédito por descuento comercial");
   });
