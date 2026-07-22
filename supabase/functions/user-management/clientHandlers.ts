@@ -67,7 +67,10 @@ async function inviteOrLinkUser(
 
   const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
     redirectTo,
-    data: { role: "cliente" },
+    // R2-16: `skip_auto_org=true` evita que `handle_new_user_signup` cree una
+    // organización fantasma y asigne el rol default `admin_org` a un usuario
+    // de portal cliente. El rol correcto se fija en `ensureClienteRole`.
+    data: { role: "cliente", skip_auto_org: true },
   });
   if (error || !data.user) {
     return { error: error?.message ?? "Error desconocido al invitar" };
@@ -76,10 +79,13 @@ async function inviteOrLinkUser(
 }
 
 async function ensureClienteRole(adminClient: SupabaseClient, userId: string): Promise<void> {
+  // R2-16: forzar rol='cliente' aunque el trigger haya creado uno default.
   const { data: existingRole } = await adminClient
     .from("user_roles").select("id").eq("user_id", userId).maybeSingle();
   if (!existingRole) {
     await adminClient.from("user_roles").insert({ user_id: userId, role: "cliente" });
+  } else {
+    await adminClient.from("user_roles").update({ role: "cliente" }).eq("user_id", userId);
   }
 }
 

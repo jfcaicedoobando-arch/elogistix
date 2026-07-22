@@ -107,7 +107,9 @@ async function createOrResetUserWithPassword(
     email,
     password,
     email_confirm: true,
-    user_metadata: { role: "agente_carga" },
+    // R2-16: `skip_auto_org=true` evita que `handle_new_user_signup` cree
+    // una organización fantasma para el agente de portal externo.
+    user_metadata: { role: "agente_carga", skip_auto_org: true },
   });
   if (error || !data.user) {
     return { error: error?.message ?? "Error al crear usuario" };
