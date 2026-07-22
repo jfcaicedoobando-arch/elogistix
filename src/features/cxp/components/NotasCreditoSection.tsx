@@ -30,12 +30,18 @@ interface Props {
   canEdit: boolean;
 }
 
+const NC_TONES: Record<string, { tone: ChipTone; label: string }> = {
+  Aplicada:  { tone: "success",     label: "Aplicada" },
+  Aprobada:  { tone: "info",        label: "Aprobada" },
+  Cancelada: { tone: "neutral",     label: "Cancelada" },
+  Borrador:  { tone: "neutral",     label: "Borrador" },
+};
+
 function NcEstadoBadge({ estado }: { estado: string }) {
-  if (estado === "Aplicada") return <Badge className="bg-success/15 text-success border-success/30">Aplicada</Badge>;
-  if (estado === "Cancelada") return <Badge variant="secondary">Cancelada</Badge>;
-  if (estado === "Aprobada") return <Badge className="bg-info/15 text-info border-info/30">Aprobada</Badge>;
-  return <Badge variant="outline">Borrador</Badge>;
+  const meta = NC_TONES[estado] ?? { tone: "neutral" as ChipTone, label: estado };
+  return <ToneBadge tone={meta.tone}>{meta.label}</ToneBadge>;
 }
+
 
 async function openStoredFile(path: string | null | undefined) {
   if (!path) return;
