@@ -26,6 +26,24 @@ export function calcularSubtotales(filas: FilaReconciliacion[]): SubtotalPorMone
   return Array.from(map.values());
 }
 
+/**
+ * Orden dentro del grupo: primero renglones con mayor |desviación| (para
+ * que los ajustes relevantes queden arriba), después "sin factura", y al
+ * final los conciliados exactos.
+ */
+export function ordenarFilasPorAjuste(filas: FilaReconciliacion[]): FilaReconciliacion[] {
+  const bucket = (f: FilaReconciliacion): number => {
+    if (f.facturas.length === 0) return 1;             // sin factura
+    if (Math.abs(f.diferencia) < 0.01) return 2;       // sin ajuste
+    return 0;                                          // con ajuste
+  };
+  return [...filas].sort((a, b) => {
+    const ba = bucket(a); const bb = bucket(b);
+    if (ba !== bb) return ba - bb;
+    return Math.abs(b.diferencia) - Math.abs(a.diferencia);
+  });
+}
+
 export function estatusBadgeClass(estatus: FilaReconciliacion["estatus_renglon"]): string {
   switch (estatus) {
     case "conciliado": return "bg-success/15 text-success border-success/30";
