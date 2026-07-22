@@ -187,13 +187,21 @@ async function parseBody(req: Request, cors: HeadersInit): Promise<{ id?: string
 async function processVerification(
   cors: HeadersInit,
   userId: string,
-  facturaId: string,
+  id: string,
   tipo: Tipo,
 ): Promise<Response> {
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  const { data: fact, error: fErr } = tipo === "cxc"
-    ? await loadFacturaCxc(admin, facturaId)
-    : await loadFacturaCxp(admin, facturaId);
+
+  let fact: CfdiParaVerificar | null = null;
+  let fErr: unknown = null;
+  if (tipo === "cxc") {
+    ({ data: fact, error: fErr } = await loadFacturaCxc(admin, id));
+  } else if (tipo === "cxp_nc") {
+    ({ data: fact, error: fErr } = await loadNotaCreditoCxp(admin, id));
+  } else {
+    ({ data: fact, error: fErr } = await loadFacturaCxp(admin, id));
+  }
+
   if (fErr || !fact) return json(cors, { error: "factura_not_found", detail: (fErr as { message?: string })?.message }, 404);
   if (!fact.organization_id) return json(cors, { error: "factura_sin_organizacion" }, 422);
   const allowed = await authorizeOrgMembership(admin, userId, fact.organization_id);
@@ -211,11 +219,11 @@ async function processVerification(
       fact.uuid_fiscal.trim().toUpperCase(),
     );
   } catch (e) {
-    await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { factura_id: facturaId, tipo } });
+    await captureEdgeException(e, { fn: "verificar-uuid-sat", extra: { id, tipo } });
     return json(cors, { error: "sat_unreachable", detail: (e as Error).message }, 502);
   }
 
-  const targetTable = tipo === "cxc" ? "facturas" : "proveedor_facturas";
+  const targetTable = tipo === "cxc" ? "facturas" : tipo === "cxp_nc" ? "proveedor_notas_credito" : "proveedor_facturas";
   const { error: uErr } = await admin
     .from(targetTable)
     .update({
@@ -223,7 +231,7 @@ async function processVerification(
       uuid_estatus_sat: result.estatus,
       uuid_verificado_fecha: new Date().toISOString(),
     })
-    .eq("id", facturaId);
+    .eq("id", id);
   if (uErr) return json(cors, { error: "update_failed", detail: uErr.message }, 500);
 
   return json(cors, { estatus: result.estatus, raw: result.raw });
