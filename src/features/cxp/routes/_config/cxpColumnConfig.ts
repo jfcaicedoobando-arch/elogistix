@@ -1,29 +1,25 @@
 /**
  * Configuración de columnas de la tabla /compras/facturas.
  *
- * Extraído de `Cxp.tsx` para mantener la ruta bajo el límite Power of 10
- * (200 líneas) y facilitar reutilización en tests.
- *
- * - `CXP_COL_DEFAULTS`: preset por defecto (visibles = true).
- * - `CXP_COL_OPTIONS`: descriptor del menú "Columnas" (con marcadores
- *   `required` para las que no se pueden ocultar).
+ * v13.307.16 — Se consolidan "Estatus + Aprobación + Días + Prog. pago"
+ * en la columna única `estado` (chip + micro-chips).  Las claves antiguas
+ * (`estatus`, `aprobacion`, `dias`, `programado`) se conservan aquí como
+ * alias silenciosos para preferencias persistidas de usuarios existentes;
+ * ya no aparecen en el menú "Columnas".
  */
 import type { ColumnOption } from "@/components/shared/ColumnVisibilityMenu";
 
 export const CXP_COL_DEFAULTS: Record<string, boolean> = {
   folio_interno: true,
-  folio: false, // Folio prov. (opcional)
+  folio: false,
   proveedor: true,
-  emision: false, // opcional
+  emision: false,
   vencimiento: true,
-  programado: false, // opcional
-  dias: true,
-  moneda: false, // opcional
+  moneda: false,
   total: true,
-  pagado: false, // opcional
+  pagado: false,
   saldo: true,
-  estatus: true,
-  aprobacion: false, // opcional
+  estado: true,
 };
 
 export const CXP_COL_OPTIONS: ColumnOption[] = [
@@ -32,12 +28,9 @@ export const CXP_COL_OPTIONS: ColumnOption[] = [
   { id: "proveedor", label: "Proveedor", required: true },
   { id: "emision", label: "Emisión" },
   { id: "vencimiento", label: "Vencimiento" },
-  { id: "programado", label: "Prog. pago" },
-  { id: "dias", label: "Días" },
   { id: "moneda", label: "Moneda" },
   { id: "total", label: "Total" },
   { id: "pagado", label: "Pagado" },
   { id: "saldo", label: "Saldo", required: true },
-  { id: "estatus", label: "Estatus", required: true },
-  { id: "aprobacion", label: "Aprobación" },
+  { id: "estado", label: "Estado", required: true },
 ];
