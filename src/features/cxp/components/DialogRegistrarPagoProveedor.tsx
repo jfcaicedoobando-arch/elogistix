@@ -37,7 +37,10 @@ export function DialogRegistrarPagoProveedor({ open, onOpenChange, factura }: Pr
         fecha_pago: f.fecha,
         monto: f.montoNum,
         moneda: f.moneda,
-        tipo_cambio_usd: Number(f.tc) || 0,
+        // v13.308.8: si no hay TC válido (ej. pago MXN de factura MXN), enviamos
+        // `null` — el CHECK `pagos_proveedor_tc_pos` sólo permite `NULL` o `> 0`.
+        // Antes mandábamos `0` y disparaba `23514` en BD (Sentry JAVASCRIPT-REACT-1M).
+        tipo_cambio_usd: Number(f.tc) > 0 ? Number(f.tc) : null,
         metodo_pago: f.metodo,
         referencia: f.referencia,
         notas: f.notas,
