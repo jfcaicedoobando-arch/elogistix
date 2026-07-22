@@ -9,15 +9,19 @@ import {
 } from "@/components/ui/select";
 import type { EstatusCxP } from "@/features/cxp/services";
 
-// Nota: "Rechazada" y "Por aprobar" ya viven en el filtro de Aprobación,
-// se omiten aquí para no duplicar.
+// v13.307.16 — "Rechazada" y "Por aprobar" viven ahora en el estatus
+// primario (celda `<EstadoFacturaCxPCell />`), por lo que el sheet expone
+// los siete estatus canónicos + "Cancelada" en un solo combobox.
 const ESTATUS: Array<EstatusCxP | "todos"> = [
   "todos",
+  "Por aprobar",
   "Vigente",
   "Parcial",
   "Por vencer",
   "Vencida",
   "Pagada",
+  "Rechazada",
+  "Cancelada",
   "Borrador",
 ];
 
