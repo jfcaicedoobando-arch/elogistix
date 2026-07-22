@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.305.9] - 2026-07-22
+- **fix(db) · Pagos de factura validan que la organización coincida con la factura.** Después de permitir que los intentos cross-tenant lleguen a RLS, se agregó una guarda explícita en `tg_pago_factura_no_sobrepago`: `pagos_factura.organization_id` debe coincidir con `facturas.organization_id`. Si no coincide, se rechaza con `LC_TENANT_MISMATCH` (`23514`). Esto cierra el borde donde un pago podía traer una factura de una organización y el `organization_id` de otra. Analogía: además de dejar que el guardia de la puerta detenga intrusos, ahora la ficha de depósito debe traer el mismo número de caja que la cuenta.
+
 ## [13.305.8] - 2026-07-22
 - **fix(db) · El trigger de sobrepago deja pasar intentos cross-tenant a RLS.** `test_rls_financiero_critico.sql` esperaba que un INSERT de `pagos_factura` contra otra organización fallara por RLS, pero `tg_pago_factura_no_sobrepago` consultaba `saldo_factura()` antes y recibía saldo 0 por el guard multi-tenant, regresando `LC_PAGO_EXCEDE_SALDO` (error de negocio) en vez del bloqueo de seguridad. Ahora el trigger detecta cuando la factura pertenece a otra organización y no es `super_admin`, omite la validación de saldo y deja que el `WITH CHECK` de RLS emita el error correcto. Analogía: si alguien intenta entrar a una caja ajena, primero debe detenerlo el guardia de la puerta, no la cajera diciendo que no hay saldo.
 
