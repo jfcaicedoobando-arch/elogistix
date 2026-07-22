@@ -1,6 +1,7 @@
 /**
  * Fila detallada de costos por proveedor para el tab Costos del embarque.
- * Muestra: concepto, monto cotizado, facturado (Δ), factura(s) ligadas y estado de pago.
+ * Muestra: concepto, monto cotizado, facturado, chip narrativo de ajuste,
+ * factura(s) ligadas y estado de pago.
  */
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, FileText } from "lucide-react";
@@ -8,15 +9,20 @@ import { Badge } from "@/components/ui/badge";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 import {
   calcularSubtotales,
   estatusBadgeClass,
   estatusLabel,
+  ordenarFilasPorAjuste,
   pagoBadgeClass,
   peorEstadoPago,
   fmtFecha,
 } from "./grupoCostosProveedorHelpers";
+import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
+import { AjusteChip } from "./AjusteChip";
+import { TONE_TEXT } from "@/features/cxp/lib/badgeTone";
 
 interface Props {
   proveedorNombre: string;
@@ -36,6 +42,21 @@ export function GrupoCostosProveedor({
 }: Props) {
   const [abierto, setAbierto] = useState(true);
   const subtotales = useMemo(() => calcularSubtotales(filas), [filas]);
+  const filasOrdenadas = useMemo(() => ordenarFilasPorAjuste(filas), [filas]);
+
+  const conteos = useMemo(() => {
+    let conAjuste = 0, sinFactura = 0;
+    for (const f of filas) {
+      if (f.facturas.length === 0) sinFactura++;
+      else if (Math.abs(f.diferencia) >= 0.01) conAjuste++;
+    }
+    return { conAjuste, sinFactura };
+  }, [filas]);
+
+  const resumenNarrativo = subtotales.map(s => ({
+    moneda: s.moneda,
+    d: describirAjusteNeto(s.cotizado, s.facturado, s.moneda),
+  }));
 
   return (
     <div className="border rounded-md overflow-hidden">
@@ -49,21 +70,30 @@ export function GrupoCostosProveedor({
           <span className="font-medium text-sm truncate" title={proveedorNombre}>{toTitleCase(proveedorNombre)}</span>
           <Badge variant="outline" className="text-xs">{filas.length}</Badge>
         </div>
-        <div className="flex items-center gap-3 text-xs tabular-nums shrink-0">
-          {subtotales.map(s => {
-            const dif = s.facturado - s.cotizado;
-            const difColor = dif === 0 ? "text-muted-foreground" : dif > 0 ? "text-destructive" : "text-success";
-            return (
-              <span key={s.moneda} className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">{s.moneda}</span>
-                <span>{formatCurrency(s.cotizado, s.moneda)}</span>
-                <span className="text-muted-foreground">→</span>
-                <span>{formatCurrency(s.facturado, s.moneda)}</span>
-                <span className={difColor}>({dif >= 0 ? "+" : ""}{formatCurrency(dif, s.moneda)})</span>
-              </span>
-            );
-          })}
-        </div>
+        <TooltipProvider delayDuration={200}>
+          <div className="flex items-center gap-3 text-xs tabular-nums shrink-0">
+            {resumenNarrativo.map(({ moneda, d }) => (
+              <Tooltip key={moneda}>
+                <TooltipTrigger asChild>
+                  <span className={cn("flex items-center gap-1.5 cursor-help", TONE_TEXT[d.tone])}>
+                    <span aria-hidden>{d.icono}</span>
+                    <span className="font-medium">{d.titulo === "Sin ajuste" || d.titulo === "Sin factura" ? d.titulo : d.titulo}</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-muted-foreground">{moneda}</span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs">
+                  <div>Cotizado: {formatCurrency(subtotales.find(x=>x.moneda===moneda)?.cotizado ?? 0, moneda)}</div>
+                  <div>Facturado: {formatCurrency(subtotales.find(x=>x.moneda===moneda)?.facturado ?? 0, moneda)}</div>
+                  <div className="mt-1">{d.detalle}</div>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+            <span className="text-muted-foreground">
+              {conteos.conAjuste} con ajuste{conteos.sinFactura > 0 ? `, ${conteos.sinFactura} sin factura` : ""}
+            </span>
+          </div>
+        </TooltipProvider>
       </button>
 
       {abierto && (
@@ -74,7 +104,7 @@ export function GrupoCostosProveedor({
                 <th className="text-left px-3 py-2 font-medium">Concepto</th>
                 <th className="text-right px-3 py-2 font-medium">Cotizado</th>
                 <th className="text-right px-3 py-2 font-medium">Facturado</th>
-                <th className="text-right px-3 py-2 font-medium">Δ</th>
+                <th className="text-left px-3 py-2 font-medium">Ajuste</th>
                 <th className="text-left px-3 py-2 font-medium">Factura(s)</th>
                 <th className="text-left px-3 py-2 font-medium">Estado</th>
                 <th className="text-left px-3 py-2 font-medium">Pago</th>
@@ -82,10 +112,10 @@ export function GrupoCostosProveedor({
               </tr>
             </thead>
             <tbody>
-              {filas.map((f, idx) => {
-                const diffColor = f.diferencia === 0
-                  ? "text-muted-foreground"
-                  : f.diferencia > 0 ? "text-destructive" : "text-success";
+              {filasOrdenadas.map((f, idx) => {
+                const ajuste = describirAjuste(f.cotizado, f.real_facturado, f.moneda, {
+                  tieneFactura: f.facturas.length > 0,
+                });
                 const pago = peorEstadoPago(f.facturas);
                 return (
                   <tr key={f.concepto_costo_id} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
@@ -94,15 +124,8 @@ export function GrupoCostosProveedor({
                     <td className="px-3 py-2 text-right tabular-nums">
                       {f.real_facturado > 0 ? formatCurrency(f.real_facturado, f.moneda) : <span className="text-muted-foreground">—</span>}
                     </td>
-                    <td className={`px-3 py-2 text-right tabular-nums ${diffColor}`}>
-                      {f.facturas.length > 0
-                        ? `${f.diferencia >= 0 ? "+" : ""}${formatCurrency(f.diferencia, f.moneda)}`
-                        : <span className="text-muted-foreground">—</span>}
-                      {f.facturas.length > 0 && Math.abs(f.desviacion_pct) >= 0.1 && (
-                        <div className="text-2xs text-muted-foreground">
-                          {f.desviacion_pct >= 0 ? "+" : ""}{f.desviacion_pct.toFixed(1)}%
-                        </div>
-                      )}
+                    <td className="px-3 py-2">
+                      <AjusteChip descripcion={ajuste} />
                     </td>
                     <td className="px-3 py-2">
                       {f.facturas.length === 0 ? (

@@ -9,6 +9,7 @@ import { useFocusSection } from "@/features/embarques/hooks/useFocusSection";
 import type { FilaReconciliacion } from "@/features/embarques/services/reconciliacionCostos";
 import type { ConceptoCostoRow } from "@/features/embarques/hooks";
 import { GrupoCostosProveedor } from "./GrupoCostosProveedor";
+import { ResumenAjusteBar } from "./ResumenAjusteBar";
 
 const FOCUS_LABEL: Record<string, string> = {
   cxp: "facturas de proveedor por pagar",
@@ -114,6 +115,8 @@ export function ConceptosCostoCard({
           </div>
         ) : (
           <>
+            {totales.length > 0 && <ResumenAjusteBar totales={totales} />}
+
             {grupos.map(g => (
               <GrupoCostosProveedor
                 key={g.nombre}
@@ -124,32 +127,6 @@ export function ConceptosCostoCard({
                 filaContenedorId={filaContenedorId}
               />
             ))}
-
-            {totales.length > 0 && (
-              <div className="border-t pt-3 mt-2">
-                <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-2 text-sm">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Totales
-                  </span>
-                  {totales.map(t => {
-                    const dif = t.facturado - t.cotizado;
-                    const difColor = dif === 0 ? "text-muted-foreground" : dif > 0 ? "text-destructive" : "text-success";
-                    return (
-                      <div key={t.moneda} className="flex items-center gap-2 tabular-nums">
-                        <Badge variant="outline" className="text-xs">{t.moneda}</Badge>
-                        <span className="text-muted-foreground text-xs">Cotizado</span>
-                        <span className="font-medium">{formatCurrency(t.cotizado, t.moneda)}</span>
-                        <span className="text-muted-foreground text-xs">Facturado</span>
-                        <span className="font-medium">{formatCurrency(t.facturado, t.moneda)}</span>
-                        <span className={`font-medium ${difColor}`}>
-                          Δ {dif >= 0 ? "+" : ""}{formatCurrency(dif, t.moneda)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </>
         )}
       </CardContent>
