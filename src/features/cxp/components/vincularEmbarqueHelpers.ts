@@ -53,6 +53,9 @@ export function filtrarGrupos(grupos: Grupo[], args: FiltrarGruposArgs): Grupo[]
     if (items.length > 0) out.push({ ...g, items });
   }
   return out;
+}
+
+
 
 export function pluralS(n: number, base: string): string {
   return `${n} ${base}${n === 1 ? "" : "s"}`;
