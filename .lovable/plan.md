@@ -1,83 +1,46 @@
-# Verificación auditoría R4 — estado real vs. reporte
+# Auditoría R4-15 (Menores) — estado real en la base
 
-Revisé cada finding contra la base de datos en vivo (definiciones actuales de funciones, triggers, vistas y columnas). Marcado: ✅ ya no existe · ⚠️ parcial · ❌ sigue vigente.
+Revisé cada sub-ítem contra las funciones y triggers vivos en la DB. **Los 5 siguen abiertos** en distintos grados. Analogía: son los "cabos sueltos" del cierre R4; ninguno tira la app, pero cada uno puede producir números o mensajes inconsistentes en producción.
 
-## BLOQUE A — P0
+## Estado por sub-ítem
 
-**FIX-R4-01 · Triggers de recálculo de estado de factura** — ✅ EXISTEN
-`trg_recalcular_estado_factura` (pagos_factura) y `trg_recalcular_estado_factura_nc` (factura_notas_credito) están vivos y ejecutan `recalcular_estado_factura()`, que suma NCs 'Aplicada' y setea el estado. El bug reportado (triggers destruidos por CASCADE) no aplica hoy.
+### R4-15.1 · Proforma USD guarda MXN=0 — ABIERTO
+`crear_proforma_atomica` calcula `v_sub_mxn` sumando **solo** conceptos con `moneda='MXN'`. Si todos los conceptos son USD, la proforma se inserta con `subtotal_mxn=0, iva_mxn=0, total_mxn=0`. Al pasar por `convertir_proformas_a_factura`, la factura hija arrastra `total_mxn=0` y choca contra el check `facturas_tipo_cambio_pos` / `facturas_total_mxn_pos`.
+**Fix**: convertir la parte USD a MXN usando el TC del embarque (o el TC de la fecha) antes del `INSERT`.
 
-**FIX-R4-02 · `convertir_proformas_a_factura` inutilizable** — ✅ CORREGIDO
-Firma real: `(uuid[], uuid, text, text, text, int, text, uuid)`. Gate único vía `es_escritor_financiero()` (que incluye admin, admin_org, contador, tesorero, ejecutivo_cobranza y super_admin). Bitácora usa columnas correctas (`usuario_id`, `modulo`, `entidad_nombre`, `detalles`). Conceptos MXN/USD se insertan con IVA y clave SAT; se generan facturas separadas por moneda. Idempotencia con `LC_PROFORMA_YA_FACTURADA` y `LC_PROFORMA_SIN_PERMISO`.
+### R4-15.2 · Triggers duplicados en `pagos_proveedor` — ABIERTO
+La tabla tiene dos pares que hacen la misma validación con funciones distintas:
+- `pagos_proveedor_requiere_aprobacion` → `tg_pagos_proveedor_requiere_aprobacion`
+- `trg_pago_requiere_aprobacion` → `check_pago_proveedor_factura_aprobada`
+- `tg_pagos_proveedor_no_sobrepago` → `tg_pago_proveedor_no_sobrepago`
+- `trg_check_no_sobrepago` → `check_no_sobrepago_proveedor`
 
-## BLOQUE B — P1
+**Fix**: quedarse con **una** implementación por validación (la más nueva/canónica), borrar el trigger y la función legacy huérfana.
 
-**FIX-R4-03 · Margen mínimo de cierre inerte** — ✅ CORREGIDO
-`validar_cierre_embarque` lee `v_pnl->>'venta_mxn'` y `utilidad_mxn`, calcula `margen_pct` como porcentaje y compara contra `pnl_margen_minimo_cierre`. La regla ya bloquea.
+### R4-15.3 · Errcodes estables en proformas — ABIERTO
+`convertir_proformas_a_factura` lanza `'LC_PROFORMA_SIN_PERMISO: …'` y `'LC_PROFORMA_YA_FACTURADA: …'` como **texto plano**, sin `USING ERRCODE`. El cliente hoy los distingue por substring del mensaje, frágil ante i18n.
+**Fix**: añadir `USING ERRCODE='P0001'` (permiso) y `'P0002'` (estado) y mapearlos en el front por SQLSTATE, no por texto.
 
-**FIX-R4-04 · TOCTOU sobrepago CxC** — ❌ SIGUE VIGENTE
-`tg_pago_factura_no_sobrepago` NO hace `SELECT ... FOR UPDATE` sobre la factura antes de validar `saldo_factura()`. Dos pagos concurrentes por el saldo total pueden pasar ambos. (El de CxP sí lo hace.)
+### R4-15.4 · Oráculo de existencia en `soft_delete_pago_*` — ABIERTO
+Hoy `soft_delete_pago_factura` y `soft_delete_pago_proveedor` distinguen: pago inexistente → `P0002`, pago de otra org → `P0001`. Un atacante puede saber si un UUID ajeno existe.
+**Fix**: unificar ambos casos a `LC_PAGO_NO_ENCONTRADO` con **el mismo ERRCODE** (`P0002`) para no filtrar existencia.
 
-**FIX-R4-05 · Retenciones no se prorratean** — ⚠️ PARCIAL
-El trigger sigue llamándose `trg_pagos_factura_calc_ret` (alfabéticamente ANTES de `trg_pagos_factura_monto_convertido`) y el código usa `NEW.monto_aplicado_factura` sin `COALESCE(..., NEW.monto)`. En INSERT donde `monto_aplicado_factura` no se envíe explícitamente, el prorrateo queda en 0. No aplicado ni el rename `zz_*` ni el fallback.
+### R4-15.5 · Escala de monto en pagos — ABIERTO
+`pagos_factura.monto` y `pagos_proveedor.monto` son `numeric` **sin escala** (aceptan 8+ decimales). Solo `pagos_proveedor.monto_en_moneda_factura` tiene `numeric(18,4)`.
+**Fix**: `CHECK (scale(monto) <= 2)` en ambas tablas para pagos, y en `ret_iva`/`ret_isr` de `pagos_factura`.
 
-**FIX-R4-06 · Fallback silencioso a TC de la factura** — ❌ SIGUE VIGENTE
-`convertir_monto_pago_a_factura` conserva `v_tc := COALESCE(NULLIF(p_tc_pago,0), NULLIF(p_tc_fact,0))`. Si el pago no trae TC pero la factura sí, usa el de la factura sin marcar `LC_PAGO_TC_REQUERIDO`.
+## Plan de remediación (una migración consolidada)
 
-**FIX-R4-07 · `embarque_estado_financiero**` — ✅ (vista removida)
-La vista ya no existe en la BD, así que el bug reportado ya no aplica. (Si el frontend todavía la consulta, sería un bug distinto — puedo revisarlo si me lo pides.)
+1. `crear_proforma_atomica`: convertir bloque USD a MXN con `tipo_cambio_usd` del embarque (fallback `configuracion.tc_default`); si no hay TC, `RAISE 'LC_PROFORMA_TC_REQUERIDO' USING ERRCODE='P0001'`.
+2. Drop de `trg_pago_requiere_aprobacion` + `check_pago_proveedor_factura_aprobada` y de `trg_check_no_sobrepago` + `check_no_sobrepago_proveedor` (dejar solo las variantes `tg_*` nuevas).
+3. Reemplazar `RAISE EXCEPTION 'LC_PROFORMA_…'` por `RAISE … USING ERRCODE='P0001'/'P0002'` en `convertir_proformas_a_factura`.
+4. Unificar `soft_delete_pago_factura` / `soft_delete_pago_proveedor` para no diferenciar "no existe" vs "otra org".
+5. `ALTER TABLE pagos_factura ADD CONSTRAINT pagos_factura_monto_escala CHECK (scale(monto) <= 2 AND scale(coalesce(ret_iva,0)) <= 2 AND scale(coalesce(ret_isr,0)) <= 2)`; equivalente en `pagos_proveedor.monto`.
+6. Frontend (`src/features/…/errors`): mapear los códigos por `error.code` (SQLSTATE `P0001/P0002`), no por `error.message`.
+7. Bump `APP_VERSION` a `13.308.1` + entrada en `CHANGELOG.md`.
 
-**FIX-R4-08 · Sobrecargas ambiguas** — ⚠️ PARCIAL
-Solo queda ambigüedad en `generar_expediente`: existen dos firmas `(text)` y `(tipo_operacion)`. Las otras dos (`crear_embarque_borrador_desde_cotizacion`, `actualizar_embarque_completo`) ya tienen una única firma.
+## Notas técnicas
 
-**FIX-R4-09 · `folio_secuencias` sin backfill** — ⚠️ ESQUEMA DIVERGENTE
-La tabla real tiene `(organization_id, tipo, ultimo_numero, updated_at)` — no `valor`. El generador `siguiente_folio_cotizacion` usa un tipo por año (`cotizacion_2026`) y ON CONFLICT, así que dentro del año está bien. Falta backfill para orgs con folios preexistentes migrados desde otros sistemas.
-
-**FIX-R4-10 · Guards fail-open y GUC bypass**
-
-- (a) `saldo_factura` y `validar_cierre_embarque` mantienen `IF v_caller_org IS NOT NULL AND ...` (fail-open cuando no hay caller). Es intencional para service_role/tests, pero un usuario auth **sin membresía** tiene `current_user_org_id()=NULL` y bypasea el guard. ❌ VIGENTE.
-- (b) `marcar_facturas_vencidas()` NO filtra por `organization_id`; corre global y `set_config('app.recalc_estado_factura','1')` es seteable por cualquiera. ❌ VIGENTE.
-- (c) `_recalc_estado_proveedor_factura(uuid)` existe; no verifiqué su REVOKE — probable ❌.
-
-## BLOQUE C — P2
-
-**FIX-R4-11 · Guard REP incompleto** — ❌ VIGENTE
-`assert_pago_sin_rep_vivo_delete` sigue chequeando solo `estado_rep = 'Timbrado'`; REP 'Pendiente' pasa el DELETE.
-
-**FIX-R4-12 · `pagos_factura.tipo_cambio` DEFAULT 1 NOT NULL** — ❌ VIGENTE
-Confirmado en `information_schema`. `calcular_comision_pago` sigue vulnerable al cortocircuito.
-
-**FIX-R4-13 · Signup crea org basura + rol global `admin_org**` — ❌ VIGENTE
-`handle_new_user_signup` sigue insertando organización "Mi organización" y `user_roles` con `admin_org` cuando `skip_auto_org != true`.
-
-**FIX-R4-14 · Migraciones frágiles** — no verificable en runtime (requiere fresh install). Los CI stubs añadidos en v13.307.24 (cron.job, cron.unschedule) mitigan el 20260722132715.
-
-**FIX-R4-15 · Menores**
-
-1. `crear_proforma_atomica` MXN=0 para conceptos USD — no verificado.
-2. Duplicados en `pagos_proveedor`: ❌ confirmado. Coexisten `pagos_proveedor_requiere_aprobacion` + `trg_pago_requiere_aprobacion`, y `trg_check_no_sobrepago` + `tg_pagos_proveedor_no_sobrepago`.
-3. ERRCODEs de proforma: ✅ `LC_PROFORMA_YA_FACTURADA` y `LC_PROFORMA_SIN_PERMISO` presentes (aunque `_YA_FACTURADA` no lleva ERRCODE explícito, solo el prefijo del mensaje).
-4. Oráculo de existencia en `soft_delete_pago_*`: no verificado a fondo.
-5. Escala de decimales en pagos: no verificado.
-
-## Resumen ejecutable
-
-**Sigue vigente y accionable (P0/P1):**
-
-- R4-04 (TOCTOU CxC), R4-05 (orden triggers retenciones), R4-06 (fallback TC), R4-08 (`generar_expediente` ambiguo), R4-10a/b/c (fail-open + `marcar_facturas_vencidas` sin filtro org + REVOKE).
-
-**Sigue vigente (P2):**
-
-- R4-11 (REP Pendiente), R4-12 (TC default 1), R4-13 (signup crea org), R4-15.2 (triggers duplicados pagos_proveedor).
-
-**Ya corregido / no aplica:**
-
-- R4-01, R4-02, R4-03, R4-07.
-
-**Parcial / a completar:**
-
-- R4-09 (backfill por org si aplica migraciones desde legacy).
-
-## Siguiente paso
-
-Si apruebas, arranco una remediación en dos migraciones nuevas (`fix_r4_bloque_ab` y `fix_r4_bloque_c`) que aborda los bugs vigentes en el orden A→B→C listado arriba, con pruebas de aceptación por cada uno. ¿Quieres que proceda con toda la remediación o solo con el subconjunto P0/P1? procede con todo
+- La migración es única (`supabase--migration`) y no toca datos; solo funciones/triggers/constraints.
+- Riesgo de la constraint de escala: si hay filas históricas con >2 decimales, hay que redondear en la misma migración (`UPDATE … SET monto = round(monto,2)`) antes del `ADD CONSTRAINT`.
+- Tras la migración se regeneran los tipos; ajustar solo los helpers de errores en TS.
