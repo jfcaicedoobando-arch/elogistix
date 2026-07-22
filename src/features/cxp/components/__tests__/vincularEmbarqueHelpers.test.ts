@@ -11,6 +11,7 @@ import {
   notificarResumen,
   calcularPuedeSugerir,
   ejecutarSugerencia,
+  filtrarGrupos,
   type Grupo,
 } from "../vincularEmbarqueHelpers";
 
