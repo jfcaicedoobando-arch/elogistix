@@ -11,7 +11,6 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
 import { useCerrarFacturaProveedorSinPago } from "@/features/cxp/hooks/useCerrarFacturaSinPago";
 import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
@@ -20,9 +19,8 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { FacturaResumen, PagosTable } from "./DialogDetallePagosProveedor.sections";
 import { StatusActionBar } from "./DialogDetallePagosProveedor.actionbar";
 import { computeFacturaFlags } from "./DialogDetallePagosProveedor.flags";
+import { ActionDialogs } from "./DialogDetallePagosProveedor.actiondialogs";
 import { NotasCreditoSection } from "./NotasCreditoSection";
-import { CerrarFacturaSinPagoDialog } from "./CerrarFacturaSinPagoDialog";
-import { CancelarFacturaProveedorDialog } from "./CancelarFacturaProveedorDialog";
 import { InfoFacturaSection } from "./InfoFacturaSection";
 import { HistorialFacturaSection } from "./HistorialFacturaSection";
 import { usePermissions } from "@/hooks/shared";
