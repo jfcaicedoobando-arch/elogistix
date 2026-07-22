@@ -56,8 +56,8 @@ BEGIN
     (org_a, user_a, 'admin'), (org_b, user_b, 'admin');
   INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin'), (user_b, 'admin');
 
-  INSERT INTO public.clientes(id, nombre, organization_id) VALUES
-    (cli_a, 'Cli OPS A', org_a), (cli_b, 'Cli OPS B', org_b);
+  INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
+    (cli_a, 'Cli OPS A', 'XAXX010101000', 'a@test.local', org_a), (cli_b, 'Cli OPS B', 'XAXX010101001', 'b@test.local', org_b);
 
   INSERT INTO public.embarques(id, expediente, cliente_id, cliente_nombre, organization_id, modo, tipo)
   VALUES
