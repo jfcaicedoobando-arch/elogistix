@@ -56,10 +56,14 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   ],
   factura_cxp: [
     "Vigente",
+    "Parcial",
     "Por vencer",
     "Vencida",
+    "Por aprobar",
+    "Rechazada",
+    "Borrador",
     "Pagada",
-    "Sin saldo",
+    "Cancelada",
   ],
   proforma: [
     "Borrador",
