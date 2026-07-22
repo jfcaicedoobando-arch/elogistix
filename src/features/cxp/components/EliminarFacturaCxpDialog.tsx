@@ -11,8 +11,8 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { EstatusCxP } from "@/features/cxp/services/proveedorFacturas";
-
 import { TONE_DOT, TONE_TEXT, type ChipTone } from "@/features/cxp/lib/badgeTone";
+import { EliminarFacturaFinancialGrid } from "./EliminarFacturaFinancialGrid";
 
 const ESTATUS_META: Record<EstatusCxP, { label: string; tone: ChipTone }> = {
   Cancelada:    { label: "Cancelada",         tone: "neutral" },
@@ -26,7 +26,6 @@ const ESTATUS_META: Record<EstatusCxP, { label: string; tone: ChipTone }> = {
   Vigente:      { label: "Pendiente de pago", tone: "warning" },
 };
 
-
 interface Props {
   factura: FacturaCxP | null;
   onOpenChange: (o: boolean) => void;
@@ -34,13 +33,6 @@ interface Props {
   onConfirm: () => void | Promise<void>;
 }
 
-function formatMonto(moneda: string, monto: number) {
-  const n = new Intl.NumberFormat("es-MX", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(monto ?? 0);
-  return `${moneda} ${n}`;
-}
 
 export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onConfirm }: Props) {
   const [paso2, setPaso2] = useState(false);
@@ -60,7 +52,7 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
   };
 
   const canDelete = confirmText.trim().toUpperCase() === "ELIMINAR";
-  const showMoneda = factura?.moneda !== "MXN";
+  
   const estatusMeta = factura ? ESTATUS_META[factura.estatus as EstatusCxP] : null;
 
   return (
@@ -100,36 +92,8 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
 
             {/* Body */}
             <div className="p-6 space-y-4">
-              {/* Financial Grid */}
-              <div className={cn("grid gap-3", showMoneda ? "grid-cols-3" : "grid-cols-2")}>
-                <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total</span>
-                  <div className="text-sm font-bold text-foreground tabular-nums whitespace-nowrap">
-                    {formatMonto(factura.moneda, factura.total)}
-                  </div>
-                </div>
-                <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Saldo pendiente</span>
-                  <div className={cn(
-                    "text-sm font-bold tabular-nums whitespace-nowrap",
-                    factura.saldo > 0 ? "text-warning" : "text-foreground",
-                  )}>
+              <EliminarFacturaFinancialGrid factura={factura} />
 
-                    {formatMonto(factura.moneda, factura.saldo)}
-                  </div>
-                </div>
-                {showMoneda && (
-                  <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Moneda / TC</span>
-                    <div className="leading-tight">
-                      <div className="text-sm font-bold text-foreground">{factura.moneda}</div>
-                      <div className="text-[11px] font-medium text-muted-foreground tabular-nums">
-                        TC {factura.tipo_cambio_usd?.toFixed(2) ?? "—"}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {/* Paso 1: nota de papelera. Paso 2: input ELIMINAR */}
               {!paso2 ? (
