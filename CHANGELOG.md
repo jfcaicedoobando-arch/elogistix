@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.308.6] - 2026-07-22
+- **fix(cotizaciones) · Deja de mandar `agente_nombre` y `naviera_nombre` al persistir cotizaciones (Sentry JAVASCRIPT-REACT-33/32/1V).** El mapper `buildPaso1Data` incluía ambos campos en el payload, pero en la tabla `cotizaciones` sólo existen los `_id` (los nombres vienen de vistas con JOIN). PostgREST tiraba `PGRST204: Could not find the 'agente_nombre' column of 'cotizaciones' in the schema cache` al guardar el paso 1 del wizard. Se eliminan del INSERT/UPDATE; la UI sigue leyendo los nombres desde la vista sin cambios.
+- **fix(embarques/pnl) · Defaults defensivos en `fetchPnlEmbarque` (Sentry JAVASCRIPT-REACT-3C).** El RPC `pnl_financiero_embarque` puede devolver `null` en `por_concepto` / `por_concepto_costo` / `por_proveedor` cuando el embarque no tiene conceptos capturados. El wrapper hacía cast directo y `PnlComparativaTable` explotaba con `Cannot read properties of undefined (reading 'reduce')`. Ahora normalizamos: `Array.isArray(raw.x) ? raw.x : []` para arrays y objetos default para `venta`/`costo`. Analogía: antes le pasábamos una caja vacía a la calculadora y se caía; ahora le pasamos una caja con ceros y suma normal.
+- **fix(observability) · `reportCaughtError` ignora clases de dominio (`AprobacionFacturaError`, `CreditLimitError`, `ValidationError`, `ZodError`) — Sentry JAVASCRIPT-REACT-37/-3D.** El filtro `isExpectedBusinessError` sólo miraba códigos Postgres, por lo que los errores de validación de aprobación de facturas (`LC_CXP_DESCUADRE`) generaban issues aunque la UI ya los mostraba como toast. Ahora también se descartan por `err.name`, alineado con el filtro de React Query en `queryClient.ts`.
+
+
+
 ## [13.308.5] - 2026-07-22
 - **fix(embarques/cierre) · Multimoneda en checks CxC y CxP.** En el tab "Cierre" del embarque, los checks "Cuentas por cobrar al día" y "Cuentas por pagar al día" mostraban siempre el saldo en MXN aunque las facturas fueran USD (ej. embarque 235 mostraba "MXN 5,220" cuando en realidad eran USD 5,220). El RPC `validar_cierre_embarque` sumaba `f.total`/`saldo_factura` a través de todas las monedas y el formatter `fmtCxc`/`fmtCxp` defaulteaba a MXN. Ahora el RPC agrupa por moneda y regresa `detalle.por_moneda: [{moneda, total, pagado, saldo, ...}]`; `cierreCheckFormatters.ts` recorre el array y muestra "saldo USD 5,220.00 + MXN 400.00" cuando corresponde (mantiene retrocompat con el shape viejo por cache). Analogía: antes el termómetro sólo tenía escala Celsius, así que 95 °F se leía como 95 °C — ahora imprime la unidad junto al número.
 
