@@ -1,6 +1,17 @@
 # Changelog
 
+## [13.307.3] - 2026-07-22
+- **fix(db) · Auditoría R3 · correcciones verificadas contra la BD real.** De los 20 hallazgos reportados, 8 ya estaban corregidos y 6 eran evidencia obsoleta; se aplican solamente los reales:
+  - **R3-02** · `pagos_proveedor.tipo_cambio_usd` deja de ser `NOT NULL`. Pagos MXN a facturas MXN ya no fallan; cuando cruzan monedas, el trigger sigue exigiendo TC (`LC_PAGO_TC_REQUERIDO`).
+  - **R3-03** · Nuevos índices únicos parciales `contenedores_numero_unico` (org+número) y `contenedores_bl_house_unico` (embarque+BL house), excluyendo la organización demo `Elogistix` que tiene duplicados históricos.
+  - **R3-07** · `validar_cierre_embarque` ahora evalúa el margen mínimo como porcentaje (`utilidad / venta × 100`) y ya no traga errores del PNL (los reporta como check `pnl_error`).
+  - **R3-08** · Bloqueo de `UPDATE embarques SET estado='Cerrado'` directo: sólo `cerrar_embarque()` puede fijarlo (usa `app.bypass_cierre`). Los demás flujos reciben `LC_CIERRE_SOLO_RPC`.
+  - **R3-09** · Nuevas funciones `soft_delete_pago_factura(uuid)` y `soft_delete_pago_proveedor(uuid)` con `SECURITY DEFINER` para poder borrar pagos lógicamente sin violar las políticas RLS que ocultan `deleted_at IS NULL`.
+  - **R3-20** · Nuevos CHECK `NOT VALID` para nuevos registros: `conceptos_venta.total ≈ cantidad × precio_unitario` (±0.01) y `facturas.total` con máximo 2 decimales.
+  - Analogía: revisamos el mapa y sólo cambiamos las cerraduras que sí estaban abiertas; las demás ya tenían candado desde R2.
+
 ## [13.307.2] - 2026-07-22
+
 - **fix(db) · Auditoría R3 · cierre completo del bloque de índices únicos.**
   - **FIX-R3-03c** · Nuevo índice único parcial `uq_embarques_bl_house_org (organization_id, upper(bl_house))` que excluye a la organización demo `Elogistix` (`00000000-0000-0000-0000-000000000001`). Producción queda con la restricción activa; los 9 duplicados históricos de la demo quedan intactos.
   - Con esto el plan R3 queda 100% cerrado (todos los P0/P1/P2 aplicados + los 3 índices únicos finales).

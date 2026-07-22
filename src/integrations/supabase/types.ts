@@ -5044,7 +5044,7 @@ export type Database = {
           organization_id: string
           proveedor_factura_id: string
           referencia: string
-          tipo_cambio_usd: number
+          tipo_cambio_usd: number | null
           updated_at: string
         }
         Insert: {
@@ -5067,7 +5067,7 @@ export type Database = {
           organization_id?: string
           proveedor_factura_id: string
           referencia?: string
-          tipo_cambio_usd: number
+          tipo_cambio_usd?: number | null
           updated_at?: string
         }
         Update: {
@@ -5090,7 +5090,7 @@ export type Database = {
           organization_id?: string
           proveedor_factura_id?: string
           referencia?: string
-          tipo_cambio_usd?: number
+          tipo_cambio_usd?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -8368,6 +8368,14 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      soft_delete_pago_factura: {
+        Args: { p_pago_id: string }
+        Returns: undefined
+      }
+      soft_delete_pago_proveedor: {
+        Args: { p_pago_id: string }
+        Returns: undefined
       }
       soft_delete_proveedor_factura: {
         Args: { p_deleted_by?: string; p_factura_id: string }
