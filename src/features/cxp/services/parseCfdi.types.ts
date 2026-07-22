@@ -22,6 +22,8 @@ export interface CfdiParsedResponse {
     iva_trasladado: number;
     ieps_trasladado: number;
     retenciones: number;
+    /** I=Ingreso, E=Egreso, T=Traslado, N=Nómina, P=Pago. */
+    tipo_comprobante: string;
     emisor: { rfc: string; nombre: string; regimen: string };
     receptor: { rfc: string; nombre: string };
     conceptos: CfdiConceptoParsed[];
