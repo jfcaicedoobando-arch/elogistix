@@ -88,6 +88,34 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                   <td className="px-3 py-2 text-muted-foreground">{n.motivo}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>
                   <td className="px-3 py-2 text-center"><NcEstadoBadge estado={n.estado} /></td>
+                  <td className="px-3 py-2 text-center">
+                    {n.archivo_xml_url ? (
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => openStoredFile(n.archivo_xml_url)}
+                        title="Descargar XML"
+                      >
+                        <FileDigit className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {n.archivo_pdf_url ? (
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => openStoredFile(n.archivo_pdf_url)}
+                        title="Descargar PDF"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
+                  </td>
                   <td className="px-2 py-2 text-right space-x-1">
                     {canEdit && n.estado === "Borrador" && (
                       <Button
