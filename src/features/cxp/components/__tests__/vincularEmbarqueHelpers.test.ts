@@ -167,4 +167,59 @@ describe("vincularEmbarqueHelpers", () => {
       expect(toast.info).toHaveBeenCalled();
     });
   });
+
+  describe("filtrarGrupos", () => {
+    const buildGrupos = (): Grupo[] => [
+      {
+        embarqueId: "e1",
+        expediente: "EXP-001",
+        items: [
+          concepto({ id: "a", concepto: "Flete marítimo", monto: 100 }),
+          concepto({ id: "b", concepto: "Maniobras puerto", monto: 250 }),
+        ],
+      },
+      {
+        embarqueId: "e2",
+        expediente: "EXP-002",
+        items: [concepto({ id: "c", concepto: "Demoras", monto: 999 })],
+      },
+    ];
+
+    it("sin filtro devuelve todo", () => {
+      const r = filtrarGrupos(buildGrupos(), { texto: "", soloMarcados: false, seleccion: {} });
+      expect(r).toHaveLength(2);
+      expect(r[0].items).toHaveLength(2);
+    });
+
+    it("filtra por texto en concepto (case-insensitive)", () => {
+      const r = filtrarGrupos(buildGrupos(), { texto: "flete", soloMarcados: false, seleccion: {} });
+      expect(r).toHaveLength(1);
+      expect(r[0].items).toHaveLength(1);
+      expect(r[0].items[0].id).toBe("a");
+    });
+
+    it("filtra por expediente y omite grupos sin matches", () => {
+      const r = filtrarGrupos(buildGrupos(), { texto: "exp-002", soloMarcados: false, seleccion: {} });
+      expect(r).toHaveLength(1);
+      expect(r[0].embarqueId).toBe("e2");
+    });
+
+    it("filtra por monto como string", () => {
+      const r = filtrarGrupos(buildGrupos(), { texto: "250", soloMarcados: false, seleccion: {} });
+      expect(r).toHaveLength(1);
+      expect(r[0].items[0].id).toBe("b");
+    });
+
+    it("soloMarcados deja solo los seleccionados", () => {
+      const r = filtrarGrupos(buildGrupos(), {
+        texto: "",
+        soloMarcados: true,
+        seleccion: { a: { monto: 100 }, c: { monto: 999 } },
+      });
+      expect(r).toHaveLength(2);
+      expect(r[0].items.map((i) => i.id)).toEqual(["a"]);
+      expect(r[1].items.map((i) => i.id)).toEqual(["c"]);
+    });
+  });
 });
+
