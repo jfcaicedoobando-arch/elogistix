@@ -60,12 +60,12 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       meta: { width: "w-[100px]", align: "center" },
       cell: ({ row }) => {
         const dias = row.original.dias_para_vencer ?? 0;
-        const variant = variantDiasParaVencer(dias);
         return (
-          <Badge variant={variant} className="whitespace-nowrap">
+          <ToneBadge tone={toneDiasParaVencer(dias)} size="md">
             {dias < 0 ? `${Math.abs(dias)} venc.` : `${dias}d`}
-          </Badge>
+          </ToneBadge>
         );
+
       },
     },
     {
