@@ -93,7 +93,7 @@ function XmlDrop({ xml, onFile, inputRef }: XmlDropProps) {
 interface PdfPickerProps {
   pdf: File | null;
   onFile: (f: File | null) => void;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 function PdfPicker({ pdf, onFile, inputRef }: PdfPickerProps) {
