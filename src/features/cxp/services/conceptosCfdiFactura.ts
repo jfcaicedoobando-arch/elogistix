@@ -38,9 +38,6 @@ export async function insertarConceptosCfdi(
   const { error } = await supabase.from("proveedor_facturas_conceptos").insert(rows);
   if (error) throw error;
   return rows.length;
-  const { error } = await supabase.from("proveedor_facturas_conceptos").insert(rows);
-  if (error) throw error;
-  return rows.length;
 }
 
 export interface ConceptoCfdiRow {
