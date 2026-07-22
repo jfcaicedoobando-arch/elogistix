@@ -90,6 +90,24 @@ function mapVerificacionSat(f: Joined) {
   };
 }
 
+/** Deriva los `flags` UI (chips secundarios + tooltip) desde la fila cruda. */
+function computeFlags(
+  f: Joined, pagado: number, nc: number, saldo: number, total: number,
+): FacturaCxP["flags"] {
+  const cubierto = pagado + nc;
+  const canceladaPor: "sat" | "manual" | null =
+    f.estado === "Cancelada"
+      ? (f.uuid_estatus_sat === "Cancelado" ? "sat" : "manual")
+      : null;
+  return {
+    parcial: pagado > 0.01 && saldo > 0.01,
+    parcialPct: total > 0 ? Math.min(100, Math.round((cubierto / total) * 100)) : 0,
+    ncAplicada: nc > 0.01,
+    satVerificada: Boolean(f.uuid_verificado),
+    canceladaPor,
+  };
+}
+
 export function mapJoinedRow(f: Joined): FacturaCxP {
   const pagado = (f.pagos_proveedor ?? [])
     .filter(p => !p.deleted_at)
@@ -101,13 +119,6 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
   const saldo = Math.max(0, total - pagado - nc);
   const yaSaldada = f.estado === "Pagada" || saldo <= 0.01;
   const dv = yaSaldada ? 0 : diasVencido(f.fecha_vencimiento);
-  const cubiertoTotal = pagado + nc;
-  const parcial = pagado > 0.01 && saldo > 0.01;
-  const parcialPct = total > 0 ? Math.min(100, Math.round((cubiertoTotal / total) * 100)) : 0;
-  const canceladaPor: "sat" | "manual" | null =
-    f.estado === "Cancelada"
-      ? (f.uuid_estatus_sat === "Cancelado" ? "sat" : "manual")
-      : null;
   return {
     id: f.id,
     proveedor_id: f.proveedor_id,
@@ -144,13 +155,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     ...mapVerificacionSat(f),
     fecha_programada_pago: f.fecha_programada_pago ?? null,
     ...mapCancelacion(f),
-    flags: {
-      parcial,
-      parcialPct,
-      ncAplicada: nc > 0.01,
-      satVerificada: Boolean(f.uuid_verificado),
-      canceladaPor,
-    },
+    flags: computeFlags(f, pagado, nc, saldo, total),
   };
 }
 
