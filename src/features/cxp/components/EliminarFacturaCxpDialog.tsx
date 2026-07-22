@@ -11,8 +11,8 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { EstatusCxP } from "@/features/cxp/services/proveedorFacturas";
-
 import { TONE_DOT, TONE_TEXT, type ChipTone } from "@/features/cxp/lib/badgeTone";
+import { EliminarFacturaFinancialGrid } from "./EliminarFacturaFinancialGrid";
 
 const ESTATUS_META: Record<EstatusCxP, { label: string; tone: ChipTone }> = {
   Cancelada:    { label: "Cancelada",         tone: "neutral" },
@@ -26,7 +26,6 @@ const ESTATUS_META: Record<EstatusCxP, { label: string; tone: ChipTone }> = {
   Vigente:      { label: "Pendiente de pago", tone: "warning" },
 };
 
-
 interface Props {
   factura: FacturaCxP | null;
   onOpenChange: (o: boolean) => void;
@@ -34,13 +33,6 @@ interface Props {
   onConfirm: () => void | Promise<void>;
 }
 
-function formatMonto(moneda: string, monto: number) {
-  const n = new Intl.NumberFormat("es-MX", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(monto ?? 0);
-  return `${moneda} ${n}`;
-}
 
 export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onConfirm }: Props) {
   const [paso2, setPaso2] = useState(false);
