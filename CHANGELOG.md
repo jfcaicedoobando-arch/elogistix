@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.307.6] - 2026-07-22
+- **feat(cxp) · Detalle de factura de proveedor con datos fiscales completos.** El modal ahora muestra la **fecha de expedición** y la **fecha de vencimiento** (con badge rojo `+N d` si está vencida), agrupadas en un bloque "Fechas y crédito" junto a los días de crédito. El desglose fiscal se reordenó a `Subtotal → IVA → IEPS → Retenciones → Total`, incluyendo el **Total** que antes sólo existía en el KPI. Se agrega una sección nueva **"Conceptos de la factura"** (`ConceptosFacturaSection` + hook `useConceptosCfdiFactura`) que lee `proveedor_facturas_conceptos` y renderiza el desglose línea por línea (descripción, cantidad, importe, IVA, IEPS, totales al pie) tal como llegó del XML/IA. La fecha de expedición también aparece en el header ("Expedida DD/MM/YYYY") para lectura de un vistazo. Analogía: antes veías la portada de la factura sin fecha ni el detalle de conceptos; ahora tienes la factura completa abierta.
+
+
+
 ## [13.307.5] - 2026-07-22
 - **feat(cxp) · Adjuntar / reemplazar / quitar XML y PDF desde el detalle.** El modal "Detalle de factura de proveedor" ahora permite subir un CFDI faltante o reemplazarlo si se cargó incompleto (caso Carol · FP-000042: se guardó XML pero no PDF y no había forma de corregirlo). Nuevos servicios `adjuntarArchivoCfdiFactura` / `quitarArchivoCfdiFactura` y hook `useAdjuntoFacturaProveedor` (mantienen prefijo `{org}/cfdi/{facturaId}/…` para respetar la RLS del bucket `facturas`). Validación por tipo (XML ≤2 MB, PDF ≤10 MB) y confirmaciones antes de reemplazar/quitar. La UI de edición sólo aparece si el usuario tiene permiso y la factura no está cancelada. Analogía: antes la carpeta de la factura estaba pegada con cinta y no se podía abrir para meter la hoja que faltaba; ahora tiene bolsillo con solapa.
 - **security · Vista `costeo_tarifas_vigentes_v` en modo `security_invoker`.** Cierra el hallazgo `SUPA_security_definer_view`: la vista ya respeta las políticas RLS del usuario que consulta, no las del creador.
