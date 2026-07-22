@@ -23,7 +23,9 @@ import { ActionDialogs } from "./DialogDetallePagosProveedor.actiondialogs";
 import { NotasCreditoSection } from "./NotasCreditoSection";
 import { InfoFacturaSection } from "./InfoFacturaSection";
 import { HistorialFacturaSection } from "./HistorialFacturaSection";
+import { ConceptosFacturaSection } from "./ConceptosFacturaSection";
 import { usePermissions } from "@/hooks/shared";
+import { formatDate } from "@/lib/formatters/dates";
 
 interface Props {
   open: boolean;
@@ -109,6 +111,12 @@ function HeaderSection({ f }: { f: FacturaCxP | null }) {
         <p className="text-xs text-muted-foreground">
           Folio prov. <span className="font-mono">{f.folio_proveedor}</span>
           {" — "}{f.proveedor_nombre}
+          {f.fecha_emision && (
+            <>
+              {" · "}
+              <span>Expedida {formatDate(f.fecha_emision)}</span>
+            </>
+          )}
         </p>
       )}
     </DialogHeader>
@@ -127,6 +135,7 @@ function BodySections({
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
       {f && <InfoFacturaSection factura={f} canEdit={canEdit} />}
+      {f && <ConceptosFacturaSection facturaId={f.id} moneda={f.moneda} />}
       {f && <HistorialFacturaSection facturaId={f.id} />}
       <PagosTable pagos={pagos} isLoading={isLoading} canEdit={canEdit} onEliminarPago={onEliminarPago} />
       {f && (
