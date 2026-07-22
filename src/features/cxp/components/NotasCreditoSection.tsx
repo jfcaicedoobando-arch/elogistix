@@ -75,6 +75,8 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                 <th className="text-left px-3 py-2">Motivo</th>
                 <th className="text-right px-3 py-2">Monto</th>
                 <th className="text-center px-3 py-2">Estado</th>
+                <th className="text-center px-3 py-2">XML</th>
+                <th className="text-center px-3 py-2">PDF</th>
                 <th className="w-28" />
               </tr>
             </thead>
