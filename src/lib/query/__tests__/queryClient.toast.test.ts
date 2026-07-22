@@ -1,6 +1,6 @@
 /**
  * v13.303.75 · Fase 1 · Cuando una query falla, la UI debe recibir un toast.
- * Antes sólo se reportaba a Sentry y el usuario veía "Sin resultados".
+ * v13.308.7 · Migrado a `notifyError` para incluir "Ver detalles".
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -9,6 +9,10 @@ const toastErrorMock = vi.fn();
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastErrorMock(...args),
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
   },
 }));
 
@@ -16,6 +20,10 @@ vi.mock("sonner", () => ({
 vi.mock("@/lib/observability/reportQueryError", () => ({
   reportQueryError: vi.fn(),
   rootOf: (key: readonly unknown[]) => (typeof key[0] === "string" ? key[0] : "data"),
+}));
+
+vi.mock("@/lib/observability/reportCaughtError", () => ({
+  reportCaughtError: vi.fn(),
 }));
 
 // Silenciamos catálogos de errores esperados: por defecto no lo son.
@@ -32,7 +40,7 @@ describe("queryClient · toast on query failure", () => {
     vi.resetModules();
   });
 
-  it("emite toast.error con id dedupe por root cuando una query falla", async () => {
+  it("emite toast.error con acción 'Ver detalles' cuando una query falla", async () => {
     const { queryClient } = await import("../queryClient");
     await queryClient.fetchQuery({
       queryKey: ["facturas", "listado"],
@@ -48,7 +56,9 @@ describe("queryClient · toast on query failure", () => {
     expect(toastErrorMock).toHaveBeenCalledTimes(1);
     const [msg, opts] = toastErrorMock.mock.calls[0];
     expect(msg).toBe("No pudimos cargar la información");
-    expect((opts as { id: string }).id).toBe("query-error:facturas");
+    const options = opts as { duration: number; action: { label: string } };
+    expect(options.duration).toBe(Infinity);
+    expect(options.action.label).toBe("Ver detalles");
   });
 
   it("respeta meta.silentError y NO muestra toast", async () => {
