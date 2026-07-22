@@ -7560,6 +7560,8 @@ export type Database = {
         Returns: number
       }
       ensure_demo_membership: { Args: { _user_id: string }; Returns: undefined }
+      es_admin_catalogo: { Args: { _uid: string }; Returns: boolean }
+      es_escritor_financiero: { Args: { _uid: string }; Returns: boolean }
       expirar_cotizaciones_job: { Args: never; Returns: Json }
       facturacion_por_emitir: {
         Args: never
