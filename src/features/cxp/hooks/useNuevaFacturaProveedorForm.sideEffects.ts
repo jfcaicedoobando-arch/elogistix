@@ -5,6 +5,28 @@
  * Extraídos del controller para mantenerlo bajo el límite Power of 10.
  */
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
+
+/**
+ * Warning persistente para fallos "best-effort" post-guardado: la factura
+ * quedó grabada pero un paso secundario (ajustes, vínculos, concepto ad-hoc)
+ * falló. Necesita `duration: Infinity` para que el usuario alcance a leer y
+ * `action` para poder copiar el detalle al clipboard.
+ */
+function notifyBestEffortFallo(titulo: string, err: unknown): void {
+  const detalle = getErrorMessage(err);
+  toast.warning(titulo, {
+    description: detalle,
+    duration: Infinity,
+    closeButton: true,
+    action: {
+      label: "Copiar detalle",
+      onClick: () => {
+        void navigator.clipboard?.writeText(`${titulo}: ${detalle}`);
+      },
+    },
+  });
+}
 import {
   subirArchivosCfdiFactura,
   vincularFacturaAConceptos,
@@ -109,15 +131,13 @@ export async function vincularSafe(params: {
           });
           ajustesCreados = r.ajustesCreados;
         } catch (ajErr) {
-          const err = ajErr as { message?: string };
-          toast.warning(`Factura guardada pero los ajustes de costo fallaron: ${err.message ?? "error"}`);
+          notifyBestEffortFallo("Factura guardada, pero los ajustes de costo fallaron", ajErr);
         }
       }
       // Fase P.3: la liquidación la determina el trigger en BD a partir de pagos.
       return { liquidados: 0, ajustesCreados };
     } catch (linkErr) {
-      const err = linkErr as { message?: string };
-      toast.warning(`Factura guardada pero el vínculo con embarque falló: ${err.message ?? "error"}`);
+      notifyBestEffortFallo("Factura guardada, pero el vínculo con embarque falló", linkErr);
       return {};
     }
   }
@@ -137,8 +157,7 @@ export async function vincularSafe(params: {
       });
       return { conceptoAdHocExpediente: embarqueAdHoc.expediente };
     } catch (e) {
-      const err = e as { message?: string };
-      toast.warning(`Factura guardada pero no se pudo crear el concepto: ${err.message ?? "error"}`);
+      notifyBestEffortFallo("Factura guardada, pero no se pudo crear el concepto", e);
       return {};
     }
   }

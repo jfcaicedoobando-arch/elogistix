@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.8] - 2026-07-22
+- **fix(cxp) · Ajustes de costo negativos permitidos + toasts persistentes.** El CHECK `conceptos_costo_monto_nonneg` bloqueaba montos negativos, así que cuando el proveedor te facturaba menos de lo devengado (descuento) el paso "ajustar utilidad del embarque" tronaba con `check_violation`. Reemplazado por `conceptos_costo_monto_signo`: los renglones normales siguen exigiendo monto≥0, pero los renglones con `origen='ajuste_factura_proveedor'` pueden ser negativos (así el `SUM(monto)` refleja el descuento y la utilidad sube correctamente). Además los tres toasts de "Factura guardada pero X falló" ahora usan `duration: Infinity`, botón de cerrar y acción "Copiar detalle" — antes se auto-cerraban en 4s sin dejarte leer el error. Analogía: tu cuaderno de gastos ya acepta anotar devoluciones con signo negativo, y las notas urgentes se quedan pegadas hasta que las quitas tú.
+
 ## [13.307.7] - 2026-07-22
 - **fix(embarques) · Validación ISO 6346 en captura de contenedores.** El campo "Número" ahora normaliza a mayúsculas y sin espacios al escribir, y muestra un mensaje rojo inline (`"Formato ISO 6346: 4 letras + 7 dígitos (ej. MSCU1234567). Déjalo vacío si aún no lo asignan."`) cuando el valor no cumple el patrón. El wizard de edición bloquea avanzar al guardado si algún contenedor tiene número inválido (antes se enviaba y la BD lo rechazaba con un `check_violation` técnico). Si aún así el backend devuelve `contenedor_iso6346`, `getErrorMessage` lo traduce al mismo texto amigable. Nuevo helper puro `esNumeroContenedorValido` + tests. Analogía: el lector de código de barras del súper ahora te avisa en el momento que tecleas mal, no hasta el final de la fila.
 
