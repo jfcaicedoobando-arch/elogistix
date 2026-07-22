@@ -1,28 +1,60 @@
-# Ordenar embarques por folio (asc) en "Capturar factura de proveedor"
+# Fix: `conceptos_costo_origen_check` bloquea ajustes de factura de proveedor
 
-Actualmente, dentro del modal **Capturar factura de proveedor → Vincular costos**, los grupos de conceptos pendientes se muestran agrupados por embarque en el orden en que llegan de la consulta (aparentemente por fecha o por concepto), lo que hace difícil ubicar un embarque específico.
+## Qué pasó (analogía)
 
-## Cambio
+Tu cuaderno de gastos tiene dos reglas separadas para cada renglón:
 
-Ordenar los grupos por número de expediente de menor a mayor.
+1. **Regla del signo del monto** (`conceptos_costo_monto_signo`) — dice qué tipos de renglón pueden ir en negativo.
+2. **Regla del tipo de renglón** (`conceptos_costo_origen_check`) — dice qué "etiquetas de origen" están permitidas.
 
-### Detalle técnico
+En `v13.307.8` actualizamos la **regla 1** para permitir montos negativos cuando el origen es `ajuste_factura_proveedor` (para los descuentos del proveedor)… pero se nos olvidó agregar esa etiqueta a la **regla 2**. Resultado: el guardado de la factura funciona, pero cuando el sistema intenta crear el renglón de ajuste al vuelo, la BD lo rechaza con `conceptos_costo_origen_check`.
 
-- Archivo: `src/features/cxp/components/vincularEmbarqueHelpers.ts`
-- Función: `agruparPorEmbarque(items)`
-  - Al final, ordenar `Array.from(map.values())` por `expediente` usando comparación natural (`localeCompare` con `{ numeric: true, sensitivity: "base" }`), para que `EXP-002` vaya antes de `EXP-010`.
-- El orden se preserva a través de `filtrarGrupos` (que sólo filtra, no reordena) y de `VincularListaConceptos` (que hace `map` directo).
+Por eso saliste con dos toasts: el verde de "Factura 0046 creada" y el rojo persistente de "los ajustes de costo fallaron".
 
-### Tests
+## Estado actual (verificado)
 
-- Añadir un caso en `src/features/cxp/components/__tests__/vincularEmbarqueHelpers.test.ts` sobre `agruparPorEmbarque`: dado un arreglo con expedientes `EXP-010`, `EXP-002`, `EXP-001`, el resultado debe salir en orden `EXP-001`, `EXP-002`, `EXP-010`.
+- `conceptos_costo_origen_check` permite hoy: `manual`, `demoras_auto`, `cotizacion`, `costeo_tarifa`.
+- El código (`crearAjustesFacturaProveedor.ts`) y el trigger de reversión (`tg_reverse_ajustes_factura_proveedor`) ya asumen `origen = 'ajuste_factura_proveedor'`.
+- Falta únicamente ampliar el CHECK del origen.
 
-### Changelog / versión
+## Cambios
 
-- `APP_VERSION` → `13.307.11`.
-- Entrada breve en `CHANGELOG.md` explicando el orden ascendente por folio de embarque.
+### Migración (schema)
+
+Reemplazar `conceptos_costo_origen_check` para incluir `ajuste_factura_proveedor`:
+
+```sql
+ALTER TABLE public.conceptos_costo
+  DROP CONSTRAINT conceptos_costo_origen_check;
+
+ALTER TABLE public.conceptos_costo
+  ADD CONSTRAINT conceptos_costo_origen_check
+  CHECK (origen = ANY (ARRAY[
+    'manual',
+    'demoras_auto',
+    'cotizacion',
+    'costeo_tarifa',
+    'ajuste_factura_proveedor'
+  ]));
+```
+
+Sin backfill: no hay filas con ese origen todavía (por eso justamente fallaba la inserción).
+
+### Reintento del ajuste para FP-000046
+
+Después de aplicar la migración, la factura 0046 ya quedó guardada pero **sin** los renglones de ajuste, así que la utilidad del embarque vinculado sigue calculada contra el costo devengado original. Opciones:
+
+- **A (recomendada):** Abrir FP-000046, entrar a "Vincular embarque", y guardar de nuevo. El servicio es idempotente y creará los ajustes esta vez.
+- **B:** Dejarla como está si la diferencia entre devengado y facturado no es material.
+
+Confirmamos contigo cuál prefieres al terminar la migración.
+
+### Versión / changelog
+
+- `APP_VERSION` → `13.307.13`.
+- Entrada en `CHANGELOG.md` explicando el CHECK faltante y el fix.
 
 ## Fuera de alcance
 
-- No se toca el orden interno de conceptos dentro de cada embarque.
-- No se agregan controles de orden configurables por el usuario.
+- No se toca la lógica de `crearAjustesFacturaProveedor.ts` ni el trigger de reversión — ambos ya son correctos.
+- No se cambia el toast de "best-effort" (ya tiene `duration: Infinity` desde `v13.307.8`).
