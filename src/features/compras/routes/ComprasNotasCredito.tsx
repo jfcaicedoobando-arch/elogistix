@@ -146,7 +146,7 @@ export default function ComprasNotasCredito() {
           </div>
           <div className="space-y-1 sm:col-span-2 lg:col-span-1">
             <Label className="text-xs">Buscar</Label>
-            <SearchInput value={search} onChange={setSearch} placeholder="Folio NC, factura, proveedor…" />
+            <SearchInput value={search} onChange={setSearch} placeholder="Folio NC o factura…" />
           </div>
         </CardContent>
       </Card>
