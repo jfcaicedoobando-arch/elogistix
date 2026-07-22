@@ -23,6 +23,7 @@ interface Props {
 }
 
 export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
+  const { organizationId } = useAuth();
   const showTc = f.moneda !== "MXN";
   const verificar = useVerificarUuidSat();
   const adjuntar = useAdjuntarArchivoCfdiFactura();
@@ -34,13 +35,14 @@ export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
 
   const puedeEditarAdjuntos = canEdit && !estaCancelada;
   const handleUpload = (file: File, tipo: TipoAdjuntoCfdi) =>
-    adjuntar.mutate({ facturaId: f.id, organizationId: f.organization_id, tipo, file });
+    adjuntar.mutate({ facturaId: f.id, organizationId, tipo, file });
   const handleRemove = (path: string, tipo: TipoAdjuntoCfdi) =>
     quitar.mutate({ facturaId: f.id, path, tipo });
-  const uploadingXml = adjuntar.isPending && adjuntar.variables?.tipo === "XML"
-    || quitar.isPending && quitar.variables?.tipo === "XML";
-  const uploadingPdf = adjuntar.isPending && adjuntar.variables?.tipo === "PDF"
-    || quitar.isPending && quitar.variables?.tipo === "PDF";
+  const busyTipo = adjuntar.isPending
+    ? adjuntar.variables?.tipo
+    : quitar.isPending ? quitar.variables?.tipo : undefined;
+
+
 
 
 
