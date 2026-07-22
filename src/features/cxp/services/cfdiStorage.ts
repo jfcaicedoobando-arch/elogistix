@@ -40,9 +40,8 @@ function contentTypeFor(tipo: TipoAdjuntoCfdi): string {
   return tipo === "XML" ? "application/xml" : "application/pdf";
 }
 
-function columnFor(tipo: TipoAdjuntoCfdi): "archivo_xml_url" | "archivo_pdf_url" {
-  return tipo === "XML" ? "archivo_xml_url" : "archivo_pdf_url";
-}
+
+
 
 export async function subirArchivosCfdiFactura(params: SubirArchivosParams): Promise<void> {
   // 13.114.14: el primer segmento DEBE ser el organization_id para satisfacer
