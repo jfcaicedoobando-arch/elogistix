@@ -143,6 +143,13 @@ export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onC
                     id="confirm-delete"
                     value={confirmText}
                     onChange={(e) => setConfirmText(e.target.value)}
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter" && canDelete && !isPending) {
+                        e.preventDefault();
+                        await onConfirm();
+                        close();
+                      }
+                    }}
                     placeholder="ELIMINAR"
                     autoComplete="off"
                     className="font-mono"
