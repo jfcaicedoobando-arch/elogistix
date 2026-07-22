@@ -81,20 +81,8 @@ export function CxpFiltrosSheetFields(props: Props) {
           <div className="space-y-1">
             <Label>Aprobación</Label>
             <Select
-              value={props.aprobacion}
-              onValueChange={(v) => props.onAprobacionChange(v as Props["aprobacion"])}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todas</SelectItem>
-                <SelectItem value="pendiente">Por aprobar</SelectItem>
-                <SelectItem value="aprobada">Aprobadas</SelectItem>
-                <SelectItem value="rechazada">Rechazadas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </>
-      )}
+          {/* v13.307.16 — Aprobación integrada en el chip primario;
+              el filtro `?aprobacion=` sigue disponible vía deep-link. */}
       <div className="space-y-1">
         <Label>Proveedor</Label>
         <Select value={props.proveedorId || "todos"} onValueChange={props.onProveedorChange}>
