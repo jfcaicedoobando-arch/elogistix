@@ -12,11 +12,13 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   Descalificado: "bg-destructive/15 text-destructive border border-destructive/30",
   Convertido: "bg-primary/15 text-primary border border-primary/30",
   Descartado: "bg-muted text-muted-foreground border border-border",
-  // CxP
+  // CxP — chip primario derivado
   Vigente: "bg-success/15 text-success border border-success/30",
   "Por vencer": "bg-warning/15 text-warning border border-warning/30",
-  "Sin saldo": "bg-muted text-muted-foreground border border-border",
-  // Pagada: estado terminal — se muestra en muted para distinguirlo de "Vigente".
+  Parcial: "bg-info/15 text-info border border-info/30",
+  "Por aprobar": "bg-warning/15 text-warning border border-warning/30",
+  Rechazada: "bg-destructive/15 text-destructive border border-destructive/30",
+  // Pagada: estado terminal — muted para distinguirlo de "Vigente".
   Pagada: "bg-muted text-muted-foreground border border-border",
   // Comisión
   Devengada: "bg-warning/15 text-warning border border-warning/30",
@@ -24,12 +26,10 @@ export const EXTRA_STATUS_BADGES: Record<string, EstadoVisual["badge"]> = {
   // Organización
   Activa: "bg-success/15 text-success border border-success/30",
   Inactiva: "bg-muted text-muted-foreground border border-border",
-  // Aprobación CxP
-  "Por aprobar": "bg-warning/15 text-warning border border-warning/30",
+  // Aprobación CxP — "Por aprobar" y "Rechazada" ya definidos arriba en CxP.
   Aprobada: "bg-success/15 text-success border border-success/30",
-  // Captura CxP
+  // Captura CxP — "Parcial" reusa la clase info definida arriba.
   "Sin captura": "bg-muted text-muted-foreground border border-border",
-  Parcial: "bg-warning/15 text-warning border border-warning/30",
   Completo: "bg-success/15 text-success border border-success/30",
   // Actividad CRM
   Pendiente: "bg-warning/15 text-warning border border-warning/30",

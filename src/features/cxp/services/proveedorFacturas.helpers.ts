@@ -50,11 +50,26 @@ export function diasVencido(fechaVenc: string | null): number {
   return Math.floor((hoy.getTime() - venc.getTime()) / 86_400_000);
 }
 
-export function clasificar(saldo: number, dias: number, estado: EstadoProveedorFactura): EstatusCxP {
-  if (estado === "Pagada") return "Pagada";
-  if (saldo <= 0.01) return "Sin saldo";
+/**
+ * Deriva el estatus primario aplicando la regla de prioridad de `EstatusCxP`.
+ * Ver JSDoc en `proveedorFacturas.ts` para el orden completo.
+ * Ventana "Por vencer" = 5 días (definida con producto v13.304.1).
+ */
+export function clasificar(
+  saldo: number,
+  pagado: number,
+  dias: number,
+  estado: EstadoProveedorFactura,
+  aprobacion: "pendiente" | "aprobada" | "rechazada",
+): EstatusCxP {
+  if (estado === "Cancelada") return "Cancelada";
+  if (aprobacion === "rechazada") return "Rechazada";
+  if (estado === "Borrador") return "Borrador";
+  if (aprobacion === "pendiente") return "Por aprobar";
+  if (estado === "Pagada" || saldo <= 0.01) return "Pagada";
   if (dias > 0) return "Vencida";
-  if (dias >= -3) return "Por vencer";
+  if (dias >= -5) return "Por vencer";
+  if (pagado > 0.01) return "Parcial";
   return "Vigente";
 }
 
@@ -103,7 +118,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     notas_credito: nc,
     saldo,
     estado: f.estado,
-    estatus: clasificar(saldo, dv, f.estado),
+    estatus: clasificar(saldo, pagado, dv, f.estado, f.estado_aprobacion),
     tipo_cambio_usd: Number(f.tipo_cambio_usd),
     estado_aprobacion: f.estado_aprobacion,
     motivo_rechazo: f.motivo_rechazo,

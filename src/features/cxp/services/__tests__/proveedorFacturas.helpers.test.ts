@@ -81,21 +81,37 @@ describe("diasVencido", () => {
 });
 
 describe("clasificar", () => {
-  it("estado Pagada gana sobre cualquier saldo/días", () => {
-    expect(clasificar(500, 10, "Pagada" as never)).toBe("Pagada");
+  // Firma: clasificar(saldo, pagado, dias, estado, aprobacion)
+  it("estado Cancelada gana sobre todo", () => {
+    expect(clasificar(500, 0, 10, "Cancelada" as never, "aprobada")).toBe("Cancelada");
   });
-  it("saldo ≤ 0.01 ⇒ Sin saldo", () => {
-    expect(clasificar(0.005, 0, "Pendiente" as never)).toBe("Sin saldo");
+  it("aprobacion rechazada gana sobre saldo/vencimiento", () => {
+    expect(clasificar(500, 0, 10, "Vigente" as never, "rechazada")).toBe("Rechazada");
+  });
+  it("estado Borrador antes de aprobación pendiente", () => {
+    expect(clasificar(100, 0, 0, "Borrador" as never, "pendiente")).toBe("Borrador");
+  });
+  it("aprobación pendiente ⇒ Por aprobar aunque haya saldo vencido", () => {
+    expect(clasificar(100, 0, 10, "Vigente" as never, "pendiente")).toBe("Por aprobar");
+  });
+  it("estado Pagada ⇒ Pagada", () => {
+    expect(clasificar(500, 500, 10, "Pagada" as never, "aprobada")).toBe("Pagada");
+  });
+  it("saldo ≤ 0.01 ⇒ Pagada", () => {
+    expect(clasificar(0.005, 100, 0, "Vigente" as never, "aprobada")).toBe("Pagada");
   });
   it("días > 0 con saldo ⇒ Vencida", () => {
-    expect(clasificar(100, 1, "Pendiente" as never)).toBe("Vencida");
+    expect(clasificar(100, 0, 1, "Vigente" as never, "aprobada")).toBe("Vencida");
   });
-  it("días entre -3 y 0 ⇒ Por vencer", () => {
-    expect(clasificar(100, -2, "Pendiente" as never)).toBe("Por vencer");
-    expect(clasificar(100, 0, "Pendiente" as never)).toBe("Por vencer");
+  it("días entre -5 y 0 ⇒ Por vencer (ventana 5 días)", () => {
+    expect(clasificar(100, 0, -5, "Vigente" as never, "aprobada")).toBe("Por vencer");
+    expect(clasificar(100, 0, 0, "Vigente" as never, "aprobada")).toBe("Por vencer");
   });
-  it("días < -3 ⇒ Vigente", () => {
-    expect(clasificar(100, -10, "Pendiente" as never)).toBe("Vigente");
+  it("pagos parciales sin vencimiento inminente ⇒ Parcial", () => {
+    expect(clasificar(50, 50, -30, "Vigente" as never, "aprobada")).toBe("Parcial");
+  });
+  it("sin pagos y sin vencimiento cercano ⇒ Vigente", () => {
+    expect(clasificar(100, 0, -30, "Vigente" as never, "aprobada")).toBe("Vigente");
   });
 });
 
@@ -142,7 +158,7 @@ describe("mapJoinedRow", () => {
     });
     const out = mapJoinedRow(row);
     expect(out.dias_vencido).toBe(0);
-    expect(out.estatus).toBe("Sin saldo");
+    expect(out.estatus).toBe("Pagada");
   });
 
   it("propaga origen del proveedor y categoría", () => {

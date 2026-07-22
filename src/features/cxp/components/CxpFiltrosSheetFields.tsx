@@ -9,7 +9,17 @@ import {
 } from "@/components/ui/select";
 import type { EstatusCxP } from "@/features/cxp/services";
 
-const ESTATUS: Array<EstatusCxP | "todos"> = ["todos", "Vigente", "Por vencer", "Vencida"];
+// Nota: "Rechazada" y "Por aprobar" ya viven en el filtro de Aprobación,
+// se omiten aquí para no duplicar.
+const ESTATUS: Array<EstatusCxP | "todos"> = [
+  "todos",
+  "Vigente",
+  "Parcial",
+  "Por vencer",
+  "Vencida",
+  "Pagada",
+  "Borrador",
+];
 
 interface ProveedorOpt { id: string; nombre: string }
 interface CategoriaOpt { id: string; nombre: string }

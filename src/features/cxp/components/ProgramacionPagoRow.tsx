@@ -49,7 +49,7 @@ export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props
           <Badge variant="secondary" className="text-2xs">Programada · {bonita}</Badge>
         )}
         {yaSaldada && (
-          <Badge variant="outline" className="text-2xs">Sin saldo</Badge>
+          <Badge variant="outline" className="text-2xs">Pagada</Badge>
         )}
       </div>
       <div className="flex items-center gap-2 flex-wrap">

@@ -18,7 +18,31 @@ import {
 
 export type ProveedorFacturaRow = Tables<"proveedor_facturas">;
 export type EstadoProveedorFactura = ProveedorFacturaRow["estado"];
-export type EstatusCxP = "Vigente" | "Por vencer" | "Vencida" | "Pagada" | "Sin saldo";
+/**
+ * Estatus primario derivado (chip único de la tabla CxP).
+ * Orden = prioridad. El primero que aplique gana.
+ *   Cancelada       → estado = Cancelada
+ *   Rechazada       → estado_aprobacion = rechazada  (excluida de aging)
+ *   Borrador        → estado = Borrador
+ *   Por aprobar     → estado_aprobacion = pendiente
+ *   Pagada          → estado = Pagada o saldo ≤ 0.01
+ *   Vencida         → dias_vencido > 0 con saldo > 0
+ *   Por vencer      → dias_vencido entre -5 y 0 (ventana de tesorería 5 días)
+ *   Parcial         → hay pagos aplicados pero aún queda saldo
+ *   Vigente         → default
+ * SAT (uuid_estatus_sat) NO participa aquí; se muestra como chip aparte
+ * en el detalle de la factura.
+ */
+export type EstatusCxP =
+  | "Cancelada"
+  | "Rechazada"
+  | "Borrador"
+  | "Por aprobar"
+  | "Pagada"
+  | "Vencida"
+  | "Por vencer"
+  | "Parcial"
+  | "Vigente";
 
 export interface FacturaCxP {
   id: string;
