@@ -1,86 +1,42 @@
+## Diagnóstico
 
-# Mejorar los estatus de facturas de proveedor (CxP)
+- Sentry `FEATURES_CXP_HOOKS_USECARGAPDFIA_ERR` en `v13.303.99`.
+- Error real: `FunctionsFetchError: Failed to send a request to the Edge Function`, `phase = "request"`, `status = null`, 2 intentos, latencia 1.7s.
+- `supabase--edge_function_logs("parse-invoice-pdf")` → **"No logs found"**. Ni un boot, ni un shutdown. Comparado con `exchange-rates` / `sentry-tunnel` que sí tienen boots recientes.
+- Conclusión: la función `parse-invoice-pdf` **no está desplegada / no bootea**. El fetch del cliente falla antes de que el runtime la reciba, por eso Supabase-js lanza `FunctionsFetchError` (fetch failure, no HTTP status).
+- El nombre de la función en el cliente (`parse-invoice-pdf`) coincide con el `Deno.serve(wrapEdgeHandler("parse-invoice-pdf", …))` del servidor, así que **no** es un error de path.
 
-## Diagnóstico: hoy hay 4 "estatus" mezclados
+## Plan de arreglo
 
-Analogía: hoy el semáforo tiene cuatro colores encendidos a la vez y el usuario no sabe cuál mirar.
+### 1. Forzar redeploy explícito de `parse-invoice-pdf`
+Aunque las edge functions de Lovable auto-despliegan al guardar, este caso sugiere que el deploy inicial de `v13.303.99` no tomó (posiblemente por bundle o import). Usar `supabase--deploy_edge_functions(["parse-invoice-pdf"])` para forzarlo y luego `supabase--curl_edge_functions` con `OPTIONS` para confirmar CORS/preflight y con `POST` mínimo para confirmar que responde.
 
-En la BD y la UI conviven cuatro dimensiones que se muestran revueltas en un solo chip:
+### 2. Endurecer el error handling del cliente para diferenciar "no desplegada" vs "network"
+`invokeOnce` en `src/features/cxp/services/parsePdfInvoice.ts` hoy trata cualquier `FunctionsFetchError` como reintentable con el mensaje genérico *"Failed to send a request to the Edge Function"*. Cambios:
+- Detectar cuando `attempts === MAX_ATTEMPTS` y `phase === "request"` sin status → mostrar mensaje humano: *"El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de Captura manual o intentar de nuevo en unos segundos."* con toast persistente hasta que el usuario cierre.
+- Mantener el envío a Sentry pero enriquecer el `context` con `functionName: "parse-invoice-pdf"` para distinguir de futuros errores de otras funciones.
 
-| Dimensión | Dónde vive hoy | Valores actuales | Problema |
-|---|---|---|---|
-| Ciclo de vida | `proveedor_facturas.estado` (enum) | Borrador, Vigente, Pagada (y Cancelada) | Mezcla "pagada" con el ciclo administrativo |
-| Captura | `estado_captura` (text) | pendiente_xml, capturada, conciliada, pagada | Duplica "pagada" con `estado`; nadie lo mira |
-| Aprobación | `estado_aprobacion` (enum) | pendiente, aprobada, rechazada | No se muestra en la lista |
-| Vencimiento | Derivado en `clasificar()` | Vigente / Por vencer / Vencida / Pagada / Sin saldo | Se pisa con el ciclo de vida y con aprobación |
-| SAT | `uuid_estatus_sat` | Vigente, Cancelado, No Encontrado, Error | Vive aparte, aunque es crítico |
+### 3. Reducir superficie de fallo en el boot de la function
+Aunque el problema principal es de despliegue, hay dos oportunidades de robustez que reducen el riesgo de que un boot falle en frío:
+- **Mover la conversión a base64 fuera del hot path del boot** — ya está dentro del handler, ok.
+- **Validar `LOVABLE_API_KEY` en boot en vez de en cada request**: hoy se lee dentro de `handle()`. Si estuviera ausente, el error se ve al primer request. Mantenerlo así (no bloquear el boot), pero agregar un log `warn` al arrancar si la clave no existe, para que aparezca en logs y sirva de señal.
+- **Validar tamaño de FormData de forma temprana**: hoy se hace `await req.formData()` sobre 86 KB — es rápido, no cambia. Sin acción.
 
-Consecuencias observadas:
-- El chip `EstatusCxP` muestra "Vigente" a una factura **rechazada** o **cancelada en SAT** → falso positivo.
-- "Sin saldo" y "Pagada" conviven sin criterio claro (una factura saldada 100% por NC queda "Sin saldo").
-- "Por vencer" sólo cubre 3 días, insuficiente para tesorería.
-- No hay estatus para "En cancelación" ni "Rechazada" en la lista.
+### 4. Test end-to-end de fumar (smoke test)
+- `curl` a `/parse-invoice-pdf` con `OPTIONS` → esperar 200 y `access-control-allow-methods` incluyendo `POST`.
+- `curl` a `/parse-invoice-pdf` con `POST` + FormData vacío → esperar 400 con `"Falta archivo PDF"`. Si sale `FunctionsFetchError`, el deploy sigue mal.
+- Confirmar en `supabase--edge_function_logs("parse-invoice-pdf")` que aparecen los boots.
 
-## Propuesta: separar en 3 ejes + 1 estatus resumen
+### 5. Versión y CHANGELOG
+- `APP_VERSION` → `13.304.2`
+- Entrada en `CHANGELOG.md` describiendo: (a) redeploy forzado, (b) mensaje humano cuando la function no responde, (c) instrucciones al usuario de usar Captura manual como fallback.
 
-Un chip por eje en el detalle, y un solo **chip primario derivado** en la tabla que sigue una regla de prioridad clara.
+## Detalles técnicos
 
-```text
-Eje 1  CICLO       Borrador → Vigente → Pagada → Cancelada
-Eje 2  APROBACIÓN  Pendiente → Aprobada / Rechazada
-Eje 3  PAGO        Sin pagar → Parcial → Saldada  (+ Vencida / Por vencer)
-Extra  SAT         Vigente / Cancelado / No verificado
-```
+- `parse-invoice-pdf/index.ts` no cambia funcionalmente; sólo se re-despliega.
+- `parsePdfInvoice.ts` gana una rama que traduce `FunctionsFetchError` de 2 intentos fallidos a un `CfdiUploadError` con `code: "SERVICE_UNAVAILABLE"` y mensaje amigable en español. El hook `useCargaPdfIa.ts` ya maneja el error y muestra toast — sólo mejora el copy.
+- No hay migración de BD ni RLS; puramente edge function + capa cliente.
 
-### Regla de prioridad para el chip primario (tabla)
+## Riesgos
 
-```text
-1. Cancelada            (estado = Cancelada)         → gris
-2. Rechazada            (aprobacion = rechazada)     → rojo
-3. Borrador             (estado = Borrador)          → ámbar suave
-4. Pendiente aprobación (aprobacion = pendiente)     → ámbar
-5. SAT cancelado        (uuid_estatus_sat=Cancelado) → rojo (badge extra)
-6. Pagada               (estado = Pagada)            → verde
-7. Vencida              (dias > 0 y saldo > 0)       → rojo
-8. Por vencer           (0 ≥ dias ≥ -7)              → ámbar
-9. Parcial              (0 < pagado < total)         → azul
-10. Vigente             (default)                    → neutro
-```
-
-Cambios respecto a hoy:
-- Ventana "Por vencer" pasa de 3 → **7 días** (configurable).
-- Nuevo estatus **Parcial** (pagos aplicados pero no saldada).
-- Se elimina **"Sin saldo"** como categoría separada: si el saldo llegó a 0 vía NC, se muestra **Saldada** y en el detalle se ve que fue por NC.
-- Chips independientes visibles en el detalle: **Aprobación** y **SAT** siempre.
-- Filtros CxP se dividen en dos selects: **Estatus** (los 10 de arriba) y **Aprobación** (pendiente/aprobada/rechazada).
-
-### Limpieza de columnas duplicadas
-
-- `estado_captura` se **deprecia**: nadie lo consume en UI y duplica `estado` + `origen_carga`. Se deja la columna, se para de escribir, se retira del tipo TS.
-- `estado` gana un valor faltante que la UI ya asume: `Cancelada` (verificar que el enum ya lo tenga; si no, agregarlo).
-
-## Alcance de la implementación
-
-Frontend:
-1. Nuevo tipo `EstatusCxP` con los 10 valores anteriores + helper `clasificarFactura(f)` que aplica la prioridad.
-2. Nuevo `<CxpEstatusChip />` con colores tokens (`bg-destructive`, `bg-warning`, `bg-primary`, `bg-muted`).
-3. Detalle de factura: agregar chips separados `AprobacionChip` y `SatChip` junto al header.
-4. `CxpFiltros`: separar filtro de estatus y filtro de aprobación; ampliar opciones.
-5. `cxpKpis`: recalcular "Vencidas" y "Por vencer 7d" con la nueva regla; agregar KPI "Pendientes de aprobación".
-
-Backend (migración corta):
-1. Añadir valor `Cancelada` a `estado_proveedor_factura` si no existe.
-2. Comentar `estado_captura` como deprecated.
-3. Índice parcial `(organization_id, estado, fecha_vencimiento)` para acelerar el nuevo filtro (si falta).
-
-Fuera de alcance (para no crecer el cambio):
-- Rediseño visual del módulo (ya cerrado en v13.303.98).
-- Migrar reportes de contabilidad que consumen `estado_captura`.
-
-## Preguntas antes de codear
-
-1. ¿Ventana "Por vencer" en 7 días o prefieres 5 / 10?
-2. ¿Mostramos el chip de SAT siempre en la lista o solo en el detalle?
-3. ¿"Rechazada" debe seguir contando en el saldo/aging o excluirse (hoy cuenta)?
-
-Confírmame estas tres y ajusto el plan antes de pasar a build.
+- Si tras forzar redeploy sigue sin bootear, el problema está en el bundle (ej. import de `_shared/sentry.ts` con dependencia no compatible). En ese caso, siguiente iteración: aislar imports comentando `wrapEdgeHandler` temporalmente y usar handler pelón para confirmar dónde revienta.
