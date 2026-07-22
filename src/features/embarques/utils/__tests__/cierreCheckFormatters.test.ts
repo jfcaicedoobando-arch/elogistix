@@ -19,21 +19,46 @@ describe("cierreCheckFormatters", () => {
     expect(pick("not an object", "a")).toBeUndefined();
   });
 
-  it("fmtCxc: formatea saldos y facturas pendientes", () => {
+  it("fmtCxc: formatea saldos y facturas pendientes (legacy MXN)", () => {
     const res = fmtCxc({ total: 100, pagado: 40, facturas_pendientes: 2 });
     expect(res).toContain("2 factura(s) por cobrar");
     expect(res).toContain("60.00");
-    
+
     expect(fmtCxc({ total: 100, pagado: 100, facturas_pendientes: 0 })).toBeNull();
-    expect(fmtCxc({ total: 50, pagado: 49.995, facturas_pendientes: 0 })).toBeNull(); // Saldo < 0.01
+    expect(fmtCxc({ total: 50, pagado: 49.995, facturas_pendientes: 0 })).toBeNull();
   });
 
-  it("fmtCxp: formatea saldos y facturas de proveedor", () => {
+  it("fmtCxc: agrupa por moneda (nuevo shape)", () => {
+    const res = fmtCxc({
+      por_moneda: [
+        { moneda: "USD", total: 5220, pagado: 0, saldo: 5220, facturas_pendientes: 1 },
+        { moneda: "MXN", total: 100, pagado: 100, saldo: 0, facturas_pendientes: 0 },
+      ],
+    });
+    expect(res).toContain("1 factura(s) por cobrar");
+    expect(res).toContain("USD");
+    expect(res).toContain("5,220");
+    expect(res).not.toContain("MXN");
+  });
+
+  it("fmtCxp: formatea saldos y facturas de proveedor (legacy MXN)", () => {
     const res = fmtCxp({ total: 100, pagado: 40, facturas_pendientes: 1 });
     expect(res).toContain("1 factura(s) de proveedor por pagar");
     expect(res).toContain("60.00");
-    
+
     expect(fmtCxp({ total: 100, pagado: 100, facturas_pendientes: 0 })).toBeNull();
+  });
+
+  it("fmtCxp: agrupa por moneda (nuevo shape)", () => {
+    const res = fmtCxp({
+      por_moneda: [
+        { moneda: "USD", total: 1000, pagado: 200, saldo: 800, facturas_pendientes: 1 },
+        { moneda: "MXN", total: 500, pagado: 100, saldo: 400, facturas_pendientes: 1 },
+      ],
+    });
+    expect(res).toContain("2 factura(s) de proveedor por pagar");
+    expect(res).toContain("USD");
+    expect(res).toContain("MXN");
   });
 
   it("fmtDocs: maneja arrays y números de documentos faltantes", () => {
