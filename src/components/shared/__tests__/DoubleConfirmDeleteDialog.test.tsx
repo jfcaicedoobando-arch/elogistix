@@ -111,4 +111,24 @@ describe("<DoubleConfirmDeleteDialog />", () => {
     expect(screen.getByText(/eliminando/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /eliminando/i })).toBeDisabled();
   });
+
+  it("presionar Enter en el input ejecuta onConfirm cuando el texto es ELIMINAR", async () => {
+    const onConfirm = vi.fn();
+    render(
+      <DoubleConfirmDeleteDialog
+        open
+        onOpenChange={() => {}}
+        entityName="registro"
+        onConfirm={onConfirm}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+
+    const input = screen.getByPlaceholderText("ELIMINAR");
+    fireEvent.change(input, { target: { value: "ELIMINAR" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await Promise.resolve();
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
 });
