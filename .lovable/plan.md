@@ -1,80 +1,54 @@
-Ahora mismo no hay lugar para subir el XML de una nota de crédito de proveedor: `proveedor_notas_credito` solo almacena folio, fecha, monto y motivo; el registro es 100% manual. El plan agrega carga automática desde XML CFDI, reutilizando la infraestructura que ya existe para facturas de proveedor.
+## Objetivo
 
-### Objetivo
-Permitir subir el XML de la nota de crédito de un proveedor mexicano, parsear los datos automáticamente y adjuntar el XML/PDF al registro, igual que con las facturas de proveedor.
+Corregir un bug P0 introducido en el Bloque A antes de continuar con el Bloque B. Todo lo demás del Bloque A se auditó y quedó consistente.
 
-### Cambios propuestos
+## El bug
 
-#### 1. Base de datos
+El nuevo trigger `guard_estado_proveedor_factura` (FIX-R2-04) impide que una factura de proveedor salga del estado `Pagada` salvo que la sesión tenga `app.recalc_cxp = '1'`. Pero la función `_recalc_estado_proveedor_factura` (Fase N, migración `20260719032603`) — que corre automáticamente después de cada movimiento de `pagos_proveedor` y `proveedor_notas_credito` — hace exactamente esa transición (Pagada → Vigente) cuando el saldo vuelve a subir, y **no** setea esa marca de sesión.
 
-- Agregar a `public.proveedor_notas_credito`:
-  - `archivo_xml_url text` (path en storage)
-  - `archivo_pdf_url text` (path en storage)
-  - `uuid_fiscal text` (UUID del timbre fiscal del CFDI)
-  - `uuid_estatus_sat text` (estatus SAT: Vigente/Cancelado/No encontrado)
-  - `uuid_verificado_fecha timestamptz` (cuándo se verificó)
-  - `updated_at` ya existe; se actualiza vía trigger existente.
-- No requiere cambios a GRANTs/RLS principales; se mantiene la política actual de tenant + admin.
+Consecuencia: hoy fallan con `LC_CXP_PAGADA_INMUTABLE` flujos legítimos como:
+- Borrar/anular un pago aplicado a una factura Pagada.
+- Aplicar/cancelar una NC de proveedor sobre una factura Pagada.
+- Cualquier ajuste cambiario/soft-delete que reabra saldo.
 
-#### 2. Storage (bucket `facturas` existente)
+## Cambios
 
-- Reutilizar el bucket privado `facturas` y sus políticas por organización.
-- Convención de path: `{organization_id}/nc/{proveedor_nota_credito_id}/{filename}`.
-- Crear servicio `subirArchivosNcProveedor` en `src/features/cxp/services/cfdiStorage.ts` (o módulo hermano) para subir XML y/o PDF a la nota de crédito recién creada.
+Una sola migración correctiva, sin tocar el guard ni tocar código de la app.
 
-#### 3. Edge function `parse-cfdi-xml`
+### 1. Marcar la ventana de recálculo como confiable
 
-- Extender `parser.ts` para detectar el atributo `TipoDeComprobante` del CFDI y devolverlo en la respuesta (`cfdi.tipo_comprobante`).
-- Si el tipo no es `E` (Nota de crédito), devolver advertencia en el response para que el frontend muestre un aviso tipo "Este CFDI no es una nota de crédito; verifica antes de guardar".
-- No se requiere nueva función de edge; se reusa `parse-cfdi-xml`.
+Modificar `public._recalc_estado_proveedor_factura(uuid)` para envolver su `UPDATE` con `set_config('app.recalc_cxp','1', true)` antes y `set_config('app.recalc_cxp','0', true)` después (mismo patrón que ya usa `cancelar_factura_proveedor` con `app.cancelando_cxp`).
 
-#### 4. Frontend — modal de registro de NC
+Con esto, el guard sigue rechazando transiciones directas hechas desde código de app o SQL manual, pero deja pasar el recálculo interno del propio motor.
 
-- Modificar `src/features/cxp/components/DialogNotaCreditoProveedor.tsx`:
-  - Agregar selector de modo: "Captura manual" / "Cargar XML CFDI".
-  - En modo XML, reutilizar el hook `useCargaCfdi` y la experiencia de drop/arrastrar del componente `CargaCfdiSection` (versión simplificada para solo XML + PDF opcional).
-  - Al procesar el XML, prellenar automáticamente:
-    - `folio_nc` = `serie + folio` del CFDI.
-    - `fecha` = fecha del comprobante.
-    - `monto` = `total` del CFDI.
-    - `moneda` = moneda del CFDI.
-    - `uuid_fiscal` = UUID del timbre.
-    - `descripcion` = primer concepto o notas de la IA.
-  - Mostrar advertencia si el monto parseado excede el saldo de la factura (ya se valida hoy, pero ahora con datos automáticos).
-  - Al guardar, primero insertar la NC en BD, luego subir XML/PDF al storage y actualizar las URLs en el registro.
+### 2. Test manual de regresión
 
-#### 5. Frontend — listado de NCs
+Después de aplicar la migración, verificar en el entorno:
 
-- Modificar `src/features/cxp/components/NotasCreditoSection.tsx`:
-  - Mostrar iconos/indicadores de XML/PDF adjuntos en cada fila.
-  - Permitir abrir/descargar el XML y el PDF usando el helper existente `getFacturaSignedUrl`/`openFacturaInNewTab` (renombrar o extender a archivo genérico de bucket `facturas`).
+1. Crear factura proveedor, pagarla completa → estado `Pagada`.
+2. Soft-delete del pago → debe volver a `Vigente` sin lanzar `LC_CXP_PAGADA_INMUTABLE`.
+3. Registrar un nuevo pago parcial → debe quedar `Vigente` (o `Parcial` si aplica).
+4. Registrar segundo pago que salde → debe volver a `Pagada`.
+5. Intentar `UPDATE proveedor_facturas SET estado='Vigente'` a mano sobre una Pagada → debe seguir fallando con `LC_CXP_PAGADA_INMUTABLE` (confirma que el guard sigue vivo).
 
-#### 6. Verificación SAT opcional
+### 3. Bump de versión y changelog
 
-- Reutilizar el hook `useVerificarUuidSat` para permitir verificar el UUID de la NC contra el SAT, igual que en facturas de proveedor.
-- Mostrar badge de estatus SAT en la sección de NC.
+- `APP_VERSION` → `13.305.14`.
+- Entrada en `CHANGELOG.md`: "Fix hotfix Bloque A: recálculo automático de estado CxP ya no colisiona con el guard `LC_CXP_PAGADA_INMUTABLE`."
 
-#### 7. Validaciones y seguridad
+## Detalle técnico
 
-- El parseo debe seguir soportando CFDI 4.0 y rechazando > 2 MB y DOCTYPE.
-- El monto de la NC nunca puede superar el saldo de la factura (regla existente; se mantiene).
-- Sólo usuarios con rol `admin`/`super_admin` pueden crear NCs (regla existente).
-- Los archivos se guardan bajo el `organization_id` para respetar RLS del storage.
+```text
+Antes:                              Después:
+recalc → UPDATE estado              recalc → SET app.recalc_cxp='1'
+       → guard bloquea                    → UPDATE estado
+                                          → guard permite (marca ok)
+                                          → SET app.recalc_cxp='0'
+```
 
-#### 8. Tests y calidad
+El scope de `set_config(..., true)` es transaccional/local, así que la marca se limpia sola al terminar la transacción incluso si algo aborta. No se abre ventana de escritura no auditada desde la app porque solo se aplica dentro de esta función `SECURITY DEFINER` interna.
 
-- Test unitario para el helper de prellenado desde `CfdiParsedResponse`.
-- Test de servicio `subirArchivosNcProveedor` con mock de storage.
-- Asegurar que `architecture-baseline.test.ts` y lint (`bun run lint -- --max-warnings 0`) sigan pasando.
-- Actualizar `CHANGELOG.md` y `APP_VERSION` (bump a `13.305.11`).
+## Fuera de alcance
 
-### Entregables visibles
-
-1. En el modal "Registrar nota de crédito" aparece una pestaña "Cargar XML CFDI".
-2. Al arrastrar el XML del SAT, se llenan automáticamente folio, fecha, monto y moneda.
-3. El usuario puede adjuntar PDF opcional.
-4. En la tabla de NCs se ve un icono de XML/PDF para descargar cada nota.
-
-### Riesgos
-- El parser actual es genérico y no distingue I/E/P/N. Detectar `TipoDeComprobante` reduce el riesgo de cargar una factura normal como NC.
-- El flujo requiere crear el registro primero para obtener el `id` y luego subir archivos. Manejaremos rollback: si falla la subida a storage, se deja la NC sin archivos y se notifica al usuario para que pueda reintentar.
+- Bloque B (P1: 13 fixes) — se ejecuta después de que este parche esté verde.
+- Cambios en la app (frontend/edge functions): ninguno.
