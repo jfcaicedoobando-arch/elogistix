@@ -6,7 +6,7 @@ import { formatCurrency } from "@/lib/formatters";
 import type { FacturaCxP, KPIsCxP } from "@/features/cxp/services";
 
 function countLabel(count: number): string {
-  return `· ${count} ${count === 1 ? "factura" : "facturas"}`;
+  return `${count} ${count === 1 ? "factura" : "facturas"}`;
 }
 
 export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] }) {
@@ -29,25 +29,26 @@ export function CxpKpiCards({ kpis, data }: { kpis: KPIsCxP; data: FacturaCxP[] 
   }
   return (
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
-      <KpiCard label={`Por pagar MXN ${countLabel(porPagarMxn)}`} value={formatCurrency(kpis.por_pagar_mxn, "MXN")} />
-      <KpiCard label={`Por pagar USD ${countLabel(porPagarUsd)}`} value={formatCurrency(kpis.por_pagar_usd, "USD")} />
+      <KpiCard label="Por pagar MXN" value={formatCurrency(kpis.por_pagar_mxn, "MXN")} sublabel={countLabel(porPagarMxn)} />
+      <KpiCard label="Por pagar USD" value={formatCurrency(kpis.por_pagar_usd, "USD")} sublabel={countLabel(porPagarUsd)} />
       <KpiCard
-        label={`Vencido ${countLabel(vencidasN)}`}
+        label={`Vencido · ${countLabel(vencidasN)}`}
         value={formatCurrency(kpis.vencido_mxn, "MXN")}
         sublabel={formatCurrency(kpis.vencido_usd, "USD")}
         variant="destructive"
       />
       <KpiCard
-        label={`Por vencer 5 días ${countLabel(porVencer7d)}`}
+        label={`Por vencer 5d · ${countLabel(porVencer7d)}`}
         value={formatCurrency(kpis.por_vencer_7d_mxn, "MXN")}
         sublabel={formatCurrency(kpis.por_vencer_7d_usd, "USD")}
         variant="warning"
       />
       <KpiCard
-        label={`Programado 7 días ${countLabel(programadoN)}`}
+        label={`Programado 7d · ${countLabel(programadoN)}`}
         value={formatCurrency(programadoMxn, "MXN")}
         sublabel={formatCurrency(programadoUsd, "USD")}
       />
     </div>
   );
 }
+
