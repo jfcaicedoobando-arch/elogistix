@@ -1,35 +1,62 @@
-## Diagnóstico
+## Qué está pasando
 
-En el embarque `c996fa28…` el guardado falló porque una fila de contenedor tenía **Número = "1"**. La base de datos exige que el número siga el estándar **ISO 6346** (4 letras mayúsculas + 7 dígitos, ej. `MSCU1234567`) o quede vacío. El valor `"1"` no cumple y el check `contenedor_iso6346` bloquea el INSERT.
+Estás viendo dos síntomas de un mismo bug:
 
-**Analogía**: es como si en la caja de un supermercado el código de barras tuviera que ser de 11 caracteres exactos. Si tecleas solo `1`, el lector lo rechaza. Hoy el "lector" (la BD) sí rechaza, pero el formulario deja escribir cualquier cosa y solo te avisa al final con un error técnico feo.
+1. **El toast desaparece antes de que puedas hacerle clic.** Nuestro `Toaster` global tiene `duration={4000}`, así que el aviso de `toast.warning(...)` se auto-cierra en 4 s. Para un warning que reporta *"la factura se guardó pero un paso posterior falló"* eso es demasiado corto: es información crítica que el usuario necesita leer completa y poder cerrar manualmente. Además el mensaje viene sin botón de acción, así que no hay nada donde "hacer clic" (sólo la X del corner, que no alcanzas a apretar).
 
-## Alcance
+2. **La causa real del error**: `crearAjustesFacturaProveedor` inserta en `conceptos_costo` un renglón con `monto = monto_facturado − monto_devengado`. Cuando el proveedor te cobra **menos** de lo devengado (descuento), ese `delta` es **negativo**. Pero la tabla tiene un CHECK `conceptos_costo_monto_nonneg (monto >= 0)` que prohíbe montos negativos, así que el INSERT truena con el error que viste.
 
-Cambios sólo de **frontend** (UI + validación del formulario). No se toca la BD ni edge functions ni lógica de negocio del embarque.
+    En otras palabras: el modelo *dice* "signo negativo = descuento del proveedor → utilidad sube", pero la base de datos nunca aceptó ese contrato. Todo ajuste a la baja está roto hoy.
 
-## Qué se va a construir
+    Analogía: es como si tu cuaderno de gastos tuviera una regla "sólo se aceptan cantidades positivas" y quisieras anotar una devolución. No puedes; tienes que cambiar la regla o inventar una columna "tipo: cargo/devolución".
 
-1. **Validación en vivo en `FilaContenedor.tsx`**
-   - Autoconvertir a mayúsculas y quitar espacios al escribir.
-   - Marcar el input en rojo y mostrar mensaje inline: *"Formato ISO 6346: 4 letras + 7 dígitos (ej. MSCU1234567). Déjalo vacío si aún no lo asignan."* cuando el valor no esté vacío y no cumpla el patrón `^[A-Z]{4}[0-9]{7}$`.
-   - `aria-invalid` para accesibilidad.
+## Qué voy a cambiar
 
-2. **Bloqueo del wizard en `useEditarEmbarqueWizard.helpers.ts` (`validarContenedoresMaritimo`)**
-   - Además de exigir tipo, si algún `numero_contenedor` está lleno pero no cumple ISO 6346, devolver un error que reabra el paso 2 con mensaje claro.
-   - Mismo chequeo en el flujo de creación (`useEmbarqueSubmitOrchestrator`) para simetría.
+### 1. Permitir ajustes negativos en `conceptos_costo` (backend)
 
-3. **Mensaje amistoso cuando la BD devuelva `contenedor_iso6346`**
-   - En el mapper de errores de guardado del embarque, si el código Postgres es `23514` y el `constraint = contenedor_iso6346`, mostrar el mismo texto guía en vez del volcado técnico.
+Migración que reemplaza el CHECK global por uno condicional:
+
+```sql
+-- Los renglones normales siguen exigiendo monto >= 0.
+-- Sólo los ajustes de factura de proveedor pueden ser negativos
+-- (representan descuentos o notas de crédito sobre lo devengado).
+ALTER TABLE public.conceptos_costo
+  DROP CONSTRAINT IF EXISTS conceptos_costo_monto_nonneg;
+
+ALTER TABLE public.conceptos_costo
+  ADD CONSTRAINT conceptos_costo_monto_signo CHECK (
+    monto >= 0
+    OR origen = 'ajuste_factura_proveedor'
+  );
+```
+
+Verifico con `SELECT SUM(monto) …` en un embarque de prueba que la utilidad ya se calcula sumando (los negativos restan correctamente porque `SUM` respeta el signo).
+
+### 2. Mejorar el toast de error
+
+En `useNuevaFacturaProveedorForm.sideEffects.ts` los dos `toast.warning(...)` de "factura guardada pero X falló" pasan a:
+
+- `duration: Infinity` (no se auto-cierra).
+- Título breve + `description` con el detalle técnico.
+- `action` con botón "Copiar detalle" para que el usuario nos lo comparta si insiste.
+
+Así el usuario alcanza a leer, cerrar con la X, o copiar el mensaje.
+
+### 3. Test de regresión
+
+Test unitario en `crearAjustesFacturaProveedor.test.ts` que valide un caso con `delta < 0` (proveedor factura menos) devuelve `ajustesCreados: 1` sin lanzar.
+
+### 4. Versionado
+
+- `APP_VERSION` → `13.307.8`.
+- Entrada en `CHANGELOG.md` explicando el bug con analogía.
 
 ## Detalles técnicos
 
-- Patrón único centralizado en un helper `esNumeroContenedorValido(v: string): boolean` dentro de `src/features/embarques/domain/contenedorIso6346.ts` (nuevo, ~15 líneas) reutilizado por la fila, la validación del wizard y los tests.
-- Test unitario del helper (casos: vacío ✅, `MSCU1234567` ✅, `1` ❌, `mscu1234567` ❌ salvo que se normalice antes).
-- Test del helper `validarContenedoresMaritimo` extendido con caso de número inválido.
-- Bump `APP_VERSION` a `13.307.6+1` y entrada en `CHANGELOG.md`.
-
-## Fuera de alcance
-
-- No se elimina ni relaja la CHECK constraint (es útil como red de seguridad).
-- No se autocompleta el número desde ningún otro campo — sigue siendo captura manual.
+- Archivos modificados:
+  - `supabase/migrations/<nuevo>.sql` — reemplaza el CHECK.
+  - `src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts` — dos toasts persistentes.
+  - `src/features/cxp/services/__tests__/crearAjustesFacturaProveedor.test.ts` — caso delta negativo (mock devuelve `{ error: null }`).
+  - `src/constants/appVersion.ts` + `CHANGELOG.md`.
+- No toco el trigger de reversión (`tg_reverse_ajustes_factura_proveedor`) ni la UI de detalle CxP: siguen funcionando igual porque sólo hacen `SUM/UPDATE deleted_at`.
+- No cambio la severidad global del `Toaster` (otros toasts siguen con 4 s, que es lo correcto para éxito/info).
