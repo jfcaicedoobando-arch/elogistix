@@ -13,6 +13,7 @@ import {
   useNotasCreditoFactura, useAplicarNotaCredito, useAprobarNotaCredito, useCancelarNotaCredito,
 } from "@/features/cxp/hooks/useNotasCreditoProveedor";
 import { DialogNotaCreditoProveedor } from "./DialogNotaCreditoProveedor";
+import { NcSatBadge } from "./NcSatBadge";
 import { getFacturaSignedUrl } from "@/services/storage/facturas";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
