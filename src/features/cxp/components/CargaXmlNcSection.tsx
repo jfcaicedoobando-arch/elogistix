@@ -6,7 +6,6 @@
 import { useRef } from "react";
 import { Upload, FileText, Loader2, CheckCircle2, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
 import { useCargaCfdi } from "@/features/cxp/hooks/useCargaCfdi";
@@ -25,7 +24,7 @@ const TIPO_LABEL: Record<string, string> = {
 };
 
 export function CargaXmlNcSection({ parsed, onParsed }: Props) {
-  const { xml, pdf, loading, setXml, setPdf, reset, handleXml, procesar } = useCargaCfdi({
+  const { xml, pdf, loading, setPdf, reset, handleXml, procesar } = useCargaCfdi({
     categorias: [],
     onParsed: async (data, files) => {
       onParsed(data, files);
