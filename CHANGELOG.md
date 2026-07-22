@@ -1,5 +1,10 @@
 # Changelog
 
+## [13.307.24] - 2026-07-22
+- **ci(rls) · Stub de `cron.job` en `_ci_bootstrap.sql` para que la snapshot de RLS deje de reventar.** La suite "Prepare RLS database snapshot" fallaba con `ERROR: relation "cron.job" does not exist` al aplicar la migración `20260722132715_..._marcar_facturas_vencidas`, que hace `SELECT jobid FROM cron.job WHERE jobname = 'marcar_facturas_vencidas_diario'` para desprogramar por id antes de re-agendar. El bootstrap ya stubeaba `cron.schedule(text,text,text)` y `cron.unschedule(text)` pero no la tabla `cron.job` ni la sobrecarga `cron.unschedule(bigint)`. Se agregó ambos stubs (tabla vacía con `jobid/jobname/schedule/command` + overload por `bigint` que retorna `true`). Como la snapshot fallaba, el job dependiente `RLS tests result` quedó en `skipped` y el workflow terminó en rojo con "Una o más suites RLS fallaron (resultado: skipped)". Analogía: el CI tenía manuales para "programar" y "cancelar por nombre" pero no un cajón donde consultar el número de trabajo — ahora el cajón existe (vacío) y también se puede cancelar por número.
+
+
+
 ## [13.307.23] - 2026-07-22
 - **chore(cxp) · Split de `EliminarFacturaCxpDialog` (202→<200 líneas) para pasar Power of 10.** El test `architecture-baseline` marcó el diálogo con 202 líneas fuera de allowlist. Se extrajo el grid financiero (Total / Saldo / Moneda-TC) a `EliminarFacturaFinancialGrid.tsx` y se removió el helper `formatMonto` duplicado. Sin cambios de UI ni de comportamiento.
 

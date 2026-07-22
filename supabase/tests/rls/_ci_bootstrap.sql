@@ -124,11 +124,26 @@ CREATE SCHEMA IF NOT EXISTS net;
 CREATE SCHEMA IF NOT EXISTS pgmq;
 CREATE SCHEMA IF NOT EXISTS vault;
 
+-- Stub de la tabla cron.job — algunas migraciones consultan
+-- `SELECT jobid FROM cron.job WHERE jobname = ...` para desprogramar por id.
+CREATE TABLE IF NOT EXISTS cron.job (
+  jobid   bigint PRIMARY KEY,
+  jobname text UNIQUE,
+  schedule text,
+  command  text
+);
+
 CREATE OR REPLACE FUNCTION cron.schedule(job_name text, schedule text, command text)
 RETURNS bigint LANGUAGE sql AS $$ SELECT 0::bigint $$;
 
 CREATE OR REPLACE FUNCTION cron.unschedule(job_name text)
 RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
+
+-- Overload por jobid (bigint) — usada por migraciones que primero leen
+-- cron.job y luego desprograman por id numérico.
+CREATE OR REPLACE FUNCTION cron.unschedule(job_id bigint)
+RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
+
 
 CREATE OR REPLACE FUNCTION net.http_post(url text, body jsonb DEFAULT '{}'::jsonb, headers jsonb DEFAULT '{}'::jsonb)
 RETURNS bigint LANGUAGE sql AS $$ SELECT 0::bigint $$;
