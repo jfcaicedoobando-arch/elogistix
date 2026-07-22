@@ -14,6 +14,11 @@ const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
     message:
       "La factura ya está liquidada. No se pueden emitir notas de crédito sobre facturas sin saldo pendiente.",
   },
+  {
+    match: /contenedor_iso6346/i,
+    message:
+      "Número de contenedor inválido. Formato ISO 6346: 4 letras + 7 dígitos (ej. MSCU1234567). Déjalo vacío si aún no lo asignan.",
+  },
 ];
 
 export function getErrorMessage(err: unknown): string {
