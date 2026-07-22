@@ -6901,6 +6901,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      assert_proformas_moneda_soportada: {
+        Args: { p_proforma_ids: string[] }
+        Returns: undefined
+      }
       assert_transicion_embarque: {
         Args: {
           p_actual: Database["public"]["Enums"]["estado_embarque"]
@@ -7565,6 +7569,10 @@ export type Database = {
           tipo_contenedor: string
           total_count: number
         }[]
+      }
+      enforce_cotizacion_vigente: {
+        Args: { p_cotizacion_id: string }
+        Returns: undefined
       }
       enforce_revalidacion_sin_cambios: {
         Args: { p_cotizacion_id: string }

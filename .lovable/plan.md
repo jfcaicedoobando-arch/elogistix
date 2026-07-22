@@ -1,54 +1,81 @@
 ## Objetivo
 
-Corregir un bug P0 introducido en el Bloque A antes de continuar con el Bloque B. Todo lo demás del Bloque A se auditó y quedó consistente.
+Aplicar el **BLOQUE B (P1)** de la auditoría R2: 13 correcciones de alto impacto sobre motor financiero, RLS multi-tenant, máquina de estados y reportes. Todo se resuelve con una migración correctiva + ajustes mínimos en frontend donde afecta a filtros de moneda; no hay cambios de UI ni de rutas.
 
-## El bug
+**Nota:** FIX-R2-08 (diferencial cambiario CxP) ya quedó cubierto por FIX-R2-03 en el Bloque A; se registra como "ya aplicado" en el changelog y no se re-implementa aquí.
 
-El nuevo trigger `guard_estado_proveedor_factura` (FIX-R2-04) impide que una factura de proveedor salga del estado `Pagada` salvo que la sesión tenga `app.recalc_cxp = '1'`. Pero la función `_recalc_estado_proveedor_factura` (Fase N, migración `20260719032603`) — que corre automáticamente después de cada movimiento de `pagos_proveedor` y `proveedor_notas_credito` — hace exactamente esa transición (Pagada → Vigente) cuando el saldo vuelve a subir, y **no** setea esa marca de sesión.
+## Cambios (una sola migración `blockB_p1_r2.sql`)
 
-Consecuencia: hoy fallan con `LC_CXP_PAGADA_INMUTABLE` flujos legítimos como:
-- Borrar/anular un pago aplicado a una factura Pagada.
-- Aplicar/cancelar una NC de proveedor sobre una factura Pagada.
-- Cualquier ajuste cambiario/soft-delete que reabra saldo.
+Se agrupan por dominio para minimizar riesgo:
 
-## Cambios
+### 1. Motor de saldos y estados de factura (cliente)
+- **FIX-R2-05** — `recalcular_estado_factura` suma NCs aplicadas al total cobrado antes de comparar contra el total, para que factura 10000 + NC 4000 + pago 6000 quede en `Pagada` (no `Parcialmente pagada`).
+- **FIX-R2-07** — nuevo trigger `guard_estado_factura` sobre `public.facturas`:
+  - Prohíbe reabrir facturas `Cancelada`.
+  - Prohíbe pasar a `Cancelada` por UPDATE directo (sólo vía función `cancelar_factura` marcando `app.cancelando_factura='1'`) y sólo si no tiene pagos vivos.
+  - Restringe estados calculados (`Pagada`, `Parcialmente pagada`, `Vencida`) a la ventana `app.recalc_estado='1'` que setea `recalcular_estado_factura`.
+- **FIX-R2-15** — índice único parcial `facturas_numero_org_unico (organization_id, numero) WHERE deleted_at IS NULL AND numero IS NOT NULL`. Antes de crearlo, script defensivo `DO $$ ... $$` que renombra duplicados existentes a `numero || '-DUP-' || id[:8]` para no romper la migración.
 
-Una sola migración correctiva, sin tocar el guard ni tocar código de la app.
+### 2. Retenciones y prorrateo
+- **FIX-R2-06** — en `calc_pago_retenciones`, base = `subtotal + iva − ret_iva − ret_isr` (total neto), no `subtotal + iva`.
 
-### 1. Marcar la ventana de recálculo como confiable
+### 3. CxP: pagos, monedas, aging
+- **FIX-R2-08** — ya resuelto en Bloque A (FIX-R2-03). Sólo se documenta.
+- **FIX-R2-09** — CHECK constraints:
+  - `pagos_proveedor.monto > 0`, `pagos_factura.monto > 0`.
+  - `pagos_proveedor.tipo_cambio_usd IS NULL OR > 0` y análogo en `pagos_factura`.
+  - El `RAISE` cuando falta TC en cruce de monedas ya está en el guard existente (Bloque A).
+- **FIX-R2-10** — reescribir `cxp_por_pagar` y `cxp_aging_proveedores` para sumar `monto_en_moneda_factura` en lugar de `monto`. Verificar previamente los nombres reales de columna con `psql` antes de ejecutar la migración; ajustar si difieren.
 
-Modificar `public._recalc_estado_proveedor_factura(uuid)` para envolver su `UPDATE` con `set_config('app.recalc_cxp','1', true)` antes y `set_config('app.recalc_cxp','0', true)` después (mismo patrón que ya usa `cancelar_factura_proveedor` con `app.cancelando_cxp`).
+### 4. Multi-tenant / oráculos
+- **FIX-R2-13** — endurecer `cxp_aging_proveedores(p_org)` y `embarques_list_extras(p_ids)`:
+  - Ignorar `p_org` recibido; usar `current_user_org_id()` salvo `super_admin`.
+  - En `embarques_list_extras`, JOIN a `public.embarques` con `organization_id = current_user_org_id() OR has_role('super_admin')`.
+- **FIX-R2-14** — recargar policy `Tenant read clientes` para excluir al rol `cliente` (portal), que sigue leyendo vía la policy existente `Cliente read own clientes`. Verificar el nombre exacto y el helper `current_user_org_role()` antes de escribir.
 
-Con esto, el guard sigue rechazando transiciones directas hechas desde código de app o SQL manual, pero deja pasar el recálculo interno del propio motor.
+### 5. Reportes financieros
+- **FIX-R2-17** — tres arreglos:
+  - `cartera_pendiente()`: `saldo := total − pagado − nc_aplicadas`.
+  - `embarque_estado_financiero()`: excluir `Sustituida` además de `Cancelada`; normalizar capturado/pagado a MXN vía `convertir_a_mxn` antes de comparar semáforo de costos.
+  - `facturacion_por_emitir()`: usar `lower(p.estado_aprobacion) = 'aprobada'` para tolerar variantes de case.
 
-### 2. Test manual de regresión
+### 6. Cotizaciones
+- **FIX-R2-11** — en `aceptar_cotizacion_version` y `crear_embarque_borrador_desde_cotizacion`, `RAISE 'LC_COT_VENCIDA'` si `fecha_vigencia < CURRENT_DATE`.
 
-Después de aplicar la migración, verificar en el entorno:
+### 7. Proformas EUR
+- **FIX-R2-12** — en `convertir_proformas_a_factura`:
+  - Ampliar el filtro a `moneda IN ('MXN','USD','EUR')` en los `SELECT` sobre `conceptos_venta` y `proforma_conceptos_consolidados`.
+  - Emitir factura EUR (tercer bloque análogo al MXN/USD) o convertir EUR→MXN/USD si la política del proyecto lo pide. **Pregunta abierta**: el manifiesto no aclara; propongo emitir tercera factura EUR con `tipo_cambio_eur` del embarque como TC en base MXN.
+  - Si aparece moneda no soportada → `RAISE 'LC_PROFORMA_MONEDA_NO_SOPORTADA'`.
 
-1. Crear factura proveedor, pagarla completa → estado `Pagada`.
-2. Soft-delete del pago → debe volver a `Vigente` sin lanzar `LC_CXP_PAGADA_INMUTABLE`.
-3. Registrar un nuevo pago parcial → debe quedar `Vigente` (o `Parcial` si aplica).
-4. Registrar segundo pago que salde → debe volver a `Pagada`.
-5. Intentar `UPDATE proveedor_facturas SET estado='Vigente'` a mano sobre una Pagada → debe seguir fallando con `LC_CXP_PAGADA_INMUTABLE` (confirma que el guard sigue vivo).
+### 8. Signup y roles
+- **FIX-R2-16** — reescribir `handle_new_user_signup`:
+  - No insertar rol `admin` por defecto.
+  - Sólo si `NOT EXISTS (SELECT 1 FROM user_roles)` → asignar `super_admin` al primer usuario.
+  - Eliminar la creación automática de "Mi organización" con membresía admin. La membresía viene por invitación/onboarding.
+  - **Riesgo alto:** este cambio afecta el flujo de alta actual. Antes de aplicar, verificar que exista un flujo de invitación o de onboarding que asigne membresía; si no, dejar FIX-R2-16 fuera del bloque y ejecutarlo en un ciclo posterior con el flujo de invitación listo.
 
-### 3. Bump de versión y changelog
+## Verificaciones post-migración
 
-- `APP_VERSION` → `13.305.14`.
-- Entrada en `CHANGELOG.md`: "Fix hotfix Bloque A: recálculo automático de estado CxP ya no colisiona con el guard `LC_CXP_PAGADA_INMUTABLE`."
+1. `bunx vitest run` completo — atención a `saldo-factura-fase-d.test.ts` y tests de proformas.
+2. `bun run lint -- --max-warnings 0`.
+3. Query de humo:
+   - Crear factura + NC + pago → verificar estado final `Pagada` (R2-05).
+   - Intentar `UPDATE facturas SET estado='Cancelada'` a mano → debe fallar (R2-07).
+   - `INSERT` de segunda factura con mismo `numero` en misma org → debe fallar (R2-15).
+   - Como usuario portal `cliente`, `SELECT * FROM clientes` → sólo su registro (R2-14).
+   - Como Org B, `cxp_aging_proveedores('org-A-uuid')` → error `LC_ORG_FORBIDDEN` (R2-13).
+   - Proforma EUR → conversión emite factura EUR (R2-12).
 
-## Detalle técnico
+## Bump y changelog
 
-```text
-Antes:                              Después:
-recalc → UPDATE estado              recalc → SET app.recalc_cxp='1'
-       → guard bloquea                    → UPDATE estado
-                                          → guard permite (marca ok)
-                                          → SET app.recalc_cxp='0'
-```
+- `APP_VERSION` → `13.306.0` (subida de minor por cambio de contrato en máquina de estados de facturas y signup).
+- Entrada consolidada en `CHANGELOG.md` con un bullet por FIX + analogía global.
 
-El scope de `set_config(..., true)` es transaccional/local, así que la marca se limpia sola al terminar la transacción incluso si algo aborta. No se abre ventana de escritura no auditada desde la app porque solo se aplica dentro de esta función `SECURITY DEFINER` interna.
+## Preguntas antes de migrar
 
-## Fuera de alcance
+1. **FIX-R2-12 (proformas EUR):** ¿emitir tercera factura EUR o forzar conversión a MXN/USD antes de facturar?
+2. **FIX-R2-16 (signup):** ¿ya existe un flujo de invitación operativo, o dejamos este FIX para después y aplicamos los otros 12?
+3. **FIX-R2-14:** ¿el rol del portal se llama exactamente `cliente` en `current_user_org_role()`?
 
-- Bloque B (P1: 13 fixes) — se ejecuta después de que este parche esté verde.
-- Cambios en la app (frontend/edge functions): ninguno.
+Si prefieres, arranco con los FIX que no dependen de estas respuestas (05, 06, 07, 09, 10, 11, 13, 15, 17) y dejamos 12/14/16 para un segundo empujón.
