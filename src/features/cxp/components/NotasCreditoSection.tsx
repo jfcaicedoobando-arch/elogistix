@@ -91,6 +91,14 @@ export function NotasCreditoSection({ facturaId, monedaFactura, saldoFactura, ca
                   <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(Number(n.monto), n.moneda)}</td>
                   <td className="px-3 py-2 text-center"><NcEstadoBadge estado={n.estado} /></td>
                   <td className="px-3 py-2 text-center">
+                    <NcSatBadge
+                      facturaId={facturaId}
+                      ncId={n.id}
+                      uuidFiscal={n.uuid_fiscal}
+                      estatus={n.uuid_estatus_sat}
+                    />
+                  </td>
+                  <td className="px-3 py-2 text-center">
                     {n.archivo_xml_url ? (
                       <Button
                         size="sm" variant="ghost"
