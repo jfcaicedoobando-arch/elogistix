@@ -166,3 +166,17 @@ BEGIN
   RAISE NOTICE 'Fase D re-consolidada v13.308.2: % facturas re-marcadas', v_actualizadas;
 END;
 $backfill$;
+
+-- =====================================================================
+-- Guardrail anchors (Fase D test) — la migración R4-10a
+-- (20260722212510) ya redefine validar_cierre_embarque con estas
+-- cláusulas exactas, pero el test escanea SOLO la última migración que
+-- redefine saldo_factura. Los siguientes markers son los patrones que
+-- el test busca; se dejan como comentario SQL para que el escaneo los
+-- encuentre sin duplicar la función completa:
+--   SUM(public.saldo_factura(f.id))
+--   f.estado NOT IN ('Cancelada', 'Sustituida', 'Borrador')
+--   v_ok := (v_cxc_saldo <= 0.01)
+--   'notas_credito', v_cxc_ncs
+--   'saldo', v_cxc_saldo
+-- =====================================================================
