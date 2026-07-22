@@ -1,3 +1,4 @@
+import { isoUtcDay } from "@/lib/date/mx";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface MarcarFacturadaParams {
@@ -11,7 +12,7 @@ export interface MarcarFacturadaParams {
 function addDays(yyyyMmDd: string, days: number): string {
   const d = new Date(yyyyMmDd + "T00:00:00");
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return isoUtcDay(d);
 }
 
 /** Sube un archivo opcional al bucket privado `facturas`. Devuelve el path o null. */

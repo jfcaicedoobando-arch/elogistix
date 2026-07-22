@@ -33,7 +33,7 @@ export function rangoFechasIso(fechaIso: string, dias = TOLERANCIA_DIAS): { desd
   const desde = new Date(base); desde.setUTCDate(desde.getUTCDate() - dias);
   const hasta = new Date(base); hasta.setUTCDate(hasta.getUTCDate() + dias);
   return {
-    desde: desde.toISOString().slice(0, 10),
-    hasta: hasta.toISOString().slice(0, 10),
+    desde: isoUtcDay(desde),
+    hasta: isoUtcDay(hasta),
   };
 }

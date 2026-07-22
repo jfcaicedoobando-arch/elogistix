@@ -1,6 +1,7 @@
 /**
  * Orquestador: dispara loaders en paralelo y aplica cálculos puros.
  */
+import { isoUtcDay } from "@/lib/date/mx";
 import { inicioMesUtc, ym } from "./mxn";
 import { loadEmbarques, loadEmbarquesActivos, loadFacturas } from "./loaders";
 import {
@@ -16,7 +17,7 @@ export async function fetchDireccionKpis(
 ): Promise<DireccionKpis> {
   const base = inicioMesUtc(hoy);
   const desde = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - (HORIZONTE_MESES - 1), 1));
-  const desdeIso = desde.toISOString().slice(0, 10);
+  const desdeIso = isoUtcDay(desde);
   const mesActual = ym(base);
   const mesPrev = ym(new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - 1, 1)));
 

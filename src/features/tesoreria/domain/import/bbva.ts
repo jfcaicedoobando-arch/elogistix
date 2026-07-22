@@ -11,6 +11,7 @@
  *  - Calcula `hash_dedupe = sha1(fecha|concepto|referencia|cargo|abono)` para
  *    evitar duplicados al re-importar el mismo periodo.
  */
+import { isoUtcDay } from "@/lib/date/mx";
 import Papa from "papaparse";
 
 
@@ -44,11 +45,11 @@ function findColIdx(headers: string[], candidates: string[]): number {
 
 function parseFecha(raw: unknown): string | null {
   if (raw == null) return null;
-  if (raw instanceof Date) return raw.toISOString().slice(0, 10);
+  if (raw instanceof Date) return isoUtcDay(raw);
   if (typeof raw === "number") {
     // Excel serial
     const ms = (raw - 25569) * 86_400_000;
-    return new Date(ms).toISOString().slice(0, 10);
+    return isoUtcDay(new Date(ms));
   }
   const s = String(raw).trim();
   if (!s) return null;

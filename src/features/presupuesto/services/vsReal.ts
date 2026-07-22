@@ -3,6 +3,7 @@
  * Real = proveedor_facturas (por categoria_presupuesto_id) + liquidaciones_comision
  * que caigan en el mes (mapeadas a la categoría "Comisiones" por nombre).
  */
+import { isoUtcDay } from "@/lib/date/mx";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCategorias } from "./categorias";
 import { fetchPresupuestoMensualAnio } from "./mensual";
@@ -32,7 +33,7 @@ export interface ResumenVsReal {
 function ultimoDia(periodo: string): string {
   const [y, m] = periodo.split("-").map(Number);
   const d = new Date(y, m, 0);
-  return d.toISOString().slice(0, 10);
+  return isoUtcDay(d);
 }
 
 type PresupRow = { categoria_id: string; periodo: string; monto_mxn: number | string };

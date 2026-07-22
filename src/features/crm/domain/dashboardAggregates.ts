@@ -43,7 +43,7 @@ export interface EmbudoRow {
 export function isoDaysFromNow(d: number): string {
   const t = new Date();
   t.setDate(t.getDate() + d);
-  return t.toISOString().slice(0, 10);
+  return isoUtcDay(t);
 }
 
 export function computePipelinePonderado(ops: OpRow[]): number {
