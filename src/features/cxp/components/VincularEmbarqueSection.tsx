@@ -157,51 +157,12 @@ export function VincularEmbarqueSection({
       />
 
       <div className="space-y-3 max-h-72 overflow-y-auto rounded-lg border p-2 bg-background">
-        {gruposFiltrados.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic px-3 py-4 text-center">
-            Ningún concepto coincide con el filtro.
-          </p>
-        ) : gruposFiltrados.map((g) => (
-          <div key={g.embarqueId} className="rounded-md border bg-muted/20">
-            <div className="px-3 py-1.5 border-b bg-muted/40 text-xs font-medium">
-              Embarque <span className="font-mono">{g.expediente}</span>
-            </div>
-            <div className="divide-y">
-              {g.items.map((it) => {
-                const sel = seleccion[it.id];
-                const checked = !!sel;
-                return (
-                  <div key={it.id} className="px-3 py-2 flex items-center gap-3 text-sm">
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(v) => onToggle(it, !!v)}
-                      aria-label={`Vincular ${it.concepto}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate" title={it.concepto}>{it.concepto}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Cotizado: {formatCurrency(it.monto, it.moneda)}
-                      </div>
-                    </div>
-                    {checked && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-muted-foreground">{it.moneda}</span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          inputMode="decimal"
-                          value={sel.monto}
-                          onChange={(e) => onChangeMonto(it.id, Number(e.target.value) || 0)}
-                          className="w-28 h-8 text-right tabular-nums"
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        <VincularListaConceptos
+          grupos={gruposFiltrados}
+          seleccion={seleccion}
+          onToggle={onToggle}
+          onChangeMonto={onChangeMonto}
+        />
       </div>
     </div>
   );
