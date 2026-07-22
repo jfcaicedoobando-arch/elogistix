@@ -1,23 +1,22 @@
 import { Badge } from "@/components/ui/badge";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import {
-  statusColumn,
   moneyColumn,
   dateColumn,
 } from "@/components/shared/dataTable/columnBuilders";
-import { StatusBadge } from "@/components/shared/StatusBadge";
-import { sortByString, sortByNumber } from "@/components/shared/dataTable/sortingFns";
+import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { EstadoFacturaCxPCell } from "./EstadoFacturaCxPCell";
 
-// Estado del flujo de aprobación (dominio `aprobacion_cxp` en statusRegistry).
-type EstadoAprob = "pendiente" | "aprobada" | "rechazada";
-const APROB_STATUS: Record<EstadoAprob, string> = {
-  pendiente: "Por aprobar",
-  aprobada: "Aprobada",
-  rechazada: "Rechazada",
-};
-
+/**
+ * Columnas de la tabla `/compras/facturas`.
+ *
+ * v13.307.16 — Consolidamos "Estatus + Aprobación + Días + Prog. pago" en
+ * una sola columna "Estado" mediante `<EstadoFacturaCxPCell />`.  La celda
+ * pinta un chip primario (estatus del ciclo de vida) y hasta 5 chips
+ * secundarios (Parcial · +N d · NC · SAT ✓ · Prog. DD/MM) con tooltip.
+ */
 export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
   return defineColumns<FacturaCxP>([
     {
@@ -31,7 +30,6 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       id: "folio", header: "Folio prov.",
       accessorFn: (f) => f.folio_proveedor, enableSorting: true,
       sortingFn: sortByString<FacturaCxP>((f) => f.folio_proveedor),
-      // Ocultada en tableta (<xl) para eliminar scroll horizontal en /cxp.
       meta: { width: "w-[120px]", className: "whitespace-nowrap text-xs text-muted-foreground hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
       cell: ({ row }) => row.original.folio_proveedor,
     },
@@ -71,42 +69,7 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
         id: "vencimiento", header: "Vencimiento",
         accessor: (f) => f.fecha_vencimiento,
       }),
-      // En tableta damos algo menos de ancho para hacer espacio a Saldo/Estatus.
       meta: { width: "w-[95px] xl:w-[110px]", className: "text-xs whitespace-nowrap" },
-    },
-    {
-      ...dateColumn<FacturaCxP>({
-        id: "programado", header: "Prog. pago",
-        accessor: (f) => f.fecha_programada_pago,
-      }),
-      meta: {
-        width: "w-[100px]",
-        className: "text-xs whitespace-nowrap hidden xl:table-cell",
-        headerClassName: "hidden xl:table-cell",
-      },
-      cell: ({ row }) => {
-        const fecha = row.original.fecha_programada_pago;
-        const saldada = row.original.estatus === "Pagada";
-        if (!fecha || saldada) return <span className="text-muted-foreground">—</span>;
-        return (
-          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-2xs px-1.5 py-0 h-5 font-normal tabular-nums">
-            {new Date(`${fecha}T00:00:00`).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}
-          </Badge>
-        );
-      },
-    },
-    {
-      id: "dias", header: "Días",
-      accessorFn: (f) => f.dias_vencido, enableSorting: true,
-      sortingFn: sortByNumber<FacturaCxP>((f) => f.dias_vencido),
-      // Título compactado a "Días" (antes "Días vencido"). Se oculta en <xl.
-      meta: { width: "w-[70px]", align: "right", className: "tabular-nums text-xs hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => {
-        const f = row.original;
-        const saldada = f.estatus === "Pagada";
-        if (saldada || f.dias_vencido <= 0) return <span className="text-muted-foreground">—</span>;
-        return <span className="text-destructive font-medium">{f.dias_vencido}</span>;
-      },
     },
     {
       id: "moneda", header: "Mon.",
@@ -119,7 +82,6 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
         accessor: (f) => f.total,
         currencyAccessor: (f) => f.moneda,
       }),
-      // Total oculto en tableta (<xl): mostramos Saldo como monto operativo principal.
       meta: { width: "w-[120px]", align: "right", className: "tabular-nums whitespace-nowrap hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
     },
     {
@@ -139,29 +101,12 @@ export function buildCxPColumns(): ColumnDef<FacturaCxP, unknown>[] {
       meta: { width: "w-[115px] xl:w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap font-semibold" },
     },
     {
-      ...statusColumn<FacturaCxP>({
-        id: "estatus", header: "Estatus",
-        domain: "factura_cxp",
-        accessor: (f) => f.estatus,
-      }),
-      meta: { width: "w-[110px]" },
-    },
-    {
-      id: "aprobacion", header: "Aprobación",
-      accessorFn: (f) => APROB_STATUS[f.estado_aprobacion as EstadoAprob],
-      enableSorting: true,
-      sortingFn: sortByString<FacturaCxP>((f) => f.estado_aprobacion),
-      meta: { width: "w-[110px]", className: "hidden xl:table-cell", headerClassName: "hidden xl:table-cell" },
-      cell: ({ row }) => {
-        const ap = row.original.estado_aprobacion as EstadoAprob;
-        return (
-          <StatusBadge
-            domain="aprobacion_cxp"
-            status={APROB_STATUS[ap]}
-            className={ap === "rechazada" && row.original.motivo_rechazo ? "cursor-help" : undefined}
-          />
-        );
-      },
+      id: "estado", header: "Estado",
+      accessorFn: (f) => f.estatus, enableSorting: true,
+      sortingFn: sortByString<FacturaCxP>((f) => f.estatus),
+      meta: { width: "w-[160px]" },
+      cell: ({ row }) => <EstadoFacturaCxPCell factura={row.original} />,
     },
   ]);
 }
+
