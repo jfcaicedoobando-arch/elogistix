@@ -3656,8 +3656,8 @@ export type Database = {
           tarifa_revalidada_por?: string | null
           tiene_proforma?: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
-          tipo_cambio_eur?: number
-          tipo_cambio_usd?: number
+          tipo_cambio_eur: number
+          tipo_cambio_usd: number
           tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_servicio?:
@@ -7560,6 +7560,8 @@ export type Database = {
         Returns: number
       }
       ensure_demo_membership: { Args: { _user_id: string }; Returns: undefined }
+      es_admin_catalogo: { Args: { _uid: string }; Returns: boolean }
+      es_escritor_financiero: { Args: { _uid: string }; Returns: boolean }
       expirar_cotizaciones_job: { Args: never; Returns: Json }
       facturacion_por_emitir: {
         Args: never
