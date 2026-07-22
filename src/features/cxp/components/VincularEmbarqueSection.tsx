@@ -173,6 +173,33 @@ export function VincularEmbarqueSection({
           </div>
         ))}
       </div>
+
+      <div className="rounded-md border border-dashed bg-muted/10 px-3 py-2 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            ¿No aparece el embarque que buscas?
+          </p>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-xs"
+            onClick={() => setMostrarBusqueda((v) => !v)}
+          >
+            <Search className="h-3.5 w-3.5 mr-1" />
+            {mostrarBusqueda ? "Ocultar buscador" : "Buscar otro embarque"}
+          </Button>
+        </div>
+        {mostrarBusqueda && (
+          <SugerirEmbarqueBlock
+            proveedorId={proveedorId}
+            proveedorNombre={proveedorNombre}
+            organizationId={organizationId}
+            seleccionado={embarqueAdHoc}
+            onSeleccionar={onEmbarqueAdHoc}
+          />
+        )}
+      </div>
     </div>
   );
 }
