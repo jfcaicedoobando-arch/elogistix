@@ -170,50 +170,26 @@ export function AdjuntoRow({
         onUpload={onUpload} onRemove={onRemove}
       />
 
-      <AlertDialog open={!!confirmReplace} onOpenChange={(o) => !o && setConfirmReplace(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Reemplazar el {tipo} actual?</AlertDialogTitle>
-            <AlertDialogDescription>
-              El archivo existente se sobreescribirá con
-              <span className="font-medium"> {confirmReplace?.name}</span>. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (confirmReplace && onUpload) onUpload(confirmReplace, tipo);
-                setConfirmReplace(null);
-              }}
-            >
-              Reemplazar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmReplaceDialog
+        file={confirmReplace}
+        tipo={tipo}
+        onCancel={() => setConfirmReplace(null)}
+        onConfirm={(file) => {
+          if (onUpload) onUpload(file, tipo);
+          setConfirmReplace(null);
+        }}
+      />
 
-      <AlertDialog open={confirmRemove} onOpenChange={setConfirmRemove}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Quitar el {tipo} adjunto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              La factura permanecerá, pero ya no tendrá el archivo {tipo}. Podrás adjuntar uno nuevo después.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (path && onRemove) onRemove(path, tipo);
-                setConfirmRemove(false);
-              }}
-            >
-              Quitar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmRemoveDialog
+        open={confirmRemove}
+        tipo={tipo}
+        onOpenChange={setConfirmRemove}
+        onConfirm={() => {
+          if (path && onRemove) onRemove(path, tipo);
+          setConfirmRemove(false);
+        }}
+      />
+
     </div>
   );
 }
