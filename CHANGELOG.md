@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.11] - 2026-07-22
+- **fix(cxp) · Orden ascendente de embarques al vincular costos.** En "Capturar factura de proveedor → Vincular costos" los grupos de conceptos pendientes ahora salen ordenados por número de expediente de menor a mayor (natural sort: `EXP-002` va antes que `EXP-010`). Antes salían en el orden que devolvía la consulta. Analogía: como acomodar los folders del archivero por número de expediente en vez de dejarlos como cayeron.
+
 ## [13.307.10] - 2026-07-22
 - **feat(cxp) · Filtro sobre los costos pendientes al vincular factura de proveedor.** Cuando el proveedor trae muchos `conceptos_costo` pendientes (fletes, maniobras, demoras…), antes había que scrollear a mano toda la lista. Ahora arriba de la lista hay un buscador que filtra por concepto, expediente o monto, y un toggle "Sólo marcados" para revisar los que llevas seleccionados antes de guardar; ambos con botón "Limpiar" y contador `Mostrando X de Y`. Se revierte el buscador de embarque ad-hoc de v13.307.9 (no era lo pedido). La sección se dividió en `VincularFiltroToolbar` + `VincularListaConceptos` y se agregó el helper puro `filtrarGrupos` con tests. Analogía: en vez de leer el menú entero, ahora escribes "flete" y sólo te aparecen los platillos con esa palabra.
 

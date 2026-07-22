@@ -24,7 +24,9 @@ export function agruparPorEmbarque(items: ConceptoCostoAbierto[]): Grupo[] {
       items: [it],
     });
   }
-  return Array.from(map.values());
+  return Array.from(map.values()).sort((a, b) =>
+    a.expediente.localeCompare(b.expediente, "es", { numeric: true, sensitivity: "base" }),
+  );
 }
 
 export interface FiltrarGruposArgs {
