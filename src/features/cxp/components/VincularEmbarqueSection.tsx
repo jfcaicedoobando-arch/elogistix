@@ -7,20 +7,20 @@
  * con el del concepto_costo; el usuario puede editarlo.
  */
 import { useMemo, useState } from "react";
-import { Loader2, Link2, Sparkles, Search } from "lucide-react";
+import { Loader2, Link2, Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters";
 import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { SugerenciaVinculo } from "@/features/compras/matching/matcher";
 import { SugerirEmbarqueBlock, type EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
+import { VincularFiltroToolbar } from "./VincularFiltroToolbar";
+import { VincularListaConceptos } from "./VincularListaConceptos";
 import {
   agruparPorEmbarque,
   calcularPuedeSugerir,
   ejecutarSugerencia,
+  filtrarGrupos,
 } from "./vincularEmbarqueHelpers";
 
 export interface SeleccionLinea {
@@ -46,7 +46,6 @@ interface Props {
   onEmbarqueAdHoc: (sel: EmbarqueSeleccionado | null) => void;
 }
 
-
 export function VincularEmbarqueSection({
   proveedorId, proveedorNombre, organizationId, seleccion, onToggle, onChangeMonto,
   onAplicarSugerencias, facturaDescripcion, facturaMonto, facturaMoneda,
@@ -55,7 +54,22 @@ export function VincularEmbarqueSection({
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
-  const [mostrarBusqueda, setMostrarBusqueda] = useState<boolean>(!!embarqueAdHoc);
+  const [filtro, setFiltro] = useState<string>("");
+  const [soloMarcados, setSoloMarcados] = useState<boolean>(false);
+
+  const gruposFiltrados = useMemo(
+    () => filtrarGrupos(grupos, { texto: filtro, soloMarcados, seleccion }),
+    [grupos, filtro, soloMarcados, seleccion],
+  );
+  const totalConceptos = useMemo(
+    () => grupos.reduce((n, g) => n + g.items.length, 0),
+    [grupos],
+  );
+  const conceptosVisibles = useMemo(
+    () => gruposFiltrados.reduce((n, g) => n + g.items.length, 0),
+    [gruposFiltrados],
+  );
+  
 
   const puedeSugerir = calcularPuedeSugerir({
     onAplicar: onAplicarSugerencias,
@@ -130,75 +144,23 @@ export function VincularEmbarqueSection({
           {ultimaSugerencia.length === 1 ? "" : "s"}. Ajusta lo que no cuadre antes de guardar.
         </div>
       )}
-      <div className="space-y-3 max-h-72 overflow-y-auto rounded-lg border p-2 bg-background">
-        {grupos.map((g) => (
-          <div key={g.embarqueId} className="rounded-md border bg-muted/20">
-            <div className="px-3 py-1.5 border-b bg-muted/40 text-xs font-medium">
-              Embarque <span className="font-mono">{g.expediente}</span>
-            </div>
-            <div className="divide-y">
-              {g.items.map((it) => {
-                const sel = seleccion[it.id];
-                const checked = !!sel;
-                return (
-                  <div key={it.id} className="px-3 py-2 flex items-center gap-3 text-sm">
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(v) => onToggle(it, !!v)}
-                      aria-label={`Vincular ${it.concepto}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate" title={it.concepto}>{it.concepto}</div>
-                      <div className="text-xs text-muted-foreground">
-                        Cotizado: {formatCurrency(it.monto, it.moneda)}
-                      </div>
-                    </div>
-                    {checked && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-muted-foreground">{it.moneda}</span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          inputMode="decimal"
-                          value={sel.monto}
-                          onChange={(e) => onChangeMonto(it.id, Number(e.target.value) || 0)}
-                          className="w-28 h-8 text-right tabular-nums"
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
 
-      <div className="rounded-md border border-dashed bg-muted/10 px-3 py-2 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground">
-            ¿No aparece el embarque que buscas?
-          </p>
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="h-auto p-0 text-xs"
-            onClick={() => setMostrarBusqueda((v) => !v)}
-          >
-            <Search className="h-3.5 w-3.5 mr-1" />
-            {mostrarBusqueda ? "Ocultar buscador" : "Buscar otro embarque"}
-          </Button>
-        </div>
-        {mostrarBusqueda && (
-          <SugerirEmbarqueBlock
-            proveedorId={proveedorId}
-            proveedorNombre={proveedorNombre}
-            organizationId={organizationId}
-            seleccionado={embarqueAdHoc}
-            onSeleccionar={onEmbarqueAdHoc}
-          />
-        )}
+      <VincularFiltroToolbar
+        filtro={filtro}
+        onFiltro={setFiltro}
+        soloMarcados={soloMarcados}
+        onSoloMarcados={setSoloMarcados}
+        visibles={conceptosVisibles}
+        total={totalConceptos}
+      />
+
+      <div className="space-y-3 max-h-72 overflow-y-auto rounded-lg border p-2 bg-background">
+        <VincularListaConceptos
+          grupos={gruposFiltrados}
+          seleccion={seleccion}
+          onToggle={onToggle}
+          onChangeMonto={onChangeMonto}
+        />
       </div>
     </div>
   );

@@ -1,32 +1,43 @@
 ## Objetivo
-Permitir buscar cualquier embarque al vincular una factura de proveedor, incluso cuando el proveedor ya tiene `conceptos_costo` pendientes precargados.
+Agregar un buscador/filtro **dentro** de la lista de conceptos de costo pendientes en el modal "Capturar factura de proveedor", para encontrar rápido el concepto/embarque a vincular cuando el proveedor trae muchos costos precargados.
 
-## Comportamiento actual
-En `VincularEmbarqueSection` (modal "Capturar factura de proveedor"):
-- Si el proveedor tiene costos pendientes → se muestra la lista de conceptos agrupada por embarque, **sin** buscador.
-- Si NO tiene costos pendientes → se muestra `SugerirEmbarqueBlock` con buscador (expediente / BL / cliente) para crear un concepto ad-hoc.
+## Contexto
+`VincularEmbarqueSection.tsx` muestra los `conceptos_costo` pendientes agrupados por embarque (`agruparPorEmbarque`). Hoy no hay forma de filtrar: si el proveedor tiene 30–50 conceptos hay que scrollear.
 
-El problema: cuando sí hay conceptos precargados, el usuario queda atrapado en esa lista y no puede vincular a otro embarque distinto.
+En el paso anterior (v13.307.9) agregué un buscador de **otro** embarque ad-hoc. No era lo pedido: se elimina.
 
 ## Cambio propuesto
-Mostrar también un bloque de búsqueda de embarque ad-hoc cuando ya existen conceptos pendientes, plegado por defecto para no saturar la UI.
 
-### UI
-En `VincularEmbarqueSection.tsx`, debajo de la lista agrupada de conceptos pendientes, agregar:
-- Un separador sutil ("¿No aparece el embarque que buscas?").
-- Un `<Button variant="link" size="sm">` que hace toggle de un bloque expandible.
-- Al expandir, renderizar el `SugerirEmbarqueBlock` existente (mismo componente ya usado en el caso vacío), reutilizando `embarqueAdHoc` / `onEmbarqueAdHoc` que ya recibe la sección.
-- Si el usuario selecciona un embarque ad-hoc, mantener visibles ambos: los conceptos marcados + la tarjeta verde de "Se creará un costo en el embarque X".
+### 1) Revertir el bloque ad-hoc agregado en v13.307.9
+En `VincularEmbarqueSection.tsx`:
+- Quitar el `<div className="rounded-md border border-dashed …">` con el botón "Buscar otro embarque" y su `SugerirEmbarqueBlock` embebido.
+- Quitar el estado `mostrarBusqueda` y el import de `Search`.
+- El componente vuelve a comportarse como antes cuando hay conceptos precargados (sólo lista), y sigue mostrando `SugerirEmbarqueBlock` cuando no hay ninguno (caso vacío).
 
-### Lógica
-- Sin cambios en hooks, servicios ni submit: `useNuevaFacturaProveedorForm` ya sabe manejar `embarqueAdHoc` en paralelo a `seleccion` de conceptos.
-- Solo estado local `mostrarBusqueda` en `VincularEmbarqueSection`; se abre automáticamente si `embarqueAdHoc` ya existe al montar.
+### 2) Añadir filtro sobre la lista de conceptos pendientes
+En `VincularEmbarqueSection.tsx`:
+- Nuevo estado local `filtro: string`.
+- Input de búsqueda arriba del contenedor `max-h-72 overflow-y-auto`, con ícono lupa y placeholder "Filtrar por concepto, expediente o monto…".
+- Botón "Sólo marcados" (toggle) para reducir la lista a los conceptos ya seleccionados (útil para revisar antes de guardar).
+- Lógica de filtrado (memoizada) que aplica sobre `grupos`:
+  - Si `filtro` tiene texto: se conservan los `items` cuyo `concepto` o `monto` (comparado como string) o cuyo `expediente` del grupo contenga el término (case-insensitive, `trim`).
+  - Si `soloMarcados` está activo: se conservan sólo los `items` con `seleccion[it.id]`.
+  - Los grupos que quedan sin items se ocultan.
+- Contador secundario: `"Mostrando X de Y conceptos"` debajo del input cuando hay filtro/toggle activo.
+- Botón "Limpiar" que resetea `filtro` y `soloMarcados` cuando alguno esté activo.
+- Estado vacío filtrado: mensaje "Ningún concepto coincide con el filtro" dentro del contenedor.
+
+### 3) Helper puro
+Extraer `filtrarGrupos(grupos, { texto, soloMarcados, seleccion })` en `vincularEmbarqueHelpers.ts` con test unitario nuevo en `__tests__/vincularEmbarqueHelpers.test.ts` (3–4 casos: sin filtro, por concepto, por expediente, sólo marcados). Mantiene la función pura y facilita cumplir Power-of-10.
 
 ## Fuera de alcance
-- No se cambia el flujo cuando no hay costos pendientes (sigue mostrando el buscador de una).
-- No se toca lógica de matching, RPCs ni persistencia.
-- No se modifica `SugerirEmbarqueBlock`.
+- No se toca `SugerirEmbarqueBlock` ni el flujo ad-hoc.
+- No se cambia el submit ni servicios (`useNuevaFacturaProveedorForm`, `vincularFacturaAConceptos`).
+- No se agrega paginación server-side; el filtro es puramente cliente sobre lo que ya trae `useConceptosCostoAbiertos` (limit 200).
 
-## Detalles técnicos
-- Archivo tocado: `src/features/cxp/components/VincularEmbarqueSection.tsx` (≈ +20 líneas, dentro del límite de 200).
-- Bump `APP_VERSION` a `13.307.9` y entrada en `CHANGELOG.md`.
+## Archivos tocados
+- `src/features/cxp/components/VincularEmbarqueSection.tsx` — quitar bloque ad-hoc, agregar input + toggle + memoización.
+- `src/features/cxp/components/vincularEmbarqueHelpers.ts` — nuevo `filtrarGrupos`.
+- `src/features/cxp/components/__tests__/vincularEmbarqueHelpers.test.ts` — casos del nuevo helper.
+- `src/constants/appVersion.ts` → `13.307.10`.
+- `CHANGELOG.md` — entrada nueva.
