@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.307.10] - 2026-07-22
+- **feat(cxp) · Filtro sobre los costos pendientes al vincular factura de proveedor.** Cuando el proveedor trae muchos `conceptos_costo` pendientes (fletes, maniobras, demoras…), antes había que scrollear a mano toda la lista. Ahora arriba de la lista hay un buscador que filtra por concepto, expediente o monto, y un toggle "Sólo marcados" para revisar los que llevas seleccionados antes de guardar; ambos con botón "Limpiar" y contador `Mostrando X de Y`. Se revierte el buscador de embarque ad-hoc de v13.307.9 (no era lo pedido). La sección se dividió en `VincularFiltroToolbar` + `VincularListaConceptos` y se agregó el helper puro `filtrarGrupos` con tests. Analogía: en vez de leer el menú entero, ahora escribes "flete" y sólo te aparecen los platillos con esa palabra.
+
 ## [13.307.9] - 2026-07-22
 - **feat(cxp) · Buscar embarque al vincular factura de proveedor.** En "Capturar factura de proveedor", cuando el proveedor ya tenía costos precargados, sólo podías marcar de esa lista y no había forma de ligar la factura a otro embarque distinto. Ahora al pie de la lista aparece "¿No aparece el embarque que buscas? → Buscar otro embarque", que despliega el mismo buscador (expediente / BL / cliente) que ya usábamos cuando no había costos precargados. Puedes seleccionar un embarque ad-hoc en paralelo a los conceptos marcados; al guardar se crea un `concepto_costo` nuevo en ese embarque. Analogía: antes sólo podías escoger platillos del menú del día; ahora además puedes pedir "algo fuera de carta" sin cerrar el menú.
 
