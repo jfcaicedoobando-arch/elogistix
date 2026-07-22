@@ -71,22 +71,7 @@ async function invokeOnce(file: File, categorias: { id: string; nombre: string }
   }
 }
 
-async function invokeWithRetry(
-  file: File,
-  categorias: { id: string; nombre: string }[],
-): Promise<{ data: CfdiParsedResponse; latencyMs: number; attempts: number }> {
-  const t0 = performance.now();
-  let last: Attempt | null = null;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const r = await invokeOnce(file, categorias);
-    if (r.ok && r.data) {
-      return { data: r.data, latencyMs: Math.round(performance.now() - t0), attempts: attempt };
-    }
-    last = r;
-    if (!r.retryable || attempt === MAX_ATTEMPTS) break;
-    await new Promise<void>((res) => setTimeout(res, BACKOFF_MS));
-  }
-  const latencyMs = Math.round(performance.now() - t0);
+function buildFailure(file: File, last: Attempt | null, latencyMs: number): CfdiUploadError {
   const serviceUnavailable = last?.phase === "request" && last?.status === null;
   const friendlyMessage = serviceUnavailable
     ? "El servicio de captura por IA no está disponible en este momento. Puedes usar el tab de \"Captura manual\" o intentar de nuevo en unos segundos."
@@ -109,9 +94,27 @@ async function invokeWithRetry(
     tags: { feature: "pdf_ia_upload", phase: err.context.phase, functionName: "parse-invoice-pdf" },
     contexts: { pdf_ia: { pdf_size: file.size, latency_ms: latencyMs, service_unavailable: serviceUnavailable, ...err.context } },
   });
-  throw err;
-
+  return err;
 }
+
+async function invokeWithRetry(
+  file: File,
+  categorias: { id: string; nombre: string }[],
+): Promise<{ data: CfdiParsedResponse; latencyMs: number; attempts: number }> {
+  const t0 = performance.now();
+  let last: Attempt | null = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const r = await invokeOnce(file, categorias);
+    if (r.ok && r.data) {
+      return { data: r.data, latencyMs: Math.round(performance.now() - t0), attempts: attempt };
+    }
+    last = r;
+    if (!r.retryable || attempt === MAX_ATTEMPTS) break;
+    await new Promise<void>((res) => setTimeout(res, BACKOFF_MS));
+  }
+  throw buildFailure(file, last, Math.round(performance.now() - t0));
+}
+
 
 export async function parsePdfInvoice(
   file: File,
