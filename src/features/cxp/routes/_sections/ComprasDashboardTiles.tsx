@@ -1,77 +1,79 @@
 /**
- * Tiles del dashboard `/compras`: `KpiCard` reutilizable + `QuickLink`.
- * Extraídos en v13.182.0 (Wave 2 splits).
- * v13.213.35 — soporte de `hint` (tooltip) para explicar cada KPI.
+ * Tiles del dashboard `/compras` — v13.307.22: KPI clickeable + eliminación de QuickLink.
+ * Los KPIs ahora navegan a la página que corresponde a la acción, eliminando la
+ * fila redundante de QuickLinks (que duplicaba el sidebar).
  */
 import { Link } from "react-router-dom";
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowUpRight, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+export type KpiTone = "default" | "info" | "warn" | "danger" | "success";
+
+const TONE_DOT: Record<KpiTone, string> = {
+  default: "bg-muted-foreground/40",
+  info: "bg-sky-500",
+  warn: "bg-amber-500",
+  danger: "bg-destructive",
+  success: "bg-emerald-500",
+};
+
+const TONE_VALUE: Record<KpiTone, string> = {
+  default: "text-foreground",
+  info: "text-foreground",
+  warn: "text-foreground",
+  danger: "text-destructive",
+  success: "text-foreground",
+};
+
 export function KpiCard({
-  label, value, sub, tone = "default", hint,
+  label, value, sub, tone = "default", hint, to, icon,
 }: {
   label: string;
   value: string | number;
   sub?: string;
-  tone?: "default" | "warn" | "danger";
+  tone?: KpiTone;
   hint?: string;
+  to?: string;
+  icon?: React.ReactNode;
 }) {
-  const toneCls = tone === "danger" ? "text-destructive"
-    : tone === "warn" ? "text-warning" : "text-foreground";
-  return (
-    <Card>
+  const body = (
+    <Card className={cn(
+      "h-full transition-colors",
+      to && "group-hover:border-primary/40 group-hover:bg-muted/30",
+    )}>
       <CardContent className="p-4">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <p className="text-xs text-muted-foreground truncate">{label}</p>
-          {hint && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Info: ${label}`}
-                  className="inline-flex text-muted-foreground/70 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
-                >
-                  <Info className="h-3 w-3" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[260px] text-xs">{hint}</TooltipContent>
-            </Tooltip>
-          )}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", TONE_DOT[tone])} aria-hidden />
+            <p className="text-xs text-muted-foreground truncate">{label}</p>
+            {hint && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Info: ${label}`}
+                    className="inline-flex text-muted-foreground/70 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
+                  >
+                    <Info className="h-3 w-3" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[260px] text-xs">{hint}</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+          {to ? (
+            <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0" />
+          ) : icon ? (
+            <span className="text-muted-foreground/60 shrink-0">{icon}</span>
+          ) : null}
         </div>
-        <p className={cn("text-2xl font-semibold tabular-nums mt-1", toneCls)}>{value}</p>
-        {sub && <p className="text-label text-muted-foreground mt-0.5 tabular-nums">{sub}</p>}
+        <p className={cn("text-2xl font-semibold tabular-nums mt-2", TONE_VALUE[tone])}>{value}</p>
+        {sub && <p className="text-xs text-muted-foreground mt-0.5 tabular-nums truncate">{sub}</p>}
       </CardContent>
     </Card>
   );
-}
-
-export function QuickLink({
-  to, icon, title, description, kpi,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  kpi: string;
-}) {
-  return (
-    <Link to={to} className="block group">
-      <Card className="h-full transition-colors group-hover:border-primary/40 group-hover:bg-muted/30">
-        <CardContent className="p-4 flex items-start gap-3">
-          <div className="rounded-md bg-primary/10 text-primary p-2">{icon}</div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold text-sm">{title}</h3>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-            <p className="text-sm font-medium tabular-nums mt-2">{kpi}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
+  return to ? <Link to={to} className="block group">{body}</Link> : body;
 }
