@@ -62,6 +62,8 @@ const WRAPPED_COVERAGE = [
   "supabase/functions/facturapi-consultar/index.ts",
   // 13.303.2 — Recuperación de claims huérfanos PENDING:<uuid>
   "supabase/functions/facturapi-recuperar-claim/index.ts",
+  // 13.303.99 — Parseo de facturas PDF con Gemini (proveedores sin XML)
+  "supabase/functions/parse-invoice-pdf/index.ts",
 ];
 
 // Funciones intencionalmente exentas de Sentry (proxy puro, sin lógica propia
