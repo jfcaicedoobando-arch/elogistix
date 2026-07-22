@@ -71,7 +71,7 @@ export function VincularEmbarqueSection({
     () => gruposFiltrados.reduce((n, g) => n + g.items.length, 0),
     [gruposFiltrados],
   );
-  const filtroActivo = filtro.trim().length > 0 || soloMarcados;
+  
 
   const puedeSugerir = calcularPuedeSugerir({
     onAplicar: onAplicarSugerencias,
