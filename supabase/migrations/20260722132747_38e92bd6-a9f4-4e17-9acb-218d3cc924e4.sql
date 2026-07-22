@@ -1,0 +1,1 @@
+ALTER VIEW public.cxp_alertas_vencimiento SET (security_invoker = on);
