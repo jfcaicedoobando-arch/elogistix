@@ -1,6 +1,16 @@
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { FacturaContextoBand } from "./FacturaContextoBand";
+import { useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Trash2 } from "lucide-react";
+import { dialogSize } from "@/components/shared/utils/dialogTokens";
+import { cn } from "@/lib/utils";
 import type { FacturaCxP } from "@/features/cxp/services";
+import { ESTATUS_META, type EstatusCxP } from "@/features/cxp/estatus";
 
 interface Props {
   factura: FacturaCxP | null;
@@ -9,23 +19,159 @@ interface Props {
   onConfirm: () => void | Promise<void>;
 }
 
+function formatMonto(moneda: string, monto: number) {
+  const n = new Intl.NumberFormat("es-MX", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(monto ?? 0);
+  return `${moneda} ${n}`;
+}
+
 export function EliminarFacturaCxpDialog({ factura, onOpenChange, isPending, onConfirm }: Props) {
+  const [paso2, setPaso2] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
+  useEffect(() => {
+    if (!factura) {
+      setPaso2(false);
+      setConfirmText("");
+    }
+  }, [factura]);
+
+  const close = () => {
+    setPaso2(false);
+    setConfirmText("");
+    onOpenChange(false);
+  };
+
+  const canDelete = confirmText.trim().toUpperCase() === "ELIMINAR";
+  const showMoneda = factura?.moneda !== "MXN";
+  const estatusMeta = factura ? ESTATUS_META[factura.estatus as EstatusCxP] : null;
+
   return (
-    <DoubleConfirmDeleteDialog
-      open={!!factura}
-      onOpenChange={onOpenChange}
-      entityName={factura ? `la factura ${factura.folio_proveedor}` : "la factura"}
-      description={factura ? (
-        <div className="space-y-3">
-          <FacturaContextoBand factura={factura} variant="compact" emphasis="total" />
-          <p className="text-xs text-muted-foreground">
-            La factura será enviada a la papelera. Puedes restaurarla si fue un error.
-          </p>
-        </div>
-      ) : undefined}
-      finalDescription="Puedes restaurarla desde la papelera si fue un error."
-      isPending={isPending}
-      onConfirm={onConfirm}
-    />
+    <AlertDialog open={!!factura} onOpenChange={(v) => { if (!v) close(); }}>
+      <AlertDialogContent className={cn(dialogSize.lg, "p-0 gap-0 overflow-hidden")}>
+        {factura && (
+          <>
+            {/* Header */}
+            <div className="p-6 pb-4">
+              <h2 className="text-xl font-bold text-foreground leading-tight tracking-tight">
+                {paso2 ? "Confirmar eliminación" : `¿Eliminar la factura ${factura.folio_proveedor}?`}
+              </h2>
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                <span className="px-2 py-0.5 bg-muted text-muted-foreground text-[11px] font-bold tracking-wider rounded border border-border font-mono">
+                  {factura.folio_interno}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Folio prov. <span className="font-medium text-foreground font-mono">{factura.folio_proveedor}</span>
+                </span>
+                <span className="text-muted-foreground/50">•</span>
+                <span className="text-sm font-medium text-foreground uppercase tracking-tight truncate max-w-[220px]">
+                  {factura.proveedor_nombre}
+                </span>
+              </div>
+            </div>
+
+            {/* Status Line */}
+            {estatusMeta && (
+              <div className="px-6 py-2 bg-muted/40 border-y border-border flex items-center gap-2">
+                <div className={cn("w-2 h-2 rounded-full", estatusMeta.dotClass)} />
+                <span className={cn("text-[11px] font-bold tracking-wide uppercase", estatusMeta.textClass)}>
+                  {estatusMeta.label}
+                </span>
+              </div>
+            )}
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              {/* Financial Grid */}
+              <div className={cn("grid gap-3", showMoneda ? "grid-cols-3" : "grid-cols-2")}>
+                <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total</span>
+                  <div className="text-sm font-bold text-foreground tabular-nums whitespace-nowrap">
+                    {formatMonto(factura.moneda, factura.total)}
+                  </div>
+                </div>
+                <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Saldo pendiente</span>
+                  <div className={cn(
+                    "text-sm font-bold tabular-nums whitespace-nowrap",
+                    factura.saldo > 0 ? "text-amber-600" : "text-foreground",
+                  )}>
+                    {formatMonto(factura.moneda, factura.saldo)}
+                  </div>
+                </div>
+                {showMoneda && (
+                  <div className="bg-card border border-border rounded-lg p-3 flex flex-col justify-between min-h-[76px]">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Moneda / TC</span>
+                    <div className="leading-tight">
+                      <div className="text-sm font-bold text-foreground">{factura.moneda}</div>
+                      <div className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                        TC {factura.tipo_cambio_usd?.toFixed(2) ?? "—"}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Paso 1: nota de papelera. Paso 2: input ELIMINAR */}
+              {!paso2 ? (
+                <div className="p-4 bg-destructive/5 border border-destructive/20 rounded-lg flex gap-3">
+                  <Trash2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-sm text-foreground leading-relaxed">
+                    La factura será enviada a la papelera. Podrás restaurarla desde el historial si fue un error.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
+                  <Label htmlFor="confirm-delete" className="text-sm text-foreground">
+                    Escribe <span className="font-bold text-destructive font-mono">ELIMINAR</span> para confirmar:
+                  </Label>
+                  <Input
+                    id="confirm-delete"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    placeholder="ELIMINAR"
+                    autoComplete="off"
+                    className="font-mono"
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-muted/40 border-t border-border flex justify-end items-center gap-2">
+              <Button variant="ghost" onClick={close} disabled={isPending}>
+                Cancelar
+              </Button>
+              {!paso2 ? (
+                <Button
+                  variant="destructive"
+                  onClick={() => setPaso2(true)}
+                >
+                  Continuar
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  disabled={isPending || !canDelete}
+                  onClick={async () => {
+                    await onConfirm();
+                    close();
+                  }}
+                >
+                  {isPending ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Eliminando...</>
+                  ) : (
+                    "Eliminar factura"
+                  )}
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
