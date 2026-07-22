@@ -113,13 +113,7 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
             {shown.length > 0 && (
               <div className="flex flex-wrap items-center gap-1">
                 {shown.map((c) => (
-                  <Badge key={c.key} variant="outline" className={CHIP_BASE}>
-                    <span
-                      aria-hidden
-                      className={`inline-block h-1.5 w-1.5 rounded-full ${TONE_DOT[c.tone]}`}
-                    />
-                    <span className="tabular-nums">{c.label}</span>
-                  </Badge>
+                  <ToneBadge key={c.key} tone={c.tone}>{c.label}</ToneBadge>
                 ))}
                 {overflow > 0 && (
                   <Badge variant="outline" className={CHIP_BASE}>
@@ -128,6 +122,7 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
                 )}
               </div>
             )}
+
           </div>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
