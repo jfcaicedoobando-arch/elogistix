@@ -205,6 +205,7 @@ export function parseCfdi(xml: string): CfdiParsed {
     iva_trasladado: iva,
     ieps_trasladado: ieps,
     retenciones,
+    tipo_comprobante: attr(comprobante, "TipoDeComprobante") || "I",
     emisor: {
       rfc: attr(emisor, "Rfc"),
       nombre: attr(emisor, "Nombre"),
