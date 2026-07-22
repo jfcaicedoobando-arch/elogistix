@@ -7,15 +7,21 @@
 import { FileCode2, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { useVerificarUuidSat } from "@/features/cxp/hooks/useVerificarUuidSat";
+import {
+  useAdjuntarArchivoCfdiFactura,
+  useQuitarArchivoCfdiFactura,
+} from "@/features/cxp/hooks/useAdjuntoFacturaProveedor";
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
 import { Field, AdjuntoRow, CanceladaBanner, UuidFiscalField } from "./InfoFacturaSection.parts";
-import type { FacturaCxP } from "@/features/cxp/services";
+import type { FacturaCxP, TipoAdjuntoCfdi } from "@/features/cxp/services";
 
 interface Props {
   factura: FacturaCxP;
+  canEdit?: boolean;
 }
 
-export function InfoFacturaSection({ factura: f }: Props) {
+export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
+
   const showTc = f.moneda !== "MXN";
   const verificar = useVerificarUuidSat();
   const estaCancelada = f.estado === "Cancelada";
