@@ -6,6 +6,8 @@
  * `<=` a `<` (silencioso, rompe conciliación en producción).
  */
 
+import { isoUtcDay } from "@/lib/date/mx";
+
 export const TOLERANCIA_MONTO_MXN = 1;
 export const TOLERANCIA_DIAS = 5;
 

@@ -3,6 +3,8 @@
  * Extraído de `hooks/crm/useCrmDashboard.ts` (Power of 10: ≤200 LOC, testabilidad).
  */
 
+import { isoUtcDay } from "@/lib/date/mx";
+
 export interface OpRow {
   id: string;
   nombre: string;
