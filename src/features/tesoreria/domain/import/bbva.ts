@@ -75,13 +75,24 @@ function parseFecha(raw: unknown): string | null {
   return null;
 }
 
+/**
+ * Convierte el valor crudo en número conservando el signo (los cargos suelen
+ * llegar negativos en el estado de cuenta). Devuelve `NaN` cuando el valor no
+ * es parseable para que la fila se descarte con evidencia y no se colapse
+ * silenciosamente a 0.
+ */
 function parseMonto(raw: unknown): number {
   if (raw == null || raw === "") return 0;
-  if (typeof raw === "number") return Math.abs(raw);
-  const s = String(raw).replace(/[$,\s]/g, "").replace(/[()]/g, "");
-  const n = Number(s);
-  return isNaN(n) ? 0 : Math.abs(n);
+  if (typeof raw === "number") return raw;
+  const s = String(raw).replace(/[$,\s]/g, "");
+  // paréntesis contables denotan cargo negativo: (1,234.56) → -1234.56
+  const isParen = /^\(.*\)$/.test(s);
+  const clean = s.replace(/[()]/g, "");
+  const n = Number(clean);
+  if (!Number.isFinite(n)) return NaN;
+  return isParen ? -Math.abs(n) : n;
 }
+
 
 async function sha1(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
