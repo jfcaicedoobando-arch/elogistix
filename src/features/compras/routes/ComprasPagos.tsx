@@ -150,7 +150,7 @@ export default function ComprasPagos() {
           </div>
           <div className="space-y-1 sm:col-span-2 lg:col-span-1">
             <Label className="text-xs">Buscar</Label>
-            <SearchInput value={search} onChange={setSearch} placeholder="Folio, proveedor, referencia…" />
+            <SearchInput value={search} onChange={setSearch} placeholder="Folio o proveedor…" />
           </div>
         </CardContent>
       </Card>
