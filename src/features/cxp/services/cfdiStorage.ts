@@ -123,11 +123,16 @@ export async function adjuntarArchivoCfdiFactura(params: AdjuntarArchivoParams):
   });
   if (up.error) throw up.error;
 
+  const patch = params.tipo === "XML"
+    ? { archivo_xml_url: path }
+    : { archivo_pdf_url: path };
   const { error } = await supabase
     .from("proveedor_facturas")
-    .update({ [columnFor(params.tipo)]: path })
+    .update(patch)
     .eq("id", params.facturaId);
   if (error) throw error;
+
+
 
   return path;
 }
