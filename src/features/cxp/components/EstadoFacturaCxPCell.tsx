@@ -27,7 +27,17 @@ interface Props {
   factura: FacturaCxP;
 }
 
-const CHIP_BASE = "text-2xs px-1.5 py-0 h-4 font-normal leading-none";
+const CHIP_BASE =
+  "text-2xs px-1.5 py-0 h-4 font-normal leading-none bg-muted text-muted-foreground border-transparent inline-flex items-center gap-1";
+
+type ChipTone = "info" | "warning" | "destructive" | "success" | "neutral";
+const TONE_DOT: Record<ChipTone, string> = {
+  info: "bg-info",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  success: "bg-success",
+  neutral: "bg-muted-foreground/60",
+};
 
 function formatProgramada(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("es-MX", {
@@ -70,43 +80,32 @@ function tooltipDetails(f: FacturaCxP): string[] {
 }
 
 export function EstadoFacturaCxPCell({ factura: f }: Props) {
-  const chips: Array<{ key: string; label: string; className: string; title?: string }> = [];
+  const chips: Array<{ key: string; label: string; tone: ChipTone }> = [];
 
   if (f.flags.parcial) {
-    chips.push({
-      key: "parcial",
-      label: `Parcial · ${f.flags.parcialPct}%`,
-      className: "bg-info/10 text-info border-info/20 tabular-nums",
-    });
+    chips.push({ key: "parcial", label: `Parcial · ${f.flags.parcialPct}%`, tone: "info" });
   }
   if (f.estatus === "Vencida" && f.dias_vencido > 0) {
-    chips.push({
-      key: "vencida-dias",
-      label: `+${f.dias_vencido} d`,
-      className: "bg-destructive/10 text-destructive border-destructive/30 tabular-nums",
-    });
+    chips.push({ key: "vencida-dias", label: `+${f.dias_vencido} d`, tone: "destructive" });
   }
   if (f.flags.ncAplicada) {
-    chips.push({
-      key: "nc",
-      label: "NC",
-      className: "bg-primary/10 text-primary border-primary/20",
-    });
+    chips.push({ key: "nc", label: "NC", tone: "neutral" });
   }
   if (f.flags.satVerificada) {
-    chips.push({
-      key: "sat",
-      label: "SAT ✓",
-      className: "bg-success/10 text-success border-success/30",
-    });
+    chips.push({ key: "sat", label: "SAT ✓", tone: "success" });
   }
   if (f.fecha_programada_pago && f.estatus !== "Pagada" && f.estatus !== "Cancelada") {
     chips.push({
       key: "programado",
       label: `Prog. ${formatProgramada(f.fecha_programada_pago)}`,
-      className: "bg-warning/10 text-warning border-warning/30 tabular-nums",
+      tone: "warning",
     });
   }
+
+  // v13.307.17 — Máximo 3 chips visibles, el resto colapsa en un chip "+N".
+  const VISIBLE = 3;
+  const overflow = Math.max(0, chips.length - VISIBLE);
+  const shown = chips.slice(0, VISIBLE);
 
   const details = tooltipDetails(f);
 
@@ -119,17 +118,22 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
             className="flex flex-col items-start gap-1 min-w-0"
           >
             <StatusBadge domain="factura_cxp" status={f.estatus} />
-            {chips.length > 0 && (
+            {shown.length > 0 && (
               <div className="flex flex-wrap items-center gap-1">
-                {chips.map((c) => (
-                  <Badge
-                    key={c.key}
-                    variant="outline"
-                    className={`${CHIP_BASE} ${c.className}`}
-                  >
-                    {c.label}
+                {shown.map((c) => (
+                  <Badge key={c.key} variant="outline" className={CHIP_BASE}>
+                    <span
+                      aria-hidden
+                      className={`inline-block h-1.5 w-1.5 rounded-full ${TONE_DOT[c.tone]}`}
+                    />
+                    <span className="tabular-nums">{c.label}</span>
                   </Badge>
                 ))}
+                {overflow > 0 && (
+                  <Badge variant="outline" className={CHIP_BASE}>
+                    +{overflow}
+                  </Badge>
+                )}
               </div>
             )}
           </div>

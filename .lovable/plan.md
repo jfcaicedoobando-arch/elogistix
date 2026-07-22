@@ -1,88 +1,97 @@
+# Auditoría visual — Módulo de Compras (1366×768)
 
-# Mejora de estatus y badges — Tabla de facturas de proveedor
+Recorrí las 11 vistas del módulo (`Facturas`, `Por capturar`, `Por aprobar`, `Por pagar`, `Pagos`, `Notas de crédito`, `Aging`, `Reportes`, `Proveedores`, `Conciliación`, `Dashboard`) y crucé lo observado con la fuente de verdad de estilos: `src/lib/ui/estadoConfig.ts` + `src/lib/status/statusExtras.ts`.
 
-## Diagnóstico (qué está mal hoy)
+## Diagnóstico (por qué se ve inconsistente)
 
-En `cxpColumns.tsx` la fila muestra **dos columnas de estado** — `Estatus` y `Aprobación` — que se pisan entre sí:
+**1. Semántica de color colapsada — mismo tono para conceptos distintos.**
+Hoy en Compras conviven, todos con `warning` (amarillo):
+`Vigente por vencer` · `Por aprobar` · `Parcialmente pagada` · `Pendiente` · `Devengada` · `En cancelación`.
+Y todos con `success` (verde):
+`Pagada` (en algunos lados) · `Aprobada` · `Vigente` · `Validado` · `Recibido` · `Completo`.
+Un usuario que ve la fila "verde SAT ✓ + verde Vigente + verde Pagada" no puede leer qué está pasando.
 
-| Situación real | Estatus | Aprobación | Problema |
-|---|---|---|---|
-| Recién capturada | "Por aprobar" | "Por aprobar" | Redundante |
-| Rechazada por finanzas | "Rechazada" | "Rechazada" | Redundante |
-| Aprobada, con abono, ya vencida | "Vencida" | "Aprobada" | Se **pierde** que hay pago parcial |
-| Aprobada, con abono, aún vigente | "Parcial" | "Aprobada" | No se ve cuántos días faltan |
-| Cancelada por SAT vs. cancelada manual | "Cancelada" | — | No distingue origen |
-| NC aplicada reduce saldo | (invisible) | — | No hay señal visual |
-| UUID verificado ante SAT | (invisible) | — | No hay señal visual |
+**2. Chips secundarios compiten con el estado primario.**
+`EstadoFacturaCxPCell` mezcla en la misma celda un badge grande (`Vigente/Vencida/…`) con hasta 5 mini-chips (`Parcial · +N d · NC · SAT ✓ · Prog. DD/MM`) sobre fondos `bg-info/10`, `bg-warning/10`, `bg-success/10`. Todos pintan y todos gritan.
 
-Además la prioridad en `clasificar()` **enmascara** información: una factura parcial + vencida sólo dice "Vencida", perdiendo el hecho de que ya hay abono. Y los colores actuales dependen sólo del `statusRegistry` genérico, sin acento operativo (rojo para atraso, ámbar para "por vencer", verde para pagada).
+**3. KPI cards del módulo usan variantes destructive/warning sin criterio único.**
+En `/compras/facturas` "Vencido" es rojo, "Por vencer" es amarillo, pero en `/compras/por-aprobar` la card "Rechazadas" también es roja y "Aprobadas" verde, y en `/compras/conciliacion` "Sin facturar" es rojo suave y "Conciliadas" verde. Cada página escoge su propia paleta.
 
-## Objetivo
+**4. Sub-encabezados y anchos inconsistentes.**
+- Facturas: título + subtítulo pequeño.
+- Por aprobar / Reportes: título con `<Icon>` + subtítulo.
+- Proveedores: título + subtítulo largo.
+- Conciliación: título muy grande sin icono.
+Las cards de KPI a veces son 3, a veces 5, a veces 4, con paddings distintos (`p-4`, `p-3`, `gap-3`, `gap-4`).
 
-Un **solo pill principal** por fila (estado de vida del documento) + **chips secundarios** opcionales que sumen contexto financiero/fiscal sin ocupar otra columna. Igual densidad, más información, menos redundancia.
+## Qué voy a construir
 
-## Modelo de estado propuesto
+### A. Refactor de la paleta semántica de Compras (una sola pasada, sin tocar otros módulos)
 
-**Estado principal** (uno solo, mutuamente excluyente, en orden de prioridad):
+Reasigno cada estado a un **rol semántico** (no a un color arbitrario) y lo escribo en `statusExtras.ts` + `estadoConfig.ts`. Los 4 roles:
 
-```text
-Borrador → Por aprobar → Rechazada → Cancelada
-                       ↘ Vigente ↔ Por vencer ↔ Vencida → Pagada
-```
+| Rol             | Uso                              | Token             | Ejemplos                       |
+|-----------------|----------------------------------|-------------------|--------------------------------|
+| Neutral         | Sin acción, terminal frío        | `muted`           | Borrador, Pagada, Cancelada, Cerrado |
+| Info (azul)     | En curso, requiere seguimiento   | `info`            | Vigente, Emitida, En proceso, Parcial |
+| Atención (ámbar)| Requiere acción del usuario      | `warning`         | Por aprobar, Por vencer, Pendiente |
+| Alerta (rojo)   | Bloqueante / SLA roto            | `destructive`     | Vencida, Rechazada, Sustituida |
+| Éxito (verde)   | Cerrado bien — solo terminal ✅  | `success`         | Aprobada, Validado, Completo   |
 
-- `Borrador` — captura incompleta (gris)
-- `Por aprobar` — esperando aprobación (ámbar, ícono reloj)
-- `Rechazada` — con `motivo_rechazo` en tooltip (rojo suave, ícono X)
-- `Cancelada` — con sub-tipo en tooltip: "por SAT" si `uuid_estatus_sat = 'Cancelado'`, si no "manual" (gris tachado)
-- `Vigente` — aprobada, sin atraso, sin abonos (azul suave)
-- `Por vencer` — aprobada, ventana ≤5 días (ámbar claro)
-- `Vencida` — días vencido > 0 (rojo)
-- `Pagada` — saldo ≤ 0.01 (verde)
+Cambios concretos:
+- `Vigente` deja de ser verde → **azul info** (aún tiene saldo, no es "listo").
+- `Pagada` unifica a **neutral** en todos los dominios (hoy alterna success/muted).
+- `Parcial`, `Por aprobar`, `Por vencer` = amarillo consistente.
+- `Aprobada` = único verde en el flujo de aprobación.
 
-**Chips secundarios** (0..N, sólo si aplican, tamaño `text-2xs h-4`):
+### B. Consolidar el chip secundario de `EstadoFacturaCxPCell`
 
-- `Parcial · 45%` — cuando `pagado > 0` y `saldo > 0` (barra fina o %). Se muestra **incluso si el estado principal es "Vencida"**, resolviendo la pérdida de información actual.
-- `+N d` — días de atraso cuando estado = Vencida (chip rojo compacto, reemplaza la columna "Días").
-- `NC $X` — cuando hay notas de crédito aplicadas (chip azul, tooltip: "Nota de crédito aplicada").
-- `SAT ✓` — cuando `uuid_verificado = true` (chip verde outline muy discreto).
-- `Prog. DD/MM` — cuando `fecha_programada_pago` (reutiliza el chip actual, pero pegado al estado en vez de columna aparte).
+- Todos los chips pasan a **una sola convención neutra** (`bg-muted text-muted-foreground border-transparent`) con un punto de color 6×6 px que indica severidad (info/warning/destructive). Así el badge primario manda y los chips acompañan.
+- Reduzco de 5 a 3 chips visibles + `+N` colapsando el resto en tooltip.
 
-## Impacto en columnas
+### C. Componente `PageHeader` compartido para Compras
 
-Antes: `Folio · Folio prov · Proveedor · Emisión · Vencimiento · Prog. pago · Días · Mon · Total · Pagado · Saldo · Estatus · Aprobación` (13)
+- `src/features/cxp/components/shared/ComprasPageHeader.tsx` con firma `{icon, title, subtitle, actions}` y espaciado `pb-4 border-b border-border/60`.
+- Aplico en las 11 páginas.
 
-Después: `Folio · Folio prov · Proveedor · Emisión · Vencimiento · Mon · Total · Pagado · Saldo · Estado` (10)
+### D. KpiRow homogéneo para Compras
 
-- Se **elimina** la columna `Aprobación` (Por aprobar/Rechazada quedan absorbidas en el estado principal).
-- Se **elimina** la columna `Días` (chip `+N d` dentro del estado).
-- Se **elimina** la columna `Prog. pago` (chip dentro del estado).
-- La columna `Estado` se ensancha a `w-[180px]` para hospedar pill + chips en dos líneas apiladas.
+- `src/features/cxp/components/shared/ComprasKpiRow.tsx` que envuelve `KpiCard` con:
+  - Grid fijo `grid-cols-2 xl:grid-cols-5 gap-3`
+  - Variantes limitadas a `default | info | warning | destructive` (nada de verdes en cards no-terminales).
+  - `tabular-nums` en el value.
+- Migración: `CxpKpiCards`, `Por-aprobar`, `Por-pagar`, `Pagos`, `Conciliación`, `Aging`.
 
-En pantallas <xl la fila queda visiblemente más limpia; en xl+ hay más aire para el Saldo.
+### E. Densidad y tipografía
 
-## Ajustes en la lógica
-
-- `clasificar()` en `proveedorFacturas.helpers.ts`: mantener el mismo estado primario, pero **no** dejar que "Vencida" o "Por vencer" absorba "Parcial" — el `Parcial` se devuelve aparte como *flag*, no como estado primario.
-- Extender `FacturaCxP` con un `flags: { parcial, ncAplicada, satVerificada, diasVencido, programado, canceladaPor: 'sat'|'manual'|null }` calculado en `mapJoinedRow`.
-- `statusRegistry.factura_cxp`: mapear cada estado a variante semántica explícita (success/warning/destructive/info/muted) en lugar de heredar la variante por defecto — asegura consistencia con el resto de la app (facturas de venta, embarques).
-
-## Componentes nuevos / tocados
-
-- **Nuevo** `src/features/cxp/components/EstadoFacturaCxPCell.tsx` — pill principal + fila de chips, con tooltip único que consolida: motivo de rechazo, sub-tipo de cancelación, saldo, días vencido, NC.
-- **Editado** `cxpColumns.tsx` — quita 3 columnas, monta el nuevo cell.
-- **Editado** `proveedorFacturas.helpers.ts` — devuelve `flags`.
-- **Editado** `statusRegistry.ts` — variantes semánticas por estado de `factura_cxp`.
-- **Editado** filtros existentes en `CxpFiltros.tsx` — el filtro por "Aprobación" desaparece del combobox (ya vive en Estatus).
-
-## Notas técnicas
-
-- No cambia el esquema SQL — todo se deriva client-side desde datos ya cargados.
-- Preservar los `data-testid` actuales de los tests de columnas; agregar `data-testid="cxp-estado-cell"` en el nuevo componente.
-- Bump de `APP_VERSION` y entrada en `CHANGELOG.md` (regla del proyecto).
-- Tests: agregar `EstadoFacturaCxPCell.test.tsx` cubriendo las 6 combinaciones críticas (Vencida+Parcial, Cancelada SAT vs manual, Rechazada con motivo, Pagada con NC, Por vencer con Prog., Borrador puro).
+- Titulares uniformes: `text-2xl font-semibold` con icono `h-6 w-6 text-primary`.
+- Subtítulos: `text-sm text-muted-foreground`.
+- Tablas: cabeceras a `text-xs uppercase tracking-wide text-muted-foreground` (ya existe pero se aplica solo en algunas).
 
 ## Fuera de alcance
 
-- KPIs superiores (`CxpKpiCards`) — mantener como están.
-- Vista Aging — usa columnas propias.
-- Cambios de flujo/permisos de aprobación.
+- No toco lógica de negocio (RPCs, cálculo de saldo, permisos).
+- No cambio los colores de módulos fuera de `/compras/*` (Ventas, Embarques, CRM mantienen su paleta).
+- No refactorizo `StatusBadge` — el registry sigue siendo la fuente de verdad, solo cambio los valores.
+
+## Verificación
+
+1. `bunx vitest run src/lib/__tests__` — cubre los tests de mapeo de estados.
+2. `bun run lint -- --max-warnings 0`.
+3. Playwright: recapturo las 11 pantallas y las comparo lado a lado con el estado actual.
+4. Bump `APP_VERSION` + entrada en `CHANGELOG.md`.
+
+## Detalles técnicos
+
+**Archivos a editar (12)**
+- `src/lib/ui/estadoConfig.ts` — reasignación de tokens para dominio factura/factura_cxp.
+- `src/lib/status/statusExtras.ts` — mismos ajustes en los extras.
+- `src/features/cxp/components/EstadoFacturaCxPCell.tsx` — chips neutros con dot de color.
+- `src/features/cxp/components/CxpKpiCards.tsx` — variantes vía `ComprasKpiRow`.
+- `src/features/cxp/components/shared/ComprasPageHeader.tsx` (nuevo).
+- `src/features/cxp/components/shared/ComprasKpiRow.tsx` (nuevo).
+- Páginas `src/pages/compras/*.tsx` (7 archivos) — adoptan `ComprasPageHeader` + `ComprasKpiRow`.
+- `CHANGELOG.md` + `APP_VERSION` en `src/lib/version.ts`.
+
+**Impacto colateral controlado**
+Cambiar `Vigente` a azul y `Pagada` a neutral se propaga a los mismos badges donde aparezcan fuera de Compras (ej. detalle de factura del cliente). Es coherente con la nueva regla "verde = terminal exitoso" y ya lo validé al leer el registry. Si prefieres aislarlo solo a Compras, lo hago con overrides por dominio en `statusRegistry.ts` en vez de tocar `EXTRA_STATUS_BADGES`.
