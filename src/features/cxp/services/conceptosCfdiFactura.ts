@@ -39,3 +39,26 @@ export async function insertarConceptosCfdi(
   if (error) throw error;
   return rows.length;
 }
+
+export interface ConceptoCfdiRow {
+  id: string;
+  descripcion: string;
+  cantidad: number;
+  clave_unidad: string | null;
+  monto: number;
+  iva: number;
+  ieps: number;
+  created_at: string;
+}
+
+/** Lee las líneas del CFDI persistidas (concepto_costo_id NULL) para una factura. */
+export async function fetchConceptosCfdi(facturaId: string): Promise<ConceptoCfdiRow[]> {
+  const { data, error } = await supabase
+    .from("proveedor_facturas_conceptos")
+    .select("id, descripcion, cantidad, clave_unidad, monto, iva, ieps, created_at")
+    .eq("proveedor_factura_id", facturaId)
+    .is("concepto_costo_id", null)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ConceptoCfdiRow[];
+}
