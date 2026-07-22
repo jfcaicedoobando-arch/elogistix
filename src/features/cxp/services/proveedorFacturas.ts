@@ -84,6 +84,21 @@ export interface FacturaCxP {
   fecha_cancelacion: string | null;
   motivo_cancelacion: string | null;
   cancelada_por: string | null;
+  /**
+   * Flags derivados de la factura que enriquecen el chip de estado sin
+   * competir con el estatus primario (`estatus`).  Consumidos por
+   * `EstadoFacturaCxPCell` para pintar chips secundarios (Parcial, +N d
+   * vencida, NC, SAT ✓, Prog. DD/MM) y por el tooltip informativo.
+   */
+  flags: {
+    parcial: boolean;
+    /** Porcentaje pagado 0..100, redondeado. */
+    parcialPct: number;
+    ncAplicada: boolean;
+    satVerificada: boolean;
+    /** Cancelada por rechazo del SAT vs cancelación manual. null si no aplica. */
+    canceladaPor: "sat" | "manual" | null;
+  };
 }
 
 
