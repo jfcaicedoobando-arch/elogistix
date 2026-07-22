@@ -147,42 +147,14 @@ export function VincularEmbarqueSection({
         </div>
       )}
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            placeholder="Filtrar por concepto, expediente o monto…"
-            className="pl-8 h-8 text-sm"
-          />
-        </div>
-        <Button
-          type="button"
-          variant={soloMarcados ? "default" : "outline"}
-          size="sm"
-          className="h-8"
-          onClick={() => setSoloMarcados((v) => !v)}
-        >
-          Sólo marcados
-        </Button>
-        {filtroActivo && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8"
-            onClick={() => { setFiltro(""); setSoloMarcados(false); }}
-          >
-            <X className="h-3.5 w-3.5 mr-1" /> Limpiar
-          </Button>
-        )}
-      </div>
-      {filtroActivo && (
-        <p className="text-xs text-muted-foreground">
-          Mostrando {conceptosVisibles} de {totalConceptos} concepto{totalConceptos === 1 ? "" : "s"}
-        </p>
-      )}
+      <VincularFiltroToolbar
+        filtro={filtro}
+        onFiltro={setFiltro}
+        soloMarcados={soloMarcados}
+        onSoloMarcados={setSoloMarcados}
+        visibles={conceptosVisibles}
+        total={totalConceptos}
+      />
 
       <div className="space-y-3 max-h-72 overflow-y-auto rounded-lg border p-2 bg-background">
         {gruposFiltrados.length === 0 ? (
