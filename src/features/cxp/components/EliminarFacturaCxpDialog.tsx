@@ -10,7 +10,19 @@ import { Loader2, Trash2 } from "lucide-react";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
 import type { FacturaCxP } from "@/features/cxp/services";
-import { ESTATUS_META, type EstatusCxP } from "@/features/cxp/estatus";
+import type { EstatusCxP } from "@/features/cxp/services/proveedorFacturas";
+
+const ESTATUS_META: Record<EstatusCxP, { label: string; dotClass: string; textClass: string }> = {
+  Cancelada:    { label: "Cancelada",    dotClass: "bg-muted-foreground",         textClass: "text-muted-foreground" },
+  Rechazada:    { label: "Rechazada",    dotClass: "bg-destructive",               textClass: "text-destructive" },
+  Borrador:     { label: "Borrador",     dotClass: "bg-muted-foreground",         textClass: "text-muted-foreground" },
+  "Por aprobar":{ label: "Por aprobar",  dotClass: "bg-amber-500",                 textClass: "text-amber-700" },
+  Pagada:       { label: "Pagada",       dotClass: "bg-emerald-500",               textClass: "text-emerald-700" },
+  Vencida:      { label: "Vencida",      dotClass: "bg-destructive",               textClass: "text-destructive" },
+  "Por vencer": { label: "Por vencer",   dotClass: "bg-amber-500",                 textClass: "text-amber-700" },
+  Parcial:      { label: "Parcial",      dotClass: "bg-sky-500",                   textClass: "text-sky-700" },
+  Vigente:      { label: "Pendiente de pago", dotClass: "bg-amber-500",            textClass: "text-amber-700" },
+};
 
 interface Props {
   factura: FacturaCxP | null;
