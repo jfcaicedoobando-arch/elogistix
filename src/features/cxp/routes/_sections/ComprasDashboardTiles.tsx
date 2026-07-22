@@ -13,10 +13,10 @@ export type KpiTone = "default" | "info" | "warn" | "danger" | "success";
 
 const TONE_DOT: Record<KpiTone, string> = {
   default: "bg-muted-foreground/40",
-  info: "bg-sky-500",
-  warn: "bg-amber-500",
+  info: "bg-info",
+  warn: "bg-warning",
   danger: "bg-destructive",
-  success: "bg-emerald-500",
+  success: "bg-success",
 };
 
 const TONE_VALUE: Record<KpiTone, string> = {
