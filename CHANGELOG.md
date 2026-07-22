@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.306.3] - 2026-07-22
+- **fix(auth) · FIX-R2-16 · Rol correcto al registrar usuarios.** Cierra el pendiente de la auditoría R2 sobre asignación de roles en el flujo de invitación/auto-registro.
+  - **Auto-signup público** (`handle_new_user_signup`): el usuario que crea su propia cuenta ahora recibe rol global `admin_org` (moderno, ámbito organización) y membresía `admin_org` en la organización recién creada. Antes se otorgaba `admin` legacy — que en algunos code paths se interpretaba como admin global cross-tenant.
+  - **Bootstrap preservado**: el primer usuario del sistema sigue siendo `super_admin` para permitir instalar entornos frescos.
+  - **Backfill**: se reconvirtieron los usuarios `admin` legacy generados por auto-signups previos a `admin_org` (sólo cuando existía la membresía pareja también como `admin` — no toca a los admins asignados a mano por consola).
+  - **Portal cliente** (`user-management/invite-client`): la invitación por correo ahora manda `skip_auto_org=true` para no crear organización fantasma, y `ensureClienteRole` **fuerza** `role='cliente'` aunque el trigger ya haya insertado uno default. Antes un contacto de cliente podía terminar con `admin` global si era un usuario totalmente nuevo.
+  - **Portal agente** (`user-management/invite-agente`): `admin.createUser` ahora pasa `skip_auto_org=true` en `user_metadata`; `ensureAgenteRole` ya forzaba `role='agente_carga'`.
+  - Analogía: al abrir la puerta de casa dejamos de darle a cada visitante la copia maestra de todas las cerraduras — ahora quien firma solo entra como administrador únicamente de su propia oficina, y los invitados a portales entran directamente como cliente o agente.
+
 ## [13.306.2] - 2026-07-22
 - **chore(dates) · Erradicación total de `toISOString().slice(0,10)` en código de producción.** Migrados los 11 archivos restantes al helper canónico (`hoyMx` / `ymMx` para fechas de negocio en CDMX, `isoUtcDay` cuando el `Date` ya está anclado a UTC): `costeo/types/navieraCondicion.ts`, `costeo/components/TarifaForm.helpers.ts`, `facturacion/domain/huecoCsv.ts`, `facturacion/services/facturaManual.ts`, `facturacion/services/dashboardEjecutivo.ts`, `auditoria/domain/core.ts`, `auditoria/domain/ejecutivoAgregados.ts`, `auditoria/hooks/useHallazgosTablaState.ts`, `dashboard/direccion/services/mxn.ts`, `cxp/hooks/useNuevaFacturaProveedorForm.helpers.ts`, `comisiones/services/devengadas.ts` y `comisiones/components/DialogGenerarLiquidacion.tsx`. Cierra el pendiente cosmético reportado tras la verificación de la auditoría R2 (FIX-R2-23).
   - Analogía: cambiamos todos los relojes viejos que a veces marcaban el día de mañana a las 6pm por un reloj único calibrado a la hora de México.
