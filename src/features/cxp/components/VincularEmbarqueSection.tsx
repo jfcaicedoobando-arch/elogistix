@@ -9,15 +9,13 @@
 import { useMemo, useState } from "react";
 import { Loader2, Link2, Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters";
 import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { SugerenciaVinculo } from "@/features/compras/matching/matcher";
 import { SugerirEmbarqueBlock, type EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
 import { VincularFiltroToolbar } from "./VincularFiltroToolbar";
+import { VincularListaConceptos } from "./VincularListaConceptos";
 import {
   agruparPorEmbarque,
   calcularPuedeSugerir,
