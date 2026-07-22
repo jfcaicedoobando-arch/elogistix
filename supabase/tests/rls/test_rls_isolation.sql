@@ -50,9 +50,9 @@ BEGIN
     (user_b, 'admin'),
     (user_cli, 'cliente');
 
-  INSERT INTO public.clientes(id, nombre, organization_id) VALUES
-    (cli_a, 'Cliente A', org_a),
-    (cli_b, 'Cliente B', org_b);
+  INSERT INTO public.clientes(id, nombre, rfc, organization_id) VALUES
+    (cli_a, 'Cliente A', 'XAXX010101000', org_a),
+    (cli_b, 'Cliente B', 'XAXX010101001', org_b);
 
   INSERT INTO public.client_users(cliente_id, user_id, organization_id) VALUES
     (cli_a, user_cli, org_a);
