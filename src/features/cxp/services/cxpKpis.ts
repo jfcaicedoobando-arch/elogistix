@@ -30,15 +30,19 @@ export function calcularKPIsCxP(filas: FacturaCxP[]): KPIsCxP {
   };
   for (const f of filas) {
     if (f.saldo <= 0) continue;
+    // Rechazadas se excluyen de aging/tesorería: no son deuda real
+    // hasta que sean reaprobadas.
+    if (f.estatus === "Rechazada" || f.estatus === "Cancelada") continue;
     const usd = f.moneda === "USD";
     if (usd) k.por_pagar_usd += f.saldo; else k.por_pagar_mxn += f.saldo;
     if (f.estatus === "Vencida") {
       k.facturas_vencidas++;
       if (usd) k.vencido_usd += f.saldo; else k.vencido_mxn += f.saldo;
     }
+    // Ventana "Por vencer" ampliada a 5 días (política v13.304.1).
     if (f.dias_vencido === 0 && f.fecha_vencimiento) {
       const dv = diasVencido(f.fecha_vencimiento);
-      if (dv >= -7 && dv <= 0) {
+      if (dv >= -5 && dv <= 0) {
         if (usd) k.por_vencer_7d_usd += f.saldo; else k.por_vencer_7d_mxn += f.saldo;
       }
     }
