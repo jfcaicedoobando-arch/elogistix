@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.305.10] - 2026-07-22
+- **fix(db) · Re-consolidada la migración Fase D con el nuevo guard SQL-safe de `saldo_factura`.** El guardrail `src/lib/__tests__/saldo-factura-fase-d.test.ts` busca la migración más reciente que redefine `public.saldo_factura(uuid)` y espera encontrar ahí todo el bundle Fase D (validar_cierre_embarque, recalcular_cobro_embarques, recalcular_estado_factura, trigger espejo y backfill). Las migraciones v13.305.6/7 redefinían sólo la función y rompían el test. Ahora una sola migración (v13.305.10) contiene el guard pivotado sobre `current_user_org_id()` **y** el bundle completo, así el guardrail se satisface sin volver a divergir. Analogía: el examen pedía ver toda la receta médica junta; antes le entregábamos sólo la corrección del jarabe suelta, ahora la receta completa vuelve a estar grapada.
+
 ## [13.305.9] - 2026-07-22
 - **fix(db) · Pagos de factura validan que la organización coincida con la factura.** Después de permitir que los intentos cross-tenant lleguen a RLS, se agregó una guarda explícita en `tg_pago_factura_no_sobrepago`: `pagos_factura.organization_id` debe coincidir con `facturas.organization_id`. Si no coincide, se rechaza con `LC_TENANT_MISMATCH` (`23514`). Esto cierra el borde donde un pago podía traer una factura de una organización y el `organization_id` de otra. Analogía: además de dejar que el guardia de la puerta detenga intrusos, ahora la ficha de depósito debe traer el mismo número de caja que la cuenta.
 
