@@ -1,74 +1,35 @@
+## Diagnóstico
 
-# Mejora del modal "Detalle de factura de proveedor"
+En el embarque `c996fa28…` el guardado falló porque una fila de contenedor tenía **Número = "1"**. La base de datos exige que el número siga el estándar **ISO 6346** (4 letras mayúsculas + 7 dígitos, ej. `MSCU1234567`) o quede vacío. El valor `"1"` no cumple y el check `contenedor_iso6346` bloquea el INSERT.
 
-## Hallazgos de la auditoría
+**Analogía**: es como si en la caja de un supermercado el código de barras tuviera que ser de 11 caracteres exactos. Si tecleas solo `1`, el lector lo rechaza. Hoy el "lector" (la BD) sí rechaza, pero el formulario deja escribir cualquier cosa y solo te avisa al final con un error técnico feo.
 
-Revisé `DialogDetallePagosProveedor.tsx` (header + KPIs + `InfoFacturaSection` + pagos + NC + historial) contra el tipo `FacturaCxP` y contra los datos que sí guardamos en la base:
+## Alcance
 
-**Datos que YA existen pero NO se muestran hoy:**
-1. `fecha_emision` — la fecha de expedición del CFDI. Hoy no aparece en ningún lugar del modal, solo se usa en filtros y en la tabla de aging.
-2. `fecha_vencimiento` — la fecha límite de pago. Solo se insinúa cuando la factura está vencida (chip "Vencida · N d"), nunca la fecha real.
-3. `dias_credito` — sí se muestra, pero suelto, sin las fechas que lo contextualizan.
-4. **Conceptos del CFDI persistidos** en `proveedor_facturas_conceptos` (los que llegan del XML o del PDF con IA). Hoy solo se ven en el *preview* al capturar la factura; después de guardar desaparecen del detalle.
-5. `total` — está arriba en el KPI, pero no vuelve a aparecer en la sección de Información junto al subtotal/IVA/retenciones, lo que rompe la lectura del desglose fiscal.
+Cambios sólo de **frontend** (UI + validación del formulario). No se toca la BD ni edge functions ni lógica de negocio del embarque.
 
-**Datos secundarios que también podrían sumar (opcional):**
-- Fecha y hora de creación/última actualización de la factura (ya se ve en `HistorialFacturaSection`, así que lo dejamos ahí).
-- Estatus SAT del UUID: ya existe (`UuidFiscalField`), ok.
+## Qué se va a construir
 
-## Qué construimos
+1. **Validación en vivo en `FilaContenedor.tsx`**
+   - Autoconvertir a mayúsculas y quitar espacios al escribir.
+   - Marcar el input en rojo y mostrar mensaje inline: *"Formato ISO 6346: 4 letras + 7 dígitos (ej. MSCU1234567). Déjalo vacío si aún no lo asignan."* cuando el valor no esté vacío y no cumpla el patrón `^[A-Z]{4}[0-9]{7}$`.
+   - `aria-invalid` para accesibilidad.
 
-### 1. Bloque "Fechas y crédito" en `InfoFacturaSection.tsx`
-Reorganizar el grid de 3 columnas para que las fechas queden juntas y visibles siempre:
+2. **Bloqueo del wizard en `useEditarEmbarqueWizard.helpers.ts` (`validarContenedoresMaritimo`)**
+   - Además de exigir tipo, si algún `numero_contenedor` está lleno pero no cumple ISO 6346, devolver un error que reabra el paso 2 con mensaje claro.
+   - Mismo chequeo en el flujo de creación (`useEmbarqueSubmitOrchestrator`) para simetría.
 
-```text
-┌─ Fechas y crédito ─────────────────────────────────────┐
-│ Expedición      Vencimiento       Días de crédito      │
-│ 15/03/2026      14/04/2026        30 días              │
-└────────────────────────────────────────────────────────┘
-```
-
-- Formatear con `formatDate` (DD/MM/YYYY, es-MX) usando `parseLocalMx` para evitar el bug de UTC.
-- Si la factura está vencida y con saldo, `Vencimiento` muestra el badge rojo `+N d` a la derecha (reutiliza el estilo actual del chip).
-- El campo "Días de crédito" se mueve a este bloque (hoy está mezclado con impuestos).
-
-### 2. Bloque "Desglose fiscal" reordenado
-Mismo grid pero con orden lógico de arriba hacia abajo:
-`Subtotal → IVA → IEPS (si aplica) → Retenciones → Total`
-El `Total` se agrega como campo con emphasis (mono, semibold) para que el desglose cuadre visualmente con lo que muestra el header.
-
-### 3. Nueva sección "Conceptos de la factura"
-Componente nuevo `ConceptosFacturaSection.tsx` que:
-
-- Hook nuevo `useConceptosCfdiFactura(facturaId)` → `select * from proveedor_facturas_conceptos where proveedor_factura_id = :id order by created_at`.
-- Renderiza la misma tabla visual que `CfdiConceptosPreview` (columnas: #, Descripción, Cantidad, Importe, IVA, IEPS si aplica, con totales al pie), reutilizando su markup para consistencia.
-- Estados: skeleton mientras carga, mensaje suave "Esta factura no tiene conceptos capturados del CFDI" cuando la lista viene vacía (típico en facturas creadas antes de v13.303.67 o cuando el proveedor no manda XML y tampoco se usó IA).
-- Se coloca entre `InfoFacturaSection` y `HistorialFacturaSection` en `DialogDetallePagosProveedor.tsx > BodySections`.
-
-### 4. Header del modal
-Añadir la fecha de expedición junto al folio, para que se lea de un vistazo sin bajar:
-
-```text
-Detalle de factura de proveedor  [FP-000042]
-Folio prov. A-12345 — Transportes ACME · Expedida 15/03/2026
-```
+3. **Mensaje amistoso cuando la BD devuelva `contenedor_iso6346`**
+   - En el mapper de errores de guardado del embarque, si el código Postgres es `23514` y el `constraint = contenedor_iso6346`, mostrar el mismo texto guía en vez del volcado técnico.
 
 ## Detalles técnicos
 
-- **Archivos nuevos:**
-  - `src/features/cxp/hooks/useConceptosCfdiFactura.ts` — React Query hook (`queryKey: ["cxp", "conceptos-cfdi", facturaId]`, `enabled: !!facturaId`).
-  - `src/features/cxp/components/ConceptosFacturaSection.tsx` — sección UI (~90 líneas, respeta Power of 10).
-- **Archivos modificados:**
-  - `src/features/cxp/components/InfoFacturaSection.tsx` — nuevo bloque de fechas, campo Total, reorden del grid.
-  - `src/features/cxp/components/DialogDetallePagosProveedor.tsx` — insertar `<ConceptosFacturaSection />` y mostrar fecha en el header.
-- **Sin cambios de esquema, sin nuevas RLS.** La tabla `proveedor_facturas_conceptos` ya está protegida por tenant.
-- **Bump de versión:** `APP_VERSION → 13.307.6` + entrada en `CHANGELOG.md`.
-- **Tests:** unit test del hook (`useConceptosCfdiFactura`) y snapshot render de `ConceptosFacturaSection` (loading, vacío, con datos con y sin IEPS).
+- Patrón único centralizado en un helper `esNumeroContenedorValido(v: string): boolean` dentro de `src/features/embarques/domain/contenedorIso6346.ts` (nuevo, ~15 líneas) reutilizado por la fila, la validación del wizard y los tests.
+- Test unitario del helper (casos: vacío ✅, `MSCU1234567` ✅, `1` ❌, `mscu1234567` ❌ salvo que se normalice antes).
+- Test del helper `validarContenedoresMaritimo` extendido con caso de número inválido.
+- Bump `APP_VERSION` a `13.307.6+1` y entrada en `CHANGELOG.md`.
 
 ## Fuera de alcance
 
-- Editar los conceptos del CFDI desde el detalle (son fiscales, se preservan tal cual llegan del SAT).
-- Sincronizar con la vinculación a `conceptos_costo` del embarque (eso vive en `VincularEmbarqueSection` y no se toca).
-- Agregar formas/métodos de pago del CFDI (no los tenemos en el tipo `FacturaCxP` hoy — sería otro cambio de servicio).
-
-¿Le doy con esto o quieres que también integre en este mismo turno los datos de forma de pago / método de pago / uso CFDI (requiere extender el `select` de `fetchFacturasCxP` y el tipo)?
+- No se elimina ni relaja la CHECK constraint (es útil como red de seguridad).
+- No se autocompleta el número desde ningún otro campo — sigue siendo captura manual.
