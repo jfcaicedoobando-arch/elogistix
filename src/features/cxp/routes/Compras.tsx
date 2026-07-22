@@ -1,13 +1,16 @@
 /**
- * Dashboard del módulo Compras (`/compras`). Ola B del rediseño (v13.175.0):
- * KPIs, aging resumen, top proveedores por saldo, últimas facturas y accesos
- * rápidos. La navegación entre páginas del módulo vive únicamente en el sidebar
- * (ComprasTabStrip eliminado en Ola A).
+ * Dashboard del módulo Compras (`/compras`) — v13.307.22 rediseño ejecutivo.
+ *
+ * Auditoría previa detectó 14 bloques con 5 duplicados (KPIs vs QuickLinks vs
+ * sidebar). Este rediseño consolida:
+ *  - 4 KPIs accionables (clickeables, sin duplicar cifras entre sí).
+ *  - Gráfica de aging (reemplaza los 3 KPIs de vencimiento).
+ *  - Tendencia de captura 14 días (nueva señal ejecutiva).
+ *  - Top proveedores con barra proporcional + últimas facturas.
+ *  - Eliminada la fila de 6 QuickLinks (duplicaba el sidebar).
  */
 import { useMemo, useState } from "react";
-import {
-  ShoppingCart, Plus, Truck, Inbox, Receipt, Landmark, LayoutList, ShieldCheck,
-} from "lucide-react";
+import { ShoppingCart, Plus, Inbox, ShieldCheck, Landmark, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -19,7 +22,9 @@ import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendiente
 import { usePermissions } from "@/hooks/shared";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { TopProveedoresCard, UltimasFacturasCard } from "./_sections/ComprasDashboardCards";
-import { KpiCard, QuickLink } from "./_sections/ComprasDashboardTiles";
+import { KpiCard } from "./_sections/ComprasDashboardTiles";
+import { ComprasAgingChart } from "./_sections/ComprasAgingChart";
+import { ComprasCapturaTrend } from "./_sections/ComprasCapturaTrend";
 import { ROUTES } from "@/constants/routes";
 
 export default function Compras() {
@@ -32,13 +37,11 @@ export default function Compras() {
 
   const metrics = useMemo(() => {
     const conSaldo = cxp.filter((f) => f.saldo > 0.01);
-    const vencidas = conSaldo.filter((f) => f.estatus === "Vencida").length;
     const porAprobarMonto = cxp
       .filter((f) => f.estado_aprobacion === "pendiente")
       .reduce((s, f) => s + Number(f.total), 0);
     return {
       facturasConSaldo: conSaldo.length,
-      vencidas,
       embarquesPorCapturar: porCapturar.length,
       porAprobarMonto,
     };
@@ -57,15 +60,15 @@ export default function Compras() {
     [cxp],
   );
 
-  const vencidoMas30 = agingTotales.d_31_60 + agingTotales.d_61_90 + agingTotales.mas_90;
   const vencidoTotal = kpis.vencido_mxn + kpis.vencido_usd;
+  const porPagar7d = kpis.por_vencer_7d_mxn + kpis.por_vencer_7d_usd;
 
   return (
     <PageContainer>
       <PageHeader
         icon={<ShoppingCart className="h-6 w-6 text-accent" />}
         title="Compras"
-        description="Dashboard del módulo: proveedores, facturas recibidas, aprobaciones y pagos."
+        description="Facturas de proveedor, aprobaciones y pagos."
         actions={canEdit ? (
           <Button onClick={() => setOpenNueva(true)}>
             <Plus className="h-4 w-4 mr-2" /> Capturar factura
@@ -73,94 +76,59 @@ export default function Compras() {
         ) : null}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+      {/* Fila 1 · 4 KPIs accionables (cada uno navega a su bandeja) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          label="Embarques por capturar"
+          label="Por capturar"
           value={metrics.embarquesPorCapturar}
-          sub="presupuesto sin factura"
-          hint="Embarques que ya tienen presupuesto operativo cargado pero aún no se ha capturado la factura del proveedor. Van a la bandeja 'Por capturar'."
+          sub="embarques sin factura"
+          to={ROUTES.COMPRAS_POR_CAPTURAR}
+          icon={<Inbox className="h-4 w-4" />}
+          tone={metrics.embarquesPorCapturar > 0 ? "info" : "default"}
+          hint="Embarques con presupuesto operativo cargado pero aún sin factura de proveedor capturada."
         />
         <KpiCard
           label="Por aprobar"
           value={pendientesAprob}
-          sub={pendientesAprob > 0 ? formatCurrencyCompact(metrics.porAprobarMonto, "MXN") : "Sin pendientes"}
-          tone={pendientesAprob > 0 ? "warn" : "default"}
-          hint="Facturas capturadas con estado 'pendiente' de aprobación contable. Hasta que se aprueben no pueden pasar a 'Por pagar'."
-        />
-        <KpiCard
-          label="Facturas con saldo"
-          value={metrics.facturasConSaldo}
-          sub={`${formatCurrencyCompact(kpis.por_pagar_mxn, "MXN")} · ${formatCurrencyCompact(kpis.por_pagar_usd, "USD")}`}
-          hint="Facturas de proveedor con saldo > 0 (aprobadas o vencidas). Suma total desglosada por moneda."
-        />
-        <KpiCard
-          label="Vencidas"
-          value={metrics.vencidas}
-          sub={`${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}`}
-          tone={vencidoTotal > 0 ? "danger" : "default"}
-          hint="Facturas cuyo vencimiento ya pasó y siguen con saldo pendiente. Prioridad de pago."
-        />
-        <KpiCard
-          label="Vencido > 30 días"
-          value={formatCurrencyCompact(vencidoMas30, "MXN")}
-          sub="Cubetas 31-60, 61-90 y >90"
-          tone={vencidoMas30 > 0 ? "danger" : "default"}
-          hint="Saldo total (MXN equivalente) de facturas vencidas hace más de 30 días. Riesgo alto de reclamo del proveedor."
-        />
-        <KpiCard
-          label="Por vencer 7 días"
-          value={formatCurrencyCompact(kpis.por_vencer_7d_mxn, "MXN")}
-          sub={formatCurrencyCompact(kpis.por_vencer_7d_usd, "USD")}
-          tone={kpis.por_vencer_7d_mxn + kpis.por_vencer_7d_usd > 0 ? "warn" : "default"}
-          hint="Facturas cuyo vencimiento cae dentro de los próximos 7 días. Programar el pago antes de que entren a 'Vencidas'."
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        <QuickLink
+          sub={pendientesAprob > 0 ? formatCurrencyCompact(metrics.porAprobarMonto, "MXN") : "sin pendientes"}
           to={ROUTES.COMPRAS_POR_APROBAR}
-          icon={<ShieldCheck className="h-5 w-5" />}
-          title="Revisar por aprobar"
-          description="Facturas a la espera de validación contable."
-          kpi={`${pendientesAprob} pendiente${pendientesAprob === 1 ? "" : "s"}`}
+          icon={<ShieldCheck className="h-4 w-4" />}
+          tone={pendientesAprob > 0 ? "warn" : "default"}
+          hint="Facturas capturadas esperando validación contable antes de pasar a 'Por pagar'."
         />
-        <QuickLink
-          to={ROUTES.COMPRAS_AGING}
-          icon={<LayoutList className="h-5 w-5" />}
-          title="Revisar antigüedad"
-          description="Cubetas de saldos vencidos por proveedor."
-          kpi={vencidoMas30 > 0 ? `${formatCurrencyCompact(vencidoMas30, "MXN")} > 30 días` : "Sin vencidos > 30 días"}
-        />
-        <QuickLink
+        <KpiCard
+          label="Por pagar"
+          value={`${formatCurrencyCompact(kpis.por_pagar_mxn, "MXN")} · ${formatCurrencyCompact(kpis.por_pagar_usd, "USD")}`}
+          sub={porPagar7d > 0 ? `${formatCurrencyCompact(porPagar7d, "MXN")} vencen en 7 d` : `${metrics.facturasConSaldo} facturas con saldo`}
           to={ROUTES.COMPRAS_POR_PAGAR}
-          icon={<Landmark className="h-5 w-5" />}
-          title="Por pagar"
-          description="Programa y registra pagos a proveedores."
-          kpi={`${metrics.facturasConSaldo} con saldo`}
+          icon={<Landmark className="h-4 w-4" />}
+          tone={porPagar7d > 0 ? "warn" : "default"}
+          hint="Saldo aprobado pendiente de pago. El sublabel adelanta lo que vence en 7 días si hay urgencia."
         />
-        <QuickLink
-          to={ROUTES.COMPRAS_PROVEEDORES}
-          icon={<Truck className="h-5 w-5" />}
-          title="Proveedores"
-          description="Catálogo de proveedores logísticos y de gastos."
-          kpi="Ir al catálogo"
-        />
-        <QuickLink
-          to={ROUTES.COMPRAS_POR_CAPTURAR}
-          icon={<Inbox className="h-5 w-5" />}
-          title="Por capturar"
-          description="Embarques con presupuesto sin factura."
-          kpi={`${metrics.embarquesPorCapturar} pendiente${metrics.embarquesPorCapturar === 1 ? "" : "s"}`}
-        />
-        <QuickLink
-          to={ROUTES.COMPRAS_FACTURAS}
-          icon={<Receipt className="h-5 w-5" />}
-          title="Facturas"
-          description="Listado y captura de facturas recibidas."
-          kpi={`${cxp.length} factura${cxp.length === 1 ? "" : "s"}`}
+        <KpiCard
+          label="Vencido"
+          value={vencidoTotal > 0 ? formatCurrencyCompact(vencidoTotal, "MXN") : "$0"}
+          sub={vencidoTotal > 0
+            ? `${formatCurrencyCompact(kpis.vencido_mxn, "MXN")} · ${formatCurrencyCompact(kpis.vencido_usd, "USD")}`
+            : "al corriente"}
+          to={ROUTES.COMPRAS_AGING}
+          icon={<AlertTriangle className="h-4 w-4" />}
+          tone={vencidoTotal > 0 ? "danger" : "success"}
+          hint="Saldo total ya vencido (todas las cubetas de aging combinadas). Click para ver el desglose por proveedor."
         />
       </div>
 
+      {/* Fila 2 · Gráficas ejecutivas: aging (2/3) + tendencia de captura (1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="lg:col-span-2">
+          <ComprasAgingChart totales={agingTotales} />
+        </div>
+        <div className="lg:col-span-1">
+          <ComprasCapturaTrend rows={cxp} />
+        </div>
+      </div>
+
+      {/* Fila 3 · Contexto de proveedores y capturas recientes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         <TopProveedoresCard rows={topProveedores} />
         <UltimasFacturasCard rows={ultimasFacturas} />
