@@ -11,7 +11,6 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { Button } from "@/components/ui/button";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { usePagosProveedor, useEliminarPagoProveedor } from "@/features/cxp/hooks";
 import { useCerrarFacturaProveedorSinPago } from "@/features/cxp/hooks/useCerrarFacturaSinPago";
 import { useFacturaProveedor } from "@/features/cxp/hooks/useFacturaProveedor";
@@ -20,9 +19,8 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { FacturaResumen, PagosTable } from "./DialogDetallePagosProveedor.sections";
 import { StatusActionBar } from "./DialogDetallePagosProveedor.actionbar";
 import { computeFacturaFlags } from "./DialogDetallePagosProveedor.flags";
+import { ActionDialogs } from "./DialogDetallePagosProveedor.actiondialogs";
 import { NotasCreditoSection } from "./NotasCreditoSection";
-import { CerrarFacturaSinPagoDialog } from "./CerrarFacturaSinPagoDialog";
-import { CancelarFacturaProveedorDialog } from "./CancelarFacturaProveedorDialog";
 import { InfoFacturaSection } from "./InfoFacturaSection";
 import { HistorialFacturaSection } from "./HistorialFacturaSection";
 import { usePermissions } from "@/hooks/shared";
@@ -92,66 +90,7 @@ export function DialogDetallePagosProveedor({
   );
 }
 
-function ActionDialogs({
-  f,
-  pagoAEliminar, setPagoAEliminar, eliminar,
-  aCerrarSinPago, setACerrarSinPago, cerrarSinPago,
-  openCancel, setOpenCancel, cancelar,
-}: {
-  f: FacturaCxP | null;
-  pagoAEliminar: string | null;
-  setPagoAEliminar: (v: string | null) => void;
-  eliminar: ReturnType<typeof useEliminarPagoProveedor>;
-  aCerrarSinPago: FacturaCxP | null;
-  setACerrarSinPago: (v: FacturaCxP | null) => void;
-  cerrarSinPago: ReturnType<typeof useCerrarFacturaProveedorSinPago>;
-  openCancel: boolean;
-  setOpenCancel: (v: boolean) => void;
-  cancelar: ReturnType<typeof useCancelarFacturaProveedor>;
-}) {
-  return (
-    <>
-      <DoubleConfirmDeleteDialog
-        open={!!pagoAEliminar}
-        onOpenChange={(o) => { if (!o) setPagoAEliminar(null); }}
-        entityName="el pago"
-        description="El pago será eliminado y el saldo de la factura se recalculará."
-        finalDescription="Esta acción no se puede deshacer fácilmente."
-        isPending={eliminar.isPending}
-        onConfirm={async () => {
-          if (!pagoAEliminar) return;
-          await eliminar.mutateAsync(pagoAEliminar);
-          setPagoAEliminar(null);
-        }}
-      />
 
-      <CerrarFacturaSinPagoDialog
-        factura={aCerrarSinPago}
-        open={!!aCerrarSinPago}
-        onOpenChange={(o) => { if (!o) setACerrarSinPago(null); }}
-        isPending={cerrarSinPago.isPending}
-        onConfirm={async (params) => {
-          if (!aCerrarSinPago) return;
-          await cerrarSinPago.mutateAsync({ ...params, facturaId: aCerrarSinPago.id });
-          setACerrarSinPago(null);
-        }}
-      />
-
-      {f && (
-        <CancelarFacturaProveedorDialog
-          factura={f}
-          open={openCancel}
-          onOpenChange={setOpenCancel}
-          isPending={cancelar.isPending}
-          onConfirm={async (motivo) => {
-            await cancelar.mutateAsync({ facturaId: f.id, motivo });
-            setOpenCancel(false);
-          }}
-        />
-      )}
-    </>
-  );
-}
 
 function HeaderSection({ f }: { f: FacturaCxP | null }) {
   return (
