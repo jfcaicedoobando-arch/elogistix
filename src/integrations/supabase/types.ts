@@ -3575,8 +3575,8 @@ export type Database = {
           tarifa_revalidada_por: string | null
           tiene_proforma: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
-          tipo_cambio_eur: number
-          tipo_cambio_usd: number
+          tipo_cambio_eur: number | null
+          tipo_cambio_usd: number | null
           tipo_carga: string
           tipo_contenedor: string | null
           tipo_servicio:
@@ -3656,8 +3656,8 @@ export type Database = {
           tarifa_revalidada_por?: string | null
           tiene_proforma?: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
-          tipo_cambio_eur: number
-          tipo_cambio_usd: number
+          tipo_cambio_eur?: number | null
+          tipo_cambio_usd?: number | null
           tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_servicio?:
@@ -3737,8 +3737,8 @@ export type Database = {
           tarifa_revalidada_por?: string | null
           tiene_proforma?: boolean
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
-          tipo_cambio_eur?: number
-          tipo_cambio_usd?: number
+          tipo_cambio_eur?: number | null
+          tipo_cambio_usd?: number | null
           tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_servicio?:
