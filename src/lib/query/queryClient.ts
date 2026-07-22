@@ -4,16 +4,37 @@ import { toast } from "sonner";
 import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 
 /**
- * Errores de negocio esperados que NO deben generar un issue en Sentry:
- * Postgres `RAISE EXCEPTION` sin código explícito devuelve `P0001`, que usamos
- * para validaciones de permisos / reglas de negocio a nivel de RPC (p.ej.
- * "No tienes permiso para convertir proformas a factura"). Estos errores ya
- * los presenta la UI con `notifyError`; no son bugs de infraestructura.
+ * Errores esperados que NO deben generar un issue en Sentry:
+ * - Postgres `P0001`: RAISE EXCEPTION de reglas de negocio (permisos, guards).
+ * - Clases de dominio (`AprobacionFacturaError`, `CreditLimitError`, etc.):
+ *   validaciones controladas que la UI ya presenta con `notifyError`.
+ * - Timeouts de gateway (504 / "upstream request timeout"): infra, no bug.
+ * - Validaciones de captura conocidas ("Debe seleccionar…").
+ * Ver mem plan Sentry 13.302.7.
  */
+const BUSINESS_ERROR_NAMES = new Set<string>([
+  "AprobacionFacturaError",
+  "CreditLimitError",
+  "ValidationError",
+  "ZodError",
+]);
+
+const BUSINESS_ERROR_MESSAGE_HINTS = [
+  "debe seleccionar al menos",
+  "upstream request timeout",
+];
+
 function isExpectedBusinessError(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
-  const code = (err as { code?: unknown }).code;
-  return typeof code === "string" && code === "P0001";
+  const e = err as { code?: unknown; name?: unknown; message?: unknown; status?: unknown };
+  if (typeof e.code === "string" && e.code === "P0001") return true;
+  if (typeof e.name === "string" && BUSINESS_ERROR_NAMES.has(e.name)) return true;
+  if (e.status === 504) return true;
+  if (typeof e.message === "string") {
+    const msg = e.message.toLowerCase();
+    if (BUSINESS_ERROR_MESSAGE_HINTS.some((h) => msg.includes(h))) return true;
+  }
+  return false;
 }
 
 /**
