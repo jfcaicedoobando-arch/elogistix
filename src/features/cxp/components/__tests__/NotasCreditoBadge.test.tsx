@@ -1,9 +1,10 @@
 /**
  * Smoke test: garantiza que los estados de NC estén mapeados a los tonos
- * semánticos correctos vía la config `NC_TONES` que consume `<ToneBadge>`.
- * v13.308.4: post-unificación (v13.307.19) los literales `bg-*/15 text-* border-*/30`
- * ya no viven inline en la sección — se derivan de `badgeTone.ts`.
+ * semánticos correctos vía la config NC_TONES que consume ToneBadge.
+ * v13.308.4: post-unificación (v13.307.19) los literales de badge ya no
+ * viven inline en la sección — se derivan de badgeTone.ts.
  */
+
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
