@@ -52,6 +52,18 @@ export interface ReportExtra {
 const EXPECTED_PG_CODES = new Set(["23514"]);
 
 /**
+ * Clases de error de dominio lanzadas intencionalmente por servicios (validaciones
+ * de negocio ya presentadas al usuario vía toast). No son bugs. Ver Sentry
+ * JAVASCRIPT-REACT-37 / -3D (13.308.6).
+ */
+const BUSINESS_ERROR_NAMES = new Set<string>([
+  "AprobacionFacturaError",
+  "CreditLimitError",
+  "ValidationError",
+  "ZodError",
+]);
+
+/**
  * Errores lanzados desde funciones/triggers de BD con `RAISE EXCEPTION 'LC_…'`
  * son parte del contrato de dominio (máquinas de estado, guardas fiscales,
  * bloqueos de eliminación). La UI ya muestra un toast contextual — se
@@ -60,7 +72,9 @@ const EXPECTED_PG_CODES = new Set(["23514"]);
 function isExpectedBusinessError(
   pgCode: string | undefined,
   message: string | undefined,
+  errName?: string,
 ): boolean {
+  if (errName && BUSINESS_ERROR_NAMES.has(errName)) return true;
   if (pgCode && EXPECTED_PG_CODES.has(pgCode)) return true;
   if (pgCode === "P0001" && typeof message === "string" && message.startsWith("LC_")) {
     return true;
