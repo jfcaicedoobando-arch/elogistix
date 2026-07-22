@@ -55,6 +55,7 @@ export function VincularEmbarqueSection({
   const { data, isLoading } = useConceptosCostoAbiertos(proveedorId, organizationId);
   const grupos = useMemo(() => agruparPorEmbarque(data ?? []), [data]);
   const [ultimaSugerencia, setUltimaSugerencia] = useState<SugerenciaVinculo[] | null>(null);
+  const [mostrarBusqueda, setMostrarBusqueda] = useState<boolean>(!!embarqueAdHoc);
 
   const puedeSugerir = calcularPuedeSugerir({
     onAplicar: onAplicarSugerencias,
