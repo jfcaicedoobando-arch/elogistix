@@ -22,8 +22,7 @@ function makeCfdiResponse(overrides: Partial<CfdiParsedResponse["cfdi"]> = {}): 
       conceptos: [{ descripcion: "Descuento", importe: 1000, iva: 160, ieps: 0 }],
       ...overrides,
     },
-    ai: null,
-    file: { xml: "path/to/xml.xml", pdf: null, pdfName: null },
+    ai: { categoria_id: null, notas: "" },
   };
 }
 
