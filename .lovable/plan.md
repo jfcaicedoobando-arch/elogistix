@@ -1,85 +1,57 @@
-# Bloque C (P2) — Auditoría R2
+ns
+# Verificación R2 — comprobar que los 32 bugs ya no existen
 
-Aplicar 15 fixes (R2-18 → R2-32). R2-16 sigue diferido (riesgo de onboarding). Cada cambio va como migración nueva o refactor TS, sin editar migraciones ya aplicadas.
+Los 32 fixes (Bloques A/B/C) se aplicaron en `v13.305.13`, `v13.306.0` y `v13.306.1`. Este plan **verifica en vivo** contra la BD y el código que cada bug ya no reproduce, sin modificar nada.
 
----
+## Método
 
-## Parte 1 · Migración SQL única `fix_r2_bloque_c_v13_306_1.sql`
+Para cada FIX ejecuto una comprobación específica y produzco una tabla con estado `✅ resuelto` / `⚠️ parcial` / `❌ regresión` + evidencia.
 
-Consolida todos los fixes DB del bloque en una sola migración transaccional para facilitar rollback.
+### Bloque A (P0)
+- **R2-01** `\df+ validar_cierre_embarque` — buscar `pp.proveedor_factura_id`, `pnl_financiero_embarque`, `pnl_margen_minimo_cierre`.
+- **R2-02** `\df convertir_proformas_a_factura` — confirmar gate unificado `admin_org|contador|super_admin` sin `_assert_writer` contradictorio.
+- **R2-03** `\df+ check_no_sobrepago_proveedor` — buscar `FOR UPDATE`, cálculo interno de TC, rechazo de monto ≤ 0.
+- **R2-04** `\df is_org_member` + `\d+ proveedor_facturas` (buscar trigger `trg_guard_estado_proveedor_factura`).
 
-### Integridad / máquinas de estado
-- **R2-18** Trigger `trg_nc_no_delete` en `factura_notas_credito` BEFORE DELETE → `RAISE 'LC_NC_INMUTABLE'`.
-- **R2-21** Trigger `trg_guard_estado_cotizacion`: valida transiciones Borrador→Enviada→Aceptada/Rechazada→En operación; bloquea regresar a Borrador desde Aceptada/En operación.
-- **R2-25** Ajustar `trg_facturas_set_fecha_vencimiento` para respetar `fecha_vencimiento` explícita (solo autocalcular si `NULL`).
-- **R2-27** `UNIQUE(sustituye_a) WHERE sustituye_a IS NOT NULL` + CHECK anti-autosustitución + trigger anti-ciclo.
-- **R2-32** Extender `_recalc_estado_proveedor_factura` para sincronizar `estado_captura='pagada'` cuando `estado='Pagada'` (y revertir a `'capturada'` al salir de Pagada).
+### Bloque B (P1)
+- **R2-05** `\df+ recalcular_estado_factura` — buscar suma de NCs aplicadas.
+- **R2-06** `\df+ calc_pago_retenciones` — base neta.
+- **R2-07** trigger `trg_guard_estado_factura` presente.
+- **R2-09** `\d pagos_factura`, `\d pagos_proveedor` — CHECKs monto > 0 y TC > 0.
+- **R2-10** `\d+ cxp_por_pagar`, `cxp_aging_proveedores` — `COALESCE(monto_en_moneda_factura,…)`.
+- **R2-11** `\df enforce_cotizacion_vigente` + llamadas en `aceptar_cotizacion_version` y `crear_embarque_borrador_desde_cotizacion`.
+- **R2-12** `\df assert_proformas_moneda_soportada`.
+- **R2-13** `\df+ embarques_list_extras`, `cxp_aging_proveedores` — filtro `current_user_org_id()`.
+- **R2-14** policy `Tenant read clientes` excluye rol `cliente`.
+- **R2-15** índice `facturas_numero_org_unico` existe.
+- **R2-16** documentado como diferido (no verificar).
+- **R2-17** `\d+ cartera_pendiente`, `embarque_estado_financiero`, `facturacion_por_emitir`.
 
-### Constraints / catálogos
-- **R2-22** CHECK ISO-6346 en `embarque_contenedores.numero_contenedor` + índices únicos parciales por org (soft-delete) y por `(embarque_id, bl_house)`. **Precaución:** validar primero con SELECT y saltar filas históricas inválidas (usar `NOT VALID` + backfill si es necesario).
-- **R2-24** CHECK regex RFC en `clientes` + trigger BEFORE INSERT/UPDATE que hace `btrim` en `nombre`/`email` y rechaza vacío. Sanear filas existentes primero.
-- **R2-26** CHECK `cancelacion_motivo IN ('01','02','03','04')`.
+### Bloque C (P2)
+- **R2-18** trigger `trg_nc_no_delete`.
+- **R2-19** función `marcar_facturas_vencidas` + job `cron.job` `marcar_facturas_vencidas_diario`.
+- **R2-20** vista `cxp_alertas_vencimiento` + función homónima.
+- **R2-21** trigger `trg_guard_estado_cotizacion`.
+- **R2-22** CHECK `contenedor_iso6346`.
+- **R2-23** `rg "toISOString\(\)\.slice\(0,\s*10\)" src` debe devolver 0 hits en producción.
+- **R2-24** CHECK `clientes_rfc_formato` + trigger `trg_clientes_normaliza_campos`.
+- **R2-25** `\df+ facturas_set_fecha_vencimiento` — respeta valor explícito.
+- **R2-26** CHECK `facturas_cancelacion_motivo_sat`.
+- **R2-27** CHECK `facturas_no_autosustitucion` + trigger `trg_guard_sustitucion_ciclo`.
+- **R2-28** `parseMonto` BBVA y `num()` en `parse-cfdi-xml/parser.ts` con nueva semántica.
+- **R2-29** confirmar que `configuracion_global` no tiene `tasa_iva` (N/A).
+- **R2-30** `\df+ convertir_a_mxn` — lanza `LC_TC_REQUERIDO` / `LC_MONEDA_NO_SOPORTADA`.
+- **R2-31** `\df+ pnl_financiero_embarque` — devuelve `estado_costos='incompleto'` cuando falta CxP.
+- **R2-32** `\df+ _recalc_estado_proveedor_factura` — sincroniza `estado_captura`.
 
-### Motor financiero
-- **R2-30** Reescribir `convertir_a_mxn(p_monto, p_moneda, p_tc)`:
-  - MXN → devuelve `ROUND(p_monto,2)`.
-  - Moneda no soportada → `LC_MONEDA_NO_SOPORTADA`.
-  - TC NULL o ≤ 0 (para USD/EUR) → `LC_TC_REQUERIDO`.
+## Entregable
 
-### Reportería / alertas
-- **R2-19** Función `marcar_facturas_vencidas()`: `UPDATE facturas SET estado='Vencida' WHERE estado IN ('Emitida','Parcialmente pagada') AND fecha_vencimiento < CURRENT_DATE`. Programar con `pg_cron` diario a las 06:00 UTC (si la extensión existe; si no, dejar la función y documentar cron externo).
-- **R2-20** Vista `cxp_alertas_vencimiento` (org, proveedor, folio, saldo, días_a_vencer) filtrada por RLS vía `is_org_member(organization_id)`; función helper `cxp_alertas_vencimiento(dias int)` que envuelve la vista.
+Tabla resumen con:
+- FIX-ID
+- Bloque
+- Estado
+- Evidencia corta (nombre de constraint/trigger/función encontrada, o hit de regex)
 
-### Formalización de objetos huérfanos (nota 3 del brief)
-- Crear con `IF NOT EXISTS`: `tracking_externo`, `tracking_intentos`, columnas `proformas.es_consolidada` / `proformas.estado_aprobacion`, secuencia `embarque_consecutivo_seq`. Solo formaliza lo que ya existe en Cloud para que un build desde cero lo reproduzca.
+Si alguna verificación falla, la marco como `❌ regresión` y sugiero (sin aplicar) el parche correctivo.
 
----
-
-## Parte 2 · Refactors TypeScript
-
-### R2-23 · Erradicar `toISOString().slice(0,10)`
-Reemplazar por `formatIsoDateMx` de `src/lib/date/mx.ts` en:
-- `features/proformas/services/facturar.ts`
-- `features/tesoreria/domain/flujoProyectado.ts`
-- `features/tesoreria/services/tolerancia.ts`
-- `features/tesoreria/domain/import/bbva.ts`
-- `features/presupuesto/services/vsReal.ts`
-- `features/embarques/domain/embarqueWizardRuta.ts`
-- `features/dashboard/direccion/services/kpiDireccion.ts`
-- `features/crm/domain/dashboardAggregates.ts`
-- Cualquier ocurrencia residual en `auditoria/*` y `costeo/*`.
-
-Añadir regla ESLint `no-restricted-syntax` que prohíba `toISOString().slice(0,10)` con mensaje claro.
-
-### R2-28 · Parsers robustos
-- `features/tesoreria/domain/import/bbva.ts`:
-  - Quitar `Math.abs()` en `parseMonto` (conservar signo).
-  - NaN empuja a `errores[]` en lugar de `0`.
-  - Contabilizar y devolver `filas_descartadas` (cargo=abono=0 o fecha inválida).
-- `supabase/functions/parse-cfdi-xml/index.ts`: `num()` lanza error explícito ante valor no numérico; documentar migración futura a parser DOM.
-
-### R2-29 · `configuracion_global.tasa_iva`
-Decisión: **leer el IVA desde `configuracion_global` con fallback 0.16 y validación numérica**. Actualizar `useTasaIVA` para hidratar desde la fila; mantener `TASA_IVA = 0.16` como constante de fallback exportada, marcada `@deprecated`. No romper cálculos existentes.
-
-### R2-31 · Utilidad sin CxP
-En `pnl_financiero_embarque` (SQL) y en el componente que la renderiza:
-- Si `conceptos_costo` está vacío o `proveedor_facturas` no cubre al menos el presupuesto planeado, devolver `utilidad_mxn = NULL` y marca `estado_costos = 'incompleto'`.
-- UI muestra badge amarillo "Costos pendientes" en `ResumenCards.tsx` cuando `estado_costos != 'completo'`; oculta el valor de utilidad hasta capturar CxP.
-
----
-
-## Parte 3 · Verificación
-
-1. `bunx vitest run` (incluye `saldo-factura-fase-d`, aging CxP, financialUtils).
-2. `bun run lint -- --max-warnings 0` (incluye nueva regla `toISOString().slice`).
-3. `supabase--linter` para revisar warnings post-migración (fixes de `search_path` donde aplique).
-4. Consulta manual: contar filas que violarían R2-22/R2-24 antes de aplicar CHECK; reportar antes de romperlas.
-
----
-
-## Detalles técnicos
-
-- **Diferido:** R2-16 (asignación de rol admin en signup) queda fuera; requiere rediseño del flujo de onboarding y comunicación al usuario.
-- **CHECKs con datos históricos:** para R2-22 y R2-24 se agregan como `NOT VALID` y se corren `VALIDATE CONSTRAINT` sólo si el sondeo previo confirma 0 filas violatorias. Si hay violaciones, el plan pausa y reporta antes de forzar.
-- **Versión / changelog:** `APP_VERSION → 13.306.1`, entrada en `CHANGELOG.md` referenciando cada FIX aplicado y R2-16 como diferido.
-- **Estimado:** 1 migración SQL + ~12 archivos TS editados + 2 tests nuevos (`convertir_a_mxn.test.ts`, `bbva-parser-errores.test.ts`).
+**No se modifica ningún archivo ni migración**; sólo consultas `psql` de sólo lectura y `rg`/`grep` sobre el código.
