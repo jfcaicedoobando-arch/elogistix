@@ -9,30 +9,40 @@ import { FacturaDetalleModales } from "@/features/facturacion/components/detalle
 import { FacturaDetalleBody } from "@/features/facturacion/components/detalle/FacturaDetalleBody";
 import { SustitutaCanceladaBanner } from "@/features/facturacion/components/detalle/SustitutaCanceladaBanner";
 import { ClaimPendingBanner } from "@/features/facturacion/components/detalle/ClaimPendingBanner";
+import type { FacturaDetalle } from "@/features/facturacion/services/detail";
+import type { FacturaFlags } from "@/features/facturacion/domain/facturaFlags";
+import type { useAcuseCancelacion } from "@/features/facturacion/hooks/useAcuseCancelacion";
+import type { useTimbrarRep } from "@/features/facturacion/hooks/useTimbrarRep";
+import type { useDescargarCfdi } from "@/features/facturacion/hooks/useDescargarCfdi";
+import type { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
+import type { useFacturaDetalleDialogs } from "@/features/facturacion/hooks/useFacturaDetalleDialogs";
+import type { usePagosFactura } from "@/features/facturacion/hooks/usePagosFactura";
 
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// Tipos amplios: la ruta ya validó que factura no es null y agrupa hooks/dialogs.
-type FacturaAny = any;
+type AcuseState = ReturnType<typeof useAcuseCancelacion>;
+type TimbrarRepMutation = ReturnType<typeof useTimbrarRep>;
+type DescargarCfdiHandler = ReturnType<typeof useDescargarCfdi>;
+type ConceptosVivos = NonNullable<ReturnType<typeof useConceptosFactura>["data"]>;
+type PagosVivos = NonNullable<ReturnType<typeof usePagosFactura>["data"]>;
+type PagoRep = PagosVivos[number];
+type DialogsBundle = ReturnType<typeof useFacturaDetalleDialogs>;
 
 interface FacturaDetalleViewProps {
-  factura: FacturaAny;
+  factura: FacturaDetalle;
   canEdit: boolean;
-  flags: any;
-  acuse: any;
+  flags: FacturaFlags;
+  acuse: AcuseState;
   eliminando: boolean;
-  conceptosVivos: any;
-  pagoRepPendiente: any;
-  timbrarRep: any;
-  handleDownload: any;
+  conceptosVivos: ConceptosVivos;
+  pagoRepPendiente: PagoRep | undefined;
+  timbrarRep: TimbrarRepMutation;
+  handleDownload: DescargarCfdiHandler;
   onEliminar: () => void;
   volverHref: string;
   volverLabel: string;
   onVolver: (href: string) => void;
-  dialogs: any;
+  dialogs: DialogsBundle;
   saldo?: number;
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export function FacturaDetalleView(props: FacturaDetalleViewProps) {
   const {
