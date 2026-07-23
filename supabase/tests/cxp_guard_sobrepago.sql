@@ -41,11 +41,11 @@ BEGIN
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
      categoria_presupuesto_id,
-     moneda, tipo_cambio_usd, subtotal, iva, total, estado)
+     moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
   VALUES
     (v_fact, v_org, v_prov, 'Test Prov', 'GUARD-SOBRE-01',
      v_cat,
-     'MXN'::public.moneda, 0, 3000, 0, 3000, 'Borrador');
+     'MXN'::public.moneda, 0, 3000, 0, 3000, 'Borrador', 'aprobada');
 END
 $fixture$ LANGUAGE plpgsql;
 
