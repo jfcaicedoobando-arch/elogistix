@@ -15,7 +15,7 @@ import { useValidacionCierre } from "@/features/embarques/hooks/useCierreEmbarqu
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   getSiguienteEstado,
   resolveCierreGate,
