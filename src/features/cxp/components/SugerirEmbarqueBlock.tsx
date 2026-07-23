@@ -21,11 +21,9 @@ import {
   type EmbarqueSugerido,
 } from "@/features/cxp/hooks";
 
-export interface EmbarqueSeleccionado {
-  embarqueId: string;
-  expediente: string;
-  concepto: string;
-}
+export type { EmbarqueSeleccionado } from "@/features/cxp/types";
+import type { EmbarqueSeleccionado } from "@/features/cxp/types";
+
 
 interface Props {
   proveedorId: string;

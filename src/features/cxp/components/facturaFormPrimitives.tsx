@@ -1,30 +1,16 @@
 /**
- * Tipos y subcomponentes compartidos del formulario de factura de proveedor.
+ * Subcomponentes compartidos del formulario de factura de proveedor.
+ * Tipos movidos a `@/features/cxp/types` (Bloque 1.3); se re-exportan aquí
+ * para no romper consumidores que aún importan desde este archivo.
  */
 import { AlertCircle } from "lucide-react";
 import type { ReactNode } from "react";
-import type { Database } from "@/integrations/supabase/types";
 
-type Moneda = Database["public"]["Enums"]["moneda"];
+export type {
+  FacturaFormValues,
+  CategoriaPresupuestoLite,
+} from "@/features/cxp/types";
 
-export interface FacturaFormValues {
-  provId: string;
-  provNombre: string;
-  folio: string;
-  emision: string;
-  diasCredito: number;
-  vencimiento: string;
-  moneda: Moneda;
-  tc: string;
-  subtotal: string;
-  iva: string;
-  ieps: string;
-  retenciones: string;
-  categoriaId: string;
-  notas: string;
-}
-
-export interface CategoriaPresupuestoLite { id: string; nombre: string }
 
 interface FormSectionProps {
   title: string;

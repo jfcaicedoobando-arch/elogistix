@@ -9,8 +9,8 @@
  */
 import type { CfdiParsedResponse, CfdiConceptoParsed } from "@/features/cxp/services";
 import { findProveedorByRfcEnOrg } from "@/features/proveedor/services";
-import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
-import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
+import type { FacturaFormValues } from "@/features/cxp/types";
+import type { TcOrigen } from "@/features/cxp/types";
 import { mapCfdiToValues, type PendingCfdi } from "./useNuevaFacturaProveedorForm.helpers";
 
 export interface ProcesarPdfIaResult {

@@ -3,7 +3,7 @@
  * Extraídos del hook controller para respetar Power-of-10.
  */
 import type { ConceptoCostoAbierto } from "@/features/cxp/services";
-import type { SeleccionLinea } from "@/features/cxp/components/VincularEmbarqueSection";
+import type { SeleccionLinea } from "@/features/cxp/types";
 import type { VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
 
 export type VinculosState = Record<string, SeleccionLinea & VinculoLinea>;
