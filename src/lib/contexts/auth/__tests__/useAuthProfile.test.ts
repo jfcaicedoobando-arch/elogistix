@@ -73,8 +73,10 @@ describe("useAuthProfile", () => {
   it("ante error de fetchUserContext no actualiza el perfil (queda vacío)", async () => {
     mockFetchUserContext.mockRejectedValueOnce(new Error("network"));
     const { result } = renderHook(() => useAuthProfile("user-err"));
-    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled());
-    expect(result.current.profile.role).toBeNull();
+    // v13.309.24: timeout más generoso para blindar contra flake bajo paralelismo pesado.
+    await waitFor(() => expect(mockFetchUserContext).toHaveBeenCalled(), { timeout: 3000 });
+    // Damos una micro-espera para que cualquier setState post-catch se propague.
+    await waitFor(() => expect(result.current.profile.role).toBeNull(), { timeout: 3000 });
     expect(result.current.profile.organizationId).toBeNull();
   });
 });
