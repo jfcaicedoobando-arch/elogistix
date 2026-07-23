@@ -14,6 +14,7 @@ bloquea el pipeline (imposible de reescribir sin refactor de esquema).
 | **H3** | `DROP FUNCTION\|TABLE\|VIEW ... CASCADE` debe ir seguido de `CREATE OR REPLACE` o `CREATE TABLE` para la misma entidad. | Evita "olvidos" de recrear dependencias tras un CASCADE. |
 | **H4** | `CREATE INDEX` requiere `IF NOT EXISTS`. `CREATE POLICY` requiere `DROP POLICY IF EXISTS ... ; CREATE POLICY ...` (Postgres <16 no soporta `CREATE POLICY IF NOT EXISTS`). | Migraciones idempotentes; permite re-ejecutar sin corromper estado. |
 | **H5** | Prohibido `DROP TABLE public.X` sin `IF EXISTS`. | Idem H4; evita romper entornos donde la tabla ya se dropeó. |
+| **H6** | Toda función `SECURITY DEFINER` en `public` debe llevar, en el mismo archivo: `REVOKE ALL ON FUNCTION ... FROM PUBLIC` **y** `GRANT EXECUTE ... TO {authenticated\|service_role\|postgres}`. Prohibido `GRANT EXECUTE ... TO PUBLIC` (regla dura, aplica también a legacy). Excepción explícita: comentario `-- audit:allow-no-grants` en la línea previa al `CREATE FUNCTION` para helpers privados intencionales. | `SECURITY DEFINER` corre con los privilegios del owner (habitualmente superuser) — sin `REVOKE FROM PUBLIC` cualquier rol conectado puede escalar. `GRANT EXECUTE TO PUBLIC` es escalación de privilegios directa. |
 
 ## Excepciones
 

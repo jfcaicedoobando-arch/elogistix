@@ -18,6 +18,15 @@
  *      (idempotencia). NB: Postgres no soporta `CREATE POLICY IF NOT EXISTS`
  *      antes de PG16; se acepta también `DROP POLICY IF EXISTS ... ; CREATE POLICY`.
  *  H5  Prohibido `DROP TABLE public.*` sin `IF EXISTS`.
+ *  H6  Toda `CREATE OR REPLACE FUNCTION public.<f>(...) ... SECURITY DEFINER`
+ *      DEBE ir acompañada en el mismo archivo de:
+ *        - `REVOKE ALL ON FUNCTION public.<f>(<args>) FROM PUBLIC` (o `FROM PUBLIC, anon`)
+ *        - `GRANT EXECUTE ON FUNCTION public.<f>(<args>) TO <rol>` con rol ∈
+ *          {authenticated, service_role, postgres}. Prohibido `TO PUBLIC`.
+ *      Excepción: comentario `-- audit:allow-no-grants` justo antes del
+ *      `CREATE OR REPLACE FUNCTION` (helpers privados sin exposición externa).
+ *      La regla `GRANT EXECUTE ... TO PUBLIC` sobre SECURITY DEFINER es dura
+ *      y aplica siempre (aun a legacy pre-baseline).
  *
  * Salida: exit 0 si limpio, 1 si hay violaciones (con listado agrupado).
  */
@@ -37,7 +46,7 @@ const FNAME_RE = /^(\d{14})_[a-z0-9-]+\.sql$/;
 
 type Violation = { file: string; check: string; detail: string };
 
-function scanFile(file: string, body: string): Violation[] {
+export function scanFile(file: string, body: string, auditPostBaseline = true): Violation[] {
   const out: Violation[] = [];
 
   // H2 — CREATE TABLE public.X requiere GRANT ... public.X
@@ -101,6 +110,142 @@ function scanFile(file: string, body: string): Violation[] {
     out.push({ file, check: "H5", detail: `DROP TABLE public.${m[1]} sin IF EXISTS` });
   }
 
+  // H6 — SECURITY DEFINER requiere REVOKE + GRANT EXECUTE apropiados
+  out.push(...scanSecurityDefiner(file, body, auditPostBaseline));
+
+  return out;
+}
+
+/**
+ * Normaliza una lista de argumentos SQL a su forma tipada canónica.
+ * Ej: `_user_id uuid, _role text DEFAULT 'x'` → `uuid, text`.
+ * Se usa para comparar firmas entre `CREATE FUNCTION`, `REVOKE` y `GRANT`.
+ */
+function splitTopLevelCommas(src: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let buf = "";
+  for (const c of src) {
+    if (c === "(") depth += 1;
+    else if (c === ")") depth -= 1;
+    if (c === "," && depth === 0) {
+      out.push(buf);
+      buf = "";
+    } else {
+      buf += c;
+    }
+  }
+  if (buf.trim() !== "") out.push(buf);
+  return out;
+}
+
+function normalizeArgTypes(rawArgs: string): string {
+  const args = rawArgs.trim();
+  if (args === "") return "";
+  return splitTopLevelCommas(args)
+    .map((a) => {
+      const noDefault = a.split(/\bdefault\b/i)[0].trim();
+      const noMode = noDefault.replace(/^(in|out|inout|variadic)\s+/i, "");
+      const tokens = noMode.split(/\s+/);
+      // Si el primer token es un nombre de argumento (identificador), quitarlo.
+      const typeTokens =
+        tokens.length > 1 && /^_?[a-z][a-z0-9_]*$/i.test(tokens[0]) ? tokens.slice(1) : tokens;
+      // Quitar modificadores `(...)` de precisión/escala (no forman parte de la firma en pg_proc).
+      return typeTokens.join(" ").toLowerCase().replace(/\s*\([^)]*\)/g, "");
+    })
+    .filter(Boolean)
+    .join(", ");
+}
+
+
+function stripSqlComments(sql: string): string {
+  // Quita comentarios `-- ...` (fin de línea) y `/* ... */` (bloque, no anidado).
+  return sql.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ");
+}
+
+function extractParenArgs(src: string, openIdx: number): { args: string; endIdx: number } | null {
+  // src[openIdx] debe ser '('. Devuelve el contenido entre parens balanceados.
+  if (src[openIdx] !== "(") return null;
+  let depth = 0;
+  for (let i = openIdx; i < src.length; i += 1) {
+    const c = src[i];
+    if (c === "(") depth += 1;
+    else if (c === ")") {
+      depth -= 1;
+      if (depth === 0) return { args: src.slice(openIdx + 1, i), endIdx: i };
+    }
+  }
+  return null;
+}
+
+function findSecurityDefinerFunctions(body: string): Array<{
+  name: string;
+  argTypes: string;
+  allowNoGrants: boolean;
+}> {
+  const clean = stripSqlComments(body);
+  const headerRe = /create\s+or\s+replace\s+function\s+public\.([a-z0-9_]+)\s*\(/gi;
+  const found: Array<{ name: string; argTypes: string; allowNoGrants: boolean }> = [];
+  for (const m of clean.matchAll(headerRe)) {
+    const name = m[1].toLowerCase();
+    const openIdx = (m.index ?? 0) + m[0].length - 1;
+    const parsed = extractParenArgs(clean, openIdx);
+    if (!parsed) continue;
+    // Tomamos ~800 chars después de la firma para buscar SECURITY DEFINER (basta para header).
+    const post = clean.slice(parsed.endIdx, parsed.endIdx + 800);
+    if (!/security\s+definer/i.test(post)) continue;
+    // audit:allow-no-grants: buscar en las 2 líneas previas al header (usar body original).
+    const rawIdx = body.indexOf(m[0]);
+    const prev = rawIdx > 0 ? body.slice(Math.max(0, rawIdx - 200), rawIdx) : "";
+    const allowNoGrants = /audit:allow-no-grants/i.test(prev);
+    found.push({ name, argTypes: normalizeArgTypes(parsed.args), allowNoGrants });
+  }
+  return found;
+}
+
+function scanSecurityDefiner(file: string, body: string, auditPostBaseline: boolean): Violation[] {
+  const out: Violation[] = [];
+  const fns = findSecurityDefinerFunctions(body);
+  for (const { name: fnName, argTypes, allowNoGrants } of fns) {
+    const sigForRe = argTypes.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*").replace(/,/g, "\\s*,\\s*");
+    const revokeRe = new RegExp(
+      `revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\bpublic\\b`,
+      "i",
+    );
+    const grantOkRe = new RegExp(
+      `grant\\s+execute\\s+on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\b(authenticated|service_role|postgres)\\b`,
+      "i",
+    );
+    const grantPublicRe = new RegExp(
+      `grant\\s+execute\\s+on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\bpublic\\b`,
+      "i",
+    );
+
+    if (grantPublicRe.test(body)) {
+      out.push({
+        file,
+        check: "H6",
+        detail: `public.${fnName}(${argTypes}) SECURITY DEFINER con GRANT EXECUTE ... TO PUBLIC (prohibido)`,
+      });
+    }
+
+    if (!auditPostBaseline || allowNoGrants) continue;
+
+    if (!revokeRe.test(body)) {
+      out.push({
+        file,
+        check: "H6",
+        detail: `public.${fnName}(${argTypes}) SECURITY DEFINER sin REVOKE ALL ... FROM PUBLIC`,
+      });
+    }
+    if (!grantOkRe.test(body)) {
+      out.push({
+        file,
+        check: "H6",
+        detail: `public.${fnName}(${argTypes}) SECURITY DEFINER sin GRANT EXECUTE ... TO {authenticated|service_role|postgres}`,
+      });
+    }
+  }
   return out;
 }
 
@@ -111,15 +256,21 @@ function main() {
 
   for (const f of all) {
     const match = FNAME_RE.exec(f);
-    // Extraer timestamp (14 dígitos iniciales) aún si el resto del nombre es inválido.
     const rawTs = /^(\d{14})/.exec(f)?.[1];
-    if (rawTs && rawTs < BASELINE) continue; // legacy: no auditado
+    const isPostBaseline = !rawTs || rawTs >= BASELINE;
+    if (!isPostBaseline) {
+      // Legacy: sólo evaluamos H6 regla dura (GRANT EXECUTE ... TO PUBLIC).
+      const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
+      const legacy = scanFile(f, body, false).filter((v) => v.check === "H6");
+      violations.push(...legacy);
+      continue;
+    }
     if (!match) {
       badNames.push(f);
       continue;
     }
     const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
-    violations.push(...scanFile(f, body));
+    violations.push(...scanFile(f, body, true));
   }
 
   const total = badNames.length + violations.length;
@@ -152,4 +303,6 @@ function main() {
   process.exit(1);
 }
 
-main();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}

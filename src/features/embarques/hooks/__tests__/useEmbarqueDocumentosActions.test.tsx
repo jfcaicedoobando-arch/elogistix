@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 import type { EmbarqueRow } from "@/features/embarques/hooks/useEmbarques";
@@ -48,12 +48,17 @@ function makeEmbarqueStub(): EmbarqueRow {
 }
 
 describe("useEmbarqueDocumentosActions", () => {
-  // v13.137.36: restaurar `fetch` stubeado para no contaminar tests siguientes.
+  // v13.309.22: reset explícito de mocks + implementaciones por test, para blindar
+  // contra flakes bajo alta paralelización en CI. `clearAllMocks` sólo limpia calls;
+  // re-fijamos las implementaciones default acá.
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getSignedUrlMock.mockResolvedValue("https://example.com/doc.pdf");
+    uploadMutateAsync.mockResolvedValue({});
+    deleteMutateAsync.mockResolvedValue({});
+  });
   afterEach(() => { vi.unstubAllGlobals(); });
   it("handleUpload llama mutateAsync con args y notifica éxito", async () => {
-    uploadMutateAsync.mockClear();
-    registrarActividadFn.mockClear();
-    sonnerSuccess.mockClear(); sonnerError.mockClear();
     const { result } = renderHook(
       () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
       { wrapper: createWrapper() },

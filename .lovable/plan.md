@@ -1,89 +1,79 @@
-# Cierre de Bloque 3 — Arquitectura Auditoría 3
+# Plan v13.309.22 — Anexo A + guardrail GRANT/REVOKE SECURITY DEFINER
 
-Objetivo: dejar los 5 ítems pendientes en ✅ y el pipeline (`lint`, `tsgo`, `test:fast`, `knip`, `madge`, `audit:arch`) en verde. Se ejecuta como **5 PRs incrementales** para mantener cada cambio revisable y evitar regresiones.
+## Contexto verificado en este turno
 
----
+1. **Los 3 tests del Anexo A pasan en aislamiento** (verificado: 9 + 7 tests verdes cuando se corren los 3 archivos solos). Sólo flakean bajo paralelismo pesado. Causa probable: mocks hoisteados a nivel de módulo (`vi.hoisted`) que quedan como referencia compartida entre archivos que también mockean `sonner`/`@/services/storage/**`. `mockClear()` en `beforeEach` limpia calls pero no re-configura implementaciones si otro test las sobrescribió con `mockImplementationOnce`.
+2. **Ya existe patrón de guardrail GRANT/REVOKE** en `demoras-recalculo-seguro-fase-h.test.ts` (grep del SQL de la migración canónica). Cubre 1 función. La BD tiene **>140 funciones `SECURITY DEFINER`** en `public`.
+3. **No hay auditor global** que valide que toda función `SECURITY DEFINER` nueva lleve `REVOKE ALL ... FROM PUBLIC` + `GRANT EXECUTE ... TO <rol>`. El `audit:migrations` de v13.309.21 cubre CREATE TABLE/DROP/INDEX/POLICY pero **no** funciones.
 
-## PR-1 · 3.5 EmbarqueDetalleTabs sin prop-drilling (S)
+## Objetivo
 
-- Crear hook `useEmbarqueDetalleTabsData(embarqueId)` en `src/features/embarques/hooks/` que agrupe fetch de `financials` + `docHandlers` + tracking.
-- Refactor `EmbarqueDetalleTabs.tsx`: pasa de 12 props a 2 (`embarqueId`, `tab`). Cada `<TabX>` consume el hook o su propio slice.
-- Mover data-fetching que hoy vive en el padre a cada tab (`TabTracking`, `TabFinancieros`, `TabDocumentos`, `TabDemoras`).
-- **Entrega**: tabs autocontenidas + tests de integración que cubran render de cada tab.
+Cerrar el Anexo A del reporte 13.309.20 y sumar una regla H6 al auditor de migraciones que blinde privilegios de `SECURITY DEFINER` post-baseline.
 
-## PR-2 · 3.6 Higiene de migraciones (S)
+## Parte A — Estabilizar los 3 hook tests
 
-- Crear `scripts/audit-migrations.ts` que recorre `supabase/migrations/*.sql` y falla si detecta:
-  - `DROP ... CASCADE` sin `CREATE OR REPLACE` posterior en el mismo archivo.
-  - `CREATE TABLE` en `public.*` sin `GRANT` en la misma migración.
-  - `CREATE INDEX`/`CREATE POLICY` sin `IF NOT EXISTS` cuando es idempotente.
-  - Naming fuera de `YYYYMMDDHHMMSS_snake_case.sql`.
-- Añadir `bun run audit:migrations` a `package.json` y a `scripts/ci-fast.sh`.
-- Documentar reglas en `docs/migrations-hygiene.md` + entrada en `CHANGELOG.md`.
+### A.1 Diagnóstico dirigido (primero, para no adivinar)
 
-## PR-3 · 2.4 residual + 3.7 SQL LC_* tests (S+M)
+Correr `bunx vitest run --pool=threads --maxWorkers=8` filtrando sólo los 3 archivos + otros que también mocken `sonner` (grep `vi.mock("sonner")` → ~60 archivos) hasta reproducir la flake. Registrar el orden en que fallan. Sin repro no toco código.
 
-- **Test fases**: `src/lib/__tests__/embarque-fases-vs-enum.test.ts` compara `embarqueFases.ts` con `Database['public']['Enums']['estado_embarque']` derivado de `types.ts`.
-- **Tests SQL LC_***: crear guardrails estilo `demoras-recalculo-seguro-fase-h.test.ts` (lee migraciones + regex) para los códigos hotspot que aún no tienen test:
-  - `LC_COT_TRANSICION_INVALIDA`
-  - `LC_CXP_DESCUADRE` (ya existe → extender a variantes)
-  - `LC_TC_NO_DISPONIBLE`
-  - `LC_EMB_CIERRE_*`
-- Coverage: mantener `vitest.config.ts` con thresholds ≥ 0.5 en el config principal, `test:coverage:shard` conserva 0 (documentado en el archivo).
+### A.2 Fix (cuando A.1 reproduzca)
 
-## PR-4 · 3.4 Formatters + StatusBadge (M)
+Aplicar la corrección mínima según lo observado. Rango probable, en orden de menor impacto a mayor:
 
-Migración por feature (una feature por commit dentro del PR):
+1. **Refactor local**: reemplazar `vi.hoisted({ ... fn: vi.fn().mockResolvedValue(x) })` por `vi.fn()` sin default + configurar la implementación dentro de un `beforeEach` local. Elimina la "sticky implementation" entre suites.
+2. **`vi.resetAllMocks()` en `afterEach`** de los 3 archivos (`clearAllMocks` limpia calls; `resetAllMocks` también limpia implementaciones).
+3. **Último recurso**: agregar `restoreMocks: true` / `unstubGlobals: true` a `vitest.config.ts` — sólo si (1) y (2) no bastan, y midiendo impacto sobre el resto de la suite (>1.5k tests).
 
-1. `features/facturacion` → `formatters/{numbers,dates,pnl}` + `StatusBadge` (reemplaza los ~120 `estado === "..."` inline por `statusVariant()`).
-2. `features/cxp`.
-3. `features/embarques`.
-4. `features/cotizacion` + `features/profit`.
-5. Al cerrar: añadir regla `no-restricted-syntax` que prohíba `toLocaleString`/`toLocaleDateString`/`new Intl.NumberFormat` fuera de `src/lib/formatters/`.
+Éxito: `bunx vitest run --pool=threads --maxWorkers=16 --repeat=5` de los 3 archivos + de la suite `test:fast` completa termina verde.
 
-**Meta**: 39 archivos → 0, allowlist vacío para formatters.
+## Parte B — Auditor estático de privilegios SECURITY DEFINER
 
-## PR-5 · 3.3 RHF+zod en CxP (L)
+### B.1 Extender `scripts/audit-migrations.ts` con la regla **H6**
 
-- Reemplazar los `useState` sueltos en:
-  - `useNuevaFacturaProveedorForm.ts` (11 useState → un solo `useForm<FacturaProveedorFormValues>` con schema zod).
-  - `useEditarFacturaProveedorForm.ts` (6 useState → mismo patrón, `defaultValues` desde row).
-- Reutilizar `FacturaFormValues` de `src/features/cxp/types/facturaForm.ts`.
-- Adaptar `NuevaFacturaProveedorDialog` / `EditarFacturaProveedorDialog` a `FormProvider` + `Controller`.
-- Tests: usar `assertMutation` + `withFrozenClock` existentes; verificar validación de cuadre (`CuadreConceptosBar` sigue funcionando).
+Para cada archivo de migración post-baseline (`> 20260723180000`):
 
----
+1. Detectar bloques `CREATE OR REPLACE FUNCTION public.<name>(...) ... SECURITY DEFINER` (incluye variantes con `RETURNS`, `LANGUAGE`, `SET search_path` en cualquier orden).
+2. En **el mismo archivo**, exigir:
+   - `REVOKE ALL ON FUNCTION public.<name>(<args>) FROM PUBLIC` (y opcionalmente `, anon`).
+   - `GRANT EXECUTE ON FUNCTION public.<name>(<args>) TO <rol_no_publico>` donde `<rol_no_publico>` ∈ {`authenticated`, `service_role`, `postgres`}.
+3. Prohibir `GRANT EXECUTE ... TO PUBLIC` sobre funciones `SECURITY DEFINER` (siempre, incluso pre-baseline — regla dura de seguridad).
+4. Whitelist opcional (por si un helper interno privado nunca se expone): comentario `-- audit:allow-no-grants` en la línea previa al `CREATE OR REPLACE FUNCTION`, para casos como `_helper_privado` que sólo se llama desde otras funciones y no debe tener EXECUTE a nadie externo (patrón que ya usa `_calcular_demoras_montos_contenedor`).
 
-## Anexo · Reparar 3 error-path tests preexistentes
+Salida esperada: `✅ Migraciones limpias (post-baseline): 597/597, H1–H6.`
 
-Antes de PR-1, en un commit corto:
+### B.2 Test para el auditor
 
-1. `useEmbarqueDocumentosActions.test.tsx` — ajustar aserción al mensaje humano nuevo emitido por `stripLcCode`.
-2. `usePagosFactura.test.tsx` — idem.
-3. `useAuthProfile.test.ts` — idem (comparar contra `getErrorMessage(err)` en lugar de string literal).
+Añadir `scripts/__tests__/audit-migrations-h6.test.ts` con 4 fixtures inline:
+- Migración válida (con REVOKE + GRANT EXECUTE a authenticated) → pasa.
+- Migración sin REVOKE → falla.
+- Migración con `GRANT EXECUTE ... TO PUBLIC` → falla.
+- Migración marcada `-- audit:allow-no-grants` sin GRANT → pasa.
 
-Sin cambiar producción; sólo actualizar expectativas del test al contrato actual de mensajes.
+### B.3 Documentación
 
----
+Actualizar `docs/migrations-hygiene.md` con la fila H6 y el ejemplo canónico:
+
+```sql
+CREATE OR REPLACE FUNCTION public.mi_rpc(_arg uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ ... $$;
+
+REVOKE ALL ON FUNCTION public.mi_rpc(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.mi_rpc(uuid) TO authenticated;
+```
+
+## Parte C — Cierre
+
+- Bump `APP_VERSION` a `13.309.22`.
+- Entry en `CHANGELOG.md` con el resumen (flakes resueltos, regla H6, ejemplos).
+- Verificación final: `bun run audit:migrations` verde, `bun run lint`, `bunx tsgo --noEmit`, `bun run test:fast --repeat=3` verde.
+
+## Fuera de alcance
+
+- **Runtime scan de `pg_proc.proacl`** vía psql para funciones legacy. Es más preciso pero requiere DB en CI y afectaría a ~140 funciones legacy — sería un turno propio con plan de remediación por batches. Este plan sólo blinda migraciones **nuevas**.
+- Otros ítems pendientes del Bloque 3 (3.3 CxP RHF+zod, 3.4 formatters, 3.5 EmbarqueDetalleTabs).
 
 ## Detalles técnicos
 
-- **Cada PR** cierra con: `bun run lint -- --max-warnings 0`, `bunx tsgo --noEmit`, `bun run test:fast`, `bunx knip`, `bunx madge --circular` (no debe subir de 19), `bun run audit:arch`.
-- **CHANGELOG.md** entrada por PR + bump `APP_VERSION` (`13.309.21` → `13.309.25`).
-- **No se toca `src/integrations/supabase/*`** (auto-gen).
-- **Zonas confirmadas sanas** del reporte se dejan intactas.
-
-## Riesgos y mitigación
-
-- PR-4 (formatters) es el más invasivo visualmente → snapshot review por feature antes del merge.
-- PR-5 (RHF) puede romper flujos de captura CxP → E2E `03-factura.spec.ts` + `08-flujo-fiscal.spec.ts` se corren en cada commit.
-- PR-1 mueve fetch a tabs → verificar que no dispare N+1 requests con React Query cache (misma `queryKey`).
-
-## Orden de ejecución sugerido
-
-```text
-Anexo tests → PR-1 → PR-2 → PR-3 → PR-4 → PR-5
-   (S)        (S)     (S)    (S+M)  (M)    (L)
-```
-
-Total estimado: 5 PRs, ~1 sesión larga cada uno. Si preferís, puedo arrancar sólo por el Anexo + PR-1 y pausar para tu revisión antes de continuar.
+- **Regex H6** para detectar función SECURITY DEFINER: aceptar cuerpo entre `CREATE OR REPLACE FUNCTION` y `$$;` / `$function$;`, buscar `SECURITY DEFINER` case-insensitive. Extraer nombre + argumentos con regex `public\.([a-z_][a-z0-9_]*)\s*\(([^)]*)\)`.
+- **Firma de la función**: normalizar tipos de argumentos (`uuid, text, jsonb`) para matchear el `REVOKE`/`GRANT` correspondiente. Sobrecargas se distinguen por firma.
+- **Baseline**: mismo `20260723180000` que H1–H5. No se aplica retroactivamente.
