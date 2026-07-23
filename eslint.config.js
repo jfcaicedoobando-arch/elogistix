@@ -684,10 +684,6 @@ export default tseslint.config(
       "src/features/operaciones/hooks/useOperacionesPageController.ts",
       "src/features/portal-agente/routes/_sections/agenteTarifasColumns.tsx",
       "src/features/proformas/components/AccionesProforma.tsx",
-      // Tests: fixtures de fechas/números específicos.
-      "**/__tests__/**",
-      "**/*.test.ts",
-      "**/*.test.tsx",
     ],
     rules: {
       "no-restricted-syntax": ["error",
