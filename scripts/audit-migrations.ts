@@ -213,15 +213,21 @@ function main() {
 
   for (const f of all) {
     const match = FNAME_RE.exec(f);
-    // Extraer timestamp (14 dígitos iniciales) aún si el resto del nombre es inválido.
     const rawTs = /^(\d{14})/.exec(f)?.[1];
-    if (rawTs && rawTs < BASELINE) continue; // legacy: no auditado
+    const isPostBaseline = !rawTs || rawTs >= BASELINE;
+    if (!isPostBaseline) {
+      // Legacy: sólo evaluamos H6 regla dura (GRANT EXECUTE ... TO PUBLIC).
+      const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
+      const legacy = scanFile(f, body, false).filter((v) => v.check === "H6");
+      violations.push(...legacy);
+      continue;
+    }
     if (!match) {
       badNames.push(f);
       continue;
     }
     const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
-    violations.push(...scanFile(f, body));
+    violations.push(...scanFile(f, body, true));
   }
 
   const total = badNames.length + violations.length;
