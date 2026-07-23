@@ -691,6 +691,9 @@ export default tseslint.config(
       "src/hooks/shared/useToast.ts",
       "src/hooks/shared/useCopyText.ts",
       "src/components/shared/errorBoundary/reportFeedback.ts",
+      // shadcn Toaster primitive + diálogo de error usa `toast()` directo.
+      "src/components/ui/sonner.tsx",
+      "src/components/ui/ErrorDetailsDialog.tsx",
       // ── SONNER-LEGACY (Sprint 4 · baseline v13.309.53) ────────────────────
       // 84 archivos que aún importan `sonner` directo. Se migrarán en olas
       // al wrapper `@/lib/ui/appFeedback` o `@/hooks/shared/useToast`.
