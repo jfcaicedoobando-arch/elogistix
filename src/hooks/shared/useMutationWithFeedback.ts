@@ -168,9 +168,9 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       }
       // FIX-R2-03: traducimos códigos `LC_*` en UN solo punto (getErrorMessage).
       if (!silent) {
-        // SAFE-CAST: `error` es TError genérico; getErrorMessage acepta Error/unknown.
         notifyError(undefined, {
           title: errorTitle,
+          // SAFE-CAST: `error` es TError genérico; getErrorMessage acepta Error/unknown.
           description: getErrorMessage(error as unknown as Error),
           error,
           method: errorMethod,
