@@ -1,6 +1,10 @@
 /**
- * Tipos derivados para `EmbarqueDetalleTabs` — extraídos en v13.182.0
- * (Wave 2 · Power-of-10 splits).
+ * Tipos derivados para `EmbarqueDetalleTabs`.
+ *
+ * v13.309.24 · Ítem 3.5 auditoría 3: la data-fetching se mudó a
+ * `useEmbarqueDetalleTabsData`. El componente sólo recibe la superficie
+ * pública mínima (embarque, id, tab, permisos). Los tipos `Financials`,
+ * `DocHandlers`, etc. quedan por si otros consumidores los necesitan.
  */
 import type { ComponentProps } from "react";
 import type { TabResumen } from "@/features/embarques/components/TabResumen";
@@ -51,13 +55,6 @@ export interface EmbarqueDetalleTabsProps {
   setActiveTab: (t: string) => void;
   estadoVisual: string;
   canEdit: boolean;
-  documentos: DocsProps["documentos"];
-  
-  conceptosCosto: CostosProps["conceptosCosto"];
-  facturas: FacturacionProps["facturas"];
-  notas: NotasProps["notas"];
-  financials: Financials;
-  docHandlers: DocHandlers;
 }
 
 export type PnlView = "global" | "contenedor";
