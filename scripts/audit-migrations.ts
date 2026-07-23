@@ -35,12 +35,14 @@ import path from "node:path";
 
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
 /**
- * Fecha de corte: sólo auditamos migraciones creadas a partir de este
- * timestamp. Se eligió `20260723180000` (2026-07-23) como snapshot post-
- * auditoría arquitectura 3. Bump manual cuando aparezca legacy imposible
- * de corregir (nunca a la baja).
+ * Fecha de corte: sólo eximimos migraciones **anteriores al día** del baseline.
+ * Migraciones del mismo día con timestamp menor NO quedan eximidas
+ * (regla H6 sigue siendo dura). Se eligió el 2026-07-23 como snapshot post-
+ * auditoría arquitectura 3. Bump manual (día ≥) cuando aparezca legacy
+ * imposible de corregir; nunca a la baja.
  */
-const BASELINE = "20260723180000";
+const BASELINE_DAY = "20260723";
+const BASELINE = `${BASELINE_DAY}000000`;
 
 const FNAME_RE = /^(\d{14})_[a-z0-9-]+\.sql$/;
 
