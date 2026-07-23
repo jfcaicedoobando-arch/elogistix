@@ -15,6 +15,7 @@ import { AlertTriangle, ExternalLink, Trash2 } from "lucide-react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { statusColumn } from "@/components/shared/dataTable/columnBuilders";
 import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
+import { formatFechaEs } from "@/lib/formatters/dates";
 import {
   computeRutaEstado, diasParaExpirar, DIAS_POR_VENCER, type RutaEstadoMeta,
 } from "@/features/costeo/utils/rutaEstado";
@@ -24,7 +25,7 @@ function formatFecha(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return formatFechaEs(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 interface RutaRow {

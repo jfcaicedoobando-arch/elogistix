@@ -5,6 +5,7 @@ import { useResponderCotizacion } from "@/features/cotizacion/hooks/mutations/us
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { formatFechaHora } from "@/lib/formatters/dates";
 export type RespuestaCotizacion = "Aceptada" | "Rechazada";
 
 /**
@@ -29,13 +30,7 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
       { respuesta: confirmAction, comentario },
       {
         onSuccess: () => {
-          const fechaTxt = new Date().toLocaleString("es-MX", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+          const fechaTxt = formatFechaHora(new Date().toISOString());
           notifySuccess(toast, {
             title:
               confirmAction === "Aceptada"
