@@ -47,7 +47,7 @@ export function ReporteEjecutivoDocument({ snapshot }: Props) {
           <View>
             <Text style={styles.h1}>Dashboard Ejecutivo</Text>
             <Text style={{ marginTop: 4, fontSize: 10, color: "#475569" }}>
-              Periodo: {snapshot.periodo} · Generado: {new Date(snapshot.generadoEn).toLocaleString("es-MX")}
+              Periodo: {snapshot.periodo} · Generado: {formatFechaHora(snapshot.generadoEn)}
             </Text>
           </View>
         </View>
