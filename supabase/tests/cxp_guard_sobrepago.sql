@@ -28,8 +28,8 @@ BEGIN
   VALUES (v_org, 'Test Org Guard Sobrepago')
   ON CONFLICT (id) DO NOTHING;
 
-  INSERT INTO public.proveedores (id, organization_id, nombre)
-  VALUES (v_prov, v_org, 'Test Prov Guard Sobrepago')
+  INSERT INTO public.proveedores (id, organization_id, nombre, categoria, subtipo_gasto)
+  VALUES (v_prov, v_org, 'Test Prov Guard Sobrepago', 'GastoOperativo', 'Otros')
   ON CONFLICT (id) DO NOTHING;
 
   -- Categoría de presupuesto mínima (columna NOT NULL en proveedor_facturas).
