@@ -7,7 +7,7 @@
  * resolvemos el email vía la edge `user-management` action `list`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { UNRESOLVED_EMAIL } from "./index";
+import { UNRESOLVED_EMAIL } from "./constants";
 
 export interface PortalClienteUserRow {
   id: string;
