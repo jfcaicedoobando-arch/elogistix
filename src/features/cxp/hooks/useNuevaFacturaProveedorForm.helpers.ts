@@ -7,6 +7,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import { todayLocalISO } from "@/lib/date/today";
 import { isoUtcDay } from "@/lib/date/mx";
+import { facturaFormErrorsFromZod } from "./useNuevaFacturaProveedorForm.schema";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
