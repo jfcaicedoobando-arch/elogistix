@@ -15,14 +15,49 @@ import { useValidacionCierre } from "@/features/embarques/hooks/useCierreEmbarqu
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/lib/domain/labelExpediente";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   getSiguienteEstado,
   resolveCierreGate,
   clasificarBloqueoAvance,
+  clasificarAvanceError,
 } from "./useEmbarqueEstadoActions.helpers";
 
 export { getSiguienteEstado } from "./useEmbarqueEstadoActions.helpers";
+
+interface AutoSyncArgs {
+  embarqueId: string;
+  modo: string;
+  tipo: string;
+  estado: string;
+  etd: string | null;
+  eta: string | null;
+  fechaLlegadaReal: string | null;
+  usuarioEmail: string;
+  sync: (args: { embarqueId: string; nuevoEstado: string; usuarioEmail: string }) => void;
+}
+
+/** Efecto puro: recalcula y sincroniza si cambió. Aislado para bajar complejidad. */
+function runAutoSyncEstado(args: AutoSyncArgs) {
+  const { embarqueId, modo, tipo, estado, etd, eta, fechaLlegadaReal, usuarioEmail, sync } = args;
+  const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado, fechaLlegadaReal);
+  if (estadoCalculado !== estado) {
+    sync({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail });
+  }
+}
+
+function pickAutoSyncFields(embarque: EmbarqueRow | undefined) {
+  if (!embarque) return null;
+  return {
+    embarqueId: embarque.id,
+    modo: embarque.modo,
+    tipo: embarque.tipo,
+    estado: embarque.estado,
+    etd: embarque.etd ?? null,
+    eta: embarque.eta ?? null,
+    fechaLlegadaReal: embarque.fecha_llegada_real ?? null,
+  };
+}
 
 /**
  * Auto-sync del estado calculado a BD. Se aísla en su propio hook para
@@ -34,20 +69,38 @@ function useAutoSyncEstadoEmbarque(
   usuarioEmail: string,
 ) {
   const { mutate: syncEstadoMutate } = useSyncEstadoEmbarque();
-  const embarqueId = embarque?.id;
-  const modo = embarque?.modo;
-  const tipo = embarque?.tipo;
-  const etd = embarque?.etd ?? null;
-  const eta = embarque?.eta ?? null;
-  const estado = embarque?.estado;
-  const fechaLlegadaReal = embarque?.fecha_llegada_real ?? null;
+  const f = useMemo(() => pickAutoSyncFields(embarque), [embarque]);
   useEffect(() => {
-    if (!embarqueId || !modo || !tipo || !estado || !puedeSincronizarEstado) return;
-    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado, fechaLlegadaReal);
-    if (estadoCalculado !== estado) {
-      syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail });
-    }
-  }, [embarqueId, modo, tipo, etd, eta, estado, fechaLlegadaReal, syncEstadoMutate, usuarioEmail, puedeSincronizarEstado]);
+    if (!puedeSincronizarEstado || !f) return;
+    runAutoSyncEstado({ ...f, usuarioEmail, sync: syncEstadoMutate });
+  }, [puedeSincronizarEstado, f, syncEstadoMutate, usuarioEmail]);
+}
+
+
+
+
+/**
+ * Consolida las variables derivadas del "gate de cierre" en un solo objeto.
+ * Extraído de `useEmbarqueEstadoActions` para reducir su complejidad ciclomática.
+ */
+function useCierreGate(
+  siguienteEstado: string | null,
+  id: string | undefined,
+) {
+  const { canEditFinance, isAdmin } = usePermissions();
+  const cierreEsSiguiente = siguienteEstado === "Cerrado";
+  const idCierre = cierreEsSiguiente ? id : undefined;
+  const { data: validacionCierre } = useValidacionCierre(idCierre);
+  const rolPuedeCerrar = isAdmin || canEditFinance;
+  // v13.135.59 — Admins pueden forzar el cierre aunque el checklist esté incompleto.
+  const validacionOk = validacionCierre?.puede_cerrar === true || isAdmin;
+  const motivo = resolveCierreGate(cierreEsSiguiente, rolPuedeCerrar, validacionOk);
+  return {
+    cierreEsSiguiente,
+    rolPuedeCerrar,
+    motivo,
+    cierrePuedeAvanzar: cierreEsSiguiente && motivo === null,
+  };
 }
 
 /**
@@ -63,7 +116,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const reabrirEmbarque = useReabrirEmbarque();
   const conceptosQuery = useEmbarqueConceptosVenta(id);
   const conceptosVenta = conceptosQuery.data ?? [];
-  const { canEditFinance, isAdmin, canEditOperations, isSuperAdmin } = usePermissions();
+  const { isAdmin, canEditOperations, isSuperAdmin } = usePermissions();
   // v13.209.3 — Auto-sync sólo si el usuario puede escribir en embarques/eventos_embarque.
   const puedeSincronizarEstado = isAdmin || isSuperAdmin || canEditOperations;
 
@@ -73,13 +126,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
 
   // v13.89.1 — Validación dura para cierre: solo admin/finanzas pueden cerrar,
   // y solo si todas las reglas del checklist (CxC, CxP, docs, etc.) pasan.
-  const cierreVisible = siguienteEstado === "Cerrado";
-  const idCierre = cierreVisible ? id : undefined;
-  const { data: validacionCierre } = useValidacionCierre(idCierre);
-  const rolPuedeCerrar = isAdmin || canEditFinance;
-  // v13.135.59 — Admins pueden forzar el cierre aunque el checklist esté incompleto.
-  const validacionOk = validacionCierre?.puede_cerrar === true || isAdmin;
-  const bloqueoCierreMotivo = resolveCierreGate(cierreVisible, rolPuedeCerrar, validacionOk);
+  const cierre = useCierreGate(siguienteEstado, id);
 
   const usuarioEmail = user?.email ?? "";
   useAutoSyncEstadoEmbarque(embarque, puedeSincronizarEstado, usuarioEmail);
@@ -93,6 +140,26 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const [blockDocsOpen, setBlockDocsOpen] = useState(false);
   const [blockFechaLlegadaOpen, setBlockFechaLlegadaOpen] = useState(false);
 
+  const notificarErrorAvance = useCallback((
+    err: unknown,
+    estadoActual: string,
+    siguiente: string,
+  ) => {
+    const msg = getErrorMessage(err);
+    const kind = clasificarAvanceError(msg);
+    if (kind === "block_docs") { setBlockDocsOpen(true); return; }
+    if (kind === "block_fecha_llegada") { setBlockFechaLlegadaOpen(true); return; }
+    if (kind === "transicion_invalida") {
+      notifyError(toast, {
+        title: "Transición de estado no permitida",
+        description: `No se permite pasar de "${estadoActual}" a "${siguiente}". Refresca la página; el estado del embarque pudo cambiar en otra sesión.`,
+        error: err, method: "HANDLE_AVANZAR_ESTADO_TRANSICION",
+      });
+      return;
+    }
+    notifyError(toast, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
+  }, [toast]);
+
   const ejecutarAvance = useCallback(async (siguiente: string) => {
     if (!embarque || !id) return;
     try {
@@ -104,43 +171,32 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       });
       notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
-      const msg = getErrorMessage(err);
-      if (msg.includes("documentos_faltantes")) { setBlockDocsOpen(true); return; }
-      if (msg.includes("fecha_llegada_real_requerida")) { setBlockFechaLlegadaOpen(true); return; }
-      if (msg.includes("LC_TRANSICION_INVALIDA")) {
-        notifyError(toast, {
-          title: "Transición de estado no permitida",
-          description: `No se permite pasar de "${embarque.estado}" a "${siguiente}". Refresca la página; el estado del embarque pudo cambiar en otra sesión.`,
-          error: err, method: "HANDLE_AVANZAR_ESTADO_TRANSICION",
-        });
-        return;
-      }
-      notifyError(toast, { title: "Error al cambiar estado", description: msg, error: err, method: "HANDLE_AVANZAR_ESTADO" });
+      notificarErrorAvance(err, embarque.estado, siguiente);
     }
-  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, toast]);
+  }, [embarque, id, avanzarEstado, usuarioEmail, registrarActividad, toast, notificarErrorAvance]);
 
   const handleAvanzarEstado = async () => {
     if (!embarque || !id) return;
     const siguiente = getSiguienteEstado(embarque.estado);
     if (!siguiente) return;
     const bloqueo = clasificarBloqueoAvance({
-      docsBloqueantes, docsFaltantesCount: docsFaltantes.length, siguiente, bloqueoCierreMotivo,
+      docsBloqueantes, docsFaltantesCount: docsFaltantes.length, siguiente,
+      bloqueoCierreMotivo: cierre.motivo,
       fechaLlegadaReal: embarque.fecha_llegada_real ?? null,
     });
-    switch (bloqueo) {
-      case "block_docs": setBlockDocsOpen(true); return;
-      case "block_fecha_llegada": setBlockFechaLlegadaOpen(true); return;
-      case "warn_docs": setWarnDocsOpen(true); return;
-      case "gate_cierre":
-        notifyError(toast, {
-          title: bloqueoCierreMotivo === "rol"
-            ? "Solo administración/finanzas pueden cerrar el embarque"
-            : "Pendientes administrativos. Revisa el Tab Cierre.",
-          method: "GATE_CERRAR_EMBARQUE",
-        });
-        return;
-      case "ok": await ejecutarAvance(siguiente);
+    if (bloqueo === "block_docs") { setBlockDocsOpen(true); return; }
+    if (bloqueo === "block_fecha_llegada") { setBlockFechaLlegadaOpen(true); return; }
+    if (bloqueo === "warn_docs") { setWarnDocsOpen(true); return; }
+    if (bloqueo === "gate_cierre") {
+      notifyError(toast, {
+        title: cierre.motivo === "rol"
+          ? "Solo administración/finanzas pueden cerrar el embarque"
+          : "Pendientes administrativos. Revisa el Tab Cierre.",
+        method: "GATE_CERRAR_EMBARQUE",
+      });
+      return;
     }
+    await ejecutarAvance(siguiente);
   };
 
 
@@ -179,10 +235,10 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
     blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes, siguienteEstado,
-    cierreEsSiguiente: cierreVisible, rolPuedeCerrar,
-    cierrePuedeAvanzar: cierreVisible && bloqueoCierreMotivo === null,
-    cierreMotivoBloqueo: bloqueoCierreMotivo,
+    cierreEsSiguiente: cierre.cierreEsSiguiente,
+    rolPuedeCerrar: cierre.rolPuedeCerrar,
+    cierrePuedeAvanzar: cierre.cierrePuedeAvanzar,
+    cierreMotivoBloqueo: cierre.motivo,
   };
 
 }
-

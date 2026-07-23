@@ -130,6 +130,36 @@ function buildGlobal(stats: StatsShape | undefined, operadores: OperadorData[]):
   };
 }
 
+type ServerOperadorRaw = StatsShape extends { operadores?: (infer T)[] } ? T : never;
+
+/**
+ * Mapper puro de un operador crudo del RPC a la forma que consume la UI.
+ * Extraído para bajar la complejidad ciclomática del hook principal (antes 15).
+ */
+function mapOperador(op: ServerOperadorRaw): OperadorData {
+  const n = (v: unknown) => Number(v ?? 0);
+  const historico = op.historico ?? [];
+  const clientesDesglose = op.clientesDesglose ?? [];
+  return {
+    nombre: op.nombre,
+    cargasActivas: n(op.cargasActivas),
+    contenedores: n(op.contenedores),
+    cargasEsteMes: n(op.cargasEsteMes),
+    profit: n(op.profit),
+    demoras: n(op.demoras),
+    criticos: n(op.criticos),
+    enPuerto: n(op.enPuerto),
+    porArribar: n(op.porArribar),
+    clientes: clientesDesglose.map((c) => c.nombre),
+    clientesDesglose,
+    desgloseEstados: { ...EMPTY_DESGLOSE, ...op.desgloseEstados },
+    cargasEnRiesgo: op.cargasEnRiesgo ?? [],
+    historicoCreadosPorMes: historico.map((h) => ({ mes: h.mes, valor: h.creados })),
+    historicoLlegadosPorMes: historico.map((h) => ({ mes: h.mes, valor: h.llegados })),
+    embarquesPorEstado: (op as ServerOperador & { embarquesPorEstado?: EmbarquesPorEstado }).embarquesPorEstado ?? {},
+  };
+}
+
 /**
  * Operaciones data — powered by server-side RPC `operaciones_stats()`.
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.
@@ -141,27 +171,10 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
     staleTime: 60_000,
   });
 
-  const operadores = useMemo<OperadorData[]>(() => {
-    if (!stats?.operadores) return [];
-    return stats.operadores.map((op) => ({
-      nombre: op.nombre,
-      cargasActivas: Number(op.cargasActivas ?? 0),
-      contenedores: Number(op.contenedores ?? 0),
-      cargasEsteMes: Number(op.cargasEsteMes ?? 0),
-      profit: Number(op.profit ?? 0),
-      demoras: Number(op.demoras ?? 0),
-      criticos: Number(op.criticos ?? 0),
-      enPuerto: Number(op.enPuerto ?? 0),
-      porArribar: Number(op.porArribar ?? 0),
-      clientes: (op.clientesDesglose ?? []).map((c) => c.nombre),
-      clientesDesglose: op.clientesDesglose ?? [],
-      desgloseEstados: { ...EMPTY_DESGLOSE, ...op.desgloseEstados },
-      cargasEnRiesgo: op.cargasEnRiesgo ?? [],
-      historicoCreadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.creados })),
-      historicoLlegadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.llegados })),
-      embarquesPorEstado: (op as ServerOperador & { embarquesPorEstado?: EmbarquesPorEstado }).embarquesPorEstado ?? {},
-    }));
-  }, [stats]);
+  const operadores = useMemo<OperadorData[]>(
+    () => (stats?.operadores ?? []).map(mapOperador),
+    [stats],
+  );
 
   const global = useMemo<OperacionesGlobal>(() => buildGlobal(stats, operadores), [stats, operadores]);
 
@@ -172,3 +185,4 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
     meses6Labels: stats?.mesesLabels ?? [],
   };
 }
+
