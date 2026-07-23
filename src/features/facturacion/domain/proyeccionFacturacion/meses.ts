@@ -1,3 +1,5 @@
+import { formatFechaLarga } from "@/lib/formatters";
+
 /** Devuelve YYYY-MM-DD del primer y último día del mes (year, month 1-12). */
 export function rangoMes(year: number, month: number): { desde: string; hasta: string } {
   const pad = (n: number) => String(n).padStart(2, "0");
