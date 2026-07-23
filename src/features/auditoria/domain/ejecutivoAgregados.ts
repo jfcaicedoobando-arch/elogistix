@@ -8,6 +8,7 @@ import type {
   SeveridadAuditoria,
 } from "@/features/auditoria/types";
 import { isoUtcDay } from "@/lib/date/mx";
+import { TOP_N } from "./ejecutivoRankingCore";
 
 // `OperadorRanking` / `calcularRanking` viven en `./ejecutivoRanking` (split Power-of-10 #4).
 export { calcularRanking, type OperadorRanking, type RankingResultado } from "./ejecutivoRanking";
