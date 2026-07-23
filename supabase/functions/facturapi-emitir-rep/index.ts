@@ -77,17 +77,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (!factura.uuid_fiscal) return jsonResponse({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
   if (factura.metodo_pago !== "PPD") return jsonResponse({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
 
-  // α.1 — Tasa IVA efectiva de la factura original (antes hardcoded 0.16).
-  // SAT rechazaba REPs de facturas de exportación con IVA 0% porque el
-  // documento_relacionado declaraba tasa 0.16 vs XML original 0.
-  // Cálculo: iva/subtotal redondeado al múltiplo SAT más cercano {0, 0.08, 0.16}.
-  const subtotalFact = Number(factura.subtotal ?? 0);
-  const ivaFact = Number(factura.iva ?? 0);
-  const tasaCalculada = subtotalFact > 0 ? ivaFact / subtotalFact : 0;
-  const tasaIvaFactura: number =
-    tasaCalculada < 0.02 ? 0
-    : tasaCalculada < 0.12 ? 0.08
-    : 0.16;
+  // α.1 — Tasa IVA efectiva de la factura original (extraída a context.ts).
+  const tasaIvaFactura = tasaIvaFacturaOriginal(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0));
 
   // 3) Cliente
   const { data: cliente, error: cErr } = await supabase
