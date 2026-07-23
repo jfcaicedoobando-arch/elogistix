@@ -9,6 +9,7 @@
  * respuesta del cliente — solo se loggea.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { translateLcCode } from "@/lib/errors";
 
 export async function portalResponderCotizacion(
   cotizacionId: string,
@@ -21,16 +22,12 @@ export async function portalResponderCotizacion(
     p_comentario: comentario,
   });
   if (error) {
-    const msg = typeof error.message === "string" ? error.message : "";
-    // FIX-25: tokens LC_* → mensajes claros en es-MX.
-    if (/LC_COT_ELIMINADA/.test(msg)) {
-      throw new Error("Esta cotización ya no está disponible.");
-    }
-    if (/LC_COT_NO_RESPONDIBLE/.test(msg)) {
-      throw new Error("Esta cotización ya no puede responderse (ya fue respondida o cambió de estado).");
-    }
-    if (/LC_COT_NO_ENCONTRADA/.test(msg)) {
-      throw new Error("Cotización no encontrada o sin acceso.");
+    // FIX-R2-03: centralizamos la traducción de tokens LC_* en el catálogo
+    // `lcCodeMessages`. Si no matchea ningún código, relanzamos el error crudo.
+    const raw = typeof error.message === "string" ? error.message : "";
+    const friendly = translateLcCode(raw);
+    if (friendly && friendly !== raw) {
+      throw new Error(friendly);
     }
     throw error;
   }
