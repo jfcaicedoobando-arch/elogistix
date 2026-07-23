@@ -52,7 +52,9 @@ vi.mock("@/integrations/supabase/client", () => {
   return { supabase: { from, rpc } };
 });
 
-
+vi.mock("@/lib/observability/reportCaughtError", () => ({
+  reportCaughtError: vi.fn(),
+}));
 
 function wrapper(qc: QueryClient) {
   return ({ children }: { children: ReactNode }) => (
