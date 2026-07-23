@@ -35,10 +35,15 @@ const FN_OPTIONS: { value: FnFilter; label: string }[] = [
   { value: "marcar_proforma_facturada", label: FN_LABEL.marcar_proforma_facturada },
 ];
 
-const dtf = new Intl.DateTimeFormat("es-MX", {
-  day: "2-digit", month: "2-digit", year: "numeric",
-  hour: "2-digit", minute: "2-digit", second: "2-digit",
-});
+import { formatFechaHora } from "@/lib/formatters";
+const dtf = {
+  format(d: Date): string {
+    return formatFechaHora(d.toISOString(), {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+  },
+};
 
 export default function Idempotencia() {
   const { isAdmin } = usePermissions();
