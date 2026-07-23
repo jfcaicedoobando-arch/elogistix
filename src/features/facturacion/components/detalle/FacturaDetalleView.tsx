@@ -30,6 +30,7 @@ interface FacturaDetalleViewProps {
   volverLabel: string;
   onVolver: (href: string) => void;
   dialogs: any;
+  saldo?: number;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -67,9 +68,12 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         acuseCancelacionStatus={acuseCancelacionStatus}
         cancellationStatus={cancellationStatus}
         sinTimbrar={sinTimbrar}
-        clienteNombre={factura.cliente_nombre}
         expediente={factura.expediente}
+        embarqueId={factura.embarque_id}
+        proformaId={factura.proforma_id}
+        proformaNumero={factura.proformas?.numero ?? null}
         total={Number(factura.total)}
+        saldo={props.saldo}
         moneda={factura.moneda}
         ambiente={factura.ambiente}
       />
