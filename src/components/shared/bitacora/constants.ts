@@ -1,4 +1,5 @@
 import { Plus, Edit, Trash2, RefreshCw, Upload, LogIn, Receipt, MessageSquare, FileX } from "lucide-react";
+import { formatFechaEs } from "@/lib/formatters";
 
 export const ICONOS_ACCION: Record<string, typeof Plus> = {
   crear: Plus,
