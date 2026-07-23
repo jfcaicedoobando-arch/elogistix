@@ -10,10 +10,14 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { unwrapOr, run } from "@/lib/supabase/response";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
+import {
+  fetchCatalogoClavesSat,
+  insertCatalogoClaveSat,
+  updateCatalogoClaveSat,
+  deleteCatalogoClaveSat,
+} from "@/features/configuracion/services/catalogoClavesSat";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,16 +40,7 @@ export function CatalogoClavesSATCard() {
   const { data: rows = [], isLoading } = useQuery<Row[]>({
     queryKey: queryKeys.configuracion.catalogoClavesSat(organizationId),
     enabled: !!organizationId,
-    queryFn: async () =>
-      (await unwrapOr(
-        supabase
-          .from("catalogo_claves_sat")
-          .select(
-            "id, organization_id, patron, clave_sat, activo, tipo_iva, clave_unidad_sat, nombre_unidad",
-          )
-          .order("patron", { ascending: true }),
-        [],
-      )) as Row[],
+    queryFn: fetchCatalogoClavesSat as unknown as () => Promise<Row[]>,
   });
 
   const invalidate = () => {
@@ -68,11 +63,7 @@ export function CatalogoClavesSATCard() {
   const addMut = useMutation({
     mutationFn: async (d: Draft) => {
       if (!organizationId) throw new Error("Sin organización");
-      await run(
-        supabase
-          .from("catalogo_claves_sat")
-          .insert({ organization_id: organizationId, ...buildPayload(d) }),
-      );
+      await insertCatalogoClaveSat(organizationId, buildPayload(d));
     },
     onSuccess: () => { invalidate(); setShowNew(false); setDraft(EMPTY_DRAFT); toast.success("Producto agregado"); },
     onError,
@@ -80,12 +71,7 @@ export function CatalogoClavesSATCard() {
 
   const updateMut = useMutation({
     mutationFn: async (vars: { id: string; d: Draft }) => {
-      await run(
-        supabase
-          .from("catalogo_claves_sat")
-          .update(buildPayload(vars.d))
-          .eq("id", vars.id),
-      );
+      await updateCatalogoClaveSat(vars.id, buildPayload(vars.d));
     },
     onSuccess: () => { invalidate(); setEditingId(null); toast.success("Producto actualizado"); },
     onError,
@@ -93,11 +79,12 @@ export function CatalogoClavesSATCard() {
 
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      await run(supabase.from("catalogo_claves_sat").delete().eq("id", id));
+      await deleteCatalogoClaveSat(id);
     },
     onSuccess: () => { invalidate(); toast.success("Producto eliminado"); },
     onError,
   });
+
 
 
   const busy = addMut.isPending || updateMut.isPending || deleteMut.isPending;

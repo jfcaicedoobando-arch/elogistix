@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { supabase } from "@/integrations/supabase/client";
+import { recuperarClaimFactura, type RecuperarClaimResponse } from "@/features/facturacion/services/claimPending";
 import { useQueryClient } from "@tanstack/react-query";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
@@ -24,13 +24,7 @@ interface Props {
   facturapiClaimAt: string | null;
 }
 
-interface RecuperarResponse {
-  outcome: "promovido" | "liberado" | "sin_cambios" | "too_early" | "no_pending" | "claim_perdido";
-  message?: string;
-  edad_minutos?: number;
-}
-
-const MENSAJES: Record<RecuperarResponse["outcome"], { titulo: string; tono: "success" | "info" | "error" }> = {
+const MENSAJES: Record<RecuperarClaimResponse["outcome"], { titulo: string; tono: "success" | "info" | "error" }> = {
   promovido: { titulo: "CFDI recuperado desde FacturAPI", tono: "success" },
   liberado: { titulo: "Reserva liberada, ya puedes reintentar el timbrado", tono: "success" },
   sin_cambios: { titulo: "Sin cambios", tono: "info" },
@@ -52,11 +46,7 @@ export function ClaimPendingBanner({ facturaId, facturapiId, facturapiClaimAt }:
   const onRecuperar = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke<RecuperarResponse>(
-        "facturapi-recuperar-claim",
-        { body: { factura_id: facturaId } },
-      );
-      if (error) throw error;
+      const data = await recuperarClaimFactura(facturaId);
       const outcome = data?.outcome ?? "sin_cambios";
       const info = MENSAJES[outcome] ?? MENSAJES.sin_cambios;
       const description = data?.message;

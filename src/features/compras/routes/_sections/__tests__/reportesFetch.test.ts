@@ -6,7 +6,7 @@ const mock = await vi.hoisted(async () => {
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
-import { fetchFacturasReporte } from "../reportesFetch";
+import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch";
 
 describe("fetchFacturasReporte", () => {
   beforeEach(() => {

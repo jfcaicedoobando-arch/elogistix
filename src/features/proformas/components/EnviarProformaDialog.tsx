@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { enviarProformaPorEmail } from "@/features/proformas/services/enviarEmail";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useDestinatariosSugeridos } from "@/features/proformas/hooks/useDestinatariosSugeridos";
 import { useEmailsOcultos } from "@/features/proformas/hooks/useEmailsOcultos";
@@ -84,14 +84,13 @@ export function EnviarProformaDialog({ open, onOpenChange, proforma }: Props) {
   const enviarMut = useMutation({
     mutationKey: queryKeys.proformas.enviarEmail(proforma.id),
     mutationFn: async ({ to, ccList, asunto, mensaje }: EnviarVars) => {
-      const { data, error } = await supabase.functions.invoke<{
-        success: boolean; enlace_portal: string; estado: string; error?: string;
-      }>("enviar-proforma-email", {
-        body: { proforma_id: proforma.id, destinatarios: to, cc: ccList, asunto, mensaje },
+      return enviarProformaPorEmail({
+        proformaId: proforma.id,
+        destinatarios: to,
+        cc: ccList,
+        asunto,
+        mensaje,
       });
-      if (error) throw new Error(error.message);
-      if (!data?.success) throw new Error(data?.error ?? "El envío no se completó.");
-      return { enlace_portal: data.enlace_portal, estado: data.estado };
     },
     onSuccess: async (res, vars) => {
       setEnviado(res);
