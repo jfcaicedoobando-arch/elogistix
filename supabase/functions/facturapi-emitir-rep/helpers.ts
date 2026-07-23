@@ -161,7 +161,7 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
         type: "pago",
         data: [
           {
-            payment_form: ctx.forma_pago,
+            payment_form: normalizarFormaPago(ctx.forma_pago),
             currency: ctx.moneda,
             amount: round2(ctx.monto),
             date: ctx.fecha_pago,
@@ -173,7 +173,7 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
                 last_balance: round2(dr.imp_saldo_ant),
                 amount: round2(dr.imp_pagado),
                 taxes: dr.tasa_iva > 0
-                  ? [{ type: "IVA", rate: dr.tasa_iva, factor: "Tasa", withholding: false }]
+                  ? [{ type: "IVA", rate: dr.tasa_iva, factor: "Tasa", withholding: false, base: round2(dr.imp_pagado) }]
                   : undefined,
               },
             ],
