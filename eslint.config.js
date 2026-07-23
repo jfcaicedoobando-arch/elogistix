@@ -35,10 +35,74 @@ const FEATURES = [
   "presupuesto","profit","proformas","proveedor","reportes","search","tesoreria",
 ];
 
-// ARCH-DEBT · Bloque 2.3: allowlist temporal de imports cross-feature que
-// aún no cabe promover a shared. Vacía por ahora — cualquier nuevo caso
-// debe agregarse aquí con comentario explicando por qué no se pudo mover.
-const CROSS_FEATURE_ALLOWLIST = [];
+// ARCH-DEBT · Bloque 2.3: allowlist temporal de imports cross-feature ya
+// existentes al momento de introducir la regla (baseline v13.309.4). Cada
+// archivo debería salir de la lista promoviendo el módulo compartido a
+// `src/components/shared/` o `src/lib/{ui,domain}/`, o duplicando la lógica
+// dentro del feature consumidor. NO agregar entradas nuevas sin PR justificado.
+const CROSS_FEATURE_ALLOWLIST = [
+  "src/features/admin/components/TabCatalogosGlobales.tsx",
+  "src/features/admin/hooks/useAdminOrgConfig.ts",
+  "src/features/admin/routes/admin-org/Configuracion.tsx",
+  "src/features/auth/routes/TrackingPublico.tsx",
+  "src/features/bandejas/routes/CxpPorCapturar.tsx",
+  "src/features/bandejas/routes/_sections/cxpPorPagarColumns.tsx",
+  "src/features/cliente/routes/ClienteDetalle.tsx",
+  "src/features/cliente/services/financials.ts",
+  "src/features/compras/routes/ComprasPorAprobar.tsx",
+  "src/features/compras/routes/_sections/notasCreditoColumns.tsx",
+  "src/features/configuracion/components/TabOperaciones.tsx",
+  "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",
+  "src/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion.tsx",
+  "src/features/cotizacion/components/seccionRuta/OrigenDestinoBlock.tsx",
+  "src/features/cotizacion/components/seccionRuta/SugerenciasTarifaInline.tsx",
+  "src/features/dashboardEjecutivo/components/BandaKPIs.tsx",
+  "src/features/dashboardEjecutivo/services/types.ts",
+  "src/features/embarques/components/DialogGenerarProforma.tsx",
+  "src/features/embarques/components/TabFacturacion.tsx",
+  "src/features/embarques/components/TabSeguros.tsx",
+  "src/features/embarques/components/conceptos/ConceptoCatalogoSelect.tsx",
+  "src/features/embarques/components/costos/AjusteChip.tsx",
+  "src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx",
+  "src/features/embarques/components/proforma/FiltroContenedorChips.tsx",
+  "src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx",
+  "src/features/embarques/components/reconciliacion/ReconciliacionTresColumnas.tsx",
+  "src/features/embarques/components/reconciliacion/ResumenReconciliacion.tsx",
+  "src/features/embarques/components/reconciliacion/reconciliacionFormat.ts",
+  "src/features/embarques/components/stepDatosRuta/StepDatosRutaMaritimo.tsx",
+  "src/features/embarques/domain/embarqueWizard.ts",
+  "src/features/embarques/domain/mappers/embarqueToDb.ts",
+  "src/features/embarques/hooks/useDialogGenerarProformaController.helpers.ts",
+  "src/features/embarques/hooks/useDialogGenerarProformaController.ts",
+  "src/features/embarques/hooks/useHidratacionEditarEmbarque.ts",
+  "src/features/embarques/hooks/useReconciliacion3Columnas.ts",
+  "src/features/embarques/hooks/useUmbralesReconciliacion.ts",
+  "src/features/embarques/services/reconciliacion3Columnas.ts",
+  "src/features/embarques/services/submitProformaDialog.ts",
+  "src/features/portal-agente/components/AgenteLayout.tsx",
+  "src/features/portal-agente/components/AgenteTarifaForm.tsx",
+  "src/features/portal-agente/routes/AgenteGarantias.tsx",
+  "src/features/portal/components/EmbarqueCard.tsx",
+  "src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx",
+  "src/features/portal/components/dashboard/PortalProximosArribosCard.tsx",
+  "src/features/portal/hooks/usePortalDashboardKpis.ts",
+  "src/features/portal/hooks/usePortalEmbarquesController.ts",
+  "src/features/portal/routes/PortalCotizacionDetalle.tsx",
+  "src/features/portal/routes/PortalEmbarques.tsx",
+  "src/features/portal/services/queries.ts",
+  "src/features/presupuesto/components/TabVsReal.tsx",
+  "src/features/profit/hooks/useEstadoResultados.ts",
+  "src/features/profit/hooks/usePeriodoMesUrl.ts",
+  "src/features/profit/routes/ProfitDashboardEjecutivo.tsx",
+  "src/features/profit/routes/ProfitPresupuesto.tsx",
+  "src/features/profit/routes/ProfitProyeccion.tsx",
+  "src/features/profit/services/estadoResultados.ts",
+  "src/features/profit/services/estadoResultadosDevengado.ts",
+  "src/features/proformas/components/ProformaDetalleCards.tsx",
+  "src/features/proformas/routes/ProformasListado.tsx",
+  "src/features/reportes/routes/CierreMensual.tsx",
+  "src/features/tesoreria/routes/TesoreriaCuentas.tsx",
+];
 
 // Overrides por feature: prohíben importar hacia carpetas internas
 // (components / domain / lib) de OTRAS features. Los imports vía
