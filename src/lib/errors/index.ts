@@ -1,8 +1,13 @@
 /**
  * Extracts a human-readable error message from an unknown caught value.
- * Also traduce códigos conocidos de Postgres/RPC a mensajes amigables para
- * el usuario final (A.4: snapshots inmutables).
+ * Traduce códigos conocidos de Postgres/RPC (`LC_*`, otros literales) a
+ * mensajes amigables para el usuario final. Ver `lcCodes.ts` para el
+ * catálogo central de códigos LC (Arquitectura Bloque 2 · Item 2.1).
  */
+import { translateLcCode, stripLcCode } from "./lcCodes";
+
+export { translateLcCode, stripLcCode, LC_CODE_MESSAGES } from "./lcCodes";
+
 const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
   {
     match: /factura_inmutable/i,
@@ -36,8 +41,18 @@ export function getErrorMessage(err: unknown): string {
     if (parts.length > 0) raw = parts.join(" — ");
     else if (typeof e.code === "string" && e.code.length > 0) raw = `Código ${e.code}`;
   }
+  // 1) Traducciones legacy con regex (factura_inmutable, etc.)
   for (const { match, message } of FRIENDLY_ERROR_MESSAGES) {
     if (match.test(raw)) return message;
+  }
+  // 2) Catálogo central LC_*
+  const lc = translateLcCode(raw);
+  if (lc) return lc;
+  // 3) Si el mensaje trae un LC_* sin traducción pero con texto humano
+  //    adjunto, lo devolvemos limpio.
+  if (/LC_[A-Z0-9_]+/.test(raw)) {
+    const stripped = stripLcCode(raw);
+    if (stripped.length > 0) return stripped;
   }
   return raw;
 }
