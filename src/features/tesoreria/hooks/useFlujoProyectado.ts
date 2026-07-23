@@ -4,7 +4,7 @@ import { fetchFlujoProyectado } from "@/features/tesoreria/services";
 import { useCobranza } from "@/features/facturacion/hooks";
 import { useFacturasCxP } from "@/features/cxp/hooks";
 import { useOrgFilter } from "@/hooks/shared";
-import { useSaldosCuentas } from "./index";
+import { useSaldosCuentas } from "./useTesoreriaCuentas";
 
 export function useFlujoProyectado(dias = 90) {
   const { organizationId } = useOrgFilter();
