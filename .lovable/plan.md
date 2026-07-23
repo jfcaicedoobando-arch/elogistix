@@ -1,74 +1,76 @@
-## Verificación de los bugs del documento R4-2
+## Contexto verificado en BD
 
-Contrasté cada fix contra la BD viva. Muchos ya están aplicados (con comentarios `FIX-R4-XX` en el propio código) o el diagnóstico es incorrecto. Detalle por bug:
+Las 10 proformas del Excel son del cliente **INDIMEX TRADING** (org `00000000-0000-0000-0000-000000000001`), todas en `estado_proforma = 'pendiente'`, `factura_id = null`, en USD con IVA 16% (excepto 3 con IVA 0 marcadas `HISTORICO`).
 
-### BLOQUE A — P0
+### Bloque A — 8 proformas sin conflicto (crear stub y vincular)
 
-**R4-01 · Triggers de recálculo "destruidos"** → **NO reproducible**
-Existen los 3 triggers en `pagos_factura` / `factura_notas_credito`:
-- `trg_recalcular_estado_factura` (AFTER INS/UPD/DEL)
-- `trg_recalcular_estado_factura_nc`
-- `trg_pagos_factura_calc_ret` (BEFORE)
 
-La función `recalcular_estado_factura()` sí calcula `Pagada/Parcialmente pagada/Vencida/Emitida` a partir de `saldo_factura`. Sin un caso vivo que muestre "pago total y sigue Emitida", el bug no se sostiene.
+| Proforma      | Expediente | Folio ext | Fecha fact | Total USD | IVA USD |
+| ------------- | ---------- | --------- | ---------- | --------- | ------- |
+| PRO-2026-0195 | ELGEN00206 | 889       | 2026-05-13 | 23,890.00 | 0       |
+| PRO-2026-0278 | ELIMP00021 | 729       | 2026-02-18 | 1,300.00  | 0       |
+| PRO-2026-0287 | ELIMP00024 | 721       | 2026-02-17 | 1,300.00  | 0       |
+| PRO-2026-0297 | ELIMP00169 | 915       | 2026-06-03 | 2,910.00  | 20      |
+| PRO-2026-0322 | ELIMP00264 | 930       | 2026-06-12 | 3,920.00  | 20      |
+| PRO-2026-0337 | ELIMP00256 | 940       | 2026-06-19 | 6,320.00  | 20      |
+| PRO-2026-0340 | ELIMP00239 | 944       | 2026-06-23 | 5,560.00  | 20      |
+| PRO-2026-0948 | ELIMP00282 | 948       | 2026-06-26 | 6,278.50  | 0       |
 
-**R4-02 · `convertir_proformas_a_factura` inutilizable** → **Diagnóstico obsoleto**
-- Gate ya unificado: `es_escritor_financiero(auth.uid()) OR super_admin` (línea 41-46).
-- Errcodes estables: `LC_PROFORMA_SIN_PERMISO` (P0001), `LC_PROFORMA_YA_FACTURADA` (P0002).
-- Firma única, sin sobrecargas.
-- Falta verificar el bloque de conceptos/moneda/bitácora del resto de la función.
 
-### BLOQUE B — P1
+**Acción atómica por proforma (una migración `supabase--insert`):**
 
-**R4-03 · Margen mínimo lee `venta_mxn`** → **Falso en el detalle**
-La función NO lee `venta_mxn`. Compara `utilidad_mxn >= v_margen_min` (líneas 171-183). El parche propuesto (cambiar a `venta.real_mxn`) no aplica. Puede haber un problema semántico si `pnl_margen_minimo_cierre` se configura como porcentaje y se compara contra pesos absolutos, pero eso requiere otra corrección.
+1. `INSERT INTO facturas` con:
+  - `numero = <folio del Excel>`
+  - `origen = 'externa'`, `estado = 'Pagada'`
+  - `moneda = 'USD'`, `subtotal/iva/total` copiados de la proforma
+  - `embarque_id`, `cliente_id`, `cliente_nombre`, `expediente`, `organization_id`, `proforma_id` heredados
+  - `fecha_emision = fecha_facturacion` del Excel, `fecha_vencimiento = fecha_emision`
+  - `uuid_fiscal = NULL`, `ret_isr = 0`, `ret_iva = 0`, `uuid_verificado = false`
+  - `notas = 'Factura emitida fuera de sistema — backfill legacy ERP'`
+2. `UPDATE proformas` a `estado_proforma='facturada'`, setear `factura_id`, `folio_factura_externa`, `fecha_facturacion`, `origen='externa'`.
+3. `INSERT INTO bitacora_actividad` con evento `PROFORMA_VINCULADA_FACTURA_EXTERNA`.
 
-**R4-04 · TOCTOU sin `FOR UPDATE`** → **YA CORREGIDO**
-`tg_pago_factura_no_sobrepago` incluye `PERFORM 1 FROM facturas WHERE id = NEW.factura_id ... FOR UPDATE` con comentario `-- FIX-R4-04`.
+Todo dentro de `BEGIN; ... COMMIT;` para que si un renglón falla se revierte solo el suyo (una transacción por proforma).
 
-**R4-05 · Retenciones no se prorratean** → **YA CORREGIDO**
-`calc_pago_retenciones` usa `v_monto := COALESCE(NULLIF(NEW.monto_aplicado_factura,0), NEW.monto)` con comentario `-- FIX-R4-05`.
+### Bloque B — 2 conflictos (NO ejecutar, requieren decisión)
 
-**R4-06 · Fallback silencioso al TC de la factura** → **Sin verificar**
-Requiere leer `convertir_monto_pago_a_factura`. Plausible.
+**PRO-2026-0084 → folio 726, embarque ELIMP00007**
 
-**R4-07 · `embarque_estado_financiero` sin NC** → **La vista no existe**
-`pg_views` no reporta esa vista. Fue reemplazada o renombrada.
+El embarque ya tiene 4 proformas `facturada` con distintas variantes del folio 726:
 
-**R4-08 · Sobrecargas ambiguas** → **FALSO**
-`crear_embarque_borrador_desde_cotizacion`, `actualizar_embarque_completo`, `generar_expediente` y `convertir_proformas_a_factura` tienen **una sola** firma cada una.
+- PRO-2026-0083 → factura `726` (USD 1,200) ← única "limpia"
+- PRO-2026-0079 → factura `726-DUP-cabeceda` (USD 1,199.98)
+- PRO-2026-0080 → factura `726-DUP-ce941c8a` (USD 1,200)
+- PRO-2026-0081 → factura `726-DUP-1a539c8b` (USD 1,200)
+- PRO-2026-0082 → pendiente (también del Excel legacy)
+- **PRO-2026-0084** → pendiente (la del Excel)
 
-**R4-09 · `folio_secuencias` sin backfill** → **FALSO / no aplicable**
-- `siguiente_folio_cotizacion(uuid)` no existe.
-- Tabla `folio_secuencias` está vacía y su columna es `ultimo_numero`, no `valor`. El backfill propuesto ni siquiera compilaría.
+**PRO-2026-0085 → folio 755, embarque ELIMP00022**
 
-**R4-10a · Fail-open en SEC DEFINER** → **PARCIALMENTE CIERTO**
-- `saldo_factura` ya es fail-closed (`FIX-R4-10a`).
-- `validar_cierre_embarque` **todavía** usa `v_caller_org IS NOT NULL AND ...` (línea 29-33): usuario sin membresía sí puede leer el JSON financiero. **Bug real.**
+- PRO-2026-0077 → factura `755-DUP-fe48bee7` (USD 2,095)
+- PRO-2026-0078 → factura `755` (USD 2,095) ← única "limpia"
+- **PRO-2026-0085** → pendiente (la del Excel)
 
-**R4-10b · `marcar_facturas_vencidas` cross-org** → **YA CORREGIDO**
-Filtro `v_is_service OR super_admin OR organization_id = v_org` presente.
+Diagnóstico: ELIMP00007 tiene **5 proformas** de USD 1,200 y ELIMP00022 tiene **3 proformas** de USD 2,095, todas apuntando al mismo folio real. Parecen duplicados de importación (ERP legacy → BD nueva). Ya se hizo un intento previo de dedupe renombrando facturas con sufijo `-DUP-`.
 
-**R4-10c · REVOKE de `_recalc_estado_proveedor_factura`** → **Sin verificar**
+Necesito que decidas para cada uno de los 2 casos:
 
-### BLOQUE C — P2
-Sin verificar todavía (R4-11 a R4-15).
+1. **Marcar la del Excel como duplicado descartado** (soft-delete PRO-2026-0084 y PRO-2026-0085 con motivo "duplicado de import legacy"). Es lo más limpio si confirmas que el embarque ya está bien facturado.
+2. **Reasignar el vínculo**: mover la factura `726` (o `755`) de la proforma actual (PRO-2026-0083 / PRO-2026-0078) a la del Excel (PRO-2026-0084 / PRO-2026-0085) y soft-deletar la anterior. Sólo si la del Excel es la "buena".
+3. **Crear stub con sufijo** `726-EXT` / `755-EXT` vinculada a la proforma del Excel. Deja 2 facturas con el mismo folio real conviviendo — no recomendado porque descuadra reportes.
+4. **Nada por ahora**: dejar PRO-2026-0084 y PRO-2026-0085 pendientes hasta que revises manualmente los 2 embarques.
 
----
+Para PRO-2026-0082 (que también aparece en el mismo embarque como pendiente y no está en el Excel), ¿la trato aparte o aplico la misma decisión?
 
-## Conclusión y siguiente paso
+### Entregables
 
-De los 10 bugs de bloques A/B revisados: **2 ya corregidos con comentario `FIX-R4-XX`**, **3 con diagnóstico incorrecto**, **1 vista inexistente**, **1 sin sobrecarga real**, **1 backfill inaplicable**, **1 parcial (R4-10a en `validar_cierre_embarque`)**, **2 sin verificar (R4-06, R4-10c)** y **2 P0 sin caso reproducible** (R4-01, R4-02 sólo mitad).
+- Una llamada a `supabase--insert` con las 8 transacciones del Bloque A.
+- Query de verificación posterior (SELECT de las 8 proformas + facturas creadas).
+- CHANGELOG entry `## [13.308.11]` describiendo backfill de 8 proformas externas.
+- Bloque B queda en espera de tu respuesta a las 4 opciones arriba.
 
-Antes de aplicar cualquier migración, propongo:
+### Nota
 
-1. **Confirmar reproducción real** de R4-01 (crear un pago total en staging y ver si la factura pasa a `Pagada`) y del bloque de conceptos/moneda de R4-02.
-2. **Verificar los 7 pendientes** (R4-06, R4-10c, R4-11, R4-12, R4-13, R4-14, R4-15) contra el código actual antes de asumirlos.
-3. **Aplicar sólo lo confirmado**: por ahora sólo el fail-closed en `validar_cierre_embarque` (R4-10a residual) parece un fix limpio con evidencia directa.
+Este es un backfill de datos, **no** un feature nuevo — no crea RPC ni UI. Si más adelante quieres flujo self-service para que ventas registre facturas externas desde el detalle de proforma, es otro plan (te lo propuse antes y podemos retomarlo).
 
-### ¿Cómo continuar?
-- **Opción 1**: verifico y reproduzco los pendientes uno por uno y traigo un nuevo plan sólo con los bugs realmente vivos.
-- **Opción 2**: aplico ya el fix acotado de R4-10a en `validar_cierre_embarque` y en paralelo verifico el resto.
-- **Opción 3**: descartar el documento R4-2 como obsoleto y no tocar nada hasta que el auditor externo re-corra su suite contra el estado actual.
-
-Recomiendo **Opción 1** para no reintroducir bugs con parches que asumen versiones viejas.
+Para los 2 casos vamos a **Reasignar el vínculo.**
