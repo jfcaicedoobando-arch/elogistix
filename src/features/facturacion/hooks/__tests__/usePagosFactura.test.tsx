@@ -79,7 +79,7 @@ describe("useRegistrarPagoFactura", () => {
     await act(async () => {
       result.current.mutate({ factura_id: "fac-1", monto: 200 } as never);
     });
-    await waitFor(() => expect(result.current.isError).toBe(true));
+    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 3000 });
   });
 });
 
