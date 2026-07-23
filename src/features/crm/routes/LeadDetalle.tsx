@@ -26,6 +26,7 @@ import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderA
 import { useActualizarLead, useEliminarLead, useLead } from "@/features/crm/hooks";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
+import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
