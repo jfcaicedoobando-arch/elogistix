@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { supabase } from "@/integrations/supabase/client";
+import { recuperarClaimFactura, type RecuperarClaimResponse } from "@/features/facturacion/services/claimPending";
 import { useQueryClient } from "@tanstack/react-query";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
 
