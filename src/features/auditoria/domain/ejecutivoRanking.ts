@@ -3,7 +3,7 @@
  * Extraído de `ejecutivoAgregados.ts` para mantener archivos ≤200 líneas.
  */
 import type { AuditoriaRevision } from "@/features/auditoria/types";
-import { diffHoras, TOP_N } from "./ejecutivoAgregados";
+import { diffHoras, TOP_N } from "./ejecutivoRankingCore";
 
 export interface OperadorRanking {
   email: string;
