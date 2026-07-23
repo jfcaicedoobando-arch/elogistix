@@ -1,52 +1,89 @@
-## Objetivo
-Correr en modo build una **verificación exhaustiva** contra la auditoría del 2026-07-23 y producir un reporte de estado real — sin refactorizar nada todavía. El reporte alimenta la decisión de qué ítems atacar después.
+# Cierre de Bloque 3 — Arquitectura Auditoría 3
 
-## Alcance
-Sólo ejecutar chequeos existentes en el repo y comparar contra los 4 bloques del documento. Cero cambios de código, cero migraciones. Un solo commit final: `docs(arquitectura) · reporte estado auditoría-3` con el reporte en `docs/arquitectura-auditoria-3-status.md`.
+Objetivo: dejar los 5 ítems pendientes en ✅ y el pipeline (`lint`, `tsgo`, `test:fast`, `knip`, `madge`, `audit:arch`) en verde. Se ejecuta como **5 PRs incrementales** para mantener cada cambio revisable y evitar regresiones.
 
-## Pasos
+---
 
-1. **Correr suite CI en frío** (sin cache), capturando stdout/stderr a `/tmp/audit3/`:
-   - `bun run lint -- --max-warnings 0`
-   - `bunx tsgo --noEmit`
-   - `bunx vitest run` (todos los shards)
-   - `bunx knip`
-   - `bunx madge --circular --extensions ts,tsx src/` → capturar número exacto de ciclos.
-   - `bunx tsx scripts/audit-arch.ts` (o equivalente vigente) → capturar oversized/violations.
-   - `scripts/ci-fast.sh` si existe.
+## PR-1 · 3.5 EmbarqueDetalleTabs sin prop-drilling (S)
 
-2. **Verificar cada ítem del documento** contra el código actual con `rg`/`sed`/`grep`, marcando ✅/⚠️/❌:
+- Crear hook `useEmbarqueDetalleTabsData(embarqueId)` en `src/features/embarques/hooks/` que agrupe fetch de `financials` + `docHandlers` + tracking.
+- Refactor `EmbarqueDetalleTabs.tsx`: pasa de 12 props a 2 (`embarqueId`, `tab`). Cada `<TabX>` consume el hook o su propio slice.
+- Mover data-fetching que hoy vive en el padre a cada tab (`TabTracking`, `TabFinancieros`, `TabDocumentos`, `TabDemoras`).
+- **Entrega**: tabs autocontenidas + tests de integración que cubran render de cada tab.
 
-   Bloque 1 (1.1 scanner · 1.2 path eslint · 1.3 tipos cxp · 1.4 anys · 1.5 AuthContext · 1.6 supabase en tsx)
-   Bloque 2 (2.1 lcCodeMessages · 2.2 schema-invariants · 2.3a shared · 2.3b eslint · 2.4 IVA/fases)
-   Bloque 3 (3.1 canónicos · 3.2 god functions · 3.3 formularios RHF · 3.4 formatters/StatusBadge · 3.5 prop-drilling tabs · 3.6 higiene migraciones · 3.7 coverage/SQL LC_ · 3.8 catch vacíos)
-   Bloque 4 (7 sub-ítems boy-scout)
+## PR-2 · 3.6 Higiene de migraciones (S)
 
-3. **Medir hotspots residuales** con conteos duros:
-   - `toLocaleString`/`Intl.NumberFormat`/`toLocaleDateString` fuera de `src/lib/formatters/`
-   - `estado === "Literal"` fuera de constantes `ESTADOS_*`
-   - Archivos > 200 líneas, > 300 líneas, > 500 líneas (top 20)
-   - Funciones con complejidad ciclomática > 16 (via eslint report json)
-   - `useState` en hooks `useNueva*Form.ts` (Bloque 3.3)
-   - CFDI de la allowlist `CROSS_FEATURE_ALLOWLIST` en `eslint.config.js` (baseline: 54)
+- Crear `scripts/audit-migrations.ts` que recorre `supabase/migrations/*.sql` y falla si detecta:
+  - `DROP ... CASCADE` sin `CREATE OR REPLACE` posterior en el mismo archivo.
+  - `CREATE TABLE` en `public.*` sin `GRANT` en la misma migración.
+  - `CREATE INDEX`/`CREATE POLICY` sin `IF NOT EXISTS` cuando es idempotente.
+  - Naming fuera de `YYYYMMDDHHMMSS_snake_case.sql`.
+- Añadir `bun run audit:migrations` a `package.json` y a `scripts/ci-fast.sh`.
+- Documentar reglas en `docs/migrations-hygiene.md` + entrada en `CHANGELOG.md`.
 
-4. **Escribir el reporte** en `docs/arquitectura-auditoria-3-status.md` con:
-   - Tabla por ítem: estado ✅/⚠️/❌ + evidencia (comando/archivo:línea) + esfuerzo estimado (S/M/L)
-   - Números duros de la suite CI (tests pasados, warnings, ciclos madge, oversized, knip)
-   - Lista ordenada de "trabajo real pendiente" priorizado por riesgo × esfuerzo
-   - Recomendación de siguiente PR (1–3 candidatos concretos)
+## PR-3 · 2.4 residual + 3.7 SQL LC_* tests (S+M)
 
-5. **Actualizar** `CHANGELOG.md` (entrada `docs`) y bumpear `APP_VERSION` a `13.309.20`.
+- **Test fases**: `src/lib/__tests__/embarque-fases-vs-enum.test.ts` compara `embarqueFases.ts` con `Database['public']['Enums']['estado_embarque']` derivado de `types.ts`.
+- **Tests SQL LC_***: crear guardrails estilo `demoras-recalculo-seguro-fase-h.test.ts` (lee migraciones + regex) para los códigos hotspot que aún no tienen test:
+  - `LC_COT_TRANSICION_INVALIDA`
+  - `LC_CXP_DESCUADRE` (ya existe → extender a variantes)
+  - `LC_TC_NO_DISPONIBLE`
+  - `LC_EMB_CIERRE_*`
+- Coverage: mantener `vitest.config.ts` con thresholds ≥ 0.5 en el config principal, `test:coverage:shard` conserva 0 (documentado en el archivo).
+
+## PR-4 · 3.4 Formatters + StatusBadge (M)
+
+Migración por feature (una feature por commit dentro del PR):
+
+1. `features/facturacion` → `formatters/{numbers,dates,pnl}` + `StatusBadge` (reemplaza los ~120 `estado === "..."` inline por `statusVariant()`).
+2. `features/cxp`.
+3. `features/embarques`.
+4. `features/cotizacion` + `features/profit`.
+5. Al cerrar: añadir regla `no-restricted-syntax` que prohíba `toLocaleString`/`toLocaleDateString`/`new Intl.NumberFormat` fuera de `src/lib/formatters/`.
+
+**Meta**: 39 archivos → 0, allowlist vacío para formatters.
+
+## PR-5 · 3.3 RHF+zod en CxP (L)
+
+- Reemplazar los `useState` sueltos en:
+  - `useNuevaFacturaProveedorForm.ts` (11 useState → un solo `useForm<FacturaProveedorFormValues>` con schema zod).
+  - `useEditarFacturaProveedorForm.ts` (6 useState → mismo patrón, `defaultValues` desde row).
+- Reutilizar `FacturaFormValues` de `src/features/cxp/types/facturaForm.ts`.
+- Adaptar `NuevaFacturaProveedorDialog` / `EditarFacturaProveedorDialog` a `FormProvider` + `Controller`.
+- Tests: usar `assertMutation` + `withFrozenClock` existentes; verificar validación de cuadre (`CuadreConceptosBar` sigue funcionando).
+
+---
+
+## Anexo · Reparar 3 error-path tests preexistentes
+
+Antes de PR-1, en un commit corto:
+
+1. `useEmbarqueDocumentosActions.test.tsx` — ajustar aserción al mensaje humano nuevo emitido por `stripLcCode`.
+2. `usePagosFactura.test.tsx` — idem.
+3. `useAuthProfile.test.ts` — idem (comparar contra `getErrorMessage(err)` en lugar de string literal).
+
+Sin cambiar producción; sólo actualizar expectativas del test al contrato actual de mensajes.
+
+---
 
 ## Detalles técnicos
 
-- Los logs completos van a `/tmp/audit3/*.log` (no se comitean); el reporte cita `archivo:línea` y comandos reproducibles.
-- Si algún chequeo falla (lint/tsgo/vitest en rojo), NO se corrige en este PR — se documenta en el reporte como bloqueo y se detiene.
-- Para complejidad ciclomática, usar `bunx eslint . --format json --rule '{"complexity":["error",16]}' --no-eslintrc` sobre `src/` y parsear top 20.
-- Para conteo de `estado === "Literal"`: `rg -n "estado\s*===\s*\"" src --type ts --type tsx | grep -v "ESTADOS_"`.
+- **Cada PR** cierra con: `bun run lint -- --max-warnings 0`, `bunx tsgo --noEmit`, `bun run test:fast`, `bunx knip`, `bunx madge --circular` (no debe subir de 19), `bun run audit:arch`.
+- **CHANGELOG.md** entrada por PR + bump `APP_VERSION` (`13.309.21` → `13.309.25`).
+- **No se toca `src/integrations/supabase/*`** (auto-gen).
+- **Zonas confirmadas sanas** del reporte se dejan intactas.
 
-## Riesgo / Reversibilidad
-Riesgo cero — sólo lectura + un archivo de documentación nuevo. Reversible con revert del commit.
+## Riesgos y mitigación
 
-## Fuera de alcance
-Todo refactor de código (Bloques 1–4 del documento). Cualquier cambio en `src/`, `supabase/`, o `scripts/` fuera de la creación del reporte.
+- PR-4 (formatters) es el más invasivo visualmente → snapshot review por feature antes del merge.
+- PR-5 (RHF) puede romper flujos de captura CxP → E2E `03-factura.spec.ts` + `08-flujo-fiscal.spec.ts` se corren en cada commit.
+- PR-1 mueve fetch a tabs → verificar que no dispare N+1 requests con React Query cache (misma `queryKey`).
+
+## Orden de ejecución sugerido
+
+```text
+Anexo tests → PR-1 → PR-2 → PR-3 → PR-4 → PR-5
+   (S)        (S)     (S)    (S+M)  (M)    (L)
+```
+
+Total estimado: 5 PRs, ~1 sesión larga cada uno. Si preferís, puedo arrancar sólo por el Anexo + PR-1 y pausar para tu revisión antes de continuar.
