@@ -12,7 +12,7 @@ import { getOrigen, getDestino, shortName } from "@/lib/formatters";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { expedienteConsecutivo } from "@/features/embarques/domain/embarquesPageHelpers";
-import { ContenedorCell, type ContenedorInfo } from "./ContenedorCell";
+import { ContenedorCell, type ContenedorInfo } from "@/features/embarques/components/ContenedorCell";
 
 export type { ContenedorInfo };
 export interface DocsInfo { pendientes: number; total: number }
