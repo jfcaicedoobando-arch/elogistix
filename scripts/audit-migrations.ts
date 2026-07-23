@@ -18,6 +18,15 @@
  *      (idempotencia). NB: Postgres no soporta `CREATE POLICY IF NOT EXISTS`
  *      antes de PG16; se acepta también `DROP POLICY IF EXISTS ... ; CREATE POLICY`.
  *  H5  Prohibido `DROP TABLE public.*` sin `IF EXISTS`.
+ *  H6  Toda `CREATE OR REPLACE FUNCTION public.<f>(...) ... SECURITY DEFINER`
+ *      DEBE ir acompañada en el mismo archivo de:
+ *        - `REVOKE ALL ON FUNCTION public.<f>(<args>) FROM PUBLIC` (o `FROM PUBLIC, anon`)
+ *        - `GRANT EXECUTE ON FUNCTION public.<f>(<args>) TO <rol>` con rol ∈
+ *          {authenticated, service_role, postgres}. Prohibido `TO PUBLIC`.
+ *      Excepción: comentario `-- audit:allow-no-grants` justo antes del
+ *      `CREATE OR REPLACE FUNCTION` (helpers privados sin exposición externa).
+ *      La regla `GRANT EXECUTE ... TO PUBLIC` sobre SECURITY DEFINER es dura
+ *      y aplica siempre (aun a legacy pre-baseline).
  *
  * Salida: exit 0 si limpio, 1 si hay violaciones (con listado agrupado).
  */
