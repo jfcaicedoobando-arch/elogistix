@@ -87,7 +87,7 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
                   <span className="text-xs text-muted-foreground">{l.contacto || "Sin contacto"} · {l.fuente}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(l.created_at).toLocaleDateString("es-MX")}
+                  {formatFechaEs(l.created_at)}
                 </span>
               </DrilldownRow>
             ))}
