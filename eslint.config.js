@@ -446,6 +446,52 @@ export default tseslint.config(
             group: ["@/pages/*", "@/pages/**"],
             message: "lib/ no puede importar de pages/.",
           },
+          // Sprint 1 (R3) · 0.5-b — Cierre del boundary `src/lib/**` → `@/features/**`.
+          // Migración escalonada en Sprint 3+ para los 12 archivos ARCH-DEBT
+          // (registry de queryKeys, contextos de auth, filenames de PDF,
+          // mappers UI) que hoy violan la regla; ver bloque de excepciones abajo.
+          {
+            group: ["@/features/*", "@/features/**"],
+            message: "lib/ no puede importar de features/. Invierte la dependencia: el feature llama al util de lib/ o expón el tipo desde src/types/.",
+          },
+        ],
+      }],
+    },
+  },
+  {
+    // ARCH-DEBT (Sprint 1 · 0.5-b): allowlist temporal para los 12 archivos
+    // que ya importan `@/features/**` desde `src/lib/**`. Reconfigura el
+    // ban de lib/ SIN el patrón features (los otros bans se mantienen).
+    // Sprint 3+ retira estos archivos migrando sus dependencias.
+    files: [
+      "src/lib/auth/signOut.ts",
+      "src/lib/contexts/AuthContext.tsx",
+      "src/lib/contexts/OrganizationContext.tsx",
+      "src/lib/contexts/auth/useAuthProfile.ts",
+      "src/lib/contexts/auth/useAuthSession.ts",
+      "src/lib/contexts/auth/useLoginAudit.ts",
+      "src/lib/csv/leadsCsv.ts",
+      "src/lib/filenames.ts",
+      "src/lib/mappers/estadoResultadosRows.ts",
+      "src/lib/query/index.ts",
+      "src/lib/ui/appFeedback.ts",
+      "src/lib/ui/uiMappings.ts",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          {
+            group: ["@/hooks/*", "@/hooks/**"],
+            message: "lib/ no puede importar de hooks/. Mueve el tipo a src/types/ o invierte la dependencia.",
+          },
+          {
+            group: ["@/components/*", "@/components/**"],
+            message: "lib/ no puede importar de components/. lib/ es puro (sin React).",
+          },
+          {
+            group: ["@/pages/*", "@/pages/**"],
+            message: "lib/ no puede importar de pages/.",
+          },
         ],
       }],
     },
