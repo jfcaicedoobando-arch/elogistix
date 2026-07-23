@@ -11,6 +11,7 @@ import { Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatFechaEs } from "@/lib/formatters/dates";
 import { useProximasActividades, type ProximaActividad } from "@/features/crm/hooks";
 
 const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
