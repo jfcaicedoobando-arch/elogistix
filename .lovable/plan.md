@@ -1,94 +1,74 @@
+## Verificación de los bugs del documento R4-2
 
-# Auditoría de toasts — cobertura 100% + "Ver detalles" universal
+Contrasté cada fix contra la BD viva. Muchos ya están aplicados (con comentarios `FIX-R4-XX` en el propio código) o el diagnóstico es incorrecto. Detalle por bug:
 
-## Estado actual (verificado)
+### BLOQUE A — P0
 
-| Tipo | Call sites | ¿Tiene "Ver detalles"? |
-|---|---|---|
-| `notifyError` | 422 | ✅ Sí (persistente + copia reporte) |
-| `notifySuccess` | 154 | ❌ No |
-| `notifyWarning` | 6 | ❌ No |
-| `toast.success` directo | 74 | ❌ No |
-| `toast.warning` directo | 12 | ❌ No |
-| `toast.info` / `toast(...)` | 45 | ❌ No |
-| `crmToast.success/info/undo` | ~30 | ❌ No |
-| `toast.error` en `queryClient` | 1 | ❌ No (excluido en allowlist) |
+**R4-01 · Triggers de recálculo "destruidos"** → **NO reproducible**
+Existen los 3 triggers en `pagos_factura` / `factura_notas_credito`:
+- `trg_recalcular_estado_factura` (AFTER INS/UPD/DEL)
+- `trg_recalcular_estado_factura_nc`
+- `trg_pagos_factura_calc_ret` (BEFORE)
 
-Los guardrails de arquitectura (`error-toasts-use-notifyError.test.ts`) ya impiden `toast.error(...)` directo y `variant:"destructive"`, pero **no existe** un guardrail equivalente para success/warning/info.
+La función `recalcular_estado_factura()` sí calcula `Pagada/Parcialmente pagada/Vencida/Emitida` a partir de `saldo_factura`. Sin un caso vivo que muestre "pago total y sigue Emitida", el bug no se sostiene.
 
-## Objetivo
+**R4-02 · `convertir_proformas_a_factura` inutilizable** → **Diagnóstico obsoleto**
+- Gate ya unificado: `es_escritor_financiero(auth.uid()) OR super_admin` (línea 41-46).
+- Errcodes estables: `LC_PROFORMA_SIN_PERMISO` (P0001), `LC_PROFORMA_YA_FACTURADA` (P0002).
+- Firma única, sin sobrecargas.
+- Falta verificar el bloque de conceptos/moneda/bitácora del resto de la función.
 
-1. **100% de los toasts** — cualquier severidad — pueden abrir "Ver detalles" con reporte copiable (título, timestamp, ruta, usuario, error real si lo hay, contexto).
-2. **Cerrar huecos**: queryClient, crmToast, catch silenciosos, comportamiento dentro de modales.
-3. **Guardrail arquitectónico** que impida regresiones futuras.
+### BLOQUE B — P1
 
-## Cambios
+**R4-03 · Margen mínimo lee `venta_mxn`** → **Falso en el detalle**
+La función NO lee `venta_mxn`. Compara `utilidad_mxn >= v_margen_min` (líneas 171-183). El parche propuesto (cambiar a `venta.real_mxn`) no aplica. Puede haber un problema semántico si `pnl_margen_minimo_cierre` se configura como porcentaje y se compara contra pesos absolutos, pero eso requiere otra corrección.
 
-### 1 · `appFeedback.ts` — extender helpers con debug opcional
+**R4-04 · TOCTOU sin `FOR UPDATE`** → **YA CORREGIDO**
+`tg_pago_factura_no_sobrepago` incluye `PERFORM 1 FROM facturas WHERE id = NEW.factura_id ... FOR UPDATE` con comentario `-- FIX-R4-04`.
 
-- `notifySuccess(_, opts)` y `notifyWarning(_, opts)` reciben ahora `error?`, `context?`, `method?`, `payload?`, `requestId?` igual que `notifyError`.
-- Cuando se pase cualquiera de esos campos (o siempre, según config), el toast incluye acción **"Ver detalles"** que abre `ErrorDetailsDialog` con el `buildErrorReport`.
-- Nuevo helper interno `attachDebugAction(opts)` reutilizado por los 3 notifiers.
-- Los notifiers también aceptan `showDetails?: boolean` para forzar la acción incluso sin `error` (ej. éxitos con payload interesante como "Factura timbrada" → ver UUID, folio, sello).
-- Éxito y warning **no** son persistentes (duration por defecto), sólo el error mantiene `duration: Infinity`.
+**R4-05 · Retenciones no se prorratean** → **YA CORREGIDO**
+`calc_pago_retenciones` usa `v_monto := COALESCE(NULLIF(NEW.monto_aplicado_factura,0), NEW.monto)` con comentario `-- FIX-R4-05`.
 
-### 2 · Nuevo helper `notifyInfo` + migración de `toast(...)` plano
+**R4-06 · Fallback silencioso al TC de la factura** → **Sin verificar**
+Requiere leer `convertir_monto_pago_a_factura`. Plausible.
 
-- Añadir `notifyInfo(_, opts)` con la misma firma.
-- Migrar los 37 usos de `toast(...)` plano y 8 de `toast.info(...)` a `notifyInfo`.
-- Migrar los 74 `toast.success(...)` y 12 `toast.warning(...)` a `notifySuccess` / `notifyWarning` (edits mecánicos por archivo).
+**R4-07 · `embarque_estado_financiero` sin NC** → **La vista no existe**
+`pg_views` no reporta esa vista. Fue reemplazada o renombrada.
 
-### 3 · `queryClient.ts` — reemplazar `toast.error` por `notifyError`
+**R4-08 · Sobrecargas ambiguas** → **FALSO**
+`crear_embarque_borrador_desde_cotizacion`, `actualizar_embarque_completo`, `generar_expediente` y `convertir_proformas_a_factura` tienen **una sola** firma cada una.
 
-- Sustituir el `toast.error("No pudimos cargar la información", …)` por `notifyError` con `error: err`, `method: "QUERY_CACHE"`, `context: { queryKey }`. Mantener `id` dedupe por root usando la key de sonner (pasar `toastId` a través de options extendidas).
-- Quitar `queryClient.ts` del `ALLOWLIST` en el test de guardrail.
+**R4-09 · `folio_secuencias` sin backfill** → **FALSO / no aplicable**
+- `siguiente_folio_cotizacion(uuid)` no existe.
+- Tabla `folio_secuencias` está vacía y su columna es `ultimo_numero`, no `valor`. El backfill propuesto ni siquiera compilaría.
 
-### 4 · `crmToast.ts` — trazabilidad opcional
+**R4-10a · Fail-open en SEC DEFINER** → **PARCIALMENTE CIERTO**
+- `saldo_factura` ya es fail-closed (`FIX-R4-10a`).
+- `validar_cierre_embarque` **todavía** usa `v_caller_org IS NOT NULL AND ...` (línea 29-33): usuario sin membresía sí puede leer el JSON financiero. **Bug real.**
 
-- `success(msg, opts?)` e `info(msg, opts?)` aceptan `{ error?, context?, method? }`. Si se pasa, incluyen "Ver detalles"; si no, se mantienen minimalistas (2s).
-- Documentar en el comment head que ahora sí pueden llevar debug.
+**R4-10b · `marcar_facturas_vencidas` cross-org** → **YA CORREGIDO**
+Filtro `v_is_service OR super_admin OR organization_id = v_org` presente.
 
-### 5 · Catch silenciosos → notifyError
+**R4-10c · REVOKE de `_recalc_estado_proveedor_factura`** → **Sin verificar**
 
-- Rastrear con `rg "console\.error\(" src -t ts` los bloques `catch` que no emiten toast (fuera de servicios puros y de `reportCaughtError`).
-- Priorizar hooks/mutations/handlers de UI. Convertir a `notifyError(toast, { error, method: "..." })` conservando el `console.error` sólo cuando el helper ya lo cubra vía Sentry.
-- No tocar servicios de dominio puros ni tests.
+### BLOQUE C — P2
+Sin verificar todavía (R4-11 a R4-15).
 
-### 6 · Toasts dentro de modales (Dialog)
+---
 
-- Verificar en `src/components/ui/dialog.tsx` que el overlay no captura pointer-events sobre el contenedor `<Toaster>`.
-- Añadir `pointer-events-auto` explícito al toast en `sonner.tsx` y `z-index` superior al Dialog (`z-[100]` vs `z-50` del overlay Radix).
-- Probar manualmente que "Ver detalles" abre el `ErrorDetailsDialog` **encima** del Dialog abierto (el store ya renderiza a portal root, sólo hay que confirmar z-index).
+## Conclusión y siguiente paso
 
-### 7 · Nuevo guardrail arquitectónico
+De los 10 bugs de bloques A/B revisados: **2 ya corregidos con comentario `FIX-R4-XX`**, **3 con diagnóstico incorrecto**, **1 vista inexistente**, **1 sin sobrecarga real**, **1 backfill inaplicable**, **1 parcial (R4-10a en `validar_cierre_embarque`)**, **2 sin verificar (R4-06, R4-10c)** y **2 P0 sin caso reproducible** (R4-01, R4-02 sólo mitad).
 
-Nuevo test `src/__tests__/architecture/all-toasts-use-notify-helpers.test.ts` que prohíbe en `src/features/**` y `src/hooks/**`:
+Antes de aplicar cualquier migración, propongo:
 
-- `toast.success(`, `toast.warning(`, `toast.info(`
-- `toast(` como statement (no como identifier)
+1. **Confirmar reproducción real** de R4-01 (crear un pago total en staging y ver si la factura pasa a `Pagada`) y del bloque de conceptos/moneda de R4-02.
+2. **Verificar los 7 pendientes** (R4-06, R4-10c, R4-11, R4-12, R4-13, R4-14, R4-15) contra el código actual antes de asumirlos.
+3. **Aplicar sólo lo confirmado**: por ahora sólo el fail-closed en `validar_cierre_embarque` (R4-10a residual) parece un fix limpio con evidencia directa.
 
-Allowlist mínima: shims (`useToast.ts`, `crmToast.ts`, `appFeedback.ts`, `sonner.tsx`) y tests.
+### ¿Cómo continuar?
+- **Opción 1**: verifico y reproduzco los pendientes uno por uno y traigo un nuevo plan sólo con los bugs realmente vivos.
+- **Opción 2**: aplico ya el fix acotado de R4-10a en `validar_cierre_embarque` y en paralelo verifico el resto.
+- **Opción 3**: descartar el documento R4-2 como obsoleto y no tocar nada hasta que el auditor externo re-corra su suite contra el estado actual.
 
-### 8 · Changelog + versión
-
-- Bump `APP_VERSION` a `13.308.7`.
-- Entrada en `CHANGELOG.md` describiendo la unificación y el nuevo guardrail.
-
-## Detalles técnicos
-
-- El `ErrorDetailsDialog` ya soporta payloads sin `error` real — muestra "Sin stack trace" y copia el resto del reporte. No requiere cambios.
-- `buildErrorReport` ya tolera `error: undefined`.
-- Los ~250 call sites de `toast.success/warning/info` se migran con búsqueda-reemplazo por archivo (paso incremental, no en un solo write masivo).
-- No hay cambios de backend ni migraciones SQL.
-
-## Riesgos
-
-- **Ruido visual** con "Ver detalles" en toasts de éxito → mitigado: sólo aparece si el caller pasa `error`/`showDetails`/`context`. Migración mecánica NO añade la acción por default.
-- **Regresiones en tests** que asertan sobre `toast.success(...)` — actualizar los que rompan (esperado: pocos, están en `__tests__` que ya usan mocks de sonner).
-- **Cascada de errores de query** — el `id` dedupe se mantiene, sólo cambia el helper.
-
-## Fuera de alcance
-
-- Rediseñar el `ErrorDetailsDialog`.
-- Traducir/reescribir copy de los toasts existentes.
-- Cambios en el backend o Sentry.
+Recomiendo **Opción 1** para no reintroducir bugs con parches que asumen versiones viejas.
