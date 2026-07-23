@@ -6,6 +6,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { mapCostosACostosEmbarque } from "@/features/cotizacion/domain/cotizacion";
 import { fromDb } from "@/lib/supabase/cast";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 type ContenedorInsert = TablesInsert<"embarque_contenedores">;
 type ConceptoCostoInsert = TablesInsert<"conceptos_costo">;
