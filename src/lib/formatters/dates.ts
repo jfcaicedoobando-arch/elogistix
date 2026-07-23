@@ -54,20 +54,22 @@ export function formatFechaEs(
 }
 
 /**
- * Fecha + hora corta es-MX (`dateStyle: "short", timeStyle: "short"`).
- * Usado en tarjetas de historial/tracking donde se muestra timestamp del evento.
+ * Fecha + hora corta es-MX. Por defecto `dateStyle: "short"` + `timeStyle: "short"`.
+ * Acepta `Intl.DateTimeFormatOptions` para casos que requieran segundos,
+ * año de 2 dígitos, mes largo, etc. (usa `toLocaleString` bajo el capó).
  */
-export function formatFechaHora(iso: string | null | undefined): string {
+export function formatFechaHora(
+  iso: string | null | undefined,
+  options: Intl.DateTimeFormatOptions = { dateStyle: "short", timeStyle: "short" },
+): string {
   if (!iso) return "-";
   try {
-    return new Date(iso).toLocaleString("es-MX", {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
+    return new Date(iso).toLocaleString("es-MX", options);
   } catch {
     return iso;
   }
 }
+
 
 /**
  * Fecha larga es-MX ("lunes, 23 de julio de 2026"). Con capitalización opcional

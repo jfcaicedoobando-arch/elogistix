@@ -6,7 +6,7 @@
  * de cotizacionPdf.ts para no introducir dependencias nuevas.
  */
 import { fetchEstadoCuentaFacturas } from "@/features/facturacion/services";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatDate, formatFechaHora } from "@/lib/formatters";
 import { escapeHtml as esc } from "@/lib/utils";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 
@@ -148,7 +148,7 @@ export async function generarEstadoCuentaPdf(
           <div class="aging">${agingHtml}</div>`
     }
 
-    <div class="footer">${esc(emisor.razonSocial ?? "Empresa")} — documento generado ${new Date().toLocaleString("es-MX")}</div>
+    <div class="footer">${esc(emisor.razonSocial ?? "Empresa")} — documento generado ${formatFechaHora(new Date().toISOString())}</div>
   </body></html>`;
 
   const win = window.open("", "_blank");
