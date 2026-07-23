@@ -64,6 +64,7 @@ export default function FacturaDetalle() {
       volverLabel={volverLabel}
       onVolver={(href) => navigate(href)}
       dialogs={dialogs}
+      saldo={controller.saldo}
     />
   );
 }

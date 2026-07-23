@@ -4,6 +4,8 @@
  * `FacturaFiscalCheckAlert` cuando aparece dentro del detalle: consolida el
  * checklist fiscal en un solo lugar. Si falta algún dato, ofrece un CTA a
  * la ficha del cliente para completarlo.
+ * v13.308.16: el nombre del cliente pasa al título del card (antes era una
+ * fila más) para evitar triplicar el mismo dato en la vista.
  */
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -75,12 +77,20 @@ export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Pr
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <User className="h-4 w-4 text-muted-foreground" /> Receptor
-        </CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-3">
+        <div className="min-w-0">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <User className="h-4 w-4 text-muted-foreground" /> Receptor
+          </CardTitle>
+          <Link
+            to={`/clientes/${clienteId}`}
+            className="text-sm font-medium text-accent hover:underline block truncate mt-1"
+          >
+            {toTitleCase(clienteNombre)}
+          </Link>
+        </div>
         {!todoOk && (
-          <Button asChild size="sm" variant="outline">
+          <Button asChild size="sm" variant="outline" className="shrink-0">
             <Link to={`/clientes/${clienteId}`}>
               <UserCog className="h-4 w-4 mr-1" /> Completar datos
             </Link>
@@ -89,17 +99,9 @@ export function FacturaReceptorCard({ clienteId, clienteNombre, rfcFactura }: Pr
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <FieldGridSkeleton fields={5} cols={3} />
+          <FieldGridSkeleton fields={4} cols={4} />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="min-w-0 md:col-span-2">
-              <p className="text-label font-medium uppercase tracking-wide text-muted-foreground">Cliente</p>
-              <p className="text-sm font-medium truncate">
-                <Link to={`/clientes/${clienteId}`} className="text-accent hover:underline">
-                  {toTitleCase(clienteNombre)}
-                </Link>
-              </p>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Row label="RFC" ok={rfcOk} value={rfc} missingLabel="Falta RFC" />
             <Row label="Código postal" ok={cpOk} value={cp} missingLabel="Falta CP" />
             <Row label="Régimen fiscal" ok={regimenOk} value={labelRegimen(regimen)} missingLabel="Falta régimen" />

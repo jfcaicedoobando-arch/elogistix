@@ -34,6 +34,6 @@ export function useFacturaDetalleController(id: string | undefined) {
   return {
     canEdit, factura, isLoading, acuse, flags,
     pagoRepPendiente, handleDownload, eliminar, eliminando,
-    conceptosVivos, timbrarRep,
+    conceptosVivos, timbrarRep, saldo, totalPagado,
   };
 }
