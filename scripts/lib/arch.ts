@@ -54,8 +54,15 @@ export interface ArchReport {
 
 export function runArchAudit(root: string): ArchReport {
   return {
-    hooksContextsDirectImports: findDirectClientImports(root, ["src/hooks", "src/lib/contexts"]),
-    componentsPagesDirectImports: findDirectClientImports(root, ["src/components"]),
+    hooksContextsDirectImports: findDirectClientImports(root, [
+      "src/hooks",
+      "src/lib/contexts",
+      "src/features",
+    ]),
+    componentsPagesDirectImports: findDirectClientImports(root, [
+      "src/components",
+      "src/features",
+    ]),
     oversized: findOversized(root),
   };
 }
