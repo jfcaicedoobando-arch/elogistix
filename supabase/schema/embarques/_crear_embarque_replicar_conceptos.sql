@@ -15,7 +15,7 @@ CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path = public, pg_catalog
+ SET search_path TO 'public', 'pg_catalog'
 AS $function$
 DECLARE
   v_costo public.cotizacion_costos%ROWTYPE;
