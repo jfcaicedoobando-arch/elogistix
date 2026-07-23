@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { User as UserIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { actualizarPasswordAgente } from "@/features/portal-agente/services/perfil";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
 

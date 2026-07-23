@@ -4,7 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { Users2, Copy } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchDemoLeads, type DemoLead } from "@/features/admin/services/demoLeads";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
