@@ -42,7 +42,7 @@ Leyenda: ✅ hecho · ⚠️ parcial · ❌ pendiente · ➖ n/a
 | 3.4 Formatters + StatusBadge | ⚠️ | 41 archivos con formateo inline, 68 con `estado === "..."`. Sin migración este turno. |
 | 3.5 Prop drilling `EmbarqueDetalleTabs` | ✅ | `useEmbarqueDetalleTabsData(embarqueId, embarque)` — Tabs pasa de 12 → 6 props; data-fetching + `docHandlers` + `financials` dentro del hijo. Ruta usa `useEmbarqueEstadoActions` directo. |
 | 3.6 Higiene de migraciones | ✅ | `scripts/audit-migrations.ts` con reglas H1-H6 (baseline `20260723180000`) + `docs/migrations-hygiene.md` |
-| 3.7 Coverage thresholds + SQL LC_ tests | ⚠️ | Thresholds correctos. SQL LC_ tests: 1/4 (`cotizacion-transicion-fase-bloque-3-7.test.ts`). Faltan `LC_CXP_DESCUADRE`, `LC_TC_NO_DISPONIBLE`, `LC_EMB_CIERRE_*` |
+| 3.7 Coverage thresholds + SQL LC_ tests | ✅ | Thresholds correctos. `lc-codes-sql-wiring.test.ts` valida `LC_CXP_DESCUADRE`, `LC_CIERRE_SOLO_RPC`, `LC_EMBARQUE_BLOQUEADO` (RAISE en migraciones) + `LC_TC_NO_DISPONIBLE` (throw en frontend), y contrato `translateLcCode()` en 3 capas. |
 | 3.8 Catch vacíos | ✅ | 0 en `src` |
 
 ### BLOQUE 4 — Boy-scout (opcional)
