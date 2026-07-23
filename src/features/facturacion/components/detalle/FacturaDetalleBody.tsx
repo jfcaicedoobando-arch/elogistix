@@ -13,16 +13,18 @@ import { FacturaPagosSection } from "@/features/facturacion/components/detalle/F
 import { FacturaBitacoraCard } from "@/features/facturacion/components/detalle/FacturaBitacoraCard";
 import { FacturaNotasCreditoSeccion } from "@/features/facturacion/components/detalle/FacturaNotasCreditoSeccion";
 import { FacturaDetalleEditableSections } from "@/features/facturacion/components/detalle/FacturaDetalleEditableSections";
+import type { FacturaDetalle } from "@/features/facturacion/services/detail";
+import type { useConceptosFactura } from "@/features/facturacion/hooks/useConceptosFactura";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+type ConceptosVivos = NonNullable<ReturnType<typeof useConceptosFactura>["data"]>;
+
 interface FacturaDetalleBodyProps {
-  factura: any;
+  factura: FacturaDetalle;
   canEdit: boolean;
   puedeEditarBorrador: boolean;
-  conceptosVivos: any;
+  conceptosVivos: ConceptosVivos;
   onRegistrarPago: () => void;
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
   const { factura, canEdit, puedeEditarBorrador, conceptosVivos, onRegistrarPago } = props;
