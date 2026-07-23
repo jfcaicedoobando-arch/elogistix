@@ -10,7 +10,7 @@ import { useOrgFilter } from "@/hooks/shared";
 export function usePresupuestoCategorias(activas = true) {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.presupuesto.categorias(activas), organizationId ?? "none"] as const,
+    queryKey: queryKeys.presupuesto.categoriasPorOrg(activas, organizationId ?? null),
     queryFn: () => fetchCategorias(activas, organizationId ?? null),
     staleTime: 60_000,
   });
