@@ -128,12 +128,15 @@ export function useNotaCreditoDraft(p: Params) {
       if (timbrarAhora && !sinUuid) await timbrar.mutateAsync(nueva.id);
       p.onOpenChange(false);
     } catch (err) {
+      const rawMsg = err instanceof Error ? err.message : "";
+      const description = rawMsg.startsWith("LC_") ? rawMsg : getErrorMessage(err);
       notifyError(toast, {
         title: "No se pudo crear la nota de crédito",
-        description: getErrorMessage(err),
+        description,
         method: "ON_ERROR",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
+
     } finally {
       setGuardando(false);
     }
