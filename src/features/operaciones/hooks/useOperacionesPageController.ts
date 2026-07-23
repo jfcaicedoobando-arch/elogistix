@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { formatFechaLarga } from "@/lib/formatters/dates";
 import {
   useOperacionesData,
   MAX_CONTENEDORES,
@@ -17,13 +18,7 @@ export function useOperacionesPageController() {
   const { isLoading, operadores, global } = useOperacionesData(periodo);
 
   const hoyStr = useMemo(() => {
-    const fecha = new Date().toLocaleDateString("es-MX", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    return fecha.charAt(0).toUpperCase() + fecha.slice(1);
+    return formatFechaLarga(new Date());
   }, []);
 
   const chartData = useMemo(() => {

@@ -8,6 +8,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
+import { formatFechaEs } from "@/lib/formatters/dates";
 import { useEmbarquesPageState } from "@/features/embarques/hooks/useEmbarquesPageState";
 import { useContenedoresInfoMap } from "@/features/embarques/hooks/useContenedoresInfoMap";
 import { buildEmbarqueColumns } from "@/features/embarques/components/embarqueColumns";
@@ -123,7 +124,7 @@ export function useEmbarquesPageController() {
           descripcion_mercancia: e.descripcion_mercancia || "",
           tipo_cambio_usd: e.tipo_cambio_usd ?? "",
           tipo_cambio_eur: e.tipo_cambio_eur ?? "",
-          created_at: e.created_at ? new Date(e.created_at).toLocaleDateString("es-MX") : "",
+          created_at: e.created_at ? formatFechaEs(e.created_at) : "",
         })),
       );
 

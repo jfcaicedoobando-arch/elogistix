@@ -12,6 +12,7 @@ import { sortByString, sortByNumber, sortByDate } from "@/components/shared/data
 import { MoreHorizontal } from "lucide-react";
 import type { TarifaInput } from "@/features/costeo/services/tarifas";
 import type { AgenteTarifaRow } from "@/features/portal-agente/services";
+import { formatNumber } from "@/lib/formatters/numbers";
 
 export function EstadoBadge({ estado }: { estado: string }) {
   // Capitaliza estado ("vigente" → "Vigente") para casar con DOMAIN_STATUSES.tarifa_maritima.
@@ -82,7 +83,7 @@ export function buildAgenteTarifasColumns(deps: AgenteTarifasColumnsDeps): Colum
       enableSorting: true,
       meta: { align: "right", className: "tabular-nums" },
       cell: ({ row }) =>
-        `${row.original.moneda} ${Number(row.original.flete_base).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`,
+        `${row.original.moneda} ${formatNumber(Number(row.original.flete_base), { decimals: 2 })}`,
     },
     {
       id: "vigencia",

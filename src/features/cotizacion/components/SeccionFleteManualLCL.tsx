@@ -19,7 +19,7 @@ import { FormField } from "@/components/shared/FormField";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProveedoresLite } from "@/features/proveedor/hooks/useProveedores";
-import { formatCurrency } from "@/lib/formatters/numbers";
+import { formatCurrency, formatNumber } from "@/lib/formatters/numbers";
 import type { CotizacionFormValues, LclFleteManual } from "@/features/cotizacion/types";
 import {
   calcularTotalesLcl,
@@ -111,7 +111,7 @@ export default function SeccionFleteManualLCL({ complete }: Props = {}) {
           <div>
             <p className="text-muted-foreground">Peso total</p>
             <p className="font-semibold tabular-nums">
-              {totalPesoKg.toLocaleString("es-MX")} kg
+              {formatNumber(totalPesoKg)} kg
             </p>
           </div>
           <div>

@@ -17,6 +17,7 @@ import { BuscarTarifaDialog } from "@/features/costeo/components/BuscarTarifaDia
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import CartaGarantiaBadge from "./CartaGarantiaBadge";
 import TarifaResumenHeredado from "./TarifaResumenHeredado";
+import { formatNumber } from "@/lib/formatters/numbers";
 import { useTarifaVinculada } from "@/features/cotizacion/hooks/useTarifaVinculada";
 import SugerenciasTarifaInline from "./seccionRuta/SugerenciasTarifaInline";
 import { aplicarTarifaAlForm, type AplicarTarifaOptions } from "./seccionRuta/aplicarTarifa";
@@ -137,8 +138,8 @@ export default function TarifaVinculadaPanel({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Agente: {tarifa.agente_nombre} · Vigente hasta {tarifa.vigente_hasta} ·
-                  {" "}USD {Number(tarifa.flete_base).toLocaleString("es-MX", { minimumFractionDigits: 2 })} +
-                  {" "}USD {Number(tarifa.recargos_total).toLocaleString("es-MX", { minimumFractionDigits: 2 })} recargos
+                  {" "}USD {formatNumber(Number(tarifa.flete_base), { decimals: 2 })} +
+                  {" "}USD {formatNumber(Number(tarifa.recargos_total), { decimals: 2 })} recargos
                 </p>
                 <div className="pt-1"><CartaGarantiaBadge tarifa={tarifa} /></div>
               </div>

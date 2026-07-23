@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared";
 import { useDashboardData, ESTADOS_FILTRO } from "@/features/dashboard/hooks";
+import { formatFechaLarga } from "@/lib/formatters/dates";
 
 export type DashboardScope = "todos" | "mios";
 
@@ -20,13 +21,7 @@ function getSaludo(): string {
 }
 
 function getHoyStr(): string {
-  const fecha = new Date().toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  return fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  return formatFechaLarga(new Date());
 }
 
 export function useDashboardController() {
