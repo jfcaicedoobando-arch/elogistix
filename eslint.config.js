@@ -656,16 +656,8 @@ export default tseslint.config(
       // Allowlist LEGACY — migrar en olas.
       "src/features/admin/components/DiagnosticoColumns.tsx",
       "src/features/admin/routes/AdminDemoLeads.tsx",
-      "src/features/auditoria/hooks/useAuditoriaEjecutivo.ts",
-      "src/features/auditoria/hooks/useAuditoriaPageController.ts",
-      "src/features/costeo/components/CosteoRutasTable.tsx",
-      "src/features/cotizacion/components/SeccionFleteManualLCL.tsx",
-      "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",
-      "src/features/cotizacion/hooks/usePortalCotizacionDetalleController.ts",
-      "src/features/dashboard/hooks/useDashboardController.ts",
-      "src/features/embarques/hooks/useEmbarquesPageController.ts",
-      "src/features/operaciones/hooks/useOperacionesPageController.ts",
-      "src/features/portal-agente/routes/_sections/agenteTarifasColumns.tsx",
+
+
       
       "src/generators/estadoCuentaPdf.ts",
       "src/pdf/components/Footer.tsx",
