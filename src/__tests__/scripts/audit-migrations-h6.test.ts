@@ -4,7 +4,7 @@
  * whitelist `-- audit:allow-no-grants`, y firma multi-argumento con comentarios.
  */
 import { describe, it, expect } from "vitest";
-import { scanFile } from "../audit-migrations";
+import { scanFile } from "@/../scripts/audit-migrations";
 
 const FILE = "20260724000000_fixture.sql";
 
