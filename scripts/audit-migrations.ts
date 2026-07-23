@@ -111,12 +111,13 @@ function main() {
 
   for (const f of all) {
     const match = FNAME_RE.exec(f);
+    // Extraer timestamp (14 dígitos iniciales) aún si el resto del nombre es inválido.
+    const rawTs = /^(\d{14})/.exec(f)?.[1];
+    if (rawTs && rawTs < BASELINE) continue; // legacy: no auditado
     if (!match) {
       badNames.push(f);
       continue;
     }
-    const ts = match[1];
-    if (ts < BASELINE) continue;
     const body = fs.readFileSync(path.join(MIG_DIR, f), "utf8");
     violations.push(...scanFile(f, body));
   }
