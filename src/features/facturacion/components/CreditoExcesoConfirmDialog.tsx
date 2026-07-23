@@ -4,10 +4,11 @@
  */
 import { AlertTriangle } from "lucide-react";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { formatCurrency } from "@/lib/formatters";
 import type { ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 
 function fmtMxn(v: number): string {
-  return v.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+  return formatCurrency(v, "MXN");
 }
 
 interface Props {

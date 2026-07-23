@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useProgramarPagoProveedor } from "@/features/cxp/hooks/useProgramarPagoProveedor";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { formatFechaEs } from "@/lib/formatters";
 
 interface Props {
   facturaId: string;
@@ -24,9 +25,7 @@ function formatoLocal(iso: string | null): string {
 
 function formatoBonito(iso: string | null): string | null {
   if (!iso) return null;
-  return new Date(iso + "T00:00:00").toLocaleDateString("es-MX", {
-    day: "2-digit", month: "short", year: "numeric",
-  });
+  return formatFechaEs(iso, { day: "2-digit", month: "short", year: "numeric" });
 }
 
 export function ProgramacionPagoRow({ facturaId, fechaProgramada, saldo }: Props) {

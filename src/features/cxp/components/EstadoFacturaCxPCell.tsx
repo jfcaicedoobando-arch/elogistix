@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 const fmtMoney = (n: number, currency: string) => formatCurrency(n, currency);
 import type { FacturaCxP } from "@/features/cxp/services";
 
@@ -32,10 +32,7 @@ interface Props {
 
 
 function formatProgramada(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "2-digit",
-  });
+  return formatFechaEs(iso, { day: "2-digit", month: "2-digit" });
 }
 
 function tooltipDetails(f: FacturaCxP): string[] {
@@ -61,7 +58,7 @@ function tooltipDetails(f: FacturaCxP): string[] {
     lines.push(`Nota(s) de crédito aplicada(s): ${fmtMoney(f.notas_credito, f.moneda)}.`);
   }
   if (f.flags.satVerificada && f.uuid_verificado_fecha) {
-    const fecha = new Date(f.uuid_verificado_fecha).toLocaleDateString("es-MX");
+    const fecha = formatFechaEs(f.uuid_verificado_fecha);
     lines.push(`CFDI verificado en SAT el ${fecha}.`);
   }
   if (f.fecha_programada_pago && f.estatus !== "Pagada") {

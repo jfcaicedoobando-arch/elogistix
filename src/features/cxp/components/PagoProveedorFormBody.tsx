@@ -13,6 +13,7 @@ import {
 import { FormSection } from "./facturaFormPrimitives";
 import { PagoSaldoRestante } from "./PagoProveedorBits";
 import { referenciaHint } from "./pagoProveedorHelpers";
+import { formatNumber } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -104,7 +105,7 @@ export function PagoProveedorFormBody(p: Props) {
           <p className="text-xs text-muted-foreground">
             {p.bloqueadoPorTc
               ? "Captura el tipo de cambio para validar el pago contra el saldo en " + p.factura.moneda + "."
-              : `≈ ${p.factura.moneda} ${p.montoEnMonedaFactura.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al TC capturado.`}
+              : `≈ ${p.factura.moneda} ${formatNumber(p.montoEnMonedaFactura, { decimals: 2 })} al TC capturado.`}
           </p>
         )}
       </FormSection>

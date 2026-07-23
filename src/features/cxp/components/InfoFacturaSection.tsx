@@ -13,6 +13,7 @@ import {
 } from "@/features/cxp/hooks/useAdjuntoFacturaProveedor";
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
 import { AdjuntoRow, CanceladaBanner } from "./InfoFacturaSection.parts";
+import { formatFechaHora } from "@/lib/formatters";
 import {
   FechasCreditoBlock, DesgloseFiscalBlock, ReferenciasFiscalesBlock,
 } from "./InfoFacturaSection.blocks";
@@ -30,7 +31,7 @@ export function InfoFacturaSection({ factura: f, canEdit = false }: Props) {
   const quitar = useQuitarArchivoCfdiFactura();
   const estaCancelada = f.estado === "Cancelada";
   const verifDate = f.uuid_verificado_fecha
-    ? new Date(f.uuid_verificado_fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
+    ? formatFechaHora(f.uuid_verificado_fecha)
     : null;
 
   const puedeEditarAdjuntos = canEdit && !estaCancelada;

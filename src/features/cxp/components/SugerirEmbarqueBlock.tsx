@@ -22,6 +22,7 @@ import {
 } from "@/features/cxp/hooks";
 
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
+import { formatFechaEs } from "@/lib/formatters";
 
 
 
@@ -136,7 +137,7 @@ export function SugerirEmbarqueBlock({
               </div>
               <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2">
                 <span className="text-accent">{e.match_tipo}</span>
-                {e.eta && <span>· ETA {new Date(e.eta).toLocaleDateString("es-MX")}</span>}
+                {e.eta && <span>· ETA {formatFechaEs(e.eta)}</span>}
               </div>
             </button>
           ))}

@@ -23,6 +23,46 @@ const NO_RESTRICTED_SYNTAX_BASE = [
   },
 ];
 
+// PR-5 · Ítem 3.4 (arq-4). Consolidación de formatters: prohibido usar
+// `toLocaleString` / `toLocaleDateString` / `new Intl.NumberFormat(...)` inline
+// en código de producción. Migra a `@/lib/formatters` (`formatCurrency`,
+// `formatNumber`, `formatDate`, `formatFechaEs`, `formatFechaHora`,
+// `formatFechaLarga`). Excepciones: los propios formatters y una allowlist
+// LEGACY (bloque `locale-format-legacy` al final) que se migrará en olas.
+const NO_LOCALE_FMT_SELECTORS = [
+  {
+    selector: "CallExpression[callee.property.name='toLocaleString']",
+    message: "PR-5 · Ítem 3.4: usa `formatCurrency`/`formatNumber`/`formatFechaHora` de `@/lib/formatters` en vez de `.toLocaleString(...)` inline.",
+  },
+  {
+    selector: "CallExpression[callee.property.name='toLocaleDateString']",
+    message: "PR-5 · Ítem 3.4: usa `formatDate`/`formatFechaEs`/`formatFechaLarga` de `@/lib/formatters` en vez de `.toLocaleDateString(...)` inline.",
+  },
+  {
+    selector: "NewExpression[callee.object.name='Intl'][callee.property.name='NumberFormat']",
+    message: "PR-5 · Ítem 3.4: usa `formatNumber`/`formatCurrency` de `@/lib/formatters` en vez de `new Intl.NumberFormat(...)` inline.",
+  },
+];
+
+// Reglas queryKey/mutationKey/TASA_IVA — se declaran una sola vez para poder
+// reusar en la allowlist locale-format-legacy sin duplicarlas.
+const QUERY_KEY_AND_IVA_RULES = [
+  {
+    selector: "Property[key.name='queryKey'] > ArrayExpression",
+    message: "No definas `queryKey` inline. Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`) para mantener una sola fuente de verdad y evitar cachés fragmentados.",
+  },
+  {
+    selector: "Property[key.name='mutationKey'] > ArrayExpression",
+    message: "No definas `mutationKey` inline. Declara la key en `queryKeys.ts` del dominio para poder referenciarla desde `useIsMutating`/DevTools.",
+  },
+  {
+    // Bloque 2.4 arquitectura — fuente única DB↔TS para el IVA. La tasa
+    // 16% vive exclusivamente en `TASA_IVA` (src/lib/financial/financialUtils.ts).
+    selector: "Literal[value=0.16]",
+    message: "No hardcodees `0.16`. Importa `TASA_IVA` desde `@/lib/financial/financialUtils` o resuelve la tasa dinámica del concepto (`resolverTasaConcepto`). Ver mem://core (Never hardcode VAT).",
+  },
+];
+
 
 // Lista de features top-level bajo `src/features/`. Se usa para generar
 // programáticamente los overrides de cross-feature deep imports (Bloque 2.3
@@ -242,23 +282,8 @@ export default tseslint.config(
       //    tests y una allowlist LEGACY de hooks que se migrarán en olas.
       "no-restricted-syntax": ["error",
         ...NO_RESTRICTED_SYNTAX_BASE,
-        {
-          selector: "Property[key.name='queryKey'] > ArrayExpression",
-          message: "No definas `queryKey` inline. Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`) para mantener una sola fuente de verdad y evitar cachés fragmentados.",
-        },
-        {
-          selector: "Property[key.name='mutationKey'] > ArrayExpression",
-          message: "No definas `mutationKey` inline. Declara la key en `queryKeys.ts` del dominio para poder referenciarla desde `useIsMutating`/DevTools.",
-        },
-        {
-          // Bloque 2.4 arquitectura — fuente única DB↔TS para el IVA. La tasa
-          // 16% vive exclusivamente en `TASA_IVA` (src/lib/financial/financialUtils.ts).
-          // Cualquier otra aparición del literal `0.16` en código de producción
-          // debe reemplazarse por `TASA_IVA` o por la tasa dinámica del concepto
-          // (`resolverTasaConcepto`). Tests están exentos (redefinen la regla).
-          selector: "Literal[value=0.16]",
-          message: "No hardcodees `0.16`. Importa `TASA_IVA` desde `@/lib/financial/financialUtils` o resuelve la tasa dinámica del concepto (`resolverTasaConcepto`). Ver mem://core (Never hardcode VAT).",
-        },
+        ...NO_LOCALE_FMT_SELECTORS,
+        ...QUERY_KEY_AND_IVA_RULES,
       ],
 
 
@@ -612,6 +637,62 @@ export default tseslint.config(
           },
         ],
       }],
+    },
+  },
+  {
+    // ─────────────────────────────────────────────────────────────────────
+    // Guardrail `locale-format-legacy` — PR-5 · Ítem 3.4 (arq-4).
+    //
+    // Los archivos abajo aún usan `.toLocaleString()`, `.toLocaleDateString()`
+    // o `new Intl.NumberFormat(...)` inline. Se migrarán en olas a los
+    // formatters canónicos de `@/lib/formatters` (`formatCurrency`,
+    // `formatNumber`, `formatDate`, `formatFechaEs`, `formatFechaHora`,
+    // `formatFechaLarga`). Al migrar un archivo: quítalo de esta lista.
+    // NO agregues archivos nuevos aquí — el guardrail existe para bloquear
+    // regresiones.
+    //
+    // Este bloque redefine `no-restricted-syntax` con SÓLO los selectores
+    // base + queryKey + IVA, omitiendo los selectores locale-format. En
+    // ESLint flat-config el último bloque coincidente gana para esa regla.
+    // ─────────────────────────────────────────────────────────────────────
+    name: "locale-format-legacy",
+    files: [
+      // Formatters canónicos: definen los helpers, deben usar la API nativa.
+      "src/lib/formatters/**",
+      // Allowlist LEGACY — migrar en olas.
+      "src/components/shared/bitacora/constants.ts",
+      "src/features/admin/components/BackfillLegacyCard.tsx",
+      "src/features/admin/components/DiagnosticoColumns.tsx",
+      "src/features/admin/components/DiagnosticoHealthPanel.tsx",
+      "src/features/admin/routes/AdminDemoLeads.tsx",
+      "src/features/auditoria/hooks/useAuditoriaEjecutivo.ts",
+      "src/features/auditoria/hooks/useAuditoriaPageController.ts",
+      "src/features/costeo/components/CosteoRutasTable.tsx",
+      "src/features/costeo/utils/tarifaFormatters.ts",
+      "src/features/cotizacion/components/SeccionFleteManualLCL.tsx",
+      "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",
+      "src/features/cotizacion/hooks/usePortalCotizacionDetalleController.ts",
+      "src/features/crm/components/ActividadTimeline.tsx",
+      "src/features/crm/components/ComentariosOportunidad.tsx",
+      "src/features/crm/components/OportunidadKanban.tsx",
+      "src/features/crm/components/crmDashboard/DealsCards.tsx",
+      "src/features/crm/routes/Actividades.tsx",
+      "src/features/crm/routes/LeadDetalle.tsx",
+      "src/features/crm/routes/MiDia.tsx",
+      "src/features/dashboard/hooks/useDashboardController.ts",
+      "src/features/embarques/hooks/useEmbarquesPageController.ts",
+      "src/features/operaciones/hooks/useOperacionesPageController.ts",
+      "src/features/portal-agente/routes/_sections/agenteTarifasColumns.tsx",
+      "src/features/proformas/components/AccionesProforma.tsx",
+      "src/generators/estadoCuentaPdf.ts",
+      "src/pdf/components/Footer.tsx",
+      "src/pdf/documents/ReporteEjecutivoDocument.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error",
+        ...NO_RESTRICTED_SYNTAX_BASE,
+        ...QUERY_KEY_AND_IVA_RULES,
+      ],
     },
   },
   // Bloque 2.3 (arquitectura): prohibir imports profundos cross-feature.
