@@ -67,10 +67,12 @@ async function applyAccepted(
   await supabase.from("factura_embarques").update({ activa: false }).eq("factura_id", factura.id);
 
   // Liberar la proforma si ya no quedan facturas vivas apuntando a ella.
+  // La RPC verifica hermanas vivas (por proforma_id + conceptos_factura.proforma_id_origen)
+  // antes de degradar `estado_proforma`. Aquí sólo limpiamos punteros legacy.
   await supabase.rpc("revertir_proforma_al_cancelar_sustitucion", { p_factura_id: factura.id });
+  await limpiarPunterosProformas(supabase, factura.id);
 
   const esSustitucion = !!factura.sustituida_por;
-  if (!esSustitucion) await revertirProformas(supabase, factura.id);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: orgId,
