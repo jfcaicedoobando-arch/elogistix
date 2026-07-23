@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.309.20] - 2026-07-23
+- **docs(arquitectura · verificación exhaustiva) · Reporte de estado real vs. auditoría 2026-07-23 en `docs/arquitectura-auditoria-3-status.md`.** Se corrió la suite completa (lint ✅, tsgo ✅, madge=19 ciclos, audit:arch ✅, test:fast=749/752 archivos verdes con 3 tests de error-path fallando pre-existentes) y se verificó cada ítem del plan contra `main`: **Bloque 1 = 100% cerrado**, **Bloque 2 = 95%** (residual: test de fases embarque + hook CI para `schema-invariants.sql`), **Bloque 3 parcial** (3.1/3.2/3.8 ✅, 3.3/3.4/3.5/3.6/3.7 pendientes). Métricas duras: 0 archivos productivos >200L, 0 `toLocaleString` fuera de formatters (falso positivo previo — `-g` corrigió), 39 archivos con formateo inline, 120 `estado === "..."` inline, 11 `useState` en `useNuevaFacturaProveedorForm`. Se documentó ranking priorizado (PR-A: props EmbarqueDetalleTabs, PR-B: script `audit-migrations`, PR-C: test fases) y anexo con los 3 tests fallidos para investigar por separado. Sin cambios de código productivo — solo documentación.
+
 ## [13.309.19] - 2026-07-23
+
 - **chore(arquitectura · 2.3b · shared domain) · Promover `conceptosPorContenedor` de `features/cotizacion/domain` a `lib/domain` y sacar 7 archivos de la allowlist cross-feature.** Era el módulo más importado externamente (8 consumidores en `features/embarques/**`) y no tenía dependencias del feature dueño — pura lógica de agrupar/filtrar conceptos por `contenedor_id`. Se movió el archivo y su test a `src/lib/domain/`, se actualizaron los 8 imports y se limpiaron 7 entradas de `CROSS_FEATURE_ALLOWLIST` en `eslint.config.js` (`DialogGenerarProforma`, `TabFacturacion`, `ResumenConceptosVenta`, `FiltroContenedorChips`, `PasoSeleccionConceptos`, `useDialogGenerarProformaController` y su `.helpers`). Typecheck verde, tests del módulo verdes (8/8). Analogía: era una llave que vivía en el cajón de una cocina pero la usaban 8 vecinos; la pasamos al llavero comunitario y ya nadie tiene que entrar a esa cocina para tomarla.
 
 ## [13.309.18] - 2026-07-23
