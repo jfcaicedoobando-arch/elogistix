@@ -110,6 +110,99 @@ function scanFile(file: string, body: string): Violation[] {
     out.push({ file, check: "H5", detail: `DROP TABLE public.${m[1]} sin IF EXISTS` });
   }
 
+  // H6 — SECURITY DEFINER requiere REVOKE + GRANT EXECUTE apropiados
+  out.push(...scanSecurityDefiner(file, body, auditPostBaseline));
+
+  return out;
+}
+
+/**
+ * Normaliza una lista de argumentos SQL a su forma tipada canónica.
+ * Ej: `_user_id uuid, _role text DEFAULT 'x'` → `uuid, text`.
+ * Se usa para comparar firmas entre `CREATE FUNCTION`, `REVOKE` y `GRANT`.
+ */
+function normalizeArgTypes(rawArgs: string): string {
+  const args = rawArgs.trim();
+  if (args === "") return "";
+  return args
+    .split(",")
+    .map((a) => {
+      // Quitar DEFAULT y trim
+      const noDefault = a.split(/\bdefault\b/i)[0].trim();
+      // Quitar prefijo IN/OUT/INOUT/VARIADIC
+      const noMode = noDefault.replace(/^(in|out|inout|variadic)\s+/i, "");
+      // Tomar la última "palabra tipo" — puede incluir espacios (p.ej. "timestamp with time zone").
+      // Heurística: si el primer token empieza con `_` (nombre de arg convencional), quitarlo.
+      const tokens = noMode.split(/\s+/);
+      if (tokens.length > 1 && /^_?[a-z][a-z0-9_]*$/i.test(tokens[0])) {
+        return tokens.slice(1).join(" ").toLowerCase();
+      }
+      return noMode.toLowerCase();
+    })
+    .filter(Boolean)
+    .join(", ");
+}
+
+function scanSecurityDefiner(file: string, body: string, auditPostBaseline: boolean): Violation[] {
+  const out: Violation[] = [];
+  // Detectar bloques CREATE OR REPLACE FUNCTION public.<name>(<args>) ... SECURITY DEFINER
+  // El cuerpo puede tener SECURITY DEFINER en cualquier orden antes del AS $$.
+  const fnRe =
+    /(^|\n)([ \t]*--[^\n]*\n)?[ \t]*create\s+or\s+replace\s+function\s+public\.([a-z0-9_]+)\s*\(([^)]*)\)([\s\S]*?)(?:as\s+\$[a-z0-9_]*\$|language\s+sql\s*;)/gi;
+  for (const m of body.matchAll(fnRe)) {
+    const commentLine = m[2] ?? "";
+    const fnName = m[3].toLowerCase();
+    const argsRaw = m[4];
+    const header = m[5];
+    if (!/security\s+definer/i.test(header)) continue;
+
+    // Excepción: comentario -- audit:allow-no-grants justo antes.
+    const allowNoGrants = /audit:allow-no-grants/i.test(commentLine);
+
+    // Normalizar firma para matchear REVOKE/GRANT
+    const argTypes = normalizeArgTypes(argsRaw);
+    // Regex tolerante: acepta espacios y firma exacta.
+    const sigForRe = argTypes.replace(/\s+/g, "\\s*").replace(/,/g, "\\s*,\\s*");
+    const revokeRe = new RegExp(
+      `revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\bpublic\\b`,
+      "i",
+    );
+    const grantOkRe = new RegExp(
+      `grant\\s+execute\\s+on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\b(authenticated|service_role|postgres)\\b`,
+      "i",
+    );
+    const grantPublicRe = new RegExp(
+      `grant\\s+execute\\s+on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*to\\s+[^;]*\\bpublic\\b`,
+      "i",
+    );
+
+    // Regla dura: TO PUBLIC prohibido, siempre.
+    if (grantPublicRe.test(body)) {
+      out.push({
+        file,
+        check: "H6",
+        detail: `public.${fnName}(${argTypes}) SECURITY DEFINER con GRANT EXECUTE ... TO PUBLIC (prohibido)`,
+      });
+    }
+
+    // El resto sólo se exige post-baseline (legacy queda documentado por otros tests).
+    if (!auditPostBaseline || allowNoGrants) continue;
+
+    if (!revokeRe.test(body)) {
+      out.push({
+        file,
+        check: "H6",
+        detail: `public.${fnName}(${argTypes}) SECURITY DEFINER sin REVOKE ALL ... FROM PUBLIC`,
+      });
+    }
+    if (!grantOkRe.test(body)) {
+      out.push({
+        file,
+        check: "H6",
+        detail: `public.${fnName}(${argTypes}) SECURITY DEFINER sin GRANT EXECUTE ... TO {authenticated|service_role|postgres}`,
+      });
+    }
+  }
   return out;
 }
 
