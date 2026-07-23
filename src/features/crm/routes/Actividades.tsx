@@ -50,7 +50,7 @@ const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActi
   },
   {
     id: "fecha_programada", header: "Programada", meta: { className: "text-xs" },
-    cell: ({ row }) => row.original.fecha_programada ? new Date(row.original.fecha_programada).toLocaleString("es-MX") : "—",
+    cell: ({ row }) => row.original.fecha_programada ? formatFechaHora(row.original.fecha_programada) : "—",
   },
 ]);
 
