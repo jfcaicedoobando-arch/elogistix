@@ -22,9 +22,7 @@ export async function getCurrentSession(): Promise<Session | null> {
   return data.session ?? null;
 }
 
-export async function signOutCurrentSession(): Promise<void> {
-  await supabase.auth.signOut();
-}
+export { signOutCurrentSession } from "@/lib/auth/signOut";
 
 export interface CachedOrganization {
   id: string;
