@@ -13,6 +13,7 @@ import {
 } from "@/features/cxp/hooks/useAdjuntoFacturaProveedor";
 import { ProgramacionPagoRow } from "@/features/cxp/components/ProgramacionPagoRow";
 import { AdjuntoRow, CanceladaBanner } from "./InfoFacturaSection.parts";
+import { formatFechaHora } from "@/lib/formatters";
 import {
   FechasCreditoBlock, DesgloseFiscalBlock, ReferenciasFiscalesBlock,
 } from "./InfoFacturaSection.blocks";
