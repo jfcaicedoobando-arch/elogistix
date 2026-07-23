@@ -52,8 +52,21 @@ const QUERY_KEY_AND_IVA_RULES = [
     message: "No definas `queryKey` inline. Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`) para mantener una sola fuente de verdad y evitar cachés fragmentados.",
   },
   {
+    // Sprint 2 · ítem 3 — cubre `queryKey: [...] as const` (TSAsExpression).
+    // El selector base sólo matchea `ArrayExpression` directo; sin este selector
+    // los hooks que anotan `as const` (patrón común para narrowear el tuple)
+    // escapaban del guardrail.
+    selector: "Property[key.name='queryKey'] > TSAsExpression > ArrayExpression",
+    message: "No definas `queryKey` inline (incluye `[...] as const`). Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`).",
+  },
+  {
     selector: "Property[key.name='mutationKey'] > ArrayExpression",
     message: "No definas `mutationKey` inline. Declara la key en `queryKeys.ts` del dominio para poder referenciarla desde `useIsMutating`/DevTools.",
+  },
+  {
+    // Sprint 2 · ítem 3 — cubre `mutationKey: [...] as const`.
+    selector: "Property[key.name='mutationKey'] > TSAsExpression > ArrayExpression",
+    message: "No definas `mutationKey` inline (incluye `[...] as const`). Declara la key en `queryKeys.ts` del dominio.",
   },
   {
     // Bloque 2.4 arquitectura — fuente única DB↔TS para el IVA. La tasa
