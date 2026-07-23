@@ -108,7 +108,7 @@ const CROSS_FEATURE_ALLOWLIST = [
   "src/features/portal-agente/routes/AgenteGarantias.tsx",
   "src/features/portal/components/EmbarqueCard.tsx",
   "src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx",
-  "src/features/portal/components/dashboard/PortalProximosArribosCard.tsx",
+  
   "src/features/portal/hooks/usePortalDashboardKpis.ts",
   "src/features/portal/hooks/usePortalEmbarquesController.ts",
   "src/features/portal/routes/PortalCotizacionDetalle.tsx",
