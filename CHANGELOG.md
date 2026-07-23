@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.309.19] - 2026-07-23
+- **chore(arquitectura · 2.3b · shared domain) · Promover `conceptosPorContenedor` de `features/cotizacion/domain` a `lib/domain` y sacar 7 archivos de la allowlist cross-feature.** Era el módulo más importado externamente (8 consumidores en `features/embarques/**`) y no tenía dependencias del feature dueño — pura lógica de agrupar/filtrar conceptos por `contenedor_id`. Se movió el archivo y su test a `src/lib/domain/`, se actualizaron los 8 imports y se limpiaron 7 entradas de `CROSS_FEATURE_ALLOWLIST` en `eslint.config.js` (`DialogGenerarProforma`, `TabFacturacion`, `ResumenConceptosVenta`, `FiltroContenedorChips`, `PasoSeleccionConceptos`, `useDialogGenerarProformaController` y su `.helpers`). Typecheck verde, tests del módulo verdes (8/8). Analogía: era una llave que vivía en el cajón de una cocina pero la usaban 8 vecinos; la pasamos al llavero comunitario y ya nadie tiene que entrar a esa cocina para tomarla.
+
 ## [13.309.18] - 2026-07-23
 - **fix(arquitectura · Power-of-10) · Extraer helpers de red de `enviarPorEmail.ts` a `_networkRetry.ts` para bajar el archivo de 206 a 160 líneas.** Los tests `architecture-baseline` y `audit-report` bloqueaban CI porque el archivo cruzó el umbral de 200 líneas tras el rename `.tsx → .ts` de v13.309.16. Se movieron `OFFLINE_MSG`, `isOnline`, `esperarOnline` y `fetchConReintento` a un módulo privado `_networkRetry.ts` (prefijo `_` = interno del feature); `enviarPorEmail.ts` los re-exporta para no romper a `enviarFacturaEmail.ts` que hace `import { fetchConReintento, OFFLINE_MSG } from ".../enviarPorEmail"`. Cero cambios de comportamiento. Tests verdes.
 
