@@ -260,4 +260,6 @@ function main() {
   process.exit(1);
 }
 
-main();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}
