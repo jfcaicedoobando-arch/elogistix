@@ -14,12 +14,14 @@ on:
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/rls/**"
+      - "supabase/tests/*.sql"
       - ".github/workflows/rls-tests.yml"
   push:
     branches: [main]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/rls/**"
+      - "supabase/tests/*.sql"
       - ".github/workflows/rls-tests.yml"
   workflow_dispatch:
   schedule:
