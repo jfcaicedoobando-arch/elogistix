@@ -47,7 +47,7 @@ export function CierreHistorialCard({ log }: { log: CierreLogEntry[] }) {
                     )}
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(entry.created_at).toLocaleString("es-MX")}
+                    {formatFechaHora(entry.created_at)}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
