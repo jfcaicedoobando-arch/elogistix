@@ -23,9 +23,8 @@ import {
   filtrarGrupos,
 } from "./vincularEmbarqueHelpers";
 
-export interface SeleccionLinea {
-  monto: number;
-}
+export type { SeleccionLinea } from "@/features/cxp/types";
+import type { SeleccionLinea } from "@/features/cxp/types";
 
 interface Props {
   proveedorId: string;
