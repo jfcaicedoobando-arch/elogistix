@@ -101,11 +101,14 @@ async function resolveEmail(
 ): Promise<string | null> {
   if (override && override.includes("@")) return override.trim();
   if (!clienteId) return null;
+  // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
   const { data: contacto } = await supabase
     .from("contactos_cliente")
     .select("email")
     .eq("cliente_id", clienteId)
-    .eq("es_principal", true)
+    .not("email", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   const emailContacto = (contacto?.email as string | null) ?? null;
   if (emailContacto) return emailContacto;
