@@ -66,12 +66,11 @@ export interface FacturapiRepPayload {
       payment_form: string;
       currency: string;
       exchange?: number;
-      amount: number;
       date: string;
-      operation_number?: string;
+      numOperacion?: string;
       related_documents: Array<{
         uuid: string;
-        folio?: string;
+        folio_number?: string;
         series?: string;
         currency: string;
         exchange?: number;
