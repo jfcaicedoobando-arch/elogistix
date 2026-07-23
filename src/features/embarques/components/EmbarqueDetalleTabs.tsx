@@ -30,7 +30,7 @@ export function EmbarqueDetalleTabs({
   const [pnlView, setPnlView] = useState<PnlView>("global");
   // v13.309.24 · Ítem 3.5: data-fetching movido a este hook (antes vivía en la ruta).
   // v13.309.50 · PR-S2-B: `EmbarqueProp` ahora es alias de `EmbarqueRow`, ya no
-  // se requiere el `as unknown as` histórico.
+  // se requiere el el cast doble histórico.
   const { conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
     useEmbarqueDetalleTabsData(embarqueId, embarque);
 
