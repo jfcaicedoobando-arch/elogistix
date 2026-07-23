@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { ArrowRight, Wallet, TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 import type { ResumenTesoreria } from "@/features/tesoreria/domain";
 
