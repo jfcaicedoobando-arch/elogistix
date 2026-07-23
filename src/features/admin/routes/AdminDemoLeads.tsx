@@ -14,30 +14,6 @@ import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { todayLocalISO } from "@/lib/date/today";
 
-interface DemoLead {
-  id: string;
-  nombre: string;
-  empresa: string;
-  email: string;
-  telefono_e164: string;
-  utm_source: string | null;
-  utm_medium: string | null;
-  utm_campaign: string | null;
-  referrer: string | null;
-  created_at: string;
-}
-
-async function fetchDemoLeads(): Promise<DemoLead[]> {
-  const { data, error } = await supabase
-    .from("demo_leads")
-    .select(
-      "id, nombre, empresa, email, telefono_e164, utm_source, utm_medium, utm_campaign, referrer, created_at",
-    )
-    .order("created_at", { ascending: false })
-    .limit(500);
-  if (error) throw new Error(error.message);
-  return (data ?? []) as DemoLead[];
-}
 
 function toCsv(rows: DemoLead[]): string {
   const headers = [
