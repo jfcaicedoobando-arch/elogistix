@@ -1,76 +1,109 @@
-## Contexto verificado en BD
+## Diagnóstico verificado
 
-Las 10 proformas del Excel son del cliente **INDIMEX TRADING** (org `00000000-0000-0000-0000-000000000001`), todas en `estado_proforma = 'pendiente'`, `factura_id = null`, en USD con IVA 16% (excepto 3 con IVA 0 marcadas `HISTORICO`).
+**Estado actual en BD** (verificado con `psql`):
 
-### Bloque A — 8 proformas sin conflicto (crear stub y vincular)
+- `PRO-2026-0970` → `estado_proforma='pendiente'`, `estado_cliente='aceptada'`, `factura_id=NULL`.
+  → `getEstadoUnificado()` la muestra como **"aceptada"** (bug reportado).
+- `facturas` del embarque `943222de…`:
+  - **F971**: `estado='Cancelada'`, `cancellation_status='accepted'`, `proforma_id=d0be4a81…`, `sustituida_por=NULL` ⚠️
+  - **F981**: `estado='Pagada'`, `proforma_id=d0be4a81…`, `sustituye_a=F971` ✅
 
+Bitácora confirma el flujo: F971 timbrada 07-10 → duplicada para sustitución 07-15 → F981 timbrada 07-15 → F971 cancelada async por cron el 07-17 (`facturapi_cancelada_async`).
 
-| Proforma      | Expediente | Folio ext | Fecha fact | Total USD | IVA USD |
-| ------------- | ---------- | --------- | ---------- | --------- | ------- |
-| PRO-2026-0195 | ELGEN00206 | 889       | 2026-05-13 | 23,890.00 | 0       |
-| PRO-2026-0278 | ELIMP00021 | 729       | 2026-02-18 | 1,300.00  | 0       |
-| PRO-2026-0287 | ELIMP00024 | 721       | 2026-02-17 | 1,300.00  | 0       |
-| PRO-2026-0297 | ELIMP00169 | 915       | 2026-06-03 | 2,910.00  | 20      |
-| PRO-2026-0322 | ELIMP00264 | 930       | 2026-06-12 | 3,920.00  | 20      |
-| PRO-2026-0337 | ELIMP00256 | 940       | 2026-06-19 | 6,320.00  | 20      |
-| PRO-2026-0340 | ELIMP00239 | 944       | 2026-06-23 | 5,560.00  | 20      |
-| PRO-2026-0948 | ELIMP00282 | 948       | 2026-06-26 | 6,278.50  | 0       |
+## Causa raíz
 
+Cuando el cron `facturapi-reconciliar-cancelaciones` marca F971 como cancelada, ejecuta `applyAccepted` (`supabase/functions/facturapi-reconciliar-cancelaciones/index.ts:49`):
 
-**Acción atómica por proforma (una migración `supabase--insert`):**
+```
+70:  supabase.rpc("revertir_proforma_al_cancelar_sustitucion", …) // OK: detecta F981 viva y no hace nada
+72:  const esSustitucion = !!factura.sustituida_por;              // ⚠️ F971.sustituida_por = NULL
+73:  if (!esSustitucion) await revertirProformas(supabase, ...)   // se ejecuta por error
+```
 
-1. `INSERT INTO facturas` con:
-  - `numero = <folio del Excel>`
-  - `origen = 'externa'`, `estado = 'Pagada'`
-  - `moneda = 'USD'`, `subtotal/iva/total` copiados de la proforma
-  - `embarque_id`, `cliente_id`, `cliente_nombre`, `expediente`, `organization_id`, `proforma_id` heredados
-  - `fecha_emision = fecha_facturacion` del Excel, `fecha_vencimiento = fecha_emision`
-  - `uuid_fiscal = NULL`, `ret_isr = 0`, `ret_iva = 0`, `uuid_verificado = false`
-  - `notas = 'Factura emitida fuera de sistema — backfill legacy ERP'`
-2. `UPDATE proformas` a `estado_proforma='facturada'`, setear `factura_id`, `folio_factura_externa`, `fecha_facturacion`, `origen='externa'`.
-3. `INSERT INTO bitacora_actividad` con evento `PROFORMA_VINCULADA_FACTURA_EXTERNA`.
+Y `revertirProformas` (líneas 27-47) hace UPDATE ciego:
 
-Todo dentro de `BEGIN; ... COMMIT;` para que si un renglón falla se revierte solo el suyo (una transacción por proforma).
+```
+si (factura_id IS NULL && factura_secundaria_id IS NULL)  // ambos NULL en esta proforma
+  estado_proforma = 'pendiente'                            // pisa el 'facturada' correcto
+```
 
-### Bloque B — 2 conflictos (NO ejecutar, requieren decisión)
+Nunca verifica si hay una factura sustituta viva apuntando a la misma proforma vía `proforma_id` o `conceptos_factura.proforma_id_origen`. La RPC `revertir_proforma_al_cancelar_sustitucion` sí lo hace bien; el problema es que el helper del edge la pisa.
 
-**PRO-2026-0084 → folio 726, embarque ELIMP00007**
+El mismo helper duplicado existe en `supabase/functions/facturapi-cancelar/cancelacion.ts:210-236` (path de cancelación síncrona) — mismo bug.
 
-El embarque ya tiene 4 proformas `facturada` con distintas variantes del folio 726:
+Además, el flujo de sustitución **nunca setea `facturas.sustituida_por`** en la factura original al timbrar la sustituta, así que `esSustitucion` siempre es `false` por esta vía. `F981.sustituye_a` sí está correcto.
 
-- PRO-2026-0083 → factura `726` (USD 1,200) ← única "limpia"
-- PRO-2026-0079 → factura `726-DUP-cabeceda` (USD 1,199.98)
-- PRO-2026-0080 → factura `726-DUP-ce941c8a` (USD 1,200)
-- PRO-2026-0081 → factura `726-DUP-1a539c8b` (USD 1,200)
-- PRO-2026-0082 → pendiente (también del Excel legacy)
-- **PRO-2026-0084** → pendiente (la del Excel)
+## Solución
 
-**PRO-2026-0085 → folio 755, embarque ELIMP00022**
+### 1. Backend — dos edge functions
 
-- PRO-2026-0077 → factura `755-DUP-fe48bee7` (USD 2,095)
-- PRO-2026-0078 → factura `755` (USD 2,095) ← única "limpia"
-- **PRO-2026-0085** → pendiente (la del Excel)
+**`supabase/functions/facturapi-reconciliar-cancelaciones/index.ts`**
+- Borrar la función local `revertirProformas` (líneas 27-47) y su llamada en la línea 73.
+- Dejar únicamente `revertir_proforma_al_cancelar_sustitucion` (RPC, línea 70) que ya cuenta facturas hermanas vivas por `proforma_id` + `conceptos_factura.proforma_id_origen`.
+- Adicionalmente, limpiar sólo los punteros `factura_id`/`factura_secundaria_id` que apunten explícitamente a la factura cancelada, sin tocar `estado_proforma` ni `fecha_facturacion`.
 
-Diagnóstico: ELIMP00007 tiene **5 proformas** de USD 1,200 y ELIMP00022 tiene **3 proformas** de USD 2,095, todas apuntando al mismo folio real. Parecen duplicados de importación (ERP legacy → BD nueva). Ya se hizo un intento previo de dedupe renombrando facturas con sufijo `-DUP-`.
+**`supabase/functions/facturapi-cancelar/cancelacion.ts`**
+- Mismo tratamiento en `revertirProformasCancelacion` (210-236): quitar el bloque `if (ambosNulos)` que resetea `estado_proforma`, `fecha_facturacion`, `folio_factura_externa`. Delegar a la RPC.
+- Asegurar que el caller (`index.ts` de `facturapi-cancelar`) también invoque la RPC después de marcar la factura como cancelada, si no lo hace ya.
 
-Necesito que decidas para cada uno de los 2 casos:
+### 2. Marcar `sustituida_por` al emitir la sustituta
 
-1. **Marcar la del Excel como duplicado descartado** (soft-delete PRO-2026-0084 y PRO-2026-0085 con motivo "duplicado de import legacy"). Es lo más limpio si confirmas que el embarque ya está bien facturado.
-2. **Reasignar el vínculo**: mover la factura `726` (o `755`) de la proforma actual (PRO-2026-0083 / PRO-2026-0078) a la del Excel (PRO-2026-0084 / PRO-2026-0085) y soft-deletar la anterior. Sólo si la del Excel es la "buena".
-3. **Crear stub con sufijo** `726-EXT` / `755-EXT` vinculada a la proforma del Excel. Deja 2 facturas con el mismo folio real conviviendo — no recomendado porque descuadra reportes.
-4. **Nada por ahora**: dejar PRO-2026-0084 y PRO-2026-0085 pendientes hasta que revises manualmente los 2 embarques.
+En `supabase/functions/facturapi-emitir/` (o donde se timbra el borrador con `sustituye_a` seteado), tras emisión exitosa hacer:
 
-Para PRO-2026-0082 (que también aparece en el mismo embarque como pendiente y no está en el Excel), ¿la trato aparte o aplico la misma decisión?
+```sql
+UPDATE facturas
+SET sustituida_por = <id_sustituta_recien_timbrada>
+WHERE id = <id_original> AND sustituida_por IS NULL;
+```
 
-### Entregables
+Esto hace que futuras cancelaciones tengan la señal correcta de sustitución para bitácora y para cualquier consumidor que dependa de `sustituida_por`.
 
-- Una llamada a `supabase--insert` con las 8 transacciones del Bloque A.
-- Query de verificación posterior (SELECT de las 8 proformas + facturas creadas).
-- CHANGELOG entry `## [13.308.11]` describiendo backfill de 8 proformas externas.
-- Bloque B queda en espera de tu respuesta a las 4 opciones arriba.
+### 3. Reparación de datos — PRO-2026-0970
 
-### Nota
+Backfill puntual (SQL de datos, no migración de esquema):
 
-Este es un backfill de datos, **no** un feature nuevo — no crea RPC ni UI. Si más adelante quieres flujo self-service para que ventas registre facturas externas desde el detalle de proforma, es otro plan (te lo propuse antes y podemos retomarlo).
+```sql
+UPDATE proformas
+SET estado_proforma   = 'facturada',
+    fecha_facturacion = (SELECT fecha_emision FROM facturas WHERE id = '75fe099b-d9f8-4277-878f-5ccb0ad7eb24'),
+    factura_id        = '75fe099b-d9f8-4277-878f-5ccb0ad7eb24'  -- F981 (viva)
+WHERE id = 'd0be4a81-d199-4cec-bfc2-4bf9736523d2';
 
-Para los 2 casos vamos a **Reasignar el vínculo.**
+UPDATE facturas
+SET sustituida_por = '75fe099b-d9f8-4277-878f-5ccb0ad7eb24'
+WHERE id = 'dc1e0162-ae7a-474b-abed-3b6301a86add' AND sustituida_por IS NULL;
+
+INSERT INTO bitacora_actividad (...) VALUES
+  (..., 'backfill_proforma_facturada', 'facturacion',
+   'd0be4a81…', jsonb_build_object('motivo', 'PRO-2026-0970 revertida por bug en reconciliar-cancelaciones', 'factura_activa', 'F981'));
+```
+
+### 4. Detección de casos silenciosos
+
+Auditoría one-shot: buscar todas las proformas en el mismo estado inconsistente y arreglarlas de una vez.
+
+```sql
+SELECT p.id, p.numero
+FROM proformas p
+WHERE p.estado_proforma = 'pendiente'
+  AND EXISTS (
+    SELECT 1 FROM facturas f
+    WHERE f.proforma_id = p.id
+      AND f.estado NOT IN ('Cancelada','Sustituida')
+      AND f.deleted_at IS NULL
+  );
+```
+
+Reparar cada una con el mismo patrón del punto 3 y registrar en bitácora.
+
+### 5. Verificación
+
+- Query final: la proforma PRO-2026-0970 sale como `facturada` con `factura_id` apuntando a F981.
+- UI: `/embarques/943222de…?tab=facturacion` muestra el badge "Facturada".
+- CHANGELOG entry `## [13.308.12]` describiendo el fix.
+
+## Fuera de alcance
+
+- No se toca la RPC `revertir_proforma_al_cancelar_sustitucion` (ya está bien).
+- No se agregan nuevos tests E2E; sí un test unitario del helper del edge si se refactoriza a módulo importable.
+- No se cambia UI ni state machine de proformas.
