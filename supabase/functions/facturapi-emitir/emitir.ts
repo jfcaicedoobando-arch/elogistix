@@ -135,11 +135,14 @@ async function cargarBaseContexto(supabase: SupabaseClient, facturaId: string, f
     return jsonResponse({ error: "clave_sat_faltante", message: `Hay ${conceptosSinClave.length} concepto(s) sin clave SAT (c_ClaveProdServ). Asigna la clave correcta antes de timbrar.` }, 422);
   }
 
+  // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
   const { data: contactoData } = await supabase
     .from("contactos_cliente")
     .select("email")
     .eq("cliente_id", factura.cliente_id)
-    .eq("es_principal", true)
+    .not("email", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   return {
