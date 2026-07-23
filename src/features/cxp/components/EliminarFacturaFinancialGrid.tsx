@@ -3,14 +3,11 @@
  * Moneda/TC. Extraído en v13.307.23 para mantener el diálogo bajo 200 líneas.
  */
 import { cn } from "@/lib/utils";
+import { formatNumber } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 
 function formatMonto(moneda: string, monto: number) {
-  const n = new Intl.NumberFormat("es-MX", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(monto ?? 0);
-  return `${moneda} ${n}`;
+  return `${moneda} ${formatNumber(monto ?? 0, { decimals: 2 })}`;
 }
 
 export function EliminarFacturaFinancialGrid({ factura }: { factura: FacturaCxP }) {
