@@ -47,11 +47,13 @@ describe("Fase L — Multi-moneda CxP", () => {
   });
 
   it("registra trigger BEFORE INSERT/UPDATE que puebla la columna", () => {
-    const sql = readLatestContaining("trg_pagos_proveedor_monto_convertido");
+    // v13.309.35+ (FIX-R2-01): el trigger de conversión se consolidó con el guard
+    // de sobrepago en `trg_pagos_proveedor_guard` / `guard_pago_proveedor`.
+    const sql = readLatestContaining("trg_pagos_proveedor_guard");
     expect(sql).toMatch(
-      /CREATE TRIGGER trg_pagos_proveedor_monto_convertido[\s\S]*BEFORE INSERT OR UPDATE/,
+      /CREATE TRIGGER trg_pagos_proveedor_guard[\s\S]*BEFORE INSERT OR UPDATE/,
     );
-    expect(sql).toMatch(/EXECUTE FUNCTION public\.tg_pagos_proveedor_monto_convertido/);
+    expect(sql).toMatch(/EXECUTE FUNCTION public\.guard_pago_proveedor/);
   });
 
   it("v_proveedor_facturas_saldo suma monto_en_moneda_factura (no `pp.monto`) y no clampa a 0", () => {
@@ -64,13 +66,18 @@ describe("Fase L — Multi-moneda CxP", () => {
     expect(chunk).not.toMatch(/GREATEST\([^,]+,\s*0\)/);
   });
 
-  it("check_no_sobrepago_proveedor compara en moneda de la factura", () => {
-    const sql = readLatestContaining("CREATE OR REPLACE FUNCTION public.check_no_sobrepago_proveedor");
-    const idx = sql.lastIndexOf("CREATE OR REPLACE FUNCTION public.check_no_sobrepago_proveedor");
-    expect(idx, "no se encontró CREATE OR REPLACE FUNCTION").toBeGreaterThan(-1);
+  it("guard_pago_proveedor valida sobrepago en moneda de la factura", () => {
+    // v13.309.35 (FIX-R2-01): el guard viejo `check_no_sobrepago_proveedor` /
+    // `tg_pago_proveedor_no_sobrepago` era código muerto en INSERT (corría antes
+    // que la conversión). Ahora la validación vive dentro de `guard_pago_proveedor`.
+    const sql = readLatestContaining("CREATE OR REPLACE FUNCTION public.guard_pago_proveedor");
+    const idx = sql.lastIndexOf("CREATE OR REPLACE FUNCTION public.guard_pago_proveedor");
+    expect(idx).toBeGreaterThan(-1);
     const chunk = sql.slice(idx, idx + 4000);
-    expect(chunk).toMatch(/SUM\((?:pp\.)?monto_en_moneda_factura\)/);
+    expect(chunk).toMatch(/SUM\(monto_en_moneda_factura\)/);
     expect(chunk).toMatch(/NEW\.monto_en_moneda_factura/);
+    expect(chunk).toMatch(/LC_PAGO_EXCEDE_SALDO/);
+    expect(chunk).toMatch(/FOR UPDATE/);
   });
 
 
