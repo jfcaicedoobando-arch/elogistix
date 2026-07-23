@@ -1,5 +1,6 @@
 import { View, Text } from "@react-pdf/renderer";
 import { styles, FONTS, COLORS } from "../theme/styles";
+import { formatFechaEs } from "@/lib/formatters";
 
 interface Props {
   /** Nombre de la empresa emisora a mostrar en la columna izquierda. */
@@ -11,11 +12,12 @@ interface Props {
  * Línea superior en color corporativo. Se repite en cada página vía `fixed`.
  */
 export function Footer({ empresaNombre }: Props) {
-  const fecha = new Date().toLocaleDateString("es-MX", {
+  const fecha = formatFechaEs(new Date().toISOString(), {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
+
   const marca = (empresaNombre ?? "").trim();
   return (
     <View style={styles.footer} fixed>
