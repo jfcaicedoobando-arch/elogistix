@@ -6729,6 +6729,18 @@ export type Database = {
       }
       _assert_internal_reader: { Args: { p_org: string }; Returns: undefined }
       _assert_writer: { Args: { p_org: string }; Returns: undefined }
+      _audit_embarques_umbrales: {
+        Args: { p_organization_id: string }
+        Returns: {
+          dias_borrador_abandonado: number
+          dias_cxc_vencida: number
+          dias_cxp_captura: number
+          dias_cxp_vencida: number
+          dias_huerfano: number
+          dias_prof_venc: number
+          margen_min_pct: number
+        }[]
+      }
       _cxp_anchor_fase_o: { Args: never; Returns: undefined }
       _cxp_validar_aprobacion: {
         Args: { p_factura_id: string }
