@@ -234,7 +234,3 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
 
   return jsonResponse({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
 }));
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
