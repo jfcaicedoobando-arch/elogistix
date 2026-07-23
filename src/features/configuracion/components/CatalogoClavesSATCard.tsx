@@ -10,10 +10,14 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { unwrapOr, run } from "@/lib/supabase/response";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
+import {
+  fetchCatalogoClavesSat,
+  insertCatalogoClaveSat,
+  updateCatalogoClaveSat,
+  deleteCatalogoClaveSat,
+} from "@/features/configuracion/services/catalogoClavesSat";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
