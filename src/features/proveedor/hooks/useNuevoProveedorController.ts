@@ -148,8 +148,8 @@ export function useNuevoProveedorController(
     onClose();
   };
 
-
   const handleSave = async () => {
+
     const validacion = preparePayload(form);
     if (!validacion.ok) {
       notifyError(toast, { title: validacion.mensaje, method: `FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_${validacion.motivo === "clabe" ? 1 : 2}` });
