@@ -24,10 +24,17 @@ export interface OversizedFile {
   lines: number;
 }
 
-export function findDirectClientImports(root: string, roots: string[]): string[] {
+export function findDirectClientImports(
+  root: string,
+  roots: string[],
+  extraExcludeDirs: string[] = [],
+): string[] {
   const out: string[] = [];
   for (const r of roots) {
-    for (const f of walk(join(root, r), { excludeDirs: ["__tests__", "node_modules"], excludeFileRe: /\.(test|spec)\.tsx?$/ })) {
+    for (const f of walk(join(root, r), {
+      excludeDirs: ["__tests__", "node_modules", ...extraExcludeDirs],
+      excludeFileRe: /\.(test|spec)\.tsx?$/,
+    })) {
       const src = readFileSync(f, "utf8");
       if (DIRECT_CLIENT_IMPORT.test(src)) out.push(relPath(root, f));
     }
