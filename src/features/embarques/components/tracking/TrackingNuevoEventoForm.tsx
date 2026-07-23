@@ -28,7 +28,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
 import { ActualizarEtaForm } from "./ActualizarEtaForm";
 import { MarcarLlegadaForm } from "./MarcarLlegadaForm";
-import { supabase } from "@/integrations/supabase/client";
+import { contarDocumentosPendientes } from "@/features/embarques/services/documentosPendientes";
 
 type Modo = "menu" | "eta" | "llegada";
 
@@ -141,17 +141,11 @@ export function TrackingNuevoEventoForm({
       onCancel={() => setModo("menu")}
       onSubmit={async ({ fecha, ubicacion }) => {
         try {
-          const { count, error: docsErr } = await supabase
-            .from("documentos_embarque")
-            .select("id", { count: "exact", head: true })
-            .eq("embarque_id", embarqueId)
-            .eq("estado", "Pendiente")
-            .is("deleted_at", null);
-          if (docsErr) throw docsErr;
-          if ((count ?? 0) > 0) {
+          const pendientes = await contarDocumentosPendientes(embarqueId);
+          if (pendientes > 0) {
             notifyError(toast, {
               title: "Documentos incompletos",
-              description: `Hay ${count} documento(s) pendiente(s). Súbelos antes de marcar la llegada real.`,
+              description: `Hay ${pendientes} documento(s) pendiente(s). Súbelos antes de marcar la llegada real.`,
             });
             return;
           }
