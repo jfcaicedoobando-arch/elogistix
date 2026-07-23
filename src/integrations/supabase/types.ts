@@ -6745,6 +6745,16 @@ export type Database = {
           margen_min_pct: number
         }[]
       }
+      _convertir_proformas_insertar_conceptos: {
+        Args: {
+          p_es_consolidada: boolean
+          p_factura_id: string
+          p_moneda: Database["public"]["Enums"]["moneda"]
+          p_org: string
+          p_proforma_ids: string[]
+        }
+        Returns: undefined
+      }
       _cxp_anchor_fase_o: { Args: never; Returns: undefined }
       _cxp_validar_aprobacion: {
         Args: { p_factura_id: string }
