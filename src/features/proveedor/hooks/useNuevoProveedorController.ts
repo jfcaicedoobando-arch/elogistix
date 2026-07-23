@@ -61,10 +61,8 @@ export function useNuevoProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
-
-
-
   const isStep1Valid = (): boolean => {
+
     // Chequeos comunes agrupados en una tabla de aserciones para bajar la
     // complejidad ciclomática (antes 11, ahora 3).
     const camposBase: boolean[] = [
