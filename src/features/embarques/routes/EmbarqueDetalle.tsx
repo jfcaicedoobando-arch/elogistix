@@ -10,7 +10,7 @@ import {
   useEmbarqueDetalleData,
   useEmbarqueDetalleTracking,
 } from "@/features/embarques/hooks";
-import { useEmbarqueEstadoActions } from "@/features/embarques/hooks/useEmbarqueEstadoActions";
+
 
 import DialogEliminarEmbarque from "@/features/embarques/components/DialogEliminarEmbarque";
 import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
@@ -55,18 +55,6 @@ export default function EmbarqueDetalle() {
 
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
-  const {
-    handleAvanzarEstado,
-    handleReabrir, reabrirEmbarque,
-    warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
-    docsFaltantes, docsBloqueantes,
-    warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
-    blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
-    confirmarAvanceConDocsPendientes,
-    avanzarEstado,
-    cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo,
-  } = useEmbarqueEstadoActions(embarque ?? undefined, id);
-
   if (isLoading) return <LoadingState />;
   if (!embarque) return <NotFoundState onBack={() => navigate("/embarques")} />;
 
@@ -77,38 +65,15 @@ export default function EmbarqueDetalle() {
     <PageContainer>
       <EmbarqueDetalleHeader
         embarque={embarque}
+        embarqueId={id!}
         estadoVisual={estadoVisual}
         siguienteEstado={siguienteEstado}
         canEdit={canEdit}
-        avanzandoEstado={avanzarEstado.isPending}
         trackingPending={trackingPending}
-        embarqueId={id!}
-        onAvanzarEstado={handleAvanzarEstado}
         onCompartirTracking={handleCompartirTracking}
         onAbrirEliminar={() => setDialogEliminarAbierto(true)}
         onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
-        onReabrir={handleReabrir}
-        reabriendoEstado={reabrirEmbarque.isPending}
-        warnCierreOpen={warnCierreOpen}
-        onWarnCierreOpenChange={setWarnCierreOpen}
-        onConfirmarCierreSinProforma={confirmarCierreSinProforma}
-        conceptosSinProforma={conceptosSinProforma}
-        docsFaltantes={docsFaltantes}
-        docsBloqueantes={docsBloqueantes}
-        warnDocsOpen={warnDocsOpen}
-        onWarnDocsOpenChange={setWarnDocsOpen}
-        blockDocsOpen={blockDocsOpen}
-        onBlockDocsOpenChange={setBlockDocsOpen}
-        onConfirmarAvanceConDocsPendientes={confirmarAvanceConDocsPendientes}
-        onIrADocumentos={() => { setBlockDocsOpen(false); setActiveTab("documentos"); }}
-        blockFechaLlegadaOpen={blockFechaLlegadaOpen}
-        onBlockFechaLlegadaOpenChange={setBlockFechaLlegadaOpen}
-        onIrATracking={() => { setBlockFechaLlegadaOpen(false); setActiveTab("tracking"); }}
-        cierreEsSiguiente={cierreEsSiguiente}
-        rolPuedeCerrar={rolPuedeCerrar}
-        cierrePuedeAvanzar={cierrePuedeAvanzar}
-        cierreMotivoBloqueo={cierreMotivoBloqueo}
-        onIrACierre={() => setActiveTab("cierre")}
+        onNavigateTab={(tab) => setActiveTab(tab)}
       />
 
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />

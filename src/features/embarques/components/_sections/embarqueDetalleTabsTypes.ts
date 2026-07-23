@@ -13,6 +13,7 @@ import type { TabCostos } from "@/features/embarques/components/TabCostos";
 import type { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
 import type { TabNotas } from "@/features/embarques/components/TabNotas";
 import type { TabTracking } from "@/features/embarques/components/TabTracking";
+import type { EmbarqueRow } from "@/features/embarques/types/embarque";
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
 export type ResumenProps = ComponentProps<typeof TabResumen>;
@@ -35,18 +36,10 @@ export interface Financials {
   margen: number;
 }
 
-// El embarque debe satisfacer simultáneamente los contratos de TabResumen,
-// TabFacturacion y TabTracking, además de exponer los campos que esta vista
-// consume directamente (expediente, created_by_email, created_at).
-export type EmbarqueProp = ResumenProps["embarque"]
-  & FacturacionProps["embarque"]
-  & TrackingProps["embarque"]
-  & {
-    expediente: string | null;
-    modo: string;
-    created_by_email?: string | null;
-    created_at: string;
-  };
+// v13.309.50 · PR-S2-B: unificamos con `EmbarqueRow` (Tables<"embarques">) —
+// que ya satisface TabResumen/TabFacturacion/TabTracking y expone todos los
+// campos que la vista consume. Elimina el `as unknown as` histórico.
+export type EmbarqueProp = EmbarqueRow;
 
 export interface EmbarqueDetalleTabsProps {
   embarque: EmbarqueProp;

@@ -8,67 +8,56 @@ import { EmbarqueHeaderDialogs } from "./EmbarqueHeaderDialogs";
 import { EmbarqueDetalleHeaderActions } from "./EmbarqueDetalleHeaderActions";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useCotizacionFolio } from "@/features/cotizacion/hooks";
+import { useEmbarqueEstadoActions } from "@/features/embarques/hooks/useEmbarqueEstadoActions";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 
+/**
+ * v13.309.50 · PR-S2-B: el header ahora consume internamente
+ * `useEmbarqueEstadoActions` (patrón `useEmbarqueDetalleTabsData`), lo que
+ * reduce la superficie del componente de 33 → 10 props. La ruta sólo pasa
+ * el embarque, el estado visual, los callbacks de navegación por tab y los
+ * disparadores de diálogos globales (eliminar/duplicar/compartir tracking).
+ */
 interface Props {
   embarque: EmbarqueRow;
+  embarqueId: string;
   estadoVisual: string;
   siguienteEstado: string | null;
   canEdit: boolean;
-  avanzandoEstado: boolean;
   trackingPending: boolean;
-  embarqueId: string;
-  onAvanzarEstado: () => void;
   onCompartirTracking: () => void;
   onAbrirEliminar: () => void;
   onAbrirDuplicar: () => void;
-  onReabrir: () => void;
-  reabriendoEstado: boolean;
-  // Soft warning al cerrar sin proforma
-  warnCierreOpen: boolean;
-  onWarnCierreOpenChange: (open: boolean) => void;
-  onConfirmarCierreSinProforma: () => void;
-  conceptosSinProforma: number;
-  // Candado de documentos
-  docsFaltantes: string[];
-  docsBloqueantes: boolean;
-  warnDocsOpen: boolean;
-  onWarnDocsOpenChange: (open: boolean) => void;
-  blockDocsOpen: boolean;
-  onBlockDocsOpenChange: (open: boolean) => void;
-  onConfirmarAvanceConDocsPendientes: () => void;
-  onIrADocumentos: () => void;
-  // Fecha de llegada real obligatoria al avanzar a Arribo
-  blockFechaLlegadaOpen: boolean;
-  onBlockFechaLlegadaOpenChange: (open: boolean) => void;
-  onIrATracking: () => void;
-  // v13.89.1 — Cierre gateado
-  cierreEsSiguiente: boolean;
-  rolPuedeCerrar: boolean;
-  cierrePuedeAvanzar: boolean;
-  cierreMotivoBloqueo: "rol" | "checklist" | null;
-  onIrACierre: () => void;
+  onNavigateTab: (tab: "documentos" | "tracking" | "cierre") => void;
 }
 
 
 export function EmbarqueDetalleHeader({
-  embarque, estadoVisual, siguienteEstado, canEdit, avanzandoEstado,
-  trackingPending, embarqueId, onAvanzarEstado, onCompartirTracking,
-  onAbrirEliminar, onAbrirDuplicar,
-  onReabrir, reabriendoEstado,
-  warnCierreOpen, onWarnCierreOpenChange, onConfirmarCierreSinProforma, conceptosSinProforma,
-  docsFaltantes, docsBloqueantes,
-  warnDocsOpen, onWarnDocsOpenChange,
-  blockDocsOpen, onBlockDocsOpenChange,
-  onConfirmarAvanceConDocsPendientes, onIrADocumentos,
-  blockFechaLlegadaOpen, onBlockFechaLlegadaOpenChange, onIrATracking,
-  cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo, onIrACierre,
+  embarque, embarqueId, estadoVisual, siguienteEstado, canEdit,
+  trackingPending, onCompartirTracking, onAbrirEliminar, onAbrirDuplicar,
+  onNavigateTab,
 }: Props) {
 
   const { isAdmin } = usePermissions();
   const puedeReabrir = isAdmin && estadoVisual === "Cerrado";
-  const bloqueadoPorDocs = docsBloqueantes && docsFaltantes.length > 0;
   const { data: cotizacionFolio } = useCotizacionFolio(embarque.cotizacion_id);
+
+  const {
+    handleAvanzarEstado,
+    handleReabrir, reabrirEmbarque,
+    warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
+    docsFaltantes, docsBloqueantes,
+    warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
+    blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
+    confirmarAvanceConDocsPendientes,
+    avanzarEstado,
+    cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo,
+  } = useEmbarqueEstadoActions(embarque, embarqueId);
+
+  const bloqueadoPorDocs = docsBloqueantes && docsFaltantes.length > 0;
+  const onIrADocumentos = () => { setBlockDocsOpen(false); onNavigateTab("documentos"); };
+  const onIrATracking = () => { setBlockFechaLlegadaOpen(false); onNavigateTab("tracking"); };
+  const onIrACierre = () => onNavigateTab("cierre");
 
   return (
     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
@@ -101,7 +90,6 @@ export function EmbarqueDetalleHeader({
             <span className="text-xs text-warning" title="Embarque legacy sin cotización vinculada (creado antes de la política tarifa-first)">
               Sin cotización vinculada
             </span>
-
           )}
         </p>
       </div>
@@ -111,18 +99,18 @@ export function EmbarqueDetalleHeader({
         estadoVisual={estadoVisual}
         siguienteEstado={siguienteEstado}
         canEdit={canEdit}
-        avanzandoEstado={avanzandoEstado}
+        avanzandoEstado={avanzarEstado.isPending}
         trackingPending={trackingPending}
         embarqueId={embarqueId}
         puedeReabrir={puedeReabrir}
-        reabriendoEstado={reabriendoEstado}
+        reabriendoEstado={reabrirEmbarque.isPending}
         docsFaltantes={docsFaltantes}
         bloqueadoPorDocs={bloqueadoPorDocs}
-        onAvanzarEstado={onAvanzarEstado}
+        onAvanzarEstado={handleAvanzarEstado}
         onCompartirTracking={onCompartirTracking}
         onAbrirEliminar={onAbrirEliminar}
         onAbrirDuplicar={onAbrirDuplicar}
-        onReabrir={onReabrir}
+        onReabrir={handleReabrir}
         cierreEsSiguiente={cierreEsSiguiente}
         rolPuedeCerrar={rolPuedeCerrar}
         cierrePuedeAvanzar={cierrePuedeAvanzar}
@@ -134,18 +122,18 @@ export function EmbarqueDetalleHeader({
       <EmbarqueHeaderDialogs
         siguienteEstado={siguienteEstado}
         warnCierreOpen={warnCierreOpen}
-        onWarnCierreOpenChange={onWarnCierreOpenChange}
-        onConfirmarCierreSinProforma={onConfirmarCierreSinProforma}
+        onWarnCierreOpenChange={setWarnCierreOpen}
+        onConfirmarCierreSinProforma={confirmarCierreSinProforma}
         conceptosSinProforma={conceptosSinProforma}
         docsFaltantes={docsFaltantes}
         warnDocsOpen={warnDocsOpen}
-        onWarnDocsOpenChange={onWarnDocsOpenChange}
+        onWarnDocsOpenChange={setWarnDocsOpen}
         blockDocsOpen={blockDocsOpen}
-        onBlockDocsOpenChange={onBlockDocsOpenChange}
-        onConfirmarAvanceConDocsPendientes={onConfirmarAvanceConDocsPendientes}
+        onBlockDocsOpenChange={setBlockDocsOpen}
+        onConfirmarAvanceConDocsPendientes={confirmarAvanceConDocsPendientes}
         onIrADocumentos={onIrADocumentos}
         blockFechaLlegadaOpen={blockFechaLlegadaOpen}
-        onBlockFechaLlegadaOpenChange={onBlockFechaLlegadaOpenChange}
+        onBlockFechaLlegadaOpenChange={setBlockFechaLlegadaOpen}
         onIrATracking={onIrATracking}
       />
 

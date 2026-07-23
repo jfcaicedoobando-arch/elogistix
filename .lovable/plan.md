@@ -1,70 +1,40 @@
-## Estado actual
+# Estado actual vs. plan R3-Sprints_2
 
-Sprint 1 ya está cerrado en `v13.309.38` (fix UPDATE `guard_pago_proveedor`, test SQL `cxp_guard_sobrepago.sql` cableado en `rls-tests.yml`, ban `@/features/**` en `src/lib/**` con allowlist ARCH-DEBT). Después vinieron parches de infraestructura (H6, schema-invariants, revalidación de tarifa, columna `es_principal`) hasta `v13.309.44`.
+## ✅ Ya hecho
 
-**Lo que sigue según el doc son los 7 ítems del Sprint 2.** Los propongo en 3 PRs para poder revisar/rollback por área. No toca lógica financiera.
+### Sprint 1 — completo
+- **1.1 FIX-R3-01**: `guard_pago_proveedor` corregido (UPDATE ya valida `NEW.monto_en_moneda_factura` directo contra `v_saldo`, sin el bug del delta). Aplicado en v13.309.38.
+- **1.2 Tests conductuales SQL**: `supabase/tests/cxp_guard_sobrepago.sql` creado y cableado en CI. Fixture arreglado (v13.309.47) para satisfacer NOT NULLs y `pagos_proveedor_tc_pos`.
+- **1.3 Ban `@/features/**` en `src/lib/**`**: aplicado en `eslint.config.js` con allowlist `ARCH-DEBT`.
 
----
+### Sprint 2 — parcial (A y C hechos, falta B)
+- **2.1 Paridad roleHierarchy ↔ has_role()**: `roleHierarchy.invariant.test.ts` agregado + `viewer` corregido (v13.309.45).
+- **2.3 Regla queryKey cubre `TSAsExpression`**: extendida; `useConceptosCfdiFactura` y `usePresupuestoCategorias` migrados (v13.309.46).
+- **2.4 3 ciclos runtime**: rotos (`useSaldosCuentas`, `admin/services/usuario`, `proveedor/services/operaciones`).
+- **2.6 `bitacora/registrar` → services**: reubicado a `src/services/bitacora/`.
+- **2.7 Complejidad**: `useEmbarqueEstadoActions`, `useNuevoProveedorController.isStep1Valid`, `useOperacionesData` refactorizados a CC ≤10 (v13.309.48).
 
-## Sprint 2 — Plan
+## ⏳ Falta
 
-### PR-S2-A · Invariantes y ciclos runtime (bajo riesgo, valor alto)
+### Sprint 2 — cerrar
+- **2.2 PR-S2-B — `EmbarqueDetalleHeader` (33 props)**: consumir bundle de `useEmbarqueEstadoActions` dentro del header (patrón `useEmbarqueDetalleTabsData`) y unificar `EmbarqueProp`/`EmbarqueRow` para eliminar el `as unknown as` de `EmbarqueDetalleTabs.tsx:34`.
+- **2.5 Hooks→components runtime**: mover `buildEmbarqueColumns` y `findOriginalFacturaIdFor` a services/domain; imports type-only restantes → `types/`.
+- **2.7 (cierre)** subir `complexity` de warn→error con allowlist ARCH-DEBT (solo tras 2.2/2.5).
+- **2.6 (cierre)** ampliar roots de `scripts/lib/arch.ts` a `src/lib/**` con allowlist infra.
 
-1. **Paridad `roleHierarchy` ↔ `has_role()`** (ítem 1)
-   - Nuevo test `src/lib/auth/__tests__/roleHierarchy.invariant.test.ts` espejo de `embarqueFases.invariant.test.ts`: parsea `roleHierarchy.ts` y compara contra los roles/jerarquía que emite `has_role()` en migraciones.
+### Sprint 3 (2-4 semanas)
+1. PR-6 formularios: `useNuevaFacturaProveedorForm` + `useEditarFacturaProveedorForm` → RHF+zod; luego `SignupForm`/`ResetPassword`. (Fase 1 del schema ya hecha en v13.309.28; falta wiring completo).
+2. Hidratación wizard: reemplazar `useHidratacionEditarEmbarque` por `defaultValues`/`reset` de RHF.
+3. Status registry Oleada 2 (`desempenoVisuals`, `leadsColumns`, 137 literales `estado ===`) + regla lint.
+4. Retrofit LC_ backend (H7 dura), registrar 5 helpers en schema-invariants, split `operaciones_stats` (308L), PR dedicada de H6 legacy.
+5. Dead code: borrar `ui/icon.tsx` + 10 barrels `features/*/index.ts`; knip burn-down (20 exports / 101 tipos / 5 deps).
+6. Clones jscpd: `ConceptoRowMXN/USD`, trío `Portal*MobileFilters`, `CosteoNavieras ↔ AgenteGarantias`, `BandejaPorEnviar ↔ Timbrar`; fusionar `MobileFilterSheet`/`MobileFiltersSheet`.
 
-2. **Cubrir `TSAsExpression` en la regla `queryKey`** (ítem 3)
-   - Ampliar `scripts/lint/queryKey.ts` (o la regla eslint equivalente) para detectar cast `as unknown as` sobre `queryKey`.
-   - Registrar las 2 keys faltantes: `cxp/hooks/useConceptosCfdiFactura.ts:18` y `presupuesto/hooks/usePresupuestoCategorias.ts:13`.
+### Sprint 4 (opcional)
+- Bans: `Intl.DateTimeFormat` fuera de `lib/formatters`, `sonner` directo en `src/features/**` (82), limpiar flags coverage=0.
+- Layout/docs, políticas catches/SAFE-CAST, DX (Prettier, react-hooks v7).
 
-3. **Romper 3 ciclos runtime** (ítem 4)
-   - `tesoreria/hooks/useFlujoProyectado.ts:7` — quitar self-import (1 línea).
-   - `auditoria/domain/ejecutivoAgregados ↔ ejecutivoRanking` — mover tipos compartidos a `types.ts` hoja.
-   - `facturacion/services/facturapi ↔ facturapiConsultar` — misma técnica.
-   - Documentar la regla "tipos compartidos en `types.ts` hoja" en `docs/architecture-guidelines.md`.
+## Recomendación
+Arrancar por **PR-S2-B** (unificar `EmbarqueProp`/`EmbarqueRow` + reducir props del header). Es el único item de Sprint 2 con impacto de UI/tipos y desbloquea subir `complexity` a error. Luego 2.5 y cerrar Sprint 2 antes de tocar Sprint 3.
 
-4. **Bitácora fuera de `lib/`** (ítem 6)
-   - Mover `lib/domain/bitacora/registrar.ts` → `src/features/bitacora/services/registrar.ts` (hace I/O).
-   - Ampliar roots de `scripts/lib/arch.ts` a `src/lib/**` con allowlist infra (`lib/supabase`, `lib/auth/signOut`, `lib/auth/changePassword`).
-
-### PR-S2-B · Refactor `EmbarqueDetalleHeader` (riesgo medio)
-
-5. **Header con 33 props** (ítem 2)
-   - Consumir bundle de `useEmbarqueEstadoActions` dentro del header (patrón `useEmbarqueDetalleTabsData`) para colapsar props.
-   - Unificar tipos `EmbarqueProp` y `EmbarqueRow` → quitar `as unknown as` de `EmbarqueDetalleTabs.tsx:34`.
-
-6. **Hooks→components runtime** (ítem 5)
-   - Mover `buildEmbarqueColumns` y `findOriginalFacturaIdFor` de hooks a `services/`/`domain/`.
-   - Convertir imports type-only a `types/`.
-
-### PR-S2-C · Complejidad (riesgo medio, más contenido)
-
-7. **Refactor de 3 hooks calientes** (ítem 7)
-   - `useEmbarqueEstadoActions` (CC ~34) — extraer sub-hooks por acción (aprobar/cerrar/reabrir/cancelar).
-   - `useNuevoProveedorController` (~33) — separar carga inicial, submit y sub-form de sucursales.
-   - `useOperacionesData` (~32) — dividir por dominio (embarques activos vs alertas).
-   - Al terminar: `complexity` warn→error con allowlist ARCH-DEBT vacía o mínima.
-
----
-
-## Validación
-
-- `bunx vitest run` (invariantes + queryKey + arquitectura + ciclos).
-- `bun run lint -- --max-warnings 0`.
-- `scripts/ci-fast.sh` completo antes de cerrar cada PR.
-- Humo manual: abrir detalle de embarque (header refactor), registrar pago (guard intacto), cambiar estado (hooks refactor).
-
-## Notas técnicas
-
-- Ningún cambio de SQL/migración en Sprint 2 (todo es TS/arquitectura).
-- `roleHierarchy` invariant no cambia grants ni policies: solo detecta drift.
-- `complexity` sube a error **solo al final** de PR-S2-C para no bloquear PRs previos.
-- Bump `APP_VERSION` una vez por PR mergeado y entrada en `CHANGELOG.md`.
-
-## Fuera de alcance (queda para Sprint 3+)
-
-- PR-6 formularios RHF+zod, hidratación wizard, status registry Oleada 2, retrofit LC_ backend, dead code, clones jscpd. Se abordan tras cerrar Sprint 2.
-
----
-
-¿Arranco por **PR-S2-A** (invariantes + ciclos, sin tocar UI)?
+¿Arranco con PR-S2-B?
