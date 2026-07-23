@@ -172,4 +172,9 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   // ── Genéricos ──────────────────────────────────────────────────────────
   LC_MONEDA_NO_SOPORTADA: "Moneda no soportada por el sistema.",
   LC_TC_REQUERIDO: "Captura el tipo de cambio del día.",
+  LC_TC_NO_DISPONIBLE:
+    "El tipo de cambio de la factura no está disponible. Refresca antes de emitir la nota de crédito.",
+  LC_TC_DOF_NO_DISPONIBLE:
+    "No fue posible obtener el tipo de cambio del DOF. Intenta de nuevo en unos segundos.",
 };
+
