@@ -94,6 +94,38 @@ function toError(err: unknown): { error: Error; original: unknown } {
 }
 
 
+function buildEnrichedTags(
+  tags: ReportTags,
+  ctx: ReturnType<typeof getErrorContext>,
+  classified: ReturnType<typeof classifyError>,
+): Record<string, string> {
+  const enriched: Record<string, string> = {
+    ...(tags as Record<string, string>),
+    organization_id: ctx.organizationId ?? "none",
+    effective_role: ctx.effectiveRole ?? "none",
+    route: ctx.route ?? "unknown",
+    app_version: ctx.appVersion,
+    error_kind: classified.kind,
+  };
+  if (classified.pgCode) enriched.pg_code = classified.pgCode;
+  return enriched;
+}
+
+function buildEnrichedExtra(
+  extra: ReportExtra | undefined,
+  ctx: ReturnType<typeof getErrorContext>,
+  classified: ReturnType<typeof classifyError>,
+): Record<string, unknown> {
+  const enriched: Record<string, unknown> = { ...(extra ?? {}) };
+  if (extra && "payload" in extra && extra.payload !== undefined) {
+    enriched.payload = sanitizePayload(extra.payload);
+  }
+  if (classified.pgHint) enriched.pg_hint = classified.pgHint;
+  if (classified.pgDetails) enriched.pg_details = classified.pgDetails;
+  if (ctx.organizationName) enriched.organization_name = ctx.organizationName;
+  return enriched;
+}
+
 export function reportCaughtError(
   err: unknown,
   tags: ReportTags,
@@ -111,24 +143,8 @@ export function reportCaughtError(
     typeof errName === "string" ? errName : undefined,
   )) return;
 
-
-  const enrichedTags: Record<string, string> = {
-    ...(tags as Record<string, string>),
-    organization_id: ctx.organizationId ?? "none",
-    effective_role: ctx.effectiveRole ?? "none",
-    route: ctx.route ?? "unknown",
-    app_version: ctx.appVersion,
-    error_kind: classified.kind,
-  };
-  if (classified.pgCode) enrichedTags.pg_code = classified.pgCode;
-
-  const enrichedExtra: Record<string, unknown> = { ...(extra ?? {}) };
-  if (extra && "payload" in extra && extra.payload !== undefined) {
-    enrichedExtra.payload = sanitizePayload(extra.payload);
-  }
-  if (classified.pgHint) enrichedExtra.pg_hint = classified.pgHint;
-  if (classified.pgDetails) enrichedExtra.pg_details = classified.pgDetails;
-  if (ctx.organizationName) enrichedExtra.organization_name = ctx.organizationName;
+  const enrichedTags = buildEnrichedTags(tags, ctx, classified);
+  const enrichedExtra = buildEnrichedExtra(extra, ctx, classified);
 
   const { error, original } = toError(err);
   if (original !== undefined) enrichedExtra.original = original;
@@ -143,3 +159,4 @@ export function reportCaughtError(
     })
     .catch(() => undefined);
 }
+
