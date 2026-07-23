@@ -48,7 +48,7 @@ vi.mock("@/features/embarques/hooks/useEmbarquesPageState", () => ({
 vi.mock("@/features/embarques/hooks/useContenedoresInfoMap", () => ({
   useContenedoresInfoMap: () => ({ data: {} }),
 }));
-vi.mock("@/features/embarques/components/embarqueColumns", () => ({
+vi.mock("@/features/embarques/table/embarqueColumns", () => ({
   buildEmbarqueColumns: () => [{ id: "expediente" }, { id: "cliente_nombre" }],
 }));
 vi.mock("@/lib/ui/appFeedback", () => ({

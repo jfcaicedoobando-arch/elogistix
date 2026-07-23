@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchSustitutaEstado, type SustitutaEstado } from "@/features/facturacion/services/sustitucionEstado";
 import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
-import { clearPersisted, readPersisted } from "./persistence";
+import { clearPersisted, readPersisted } from "@/features/facturacion/services/sustitucionPersistence";
 
 export type Step = "intro" | "confirmar";
 

@@ -4,7 +4,7 @@
  */
 
 import type { EmbarqueRow } from "@/features/embarques/hooks";
-import type { ContenedorInfo } from "@/features/embarques/components/embarqueColumns";
+import type { ContenedorInfo } from "@/features/embarques/table/embarqueColumns";
 
 export interface EstadoContenedorCell {
   count: number;

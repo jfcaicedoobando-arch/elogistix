@@ -21,7 +21,7 @@ import { listarSustitutas } from "@/features/facturacion/services/sustitutasDeFa
 import { useCancelarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
-import { clearPersisted, writePersisted } from "./sustitucion/persistence";
+import { clearPersisted, writePersisted } from "@/features/facturacion/services/sustitucionPersistence";
 import { useSustitucionState } from "./sustitucion/useSustitucionState";
 
 interface Props {

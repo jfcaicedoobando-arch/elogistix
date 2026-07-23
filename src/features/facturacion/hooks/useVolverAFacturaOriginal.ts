@@ -9,7 +9,7 @@
  */
 import { useMemo } from "react";
 import { useFactura } from "@/features/facturacion/hooks/useFactura";
-import { findOriginalFacturaIdFor } from "@/features/facturacion/components/sustitucion/persistence";
+import { findOriginalFacturaIdFor } from "@/features/facturacion/services/sustitucionPersistence";
 
 export function useVolverAFacturaOriginal(
   id: string | undefined,
