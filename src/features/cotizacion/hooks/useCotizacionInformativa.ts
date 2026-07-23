@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { crearCotizacionInformativa } from "@/features/cotizacion/services/informativa";
 import type { CotizacionInformativaInput } from "@/features/cotizacion/types";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useCreateCotizacionInformativa() {
   const qc = useQueryClient();

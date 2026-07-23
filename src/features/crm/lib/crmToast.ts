@@ -16,7 +16,7 @@ import {
   notifyError,
   notifySuccess,
   notifyInfo,
-} from "@/components/shared/utils/appFeedback";
+} from "@/lib/ui/appFeedback";
 
 interface DebugOpts {
   error?: unknown;

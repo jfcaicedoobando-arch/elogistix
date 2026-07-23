@@ -8,7 +8,7 @@ import {
   subscribeNotificaciones,
   type NotificacionInterna,
 } from "@/features/notificaciones/services";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
 export type { NotificacionInterna };

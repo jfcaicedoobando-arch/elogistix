@@ -8,7 +8,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/shared/useToast";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   convertirProformaAFactura,
   fetchPrimeraSerieActiva,

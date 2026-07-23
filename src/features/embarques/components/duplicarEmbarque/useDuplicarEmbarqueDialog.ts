@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useToast } from "@/hooks/shared";
 import { useDuplicarEmbarque } from "@/features/embarques/hooks";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { EmbarqueRow } from "@/features/embarques/hooks";
 import { type CopiaContenedor, MAX_COPIAS } from "./types";
 

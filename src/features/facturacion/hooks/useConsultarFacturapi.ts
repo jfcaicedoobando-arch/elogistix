@@ -5,7 +5,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { consultarEstadoFacturapi, type ConsultarFacturapiResult } from "@/features/facturacion/services/facturapi";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
 export function useConsultarFacturapi(facturaId: string | null | undefined) {

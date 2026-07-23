@@ -14,7 +14,7 @@ import {
   type CrmEtapaTipo,
   type EtapaPatch,
 } from "@/features/crm/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { CrmEtapaRow, CrmEtapaTipo, EtapaPatch };
 

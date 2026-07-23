@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   usePlantillasMensaje,
   useCrearPlantilla,

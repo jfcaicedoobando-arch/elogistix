@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { enviarFacturaPorEmail, type EnviarFacturaEmailInput } from "@/features/facturacion/services/mutations/enviarFacturaEmail";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
 export function useEnviarFacturaEmail(facturaId: string | undefined) {

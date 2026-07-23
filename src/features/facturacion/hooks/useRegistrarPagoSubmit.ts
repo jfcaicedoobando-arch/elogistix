@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors";
 import { emitirRep } from "@/features/facturacion/services/repFacturapi";

@@ -12,7 +12,7 @@ import { useSugerirCandidatos, useConciliarPago, useIgnorarMovimiento, useDescon
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   movimiento: MovimientoBBVA | null;
   onClose: () => void;

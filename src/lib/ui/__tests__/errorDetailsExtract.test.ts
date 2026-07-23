@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { extractErrorDetails, deriveErrorCode } from "@/components/shared/utils/errorDetailsExtract";
+import { extractErrorDetails, deriveErrorCode } from "@/lib/ui/errorDetailsExtract";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
 describe("extractErrorDetails", () => {

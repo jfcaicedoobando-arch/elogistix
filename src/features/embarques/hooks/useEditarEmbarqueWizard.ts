@@ -9,7 +9,7 @@ import {
   useUpdateEmbarque,
 } from "@/features/embarques/hooks/useEmbarques";
 import { useContenedoresEmbarque } from "@/features/embarques/hooks/useContenedoresEmbarque";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";

@@ -24,7 +24,7 @@ import { useActualizarEta } from "@/features/embarques/hooks/mutations/useActual
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
 import { ActualizarEtaForm } from "./ActualizarEtaForm";
 import { MarcarLlegadaForm } from "./MarcarLlegadaForm";

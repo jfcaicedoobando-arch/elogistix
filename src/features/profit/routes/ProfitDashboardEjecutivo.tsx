@@ -22,7 +22,7 @@ import { AlertasPanel } from "@/features/dashboardEjecutivo/components/AlertasPa
 import { ReporteEjecutivoDocument } from "@/pdf/documents/ReporteEjecutivoDocument";
 import { toast } from "sonner";
 import { descargarBlob } from "@/lib/downloadBlob";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePeriodoMesUrl } from "@/features/profit/hooks/usePeriodoMesUrl";

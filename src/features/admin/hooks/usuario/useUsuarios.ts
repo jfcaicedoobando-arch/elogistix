@@ -7,7 +7,7 @@ import {
   type UserRow,
 } from '@/features/admin/services/usuario';
 import type { AppRole } from "@/types/appRole";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { UserRow };
 

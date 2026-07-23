@@ -3,7 +3,7 @@
  * Extraído para mantener `useClienteDetalleController.ts` ≤200 LOC.
  */
 import { useState } from "react";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useToast } from "@/hooks/shared";
 import { diffFields, SENSITIVE_FIELDS } from "@/features/auditoria/utils/diffFields";
 import { getErrorMessage } from "@/lib/errors";

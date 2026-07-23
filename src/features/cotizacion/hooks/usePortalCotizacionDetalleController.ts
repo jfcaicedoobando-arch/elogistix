@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { useResponderCotizacion } from "@/features/cotizacion/hooks/mutations/usePortalCotizacionMutations";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type RespuestaCotizacion = "Aceptada" | "Rechazada";

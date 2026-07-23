@@ -24,7 +24,7 @@ import {
 } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 

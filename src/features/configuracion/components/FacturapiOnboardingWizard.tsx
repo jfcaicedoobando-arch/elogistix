@@ -12,7 +12,7 @@ import { Receipt, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { FormDialogSection } from "@/components/shared/FormDialogSection";
-import { notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useFacturapiCredenciales,
   useUpsertFacturapiCredenciales,

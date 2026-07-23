@@ -10,7 +10,7 @@ import {
 } from "@/features/admin/hooks/usuario";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { notifyWarning } from "@/components/shared/utils/appFeedback";
+import { notifyWarning } from "@/lib/ui/appFeedback";
 import { UNRESOLVED_EMAIL } from "@/features/admin/services/usuario";
 import { useUsuarioColumns } from "./usuariosColumns";
 import { RoleChangeAlertDialog, type PendingRoleChange } from "./RoleChangeAlertDialog";

@@ -10,7 +10,7 @@ import {
   type GenerarLiquidacionParams,
   type RegistrarPagoLiquidacionParams,
 } from "@/features/comisiones/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useLiquidaciones() {
   return useQuery({

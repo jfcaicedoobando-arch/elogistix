@@ -12,7 +12,7 @@ import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   type PendingCfdi,
   addDays, initialValues, calcularTotal, validateFactura,

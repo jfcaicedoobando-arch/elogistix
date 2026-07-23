@@ -13,7 +13,7 @@ import { useEmbarqueConceptosVenta } from "@/features/embarques/hooks/useEmbarqu
 import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFaltantesParaEstado";
 import { useValidacionCierre } from "@/features/embarques/hooks/useCierreEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
 import { useEffect, useState, useCallback } from "react";
 import {

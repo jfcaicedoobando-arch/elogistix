@@ -1,6 +1,6 @@
 import { QueryClient, QueryCache, MutationCache, type Query } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 
 /**

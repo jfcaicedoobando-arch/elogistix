@@ -20,7 +20,7 @@ vi.mock("@/features/facturacion/services/facturaManual", () => ({
 vi.mock("@/features/facturacion/services/facturapi", () => ({
   emitirFacturapi: (...a: unknown[]) => emitirFacturapi(...a),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 

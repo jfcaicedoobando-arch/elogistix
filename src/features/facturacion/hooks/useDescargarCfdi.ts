@@ -6,7 +6,7 @@
 import { useCallback } from "react";
 import { openFacturaInNewTab } from "@/services/storage";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useToast } from "@/hooks/shared";

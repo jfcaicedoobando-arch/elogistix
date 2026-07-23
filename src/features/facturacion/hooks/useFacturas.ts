@@ -8,7 +8,7 @@ import {
   type FacturaRow,
   type FacturaListItem,
 } from "@/features/facturacion/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { FacturaRow, FacturaListItem };
 

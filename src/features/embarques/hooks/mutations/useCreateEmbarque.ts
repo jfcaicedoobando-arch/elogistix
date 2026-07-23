@@ -8,7 +8,7 @@ import { crearEmbarqueRpc, duplicarEmbarqueRpc } from '@/features/embarques/serv
 import { crearMuchos } from '@/features/embarques/services/contenedores';
 import { fromDb } from "@/lib/supabase/cast";
 import { newRequestId } from "@/lib/idempotency";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 

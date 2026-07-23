@@ -10,7 +10,7 @@ import {
   listarCuentas, crearCuenta, eliminarCuenta, fetchSaldosCuentas,
 } from "@/features/tesoreria/services";
 import type { TablesInsert } from "@/integrations/supabase/types";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useCuentasBancarias(activas = true) {
   return useQuery({

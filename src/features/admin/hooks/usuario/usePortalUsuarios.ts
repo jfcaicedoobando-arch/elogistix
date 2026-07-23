@@ -5,7 +5,7 @@ import {
   fetchUsuariosPortalAgente,
 } from "@/features/admin/services/usuario/portales";
 import { deleteUserViaEdgeFunction } from "@/features/admin/services/usuario";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useUsuariosPortalCliente() {
   return useQuery({

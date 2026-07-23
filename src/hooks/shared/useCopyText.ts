@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 import { toast } from "sonner";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 /**
  * Hook DRY para copiar texto al portapapeles con toast de feedback.

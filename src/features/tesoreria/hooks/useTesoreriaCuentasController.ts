@@ -9,7 +9,7 @@ import { useCuentasBancarias, useCrearCuenta, useEliminarCuenta } from "@/featur
 import type { Database } from "@/integrations/supabase/types";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
 const INITIAL_FORM = {

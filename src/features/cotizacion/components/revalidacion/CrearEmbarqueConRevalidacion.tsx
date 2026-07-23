@@ -20,7 +20,7 @@ import {
 } from "@/features/cotizacion/hooks/useRevalidacionTarifa";
 import { revalidarTarifa } from "@/features/cotizacion/services/revalidacion";
 import type { ResultadoRevalidacion } from "@/features/cotizacion/domain/revalidacionTarifa";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Props {
   cotizacionId: string;

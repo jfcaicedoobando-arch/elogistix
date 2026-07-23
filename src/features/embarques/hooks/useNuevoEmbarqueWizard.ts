@@ -24,7 +24,7 @@ import { useEmbarqueSubmitOrchestrator } from "@/features/embarques/hooks/useEmb
 import { useCotizacionesAceptadas } from "@/features/cotizacion/hooks";
 import type { StepValidationErrors } from "@/features/embarques/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/features/embarques/domain/embarqueWizardStepValidator";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 

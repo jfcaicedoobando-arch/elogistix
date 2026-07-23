@@ -12,7 +12,7 @@ import {
 } from "@/features/admin/services";
 import { toast } from "sonner";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export default function TabExportar() {
   const { organizationId, organization } = useOrganization();
   const [progress, setProgress] = useState<ExportProgress | null>(null);

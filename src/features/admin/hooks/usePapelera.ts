@@ -12,7 +12,7 @@ import {
 } from "@/features/admin/services";
 import { queryKeys } from "@/lib/query";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export type { SoftTable, TrashRow, TrashCountRow };
 
 export function usePapelera(enabled: boolean) {

@@ -9,7 +9,7 @@ import {
 } from "@/features/cotizacion/services/envios";
 import { toast } from "sonner";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 export type { EnvioRow } from "@/features/cotizacion/services/envios";
 

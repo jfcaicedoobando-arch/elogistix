@@ -15,7 +15,7 @@ import { useOrgFilter } from "@/hooks/shared";
 import { subirArchivosNcProveedor } from "@/features/cxp/services";
 import { NuevaNotaCreditoFormFields } from "./NuevaNotaCreditoFormFields";
 import { buildNcPrefillFromCfdi } from "./ncFromCfdi";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import type { CfdiParsedResponse } from "@/features/cxp/services";

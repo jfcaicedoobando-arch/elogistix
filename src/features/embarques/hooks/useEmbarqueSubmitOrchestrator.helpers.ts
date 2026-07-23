@@ -3,7 +3,7 @@
  * Sin React, sin hooks. Aíslan derivaciones de payload y reporte de errores
  * para mantener el hook orquestador ≤200 LOC con margen (Power-of-10 #4).
  */
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import type { ContenedorBorrador } from "@/features/embarques/types/contenedor";
 

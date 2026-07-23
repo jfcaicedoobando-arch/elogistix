@@ -10,7 +10,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { limpiarCancellationStatusVerificado } from "@/features/facturacion/services/limpiarPendingVerificado";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
 interface Args {

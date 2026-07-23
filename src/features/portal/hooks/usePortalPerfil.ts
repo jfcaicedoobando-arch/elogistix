@@ -5,7 +5,7 @@ import {
   actualizarContactoPortal,
 } from "@/features/portal/services";
 import type { PortalPerfilData } from "@/features/portal/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { PortalPerfilData };
 

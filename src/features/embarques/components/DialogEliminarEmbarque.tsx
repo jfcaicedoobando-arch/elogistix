@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useToast } from "@/hooks/shared";
 import { useNavigate } from "react-router-dom";
 import {

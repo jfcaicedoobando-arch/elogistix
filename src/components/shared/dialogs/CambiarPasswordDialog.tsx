@@ -6,7 +6,7 @@ import { Loader2, KeyRound } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { updateOwnPassword } from "@/lib/auth/changePassword";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 
 interface Props {

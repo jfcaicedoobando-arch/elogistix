@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   variant?: "ghost" | "outline";
   className?: string;

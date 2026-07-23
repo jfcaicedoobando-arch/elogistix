@@ -4,7 +4,7 @@ import { openFacturaInNewTab } from "@/services/storage";
 import { toast } from "@/hooks/shared";
 import { descargarCfdiFacturapi, esUrlFacturapi } from "@/features/facturacion/services/descargarCfdiFacturapi";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   stored: string | null;
   kind: "pdf" | "xml";

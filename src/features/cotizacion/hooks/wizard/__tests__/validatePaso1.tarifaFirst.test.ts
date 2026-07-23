@@ -24,7 +24,7 @@ vi.mock("@/features/cotizacion/services/wizard/paso1Crm", () => ({
 vi.mock("@/features/crm/services/vincularCotizacion", () => ({
   vincularOCrearOportunidadParaCotizacion: vi.fn(),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({ notifyError: vi.fn() }));
+vi.mock("@/lib/ui/appFeedback", () => ({ notifyError: vi.fn() }));
 
 import { validatePaso1 } from "../handlePaso1Crm";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";

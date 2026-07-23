@@ -13,7 +13,7 @@ import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useProveedorMutations } from "@/features/proveedor/hooks";
 import type { TablesInsert } from "@/integrations/supabase/types";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;

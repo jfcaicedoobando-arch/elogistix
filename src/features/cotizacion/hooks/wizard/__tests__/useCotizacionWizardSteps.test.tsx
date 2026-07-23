@@ -23,7 +23,7 @@ vi.mock("@/features/cotizacion/services", () => ({
     mxn: [{ descripcion: "Despacho", monto: 200 }],
   }),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
   notifySuccess: (...a: unknown[]) => notifySuccess(...a),
 }));

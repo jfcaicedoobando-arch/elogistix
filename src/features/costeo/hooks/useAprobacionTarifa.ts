@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { toast } from "sonner";
 import { aprobarTarifa, rechazarTarifa, reactivarTarifa } from "@/features/costeo/services/aprobacion";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 function describeError(e: unknown): string {
   if (e instanceof Error) return e.message;

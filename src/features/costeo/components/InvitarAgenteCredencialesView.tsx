@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, Check } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { useState } from "react";
 
 interface Props {

@@ -16,7 +16,7 @@ import SearchInput from "@/components/shared/SearchInput";
 import { CrmSubheader } from "@/features/crm/components/CrmSubheader";
 import { DataTable } from "@/components/shared/DataTable";
 import { useDebounce, useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import { LoadingState } from "@/components/shared/states/LoadingState";
 import OportunidadKanban from "@/features/crm/components/OportunidadKanban";

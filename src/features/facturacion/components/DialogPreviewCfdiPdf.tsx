@@ -12,7 +12,7 @@ import {
   descargarCfdiFacturapi,
   fetchCfdiFacturapi,
 } from "@/features/facturacion/services/descargarCfdiFacturapi";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Props {
   open: boolean;

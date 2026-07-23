@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAgenteContext } from "@/features/portal-agente/hooks";
 
 export default function AgentePerfil() {

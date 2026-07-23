@@ -9,7 +9,7 @@ import {
   type ActualizarFacturaPayload,
   type NuevaFacturaProveedorPayload,
 } from "@/features/cxp/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useCrearFacturaProveedor() {
   const qc = useQueryClient();

@@ -11,7 +11,7 @@ import { insertBitacora } from "@/features/auditoria/services/bitacora";
 import { hallazgoHash, AUDITORIA_REVISIONES_KEY } from "@/features/auditoria/hooks/revisiones/hash";
 import { queryKeys } from "@/lib/query";
 import { logger } from "@/lib/observability/logger";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
 
 const CHUNK = 5;

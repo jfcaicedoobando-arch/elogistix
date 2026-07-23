@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useResolverReaprobacion } from "@/features/cotizacion/hooks/useRevalidacionTarifa";
 import { recotizarCotizacion } from "@/features/cotizacion/services/versionado";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Props {
   cotizacionId: string;

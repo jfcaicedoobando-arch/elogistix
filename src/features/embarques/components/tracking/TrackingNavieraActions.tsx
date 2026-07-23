@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ExternalLink, Copy, Check, AlertCircle } from "lucide-react";
 import { useNavieras } from "@/features/catalogos/hooks/useNavieras";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Copia texto al portapapeles con fallback para entornos donde la Clipboard API

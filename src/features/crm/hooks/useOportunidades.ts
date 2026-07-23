@@ -18,7 +18,7 @@ import {
   type CrmOportunidadRow,
   type OportunidadInput as ServiceOportunidadInput,
 } from "@/features/crm/services/oportunidades";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { CrmOportunidadRow, Moneda } from "@/features/crm/services/oportunidades";
 export type OportunidadInput = ServiceOportunidadInput;

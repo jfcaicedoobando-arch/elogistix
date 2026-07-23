@@ -14,7 +14,7 @@ const notifyError = vi.fn();
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: (...a: unknown[]) => notifySuccess(...a),
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));

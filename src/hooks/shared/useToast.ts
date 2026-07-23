@@ -8,7 +8,7 @@
  *
  * v13.140.x — Política canónica de toasts:
  *  - Mensajes generales de feature → `useToast()` + helpers de
- *    `@/components/shared/utils/appFeedback` (`notifyError`, `notifySuccess`,
+ *    `@/lib/ui/appFeedback` (`notifyError`, `notifySuccess`,
  *    `notifyWarning`).
  *  - Toasts minimalistas/silenciados del CRM → `crmToast` en
  *    `@/features/crm/lib/crmToast`.
@@ -21,7 +21,7 @@
 import { toast as sonnerToast } from "sonner";
 import type { ReactNode } from "react";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
-import type { ErrorReport } from "@/components/shared/utils/errorReport";
+import type { ErrorReport } from "@/lib/ui/errorReport";
 
 type Variant = "default" | "destructive" | "warning" | "success";
 

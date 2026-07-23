@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   onCreated: (id: string) => void;
   onMore: () => void;

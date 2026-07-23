@@ -10,13 +10,13 @@ import type { ReactNode } from "react";
 vi.mock("@/features/embarques/services", () => ({
   actualizarEtaEmbarque: vi.fn(),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));
 
 import { actualizarEtaEmbarque } from "@/features/embarques/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useActualizarEta } from "@/features/embarques/hooks/mutations/useActualizarEta";
 import { queryKeys } from "@/lib/query";
 

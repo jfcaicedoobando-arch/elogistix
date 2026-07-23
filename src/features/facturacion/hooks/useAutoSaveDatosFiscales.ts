@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { toast } from "sonner";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   actualizarDatosTimbradoFactura,
   type DatosTimbradoPatch,

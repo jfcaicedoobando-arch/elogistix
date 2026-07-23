@@ -7,7 +7,7 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared";
 
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { todayLocalISO } from "@/lib/date/today";

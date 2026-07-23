@@ -4,7 +4,7 @@ import {
   fetchCategorias, crearCategoria, actualizarCategoria, eliminarCategoria,
 } from "@/features/presupuesto/services";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useOrgFilter } from "@/hooks/shared";
 
 export function usePresupuestoCategorias(activas = true) {

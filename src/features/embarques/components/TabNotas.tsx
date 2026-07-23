@@ -12,7 +12,7 @@ import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/shared";
 import type { NotaEmbarqueRow } from "@/features/embarques/hooks";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
 
 interface Props {

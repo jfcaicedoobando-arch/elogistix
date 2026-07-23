@@ -43,7 +43,7 @@ vi.mock("@/hooks/shared", () => ({
 }));
 vi.mock("@/generators/exportCsv", () => ({ exportToCsv: exportToCsvMock }));
 vi.mock("@/generators/layoutContable", () => ({ exportarLayoutContable: exportarLayoutContableMock }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: notifyErrorMock,
   notifySuccess: notifySuccessMock,
 }));

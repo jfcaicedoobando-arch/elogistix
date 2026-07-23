@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
 import { enviarCfdiFactura, enviarCfdiRep, enviarCfdiNotaCredito } from "@/features/facturacion/services/enviarCfdiEmail";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors/index";
 

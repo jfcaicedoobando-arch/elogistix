@@ -4,7 +4,7 @@ import {
   cerrarFacturaProveedorSinPago,
   type MotivoCierreSinPago,
 } from "@/features/cxp/services/cerrarFacturaSinPago";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
 /**

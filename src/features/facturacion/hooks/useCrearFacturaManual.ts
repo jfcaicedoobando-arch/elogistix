@@ -9,7 +9,7 @@ import {
 } from "@/features/facturacion/services/facturaManual";
 import { emitirFacturapi } from "@/features/facturacion/services/facturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";

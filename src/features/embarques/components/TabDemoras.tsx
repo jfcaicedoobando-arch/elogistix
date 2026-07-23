@@ -17,7 +17,7 @@ import { useContenedoresEmbarque } from "@/features/embarques/hooks";
 import { actualizarDemorasContenedor } from "@/features/embarques/services/contenedores";
 import { toast } from "sonner";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import {
   buildDemorasColumns,

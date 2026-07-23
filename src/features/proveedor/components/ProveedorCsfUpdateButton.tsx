@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { Tables } from "@/types/db";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   proveedor: Tables<"proveedores">;
   onUpdate: (id: string, patch: Record<string, string>) => Promise<unknown>;

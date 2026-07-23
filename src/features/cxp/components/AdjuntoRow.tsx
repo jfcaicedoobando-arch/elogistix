@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { openFacturaInNewTab } from "@/services/storage/facturas";
 import { ConfirmReplaceDialog, ConfirmRemoveDialog } from "./AdjuntoRow.dialogs";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { TipoAdjuntoCfdi } from "@/features/cxp/services";
 
 const MAX_BYTES: Record<TipoAdjuntoCfdi, number> = {

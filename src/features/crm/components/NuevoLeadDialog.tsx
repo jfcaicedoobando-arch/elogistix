@@ -8,7 +8,7 @@ import { Loader2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearLead } from "@/features/crm/hooks";

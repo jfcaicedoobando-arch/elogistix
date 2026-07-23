@@ -4,7 +4,7 @@
  */
 import { useState, useMemo, useCallback } from "react";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { useCrearLeadsBulk } from "@/features/crm/hooks";
 import {
   parseLeadsCsv,

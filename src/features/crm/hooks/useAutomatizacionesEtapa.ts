@@ -8,7 +8,7 @@ import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 import { moverEtapaOportunidad } from "@/features/crm/services/oportunidades";
 import { runAutomatizaciones } from "@/features/crm/services/automatizacionesEtapa";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export function useMoverEtapaConAutomatizacion() {
   const qc = useQueryClient();

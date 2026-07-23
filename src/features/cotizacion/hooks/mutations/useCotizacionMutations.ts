@@ -8,7 +8,7 @@ import {
   updateEstadoCotizacion as svcUpdateEstado,
   reactivarCotizacion as svcReactivar,
 } from '@/features/cotizacion/services';
-import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
+import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
 
 export function useCreateCotizacion() {
   const queryClient = useQueryClient();

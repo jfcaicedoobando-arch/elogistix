@@ -16,7 +16,7 @@ import PortalFacturaResumenCard from "@/features/portal/components/factura/Porta
 import PortalFacturaConceptosTable from "@/features/portal/components/factura/PortalFacturaConceptosTable";
 import PortalFacturaPagosCard from "@/features/portal/components/factura/PortalFacturaPagosCard";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export default function PortalFacturaDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

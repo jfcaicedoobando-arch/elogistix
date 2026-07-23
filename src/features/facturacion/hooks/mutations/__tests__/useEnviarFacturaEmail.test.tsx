@@ -21,7 +21,7 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => mocks.notifyError(...a),
 }));
 

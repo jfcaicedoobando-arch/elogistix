@@ -16,7 +16,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 const ESTADO_COLOR: Record<string, string> = {
   Pendiente: "bg-warning/10 text-warning border-warning/20",

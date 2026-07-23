@@ -24,7 +24,7 @@ vi.mock("@/features/cotizacion/services", () => ({
   portalResponderCotizacion: portalResponderMock,
 }));
 vi.mock("@/hooks/shared", () => ({ useToast: () => ({ toast: toastFn }) }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: notifySuccessMock,
   notifyError: notifyErrorMock,
 }));

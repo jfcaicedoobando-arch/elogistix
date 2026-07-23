@@ -3,7 +3,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { recotizarCotizacion } from "@/features/cotizacion/services/versionado";
 
 export function useRecotizarCotizacion() {

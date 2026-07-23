@@ -14,7 +14,7 @@ import { asignarConceptosAProforma } from "@/features/proformas/services";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import type { Tables } from "@/types/db";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 interface Props {
   proformaBorrador: ProformaConFactura;

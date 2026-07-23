@@ -18,7 +18,7 @@ vi.mock("@/features/facturacion/services/notasCreditoFacturapi", () => ({
   timbrarNotaCreditoFacturapi: (...a: unknown[]) => timbrarNotaCreditoFacturapi(...a),
   cancelarNotaCreditoFacturapi: (...a: unknown[]) => cancelarNotaCreditoFacturapi(...a),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 

@@ -9,7 +9,7 @@ import { hallazgoHash, AUDITORIA_REVISIONES_KEY } from "./hash";
 import { resolveAuthUser } from "./query";
 import { queryKeys } from "@/lib/query";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export function useMarcarRevisado() {
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();

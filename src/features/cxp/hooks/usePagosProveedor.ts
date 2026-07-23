@@ -7,7 +7,7 @@ import {
   eliminarPagoProveedor,
   type RegistrarPagoProveedorInput,
 } from "@/features/cxp/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
 
 export function usePagosProveedor(facturaId: string | null | undefined) {

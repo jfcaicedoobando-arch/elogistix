@@ -15,6 +15,10 @@ vi.mock("sonner", () => ({
   toast: { success: sonnerSuccess, error: sonnerError, warning: vi.fn(), info: vi.fn(), message: vi.fn() },
 }));
 
+vi.mock("@/lib/observability/reportCaughtError", () => ({
+  reportCaughtError: vi.fn(),
+}));
+
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "user-1", email: "u@x.com" } }),
 }));

@@ -21,7 +21,7 @@ vi.mock("@/features/facturacion/services/repFacturapi", () => ({
   emitirRep: (...a: unknown[]) => emitirRep(...a),
   cancelarRep: (...a: unknown[]) => cancelarRep(...a),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 
