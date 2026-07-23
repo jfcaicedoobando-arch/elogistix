@@ -40,6 +40,7 @@ export function CatalogoClavesSATCard() {
   const { data: rows = [], isLoading } = useQuery<Row[]>({
     queryKey: queryKeys.configuracion.catalogoClavesSat(organizationId),
     enabled: !!organizationId,
+    // SAFE-CAST: el service devuelve el row canónico; Row local es un alias estructural del mismo shape.
     queryFn: fetchCatalogoClavesSat as unknown as () => Promise<Row[]>,
   });
 
