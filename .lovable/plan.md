@@ -1,50 +1,73 @@
-# Plan — Sprint 1 (R3)
+## Diagnóstico (confirmado con datos reales)
 
-Sigo el orden obligatorio del documento: **Sprint 1 completo primero** en dos PRs lógicos. Después esperamos aprobación para Sprints 2–4.
+**Cotización afectada** `b83f5761…` tiene un concepto de venta con datos inconsistentes:
 
-## Analogía
-El guard actual funciona como un cajero que sólo verifica *cuánto más* estás depositando en una cuenta con límite, no *cuánto quedará en total*. Si ya había 1000 y quieres subir a 2500, revisa el "+1500" contra el saldo restante — pero el saldo restante ya está inflado porque excluye tu pago viejo. Resultado: puedes rebasar el tope por el monto viejo. El fix cambia la comparación a "cuánto quedará en total".
+```
+"Cargos en Destino": cantidad=1, precio_unitario=125, total=145
+```
 
-## Cambios
+El check constraint `conceptos_venta_total_calc` exige:
 
-### 1.1 FIX-R3-01 — Corregir path UPDATE de `guard_pago_proveedor`
-- **Migración nueva** en `supabase/migrations/` con el `CREATE OR REPLACE FUNCTION public.guard_pago_proveedor()` exacto del documento (líneas 32–100): elimina el bloque `v_delta` y valida `NEW.monto_en_moneda_factura > v_saldo + 0.005` directo, ya que `v_pagos` excluye `NEW.id` para INSERT y UPDATE.
-- Sincronizar la fuente canónica en `supabase/schema/cxp/` (mismo cuerpo).
-- No cambia nombre ni firma → `schema-invariants.sql` no requiere ajuste.
+```
+ABS(total - ROUND(cantidad * precio_unitario, 2)) <= 0.01
+```
 
-### 1.2 Tests conductuales SQL (mitad pendiente del 0.2)
-- Crear `supabase/tests/cxp_guard_sobrepago.sql` con 4 casos DO/ASSERT:
-  1. INSERT pago > total → SQLSTATE 23514.
-  2. INSERT válido → pasa y `monto_en_moneda_factura` poblado.
-  3. UPDATE 1000→2500 en factura 3000 con otro pago 1000 → 23514 (el bug 1.1).
-  4. UPDATE legítimo dentro de saldo → pasa.
-- Cablear en `.github/workflows/rls-tests.yml` con otra línea `$PSQL -f supabase/tests/cxp_guard_sobrepago.sql`, junto a `schema-invariants.sql`.
+Aquí `|145 − 125| = 20`, así que el INSERT a `conceptos_venta` truena.
 
-### 1.3 Ban `@/features/**` desde `src/lib/**` (cierre de 0.5)
-- Editar `eslint.config.js` bloque `src/lib/**` (~L432–452): añadir patrón `@/features/**` a `no-restricted-imports`.
-- **Allowlist ARCH-DEBT** con los 12 archivos actuales que ya importan features desde lib (los enumero al implementar tras un `rg` para asegurar la lista exacta; el documento R2 N1 los identifica: `lib/contexts/auth/useAuthProfile.ts`, `useLoginAudit.ts`, `useAuthSession.ts`, `OrganizationContext.tsx`, `lib/filenames.ts`, `lib/ui/uiMappings.ts`, `lib/ui/appFeedback.ts`, `lib/csv/leadsCsv.ts`, `lib/query/index.ts`, etc.).
-- **No** migrar esos 12 archivos en este ítem — sólo cerrar la puerta a nuevos.
+**Origen del dato roto:** el JSON `cotizaciones.conceptos_venta` puede contener `total` desalineado con `cantidad × precio_unitario` (probablemente por edición manual o recargos aplicados al total sin recalcular el unitario). Consulta a la BD encuentra **100 conceptos** en cotizaciones con este mismo drift, así que no es un caso aislado — cualquier cotización afectada va a fallar al crear el embarque borrador (botón "Revalidar tarifa / Crear embarque").
 
-## Detalles técnicos
-- La corrección clave: `v_pagos` filtra `id <> COALESCE(NEW.id, ...)`, así excluye la fila en juego para ambos paths, y comparamos `NEW.monto_en_moneda_factura` (post-conversión) contra `v_saldo`. Preserva `FOR UPDATE`, fórmula de diferencial cambiario, y NCs `Aplicada`.
-- Estructura de la migración: encabezado con comentario del bug, `CREATE OR REPLACE FUNCTION` (mismo owner/SECURITY DEFINER/search_path), sin drops adicionales.
-- El test SQL usa una organización + proveedor + factura de fixture en un `BEGIN … ROLLBACK` para no ensuciar datos.
+**Dónde revienta:** la RPC `crear_embarque_borrador_desde_cotizacion` (migraciones `20260719064026` y `20260719060217`) copia los tres campos verbatim del JSON:
 
-## Orden de PRs
-- **PR-A**: 1.1 + 1.2 juntos (fix con su test de regresión).
-- **PR-B**: 1.3 aparte (cambio de lint aislado).
+```sql
+INSERT INTO conceptos_venta (cantidad, precio_unitario, total, …)
+VALUES ((v->>'cantidad')::integer, (v->>'precio_unitario')::numeric, (v->>'total')::numeric, …);
+```
 
-## Checklist de humo (Sprint 1)
-1. UPDATE de pago que excede saldo → `LC_PAGO_EXCEDE_SALDO`.
-2. UPDATE legítimo pasa.
-3. INSERT sobrepago falla; INSERT válido pasa.
-4. `cxp_guard_sobrepago.sql` verde en CI.
-5. `schema-invariants.sql` verde.
-6. `bun run lint`, `tsgo`, `vitest`, `knip` verdes; el ban 1.3 no añade violaciones fuera de la allowlist.
+Como el check requiere consistencia, revienta la inserción y el flujo de revalidación reporta `UNKNOWN`.
 
-## Version bump
-- `APP_VERSION` → `13.309.38`
-- Entrada en `CHANGELOG.md` describiendo FIX-R3-01, test conductual y ban lib→features.
+## Cambios propuestos
 
-## Fuera de alcance (Sprints 2–4)
-No tocar en este PR: paridad roleHierarchy, refactor de `EmbarqueDetalleHeader`, ciclos runtime, PR-6 formularios, status registry, etc. Los aplicaré en órdenes siguientes tras aprobación.
+### 1. RPC: reconciliar `precio_unitario` al insertar (una migración)
+
+En `crear_embarque_borrador_desde_cotizacion`, cuando el JSON venga inconsistente, **preservar el `total`** (que es la cifra que Ventas cotizó al cliente) y recalcular `precio_unitario`:
+
+```sql
+v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::integer, 1), 1);
+v_total := COALESCE((v_venta->>'total')::numeric, 0);
+v_pu    := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
+
+IF ABS(v_total - ROUND(v_cant * v_pu, 2)) > 0.01 THEN
+  v_pu := ROUND(v_total / v_cant, 6);   -- reconcilia sin alterar el importe cobrado
+END IF;
+
+INSERT INTO conceptos_venta (cantidad, precio_unitario, total, …)
+VALUES (v_cant, v_pu, ROUND(v_total, 2), …);
+```
+
+Decisión: preservar `total` (importe cobrable) sobre `precio_unitario` es lo correcto para no alterar cotización aceptada por el cliente.
+
+### 2. Backfill defensivo del JSON histórico
+
+Migración one-shot que corre sobre `cotizaciones.conceptos_venta`: para cada elemento con drift > 0.01, recalcula `precio_unitario = round(total/cantidad, 6)` y lo escribe de vuelta al jsonb. Esto deja los 100 registros consistentes y evita futuras sorpresas en otros flujos.
+
+### 3. Prevenir regresión al editar cotizaciones
+
+Auditar `src/features/cotizacion` donde se editan conceptos: asegurar que al cambiar `total` se recalcula `precio_unitario` (o viceversa) antes de persistir. Fix contenido en front — sin tocar lógica de negocio. Sub-alcance a confirmar durante la exploración; si aparece un solo formulario responsable, se corrige; si es amplio, se propone plan separado.
+
+### 4. Test SQL de regresión
+
+Añadir a `supabase/tests/` un test que inserte un JSON con drift y verifique que la RPC no revienta y produce filas consistentes con el check.
+
+### 5. CHANGELOG + APP_VERSION
+
+Bump a `13.309.40` y entrada en `CHANGELOG.md` describiendo el fix.
+
+## Fuera de alcance
+
+- No se cambia el check constraint (sigue con tolerancia 0.01).
+- No se altera el importe total cotizado.
+- No se toca UI del wizard de revalidación.
+
+## Analogía (para principiante)
+
+Imagina una factura escrita a mano: 1 caja × $125 = $145. Los números no cuadran. Antes, el sistema copiaba tal cual y la báscula (constraint) lo rechazaba. Ahora, al pasarlo al embarque, decidimos respetar el **total cobrado ($145)** y ajustamos el precio unitario a $145 para que cuadre — nadie pierde dinero, y la báscula deja pasar la operación.
