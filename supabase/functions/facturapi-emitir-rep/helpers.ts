@@ -78,7 +78,7 @@ export interface FacturapiRepPayload {
         installment: number;
         last_balance: number;
         amount: number;
-        taxes?: Array<{ type: "IVA"; rate: number; factor: "Tasa"; withholding: false }>;
+        taxes?: Array<{ type: "IVA"; rate: number; factor: "Tasa"; withholding: false; base: number }>;
       }>;
     }>;
   }>;
