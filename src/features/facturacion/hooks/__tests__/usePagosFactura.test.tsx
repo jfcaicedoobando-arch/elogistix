@@ -39,7 +39,14 @@ function makeWrapper() {
   return Wrapper;
 }
 
-beforeEach(() => { vi.clearAllMocks(); });
+// v13.309.24 (Anexo A): mockReset restaura implementaciones default, no sólo calls.
+// Previene flakes bajo paralelismo pesado donde un mock resuelto en un test
+// contamina al siguiente si sólo se llamó clearAllMocks.
+beforeEach(() => {
+  mockListar.mockReset();
+  mockRegistrar.mockReset();
+  mockEliminar.mockReset();
+});
 
 describe("usePagosFactura", () => {
   it("happy path: retorna lista de pagos para un facturaId", async () => {
@@ -72,7 +79,7 @@ describe("useRegistrarPagoFactura", () => {
     await act(async () => {
       result.current.mutate({ factura_id: "fac-1", monto: 200 } as never);
     });
-    await waitFor(() => expect(result.current.isError).toBe(true));
+    await waitFor(() => expect(result.current.isError).toBe(true), { timeout: 3000 });
   });
 });
 

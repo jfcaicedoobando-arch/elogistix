@@ -1,10 +1,10 @@
 /**
- * `<ToneBadge>` — Chip neutro con dot de color, patrón oficial del módulo CxP.
+ * `<ToneBadge>` — Chip neutro con dot de color.
  *
- * v13.307.19 · Extraído para que todos los badges del módulo (facturas,
- * notas de crédito, aging, conciliación, por-pagar, eliminación) hablen
- * el mismo lenguaje visual: fondo `bg-muted`, texto muted, dot de 6 px
- * indicando severidad. Ver `src/features/cxp/lib/badgeTone.ts`.
+ * v13.309.23 · Promovido a `src/components/shared/` (item 2.3a del plan de
+ * auditoría 3): consumido cross-feature por CxP, Bandejas, Compras y
+ * Embarques. Vive el mismo lenguaje visual: fondo `bg-muted`, texto muted,
+ * dot de 6 px indicando severidad. Ver `src/lib/ui/badgeTone.ts`.
  */
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

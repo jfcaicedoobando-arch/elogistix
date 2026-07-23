@@ -6,7 +6,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Plus, Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 
 
