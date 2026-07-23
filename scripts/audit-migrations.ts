@@ -143,26 +143,56 @@ function normalizeArgTypes(rawArgs: string): string {
     .join(", ");
 }
 
+function stripSqlComments(sql: string): string {
+  // Quita comentarios `-- ...` (fin de línea) y `/* ... */` (bloque, no anidado).
+  return sql.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ");
+}
+
+function extractParenArgs(src: string, openIdx: number): { args: string; endIdx: number } | null {
+  // src[openIdx] debe ser '('. Devuelve el contenido entre parens balanceados.
+  if (src[openIdx] !== "(") return null;
+  let depth = 0;
+  for (let i = openIdx; i < src.length; i += 1) {
+    const c = src[i];
+    if (c === "(") depth += 1;
+    else if (c === ")") {
+      depth -= 1;
+      if (depth === 0) return { args: src.slice(openIdx + 1, i), endIdx: i };
+    }
+  }
+  return null;
+}
+
+function findSecurityDefinerFunctions(body: string): Array<{
+  name: string;
+  argTypes: string;
+  allowNoGrants: boolean;
+}> {
+  const clean = stripSqlComments(body);
+  const headerRe = /create\s+or\s+replace\s+function\s+public\.([a-z0-9_]+)\s*\(/gi;
+  const found: Array<{ name: string; argTypes: string; allowNoGrants: boolean }> = [];
+  for (const m of clean.matchAll(headerRe)) {
+    const name = m[1].toLowerCase();
+    const openIdx = (m.index ?? 0) + m[0].length - 1;
+    const parsed = extractParenArgs(clean, openIdx);
+    if (!parsed) continue;
+    // Tomamos ~800 chars después de la firma para buscar SECURITY DEFINER (basta para header).
+    const post = clean.slice(parsed.endIdx, parsed.endIdx + 800);
+    if (!/security\s+definer/i.test(post)) continue;
+    // audit:allow-no-grants: buscar en las 2 líneas previas al header (usar body original).
+    const rawIdx = body.indexOf(m[0]);
+    const prev = rawIdx > 0 ? body.slice(Math.max(0, rawIdx - 200), rawIdx) : "";
+    const allowNoGrants = /audit:allow-no-grants/i.test(prev);
+    found.push({ name, argTypes: normalizeArgTypes(parsed.args), allowNoGrants });
+  }
+  return found;
+}
+
 function scanSecurityDefiner(file: string, body: string, auditPostBaseline: boolean): Violation[] {
   const out: Violation[] = [];
-  // Detectar bloques CREATE OR REPLACE FUNCTION public.<name>(<args>) ... SECURITY DEFINER
-  // El cuerpo puede tener SECURITY DEFINER en cualquier orden antes del AS $$.
-  const fnRe =
-    /(^|\n)([ \t]*--[^\n]*\n)?[ \t]*create\s+or\s+replace\s+function\s+public\.([a-z0-9_]+)\s*\(([^)]*)\)([\s\S]*?)(?:as\s+\$[a-z0-9_]*\$|language\s+sql\s*;)/gi;
-  for (const m of body.matchAll(fnRe)) {
-    const commentLine = m[2] ?? "";
-    const fnName = m[3].toLowerCase();
-    const argsRaw = m[4];
-    const header = m[5];
-    if (!/security\s+definer/i.test(header)) continue;
-
-    // Excepción: comentario -- audit:allow-no-grants justo antes.
-    const allowNoGrants = /audit:allow-no-grants/i.test(commentLine);
-
-    // Normalizar firma para matchear REVOKE/GRANT
-    const argTypes = normalizeArgTypes(argsRaw);
-    // Regex tolerante: acepta espacios y firma exacta.
-    const sigForRe = argTypes.replace(/\s+/g, "\\s*").replace(/,/g, "\\s*,\\s*");
+  const fns = findSecurityDefinerFunctions(body);
+  for (const { name: fnName, argTypes, allowNoGrants } of fns) {
+    const sigForRe = argTypes.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*").replace(/,/g, "\\s*,\\s*");
     const revokeRe = new RegExp(
       `revoke\\s+(?:all|execute)[^;]*on\\s+function\\s+public\\.${fnName}\\s*\\(\\s*${sigForRe}\\s*\\)[^;]*from\\s+[^;]*\\bpublic\\b`,
       "i",
@@ -176,7 +206,6 @@ function scanSecurityDefiner(file: string, body: string, auditPostBaseline: bool
       "i",
     );
 
-    // Regla dura: TO PUBLIC prohibido, siempre.
     if (grantPublicRe.test(body)) {
       out.push({
         file,
@@ -185,7 +214,6 @@ function scanSecurityDefiner(file: string, body: string, auditPostBaseline: bool
       });
     }
 
-    // El resto sólo se exige post-baseline (legacy queda documentado por otros tests).
     if (!auditPostBaseline || allowNoGrants) continue;
 
     if (!revokeRe.test(body)) {
