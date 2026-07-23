@@ -59,6 +59,7 @@ describe("useEmbarqueDocumentosActions", () => {
   });
   afterEach(() => { vi.unstubAllGlobals(); });
   it("handleUpload llama mutateAsync con args y notifica éxito", async () => {
+    const { result } = renderHook(
       () => useEmbarqueDocumentosActions(makeEmbarqueStub(), "e-1"),
       { wrapper: createWrapper() },
     );
