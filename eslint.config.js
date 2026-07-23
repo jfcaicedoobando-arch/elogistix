@@ -451,6 +451,40 @@ export default tseslint.config(
     },
   },
   {
+    // Sprint 1 (R3) · 0.5-b — Cierre del boundary `src/lib/**` → `@/features/**`.
+    // El resto de bans para lib/ vive en el bloque anterior; este añade el
+    // ban específico a features/ con una allowlist ARCH-DEBT de los 12
+    // archivos que ya lo violan hoy (registry de queryKeys, contextos de
+    // auth, filenames de PDF, mappers UI). Migración escalonada en Sprint 3+.
+    files: ["src/lib/**"],
+    ignores: [
+      "src/lib/**/__tests__/**",
+      // ARCH-DEBT: imports legítimos hoy — pendientes de migración.
+      "src/lib/auth/signOut.ts",
+      "src/lib/contexts/AuthContext.tsx",
+      "src/lib/contexts/OrganizationContext.tsx",
+      "src/lib/contexts/auth/useAuthProfile.ts",
+      "src/lib/contexts/auth/useAuthSession.ts",
+      "src/lib/contexts/auth/useLoginAudit.ts",
+      "src/lib/csv/leadsCsv.ts",
+      "src/lib/filenames.ts",
+      "src/lib/mappers/estadoResultadosRows.ts",
+      "src/lib/query/index.ts",
+      "src/lib/ui/appFeedback.ts",
+      "src/lib/ui/uiMappings.ts",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          {
+            group: ["@/features/*", "@/features/**"],
+            message: "lib/ no puede importar de features/. Invierte la dependencia: el feature llama al util de lib/ o expón el tipo desde src/types/.",
+          },
+        ],
+      }],
+    },
+  },
+  {
     // `src/services/**` es la capa de acceso a datos: solo puede tocar
     // Supabase + utils de `lib/`. NO puede importar hooks, componentes,
     // páginas ni contexts (eso invierte la jerarquía).
