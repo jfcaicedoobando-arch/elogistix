@@ -13,6 +13,7 @@ import {
 } from "@/features/admin/hooks";
 import HealthKpisRow from "@/features/admin/components/diagnosticoHealth/HealthKpisRow";
 import HealthSlowestTable from "@/features/admin/components/diagnosticoHealth/HealthSlowestTable";
+import { formatFechaEs } from "@/lib/formatters/dates";
 
 // Lazy: difiere recharts fuera del TTI del panel de diagnóstico.
 const HealthTimelineChart = lazy(
