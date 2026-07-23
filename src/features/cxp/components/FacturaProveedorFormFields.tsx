@@ -14,19 +14,18 @@ import {
 } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
 import type { Database } from "@/integrations/supabase/types";
-import {
-  FormSection, FieldError, RequiredMark,
-  type FacturaFormValues, type CategoriaPresupuestoLite,
-} from "./facturaFormPrimitives";
+import { FormSection, FieldError, RequiredMark } from "./facturaFormPrimitives";
+import type {
+  FacturaFormValues,
+  CategoriaPresupuestoLite,
+  TcOrigen,
+} from "@/features/cxp/types";
 import { ProveedorYFolioSection, NotasSection } from "./FacturaProveedorFormFields.sections";
 import { TcOrigenHint } from "./FacturaProveedorFormFields.hint";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
-export type { FacturaFormValues };
-
-/** De dónde salió el valor del campo `tc`. Controla el hint bajo el input. */
-export type TcOrigen = "dof" | "cfdi" | "manual" | "vacio";
+export type { FacturaFormValues, TcOrigen };
 
 interface Props {
   values: FacturaFormValues;
