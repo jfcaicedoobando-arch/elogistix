@@ -19,7 +19,7 @@ import { VincularEmbarqueSection } from "./VincularEmbarqueSection";
 import { CuadreConceptosBar } from "./CuadreConceptosBar";
 import { Kpi } from "./DialogDetallePagosProveedor.parts";
 import { calcularCuadreConceptos, type ConceptoParaCuadre } from "@/features/cxp/utils/cuadreConceptos";
-import type { EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
+import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 
 interface Props {
   open: boolean;

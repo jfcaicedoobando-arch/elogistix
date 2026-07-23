@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/formatters";
 import type { ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { Grupo } from "./vincularEmbarqueHelpers";
-import type { SeleccionLinea } from "./VincularEmbarqueSection";
+import type { SeleccionLinea } from "@/features/cxp/types";
 
 interface Props {
   grupos: Grupo[];
