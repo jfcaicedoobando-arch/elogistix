@@ -42,6 +42,11 @@ const NO_LOCALE_FMT_SELECTORS = [
     selector: "NewExpression[callee.object.name='Intl'][callee.property.name='NumberFormat']",
     message: "PR-5 · Ítem 3.4: usa `formatNumber`/`formatCurrency` de `@/lib/formatters` en vez de `new Intl.NumberFormat(...)` inline.",
   },
+  {
+    // Sprint 4 · Ban `Intl.DateTimeFormat` fuera de `lib/formatters`.
+    selector: "NewExpression[callee.object.name='Intl'][callee.property.name='DateTimeFormat']",
+    message: "Sprint 4: usa `formatFechaEs`/`formatFechaHora`/`formatFechaLarga` de `@/lib/formatters` en vez de `new Intl.DateTimeFormat(...)` inline.",
+  },
 ];
 
 // Reglas queryKey/mutationKey/TASA_IVA — se declaran una sola vez para poder
