@@ -34,7 +34,7 @@ function formatProx(prox: ProximaActividad | undefined): string {
   if (diff < 0) return `Vencida · ${prox.asunto}`;
   if (diff === 0) return `Hoy · ${prox.asunto}`;
   if (diff === 1) return `Mañana · ${prox.asunto}`;
-  return `${d.toLocaleDateString("es-MX")} · ${prox.asunto}`;
+  return `${formatFechaEs(prox.fecha_programada)} · ${prox.asunto}`;
 }
 
 function OpCard({ op, onClick, proxima }: { op: CrmOportunidadRow; onClick: () => void; proxima?: ProximaActividad }) {
