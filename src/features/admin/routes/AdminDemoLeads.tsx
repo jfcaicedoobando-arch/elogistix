@@ -10,6 +10,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatPhoneMx } from "@/lib/formatters/phone";
+import { formatFechaHora } from "@/lib/formatters";
+
 import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { todayLocalISO } from "@/lib/date/today";
