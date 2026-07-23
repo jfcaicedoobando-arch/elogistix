@@ -46,7 +46,9 @@ export function findDirectClientImports(
       excludeFileRe: /\.(test|spec)\.tsx?$/,
     })) {
       const src = readFileSync(f, "utf8");
-      if (DIRECT_CLIENT_IMPORT.test(src)) out.push(relPath(root, f));
+      const rel = relPath(root, f);
+      if (CLIENT_IMPORT_ALLOW.has(rel)) continue;
+      if (DIRECT_CLIENT_IMPORT.test(src)) out.push(rel);
     }
   }
   return out.sort();
