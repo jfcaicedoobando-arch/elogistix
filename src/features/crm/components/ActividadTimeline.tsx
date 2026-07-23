@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { formatFechaHora } from "@/lib/formatters";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import {
   useActividades, useCrearActividad, useCompletarActividad,
@@ -84,7 +85,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
                 </div>
                 {a.descripcion && <div className="text-xs text-muted-foreground mt-1">{a.descripcion}</div>}
                 <div className="text-2xs text-muted-foreground mt-1 flex items-center gap-2">
-                  <span>{new Date(a.created_at).toLocaleString("es-MX")}</span>
+                  <span>{formatFechaHora(a.created_at)}</span>
                   <span>· {a.responsable_email}</span>
                   {!a.fecha_completada && (
                     <Button

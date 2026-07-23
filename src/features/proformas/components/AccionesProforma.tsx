@@ -25,6 +25,7 @@ import {
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { formatCurrency } from "@/lib/formatters";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
@@ -60,7 +61,7 @@ function computarFlags(
 }
 
 function fmtMxn(v: number): string {
-  return v.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+  return formatCurrency(v, "MXN");
 }
 
 export function AccionesProforma({ proforma, downloadingId, onDescargar }: Props) {

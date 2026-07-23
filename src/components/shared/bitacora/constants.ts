@@ -1,4 +1,5 @@
 import { Plus, Edit, Trash2, RefreshCw, Upload, LogIn, Receipt, MessageSquare, FileX } from "lucide-react";
+import { formatFechaEs } from "@/lib/formatters";
 
 export const ICONOS_ACCION: Record<string, typeof Plus> = {
   crear: Plus,
@@ -47,5 +48,5 @@ export function tiempoRelativo(fecha: string): string {
   if (horas < 24) return `hace ${horas}h`;
   const dias = Math.floor(horas / 24);
   if (dias < 7) return `hace ${dias}d`;
-  return new Date(fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
+  return formatFechaEs(fecha, { day: "2-digit", month: "short" });
 }

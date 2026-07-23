@@ -654,7 +654,6 @@ export default tseslint.config(
       // Formatters canónicos: definen los helpers, deben usar la API nativa.
       "src/lib/formatters/**",
       // Allowlist LEGACY — migrar en olas.
-      "src/components/shared/bitacora/constants.ts",
       "src/features/admin/components/BackfillLegacyCard.tsx",
       "src/features/admin/components/DiagnosticoColumns.tsx",
       "src/features/admin/components/DiagnosticoHealthPanel.tsx",
@@ -662,11 +661,9 @@ export default tseslint.config(
       "src/features/auditoria/hooks/useAuditoriaEjecutivo.ts",
       "src/features/auditoria/hooks/useAuditoriaPageController.ts",
       "src/features/costeo/components/CosteoRutasTable.tsx",
-      "src/features/costeo/utils/tarifaFormatters.ts",
       "src/features/cotizacion/components/SeccionFleteManualLCL.tsx",
       "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",
       "src/features/cotizacion/hooks/usePortalCotizacionDetalleController.ts",
-      "src/features/crm/components/ActividadTimeline.tsx",
       "src/features/crm/components/ComentariosOportunidad.tsx",
       "src/features/crm/components/OportunidadKanban.tsx",
       "src/features/crm/components/crmDashboard/DealsCards.tsx",
@@ -677,7 +674,7 @@ export default tseslint.config(
       "src/features/embarques/hooks/useEmbarquesPageController.ts",
       "src/features/operaciones/hooks/useOperacionesPageController.ts",
       "src/features/portal-agente/routes/_sections/agenteTarifasColumns.tsx",
-      "src/features/proformas/components/AccionesProforma.tsx",
+      
       "src/generators/estadoCuentaPdf.ts",
       "src/pdf/components/Footer.tsx",
       "src/pdf/documents/ReporteEjecutivoDocument.tsx",
