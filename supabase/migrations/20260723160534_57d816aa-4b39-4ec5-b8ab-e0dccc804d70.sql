@@ -1,31 +1,6 @@
--- Fuente canónica de public.auditoria_embarques_org
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- Ítem 3.2.a — Extraer carga de umbrales de auditoria_embarques_org a helper
+-- Refactor puro. Sin cambios de resultado.
 
--- === Overload 1/2 ===
-CREATE OR REPLACE FUNCTION public.auditoria_embarques_org()
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE
- SET search_path TO 'public'
-AS $function$
-DECLARE
-  v_caller_org uuid;
-BEGIN
-  v_caller_org := public.current_user_org_id();
-  IF v_caller_org IS NULL THEN
-    RAISE EXCEPTION 'No autorizado' USING ERRCODE = '42501';
-  END IF;
-  PERFORM public._assert_internal_reader(v_caller_org);
-  -- Delegar a la variante con parámetro (que ahora también valida).
-  RETURN public.auditoria_embarques_org(v_caller_org);
-END;
-$function$
- name:auditoria_embarques_org schema:public;
-
--- === Helper interno: carga de umbrales configurables ===
--- Consolida los 7 SELECT INTO originales en una sola llamada (ítem 3.2.a).
--- Mantiene los mismos defaults y clamps que el bloque original.
 CREATE OR REPLACE FUNCTION public._audit_embarques_umbrales(p_organization_id uuid)
 RETURNS TABLE(
   margen_min_pct numeric,
@@ -63,10 +38,17 @@ AS $$
     GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxc_vencida'), 0), 0)::int           AS dias_cxc_vencida,
     GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxp_captura'), 7), 1)::int           AS dias_cxp_captura,
     GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxp_vencida'), 0), 0)::int           AS dias_cxp_vencida;
-$$
- name:_audit_embarques_umbrales schema:public;
+$$;
 
--- === Overload 2/2 ===
+REVOKE ALL ON FUNCTION public._audit_embarques_umbrales(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._audit_embarques_umbrales(uuid) TO service_role;
+
+COMMENT ON FUNCTION public._audit_embarques_umbrales(uuid) IS
+  'Helper interno de auditoria_embarques_org. Carga los 7 umbrales configurables desde `configuracion` con defaults y clamps idénticos al bloque original (ítem 3.2.a).';
+
+-- Reescribir auditoria_embarques_org(uuid) usando el helper.
+-- Cuerpo idéntico al canónico, sólo se reemplazan las 7 lecturas de umbrales por un único SELECT INTO.
+
 CREATE OR REPLACE FUNCTION public.auditoria_embarques_org(p_organization_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -98,7 +80,6 @@ BEGIN
          v_dias_cxp_captura, v_dias_cxp_vencida
     FROM public._audit_embarques_umbrales(p_organization_id) u;
 
-
   WITH
   emb AS (
     SELECT id, expediente, cliente_nombre, modo, estado, etd, eta,
@@ -106,7 +87,7 @@ BEGIN
            tipo_cambio_usd, tipo_cambio_eur, fecha_creacion
     FROM embarques
     WHERE estado <> 'Cancelado'
-      AND deleted_at IS NULL  -- AUD-2: excluir soft-deleted
+      AND deleted_at IS NULL
       AND organization_id = p_organization_id
   ),
   docs_existentes AS (
@@ -116,7 +97,6 @@ BEGIN
     WHERE embarque_id IN (SELECT id FROM emb) AND deleted_at IS NULL
     GROUP BY embarque_id, nombre
   ),
-  -- AUD-2: usar la matriz canónica en vez de una copia hardcodeada.
   exigidos AS (
     SELECT e.id AS embarque_id, e.expediente, e.cliente_nombre, e.modo, e.estado, e.eta,
            d.doc_nombre
@@ -139,7 +119,6 @@ BEGIN
     WHERE COALESCE(de.satisfecho, false) = false
     GROUP BY x.embarque_id, x.expediente, x.cliente_nombre, x.modo, x.estado, x.eta
   ),
-  -- AUD-2: sólo docs Pendiente que realmente aplican al modo/estado actual.
   hall_docs_pendientes AS (
     SELECT jsonb_build_object(
       'embarque_id', e.id, 'expediente', e.expediente,
@@ -189,7 +168,6 @@ BEGIN
       AND (e.etd IS NULL OR e.etd >= v_fecha_corte_facturacion)
     GROUP BY e.id, e.expediente, e.cliente_nombre, e.modo, e.estado, e.eta
   ),
-  -- AUD-2: detectar embarques con conceptos en moneda extranjera sin TC.
   emb_sin_tc AS (
     SELECT e.id AS embarque_id, e.expediente, e.cliente_nombre, e.modo, e.estado, e.eta,
            bool_or(cv.moneda::text = 'USD') AS tiene_usd_venta,
@@ -243,7 +221,6 @@ BEGIN
     ) AS h
     FROM emb_falta_tc f
   ),
-  -- AUD-2: la conversión sólo se hace si hay TC; sin TC, no suma (no inventamos tasa).
   ventas_mxn AS (
     SELECT cv.embarque_id,
            SUM(cv.total * CASE
@@ -304,7 +281,7 @@ BEGIN
     ) AS h
     FROM margenes m
     WHERE m.utilidad_mxn < 0
-      AND NOT m.tc_incompleto  -- AUD-2: no alertar margen sin TC completo
+      AND NOT m.tc_incompleto
   ),
   hall_margen_bajo AS (
     SELECT jsonb_build_object(
@@ -684,5 +661,4 @@ BEGIN
 
   RETURN v_result;
 END;
-$function$
- name:auditoria_embarques_org schema:public;
+$function$;
