@@ -41,13 +41,14 @@ export function CanceladaBanner({ fecha, motivo }: { fecha: string | null; motiv
 }
 
 export function UuidFiscalField({
-  uuid, estatus, verifDate, isPending, onVerify,
+  uuid, estatus, verifDate, isPending, onVerify, esExtranjero = false,
 }: {
   uuid: string | null;
   estatus: string | null;
   verifDate: string | null;
   isPending: boolean;
   onVerify: () => void;
+  esExtranjero?: boolean;
 }) {
   const variant: "default" | "secondary" | "destructive" =
     estatus === "Vigente" ? "default" : estatus === "Cancelado" ? "destructive" : "secondary";
@@ -59,7 +60,11 @@ export function UuidFiscalField({
       <span className="text-sm text-foreground truncate font-mono">
         {uuid ?? <span className="text-muted-foreground font-sans">—</span>}
       </span>
-      {uuid && (
+      {esExtranjero ? (
+        <span className="text-2xs text-muted-foreground mt-0.5">
+          No aplica (proveedor internacional)
+        </span>
+      ) : uuid && (
         <div className="flex items-center gap-2 flex-wrap mt-0.5">
           {estatus && (
             <Badge variant={variant} className="text-2xs">

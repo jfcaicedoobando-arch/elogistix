@@ -101,6 +101,7 @@ export function ReferenciasFiscalesBlock({
           verifDate={verifDate}
           isPending={isVerifying}
           onVerify={onVerify}
+          esExtranjero={f.proveedor_origen === "Extranjero"}
         />
         <Field
           label="Embarque"
