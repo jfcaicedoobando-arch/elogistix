@@ -6,6 +6,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { mapCostosACostosEmbarque } from "@/features/cotizacion/domain/cotizacion";
 import { fromDb } from "@/lib/supabase/cast";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 type ContenedorInsert = TablesInsert<"embarque_contenedores">;
 type ConceptoCostoInsert = TablesInsert<"conceptos_costo">;
@@ -101,7 +102,7 @@ function parseVentaRow(raw: unknown): VentaParsed | null {
   const aplicaIva = Boolean(v.aplica_iva ?? false);
   const tasaIva = typeof v.tasa_iva_aplicada === "number"
     ? Number(v.tasa_iva_aplicada)
-    : (aplicaIva ? 0.16 : 0);
+    : (aplicaIva ? TASA_IVA : 0);
   const unidadMedida = String(v.unidad_medida ?? "Contenedor");
   const totalCotizado = Number(v.total ?? cantidad * precioUnitario);
   return { descripcion, cantidad, precioUnitario, moneda, aplicaIva, tasaIva, unidadMedida, totalCotizado };

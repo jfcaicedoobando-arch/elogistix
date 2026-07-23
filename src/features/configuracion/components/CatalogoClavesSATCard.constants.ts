@@ -3,6 +3,7 @@
  * Separado del `.parts.tsx` para respetar `react-refresh/only-export-components`
  * (los `.tsx` deben exportar únicamente componentes).
  */
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 export type TipoIva = "gravado_16" | "tasa_0" | "exento";
 
@@ -55,7 +56,7 @@ export const TIPO_IVA_VARIANT: Record<TipoIva, "default" | "secondary" | "outlin
 };
 
 export function tasaFromTipo(tipo: TipoIva): number | null {
-  if (tipo === "gravado_16") return 0.16;
+  if (tipo === "gravado_16") return TASA_IVA;
   if (tipo === "tasa_0") return 0;
   return null;
 }

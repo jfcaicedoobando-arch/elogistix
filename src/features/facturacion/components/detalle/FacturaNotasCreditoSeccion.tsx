@@ -16,6 +16,7 @@ import { DialogCancelarNotaCredito } from "@/features/facturacion/components/Dia
 import { useTimbrarNotaCredito, useCancelarNotaCredito } from "@/features/facturacion/hooks/useNotaCreditoFacturapi";
 import { FacturaNotasCreditoTable } from "./FacturaNotasCreditoTable";
 import type { Tables } from "@/integrations/supabase/types";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 type Moneda = Tables<"facturas">["moneda"];
 
@@ -40,7 +41,7 @@ function parseConceptosSugeridos(snapshot: unknown): ConceptoNotaCredito[] {
     clave_sat: "84111506",
     clave_unidad: "E48",
     unidad: "Unidad de servicio",
-    tasa_iva: 0.16,
+    tasa_iva: TASA_IVA,
   })).filter((c) => c.descripcion);
 }
 
