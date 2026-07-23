@@ -6,8 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-
-const FORMAS = ["Transferencia", "Cheque", "Efectivo", "Tarjeta", "Otro"];
+import { FORMAS_PAGO_SAT } from "@/constants/catalogosSAT";
 
 export interface PagoFormValues {
   fecha: string;
@@ -35,7 +34,7 @@ export function PagoFormFields({ values, onChange }: Props) {
         <Select value={values.formaPago} onValueChange={(v) => onChange("formaPago", v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            {FORMAS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+            {FORMAS_PAGO_SAT.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
