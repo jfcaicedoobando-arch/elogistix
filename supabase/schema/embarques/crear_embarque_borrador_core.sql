@@ -24,7 +24,7 @@ DECLARE
   v_first_hijo_id uuid;
   v_user_email    text;
   i               integer;
-  v_costo         public.cotizacion_costos%ROWTYPE;
+  v_target_ids    uuid[];
   v_target_ids    uuid[];
   v_cid           uuid;
   v_venta         jsonb;
