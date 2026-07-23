@@ -25,6 +25,7 @@ import {
 import type { ProformaDetalleFull } from "@/features/proformas/services";
 import { usePermissions } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
+import { formatCurrency } from "@/lib/formatters";
 
 type EstadoCliente = "pendiente" | "aceptada" | "rechazada";
 
