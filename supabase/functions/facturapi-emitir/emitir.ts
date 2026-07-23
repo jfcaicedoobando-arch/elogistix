@@ -221,6 +221,18 @@ export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
   if (updErr) return jsonResponse({ error: "db_update_failed", detail: updErr.message }, 500);
   if (!updRow) return jsonResponse({ error: "claim_perdido", message: "El claim de timbrado se perdió; verifica el estado en Facturapi.", facturapi_id: facturapiId, uuid }, 409);
 
+  // Al timbrar una SUSTITUTA, dejar la relación bidireccional en la original.
+  // Sin esto, cuando la original se cancela asíncronamente vía cron
+  // (facturapi-reconciliar-cancelaciones) no se detecta que es sustitución
+  // y se limpia la proforma incorrectamente (ver bug histórico PRO-2026-0970).
+  if (factura.sustituye_a) {
+    await supabase
+      .from("facturas")
+      .update({ sustituida_por: facturaId })
+      .eq("id", factura.sustituye_a)
+      .is("sustituida_por", null);
+  }
+
   await registrarBitacoraEdge(supabase, {
     organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
     accion: "facturapi_emitida", entidadId: facturaId, entidadNombre: numeroFinal,

@@ -24,7 +24,14 @@ import {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-async function revertirProformas(supabase: SupabaseClient, facturaId: string): Promise<void> {
+/**
+ * Limpia sólo los punteros `factura_id`/`factura_secundaria_id`.
+ * NO toca `estado_proforma` — de eso se encarga la RPC
+ * `revertir_proforma_al_cancelar_sustitucion`, que verifica facturas
+ * hermanas vivas (por `proforma_id` y `conceptos_factura.proforma_id_origen`).
+ * Ver bug histórico PRO-2026-0970 (F971 → F981).
+ */
+async function limpiarPunterosProformas(supabase: SupabaseClient, facturaId: string): Promise<void> {
   const { data: pfs } = await supabase
     .from("proformas")
     .select("id, factura_id, factura_secundaria_id")
@@ -32,17 +39,10 @@ async function revertirProformas(supabase: SupabaseClient, facturaId: string): P
   for (const pf of pfs ?? []) {
     const nuevoFacturaId = pf.factura_id === facturaId ? null : pf.factura_id;
     const nuevoFacturaSecId = pf.factura_secundaria_id === facturaId ? null : pf.factura_secundaria_id;
-    const ambosNulos = !nuevoFacturaId && !nuevoFacturaSecId;
-    const pfPatch: Record<string, unknown> = {
-      factura_id: nuevoFacturaId,
-      factura_secundaria_id: nuevoFacturaSecId,
-    };
-    if (ambosNulos) {
-      pfPatch.estado_proforma = "pendiente";
-      pfPatch.fecha_facturacion = null;
-      pfPatch.folio_factura_externa = null;
-    }
-    await supabase.from("proformas").update(pfPatch).eq("id", pf.id);
+    await supabase
+      .from("proformas")
+      .update({ factura_id: nuevoFacturaId, factura_secundaria_id: nuevoFacturaSecId })
+      .eq("id", pf.id);
   }
 }
 
@@ -67,10 +67,12 @@ async function applyAccepted(
   await supabase.from("factura_embarques").update({ activa: false }).eq("factura_id", factura.id);
 
   // Liberar la proforma si ya no quedan facturas vivas apuntando a ella.
+  // La RPC verifica hermanas vivas (por proforma_id + conceptos_factura.proforma_id_origen)
+  // antes de degradar `estado_proforma`. Aquí sólo limpiamos punteros legacy.
   await supabase.rpc("revertir_proforma_al_cancelar_sustitucion", { p_factura_id: factura.id });
+  await limpiarPunterosProformas(supabase, factura.id);
 
   const esSustitucion = !!factura.sustituida_por;
-  if (!esSustitucion) await revertirProformas(supabase, factura.id);
 
   await registrarBitacoraEdge(supabase, {
     organizationId: orgId,
