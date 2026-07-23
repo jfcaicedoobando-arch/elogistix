@@ -102,7 +102,7 @@ function parseVentaRow(raw: unknown): VentaParsed | null {
   const aplicaIva = Boolean(v.aplica_iva ?? false);
   const tasaIva = typeof v.tasa_iva_aplicada === "number"
     ? Number(v.tasa_iva_aplicada)
-    : (aplicaIva ? 0.16 : 0);
+    : (aplicaIva ? TASA_IVA : 0);
   const unidadMedida = String(v.unidad_medida ?? "Contenedor");
   const totalCotizado = Number(v.total ?? cantidad * precioUnitario);
   return { descripcion, cantidad, precioUnitario, moneda, aplicaIva, tasaIva, unidadMedida, totalCotizado };
