@@ -69,14 +69,13 @@ function useAutoSyncEstadoEmbarque(
   usuarioEmail: string,
 ) {
   const { mutate: syncEstadoMutate } = useSyncEstadoEmbarque();
-  const f = pickAutoSyncFields(embarque);
-  const key = f ? `${f.embarqueId}|${f.modo}|${f.tipo}|${f.estado}|${f.etd}|${f.eta}|${f.fechaLlegadaReal}` : null;
+  const f = useMemo(() => pickAutoSyncFields(embarque), [embarque]);
   useEffect(() => {
     if (!puedeSincronizarEstado || !f) return;
     runAutoSyncEstado({ ...f, usuarioEmail, sync: syncEstadoMutate });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puedeSincronizarEstado, key, syncEstadoMutate, usuarioEmail]);
+  }, [puedeSincronizarEstado, f, syncEstadoMutate, usuarioEmail]);
 }
+
 
 
 
