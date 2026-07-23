@@ -9,6 +9,7 @@ vi.mock("@/pdf/emisor", () => ({
 vi.mock("@/lib/formatters", () => ({
   formatCurrency: (n: number, m: string) => `${m}${n}`,
   formatDate: (d: string) => d,
+  formatFechaHora: (d: string | Date) => String(d),
 }));
 vi.mock("@/lib/utils", () => ({
   escapeHtml: (s: string) => s,
