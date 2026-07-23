@@ -23,6 +23,15 @@ DECLARE
   v_fact uuid := '33333333-3333-3333-3333-333333333333';
   v_cat uuid := '66666666-6666-6666-6666-666666666666';
 BEGIN
+  -- Organización y proveedor mínimos (FKs).
+  INSERT INTO public.organizations (id, nombre)
+  VALUES (v_org, 'Test Org Guard Sobrepago')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.proveedores (id, organization_id, nombre)
+  VALUES (v_prov, v_org, 'Test Prov Guard Sobrepago')
+  ON CONFLICT (id) DO NOTHING;
+
   -- Categoría de presupuesto mínima (columna NOT NULL en proveedor_facturas).
   INSERT INTO public.presupuesto_categorias
     (id, organization_id, nombre, orden, activa, tipo_contable)
