@@ -13,6 +13,7 @@ import type { TabCostos } from "@/features/embarques/components/TabCostos";
 import type { TabFacturacion } from "@/features/embarques/components/TabFacturacion";
 import type { TabNotas } from "@/features/embarques/components/TabNotas";
 import type { TabTracking } from "@/features/embarques/components/TabTracking";
+import type { EmbarqueRow } from "@/features/embarques/types/embarque";
 
 // Tipos derivados de los hijos para no duplicar contratos ni recurrir a `any`.
 export type ResumenProps = ComponentProps<typeof TabResumen>;
