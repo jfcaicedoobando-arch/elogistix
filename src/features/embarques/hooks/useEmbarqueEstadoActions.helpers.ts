@@ -58,3 +58,16 @@ export function clasificarBloqueoAvance(params: {
   if (siguiente === "Cerrado" && bloqueoCierreMotivo !== null) return "gate_cierre";
   return "ok";
 }
+
+/**
+ * Clasifica el mensaje de error devuelto por `avanzar_estado_embarque` en
+ * una acción UX. Puro para poder testearse aisladamente.
+ */
+export type AvanceErrorKind = "block_docs" | "block_fecha_llegada" | "transicion_invalida" | "generic";
+export function clasificarAvanceError(msg: string): AvanceErrorKind {
+  if (msg.includes("documentos_faltantes")) return "block_docs";
+  if (msg.includes("fecha_llegada_real_requerida")) return "block_fecha_llegada";
+  if (msg.includes("LC_TRANSICION_INVALIDA")) return "transicion_invalida";
+  return "generic";
+}
+
