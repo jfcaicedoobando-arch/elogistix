@@ -150,13 +150,17 @@ interface PrepareResponse {
 
 async function generarPdfBlob(cotizacion: CotizacionRow, tasaIva: number): Promise<Blob> {
   // Reusa la misma plantilla que el botón "Exportar PDF".
-  const { CotizacionDocument } = await import("@/pdf/documents/CotizacionDocument");
-  const { cargarEmisorEmpresa } = await import("@/pdf/emisor");
-  const { pdf } = await import("@react-pdf/renderer");
+  const [{ CotizacionDocument }, { cargarEmisorEmpresa }, { pdf }, { createElement }] = await Promise.all([
+    import("@/pdf/documents/CotizacionDocument"),
+    import("@/pdf/emisor"),
+    import("@react-pdf/renderer"),
+    import("react"),
+  ]);
   const emisor = await cargarEmisorEmpresa();
-  const instance = pdf(<CotizacionDocument cotizacion={cotizacion} tasaIva={tasaIva} emisor={emisor} />);
+  const instance = pdf(createElement(CotizacionDocument, { cotizacion, tasaIva, emisor }));
   return await instance.toBlob();
 }
+
 
 export async function enviarCotizacionPorEmail(input: EnviarEmailInput): Promise<EnviarEmailResult> {
   const { cotizacion, tasaIva = TASA_IVA } = input;
