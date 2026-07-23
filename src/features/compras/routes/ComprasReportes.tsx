@@ -23,7 +23,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
-import { fetchFacturasReporte } from "./_sections/reportesFetch";
+import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
