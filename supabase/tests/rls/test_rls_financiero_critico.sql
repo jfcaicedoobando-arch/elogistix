@@ -238,6 +238,13 @@ BEGIN
          estado = 'Devengada'
    WHERE id = com_a;
 
+  PERFORM pg_temp.as_user(user_b);
+  SELECT count(*) INTO visible FROM public.comisiones_devengadas WHERE id = com_a;
+  PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver comisiones_devengadas de org_a');
+  PERFORM pg_temp.as_postgres();
+
+
+
 
   -- =========================================================================
   -- TEST 9: liquidaciones_comision aislamiento
