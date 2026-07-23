@@ -47,5 +47,5 @@ export function tiempoRelativo(fecha: string): string {
   if (horas < 24) return `hace ${horas}h`;
   const dias = Math.floor(horas / 24);
   if (dias < 7) return `hace ${dias}d`;
-  return new Date(fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
+  return formatFechaEs(fecha, { day: "2-digit", month: "short" });
 }
