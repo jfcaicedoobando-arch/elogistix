@@ -260,7 +260,17 @@ export default tseslint.config(
           selector: "Property[key.name='mutationKey'] > ArrayExpression",
           message: "No definas `mutationKey` inline. Declara la key en `queryKeys.ts` del dominio para poder referenciarla desde `useIsMutating`/DevTools.",
         },
+        {
+          // Bloque 2.4 arquitectura — fuente única DB↔TS para el IVA. La tasa
+          // 16% vive exclusivamente en `TASA_IVA` (src/lib/financial/financialUtils.ts).
+          // Cualquier otra aparición del literal `0.16` en código de producción
+          // debe reemplazarse por `TASA_IVA` o por la tasa dinámica del concepto
+          // (`resolverTasaConcepto`). Tests están exentos (redefinen la regla).
+          selector: "Literal[value=0.16]",
+          message: "No hardcodees `0.16`. Importa `TASA_IVA` desde `@/lib/financial/financialUtils` o resuelve la tasa dinámica del concepto (`resolverTasaConcepto`). Ver mem://core (Never hardcode VAT).",
+        },
       ],
+
 
     },
   },
