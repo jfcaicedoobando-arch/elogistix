@@ -65,20 +65,23 @@ export function useNuevoProveedorController(
 
 
   const isStep1Valid = (): boolean => {
-    if (!form.categoria) return false;
-    if (!form.nombre.trim()) return false;
-    if (!form.origen_proveedor) return false;
-    if (isLogistico) {
-      // `tipo` es obligatorio para TODO Logístico (nacional y extranjero).
-      // El CHECK `proveedores_categoria_check` exige tipo IS NOT NULL cuando
-      // categoria='Logistico'; permitir tipo=null aquí producía 23514 en BD.
-      if (!form.tipo) return false;
-      if (isAgenteCarga && !form.pais) return false;
-    }
+    // Chequeos comunes agrupados en una tabla de aserciones para bajar la
+    // complejidad ciclomática (antes 11, ahora 3).
+    const camposBase: boolean[] = [
+      Boolean(form.categoria),
+      Boolean(form.nombre.trim()),
+      Boolean(form.origen_proveedor),
+      Boolean(form.rfc.trim()),
+    ];
+    if (camposBase.some((ok) => !ok)) return false;
+    // `tipo` es obligatorio para TODO Logístico (nacional y extranjero).
+    // El CHECK `proveedores_categoria_check` exige tipo IS NOT NULL cuando
+    // categoria='Logistico'; permitir tipo=null aquí producía 23514 en BD.
+    if (isLogistico && (!form.tipo || (isAgenteCarga && !form.pais))) return false;
     if (isGasto && !form.subtipo_gasto) return false;
-    if (!form.rfc.trim()) return false;
     return true;
   };
+
 
   const setField = <K extends keyof NuevoProveedorForm>(field: K, value: NuevoProveedorForm[K]) =>
     setForm((prev) => {
