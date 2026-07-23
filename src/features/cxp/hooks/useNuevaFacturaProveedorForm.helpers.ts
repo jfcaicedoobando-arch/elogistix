@@ -7,6 +7,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { FacturaFormValues } from "@/features/cxp/types";
 import { todayLocalISO } from "@/lib/date/today";
 import { isoUtcDay } from "@/lib/date/mx";
+import { facturaFormErrorsFromZod } from "./useNuevaFacturaProveedorForm.schema";
 
 export type Moneda = Database["public"]["Enums"]["moneda"];
 
@@ -66,19 +67,15 @@ export function calcularTotal(values: FacturaFormValues): number {
   return s + i + e - r;
 }
 
+/**
+ * PR-6 · Ítem 3.3 (auditoría-4): delegado a zod para unificar el paradigma
+ * de validación. La firma pública se preserva para no romper consumidores.
+ */
 export function validateFactura(
   values: FacturaFormValues,
   total: number,
 ): Partial<Record<keyof FacturaFormValues, string>> {
-  const next: Partial<Record<keyof FacturaFormValues, string>> = {};
-  if (!values.provId) next.provId = "Selecciona un proveedor";
-  if (!values.folio.trim()) next.folio = "Captura el folio del proveedor";
-  if (!values.categoriaId) next.categoriaId = "Selecciona una categoría contable";
-  if (total <= 0) next.subtotal = "El total debe ser mayor a 0";
-  if (values.moneda !== "MXN" && !(Number(values.tc) > 0)) {
-    next.tc = "Captura el tipo de cambio";
-  }
-  return next;
+  return facturaFormErrorsFromZod(values, { total });
 }
 
 /** Si todos los vínculos comparten un único embarque, lo devuelve. */
