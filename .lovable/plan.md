@@ -1,66 +1,53 @@
+## Problema
 
-# Auditoría R5 — verificación y plan de fixes
+En el detalle de cotización, cuando la cotización está en **Borrador**, la UI muestra el botón **"Aceptar"** (junto con "Marcar como Enviada" y "Rechazar"). Al hacer clic en Aceptar, el trigger `guard_estado_cotizacion` de la base de datos rechaza la transición con:
 
-Verifiqué cada hallazgo contra la BD antes de planear. **9 son bugs reales**, **1 tiene diagnóstico incorrecto**, **1 no es reproducible**.
+```
+LC_COT_TRANSICION_INVALIDA: no se puede pasar de Borrador a Aceptada
+```
 
-## Resultado de la verificación
+Hay un desajuste entre la UI y la máquina de estados del backend:
 
-| # | Hallazgo | Estado | Nota |
-|---|---|---|---|
-| R5-01 | Regresión sobrepago + dif. cambiaria CxP | ⚠️ Parcial | Trigger sí existe (`tg_pago_proveedor_no_sobrepago`) y lanza `LC_PAGO_EXCEDE_SALDO`, pero **usa `subtotal` en vez de `total`** (excluye IVA) y **`diferencia_cambiaria_mxn` no la calcula ninguna función** (columna huérfana) |
-| R5-02 | Margen absoluto vs pct | ✅ Real | `v_ok := (v_utilidad_mxn >= v_margen_min)` confirmado |
-| R5-03 | Sobrecargas duplicadas | ❌ No reproducible | 1 sola firma para cada función. **Omitir.** |
-| R5-04 | Backfill `folio_secuencias` | ✅ Real | 3 orgs sin fila `cotizacion`, 2 sin `factura` |
-| R5-05 | Vista `embarque_estado_financiero` | ❌ No existe la vista | **Omitir**, pedir aclaración al cierre |
-| R5-06 | `cxp_aging_proveedores` fail-open | ✅ Real | `v_org := p_org` confirmado |
-| R5-07 | GUC `app.recalc_estado_factura` bypass | ✅ Real | Sin check de rol |
-| R5-08 | EUR en `convertir_proformas_a_factura` | ✅ Real | Camino EUR no manejado |
-| R5-09 | `monto_cobrado_mxn` en comisiones | ✅ Real | No usa fallback a TC del embarque cuando TC del pago=1 |
-| R5-10 | `auth.role()='service_role'` sin COALESCE | ✅ Real | `validar_cierre_embarque` y `marcar_facturas_vencidas` |
-| R5-11 | Menores | ✅ Real (2 de 6) | `proformas.factura_id` no se rellena; `bl_master` sin unique por org (existe `uq_embarques_bl_house_org`) |
+- UI (`CotizacionDetalleSecciones.tsx`): permite Aceptar desde **Borrador o Enviada**.
+- DB (`guard_estado_cotizacion`): sólo permite Enviada → Aceptada.
 
-## Alcance de la migración (única)
+## Analogía
 
-Archivo: `supabase/migrations/20260723XXXXXX_fix_r5.sql`
+Es como si en la caja del súper te dejaran pasar con el carrito, pero al llegar el guardia te dijera que primero debiste sacar un boleto en otra ventanilla que ni siquiera está señalizada. Lo lógico es que quien deja pasar (la UI) y quien valida (la DB) hablen el mismo idioma.
 
-### BLOQUE A — P0 corregido
+## Decisión
 
-1. **R5-01a**: Rescribir `tg_pago_proveedor_no_sobrepago` para comparar contra `total` (subtotal + IVA − NC) en lugar de `subtotal`. Mantener el nombre del trigger existente para no duplicar.
-2. **R5-01b**: Añadir cómputo de `diferencia_cambiaria_mxn` en `tg_pagos_proveedor_monto_convertido` cuando `NEW.moneda='MXN'` y factura `USD`:
-   `NEW.diferencia_cambiaria_mxn = ROUND(NEW.monto_en_moneda_factura * (NEW.tipo_cambio_usd − v_fact_tc), 2)`.
-3. **R5-01c**: Rechazar cruce MXN↔USD sin `tipo_cambio_usd` con `LC_PAGO_TC_REQUERIDO` (hoy silenciosamente permite fallback).
+Alinear la DB con la UI: **permitir Borrador → Aceptada**. Es un flujo real: a veces la cotización se acepta verbalmente o por chat sin pasar por el envío formal por correo. Ya existe precedente porque el guard permite Borrador → Rechazada (misma lógica de "saltarse" Enviada).
 
-### BLOQUE B — P1
+## Cambios
 
-4. **R5-02**: `validar_cierre_embarque` — calcular `v_margen_pct := v_utilidad_mxn / v_venta_mxn * 100` y usarlo en el check. Añadir `margen_pct` y `minimo_pct` al detalle.
-5. **R5-04**: Backfill de `folio_secuencias` para `cotizacion`, `factura`, `proforma`, `embarque` con `MAX()` por org y `ON CONFLICT (organization_id, tipo) DO UPDATE`.
-6. **R5-06**: `cxp_aging_proveedores` — exigir membresía (`current_user_org_id()` o `has_role super_admin`), eliminar fallback a `p_org`.
-7. **R5-07**: `guard_estado_factura` — aceptar GUC bypass sólo si `auth.role()='service_role'` o `current_user='postgres'`.
-8. **R5-08**: `convertir_proformas_a_factura` — soportar EUR usando `embarques.tipo_cambio_eur` o `RAISE LC_MONEDA_NO_SOPORTADA`.
-9. **R5-09**: `calcular_comision_pago` — cuando `pago.moneda IN ('USD','EUR')` y `tipo_cambio IN (0,1)`, usar TC del embarque.
+### 1. Migración SQL
 
-### BLOQUE C — P2
+Actualizar `guard_estado_cotizacion` para agregar `Borrador → Aceptada` a las transiciones válidas:
 
-10. **R5-10**: Envolver `auth.role() = 'service_role'` con `COALESCE(auth.role(),'')` en `validar_cierre_embarque` y `marcar_facturas_vencidas`.
-11. **R5-11a**: En `convertir_proformas_a_factura` (y donde se enlace), setear `proformas.factura_id` para navegación bidireccional.
-12. **R5-11b**: `CREATE UNIQUE INDEX uq_embarques_bl_master_org` con `WHERE bl_master IS NOT NULL AND deleted_at IS NULL` replicando el patrón de `bl_house`.
+```sql
+IF (v_old = 'Borrador'      AND v_new IN ('Enviada','Aceptada','Rechazada'))
+OR (v_old = 'Enviada'       AND v_new IN ('Aceptada','Rechazada'))
+OR (v_old = 'Aceptada'      AND v_new IN ('En operación'))
+```
 
-## Checks post-migración
+Actualizar también el archivo canónico en `supabase/schema/` si existe la función ahí (item 3.1 de la refactorización).
 
-- Sobrepago CxP → `LC_PAGO_EXCEDE_SALDO` con el nuevo denominador `total`.
-- Pago MXN@20 sobre factura USD@19.5 → `diferencia_cambiaria_mxn = 500` por cada 1000 USD.
-- Cierre embarque con margen 25% y mínimo 30% → `puede_cerrar=false`, `margen_pct=25`.
-- `SELECT cxp_aging_proveedores(<otra_org>)` como usuario sin membresía → `LC_ORG_FORBIDDEN`.
-- `SET app.recalc_estado_factura='1'; UPDATE facturas SET estado='Pagada'` como usuario normal → bloqueado.
+### 2. Snapshot de versión al aceptar desde Borrador
 
-## Fuera de alcance
+Revisar `snapshot_cotizacion_al_enviar`: hoy congela la cotización al pasar a Enviada. Si se acepta directo desde Borrador, hay que asegurar que también se genere el snapshot/versión (misma lógica) para no perder trazabilidad. Se ajusta el trigger para disparar snapshot también en Borrador → Aceptada.
 
-- R5-03 (sobrecargas): no reproducible, no toco.
-- R5-05 (vista `embarque_estado_financiero`): no existe en esta BD. Pregunto tras aplicar.
-- R5-11 restantes (FK cross-tenant, expediente vacío, REVOKE `_cxp_anchor_fase_o`, exigir `tipo_cambio` en factura no MXN): postergado a otra ronda para no inflar esta migración.
+### 3. Sin cambios de UI
 
-## Después de la migración
+El botón "Aceptar" ya se muestra correctamente desde Borrador. No se toca.
 
-- Regenerar tipos (automático).
-- Bump `APP_VERSION` → `13.308.17`.
-- Entrada en `CHANGELOG.md`.
+### 4. Versionado y changelog
+
+- `APP_VERSION` → `13.308.10` (o el siguiente disponible).
+- Entrada en `CHANGELOG.md` describiendo el fix.
+
+## Verificación
+
+1. Migración aplicada limpia contra el linter.
+2. Probar en la cotización `e64a91fb-...` (la del reporte) que el botón Aceptar la mueve a Aceptada y crea la versión snapshot.
+3. Confirmar que las transiciones inválidas (p.ej. Aceptada → Borrador) siguen bloqueadas.
