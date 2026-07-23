@@ -191,36 +191,10 @@ BEGIN
     IF i = 1 THEN v_first_hijo_id := v_cid; END IF;
   END LOOP;
 
-  FOR v_costo IN SELECT * FROM public.cotizacion_costos WHERE cotizacion_id = v_cot.id AND deleted_at IS NULL LOOP
-    IF COALESCE(v_costo.unidad_medida, 'Contenedor') = 'BL' THEN
-      INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, organization_id)
-      VALUES (v_embarque_id, NULL, v_costo.concepto, COALESCE(v_costo.costo_total, v_costo.costo_unitario * v_costo.cantidad),
-              CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-              COALESCE(v_costo.proveedor, ''), v_cot.organization_id);
-    ELSE
-      FOREACH v_cid IN ARRAY v_target_ids LOOP
-        INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, organization_id)
-        VALUES (v_embarque_id, v_cid, v_costo.concepto, COALESCE(v_costo.costo_total, v_costo.costo_unitario * v_costo.cantidad),
-                CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-                COALESCE(v_costo.proveedor, ''), v_cot.organization_id);
-      END LOOP;
-    END IF;
-  END LOOP;
+  PERFORM public._crear_embarque_replicar_conceptos(
+    v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
+  );
 
-  IF jsonb_typeof(v_cot.conceptos_venta) = 'array' THEN
-    FOR v_venta IN SELECT * FROM jsonb_array_elements(v_cot.conceptos_venta) LOOP
-      IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
-        INSERT INTO public.conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, aplica_iva, total, organization_id)
-        VALUES (v_embarque_id, v_venta->>'descripcion',
-                COALESCE((v_venta->>'cantidad')::integer, 1),
-                COALESCE((v_venta->>'precio_unitario')::numeric, 0),
-                CASE WHEN v_venta->>'moneda' = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
-                COALESCE((v_venta->>'aplica_iva')::boolean, false),
-                COALESCE((v_venta->>'total')::numeric, 0),
-                v_cot.organization_id);
-      END IF;
-    END LOOP;
-  END IF;
 
   UPDATE public.cotizaciones
   SET embarque_id = v_embarque_id, estado = 'En operación'::estado_cotizacion, updated_at = now()
