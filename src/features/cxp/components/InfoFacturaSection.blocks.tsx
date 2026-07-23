@@ -119,10 +119,7 @@ export function ReferenciasFiscalesBlock({
           onVerify={onVerify}
           esExtranjero={f.proveedor_origen === "Extranjero"}
         />
-        <Field
-          label="Embarque"
-          value={f.embarque_id ? <span className="font-mono text-xs">{f.embarque_id.slice(0, 8)}…</span> : null}
-        />
+        <Field label="Embarque" value={<EmbarqueValor f={f} />} />
       </div>
     </div>
   );
