@@ -2,6 +2,28 @@
 -- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
 -- Ver supabase/schema/README.md.
 
+-- === Overload 1/2 ===
+CREATE OR REPLACE FUNCTION public.auditoria_embarques_org()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_caller_org uuid;
+BEGIN
+  v_caller_org := public.current_user_org_id();
+  IF v_caller_org IS NULL THEN
+    RAISE EXCEPTION 'No autorizado' USING ERRCODE = '42501';
+  END IF;
+  PERFORM public._assert_internal_reader(v_caller_org);
+  -- Delegar a la variante con parámetro (que ahora también valida).
+  RETURN public.auditoria_embarques_org(v_caller_org);
+END;
+$function$
+ name:auditoria_embarques_org schema:public;
+
+-- === Overload 2/2 ===
 CREATE OR REPLACE FUNCTION public.auditoria_embarques_org(p_organization_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
