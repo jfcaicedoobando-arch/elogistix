@@ -22,6 +22,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
   pagos_proveedor(monto, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor),
+  embarques(expediente),
   presupuesto_categorias!categoria_presupuesto_id(nombre)
 ` as const;
 
