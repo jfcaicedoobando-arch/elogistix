@@ -1,8 +1,12 @@
-/** FacturaDetalleBody — bloques intermedios de la vista de factura. */
+/**
+ * FacturaDetalleBody — bloques intermedios de la vista de factura.
+ * v13.308.16: nuevo orden por importancia (Receptor → operativo → fiscal
+ * → conceptos+totales → cobros → NC → bitácora). Emisor y Totales
+ * dejaron de ser cards independientes (viven dentro de Timbrado fiscal
+ * y Desglose de conceptos respectivamente).
+ */
 import { FacturaResumenCard } from "@/features/facturacion/components/detalle/FacturaResumenCard";
-import { FacturaEmisorCard } from "@/features/facturacion/components/detalle/FacturaEmisorCard";
 import { FacturaReceptorCard } from "@/features/facturacion/components/detalle/FacturaReceptorCard";
-import { FacturaTotalesCard } from "@/features/facturacion/components/detalle/FacturaTotalesCard";
 import { FacturaTimbradoCard } from "@/features/facturacion/components/detalle/FacturaTimbradoCard";
 import { FacturaConceptosTable } from "@/features/facturacion/components/detalle/FacturaConceptosTable";
 import { FacturaPagosSection } from "@/features/facturacion/components/detalle/FacturaPagosSection";
@@ -28,16 +32,13 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <FacturaEmisorCard />
-        {mostrarReceptor && (
-          <FacturaReceptorCard
-            clienteId={factura.cliente_id}
-            clienteNombre={factura.cliente_nombre}
-            rfcFactura={factura.rfc_cliente}
-          />
-        )}
-      </div>
+      {mostrarReceptor && (
+        <FacturaReceptorCard
+          clienteId={factura.cliente_id}
+          clienteNombre={factura.cliente_nombre}
+          rfcFactura={factura.rfc_cliente}
+        />
+      )}
 
       <FacturaResumenCard factura={factura} />
 
@@ -46,7 +47,9 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
           uuidFiscal={factura.uuid_fiscal}
           folioFiscal={factura.folio_fiscal}
           serie={factura.serie}
-          fechaEmision={factura.fecha_emision}
+          usoCfdi={factura.uso_cfdi}
+          formaPago={factura.forma_pago}
+          metodoPago={factura.metodo_pago}
           ambiente={factura.ambiente}
         />
       )}
@@ -63,15 +66,11 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
           snapshot={factura.snapshot_emision}
           moneda={factura.moneda}
           conceptos={conceptosVivos}
+          subtotal={Number(factura.subtotal)}
+          iva={Number(factura.iva)}
+          total={Number(factura.total)}
         />
       )}
-
-      <FacturaTotalesCard
-        subtotal={Number(factura.subtotal)}
-        iva={Number(factura.iva)}
-        total={Number(factura.total)}
-        moneda={factura.moneda}
-      />
 
       <FacturaPagosSection
         facturaId={factura.id}

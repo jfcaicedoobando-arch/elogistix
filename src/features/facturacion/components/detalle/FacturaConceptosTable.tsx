@@ -8,10 +8,16 @@
  * Cada renglón muestra un badge indicando su régimen de IVA
  * (16% / 0% / Exento). Para facturas timbradas se infiere del snapshot
  * de Facturapi (`product.taxes[].factor` + `rate`).
+ *
+ * v13.308.16: si se pasan `subtotal / iva / total`, se renderiza un
+ * footer con Subtotal · IVA · Total dentro del mismo card, evitando la
+ * card separada "Totales" que fragmentaba la lectura.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt } from "lucide-react";
 import type { TipoIvaConcepto } from "@/features/facturacion/services/conceptosFacturaCrud";
+import { formatCurrency } from "@/lib/formatters";
+import { MoneyCell } from "@/components/shared/MoneyCell";
 import {
   ConceptosMobileList,
   ConceptosDesktopTable,
@@ -39,6 +45,9 @@ interface Props {
     embarque_id?: string | null;
     embarque_expediente?: string | null;
   }>;
+  subtotal?: number;
+  iva?: number;
+  total?: number;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -69,7 +78,19 @@ function inferirTipoIva(c: ConceptoSnapshot): TipoIvaConcepto | null {
   return null;
 }
 
-export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConceptos }: Props) {
+function TotalesFooter({ subtotal, iva, total, moneda }: { subtotal: number; iva: number; total: number; moneda: string }) {
+  return (
+    <div className="border-t pt-4 mt-4">
+      <div className="grid grid-cols-3 gap-3">
+        <MoneyCell label="Subtotal" value={formatCurrency(subtotal, moneda)} />
+        <MoneyCell label="IVA" value={formatCurrency(iva, moneda)} />
+        <MoneyCell label="Total" value={formatCurrency(total, moneda)} highlight />
+      </div>
+    </div>
+  );
+}
+
+export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConceptos, subtotal, iva, total }: Props) {
   const conceptos: ConceptoSnapshot[] = propConceptos && propConceptos.length > 0
     ? propConceptos.map((c) => ({
         descripcion: c.descripcion,
@@ -82,6 +103,7 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
       }))
     : parseConceptos(snapshot);
   const mostrarEmbarque = conceptos.some((c) => c.embarque_expediente);
+  const mostrarTotales = typeof subtotal === "number" && typeof iva === "number" && typeof total === "number";
 
   if (conceptos.length === 0) {
     return (
@@ -97,6 +119,9 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
             <p className="text-sm">Esta factura no incluye un desglose detallado.</p>
             <p className="text-xs mt-1">Consulta el PDF para más información.</p>
           </div>
+          {mostrarTotales && (
+            <TotalesFooter subtotal={subtotal!} iva={iva!} total={total!} moneda={moneda} />
+          )}
         </CardContent>
       </Card>
     );
@@ -122,6 +147,9 @@ export function FacturaConceptosTable({ snapshot, moneda, conceptos: propConcept
           mostrarEmbarque={mostrarEmbarque}
           inferirTipoIva={inferirTipoIva}
         />
+        {mostrarTotales && (
+          <TotalesFooter subtotal={subtotal!} iva={iva!} total={total!} moneda={moneda} />
+        )}
       </CardContent>
     </Card>
   );

@@ -12,7 +12,7 @@
  * viven en el menú "Más acciones" para no saturar el header.
  */
 import {
-  Stamp, Mail, FileText, FileCode2, Ship, Trash2, Replace, Ban,
+  Stamp, Mail, FileText, FileCode2, Trash2, Replace, Ban,
   FileArchive, RefreshCw, HandCoins, SearchCheck, ExternalLink,
 } from "lucide-react";
 
@@ -101,12 +101,7 @@ function buildSecondary(props: Props, primaryId: string | null): DetalleActionIt
 function buildMore(props: Props): DetalleActionItem[] {
   const { factura, flags, acuse } = props;
   const items: DetalleActionItem[] = [];
-  if (factura.embarque_id) {
-    items.push({
-      id: "ver-embarque", label: "Ver embarque", icon: Ship,
-      href: `/embarques/${factura.embarque_id}`,
-    });
-  }
+  // "Ver embarque" se retiró: el expediente del header ya es link clickable.
   if (factura.facturapi_id) {
     items.push({
       id: "consultar-facturapi", label: "Verificar estatus en FacturApi",
