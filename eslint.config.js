@@ -23,6 +23,46 @@ const NO_RESTRICTED_SYNTAX_BASE = [
   },
 ];
 
+// PR-5 · Ítem 3.4 (arq-4). Consolidación de formatters: prohibido usar
+// `toLocaleString` / `toLocaleDateString` / `new Intl.NumberFormat(...)` inline
+// en código de producción. Migra a `@/lib/formatters` (`formatCurrency`,
+// `formatNumber`, `formatDate`, `formatFechaEs`, `formatFechaHora`,
+// `formatFechaLarga`). Excepciones: los propios formatters y una allowlist
+// LEGACY (bloque `locale-format-legacy` al final) que se migrará en olas.
+const NO_LOCALE_FMT_SELECTORS = [
+  {
+    selector: "CallExpression[callee.property.name='toLocaleString']",
+    message: "PR-5 · Ítem 3.4: usa `formatCurrency`/`formatNumber`/`formatFechaHora` de `@/lib/formatters` en vez de `.toLocaleString(...)` inline.",
+  },
+  {
+    selector: "CallExpression[callee.property.name='toLocaleDateString']",
+    message: "PR-5 · Ítem 3.4: usa `formatDate`/`formatFechaEs`/`formatFechaLarga` de `@/lib/formatters` en vez de `.toLocaleDateString(...)` inline.",
+  },
+  {
+    selector: "NewExpression[callee.object.name='Intl'][callee.property.name='NumberFormat']",
+    message: "PR-5 · Ítem 3.4: usa `formatNumber`/`formatCurrency` de `@/lib/formatters` en vez de `new Intl.NumberFormat(...)` inline.",
+  },
+];
+
+// Reglas queryKey/mutationKey/TASA_IVA — se declaran una sola vez para poder
+// reusar en la allowlist locale-format-legacy sin duplicarlas.
+const QUERY_KEY_AND_IVA_RULES = [
+  {
+    selector: "Property[key.name='queryKey'] > ArrayExpression",
+    message: "No definas `queryKey` inline. Usa el builder de `src/features/<dominio>/queryKeys.ts` (o `src/lib/query`) para mantener una sola fuente de verdad y evitar cachés fragmentados.",
+  },
+  {
+    selector: "Property[key.name='mutationKey'] > ArrayExpression",
+    message: "No definas `mutationKey` inline. Declara la key en `queryKeys.ts` del dominio para poder referenciarla desde `useIsMutating`/DevTools.",
+  },
+  {
+    // Bloque 2.4 arquitectura — fuente única DB↔TS para el IVA. La tasa
+    // 16% vive exclusivamente en `TASA_IVA` (src/lib/financial/financialUtils.ts).
+    selector: "Literal[value=0.16]",
+    message: "No hardcodees `0.16`. Importa `TASA_IVA` desde `@/lib/financial/financialUtils` o resuelve la tasa dinámica del concepto (`resolverTasaConcepto`). Ver mem://core (Never hardcode VAT).",
+  },
+];
+
 
 // Lista de features top-level bajo `src/features/`. Se usa para generar
 // programáticamente los overrides de cross-feature deep imports (Bloque 2.3
