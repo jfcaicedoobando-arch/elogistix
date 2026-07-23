@@ -79,9 +79,9 @@ Deno.test("buildRepPayload incluye exchange en doc relacionado si difiere de la 
   assertEquals(p.complements[0].data[0].related_documents[0].exchange, 18.5);
 });
 
-Deno.test("buildRepPayload incluye operation_number cuando hay referencia", () => {
+Deno.test("buildRepPayload incluye numOperacion cuando hay referencia", () => {
   const p = buildRepPayload(validCtx);
-  assertEquals(p.complements[0].data[0].operation_number, "REF-001");
+  assertEquals(p.complements[0].data[0].numOperacion, "REF-001");
 });
 
 Deno.test("buildRepPayload omite taxes cuando tasa_iva = 0", () => {
