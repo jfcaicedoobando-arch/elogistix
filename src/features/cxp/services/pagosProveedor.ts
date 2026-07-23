@@ -73,50 +73,42 @@ function esErrorPagoSinAprobacion(err: unknown): boolean {
   return typeof rec.message === "string" && rec.message.includes("LC_PAGO_SIN_APROBACION");
 }
 
-export async function registrarPagoProveedor(
-  input: RegistrarPagoProveedorInput,
-  userId: string | null,
-): Promise<PagoProveedor> {
-  // Resolvemos la organización del padre para que el INSERT no dependa del
-  // default `current_user_org_id()` (que puede divergir bajo impersonación o
-  // cambio reciente de organización activa). Si la org del usuario actual no
-  // coincide con la de la factura, abortamos con un error tipado para que el
-  // toast en español lo capture (evita el PostgrestError RLS opaco visto en
-  // Sentry JAVASCRIPT-REACT-W).
+async function resolverOrgFactura(facturaId: string): Promise<string> {
   const { data: fact, error: errFact } = await supabase
     .from("proveedor_facturas")
     .select("organization_id, estado_aprobacion")
-    .eq("id", input.proveedor_factura_id)
+    .eq("id", facturaId)
     .maybeSingle();
   if (errFact) throw errFact;
   if (!fact?.organization_id) {
-    throw Object.assign(new Error("Factura de proveedor no encontrada."), {
-      code: "NOT_FOUND",
-    });
+    throw Object.assign(new Error("Factura de proveedor no encontrada."), { code: "NOT_FOUND" });
   }
-
   const { data: orgActualRow, error: errOrg } = await supabase.rpc("current_user_org_id");
   if (errOrg) throw errOrg;
   const orgActual = (orgActualRow as string | null) ?? null;
   if (orgActual && orgActual !== fact.organization_id) {
     throw Object.assign(new Error("ORG_MISMATCH"), { code: "ORG_MISMATCH" });
   }
-
-  // Fase R.4 · Bug 24: defensa temprana antes de golpear la BD.
   if (fact.estado_aprobacion !== "aprobada") {
     throw new PagoRequiereAprobacionError();
   }
+  return fact.organization_id;
+}
 
-  const payload: TablesInsert<"pagos_proveedor"> = {
-    organization_id: fact.organization_id,
+function construirPayloadPago(
+  input: RegistrarPagoProveedorInput,
+  organizationId: string,
+  userId: string | null,
+): TablesInsert<"pagos_proveedor"> {
+  const tc = input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null;
+  return {
+    organization_id: organizationId,
     proveedor_factura_id: input.proveedor_factura_id,
     fecha_pago: input.fecha_pago,
     monto: input.monto,
     moneda: input.moneda,
-    // v13.308.8: nunca enviar `0` — el CHECK `pagos_proveedor_tc_pos` exige
-    // `IS NULL OR > 0`. Normalizamos aquí como último cinturón de seguridad
-    // por si un caller viejo aún manda 0.
-    tipo_cambio_usd: input.tipo_cambio_usd && input.tipo_cambio_usd > 0 ? input.tipo_cambio_usd : null,
+    // v13.308.8: nunca enviar `0` — el CHECK `pagos_proveedor_tc_pos` exige `IS NULL OR > 0`.
+    tipo_cambio_usd: tc,
     metodo_pago: input.metodo_pago,
     referencia: input.referencia ?? "",
     cuenta_bancaria_id: input.cuenta_bancaria_id ?? null,
@@ -124,17 +116,28 @@ export async function registrarPagoProveedor(
     diferencia_cambiaria_mxn: input.diferencia_cambiaria_mxn ?? null,
     created_by: userId,
   };
+}
+
+export async function registrarPagoProveedor(
+  input: RegistrarPagoProveedorInput,
+  userId: string | null,
+): Promise<PagoProveedor> {
+  // Resolvemos la organización del padre para que el INSERT no dependa del
+  // default `current_user_org_id()` (que puede divergir bajo impersonación).
+  // Ver Sentry JAVASCRIPT-REACT-W.
+  const organizationId = await resolverOrgFactura(input.proveedor_factura_id);
+  const payload = construirPayloadPago(input, organizationId, userId);
+
   const { data, error } = await supabase
     .from("pagos_proveedor")
     .insert(payload)
     .select()
     .single();
   if (error) {
-    if (esErrorPagoSinAprobacion(error)) {
-      throw new PagoRequiereAprobacionError();
-    }
+    if (esErrorPagoSinAprobacion(error)) throw new PagoRequiereAprobacionError();
     throw error;
   }
+
 
 
   // Recalcular estado de la factura origen
