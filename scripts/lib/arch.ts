@@ -64,12 +64,15 @@ export function runArchAudit(root: string): ArchReport {
     hooksContextsDirectImports: findDirectClientImports(root, [
       "src/hooks",
       "src/lib/contexts",
-      "src/features",
     ]),
-    componentsPagesDirectImports: findDirectClientImports(root, [
-      "src/components",
-      "src/features",
-    ]),
+    // `src/features` alberga ~90% del código. Excluimos `services/` (capa
+    // permitida para tocar el cliente Supabase) para que sólo afloren
+    // violaciones reales en components/hooks/routes de features.
+    componentsPagesDirectImports: findDirectClientImports(
+      root,
+      ["src/components", "src/features"],
+      ["services"],
+    ),
     oversized: findOversized(root),
   };
 }
