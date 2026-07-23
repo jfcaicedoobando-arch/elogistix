@@ -13,6 +13,7 @@ import {
 import { FormSection } from "./facturaFormPrimitives";
 import { PagoSaldoRestante } from "./PagoProveedorBits";
 import { referenciaHint } from "./pagoProveedorHelpers";
+import { formatNumber } from "@/lib/formatters";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { Database } from "@/integrations/supabase/types";
 
