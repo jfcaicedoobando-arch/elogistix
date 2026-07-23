@@ -94,7 +94,7 @@ export function FacturaDetalleView(props: FacturaDetalleViewProps) {
         facturapiClaimAt={factura.facturapi_claim_at ?? null}
       />
 
-      {mostrarSustitutaCancelada && (
+      {mostrarSustitutaCancelada && factura.sustituida_por && (
         <SustitutaCanceladaBanner
           sustitutaId={factura.sustituida_por}
           sustitutaNumero={factura.sustituida_por_ref?.numero ?? null}
