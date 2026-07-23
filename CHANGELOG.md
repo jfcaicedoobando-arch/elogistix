@@ -1,6 +1,10 @@
 # Changelog
 
+## [13.309.49] - 2026-07-24
+- **fix(tests · rls_financiero_critico) · Reconciliación con el trigger de comisiones restaurado.** En 13.309.43 se restauró `trg_pago_factura_comision_ins`, que inserta automáticamente una fila en `comisiones_devengadas` cuando se crea un `pagos_factura`. La fixture del test seguía haciendo un `INSERT` explícito con el mismo `pago_factura_id`, chocando con la unique key `comisiones_devengadas_pago_factura_id_key`. Ahora la fixture toma la fila auto-creada (`SELECT id INTO com_a FROM comisiones_devengadas WHERE pago_factura_id = pago_fac_a`), verifica que existe (assertion nueva) y hace `UPDATE` para fijar los montos que espera el test. La aserción de aislamiento por RLS (user_b no debe ver la comisión de org_a) se mantiene intacta. Analogía: antes intentábamos poner una silla nueva donde ya había una idéntica; ahora nos sentamos en la que el trigger ya trajo y la ajustamos a nuestra medida.
+
 ## [13.309.48] - 2026-07-24
+
 - **chore(arquitectura · Sprint 2 · PR-S2-C) · Baja de complejidad ciclomática en 3 hooks calientes.** `useEmbarqueEstadoActions` pasa de 12 → ≤10 extrayendo el gate de cierre a `useCierreGate` interno, el auto-sync a `pickAutoSyncFields` + `runAutoSyncEstado` (puros) y la clasificación de errores de avance a `clasificarAvanceError` en `useEmbarqueEstadoActions.helpers.ts` (testeable). `useNuevoProveedorController.isStep1Valid` pasa de 11 → 3 usando una tabla de aserciones para los campos base. `useOperacionesData` extrae `mapOperador` (mapper puro) reduciendo el `useMemo` de 15 → ≤10 sin cambiar la forma de datos. Los tres archivos pasan `complexity: ["error", { max: 10 }]` aislado. Sin cambios de comportamiento; 235 tests verdes. PR-S2-B (agrupar 38 props de `EmbarqueDetalleHeader` en objetos semánticos) queda pendiente para el siguiente turno — es cambio de superficie API, no de lógica. Analogía: partimos las tres piezas más pesadas del motor en engranajes chicos independientes, cada uno con un rol claro; el motor arranca igual pero ahora se puede desarmar sin desmontar la máquina completa.
 
 ## [13.309.47] - 2026-07-24
