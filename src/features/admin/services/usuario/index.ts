@@ -1,5 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/appRole";
+import { UNRESOLVED_EMAIL } from "./constants";
+
+// Re-export para no romper callers históricos que importan desde el barrel.
+export { UNRESOLVED_EMAIL } from "./constants";
 
 export interface UserRow {
   user_id: string;
