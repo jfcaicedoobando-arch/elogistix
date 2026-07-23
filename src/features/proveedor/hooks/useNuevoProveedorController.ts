@@ -19,7 +19,7 @@ import {
 import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
 import { preparePayload } from "./useNuevoProveedorController.helpers";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export {
   DOCS_EXTRANJERO,
   DOCS_NACIONAL,

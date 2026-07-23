@@ -16,7 +16,7 @@ import type { HallazgoAuditoria } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 import { queryKeys } from "@/lib/query";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
 export function useSnoozeHallazgo() {
   const queryClient = useQueryClient();

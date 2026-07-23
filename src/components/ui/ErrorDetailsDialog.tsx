@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Copy, Check, X } from "lucide-react";
 import { useErrorReport, closeErrorReport } from "@/lib/diagnostics/errorDetailsStore";
-import { formatReportMarkdown, formatReportJson } from "@/components/shared/utils/errorReport";
+import { formatReportMarkdown, formatReportJson } from "@/lib/ui/errorReport";
 import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { toast as sonnerToast } from "sonner";
 

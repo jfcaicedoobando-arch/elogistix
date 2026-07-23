@@ -20,7 +20,7 @@ import { enviarCfdiFactura } from "@/features/facturacion/services/enviarCfdiEma
 import { useTimbrarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors/index";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { queryKeys } from "@/lib/query";
 

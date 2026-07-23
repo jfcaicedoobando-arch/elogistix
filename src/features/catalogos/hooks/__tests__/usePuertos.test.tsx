@@ -16,7 +16,7 @@ vi.mock("@/hooks/shared", async (importOriginal) => ({
   useToast: vi.fn(() => ({ toast: vi.fn() })),
 }));
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));

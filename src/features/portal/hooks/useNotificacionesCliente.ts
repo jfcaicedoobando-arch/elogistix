@@ -9,7 +9,7 @@ import {
   marcarNotificacionLeida,
   marcarTodasNotificacionesLeidas,
 } from "@/features/portal/services";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 const KEY = ["portal", "notificaciones"] as const;
 

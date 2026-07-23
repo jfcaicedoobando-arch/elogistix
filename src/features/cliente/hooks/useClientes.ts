@@ -16,7 +16,7 @@ import {
   fetchCotizacionesCliente,
 } from "@/features/cliente/services";
 import type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
 

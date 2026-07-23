@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 import { useCreateCotizacionInformativa } from "@/features/cotizacion/hooks";
 import SeccionTarifasInformativas from "./SeccionTarifasInformativas";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   nuevaTarifaInformativa,
   validateCotizacionInformativa,

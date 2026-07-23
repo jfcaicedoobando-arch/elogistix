@@ -23,7 +23,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, AlertCircle, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { ROUTES } from "@/constants/routes";
 import { validateOnboarding } from "@/features/onboarding/lib/onboardingValidation";
 

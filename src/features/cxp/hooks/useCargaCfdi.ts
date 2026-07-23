@@ -8,7 +8,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { parseCfdiXml, type CfdiParsedResponse } from "@/features/cxp/services";
 import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface UseCargaCfdiArgs {
   categorias: { id: string; nombre: string }[];

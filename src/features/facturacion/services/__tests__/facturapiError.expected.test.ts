@@ -8,7 +8,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { FacturapiError, parseFunctionError } from "../facturapi";
-import { isExpectedFacturapiValidation } from "@/components/shared/utils/appFeedback";
+import { isExpectedFacturapiValidation } from "@/lib/ui/appFeedback";
 
 describe("FacturapiError.expected — validaciones SAT esperadas", () => {
   const EXPECTED_MESSAGES = [

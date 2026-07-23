@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { createTrackingLink } from "@/features/embarques/services/tracking";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useCreateTrackingLink() {
   const qc = useQueryClient();

@@ -5,7 +5,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { actualizarActividadNotas } from "@/features/crm/services";
 import { queryKeys } from "@/lib/query";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 // NOTA: la edición de notas es inline; un toast de éxito por cada blur sería
 // ruido. Solo notificamos errores.

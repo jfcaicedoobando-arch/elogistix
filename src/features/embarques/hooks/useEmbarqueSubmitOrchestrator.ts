@@ -11,7 +11,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifyWarning, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifyWarning, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
 import {

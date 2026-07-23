@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Archive, ArchiveRestore, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { useReactivarCotizacion } from "@/features/cotizacion/hooks";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/formatters";
 import { puedeReactivar } from "@/features/cotizacion/domain/lifecycle";

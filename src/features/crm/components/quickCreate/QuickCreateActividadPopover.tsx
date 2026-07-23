@@ -12,7 +12,7 @@ import { DateTimePickerMx } from "@/components/ui/date-time-picker-mx";
 import { toast } from "sonner";
 import { useCrearActividad, useOportunidades, type CrmEntidadTipo } from "@/features/crm/hooks";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   onCreated: () => void;
   onMore: () => void;

@@ -29,7 +29,7 @@
  */
 import { useMutation, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 
 /**

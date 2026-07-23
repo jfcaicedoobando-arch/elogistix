@@ -16,7 +16,7 @@ import {
   type EmbarqueFormValues,
   type CotizacionParaVincular,
 } from "@/features/embarques/domain/mappers/embarque";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 

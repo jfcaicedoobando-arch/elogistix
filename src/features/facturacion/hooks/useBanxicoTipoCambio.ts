@@ -14,7 +14,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchExchangeRates } from "@/features/catalogos/services";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export interface BanxicoTcResult {
   tipoCambio: number;

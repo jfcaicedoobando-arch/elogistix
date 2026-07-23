@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useCrearOportunidad, useEtapasPipeline } from "@/features/crm/hooks";
 import { useClientesForSelect } from "@/features/cliente/hooks";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   onCreated: (id: string) => void;
   onMore: () => void;

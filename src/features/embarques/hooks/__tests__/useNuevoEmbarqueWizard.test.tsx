@@ -52,7 +52,7 @@ vi.mock("@/features/embarques/hooks/useEmbarqueSubmitOrchestrator", () => ({
 vi.mock("@/features/embarques/domain/embarqueWizardStepValidator", () => ({
   validateWizardStep: (...a: unknown[]) => validateWizardStepMock(...a),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyErrorMock(...a),
 }));
 vi.mock("@/hooks/shared", () => ({

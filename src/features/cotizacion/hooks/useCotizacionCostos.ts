@@ -5,7 +5,7 @@ import {
   upsertCotizacionCostos,
 } from '@/features/cotizacion/services';
 import { newRequestId } from '@/lib/idempotency';
-import { notifyError } from '@/components/shared/utils/appFeedback';
+import { notifyError } from '@/lib/ui/appFeedback';
 
 export type { CostoCotizacion } from '@/features/cotizacion/types';
 import type { CostoCotizacion } from '@/features/cotizacion/types';

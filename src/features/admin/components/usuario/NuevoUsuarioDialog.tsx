@@ -5,7 +5,7 @@ import { Loader2, UserPlus } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useCreateUser } from "@/features/admin/hooks/usuario";
 import { useOrganizationsList } from "@/features/admin/hooks";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { AppRole } from "@/types/appRole";
 import { NuevoUsuarioCredencialesSection } from "./NuevoUsuarioCredencialesSection";

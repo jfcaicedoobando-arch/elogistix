@@ -29,12 +29,12 @@ vi.mock("@/hooks/shared", () => ({
   useRegistrarActividad: vi.fn(() => ({ mutate: vi.fn() })),
 }));
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));
 
-import { notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import { useUpdateCliente } from "@/features/cliente/hooks/useClientes";
 
 describe("useClienteDetalleController", () => {

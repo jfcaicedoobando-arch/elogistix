@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { createDemoLead } from "@/features/marketing/services/demoLeads";
 import { enterDemoMode } from "@/features/marketing/services/demoAccess";
 import { demoAccessSchema } from "@/features/marketing/lib/demoAccessSchema";

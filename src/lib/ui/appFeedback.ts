@@ -22,7 +22,7 @@
  */
 import { toast as sonnerToast } from "sonner";
 import { STEP_LABELS } from "@/features/embarques/domain/embarqueWizardSchemas";
-import { buildErrorReport } from "@/components/shared/utils/errorReport";
+import { buildErrorReport } from "@/lib/ui/errorReport";
 import { openErrorReport } from "@/lib/diagnostics/errorDetailsStore";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 

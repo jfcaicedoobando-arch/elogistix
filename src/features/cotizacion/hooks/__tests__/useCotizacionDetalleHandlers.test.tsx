@@ -53,7 +53,7 @@ vi.mock("@/features/crm/services/vincularCotizacion", () => ({
   sincronizarEtapaPorEstadoCotizacion: (...a: unknown[]) => sincronizarEtapaMock(...a),
   propagarConversionProspectoCRM: (...a: unknown[]) => propagarConversionMock(...a),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: notifyErrorMock,
   notifySuccess: notifySuccessMock,
 }));

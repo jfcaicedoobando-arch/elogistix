@@ -22,7 +22,7 @@ import {
   calcularTotal,
   validateFactura,
 } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
 

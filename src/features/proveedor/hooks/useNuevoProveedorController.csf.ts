@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { parseCsf, type CsfParsedData } from "@/features/cliente/services/csf";
 import type { NuevoProveedorForm } from "./useNuevoProveedorController.constants";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export type CsfPatch = Partial<
   Pick<
     NuevoProveedorForm,

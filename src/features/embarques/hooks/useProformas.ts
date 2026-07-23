@@ -18,7 +18,7 @@ import {
   type ProformaPendienteConEmbarque,
   type ProformaRow,
 } from "@/features/proformas/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
 export type { ProformaConFactura, ProformaPendienteConEmbarque, ProformaRow };

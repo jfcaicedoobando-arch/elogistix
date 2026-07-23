@@ -14,7 +14,7 @@ import {
   reintentarAcuseCancelacion,
   descargarAcuseCancelacionPdf,
 } from "@/features/facturacion/services/facturapi";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";

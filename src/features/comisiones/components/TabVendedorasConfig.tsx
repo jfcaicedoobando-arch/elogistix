@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/formatters";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   useVendedorasConfig, useUpsertVendedoraConfig, useUpdateVendedoraConfig,
   useEmbarquesSinVendedora, useAsignarVendedoraEmbarque,

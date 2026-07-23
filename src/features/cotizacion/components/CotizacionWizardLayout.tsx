@@ -9,7 +9,7 @@ import { WizardTotalsBar } from "@/features/cotizacion/components/wizard/WizardT
 import { useCotizacionKeyboardShortcuts } from "@/features/cotizacion/hooks/wizard/useCotizacionKeyboardShortcuts";
 import { usePermissions } from "@/hooks/shared";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 const WIZARD_STEPS = [
   { num: 1, title: "Datos Generales" },
   { num: 2, title: "Costos & P&L" },

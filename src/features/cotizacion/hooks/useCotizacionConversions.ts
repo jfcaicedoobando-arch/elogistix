@@ -6,7 +6,7 @@ import {
   crearEmbarqueBorradorDesdeCotizacion,
   type ProspectoAClienteInput,
 } from '@/features/cotizacion/services';
-import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
+import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
 
 
 /** Convierte un prospecto en cliente y actualiza la cotización */

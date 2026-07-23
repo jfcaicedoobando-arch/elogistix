@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Send } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { InvitarAgenteCredencialesView } from "./InvitarAgenteCredencialesView";
 import { InvitarAgentePasswordTab } from "./InvitarAgentePasswordTab";

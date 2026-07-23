@@ -13,7 +13,7 @@ import {
   quitarArchivoCfdiFactura,
   type TipoAdjuntoCfdi,
 } from "@/features/cxp/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface AdjuntarVars {
   facturaId: string;

@@ -6,7 +6,7 @@
 import * as Sentry from "@sentry/react";
 import { toast } from "sonner";
 import { logger } from "@/lib/observability/logger";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { APP_VERSION } from "@/constants/appVersion";
 
 export interface ErrorBoundarySnapshot {

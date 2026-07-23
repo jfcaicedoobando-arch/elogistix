@@ -7,7 +7,7 @@ import {
   updateConfiguracionGlobalItems,
   type ConfigGlobalItem,
 } from "@/features/configuracion/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { ConfigGlobalItem };
 

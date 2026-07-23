@@ -4,7 +4,7 @@ import {
   fetchEventosEmbarque,
   insertEventoEmbarque,
 } from "@/features/embarques/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export interface EventoEmbarque {
   id: string;

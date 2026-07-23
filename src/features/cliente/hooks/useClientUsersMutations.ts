@@ -6,7 +6,7 @@ import {
   revokeClientUser,
   type InviteClientUserParams,
 } from "@/features/cliente/services/usuarios";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Lista los usuarios del portal vinculados a un cliente específico.

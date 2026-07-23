@@ -12,7 +12,7 @@ import type { DocumentoEmbarqueRow } from "@/features/embarques/hooks";
 import { useCreateDocumentoEmbarque } from "@/features/embarques/hooks";
 import { getDocsForMode } from "@/features/embarques/constants/embarqueConstants";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 

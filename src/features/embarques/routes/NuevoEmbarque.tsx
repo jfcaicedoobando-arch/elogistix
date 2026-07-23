@@ -10,7 +10,7 @@ import { StepCostosPrecios } from "@/features/embarques/components/StepCostosPre
 import { useNuevoEmbarqueWizard } from "@/features/embarques/hooks";
 import { CotizacionVinculadaProvider } from "@/features/embarques/hooks/useHeredadoCotizacion";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 const steps = [
   { title: "Datos Generales", num: 1 },
   { title: "Datos de Ruta", num: 2 },

@@ -7,7 +7,7 @@ import { usePermissions } from "@/hooks/shared";
 import {
   useCotizacionCostos, useUpsertCotizacionCostos, type CostoCotizacion,
 } from "@/features/cotizacion/hooks";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ConceptoVentaCotizacion } from "@/features/cotizacion/hooks";
 import ResumenPL from "./ResumenPL";
 import TablaCostosDetalle from "./TablaCostosDetalle";

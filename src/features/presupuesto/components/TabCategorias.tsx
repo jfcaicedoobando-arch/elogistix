@@ -17,7 +17,7 @@ import { seedCategoriasDefault } from "@/features/presupuesto/services";
 import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import { DialogCategoria } from "./DialogCategoria";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 export function TabCategorias() {
   const { organizationId } = useOrganization();
   const cats = usePresupuestoCategorias(false);

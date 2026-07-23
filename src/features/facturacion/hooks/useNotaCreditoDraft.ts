@@ -12,7 +12,7 @@ import {
 } from "@/features/facturacion/services/notasCredito";
 import { useTimbrarNotaCredito } from "@/features/facturacion/hooks/useNotaCreditoFacturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/integrations/supabase/types";

@@ -16,7 +16,7 @@ import {
 import type { CategoriaPresupuesto } from "@/features/presupuesto/services";
 import type { Enums } from "@/integrations/supabase/types";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 type TipoContable = Enums<"tipo_contable_categoria">;
 

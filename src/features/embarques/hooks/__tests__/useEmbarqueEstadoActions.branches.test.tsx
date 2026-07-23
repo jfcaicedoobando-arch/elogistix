@@ -34,7 +34,7 @@ vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: vi.fn() }),
   useRegistrarActividad: () => ({ mutate: h.registrar }),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...args: unknown[]) => h.notifyError(...args),
   notifySuccess: (...args: unknown[]) => h.notifySuccess(...args),
 }));

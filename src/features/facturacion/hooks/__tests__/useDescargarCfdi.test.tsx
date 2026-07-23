@@ -25,7 +25,7 @@ vi.mock("@/features/facturacion/services/descargarCfdiFacturapi", () => ({
   descargarCfdiFacturapi: (...a: unknown[]) => descargarCfdiFacturapi(...a),
   esUrlFacturapi: (...a: unknown[]) => esUrlFacturapi(...a),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 vi.mock("@/hooks/shared", () => ({ useToast: () => ({ toast }) }));

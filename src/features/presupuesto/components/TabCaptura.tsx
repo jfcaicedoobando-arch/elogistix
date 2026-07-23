@@ -16,7 +16,7 @@ import {
 } from "@/features/presupuesto/hooks";
 import { formatCurrency } from "@/lib/formatters/numbers";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 const MESES_LABEL = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 interface Props { anio: number; onAnioChange: (a: number) => void }

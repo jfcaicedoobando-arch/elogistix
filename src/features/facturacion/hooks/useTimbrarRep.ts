@@ -5,7 +5,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { emitirRep, cancelarRep, type MotivoCancelacionSat } from "@/features/facturacion/services/repFacturapi";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 

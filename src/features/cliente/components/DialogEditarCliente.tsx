@@ -14,7 +14,7 @@ import { REGIMENES_FISCALES_SAT } from "@/constants/regimenFiscalSAT";
 import { USOS_CFDI_SAT } from "@/constants/catalogosSAT";
 import { CsfDropZone } from "@/features/cliente/components/NuevoClienteFormPieces";
 import { parseCsf } from "@/features/cliente/services/csf";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { CondicionesCreditoSection } from "./CondicionesCreditoSection";
 
 interface ClienteData {

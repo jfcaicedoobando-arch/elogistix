@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   crearDemoraVenta, eliminarDemoraVenta, fetchDemorasVenta,
   type DemoraVentaTarifaInput,

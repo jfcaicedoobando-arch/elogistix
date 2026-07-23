@@ -10,7 +10,7 @@ import {
   establecerOrganizacionActiva,
   updateAdminOrganization,
 } from "@/features/admin/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useAdminOrgInfo(id: string | undefined) {

@@ -7,7 +7,7 @@ import {
   type UpdateGarantiaInput,
 } from "../services/garantias";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 export function useGarantiasContenedor(embarqueId: string | undefined) {
   return useQuery({

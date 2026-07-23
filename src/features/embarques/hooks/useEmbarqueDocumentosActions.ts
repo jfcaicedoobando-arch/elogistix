@@ -10,7 +10,7 @@ import {
   type EmbarqueRow,
   type DocumentoEmbarqueRow,
 } from "@/features/embarques/hooks/useEmbarques";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { descargarBlob } from "@/lib/downloadBlob";
 
 /**

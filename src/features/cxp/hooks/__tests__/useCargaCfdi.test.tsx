@@ -17,7 +17,7 @@ vi.mock("sonner", () => ({
     error: (...a: unknown[]) => toastError(...a),
   },
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 vi.mock("@/features/cxp/services", async () => {

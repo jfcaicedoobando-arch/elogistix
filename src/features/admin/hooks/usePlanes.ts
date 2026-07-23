@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/features/admin/services/planes";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Plan };
 

@@ -5,7 +5,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { verificarUuidNcSat, type EstatusSat } from "@/features/cxp/services/verificarUuidNcSat";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 
 export function useVerificarUuidNcSat(facturaId: string | undefined) {

@@ -1,6 +1,6 @@
 import { useCreateTrackingLink } from "@/features/embarques/hooks/useTrackingLinks";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**

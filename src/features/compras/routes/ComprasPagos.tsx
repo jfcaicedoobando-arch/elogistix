@@ -21,7 +21,7 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { toCSV } from "@/lib/io/csv";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   listarPagosProveedorGlobal,
 } from "@/features/compras/services/pagosGlobal";

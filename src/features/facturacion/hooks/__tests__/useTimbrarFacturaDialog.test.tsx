@@ -24,7 +24,7 @@ vi.mock("@/features/facturacion/hooks/useTimbrarFactura", () => ({
   useTimbrarFactura: vi.fn(),
 }));
 vi.mock("@/hooks/shared", () => ({ useToast: () => ({ toast: vi.fn() }) }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
   notifySuccess: vi.fn(),
 }));
@@ -35,7 +35,7 @@ import {
 } from "@/features/facturacion/services";
 import { enviarCfdiFactura } from "@/features/facturacion/services/enviarCfdiEmail";
 import { useTimbrarFactura } from "@/features/facturacion/hooks/useTimbrarFactura";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { useTimbrarFacturaDialog } from "@/features/facturacion/hooks/useTimbrarFacturaDialog";
 
 const mockActualizar = vi.mocked(actualizarDatosTimbradoFactura);

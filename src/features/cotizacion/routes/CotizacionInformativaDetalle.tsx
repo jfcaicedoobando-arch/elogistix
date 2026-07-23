@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/shared";
 import { useTiposContenedor } from "@/features/catalogos/hooks";
 import { resolveTipoContenedorNombre } from "@/features/cotizacion/utils/resolveTipoContenedorNombre";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 interface Props {
   cotizacion: CotizacionRow;
   onBack: () => void;

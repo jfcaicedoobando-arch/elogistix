@@ -25,7 +25,7 @@ async function obtenerBytes(stored: string | null, facturaId: string, tipo: "pdf
   return await blob.arrayBuffer();
 }
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { todayLocalISO } from "@/lib/date/today";
 interface Props {
   selectedIds: Set<string>;

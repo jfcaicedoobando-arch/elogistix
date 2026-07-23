@@ -12,7 +12,7 @@ import {
   type PlantillaMensajeRow,
   type PlantillaInput,
 } from "@/features/crm/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { PlantillaCanal, PlantillaMensajeRow, PlantillaInput };
 

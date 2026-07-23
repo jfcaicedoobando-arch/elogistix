@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import {
   fetchCosteoAgentes,

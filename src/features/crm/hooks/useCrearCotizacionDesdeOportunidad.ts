@@ -7,7 +7,7 @@ import {
 import { generarFolioCotizacion } from "@/features/cotizacion/services/queries";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface UseCrearCotizacionDesdeOpInput {
   oportunidad: CrearCotizacionDesdeOpInput["oportunidad"] & {

@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { explicarHallazgo, type ExplicacionHallazgo } from "@/features/auditoria/services/explicarHallazgo";
 import type { HallazgoAuditoria } from "@/features/auditoria/types";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export type { ExplicacionHallazgo };
 

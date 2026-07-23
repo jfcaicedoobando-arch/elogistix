@@ -6,7 +6,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/shared/useToast";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { eliminarFacturaBorrador } from "@/features/facturacion/services/eliminarBorrador";
 import { queryKeys } from "@/lib/query";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";

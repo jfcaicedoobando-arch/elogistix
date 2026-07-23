@@ -7,7 +7,7 @@ const emitirRep = vi.fn();
 const mutateAsync = vi.fn();
 const registrarActividadMutate = vi.fn();
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: (...a: unknown[]) => notifySuccess(...a),
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));

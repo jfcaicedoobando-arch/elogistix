@@ -13,7 +13,7 @@ import {
 } from "@/features/cotizacion/services/wizard/paso1Crm";
 import { vincularOCrearOportunidadParaCotizacion } from "@/features/crm/services/vincularCotizacion";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { esIncotermSinFleteVenta } from "@/features/cotizacion/utils/incotermRules";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
 

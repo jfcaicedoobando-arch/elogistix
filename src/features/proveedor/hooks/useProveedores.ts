@@ -15,7 +15,7 @@ import {
   type ProveedorOperacion,
   type ProveedorLite,
 } from "@/features/proveedor/services";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 

@@ -12,7 +12,7 @@ import {
 import type { AuditoriaComentario } from "@/features/auditoria/types";
 import { logger } from "@/lib/observability/logger";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 const baseKey = (revisionId: string) =>
   ["auditoria", "comentarios", revisionId] as const;
 

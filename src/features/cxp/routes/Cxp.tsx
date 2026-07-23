@@ -28,7 +28,7 @@ import { useCobranza } from "@/features/facturacion/hooks";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { ReporteCarteraDocument } from "@/pdf/documents/ReporteCarteraDocument";
 import type { FacturaCxP } from "@/features/cxp/services";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
 

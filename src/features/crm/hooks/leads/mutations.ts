@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import { createLead, updateLead, softDeleteLead } from "@/features/crm/services/leads";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { LeadInput } from "./constants";
 
 export function useCrearLead() {

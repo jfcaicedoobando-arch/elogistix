@@ -14,7 +14,7 @@ import {
 import { fetchProveedoresPorTipo } from "@/features/costeo/services/agentes";
 import type { NavieraCondicionInput, DemorasTramoInput } from "@/features/costeo/types/navieraCondicion";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export function useCondicionesNaviera() {
   const { organizationId } = useOrganization();

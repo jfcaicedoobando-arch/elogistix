@@ -4,7 +4,7 @@
  */
 import { toast } from "sonner";
 import { existeFacturaDuplicada } from "@/features/cxp/services";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
 import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
 import { buildPayload, type PendingCfdi, type VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";

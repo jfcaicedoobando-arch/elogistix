@@ -6,7 +6,7 @@ import { Loader2, UserCog } from "lucide-react";
 import { FormDialogShell } from "@/components/shared/FormDialogShell";
 import { useActualizarContactoPortal } from "@/features/portal/hooks";
 import { useToast } from "@/hooks/shared";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 
 interface Props {

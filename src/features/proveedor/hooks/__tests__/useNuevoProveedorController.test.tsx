@@ -61,7 +61,7 @@ vi.mock("../useNuevoProveedorController.csf", () => ({
   }),
 }));
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError,
 }));
 

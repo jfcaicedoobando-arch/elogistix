@@ -7,7 +7,7 @@
 import { useQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
 import { cotizacionPlantillas as keys } from "@/features/cotizacion/queryKeys";
 import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/cotizacionForm";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 import {
   fetchPlantillas,

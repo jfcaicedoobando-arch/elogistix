@@ -51,13 +51,13 @@ vi.mock("@/features/embarques/hooks/useContenedoresInfoMap", () => ({
 vi.mock("@/features/embarques/components/embarqueColumns", () => ({
   buildEmbarqueColumns: () => [{ id: "expediente" }, { id: "cliente_nombre" }],
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
   notifySuccess: vi.fn(),
 }));
 
 import { useEmbarquesPageController } from "../useEmbarquesPageController";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 // v13.137.36: factory por-test para evitar QueryClient leak (ver
 // useEmbarqueSubmitOrchestrator.test.tsx).

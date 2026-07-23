@@ -11,7 +11,7 @@ import {
   crearComentarioOportunidad,
   type ComentarioRow,
 } from "@/features/crm/services";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export type { ComentarioRow };
 

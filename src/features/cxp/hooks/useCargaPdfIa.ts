@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { parsePdfInvoice } from "@/features/cxp/services/parsePdfInvoice";
 import { CfdiUploadError } from "@/features/cxp/services/parseCfdi";
 import type { CfdiParsedResponse } from "@/features/cxp/services";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Args {
   categorias: { id: string; nombre: string }[];

@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import { insertarNotaEmbarque } from '@/features/embarques/services';
-import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
+import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
 
 export function useCreateNotaEmbarque() {
   const queryClient = useQueryClient();

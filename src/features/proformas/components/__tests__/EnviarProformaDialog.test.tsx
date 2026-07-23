@@ -33,7 +33,7 @@ vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: vi.fn(),
 }));
 

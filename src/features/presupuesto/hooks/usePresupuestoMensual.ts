@@ -5,7 +5,7 @@ import {
   type UpsertCeldaParams,
 } from "@/features/presupuesto/services";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export function usePresupuestoMensualAnio(anio: number) {
   const { organizationId } = useOrganization();

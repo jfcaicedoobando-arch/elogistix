@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { programarPagoProveedor } from "@/features/cxp/services/programarPagoProveedor";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateProfitDependencies } from "@/features/profit/hooks/invalidateProfitDependencies";
 

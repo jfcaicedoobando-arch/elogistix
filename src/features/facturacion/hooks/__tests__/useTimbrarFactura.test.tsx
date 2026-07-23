@@ -37,7 +37,7 @@ vi.mock("@/features/facturacion/services/facturapi", () => {
     FacturapiError,
   };
 });
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 

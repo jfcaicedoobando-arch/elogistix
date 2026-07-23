@@ -12,7 +12,7 @@ import {
   type GlobalUserRow,
   type OrgRow,
 } from '@/features/admin/services';
-import { notifyError, notifySuccess } from '@/components/shared/utils/appFeedback';
+import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
 
 export type { AdminOrgStats, AdminOrgActivity, AdminRecentOrg, GlobalUserRow, OrgRow };
 

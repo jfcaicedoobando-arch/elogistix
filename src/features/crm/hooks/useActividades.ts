@@ -19,7 +19,7 @@ import {
   type CrmEntidadTipo,
   type CrearActividadInput,
 } from "@/features/crm/services/actividades";
-import { notifyError, notifySuccess } from "@/components/shared/utils/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { CrmActividadRow, CrmActividadTipo, CrmEntidadTipo } from "@/features/crm/services/actividades";
 export type ActividadInput = CrearActividadInput;

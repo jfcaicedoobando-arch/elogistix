@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertTriangle, Trash2, Save, PlugZap, Loader2 } from "lucide-react";
-import { notifySuccess, notifyError } from "@/components/shared/utils/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import type { FacturapiAmbiente } from "@/features/configuracion/services/facturapiCredenciales";
 import {
   useSetFacturapiApiKey,

@@ -11,7 +11,7 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { PagoFacturaHeaderInfo } from "./PagoProveedorBits";
 import { usePagoProveedorForm } from "./usePagoProveedorForm";
 import { PagoProveedorFormBody } from "./PagoProveedorFormBody";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { traducirErrorPagoProveedor } from "@/features/cxp/services/pagosProveedorErrors";
 
 interface Props {

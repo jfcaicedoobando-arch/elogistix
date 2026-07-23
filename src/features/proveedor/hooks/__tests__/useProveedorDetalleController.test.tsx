@@ -29,7 +29,7 @@ vi.mock("@/hooks/shared", () => ({
   useRegistrarActividad: vi.fn(() => ({ mutate: vi.fn() })),
 }));
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));

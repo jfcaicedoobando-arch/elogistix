@@ -11,7 +11,7 @@ import { usePermissions, useToast } from "@/hooks/shared";
 import { useIdempotenciaLog, type FnFilter } from "@/features/admin/hooks";
 import type { IdempotenciaRow } from "@/features/admin/services";
 
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 const FN_LABEL: Record<string, string> = {
   crear_embarque_completo: "Crear embarque",
   duplicar_embarque_completo: "Duplicar embarque",

@@ -10,7 +10,7 @@ import type { CotizacionFormValues } from "@/features/cotizacion/domain/mappers/
 import type { CreateCotizacionInput, CotizacionRow } from "@/features/cotizacion/hooks/useCotizaciones";
 import { savePaso1 } from "@/features/cotizacion/services";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { validatePaso1, vincularCrmTrasCrear } from "./handlePaso1Crm";
 import { scrollAndFocusSection, seccionParaErrorPaso1 } from "./scrollToErrorSection";
 

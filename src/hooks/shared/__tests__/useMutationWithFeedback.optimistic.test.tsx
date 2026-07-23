@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useMutationWithFeedback } from "@/hooks/shared/useMutationWithFeedback";
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));

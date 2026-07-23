@@ -23,7 +23,7 @@ vi.mock("@/features/facturacion/hooks/useNotaCreditoFacturapi", () => ({
 vi.mock("@/hooks/shared", () => ({
   useToast: () => ({ toast: mocks.toast }),
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: mocks.notifyError,
 }));
 

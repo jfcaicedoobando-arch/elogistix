@@ -19,7 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { notifyError } from "@/components/shared/utils/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { EditRow } from "./CatalogoClavesSATCard.parts";
 import {
   EMPTY_DRAFT, TIPO_IVA_LABEL, TIPO_IVA_VARIANT, tasaFromTipo,

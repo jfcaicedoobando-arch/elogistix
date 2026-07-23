@@ -19,7 +19,7 @@ vi.mock("@/features/catalogos/services", () => ({
 vi.mock("sonner", () => ({
   toast: { success: mocks.toastSuccess, error: vi.fn() },
 }));
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifyError: mocks.notifyError,
 }));
 

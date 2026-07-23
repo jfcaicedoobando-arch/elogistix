@@ -19,7 +19,7 @@ vi.mock("@/features/cliente/services/csf", () => ({
   parseCsf: vi.fn().mockResolvedValue({ nombre: "Parsed Org", rfc: "PARS123", cp: "12345" }),
 }));
 
-vi.mock("@/components/shared/utils/appFeedback", () => ({
+vi.mock("@/lib/ui/appFeedback", () => ({
   notifySuccess: vi.fn(),
   notifyError: vi.fn(),
 }));
