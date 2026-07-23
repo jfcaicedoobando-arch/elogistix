@@ -31,6 +31,7 @@ import { useMutation, useQueryClient, type UseMutationOptions } from "@tanstack/
 import type { QueryKey } from "@tanstack/react-query";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Descriptor de actualización optimista. Soporta 1..N queries: se toma un
