@@ -324,6 +324,15 @@ export default tseslint.config(
     },
   },
   {
+    // Bloque 2.4 arquitectura — el único archivo autorizado a hardcodear la tasa
+    // de IVA es el que la define (`TASA_IVA` + `TASAS_IVA_MX`). Cualquier otro
+    // callsite debe importar la constante.
+    files: ["src/lib/financial/financialUtils.ts"],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
+  {
     // Definiciones de columnas para DataTable: exportan `buildColumns` +
     // celdas inline (mismo patrón que primitivas shadcn). React Refresh y
     // el límite de complexity no aplican porque el render JSX condicional
