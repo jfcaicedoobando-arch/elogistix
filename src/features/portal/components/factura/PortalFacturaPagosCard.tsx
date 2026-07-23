@@ -3,6 +3,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePortalPagosFactura } from "@/features/portal/hooks";
+import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { CheckCircle2, Clock } from "lucide-react";
 
 interface Props {
