@@ -199,28 +199,42 @@ async function createInvoiceInFacturapi(
   }
 }
 
-export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
-  const { supabase, apiKey, ambiente, ctx, factura, facturaId, user, claim } = input;
-  const payload = buildFacturapiPayload(ctx);
+interface TimbradoResultado {
+  facturapiId: string;
+  uuid: string;
+  folio: number;
+  serie: string;
+  numero: string;
+  pdfUrl: string;
+  xmlUrl: string;
+}
 
-  const invoice = await createInvoiceInFacturapi(input, payload);
-  if (invoice instanceof Response) return invoice;
-
-  const facturapiId: string = invoice.id;
-  const uuid: string = invoice.uuid;
-  const folio: number = invoice.folio_number ?? invoice.folio ?? 0;
-  const serieTimbrada: string = invoice.series ?? ctx.serie ?? "";
+function parseInvoiceResult(invoice: FapiInvoice, ctx: FacturaContext): TimbradoResultado {
+  const facturapiId = invoice.id;
+  const uuid = invoice.uuid;
+  const folio = invoice.folio_number ?? invoice.folio ?? 0;
+  const serie = invoice.series ?? ctx.serie ?? "";
+  const numero = `${serie}${folio}`;
   const pdfUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/pdf`;
   const xmlUrl = `${FACTURAPI_BASE}/invoices/${facturapiId}/xml`;
-  const respaldo = await respaldarXmlEmitido({ supabase, apiKey, facturapiId, organizationId: factura.organization_id, facturaId, uuid });
+  return { facturapiId, uuid, folio, serie, numero, pdfUrl, xmlUrl };
+}
 
-  const numeroFinal = `${serieTimbrada}${folio}`;
+async function persistirFacturaTimbrada(
+  input: EmitirInput,
+  resultado: TimbradoResultado,
+  respaldo: Awaited<ReturnType<typeof respaldarXmlEmitido>>,
+): Promise<Response | null> {
+  const { supabase, factura, facturaId, user, claim } = input;
+  const { facturapiId, uuid, folio, serie, numero, pdfUrl, xmlUrl } = resultado;
+
   const { error: updErr, data: updRow } = await supabase
     .from("facturas")
     .update({
-      numero: numeroFinal, facturapi_id: facturapiId, facturapi_claim_at: null, uuid_fiscal: uuid, folio_fiscal: folio, serie: serieTimbrada,
-      factura_pdf_url: pdfUrl, factura_xml_url: xmlUrl, factura_xml_backup_path: respaldo.path,
-      estado: "Emitida", ambiente, timbrado_en: new Date().toISOString(), timbrado_por: user.id,
+      numero, facturapi_id: facturapiId, facturapi_claim_at: null, uuid_fiscal: uuid,
+      folio_fiscal: folio, serie, factura_pdf_url: pdfUrl, factura_xml_url: xmlUrl,
+      factura_xml_backup_path: respaldo.path, estado: "Emitida", ambiente: input.ambiente,
+      timbrado_en: new Date().toISOString(), timbrado_por: user.id,
     })
     .eq("id", facturaId)
     .eq("facturapi_id", claim.claimTag)
@@ -244,9 +258,31 @@ export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
 
   await registrarBitacoraEdge(supabase, {
     organizationId: factura.organization_id, usuarioId: user.id, usuarioEmail: user.email, modulo: "facturacion",
-    accion: "facturapi_emitida", entidadId: facturaId, entidadNombre: numeroFinal,
-    detalles: { uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null } },
+    accion: "facturapi_emitida", entidadId: facturaId, entidadNombre: numero,
+    detalles: { uuid, folio, serie, facturapi_id: facturapiId, xml_backup: { status: respaldo.status, path: respaldo.path, error: respaldo.error ?? null } },
   });
 
-  return jsonResponse({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
+  return null;
+}
+
+export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
+  const { supabase, apiKey, ctx, factura, facturaId } = input;
+  const payload = buildFacturapiPayload(ctx);
+
+  const invoice = await createInvoiceInFacturapi(input, payload);
+  if (invoice instanceof Response) return invoice;
+
+  const resultado = parseInvoiceResult(invoice, ctx);
+  const respaldo = await respaldarXmlEmitido({
+    supabase, apiKey, facturapiId: resultado.facturapiId,
+    organizationId: factura.organization_id, facturaId, uuid: resultado.uuid,
+  });
+
+  const persistError = await persistirFacturaTimbrada(input, resultado, respaldo);
+  if (persistError) return persistError;
+
+  return jsonResponse({
+    uuid: resultado.uuid, folio: resultado.folio, serie: resultado.serie,
+    facturapi_id: resultado.facturapiId, pdf_url: resultado.pdfUrl, xml_url: resultado.xmlUrl, xml_backup: respaldo,
+  });
 }
