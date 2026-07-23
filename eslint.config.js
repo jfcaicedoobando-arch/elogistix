@@ -674,7 +674,7 @@ export default tseslint.config(
       "src/features/embarques/hooks/useEmbarquesPageController.ts",
       "src/features/operaciones/hooks/useOperacionesPageController.ts",
       "src/features/portal-agente/routes/_sections/agenteTarifasColumns.tsx",
-      "src/features/proformas/components/AccionesProforma.tsx",
+      
       "src/generators/estadoCuentaPdf.ts",
       "src/pdf/components/Footer.tsx",
       "src/pdf/documents/ReporteEjecutivoDocument.tsx",
