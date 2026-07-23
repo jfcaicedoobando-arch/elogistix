@@ -687,38 +687,9 @@ BEGIN
     UNION ALL SELECT h FROM hall_contenedor_fechas
     UNION ALL SELECT h FROM hall_tipo_cambio_faltante
   )
-  SELECT jsonb_build_object(
-    'generated_at', now(),
-    'total_hallazgos', COUNT(*),
-    'por_severidad', jsonb_build_object(
-      'critico', COUNT(*) FILTER (WHERE h->>'severidad' = 'critico'),
-      'alto',    COUNT(*) FILTER (WHERE h->>'severidad' = 'alto'),
-      'medio',   COUNT(*) FILTER (WHERE h->>'severidad' = 'medio')
-    ),
-    'por_regla', jsonb_build_object(
-      'docs_faltantes',                COUNT(*) FILTER (WHERE h->>'regla' = 'docs_faltantes'),
-      'docs_pendientes_avanzado',      COUNT(*) FILTER (WHERE h->>'regla' = 'docs_pendientes_avanzado'),
-      'fechas',                        COUNT(*) FILTER (WHERE h->>'regla' = 'fechas'),
-      'ventas_sin_facturar',           COUNT(*) FILTER (WHERE h->>'regla' = 'ventas_sin_facturar'),
-      'margen_negativo',               COUNT(*) FILTER (WHERE h->>'regla' = 'margen_negativo'),
-      'margen_bajo',                   COUNT(*) FILTER (WHERE h->>'regla' = 'margen_bajo'),
-      'venta_sin_costo',               COUNT(*) FILTER (WHERE h->>'regla' = 'venta_sin_costo'),
-      'costo_sin_venta',               COUNT(*) FILTER (WHERE h->>'regla' = 'costo_sin_venta'),
-      'proforma_vencida',              COUNT(*) FILTER (WHERE h->>'regla' = 'proforma_vencida'),
-      'proforma_borrador_abandonada',  COUNT(*) FILTER (WHERE h->>'regla' = 'proforma_borrador_abandonada'),
-      'proforma_inconsistente',        COUNT(*) FILTER (WHERE h->>'regla' = 'proforma_inconsistente'),
-      'embarque_huerfano',             COUNT(*) FILTER (WHERE h->>'regla' = 'embarque_huerfano'),
-      'factura_sin_timbrar',           COUNT(*) FILTER (WHERE h->>'regla' = 'factura_sin_timbrar'),
-      'rep_pendiente',                 COUNT(*) FILTER (WHERE h->>'regla' = 'rep_pendiente'),
-      'factura_cancelada_sin_sustitucion', COUNT(*) FILTER (WHERE h->>'regla' = 'factura_cancelada_sin_sustitucion'),
-      'cxc_vencida',                   COUNT(*) FILTER (WHERE h->>'regla' = 'cxc_vencida'),
-      'cxp_por_capturar_estancada',    COUNT(*) FILTER (WHERE h->>'regla' = 'cxp_por_capturar_estancada'),
-      'cxp_vencida',                   COUNT(*) FILTER (WHERE h->>'regla' = 'cxp_vencida'),
-      'contenedor_datos_incompletos',  COUNT(*) FILTER (WHERE h->>'regla' = 'contenedor_datos_incompletos'),
-      'contenedor_fechas_incompletas', COUNT(*) FILTER (WHERE h->>'regla' = 'contenedor_fechas_incompletas'),
-      'tipo_cambio_faltante',          COUNT(*) FILTER (WHERE h->>'regla' = 'tipo_cambio_faltante')
-    ),
-    'umbrales', jsonb_build_object(
+  SELECT public._audit_embarques_agregar(
+    (SELECT COALESCE(jsonb_agg(h), '[]'::jsonb) FROM todos),
+    jsonb_build_object(
       'margen_minimo_pct', v_margen_min_pct,
       'dias_proforma_vencida', v_dias_prof_venc,
       'dias_huerfano', v_dias_huerfano,
@@ -726,14 +697,9 @@ BEGIN
       'dias_cxc_vencida', v_dias_cxc_vencida,
       'dias_cxp_captura', v_dias_cxp_captura,
       'dias_cxp_vencida', v_dias_cxp_vencida
-    ),
-    'hallazgos', COALESCE(jsonb_agg(h ORDER BY
-      CASE h->>'severidad' WHEN 'critico' THEN 1 WHEN 'alto' THEN 2 ELSE 3 END,
-      h->>'expediente'
-    ), '[]'::jsonb)
+    )
   )
-  INTO v_result
-  FROM todos;
+  INTO v_result;
 
   RETURN v_result;
 END;
