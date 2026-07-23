@@ -637,31 +637,21 @@ export default tseslint.config(
     // ─────────────────────────────────────────────────────────────────────
     // Guardrail `locale-format-legacy` — PR-5 · Ítem 3.4 (arq-4).
     //
-    // Los archivos abajo aún usan `.toLocaleString()`, `.toLocaleDateString()`
-    // o `new Intl.NumberFormat(...)` inline. Se migrarán en olas a los
-    // formatters canónicos de `@/lib/formatters` (`formatCurrency`,
-    // `formatNumber`, `formatDate`, `formatFechaEs`, `formatFechaHora`,
-    // `formatFechaLarga`). Al migrar un archivo: quítalo de esta lista.
-    // NO agregues archivos nuevos aquí — el guardrail existe para bloquear
-    // regresiones.
+    // Allowlist AGOTADA (v13.309.32): todos los archivos legacy fueron
+    // migrados a los formatters canónicos de `@/lib/formatters`. Este
+    // bloque queda SOLO para los propios formatters, que necesitan usar la
+    // API nativa (`toLocaleString`/`toLocaleDateString`/`Intl.NumberFormat`)
+    // porque ellos son la implementación de referencia.
     //
-    // Este bloque redefine `no-restricted-syntax` con SÓLO los selectores
-    // base + queryKey + IVA, omitiendo los selectores locale-format. En
-    // ESLint flat-config el último bloque coincidente gana para esa regla.
+    // Si aparece una nueva violación en código de aplicación: NO agregarla
+    // aquí. Migrar el archivo al formatter apropiado (`formatFechaEs`,
+    // `formatFechaHora`, `formatFechaLarga`, `formatCurrency`,
+    // `formatNumber`) o extender el formatter si falta un caso.
     // ─────────────────────────────────────────────────────────────────────
     name: "locale-format-legacy",
     files: [
       // Formatters canónicos: definen los helpers, deben usar la API nativa.
       "src/lib/formatters/**",
-      // Allowlist LEGACY — migrar en olas.
-      "src/features/admin/components/DiagnosticoColumns.tsx",
-      "src/features/admin/routes/AdminDemoLeads.tsx",
-
-
-      
-      "src/generators/estadoCuentaPdf.ts",
-      "src/pdf/components/Footer.tsx",
-      "src/pdf/documents/ReporteEjecutivoDocument.tsx",
     ],
     rules: {
       "no-restricted-syntax": ["error",
@@ -670,6 +660,7 @@ export default tseslint.config(
       ],
     },
   },
+
   // Bloque 2.3 (arquitectura): prohibir imports profundos cross-feature.
   ...crossFeatureOverrides,
 );
