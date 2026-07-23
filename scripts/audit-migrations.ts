@@ -121,27 +121,42 @@ export function scanFile(file: string, body: string, auditPostBaseline = true): 
  * Ej: `_user_id uuid, _role text DEFAULT 'x'` → `uuid, text`.
  * Se usa para comparar firmas entre `CREATE FUNCTION`, `REVOKE` y `GRANT`.
  */
+function splitTopLevelCommas(src: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let buf = "";
+  for (const c of src) {
+    if (c === "(") depth += 1;
+    else if (c === ")") depth -= 1;
+    if (c === "," && depth === 0) {
+      out.push(buf);
+      buf = "";
+    } else {
+      buf += c;
+    }
+  }
+  if (buf.trim() !== "") out.push(buf);
+  return out;
+}
+
 function normalizeArgTypes(rawArgs: string): string {
   const args = rawArgs.trim();
   if (args === "") return "";
-  return args
-    .split(",")
+  return splitTopLevelCommas(args)
     .map((a) => {
-      // Quitar DEFAULT y trim
       const noDefault = a.split(/\bdefault\b/i)[0].trim();
-      // Quitar prefijo IN/OUT/INOUT/VARIADIC
       const noMode = noDefault.replace(/^(in|out|inout|variadic)\s+/i, "");
-      // Tomar la última "palabra tipo" — puede incluir espacios (p.ej. "timestamp with time zone").
-      // Heurística: si el primer token empieza con `_` (nombre de arg convencional), quitarlo.
       const tokens = noMode.split(/\s+/);
-      if (tokens.length > 1 && /^_?[a-z][a-z0-9_]*$/i.test(tokens[0])) {
-        return tokens.slice(1).join(" ").toLowerCase();
-      }
-      return noMode.toLowerCase();
+      // Si el primer token es un nombre de argumento (identificador), quitarlo.
+      const typeTokens =
+        tokens.length > 1 && /^_?[a-z][a-z0-9_]*$/i.test(tokens[0]) ? tokens.slice(1) : tokens;
+      // Quitar modificadores `(...)` de precisión/escala (no forman parte de la firma en pg_proc).
+      return typeTokens.join(" ").toLowerCase().replace(/\s*\([^)]*\)/g, "");
     })
     .filter(Boolean)
     .join(", ");
 }
+
 
 function stripSqlComments(sql: string): string {
   // Quita comentarios `-- ...` (fin de línea) y `/* ... */` (bloque, no anidado).
