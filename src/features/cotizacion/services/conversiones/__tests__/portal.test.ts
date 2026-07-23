@@ -35,9 +35,9 @@ describe("portalResponderCotizacion", () => {
   });
 
   it.each([
-    ["LC_COT_ELIMINADA", /ya no está disponible/i],
-    ["LC_COT_NO_RESPONDIBLE", /ya no puede responderse/i],
-    ["LC_COT_NO_ENCONTRADA", /no encontrada|sin acceso/i],
+    ["LC_COT_ELIMINADA", /ya fue eliminada/i],
+    ["LC_COT_NO_RESPONDIBLE", /no admite respuesta del cliente/i],
+    ["LC_COT_NO_ENCONTRADA", /no existe o fue eliminada/i],
   ])("mapea %s a mensaje es-MX legible", async (token, matcher) => {
     mock.setRpcResult("portal_responder_cotizacion", {
       data: null,
