@@ -46,6 +46,19 @@ function runAutoSyncEstado(args: AutoSyncArgs) {
   }
 }
 
+function pickAutoSyncFields(embarque: EmbarqueRow | undefined) {
+  if (!embarque) return null;
+  return {
+    embarqueId: embarque.id,
+    modo: embarque.modo,
+    tipo: embarque.tipo,
+    estado: embarque.estado,
+    etd: embarque.etd ?? null,
+    eta: embarque.eta ?? null,
+    fechaLlegadaReal: embarque.fecha_llegada_real ?? null,
+  };
+}
+
 /**
  * Auto-sync del estado calculado a BD. Se aísla en su propio hook para
  * mantener la complejidad ciclomática del hook principal bajo control.
@@ -56,22 +69,15 @@ function useAutoSyncEstadoEmbarque(
   usuarioEmail: string,
 ) {
   const { mutate: syncEstadoMutate } = useSyncEstadoEmbarque();
-  const embarqueId = embarque?.id;
-  const modo = embarque?.modo;
-  const tipo = embarque?.tipo;
-  const etd = embarque?.etd ?? null;
-  const eta = embarque?.eta ?? null;
-  const estado = embarque?.estado;
-  const fechaLlegadaReal = embarque?.fecha_llegada_real ?? null;
+  const f = pickAutoSyncFields(embarque);
+  const key = f ? `${f.embarqueId}|${f.modo}|${f.tipo}|${f.estado}|${f.etd}|${f.eta}|${f.fechaLlegadaReal}` : null;
   useEffect(() => {
-    if (!puedeSincronizarEstado) return;
-    if (!embarqueId || !modo || !tipo || !estado) return;
-    runAutoSyncEstado({
-      embarqueId, modo, tipo, estado, etd, eta, fechaLlegadaReal, usuarioEmail,
-      sync: syncEstadoMutate,
-    });
-  }, [puedeSincronizarEstado, embarqueId, modo, tipo, etd, eta, estado, fechaLlegadaReal, syncEstadoMutate, usuarioEmail]);
+    if (!puedeSincronizarEstado || !f) return;
+    runAutoSyncEstado({ ...f, usuarioEmail, sync: syncEstadoMutate });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puedeSincronizarEstado, key, syncEstadoMutate, usuarioEmail]);
 }
+
 
 
 /**
