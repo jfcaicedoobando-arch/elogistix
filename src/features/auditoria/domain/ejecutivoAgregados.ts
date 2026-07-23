@@ -35,8 +35,9 @@ export const REGLAS_FINANCIERAS: ReglaAuditoria[] = [
   "proforma_vencida",
 ];
 
-// `diffHoras` vive en `./ejecutivoRankingCore` (hoja pura, rompe ciclo con ranking).
-export { diffHoras, TOP_N } from "./ejecutivoRankingCore";
+// `TOP_N` y `diffHoras` viven en `./ejecutivoRankingCore` (hoja pura, rompe ciclo con ranking).
+export { diffHoras } from "./ejecutivoRankingCore";
+export { TOP_N };
 
 export function emptyPorRegla(): Record<ReglaAuditoria, number> {
   return {
