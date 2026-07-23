@@ -63,8 +63,8 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
   }));
 }
 
-/** Placeholder cuando la edge function `user-management` no resolvió el email. */
-export const UNRESOLVED_EMAIL = "No disponible";
+// UNRESOLVED_EMAIL vive en `./constants.ts` (extraído en Sprint 2 · ítem 4b
+// para romper el ciclo `portales.ts → ./index → portales.ts`).
 
 export async function updateUserRole(userId: string, newRole: AppRole): Promise<void> {
   const { error } = await supabase
