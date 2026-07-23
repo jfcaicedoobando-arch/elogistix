@@ -12,7 +12,7 @@
  * cancelación (SAT vs manual), saldo, días vencido y NC aplicadas.
  */
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import { ToneBadge } from "@/components/shared/ToneBadge";
 import { Badge } from "@/components/ui/badge";
 import { CHIP_BASE } from "@/lib/ui/badgeTone";
 import type { ChipTone } from "@/lib/ui/badgeTone";

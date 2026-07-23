@@ -3,7 +3,7 @@
  * de costos directos. Basado en `<ToneBadge>` (lenguaje visual CxP).
  */
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { AjusteDescripcion } from "./ajusteDescripcion";
 
 interface Props {

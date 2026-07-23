@@ -2,7 +2,7 @@
  * Columnas + badge de estado para `ComprasNotasCredito` — extraídos en
  * v13.182.0 (Wave 2 splits).
  */
-import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import { defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";

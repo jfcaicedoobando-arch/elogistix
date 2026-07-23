@@ -19,7 +19,7 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 import { bucketDeDias, BUCKET_LABELS, BUCKET_TONE, type CubetaAging } from "./agingBuckets";
-import { ToneBadge } from "@/features/cxp/components/ToneBadge";
+import { ToneBadge } from "@/components/shared/ToneBadge";
 
 import { todayLocalISO } from "@/lib/date/today";
 import { AgingActionBar, AgingKpiRow } from "./AgingDrillDownDialog.parts";
