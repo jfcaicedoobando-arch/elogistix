@@ -101,7 +101,7 @@ export default function LeadDetalle() {
 
       <PageHeader
         title={lead.empresa}
-        description={`Lead · ${lead.fuente} · creado ${new Date(lead.created_at).toLocaleDateString("es-MX")}`}
+        description={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
         actions={
           <LeadHeaderActions
             estado={lead.estado}
