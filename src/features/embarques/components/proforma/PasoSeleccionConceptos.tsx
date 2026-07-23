@@ -5,7 +5,7 @@ import {
   ConceptoRow, TotalesProformaBox, ProformaFooterFields,
 } from "./PasoSeleccionConceptos.parts";
 import { buildContenedorLabelMap } from "./PasoSeleccionConceptos.helpers";
-import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
