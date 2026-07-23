@@ -66,8 +66,13 @@ describe("Fase O — Validación de aprobación CxP", () => {
   });
 
   it("aprobar_factura_proveedor invoca la validación sólo cuando p_aprobar", () => {
-    // Bloque IF p_aprobar THEN ... PERFORM public._cxp_validar_aprobacion(p_id)
-    expect(sql).toMatch(
+    // Bloque IF p_aprobar THEN ... PERFORM public._cxp_validar_aprobacion(p_id).
+    // El wrapper `aprobar_factura_proveedor` puede vivir en una migración distinta
+    // a la que redefine la función de validación (ej. exención de extranjeros
+    // v13.309.33 sólo toca `_cxp_validar_aprobacion`). Buscamos la migración más
+    // reciente que contenga el wrapper.
+    const wrapperSql = readLatestContaining("aprobar_factura_proveedor");
+    expect(wrapperSql).toMatch(
       /IF p_aprobar THEN\s+PERFORM public\._cxp_validar_aprobacion\(p_id\)/,
     );
   });
