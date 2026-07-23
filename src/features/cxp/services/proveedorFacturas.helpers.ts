@@ -22,6 +22,7 @@ export const PROVEEDOR_FACTURAS_SELECT = `
   pagos_proveedor(monto, deleted_at),
   proveedor_notas_credito(monto, estado, deleted_at),
   proveedores(origen_proveedor),
+  embarques(expediente),
   presupuesto_categorias!categoria_presupuesto_id(nombre)
 ` as const;
 
@@ -39,6 +40,7 @@ export type Joined = Pick<
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
   proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
+  embarques: { expediente: string } | null;
   presupuesto_categorias: { nombre: string } | null;
 };
 
@@ -125,6 +127,7 @@ export function mapJoinedRow(f: Joined): FacturaCxP {
     proveedor_nombre: f.proveedor_nombre,
     proveedor_origen: f.proveedores?.origen_proveedor ?? null,
     embarque_id: f.embarque_id,
+    embarque_expediente: f.embarques?.expediente ?? null,
     folio_proveedor: f.folio_proveedor,
     folio_interno: f.folio_interno,
     fecha_emision: f.fecha_emision,

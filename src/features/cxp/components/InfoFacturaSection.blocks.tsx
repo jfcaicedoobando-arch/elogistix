@@ -3,10 +3,26 @@
  * complejidad ciclomática del componente principal por debajo de 16.
  * v13.307.17
  */
+import { Link } from "react-router-dom";
 import { formatDate } from "@/lib/formatters/dates";
 import { formatCurrency } from "@/lib/formatters";
 import { Field, UuidFiscalField } from "./InfoFacturaSection.parts";
 import type { FacturaCxP } from "@/features/cxp/services";
+
+function EmbarqueValor({ f }: { f: FacturaCxP }) {
+  if (!f.embarque_id) return null;
+  if (f.embarque_expediente) {
+    return (
+      <Link
+        to={`/embarques/${f.embarque_id}`}
+        className="text-primary hover:underline font-medium"
+      >
+        {f.embarque_expediente}
+      </Link>
+    );
+  }
+  return <span className="text-muted-foreground italic text-xs">Sin expediente</span>;
+}
 
 function VencimientoValor({ f }: { f: FacturaCxP }) {
   if (!f.fecha_vencimiento) return null;
@@ -103,10 +119,7 @@ export function ReferenciasFiscalesBlock({
           onVerify={onVerify}
           esExtranjero={f.proveedor_origen === "Extranjero"}
         />
-        <Field
-          label="Embarque"
-          value={f.embarque_id ? <span className="font-mono text-xs">{f.embarque_id.slice(0, 8)}…</span> : null}
-        />
+        <Field label="Embarque" value={<EmbarqueValor f={f} />} />
       </div>
     </div>
   );
