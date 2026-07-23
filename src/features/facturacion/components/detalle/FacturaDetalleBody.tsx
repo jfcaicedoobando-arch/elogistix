@@ -44,7 +44,7 @@ export function FacturaDetalleBody(props: FacturaDetalleBodyProps) {
 
       <FacturaResumenCard factura={factura} />
 
-      {mostrarTimbrado && (
+      {mostrarTimbrado && factura.uuid_fiscal && (
         <FacturaTimbradoCard
           uuidFiscal={factura.uuid_fiscal}
           folioFiscal={factura.folio_fiscal}
