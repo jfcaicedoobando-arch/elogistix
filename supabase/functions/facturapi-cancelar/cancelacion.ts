@@ -206,7 +206,18 @@ export async function resolveSustitutaSnapshot(
   return { ok: true, uuid: data.uuid_fiscal as string, facturapiId: data.facturapi_id as string };
 }
 
-/** Revierte los enlaces `factura_id` de las proformas asociadas a la factura cancelada. */
+/**
+ * Limpia los punteros `factura_id`/`factura_secundaria_id` en proformas que
+ * apuntaban a la factura cancelada. **NO toca `estado_proforma`** — esa
+ * responsabilidad es de la RPC `revertir_proforma_al_cancelar_sustitucion`
+ * (llamada aparte por el caller), que sí verifica si quedan facturas hermanas
+ * vivas antes de degradar el estado.
+ *
+ * Bug histórico: esta función reseteaba `estado_proforma='pendiente'` cuando
+ * ambos punteros quedaban nulos, sin verificar si existía una factura
+ * sustituta viva apuntando a la misma proforma por `proforma_id` o por
+ * `conceptos_factura.proforma_id_origen` (ver PRO-2026-0970 / F971 → F981).
+ */
 export async function revertirProformasCancelacion(
   supabase: SupabaseClient,
   facturaId: string,
@@ -219,18 +230,12 @@ export async function revertirProformasCancelacion(
   for (const pf of proformasLigadas ?? []) {
     const nuevoFacturaId = pf.factura_id === facturaId ? null : pf.factura_id;
     const nuevoFacturaSecId = pf.factura_secundaria_id === facturaId ? null : pf.factura_secundaria_id;
-    const ambosNulos = !nuevoFacturaId && !nuevoFacturaSecId;
     const patch: Record<string, unknown> = {
       factura_id: nuevoFacturaId,
       factura_secundaria_id: nuevoFacturaSecId,
     };
-    if (ambosNulos) {
-      patch.estado_proforma = "pendiente";
-      patch.fecha_facturacion = null;
-      patch.folio_factura_externa = null;
-    }
     const { error: upErr } = await supabase.from("proformas").update(patch).eq("id", pf.id);
-    if (!upErr) revertidas.push({ id: pf.id, estado: ambosNulos ? "pendiente" : "facturada" });
+    if (!upErr) revertidas.push({ id: pf.id, estado: "punteros_limpiados" });
   }
   return revertidas;
 }
