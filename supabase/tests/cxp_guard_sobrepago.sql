@@ -21,13 +21,31 @@ DECLARE
   v_org uuid := '11111111-1111-1111-1111-111111111111';
   v_prov uuid := '22222222-2222-2222-2222-222222222222';
   v_fact uuid := '33333333-3333-3333-3333-333333333333';
+  v_cat uuid := '66666666-6666-6666-6666-666666666666';
 BEGIN
+  -- Organización y proveedor mínimos (FKs).
+  INSERT INTO public.organizations (id, nombre)
+  VALUES (v_org, 'Test Org Guard Sobrepago')
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.proveedores (id, organization_id, nombre, categoria, subtipo_gasto)
+  VALUES (v_prov, v_org, 'Test Prov Guard Sobrepago', 'GastoOperativo', 'Otros')
+  ON CONFLICT (id) DO NOTHING;
+
+  -- Categoría de presupuesto mínima (columna NOT NULL en proveedor_facturas).
+  INSERT INTO public.presupuesto_categorias
+    (id, organization_id, nombre, orden, activa, tipo_contable)
+  VALUES
+    (v_cat, v_org, 'Test Guard Sobrepago', 0, true, 'CostoDirectoEmbarque');
+
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
-     moneda, tipo_cambio_usd, subtotal, iva, total, estado)
+     categoria_presupuesto_id,
+     moneda, tipo_cambio_usd, subtotal, iva, total, estado, estado_aprobacion)
   VALUES
     (v_fact, v_org, v_prov, 'Test Prov', 'GUARD-SOBRE-01',
-     'MXN'::public.moneda, 0, 3000, 0, 3000, 'Borrador');
+     v_cat,
+     'MXN'::public.moneda, 0, 3000, 0, 3000, 'Borrador', 'aprobada');
 END
 $fixture$ LANGUAGE plpgsql;
 
@@ -44,7 +62,7 @@ BEGIN
     VALUES
       ('11111111-1111-1111-1111-111111111111',
        '33333333-3333-3333-3333-333333333333',
-       4000, 'MXN'::public.moneda, 0);
+       4000, 'MXN'::public.moneda, NULL);
     RAISE EXCEPTION 'CASO1_FALLO: se aceptó INSERT sobrepago (esperaba LC_PAGO_EXCEDE_SALDO)';
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS v_sqlstate = RETURNED_SQLSTATE;
@@ -67,7 +85,7 @@ BEGIN
     (v_pago_id,
      '11111111-1111-1111-1111-111111111111',
      '33333333-3333-3333-3333-333333333333',
-     1000, 'MXN'::public.moneda, 0);
+     1000, 'MXN'::public.moneda, NULL);
 
   SELECT monto_en_moneda_factura INTO v_mmf
     FROM public.pagos_proveedor WHERE id = v_pago_id;
@@ -86,7 +104,7 @@ VALUES
   ('55555555-5555-5555-5555-555555555555',
    '11111111-1111-1111-1111-111111111111',
    '33333333-3333-3333-3333-333333333333',
-   1000, 'MXN'::public.moneda, 0);
+   1000, 'MXN'::public.moneda, NULL);
 
 -- -------------------------------------------------------------
 -- CASO 3 (BUG histórico): UPDATE eleva pago 1000→2500 en factura 3000
