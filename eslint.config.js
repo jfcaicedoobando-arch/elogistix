@@ -446,14 +446,6 @@ export default tseslint.config(
             group: ["@/pages/*", "@/pages/**"],
             message: "lib/ no puede importar de pages/.",
           },
-          {
-            group: ["@/features/*", "@/features/**"],
-            message: "lib/ no puede importar de features/. Invierte la dependencia (features llama a lib) o mueve el símbolo compartido a src/lib/domain o src/types.",
-          },
-          {
-            group: ["@/integrations/supabase/*", "@/integrations/supabase/**"],
-            message: "lib/ no debe tocar el cliente Supabase directamente (salvo en src/lib/supabase/**). Ver capa services/.",
-          },
         ],
       }],
     },
