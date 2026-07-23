@@ -108,35 +108,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .order("created_at", { ascending: true });
   if (ppErr) return jsonResponse({ error: "pagos_query_failed", detail: ppErr.message }, 500);
 
-  const totalFactura = Number(factura.total ?? 0);
-  let acumuladoAntes = 0;
-  let numParcialidad = 1;
-  for (const pp of pagosPrev ?? []) {
-    if (pp.id === pago.id) break;
-    acumuladoAntes += Number(pp.monto_aplicado_factura ?? 0);
-    numParcialidad += 1;
-  }
-  const saldoAnt = round2(totalFactura - acumuladoAntes);
-  const impPagado = Number(pago.monto_aplicado_factura ?? 0);
-  const saldoInsoluto = round2(saldoAnt - impPagado);
+  const { numParcialidad, saldoAnt, impPagado, saldoInsoluto } = calcularParcialidad(
+    pagosPrev, pago.id, Number(factura.total ?? 0), Number(pago.monto_aplicado_factura ?? 0),
+  );
 
   // v13.208.0 — Referencias del embarque vinculado a la factura (con fallback a snapshot).
-  let refExpediente: string | null = (factura as { expediente?: string | null }).expediente ?? null;
-  let refBlMaster: string | null = null;
-  let refBlHouse: string | null = (factura as { referencia_bl?: string | null }).referencia_bl ?? null;
-  const embarqueId = (factura as { embarque_id?: string | null }).embarque_id ?? null;
-  if (embarqueId) {
-    const { data: emb } = await supabase
-      .from("embarques")
-      .select("expediente, bl_master, bl_house")
-      .eq("id", embarqueId)
-      .maybeSingle();
-    if (emb) {
-      refExpediente = (emb as { expediente?: string | null }).expediente ?? refExpediente;
-      refBlMaster = (emb as { bl_master?: string | null }).bl_master ?? null;
-      refBlHouse = (emb as { bl_house?: string | null }).bl_house ?? refBlHouse;
-    }
-  }
+  const refs = await resolverReferenciasEmbarque(supabase, factura);
+
 
   // 5) Construir contexto
   const ctx: PagoContext = {
