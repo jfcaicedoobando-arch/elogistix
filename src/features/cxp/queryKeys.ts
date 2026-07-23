@@ -16,6 +16,8 @@ export const cxp = {
     ["cxp", "buscar_embarques", term, organizationId ?? null] as const,
   conciliacionCandidatos: (pagoId: string) =>
     ["cxp", "conciliacion-candidatos", pagoId] as const,
+  conceptosCfdi: (facturaId?: string | null) =>
+    ["cxp", "conceptos-cfdi", facturaId ?? null] as const,
 } as const;
 
 // Keys de dominios adyacentes que se invalidan desde CxP.

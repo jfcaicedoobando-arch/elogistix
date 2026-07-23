@@ -2,6 +2,8 @@ export const presupuesto = {
   all: ["presupuesto"] as const,
   categorias: (activas?: boolean) =>
     ["presupuesto", "categorias", activas ?? null] as const,
+  categoriasPorOrg: (activas: boolean, organizationId: string | null) =>
+    ["presupuesto", "categorias", activas ?? null, organizationId ?? "none"] as const,
   mensual: (anio: number) => ["presupuesto", "mensual", anio] as const,
   mensualPorOrg: (anio: number, organizationId: string | null) =>
     ["presupuesto", "mensual", anio, organizationId ?? "none"] as const,

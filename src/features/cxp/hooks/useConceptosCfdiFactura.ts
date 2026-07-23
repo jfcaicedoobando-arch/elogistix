@@ -6,6 +6,7 @@
  * capa Hooks→Services→Lib (baseline arquitectónico).
  */
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 import {
   fetchConceptosCfdi,
   type ConceptoCfdiRow,
@@ -15,7 +16,7 @@ export type { ConceptoCfdiRow };
 
 export function useConceptosCfdiFactura(facturaId: string | null | undefined) {
   return useQuery({
-    queryKey: ["cxp", "conceptos-cfdi", facturaId ?? null] as const,
+    queryKey: queryKeys.cxp.conceptosCfdi(facturaId ?? null),
     queryFn: () => fetchConceptosCfdi(facturaId as string),
     enabled: !!facturaId,
     staleTime: 30_000,

@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
-import type { ProveedorOperacion } from "./index";
+import type { ProveedorOperacion } from "./proveedoresCrud";
 
 export async function fetchProveedorOperaciones(
   proveedorId: string,
