@@ -38,7 +38,7 @@ export interface Financials {
 
 // v13.309.50 · PR-S2-B: unificamos con `EmbarqueRow` (Tables<"embarques">) —
 // que ya satisface TabResumen/TabFacturacion/TabTracking y expone todos los
-// campos que la vista consume. Elimina el `as unknown as` histórico.
+// campos que la vista consume. Elimina el el cast doble histórico.
 export type EmbarqueProp = EmbarqueRow;
 
 export interface EmbarqueDetalleTabsProps {

@@ -18,14 +18,10 @@ import {
 } from "./useNuevoProveedorController.constants";
 import { mergeCsfPatch, procesarCsfUpload } from "./useNuevoProveedorController.csf";
 import { preparePayload } from "./useNuevoProveedorController.helpers";
-
 import { notifyError } from "@/lib/ui/appFeedback";
-export {
-  DOCS_EXTRANJERO,
-  DOCS_NACIONAL,
-  EMPTY_PROVEEDOR_FORM,
-  type NuevoProveedorForm,
-} from "./useNuevoProveedorController.constants";
+
+export { DOCS_EXTRANJERO, DOCS_NACIONAL, EMPTY_PROVEEDOR_FORM, type NuevoProveedorForm } from "./useNuevoProveedorController.constants";
+
 
 /**
  * Controller del diálogo de alta de proveedores (wizard 2 pasos).
@@ -61,10 +57,8 @@ export function useNuevoProveedorController(
   const isAgenteCarga = isLogistico && form.tipo === "Agente de Carga";
   const rfcLabel = form.origen_proveedor === "Extranjero" ? "Tax ID" : "RFC";
 
-
-
-
   const isStep1Valid = (): boolean => {
+
     // Chequeos comunes agrupados en una tabla de aserciones para bajar la
     // complejidad ciclomática (antes 11, ahora 3).
     const camposBase: boolean[] = [
@@ -150,8 +144,8 @@ export function useNuevoProveedorController(
     onClose();
   };
 
-
   const handleSave = async () => {
+
     const validacion = preparePayload(form);
     if (!validacion.ok) {
       notifyError(toast, { title: validacion.mensaje, method: `FEATURES_PROVEEDOR_HOOKS_USENUEVOPROVEEDORCONTROLLER_${validacion.motivo === "clabe" ? 1 : 2}` });
