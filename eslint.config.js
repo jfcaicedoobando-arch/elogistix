@@ -812,6 +812,9 @@ export default tseslint.config(
     files: [
       // Formatters canónicos: definen los helpers, deben usar la API nativa.
       "src/lib/formatters/**",
+      // Primitivas TZ-aware CDMX (`hoyMx`, `ymMx`): capa de bajo nivel que
+      // implementa los formatters de dominio con `Intl.DateTimeFormat("en-CA", ...)`.
+      "src/lib/date/mx.ts",
     ],
     rules: {
       "no-restricted-syntax": ["error",
