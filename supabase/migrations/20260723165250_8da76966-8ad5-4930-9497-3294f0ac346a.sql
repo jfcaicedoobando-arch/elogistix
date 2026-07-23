@@ -259,3 +259,6 @@ BEGIN
   );
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.calcular_demoras_embarque(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.calcular_demoras_embarque(uuid) TO authenticated, service_role;
