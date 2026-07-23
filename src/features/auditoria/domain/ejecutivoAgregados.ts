@@ -8,6 +8,7 @@ import type {
   SeveridadAuditoria,
 } from "@/features/auditoria/types";
 import { isoUtcDay } from "@/lib/date/mx";
+import { TOP_N } from "./ejecutivoRankingCore";
 
 // `OperadorRanking` / `calcularRanking` viven en `./ejecutivoRanking` (split Power-of-10 #4).
 export { calcularRanking, type OperadorRanking, type RankingResultado } from "./ejecutivoRanking";
@@ -34,11 +35,9 @@ export const REGLAS_FINANCIERAS: ReglaAuditoria[] = [
   "proforma_vencida",
 ];
 
-export const TOP_N = 5;
-
-export function diffHoras(desde: string, hasta: string): number {
-  return (Date.parse(hasta) - Date.parse(desde)) / (1000 * 60 * 60);
-}
+// `TOP_N` y `diffHoras` viven en `./ejecutivoRankingCore` (hoja pura, rompe ciclo con ranking).
+export { diffHoras } from "./ejecutivoRankingCore";
+export { TOP_N };
 
 export function emptyPorRegla(): Record<ReglaAuditoria, number> {
   return {

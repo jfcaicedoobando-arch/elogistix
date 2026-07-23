@@ -19,6 +19,16 @@ export const SIZE_EXEMPT = new Set<string>([
   "src/integrations/supabase/types.ts",
 ]);
 
+/**
+ * Sprint 2 · ítem 6 (cierre) — wrappers de infraestructura en `src/lib/**`
+ * cuyo ÚNICO trabajo es tocar el cliente (justificado). No añadir más
+ * archivos a esta lista: la regla es que lib/ es puro.
+ */
+export const CLIENT_IMPORT_ALLOW = new Set<string>([
+  "src/lib/auth/signOut.ts",
+  "src/lib/auth/changePassword.ts",
+]);
+
 export interface OversizedFile {
   file: string;
   lines: number;
@@ -36,7 +46,9 @@ export function findDirectClientImports(
       excludeFileRe: /\.(test|spec)\.tsx?$/,
     })) {
       const src = readFileSync(f, "utf8");
-      if (DIRECT_CLIENT_IMPORT.test(src)) out.push(relPath(root, f));
+      const rel = relPath(root, f);
+      if (CLIENT_IMPORT_ALLOW.has(rel)) continue;
+      if (DIRECT_CLIENT_IMPORT.test(src)) out.push(rel);
     }
   }
   return out.sort();
@@ -61,9 +73,12 @@ export interface ArchReport {
 
 export function runArchAudit(root: string): ArchReport {
   return {
+    // Sprint 2 · ítem 6 (cierre): cubrimos TODO src/lib (antes sólo
+    // src/lib/contexts) para que ningún archivo de lib/ toque el cliente
+    // fuera de CLIENT_IMPORT_ALLOW.
     hooksContextsDirectImports: findDirectClientImports(root, [
       "src/hooks",
-      "src/lib/contexts",
+      "src/lib",
     ]),
     // `src/features` alberga ~90% del código. Excluimos `services/` (capa
     // permitida para tocar el cliente Supabase) para que sólo afloren

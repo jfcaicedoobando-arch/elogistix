@@ -245,8 +245,10 @@ export default tseslint.config(
       "max-lines-per-function": ["warn", { max: 200, skipBlankLines: true, skipComments: true, IIFEs: true }],
       // Umbral pragmático: 16. Funciones con CC ≤ 15 son aceptables
       // (estándar de la industria es 15; subir a 16 evita refactors forzados
-      // de bajo valor). Sólo warning a partir de CC ≥ 16.
-      "complexity": ["warn", { max: 16 }],
+      // de bajo valor). Sprint 2 · ítem 2.7 (cierre): promovido warn→error.
+      // Tests, columnas de tabla y otros patrones legítimos tienen overrides
+      // dedicados que apagan la regla — ver bloques más abajo.
+      "complexity": ["error", { max: 16 }],
       "max-depth": ["warn", 4],
       "max-params": ["warn", 5],
       // Architectural guardrail — barrel imports for hooks/services

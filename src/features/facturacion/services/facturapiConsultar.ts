@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { parseFunctionError, FacturapiError } from "./facturapi";
+import { parseFunctionError, FacturapiError } from "./facturapiError";
 
 export interface ConsultarFacturapiRelacionado {
   relationship: string | null;
