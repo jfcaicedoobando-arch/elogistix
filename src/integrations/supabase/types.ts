@@ -6745,6 +6745,20 @@ export type Database = {
           margen_min_pct: number
         }[]
       }
+      _calcular_demoras_montos_contenedor: {
+        Args: {
+          p_cond_id: string
+          p_dias_excedidos: number
+          p_moneda_default: string
+          p_org: string
+          p_tipo_cont_id: string
+        }
+        Returns: {
+          moneda_costo: string
+          monto_costo: number
+          monto_venta: number
+        }[]
+      }
       _convertir_proformas_insertar_conceptos: {
         Args: {
           p_es_consolidada: boolean
