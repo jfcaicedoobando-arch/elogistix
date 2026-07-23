@@ -1,5 +1,10 @@
 # Changelog
 
+# Changelog
+
+## [13.309.2] - 2026-07-23
+- **refactor(arquitectura · Bloque 2.1) · Catálogo central de códigos `LC_*` para traducir errores del backend.** Se creó `src/lib/errors/lcCodes.ts` con un mapa de ~100 códigos `LC_*` (derivados de las migraciones de Supabase) a mensajes es-MX amigables (`translateLcCode`) y un helper `stripLcCode` que limpia el token cuando el mensaje ya trae texto humano adjunto. `getErrorMessage` (que usa el wrapper global de mutaciones y todos los toasts vía `appFeedback`) ahora: (1) intenta las traducciones legacy por regex, (2) consulta el catálogo LC, (3) si no hay traducción pero detecta un token `LC_*`, devuelve el mensaje sin ese ruido. Se eliminó el `try/catch` ad-hoc en `useSyncEstadoEmbarque` que traducía `LC_TRANSICION_INVALIDA` a mano — ese mensaje ahora vive en un solo lugar. Se agregó `lcCodes.test.ts` (3 casos). Analogía: era como tener cada cajero con su propio diccionario para traducir códigos de error del proveedor; ahora todos consultan el mismo diccionario colgado en la pared, y si aparece un código nuevo basta con anotarlo una vez.
+
 ## [13.309.1] - 2026-07-23
 - **refactor(arquitectura · Bloque 1.3) · Tipos de dominio CxP fuera de componentes `.tsx`.** Se creó `src/features/cxp/types/` con barrel y se movieron ahí `FacturaFormValues`, `CategoriaPresupuestoLite`, `TcOrigen`, `EmbarqueSeleccionado` y `SeleccionLinea` (antes vivían dentro de `facturaFormPrimitives.tsx`, `FacturaProveedorFormFields.tsx`, `SugerirEmbarqueBlock.tsx` y `VincularEmbarqueSection.tsx`). Los 8 hooks del formulario CxP (`useNuevaFacturaProveedorForm.*`, `useEditarFacturaProveedorForm`) ahora importan desde `@/features/cxp/types`; los componentes originales conservan re-export para no romper consumidores externos. Métrica: madge circular baja de 57 a 21 (línea base histórica) — objetivo del ítem cumplido y muy por debajo del techo (≤45). Analogía: era como tener las definiciones de "qué es una factura" pegadas en el mismo cuaderno donde el cajero anota los pagos; ahora viven en un diccionario aparte que todos consultan sin abrir el cuaderno del cajero.
 
