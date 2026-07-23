@@ -151,6 +151,14 @@ jobs:
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/schema-invariants.sql
 
+      - name: CxP guard — tests conductuales de sobrepago (FIX-R3-01)
+        # Sprint 1 (R3): valida INSERT/UPDATE de pagos_proveedor contra
+        # el trigger `guard_pago_proveedor`. Cubre el bug del path UPDATE
+        # (delta vs saldo) reintroducido si alguien vuelve a la fórmula
+        # v_delta. Todo el fixture corre dentro de BEGIN…ROLLBACK.
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
+        run: $PSQL -f supabase/tests/cxp_guard_sobrepago.sql
+
       - name: Dump prepared database
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |
