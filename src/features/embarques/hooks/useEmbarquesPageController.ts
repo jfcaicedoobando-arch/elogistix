@@ -11,7 +11,7 @@ import { getOrigen, getDestino } from "@/lib/formatters";
 import { formatFechaEs } from "@/lib/formatters/dates";
 import { useEmbarquesPageState } from "@/features/embarques/hooks/useEmbarquesPageState";
 import { useContenedoresInfoMap } from "@/features/embarques/hooks/useContenedoresInfoMap";
-import { buildEmbarqueColumns } from "@/features/embarques/components/embarqueColumns";
+import { buildEmbarqueColumns } from "@/features/embarques/table/embarqueColumns";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fetchEmbarquesParaExport } from "@/features/embarques/services";
 import { useOrgFilter } from "@/hooks/shared";
