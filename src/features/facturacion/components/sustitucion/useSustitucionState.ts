@@ -7,17 +7,13 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchSustitutaEstado, type SustitutaEstado } from "@/features/facturacion/services/sustitucionEstado";
 import { facturacion as facturacionKeys } from "@/features/facturacion/queryKeys";
 import { clearPersisted, readPersisted } from "./persistence";
 
 export type Step = "intro" | "confirmar";
 
-interface SustitutaData {
-  id: string;
-  estado: string | null;
-  uuid_fiscal: string | null;
-}
+type SustitutaData = SustitutaEstado;
 
 export function useSustitucionState(facturaId: string | null, open: boolean) {
   const [step, setStep] = useState<Step>("intro");
@@ -31,15 +27,7 @@ export function useSustitucionState(facturaId: string | null, open: boolean) {
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
     staleTime: 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("facturas")
-        .select("id, estado, uuid_fiscal")
-        .eq("id", nuevaId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchSustitutaEstado(nuevaId!),
   });
 
   // Restaurar progreso al abrir.
