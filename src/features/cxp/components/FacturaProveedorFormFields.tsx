@@ -25,7 +25,7 @@ import { TcOrigenHint } from "./FacturaProveedorFormFields.hint";
 
 type Moneda = Database["public"]["Enums"]["moneda"];
 
-export type { FacturaFormValues, TcOrigen };
+
 
 interface Props {
   values: FacturaFormValues;
