@@ -74,7 +74,7 @@ const ERROR_RULES: readonly RuleMatch[] = [
   },
   {
     code: "LC_CXP_UUID_NO_VERIFICADO",
-    message: "Verifica el UUID en el SAT antes de aprobar.",
+    message: "Verifica el UUID en el SAT antes de aprobar. Si es un proveedor internacional, quita el UUID fiscal desde el detalle de la factura.",
     matches: (raw) => raw.includes("lc_cxp_uuid_no_verificado"),
   },
   {
