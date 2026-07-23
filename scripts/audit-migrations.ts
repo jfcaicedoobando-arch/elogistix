@@ -46,7 +46,7 @@ const FNAME_RE = /^(\d{14})_[a-z0-9-]+\.sql$/;
 
 type Violation = { file: string; check: string; detail: string };
 
-function scanFile(file: string, body: string): Violation[] {
+export function scanFile(file: string, body: string, auditPostBaseline = true): Violation[] {
   const out: Violation[] = [];
 
   // H2 — CREATE TABLE public.X requiere GRANT ... public.X
