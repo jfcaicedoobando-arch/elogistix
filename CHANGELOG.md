@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.308.15] - 2026-07-23
+- **chore(lint) · Complejidad ciclomática de `emitirYActualizar` reducida a 16.** ESLint rechazaba `supabase/functions/facturapi-emitir/emitir.ts` por complejidad 17 en la función `emitirYActualizar`. Se extrajeron dos helpers: `parseInvoiceResult` para derivar folio, serie, número y URLs del CFDI, y `persistirFacturaTimbrada` para el `UPDATE` de la factura, la relación bidireccional `sustituida_por` y la bitácora. Esto desacopla la orquestación de la persistencia y baja la complejidad reportada. No cambia comportamiento ni payload de FacturApi. Analogía: era como tener un chef que aparte de cocinar también cobraba, anotaba pedidos y lavaba los platos; ahora esos pasos los hacen dos ayudantes y el chef solo coordina.
+
 ## [13.308.14] - 2026-07-23
 - **fix(facturación · REP) · Payload de timbrado de REP alineado a FacturApi v2.** La Edge Function `facturapi-emitir-rep` enviaba `amount` dentro del nodo `data[0]` del complemento de pago y usaba `folio`/`operation_number` como nombres de campo, pero FacturApi v2 los rechaza (`amount` no permitido en `data`, `folio` desconocido en `related_documents`). Ahora: (1) se elimina `amount` del nodo `data[0]`; (2) el número de operación se envía como `numOperacion` (camelCase del SDK); (3) el folio del documento relacionado se envía como `folio_number`; (4) `series` se mantiene. El pago `49997947-c876-475c-92e7-aaf187f6e2bd` de F963 se timbró correctamente como REP `P1`. Analogía: era como llenar una nueva versión del formulario SAT con los campos de la versión anterior — ahora usamos los nombres de campo que la nueva versión espera.
 
