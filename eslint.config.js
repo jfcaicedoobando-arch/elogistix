@@ -24,6 +24,55 @@ const NO_RESTRICTED_SYNTAX_BASE = [
 ];
 
 
+// Lista de features top-level bajo `src/features/`. Se usa para generar
+// programáticamente los overrides de cross-feature deep imports (Bloque 2.3
+// arquitectura). Mantener sincronizada con `ls src/features/`.
+const FEATURES = [
+  "admin","auditoria","auth","bandejas","catalogos","cliente","comisiones",
+  "compras","configuracion","costeo","cotizacion","crm","cxp","dashboard",
+  "dashboardEjecutivo","dev","embarques","facturacion","legal","marketing",
+  "notificaciones","onboarding","operaciones","portal","portal-agente",
+  "presupuesto","profit","proformas","proveedor","reportes","search","tesoreria",
+];
+
+// ARCH-DEBT · Bloque 2.3: allowlist temporal de imports cross-feature que
+// aún no cabe promover a shared. Vacía por ahora — cualquier nuevo caso
+// debe agregarse aquí con comentario explicando por qué no se pudo mover.
+const CROSS_FEATURE_ALLOWLIST = [];
+
+// Overrides por feature: prohíben importar hacia carpetas internas
+// (components / domain / lib) de OTRAS features. Los imports vía
+// `hooks`, `services`, `types`, `queryKeys` y la ruta pública (`routes`)
+// se mantienen permitidos porque son la superficie estable del feature.
+const crossFeatureOverrides = FEATURES.map((self) => ({
+  name: `cross-feature/${self}`,
+  files: [`src/features/${self}/**/*.{ts,tsx}`],
+  ignores: [
+    `src/features/${self}/**/__tests__/**`,
+    `src/features/${self}/**/*.test.ts`,
+    `src/features/${self}/**/*.test.tsx`,
+    ...CROSS_FEATURE_ALLOWLIST,
+  ],
+  rules: {
+    "no-restricted-imports": ["error", {
+      patterns: FEATURES.filter((f) => f !== self).flatMap((f) => [
+        {
+          group: [`@/features/${f}/components/*`, `@/features/${f}/components/**`],
+          message: `Cross-feature: no importes componentes internos de '${f}'. Si es genuinamente compartido, promuévelo a 'src/components/shared/'. Ver Bloque 2.3 (arquitectura).`,
+        },
+        {
+          group: [`@/features/${f}/domain/*`, `@/features/${f}/domain/**`],
+          message: `Cross-feature: no importes de '${f}/domain'. Promueve la lógica pura a 'src/lib/domain/' o duplícala en tu feature. Ver Bloque 2.3.`,
+        },
+        {
+          group: [`@/features/${f}/lib/*`, `@/features/${f}/lib/**`],
+          message: `Cross-feature: no importes de '${f}/lib'. Promueve a 'src/lib/' (ui/domain/formatters). Ver Bloque 2.3.`,
+        },
+      ]),
+    }],
+  },
+}));
+
 export default tseslint.config(
   // v13.303.5 — Ignores ampliados: además de `dist`/`coverage` (build output),
   // excluimos artefactos que nunca deberían pasar por el parser TS de ESLint:
