@@ -161,22 +161,17 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
       userOnSuccess?.(data, variables, onMutateResult, context);
     },
     onError: (error, variables, onMutateResult, context) => {
-      // Rollback: restauramos cada snapshot capturado en onMutate.
-      // SAFE-CAST: recuperamos el contexto interno que inyectamos en onMutate.
+      // SAFE-CAST: recuperamos el contexto interno inyectado en onMutate para rollback.
       const ctx = onMutateResult as unknown as OptimisticContext | undefined;
-      const snapshots = ctx?.__snapshots ?? [];
-      for (const snap of snapshots) {
+      for (const snap of ctx?.__snapshots ?? []) {
         qc.setQueryData(snap.key, snap.previous);
       }
-
-      // FIX-R2-03: traducimos códigos `LC_*` en UN solo punto para no romper
-      // mensajes por doble traducción. Los `notifyError` directos en callsites
-      // permanecen sin cambios y traducen ellos mismos si aplica.
-      const err = error as unknown as Error;
+      // FIX-R2-03: traducimos códigos `LC_*` en UN solo punto (getErrorMessage).
       if (!silent) {
+        // SAFE-CAST: `error` es TError genérico; getErrorMessage acepta Error/unknown.
         notifyError(undefined, {
           title: errorTitle,
-          description: getErrorMessage(err),
+          description: getErrorMessage(error as unknown as Error),
           error,
           method: errorMethod,
           errorCode: ERROR_CODES.VALIDATION_FAILED,
