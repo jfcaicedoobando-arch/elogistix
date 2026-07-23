@@ -1,91 +1,66 @@
-# Auditoría visual — Detalle de factura (F963, Full HD)
 
-## Diagnóstico
+# Auditoría R5 — verificación y plan de fixes
 
-Orden actual de la vista:
+Verifiqué cada hallazgo contra la BD antes de planear. **9 son bugs reales**, **1 tiene diagnóstico incorrecto**, **1 no es reproducible**.
 
-```text
-Header (F963 · Pagada · CLIENTE · Exp · TOTAL)
-Actions bar (Enviar · PDF · XML · Más acciones)
-[ Emisor           |  Receptor              ]   ← 2 columnas
-Datos generales
-Timbrado fiscal
-Desglose de conceptos
-Totales
-Historial de pagos
-Notas de crédito
-Historial de la factura
-```
+## Resultado de la verificación
 
-Problemas concretos que se ven en las capturas:
+| # | Hallazgo | Estado | Nota |
+|---|---|---|---|
+| R5-01 | Regresión sobrepago + dif. cambiaria CxP | ⚠️ Parcial | Trigger sí existe (`tg_pago_proveedor_no_sobrepago`) y lanza `LC_PAGO_EXCEDE_SALDO`, pero **usa `subtotal` en vez de `total`** (excluye IVA) y **`diferencia_cambiaria_mxn` no la calcula ninguna función** (columna huérfana) |
+| R5-02 | Margen absoluto vs pct | ✅ Real | `v_ok := (v_utilidad_mxn >= v_margen_min)` confirmado |
+| R5-03 | Sobrecargas duplicadas | ❌ No reproducible | 1 sola firma para cada función. **Omitir.** |
+| R5-04 | Backfill `folio_secuencias` | ✅ Real | 3 orgs sin fila `cotizacion`, 2 sin `factura` |
+| R5-05 | Vista `embarque_estado_financiero` | ❌ No existe la vista | **Omitir**, pedir aclaración al cierre |
+| R5-06 | `cxp_aging_proveedores` fail-open | ✅ Real | `v_org := p_org` confirmado |
+| R5-07 | GUC `app.recalc_estado_factura` bypass | ✅ Real | Sin check de rol |
+| R5-08 | EUR en `convertir_proformas_a_factura` | ✅ Real | Camino EUR no manejado |
+| R5-09 | `monto_cobrado_mxn` en comisiones | ✅ Real | No usa fallback a TC del embarque cuando TC del pago=1 |
+| R5-10 | `auth.role()='service_role'` sin COALESCE | ✅ Real | `validar_cierre_embarque` y `marcar_facturas_vencidas` |
+| R5-11 | Menores | ✅ Real (2 de 6) | `proformas.factura_id` no se rellena; `bl_master` sin unique por org (existe `uq_embarques_bl_house_org`) |
 
-1. **Triple mención del cliente.** Aparece en el header (`ENTERA SALUD ANIMAL…`), otra vez en el card *Receptor* como campo "Cliente" (link), y una tercera vez implícita en la bitácora. En un CFDI el receptor es información fiscal, no un dato de contexto — con verlo una vez en el header basta.
-2. **Card Emisor casi vacía ocupando 50% del ancho.** Muestra 2–3 líneas de texto (razón social + RFC) y desperdicia toda la columna izquierda del pliegue. Rompe el equilibrio contra Receptor, que sí tiene 5 campos + validaciones.
-3. **"Ver embarque" enterrado en "Más acciones".** El expediente `ELIMP00298` ya está impreso en el header pero no es clickable, y para llegar al embarque hay que abrir el menú overflow. Es la navegación más frecuente desde una factura y hoy toma 2 clics + búsqueda visual.
-4. **Timbrado fiscal como card independiente** con solo 4 datos (UUID, folio, serie, fecha emisión). La *fecha de emisión* ya está en *Datos generales*, así que se repite.
-5. **Orden por importancia invertido.** Lo primero que un usuario mira en una factura ya emitida es *a quién*, *cuánto* y *si está pagada*. Hoy conceptos y totales quedan por debajo de dos cards fiscales de referencia.
-6. **"Datos generales" mezcla dos naturalezas**: fechas/crédito (operativo) con Uso CFDI / Forma / Método de pago (fiscal). El bloque fiscal encajaría mejor junto a Timbrado.
+## Alcance de la migración (única)
 
-## Recomendación
+Archivo: `supabase/migrations/20260723XXXXXX_fix_r5.sql`
 
-### 1. Header más limpio + expediente clickable
+### BLOQUE A — P0 corregido
 
-- Quitar el nombre del cliente del subheader (queda en el card Receptor, que es su lugar fiscal).
-- Dejar el subheader como: `Exp: <ELIMP00298 clickable> · Proforma: PRO-2026-0962`. Ambos como enlaces suaves (`text-accent hover:underline`), no botones.
-- El chip "Ver embarque" del menú "Más acciones" se elimina — la ruta al embarque es el expediente mismo.
+1. **R5-01a**: Rescribir `tg_pago_proveedor_no_sobrepago` para comparar contra `total` (subtotal + IVA − NC) en lugar de `subtotal`. Mantener el nombre del trigger existente para no duplicar.
+2. **R5-01b**: Añadir cómputo de `diferencia_cambiaria_mxn` en `tg_pagos_proveedor_monto_convertido` cuando `NEW.moneda='MXN'` y factura `USD`:
+   `NEW.diferencia_cambiaria_mxn = ROUND(NEW.monto_en_moneda_factura * (NEW.tipo_cambio_usd − v_fact_tc), 2)`.
+3. **R5-01c**: Rechazar cruce MXN↔USD sin `tipo_cambio_usd` con `LC_PAGO_TC_REQUERIDO` (hoy silenciosamente permite fallback).
 
-### 2. Fusionar Emisor dentro del header / retirar como card
+### BLOQUE B — P1
 
-El emisor es constante para toda la organización. Opciones (elijo B en el plan, pero puedo cambiar si prefieres):
+4. **R5-02**: `validar_cierre_embarque` — calcular `v_margen_pct := v_utilidad_mxn / v_venta_mxn * 100` y usarlo en el check. Añadir `margen_pct` y `minimo_pct` al detalle.
+5. **R5-04**: Backfill de `folio_secuencias` para `cotizacion`, `factura`, `proforma`, `embarque` con `MAX()` por org y `ON CONFLICT (organization_id, tipo) DO UPDATE`.
+6. **R5-06**: `cxp_aging_proveedores` — exigir membresía (`current_user_org_id()` o `has_role super_admin`), eliminar fallback a `p_org`.
+7. **R5-07**: `guard_estado_factura` — aceptar GUC bypass sólo si `auth.role()='service_role'` o `current_user='postgres'`.
+8. **R5-08**: `convertir_proformas_a_factura` — soportar EUR usando `embarques.tipo_cambio_eur` o `RAISE LC_MONEDA_NO_SOPORTADA`.
+9. **R5-09**: `calcular_comision_pago` — cuando `pago.moneda IN ('USD','EUR')` y `tipo_cambio IN (0,1)`, usar TC del embarque.
 
-- **A.** Reducirlo a una línea tipo *"Emitido por Elogistix Shipping · ESH2311092R7"* debajo del total en el header.
-- **B (recomendada).** Moverlo como bloque colapsable/secundario dentro de *Timbrado fiscal* — donde vive el resto de la información propiamente fiscal del CFDI.
+### BLOQUE C — P2
 
-Esto libera la fila superior para que **Receptor ocupe todo el ancho** (que es donde vive la validación fiscal ✓/✗ y donde el usuario realmente decide si puede timbrar).
+10. **R5-10**: Envolver `auth.role() = 'service_role'` con `COALESCE(auth.role(),'')` en `validar_cierre_embarque` y `marcar_facturas_vencidas`.
+11. **R5-11a**: En `convertir_proformas_a_factura` (y donde se enlace), setear `proformas.factura_id` para navegación bidireccional.
+12. **R5-11b**: `CREATE UNIQUE INDEX uq_embarques_bl_master_org` con `WHERE bl_master IS NOT NULL AND deleted_at IS NULL` replicando el patrón de `bl_house`.
 
-### 3. Nuevo orden propuesto
+## Checks post-migración
 
-```text
-Header (F963 · Pagada · Exp🔗 · Proforma🔗 · TOTAL)
-Actions bar (sin "Ver embarque")
-Receptor (full width, con validaciones ✓/✗)
-Datos generales  ← solo fechas + días crédito + tipo cambio + notas + Ref BL
-Fiscal del CFDI (merge de Uso/Forma/Método + Timbrado + Emisor compacto)
-Desglose de conceptos
-Totales (Subtotal · IVA · Total)
-Historial de pagos
-Notas de crédito
-Historial de la factura
-```
+- Sobrepago CxP → `LC_PAGO_EXCEDE_SALDO` con el nuevo denominador `total`.
+- Pago MXN@20 sobre factura USD@19.5 → `diferencia_cambiaria_mxn = 500` por cada 1000 USD.
+- Cierre embarque con margen 25% y mínimo 30% → `puede_cerrar=false`, `margen_pct=25`.
+- `SELECT cxp_aging_proveedores(<otra_org>)` como usuario sin membresía → `LC_ORG_FORBIDDEN`.
+- `SET app.recalc_estado_factura='1'; UPDATE facturas SET estado='Pagada'` como usuario normal → bloqueado.
 
-Racional de la jerarquía: **quién → cuándo/cómo → qué se cobró → cuánto → cobros → ajustes → auditoría.**
+## Fuera de alcance
 
-### 4. Ajustes menores dentro de los cards
+- R5-03 (sobrecargas): no reproducible, no toco.
+- R5-05 (vista `embarque_estado_financiero`): no existe en esta BD. Pregunto tras aplicar.
+- R5-11 restantes (FK cross-tenant, expediente vacío, REVOKE `_cxp_anchor_fase_o`, exigir `tipo_cambio` en factura no MXN): postergado a otra ronda para no inflar esta migración.
 
-- Card *Receptor*: quitar la fila "Cliente" (redundante con header) y dejar solo los 4 campos fiscales + botón "Completar datos". Eleva la densidad útil.
-- Card *Datos generales*: quitar *Uso CFDI / Forma de pago / Método de pago* (se mueven al bloque fiscal). Deja fechas + crédito + tipo de cambio + BL + notas.
-- Card *Timbrado fiscal*: quitar *Fecha de emisión* (ya está en Datos generales); añadir Emisor compacto (razón social · RFC) en una fila superior.
+## Después de la migración
 
-## Alcance técnico
-
-Archivos que se tocan (solo presentación, sin cambios de negocio):
-
-- `src/features/facturacion/components/detalle/FacturaDetalleHeader.tsx` — reemplazar cliente por expediente/proforma clickables.
-- `src/features/facturacion/components/detalle/FacturaDetalleBody.tsx` — remover grid Emisor|Receptor, dejar Receptor full-width, reordenar bloques.
-- `src/features/facturacion/components/detalle/FacturaDetalleActionsBar.tsx` — eliminar entry `ver-embarque` de `buildMore()`.
-- `src/features/facturacion/components/detalle/FacturaReceptorCard.tsx` — quitar fila "Cliente".
-- `src/features/facturacion/components/detalle/FacturaResumenCard.tsx` — quitar Uso CFDI / Forma / Método.
-- `src/features/facturacion/components/detalle/FacturaTimbradoCard.tsx` — absorber Emisor compacto + fiscal (Uso/Forma/Método); quitar fecha emisión.
-- `FacturaEmisorCard.tsx` — se elimina como archivo (o se convierte en subcomponente interno del card fiscal).
-- Bump `APP_VERSION` (13.308.16) + entrada en `CHANGELOG.md`.
-
-## Verificación
-
-- Playwright a Full HD (1920×1200) sobre F963: capturar 3 secciones (arriba, medio, abajo) y comparar con las capturas actuales que ya tengo.
-- Repetir sobre una factura borrador (para confirmar que el flujo sin timbrar sigue mostrando Receptor + acciones correctas) y sobre una cancelada (para asegurar que los banners no chocan con el nuevo orden).
-- `bun run lint --max-warnings 0`.
-
-## Fuera de alcance (te lo dejo como preguntas si quieres iterar después)
-
-- ¿Convertir *Totales* en un footer sticky del bloque de conceptos en vez de card aparte? Ganaría densidad pero cambia patrón usado en otras vistas. Si
-- ¿Mostrar el saldo en el header como segundo número junto al total cuando `saldo > 0`? Hoy solo lo ves scrolleando hasta *Historial de pagos*. Si
+- Regenerar tipos (automático).
+- Bump `APP_VERSION` → `13.308.17`.
+- Entrada en `CHANGELOG.md`.
