@@ -113,20 +113,28 @@ jobs:
         id: setup-bun
         uses: ./.github/actions/setup-bun
 
-      # v13.303.5 — Los 3 audits son procesos tsx independientes: paralelizamos.
-      - name: Audits en paralelo (arch + casts + test hygiene)
+      # v13.303.5 — Los audits son procesos tsx independientes: paralelizamos.
+      # v13.309.36 (FIX-R2-04) — Añadidos `audit:schema` y `audit:migrations`
+      # para que los guardrails documentados en migrations-hygiene.md sí corran.
+      - name: Audits en paralelo (arch + casts + tests + schema + migrations)
         run: |
           set -e
-          bun run audit:arch  > /tmp/audit-arch.log  2>&1 &
+          bun run audit:arch       > /tmp/audit-arch.log       2>&1 &
           A=$!
-          bun run audit:casts > /tmp/audit-casts.log 2>&1 &
+          bun run audit:casts      > /tmp/audit-casts.log      2>&1 &
           C=$!
-          bun run audit:tests > /tmp/audit-tests.log 2>&1 &
+          bun run audit:tests      > /tmp/audit-tests.log      2>&1 &
           T=$!
+          bun run audit:schema     > /tmp/audit-schema.log     2>&1 &
+          S=$!
+          bun run audit:migrations > /tmp/audit-migrations.log 2>&1 &
+          M=$!
           fail=0
-          wait $A || { echo '❌ audit:arch';  cat /tmp/audit-arch.log;  fail=1; }
-          wait $C || { echo '❌ audit:casts'; cat /tmp/audit-casts.log; fail=1; }
-          wait $T || { echo '❌ audit:tests'; cat /tmp/audit-tests.log; fail=1; }
+          wait $A || { echo '❌ audit:arch';       cat /tmp/audit-arch.log;       fail=1; }
+          wait $C || { echo '❌ audit:casts';      cat /tmp/audit-casts.log;      fail=1; }
+          wait $T || { echo '❌ audit:tests';      cat /tmp/audit-tests.log;      fail=1; }
+          wait $S || { echo '❌ audit:schema';     cat /tmp/audit-schema.log;     fail=1; }
+          wait $M || { echo '❌ audit:migrations'; cat /tmp/audit-migrations.log; fail=1; }
           exit $fail
 
       # v13.303.5 — Los architecture gating tests se sacaron del matrix de
