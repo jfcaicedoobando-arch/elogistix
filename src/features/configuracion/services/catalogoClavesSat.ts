@@ -22,7 +22,7 @@ export interface CatalogoClavePayload {
   clave_sat: string;
   activo: boolean;
   tipo_iva: string;
-  tasa_iva_default: number;
+  tasa_iva_default: number | null;
   clave_unidad_sat: string;
 }
 
