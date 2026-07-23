@@ -21,12 +21,21 @@ DECLARE
   v_org uuid := '11111111-1111-1111-1111-111111111111';
   v_prov uuid := '22222222-2222-2222-2222-222222222222';
   v_fact uuid := '33333333-3333-3333-3333-333333333333';
+  v_cat uuid := '66666666-6666-6666-6666-666666666666';
 BEGIN
+  -- Categoría de presupuesto mínima (columna NOT NULL en proveedor_facturas).
+  INSERT INTO public.presupuesto_categorias
+    (id, organization_id, nombre, orden, activa, tipo_contable)
+  VALUES
+    (v_cat, v_org, 'Test Guard Sobrepago', 0, true, 'gasto');
+
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
+     categoria_presupuesto_id,
      moneda, tipo_cambio_usd, subtotal, iva, total, estado)
   VALUES
     (v_fact, v_org, v_prov, 'Test Prov', 'GUARD-SOBRE-01',
+     v_cat,
      'MXN'::public.moneda, 0, 3000, 0, 3000, 'Borrador');
 END
 $fixture$ LANGUAGE plpgsql;
