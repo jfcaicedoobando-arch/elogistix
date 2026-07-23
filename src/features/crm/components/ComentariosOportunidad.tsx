@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { getErrorMessage } from "@/lib/errors";
+import { formatFechaHora } from "@/lib/formatters/dates";
 import {
   useComentariosOportunidad,
   useCrearComentarioOportunidad,
