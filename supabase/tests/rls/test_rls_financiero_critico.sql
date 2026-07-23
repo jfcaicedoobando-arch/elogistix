@@ -219,18 +219,32 @@ BEGIN
   -- (13.135.6) Guard `IF EXISTS` eliminado: la tabla la crea la migración
   -- 20260602193937. Si en CI no existe, queremos un fallo ruidoso.
   -- =========================================================================
-  INSERT INTO public.comisiones_devengadas(
-    id, organization_id, pago_factura_id, embarque_id, factura_id,
-    monto_cobrado_mxn, utilidad_prorrateada_mxn, porcentaje_aplicado, comision_mxn, estado
-  ) VALUES (
-    com_a, org_a, pago_fac_a, emb_a, fac_a,
-    500, 200, 0.10, 20, 'Devengada'
-  );
+  -- v13.309.49 — El trigger `trg_pago_factura_comision_ins` (restaurado en
+  -- 13.309.43) inserta automáticamente una comisión devengada al crearse el
+  -- pago_factura. Antes hacíamos un INSERT explícito que colisionaba con la
+  -- unique key `comisiones_devengadas_pago_factura_id_key`. Ahora tomamos la
+  -- fila auto-creada y ajustamos los campos necesarios para el test.
+  SELECT id INTO com_a
+    FROM public.comisiones_devengadas
+   WHERE pago_factura_id = pago_fac_a;
+  PERFORM pg_temp.assert(com_a IS NOT NULL, 'trigger debe crear comisiones_devengadas para el pago');
+  UPDATE public.comisiones_devengadas
+     SET embarque_id = emb_a,
+         factura_id = fac_a,
+         monto_cobrado_mxn = 500,
+         utilidad_prorrateada_mxn = 200,
+         porcentaje_aplicado = 0.10,
+         comision_mxn = 20,
+         estado = 'Devengada'
+   WHERE id = com_a;
 
   PERFORM pg_temp.as_user(user_b);
   SELECT count(*) INTO visible FROM public.comisiones_devengadas WHERE id = com_a;
   PERFORM pg_temp.assert(visible = 0, 'user_b NO debe ver comisiones_devengadas de org_a');
   PERFORM pg_temp.as_postgres();
+
+
+
 
   -- =========================================================================
   -- TEST 9: liquidaciones_comision aislamiento
