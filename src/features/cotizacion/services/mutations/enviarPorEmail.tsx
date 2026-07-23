@@ -157,7 +157,10 @@ async function generarPdfBlob(cotizacion: CotizacionRow, tasaIva: number): Promi
     import("react"),
   ]);
   const emisor = await cargarEmisorEmpresa();
-  const instance = pdf(createElement(CotizacionDocument, { cotizacion, tasaIva, emisor }));
+  // SAFE-CAST: CotizacionDocument devuelve un DocumentElement de react-pdf; el genérico de createElement no lo infiere.
+  const element = createElement(CotizacionDocument, { cotizacion, tasaIva, emisor }) as Parameters<typeof pdf>[0];
+  const instance = pdf(element);
+
   return await instance.toBlob();
 }
 
