@@ -18,6 +18,7 @@ import { TabSeguros } from "@/features/embarques/components/TabSeguros";
 import { TabCierre } from "@/features/embarques/components/TabCierre";
 import { TabDemoras } from "@/features/embarques/components/TabDemoras";
 import { SeccionDemorasAuto } from "@/features/embarques/components/financiero/SeccionDemorasAuto";
+import { useEmbarqueDetalleTabsData } from "@/features/embarques/hooks/useEmbarqueDetalleTabsData";
 import type {
   EmbarqueDetalleTabsProps,
   PnlView,
@@ -25,10 +26,13 @@ import type {
 
 export function EmbarqueDetalleTabs({
   embarque, embarqueId, activeTab, setActiveTab, estadoVisual, canEdit,
-  documentos, conceptosCosto, facturas, notas,
-  financials, docHandlers,
 }: EmbarqueDetalleTabsProps) {
   const [pnlView, setPnlView] = useState<PnlView>("global");
+  // v13.309.24 · Ítem 3.5: data-fetching movido a este hook (antes vivía en la ruta).
+  // SAFE-CAST: EmbarqueProp es un subconjunto compatible con EmbarqueRow que el hook consume
+  // internamente; el mismo objeto ya se pasa a TabResumen/TabFacturacion/TabTracking sin cast.
+  const { conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
+    useEmbarqueDetalleTabsData(embarqueId, embarque as unknown as Parameters<typeof useEmbarqueDetalleTabsData>[1]);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>

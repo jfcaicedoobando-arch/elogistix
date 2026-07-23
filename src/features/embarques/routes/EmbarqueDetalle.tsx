@@ -8,10 +8,9 @@ import {
   calcularEstadoEmbarque,
   getSiguienteEstado,
   useEmbarqueDetalleData,
-  useEmbarqueFinancials,
-  useEmbarqueDetalleActions,
   useEmbarqueDetalleTracking,
 } from "@/features/embarques/hooks";
+import { useEmbarqueEstadoActions } from "@/features/embarques/hooks/useEmbarqueEstadoActions";
 
 import DialogEliminarEmbarque from "@/features/embarques/components/DialogEliminarEmbarque";
 import DialogDuplicarEmbarque from "@/features/embarques/components/DialogDuplicarEmbarque";
@@ -35,16 +34,20 @@ const TABS_LEGACY: Record<string, (typeof TABS_VALIDOS)[number]> = {
   "demoras": "garantias",
 };
 
+/**
+ * v13.309.24 · Ítem 3.5 auditoría 3: se movió la data-fetching y el cómputo de
+ * `financials`/`docHandlers` a `useEmbarqueDetalleTabsData` (dentro de Tabs).
+ * La ruta ahora sólo orquesta el header (embarque + estado + diálogos globales).
+ * `useEmbarqueEstadoActions` reemplaza a `useEmbarqueDetalleActions` para evitar
+ * instanciar mutaciones de documentos aquí — ésas viven exclusivamente en Tabs.
+ */
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen", "tab", TABS_LEGACY);
 
-  const {
-    embarque, conceptosVenta, conceptosCosto, documentos, notas, facturas,
-    tipoCambioUSD, tipoCambioEUR, isLoading,
-  } = useEmbarqueDetalleData(id);
+  const { embarque, isLoading } = useEmbarqueDetalleData(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
@@ -53,30 +56,22 @@ export default function EmbarqueDetalle() {
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
   const {
-    handleUpload, handleDeleteDoc, handleDownload, handleToggleNoAplica, handleAvanzarEstado,
+    handleAvanzarEstado,
     handleReabrir, reabrirEmbarque,
     warnCierreOpen, setWarnCierreOpen, confirmarCierreSinProforma, conceptosSinProforma,
     docsFaltantes, docsBloqueantes,
     warnDocsOpen, setWarnDocsOpen, blockDocsOpen, setBlockDocsOpen,
     blockFechaLlegadaOpen, setBlockFechaLlegadaOpen,
     confirmarAvanceConDocsPendientes,
-    downloadingDocId, avanzarEstado, uploadDoc, deleteDoc, setNoAplica,
+    avanzarEstado,
     cierreEsSiguiente, rolPuedeCerrar, cierrePuedeAvanzar, cierreMotivoBloqueo,
-  } = useEmbarqueDetalleActions(embarque ?? undefined, id);
-
-
-  const financials = useEmbarqueFinancials({
-    conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,
-  });
+  } = useEmbarqueEstadoActions(embarque ?? undefined, id);
 
   if (isLoading) return <LoadingState />;
   if (!embarque) return <NotFoundState onBack={() => navigate("/embarques")} />;
 
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real);
   const siguienteEstado = getSiguienteEstado(estadoVisual);
-  const uploadingDocId = uploadDoc.isPending ? (uploadDoc.variables?.docId ?? null) : null;
-  const deletingDocId = deleteDoc.isPending ? (deleteDoc.variables?.docId ?? null) : null;
-  const togglingNoAplicaDocId = setNoAplica.isPending ? (setNoAplica.variables?.docId ?? null) : null;
 
   return (
     <PageContainer>
@@ -116,8 +111,6 @@ export default function EmbarqueDetalle() {
         onIrACierre={() => setActiveTab("cierre")}
       />
 
-
-
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
 
@@ -128,22 +121,6 @@ export default function EmbarqueDetalle() {
         setActiveTab={setActiveTab}
         estadoVisual={estadoVisual}
         canEdit={canEdit}
-        documentos={documentos}
-        
-        conceptosCosto={conceptosCosto}
-        facturas={facturas}
-        notas={notas}
-        financials={financials}
-        docHandlers={{
-          uploadingDocId,
-          downloadingDocId,
-          deletingDocId,
-          togglingNoAplicaDocId,
-          onUpload: handleUpload,
-          onDownload: handleDownload,
-          onDelete: handleDeleteDoc,
-          onToggleNoAplica: handleToggleNoAplica,
-        }}
       />
     </PageContainer>
   );

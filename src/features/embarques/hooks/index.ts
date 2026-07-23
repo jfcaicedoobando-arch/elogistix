@@ -8,6 +8,7 @@ export * from './useDialogGenerarProformaController';
 export * from './useEditarEmbarqueWizard';
 export * from './useEmbarqueDetalleActions';
 export * from './useEmbarqueDetalleData';
+export * from './useEmbarqueDetalleTabsData';
 export * from './useEmbarqueDetalleTracking';
 export * from './useEmbarqueDependenciasFinancieras';
 export * from './useEmbarqueDocumentosActions';
