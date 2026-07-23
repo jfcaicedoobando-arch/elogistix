@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { crmToast } from "@/features/crm/lib/crmToast";
 import { getErrorMessage } from "@/lib/errors";
+import { formatFechaHora } from "@/lib/formatters/dates";
 import {
   useComentariosOportunidad,
   useCrearComentarioOportunidad,
@@ -21,13 +22,7 @@ interface Props {
 }
 
 function formatRelativeDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString("es-MX", {
-      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
+  return formatFechaHora(iso);
 }
 
 export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props) {

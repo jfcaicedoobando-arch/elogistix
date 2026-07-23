@@ -26,6 +26,7 @@ import LeadHeaderActions from "@/features/crm/components/leadDetalle/LeadHeaderA
 import { useActualizarLead, useEliminarLead, useLead } from "@/features/crm/hooks";
 import { useLeadEditForm } from "@/features/crm/hooks";
 import { ROUTES } from "@/constants/routes";
+import { formatFechaEs } from "@/lib/formatters/dates";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -100,7 +101,7 @@ export default function LeadDetalle() {
 
       <PageHeader
         title={lead.empresa}
-        description={`Lead · ${lead.fuente} · creado ${new Date(lead.created_at).toLocaleDateString("es-MX")}`}
+        description={`Lead · ${lead.fuente} · creado ${formatFechaEs(lead.created_at)}`}
         actions={
           <LeadHeaderActions
             estado={lead.estado}

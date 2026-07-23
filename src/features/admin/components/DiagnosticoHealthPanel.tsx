@@ -13,6 +13,7 @@ import {
 } from "@/features/admin/hooks";
 import HealthKpisRow from "@/features/admin/components/diagnosticoHealth/HealthKpisRow";
 import HealthSlowestTable from "@/features/admin/components/diagnosticoHealth/HealthSlowestTable";
+import { formatFechaEs } from "@/lib/formatters/dates";
 
 // Lazy: difiere recharts fuera del TTI del panel de diagnóstico.
 const HealthTimelineChart = lazy(
@@ -33,7 +34,7 @@ const RANGE_OPTIONS: Array<{ label: string; hours: number; buckets: number }> = 
 function formatBucket(iso: string, hours: number): string {
   const d = new Date(iso);
   if (hours <= 24) return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-  return d.toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" });
+  return formatFechaEs(iso, { day: "2-digit", month: "2-digit" });
 }
 
 export function DiagnosticoHealthPanel() {

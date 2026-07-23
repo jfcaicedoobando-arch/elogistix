@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
+import { formatFechaHora } from "@/lib/formatters/dates";
 
 export function BackfillLegacyCard() {
   const [open, setOpen] = useState(false);
@@ -58,7 +59,7 @@ export function BackfillLegacyCard() {
           <div className="rounded-md border bg-success/5 border-success/30 p-3 text-xs space-y-1">
             <div className="flex items-center gap-1 font-semibold text-success dark:text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Último resultado ({new Date(result.ejecutado_at).toLocaleString("es-MX")})
+              Último resultado ({formatFechaHora(result.ejecutado_at)})
             </div>
             <ul className="list-disc pl-5 text-muted-foreground">
               <li>{result.totales.conceptos_actualizados} conceptos de venta marcados como facturados</li>

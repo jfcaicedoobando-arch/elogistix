@@ -11,10 +11,11 @@ import { NextBestActionsCard } from "@/features/crm/components/crmDashboard/Next
 import { CotizacionesSinRespuestaCard } from "@/features/crm/components/crmDashboard/CotizacionesSinRespuestaCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { formatFechaLarga } from "@/lib/formatters/dates";
 
 export default function MiDia() {
   const vm = useCrmInicioVM();
-  const hoy = new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+  const hoy = formatFechaLarga(new Date(), { weekday: "long", day: "numeric", month: "long" });
 
   return (
     <PageContainer>

@@ -1,6 +1,7 @@
 import { Target, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { formatFechaEs } from "@/lib/formatters/dates";
 import { DrilldownRow } from "@/components/shared/dataTable/DrilldownRow";
 
 interface DealItem {
@@ -86,7 +87,7 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
                   <span className="text-xs text-muted-foreground">{l.contacto || "Sin contacto"} · {l.fuente}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(l.created_at).toLocaleDateString("es-MX")}
+                  {formatFechaEs(l.created_at)}
                 </span>
               </DrilldownRow>
             ))}
