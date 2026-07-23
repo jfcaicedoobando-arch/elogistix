@@ -6755,6 +6755,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      _crear_embarque_replicar_conceptos: {
+        Args: {
+          p_conceptos_venta: Json
+          p_cotizacion_id: string
+          p_embarque_id: string
+          p_org: string
+          p_target_ids: string[]
+        }
+        Returns: undefined
+      }
       _cxp_anchor_fase_o: { Args: never; Returns: undefined }
       _cxp_validar_aprobacion: {
         Args: { p_factura_id: string }
