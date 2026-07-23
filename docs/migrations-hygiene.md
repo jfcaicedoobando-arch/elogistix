@@ -35,4 +35,13 @@ Salida esperada en verde:
 
 ## Cuándo mover el baseline
 
-Nunca a la baja. Si una migración legacy imposible de corregir aparece post-baseline (p. ej. renombre de archivo manual), documentar el caso y **subir** el baseline al siguiente timestamp. Cambiar `BASELINE` en `scripts/audit-migrations.ts` + registrar la razón en el CHANGELOG.
+Nunca a la baja. Si una migración legacy imposible de corregir aparece post-baseline (p. ej. renombre de archivo manual o una migración ya ejecutada/aplicada que no se puede editar), documentar el caso y **subir** el baseline al siguiente timestamp. Cambiar `BASELINE` en `scripts/audit-migrations.ts` + registrar la razón en el CHANGELOG.
+
+### Histórico de baseline bumps
+
+- `20260723213500` → `20260723223436` (2026-07-23): FIX-H6-01. Las migraciones
+  `20260723220718_ee593a16…` y `20260723222256_a8da9a2c…` crearon funciones
+  `SECURITY DEFINER` sin `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE …`. Al no
+  poder editar archivos de migración ya creados, se corrige en BD con una
+  migración posterior (`20260723223436`) que re-aplica las funciones con los
+  grants correctos; las migraciones originales quedan como legacy auditado.
