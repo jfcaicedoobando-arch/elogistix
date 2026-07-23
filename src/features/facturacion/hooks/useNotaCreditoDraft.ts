@@ -16,6 +16,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors/index";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import type { Tables } from "@/integrations/supabase/types";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 type Moneda = Tables<"factura_notas_credito">["moneda"];
 type Motivo = Tables<"factura_notas_credito">["motivo"];
@@ -31,7 +32,7 @@ export function makeConcepto(): ConceptoNotaCredito {
     clave_sat: CLAVE_SAT_DEFAULT,
     clave_unidad: CLAVE_UNIDAD_DEFAULT,
     unidad: "Unidad de servicio",
-    tasa_iva: 0.16,
+    tasa_iva: TASA_IVA,
   };
 }
 
