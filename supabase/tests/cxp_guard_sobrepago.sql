@@ -27,7 +27,7 @@ BEGIN
   INSERT INTO public.presupuesto_categorias
     (id, organization_id, nombre, orden, activa, tipo_contable)
   VALUES
-    (v_cat, v_org, 'Test Guard Sobrepago', 0, true, 'gasto');
+    (v_cat, v_org, 'Test Guard Sobrepago', 0, true, 'CostoDirectoEmbarque');
 
   INSERT INTO public.proveedor_facturas
     (id, organization_id, proveedor_id, proveedor_nombre, folio_proveedor,
