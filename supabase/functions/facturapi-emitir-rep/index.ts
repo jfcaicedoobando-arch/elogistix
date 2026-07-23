@@ -144,11 +144,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       metodo_pago: "PPD",
       tasa_iva: tasaIvaFactura,
     },
-    referencias: {
-      expediente: refExpediente,
-      bl_master: refBlMaster,
-      bl_house: refBlHouse,
-    },
+    referencias: refs,
   };
 
   const issues = validateRepContext(ctx);
