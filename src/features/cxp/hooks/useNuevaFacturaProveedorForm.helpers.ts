@@ -75,10 +75,6 @@ export function validateFactura(
   values: FacturaFormValues,
   total: number,
 ): Partial<Record<keyof FacturaFormValues, string>> {
-  // Import diferido para no crear dependencia circular en tests puros
-  // (`helpers` es consumido por el schema? no; el schema depende de `types`).
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { facturaFormErrorsFromZod } = require("./useNuevaFacturaProveedorForm.schema") as typeof import("./useNuevaFacturaProveedorForm.schema");
   return facturaFormErrorsFromZod(values, { total });
 }
 
