@@ -9,6 +9,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { History } from "lucide-react";
+import { formatFechaHora } from "@/lib/formatters";
 
 export interface CierreLogEntry {
   id: string;
