@@ -6,7 +6,7 @@ import {
   obtenerReconciliacion3Columnas,
   type ResultadoReconciliacion3C,
 } from "@/features/embarques/services/reconciliacion3Columnas";
-import type { UmbralesVarianza } from "@/features/cotizacion/domain/versionadoCotizacion";
+import type { UmbralesVarianza } from "@/lib/domain/versionadoCotizacion";
 import { queryKeys } from "@/lib/query";
 
 export function useReconciliacion3Columnas(

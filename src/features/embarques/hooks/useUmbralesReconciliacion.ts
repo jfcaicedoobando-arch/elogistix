@@ -3,7 +3,7 @@
  * configuración por organización. Cae a UMBRALES_DEFAULT si no hay valores.
  */
 import { useConfigValue } from "@/features/configuracion/hooks/useConfiguracion";
-import { UMBRALES_DEFAULT, type UmbralesVarianza } from "@/features/cotizacion/domain/versionadoCotizacion";
+import { UMBRALES_DEFAULT, type UmbralesVarianza } from "@/lib/domain/versionadoCotizacion";
 
 export function useUmbralesReconciliacion(): UmbralesVarianza {
   const alerta = useConfigValue<number>(

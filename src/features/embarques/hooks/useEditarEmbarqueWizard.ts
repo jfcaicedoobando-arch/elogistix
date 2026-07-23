@@ -13,7 +13,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/features/cliente/hooks/useClientes";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared";
-import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 import {
   useConceptosForm,
   useCotizacion,

@@ -8,7 +8,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate } from "@/lib/formatters";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useDrilldownRow } from "@/components/shared/dataTable/useDrilldownRow";
 
 function etaProximityClass(eta: string | null | undefined): string {

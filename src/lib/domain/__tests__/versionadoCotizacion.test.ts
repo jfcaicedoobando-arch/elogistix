@@ -6,7 +6,7 @@ import {
   construirFilaReconciliacion,
   construirResumen,
   UMBRALES_DEFAULT,
-} from "@/features/cotizacion/domain/versionadoCotizacion";
+} from "@/lib/domain/versionadoCotizacion";
 
 describe("calcularDeltaPct", () => {
   it("calcula incremento porcentual", () => {
