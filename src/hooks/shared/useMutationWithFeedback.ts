@@ -169,12 +169,14 @@ export function useMutationWithFeedback<TData = unknown, TError = Error, TVariab
         qc.setQueryData(snap.key, snap.previous);
       }
 
-      // SAFE-CAST: react-query tipa el error como `unknown`; sólo usamos `.message` para el toast.
+      // FIX-R2-03: traducimos códigos `LC_*` en UN solo punto para no romper
+      // mensajes por doble traducción. Los `notifyError` directos en callsites
+      // permanecen sin cambios y traducen ellos mismos si aplica.
       const err = error as unknown as Error;
       if (!silent) {
         notifyError(undefined, {
           title: errorTitle,
-          description: err?.message,
+          description: getErrorMessage(err),
           error,
           method: errorMethod,
           errorCode: ERROR_CODES.VALIDATION_FAILED,
