@@ -42,6 +42,11 @@ const NO_LOCALE_FMT_SELECTORS = [
     selector: "NewExpression[callee.object.name='Intl'][callee.property.name='NumberFormat']",
     message: "PR-5 · Ítem 3.4: usa `formatNumber`/`formatCurrency` de `@/lib/formatters` en vez de `new Intl.NumberFormat(...)` inline.",
   },
+  {
+    // Sprint 4 · Ban `Intl.DateTimeFormat` fuera de `lib/formatters`.
+    selector: "NewExpression[callee.object.name='Intl'][callee.property.name='DateTimeFormat']",
+    message: "Sprint 4: usa `formatFechaEs`/`formatFechaHora`/`formatFechaLarga` de `@/lib/formatters` en vez de `new Intl.DateTimeFormat(...)` inline.",
+  },
 ];
 
 // Reglas queryKey/mutationKey/TASA_IVA — se declaran una sola vez para poder
@@ -637,21 +642,19 @@ export default tseslint.config(
   },
   {
     // ─────────────────────────────────────────────────────────────────────
-    // Guardrail `no-raw-table` — design system de tablas.
+    // Guardrail `no-raw-table` + `no-direct-sonner` — design system.
     //
-    // Prohibido importar `@/components/ui/table` (primitivas shadcn) fuera
-    // de la allowlist. Todas las listas deben usar `<DataTable />` de
-    // `@/components/shared/DataTable` + los builders (`defineColumns`,
-    // `columnBuilders`, `StatusBadge`) para unificar el design language.
+    // 1. `@/components/ui/table` (primitivas shadcn) — usar `<DataTable />`
+    //    de `@/components/shared/DataTable` + builders.
+    // 2. `sonner` directo (Sprint 4) — usar `notifyError`/`notifySuccess`/
+    //    `notifyInfo` de `@/lib/ui/appFeedback` (wrapper con Sentry breadcrumbs
+    //    + diagnóstico) o `useToast` de `@/hooks/shared`. Baseline temporal
+    //    de 84 archivos en `SONNER_LEGACY_ALLOWLIST` (burn-down).
     //
     // Este bloque va aparte porque el override de `src/features/**` apaga
     // `no-restricted-imports` completo; scopearlo aquí lo mantiene activo.
-    //
-    // Para pedir excepción: agregar el archivo a `ignores` con un comentario
-    // que explique el motivo (form-table editable, sub-tabla read-only
-    // estática, catálogo con toggles inline, etc.).
     // ─────────────────────────────────────────────────────────────────────
-    name: "no-raw-table",
+    name: "no-raw-table-and-sonner",
     files: ["src/**/*.{ts,tsx}"],
     ignores: [
       // Implementación misma del DataTable — consume las primitivas.
@@ -682,13 +685,112 @@ export default tseslint.config(
       "**/__tests__/**",
       "**/*.test.ts",
       "**/*.test.tsx",
+      // Wrappers autorizados de `sonner` — la implementación de referencia.
+      "src/lib/ui/appFeedback.ts",
+      "src/lib/ui/__tests__/**",
+      "src/hooks/shared/useToast.ts",
+      "src/hooks/shared/useCopyText.ts",
+      "src/components/shared/errorBoundary/reportFeedback.ts",
+      // shadcn Toaster primitive + diálogo de error usa `toast()` directo.
+      "src/components/ui/sonner.tsx",
+      "src/components/ui/ErrorDetailsDialog.tsx",
+      // ── SONNER-LEGACY (Sprint 4 · baseline v13.309.53) ────────────────────
+      // 84 archivos que aún importan `sonner` directo. Se migrarán en olas
+      // al wrapper `@/lib/ui/appFeedback` o `@/hooks/shared/useToast`.
+      // NO agregar entradas nuevas: la regla existe para bloquear regresiones.
+      "src/features/admin/components/TabExportar.tsx",
+      "src/features/admin/hooks/useBackfillLegacy.ts",
+      "src/features/auditoria/hooks/revisiones/asignar.ts",
+      "src/features/auditoria/hooks/revisiones/desmarcar.ts",
+      "src/features/auditoria/hooks/revisiones/marcar.ts",
+      "src/features/auditoria/hooks/useAuditoriaComentarios.ts",
+      "src/features/auditoria/hooks/useMarcarRevisadosBulk.ts",
+      "src/features/auditoria/hooks/useSnoozeHallazgo.ts",
+      "src/features/cliente/components/DialogEditarCliente.tsx",
+      "src/features/comisiones/components/TabVendedorasConfig.tsx",
+      "src/features/comisiones/hooks/useVendedorasEmailWarning.ts",
+      "src/features/configuracion/components/CatalogoClavesSATCard.tsx",
+      "src/features/costeo/hooks/useAprobacionTarifa.ts",
+      "src/features/costeo/hooks/useDemorasVenta.ts",
+      "src/features/cotizacion/components/CotizacionWizardLayout.tsx",
+      "src/features/cotizacion/components/plantillas/EditarPlantillaDialog.tsx",
+      "src/features/cotizacion/components/wizard/GuardarPlantillaDialog.tsx",
+      "src/features/cotizacion/components/wizard/PlantillaSelectorPaso1.tsx",
+      "src/features/cotizacion/hooks/mutations/useEnviarCotizacionEmail.ts",
+      "src/features/cotizacion/hooks/useCotizacionVersiones.ts",
+      "src/features/cotizacion/routes/CotizacionPlantillas.tsx",
+      "src/features/crm/components/ConvertirLeadSheet.tsx",
+      "src/features/crm/components/quickCreate/QuickCreateActividadPopover.tsx",
+      "src/features/crm/components/quickCreate/QuickCreateLeadPopover.tsx",
+      "src/features/crm/components/quickCreate/QuickCreateOportunidadPopover.tsx",
+      "src/features/crm/hooks/useUndoToast.ts",
+      "src/features/crm/lib/crmToast.ts",
+      "src/features/cxp/components/AdjuntoRow.tsx",
+      "src/features/cxp/components/ConciliacionPagoCell.tsx",
+      "src/features/cxp/components/CrearProveedorDesdeCfdiDialog.tsx",
+      "src/features/cxp/components/DialogNotaCreditoProveedor.tsx",
+      "src/features/cxp/components/DialogRegistrarPagoProveedor.tsx",
+      "src/features/cxp/components/vincularEmbarqueHelpers.ts",
+      "src/features/cxp/hooks/useAprobarFacturasLote.ts",
+      "src/features/cxp/hooks/useCancelarFacturaProveedor.ts",
+      "src/features/cxp/hooks/useCargaCfdi.ts",
+      "src/features/cxp/hooks/useCargaPdfIa.ts",
+      "src/features/cxp/hooks/useCerrarFacturaSinPago.ts",
+      "src/features/cxp/hooks/useEditarFacturaProveedorForm.ts",
+      "src/features/cxp/hooks/useNuevaFacturaProveedorForm.sideEffects.ts",
+      "src/features/cxp/hooks/useNuevaFacturaProveedorForm.submit.ts",
+      "src/features/cxp/hooks/useNuevaFacturaProveedorForm.ts",
+      "src/features/cxp/hooks/useProgramarPagoProveedor.ts",
+      "src/features/cxp/hooks/useTcDofPorFecha.ts",
+      "src/features/cxp/hooks/useVerificarUuidNcSat.ts",
+      "src/features/cxp/hooks/useVerificarUuidSat.ts",
+      "src/features/cxp/routes/Cxp.tsx",
+      "src/features/embarques/components/TabDemoras.tsx",
+      "src/features/embarques/components/facturacion/ProformaInconsistenteAlert.tsx",
+      "src/features/embarques/hooks/useCierreEmbarque.ts",
+      "src/features/embarques/hooks/useDemorasEmbarque.ts",
+      "src/features/embarques/hooks/useGarantiasContenedor.ts",
+      "src/features/embarques/hooks/useSegurosEmbarque.ts",
+      "src/features/embarques/routes/NuevoEmbarque.tsx",
+      "src/features/facturacion/components/DialogSustituirFactura.tsx",
+      "src/features/facturacion/components/FacturasMasivasToolbar.tsx",
+      "src/features/facturacion/components/detalle/ClaimPendingBanner.tsx",
+      "src/features/facturacion/components/detalle/FacturaConceptosEditor.tsx",
+      "src/features/facturacion/components/sustitucion/useSustitucionState.ts",
+      "src/features/facturacion/hooks/mutations/useEnviarFacturaEmail.ts",
+      "src/features/facturacion/hooks/useAcuseCancelacion.tsx",
+      "src/features/facturacion/hooks/useAutoSaveDatosFiscales.ts",
+      "src/features/facturacion/hooks/useBanxicoTipoCambio.ts",
+      "src/features/facturacion/hooks/useConsultarFacturapi.ts",
+      "src/features/facturacion/hooks/useCrearFacturaManual.ts",
+      "src/features/facturacion/hooks/useLimpiarPendingVerificado.ts",
+      "src/features/facturacion/hooks/useNotaCreditoFacturapi.ts",
+      "src/features/facturacion/hooks/useTimbrarFactura.ts",
+      "src/features/facturacion/hooks/useTimbrarRep.ts",
+      "src/features/presupuesto/components/DialogCategoria.tsx",
+      "src/features/presupuesto/components/TabCaptura.tsx",
+      "src/features/presupuesto/components/TabCategorias.tsx",
+      "src/features/profit/routes/ProfitDashboardEjecutivo.tsx",
+      "src/features/proformas/components/DestinatariosRecientesChips.tsx",
+      "src/features/proveedor/components/ProveedorCsfUpdateButton.tsx",
+      "src/features/proveedor/hooks/useNuevoProveedorController.csf.ts",
+      "src/features/proveedor/hooks/useNuevoProveedorController.ts",
+      "src/features/proveedor/hooks/useProveedoresCrear.ts",
+      "src/features/tesoreria/components/PanelConciliacionMovimiento.tsx",
+      "src/features/tesoreria/hooks/useTesoreriaCuentasController.ts",
+      "src/features/tesoreria/hooks/useTesoreriaMovimientos.ts",
+      "src/features/tesoreria/routes/TesoreriaConciliacion.tsx",
     ],
     rules: {
       "no-restricted-imports": ["error", {
         paths: [
           {
             name: "@/components/ui/table",
-            message: "Usa <DataTable /> de '@/components/shared/DataTable' + columnBuilders/defineColumns para estandarizar tablas. Excepciones: agrega el archivo a la allowlist del bloque `no-raw-table` en eslint.config.js con un comentario que explique el motivo.",
+            message: "Usa <DataTable /> de '@/components/shared/DataTable' + columnBuilders/defineColumns para estandarizar tablas. Excepciones: agrega el archivo a la allowlist del bloque `no-raw-table-and-sonner` en eslint.config.js con un comentario que explique el motivo.",
+          },
+          {
+            name: "sonner",
+            message: "Sprint 4: no importes `sonner` directo. Usa `notifyError`/`notifySuccess`/`notifyInfo` de `@/lib/ui/appFeedback` (wrapper con diagnóstico) o `useToast` de `@/hooks/shared`. Excepciones sólo en la baseline SONNER-LEGACY (burn-down).",
           },
         ],
       }],
@@ -713,6 +815,9 @@ export default tseslint.config(
     files: [
       // Formatters canónicos: definen los helpers, deben usar la API nativa.
       "src/lib/formatters/**",
+      // Primitivas TZ-aware CDMX (`hoyMx`, `ymMx`): capa de bajo nivel que
+      // implementa los formatters de dominio con `Intl.DateTimeFormat("en-CA", ...)`.
+      "src/lib/date/mx.ts",
     ],
     rules: {
       "no-restricted-syntax": ["error",

@@ -1,3 +1,5 @@
+import { formatFechaLarga } from "@/lib/formatters";
+
 /** Devuelve YYYY-MM-DD del primer y último día del mes (year, month 1-12). */
 export function rangoMes(year: number, month: number): { desde: string; hasta: string } {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -16,14 +18,14 @@ export function generarMesesDisponibles(hoy = new Date()): {
 }[] {
   const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 24, 1);
   const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 12, 1);
-  const fmt = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" });
   const out: { key: string; label: string; year: number; month: number }[] = [];
   const cur = new Date(inicio);
   while (cur <= fin) {
     const y = cur.getFullYear();
     const m = cur.getMonth() + 1;
     const key = `${y}-${String(m).padStart(2, "0")}`;
-    const label = fmt.format(cur).replace(/^./, (c) => c.toUpperCase());
+    // Sprint 4 · usar formatter canónico en vez de `Intl.DateTimeFormat` inline.
+    const label = formatFechaLarga(cur, { month: "long", year: "numeric" }, true);
     out.push({ key, label, year: y, month: m });
     cur.setMonth(cur.getMonth() + 1);
   }

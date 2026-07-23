@@ -12,11 +12,12 @@ import { usePortalProforma } from "@/features/proformas/hooks/usePortalProforma"
 import { PortalProformaResumen } from "@/features/proformas/components/portal/PortalProformaResumen";
 import { PortalProformaAcciones } from "@/features/proformas/components/portal/PortalProformaAcciones";
 
+import { formatFechaHora } from "@/lib/formatters";
+
 function fechaMx(iso: string | null | undefined): string {
   if (!iso) return "—";
-  try {
-    return new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
-  } catch { return "—"; }
+  const s = formatFechaHora(iso, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return s === "-" ? "—" : s;
 }
 
 type ProformaData = NonNullable<NonNullable<ReturnType<typeof usePortalProforma>["data"]>["proforma"]>;
