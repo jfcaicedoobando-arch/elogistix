@@ -20,19 +20,16 @@ const levelLabel: Record<string, string> = {
 };
 
 function fmtTs(ts: string): string {
-  try {
-    return new Date(ts).toLocaleString("es-MX", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  } catch {
-    return ts;
-  }
+  return formatFechaHora(ts, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
+
 
 export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns<AppLogRow>([
   {
