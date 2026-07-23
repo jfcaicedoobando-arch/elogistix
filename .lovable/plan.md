@@ -1,73 +1,70 @@
-## Diagnóstico (confirmado con datos reales)
+## Estado actual
 
-**Cotización afectada** `b83f5761…` tiene un concepto de venta con datos inconsistentes:
+Sprint 1 ya está cerrado en `v13.309.38` (fix UPDATE `guard_pago_proveedor`, test SQL `cxp_guard_sobrepago.sql` cableado en `rls-tests.yml`, ban `@/features/**` en `src/lib/**` con allowlist ARCH-DEBT). Después vinieron parches de infraestructura (H6, schema-invariants, revalidación de tarifa, columna `es_principal`) hasta `v13.309.44`.
 
-```
-"Cargos en Destino": cantidad=1, precio_unitario=125, total=145
-```
+**Lo que sigue según el doc son los 7 ítems del Sprint 2.** Los propongo en 3 PRs para poder revisar/rollback por área. No toca lógica financiera.
 
-El check constraint `conceptos_venta_total_calc` exige:
+---
 
-```
-ABS(total - ROUND(cantidad * precio_unitario, 2)) <= 0.01
-```
+## Sprint 2 — Plan
 
-Aquí `|145 − 125| = 20`, así que el INSERT a `conceptos_venta` truena.
+### PR-S2-A · Invariantes y ciclos runtime (bajo riesgo, valor alto)
 
-**Origen del dato roto:** el JSON `cotizaciones.conceptos_venta` puede contener `total` desalineado con `cantidad × precio_unitario` (probablemente por edición manual o recargos aplicados al total sin recalcular el unitario). Consulta a la BD encuentra **100 conceptos** en cotizaciones con este mismo drift, así que no es un caso aislado — cualquier cotización afectada va a fallar al crear el embarque borrador (botón "Revalidar tarifa / Crear embarque").
+1. **Paridad `roleHierarchy` ↔ `has_role()`** (ítem 1)
+   - Nuevo test `src/lib/auth/__tests__/roleHierarchy.invariant.test.ts` espejo de `embarqueFases.invariant.test.ts`: parsea `roleHierarchy.ts` y compara contra los roles/jerarquía que emite `has_role()` en migraciones.
 
-**Dónde revienta:** la RPC `crear_embarque_borrador_desde_cotizacion` (migraciones `20260719064026` y `20260719060217`) copia los tres campos verbatim del JSON:
+2. **Cubrir `TSAsExpression` en la regla `queryKey`** (ítem 3)
+   - Ampliar `scripts/lint/queryKey.ts` (o la regla eslint equivalente) para detectar cast `as unknown as` sobre `queryKey`.
+   - Registrar las 2 keys faltantes: `cxp/hooks/useConceptosCfdiFactura.ts:18` y `presupuesto/hooks/usePresupuestoCategorias.ts:13`.
 
-```sql
-INSERT INTO conceptos_venta (cantidad, precio_unitario, total, …)
-VALUES ((v->>'cantidad')::integer, (v->>'precio_unitario')::numeric, (v->>'total')::numeric, …);
-```
+3. **Romper 3 ciclos runtime** (ítem 4)
+   - `tesoreria/hooks/useFlujoProyectado.ts:7` — quitar self-import (1 línea).
+   - `auditoria/domain/ejecutivoAgregados ↔ ejecutivoRanking` — mover tipos compartidos a `types.ts` hoja.
+   - `facturacion/services/facturapi ↔ facturapiConsultar` — misma técnica.
+   - Documentar la regla "tipos compartidos en `types.ts` hoja" en `docs/architecture-guidelines.md`.
 
-Como el check requiere consistencia, revienta la inserción y el flujo de revalidación reporta `UNKNOWN`.
+4. **Bitácora fuera de `lib/`** (ítem 6)
+   - Mover `lib/domain/bitacora/registrar.ts` → `src/features/bitacora/services/registrar.ts` (hace I/O).
+   - Ampliar roots de `scripts/lib/arch.ts` a `src/lib/**` con allowlist infra (`lib/supabase`, `lib/auth/signOut`, `lib/auth/changePassword`).
 
-## Cambios propuestos
+### PR-S2-B · Refactor `EmbarqueDetalleHeader` (riesgo medio)
 
-### 1. RPC: reconciliar `precio_unitario` al insertar (una migración)
+5. **Header con 33 props** (ítem 2)
+   - Consumir bundle de `useEmbarqueEstadoActions` dentro del header (patrón `useEmbarqueDetalleTabsData`) para colapsar props.
+   - Unificar tipos `EmbarqueProp` y `EmbarqueRow` → quitar `as unknown as` de `EmbarqueDetalleTabs.tsx:34`.
 
-En `crear_embarque_borrador_desde_cotizacion`, cuando el JSON venga inconsistente, **preservar el `total`** (que es la cifra que Ventas cotizó al cliente) y recalcular `precio_unitario`:
+6. **Hooks→components runtime** (ítem 5)
+   - Mover `buildEmbarqueColumns` y `findOriginalFacturaIdFor` de hooks a `services/`/`domain/`.
+   - Convertir imports type-only a `types/`.
 
-```sql
-v_cant  := GREATEST(COALESCE((v_venta->>'cantidad')::integer, 1), 1);
-v_total := COALESCE((v_venta->>'total')::numeric, 0);
-v_pu    := COALESCE((v_venta->>'precio_unitario')::numeric, 0);
+### PR-S2-C · Complejidad (riesgo medio, más contenido)
 
-IF ABS(v_total - ROUND(v_cant * v_pu, 2)) > 0.01 THEN
-  v_pu := ROUND(v_total / v_cant, 6);   -- reconcilia sin alterar el importe cobrado
-END IF;
+7. **Refactor de 3 hooks calientes** (ítem 7)
+   - `useEmbarqueEstadoActions` (CC ~34) — extraer sub-hooks por acción (aprobar/cerrar/reabrir/cancelar).
+   - `useNuevoProveedorController` (~33) — separar carga inicial, submit y sub-form de sucursales.
+   - `useOperacionesData` (~32) — dividir por dominio (embarques activos vs alertas).
+   - Al terminar: `complexity` warn→error con allowlist ARCH-DEBT vacía o mínima.
 
-INSERT INTO conceptos_venta (cantidad, precio_unitario, total, …)
-VALUES (v_cant, v_pu, ROUND(v_total, 2), …);
-```
+---
 
-Decisión: preservar `total` (importe cobrable) sobre `precio_unitario` es lo correcto para no alterar cotización aceptada por el cliente.
+## Validación
 
-### 2. Backfill defensivo del JSON histórico
+- `bunx vitest run` (invariantes + queryKey + arquitectura + ciclos).
+- `bun run lint -- --max-warnings 0`.
+- `scripts/ci-fast.sh` completo antes de cerrar cada PR.
+- Humo manual: abrir detalle de embarque (header refactor), registrar pago (guard intacto), cambiar estado (hooks refactor).
 
-Migración one-shot que corre sobre `cotizaciones.conceptos_venta`: para cada elemento con drift > 0.01, recalcula `precio_unitario = round(total/cantidad, 6)` y lo escribe de vuelta al jsonb. Esto deja los 100 registros consistentes y evita futuras sorpresas en otros flujos.
+## Notas técnicas
 
-### 3. Prevenir regresión al editar cotizaciones
+- Ningún cambio de SQL/migración en Sprint 2 (todo es TS/arquitectura).
+- `roleHierarchy` invariant no cambia grants ni policies: solo detecta drift.
+- `complexity` sube a error **solo al final** de PR-S2-C para no bloquear PRs previos.
+- Bump `APP_VERSION` una vez por PR mergeado y entrada en `CHANGELOG.md`.
 
-Auditar `src/features/cotizacion` donde se editan conceptos: asegurar que al cambiar `total` se recalcula `precio_unitario` (o viceversa) antes de persistir. Fix contenido en front — sin tocar lógica de negocio. Sub-alcance a confirmar durante la exploración; si aparece un solo formulario responsable, se corrige; si es amplio, se propone plan separado.
+## Fuera de alcance (queda para Sprint 3+)
 
-### 4. Test SQL de regresión
+- PR-6 formularios RHF+zod, hidratación wizard, status registry Oleada 2, retrofit LC_ backend, dead code, clones jscpd. Se abordan tras cerrar Sprint 2.
 
-Añadir a `supabase/tests/` un test que inserte un JSON con drift y verifique que la RPC no revienta y produce filas consistentes con el check.
+---
 
-### 5. CHANGELOG + APP_VERSION
-
-Bump a `13.309.40` y entrada en `CHANGELOG.md` describiendo el fix.
-
-## Fuera de alcance
-
-- No se cambia el check constraint (sigue con tolerancia 0.01).
-- No se altera el importe total cotizado.
-- No se toca UI del wizard de revalidación.
-
-## Analogía (para principiante)
-
-Imagina una factura escrita a mano: 1 caja × $125 = $145. Los números no cuadran. Antes, el sistema copiaba tal cual y la báscula (constraint) lo rechazaba. Ahora, al pasarlo al embarque, decidimos respetar el **total cobrado ($145)** y ajustamos el precio unitario a $145 para que cuadre — nadie pierde dinero, y la báscula deja pasar la operación.
+¿Arranco por **PR-S2-A** (invariantes + ciclos, sin tocar UI)?
