@@ -9,9 +9,9 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useOrgFilter } from "@/hooks/shared";
 import type { CfdiParsedResponse, ConceptoCostoAbierto, CfdiConceptoParsed } from "@/features/cxp/services";
 import { useCrearFacturaProveedor } from "@/features/cxp/hooks";
-import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
+import type { FacturaFormValues } from "@/features/cxp/types";
 import type { CargaMode } from "@/features/cxp/components/CargaCfdiSection";
-import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
+import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import { notifyError } from "@/lib/ui/appFeedback";
 import {
   type PendingCfdi,
@@ -21,7 +21,7 @@ import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
 import { procesarPdfIaParsed } from "./useNuevaFacturaProveedorForm.pdfIa";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
-import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
+import type { TcOrigen } from "@/features/cxp/types";
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,

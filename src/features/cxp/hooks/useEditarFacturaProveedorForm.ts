@@ -16,7 +16,7 @@ import {
   type FacturaCxP,
   type FacturaParaEdicion,
 } from "@/features/cxp/services";
-import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
+import type { FacturaFormValues } from "@/features/cxp/types";
 import {
   addDays,
   calcularTotal,
@@ -24,7 +24,7 @@ import {
 } from "@/features/cxp/hooks/useNuevaFacturaProveedorForm.helpers";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
-import type { TcOrigen } from "@/features/cxp/components/FacturaProveedorFormFields";
+import type { TcOrigen } from "@/features/cxp/types";
 
 
 type RowLite = FacturaParaEdicion;

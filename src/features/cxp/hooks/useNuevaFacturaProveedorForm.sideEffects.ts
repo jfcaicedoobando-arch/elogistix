@@ -35,8 +35,8 @@ import {
   insertarConceptosCfdi,
   type CfdiConceptoParsed,
 } from "@/features/cxp/services";
-import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
-import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
+import type { FacturaFormValues } from "@/features/cxp/types";
+import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { PendingCfdi, VinculoLinea } from "./useNuevaFacturaProveedorForm.helpers";
 
 /**

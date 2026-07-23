@@ -4,7 +4,7 @@
  * Sin React, sin Supabase: testeables en aislamiento.
  */
 import type { Database } from "@/integrations/supabase/types";
-import type { FacturaFormValues } from "@/features/cxp/components/facturaFormPrimitives";
+import type { FacturaFormValues } from "@/features/cxp/types";
 import { todayLocalISO } from "@/lib/date/today";
 import { isoUtcDay } from "@/lib/date/mx";
 
