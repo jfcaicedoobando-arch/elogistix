@@ -21,8 +21,8 @@ import {
   type EmbarqueSugerido,
 } from "@/features/cxp/hooks";
 
-export type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { EmbarqueSeleccionado } from "@/features/cxp/types";
+
 
 
 interface Props {
