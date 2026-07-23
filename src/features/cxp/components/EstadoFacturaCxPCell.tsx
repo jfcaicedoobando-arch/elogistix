@@ -58,7 +58,7 @@ function tooltipDetails(f: FacturaCxP): string[] {
     lines.push(`Nota(s) de crédito aplicada(s): ${fmtMoney(f.notas_credito, f.moneda)}.`);
   }
   if (f.flags.satVerificada && f.uuid_verificado_fecha) {
-    const fecha = new Date(f.uuid_verificado_fecha).toLocaleDateString("es-MX");
+    const fecha = formatFechaEs(f.uuid_verificado_fecha);
     lines.push(`CFDI verificado en SAT el ${fecha}.`);
   }
   if (f.fecha_programada_pago && f.estatus !== "Pagada") {
