@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatFechaEs } from "@/lib/formatters";
 const fmtMoney = (n: number, currency: string) => formatCurrency(n, currency);
 import type { FacturaCxP } from "@/features/cxp/services";
 
@@ -32,10 +32,7 @@ interface Props {
 
 
 function formatProgramada(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "2-digit",
-  });
+  return formatFechaEs(iso, { day: "2-digit", month: "2-digit" });
 }
 
 function tooltipDetails(f: FacturaCxP): string[] {
