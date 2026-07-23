@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.309.15] - 2026-07-23
+- **chore(arquitectura · Bloque 1.3 · re-exports muertos) · Eliminar los 3 `export type` residuales en componentes CxP y apuntar consumidores a `@/features/cxp/types`.** Se quitan las 4 re-exportaciones tipo puente que quedaron tras el ítem 1.3: `FacturaFormValues`/`TcOrigen` en `FacturaProveedorFormFields.tsx`, `EmbarqueSeleccionado` en `SugerirEmbarqueBlock.tsx` y `SeleccionLinea` en `VincularEmbarqueSection.tsx`. 5 consumidores migran su `import type` a la fuente canónica `@/features/cxp/types`: `FacturaProveedorFormFields.hint.tsx`, `CxpPorCapturar.tsx`, `DialogNuevaFacturaProveedor.tsx`, `VincularEmbarqueSection.tsx` (para `EmbarqueSeleccionado`) y `VincularListaConceptos.tsx`. Refactor puro: cero cambios de runtime, tipos idénticos, typecheck verde (`bunx tsgo --noEmit`). Analogía: era como tener carteles de "el baño está allá →" en tres pasillos distintos apuntando al mismo baño; ahora todos entran directo por la puerta.
+
+
 ## [13.309.14] - 2026-07-23
 - **fix(facturacion · NC · TC guard) · Preservar código `LC_TC_NO_DISPONIBLE` en el toast de error.** El test `useNotaCreditoDraft.tc.test.ts` esperaba que la descripción del `notifyError` contuviera `LC_TC_NO_DISPONIBLE`, pero `getErrorMessage` lo despojaba dejando sólo el mensaje humano. Ahora, si el `Error.message` empieza con `LC_`, se pasa tal cual (código + detalle) al `description` del toast; para el resto se sigue usando `getErrorMessage`. Analogía: era como recibir un paquete con etiqueta de tracking y quitársela antes de entregarlo — ahora la etiqueta llega junto con el contenido para poder rastrear el error.
 
