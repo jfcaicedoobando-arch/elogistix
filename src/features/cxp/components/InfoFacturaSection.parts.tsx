@@ -7,6 +7,7 @@
 import { Loader2, ShieldCheck, Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatFechaHora } from "@/lib/formatters";
 
 export { AdjuntoRow } from "./AdjuntoRow";
 
