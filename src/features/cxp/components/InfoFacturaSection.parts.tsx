@@ -26,8 +26,7 @@ export function Field({ label, value, mono = false }: { label: string; value: Re
 
 export function CanceladaBanner({ fecha, motivo }: { fecha: string | null; motivo: string | null }) {
   const fechaTxt = fecha
-    ? new Date(fecha).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
-    : null;
+  const fechaTxt = fecha ? formatFechaHora(fecha) : null;
   return (
     <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs">
       <div className="flex items-center gap-2 font-medium text-destructive">
