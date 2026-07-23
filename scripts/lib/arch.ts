@@ -19,6 +19,16 @@ export const SIZE_EXEMPT = new Set<string>([
   "src/integrations/supabase/types.ts",
 ]);
 
+/**
+ * Sprint 2 · ítem 6 (cierre) — wrappers de infraestructura en `src/lib/**`
+ * cuyo ÚNICO trabajo es tocar el cliente (justificado). No añadir más
+ * archivos a esta lista: la regla es que lib/ es puro.
+ */
+export const CLIENT_IMPORT_ALLOW = new Set<string>([
+  "src/lib/auth/signOut.ts",
+  "src/lib/auth/changePassword.ts",
+]);
+
 export interface OversizedFile {
   file: string;
   lines: number;
