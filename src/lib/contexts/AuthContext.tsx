@@ -4,7 +4,7 @@ import type { AppRole } from "@/types/appRole";
 import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
-import { signOutCurrentSession } from "@/features/auth/services";
+import { signOutCurrentSession } from "@/lib/auth/signOut";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/lib/auth/authSnapshot";
 import { syncSentryUser } from "@/lib/observability/sentry/user";

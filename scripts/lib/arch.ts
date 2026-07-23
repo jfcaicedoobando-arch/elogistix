@@ -24,10 +24,17 @@ export interface OversizedFile {
   lines: number;
 }
 
-export function findDirectClientImports(root: string, roots: string[]): string[] {
+export function findDirectClientImports(
+  root: string,
+  roots: string[],
+  extraExcludeDirs: string[] = [],
+): string[] {
   const out: string[] = [];
   for (const r of roots) {
-    for (const f of walk(join(root, r), { excludeDirs: ["__tests__", "node_modules"], excludeFileRe: /\.(test|spec)\.tsx?$/ })) {
+    for (const f of walk(join(root, r), {
+      excludeDirs: ["__tests__", "node_modules", ...extraExcludeDirs],
+      excludeFileRe: /\.(test|spec)\.tsx?$/,
+    })) {
       const src = readFileSync(f, "utf8");
       if (DIRECT_CLIENT_IMPORT.test(src)) out.push(relPath(root, f));
     }
@@ -54,8 +61,18 @@ export interface ArchReport {
 
 export function runArchAudit(root: string): ArchReport {
   return {
-    hooksContextsDirectImports: findDirectClientImports(root, ["src/hooks", "src/lib/contexts"]),
-    componentsPagesDirectImports: findDirectClientImports(root, ["src/components"]),
+    hooksContextsDirectImports: findDirectClientImports(root, [
+      "src/hooks",
+      "src/lib/contexts",
+    ]),
+    // `src/features` alberga ~90% del código. Excluimos `services/` (capa
+    // permitida para tocar el cliente Supabase) para que sólo afloren
+    // violaciones reales en components/hooks/routes de features.
+    componentsPagesDirectImports: findDirectClientImports(
+      root,
+      ["src/components", "src/features"],
+      ["services"],
+    ),
     oversized: findOversized(root),
   };
 }

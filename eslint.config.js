@@ -361,7 +361,7 @@ export default tseslint.config(
     // tira el job; se relajan SOLO las reglas estructurales (no de tipos).
     files: [
       "src/features/facturacion/components/FacturasMasivasToolbar.tsx",
-      "src/features/facturas/services/dashboardEjecutivo.ts",
+      "src/features/facturacion/services/dashboardEjecutivo.ts",
       "supabase/functions/facturapi-cancelar/index.ts",
       "supabase/functions/facturapi-emitir/index.ts",
     ],
