@@ -25,9 +25,8 @@ DECLARE
   v_user_email    text;
   i               integer;
   v_target_ids    uuid[];
-  v_target_ids    uuid[];
   v_cid           uuid;
-  v_venta         jsonb;
+
   v_origen_code   text;
   v_destino_code  text;
   v_puerto_o      text;
