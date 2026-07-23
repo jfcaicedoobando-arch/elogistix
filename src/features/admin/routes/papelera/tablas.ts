@@ -45,10 +45,18 @@ export const TABLAS: TablaMeta[] = [
 
 export const GRUPOS = ["Operaciones", "Comercial", "Facturación", "CxP / Tesorería", "CRM", "Catálogos"] as const;
 
-export const dtf = new Intl.DateTimeFormat("es-MX", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+/**
+ * Sprint 4 · Ban Intl.DateTimeFormat fuera de `lib/formatters`: adaptador
+ * al helper canónico `formatFechaHora` manteniendo la API previa (`dtf.format(Date)`)
+ * para no tocar los consumidores en `columns.tsx`.
+ */
+import { formatFechaHora } from "@/lib/formatters";
+
+export const dtf = {
+  format(d: Date): string {
+    return formatFechaHora(d.toISOString(), {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  },
+};
