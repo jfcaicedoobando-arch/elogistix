@@ -1,59 +1,73 @@
-## Ítem 3.2 — Dividir god functions SQL
+## Contexto — estado real del plan
 
-**Contexto:** Bloques 1 y 2 y el ítem 3.1 (fuentes canónicas SQL) ya se aplicaron (v13.309.0–v13.309.6). El siguiente ítem según el orden obligatorio del documento es **3.2 – Dividir god functions**.
+Revisé el documento subido contra el repo actual. Casi todo Bloque 1 y 2 ya está aplicado en v13.309.0–12:
 
-**Regla del propio documento:** *"Cada una en su propio PR con tests de humo E2E del flujo afectado"*. Es decir, **una función por commit/turno**, no las 5 juntas.
+| Ítem | Estado | Evidencia |
+|------|--------|-----------|
+| 1.1 scanner `src/features` | ✅ | `scripts/lib/arch.ts:73` incluye `src/features` |
+| 1.2 path eslint | ✅ | `eslint.config.js:502` apunta al path correcto `facturacion/services/dashboardEjecutivo.ts` |
+| 1.3 tipos fuera de `.tsx` | 🟡 casi | Tipos ya viven en `src/features/cxp/types/{facturaForm,embarque,index}.ts`. Quedan **re-exports muertos** en 3 `.tsx` (`FacturaProveedorFormFields.tsx:28`, `SugerirEmbarqueBlock.tsx:24`, `VincularEmbarqueSection.tsx:26`) sin consumidores. |
+| 1.4 sin `: any` en detalle factura | ✅ | grep vacío |
+| 1.5 AuthContext desacoplado | ✅ | `src/lib/contexts/AuthContext.tsx` no importa `@/features/**` |
+| 1.6 supabase.client en `.tsx` | 🟡 | Solo queda 1: `cotizacion/services/mutations/enviarPorEmail.tsx` (JSX en services, listado también en Bloque 4 §5) |
+| 2.1 traducción LC_ | ✅ | `src/lib/errors/lcCodeMessages.ts` |
+| 2.2 invariantes esquema | ✅ | `supabase/tests/schema-invariants.sql` |
+| 2.3(a) shared promotion | ✅ | `ProfitBadge` en `components/shared`, `badgeTone` en `lib/ui`, `estadoUnificado` en `lib/domain` |
+| 2.3(b) eslint cross-feature | ❌ | Aún ~640 imports `@/features/*/{components,domain,lib}/*` cross-feature |
+| 2.4 TASA_IVA | ✅ | 0 literales `0.16` fuera de `financialUtils` |
+| 3.1 fuentes canónicas SQL | ✅ | `supabase/schema/{auditoria,embarques,facturacion,proformas}/*.sql` |
+| 3.2 god-functions | 🟡 3/5 | ✅ `auditoria_embarques_org`, `convertir_proformas_a_factura`, `crear_embarque_borrador_core`. Pendientes: **`operaciones_stats` (307 L)** y `calcular_demoras_embarque` (236 L) |
 
-### Alcance de este turno (solo la primera)
+**Orden del documento:** "Bloque 1 → 2 → 3 → 4, dentro de cada bloque el orden es el de ejecución". Los residuales de Bloque 1 (1.3 dead re-exports y 1.6 enviarPorEmail.tsx) son follow-ups triviales de <10 min cada uno. El siguiente ítem *sustantivo* pendiente es continuar 3.2.
 
-Refactorizar `auditoria_embarques_org` (664 líneas) — es la más grande y la que la auditoría lista primero.
+## Alcance de este turno (un commit, regla de oro #1)
 
-**Regla dura:** refactor puro. Firma pública, tipo de retorno, textos de hallazgo (es-MX) y semántica de resultados deben ser **byte-idénticos** contra el estado actual. Si algo obliga a cambiar comportamiento, me detengo.
+Refactor puro de `public.operaciones_stats` (307 líneas). Es la siguiente god-function según el orden del ítem 3.2. Firma pública y contrato JSON de retorno **byte-idénticos**.
 
-### Cómo se divide
+## Cómo se divide
 
-1. Leer la fuente canónica en `supabase/schema/auditoria/auditoria_embarques_org.sql` (creada en 3.1) y mapear las secciones lógicas (bloques `INSERT INTO hallazgos SELECT ...` por categoría de hallazgo: cierre, financieros, tracking, documentos, garantías, demoras, etc.).
-2. Extraer cada categoría a una función privada `_audit_embarques_<categoria>(p_org_id uuid) RETURNS SETOF hallazgo_row` en el mismo schema, sin cambiar el SQL interno de cada bloque (copia literal).
-3. Reescribir `auditoria_embarques_org` como orquestador: `UNION ALL` de las funciones privadas, preservando el ORDER BY / severidad / metadata final.
-4. Mantener `SECURITY DEFINER`, `search_path`, permisos y `GRANT`s idénticos.
-5. Actualizar la fuente canónica `supabase/schema/auditoria/*.sql` (una función = un archivo) — regla establecida en 3.1.
+1. Leer la definición actual desde DB vía `supabase--read_query` sobre `pg_proc` (aún no existe en `supabase/schema/`; parte del ítem 3.1 fue solo las 10 más redefinidas — `operaciones_stats` no estaba en esa lista, así que primero se **crea** la fuente canónica).
+2. Identificar bloques por concern (típicamente: KPIs por estado, agregados por modo, agregados por operador, top clientes, series temporales). Cada bloque termina construyendo una porción del `jsonb_build_object` final.
+3. Extraer 2–3 helpers privados `_operaciones_stats_<concern>(p_org uuid, ...)` que devuelven `jsonb` — mismo SQL interno, copia literal.
+4. El orquestador público arma el `jsonb_build_object` final llamando a los helpers.
+5. `SECURITY DEFINER`, `SET search_path`, permisos y `GRANT`s del orquestador **inalterados**. Helpers privados: `REVOKE ALL FROM PUBLIC/anon/authenticated`, `GRANT EXECUTE TO service_role`.
 
-### Migración
+## Migración
 
-- Un archivo: `supabase/migrations/<ts>_split_auditoria_embarques_org.sql`.
-- Contiene `CREATE OR REPLACE FUNCTION` de los helpers privados + el orquestador. Sin `DROP` (siguen usando el mismo nombre público).
-- Sin cambios en tablas, sin `CASCADE`, sin RLS nueva.
+- Un archivo: `supabase/migrations/<ts>_split_operaciones_stats.sql`.
+- Contiene `CREATE OR REPLACE FUNCTION` de los helpers + el orquestador (mismo nombre y firma, sin `DROP`).
+- Sin cambios en tablas, RLS, ni datos.
 
-### Verificación (checklist del documento)
+## Fuentes canónicas nuevas
 
-1. `npm run lint`, `npx tsc -b`, `npx vitest run`, `npx knip` — todos verdes.
-2. **Prueba de equivalencia SQL** (crítica para "refactor puro"):
-   ```sql
-   -- capturar snapshot ANTES de aplicar la migración en una org real de staging
-   SELECT * FROM auditoria_embarques_org('<org-id>') ORDER BY 1,2,3;
-   -- comparar contra el mismo query después de la migración
-   ```
-   Ejecutar contra al menos 2 organizaciones con datos representativos vía `supabase--read_query`. **Diff debe ser vacío.**
-3. Snapshot de invariantes de esquema (creado en 2.2) sigue verde: los triggers y funciones críticas no se tocan; sólo se agregan helpers privados nuevos.
-4. `CHANGELOG.md` + bump `APP_VERSION` a `13.309.7`.
+- `supabase/schema/operaciones/operaciones_stats.sql` (orquestador refactorizado).
+- `supabase/schema/operaciones/_operaciones_stats_<concern>.sql` × N helpers.
 
-### Detalles técnicos (para revisión)
+(Se crea el subdirectorio `operaciones/` — patrón ya establecido con `auditoria/`, `embarques/`, `facturacion/`, `proformas/`.)
 
-- **Naming de helpers:** prefijo `_audit_embarques_` (underscore inicial marca uso interno), en el schema `public` (mismo que la función pública).
-- **Contrato de retorno:** cada helper devuelve exactamente las columnas que `auditoria_embarques_org` inserta hoy (misma tupla). Se define un `TYPE` o se reusa el `RETURNS TABLE (...)` idéntico al público.
-- **Permisos:** los helpers privados **no** reciben `GRANT` a `authenticated`/`anon` (sólo el orquestador público mantiene sus grants actuales). Así evitamos ampliar superficie.
-- **NO se toca:** `search_path`, `SECURITY DEFINER`, `LANGUAGE plpgsql`/`sql`, ni el orden de columnas del `RETURNS TABLE` del orquestador.
-- **Fuera de alcance de este turno:** las otras 4 god functions (`convertir_proformas_a_factura`, `operaciones_stats`, `crear_embarque_borrador_core`, `calcular_demoras_embarque`). Cada una será su propio turno/PR.
+## Verificación
 
-### Riesgos y mitigación
+1. `supabase--read_query` ANTES: `SELECT operaciones_stats('<org>')` sobre 1–2 orgs con datos → guardar output.
+2. Migración aplicada → mismo query → **diff debe ser vacío** (comparación textual del JSON).
+3. `bun run lint`, `bunx tsgo`, `bunx vitest run` — verdes.
+4. Snapshot de invariantes (2.2) sigue verde (no se dropean triggers).
+5. CHANGELOG + `APP_VERSION` → `13.309.13`.
 
-- **Riesgo:** que un `UNION ALL` cambie el orden implícito de resultados y algún consumidor UI dependa de él → mitigado con `ORDER BY` explícito idéntico al actual.
-- **Riesgo:** helpers privados sin `search_path` heredan uno inseguro → cada helper declara `SET search_path = public, pg_catalog` igual que el orquestador.
-- **Riesgo:** que el diff SQL sea > lo esperado (>15 archivos o >2 h) → si al abrir la fuente canónica veo que la función mezcla categorías inseparablemente, me detengo y reporto en vez de forzar (regla 6 de las reglas de oro).
+## Riesgos y mitigación
 
-### Entregables
+- **Función no está en fuentes canónicas del 3.1.** Riesgo bajo — creo la fuente canónica ahora, con la definición actual como línea base pre-refactor comentada en el commit message.
+- **Retorno `jsonb` con orden de claves distinto entre helpers.** Mitigación: el orquestador arma el `jsonb_build_object` final; los helpers devuelven fragmentos que se concatenan con `||`, preservando el orden semántico. Si al diseñar veo que el orden actual depende de la construcción monolítica, me detengo (regla de oro #6) y reporto.
+- **Función podría ser `SETOF` o `TABLE(...)` en vez de `jsonb`.** Verifico el `RETURNS` real antes de tocar nada.
 
-- `supabase/migrations/<ts>_split_auditoria_embarques_org.sql`
-- `supabase/schema/auditoria/auditoria_embarques_org.sql` (actualizada + nuevas)
-- `CHANGELOG.md` entry
-- `APP_VERSION` → `13.309.7`
+## Fuera de alcance de este turno
+
+- `calcular_demoras_embarque` (última god-function de 3.2) — su propio PR.
+- Residuales 1.3 (dead re-exports) y 1.6 (`enviarPorEmail.tsx`) — PRs de 5 min cada uno, no bloquean 3.2.
+- 2.3(b) ESLint no-restricted cross-feature (640 imports) — Bloque 2 residual grande, propio PR.
+
+## Entregables
+
+- `supabase/migrations/<ts>_split_operaciones_stats.sql`
+- `supabase/schema/operaciones/operaciones_stats.sql` + helpers `_operaciones_stats_*.sql`
+- Entrada en `CHANGELOG.md`
+- `APP_VERSION` → `13.309.13`
