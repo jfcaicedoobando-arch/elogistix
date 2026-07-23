@@ -21,7 +21,7 @@ export const USOS_CFDI_SAT: Array<{ value: string; label: string }> = [
   { value: "I04", label: "I04 - Equipo de cómputo y accesorios" },
   { value: "I05", label: "I05 - Dados, troqueles, moldes, matrices y herramental" },
   { value: "I06", label: "I06 - Comunicaciones telefónicas" },
-  { value: "I07", label: "I07 - Comunicaciones satelitales" },
+  { value: "I07", label: "I07 - Comunicaciones satelitares" },
   { value: "I08", label: "I08 - Otra maquinaria y equipo" },
   // Deducciones personales (PF)
   { value: "D01", label: "D01 - Honorarios médicos, dentales y gastos hospitalarios" },
@@ -71,6 +71,15 @@ export const METODOS_PAGO_SAT: Array<{ value: string; label: string }> = [
   { value: "PUE", label: "PUE - Pago en una sola exhibición" },
   { value: "PPD", label: "PPD - Pago en parcialidades o diferido" },
 ];
+
+export function labelDeCatalogo(
+  options: Readonly<Array<{ value: string; label: string }>>,
+  clave: string | null | undefined,
+  fallback = "—",
+): string {
+  if (!clave) return fallback;
+  return options.find((o) => o.value === clave)?.label ?? clave;
+}
 
 export const MOTIVOS_CANCELACION_SAT: Array<{ value: "01" | "02" | "03" | "04"; label: string }> = [
   { value: "01", label: "01 - Comprobante emitido con errores con relación" },

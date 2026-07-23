@@ -1,5 +1,5 @@
 import { assertEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
+import { buildRepPayload, validateRepContext, normalizarFormaPago, type PagoContext } from "./helpers.ts";
 
 const validCtx: PagoContext = {
   receptor: {
@@ -79,9 +79,9 @@ Deno.test("buildRepPayload incluye exchange en doc relacionado si difiere de la 
   assertEquals(p.complements[0].data[0].related_documents[0].exchange, 18.5);
 });
 
-Deno.test("buildRepPayload incluye operation_number cuando hay referencia", () => {
+Deno.test("buildRepPayload incluye numOperacion cuando hay referencia", () => {
   const p = buildRepPayload(validCtx);
-  assertEquals(p.complements[0].data[0].operation_number, "REF-001");
+  assertEquals(p.complements[0].data[0].numOperacion, "REF-001");
 });
 
 Deno.test("buildRepPayload omite taxes cuando tasa_iva = 0", () => {
@@ -90,4 +90,33 @@ Deno.test("buildRepPayload omite taxes cuando tasa_iva = 0", () => {
     documento_relacionado: { ...validCtx.documento_relacionado, tasa_iva: 0 },
   });
   assertEquals(p.complements[0].data[0].related_documents[0].taxes, undefined);
+});
+
+Deno.test("buildRepPayload incluye base en taxes de documento relacionado", () => {
+  const p = buildRepPayload(validCtx);
+  const tax = p.complements[0].data[0].related_documents[0].taxes![0];
+  assertEquals(tax.base, 1160);
+});
+
+Deno.test("normalizarFormaPago conserva codigos SAT de 2 digitos", () => {
+  assertEquals(normalizarFormaPago("03"), "03");
+  assertEquals(normalizarFormaPago("28"), "28");
+});
+
+Deno.test("normalizarFormaPago mapea nombres legibles a codigos SAT", () => {
+  assertEquals(normalizarFormaPago("Transferencia"), "03");
+  assertEquals(normalizarFormaPago("Cheque"), "02");
+  assertEquals(normalizarFormaPago("Efectivo"), "01");
+  assertEquals(normalizarFormaPago("Tarjeta de crédito"), "04");
+  assertEquals(normalizarFormaPago("Otro"), "99");
+});
+
+Deno.test("normalizarFormaPago sin dato cae en Por definir", () => {
+  assertEquals(normalizarFormaPago(null), "99");
+  assertEquals(normalizarFormaPago(""), "99");
+});
+
+Deno.test("validateRepContext acepta forma de pago legible mapeada", () => {
+  const issues = validateRepContext({ ...validCtx, forma_pago: "Transferencia" });
+  assertEquals(issues.some((i) => i.field === "forma_pago"), false);
 });

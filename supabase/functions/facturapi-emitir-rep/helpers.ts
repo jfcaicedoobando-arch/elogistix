@@ -66,19 +66,18 @@ export interface FacturapiRepPayload {
       payment_form: string;
       currency: string;
       exchange?: number;
-      amount: number;
       date: string;
-      operation_number?: string;
+      numOperacion?: string;
       related_documents: Array<{
         uuid: string;
-        folio?: string;
+        folio_number?: string;
         series?: string;
         currency: string;
         exchange?: number;
         installment: number;
         last_balance: number;
         amount: number;
-        taxes?: Array<{ type: "IVA"; rate: number; factor: "Tasa"; withholding: false }>;
+        taxes?: Array<{ type: "IVA"; rate: number; factor: "Tasa"; withholding: false; base: number }>;
       }>;
     }>;
   }>;
@@ -99,12 +98,33 @@ function isValidZip(zip: string | null | undefined): boolean {
   return !!zip && /^\d{5}$/.test(zip.trim());
 }
 
+const FORMA_PAGO_MAP: Record<string, string> = {
+  transferencia: "03",
+  transfer: "03",
+  cheque: "02",
+  efectivo: "01",
+  tarjeta: "04",
+  "tarjeta de crédito": "04",
+  "tarjeta de credito": "04",
+  "tarjeta de débito": "28",
+  "tarjeta de debito": "28",
+  otro: "99",
+};
+
+export function normalizarFormaPago(formaPago: string | null | undefined): string {
+  if (!formaPago) return "99";
+  const v = formaPago.trim();
+  if (/^\d{2}$/.test(v)) return v;
+  const key = v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return FORMA_PAGO_MAP[key] ?? "99";
+}
+
 export function validateRepContext(ctx: PagoContext): RepValidationIssue[] {
   const issues: RepValidationIssue[] = [];
   if (!isValidRfc(ctx.receptor.tax_id)) issues.push({ field: "rfc", message: "RFC del receptor inválido" });
   if (!isValidZip(ctx.receptor.address.zip)) issues.push({ field: "codigo_postal", message: "Código postal del receptor requerido (5 dígitos)" });
   if (!ctx.receptor.tax_system) issues.push({ field: "regimen_fiscal", message: "Régimen fiscal del receptor requerido" });
-  if (!ctx.forma_pago) issues.push({ field: "forma_pago", message: "Forma de pago SAT requerida" });
+  if (!normalizarFormaPago(ctx.forma_pago)) issues.push({ field: "forma_pago", message: "Forma de pago SAT requerida" });
   if (!ctx.fecha_pago) issues.push({ field: "fecha_pago", message: "Fecha de pago requerida" });
   if (!(ctx.monto > 0)) issues.push({ field: "monto", message: "Monto del pago debe ser mayor a 0" });
   if (ctx.moneda !== "MXN" && !(ctx.tipo_cambio > 0)) {
@@ -140,9 +160,8 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
         type: "pago",
         data: [
           {
-            payment_form: ctx.forma_pago,
+            payment_form: normalizarFormaPago(ctx.forma_pago),
             currency: ctx.moneda,
-            amount: round2(ctx.monto),
             date: ctx.fecha_pago,
             related_documents: [
               {
@@ -152,7 +171,7 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
                 last_balance: round2(dr.imp_saldo_ant),
                 amount: round2(dr.imp_pagado),
                 taxes: dr.tasa_iva > 0
-                  ? [{ type: "IVA", rate: dr.tasa_iva, factor: "Tasa", withholding: false }]
+                  ? [{ type: "IVA", rate: dr.tasa_iva, factor: "Tasa", withholding: false, base: round2(dr.imp_pagado) }]
                   : undefined,
               },
             ],
@@ -164,13 +183,13 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
 
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
-  if (ctx.numero_operacion) payload.complements[0].data[0].operation_number = ctx.numero_operacion;
+  if (ctx.numero_operacion) payload.complements[0].data[0].numOperacion = ctx.numero_operacion;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) {
     payload.complements[0].data[0].exchange = ctx.tipo_cambio;
   }
 
   const rdoc = payload.complements[0].data[0].related_documents[0];
-  if (dr.folio) rdoc.folio = dr.folio;
+  if (dr.folio) rdoc.folio_number = dr.folio;
   if (dr.serie) rdoc.series = dr.serie;
   // exchange en el documento relacionado: relación moneda_dr → moneda del pago
   if (!sameCurrency && dr.tipo_cambio_dr > 0) {

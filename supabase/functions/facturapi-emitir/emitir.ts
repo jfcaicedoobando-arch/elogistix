@@ -167,16 +167,17 @@ async function cargarReferenciasEmbarque(supabase: SupabaseClient, factura: Fact
   return { expediente: refExpediente, bl_master: refBlMaster, bl_house: refBlHouse };
 }
 
-export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
-  const { supabase, facturapi, apiKey, ambiente, ctx, factura, facturaId, user, claim } = input;
-  const payload = buildFacturapiPayload(ctx);
+interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
 
-  interface FapiInvoice { id: string; uuid: string; folio_number?: number; folio?: number; series?: string }
-  let invoice: FapiInvoice;
+async function createInvoiceInFacturapi(
+  input: EmitirInput,
+  payload: ReturnType<typeof buildFacturapiPayload>,
+): Promise<FapiInvoice | Response> {
+  const { supabase, facturapi, factura, facturaId, user, claim } = input;
   try {
     // FIX-04/32 — timeout defensivo: si FacturApi cuelga, liberamos el claim
     // y devolvemos 504 en vez de dejar la Edge Function ocupada 150 s.
-    invoice = await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
+    return await withFacturapiTimeout("invoices.create", facturapi.invoices.create(payload)) as FapiInvoice;
   } catch (err) {
     await claim.release();
     if (err instanceof FacturapiTimeoutError) {
@@ -196,6 +197,14 @@ export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
     const message = (detail && typeof detail === "object" && "message" in (detail as Record<string, unknown>) && typeof (detail as Record<string, unknown>).message === "string") ? (detail as Record<string, string>).message : `FacturApi respondió ${status}`;
     return jsonResponse({ error: "facturapi_error", status, detail, message }, 502);
   }
+}
+
+export async function emitirYActualizar(input: EmitirInput): Promise<Response> {
+  const { supabase, apiKey, ambiente, ctx, factura, facturaId, user, claim } = input;
+  const payload = buildFacturapiPayload(ctx);
+
+  const invoice = await createInvoiceInFacturapi(input, payload);
+  if (invoice instanceof Response) return invoice;
 
   const facturapiId: string = invoice.id;
   const uuid: string = invoice.uuid;

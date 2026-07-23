@@ -3,6 +3,7 @@ import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePortalPagosFactura } from "@/features/portal/hooks";
+import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { CheckCircle2, Clock } from "lucide-react";
 
 interface Props {
@@ -43,7 +44,7 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{formatDate(p.fecha_pago)}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {p.forma_pago}{p.referencia ? ` • ${p.referencia}` : ""}
+                    {labelDeCatalogo(FORMAS_PAGO_SAT, p.forma_pago)}{p.referencia ? ` • ${p.referencia}` : ""}
                   </p>
                 </div>
                 <div className="text-right shrink-0">

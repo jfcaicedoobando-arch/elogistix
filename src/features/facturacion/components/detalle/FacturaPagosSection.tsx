@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
+import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { PagoRepCell } from "./PagoRepCell";
 
 interface Props {
@@ -108,13 +109,14 @@ export function FacturaPagosSection({
                       <td className="py-2 px-2 text-right tabular-nums">
                         {formatCurrency(Number(p.monto_aplicado_factura), moneda)}
                       </td>
-                      <td className="py-2 px-2">{p.forma_pago}</td>
+                      <td className="py-2 px-2">{labelDeCatalogo(FORMAS_PAGO_SAT, p.forma_pago)}</td>
                       <td className="py-2 px-2 max-w-[200px] truncate" title={p.referencia ?? ""}>
                         {p.referencia || "—"}
                       </td>
                       <td className="py-2 px-2">
                         <PagoRepCell
                           pagoId={p.id}
+                          facturaId={facturaId}
                           estadoRep={p.estado_rep}
                           serieRep={p.serie_rep ?? null}
                           folioRep={p.folio_rep ?? null}

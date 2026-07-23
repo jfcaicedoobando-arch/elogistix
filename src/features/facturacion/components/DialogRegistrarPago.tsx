@@ -64,7 +64,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
 
   const [values, setValues] = useState<PagoFormValues>({
     fecha: today(), monto: "", moneda: "MXN",
-    formaPago: "Transferencia", referencia: "", notas: "",
+    formaPago: "03", referencia: "", notas: "",
   });
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function DialogRegistrarPago({ open, onOpenChange, factura }: Props) {
         fecha: today(),
         monto: saldo > 0 ? saldo.toFixed(2) : "",
         moneda: factura.moneda,
-        formaPago: "Transferencia", referencia: "", notas: "",
+        formaPago: "03", referencia: "", notas: "",
       });
     }
   }, [open, factura, saldo]);
