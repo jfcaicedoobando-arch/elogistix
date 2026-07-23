@@ -1,7 +1,64 @@
--- Fuente canónica de public.crear_embarque_borrador_core
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
 
+-- Helper privado: replica cotizacion_costos + conceptos_venta al embarque recién creado.
+CREATE OR REPLACE FUNCTION public._crear_embarque_replicar_conceptos(
+  p_cotizacion_id uuid,
+  p_embarque_id   uuid,
+  p_org           uuid,
+  p_target_ids    uuid[],
+  p_conceptos_venta jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_catalog
+AS $function$
+DECLARE
+  v_costo public.cotizacion_costos%ROWTYPE;
+  v_cid   uuid;
+  v_venta jsonb;
+BEGIN
+  FOR v_costo IN
+    SELECT * FROM public.cotizacion_costos
+    WHERE cotizacion_id = p_cotizacion_id AND deleted_at IS NULL
+  LOOP
+    IF COALESCE(v_costo.unidad_medida, 'Contenedor') = 'BL' THEN
+      INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, organization_id)
+      VALUES (p_embarque_id, NULL, v_costo.concepto, COALESCE(v_costo.costo_total, v_costo.costo_unitario * v_costo.cantidad),
+              CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
+              COALESCE(v_costo.proveedor, ''), p_org);
+    ELSE
+      FOREACH v_cid IN ARRAY p_target_ids LOOP
+        INSERT INTO public.conceptos_costo (embarque_id, contenedor_id, concepto, monto, moneda, proveedor_nombre, organization_id)
+        VALUES (p_embarque_id, v_cid, v_costo.concepto, COALESCE(v_costo.costo_total, v_costo.costo_unitario * v_costo.cantidad),
+                CASE WHEN v_costo.moneda = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
+                COALESCE(v_costo.proveedor, ''), p_org);
+      END LOOP;
+    END IF;
+  END LOOP;
+
+  IF jsonb_typeof(p_conceptos_venta) = 'array' THEN
+    FOR v_venta IN SELECT * FROM jsonb_array_elements(p_conceptos_venta) LOOP
+      IF COALESCE(trim(v_venta->>'descripcion'), '') <> '' THEN
+        INSERT INTO public.conceptos_venta (embarque_id, descripcion, cantidad, precio_unitario, moneda, aplica_iva, total, organization_id)
+        VALUES (p_embarque_id, v_venta->>'descripcion',
+                COALESCE((v_venta->>'cantidad')::integer, 1),
+                COALESCE((v_venta->>'precio_unitario')::numeric, 0),
+                CASE WHEN v_venta->>'moneda' = 'USD' THEN 'USD'::moneda ELSE 'MXN'::moneda END,
+                COALESCE((v_venta->>'aplica_iva')::boolean, false),
+                COALESCE((v_venta->>'total')::numeric, 0),
+                p_org);
+      END IF;
+    END LOOP;
+  END IF;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM anon;
+REVOKE ALL ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public._crear_embarque_replicar_conceptos(uuid, uuid, uuid, uuid[], jsonb) TO service_role;
+
+-- Orquestador: idéntico al actual, delega los dos bucles al helper.
 CREATE OR REPLACE FUNCTION public.crear_embarque_borrador_core(p_cotizacion_id uuid)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -26,7 +83,6 @@ DECLARE
   i               integer;
   v_target_ids    uuid[];
   v_cid           uuid;
-
   v_origen_code   text;
   v_destino_code  text;
   v_puerto_o      text;
@@ -46,7 +102,6 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_NO_ENCONTRADA: cotización % no existe', p_cotizacion_id USING ERRCODE = 'P0002';
   END IF;
 
-  -- FIX-21: rechazar cotizaciones borradas (soft delete).
   IF v_cot.deleted_at IS NOT NULL THEN
     RAISE EXCEPTION 'LC_COT_ELIMINADA: la cotización % está eliminada', p_cotizacion_id USING ERRCODE = 'P0001';
   END IF;
@@ -62,8 +117,6 @@ BEGIN
     RAISE EXCEPTION 'LC_NO_AUTORIZADO: solo admin u operador pueden crear el borrador' USING ERRCODE = '42501';
   END IF;
 
-  -- FIX-21: aceptar 'Aceptada' y 'En operación' (esta última implica que ya
-  -- hay un embarque; el bloque de idempotencia devuelve el existente).
   IF v_cot.estado NOT IN ('Aceptada'::estado_cotizacion, 'En operación'::estado_cotizacion) THEN
     RAISE EXCEPTION 'LC_COT_ESTADO_INVALIDO: la cotización debe estar Aceptada o En operación (actual: %)', v_cot.estado USING ERRCODE = 'P0001';
   END IF;
@@ -72,10 +125,7 @@ BEGIN
     RAISE EXCEPTION 'LC_COT_SIN_CLIENTE: convierte el prospecto a cliente antes de crear el borrador' USING ERRCODE = 'P0001';
   END IF;
 
-  -- Idempotencia (link directo): la cotización ya apunta a un embarque.
   IF v_cot.embarque_id IS NOT NULL THEN
-    -- Sólo devolver si el embarque sigue vivo; si fue eliminado, se limpia el link
-    -- y se crea uno nuevo (permite re-generar tras borrar).
     SELECT id INTO v_orphan_id FROM public.embarques WHERE id = v_cot.embarque_id AND deleted_at IS NULL;
     IF FOUND THEN
       RETURN v_orphan_id;
@@ -83,8 +133,6 @@ BEGIN
     UPDATE public.cotizaciones SET embarque_id = NULL WHERE id = v_cot.id;
   END IF;
 
-  -- FIX-21: idempotencia extendida — embarque huérfano (con cotizacion_id
-  -- pero sin link inverso). Devolverlo en vez de duplicar.
   SELECT id INTO v_orphan_id
   FROM public.embarques
   WHERE cotizacion_id = v_cot.id AND deleted_at IS NULL
@@ -93,9 +141,6 @@ BEGIN
   IF v_orphan_id IS NOT NULL THEN
     RETURN v_orphan_id;
   END IF;
-
-  -- v13.303.42: no reservar expediente aquí. Se asigna en avanzar_estado_embarque
-  -- cuando el borrador pasa a Confirmado.
 
   v_origen_code := COALESCE(
     NULLIF(substring(v_cot.origen  FROM '\(([^)]+)\)'), ''),
@@ -195,7 +240,6 @@ BEGIN
     v_cot.id, v_embarque_id, v_cot.organization_id, v_target_ids, v_cot.conceptos_venta
   );
 
-
   UPDATE public.cotizaciones
   SET embarque_id = v_embarque_id, estado = 'En operación'::estado_cotizacion, updated_at = now()
   WHERE id = v_cot.id;
@@ -218,5 +262,4 @@ BEGIN
 
   RETURN v_embarque_id;
 END;
-$function$
- name:crear_embarque_borrador_core schema:public;
+$function$;
