@@ -100,10 +100,7 @@ export function PagosCajaBlock({ tesoreria, cxpPorPagar, loading }: Props) {
                       </span>
                       <span className="text-2xs text-muted-foreground w-20 text-right">
                         {f.fecha_vencimiento
-                          ? new Date(f.fecha_vencimiento + "T00:00:00").toLocaleDateString("es-MX", {
-                              day: "2-digit",
-                              month: "short",
-                            })
+                          ? formatFechaEs(f.fecha_vencimiento, { day: "2-digit", month: "short" })
                           : "—"}
                       </span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
