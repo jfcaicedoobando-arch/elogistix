@@ -50,6 +50,7 @@ export interface FacturaCxP {
   proveedor_nombre: string;
   proveedor_origen: "Nacional" | "Extranjero" | null;
   embarque_id: string | null;
+  embarque_expediente: string | null;
   folio_proveedor: string;
   folio_interno: string;
   fecha_emision: string;
