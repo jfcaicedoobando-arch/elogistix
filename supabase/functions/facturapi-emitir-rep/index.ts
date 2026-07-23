@@ -15,6 +15,7 @@ import { resolveFacturapiKey, FACTURAPI_BASE } from "../_shared/facturapiAuth.ts
 import { authorizeOrgMembership } from "../_shared/auth.ts";
 import { getFacturapiClient, describeFacturapiError } from "../_shared/facturapiClient.ts";
 import { buildRepPayload, validateRepContext, type PagoContext } from "./helpers.ts";
+import { calcularParcialidad, resolverReferenciasEmbarque, tasaIvaFacturaOriginal } from "./context.ts";
 import { respaldarXmlTimbrado } from "../_shared/respaldarXmlTimbrado.ts";
 import { registrarBitacoraEdge } from "../_shared/bitacora.ts";
 import { jsonResponse } from "../_shared/response.ts";
@@ -76,17 +77,8 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
   if (!factura.uuid_fiscal) return jsonResponse({ error: "factura_no_timbrada", message: "La factura original no está timbrada." }, 409);
   if (factura.metodo_pago !== "PPD") return jsonResponse({ error: "no_aplica_rep", message: "La factura no es PPD; no requiere REP." }, 409);
 
-  // α.1 — Tasa IVA efectiva de la factura original (antes hardcoded 0.16).
-  // SAT rechazaba REPs de facturas de exportación con IVA 0% porque el
-  // documento_relacionado declaraba tasa 0.16 vs XML original 0.
-  // Cálculo: iva/subtotal redondeado al múltiplo SAT más cercano {0, 0.08, 0.16}.
-  const subtotalFact = Number(factura.subtotal ?? 0);
-  const ivaFact = Number(factura.iva ?? 0);
-  const tasaCalculada = subtotalFact > 0 ? ivaFact / subtotalFact : 0;
-  const tasaIvaFactura: number =
-    tasaCalculada < 0.02 ? 0
-    : tasaCalculada < 0.12 ? 0.08
-    : 0.16;
+  // α.1 — Tasa IVA efectiva de la factura original (extraída a context.ts).
+  const tasaIvaFactura = tasaIvaFacturaOriginal(Number(factura.subtotal ?? 0), Number(factura.iva ?? 0));
 
   // 3) Cliente
   const { data: cliente, error: cErr } = await supabase
@@ -116,35 +108,13 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .order("created_at", { ascending: true });
   if (ppErr) return jsonResponse({ error: "pagos_query_failed", detail: ppErr.message }, 500);
 
-  const totalFactura = Number(factura.total ?? 0);
-  let acumuladoAntes = 0;
-  let numParcialidad = 1;
-  for (const pp of pagosPrev ?? []) {
-    if (pp.id === pago.id) break;
-    acumuladoAntes += Number(pp.monto_aplicado_factura ?? 0);
-    numParcialidad += 1;
-  }
-  const saldoAnt = round2(totalFactura - acumuladoAntes);
-  const impPagado = Number(pago.monto_aplicado_factura ?? 0);
-  const saldoInsoluto = round2(saldoAnt - impPagado);
+  const { numParcialidad, saldoAnt, impPagado, saldoInsoluto } = calcularParcialidad(
+    pagosPrev, pago.id, Number(factura.total ?? 0), Number(pago.monto_aplicado_factura ?? 0),
+  );
 
   // v13.208.0 — Referencias del embarque vinculado a la factura (con fallback a snapshot).
-  let refExpediente: string | null = (factura as { expediente?: string | null }).expediente ?? null;
-  let refBlMaster: string | null = null;
-  let refBlHouse: string | null = (factura as { referencia_bl?: string | null }).referencia_bl ?? null;
-  const embarqueId = (factura as { embarque_id?: string | null }).embarque_id ?? null;
-  if (embarqueId) {
-    const { data: emb } = await supabase
-      .from("embarques")
-      .select("expediente, bl_master, bl_house")
-      .eq("id", embarqueId)
-      .maybeSingle();
-    if (emb) {
-      refExpediente = (emb as { expediente?: string | null }).expediente ?? refExpediente;
-      refBlMaster = (emb as { bl_master?: string | null }).bl_master ?? null;
-      refBlHouse = (emb as { bl_house?: string | null }).bl_house ?? refBlHouse;
-    }
-  }
+  const refs = await resolverReferenciasEmbarque(supabase, factura);
+
 
   // 5) Construir contexto
   const ctx: PagoContext = {
@@ -174,11 +144,7 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
       metodo_pago: "PPD",
       tasa_iva: tasaIvaFactura,
     },
-    referencias: {
-      expediente: refExpediente,
-      bl_master: refBlMaster,
-      bl_house: refBlHouse,
-    },
+    referencias: refs,
   };
 
   const issues = validateRepContext(ctx);
@@ -268,7 +234,3 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
 
   return jsonResponse({ uuid, folio, serie: serieTimbrada, facturapi_id: facturapiId, pdf_url: pdfUrl, xml_url: xmlUrl, xml_backup: respaldo });
 }));
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
