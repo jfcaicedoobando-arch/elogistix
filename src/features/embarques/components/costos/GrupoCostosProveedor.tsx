@@ -22,7 +22,7 @@ import {
 } from "./grupoCostosProveedorHelpers";
 import { describirAjuste, describirAjusteNeto } from "./ajusteDescripcion";
 import { AjusteChip } from "./AjusteChip";
-import { TONE_TEXT } from "@/features/cxp/lib/badgeTone";
+import { TONE_TEXT } from "@/lib/ui/badgeTone";
 
 interface Props {
   proveedorNombre: string;

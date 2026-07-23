@@ -5,7 +5,7 @@
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { describirAjusteNeto } from "./ajusteDescripcion";
-import { TONE_TEXT } from "@/features/cxp/lib/badgeTone";
+import { TONE_TEXT } from "@/lib/ui/badgeTone";
 
 interface TotalPorMoneda {
   moneda: string;

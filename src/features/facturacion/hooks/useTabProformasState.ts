@@ -12,7 +12,7 @@
 import { useState, useMemo } from "react";
 import type { ProformaConFactura } from "@/features/embarques/hooks/useProformas";
 import { DEFAULT_PAGE_SIZE } from "@/hooks/shared";
-import { getEstadoUnificado, type EstadoUnificadoProforma } from "@/features/proformas/lib/estadoUnificado";
+import { getEstadoUnificado, type EstadoUnificadoProforma } from "@/lib/domain/estadoUnificado";
 
 export type FiltroEstadoProforma = "todas" | EstadoUnificadoProforma;
 

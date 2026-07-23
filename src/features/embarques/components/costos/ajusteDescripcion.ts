@@ -3,7 +3,7 @@
  * Fuente única de verdad usada por `AjusteChip`, `ResumenAjusteBar` y el header
  * de `GrupoCostosProveedor` para que las 3 superficies hablen igual.
  */
-import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+import type { ChipTone } from "@/lib/ui/badgeTone";
 import { formatCurrency } from "@/lib/formatters";
 
 export type AjusteKind = "sin_factura" | "sin_ajuste" | "ahorro" | "sobrecosto";

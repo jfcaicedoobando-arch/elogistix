@@ -6,7 +6,7 @@ import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
 import { ToneBadge } from "@/features/cxp/components/ToneBadge";
-import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+import type { ChipTone } from "@/lib/ui/badgeTone";
 import type { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 
 export type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];

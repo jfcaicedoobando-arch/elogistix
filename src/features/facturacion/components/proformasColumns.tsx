@@ -17,7 +17,7 @@ import {
   getEstadoUnificado,
   rankEstadoUnificado,
   LABEL_ESTADO_UNIFICADO,
-} from "@/features/proformas/lib/estadoUnificado";
+} from "@/lib/domain/estadoUnificado";
 
 
 

@@ -15,7 +15,7 @@ import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters"
 import { nombreDesdeEmail } from "@/lib/formatters/text";
 import type { ProformaConFactura } from "@/features/proformas/services";
 import { esBorradorVacio } from "./esBorradorVacio";
-import { getEstadoUnificado } from "@/features/proformas/lib/estadoUnificado";
+import { getEstadoUnificado } from "@/lib/domain/estadoUnificado";
 
 interface Props {
   proformas: ProformaConFactura[];

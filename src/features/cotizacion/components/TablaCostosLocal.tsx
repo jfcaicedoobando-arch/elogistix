@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
-import { ProfitBadge } from "@/features/profit/components/ProfitBadge";
+import { ProfitBadge } from "@/components/shared/ProfitBadge";
 import { ProductoServicioSelect } from "@/features/cotizacion/components/conceptos/ProductoServicioSelect";
 import { UnidadMedidaSelect } from "@/features/cotizacion/components/conceptos/UnidadMedidaSelect";
 import { tasaDesdeTipoIva } from "@/features/cotizacion/hooks/useProductosCatalogo";

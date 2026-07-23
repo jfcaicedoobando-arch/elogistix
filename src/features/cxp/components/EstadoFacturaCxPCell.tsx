@@ -14,8 +14,8 @@
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ToneBadge } from "@/features/cxp/components/ToneBadge";
 import { Badge } from "@/components/ui/badge";
-import { CHIP_BASE } from "@/features/cxp/lib/badgeTone";
-import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+import { CHIP_BASE } from "@/lib/ui/badgeTone";
+import type { ChipTone } from "@/lib/ui/badgeTone";
 import {
   Tooltip,
   TooltipContent,

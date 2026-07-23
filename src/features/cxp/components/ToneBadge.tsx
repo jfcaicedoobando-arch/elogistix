@@ -8,7 +8,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { CHIP_BASE, CHIP_BASE_MD, TONE_DOT, type ChipTone } from "@/features/cxp/lib/badgeTone";
+import { CHIP_BASE, CHIP_BASE_MD, TONE_DOT, type ChipTone } from "@/lib/ui/badgeTone";
 
 interface ToneBadgeProps {
   tone: ChipTone;
