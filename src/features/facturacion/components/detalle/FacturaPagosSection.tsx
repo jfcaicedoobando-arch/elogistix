@@ -17,6 +17,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePagosFactura, useEliminarPagoFactura } from "@/features/facturacion/hooks";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { DialogPreviewCfdiPdf } from "@/features/facturacion/components/DialogPreviewCfdiPdf";
+import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
 import { PagoRepCell } from "./PagoRepCell";
 
 interface Props {
