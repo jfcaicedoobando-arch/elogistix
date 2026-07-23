@@ -1,75 +1,7 @@
--- Fuente canónica de public.auditoria_embarques_org
--- Regenerada desde DB. Cada cambio DEBE actualizarse aquí en el mismo PR que la migración correspondiente.
--- Ver supabase/schema/README.md.
+-- Ítem 3.2.b: extraer el agregador final del orquestador a un helper reutilizable.
+-- Refactor puro: la salida jsonb permanece semánticamente idéntica (mismo objeto,
+-- mismos counters, misma severidad, mismos umbrales, mismo ORDER BY dentro de jsonb_agg).
 
--- === Overload 1/2 ===
-CREATE OR REPLACE FUNCTION public.auditoria_embarques_org()
- RETURNS jsonb
- LANGUAGE plpgsql
- STABLE
- SET search_path TO 'public'
-AS $function$
-DECLARE
-  v_caller_org uuid;
-BEGIN
-  v_caller_org := public.current_user_org_id();
-  IF v_caller_org IS NULL THEN
-    RAISE EXCEPTION 'No autorizado' USING ERRCODE = '42501';
-  END IF;
-  PERFORM public._assert_internal_reader(v_caller_org);
-  -- Delegar a la variante con parámetro (que ahora también valida).
-  RETURN public.auditoria_embarques_org(v_caller_org);
-END;
-$function$
- name:auditoria_embarques_org schema:public;
-
--- === Helper interno: carga de umbrales configurables ===
--- Consolida los 7 SELECT INTO originales en una sola llamada (ítem 3.2.a).
--- Mantiene los mismos defaults y clamps que el bloque original.
-CREATE OR REPLACE FUNCTION public._audit_embarques_umbrales(p_organization_id uuid)
-RETURNS TABLE(
-  margen_min_pct numeric,
-  dias_prof_venc int,
-  dias_huerfano int,
-  dias_borrador_abandonado int,
-  dias_cxc_vencida int,
-  dias_cxp_captura int,
-  dias_cxp_vencida int
-)
-LANGUAGE sql
-STABLE
-SET search_path TO 'public'
-AS $$
-  WITH cfg AS (
-    SELECT clave, (valor #>> '{}') AS v
-    FROM configuracion
-    WHERE organization_id = p_organization_id
-      AND categoria = 'auditoria'
-      AND clave IN (
-        'margen_minimo_pct',
-        'dias_proforma_vencida',
-        'dias_huerfano',
-        'dias_borrador_abandonado',
-        'dias_cxc_vencida',
-        'dias_cxp_captura',
-        'dias_cxp_vencida'
-      )
-  )
-  SELECT
-    COALESCE((SELECT NULLIF(v,'')::numeric FROM cfg WHERE clave = 'margen_minimo_pct'), 5)::numeric               AS margen_min_pct,
-    COALESCE((SELECT NULLIF(v,'')::int     FROM cfg WHERE clave = 'dias_proforma_vencida'), 30)::int              AS dias_prof_venc,
-    COALESCE((SELECT NULLIF(v,'')::int     FROM cfg WHERE clave = 'dias_huerfano'), 5)::int                       AS dias_huerfano,
-    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_borrador_abandonado'), 15), 1)::int  AS dias_borrador_abandonado,
-    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxc_vencida'), 0), 0)::int           AS dias_cxc_vencida,
-    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxp_captura'), 7), 1)::int           AS dias_cxp_captura,
-    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxp_vencida'), 0), 0)::int           AS dias_cxp_vencida;
-$$
- name:_audit_embarques_umbrales schema:public;
-
--- === Helper interno: agregador final (ítem 3.2.b) ===
--- Toma el arreglo de hallazgos ya construido + el objeto de umbrales y devuelve
--- el reporte final (`generated_at`, `total_hallazgos`, `por_severidad`, `por_regla`,
--- `umbrales`, `hallazgos` ordenados por severidad y expediente).
 CREATE OR REPLACE FUNCTION public._audit_embarques_agregar(
   p_hallazgos jsonb,
   p_umbrales jsonb
@@ -116,10 +48,13 @@ AS $agg$
     ), '[]'::jsonb)
   )
   FROM jsonb_array_elements(COALESCE(p_hallazgos, '[]'::jsonb)) AS t(h);
-$agg$
- name:_audit_embarques_agregar schema:public;
+$agg$;
 
--- === Overload 2/2 ===
+REVOKE ALL ON FUNCTION public._audit_embarques_agregar(jsonb, jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public._audit_embarques_agregar(jsonb, jsonb) FROM anon;
+REVOKE ALL ON FUNCTION public._audit_embarques_agregar(jsonb, jsonb) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public._audit_embarques_agregar(jsonb, jsonb) TO service_role;
+
 CREATE OR REPLACE FUNCTION public.auditoria_embarques_org(p_organization_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -703,5 +638,4 @@ BEGIN
 
   RETURN v_result;
 END;
-$function$
- name:auditoria_embarques_org schema:public;
+$function$;
