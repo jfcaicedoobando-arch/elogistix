@@ -71,11 +71,14 @@ export async function loadCliente(supabase: SupabaseLike, id: string): Promise<C
 }
 
 export async function loadEmailPrincipal(supabase: SupabaseLike, clienteId: string): Promise<string | null> {
+  // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
   const { data } = await supabase
     .from("contactos_cliente")
     .select("email")
     .eq("cliente_id", clienteId)
-    .eq("es_principal", true)
+    .not("email", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   return ((data as { email: string | null } | null)?.email) ?? null;
 }
