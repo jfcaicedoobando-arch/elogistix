@@ -6,6 +6,7 @@ import { HoyKpiRow } from "@/features/dashboard/finance/components/HoyKpiRow";
 import { CobranzaBlock } from "@/features/dashboard/finance/components/CobranzaBlock";
 import { PagosCajaBlock } from "@/features/dashboard/finance/components/PagosCajaBlock";
 import { CierreAdminBlock } from "@/features/dashboard/finance/components/CierreAdminBlock";
+import { formatFechaLarga } from "@/lib/formatters";
 
 function getSaludo(): string {
   const h = new Date().getHours();
@@ -15,13 +16,7 @@ function getSaludo(): string {
 }
 
 function getHoyStr(): string {
-  const fecha = new Date().toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  return fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  return formatFechaLarga(new Date());
 }
 
 function firstName(email: string | null | undefined, fallback: string): string {
