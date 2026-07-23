@@ -23,13 +23,15 @@ export default function AgentePerfil() {
       return;
     }
     setPending(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setPending(false);
-    if (error) {
-      notifyError(undefined, { title: `Error al cambiar contraseña: ${error.message}`, error, method: "AGENTE_CHANGE_PASSWORD" });
-    } else {
+    try {
+      await actualizarPasswordAgente(password);
       notifySuccess(undefined, { title: "Contraseña actualizada" });
       setPassword("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      notifyError(undefined, { title: `Error al cambiar contraseña: ${message}`, error, method: "AGENTE_CHANGE_PASSWORD" });
+    } finally {
+      setPending(false);
     }
   };
 
