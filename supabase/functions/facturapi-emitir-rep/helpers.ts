@@ -162,7 +162,6 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
           {
             payment_form: normalizarFormaPago(ctx.forma_pago),
             currency: ctx.moneda,
-            amount: round2(ctx.monto),
             date: ctx.fecha_pago,
             related_documents: [
               {
@@ -184,13 +183,13 @@ export function buildRepPayload(ctx: PagoContext): FacturapiRepPayload {
 
   if (ctx.serie) payload.serie = ctx.serie;
   if (ctx.receptor.email) payload.customer.email = ctx.receptor.email;
-  if (ctx.numero_operacion) payload.complements[0].data[0].operation_number = ctx.numero_operacion;
+  if (ctx.numero_operacion) payload.complements[0].data[0].numOperacion = ctx.numero_operacion;
   if (ctx.moneda !== "MXN" && ctx.tipo_cambio > 0) {
     payload.complements[0].data[0].exchange = ctx.tipo_cambio;
   }
 
   const rdoc = payload.complements[0].data[0].related_documents[0];
-  if (dr.folio) rdoc.folio = dr.folio;
+  if (dr.folio) rdoc.folio_number = dr.folio;
   if (dr.serie) rdoc.series = dr.serie;
   // exchange en el documento relacionado: relación moneda_dr → moneda del pago
   if (!sameCurrency && dr.tipo_cambio_dr > 0) {
