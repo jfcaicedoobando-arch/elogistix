@@ -23,6 +23,49 @@ END;
 $function$
  name:auditoria_embarques_org schema:public;
 
+-- === Helper interno: carga de umbrales configurables ===
+-- Consolida los 7 SELECT INTO originales en una sola llamada (ítem 3.2.a).
+-- Mantiene los mismos defaults y clamps que el bloque original.
+CREATE OR REPLACE FUNCTION public._audit_embarques_umbrales(p_organization_id uuid)
+RETURNS TABLE(
+  margen_min_pct numeric,
+  dias_prof_venc int,
+  dias_huerfano int,
+  dias_borrador_abandonado int,
+  dias_cxc_vencida int,
+  dias_cxp_captura int,
+  dias_cxp_vencida int
+)
+LANGUAGE sql
+STABLE
+SET search_path TO 'public'
+AS $$
+  WITH cfg AS (
+    SELECT clave, (valor #>> '{}') AS v
+    FROM configuracion
+    WHERE organization_id = p_organization_id
+      AND categoria = 'auditoria'
+      AND clave IN (
+        'margen_minimo_pct',
+        'dias_proforma_vencida',
+        'dias_huerfano',
+        'dias_borrador_abandonado',
+        'dias_cxc_vencida',
+        'dias_cxp_captura',
+        'dias_cxp_vencida'
+      )
+  )
+  SELECT
+    COALESCE((SELECT NULLIF(v,'')::numeric FROM cfg WHERE clave = 'margen_minimo_pct'), 5)::numeric               AS margen_min_pct,
+    COALESCE((SELECT NULLIF(v,'')::int     FROM cfg WHERE clave = 'dias_proforma_vencida'), 30)::int              AS dias_prof_venc,
+    COALESCE((SELECT NULLIF(v,'')::int     FROM cfg WHERE clave = 'dias_huerfano'), 5)::int                       AS dias_huerfano,
+    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_borrador_abandonado'), 15), 1)::int  AS dias_borrador_abandonado,
+    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxc_vencida'), 0), 0)::int           AS dias_cxc_vencida,
+    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxp_captura'), 7), 1)::int           AS dias_cxp_captura,
+    GREATEST(COALESCE((SELECT NULLIF(v,'')::int FROM cfg WHERE clave = 'dias_cxp_vencida'), 0), 0)::int           AS dias_cxp_vencida;
+$$
+ name:_audit_embarques_umbrales schema:public;
+
 -- === Overload 2/2 ===
 CREATE OR REPLACE FUNCTION public.auditoria_embarques_org(p_organization_id uuid)
  RETURNS jsonb
@@ -47,61 +90,14 @@ BEGIN
 
   PERFORM public._assert_internal_reader(p_organization_id);
 
-  SELECT COALESCE(NULLIF((valor #>> '{}'), '')::numeric, 5)
-  INTO v_margen_min_pct
-  FROM configuracion
-  WHERE categoria = 'auditoria' AND clave = 'margen_minimo_pct'
-    AND organization_id = p_organization_id
-  LIMIT 1;
-  v_margen_min_pct := COALESCE(v_margen_min_pct, 5);
+  SELECT u.margen_min_pct, u.dias_prof_venc, u.dias_huerfano,
+         u.dias_borrador_abandonado, u.dias_cxc_vencida,
+         u.dias_cxp_captura, u.dias_cxp_vencida
+    INTO v_margen_min_pct, v_dias_prof_venc, v_dias_huerfano,
+         v_dias_borrador_abandonado, v_dias_cxc_vencida,
+         v_dias_cxp_captura, v_dias_cxp_vencida
+    FROM public._audit_embarques_umbrales(p_organization_id) u;
 
-  SELECT COALESCE(NULLIF((valor #>> '{}'), '')::int, 30)
-  INTO v_dias_prof_venc
-  FROM configuracion
-  WHERE categoria = 'auditoria' AND clave = 'dias_proforma_vencida'
-    AND organization_id = p_organization_id
-  LIMIT 1;
-  v_dias_prof_venc := COALESCE(v_dias_prof_venc, 30);
-
-  SELECT COALESCE(NULLIF((valor #>> '{}'), '')::int, 5)
-  INTO v_dias_huerfano
-  FROM configuracion
-  WHERE categoria = 'auditoria' AND clave = 'dias_huerfano'
-    AND organization_id = p_organization_id
-  LIMIT 1;
-  v_dias_huerfano := COALESCE(v_dias_huerfano, 5);
-
-  SELECT COALESCE(NULLIF((valor #>> '{}'), '')::int, 15)
-  INTO v_dias_borrador_abandonado
-  FROM configuracion
-  WHERE categoria = 'auditoria' AND clave = 'dias_borrador_abandonado'
-    AND organization_id = p_organization_id
-  LIMIT 1;
-  v_dias_borrador_abandonado := GREATEST(COALESCE(v_dias_borrador_abandonado, 15), 1);
-
-  SELECT COALESCE(NULLIF((valor #>> '{}'), '')::int, 0)
-  INTO v_dias_cxc_vencida
-  FROM configuracion
-  WHERE categoria = 'auditoria' AND clave = 'dias_cxc_vencida'
-    AND organization_id = p_organization_id
-  LIMIT 1;
-  v_dias_cxc_vencida := GREATEST(COALESCE(v_dias_cxc_vencida, 0), 0);
-
-  SELECT COALESCE(NULLIF((valor #>> '{}'), '')::int, 7)
-  INTO v_dias_cxp_captura
-  FROM configuracion
-  WHERE categoria = 'auditoria' AND clave = 'dias_cxp_captura'
-    AND organization_id = p_organization_id
-  LIMIT 1;
-  v_dias_cxp_captura := GREATEST(COALESCE(v_dias_cxp_captura, 7), 1);
-
-  SELECT COALESCE(NULLIF((valor #>> '{}'), '')::int, 0)
-  INTO v_dias_cxp_vencida
-  FROM configuracion
-  WHERE categoria = 'auditoria' AND clave = 'dias_cxp_vencida'
-    AND organization_id = p_organization_id
-  LIMIT 1;
-  v_dias_cxp_vencida := GREATEST(COALESCE(v_dias_cxp_vencida, 0), 0);
 
   WITH
   emb AS (
