@@ -13,7 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useConceptosCostoAbiertos, type ConceptoCostoAbierto } from "@/features/cxp/hooks";
 import type { SugerenciaVinculo } from "@/features/compras/matching/matcher";
-import { SugerirEmbarqueBlock, type EmbarqueSeleccionado } from "./SugerirEmbarqueBlock";
+import { SugerirEmbarqueBlock } from "./SugerirEmbarqueBlock";
+import type { EmbarqueSeleccionado } from "@/features/cxp/types";
+
 import { VincularFiltroToolbar } from "./VincularFiltroToolbar";
 import { VincularListaConceptos } from "./VincularListaConceptos";
 import {
@@ -23,8 +25,8 @@ import {
   filtrarGrupos,
 } from "./vincularEmbarqueHelpers";
 
-export type { SeleccionLinea } from "@/features/cxp/types";
 import type { SeleccionLinea } from "@/features/cxp/types";
+
 
 interface Props {
   proveedorId: string;

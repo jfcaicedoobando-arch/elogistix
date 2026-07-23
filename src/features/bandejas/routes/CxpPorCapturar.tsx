@@ -14,7 +14,7 @@ import { resumirCxpPorCapturar } from "@/features/bandejas/domain/aggregates";
 import { CxpPorCapturarToolbar } from "@/features/bandejas/components/CxpPorCapturarToolbar";
 import { buildCxpPorCapturarColumns } from "@/features/bandejas/components/cxpPorCapturarColumns";
 import { DialogNuevaFacturaProveedor } from "@/features/cxp/components/DialogNuevaFacturaProveedor";
-import type { EmbarqueSeleccionado } from "@/features/cxp/components/SugerirEmbarqueBlock";
+import type { EmbarqueSeleccionado } from "@/features/cxp/types";
 import type { CxpPorCapturarRow as RowData } from "@/features/bandejas/services/bandejas";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { KpiCard } from "@/components/shared/KpiCard";
