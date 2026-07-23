@@ -40,6 +40,7 @@ export type Joined = Pick<
   pagos_proveedor: Array<{ monto: number; deleted_at: string | null }> | null;
   proveedor_notas_credito: Array<{ monto: number; estado: string; deleted_at: string | null }> | null;
   proveedores: { origen_proveedor: "Nacional" | "Extranjero" | null } | null;
+  embarques: { expediente: string } | null;
   presupuesto_categorias: { nombre: string } | null;
 };
 
