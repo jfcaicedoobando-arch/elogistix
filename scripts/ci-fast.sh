@@ -21,9 +21,10 @@ start() {
   echo "▶ $name (pid=$pid) → $log"
 }
 
-start lint      bun run lint -- --max-warnings 0
-start typecheck bun run typecheck
-start vitest    bun run test:fast --reporter=dot --bail=1
+start lint       bun run lint -- --max-warnings 0
+start typecheck  bun run typecheck
+start migrations bun run audit:migrations
+start vitest     bun run test:fast --reporter=dot --bail=1
 
 fail=0
 for name in "${!PIDS[@]}"; do
