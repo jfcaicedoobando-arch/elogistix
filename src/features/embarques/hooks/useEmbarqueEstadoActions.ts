@@ -25,6 +25,27 @@ import {
 
 export { getSiguienteEstado } from "./useEmbarqueEstadoActions.helpers";
 
+interface AutoSyncArgs {
+  embarqueId: string;
+  modo: string;
+  tipo: string;
+  estado: string;
+  etd: string | null;
+  eta: string | null;
+  fechaLlegadaReal: string | null;
+  usuarioEmail: string;
+  sync: (args: { embarqueId: string; nuevoEstado: string; usuarioEmail: string }) => void;
+}
+
+/** Efecto puro: recalcula y sincroniza si cambió. Aislado para bajar complejidad. */
+function runAutoSyncEstado(args: AutoSyncArgs) {
+  const { embarqueId, modo, tipo, estado, etd, eta, fechaLlegadaReal, usuarioEmail, sync } = args;
+  const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado, fechaLlegadaReal);
+  if (estadoCalculado !== estado) {
+    sync({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail });
+  }
+}
+
 /**
  * Auto-sync del estado calculado a BD. Se aísla en su propio hook para
  * mantener la complejidad ciclomática del hook principal bajo control.
@@ -42,17 +63,16 @@ function useAutoSyncEstadoEmbarque(
   const eta = embarque?.eta ?? null;
   const estado = embarque?.estado;
   const fechaLlegadaReal = embarque?.fecha_llegada_real ?? null;
-  // Consolidamos las 5 guardas en un solo booleano para bajar la complejidad
-  // ciclomática del efecto (antes 11, ahora 3).
-  const listo = puedeSincronizarEstado && Boolean(embarqueId && modo && tipo && estado);
   useEffect(() => {
-    if (!listo || !embarqueId || !modo || !tipo || !estado) return;
-    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado, fechaLlegadaReal);
-    if (estadoCalculado !== estado) {
-      syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado, usuarioEmail });
-    }
-  }, [listo, embarqueId, modo, tipo, etd, eta, estado, fechaLlegadaReal, syncEstadoMutate, usuarioEmail]);
+    if (!puedeSincronizarEstado) return;
+    if (!embarqueId || !modo || !tipo || !estado) return;
+    runAutoSyncEstado({
+      embarqueId, modo, tipo, estado, etd, eta, fechaLlegadaReal, usuarioEmail,
+      sync: syncEstadoMutate,
+    });
+  }, [puedeSincronizarEstado, embarqueId, modo, tipo, etd, eta, estado, fechaLlegadaReal, syncEstadoMutate, usuarioEmail]);
 }
+
 
 /**
  * Consolida las variables derivadas del "gate de cierre" en un solo objeto.
