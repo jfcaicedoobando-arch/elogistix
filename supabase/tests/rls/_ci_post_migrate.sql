@@ -41,16 +41,14 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, se
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, anon, service_role;
 
 -- ============================================================================
--- Drop triggers que dependen de columnas/comportamiento de runtime (no de RLS).
--- `trg_pago_factura_comision` llama a `calcular_comision_pago()` que hace
--- `SELECT vendedora_id, COALESCE(tipo_cambio, 1) FROM embarques`, pero
--- `embarques` tiene `tipo_cambio_usd`/`tipo_cambio_eur`, no `tipo_cambio`.
--- En producción la función nunca dispara porque hay vendedoras configuradas;
--- en CI cualquier INSERT en `pagos_factura` lo rompe. Como las suites RLS
--- solo validan aislamiento, drop seguro.
+-- Triggers de comisiones.
+--
+-- Antes se dropeaba `trg_pago_factura_comision_ins` aquí para evitar un bug
+-- legacy de `calcular_comision_pago(uuid)` que leía `embarques.tipo_cambio`.
+-- Ese bug ya fue corregido por la migración 20260616231916 para usar
+-- `tipo_cambio_usd`, y `schema-invariants.sql` ahora exige que el trigger
+-- exista. No lo removemos en CI: si vuelve a romper, queremos detectarlo.
 -- ============================================================================
-DROP TRIGGER IF EXISTS trg_pago_factura_comision ON public.pagos_factura;
-DROP TRIGGER IF EXISTS trg_pago_factura_comision_ins ON public.pagos_factura;
 
 -- ============================================================================
 -- Stub deny-all removido: las 3 policies reales de tracking_externo ya viven
