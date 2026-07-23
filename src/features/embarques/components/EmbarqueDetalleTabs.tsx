@@ -29,9 +29,8 @@ export function EmbarqueDetalleTabs({
 }: EmbarqueDetalleTabsProps) {
   const [pnlView, setPnlView] = useState<PnlView>("global");
   // v13.309.24 · Ítem 3.5: data-fetching movido a este hook (antes vivía en la ruta).
-  // SAFE-CAST: EmbarqueProp es un subconjunto compatible con EmbarqueRow que el hook consume
-  // internamente; el mismo objeto ya se pasa a TabResumen/TabFacturacion/TabTracking sin cast.
   const { conceptosCosto, documentos, notas, facturas, financials, docHandlers } =
+    // SAFE-CAST: EmbarqueProp es un subconjunto compatible con EmbarqueRow que el hook consume.
     useEmbarqueDetalleTabsData(embarqueId, embarque as unknown as Parameters<typeof useEmbarqueDetalleTabsData>[1]);
 
   return (
