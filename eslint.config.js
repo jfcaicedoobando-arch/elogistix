@@ -326,8 +326,14 @@ export default tseslint.config(
   {
     // Bloque 2.4 arquitectura — el único archivo autorizado a hardcodear la tasa
     // de IVA es el que la define (`TASA_IVA` + `TASAS_IVA_MX`). Cualquier otro
-    // callsite debe importar la constante.
-    files: ["src/lib/financial/financialUtils.ts"],
+    // callsite de src debe importar la constante. Las Edge Functions corren en
+    // Deno y no pueden importar `@/lib/*` (aliases del bundler web), así que
+    // están exentas del guardrail — sus helpers replican la constante en el
+    // propio archivo.
+    files: [
+      "src/lib/financial/financialUtils.ts",
+      "supabase/functions/**",
+    ],
     rules: {
       "no-restricted-syntax": "off",
     },
