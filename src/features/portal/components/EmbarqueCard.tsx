@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getEstadoColor, getEstadoBorderColor, getModoCircleStyle, getModoLucideIcon } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/features/embarques/domain/embarque";
-import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { MapPin, CalendarClock } from "lucide-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";

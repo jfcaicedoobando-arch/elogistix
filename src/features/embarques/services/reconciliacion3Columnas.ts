@@ -20,7 +20,7 @@ import {
   type FilaReconciliacion3C,
   type ResumenReconciliacion3C,
   type UmbralesVarianza,
-} from "@/features/cotizacion/domain/versionadoCotizacion";
+} from "@/lib/domain/versionadoCotizacion";
 
 interface DeltaConcepto {
   concepto: string;

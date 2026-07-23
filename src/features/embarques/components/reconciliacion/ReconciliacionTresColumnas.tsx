@@ -15,7 +15,7 @@ import {
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useReconciliacion3Columnas } from "@/features/embarques/hooks/useReconciliacion3Columnas";
 import { useUmbralesReconciliacion } from "@/features/embarques/hooks/useUmbralesReconciliacion";
-import type { FilaReconciliacion3C } from "@/features/cotizacion/domain/versionadoCotizacion";
+import type { FilaReconciliacion3C } from "@/lib/domain/versionadoCotizacion";
 import { fmt, pct, colorPorClasificacion } from "./reconciliacionFormat";
 import { ResumenReconciliacion } from "./ResumenReconciliacion";
 

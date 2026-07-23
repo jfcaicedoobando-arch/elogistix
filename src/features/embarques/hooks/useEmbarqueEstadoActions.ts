@@ -14,7 +14,7 @@ import { useDocsFaltantesParaEstado } from "@/features/embarques/hooks/useDocsFa
 import { useValidacionCierre } from "@/features/embarques/hooks/useCierreEmbarque";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { labelExpediente } from "@/features/embarques/domain/labelExpediente";
+import { labelExpediente } from "@/lib/domain/labelExpediente";
 import { useEffect, useState, useCallback } from "react";
 import {
   getSiguienteEstado,

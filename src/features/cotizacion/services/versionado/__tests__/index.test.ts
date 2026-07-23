@@ -15,7 +15,7 @@ import {
   CotizacionConEmbarqueError,
   CotizacionYaAceptadaError,
   MotivoRequeridoError,
-} from "@/features/cotizacion/domain/versionadoCotizacion";
+} from "@/lib/domain/versionadoCotizacion";
 
 beforeEach(() => {
   mock.rpcCalls.length = 0;

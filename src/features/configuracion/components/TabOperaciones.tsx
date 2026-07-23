@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { useConfigValue, useUpdateConfiguracion } from "@/features/configuracion/hooks/useConfiguracion";
-import { UMBRALES_DEFAULT } from "@/features/cotizacion/domain/versionadoCotizacion";
+import { UMBRALES_DEFAULT } from "@/lib/domain/versionadoCotizacion";
 
 export default function TabOperaciones() {
   const alertaActual = useConfigValue<number>(
