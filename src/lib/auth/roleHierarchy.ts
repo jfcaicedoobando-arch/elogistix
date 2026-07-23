@@ -8,7 +8,12 @@ import type { AppRole } from "@/types/appRole";
  *
  * Si el agrupador de BD cambia, ESTE archivo debe actualizarse en paralelo.
  */
-const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
+/**
+ * Espejo TS exacto del `CASE` que vive en `public.has_role()` (BD).
+ * Cualquier drift lo detecta `roleHierarchy.invariant.test.ts` (Sprint 2 · ítem 1).
+ * Se exporta para permitir su verificación en tests de invariantes.
+ */
+export const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
   super_admin: ["super_admin"],
   admin: ["admin", "admin_org", "super_admin"],
   admin_org: ["admin_org", "super_admin"],
@@ -34,7 +39,6 @@ const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
     "gerente_visor",
     "gerente_comercial",
     "coordinador_logistico",
-    "operador",
     "admin",
     "admin_org",
     "super_admin",
@@ -45,7 +49,7 @@ const ROLE_EQUIVALENTS: Record<AppRole, readonly AppRole[]> = {
   tesorero: ["tesorero", "admin_org", "super_admin"],
   auxiliar_contable: ["auxiliar_contable", "contador", "admin_org", "super_admin"],
   ejecutivo_cobranza: ["ejecutivo_cobranza", "contador", "admin_org", "super_admin"],
-  // Roles sin agrupación: coincidencia exacta.
+  // Roles sin agrupación: coincidencia exacta (fallback ELSE del CASE en BD).
   coordinador_logistico: ["coordinador_logistico"],
   ejecutivo_pricing: ["ejecutivo_pricing"],
   gerente_operaciones: ["gerente_operaciones"],
