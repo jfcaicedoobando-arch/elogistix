@@ -169,6 +169,12 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   LC_PROFORMA_MONEDA_NO_SOPORTADA:
     "La moneda de la proforma aún no está soportada para conversión (usa MXN o USD).",
 
+  // ── App-raised (no vienen de la BD) ────────────────────────────────────
+  LC_FACTURA_CON_REP_VIVO:
+    "La factura tiene un complemento de pago (REP) vivo. Cancela primero el REP para continuar.",
+  LC_MOVIMIENTO_YA_VINCULADO:
+    "El movimiento bancario ya está vinculado a otro pago. Desvincúlalo antes de reutilizarlo.",
+
   // ── Genéricos ──────────────────────────────────────────────────────────
   LC_MONEDA_NO_SOPORTADA: "Moneda no soportada por el sistema.",
   LC_TC_REQUERIDO: "Captura el tipo de cambio del día.",

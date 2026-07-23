@@ -144,6 +144,13 @@ jobs:
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: $PSQL -f supabase/tests/rls/_ci_verify_rls.sql
 
+      - name: Verify schema invariants (triggers/functions esperados)
+        # FIX-R2-04: si alguien dropea un trigger/función crítico sin
+        # actualizar el snapshot esperado, este script hace RAISE y el
+        # job falla.
+        if: steps.snapshot-cache.outputs.cache-hit != 'true'
+        run: $PSQL -f supabase/tests/schema-invariants.sql
+
       - name: Dump prepared database
         if: steps.snapshot-cache.outputs.cache-hit != 'true'
         run: |
