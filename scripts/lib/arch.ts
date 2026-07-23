@@ -73,9 +73,12 @@ export interface ArchReport {
 
 export function runArchAudit(root: string): ArchReport {
   return {
+    // Sprint 2 · ítem 6 (cierre): cubrimos TODO src/lib (antes sólo
+    // src/lib/contexts) para que ningún archivo de lib/ toque el cliente
+    // fuera de CLIENT_IMPORT_ALLOW.
     hooksContextsDirectImports: findDirectClientImports(root, [
       "src/hooks",
-      "src/lib/contexts",
+      "src/lib",
     ]),
     // `src/features` alberga ~90% del código. Excluimos `services/` (capa
     // permitida para tocar el cliente Supabase) para que sólo afloren
