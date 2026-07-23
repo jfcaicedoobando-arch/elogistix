@@ -41,7 +41,6 @@ BEGIN
 
   v_caller_org := public.current_user_org_id();
 
-  -- FIX-R2-02: gate unificado (admin org/contador vía es_escritor_financiero, o super_admin)
   IF NOT (
     public.es_escritor_financiero(auth.uid())
     OR public.has_role(auth.uid(), 'super_admin'::app_role)
@@ -131,53 +130,9 @@ BEGIN
       p_notas, 'conversion_proforma'
     ) RETURNING id INTO v_factura_mxn_id;
 
-    IF v_first.es_consolidada THEN
-      INSERT INTO public.conceptos_factura (
-        factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
-        tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
-      )
-      SELECT v_factura_mxn_id, pcc.descripcion, pcc.cantidad, pcc.precio_unitario,
-             pcc.moneda, pcc.total, v_org,
-             COALESCE(public.resolver_clave_sat(v_org, pcc.descripcion), '78101800'),
-             CASE
-               WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN 'exento'
-               WHEN COALESCE(pcc.tasa_iva_aplicada, 0.16) = 0 THEN 'tasa_0'
-               ELSE 'gravado_16'
-             END,
-             CASE
-               WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN NULL
-               ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16)
-             END,
-             p.embarque_id, pcc.proforma_id
-      FROM public.proforma_conceptos_consolidados pcc
-      JOIN public.proformas p ON p.id = pcc.proforma_id
-      WHERE pcc.proforma_id = ANY(p_proforma_ids)
-        AND pcc.moneda = 'MXN'::public.moneda
-        AND pcc.deleted_at IS NULL;
-    ELSE
-      INSERT INTO public.conceptos_factura (
-        factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
-        tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
-      )
-      SELECT v_factura_mxn_id, cv.descripcion, cv.cantidad, cv.precio_unitario,
-             cv.moneda, cv.cantidad * cv.precio_unitario, v_org,
-             COALESCE(public.resolver_clave_sat(v_org, cv.descripcion), '78101800'),
-             CASE
-               WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN 'exento'
-               WHEN COALESCE(cv.tasa_iva_aplicada, 0.16) = 0 THEN 'tasa_0'
-               ELSE 'gravado_16'
-             END,
-             CASE
-               WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN NULL
-               ELSE COALESCE(cv.tasa_iva_aplicada, 0.16)
-             END,
-             p.embarque_id, cv.proforma_id
-      FROM public.conceptos_venta cv
-      JOIN public.proformas p ON p.id = cv.proforma_id
-      WHERE cv.proforma_id = ANY(p_proforma_ids)
-        AND cv.moneda = 'MXN'::public.moneda
-        AND cv.deleted_at IS NULL;
-    END IF;
+    PERFORM public._convertir_proformas_insertar_conceptos(
+      v_factura_mxn_id, p_proforma_ids, v_org, v_first.es_consolidada, 'MXN'::public.moneda
+    );
 
     SELECT
       COALESCE(SUM(cantidad * precio_unitario), 0),
@@ -235,53 +190,9 @@ BEGIN
       p_notas, 'conversion_proforma'
     ) RETURNING id INTO v_factura_usd_id;
 
-    IF v_first.es_consolidada THEN
-      INSERT INTO public.conceptos_factura (
-        factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
-        tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
-      )
-      SELECT v_factura_usd_id, pcc.descripcion, pcc.cantidad, pcc.precio_unitario,
-             pcc.moneda, pcc.total, v_org,
-             COALESCE(public.resolver_clave_sat(v_org, pcc.descripcion), '78101800'),
-             CASE
-               WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN 'exento'
-               WHEN COALESCE(pcc.tasa_iva_aplicada, 0.16) = 0 THEN 'tasa_0'
-               ELSE 'gravado_16'
-             END,
-             CASE
-               WHEN pcc.tasa_iva_aplicada IS NULL AND pcc.aplica_iva = false THEN NULL
-               ELSE COALESCE(pcc.tasa_iva_aplicada, 0.16)
-             END,
-             p.embarque_id, pcc.proforma_id
-      FROM public.proforma_conceptos_consolidados pcc
-      JOIN public.proformas p ON p.id = pcc.proforma_id
-      WHERE pcc.proforma_id = ANY(p_proforma_ids)
-        AND pcc.moneda = 'USD'::public.moneda
-        AND pcc.deleted_at IS NULL;
-    ELSE
-      INSERT INTO public.conceptos_factura (
-        factura_id, descripcion, cantidad, precio_unitario, moneda, total, organization_id, clave_sat,
-        tipo_iva, tasa_iva_aplicada, embarque_id, proforma_id_origen
-      )
-      SELECT v_factura_usd_id, cv.descripcion, cv.cantidad, cv.precio_unitario,
-             cv.moneda, cv.cantidad * cv.precio_unitario, v_org,
-             COALESCE(public.resolver_clave_sat(v_org, cv.descripcion), '78101800'),
-             CASE
-               WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN 'exento'
-               WHEN COALESCE(cv.tasa_iva_aplicada, 0.16) = 0 THEN 'tasa_0'
-               ELSE 'gravado_16'
-             END,
-             CASE
-               WHEN cv.tasa_iva_aplicada IS NULL AND cv.aplica_iva = false THEN NULL
-               ELSE COALESCE(cv.tasa_iva_aplicada, 0.16)
-             END,
-             p.embarque_id, cv.proforma_id
-      FROM public.conceptos_venta cv
-      JOIN public.proformas p ON p.id = cv.proforma_id
-      WHERE cv.proforma_id = ANY(p_proforma_ids)
-        AND cv.moneda = 'USD'::public.moneda
-        AND cv.deleted_at IS NULL;
-    END IF;
+    PERFORM public._convertir_proformas_insertar_conceptos(
+      v_factura_usd_id, p_proforma_ids, v_org, v_first.es_consolidada, 'USD'::public.moneda
+    );
 
     SELECT
       COALESCE(SUM(cantidad * precio_unitario), 0),
@@ -330,4 +241,5 @@ BEGIN
   RETURN QUERY SELECT * FROM public.facturas WHERE id = ANY(v_factura_ids);
 END;
 $function$
- name:convertir_proformas_a_factura schema:public;
+
+;
