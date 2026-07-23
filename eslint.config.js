@@ -535,4 +535,6 @@ export default tseslint.config(
       }],
     },
   },
+  // Bloque 2.3 (arquitectura): prohibir imports profundos cross-feature.
+  ...crossFeatureOverrides,
 );
