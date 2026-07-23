@@ -36,7 +36,7 @@ describe("Bloque 3.7 — guard_estado_cotizacion transiciones seguras", () => {
     expect(fnBody).toMatch(/ERRCODE\s*=\s*'P0001'/);
   });
 
-  it("fija search_path a public", () => {
+  it("fija search_path a public en guard_estado_cotizacion", () => {
     expect(fnBody).toMatch(/SET search_path\s+TO\s+'public'/i);
   });
 
