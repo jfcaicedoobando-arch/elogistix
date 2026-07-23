@@ -91,3 +91,32 @@ Deno.test("buildRepPayload omite taxes cuando tasa_iva = 0", () => {
   });
   assertEquals(p.complements[0].data[0].related_documents[0].taxes, undefined);
 });
+
+Deno.test("buildRepPayload incluye base en taxes de documento relacionado", () => {
+  const p = buildRepPayload(validCtx);
+  const tax = p.complements[0].data[0].related_documents[0].taxes![0];
+  assertEquals(tax.base, 1160);
+});
+
+Deno.test("normalizarFormaPago conserva codigos SAT de 2 digitos", () => {
+  assertEquals(normalizarFormaPago("03"), "03");
+  assertEquals(normalizarFormaPago("28"), "28");
+});
+
+Deno.test("normalizarFormaPago mapea nombres legibles a codigos SAT", () => {
+  assertEquals(normalizarFormaPago("Transferencia"), "03");
+  assertEquals(normalizarFormaPago("Cheque"), "02");
+  assertEquals(normalizarFormaPago("Efectivo"), "01");
+  assertEquals(normalizarFormaPago("Tarjeta de crédito"), "04");
+  assertEquals(normalizarFormaPago("Otro"), "99");
+});
+
+Deno.test("normalizarFormaPago sin dato cae en Por definir", () => {
+  assertEquals(normalizarFormaPago(null), "99");
+  assertEquals(normalizarFormaPago(""), "99");
+});
+
+Deno.test("validateRepContext acepta forma de pago legible mapeada", () => {
+  const issues = validateRepContext({ ...validCtx, forma_pago: "Transferencia" });
+  assertEquals(issues.some((i) => i.field === "forma_pago"), false);
+});
