@@ -1,109 +1,91 @@
-## Diagnóstico verificado
+# Auditoría visual — Detalle de factura (F963, Full HD)
 
-**Estado actual en BD** (verificado con `psql`):
+## Diagnóstico
 
-- `PRO-2026-0970` → `estado_proforma='pendiente'`, `estado_cliente='aceptada'`, `factura_id=NULL`.
-  → `getEstadoUnificado()` la muestra como **"aceptada"** (bug reportado).
-- `facturas` del embarque `943222de…`:
-  - **F971**: `estado='Cancelada'`, `cancellation_status='accepted'`, `proforma_id=d0be4a81…`, `sustituida_por=NULL` ⚠️
-  - **F981**: `estado='Pagada'`, `proforma_id=d0be4a81…`, `sustituye_a=F971` ✅
+Orden actual de la vista:
 
-Bitácora confirma el flujo: F971 timbrada 07-10 → duplicada para sustitución 07-15 → F981 timbrada 07-15 → F971 cancelada async por cron el 07-17 (`facturapi_cancelada_async`).
-
-## Causa raíz
-
-Cuando el cron `facturapi-reconciliar-cancelaciones` marca F971 como cancelada, ejecuta `applyAccepted` (`supabase/functions/facturapi-reconciliar-cancelaciones/index.ts:49`):
-
-```
-70:  supabase.rpc("revertir_proforma_al_cancelar_sustitucion", …) // OK: detecta F981 viva y no hace nada
-72:  const esSustitucion = !!factura.sustituida_por;              // ⚠️ F971.sustituida_por = NULL
-73:  if (!esSustitucion) await revertirProformas(supabase, ...)   // se ejecuta por error
+```text
+Header (F963 · Pagada · CLIENTE · Exp · TOTAL)
+Actions bar (Enviar · PDF · XML · Más acciones)
+[ Emisor           |  Receptor              ]   ← 2 columnas
+Datos generales
+Timbrado fiscal
+Desglose de conceptos
+Totales
+Historial de pagos
+Notas de crédito
+Historial de la factura
 ```
 
-Y `revertirProformas` (líneas 27-47) hace UPDATE ciego:
+Problemas concretos que se ven en las capturas:
 
-```
-si (factura_id IS NULL && factura_secundaria_id IS NULL)  // ambos NULL en esta proforma
-  estado_proforma = 'pendiente'                            // pisa el 'facturada' correcto
-```
+1. **Triple mención del cliente.** Aparece en el header (`ENTERA SALUD ANIMAL…`), otra vez en el card *Receptor* como campo "Cliente" (link), y una tercera vez implícita en la bitácora. En un CFDI el receptor es información fiscal, no un dato de contexto — con verlo una vez en el header basta.
+2. **Card Emisor casi vacía ocupando 50% del ancho.** Muestra 2–3 líneas de texto (razón social + RFC) y desperdicia toda la columna izquierda del pliegue. Rompe el equilibrio contra Receptor, que sí tiene 5 campos + validaciones.
+3. **"Ver embarque" enterrado en "Más acciones".** El expediente `ELIMP00298` ya está impreso en el header pero no es clickable, y para llegar al embarque hay que abrir el menú overflow. Es la navegación más frecuente desde una factura y hoy toma 2 clics + búsqueda visual.
+4. **Timbrado fiscal como card independiente** con solo 4 datos (UUID, folio, serie, fecha emisión). La *fecha de emisión* ya está en *Datos generales*, así que se repite.
+5. **Orden por importancia invertido.** Lo primero que un usuario mira en una factura ya emitida es *a quién*, *cuánto* y *si está pagada*. Hoy conceptos y totales quedan por debajo de dos cards fiscales de referencia.
+6. **"Datos generales" mezcla dos naturalezas**: fechas/crédito (operativo) con Uso CFDI / Forma / Método de pago (fiscal). El bloque fiscal encajaría mejor junto a Timbrado.
 
-Nunca verifica si hay una factura sustituta viva apuntando a la misma proforma vía `proforma_id` o `conceptos_factura.proforma_id_origen`. La RPC `revertir_proforma_al_cancelar_sustitucion` sí lo hace bien; el problema es que el helper del edge la pisa.
+## Recomendación
 
-El mismo helper duplicado existe en `supabase/functions/facturapi-cancelar/cancelacion.ts:210-236` (path de cancelación síncrona) — mismo bug.
+### 1. Header más limpio + expediente clickable
 
-Además, el flujo de sustitución **nunca setea `facturas.sustituida_por`** en la factura original al timbrar la sustituta, así que `esSustitucion` siempre es `false` por esta vía. `F981.sustituye_a` sí está correcto.
+- Quitar el nombre del cliente del subheader (queda en el card Receptor, que es su lugar fiscal).
+- Dejar el subheader como: `Exp: <ELIMP00298 clickable> · Proforma: PRO-2026-0962`. Ambos como enlaces suaves (`text-accent hover:underline`), no botones.
+- El chip "Ver embarque" del menú "Más acciones" se elimina — la ruta al embarque es el expediente mismo.
 
-## Solución
+### 2. Fusionar Emisor dentro del header / retirar como card
 
-### 1. Backend — dos edge functions
+El emisor es constante para toda la organización. Opciones (elijo B en el plan, pero puedo cambiar si prefieres):
 
-**`supabase/functions/facturapi-reconciliar-cancelaciones/index.ts`**
-- Borrar la función local `revertirProformas` (líneas 27-47) y su llamada en la línea 73.
-- Dejar únicamente `revertir_proforma_al_cancelar_sustitucion` (RPC, línea 70) que ya cuenta facturas hermanas vivas por `proforma_id` + `conceptos_factura.proforma_id_origen`.
-- Adicionalmente, limpiar sólo los punteros `factura_id`/`factura_secundaria_id` que apunten explícitamente a la factura cancelada, sin tocar `estado_proforma` ni `fecha_facturacion`.
+- **A.** Reducirlo a una línea tipo *"Emitido por Elogistix Shipping · ESH2311092R7"* debajo del total en el header.
+- **B (recomendada).** Moverlo como bloque colapsable/secundario dentro de *Timbrado fiscal* — donde vive el resto de la información propiamente fiscal del CFDI.
 
-**`supabase/functions/facturapi-cancelar/cancelacion.ts`**
-- Mismo tratamiento en `revertirProformasCancelacion` (210-236): quitar el bloque `if (ambosNulos)` que resetea `estado_proforma`, `fecha_facturacion`, `folio_factura_externa`. Delegar a la RPC.
-- Asegurar que el caller (`index.ts` de `facturapi-cancelar`) también invoque la RPC después de marcar la factura como cancelada, si no lo hace ya.
+Esto libera la fila superior para que **Receptor ocupe todo el ancho** (que es donde vive la validación fiscal ✓/✗ y donde el usuario realmente decide si puede timbrar).
 
-### 2. Marcar `sustituida_por` al emitir la sustituta
+### 3. Nuevo orden propuesto
 
-En `supabase/functions/facturapi-emitir/` (o donde se timbra el borrador con `sustituye_a` seteado), tras emisión exitosa hacer:
-
-```sql
-UPDATE facturas
-SET sustituida_por = <id_sustituta_recien_timbrada>
-WHERE id = <id_original> AND sustituida_por IS NULL;
-```
-
-Esto hace que futuras cancelaciones tengan la señal correcta de sustitución para bitácora y para cualquier consumidor que dependa de `sustituida_por`.
-
-### 3. Reparación de datos — PRO-2026-0970
-
-Backfill puntual (SQL de datos, no migración de esquema):
-
-```sql
-UPDATE proformas
-SET estado_proforma   = 'facturada',
-    fecha_facturacion = (SELECT fecha_emision FROM facturas WHERE id = '75fe099b-d9f8-4277-878f-5ccb0ad7eb24'),
-    factura_id        = '75fe099b-d9f8-4277-878f-5ccb0ad7eb24'  -- F981 (viva)
-WHERE id = 'd0be4a81-d199-4cec-bfc2-4bf9736523d2';
-
-UPDATE facturas
-SET sustituida_por = '75fe099b-d9f8-4277-878f-5ccb0ad7eb24'
-WHERE id = 'dc1e0162-ae7a-474b-abed-3b6301a86add' AND sustituida_por IS NULL;
-
-INSERT INTO bitacora_actividad (...) VALUES
-  (..., 'backfill_proforma_facturada', 'facturacion',
-   'd0be4a81…', jsonb_build_object('motivo', 'PRO-2026-0970 revertida por bug en reconciliar-cancelaciones', 'factura_activa', 'F981'));
+```text
+Header (F963 · Pagada · Exp🔗 · Proforma🔗 · TOTAL)
+Actions bar (sin "Ver embarque")
+Receptor (full width, con validaciones ✓/✗)
+Datos generales  ← solo fechas + días crédito + tipo cambio + notas + Ref BL
+Fiscal del CFDI (merge de Uso/Forma/Método + Timbrado + Emisor compacto)
+Desglose de conceptos
+Totales (Subtotal · IVA · Total)
+Historial de pagos
+Notas de crédito
+Historial de la factura
 ```
 
-### 4. Detección de casos silenciosos
+Racional de la jerarquía: **quién → cuándo/cómo → qué se cobró → cuánto → cobros → ajustes → auditoría.**
 
-Auditoría one-shot: buscar todas las proformas en el mismo estado inconsistente y arreglarlas de una vez.
+### 4. Ajustes menores dentro de los cards
 
-```sql
-SELECT p.id, p.numero
-FROM proformas p
-WHERE p.estado_proforma = 'pendiente'
-  AND EXISTS (
-    SELECT 1 FROM facturas f
-    WHERE f.proforma_id = p.id
-      AND f.estado NOT IN ('Cancelada','Sustituida')
-      AND f.deleted_at IS NULL
-  );
-```
+- Card *Receptor*: quitar la fila "Cliente" (redundante con header) y dejar solo los 4 campos fiscales + botón "Completar datos". Eleva la densidad útil.
+- Card *Datos generales*: quitar *Uso CFDI / Forma de pago / Método de pago* (se mueven al bloque fiscal). Deja fechas + crédito + tipo de cambio + BL + notas.
+- Card *Timbrado fiscal*: quitar *Fecha de emisión* (ya está en Datos generales); añadir Emisor compacto (razón social · RFC) en una fila superior.
 
-Reparar cada una con el mismo patrón del punto 3 y registrar en bitácora.
+## Alcance técnico
 
-### 5. Verificación
+Archivos que se tocan (solo presentación, sin cambios de negocio):
 
-- Query final: la proforma PRO-2026-0970 sale como `facturada` con `factura_id` apuntando a F981.
-- UI: `/embarques/943222de…?tab=facturacion` muestra el badge "Facturada".
-- CHANGELOG entry `## [13.308.12]` describiendo el fix.
+- `src/features/facturacion/components/detalle/FacturaDetalleHeader.tsx` — reemplazar cliente por expediente/proforma clickables.
+- `src/features/facturacion/components/detalle/FacturaDetalleBody.tsx` — remover grid Emisor|Receptor, dejar Receptor full-width, reordenar bloques.
+- `src/features/facturacion/components/detalle/FacturaDetalleActionsBar.tsx` — eliminar entry `ver-embarque` de `buildMore()`.
+- `src/features/facturacion/components/detalle/FacturaReceptorCard.tsx` — quitar fila "Cliente".
+- `src/features/facturacion/components/detalle/FacturaResumenCard.tsx` — quitar Uso CFDI / Forma / Método.
+- `src/features/facturacion/components/detalle/FacturaTimbradoCard.tsx` — absorber Emisor compacto + fiscal (Uso/Forma/Método); quitar fecha emisión.
+- `FacturaEmisorCard.tsx` — se elimina como archivo (o se convierte en subcomponente interno del card fiscal).
+- Bump `APP_VERSION` (13.308.16) + entrada en `CHANGELOG.md`.
 
-## Fuera de alcance
+## Verificación
 
-- No se toca la RPC `revertir_proforma_al_cancelar_sustitucion` (ya está bien).
-- No se agregan nuevos tests E2E; sí un test unitario del helper del edge si se refactoriza a módulo importable.
-- No se cambia UI ni state machine de proformas.
+- Playwright a Full HD (1920×1200) sobre F963: capturar 3 secciones (arriba, medio, abajo) y comparar con las capturas actuales que ya tengo.
+- Repetir sobre una factura borrador (para confirmar que el flujo sin timbrar sigue mostrando Receptor + acciones correctas) y sobre una cancelada (para asegurar que los banners no chocan con el nuevo orden).
+- `bun run lint --max-warnings 0`.
+
+## Fuera de alcance (te lo dejo como preguntas si quieres iterar después)
+
+- ¿Convertir *Totales* en un footer sticky del bloque de conceptos en vez de card aparte? Ganaría densidad pero cambia patrón usado en otras vistas. Si
+- ¿Mostrar el saldo en el header como segundo número junto al total cuando `saldo > 0`? Hoy solo lo ves scrolleando hasta *Historial de pagos*. Si
