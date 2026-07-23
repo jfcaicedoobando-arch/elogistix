@@ -96,11 +96,14 @@ Deno.serve(wrapEdgeHandler("facturapi-emitir-rep", async (req) => {
     .maybeSingle();
   if (cErr || !cliente) return jsonResponse({ error: "cliente_not_found", detail: cErr?.message }, 404);
 
+  // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
   const { data: contactoData } = await supabase
     .from("contactos_cliente")
     .select("email")
     .eq("cliente_id", factura.cliente_id)
-    .eq("es_principal", true)
+    .not("email", "is", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   // 4) Pagos previos de la misma factura para calcular num_parcialidad e imp_saldo_ant
