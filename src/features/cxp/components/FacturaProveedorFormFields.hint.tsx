@@ -3,7 +3,7 @@
  * Extraído para respetar Power-of-10 (≤200 líneas por archivo).
  */
 import { formatFechaEs } from "@/features/cxp/hooks/useTcDofPorFecha";
-import type { TcOrigen } from "./FacturaProveedorFormFields";
+import type { TcOrigen } from "@/features/cxp/types";
 
 export function TcOrigenHint({ origen, fechaAplicada }: { origen: TcOrigen; fechaAplicada?: string }) {
   if (origen === "vacio") return null;
