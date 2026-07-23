@@ -36,13 +36,14 @@ import path from "node:path";
 const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
 /**
  * Fecha de corte: sólo auditamos migraciones creadas a partir de este
- * timestamp. Se eligió `20260723180000` (2026-07-23 18:00) como snapshot
- * post-auditoría arquitectura 3 — migraciones anteriores tienen violaciones
- * H6 documentadas (SECURITY DEFINER sin REVOKE/GRANT explícito) que se
- * cerrarán en una PR dedicada. Bump manual cuando aparezca legacy
- * imposible de corregir (nunca a la baja).
+ * timestamp. Se eligió `20260723213500` (2026-07-23 21:35) como snapshot
+ * post-FIX-R2-01 (consolidación `guard_pago_proveedor`). Migraciones
+ * anteriores tienen violaciones H6 documentadas que se cerrarán en una
+ * PR dedicada; su REVOKE-sin-GRANT explícito es funcionalmente inocuo
+ * porque son triggers internos. Bump manual cuando aparezca legacy
+ * imposible de corregir; nunca a la baja.
  */
-const BASELINE = "20260723180000";
+const BASELINE = "20260723213500";
 
 const FNAME_RE = /^(\d{14})_[a-z0-9-]+\.sql$/;
 
