@@ -5,7 +5,7 @@ import { useDialogGenerarProformaController } from "@/features/embarques/hooks";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
 import { PasoConfirmacionProforma } from "./proforma/PasoConfirmacionProforma";
 import type { Tables } from "@/types/db";
-import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 
 type ConceptoVenta = Tables<'conceptos_venta'>;
 type EmbarqueRow = Tables<'embarques'>;

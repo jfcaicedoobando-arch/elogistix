@@ -6,7 +6,7 @@
  */
 import type { Tables } from "@/integrations/supabase/types";
 import type { calcularTotalesProforma } from "@/features/proformas/domain/proforma";
-import type { FiltroContenedor } from "@/features/cotizacion/domain/conceptosPorContenedor";
+import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/features/embarques/types/contenedor";
 import { validarContenedoresFCL } from "@/features/embarques/services/validarContenedoresFCL";
 
