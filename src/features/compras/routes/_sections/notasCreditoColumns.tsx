@@ -3,7 +3,7 @@
  * v13.182.0 (Wave 2 splits).
  */
 import { ToneBadge } from "@/features/cxp/components/ToneBadge";
-import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+import type { ChipTone } from "@/lib/ui/badgeTone";
 import { defineColumns } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import type { NotaCreditoRow } from "@/features/compras/services/notasCreditoGlobal";

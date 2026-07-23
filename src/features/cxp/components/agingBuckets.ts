@@ -20,7 +20,7 @@ export const BUCKET_LABELS: Record<CubetaAging, string> = {
   mas_90: ">90 d",
 };
 
-import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+import type { ChipTone } from "@/lib/ui/badgeTone";
 
 /** Tono semántico por cubeta — consumido por `<ToneBadge tone={...} />`. */
 export const BUCKET_TONE: Record<CubetaAging, ChipTone> = {

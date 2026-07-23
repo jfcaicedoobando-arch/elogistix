@@ -24,6 +24,119 @@ const NO_RESTRICTED_SYNTAX_BASE = [
 ];
 
 
+// Lista de features top-level bajo `src/features/`. Se usa para generar
+// programáticamente los overrides de cross-feature deep imports (Bloque 2.3
+// arquitectura). Mantener sincronizada con `ls src/features/`.
+const FEATURES = [
+  "admin","auditoria","auth","bandejas","catalogos","cliente","comisiones",
+  "compras","configuracion","costeo","cotizacion","crm","cxp","dashboard",
+  "dashboardEjecutivo","dev","embarques","facturacion","legal","marketing",
+  "notificaciones","onboarding","operaciones","portal","portal-agente",
+  "presupuesto","profit","proformas","proveedor","reportes","search","tesoreria",
+];
+
+// ARCH-DEBT · Bloque 2.3: allowlist temporal de imports cross-feature ya
+// existentes al momento de introducir la regla (baseline v13.309.4). Cada
+// archivo debería salir de la lista promoviendo el módulo compartido a
+// `src/components/shared/` o `src/lib/{ui,domain}/`, o duplicando la lógica
+// dentro del feature consumidor. NO agregar entradas nuevas sin PR justificado.
+const CROSS_FEATURE_ALLOWLIST = [
+  "src/features/admin/components/TabCatalogosGlobales.tsx",
+  "src/features/admin/hooks/useAdminOrgConfig.ts",
+  "src/features/admin/routes/admin-org/Configuracion.tsx",
+  "src/features/auth/routes/TrackingPublico.tsx",
+  "src/features/bandejas/routes/CxpPorCapturar.tsx",
+  "src/features/bandejas/routes/_sections/cxpPorPagarColumns.tsx",
+  "src/features/cliente/routes/ClienteDetalle.tsx",
+  "src/features/cliente/services/financials.ts",
+  "src/features/compras/routes/ComprasPorAprobar.tsx",
+  "src/features/compras/routes/_sections/notasCreditoColumns.tsx",
+  "src/features/configuracion/components/TabOperaciones.tsx",
+  "src/features/cotizacion/components/TarifaVinculadaPanel.tsx",
+  "src/features/cotizacion/components/revalidacion/CrearEmbarqueConRevalidacion.tsx",
+  "src/features/cotizacion/components/seccionRuta/OrigenDestinoBlock.tsx",
+  "src/features/cotizacion/components/seccionRuta/SugerenciasTarifaInline.tsx",
+  "src/features/dashboardEjecutivo/components/BandaKPIs.tsx",
+  "src/features/dashboardEjecutivo/services/types.ts",
+  "src/features/embarques/components/DialogGenerarProforma.tsx",
+  "src/features/embarques/components/TabFacturacion.tsx",
+  "src/features/embarques/components/TabSeguros.tsx",
+  "src/features/embarques/components/conceptos/ConceptoCatalogoSelect.tsx",
+  "src/features/embarques/components/costos/AjusteChip.tsx",
+  "src/features/embarques/components/facturacion/ResumenConceptosVenta.tsx",
+  "src/features/embarques/components/proforma/FiltroContenedorChips.tsx",
+  "src/features/embarques/components/proforma/PasoSeleccionConceptos.tsx",
+  "src/features/embarques/components/reconciliacion/ReconciliacionTresColumnas.tsx",
+  "src/features/embarques/components/reconciliacion/ResumenReconciliacion.tsx",
+  "src/features/embarques/components/reconciliacion/reconciliacionFormat.ts",
+  "src/features/embarques/components/stepDatosRuta/StepDatosRutaMaritimo.tsx",
+  "src/features/embarques/domain/embarqueWizard.ts",
+  "src/features/embarques/domain/mappers/embarqueToDb.ts",
+  "src/features/embarques/hooks/useDialogGenerarProformaController.helpers.ts",
+  "src/features/embarques/hooks/useDialogGenerarProformaController.ts",
+  "src/features/embarques/hooks/useHidratacionEditarEmbarque.ts",
+  "src/features/embarques/hooks/useReconciliacion3Columnas.ts",
+  "src/features/embarques/hooks/useUmbralesReconciliacion.ts",
+  "src/features/embarques/services/reconciliacion3Columnas.ts",
+  "src/features/embarques/services/submitProformaDialog.ts",
+  "src/features/portal-agente/components/AgenteLayout.tsx",
+  "src/features/portal-agente/components/AgenteTarifaForm.tsx",
+  "src/features/portal-agente/routes/AgenteGarantias.tsx",
+  "src/features/portal/components/EmbarqueCard.tsx",
+  "src/features/portal/components/dashboard/PortalEmbarquesRecientesCard.tsx",
+  "src/features/portal/components/dashboard/PortalProximosArribosCard.tsx",
+  "src/features/portal/hooks/usePortalDashboardKpis.ts",
+  "src/features/portal/hooks/usePortalEmbarquesController.ts",
+  "src/features/portal/routes/PortalCotizacionDetalle.tsx",
+  "src/features/portal/routes/PortalEmbarques.tsx",
+  "src/features/portal/services/queries.ts",
+  "src/features/presupuesto/components/TabVsReal.tsx",
+  "src/features/profit/hooks/useEstadoResultados.ts",
+  "src/features/profit/hooks/usePeriodoMesUrl.ts",
+  "src/features/profit/routes/ProfitDashboardEjecutivo.tsx",
+  "src/features/profit/routes/ProfitPresupuesto.tsx",
+  "src/features/profit/routes/ProfitProyeccion.tsx",
+  "src/features/profit/services/estadoResultados.ts",
+  "src/features/profit/services/estadoResultadosDevengado.ts",
+  "src/features/proformas/components/ProformaDetalleCards.tsx",
+  "src/features/proformas/routes/ProformasListado.tsx",
+  "src/features/reportes/routes/CierreMensual.tsx",
+  "src/features/tesoreria/routes/TesoreriaCuentas.tsx",
+];
+
+// Overrides por feature: prohíben importar hacia carpetas internas
+// (components / domain / lib) de OTRAS features. Los imports vía
+// `hooks`, `services`, `types`, `queryKeys` y la ruta pública (`routes`)
+// se mantienen permitidos porque son la superficie estable del feature.
+const crossFeatureOverrides = FEATURES.map((self) => ({
+  name: `cross-feature/${self}`,
+  files: [`src/features/${self}/**/*.{ts,tsx}`],
+  ignores: [
+    `src/features/${self}/**/__tests__/**`,
+    `src/features/${self}/**/*.test.ts`,
+    `src/features/${self}/**/*.test.tsx`,
+    ...CROSS_FEATURE_ALLOWLIST,
+  ],
+  rules: {
+    "no-restricted-imports": ["error", {
+      patterns: FEATURES.filter((f) => f !== self).flatMap((f) => [
+        {
+          group: [`@/features/${f}/components/*`, `@/features/${f}/components/**`],
+          message: `Cross-feature: no importes componentes internos de '${f}'. Si es genuinamente compartido, promuévelo a 'src/components/shared/'. Ver Bloque 2.3 (arquitectura).`,
+        },
+        {
+          group: [`@/features/${f}/domain/*`, `@/features/${f}/domain/**`],
+          message: `Cross-feature: no importes de '${f}/domain'. Promueve la lógica pura a 'src/lib/domain/' o duplícala en tu feature. Ver Bloque 2.3.`,
+        },
+        {
+          group: [`@/features/${f}/lib/*`, `@/features/${f}/lib/**`],
+          message: `Cross-feature: no importes de '${f}/lib'. Promueve a 'src/lib/' (ui/domain/formatters). Ver Bloque 2.3.`,
+        },
+      ]),
+    }],
+  },
+}));
+
 export default tseslint.config(
   // v13.303.5 — Ignores ampliados: además de `dist`/`coverage` (build output),
   // excluimos artefactos que nunca deberían pasar por el parser TS de ESLint:
@@ -486,4 +599,6 @@ export default tseslint.config(
       }],
     },
   },
+  // Bloque 2.3 (arquitectura): prohibir imports profundos cross-feature.
+  ...crossFeatureOverrides,
 );

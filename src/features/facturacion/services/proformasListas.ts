@@ -2,7 +2,7 @@
  * Servicio: proformas aceptadas por el cliente y listas para convertir a factura.
  *
  * Una proforma está "lista para facturar" cuando su `getEstadoUnificado`
- * (ver `@/features/proformas/lib/estadoUnificado`) resuelve a `'aceptada'`:
+ * (ver `@/lib/domain/estadoUnificado`) resuelve a `'aceptada'`:
  *   - `estado_cliente = 'aceptada'` (el cliente aceptó la proforma)
  *   - `estado_proforma <> 'facturada'` (aún no cerrada en flujo legacy)
  *   - `factura_id IS NULL` (sin CFDI/borrador enlazado)

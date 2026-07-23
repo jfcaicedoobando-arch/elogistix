@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters";
-import { LABEL_ESTADO_UNIFICADO, type EstadoUnificadoProforma } from "@/features/proformas/lib/estadoUnificado";
+import { LABEL_ESTADO_UNIFICADO, type EstadoUnificadoProforma } from "@/lib/domain/estadoUnificado";
 
 interface ClienteOption { id: string; nombre: string }
 

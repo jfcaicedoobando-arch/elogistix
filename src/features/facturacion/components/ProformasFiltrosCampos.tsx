@@ -13,7 +13,7 @@ import { DatePickerMx } from "@/components/ui/date-picker-mx";
 import {
   ESTADOS_UNIFICADOS,
   LABEL_ESTADO_UNIFICADO,
-} from "@/features/proformas/lib/estadoUnificado";
+} from "@/lib/domain/estadoUnificado";
 
 interface ClienteOption { id: string; nombre: string }
 

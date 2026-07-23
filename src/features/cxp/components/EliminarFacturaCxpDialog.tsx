@@ -11,7 +11,7 @@ import { dialogSize } from "@/components/shared/utils/dialogTokens";
 import { cn } from "@/lib/utils";
 import type { FacturaCxP } from "@/features/cxp/services";
 import type { EstatusCxP } from "@/features/cxp/services/proveedorFacturas";
-import { TONE_DOT, TONE_TEXT, type ChipTone } from "@/features/cxp/lib/badgeTone";
+import { TONE_DOT, TONE_TEXT, type ChipTone } from "@/lib/ui/badgeTone";
 import { EliminarFacturaFinancialGrid } from "./EliminarFacturaFinancialGrid";
 
 const ESTATUS_META: Record<EstatusCxP, { label: string; tone: ChipTone }> = {

@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { Plus, Check, X, ShieldCheck, FileText, FileDigit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToneBadge } from "@/features/cxp/components/ToneBadge";
-import type { ChipTone } from "@/features/cxp/lib/badgeTone";
+import type { ChipTone } from "@/lib/ui/badgeTone";
 
 
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
