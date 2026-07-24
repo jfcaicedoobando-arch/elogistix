@@ -39,6 +39,24 @@ const signupSchema = z
 
 type SignupValues = z.infer<typeof signupSchema>;
 
+const FIELD_ORDER: Array<keyof SignupValues> = [
+  "name",
+  "company",
+  "phone",
+  "email",
+  "password",
+  "password2",
+  "acceptTerms",
+];
+
+function getFirstFieldError(errors: Record<string, { message?: string } | undefined>): string | null {
+  for (const field of FIELD_ORDER) {
+    const msg = errors[field]?.message;
+    if (msg) return msg;
+  }
+  return null;
+}
+
 export function SignupForm() {
   const { toast } = useToast();
   const [signupDone, setSignupDone] = useState(false);
@@ -99,16 +117,7 @@ export function SignupForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = form;
-  const firstFieldError =
-    errors.name?.message ??
-    errors.company?.message ??
-    errors.phone?.message ??
-    errors.email?.message ??
-    errors.password?.message ??
-    errors.password2?.message ??
-    errors.acceptTerms?.message ??
-    null;
-  const alertMessage = signupError ?? firstFieldError;
+  const alertMessage = signupError ?? getFirstFieldError(errors);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
