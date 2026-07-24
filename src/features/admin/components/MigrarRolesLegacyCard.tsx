@@ -26,14 +26,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
 import { formatFechaHora } from "@/lib/formatters/dates";
-import {
-  ROLE_LABELS,
-  type LEGACY_TO_MODERN as _LEGACY_TO_MODERN_TYPE,
-} from "@/features/admin/domain/roles/roleCatalog";
+import { ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
 import type { AppRole } from "@/types/appRole";
-
-// Ignoramos el import de tipo (sólo dependemos de ROLE_LABELS en runtime).
-void (0 as unknown as typeof _LEGACY_TO_MODERN_TYPE);
 
 export function MigrarRolesLegacyCard() {
   const [open, setOpen] = useState(false);
