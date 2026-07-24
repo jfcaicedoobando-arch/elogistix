@@ -35,53 +35,61 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 
 ```text
 src/
-├── pages/          → Composición de UI por ruta. NO tocan Supabase ni lógica de dominio.
-├── components/     → Componentes reutilizables y específicos de feature.
-│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs, y utils de presentación (appFeedback, dialogTokens, kpiTones, uiMappings, auditoriaConfig).
+├── features/       → Raíz de dominio. 32 módulos con plantilla estándar:
+│                       routes/ · components/ · hooks/ · services/ ·
+│                       domain/ · types/ · utils/ · queryKeys.ts
+│                    Módulos: admin, auditoria, auth, bandejas, catalogos,
+│                    cliente, comisiones, compras, configuracion, costeo,
+│                    cotizacion, crm, cxp, dashboard, dashboardEjecutivo,
+│                    dev, embarques, facturacion, legal, marketing,
+│                    notificaciones, onboarding, operaciones, portal,
+│                    portal-agente, presupuesto, profit, proformas,
+│                    proveedor, reportes, search, tesoreria.
+├── components/     → SOLO transversales (no específicos de dominio).
+│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs, DataTable, StatusBadge, etc.
 │   ├── ui/             → shadcn read-only (no editar).
-│   └── <dominio>/      → Componentes por feature (embarque, cotizacion, cliente, …).
-├── hooks/          → React Query + estado local + side effects (toasts, navegación).
-│   ├── admin/          → Barrel folder (organizaciones, miembros, planes).
-│   ├── auditoria/      → Barrel folder.
-│   ├── catalogos/      → Barrel folder (puertos, navieras, exchange-rates, …).
-│   ├── cliente/        → Barrel folder.
-│   ├── configuracion/  → Barrel folder.
-│   ├── cotizacion/     → Barrel folder + barrel `useCotizaciones.ts`.
-│   ├── dashboard/      → Barrel folder.
-│   ├── embarque/       → Barrel folder + barrel `useEmbarques.ts` + `mutations/`.
-│   ├── facturacion/    → Barrel folder.
-│   ├── layout/         → Barrel folder (`useAppSidebarSections`).
-│   ├── operaciones/    → Barrel folder.
-│   ├── portal/         → Barrel folder.
-│   ├── proveedor/      → Barrel folder.
-│   ├── reportes/       → Barrel folder.
-│   ├── shared/         → Hooks transversales (debounce, listPageState, permissions, sidebarAlerts, tabsParam, useToast/useIsMobile wrappers).
-│   └── usuario/        → Barrel folder.
-├── services/       → Acceso puro a datos (Supabase, edge functions, fetch). Sin React Query.
-├── lib/            → Utilidades puras y reutilizables.
-│   ├── domain/         → Reglas de dominio (cálculos de estado, validaciones).
-│   ├── mappers/        → Transformación entre formato DB ↔ UI.
-│   ├── parsers/        → Parsing de payloads (CSF, dashboard).
-│   ├── financial/      → Cálculos monetarios + IVA dinámico.
-│   ├── formatters/     → Money/date/number en es-MX.
-│   ├── errors/         → Utilidades puras de errores (dynamicImportError).
-│   ├── query/          → Query keys centralizados.
-│   └── *.ts            → utils, storage, contacto, sentry.
-├── content/        → Contenido editorial (changelog, copy de marketing).
-├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard, appVersion).
+│   └── layout/         → AppSidebar, AppShell, breadcrumbs.
+├── hooks/          → SOLO hooks transversales.
+│   ├── shared/         → debounce, listPageState, permissions, sidebarAlerts, tabsParam, useToast/useIsMobile.
+│   ├── layout/         → `useAppSidebarSections`.
+│   └── emails/         → wrappers de plantillas.
+│                    Los hooks de dominio viven en `features/<dominio>/hooks/`.
+├── services/       → Servicios transversales. Los específicos viven en `features/<dominio>/services/`.
+├── lib/            → Utilidades puras y reutilizables (~24 subdirs).
+│   ├── auth/           → Helpers de sesión y roles (fuera de contexts).
+│   ├── contexts/       → React Contexts (Auth, Organization, Theme, Breadcrumb).
+│   ├── browserStorage/ → Wrapper único autorizado para local/sessionStorage.
+│   ├── date/           → mx.ts + helpers UTC canónicos.
+│   ├── domain/         → Reglas de dominio compartidas (bitácora, cálculos).
+│   ├── errors/         → LC_* codes + dynamicImportError.
+│   ├── financial/      → Cálculos monetarios + IVA dinámico + currency.js.
+│   ├── formatters/     → Money/date/number en es-MX (canónico).
+│   ├── mappers/        → DB ↔ UI.
+│   ├── parsers/        → CSF, dashboard, CFDI XML.
+│   ├── query/          → Query keys centralizados por dominio.
+│   ├── supabase/       → Wrappers tipados.
+│   ├── ui/             → appFeedback, dialogTokens, kpiTones, uiMappings.
+│   ├── validation/     → Zod schemas compartidos.
+│   └── …               → csv, diagnostics, hooks, io, logging, net, observability, passwords, search, status, storage, utils.
+├── content/        → Contenido editorial (copy de marketing).
+├── constants/      → Constantes de dominio/UI + `appVersion.ts`.
 ├── types/          → Tipos compartidos entre módulos.
-├── contexts/       → React Contexts (Auth, Organization, Theme, Breadcrumb).
-├── generators/     → Generación pura de archivos (PDF, CSV). Sin Supabase ni I/O — reciben DTOs hidratados desde `services/`.
+├── generators/     → Generación pura de archivos (PDF, CSV). Sin I/O.
 └── integrations/   → Clientes auto-generados (Supabase). NO editar.
 
-> Nota: `src/utils/` fue eliminado en v8.206.0. Las utilidades viven en `src/lib/` (puras) o `src/services/` (con I/O).
+> **Regla cross-feature:** un feature no puede importar internals de otro feature. Excepciones documentadas en `CROSS_FEATURE_ALLOWLIST` de `eslint.config.js` (44 entradas hoy, marcadas ARCH-DEBT y en burn-down).
+>
+> Notas históricas: `src/pages/`, `src/contexts/` y `src/hooks/<dominio>/` **ya no existen**; su contenido migró a `features/<dominio>/routes/`, `lib/contexts/` y `features/<dominio>/hooks/` respectivamente. `src/utils/` se eliminó en v8.206.0.
 
 supabase/
 ├── functions/      → Edge functions (Deno). Cada carpeta = 1 función desplegada.
 │   └── _shared/        → corsHeaders + handlePreflight + auth/response helpers.
 ├── migrations/     → SQL versionado (RPCs, RLS, índices, triggers).
+├── schema/         → **Canónico** por módulo (cxp, embarques, …). Fuente de verdad de triggers/funciones.
+├── tests/          → `schema-invariants.sql` + suite conductual (rls, negocio).
 └── config.toml     → Project-level config (no editar `project_id`; sí bloques `[functions.X]`).
 ```
+
 
 ## 2. Flujo de datos canónico
 
