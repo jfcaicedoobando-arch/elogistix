@@ -41,13 +41,13 @@ BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'TEST Org A'), (org_b, 'TEST Org B');
 
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
-    (org_a, user_a, 'admin'),
-    (org_b, user_b, 'admin');
+    (org_a, user_a, 'admin_org'),
+    (org_b, user_b, 'admin_org');
 
   -- Roles globales (tabla user_roles)
   INSERT INTO public.user_roles(user_id, role) VALUES
-    (user_a, 'admin'),
-    (user_b, 'admin'),
+    (user_a, 'admin_org'),
+    (user_b, 'admin_org'),
     (user_cli, 'cliente');
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
