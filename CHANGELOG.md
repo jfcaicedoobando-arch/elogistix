@@ -1,6 +1,12 @@
 # Changelog
 
+## [13.312.9] - 2026-07-24
+- **fix(embarques · contenedores duplicados) · Traduce el error 23505 `uq_embarque_contenedor_numero` a un mensaje amigable en es-MX.** Origen: Sentry `JAVASCRIPT-REACT-1M` (68 ocurrencias, 8 usuarios, regressed) y `JAVASCRIPT-REACT-3H` — al guardar un contenedor con un número ya usado en el mismo embarque, la app lanzaba el error crudo de Postgres (`duplicate key value violates unique constraint`). Cambios en `src/features/embarques/services/contenedores/crud.ts`: se agrega `traducirErrorContenedorDuplicado()` que detecta `code === '23505'` + constraint `uq_embarque_contenedor_numero`, extrae el número del `details` y lanza `Error("El contenedor \"X\" ya está registrado en este embarque.")`. Aplicado en `crearMuchos()` y `sincronizarContenedores()` (RPC). Analogía: en vez de mostrar el mensaje técnico del guardia de la base de datos, el sistema ahora avisa en español "esta caja ya tiene ese número".
+- **fix(storage · archivo duplicado) · Traduce `StorageApiError: The resource already exists` a un mensaje amigable.** Origen: Sentry `JAVASCRIPT-REACT-3G`. Cambio en `src/services/storage/index.ts` — al detectar `already exists` en `uploadFile()`, se lanza `Error("Ya existe un archivo con ese nombre. Renómbralo o elimínalo antes de subirlo nuevamente.")`.
+- **chore(sentry) · Marca `JAVASCRIPT-REACT-3F` como resuelto.** El error `conceptos_venta_total_calc` ya fue corregido en v13.309.40; el evento reportado provenía de un release viejo (`libre-carga@13.142.8`) previo al fix.
+
 ## [13.312.8] - 2026-07-24
+
 - **ci(edge-functions · path-gate) · Aplica el diff faltante `ci-edge-functions-path-gate`.** Origen: era el único de los 10 diffs de la auditoría 2026-07-24 que no venía en el ZIP original. Cambio: en el job `edge-functions` de `.github/workflows/ci.yml` se agrega un step `Detect edge-function changes` que, en PRs, compara contra `pull_request.base.sha` y sólo activa Deno si el diff toca `supabase/functions/**` o el propio `ci.yml`; en push a `main` corre siempre (gate de release). Los 3 steps siguientes (`Setup Deno`, `Cache Deno deps`, `Run Deno tests`) quedan condicionados a `steps.changes.outputs.run == 'true'`. El job se reporta `success` aunque se saltee, así que `ci-success` no necesita cambios. Analogía: le pusimos un torniquete al gimnasio de Deno — si el PR no trae ropa deportiva (archivos de edge-functions), ni siquiera enciende las luces.
 
 
