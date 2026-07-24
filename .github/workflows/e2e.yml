@@ -382,12 +382,13 @@ jobs:
       - name: Fail if any test job failed
         # Explicit gate: si algún shard falló, este job también falla para que
         # notify-failure dispare y el workflow quede rojo (regresión).
-        if: ${{ needs.internal-shard.result == 'failure' || needs.mutators.result == 'failure' || needs.portal.result == 'failure' }}
+        if: ${{ needs.internal-shard.result == 'failure' || needs.mutators.result == 'failure' || needs.portal.result == 'failure' || needs.multi-tenant.result == 'failure' }}
         run: |
           echo "::error::Se detectaron regresiones en E2E."
           echo "internal-shard=${{ needs.internal-shard.result }}"
           echo "mutators=${{ needs.mutators.result }}"
           echo "portal=${{ needs.portal.result }}"
+          echo "multi-tenant=${{ needs.multi-tenant.result }}"
           exit 1
 
   notify-failure:
