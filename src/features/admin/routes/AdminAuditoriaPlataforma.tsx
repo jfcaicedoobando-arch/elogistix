@@ -53,6 +53,7 @@ export default function AdminAuditoriaPlataforma() {
         </CardContent>
       </Card>
 
+      <MigrarRolesLegacyCard />
       <BackfillLegacyCard />
     </PageContainer>
   );
