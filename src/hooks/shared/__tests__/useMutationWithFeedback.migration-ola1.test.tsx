@@ -85,7 +85,8 @@ describe("Ola 1 · item 3 — mutaciones migradas a useMutationWithFeedback", ()
     const { result } = renderHook(() => useMarcarNotificacionLeida(), { wrapper: Wrapper });
     result.current.mutate("n1");
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(marcarNotificacionLeida).toHaveBeenCalledWith("n1");
+    expect(marcarNotificacionLeida).toHaveBeenCalled();
+    expect(marcarNotificacionLeida.mock.calls[0][0]).toBe("n1");
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["portal", "notificaciones"] });
     expect(notifyError).not.toHaveBeenCalled();
   });
