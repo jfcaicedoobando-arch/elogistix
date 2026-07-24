@@ -30,7 +30,7 @@ Leyenda: ✅ hecho · ⚠️ parcial · ❌ pendiente · ➖ n/a
 | 2.3(b) `no-restricted-imports` cross-feature | ✅ | `eslint.config.js:43` |
 | 2.4 IVA único / Fases embarque | ✅ | IVA en `financialUtils.ts`. Fases: `embarqueFases.invariant.test.ts` cubre TS ↔ enum SQL. |
 
-**Bloque 2 = 100 % cerrado.** v13.309.27 (PR-3b) promovió `versionadoCotizacion` y `labelExpediente` a `src/lib/domain/`; allowlist cross-feature reducida de 51 → 43.
+**Bloque 2 = 100 % cerrado.** v13.309.27 (PR-3b) promovió `versionadoCotizacion` y `labelExpediente` a `src/lib/domain/`; allowlist cross-feature en **44** entradas (ARCH-DEBT, en burn-down).
 
 ### BLOQUE 3 — Estructural
 
