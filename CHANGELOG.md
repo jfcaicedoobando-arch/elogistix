@@ -1,7 +1,7 @@
 # Changelog
 
 ## [13.312.22] - 2026-07-24
-- **fix(lint) · `SignupForm` complejidad 19 → bajo umbral.** Se extrae el chain de 7 `??` sobre `errors.*?.message` a un helper `getFirstFieldError(errors)` que itera un `FIELD_ORDER` tipado. Sin cambios de UI ni de comportamiento; sólo baja la complejidad ciclomática del componente para pasar `--max-warnings 0`.
+- **fix(lint) · `SignupForm` complejidad 19 → bajo umbral + helper blindado con tests.** Se extrae el chain de 7 `??` sobre `errors.*?.message` a un helper puro `getFirstFieldError(errors)` que itera un `SIGNUP_FIELD_ORDER` tipado. El helper vive en `SignupForm.helpers.ts` (fuera del componente) para no romper `react-refresh/only-export-components`. 6 tests conductuales en `SignupForm.helpers.test.tsx` fijan el contrato: null cuando no hay errores, orden canónico (name→company→phone→email→password→password2→acceptTerms), ignorar `message` vacío/undefined y snapshot del orden. Sin cambios de UI ni de flujo. Analogía: antes teníamos 7 `if` colgados dentro del componente; ahora hay una recepcionista fuera que va llamando a los 7 campos en orden y regresa al primero que se queja.
 
 
 

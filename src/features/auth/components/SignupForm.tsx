@@ -11,6 +11,7 @@ import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
+import { getFirstFieldError } from "./SignupForm.helpers";
 
 /**
  * v13.312.19 — Ola 1 · PR-6 paso 2: migrado de 10 `useState` a RHF+zod.
@@ -38,24 +39,6 @@ const signupSchema = z
   });
 
 type SignupValues = z.infer<typeof signupSchema>;
-
-const FIELD_ORDER: Array<keyof SignupValues> = [
-  "name",
-  "company",
-  "phone",
-  "email",
-  "password",
-  "password2",
-  "acceptTerms",
-];
-
-function getFirstFieldError(errors: Record<string, { message?: string } | undefined>): string | null {
-  for (const field of FIELD_ORDER) {
-    const msg = errors[field]?.message;
-    if (msg) return msg;
-  }
-  return null;
-}
 
 export function SignupForm() {
   const { toast } = useToast();
