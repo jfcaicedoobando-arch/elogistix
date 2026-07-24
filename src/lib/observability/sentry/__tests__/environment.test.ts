@@ -18,6 +18,7 @@ const sentryMock = vi.hoisted(() => ({
   httpClientIntegration: vi.fn(() => ({ name: "httpClient" })),
   thirdPartyErrorFilterIntegration: vi.fn(() => ({ name: "tpe" })),
   captureConsoleIntegration: vi.fn(() => ({ name: "console" })),
+  extraErrorDataIntegration: vi.fn(() => ({ name: "extraErrorData" })),
 }));
 
 
