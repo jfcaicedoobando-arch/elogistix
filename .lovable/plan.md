@@ -1,34 +1,64 @@
-# Fix auditor H6 — Bump baseline
 
-## Contexto
+# Plan: remediación auditoría E2E (t3-e2e-audit.md)
 
-El auditor de migraciones (`scripts/audit-migrations.ts`) marca 2 violaciones H6 en `20260724180737_*.sql` (función `ensure_demo_membership` con `SECURITY DEFINER` sin `REVOKE`/`GRANT EXECUTE`).
+La auditoría identifica 3 clases de problemas: **(a) specs valiosos que nunca corren en CI** por falta de env/jobs, **(b) tests "verdes falsos"** que skippean silenciosamente o solo miden overflow/consola, y **(c) gaps de flujos fiscales/CxC/CxP** sin cobertura. La estrategia es arreglar primero lo que ya existe pero no ejecuta (bajo costo, alto valor), después endurecer los skips silenciosos, y por último añadir cobertura nueva.
 
-Ese archivo ya fue creado y aplicado en el turno anterior (fix v13.312.11 para issue de Sentry `JAVASCRIPT-REACT-1G`), y en v13.312.12 emití una **migración correctiva posterior** que sí trae el bloque `REVOKE ALL ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO service_role`. Sin embargo, el auditor escanea cada archivo por separado y no reconoce fixes cross-file, así que sigue reportando el archivo original.
+## Ola 1 — Activar lo que ya existe (bajo costo, alto valor)
 
-Analogía: es como cuando corriges un error de ortografía en una hoja nueva, pero el corrector sigue subrayando la hoja vieja porque no sabe que ya la actualizaste en otra parte del cuaderno. La solución es decirle al corrector: "ignora todo lo anterior a esta fecha, ya está auditado y documentado".
+1. **Job `chromium-multi-tenant` en `.github/workflows/e2e.yml`**
+   - Añadir job que corra `bun run e2e:provision-multi-tenant` antes y luego `playwright test --project=chromium-multi-tenant`.
+   - Secrets necesarios: los mismos `E2E_*` + `E2E_CROSS_ORG_*` que ya usa 06 (validar que existen en repo settings; si no, listarlos como bloqueante para el usuario).
 
-## Precedente
+2. **Baselines visuales del spec 27**
+   - Generar snapshots con `playwright test 27-visual-regression --update-snapshots` contra staging.
+   - Commitear `e2e/specs/__screenshots__/*.png` (o ruta que Playwright use según config).
+   - Reemplazar máscara frágil `.text-xl, .text-2xl` por `data-testid` explícito en `TimelineEstadosCard`.
 
-`docs/migrations-hygiene.md` documenta exactamente este patrón (FIX-H6-01, bump del baseline `20260723213500` → `20260723223436` el 2026-07-23): cuando una migración legacy imposible de editar cae post-baseline, se **sube** el baseline y se registra la razón.
+3. **Poblar variables gating en CI para specs 07–12, 25**
+   - Documentar en `e2e/README.md` qué IDs de negocio requiere cada spec.
+   - Extender `scripts/e2e/provision-users.ts` (o crear `provision-fixtures.ts`) para sembrar y exportar a `GITHUB_ENV` los IDs: `E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID`, `E2E_COTIZACION_ACEPTADA_ID`, `E2E_PROVEEDOR_ID`, `E2E_EMBARQUE_PARA_CXP_ID`, `E2E_HAS_SEED=1`, `E2E_HAS_AUDIT_DATA=1`.
+   - `E2E_FISCAL=1` solo si `FACTURAPI_SANDBOX_KEY` está presente (specs 08/25).
 
-## Cambios
+## Ola 2 — Eliminar falsos verdes
 
-### 1. `scripts/audit-migrations.ts`
-Cambiar `BASELINE` de `"20260723223436"` a `"20260724180738"` (un segundo después del archivo problemático — deja fuera solo ese archivo, no oculta migraciones futuras).
+4. **Convertir skips silenciosos en fallos explícitos**
+   - En specs 02/18/21/22/23 y 06: si el env/data requerido falta, `test.fail("missing fixture: …")` en vez de `test.skip`, salvo bandera explícita `E2E_ALLOW_MISSING_FIXTURES=1` (útil solo en local).
+   - En spec 06: si `E2E_CROSS_ORG_*` degrada a UUID dummy, marcar el test como `test.skip` con motivo (no `console.warn` invisible).
 
-### 2. `docs/migrations-hygiene.md`
-Agregar entrada al histórico de baseline bumps explicando:
-- FIX-H6-02, 2026-07-24
-- Archivo `20260724180737_d76d8b84…` recreó `ensure_demo_membership` sin `REVOKE`/`GRANT EXECUTE`
-- Ya corregido en BD por migración correctiva posterior (v13.312.12)
-- Baseline sube a `20260724180738`
+5. **Endurecer suite responsive (13–20)**
+   - Añadir al menos 1 aserción de negocio por spec (p.ej. 13: KPI card con número; 18: portal muestra saldo del cliente; 14: cotización creada visible en lista).
+   - Sustituir los 23 `waitForTimeout` por `waitForResponse`/`expect.poll` (empezar por 18-portal con 6 ocurrencias).
 
-### 3. `CHANGELOG.md` + `src/constants/appVersion.ts`
-Bump a `13.312.13`, entrada breve explicando el bump del baseline y referencia al fix H6 previo.
+6. **Adopción de Page Objects**
+   - Extraer POs para `cotizacion`, `cxp`, `portal`, `cliente` (los 4 flujos más repetidos).
+   - Migrar specs de mayor duplicación (11, 12, 17, 20).
 
-## Validación
+## Ola 3 — Cerrar gaps críticos (fiscal/dinero primero)
 
-- `bun run audit:migrations` debe salir en verde (`✅ Migraciones limpias`).
-- No se toca ningún archivo SQL ya aplicado.
-- La función en BD **ya tiene** los grants correctos (aplicado en v13.312.12), así que la postura de seguridad real no cambia.
+Un spec nuevo por gap, en orden de prioridad de la auditoría:
+
+7. **Notas de crédito CFDI** (emisión → aplicación a saldo → cancelación) usando `facturapi-emitir-nota-credito` + `facturapi-cancelar-nota-credito`.
+8. **Cancelación CFDI motivo 02/04 como flujo** (con `facturapi-reconciliar-cancelaciones` y verificación de acuse SAT).
+9. **Habilitar spec 08 en CI** (una vez `E2E_FISCAL` esté armado en ola 1) + REP manual + `rep-retry-nocturno`.
+10. **Conciliación bancaria real** en `/tesoreria/conciliacion` (matching de movimientos ↔ pagos). Renombrar spec 04 actual a `smoke-facturacion-tabs` para eliminar el nombre engañoso.
+11. **Descarga CFDI en portal cliente** (`facturapi-descargar`, valida PDF y XML).
+12. **CxC aging real** (buckets 0-30/31-60/61-90/+90 con fechas conocidas) y **workflow CxP aprobación** (`/compras/por-aprobar`).
+13. **Costeo y admin** (tarifas + alta de usuario/rol/org) — cierre de gaps de mayor valor operativo.
+
+## Detalles técnicos
+
+- **Snapshots (paso 2):** Playwright guarda en `<spec>-snapshots/`. Confirmar con `snapshotPathTemplate` de `playwright.config.ts` antes de commitear.
+- **Provisión de fixtures (paso 3):** el script debe ser **idempotente** — si el registro ya existe con tag `E2E_FIXTURE`, reutilizarlo; si no, crearlo. Escribir IDs a `$GITHUB_OUTPUT` para que el step siguiente los inyecte al env de Playwright.
+- **Gate por secret (paso 3):** usar `if: env.FACTURAPI_SANDBOX_KEY != ''` a nivel step, no a nivel job, para no romper el job entero cuando el secret falta en un fork.
+- **`test.fail` vs `test.skip` (paso 4):** Playwright no aborta el run con `test.fail` si el test efectivamente falla — es el comportamiento buscado. La bandera `E2E_ALLOW_MISSING_FIXTURES` se lee en `testBase.ts` fixture nuevo.
+- **CHANGELOG + APP_VERSION** en cada ola (siguiendo memoria `mem://instructions/changelog-updates`).
+
+## Fuera de alcance
+
+- Cambiar a Vitest o a un runner distinto.
+- Reescribir RLS o edge functions (la auditoría reconoce que RLS tiene su propio workflow `rls-tests.yml`).
+- Tests unitarios adicionales — este plan es E2E puro.
+
+## Nota
+
+`.lovable/` está en tu `.gitignore`, así que este plan no se persistirá tras el próximo snapshot. ¿Quieres que lo saque del `.gitignore` para que los planes queden versionados?
