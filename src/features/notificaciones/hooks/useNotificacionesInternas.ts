@@ -1,5 +1,9 @@
+/**
+ * v13.312.20 — Ola 1 · item 3: mutaciones internas migradas a
+ * `useMutationWithFeedback` (estandariza invalidación + `notifyError`).
+ */
 import { useEffect } from "react";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   fetchNotificaciones,
@@ -8,7 +12,7 @@ import {
   subscribeNotificaciones,
   type NotificacionInterna,
 } from "@/features/notificaciones/services";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 
 export type { NotificacionInterna };
@@ -34,20 +38,18 @@ export function useNotificacionesInternas() {
     return unsubscribe;
   }, [qc, userId]);
 
-  const marcarLeidaMut = useMutation({
+  const marcarLeidaMut = useMutationWithFeedback({
     mutationFn: svcMarcarLeida,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notificaciones.internas(userId) }),
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al marcar notificación: ${error.message}`, error, method: "MARK_INTERNAL_NOTIF_READ" });
-    },
+    invalidate: queryKeys.notificaciones.internas(userId),
+    errorTitle: "Error al marcar notificación",
+    errorMethod: "MARK_INTERNAL_NOTIF_READ",
   });
 
-  const marcarTodasMut = useMutation({
+  const marcarTodasMut = useMutationWithFeedback({
     mutationFn: () => (userId ? svcMarcarTodas(userId) : Promise.resolve()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notificaciones.internas(userId) }),
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al marcar notificaciones: ${error.message}`, error, method: "MARK_ALL_INTERNAL_NOTIF_READ" });
-    },
+    invalidate: queryKeys.notificaciones.internas(userId),
+    errorTitle: "Error al marcar notificaciones",
+    errorMethod: "MARK_ALL_INTERNAL_NOTIF_READ",
   });
 
   const noLeidas = (query.data ?? []).filter((n) => !n.leida).length;
