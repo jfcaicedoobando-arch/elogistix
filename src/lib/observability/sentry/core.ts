@@ -87,9 +87,11 @@ export function initSentry(): void {
       return scrubEventPii(event);
     },
     // 13.114.19: las transactions también pueden traer PII en `request.url`
-    // (query strings con `?email=`, `?rfc=`, etc.). SAFE-CAST: TransactionEvent
-    // y ErrorEvent comparten la forma scrubbeable.
+    // (query strings con `?email=`, `?rfc=`, etc.).
     beforeSendTransaction(event) {
+      // SAFE-CAST: TransactionEvent y ErrorEvent comparten la forma scrubbeable
+      // (request, breadcrumbs, user). `scrubEventPii` sólo lee/escribe campos
+      // comunes; el doble cast evita duplicar la lógica de redacción.
       return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
     },
     beforeBreadcrumb: scrubBreadcrumb,
