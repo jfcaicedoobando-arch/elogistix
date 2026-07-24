@@ -13,6 +13,7 @@ import type { AppRole } from "@/types/appRole";
 import {
   ASSIGNABLE_ROLE_GROUPS,
   ROLE_LABELS,
+  ROLE_DESCRIPTIONS,
   esRolLegacy,
   rolModernoSugerido,
 } from "@/features/admin/domain/roles/roleCatalog";
@@ -115,8 +116,13 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
               {group.label}
             </SelectLabel>
             {group.roles.map((r) => (
-              <SelectItem key={r} value={r}>
-                {ROLE_LABELS[r]}
+              <SelectItem key={r} value={r} className="items-start py-2">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">{ROLE_LABELS[r]}</span>
+                  <span className="text-2xs leading-snug text-muted-foreground">
+                    {ROLE_DESCRIPTIONS[r]}
+                  </span>
+                </div>
               </SelectItem>
             ))}
           </SelectGroup>

@@ -6128,6 +6128,42 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_log: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_role: string | null
+          id: string
+          motivo: string | null
+          organization_id: string | null
+          source: string
+          to_role: string
+          user_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_role?: string | null
+          id?: string
+          motivo?: string | null
+          organization_id?: string | null
+          source: string
+          to_role: string
+          user_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_role?: string | null
+          id?: string
+          motivo?: string | null
+          organization_id?: string | null
+          source?: string
+          to_role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       seguros_embarque: {
         Row: {
           aseguradora: string
