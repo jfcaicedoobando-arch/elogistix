@@ -13,7 +13,12 @@ import type { AppRole } from "@/types/appRole";
 import {
   ASSIGNABLE_ROLE_GROUPS,
   ROLE_LABELS,
+  esRolLegacy,
+  rolModernoSugerido,
 } from "@/features/admin/domain/roles/roleCatalog";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertTriangle } from "lucide-react";
 import { inicialesDeEmail } from "./usuariosCellsUtils";
 
 
@@ -47,6 +52,26 @@ export function UsuarioCell({ user, isSelf }: UsuarioCellProps) {
             Tú
           </span>
         )}
+        {esRolLegacy(user.role) && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="outline"
+                  className="mt-0.5 w-fit gap-1 border-warning/60 bg-warning/10 text-2xs uppercase tracking-wide text-warning-foreground"
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  Rol legado
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs">
+                Este usuario aún tiene el rol legacy <strong>{user.role}</strong>. Cámbialo a{" "}
+                <strong>{ROLE_LABELS[rolModernoSugerido(user.role) ?? "customer_service"]}</strong>{" "}
+                o ejecuta la migración desde <em>Auditoría de plataforma → Migración de roles legacy</em>.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
     </div>
   );
@@ -74,6 +99,16 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
+        {esRolLegacy(user.role) && (
+          <SelectGroup>
+            <SelectLabel className="text-2xs uppercase tracking-wide text-warning-foreground">
+              Rol legado (migrar)
+            </SelectLabel>
+            <SelectItem key={user.role} value={user.role} disabled>
+              {ROLE_LABELS[user.role]}
+            </SelectItem>
+          </SelectGroup>
+        )}
         {ASSIGNABLE_ROLE_GROUPS.map((group) => (
           <SelectGroup key={group.label}>
             <SelectLabel className="text-2xs uppercase tracking-wide text-muted-foreground">

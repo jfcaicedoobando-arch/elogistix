@@ -1,64 +1,68 @@
-# Bug: usuarios con rol "Agente de carga" no ven los documentos de sus embarques
 
-## Causa raíz (verificada en DB)
+# Mejorar el manejo de roles y usuarios en el ERP
 
-La tabla `embarques` tiene una política dedicada **"Agente read own embarques"** que deja al rol `agente_carga` ver los embarques donde `embarques.agente` coincide con el agente asignado. Pero las tablas hijas del embarque **no tienen esa política equivalente**.
+## Diagnóstico (verificado)
 
-Políticas actuales en `documentos_embarque` (verificado con `pg_policies`):
-- `Tenant CRUD documentos_embarque` → sólo `admin`/`operador`/`super_admin`
-- `Tenant viewer documentos_embarque` → sólo `viewer`
-- `Cliente read own documentos` → sólo rol `cliente`
+Hoy conviven **13 roles modernos** con **3 legacy** (`admin`, `operador`, `viewer`). En base de datos siguen "vivos":
 
-`has_role(_, 'operador')` incluye `coordinador_logistico`, y `has_role(_, 'viewer')` incluye `contador`, así que esos roles sí pasan. **Pero `agente_carga` no está en ningún grupo**, así que la RPC `get_embarque_full` devuelve `documentos: []` para ellos aunque el embarque sí aparezca.
+- `organization_members`: 3 filas con rol legacy `admin` (de 13 totales).
+- `user_roles`: 1 fila legacy `admin` (de 18 totales).
 
-Roles activos hoy en `user_roles`: `coordinador_logistico` (6), `cliente` (3), `admin_org` (3), `contador` (2), **`agente_carga` (2)**, `admin` (1), `super_admin` (1). Los dos usuarios con `agente_carga` son los afectados.
+El puente entre viejo y nuevo se sostiene con `ROLE_EQUIVALENTS` en `src/lib/auth/roleHierarchy.ts` (espejo del `CASE` en `public.has_role()`). Cada vez que alguien toca esa tabla o el enum, aparecen bugs sutiles: chequeos que asumen `admin` como super-poder dentro del tenant, o RPCs que no reconocen el rol moderno equivalente. Ejemplo reciente que ya vimos: `LC_CXP_UUID_NO_VERIFICADO` y el bug de "app_role: owner/contabilidad" venían de este drift.
 
-El mismo hueco existe en las tablas hermanas: `notas_embarque`, `conceptos_venta`, `conceptos_costo` y `facturas` (todas también devueltas por `get_embarque_full`). Un agente que entra al detalle ve el header pero los tabs Documentos, Notas, Costos, Facturación aparecen vacíos.
+**Meta**: dejar un único conjunto canónico de roles modernos, sin ambigüedad, y una UI de administración que no permita reintroducir legacy.
 
-Analogía: al agente le dimos llave para entrar a la bodega (embarque), pero no a los cajones de adentro (documentos, notas, facturas). Vemos la bodega vacía, no porque no haya cosas, sino porque no puede abrir los cajones.
+## Plan por fases (bajo esfuerzo → alto valor)
 
-## Alcance del fix
+### Fase 1 — Congelar legacy y volverlo visible (rápido, sin riesgo)
 
-Sólo lectura. No tocar UI, no cambiar quién puede editar. Es una migración SQL que agrega políticas SELECT análogas a "Agente read own embarques" para las tablas hijas.
+- Marcar `admin`, `operador`, `viewer` como **deprecated** en `roleCatalog.ts` (ya lo están en copy, pero añadir flag `deprecated: true` consumible por UI).
+- En la tabla de Gestión de Usuarios (`/admin` y `admin_org` local): pintar badge amarillo "Rol legado — migrar" al lado del rol, con tooltip que sugiere el rol moderno equivalente (mapa `LEGACY_TO_MODERN`).
+- Bloquear en el frontend la **asignación** de roles legacy en cualquier selector nuevo (ya está a nivel de `ASSIGNABLE_ROLES_ADMIN_ORG`, revisar que ningún dropdown los liste todavía).
 
-## Cambios
+### Fase 2 — Migración de datos (una sola pasada, reversible)
 
-Una migración con `CREATE POLICY ... FOR SELECT` en cada tabla hija, usando el mismo patrón: sólo si el `embarque_id` pertenece a un embarque cuyo `agente` coincide con `current_agente_id()` y `organization_id = current_agente_org()`.
+- RPC nueva `migrar_roles_legacy_dry_run()` → devuelve JSON con los 4 usuarios afectados, el rol legacy actual y el rol moderno propuesto según este mapa:
+  - `admin` → `admin_org`
+  - `operador` → `coordinador_logistico`
+  - `viewer` → `customer_service`
+- Tarjeta nueva en `/admin` (super admin) al lado de `BackfillLegacyCard`: **"Migración de roles legacy"** con vista previa, botón "Ejecutar migración" y confirmación tipeada.
+- RPC `migrar_roles_legacy_ejecutar()` que actualiza `organization_members` y `user_roles` en una transacción, y deja registro en `bitacora_actividad` (quién, cuándo, mapa aplicado).
 
-Tablas a cubrir:
-1. `documentos_embarque` — política `Agente read own documentos`
-2. `notas_embarque` — política `Agente read own notas` (tipo `nota` y `cambio_estado`, igual que la de cliente)
-3. `conceptos_venta` — política `Agente read own conceptos_venta`
-4. `conceptos_costo` — política `Agente read own conceptos_costo`
-5. `facturas` — política `Agente read own facturas`
+### Fase 3 — Blindaje en base de datos
 
-## Verificación
+- Añadir CHECK / trigger en `organization_members` y `user_roles` que **rechace inserts** de valores en `LEGACY_ROLES` una vez la migración quede en 0. Updates de filas existentes siguen permitidos por si hay que revertir.
+- Test SQL de invariante en `supabase/tests/schema-invariants.sql`: "no legacy roles in production tables".
 
-- Correr `set_config('request.jwt.claims', ...)` simulando un usuario `agente_carga` y comprobar que `SELECT` sobre `documentos_embarque` para uno de sus embarques devuelve filas.
-- Confirmar que un `agente_carga` de otra org sigue viendo cero (aislamiento tenant).
-- Confirmar que roles ya funcionales (`admin_org`, `coordinador_logistico`, `contador`, `cliente`) no cambian su acceso.
-- Bump `APP_VERSION` y entrada en `CHANGELOG.md`.
+### Fase 4 — Limpieza del enum (opcional, después de Fase 3 estable)
+
+- Los valores del enum no se pueden borrar en Postgres, pero podemos:
+  - Eliminar las ramas legacy de `ROLE_EQUIVALENTS` y del `CASE` en `public.has_role()` (ya no hará falta).
+  - Dejar tests en `roleHierarchy.invariant.test.ts` que verifiquen que el mapa TS no contiene claves legacy.
+  - Ocultar completamente los roles legacy de todos los catálogos UI.
+
+### Fase 5 — Mejoras estructurales de UX de usuarios
+
+Independientes de legacy, pero directamente relacionadas con "menos bugs de roles":
+
+1. **Vista única "Usuarios y roles"** por organización con: email, rol actual, último login, estado (activo/invitado/deshabilitado), acciones (cambiar rol, resetear password, desactivar).
+2. **Historial de cambios de rol** por usuario (tabla `role_change_log` con `user_id`, `from_role`, `to_role`, `changed_by`, `at`, `motivo`). Hoy quedan sueltos en bitácora.
+3. **Selector de rol con explicación**: dropdown agrupado (ya lo tenemos con `ASSIGNABLE_ROLE_GROUPS`) + descripción `ROLE_DESCRIPTIONS` visible bajo el select para que el admin del tenant elija con contexto.
+4. **Simulador "¿qué verá este usuario?"**: al asignar un rol, mostrar en un panel lateral las secciones del sidebar que se activarán/desactivarán. Reutiliza `useAppSidebarSections` con el rol propuesto.
+5. **Invitaciones con expiración**: en vez de crear usuario + password, emitir un magic-link por email vía edge function `user-management` con vigencia 72h.
 
 ## Detalles técnicos
 
-```sql
-CREATE POLICY "Agente read own documentos"
-  ON public.documentos_embarque FOR SELECT
-  USING (
-    has_role(auth.uid(), 'agente_carga'::app_role)
-    AND EXISTS (
-      SELECT 1 FROM embarques e
-      JOIN costeo_agentes a ON a.id = current_agente_id()
-      WHERE e.id = documentos_embarque.embarque_id
-        AND e.organization_id = current_agente_org()
-        AND lower(trim(e.agente)) = lower(trim(a.nombre))
-    )
-  );
-```
+- **Archivos frontend afectados**: `src/features/admin/domain/roles/roleCatalog.ts`, `src/features/admin/hooks/usuario/useUsuarios.ts`, `src/features/admin/components/BackfillLegacyCard.tsx` (nueva tarjeta gemela), `src/lib/auth/roleHierarchy.ts` (limpieza en Fase 4), `src/components/layout/sidebarItems.ts` (verificar que ningún ítem dependa exclusivamente de `admin` legacy).
+- **Migraciones SQL nuevas**:
+  - `xxxx_migrar_roles_legacy_rpcs.sql` — `migrar_roles_legacy_dry_run()` + `migrar_roles_legacy_ejecutar()` (SECURITY DEFINER, super_admin only, `SET search_path = public`).
+  - `xxxx_bloquear_inserts_legacy.sql` — trigger `BEFORE INSERT` en `organization_members` y `user_roles`.
+  - `xxxx_role_change_log.sql` — tabla + trigger `AFTER UPDATE OF role`.
+- **Tests**: extender `roleHierarchy.invariant.test.ts` con "el mapa TS y `has_role()` coinciden" (ya existe) + nuevo test "no legacy en tablas de producción" en `schema-invariants.sql`.
+- `APP_VERSION` bump + entrada en `CHANGELOG.md` por fase.
 
-Se repite el patrón para las otras cuatro tablas cambiando el nombre y la columna `embarque_id`. Para `notas_embarque` se restringe adicionalmente por `tipo IN ('nota','cambio_estado')` para no filtrar bitácora interna, siguiendo el precedente de la política de cliente.
+## Recomendación de arranque
 
-## Fuera de alcance
+Empezar por **Fase 1 + Fase 2** en un solo PR: el impacto real (4 filas) es mínimo, cierra la puerta al drift y desbloquea Fase 3–4 sin riesgo. Fase 5 la podemos priorizar según qué duela más al usuario (historial vs. invitaciones vs. simulador).
 
-- No agrego permisos de INSERT/UPDATE/DELETE para agentes — sólo lectura, que es la queja reportada.
-- No refactorizo `get_embarque_full` (la RPC es correcta; el problema estaba en las RLS de las tablas base).
+¿Confirmas que arranque con Fase 1 + 2, o prefieres que ataquemos primero alguna mejora de Fase 5?

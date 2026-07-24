@@ -134,3 +134,26 @@ export const obtenerEtiquetaRol = (role: string | null | undefined): string => {
   return ROLE_LABELS[role as AppRole] ?? role;
 };
 
+/**
+ * Mapa canónico legacy → moderno. Debe coincidir con el mapa usado por las
+ * RPCs `migrar_roles_legacy_dry_run` / `_ejecutar` en la base de datos.
+ */
+export const LEGACY_TO_MODERN: Record<string, AppRole> = {
+  admin: "admin_org",
+  operador: "coordinador_logistico",
+  viewer: "customer_service",
+} as const;
+
+/** Devuelve `true` si el rol es uno de los tres legacy (`admin`, `operador`, `viewer`). */
+export const esRolLegacy = (role: string | null | undefined): boolean => {
+  if (!role) return false;
+  return (LEGACY_ROLES as readonly string[]).includes(role);
+};
+
+/** Rol moderno sugerido para un rol legacy. Devuelve `null` si el rol no es legacy. */
+export const rolModernoSugerido = (role: string | null | undefined): AppRole | null => {
+  if (!role) return null;
+  return LEGACY_TO_MODERN[role] ?? null;
+};
+
+
