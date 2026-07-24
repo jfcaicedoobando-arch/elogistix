@@ -58,6 +58,29 @@ env:
   VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
   VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
   E2E_BLOB: "1"
+  # v13.312.15 — Exponemos las variables gating de specs 07–12/25 y multi-tenant
+  # (26) para que, si el proyecto de staging registra los secrets, los specs
+  # dejen de saltarse silenciosamente. Si el secret está vacío el spec skipea
+  # con el motivo original (test.skip(!X, "…")). Ninguna se marca `required`
+  # aquí para no romper el workflow cuando el tenant todavía no los tiene.
+  E2E_HAS_SEED: ${{ secrets.E2E_HAS_SEED }}
+  E2E_FISCAL: ${{ secrets.E2E_FISCAL }}
+  E2E_PROFORMA_NUMERO: ${{ secrets.E2E_PROFORMA_NUMERO }}
+  E2E_HAS_AUDIT_DATA: ${{ secrets.E2E_HAS_AUDIT_DATA }}
+  E2E_ADMIN_ORG: ${{ secrets.E2E_ADMIN_ORG }}
+  E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID: ${{ secrets.E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID }}
+  E2E_COTIZACION_ACEPTADA_ID: ${{ secrets.E2E_COTIZACION_ACEPTADA_ID }}
+  E2E_PROVEEDOR_ID: ${{ secrets.E2E_PROVEEDOR_ID }}
+  E2E_EMBARQUE_PARA_CXP_ID: ${{ secrets.E2E_EMBARQUE_PARA_CXP_ID }}
+  # Multi-tenant (spec 26 — corre en el job `multi-tenant`).
+  E2E_MT_A_EMAIL: ${{ secrets.E2E_MT_A_EMAIL }}
+  E2E_MT_A_PASSWORD: ${{ secrets.E2E_MT_A_PASSWORD }}
+  E2E_MT_B_EMAIL: ${{ secrets.E2E_MT_B_EMAIL }}
+  E2E_MT_B_PASSWORD: ${{ secrets.E2E_MT_B_PASSWORD }}
+  # Cuando E2E_STRICT_FIXTURES=1, `requireFixture()` de testBase promueve los
+  # skips por fixture ausente a fallo (ver `e2e/fixtures/requireFixture.ts`).
+  # En CI lo dejamos apagado por default; se activa vía dispatch input.
+  E2E_STRICT_FIXTURES: ${{ github.event.inputs.strict_fixtures || '' }}
 
 jobs:
   # Solo corre la suite si post-deploy-smoke finalizó "success"; si el smoke
