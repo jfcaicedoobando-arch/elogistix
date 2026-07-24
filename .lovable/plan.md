@@ -1,68 +1,88 @@
-# Roadmap post-release · Olas 1–3
 
-Fuente: `instrucciones-lovable-release-2.md` + estado actual verificado en `CHANGELOG.md` (v13.312.20). El release C1 ya cerró (v13.312.18); lo que queda es deuda no bloqueante rastreada.
+# Auditoría de CPU — Lovable Cloud
 
-## Estado actual (verificado)
+## Diagnóstico (verificado con `db_health` + `slow_queries` + `pg_stat_user_tables`)
 
-- **Ola 1 · item 2** (RHF en 4 formularios): 2/4 hechos → `SignupForm`, `ResetPassword` (v13.312.19). Faltan los 2 pesados de CxP.
-- **Ola 1 · item 3** (`useMutationWithFeedback`): 6/6 del primer batch hechos en portal/notificaciones/auditoría (v13.312.20). Faltan los 6 focos de alto volumen que menciona el doc.
-- **Ola 1 · item 1** (wizard hidratación): 0/1. Es la pieza más frágil del frontend.
-- **Ola 2** y **Ola 3**: 0 avance.
+**El backend está sano estructuralmente** (memoria 46%, disco 16%, conexiones 16/60). El CPU se va en **volumen de llamadas repetidas** y **transacciones que se abortan**, no en datos pesados.
 
-## Ola 1 — cerrar pendientes (prioridad alta)
+Analogía: la base de datos no está llena, pero suena el timbre miles de veces por minuto — cada timbrazo es barato, sumados agotan al portero.
 
-**A. Wizard hidratación** — `useHidratacionEditarEmbarque.ts`
-- Hoy: 4 `useEffect` + 4 flags + refs mutados en render (líneas 51-58) + deps `[p]`. Frágil, causa loops.
-- Fix: reemplazar por `defaultValues`/`reset` de RHF alimentado del query del embarque en `useEditarEmbarqueWizard`.
-- Red de seguridad **antes** de tocar: tests conductuales por tab del wizard (Datos generales, Ruta, Contenedores, Costeo, Documentos) que fijen el comportamiento actual de hidratación.
+### 🔥 Top consumidores (últimos 7 días, tiempo total CPU)
 
-**B. Formularios CxP a RHF** — `useNuevaFacturaProveedorForm` (10 `useState`) + `useEditarFacturaProveedorForm` (5 `useState`)
-- El schema zod (`buildFacturaFormSchema`) y validador (`validateFactura`) ya existen — solo falta migrar el estado a `useForm`.
-- Complicación: el hook orquesta CFDI XML parse + reducer de vínculos + PDF-IA + TC-DOF. Migrar el form no puede romper esos side effects.
-- Estrategia: extraer el estado no-form (parse/vinculos/refs) fuera del `useForm`; el form solo gobierna campos editables.
-- Red: snapshot conductual del flujo CFDI (subida XML → autopoblado → guardado) antes del refactor.
+| # | Consulta | Llamadas | Tiempo total | Problema |
+|---|---|---:|---:|---|
+| 1 | `auditoria_revisiones` list (created_at DESC) | 5 164 | 190 s | Volumen + falta índice `created_at` |
+| 2 | `conceptos_costo` con LATERAL join a `embarques` | 916 | 155 s | LATERAL con `LIMIT 1` innecesario |
+| 3 | RPC `sidebar_alert_counts()` | **9 369** (3 589 + 5 780) | 218 s | Se llama en cada montaje del layout |
+| 4 | `conceptos_venta` por embarque_id ANY() | 1 778 | 106 s | Sin índice compuesto óptimo |
+| 5 | `bitacora_actividad` (accion <>) | 135 | 78 s | Sin índice sobre `accion` |
+| 6 | `facturas` con LATERAL a pagos + NC | 2 097 | 74 s | LATERAL costoso, sin `organization_id` en WHERE |
+| 7 | RPC `operadores_distintos()` | 1 885 | 68 s | Se llama demasiado, sin cache |
+| 8 | `auditoria_revisiones` (segunda variante) | 2 382 | 57 s | Mismo problema #1 |
+| 9 | RPC `cartera_pendiente()` | 125 | 41 s | Cara individualmente (330 ms media) |
 
-**C. Migración de 6 hooks de alto volumen a `useMutationWithFeedback`** — foco de fugas de error crudo
-- `useCosteoTarifas` (6 mutaciones), `useCotizacionMutations` (5), `useClientes` (5), `useDocumentoEmbarqueMutations` (4), `useTimbrarFactura` (4), `useNotasCreditoProveedor` (4) = 28 callsites de los 193 totales.
-- Mecánico: aplicar el patrón ya usado en portal/notificaciones. Tests conductuales por hook (éxito → invalidate + toast; error → `notifyError` con título correcto).
-- Excluir casos con branching complejo (mapeo 402/429, éxitos parciales) como se hizo con `useExplicarHallazgo`/`useMarcarRevisadosBulk`.
+### 🚨 Bandera roja adicional
+- **82 323 240 transacciones abortadas** desde el último boot. Esto significa que algún endpoint lanza excepciones sin parar (probablemente RLS o `RAISE EXCEPTION` en trigger). Cada rollback consume CPU aunque no persista datos.
 
-## Ola 2 — 2–4 semanas post-release
+## Plan de remediación
 
-**D. Complexity disables sin justificar (3)** — `DialogTimbrarFactura` (CC=27), `TabPnl` (CC=27), `TabCierre` (CC=18): refactor o comentario justificante. Limpiar 3 entradas muertas de la allowlist (`FacturasMasivasToolbar`, `dashboardEjecutivo`, `facturapi-emitir` ya no violan). Burn-down real de `describirEntrada` (CC=24, hoy solo suprimido).
+### Fase 1 — Reducir volumen de llamadas (mayor impacto, menor riesgo)
 
-**E. Prop drilling residual (3 componentes)** — `EmbarqueDetalleHeaderActions` (23 props → consumir `useEmbarqueEstadoActions` directo), `PagoProveedorFormBody` (24), `TabFacturasEmitidas` (23).
+1. **`sidebar_alert_counts` + `adminPendientes` — deduplicar montajes.**
+   - `useSidebarAlerts` ya tiene `staleTime: 5 min`, pero se dispara ~9 000 veces. Investigar si el hook se monta en múltiples subárboles (sidebar + header + comandos), o si hay `queryKey` con dependencias inestables.
+   - Acción: consolidar en un provider único a nivel `AppLayout` (`useSidebarAlerts` una sola instancia) y añadir `refetchOnWindowFocus: false` + `refetchOnMount: false`.
 
-**F. Shim `lib/domain/bitacora/registrar.ts`** — migrar los 12 callers productivos a `@/services/bitacora/registrar` y borrar el shim.
+2. **`operadores_distintos()` — cachear más agresivo.**
+   - Este RPC devuelve una lista casi estática (usuarios). Elevar `staleTime` a 15 min y `refetchOnMount: 'always' → false`.
 
-**G. Backend chico** — registrar 5 helpers (`_audit_embarques_*`, `_convertir_proformas_*`, `_crear_embarque_*`, `_calcular_demoras_*`) en `schema-invariants.sql`; sincronizar header/grants del canónico `supabase/schema/cxp/guard_pago_proveedor.sql` (baseline `20260723223436` + REVOKE/GRANT del H6).
+3. **`auditoria_revisiones` (dashboard admin) — throttle.**
+   - Verificar si algún componente lo consulta en cada render del panel `/auditoria`. Añadir `staleTime: 60 s` mínimo si no lo tiene.
 
-**H. Regla H7 en `scripts/audit-migrations.ts`** — todo `RAISE` nuevo sin `LC_`+`ERRCODE` falla el audit (cobertura LC_ estancada en 21.5%).
+### Fase 2 — Índices faltantes (migración SQL)
 
-## Ola 3 — boy-scout (cuando haya oxígeno)
+```sql
+-- Ordenamientos frecuentes por created_at DESC
+CREATE INDEX IF NOT EXISTS idx_auditoria_revisiones_created_at
+  ON public.auditoria_revisiones (created_at DESC);
 
-**I.** 4 clones jscpd: `ConceptoRowMXN/USD` (parametrizar por moneda), `Portal*MobileFilters`, `CosteoNavieras ↔ AgenteGarantias`, `BandejaPorEnviar ↔ Timbrar`. Fusionar `MobileFilterSheet`/`MobileFiltersSheet`.
+-- bitacora_actividad — filtro por accion <> ... ORDER BY created_at DESC
+CREATE INDEX IF NOT EXISTS idx_bitacora_accion_created_at
+  ON public.bitacora_actividad (accion, created_at DESC);
 
-**J.** Knip burn-down (22 exports / 106 tipos); quemar SONNER-LEGACY (82 archivos en olas); CROSS_FEATURE (44 entradas, top: admin→configuracion 8, profit→dashboardEjecutivo 8).
+-- conceptos_venta — filtro común deleted_at IS NULL + embarque_id ANY()
+CREATE INDEX IF NOT EXISTS idx_conceptos_venta_embarque_activo
+  ON public.conceptos_venta (embarque_id)
+  WHERE deleted_at IS NULL;
 
-**K.** Layout: `dashboardEjecutivo` a convención única; `compras/matching` → `compras/domain/matching`; absorber `crm/lib` + `marketing/lib`.
+-- facturas — dashboard "por vencer"
+CREATE INDEX IF NOT EXISTS idx_facturas_org_estado_vencimiento
+  ON public.facturas (organization_id, estado, fecha_vencimiento)
+  WHERE deleted_at IS NULL;
+```
 
-**L.** Cosméticos: flags redundantes `--coverage.thresholds.*=0`; re-export huérfano `LC_CODE_MESSAGES`; `.env` a `.gitignore`; Prettier; react-hooks v7 por dominio; memo trivial `Cxp.tsx:64`; `Onboarding`/`ClaimPendingBanner` → `useMutationWithFeedback`.
+Antes de crear cada índice: correr `EXPLAIN (ANALYZE, BUFFERS)` para confirmar Seq Scan; después, re-EXPLAIN para verificar uso del índice.
 
-## Guardarraíles activos (respetar en cada PR)
+### Fase 3 — Investigar rollbacks masivos (82M)
 
-- Ciclos type-only: **≤15** (madge). Rechazar PR que agregue uno nuevo.
-- Toda migración que toque triggers/funciones debe actualizar `supabase/tests/schema-invariants.sql` en el mismo PR (CI truena si no).
-- Cada Ola bumpea `APP_VERSION` + entrada en `CHANGELOG.md` con analogía y "pendientes" explícitos si aplica.
+- Revisar `edge_function_logs` y logs de Postgres buscando `RAISE EXCEPTION` frecuente o errores `LC_*`.
+- Sospechosos probables: triggers de coherencia CxP/proformas, RLS de tablas expuestas al portal cliente, o un cron/webhook que reintenta ciegamente.
+- Acción: agregar consulta a `pg_stat_database.xact_rollback` en dos momentos separados para medir la tasa real, luego revisar Sentry por errores server-side con alto volumen.
 
-## Orden sugerido de ejecución
+### Fase 4 — Optimización de LATERAL joins (opcional, tras Fase 1-3)
 
-1. **C** primero (mecánico, alto ROI en telemetría de errores).
-2. **B** con red conductual (bloquea confianza en CxP).
-3. **A** con red conductual por tab (mayor riesgo, mejor último de Ola 1).
-4. Ola 2 en el orden **G → H → D → E → F** (backend/CI antes que refactors visuales).
-5. Ola 3 oportunista.
+- Reescribir queries auto-generadas por PostgREST que usan LATERAL con `LIMIT 1 OFFSET 0` — normalmente vienen de embeds `select('*, relacion(campo)')` que podrían resolverse con RPC + join plano.
+- Target: `conceptos_costo → embarques` y `facturas → pagos_factura + factura_notas_credito`.
 
-## Nota de persistencia
+## Detalles técnicos
 
-El plan vive en `.lovable/plan.md`, que está en `.gitignore` — se pierde al cerrar sesión. Si querés que persista en el repo, avisá y quito la entrada del `.gitignore`.
+- Ninguna operación bloquea la app; todas se pueden aplicar incrementalmente.
+- Los índices en tablas <10k filas no son urgentes, pero eliminan Seq Scan que multiplicado por miles de llamadas suma CPU.
+- **No** se recomienda todavía `resize_compute`: la saturación no viene de RAM/conexiones sino de patrón de acceso. Primero optimizar, luego reevaluar `db_health`.
+
+## Entregable
+
+Un solo release `v13.312.23` con:
+1. Consolidación de hooks de sidebar y cachés (Fase 1).
+2. Migración SQL con los 4 índices (Fase 2).
+3. Reporte de rollbacks + issue de seguimiento si se identifica trigger culpable (Fase 3).
+4. Fase 4 se pospone a un segundo release si tras aplicar 1-3 el CPU sigue alto.
