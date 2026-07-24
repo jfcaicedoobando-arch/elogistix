@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { queryKeys } from "@/lib/query";
 import {
   migrarRolesLegacyDryRun,
   migrarRolesLegacyEjecutar,
@@ -12,7 +13,7 @@ import {
   type MigrarRolesLegacyResult,
 } from "@/features/admin/services/migrarRolesLegacy";
 
-const QUERY_KEY = ["admin", "migrarRolesLegacy", "dryRun"] as const;
+const QUERY_KEY = queryKeys.admin.migrarRolesLegacyDryRun;
 
 export function useMigrarRolesLegacyDryRun(enabled: boolean) {
   return useQuery<MigrarRolesLegacyDryRun>({
@@ -33,8 +34,8 @@ export function useMigrarRolesLegacy(options: UseMigrarRolesLegacyOptions = {}) 
     mutationFn: migrarRolesLegacyEjecutar,
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
-      qc.invalidateQueries({ queryKey: ["usuarios"] });
-      qc.invalidateQueries({ queryKey: ["admin", "orgMembers"] });
+      qc.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+      qc.invalidateQueries({ queryKey: queryKeys.admin.orgMembersAll });
       notifySuccess(toast, {
         title: `Migración completada: ${data.total_migrados} rol(es) actualizado(s).`,
       });
