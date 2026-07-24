@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.312.13] - 2026-07-24
+- **chore(audit · migraciones) · Bump baseline del auditor `20260723223436` → `20260724180738` (FIX-H6-02).** Origen: `bun run audit:migrations` seguía marcando 2 violaciones H6 sobre `20260724180737_*.sql` (función `ensure_demo_membership` sin `REVOKE`/`GRANT EXECUTE`), a pesar de que la migración correctiva de v13.312.12 ya aplicó los grants correctos en BD. El auditor escanea archivo por archivo y no reconoce fixes cross-file, así que — siguiendo el precedente documentado en `docs/migrations-hygiene.md` (FIX-H6-01) — se sube el baseline un segundo después del archivo problemático. La postura de seguridad real no cambia: la función en BD ya tiene `REVOKE ALL ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO service_role`. Analogía: el corrector seguía subrayando la hoja vieja aunque ya la corregimos en otra parte del cuaderno; le dijimos "de aquí para atrás ya está auditado, empieza a revisar desde mañana".
+
+
 ## [13.312.12] - 2026-07-24
 - **fix(migraciones · H6) · Agrega `REVOKE`/`GRANT` a `ensure_demo_membership(uuid)`.** Origen: `audit:migrations` falló en CI con 2 violaciones H6 sobre la migración `20260724180737_*.sql` (creada en v13.312.11) — la función `SECURITY DEFINER` no tenía `REVOKE ALL ... FROM PUBLIC` ni `GRANT EXECUTE ... TO service_role`. Nueva migración correctiva re-aplica la función con los grants correctos (sólo `service_role` puede ejecutarla; se quita acceso a `PUBLIC` y `anon`). Analogía: la puerta interna del gimnasio demo tenía la cerradura nueva pero seguía sin lista de quién puede entrar; ahora sólo el conserje del backend tiene la llave.
 
