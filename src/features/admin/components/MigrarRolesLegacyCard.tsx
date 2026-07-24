@@ -13,7 +13,7 @@
  * migración" con doble confirmación tipeada.
  */
 import { useState } from "react";
-import { ShieldCheck, Loader2, CheckCircle2, RefreshCcw } from "lucide-react";
+import { ShieldCheck, Loader2, RefreshCcw } from "lucide-react";
 import {
   useMigrarRolesLegacy,
   useMigrarRolesLegacyDryRun,
@@ -25,9 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmActionDialog } from "@/components/shared/dialogs/ConfirmActionDialog";
-import { formatFechaHora } from "@/lib/formatters/dates";
-import { ROLE_LABELS } from "@/features/admin/domain/roles/roleCatalog";
-import type { AppRole } from "@/types/appRole";
+import { MigrarRolesLegacyPreviewTable } from "./MigrarRolesLegacyPreviewTable";
+import { MigrarRolesLegacyResultPanel } from "./MigrarRolesLegacyResultPanel";
 
 export function MigrarRolesLegacyCard() {
   const [open, setOpen] = useState(false);
@@ -44,10 +43,6 @@ export function MigrarRolesLegacyCard() {
   });
 
   const total = preview.data?.total_afectados ?? 0;
-  const items = [
-    ...(preview.data?.organization_members ?? []).map((r) => ({ ...r, fuente: "organization_members" as const })),
-    ...(preview.data?.user_roles ?? []).map((r) => ({ ...r, fuente: "user_roles" as const })),
-  ];
 
   return (
     <Card>
@@ -63,8 +58,7 @@ export function MigrarRolesLegacyCard() {
           <code className="bg-muted px-1 rounded">operador</code> y{" "}
           <code className="bg-muted px-1 rounded">viewer</code> por sus equivalentes
           modernos en <strong>membresías de organización</strong> y en{" "}
-          <strong>roles globales</strong>. Es la única forma soportada de crear
-          usuarios con esos nombres.
+          <strong>roles globales</strong>.
         </p>
 
         <div className="rounded-md border bg-muted/30 p-3 text-xs space-y-1">
@@ -76,20 +70,16 @@ export function MigrarRolesLegacyCard() {
           </ul>
         </div>
 
-        {preview.isLoading && (
+        {preview.isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Calculando registros afectados…
           </div>
-        )}
-
-        {preview.isError && (
+        ) : preview.isError ? (
           <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
             No se pudo cargar la vista previa. Verifica que estás firmado como super_admin.
           </div>
-        )}
-
-        {!preview.isLoading && !preview.isError && preview.data && (
-          <>
+        ) : preview.data ? (
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Badge variant={total > 0 ? "default" : "secondary"}>
                 {total} registro(s) por migrar
@@ -104,38 +94,7 @@ export function MigrarRolesLegacyCard() {
                 <RefreshCcw className={`h-3.5 w-3.5 ${preview.isFetching ? "animate-spin" : ""}`} />
               </Button>
             </div>
-
-            {total > 0 && (
-              <div className="rounded-md border max-h-52 overflow-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/50 sticky top-0">
-                    <tr>
-                      <th className="text-left px-2 py-1 font-medium">Fuente</th>
-                      <th className="text-left px-2 py-1 font-medium">Usuario</th>
-                      <th className="text-left px-2 py-1 font-medium">Organización</th>
-                      <th className="text-left px-2 py-1 font-medium">Rol actual</th>
-                      <th className="text-left px-2 py-1 font-medium">Rol propuesto</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((it) => (
-                      <tr key={`${it.fuente}-${it.id}`} className="border-t">
-                        <td className="px-2 py-1 text-muted-foreground">{it.fuente}</td>
-                        <td className="px-2 py-1 font-mono text-2xs">{it.user_id.slice(0, 8)}…</td>
-                        <td className="px-2 py-1 text-muted-foreground">{it.organizacion ?? "—"}</td>
-                        <td className="px-2 py-1">
-                          <Badge variant="outline" className="text-2xs">{it.rol_actual}</Badge>
-                        </td>
-                        <td className="px-2 py-1">
-                          <Badge className="text-2xs">{ROLE_LABELS[it.rol_propuesto as AppRole] ?? it.rol_propuesto}</Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
+            <MigrarRolesLegacyPreviewTable data={preview.data} />
             <Button
               variant="outline"
               onClick={() => setOpen(true)}
@@ -144,26 +103,10 @@ export function MigrarRolesLegacyCard() {
               {run.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Ejecutar migración
             </Button>
-          </>
-        )}
-
-        {result && (
-          <div className="rounded-md border bg-success/5 border-success/30 p-3 text-xs space-y-1">
-            <div className="flex items-center gap-1 font-semibold text-success">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Último resultado ({formatFechaHora(result.ejecutado_at)})
-            </div>
-            <ul className="list-disc pl-5 text-muted-foreground">
-              <li>Total migrados: <strong>{result.total_migrados}</strong></li>
-              <li>
-                organization_members — admin→admin_org: {result.organization_members.admin_a_admin_org}, operador→coordinador: {result.organization_members.operador_a_coordinador_logistico}, viewer→customer_service: {result.organization_members.viewer_a_customer_service}
-              </li>
-              <li>
-                user_roles — admin→admin_org: {result.user_roles.admin_a_admin_org}, operador→coordinador: {result.user_roles.operador_a_coordinador_logistico}, viewer→customer_service: {result.user_roles.viewer_a_customer_service}
-              </li>
-            </ul>
           </div>
-        )}
+        ) : null}
+
+        {result && <MigrarRolesLegacyResultPanel result={result} />}
 
         <ConfirmActionDialog
           open={open}
@@ -178,10 +121,8 @@ export function MigrarRolesLegacyCard() {
             <>
               Esta acción actualiza <strong>{total}</strong> registro(s) en{" "}
               <code className="bg-muted px-1 rounded">organization_members</code> y{" "}
-              <code className="bg-muted px-1 rounded">user_roles</code> de TODAS las
-              organizaciones. Los roles nuevos entrarán en vigor inmediatamente. La
-              operación es idempotente: correrla dos veces no hace daño, pero no es
-              automáticamente reversible.
+              <code className="bg-muted px-1 rounded">user_roles</code>. Es idempotente
+              pero no automáticamente reversible.
             </>
           }
         >
