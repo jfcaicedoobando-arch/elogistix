@@ -6,7 +6,7 @@
  */
 import { translateLcCode, stripLcCode } from "./lcCodes";
 
-export { translateLcCode, stripLcCode, LC_CODE_MESSAGES } from "./lcCodes";
+export { translateLcCode, stripLcCode } from "./lcCodes";
 
 const FRIENDLY_ERROR_MESSAGES: Array<{ match: RegExp; message: string }> = [
   {
