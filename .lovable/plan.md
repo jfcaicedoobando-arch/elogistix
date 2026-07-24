@@ -1,68 +1,76 @@
+# Condición de release C1 — Docs canónicos
 
-# Mejorar el manejo de roles y usuarios en el ERP
+Origen: `auditoria-arquitectura-r3-release-readiness-2026-07-24.md` (veredicto **GO con 1 condición**). Todo el resto del roadmap (Olas 1-3) queda **post-release** y **no** se toca en este plan.
 
-## Diagnóstico (verificado)
+## Contexto verificado (contra HEAD)
 
-Hoy conviven **13 roles modernos** con **3 legacy** (`admin`, `operador`, `viewer`). En base de datos siguen "vivos":
+- `src/pages/` → **no existe** (la topología real vive en `src/features/`, 32 módulos: admin, auditoria, auth, bandejas, catalogos, cliente, comisiones, compras, configuracion, costeo, … ).
+- `src/contexts/` → **no existe** (movido a `src/lib/contexts/`: Auth, Breadcrumb, Organization, Theme).
+- `src/hooks/` → solo transversales (`emails/`, `layout/`, `shared/`, `__tests__/`); ya **no** hay `hooks/<dominio>/`.
+- `eslint.config.js` — `CROSS_FEATURE_ALLOWLIST`: **44** entradas (no 43).
+- `eslint.config.js` — bloque `locale-format-legacy`: quedan **2** entradas productivas (`lib/formatters/**`, `lib/date/mx.ts`) → **agotada** para hotspots.
+- `scripts/audit-migrations.ts:47` — `BASELINE = "20260723223436"` (no `20260723180000`).
+- `eslint.config.js:697` — comentario dice `"84 archivos"`; el bloque SONNER-LEGACY real tiene **82** archivos + **6** wrappers autorizados.
+- `docs/arquitectura-auditoria-3-status.md:41` — fila 3.3 marca "❌ Sin cambios", pero el **paso 1 (zod)** ya existe: `useNuevaFacturaProveedorForm.schema.ts` con `buildFacturaFormSchema` + `validateFactura`. Lo pendiente es el paso 2 (migrar el estado a `useForm`).
 
-- `organization_members`: 3 filas con rol legacy `admin` (de 13 totales).
-- `user_roles`: 1 fila legacy `admin` (de 18 totales).
+## Nota sobre los diffs del auditor
 
-El puente entre viejo y nuevo se sostiene con `ROLE_EQUIVALENTS` en `src/lib/auth/roleHierarchy.ts` (espejo del `CASE` en `public.has_role()`). Cada vez que alguien toca esa tabla o el enum, aparecen bugs sutiles: chequeos que asumen `admin` como super-poder dentro del tenant, o RPCs que no reconocen el rol moderno equivalente. Ejemplo reciente que ya vimos: `LC_CXP_UUID_NO_VERIFICADO` y el bug de "app_role: owner/contabilidad" venían de este drift.
+Los archivos `arch-md-c1.diff` y `docs-banners-c1.diff` **no están** en el repo. Aplicamos los mismos cambios directamente con `line_replace`, reproduciendo el efecto descrito por el auditor (sin tocar código de aplicación).
 
-**Meta**: dejar un único conjunto canónico de roles modernos, sin ambigüedad, y una UI de administración que no permita reintroducir legacy.
+---
 
-## Plan por fases (bajo esfuerzo → alto valor)
+## Cambios a aplicar
 
-### Fase 1 — Congelar legacy y volverlo visible (rápido, sin riesgo)
+### 1) `ARCHITECTURE.md` — reescribir §1 "Estructura de carpetas"
 
-- Marcar `admin`, `operador`, `viewer` como **deprecated** en `roleCatalog.ts` (ya lo están en copy, pero añadir flag `deprecated: true` consumible por UI).
-- En la tabla de Gestión de Usuarios (`/admin` y `admin_org` local): pintar badge amarillo "Rol legado — migrar" al lado del rol, con tooltip que sugiere el rol moderno equivalente (mapa `LEGACY_TO_MODERN`).
-- Bloquear en el frontend la **asignación** de roles legacy en cualquier selector nuevo (ya está a nivel de `ASSIGNABLE_ROLES_ADMIN_ORG`, revisar que ningún dropdown los liste todavía).
+Reemplazar la sección `## 1. Estructura de carpetas` completa por la topología **real** verificada contra HEAD:
 
-### Fase 2 — Migración de datos (una sola pasada, reversible)
+- `src/features/` como raíz de dominio (32 módulos con plantilla `routes/ · components/ · hooks/ · services/ · domain/ · types/ · utils/ · queryKeys.ts`).
+- `src/components/` y `src/hooks/` **solo** transversales (shared, ui, layout, emails).
+- `src/lib/` con sus ~24 subdirs, incluyendo `auth/` y `contexts/` (ya no está en `src/contexts/`).
+- Eliminar referencias a `src/pages/`, `src/contexts/`, `src/hooks/<dominio>/` (obsoletas).
+- Mencionar `supabase/schema/` canónico y `supabase/tests/` (invariants + conductual).
+- Anotar la regla cross-feature con allowlist ARCH-DEBT (44 entradas hoy).
 
-- RPC nueva `migrar_roles_legacy_dry_run()` → devuelve JSON con los 4 usuarios afectados, el rol legacy actual y el rol moderno propuesto según este mapa:
-  - `admin` → `admin_org`
-  - `operador` → `coordinador_logistico`
-  - `viewer` → `customer_service`
-- Tarjeta nueva en `/admin` (super admin) al lado de `BackfillLegacyCard`: **"Migración de roles legacy"** con vista previa, botón "Ejecutar migración" y confirmación tipeada.
-- RPC `migrar_roles_legacy_ejecutar()` que actualiza `organization_members` y `user_roles` en una transacción, y deja registro en `bitacora_actividad` (quién, cuándo, mapa aplicado).
+### 2) Banners de OBSOLETO en dos docs de arquitectura
 
-### Fase 3 — Blindaje en base de datos
+Insertar en el **top** de cada archivo un banner que apunte al canónico (`ARCHITECTURE.md`) y marque el documento como histórico:
 
-- Añadir CHECK / trigger en `organization_members` y `user_roles` que **rechace inserts** de valores en `LEGACY_ROLES` una vez la migración quede en 0. Updates de filas existentes siguen permitidos por si hay que revertir.
-- Test SQL de invariante en `supabase/tests/schema-invariants.sql`: "no legacy roles in production tables".
+- `docs/architecture-map.md` — banner "⚠️ OBSOLETO — ver `ARCHITECTURE.md`".
+- `docs/architecture.md` — mismo banner.
 
-### Fase 4 — Limpieza del enum (opcional, después de Fase 3 estable)
+### 3) Corregir 4 números stale (ediciones chicas)
 
-- Los valores del enum no se pueden borrar en Postgres, pero podemos:
-  - Eliminar las ramas legacy de `ROLE_EQUIVALENTS` y del `CASE` en `public.has_role()` (ya no hará falta).
-  - Dejar tests en `roleHierarchy.invariant.test.ts` que verifiquen que el mapa TS no contiene claves legacy.
-  - Ocultar completamente los roles legacy de todos los catálogos UI.
+- `docs/arquitectura-auditoria-3-status.md`:
+  - CROSS_FEATURE_ALLOWLIST: `43` → **`44`**.
+  - locale-format-legacy: `27` → **AGOTADA** (solo `lib/formatters/**` + `lib/date/mx.ts`).
+  - Fila 3.3 (formularios): "❌ Sin cambios" → **paso 1 hecho** (schema zod `buildFacturaFormSchema`); pendiente el paso 2 (RHF `useForm`).
+- `docs/migrations-hygiene.md:4`: baseline `20260723180000` → **`20260723223436`**.
+- `eslint.config.js:~697` (comentario **de línea**, no lógica): `"84 archivos + 7 wrappers"` → **`"82 archivos + 6 wrappers"`**.
 
-### Fase 5 — Mejoras estructurales de UX de usuarios
+## Fuera de alcance (post-release)
 
-Independientes de legacy, pero directamente relacionadas con "menos bugs de roles":
+Todas las Olas 1-3 del roadmap (cascada de hidratación, PR-6 paso 2 RHF, migración a `useMutationWithFeedback`, complexity disables, prop drilling, shim bitácora, backend chico, regla H7, clones jscpd, knip/SONNER/CROSS_FEATURE burn-down, layout pospuesto, cosméticos). Se rastrean pero **no** son bloqueantes del release.
 
-1. **Vista única "Usuarios y roles"** por organización con: email, rol actual, último login, estado (activo/invitado/deshabilitado), acciones (cambiar rol, resetear password, desactivar).
-2. **Historial de cambios de rol** por usuario (tabla `role_change_log` con `user_id`, `from_role`, `to_role`, `changed_by`, `at`, `motivo`). Hoy quedan sueltos en bitácora.
-3. **Selector de rol con explicación**: dropdown agrupado (ya lo tenemos con `ASSIGNABLE_ROLE_GROUPS`) + descripción `ROLE_DESCRIPTIONS` visible bajo el select para que el admin del tenant elija con contexto.
-4. **Simulador "¿qué verá este usuario?"**: al asignar un rol, mostrar en un panel lateral las secciones del sidebar que se activarán/desactivarán. Reutiliza `useAppSidebarSections` con el rol propuesto.
-5. **Invitaciones con expiración**: en vez de crear usuario + password, emitir un magic-link por email vía edge function `user-management` con vigencia 72h.
+## Validación
 
-## Detalles técnicos
+- Los cambios son **solo docs + 1 comentario en `eslint.config.js`** → no hay riesgo de romper lint/tsc/vitest.
+- Verificar tras aplicar: `bun run lint` sigue verde y `docs consistentes con el código`.
+- Bump de `APP_VERSION` + entrada en `CHANGELOG.md` (patch): "docs: condición C1 release — ARCHITECTURE.md §1 al día + banners obsoleto + números stale".
 
-- **Archivos frontend afectados**: `src/features/admin/domain/roles/roleCatalog.ts`, `src/features/admin/hooks/usuario/useUsuarios.ts`, `src/features/admin/components/BackfillLegacyCard.tsx` (nueva tarjeta gemela), `src/lib/auth/roleHierarchy.ts` (limpieza en Fase 4), `src/components/layout/sidebarItems.ts` (verificar que ningún ítem dependa exclusivamente de `admin` legacy).
-- **Migraciones SQL nuevas**:
-  - `xxxx_migrar_roles_legacy_rpcs.sql` — `migrar_roles_legacy_dry_run()` + `migrar_roles_legacy_ejecutar()` (SECURITY DEFINER, super_admin only, `SET search_path = public`).
-  - `xxxx_bloquear_inserts_legacy.sql` — trigger `BEFORE INSERT` en `organization_members` y `user_roles`.
-  - `xxxx_role_change_log.sql` — tabla + trigger `AFTER UPDATE OF role`.
-- **Tests**: extender `roleHierarchy.invariant.test.ts` con "el mapa TS y `has_role()` coinciden" (ya existe) + nuevo test "no legacy en tablas de producción" en `schema-invariants.sql`.
-- `APP_VERSION` bump + entrada en `CHANGELOG.md` por fase.
+## Detalles técnicos (para el modo build)
 
-## Recomendación de arranque
+Archivos a modificar:
 
-Empezar por **Fase 1 + Fase 2** en un solo PR: el impacto real (4 filas) es mínimo, cierra la puerta al drift y desbloquea Fase 3–4 sin riesgo. Fase 5 la podemos priorizar según qué duela más al usuario (historial vs. invitaciones vs. simulador).
+```text
+ARCHITECTURE.md                             (reescribir §1)
+docs/architecture-map.md                    (insertar banner al top)
+docs/architecture.md                        (insertar banner al top)
+docs/arquitectura-auditoria-3-status.md     (3 correcciones puntuales)
+docs/migrations-hygiene.md                  (1 corrección: baseline)
+eslint.config.js                            (1 comentario: 84→82 / 7→6)
+src/constants/appVersion.ts                 (bump patch)
+CHANGELOG.md                                (nueva entrada)
+```
 
-¿Confirmas que arranque con Fase 1 + 2, o prefieres que ataquemos primero alguna mejora de Fase 5?
+Sin migraciones DB. Sin cambios de código de aplicación. Sin cambios en tests.
