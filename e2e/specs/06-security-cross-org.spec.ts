@@ -17,7 +17,9 @@ import { requireFixture } from "../fixtures/requireFixture";
  * imprime un warning en ese caso.
  */
 
-const DUMMY_UUID = "00000000-0000-4000-8000-000000000000";
+// (v13.312.17) Se retiró el fallback a DUMMY_UUID: ahora requireFixture
+// promueve la ausencia del env a skip/fail para evitar falsos verdes.
+
 
 const targets = [
   {
