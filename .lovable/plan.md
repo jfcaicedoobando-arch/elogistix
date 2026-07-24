@@ -1,76 +1,33 @@
-# Condición de release C1 — Docs canónicos
+## Contexto
 
-Origen: `auditoria-arquitectura-r3-release-readiness-2026-07-24.md` (veredicto **GO con 1 condición**). Todo el resto del roadmap (Olas 1-3) queda **post-release** y **no** se toca en este plan.
+Las 5 proformas del CSV están en `estado_proforma = 'pendiente'` sin `factura_id` ni `folio_factura_externa`. Fueron facturadas en el sistema anterior, por lo que los folios (804, 908, 781, 849, 858) no corresponden a facturas actuales en la tabla `facturas` (verifiqué: solo existe un folio 849, pero pertenece a otro cliente — SONOMEDICS, no QUIMCELT).
 
-## Contexto verificado (contra HEAD)
+Como no hay CFDI destino en este sistema, no podemos vincular `factura_id`. La ruta correcta es marcarlas como facturadas externamente usando los campos ya existentes: `folio_factura_externa` y `fecha_facturacion`.
 
-- `src/pages/` → **no existe** (la topología real vive en `src/features/`, 32 módulos: admin, auditoria, auth, bandejas, catalogos, cliente, comisiones, compras, configuracion, costeo, … ).
-- `src/contexts/` → **no existe** (movido a `src/lib/contexts/`: Auth, Breadcrumb, Organization, Theme).
-- `src/hooks/` → solo transversales (`emails/`, `layout/`, `shared/`, `__tests__/`); ya **no** hay `hooks/<dominio>/`.
-- `eslint.config.js` — `CROSS_FEATURE_ALLOWLIST`: **44** entradas (no 43).
-- `eslint.config.js` — bloque `locale-format-legacy`: quedan **2** entradas productivas (`lib/formatters/**`, `lib/date/mx.ts`) → **agotada** para hotspots.
-- `scripts/audit-migrations.ts:47` — `BASELINE = "20260723223436"` (no `20260723180000`).
-- `eslint.config.js:697` — comentario dice `"84 archivos"`; el bloque SONNER-LEGACY real tiene **82** archivos + **6** wrappers autorizados.
-- `docs/arquitectura-auditoria-3-status.md:41` — fila 3.3 marca "❌ Sin cambios", pero el **paso 1 (zod)** ya existe: `useNuevaFacturaProveedorForm.schema.ts` con `buildFacturaFormSchema` + `validateFactura`. Lo pendiente es el paso 2 (migrar el estado a `useForm`).
+## Cambios
 
-## Nota sobre los diffs del auditor
+Migración de datos (tool `supabase--insert`, un solo `UPDATE`):
 
-Los archivos `arch-md-c1.diff` y `docs-banners-c1.diff` **no están** en el repo. Aplicamos los mismos cambios directamente con `line_replace`, reproduciendo el efecto descrito por el auditor (sin tocar código de aplicación).
+| Proforma | folio_factura_externa | fecha_facturacion |
+|---|---|---|
+| PRO-2026-0288 | 804 | 2026-03-30 |
+| PRO-2026-0277 | 908 | 2026-05-27 |
+| PRO-2026-0187 | 781 | 2026-03-10 |
+| PRO-2026-0186 | 849 | 2026-04-24 |
+| PRO-2026-0185 | 858 | 2026-04-28 |
 
----
+Set adicional:
+- `estado_proforma = 'facturada'`
+- `updated_at = now()`
 
-## Cambios a aplicar
+No se toca `factura_id` (queda `NULL` porque no existe CFDI equivalente en el sistema nuevo).
 
-### 1) `ARCHITECTURE.md` — reescribir §1 "Estructura de carpetas"
+## Detalles técnicos
 
-Reemplazar la sección `## 1. Estructura de carpetas` completa por la topología **real** verificada contra HEAD:
+- Un `UPDATE ... FROM (VALUES ...)` sobre `public.proformas` filtrando por `numero IN (...)`.
+- Sin migración de esquema, sin cambios de código, sin bump de `APP_VERSION` (es solo data-fix, análogo a la vinculación previa de v13.308.11).
+- Entrada en `CHANGELOG.md` bajo la versión actual documentando el ajuste de 5 registros heredados.
 
-- `src/features/` como raíz de dominio (32 módulos con plantilla `routes/ · components/ · hooks/ · services/ · domain/ · types/ · utils/ · queryKeys.ts`).
-- `src/components/` y `src/hooks/` **solo** transversales (shared, ui, layout, emails).
-- `src/lib/` con sus ~24 subdirs, incluyendo `auth/` y `contexts/` (ya no está en `src/contexts/`).
-- Eliminar referencias a `src/pages/`, `src/contexts/`, `src/hooks/<dominio>/` (obsoletas).
-- Mencionar `supabase/schema/` canónico y `supabase/tests/` (invariants + conductual).
-- Anotar la regla cross-feature con allowlist ARCH-DEBT (44 entradas hoy).
+## Verificación
 
-### 2) Banners de OBSOLETO en dos docs de arquitectura
-
-Insertar en el **top** de cada archivo un banner que apunte al canónico (`ARCHITECTURE.md`) y marque el documento como histórico:
-
-- `docs/architecture-map.md` — banner "⚠️ OBSOLETO — ver `ARCHITECTURE.md`".
-- `docs/architecture.md` — mismo banner.
-
-### 3) Corregir 4 números stale (ediciones chicas)
-
-- `docs/arquitectura-auditoria-3-status.md`:
-  - CROSS_FEATURE_ALLOWLIST: `43` → **`44`**.
-  - locale-format-legacy: `27` → **AGOTADA** (solo `lib/formatters/**` + `lib/date/mx.ts`).
-  - Fila 3.3 (formularios): "❌ Sin cambios" → **paso 1 hecho** (schema zod `buildFacturaFormSchema`); pendiente el paso 2 (RHF `useForm`).
-- `docs/migrations-hygiene.md:4`: baseline `20260723180000` → **`20260723223436`**.
-- `eslint.config.js:~697` (comentario **de línea**, no lógica): `"84 archivos + 7 wrappers"` → **`"82 archivos + 6 wrappers"`**.
-
-## Fuera de alcance (post-release)
-
-Todas las Olas 1-3 del roadmap (cascada de hidratación, PR-6 paso 2 RHF, migración a `useMutationWithFeedback`, complexity disables, prop drilling, shim bitácora, backend chico, regla H7, clones jscpd, knip/SONNER/CROSS_FEATURE burn-down, layout pospuesto, cosméticos). Se rastrean pero **no** son bloqueantes del release.
-
-## Validación
-
-- Los cambios son **solo docs + 1 comentario en `eslint.config.js`** → no hay riesgo de romper lint/tsc/vitest.
-- Verificar tras aplicar: `bun run lint` sigue verde y `docs consistentes con el código`.
-- Bump de `APP_VERSION` + entrada en `CHANGELOG.md` (patch): "docs: condición C1 release — ARCHITECTURE.md §1 al día + banners obsoleto + números stale".
-
-## Detalles técnicos (para el modo build)
-
-Archivos a modificar:
-
-```text
-ARCHITECTURE.md                             (reescribir §1)
-docs/architecture-map.md                    (insertar banner al top)
-docs/architecture.md                        (insertar banner al top)
-docs/arquitectura-auditoria-3-status.md     (3 correcciones puntuales)
-docs/migrations-hygiene.md                  (1 corrección: baseline)
-eslint.config.js                            (1 comentario: 84→82 / 7→6)
-src/constants/appVersion.ts                 (bump patch)
-CHANGELOG.md                                (nueva entrada)
-```
-
-Sin migraciones DB. Sin cambios de código de aplicación. Sin cambios en tests.
+Después del update, correr `SELECT numero, estado_proforma, folio_factura_externa, fecha_facturacion FROM proformas WHERE numero IN (...)` y confirmar que las 5 quedan en `facturada` con los folios/fechas correctos.
