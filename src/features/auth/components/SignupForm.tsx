@@ -1,3 +1,6 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useState } from "react";
 import { signUpWithEmail } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
@@ -9,43 +12,60 @@ import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 
+/**
+ * v13.312.19 — Ola 1 · PR-6 paso 2: migrado de 10 `useState` a RHF+zod.
+ * El schema valida el match de contraseñas y el checkbox de términos.
+ */
+const signupSchema = z
+  .object({
+    name: z.string().min(1, "Ingresa tu nombre."),
+    company: z
+      .string()
+      .trim()
+      .min(2, "El nombre de la empresa debe tener entre 2 y 120 caracteres.")
+      .max(120, "El nombre de la empresa debe tener entre 2 y 120 caracteres."),
+    phone: z.string().optional(),
+    email: z.string().email("Correo inválido."),
+    password: z.string().min(6, "Mínimo 6 caracteres."),
+    password2: z.string().min(6, "Mínimo 6 caracteres."),
+    acceptTerms: z.literal(true, {
+      message: "Debes aceptar los términos para continuar.",
+    }),
+  })
+  .refine((v) => v.password === v.password2, {
+    path: ["password2"],
+    message: "Las contraseñas no coinciden.",
+  });
+
+type SignupValues = z.infer<typeof signupSchema>;
+
 export function SignupForm() {
   const { toast } = useToast();
-  const [signupName, setSignupName] = useState("");
-  const [signupCompany, setSignupCompany] = useState("");
-  const [signupPhone, setSignupPhone] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupPassword2, setSignupPassword2] = useState("");
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [signupLoading, setSignupLoading] = useState(false);
   const [signupDone, setSignupDone] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<SignupValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      name: "",
+      company: "",
+      phone: "",
+      email: "",
+      password: "",
+      password2: "",
+      acceptTerms: false as unknown as true,
+    },
+  });
+
+  const onSubmit = async (v: SignupValues) => {
     setSignupError(null);
-    const companyName = signupCompany.trim();
-    if (companyName.length < 2 || companyName.length > 120) {
-      setSignupError("El nombre de la empresa debe tener entre 2 y 120 caracteres.");
-      return;
-    }
-    if (signupPassword !== signupPassword2) {
-      setSignupError("Las contraseñas no coinciden.");
-      return;
-    }
-    if (!acceptTerms) {
-      setSignupError("Debes aceptar los términos para continuar.");
-      return;
-    }
-    setSignupLoading(true);
     try {
       await signUpWithEmail({
-        email: signupEmail,
-        password: signupPassword,
-        fullName: signupName,
-        companyName,
-        phone: signupPhone.trim() || undefined,
+        email: v.email,
+        password: v.password,
+        fullName: v.name,
+        companyName: v.company.trim(),
+        phone: v.phone?.trim() || undefined,
         redirectTo: `${window.location.origin}/onboarding`,
       });
       setSignupDone(true);
@@ -53,9 +73,12 @@ export function SignupForm() {
     } catch (err) {
       const friendly = translateAuthError(err instanceof Error ? err.message : null);
       setSignupError(friendly);
-      notifyError(toast, { title: "No pudimos crear la cuenta", description: friendly, error: err, method: "HANDLE_SIGNUP" });
-    } finally {
-      setSignupLoading(false);
+      notifyError(toast, {
+        title: "No pudimos crear la cuenta",
+        description: friendly,
+        error: err,
+        method: "HANDLE_SIGNUP",
+      });
     }
   };
 
@@ -69,46 +92,97 @@ export function SignupForm() {
     );
   }
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = form;
+  const firstFieldError =
+    errors.name?.message ??
+    errors.company?.message ??
+    errors.phone?.message ??
+    errors.email?.message ??
+    errors.password?.message ??
+    errors.password2?.message ??
+    errors.acceptTerms?.message ??
+    null;
+  const alertMessage = signupError ?? firstFieldError;
+
   return (
-    <form onSubmit={handleSignup} className="space-y-4" noValidate>
-      {signupError && (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {alertMessage && (
         <Alert variant="destructive" role="alert">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{signupError}</AlertDescription>
+          <AlertDescription>{alertMessage}</AlertDescription>
         </Alert>
       )}
       <div className="space-y-2">
         <Label htmlFor="signup-name">Nombre completo</Label>
-        <Input id="signup-name" type="text" placeholder="Juan Pérez" value={signupName} onChange={(e) => setSignupName(e.target.value)} required autoComplete="name" />
+        <Input id="signup-name" type="text" placeholder="Juan Pérez" autoComplete="name" {...register("name")} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-company">Nombre de empresa</Label>
-        <Input id="signup-company" type="text" placeholder="Mi Agencia Aduanal S.A. de C.V." value={signupCompany} onChange={(e) => setSignupCompany(e.target.value)} required minLength={2} maxLength={120} autoComplete="organization" />
+        <Input
+          id="signup-company"
+          type="text"
+          placeholder="Mi Agencia Aduanal S.A. de C.V."
+          autoComplete="organization"
+          {...register("company")}
+        />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="signup-phone">Teléfono <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-        <Input id="signup-phone" type="tel" placeholder="55 1234 5678" value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} autoComplete="tel" inputMode="tel" />
+        <Label htmlFor="signup-phone">
+          Teléfono <span className="text-muted-foreground font-normal">(opcional)</span>
+        </Label>
+        <Input
+          id="signup-phone"
+          type="tel"
+          placeholder="55 1234 5678"
+          autoComplete="tel"
+          inputMode="tel"
+          {...register("phone")}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-email">Email de trabajo</Label>
-        <Input id="signup-email" type="email" placeholder="tu@agencia.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required autoComplete="email" />
+        <Input id="signup-email" type="email" placeholder="tu@agencia.com" autoComplete="email" {...register("email")} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-password">Contraseña</Label>
-        <Input id="signup-password" type="password" placeholder="Mínimo 6 caracteres" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
+        <Input
+          id="signup-password"
+          type="password"
+          placeholder="Mínimo 6 caracteres"
+          autoComplete="new-password"
+          {...register("password")}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="signup-password2">Confirmar contraseña</Label>
-        <Input id="signup-password2" type="password" placeholder="••••••••" value={signupPassword2} onChange={(e) => setSignupPassword2(e.target.value)} required minLength={6} autoComplete="new-password" />
+        <Input
+          id="signup-password2"
+          type="password"
+          placeholder="••••••••"
+          autoComplete="new-password"
+          {...register("password2")}
+        />
       </div>
       <label className="flex items-start gap-2 text-xs text-muted-foreground">
-        <input type="checkbox" className="mt-0.5" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} />
+        <input type="checkbox" className="mt-0.5" {...register("acceptTerms")} />
         <span>
-          Acepto los <a href="/legal/terminos" target="_blank" className="text-accent hover:underline">Términos</a> y el <a href="/legal/privacidad" target="_blank" className="text-accent hover:underline">Aviso de privacidad</a>.
+          Acepto los{" "}
+          <a href="/legal/terminos" target="_blank" className="text-accent hover:underline">
+            Términos
+          </a>{" "}
+          y el{" "}
+          <a href="/legal/privacidad" target="_blank" className="text-accent hover:underline">
+            Aviso de privacidad
+          </a>
+          .
         </span>
       </label>
-      <Button type="submit" className="w-full" disabled={signupLoading}>
-        {signupLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
         Crear cuenta gratis
       </Button>
     </form>
