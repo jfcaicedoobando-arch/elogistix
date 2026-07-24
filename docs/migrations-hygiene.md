@@ -1,7 +1,7 @@
 # Higiene de migraciones SQL
 
 Reglas obligatorias para toda migración creada a partir del baseline
-`20260723180000` (2026-07-23). El auditor `bun run audit:migrations` las hace
+`20260723223436` (2026-07-23). El auditor `bun run audit:migrations` las hace
 cumplir en CI. Legacy anterior al baseline queda documentado pero no
 bloquea el pipeline (imposible de reescribir sin refactor de esquema).
 
