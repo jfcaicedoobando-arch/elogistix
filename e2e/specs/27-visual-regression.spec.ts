@@ -57,8 +57,8 @@ for (const vp of VIEWPORTS) {
         page.getByRole("heading", { name: /buen(os|as)\s+(d[íi]as|tardes|noches)/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
       await page.waitForLoadState("networkidle").catch(() => {});
-      // Buffer defensivo para que gradientes y skeletons terminen su transición.
-      await page.waitForTimeout(500);
+      // (v13.312.17) Se retiró el `waitForTimeout(500)` "buffer defensivo";
+      // Playwright ya deshabilita animaciones vía `SCREENSHOT_OPTS`.
 
       // ── 1. Breadcrumbs ──────────────────────────────────────────────
       const breadcrumbs = page.getByRole("navigation", { name: /migas de pan/i }).first();

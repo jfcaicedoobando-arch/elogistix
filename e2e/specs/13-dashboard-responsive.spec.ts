@@ -32,7 +32,7 @@ for (const vp of VIEWPORTS) {
       ).toBeVisible({ timeout: 15_000 });
 
       // Esperar hidratación de widgets/KPIs.
-      await page.waitForTimeout(1200);
+      await page.waitForLoadState("networkidle").catch(() => {});
 
       const overflow = await page.evaluate(() => {
         const main = document.querySelector("main") ?? document.body;

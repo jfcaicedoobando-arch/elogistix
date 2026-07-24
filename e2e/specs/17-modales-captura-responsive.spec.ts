@@ -66,7 +66,7 @@ async function ejercitarModal(
   const dialog = page.getByRole("dialog").filter({ hasText: opts.tituloDialog }).first();
   await expect(dialog).toBeVisible({ timeout: 10_000 });
 
-  await page.waitForTimeout(300); // dejar que el shell se asiente
+  await page.waitForLoadState("networkidle").catch(() => {}); // shell asentado
   await assertDialogFits(page, opts.label);
   await assertNoMainOverflow(page, `${opts.label} con dialog abierto`);
 
@@ -140,7 +140,7 @@ for (const vp of VIEWPORTS) {
           await expect(
             page.getByRole("heading", { name: /cuentas por pagar/i }).first(),
           ).toBeVisible({ timeout: 15_000 });
-          await page.waitForTimeout(400);
+          await page.waitForLoadState("networkidle").catch(() => {});
         },
         triggerName: /capturar factura/i,
         tituloDialog: /capturar factura de proveedor/i,
@@ -170,7 +170,7 @@ for (const vp of VIEWPORTS) {
       await expect(
         page.getByRole("heading", { name: /nueva cotizaci[oó]n/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(600);
+      await page.waitForLoadState("networkidle").catch(() => {});
 
       await assertNoMainOverflow(page, `wizard-cotizacion ${vp.name}`);
 
