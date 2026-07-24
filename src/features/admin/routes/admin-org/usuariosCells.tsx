@@ -99,6 +99,16 @@ export function ChangeRoleCell({ user, isSelf, onPendingRole }: ChangeRoleCellPr
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
+        {esRolLegacy(user.role) && (
+          <SelectGroup>
+            <SelectLabel className="text-2xs uppercase tracking-wide text-warning-foreground">
+              Rol legado (migrar)
+            </SelectLabel>
+            <SelectItem key={user.role} value={user.role} disabled>
+              {ROLE_LABELS[user.role]}
+            </SelectItem>
+          </SelectGroup>
+        )}
         {ASSIGNABLE_ROLE_GROUPS.map((group) => (
           <SelectGroup key={group.label}>
             <SelectLabel className="text-2xs uppercase tracking-wide text-muted-foreground">
