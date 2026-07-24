@@ -8,6 +8,8 @@ export const LC_CODE_MESSAGES: Record<string, string> = {
   // ── Autenticación / tenancy ────────────────────────────────────────────
   LC_AUTH_REQUIRED: "Debes iniciar sesión para continuar.",
   LC_NO_AUTORIZADO: "No tienes permisos para realizar esta acción.",
+  LC_ROL_LEGACY_BLOQUEADO:
+    "Ese rol ya no se usa. Asigna uno del catálogo actual (por ejemplo, admin_org o coordinador_logistico).",
   LC_FORBIDDEN_FACTURA_PROVEEDOR_DELETE:
     "No tienes permisos para eliminar facturas de proveedor.",
   LC_ORG_FORBIDDEN: "Este recurso pertenece a otra organización.",
