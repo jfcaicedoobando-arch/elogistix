@@ -11,7 +11,7 @@ import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
 import { useBitacora } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared";
 import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
-import { MODULOS_BITACORA } from "@/lib/domain/bitacora/registrar";
+import { MODULOS_BITACORA } from "@/services/bitacora/registrar";
 import { PageContainer } from "@/components/shared/PageContainer";
 
 const MODULOS = MODULOS_BITACORA;

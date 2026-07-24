@@ -11,7 +11,7 @@
  * v13.189.0 · Ola 2 · Item 4
  */
 import { supabase } from "@/integrations/supabase/client";
-import { registrarActividad } from "@/lib/domain/bitacora/registrar";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export async function cancelarFacturaProveedor(
   facturaId: string,

@@ -5,7 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { unwrap, unwrapOr, run } from "@/lib/supabase/response";
 import type { TablesInsert } from "@/integrations/supabase/types";
-import { registrarActividad } from "@/lib/domain/bitacora/registrar";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 // folio_interno se asigna en el trigger BEFORE INSERT de la BD; el caller no lo manda.
 export type NuevaFacturaProveedorPayload =

@@ -4,7 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import { registrarActividad } from "@/lib/domain/bitacora/registrar";
+import { registrarActividad } from "@/services/bitacora/registrar";
 // Fase N: el estado se recalcula por trigger BD. `decidirEstadoFactura` sigue viviendo en `./estadoFacturaProveedor` para uso puro en UI.
 
 export type PagoProveedor = Tables<"pagos_proveedor">;

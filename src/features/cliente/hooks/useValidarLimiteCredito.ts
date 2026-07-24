@@ -17,7 +17,7 @@ import {
   fetchExposicionCreditoCliente,
   type ExposicionCreditoCliente,
 } from "@/features/cliente/services/crud";
-import { registrarActividad } from "@/lib/domain/bitacora/registrar";
+import { registrarActividad } from "@/services/bitacora/registrar";
 
 export interface ValidarLimiteInput {
   clienteId: string;

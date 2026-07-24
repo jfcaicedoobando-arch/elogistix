@@ -573,10 +573,10 @@ export default tseslint.config(
     // CI corre `eslint --max-warnings 0`, así que cualquier warning aquí
     // tira el job; se relajan SOLO las reglas estructurales (no de tipos).
     files: [
-      "src/features/facturacion/components/FacturasMasivasToolbar.tsx",
-      "src/features/facturacion/services/dashboardEjecutivo.ts",
+      // Burn-down verificado (R3): FacturasMasivasToolbar, dashboardEjecutivo
+      // y facturapi-emitir ya no violan; quedan fuera. Solo persiste
+      // facturapi-cancelar (CC=35, pendiente de split).
       "supabase/functions/facturapi-cancelar/index.ts",
-      "supabase/functions/facturapi-emitir/index.ts",
     ],
     rules: {
       "complexity": "off",

@@ -26,7 +26,7 @@
     "test:fast": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --config vitest.fast.config.ts --exclude='**/canaries/**' --exclude='**/pdfLeak*' --exclude='src/**/*.perf.test.tsx' --exclude='src/**/*.perf.ts'",
     "test:perf": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --config vitest.perf.config.ts",
     "test:coverage": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --coverage",
-    "test:coverage:shard": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --coverage --reporter=blob --reporter=default --retry=2 --coverage.thresholds.lines=0 --coverage.thresholds.statements=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0",
+    "test:coverage:shard": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitest run --coverage --reporter=blob --reporter=default --retry=2",
     "test:coverage:merge": "NODE_OPTIONS=\"--max-old-space-size=4096\" vitest run --merge-reports=.vitest-reports --coverage",
     "coverage:report": "tsx scripts/coverage-report.ts",
     "changelog:add": "tsx scripts/add-changelog.ts",

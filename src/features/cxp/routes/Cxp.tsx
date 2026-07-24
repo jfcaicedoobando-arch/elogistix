@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { Plus, FileText, Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ export default function Cxp() {
     f.setAEliminar(fact);
   }, [f]);
 
-  const columns = useMemo(() => buildCxPColumns(), []);
+  const columns = buildCxPColumns();
   const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
 
   return (
