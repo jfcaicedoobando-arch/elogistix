@@ -694,7 +694,7 @@ export default tseslint.config(
       "src/components/ui/sonner.tsx",
       "src/components/ui/ErrorDetailsDialog.tsx",
       // ── SONNER-LEGACY (Sprint 4 · baseline v13.309.53) ────────────────────
-      // 84 archivos que aún importan `sonner` directo. Se migrarán en olas
+      // 82 archivos + 6 wrappers autorizados que aún importan `sonner` directo. Se migrarán en olas
       // al wrapper `@/lib/ui/appFeedback` o `@/hooks/shared/useToast`.
       // NO agregar entradas nuevas: la regla existe para bloquear regresiones.
       "src/features/admin/components/TabExportar.tsx",
