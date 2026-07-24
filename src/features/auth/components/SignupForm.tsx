@@ -53,6 +53,8 @@ export function SignupForm() {
       email: "",
       password: "",
       password2: "",
+      // SAFE-CAST: `z.literal(true)` obliga a que el tipo del campo sea `true`,
+      // pero el defaultValue del checkbox arranca en `false` hasta que el usuario lo marca.
       acceptTerms: false as unknown as true,
     },
   });

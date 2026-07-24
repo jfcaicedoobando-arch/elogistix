@@ -2,14 +2,17 @@
  * Bloque 3.3 — Notificaciones del cliente en su portal.
  * Lee la tabla `notificaciones_cliente` filtrada por RLS y expone helpers
  * para marcar leídas (una o todas).
+ *
+ * v13.312.20 — Ola 1 · item 3: mutaciones migradas a `useMutationWithFeedback`
+ * para estandarizar invalidación + `notifyError` (elimina toasts duplicados).
  */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   fetchNotificacionesCliente,
   marcarNotificacionLeida,
   marcarTodasNotificacionesLeidas,
 } from "@/features/portal/services";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
 
 const KEY = ["portal", "notificaciones"] as const;
 
@@ -26,23 +29,19 @@ export function useNotificacionesCliente(enabled = true) {
 }
 
 export function useMarcarNotificacionLeida() {
-  const qc = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: marcarNotificacionLeida,
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al marcar notificación: ${error.message}`, error, method: "MARK_NOTIF_READ" });
-    },
+    invalidate: KEY,
+    errorTitle: "Error al marcar notificación",
+    errorMethod: "MARK_NOTIF_READ",
   });
 }
 
 export function useMarcarTodasLeidas() {
-  const qc = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: marcarTodasNotificacionesLeidas,
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al marcar notificaciones: ${error.message}`, error, method: "MARK_ALL_NOTIF_READ" });
-    },
+    invalidate: KEY,
+    errorTitle: "Error al marcar notificaciones",
+    errorMethod: "MARK_ALL_NOTIF_READ",
   });
 }
