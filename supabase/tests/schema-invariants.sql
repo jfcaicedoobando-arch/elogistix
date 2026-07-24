@@ -158,6 +158,14 @@ DECLARE
     'assert_movimiento_pago_consistente',
     'assert_nc_no_excede_saldo',
     'assert_pago_sin_rep_vivo',
+    -- Helpers extraídos en los splits de god functions (Sprint R2/R3) —
+    -- protección anti-borrado: si una migración los dropea, el padre truena.
+    '_audit_embarques_agregar',
+    '_audit_embarques_umbrales',
+    '_calcular_demoras_montos_contenedor',
+    '_convertir_proformas_insertar_conceptos',
+    '_crear_embarque_replicar_conceptos',
+    'auditoria_embarques_org',
     'assert_pago_sin_rep_vivo_delete',
     'assert_proformas_moneda_soportada',
     'assert_proveedor_factura_viva_para_pago',
