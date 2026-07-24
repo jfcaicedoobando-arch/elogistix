@@ -67,15 +67,14 @@ export function useCreateCliente() {
 }
 
 export function useCreateContacto() {
+  const queryClient = useQueryClient();
   return useMutationWithFeedback({
     mutationFn: (contacto: TablesInsert<"contactos_cliente">) => createContacto(contacto),
-    invalidate: [queryKeys.clientes.all],
     successTitle: "Contacto creado",
     errorTitle: "Error al crear contacto",
     errorMethod: "CREATE_CONTACTO",
-    // Invalidate específico por cliente además del genérico.
-    onSuccess: (_r, vars, _ctx, _mut) => {
-      // Nota: el invalidate genérico ya cubre la lista; este afina la key exacta.
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) });
     },
   });
 }
