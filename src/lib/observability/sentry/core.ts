@@ -121,7 +121,19 @@ export function initSentry(): void {
     profilesSampleRate: readRate("VITE_SENTRY_PROFILES_SAMPLE_RATE", 0.1),
     replaysSessionSampleRate: readRate("VITE_SENTRY_REPLAYS_SESSION_RATE", 0),
     replaysOnErrorSampleRate: readRate("VITE_SENTRY_REPLAYS_ON_ERROR_RATE", 1.0),
-    tunnel: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentry-tunnel`,
+    tunnel: resolveTunnelUrl(),
+    // 13.312.10: explícito para blindar contra un upgrade del SDK que cambie
+    // el default. `sendDefaultPii: false` bloquea que Sentry adjunte cookies,
+    // IP y headers del navegador automáticamente.
+    sendDefaultPii: false,
+    // 13.312.10: los payloads de RPC (`extra.payload`) son objetos de 2-3
+    // niveles (embarque → contenedores → conceptos). Con depth 3 el SDK
+    // convierte los niveles internos a `"[Object]"` y perdemos contexto.
+    normalizeDepth: 5,
+    // 13.312.10: los mensajes de PostgrestError incluyen `message` + `hint` +
+    // `details` que suman >500 chars. 250 (default) los recorta.
+    maxValueLength: 1500,
+    denyUrls: DENY_URLS,
 
 
     // Defensa en profundidad: estos errores de Vite (chunk viejo cacheado)
@@ -139,7 +151,17 @@ export function initSentry(): void {
       /Lock broken by another request with the 'steal' option/i,
       // 13.142.8: credenciales incorrectas en login — es UX esperada, no bug.
       /Invalid login credentials/i,
+      // 13.312.10: ruido de navegador / scanners de correo (Outlook safelink),
+      // Safari offline y extensiones. No corregibles desde nuestro código.
+      /ResizeObserver loop (limit exceeded|completed with undelivered notifications)/i,
+      /Non-Error promise rejection captured/i,
+      /Object Not Found Matching Id/i,
+      /^Load failed$/i,
+      /NetworkError when attempting to fetch resource/i,
+      /Extension context invalidated/i,
+      /The operation was aborted/i,
     ],
+
     beforeSend(event, hint) {
       if (shouldDropSentryEvent(event, hint)) return null;
       return scrubEventPii(event);
