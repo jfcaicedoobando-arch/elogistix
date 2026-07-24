@@ -49,15 +49,21 @@ for (const vp of VIEWPORTS) {
       // 1) Dashboard portal
       await page.goto("/portal");
       await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(700);
+      await page.waitForLoadState("networkidle");
       await assertNoOverflow(page, `portal dashboard ${vp.name}`);
+
+      // Aserción de negocio (v13.312.15): el dashboard del portal debe
+      // renderizar al menos un heading real del cliente (no solo layout).
+      await expect(
+        page.getByRole("heading", { level: 1 }).first(),
+      ).toBeVisible({ timeout: 10_000 });
 
       // 2) Embarques (lista)
       await page.goto("/portal/embarques");
       await expect(
         page.getByRole("heading", { name: /mis embarques/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(600);
+      await page.waitForLoadState("networkidle");
       await assertNoOverflow(page, `portal embarques ${vp.name}`);
 
       // 3) Facturas (lista)
@@ -65,7 +71,7 @@ for (const vp of VIEWPORTS) {
       await expect(
         page.getByRole("heading", { name: /mis facturas/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(600);
+      await page.waitForLoadState("networkidle");
       await assertNoOverflow(page, `portal facturas ${vp.name}`);
 
       // 4) Cotizaciones (lista)
@@ -73,7 +79,7 @@ for (const vp of VIEWPORTS) {
       await expect(
         page.getByRole("heading", { name: /mis cotizaciones/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(600);
+      await page.waitForLoadState("networkidle");
       await assertNoOverflow(page, `portal cotizaciones ${vp.name}`);
 
       expect(errores, `consola portal ${vp.name}`).toEqual([]);
