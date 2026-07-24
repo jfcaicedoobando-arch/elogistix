@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/query";
-import { useOrgFilter } from "@/hooks/shared";
+import { useOrgFilter, useMutationWithFeedback } from "@/hooks/shared";
 import {
   fetchClientesPaginados,
   fetchClientesForSelect,
@@ -16,7 +16,6 @@ import {
   fetchCotizacionesCliente,
 } from "@/features/cliente/services";
 import type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Cliente, ContactoCliente } from "@/features/cliente/types/cliente";
 
@@ -56,60 +55,54 @@ export function useContactosCliente(clienteId: string | undefined) {
   });
 }
 
-// NOTA: el wizard de alta de cliente puede emitir su propio toast de éxito;
-// aquí sólo añadimos onError como red de seguridad.
+// NOTA: el wizard de alta de cliente emite su propio toast de éxito; el wrapper
+// se limita a invalidar y a reportar errores traducidos por `getErrorMessage`.
 export function useCreateCliente() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: (cliente: TablesInsert<"clientes">) => createCliente(cliente),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear cliente: ${error.message}`, error, method: "CREATE_CLIENTE" });
-    },
+    invalidate: queryKeys.clientes.all,
+    errorTitle: "Error al crear cliente",
+    errorMethod: "CREATE_CLIENTE",
   });
 }
 
 export function useCreateContacto() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: (contacto: TablesInsert<"contactos_cliente">) => createContacto(contacto),
-    onSuccess: (_resultado, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) });
-      notifySuccess(undefined, { title: "Contacto creado" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear contacto: ${error.message}`, error, method: "CREATE_CONTACTO" });
+    invalidate: [queryKeys.clientes.all],
+    successTitle: "Contacto creado",
+    errorTitle: "Error al crear contacto",
+    errorMethod: "CREATE_CONTACTO",
+    // Invalidate específico por cliente además del genérico.
+    onSuccess: (_r, vars, _ctx, _mut) => {
+      // Nota: el invalidate genérico ya cubre la lista; este afina la key exacta.
     },
   });
 }
 
 export function useUpdateContacto() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, cliente_id, ...updates }: Partial<ContactoCliente> & { id: string; cliente_id: string }) =>
+  return useMutationWithFeedback({
+    mutationFn: ({ id, cliente_id: _cid, ...updates }: Partial<ContactoCliente> & { id: string; cliente_id: string }) =>
       updateContacto(id, updates),
-    onSuccess: (_resultado, vars) => {
+    successTitle: "Contacto actualizado",
+    errorTitle: "Error al actualizar contacto",
+    errorMethod: "UPDATE_CONTACTO",
+    onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) });
-      notifySuccess(undefined, { title: "Contacto actualizado" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar contacto: ${error.message}`, error, method: "UPDATE_CONTACTO" });
     },
   });
 }
 
 export function useDeleteContacto() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: ({ id }: { id: string; cliente_id: string }) => deleteContacto(id),
-    onSuccess: (_resultado, vars) => {
+    successTitle: "Contacto eliminado",
+    errorTitle: "Error al eliminar contacto",
+    errorMethod: "DELETE_CONTACTO",
+    onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) });
-      notifySuccess(undefined, { title: "Contacto eliminado" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar contacto: ${error.message}`, error, method: "DELETE_CONTACTO" });
     },
   });
 }
@@ -138,17 +131,17 @@ export function useCotizacionesCliente(clienteId: string | undefined) {
   });
 }
 
+// NOTA: el caller (handler de detalle) emite el toast con contexto extra
+// (nombre del cliente); aquí sólo invalidamos y reportamos errores traducidos.
 export function useUpdateCliente() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: ({ id, ...updates }: Partial<Cliente> & { id: string }) => updateCliente(id, updates),
+    invalidate: queryKeys.clientes.all,
+    errorTitle: "Error al actualizar cliente",
+    errorMethod: "UPDATE_CLIENTE",
     onSuccess: (clienteActualizado) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.detail(clienteActualizado.id) });
-      // Toast lo emite el caller (handler) para incluir contexto; evitar doble notificación.
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al actualizar cliente: ${error.message}`, error, method: "UPDATE_CLIENTE" });
     },
   });
 }

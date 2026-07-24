@@ -1,15 +1,15 @@
 /**
  * Mutations de documentos del embarque: subir, eliminar, crear fila y marcar No Aplica.
  */
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
+import { useMutationWithFeedback } from '@/hooks/shared';
 import {
   uploadDocumentoEmbarque,
   deleteDocumentoEmbarque,
   createDocumentoEmbarqueRow,
   setDocumentoEstadoNoAplica,
 } from '@/features/embarques/services';
-import { notifyError, notifySuccess } from '@/lib/ui/appFeedback';
 
 /**
  * Invalida las caches que dependen del estado de documentos del embarque:
@@ -28,31 +28,25 @@ function invalidateDocumentosCaches(
 
 export function useUploadDocumentoEmbarque() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: ({ embarqueId, docId, file }: { embarqueId: string; docId: string; file: File }) =>
       uploadDocumentoEmbarque(embarqueId, docId, file),
-    onSuccess: (_r, vars) => {
-      invalidateDocumentosCaches(queryClient, vars.embarqueId);
-      notifySuccess(undefined, { title: "Documento subido" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al subir documento: ${error.message}`, error, method: "UPLOAD_DOC_EMBARQUE" });
-    },
+    successTitle: "Documento subido",
+    errorTitle: "Error al subir documento",
+    errorMethod: "UPLOAD_DOC_EMBARQUE",
+    onSuccess: (_r, vars) => invalidateDocumentosCaches(queryClient, vars.embarqueId),
   });
 }
 
 export function useDeleteDocumentoEmbarque() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: ({ docId, archivoPath }: { embarqueId: string; docId: string; archivoPath: string }) =>
       deleteDocumentoEmbarque(docId, archivoPath),
-    onSuccess: (_r, vars) => {
-      invalidateDocumentosCaches(queryClient, vars.embarqueId);
-      notifySuccess(undefined, { title: "Documento eliminado" });
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al eliminar documento: ${error.message}`, error, method: "DELETE_DOC_EMBARQUE" });
-    },
+    successTitle: "Documento eliminado",
+    errorTitle: "Error al eliminar documento",
+    errorMethod: "DELETE_DOC_EMBARQUE",
+    onSuccess: (_r, vars) => invalidateDocumentosCaches(queryClient, vars.embarqueId),
   });
 }
 
@@ -63,15 +57,12 @@ export function useDeleteDocumentoEmbarque() {
  */
 export function useCreateDocumentoEmbarque() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: ({ embarqueId, nombre, notas }: { embarqueId: string; nombre: string; notas?: string }) =>
       createDocumentoEmbarqueRow({ embarqueId, nombre, notas }),
-    onSuccess: (_r, vars) => {
-      invalidateDocumentosCaches(queryClient, vars.embarqueId);
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al crear documento: ${error.message}`, error, method: "CREATE_DOC_EMBARQUE" });
-    },
+    errorTitle: "Error al crear documento",
+    errorMethod: "CREATE_DOC_EMBARQUE",
+    onSuccess: (_r, vars) => invalidateDocumentosCaches(queryClient, vars.embarqueId),
   });
 }
 
@@ -81,14 +72,11 @@ export function useCreateDocumentoEmbarque() {
  */
 export function useSetDocumentoNoAplica() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationFn: ({ docId, noAplica }: { embarqueId: string; docId: string; noAplica: boolean }) =>
       setDocumentoEstadoNoAplica(docId, noAplica),
-    onSuccess: (_r, vars) => {
-      invalidateDocumentosCaches(queryClient, vars.embarqueId);
-    },
-    onError: (error: Error) => {
-      notifyError(undefined, { title: `Error al marcar documento: ${error.message}`, error, method: "SET_DOC_NO_APLICA" });
-    },
+    errorTitle: "Error al marcar documento",
+    errorMethod: "SET_DOC_NO_APLICA",
+    onSuccess: (_r, vars) => invalidateDocumentosCaches(queryClient, vars.embarqueId),
   });
 }
