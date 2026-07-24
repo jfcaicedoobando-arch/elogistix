@@ -8020,6 +8020,8 @@ export type Database = {
         Args: { p_garantia_id: string }
         Returns: string
       }
+      migrar_roles_legacy_dry_run: { Args: never; Returns: Json }
+      migrar_roles_legacy_ejecutar: { Args: never; Returns: Json }
       move_to_dlq: {
         Args: {
           dlq_name: string
