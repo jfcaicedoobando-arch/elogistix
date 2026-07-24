@@ -52,6 +52,8 @@ beforeEach(() => {
   vi.stubEnv("MODE", "production");
   vi.unstubAllEnvs();
   vi.stubEnv("MODE", "production");
+  // 13.310.0: sin DSN, initSentry no arranca. Stub un DSN de prueba.
+  vi.stubEnv("VITE_SENTRY_DSN", "https://x@o0.ingest.sentry.io/0");
 });
 
 afterEach(() => {

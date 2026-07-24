@@ -690,7 +690,6 @@ export default tseslint.config(
       "src/lib/ui/__tests__/**",
       "src/hooks/shared/useToast.ts",
       "src/hooks/shared/useCopyText.ts",
-      "src/components/shared/errorBoundary/reportFeedback.ts",
       // shadcn Toaster primitive + diálogo de error usa `toast()` directo.
       "src/components/ui/sonner.tsx",
       "src/components/ui/ErrorDetailsDialog.tsx",
