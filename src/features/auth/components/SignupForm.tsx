@@ -49,7 +49,9 @@ const FIELD_ORDER: Array<keyof SignupValues> = [
   "acceptTerms",
 ];
 
-function getFirstFieldError(errors: Record<string, { message?: string } | undefined>): string | null {
+export function getFirstFieldError(
+  errors: Record<string, { message?: string } | undefined>,
+): string | null {
   for (const field of FIELD_ORDER) {
     const msg = errors[field]?.message;
     if (msg) return msg;
