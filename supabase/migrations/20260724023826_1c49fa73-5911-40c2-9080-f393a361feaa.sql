@@ -72,3 +72,6 @@ BEGIN
   RETURN v_org_id;
 END;
 $function$;
+-- H6: REVOKE/GRANT
+REVOKE ALL ON FUNCTION public.provision_organization(text, text, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.provision_organization(text, text, uuid) TO authenticated, service_role, postgres;
