@@ -106,12 +106,11 @@ export async function sincronizarContenedores(
     orden: b.orden || i + 1,
   }));
 
-  return unwrapOr(
-    supabase.rpc("sincronizar_contenedores_embarque", {
-      p_embarque_id: embarqueId,
-      // SAFE-CAST: jsonb param tipado en supabase types como Json
-      p_contenedores: payload as never,
-    }),
-    [],
-  ) as Promise<EmbarqueContenedor[]>;
+  const { data, error } = await supabase.rpc("sincronizar_contenedores_embarque", {
+    p_embarque_id: embarqueId,
+    // SAFE-CAST: jsonb param tipado en supabase types como Json
+    p_contenedores: payload as never,
+  });
+  if (error) throw traducirErrorContenedorDuplicado(error);
+  return ((data ?? []) as unknown) as EmbarqueContenedor[];
 }
