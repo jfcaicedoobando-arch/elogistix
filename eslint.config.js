@@ -649,7 +649,7 @@ export default tseslint.config(
     // 2. `sonner` directo (Sprint 4) — usar `notifyError`/`notifySuccess`/
     //    `notifyInfo` de `@/lib/ui/appFeedback` (wrapper con Sentry breadcrumbs
     //    + diagnóstico) o `useToast` de `@/hooks/shared`. Baseline temporal
-    //    de 84 archivos en `SONNER_LEGACY_ALLOWLIST` (burn-down).
+    //    de 82 archivos + 6 wrappers en `SONNER_LEGACY_ALLOWLIST` (burn-down).
     //
     // Este bloque va aparte porque el override de `src/features/**` apaga
     // `no-restricted-imports` completo; scopearlo aquí lo mantiene activo.
