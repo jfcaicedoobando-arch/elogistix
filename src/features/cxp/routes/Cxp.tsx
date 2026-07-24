@@ -61,7 +61,7 @@ export default function Cxp() {
     f.setAEliminar(fact);
   }, [f]);
 
-  const columns = useMemo(() => buildCxPColumns(), []);
+  const columns = buildCxPColumns();
   const colVis = useColumnVisibility("cxp-facturas-columns", CXP_COL_DEFAULTS);
 
   return (
