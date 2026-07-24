@@ -22,7 +22,8 @@ function readLatestContaining(marker: string): string {
 }
 
 describe("Folio interno CxP — liberación al soft-delete (v13.307.14)", () => {
-  const sql = readLatestContaining("tg_liberar_folio_proveedor_factura");
+  // Buscar la migración que define la función (no meras referencias en comentarios/GRANTs).
+  const sql = readLatestContaining("CREATE OR REPLACE FUNCTION public.tg_liberar_folio_proveedor_factura");
 
   it("define la función como SECURITY DEFINER con search_path fijo", () => {
     expect(sql).toMatch(
