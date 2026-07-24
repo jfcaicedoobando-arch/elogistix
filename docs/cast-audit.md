@@ -1,21 +1,21 @@
-# Cast Audit — generado 2026-07-23
+# Cast Audit — generado 2026-07-24
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **2480**
+Total de `as` casts detectados: **2478**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 751     | 30.3% |
-| LOW       | 1 | 112      | 4.5% |
-| MEDIUM    | 2 | 1616   | 65.2% |
-| HIGH      | 3 | 1     | 0.0% |
+| SAFE      | 0 | 755     | 30.5% |
+| LOW       | 1 | 113      | 4.6% |
+| MEDIUM    | 2 | 1608   | 64.9% |
+| HIGH      | 3 | 2     | 0.1% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 1 (~0.0%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 2 (~0.1%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -47,10 +47,16 @@ Total de `as` casts detectados: **2480**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/features/embarques/components/EmbarqueDetalleTabs.tsx:33`
+### 1. [HIGH] `src/lib/observability/sentry/core.ts:93`
 
 ```ts
-useEmbarqueDetalleTabsData(embarqueId, embarque as unknown as Parameters<typeof useEmbarqueDetalleTabsData>[1]);
+return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
+```
+
+### 2. [HIGH] `src/lib/observability/sentry/core.ts:93`
+
+```ts
+return scrubEventPii(event as unknown as Sentry.ErrorEvent) as unknown as typeof event;
 ```
 
 
