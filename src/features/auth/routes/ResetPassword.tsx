@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { subscribeToAuthChanges, getCurrentSession, updateUserPassword } from "@/features/auth/services";
 import { Button } from "@/components/ui/button";
@@ -12,23 +15,42 @@ import { BRAND } from "@/components/shared/utils/brand";
 import { Seo } from "@/components/shared/Seo";
 import { translateAuthError } from "@/lib/auth/translateAuthError";
 
+/**
+ * v13.312.19 — Ola 1 · PR-6 paso 2: migrado de 8 `useState` a RHF+zod.
+ */
+const resetSchema = z
+  .object({
+    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+    password2: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+  })
+  .refine((v) => v.password === v.password2, {
+    path: ["password2"],
+    message: "Las contraseñas no coinciden.",
+  });
+
+type ResetValues = z.infer<typeof resetSchema>;
+
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [validSession, setValidSession] = useState(false);
-  const [password, setPassword] = useState("");
-  const [password2, setPassword2] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetValues>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: { password: "", password2: "" },
+  });
+
   useEffect(() => {
-    // Supabase emite PASSWORD_RECOVERY cuando el usuario abre el enlace de recovery.
     const sub = subscribeToAuthChanges((event) => {
       if (event === "PASSWORD_RECOVERY") setValidSession(true);
     });
-    // Si ya hay sesión activa (el link puso el token), también permitimos.
     getCurrentSession().then((session) => {
       if (session) setValidSession(true);
       setReady(true);
@@ -38,28 +60,19 @@ export default function ResetPassword() {
     };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (v: ResetValues) => {
     setError(null);
-    if (password !== password2) {
-      setError("Las contraseñas no coinciden.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
-      return;
-    }
-    setLoading(true);
     try {
-      await updateUserPassword(password);
+      await updateUserPassword(v.password);
       setDone(true);
       setTimeout(() => navigate("/login", { replace: true }), 2500);
     } catch (err) {
       setError(translateAuthError(err instanceof Error ? err.message : null));
-    } finally {
-      setLoading(false);
     }
   };
+
+  const firstFieldError = errors.password?.message ?? errors.password2?.message ?? null;
+  const alertMessage = error ?? firstFieldError;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4 py-8">
@@ -75,7 +88,9 @@ export default function ResetPassword() {
         </CardHeader>
         <CardContent className="pt-2">
           {!ready ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           ) : done ? (
             <div className="space-y-3 py-4 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-accent" />
@@ -86,16 +101,22 @@ export default function ResetPassword() {
             <div className="space-y-3 py-4 text-center">
               <AlertCircle className="mx-auto h-10 w-10 text-destructive" />
               <p className="text-sm font-medium text-foreground">Enlace no válido o expirado</p>
-              <p className="text-xs text-muted-foreground">Solicita un nuevo enlace desde la pantalla de inicio de sesión.</p>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/login")}>Volver al login</Button>
+              <p className="text-xs text-muted-foreground">
+                Solicita un nuevo enlace desde la pantalla de inicio de sesión.
+              </p>
+              <Button variant="outline" className="w-full" onClick={() => navigate("/login")}>
+                Volver al login
+              </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <p className="text-sm text-muted-foreground">Ingresa tu nueva contraseña para tu cuenta de Libre Carga.</p>
-              {error && (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Ingresa tu nueva contraseña para tu cuenta de Libre Carga.
+              </p>
+              {alertMessage && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription>{alertMessage}</AlertDescription>
                 </Alert>
               )}
               <div className="space-y-2">
@@ -105,12 +126,9 @@ export default function ResetPassword() {
                     id="new-password"
                     type={showPwd ? "text" : "password"}
                     placeholder="Mínimo 6 caracteres"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
                     autoComplete="new-password"
                     className="pr-10"
+                    {...register("password")}
                   />
                   <button
                     type="button"
@@ -128,15 +146,12 @@ export default function ResetPassword() {
                   id="new-password-2"
                   type={showPwd ? "text" : "password"}
                   placeholder="••••••••"
-                  value={password2}
-                  onChange={(e) => setPassword2(e.target.value)}
-                  required
-                  minLength={6}
                   autoComplete="new-password"
+                  {...register("password2")}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Actualizar contraseña
               </Button>
             </form>
