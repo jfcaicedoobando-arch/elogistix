@@ -72,3 +72,7 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
+-- Grants anclados (H6, migración 20260723223436):
+REVOKE ALL ON FUNCTION public.guard_pago_proveedor() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.guard_pago_proveedor() TO service_role;
