@@ -13,6 +13,7 @@ import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";
+import { requireFixture } from "../fixtures/requireFixture";
 
 const PROVEEDOR_ID = process.env.E2E_PROVEEDOR_ID ?? "";
 const EMBARQUE_ID = process.env.E2E_EMBARQUE_PARA_CXP_ID ?? "";
@@ -20,8 +21,8 @@ const EMBARQUE_ID = process.env.E2E_EMBARQUE_PARA_CXP_ID ?? "";
 test.describe.configure({ mode: "serial" });
 
 test.describe("Flujo 12 — CXP captura + pago", () => {
-  test.skip(
-    !PROVEEDOR_ID || !EMBARQUE_ID,
+  requireFixture(
+    Boolean(PROVEEDOR_ID) && Boolean(EMBARQUE_ID),
     "E2E_PROVEEDOR_ID y E2E_EMBARQUE_PARA_CXP_ID requeridos",
   );
 

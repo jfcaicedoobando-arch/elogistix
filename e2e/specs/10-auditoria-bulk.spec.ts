@@ -10,11 +10,12 @@ import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";
+import { requireFixture } from "../fixtures/requireFixture";
 
 const ENABLED = process.env.E2E_HAS_AUDIT_DATA === "1";
 
 test.describe("Flujo 10 — Auditoría operativa (bulk + snooze)", () => {
-  test.skip(!ENABLED, "E2E_HAS_AUDIT_DATA=1 requerido");
+  requireFixture(ENABLED, "E2E_HAS_AUDIT_DATA=1 requerido");
 
   let startTs = "";
   test.beforeEach(() => {
