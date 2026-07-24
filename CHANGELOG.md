@@ -1,5 +1,14 @@
 # Changelog
 
+## [13.312.17] - 2026-07-24
+- **test(e2e) · Ola 3 · Higiene mecánica de la auditoría T3.** Cambio en 4 frentes, todos bajo la misma idea: dejar de aceptar "falsos verdes" en CI.
+  - **`waitForTimeout` residuales eliminados (17 → 0).** Migramos los sleeps duros a `page.waitForLoadState("networkidle")` en los specs responsive: 13 (1), 14 (1), 15 (3), 17 (3), 19 (1), 20 (5), 26 (2), 27 (1). Analogía: antes esperábamos "un rato fijo por si acaso"; ahora esperamos hasta que la red se calla, y si no se calla en el timeout de expect, el test lo dice.
+  - **Adopción de `requireFixture()` en 7 specs (06, 07, 08, 09, 10, 11, 12, 18).** Antes `test.skip(!ENV, "…")` producía skip silencioso aun con `E2E_STRICT_FIXTURES=1`; ahora el helper puentea correctamente ambos modos y con `E2E_STRICT_FIXTURES=1` (input del workflow_dispatch) los promueve a fallo real. Se eliminó también el fallback silencioso a `DUMMY_UUID` del spec 06 (cross-org): sin `E2E_CROSS_ORG_*` reales el spec ahora skippea/falla explícitamente en vez de "validar 404 genérico" pasando por seguridad real.
+  - **Máscara CSS frágil del spec 27 reemplazada por `data-e2e-mask="dynamic-count"`.** En `TimelineEstadosCard.tsx` el conteo dinámico ahora expone un atributo estable; la máscara de screenshot ya no depende de utilidades Tailwind (`.text-xl, .text-2xl`) que se reutilizan en toda la app. Si mañana alguien usa `text-xl` en un heading vecino, la baseline ya no queda enmascarada por accidente.
+  - **Sin cambios de baselines visuales todavía:** el spec 27 sigue etiquetado `@visual` y fuera de CI hasta la Ola 6.
+
+
+
 ## [13.312.16] - 2026-07-24
 - **fix(cxp · aging) · Ignorar notas de crédito soft-borradas en `cxp_aging_proveedores` (H1).** Migración `20260724130000_fix-aging-nc-deleted-at.sql`: el CTE `nc` de la función de aging descontaba NCs soft-borradas, divergiendo del guard de sobrepago y de `v_proveedor_facturas_saldo` (ambos ya filtran `deleted_at IS NULL`). Fix quirúrgico + test conductual `supabase/tests/aging_nc_deleted_at.sql`. Analogía: el semáforo de "quién debe cuánto" contaba descuentos ya cancelados; ahora solo cuenta los vigentes, como el resto del sistema.
 - **fix(security · rls) · Endurece EXECUTE para `anon` (FIX-45-HARDENING, H3).** Migración `20260724130100_fix45-hardening-anon-execute.sql`: revoca EXECUTE a `anon`/`PUBLIC` en 5 triggers/helpers internos (`assert_pago_sin_rep_vivo_delete`, `calc_pago_retenciones`, `calcular_comision_pago` x2, `tg_facturas_link_proforma`, `tg_liberar_folio_proveedor_factura`) — solo `service_role`. `is_org_member(uuid)` deja de estar en PUBLIC (mantiene `authenticated` + `service_role`). Ajuste gemelo en `supabase/tests/rls/_ci_post_migrate.sql` para que CI refleje prod.
