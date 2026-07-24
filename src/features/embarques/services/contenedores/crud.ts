@@ -59,10 +59,12 @@ export async function crearMuchos(
     piezas: b.piezas,
     orden: b.orden || i + 1,
   }));
-  return unwrapOr(
-    supabase.from("embarque_contenedores").insert(rows).select(),
-    [],
-  );
+  const { data, error } = await supabase
+    .from("embarque_contenedores")
+    .insert(rows)
+    .select();
+  if (error) throw traducirErrorContenedorDuplicado(error);
+  return (data ?? []) as EmbarqueContenedor[];
 }
 
 /**
