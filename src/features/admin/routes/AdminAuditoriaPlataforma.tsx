@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BackfillLegacyCard } from "@/features/admin/components/BackfillLegacyCard";
+import { MigrarRolesLegacyCard } from "@/features/admin/components/MigrarRolesLegacyCard";
 
 const KPIS_PREVISTOS = [
   "Uso por organización (embarques, cotizaciones, usuarios activos).",
