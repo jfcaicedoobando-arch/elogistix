@@ -15,6 +15,7 @@ on:
       - "supabase/migrations/**"
       - "supabase/tests/rls/**"
       - "supabase/tests/*.sql"
+      - "supabase/schema/**"
       - ".github/workflows/rls-tests.yml"
   push:
     branches: [main]
@@ -22,6 +23,7 @@ on:
       - "supabase/migrations/**"
       - "supabase/tests/rls/**"
       - "supabase/tests/*.sql"
+      - "supabase/schema/**"
       - ".github/workflows/rls-tests.yml"
   workflow_dispatch:
   schedule:
@@ -110,7 +112,7 @@ jobs:
           path: .rls-snapshot/db.dump
           # Invalidamos cache cuando cambian migraciones, helpers CI o el
           # propio workflow (pinneo de imagen Postgres incluido).
-          key: rls-snapshot-pg15.8-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', '.github/workflows/rls-tests.yml') }}
+          key: rls-snapshot-pg15.8-${{ hashFiles('supabase/migrations/**', 'supabase/tests/rls/_ci_*.sql', 'supabase/tests/*.sql', '.github/workflows/rls-tests.yml') }}
 
       - name: Bootstrap (stubs auth/storage/cron/net/pgmq)
         if: steps.snapshot-cache.outputs.cache-hit != 'true'

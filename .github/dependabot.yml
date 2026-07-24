@@ -19,3 +19,26 @@ updates:
     labels:
       - "ci"
       - "dependencies"
+
+  # Dependencias JS (bun.lock). Sin esto, las ~100 deps de package.json nunca
+  # reciben PRs de actualización — dependency-review sólo audita PRs que ya
+  # existen; nada los propone. Grupos para no inundar: minor/patch agrupados,
+  # majors llegan individuales para revisión manual.
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "America/Mexico_City"
+    open-pull-requests-limit: 5
+    groups:
+      bun-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
