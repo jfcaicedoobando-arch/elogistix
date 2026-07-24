@@ -35,10 +35,14 @@ END $$;
 -- ============================================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
+-- FIX-45-HARDENING: ya NO se otorga todo a `anon`. El grant masivo a anon
+-- neutralizaba fix45_anon_execute_whitelist.sql (200+ funciones SECURITY
+-- DEFINER "expuestas" artificialmente) y hacía a CI infiel a prod, donde
+-- solo llegan a anon los GRANTs explícitos de las migraciones (p.ej.
+-- demo_leads). USAGE en el schema se conserva.
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, anon, service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role;
 
 -- ============================================================================
 -- Triggers de comisiones.

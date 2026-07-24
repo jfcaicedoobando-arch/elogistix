@@ -169,7 +169,7 @@ jobs:
         run: bunx playwright install-deps chromium
 
       - name: Run internal specs (shard ${{ matrix.shard }}/3)
-        run: bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3
+        run: bunx playwright test --project=chromium-internal --shard=${{ matrix.shard }}/3 --grep-invert "@visual"  # @visual fuera de CI hasta commitear baselines (ver spec 27)
 
       - name: Upload blob report
         if: always()
@@ -219,7 +219,29 @@ jobs:
         run: bunx playwright install-deps chromium
 
       - name: Run mutators
-        run: bunx playwright test --project=chromium-mutators
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=mutators-report.json bunx playwright test --project=chromium-mutators --reporter=blob,json
+
+      - name: Gate anti-skip — mutators debe ejecutar tests reales
+        # Auditoría de tests 2026-07-24 (H2): los specs 09-12 y 25 hacen
+        # test.skip cuando faltan los env IDs/flags que e2e.yml nunca
+        # exporta (E2E_FISCAL, E2E_EMBARQUE_*_ID, …) → el job quedaba
+        # verde ejecutando 0 tests reales. Si vuelve a pasar, falla.
+        if: always()
+        run: |
+          node -e '
+            const fs = require("fs");
+            if (!fs.existsSync("mutators-report.json")) {
+              console.error("::error::mutators-report.json no existe — el run de Playwright no produjo reporte.");
+              process.exit(1);
+            }
+            const r = JSON.parse(fs.readFileSync("mutators-report.json", "utf8"));
+            const s = r.stats || {};
+            const executed = (s.expected||0) + (s.unexpected||0) + (s.flaky||0);
+            console.log(`mutators: executed=${executed} skipped=${s.skipped||0}`);
+            if (executed === 0) {
+              console.error("::error::0 tests ejecutados en mutators — los specs skippearon en silencio (faltan env IDs/seed de staging).");
+              process.exit(1);
+            }'
 
       - name: Upload blob report
         if: always()

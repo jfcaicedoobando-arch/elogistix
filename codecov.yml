@@ -1,0 +1,25 @@
+# codecov.yml · Ola 2 (auditoría de tests 2026-07-24)
+#
+# Convierte la política escrita "todo PR en módulos core DEBE agregar
+# tests" en un gate automático: el status `patch` exige que las líneas
+# NUEVAS/MODIFICADAS del PR tengan >= 70% de cobertura. El `project`
+# global queda informativo (el piso global lo gobierna vitest en el job
+# coverage de ci.yml — este archivo no lo reemplaza).
+#
+# Requiere la GitHub App de Codecov instalada en el repo (ci.yml ya sube
+# lcov con codecov-action; sin la App los statuses simplemente no se
+# publican y nada se rompe).
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        target: 70%
+        threshold: 0%
+        informational: false
+        only_pulls: true
+comment:
+  layout: "reach, diff, flags"
+  behavior: default

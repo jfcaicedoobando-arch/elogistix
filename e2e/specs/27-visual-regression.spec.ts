@@ -45,7 +45,7 @@ const SCREENSHOT_OPTS = {
 };
 
 for (const vp of VIEWPORTS) {
-  test.describe(`Flujo 27 — Visual regression (${vp.name})`, () => {
+  test.describe(`Flujo 27 — Visual regression @visual (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test(`componentes de layout estables (${vp.name})`, async ({ page }) => {
