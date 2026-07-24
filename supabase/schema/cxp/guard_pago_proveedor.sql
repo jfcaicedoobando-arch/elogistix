@@ -1,5 +1,6 @@
 -- Fuente canónica de public.guard_pago_proveedor (dominio cxp).
--- Última migración que la define: 20260723220718 (FIX-R3-01).
+-- Última migración que la define: 20260723223436 (H6, grants anclados;
+-- cuerpo idéntico a FIX-R3-01 / 20260723220718).
 -- Regla: cualquier cambio a esta función debe actualizar este archivo
 -- en el mismo PR (ver supabase/schema/README.md).
 
