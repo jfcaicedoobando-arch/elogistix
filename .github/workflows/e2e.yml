@@ -283,9 +283,76 @@ jobs:
           path: test-results/
           retention-days: 14
 
+  multi-tenant:
+    name: Multi-tenant isolation (26)
+    needs: [guard-secrets, provision-users]
+    if: needs.guard-secrets.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Serial: usa dos orgs dedicadas y no debe intercalarse con otras corridas.
+    concurrency:
+      group: e2e-multi-tenant
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: ./.github/actions/setup-bun
+
+      - name: Guard (multi-tenant secrets)
+        id: mt_check
+        run: |
+          if [ -z "${E2E_MT_A_EMAIL}" ] || [ -z "${E2E_MT_A_PASSWORD}" ] || \
+             [ -z "${E2E_MT_B_EMAIL}" ] || [ -z "${E2E_MT_B_PASSWORD}" ]; then
+            echo "::warning::E2E_MT_* secrets missing — se omite el job multi-tenant."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache Playwright browsers
+        if: steps.mt_check.outputs.skip == 'false'
+        id: pw-cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browser (chromium)
+        if: steps.mt_check.outputs.skip == 'false' && steps.pw-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium
+      - name: Install Playwright system deps
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bunx playwright install-deps chromium
+
+      - name: Provisionar orgs A/B + fixture e2e/.tmp/multi-tenant.json
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bun run e2e:provision-multi-tenant
+
+      - name: Run multi-tenant specs
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bunx playwright test --project=chromium-multi-tenant
+
+      - name: Upload blob report
+        if: always() && steps.mt_check.outputs.skip == 'false'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: blob-multi-tenant
+          path: blob-report/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload traces on failure
+        if: failure() && steps.mt_check.outputs.skip == 'false'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: traces-multi-tenant
+          path: test-results/
+          retention-days: 14
+
   merge-reports:
     name: Merge HTML report
-    needs: [internal-shard, mutators, portal]
+    needs: [internal-shard, mutators, portal, multi-tenant]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
