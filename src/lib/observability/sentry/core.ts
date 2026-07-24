@@ -204,6 +204,11 @@ export function initSentry(): void {
         matchRoutes,
       }),
       Sentry.browserProfilingIntegration(),
+      // 13.312.10 (audit Sentry PR-C): captura `Error.cause` y propiedades
+      // enumerables (útil para `PostgrestError` que trae `code/hint/details`
+      // como campos, no como parte del stack). Depth 5 alineado a normalizeDepth.
+      Sentry.extraErrorDataIntegration({ depth: 5, captureErrorCause: true }),
+
       // F2 (13.65.0): captura automática de respuestas 5xx en fetch/XHR.
       // Empezamos en 500-599 para no inflar la cuota: muchos 4xx son
       // comportamiento esperado (401 al cargar sesión, 409 conflictos UX).
