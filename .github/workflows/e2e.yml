@@ -27,6 +27,11 @@ on:
         description: "Override de E2E_BASE_URL (opcional; default = secret)"
         required: false
         type: string
+      strict_fixtures:
+        description: "Si '1', los specs con fixtures ausentes fallan (no skip)."
+        required: false
+        default: ""
+        type: string
   schedule:
     - cron: "30 12 * * *"
   workflow_run:
