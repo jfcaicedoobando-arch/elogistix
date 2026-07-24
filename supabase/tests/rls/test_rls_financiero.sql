@@ -45,8 +45,8 @@ BEGIN
   -- Seed mínimo (bypass RLS como rol postgres)
   INSERT INTO public.organizations(id, nombre) VALUES (org_a, 'RLS FIN A'), (org_b, 'RLS FIN B');
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
-    (org_a, user_a, 'admin'), (org_b, user_b, 'admin');
-  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin'), (user_b, 'admin');
+    (org_a, user_a, 'admin_org'), (org_b, user_b, 'admin_org');
+  INSERT INTO public.user_roles(user_id, role) VALUES (user_a, 'admin_org'), (user_b, 'admin_org');
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES
     (cli_a, 'Cliente Fin A', 'XAXX010101000', 'a@test.local', org_a),

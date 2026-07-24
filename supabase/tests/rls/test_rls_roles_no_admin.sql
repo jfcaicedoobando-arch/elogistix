@@ -42,14 +42,14 @@ BEGIN
     (org_a, 'RLS NoAdmin A'), (org_b, 'RLS NoAdmin B');
 
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
-    (org_a, admin_a, 'admin'),
-    (org_a, viewer_a, 'viewer'),
-    (org_a, operador_a, 'operador');
+    (org_a, admin_a, 'admin_org'),
+    (org_a, viewer_a, 'customer_service'),
+    (org_a, operador_a, 'coordinador_logistico');
 
   INSERT INTO public.user_roles(user_id, role) VALUES
-    (admin_a, 'admin'),
-    (viewer_a, 'viewer'),
-    (operador_a, 'operador'),
+    (admin_a, 'admin_org'),
+    (viewer_a, 'customer_service'),
+    (operador_a, 'coordinador_logistico'),
     (cli_user, 'cliente');
 
   INSERT INTO public.clientes(id, nombre, rfc, email, organization_id) VALUES

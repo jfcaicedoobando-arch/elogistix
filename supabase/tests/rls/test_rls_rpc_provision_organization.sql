@@ -88,15 +88,15 @@ BEGIN
   INSERT INTO public.organizations(id, nombre) VALUES (seed_org, 'RPC Provision Seed');
 
   INSERT INTO public.organization_members(organization_id, user_id, role) VALUES
-    (seed_org, admin_a, 'admin'),
-    (seed_org, operador_a, 'operador'),
-    (seed_org, viewer_a, 'viewer');
+    (seed_org, admin_a, 'admin_org'),
+    (seed_org, operador_a, 'coordinador_logistico'),
+    (seed_org, viewer_a, 'customer_service');
 
   INSERT INTO public.user_roles(user_id, role) VALUES
     (super_a, 'super_admin'),
-    (admin_a, 'admin'),
-    (operador_a, 'operador'),
-    (viewer_a, 'viewer');
+    (admin_a, 'admin_org'),
+    (operador_a, 'coordinador_logistico'),
+    (viewer_a, 'customer_service');
   -- plano_a a propósito NO tiene rol.
 
   -- ════════════════════════════════════════════════════════════════════════
