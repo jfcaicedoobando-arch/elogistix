@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutationWithFeedback } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";
 import {
   aplicarNotaCredito,
@@ -19,64 +19,63 @@ export function useNotasCreditoFactura(facturaId: string | undefined) {
   });
 }
 
-function invalidate(qc: ReturnType<typeof useQueryClient>, facturaId: string | undefined) {
-  if (facturaId) qc.invalidateQueries({ queryKey: queryKeys.cxp.notasCredito(facturaId) });
-  qc.invalidateQueries({ queryKey: queryKeys.cxp.all });
+/**
+ * Invalida ambas caches: la lista de NCs del facturaId y el árbol `cxp.all`.
+ * El wrapper solo acepta keys estáticas, así que el invalidate específico por
+ * factura se hace vía `onSuccess` extra (facturaId está fuera de las vars).
+ */
+function useInvalidateNc(facturaId: string | undefined) {
+  const qc = useQueryClient();
+  return () => {
+    if (facturaId) qc.invalidateQueries({ queryKey: queryKeys.cxp.notasCredito(facturaId) });
+  };
 }
 
 export function useCrearNotaCredito(facturaId: string | undefined) {
-  const qc = useQueryClient();
-  return useMutation({
+  const invalidateNc = useInvalidateNc(facturaId);
+  return useMutationWithFeedback({
     mutationFn: (payload: TablesInsert<"proveedor_notas_credito">) =>
       crearNotaCreditoProveedor(payload),
-    onSuccess: () => {
-      invalidate(qc, facturaId);
-      notifySuccess(undefined, { title: "Nota de crédito registrada" });
-    },
-    onError: (error: Error) => notifyError(undefined, {
-      title: `No se pudo registrar la NC: ${error.message}`, error, method: "CREAR_NC_PROVEEDOR",
-    }),
+    invalidate: queryKeys.cxp.all,
+    successTitle: "Nota de crédito registrada",
+    errorTitle: "No se pudo registrar la NC",
+    errorMethod: "CREAR_NC_PROVEEDOR",
+    onSuccess: () => invalidateNc(),
   });
 }
 
 export function useAplicarNotaCredito(facturaId: string | undefined) {
-  const qc = useQueryClient();
-  return useMutation({
+  const invalidateNc = useInvalidateNc(facturaId);
+  return useMutationWithFeedback({
     mutationFn: (id: string) => aplicarNotaCredito(id),
-    onSuccess: () => {
-      invalidate(qc, facturaId);
-      notifySuccess(undefined, { title: "Nota de crédito aplicada" });
-    },
-    onError: (error: Error) => notifyError(undefined, {
-      title: `No se pudo aplicar la NC: ${error.message}`, error, method: "APLICAR_NC_PROVEEDOR",
-    }),
+    invalidate: queryKeys.cxp.all,
+    successTitle: "Nota de crédito aplicada",
+    errorTitle: "No se pudo aplicar la NC",
+    errorMethod: "APLICAR_NC_PROVEEDOR",
+    onSuccess: () => invalidateNc(),
   });
 }
 
 export function useAprobarNotaCredito(facturaId: string | undefined) {
-  const qc = useQueryClient();
-  return useMutation({
+  const invalidateNc = useInvalidateNc(facturaId);
+  return useMutationWithFeedback({
     mutationFn: (id: string) => aprobarNotaCredito(id),
-    onSuccess: () => {
-      invalidate(qc, facturaId);
-      notifySuccess(undefined, { title: "Nota de crédito aprobada" });
-    },
-    onError: (error: Error) => notifyError(undefined, {
-      title: `No se pudo aprobar la NC: ${error.message}`, error, method: "APROBAR_NC_PROVEEDOR",
-    }),
+    invalidate: queryKeys.cxp.all,
+    successTitle: "Nota de crédito aprobada",
+    errorTitle: "No se pudo aprobar la NC",
+    errorMethod: "APROBAR_NC_PROVEEDOR",
+    onSuccess: () => invalidateNc(),
   });
 }
 
 export function useCancelarNotaCredito(facturaId: string | undefined) {
-  const qc = useQueryClient();
-  return useMutation({
+  const invalidateNc = useInvalidateNc(facturaId);
+  return useMutationWithFeedback({
     mutationFn: (id: string) => cancelarNotaCredito(id),
-    onSuccess: () => {
-      invalidate(qc, facturaId);
-      notifySuccess(undefined, { title: "Nota de crédito cancelada" });
-    },
-    onError: (error: Error) => notifyError(undefined, {
-      title: `No se pudo cancelar la NC: ${error.message}`, error, method: "CANCELAR_NC_PROVEEDOR",
-    }),
+    invalidate: queryKeys.cxp.all,
+    successTitle: "Nota de crédito cancelada",
+    errorTitle: "No se pudo cancelar la NC",
+    errorMethod: "CANCELAR_NC_PROVEEDOR",
+    onSuccess: () => invalidateNc(),
   });
 }

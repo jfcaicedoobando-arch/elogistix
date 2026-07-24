@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
-import { useToast } from "@/hooks/shared";
+import { useToast, useMutationWithFeedback } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { registrarActividad } from "@/services/bitacora/registrar";
 import {
@@ -29,13 +29,14 @@ export function useCosteoTarifaMutations() {
   const queryClient = useQueryClient();
   const { organizationId } = useOrganization();
   const { toast } = useToast();
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.costeo.tarifas.all });
 
-  const crear = useMutation({
+  const crear = useMutationWithFeedback({
     mutationFn: (input: TarifaInput) => insertTarifaConRecargos(organizationId!, input),
+    invalidate: queryKeys.costeo.tarifas.all,
+    successTitle: "Tarifa guardada",
+    errorTitle: "Error al guardar",
+    errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_1",
     onSuccess: (row) => {
-      invalidate();
-      toast({ title: "Tarifa guardada" });
       // SAFE-CAST: `row` proviene de insertTarifaConRecargos (RPC tipada como Json); solo se leen campos opcionales para bitácora.
       const rowLike = row as unknown as { id?: string; naviera_nombre?: string; origen_nombre?: string; destino_nombre?: string };
       registrarActividad({
@@ -46,10 +47,11 @@ export function useCosteoTarifaMutations() {
         detalles: { naviera: rowLike?.naviera_nombre },
       });
     },
-    onError: (e: Error) =>
-      notifyError(toast, { title: "Error al guardar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_1" }),
   });
 
+  // NOTA: `crearMultiples` NO usa `useMutationWithFeedback` porque su éxito es
+  // ramificado (exitos vs fallos parciales) y necesita 3 mensajes distintos.
+  // Sigue el mismo patrón que `useMarcarRevisadosBulk`.
   const crearMultiples = useMutation({
     mutationFn: async (inputs: TarifaInput[]) => {
       const exitos: TarifaInput[] = [];
@@ -65,7 +67,7 @@ export function useCosteoTarifaMutations() {
       return { exitos, fallos };
     },
     onSuccess: ({ exitos, fallos }) => {
-      invalidate();
+      queryClient.invalidateQueries({ queryKey: queryKeys.costeo.tarifas.all });
       if (fallos.length === 0) {
         toast({ title: `Se crearon ${exitos.length} tarifa${exitos.length === 1 ? "" : "s"}` });
       } else if (exitos.length === 0) {
@@ -86,38 +88,38 @@ export function useCosteoTarifaMutations() {
       notifyError(toast, { title: "Error al guardar tarifas", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_6" }),
   });
 
-  const actualizar = useMutation({
+  const actualizar = useMutationWithFeedback({
     mutationFn: ({ id, input }: { id: string; input: TarifaInput }) =>
       updateTarifaConRecargos(id, input),
+    invalidate: queryKeys.costeo.tarifas.all,
+    successTitle: "Tarifa actualizada",
+    errorTitle: "Error al actualizar",
+    errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_2",
     onSuccess: (_data, vars) => {
-      invalidate();
-      toast({ title: "Tarifa actualizada" });
       registrarActividad({ modulo: "costeo", accion: "editar", entidadId: vars.id });
     },
-    onError: (e: Error) =>
-      notifyError(toast, { title: "Error al actualizar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_2" }),
   });
 
-  const reemplazar = useMutation({
+  const reemplazar = useMutationWithFeedback({
     mutationFn: (id: string) => marcarTarifaReemplazada(id),
+    invalidate: queryKeys.costeo.tarifas.all,
+    successTitle: "Tarifa marcada como reemplazada",
+    errorTitle: "Error al marcar tarifa",
+    errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_3",
     onSuccess: (_data, id) => {
-      invalidate();
-      toast({ title: "Tarifa marcada como reemplazada" });
       registrarActividad({ modulo: "costeo", accion: "reemplazar", entidadId: id });
     },
-    onError: (e: Error) =>
-      notifyError(toast, { title: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_3" }),
   });
 
-  const eliminar = useMutation({
+  const eliminar = useMutationWithFeedback({
     mutationFn: (id: string) => deleteTarifa(id),
+    invalidate: queryKeys.costeo.tarifas.all,
+    successTitle: "Tarifa eliminada",
+    errorTitle: "Error al eliminar",
+    errorMethod: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_4",
     onSuccess: (_data, id) => {
-      invalidate();
-      toast({ title: "Tarifa eliminada" });
       registrarActividad({ modulo: "costeo", accion: "eliminar", entidadId: id });
     },
-    onError: (e: Error) =>
-      notifyError(toast, { title: "Error al eliminar", description: e.message, error: e, method: "FEATURES_COSTEO_HOOKS_USECOSTEOTARIFAS_4" }),
   });
 
   return { crear, crearMultiples, actualizar, reemplazar, eliminar };
