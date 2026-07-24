@@ -228,6 +228,9 @@ jobs:
         # verde ejecutando 0 tests reales. Si vuelve a pasar, falla.
         if: always()
         run: |
+          # shellcheck disable=SC2016
+          # Las expresiones ${...} viven dentro del string de node -e y las
+          # expande Node, no bash. Silenciamos SC2016 a propósito.
           node -e '
             const fs = require("fs");
             if (!fs.existsSync("mutators-report.json")) {
