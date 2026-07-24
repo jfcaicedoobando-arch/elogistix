@@ -221,12 +221,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
+      # Gate de paths: los 42 tests Deno solo corren si el PR toca
+      # supabase/functions o este workflow. En push a main corren siempre
+      # (gate de release). El job queda en success aunque se saltee, así que
+      # ci-success no necesita cambios.
+      - name: Detect edge-function changes
+        id: changes
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch --depth=1 origin "${{ github.event.pull_request.base.sha }}"
+          CHANGED=$(git diff --name-only FETCH_HEAD HEAD)
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -qE '^supabase/functions/|^\.github/workflows/ci\.yml$'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Deno
+        if: steps.changes.outputs.run == 'true'
         uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
         with:
           deno-version: v1.46.x
 
       - name: Cache Deno deps
+        if: steps.changes.outputs.run == 'true'
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
@@ -237,6 +260,7 @@ jobs:
             ${{ runner.os }}-deno-
 
       - name: Run Deno tests (excluding smoke)
+        if: steps.changes.outputs.run == 'true'
         # --no-check: el ecosistema Deno+esm.sh emite muchos errores TS2578
         # ("Unused @ts-expect-error") cuando los tipos de `Deno.*` y de los
         # @supabase/* remotos se resuelven completamente. Mantenemos los
