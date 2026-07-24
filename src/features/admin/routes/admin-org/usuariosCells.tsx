@@ -13,6 +13,7 @@ import type { AppRole } from "@/types/appRole";
 import {
   ASSIGNABLE_ROLE_GROUPS,
   ROLE_LABELS,
+  ROLE_DESCRIPTIONS,
   esRolLegacy,
   rolModernoSugerido,
 } from "@/features/admin/domain/roles/roleCatalog";
