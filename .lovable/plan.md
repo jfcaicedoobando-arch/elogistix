@@ -1,33 +1,70 @@
 ## Contexto
 
-Las 5 proformas del CSV están en `estado_proforma = 'pendiente'` sin `factura_id` ni `folio_factura_externa`. Fueron facturadas en el sistema anterior, por lo que los folios (804, 908, 781, 849, 858) no corresponden a facturas actuales en la tabla `facturas` (verifiqué: solo existe un folio 849, pero pertenece a otro cliente — SONOMEDICS, no QUIMCELT).
+En el embarque `3296c226…` (estado **Cerrado**), Héctor intentó eliminar una proforma y el backend respondió con `Embarque cerrado: edición bloqueada (tabla conceptos_venta)` (código Postgres `23514`).
 
-Como no hay CFDI destino en este sistema, no podemos vincular `factura_id`. La ruta correcta es marcarlas como facturadas externamente usando los campos ya existentes: `folio_factura_externa` y `fecha_facturacion`.
+El servicio `eliminarProforma` (`src/features/proformas/services/crud.ts`) hace dos pasos:
 
-## Cambios
+1. `UPDATE conceptos_venta SET estado_facturacion='pendiente', proforma_id=NULL WHERE proforma_id = …`
+2. `rpc('soft_delete_record', { _table: 'proformas', … })`
 
-Migración de datos (tool `supabase--insert`, un solo `UPDATE`):
+El paso 1 dispara `tg_bloquear_si_embarque_cerrado`, que en el CHANGELOG (v13.303.99…) se dejó **intencionalmente** enganchado a `conceptos_venta` para proteger la operación. Pero **eliminar una proforma no es una edición operativa** — es limpieza fiscal previa a la factura (análoga a lo que ya se hizo con `facturas`/`pagos_factura`). Hoy no hay forma de que un usuario elimine una proforma huérfana de un embarque ya cerrado.
 
-| Proforma | folio_factura_externa | fecha_facturacion |
-|---|---|---|
-| PRO-2026-0288 | 804 | 2026-03-30 |
-| PRO-2026-0277 | 908 | 2026-05-27 |
-| PRO-2026-0187 | 781 | 2026-03-10 |
-| PRO-2026-0186 | 849 | 2026-04-24 |
-| PRO-2026-0185 | 858 | 2026-04-28 |
+Analogía: el candado de la puerta operativa no debería trabar también la papelera de borradores fiscales.
 
-Set adicional:
-- `estado_proforma = 'facturada'`
-- `updated_at = now()`
+## Diagnóstico (verificado)
 
-No se toca `factura_id` (queda `NULL` porque no existe CFDI equivalente en el sistema nuevo).
+- Trigger `tg_bloquear_si_embarque_cerrado` bloquea cualquier `UPDATE/INSERT/DELETE` sobre `conceptos_venta` cuando `embarques.estado = 'Cerrado'`.
+- El trigger respeta la GUC `app.bypass_cierre = 'on'` (patrón ya usado por `avanzar_estado_embarque`, `cerrar_embarque`, etc.).
+- La proforma en cuestión es un borrador (no está `facturada`) — eliminarla es seguro.
 
-## Detalles técnicos
+## Plan
 
-- Un `UPDATE ... FROM (VALUES ...)` sobre `public.proformas` filtrando por `numero IN (...)`.
-- Sin migración de esquema, sin cambios de código, sin bump de `APP_VERSION` (es solo data-fix, análogo a la vinculación previa de v13.308.11).
-- Entrada en `CHANGELOG.md` bajo la versión actual documentando el ajuste de 5 registros heredados.
+### 1. Nueva RPC `eliminar_proforma_atomica(p_proforma_id uuid)`
 
-## Verificación
+En una nueva migración:
 
-Después del update, correr `SELECT numero, estado_proforma, folio_factura_externa, fecha_facturacion FROM proformas WHERE numero IN (...)` y confirmar que las 5 quedan en `facturada` con los folios/fechas correctos.
+- `SECURITY DEFINER`, `SET search_path = public`, `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO authenticated, service_role, postgres` (cumple H6).
+- Verifica que la proforma exista y **no** esté en estado `facturada` (para no romper trazabilidad ya vinculada a un CFDI). Si lo está, `RAISE EXCEPTION 'LC_PROFORMA_FACTURADA'`.
+- Verifica que el `auth.uid()` pertenezca a la misma `organization_id` de la proforma (defensa en profundidad además de RLS).
+- Dentro de la función activa `PERFORM set_config('app.bypass_cierre','on', true)` (scope local a la transacción) para que el trigger permita:
+  - `UPDATE conceptos_venta SET estado_facturacion='pendiente', proforma_id=NULL WHERE proforma_id = p_proforma_id`.
+  - Llamar a `soft_delete_record('proformas', p_proforma_id)` (que hace `UPDATE proformas SET deleted_at = now()`, sin tocar `conceptos_venta` ni el embarque, por lo que no re-dispara el bloqueo).
+- Registra en `bitacora_actividad` la acción `PROFORMA_ELIMINADA` con `metadata = { embarque_id, motivo: 'cierre' }`.
+
+### 2. Reemplazar el flujo del cliente
+
+En `src/features/proformas/services/crud.ts`:
+
+- `eliminarProforma` deja de hacer los dos pasos manuales y llama únicamente a `supabase.rpc('eliminar_proforma_atomica', { p_proforma_id })`.
+- El `Sentry.startSpan` se conserva (`op: db.rpc`, name `rpc.eliminar_proforma_atomica`).
+- El mensaje de error `LC_PROFORMA_FACTURADA` se mapea en `src/lib/errors/lcCodeMessages.ts` con copy amigable: “No se puede eliminar: la proforma ya está facturada. Cancela primero la factura vinculada.”
+
+### 3. Tests
+
+- Ampliar `src/features/proformas/services/__tests__/crud.test.ts` con dos casos:
+  - Éxito: mock de `supabase.rpc('eliminar_proforma_atomica')` → `error: null`, verifica que se llame con el `p_proforma_id` correcto.
+  - Error `LC_PROFORMA_FACTURADA` → burbujea al caller.
+- Sumar entrada al test `lcCodeMessages` para asegurar el copy del nuevo código.
+
+### 4. Documentación
+
+- `CHANGELOG.md`: nueva entrada `## [13.312.7]` describiendo el fix (usuario reporta bloqueo al eliminar proforma en embarque cerrado; ahora la RPC bypassa el candado sólo para borradores).
+- Bump `APP_VERSION` a `13.312.7` en `src/constants/appVersion.ts`.
+
+## Consideraciones técnicas
+
+- El trigger sigue igual (no relajamos la protección general de `conceptos_venta`) — el bypass es puntual y auditado por la RPC.
+- `soft_delete_record` no toca `conceptos_venta`, así que el bypass sólo cubre el `UPDATE` inicial.
+- El chequeo de estado `facturada` evita que un admin borre por accidente una proforma ya convertida en CFDI vigente.
+- No se modifica UI del diálogo (el mensaje sigue igual); en el próximo turno podríamos ocultar el botón para roles sin permiso, pero fuera de scope aquí.
+
+## Archivos a tocar
+
+- `supabase/migrations/<timestamp>_eliminar_proforma_atomica.sql` (nueva)
+- `src/features/proformas/services/crud.ts`
+- `src/features/proformas/services/__tests__/crud.test.ts`
+- `src/lib/errors/lcCodeMessages.ts` (+ test asociado si aplica)
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
+
+Esta proforma es legacy de versiones anterirores del software. Borra la de manera directa. Es lo mas sencillo. PRO-2026-0330
