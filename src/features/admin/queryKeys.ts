@@ -29,6 +29,8 @@ export const admin = {
   orgActivity: ['admin', 'org-activity'] as const,
   recentOrgs: ['admin', 'recent-orgs'] as const,
   recentOrgsList: (limit: number) => ['admin', 'recent-orgs', limit] as const,
+  migrarRolesLegacyDryRun: ['admin', 'migrar-roles-legacy', 'dry-run'] as const,
+  orgMembersAll: ['admin-org-members'] as const,
 } as const;
 
 export const appLogs = {
