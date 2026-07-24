@@ -192,7 +192,7 @@ describe("useClientes · migración ola1 batch 2", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(notifySuccess).toHaveBeenCalledWith(undefined, expect.objectContaining({ title: "Contacto creado" }));
     const keys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey);
-    expect(keys).toEqual(expect.arrayContaining([["clientes", "contactos", "cli1"]]));
+    expect(keys).toEqual(expect.arrayContaining([["contactos_cliente", "cli1"]]));
   });
 
   it("useUpdateCliente: error → notifyError con título traducido", async () => {
@@ -236,7 +236,7 @@ describe("useClientes · migración ola1 batch 2", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(notifySuccess).toHaveBeenCalledWith(undefined, expect.objectContaining({ title: "Contacto actualizado" }));
     const keys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey);
-    expect(keys).toEqual(expect.arrayContaining([["clientes", "contactos", "cli1"]]));
+    expect(keys).toEqual(expect.arrayContaining([["contactos_cliente", "cli1"]]));
   });
 });
 
@@ -282,7 +282,7 @@ describe("useCotizacionMutations · migración ola1 batch 2", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(notifySuccess).toHaveBeenCalledWith(undefined, expect.objectContaining({ title: "Cotización reactivada" }));
     const keys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey);
-    expect(keys).toEqual(expect.arrayContaining([["cotizaciones", "detail", "cot1"]]));
+    expect(keys).toEqual(expect.arrayContaining([["cotizaciones", "cot1"]]));
   });
 
   it("useUpdateCotizacion: error → notifyError con título específico", async () => {
@@ -312,7 +312,7 @@ describe("useDocumentoEmbarqueMutations · migración ola1 batch 2", () => {
     const keys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey);
     expect(keys).toEqual(
       expect.arrayContaining([
-        ["embarques", "documentos", "e1"],
+        ["documentos_embarque", "e1"],
         ["embarques"],
         ["auditoria", "embarques"],
       ]),
@@ -339,7 +339,7 @@ describe("useDocumentoEmbarqueMutations · migración ola1 batch 2", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(notifySuccess).not.toHaveBeenCalled();
     const keys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey);
-    expect(keys).toEqual(expect.arrayContaining([["embarques", "documentos", "e1"]]));
+    expect(keys).toEqual(expect.arrayContaining([["documentos_embarque", "e1"]]));
   });
 
   it("useSetDocumentoNoAplica: error → método SET_DOC_NO_APLICA", async () => {
@@ -403,7 +403,7 @@ describe("useNotasCreditoProveedor · migración ola1 batch 2", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(notifySuccess).toHaveBeenCalledWith(undefined, expect.objectContaining({ title: "Nota de crédito registrada" }));
     const keys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey);
-    expect(keys).toEqual(expect.arrayContaining([["cxp", "notasCredito", "fac1"]]));
+    expect(keys).toEqual(expect.arrayContaining([["cxp", "notas-credito", "fac1"]]));
   });
 
   it("useAplicarNotaCredito: error → método APLICAR_NC_PROVEEDOR", async () => {
