@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.312.18] - 2026-07-24
+- **docs(release · C1) · Cierre de la condición única de release.** Corregido el comentario stale de baseline en `eslint.config.js` (`SONNER_LEGACY_ALLOWLIST`): "84 archivos" → "82 archivos + 6 wrappers". Verificado que el resto de C1 ya estaba aplicado en el repo: `ARCHITECTURE.md` §1 refleja la topología `features/` real (32 módulos, `lib/contexts/`, `supabase/schema/`, `supabase/tests/`); banners **OBSOLETO** presentes en `docs/architecture-map.md` y `docs/architecture.md`; `docs/arquitectura-auditoria-3-status.md` ya cita 44 entradas de `CROSS_FEATURE_ALLOWLIST`, `locale-format-legacy` AGOTADA y paso 1 del ítem 3.3 cerrado; `docs/migrations-hygiene.md` ya en baseline `20260723223436`. Analogía: la casa ya estaba pintada, solo faltaba retocar el número de la placa en la puerta. Release-ready. 🚀
+
+
 ## [13.312.17] - 2026-07-24
 - **test(e2e) · Ola 3 · Higiene mecánica de la auditoría T3.** Cambio en 4 frentes, todos bajo la misma idea: dejar de aceptar "falsos verdes" en CI.
   - **`waitForTimeout` residuales eliminados (17 → 0).** Migramos los sleeps duros a `page.waitForLoadState("networkidle")` en los specs responsive: 13 (1), 14 (1), 15 (3), 17 (3), 19 (1), 20 (5), 26 (2), 27 (1). Analogía: antes esperábamos "un rato fijo por si acaso"; ahora esperamos hasta que la red se calla, y si no se calla en el timeout de expect, el test lo dice.
