@@ -14,11 +14,12 @@
  */
 import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
+import { requireFixture } from "../fixtures/requireFixture";
 
 const HAS_SEED = process.env.E2E_HAS_SEED === "1";
 
 test.describe("Flujo 07 — Wizard Nuevo Embarque (teclado)", () => {
-  test.skip(!HAS_SEED, "Requiere E2E_HAS_SEED=1 + cotización aceptada sembrada");
+  requireFixture(HAS_SEED, "Requiere E2E_HAS_SEED=1 + cotización aceptada sembrada");
 
   test("teclado: vincula cotización, valida badges y navega pasos", async ({ page }) => {
     await loginAs(page, internalCreds());
