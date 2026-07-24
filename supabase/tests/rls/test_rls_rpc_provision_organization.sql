@@ -149,9 +149,9 @@ BEGIN
   PERFORM pg_temp.assert(visible = 1, 'super_admin debe haber creado la organización');
 
   SELECT count(*) INTO visible FROM public.organization_members
-    WHERE organization_id = created_org AND user_id = new_owner AND role = 'admin';
+    WHERE organization_id = created_org AND user_id = new_owner AND role = 'admin_org';
   PERFORM pg_temp.assert(visible = 1,
-    'super_admin debe haber dado de alta al owner como admin de la nueva org');
+    'super_admin debe haber dado de alta al owner como admin_org de la nueva org');
 
   -- ════════════════════════════════════════════════════════════════════════
   -- TEST 7: nombre vacío → 22023
