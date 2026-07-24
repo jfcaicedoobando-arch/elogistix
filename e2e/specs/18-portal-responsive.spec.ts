@@ -95,7 +95,7 @@ for (const vp of VIEWPORTS) {
       await expect(
         page.getByRole("heading", { name: /mis embarques/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(500);
+      await page.waitForLoadState("networkidle");
 
       const filas = page.locator("table tbody tr");
       const hayFilas = (await filas.count()) > 0;
@@ -103,7 +103,7 @@ for (const vp of VIEWPORTS) {
 
       await filas.first().click();
       await page.waitForURL(/\/portal\/embarques\/[^/]+/i, { timeout: 15_000 });
-      await page.waitForTimeout(700);
+      await page.waitForLoadState("networkidle");
       await assertNoOverflow(page, `portal detalle embarque ${vp.name}`);
 
       expect(errores, `consola detalle portal ${vp.name}`).toEqual([]);
