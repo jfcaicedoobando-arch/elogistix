@@ -1,64 +1,60 @@
+## Pendientes tras la auditoría E2E T3
 
-# Plan: remediación auditoría E2E (t3-e2e-audit.md)
+Comparé la auditoría contra el repo actual (v13.312.16). Lo aplicado en v13.312.15/16: job `multi-tenant`, 13 envs gating, helper `requireFixture`, gate anti-skip en mutators, `@visual` fuera de CI, spec 18 sin `waitForTimeout`, H1/H3 fixes SQL.
 
-La auditoría identifica 3 clases de problemas: **(a) specs valiosos que nunca corren en CI** por falta de env/jobs, **(b) tests "verdes falsos"** que skippean silenciosamente o solo miden overflow/consola, y **(c) gaps de flujos fiscales/CxC/CxP** sin cobertura. La estrategia es arreglar primero lo que ya existe pero no ejecuta (bajo costo, alto valor), después endurecer los skips silenciosos, y por último añadir cobertura nueva.
+**Lo que queda** — analogía: pusimos los interruptores y el tablero de alarmas; ahora falta cambiar los focos viejos, cubrir las habitaciones sin cámara, y calibrar el sensor de imagen.
 
-## Ola 1 — Activar lo que ya existe (bajo costo, alto valor)
+### Estado numérico
+- `waitForTimeout` residuales: **17** en 8 specs (13, 14, 15, 17, 19, 20, 26, 27).
+- Specs con `test.skip` crudo (no usan `requireFixture` todavía): **6** (07, 08, 09, 10, 11, 12) → `E2E_STRICT_FIXTURES=1` aún no promueve fallo real.
+- Baselines visuales spec 27: **0 PNGs** en repo → falla en CI si sale del `--grep-invert`.
+- Tests "smoke sin aserción de negocio": **~38 de 64** (~59%), concentrados en 13–17, 19, 20.
+- **Módulos sin E2E** (§3 auditoría): notas de crédito, cancelación CFDI como flujo, conciliación bancaria, descarga CFDI en portal, CxC aging real, crear cotización, costeo, admin provisioning.
 
-1. **Job `chromium-multi-tenant` en `.github/workflows/e2e.yml`**
-   - Añadir job que corra `bun run e2e:provision-multi-tenant` antes y luego `playwright test --project=chromium-multi-tenant`.
-   - Secrets necesarios: los mismos `E2E_*` + `E2E_CROSS_ORG_*` que ya usa 06 (validar que existen en repo settings; si no, listarlos como bloqueante para el usuario).
+---
 
-2. **Baselines visuales del spec 27**
-   - Generar snapshots con `playwright test 27-visual-regression --update-snapshots` contra staging.
-   - Commitear `e2e/specs/__screenshots__/*.png` (o ruta que Playwright use según config).
-   - Reemplazar máscara frágil `.text-xl, .text-2xl` por `data-testid` explícito en `TimelineEstadosCard`.
+### Ola 3 — Higiene mecánica (bajo riesgo, alto orden)
 
-3. **Poblar variables gating en CI para specs 07–12, 25**
-   - Documentar en `e2e/README.md` qué IDs de negocio requiere cada spec.
-   - Extender `scripts/e2e/provision-users.ts` (o crear `provision-fixtures.ts`) para sembrar y exportar a `GITHUB_ENV` los IDs: `E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID`, `E2E_COTIZACION_ACEPTADA_ID`, `E2E_PROVEEDOR_ID`, `E2E_EMBARQUE_PARA_CXP_ID`, `E2E_HAS_SEED=1`, `E2E_HAS_AUDIT_DATA=1`.
-   - `E2E_FISCAL=1` solo si `FACTURAPI_SANDBOX_KEY` está presente (specs 08/25).
+1. Migrar los 17 `waitForTimeout` restantes a `waitForLoadState("networkidle")` / `waitForResponse` / `expect.poll`. Por spec: 20 (5), 15 (3), 17 (3), 26 (2), 13/14/19/27 (1 c/u).
+2. Adoptar `requireFixture()` en los 6 specs 07–12 en lugar de `test.skip` crudo — así `E2E_STRICT_FIXTURES=1` (input del dispatch) los promueve a fallo cuando queramos auditar cobertura real.
+3. Spec 06: cuando `E2E_CROSS_ORG_*` degrada a UUID dummy, promover el `console.warn` a `test.info().annotations` + `requireFixture` → deja de quedar verde sin secrets reales.
+4. Spec 27: sustituir la máscara frágil `.text-xl, .text-2xl` por `data-e2e-mask="dynamic-count"` en los 3 nodos del timeline (una línea por componente).
 
-## Ola 2 — Eliminar falsos verdes
+### Ola 4 — Cobertura crítica fiscal/dinero (§3 prioridades 1–3)
 
-4. **Convertir skips silenciosos en fallos explícitos**
-   - En specs 02/18/21/22/23 y 06: si el env/data requerido falta, `test.fail("missing fixture: …")` en vez de `test.skip`, salvo bandera explícita `E2E_ALLOW_MISSING_FIXTURES=1` (útil solo en local).
-   - En spec 06: si `E2E_CROSS_ORG_*` degrada a UUID dummy, marcar el test como `test.skip` con motivo (no `console.warn` invisible).
+Nuevos specs conectados al proyecto `chromium-mutators` con gating por `E2E_FISCAL`:
 
-5. **Endurecer suite responsive (13–20)**
-   - Añadir al menos 1 aserción de negocio por spec (p.ej. 13: KPI card con número; 18: portal muestra saldo del cliente; 14: cotización creada visible en lista).
-   - Sustituir los 23 `waitForTimeout` por `waitForResponse`/`expect.poll` (empezar por 18-portal con 6 ocurrencias).
+5. **`28-nota-credito.spec.ts`** — emisión NC contra factura sandbox → verifica saldo/estado → aplica → cancela NC. Cleanup FK-safe con tag `E2E_TEST`.
+6. **`29-cancelar-cfdi.spec.ts`** — cancelación motivo 02/04 como flujo (no cleanup): duplica sandbox → cancela → `facturapi-reconciliar-cancelaciones` → verifica estado SAT/acuse en UI.
+7. **`30-portal-descarga-cfdi.spec.ts`** — portal cliente descarga PDF+XML de factura (`facturapi-descargar`); afirma que llega binario válido y filename correcto.
 
-6. **Adopción de Page Objects**
-   - Extraer POs para `cotizacion`, `cxp`, `portal`, `cliente` (los 4 flujos más repetidos).
-   - Migrar specs de mayor duplicación (11, 12, 17, 20).
+### Ola 5 — Cobertura secundaria (§3 prioridades 4–9)
 
-## Ola 3 — Cerrar gaps críticos (fiscal/dinero primero)
+8. **`31-conciliacion-bancaria.spec.ts`** — matching en `/tesoreria/conciliacion` (spec 04 se llama así pero no lo prueba).
+9. **`32-cxc-aging-real.spec.ts`** — validar buckets 0-30/31-60/… con fechas conocidas (no solo "no todos dicen hoy" como el spec 23).
+10. **`33-crear-cotizacion.spec.ts`** — wizard cotización completo hasta enviar (hoy nadie lo envía).
+11. Enriquecer specs 13–17, 19, 20: añadir una aserción de negocio por spec (heading semántico, presencia de dato de tenant, valor de KPI > 0), sin retirar el chequeo de overflow.
 
-Un spec nuevo por gap, en orden de prioridad de la auditoría:
+### Ola 6 — Visuales spec 27
 
-7. **Notas de crédito CFDI** (emisión → aplicación a saldo → cancelación) usando `facturapi-emitir-nota-credito` + `facturapi-cancelar-nota-credito`.
-8. **Cancelación CFDI motivo 02/04 como flujo** (con `facturapi-reconciliar-cancelaciones` y verificación de acuse SAT).
-9. **Habilitar spec 08 en CI** (una vez `E2E_FISCAL` esté armado en ola 1) + REP manual + `rep-retry-nocturno`.
-10. **Conciliación bancaria real** en `/tesoreria/conciliacion` (matching de movimientos ↔ pagos). Renombrar spec 04 actual a `smoke-facturacion-tabs` para eliminar el nombre engañoso.
-11. **Descarga CFDI en portal cliente** (`facturapi-descargar`, valida PDF y XML).
-12. **CxC aging real** (buckets 0-30/31-60/61-90/+90 con fechas conocidas) y **workflow CxP aprobación** (`/compras/por-aprobar`).
-13. **Costeo y admin** (tarifas + alta de usuario/rol/org) — cierre de gaps de mayor valor operativo.
+12. Preparar corrida `bunx playwright test --project=chromium-internal --grep "@visual" --update-snapshots` contra staging estable, revisar los PNGs generados, commitearlos bajo `e2e/specs/27-visual-regression.spec.ts-snapshots/`, luego retirar el `--grep-invert "@visual"` del workflow.
 
-## Detalles técnicos
+---
 
-- **Snapshots (paso 2):** Playwright guarda en `<spec>-snapshots/`. Confirmar con `snapshotPathTemplate` de `playwright.config.ts` antes de commitear.
-- **Provisión de fixtures (paso 3):** el script debe ser **idempotente** — si el registro ya existe con tag `E2E_FIXTURE`, reutilizarlo; si no, crearlo. Escribir IDs a `$GITHUB_OUTPUT` para que el step siguiente los inyecte al env de Playwright.
-- **Gate por secret (paso 3):** usar `if: env.FACTURAPI_SANDBOX_KEY != ''` a nivel step, no a nivel job, para no romper el job entero cuando el secret falta en un fork.
-- **`test.fail` vs `test.skip` (paso 4):** Playwright no aborta el run con `test.fail` si el test efectivamente falla — es el comportamiento buscado. La bandera `E2E_ALLOW_MISSING_FIXTURES` se lee en `testBase.ts` fixture nuevo.
-- **CHANGELOG + APP_VERSION** en cada ola (siguiendo memoria `mem://instructions/changelog-updates`).
+### Detalles técnicos
 
-## Fuera de alcance
+- **Riesgo cero**: Ola 3 completa (mecánica, sin nueva lógica).
+- **Requiere secrets nuevos en GitHub**: Olas 4/5 dependen de `E2E_FISCAL=1`, `E2E_PROFORMA_NUMERO`, `E2E_FACTURA_SANDBOX_ID` (nuevo, para 28/29/30), `E2E_CUENTA_BANCO_ID` (nuevo, para 31). El workflow ya expone estas envs con guard silencioso — sin secrets, los specs `requireFixture` skippean; con `E2E_STRICT_FIXTURES=1` fallan.
+- **Sandbox FacturApi**: Olas 4/5 timbran contra sandbox — los specs deben tener cleanup con cancelación motivo 02 en `afterAll`, patrón ya probado en spec 08.
+- **Ratchet de cobertura**: cada spec nuevo baja el % `smoke` (hoy 59%) hacia meta ~40%.
+- **Versión y CHANGELOG**: bump por ola (13.312.17 → 20).
 
-- Cambiar a Vitest o a un runner distinto.
-- Reescribir RLS o edge functions (la auditoría reconoce que RLS tiene su propio workflow `rls-tests.yml`).
-- Tests unitarios adicionales — este plan es E2E puro.
+### Recomendación de orden
 
-## Nota
+Ola 3 se puede mergear sola esta semana (bajo riesgo). Antes de Ola 4 necesito de ti: (a) confirmar que sandbox FacturApi está estable en staging, (b) los 2 secrets nuevos (`E2E_FACTURA_SANDBOX_ID`, `E2E_CUENTA_BANCO_ID`). Ola 6 requiere elegir una ventana con staging "congelado".
 
-`.lovable/` está en tu `.gitignore`, así que este plan no se persistirá tras el próximo snapshot. ¿Quieres que lo saque del `.gitignore` para que los planes queden versionados?
+### Qué NO propongo (fuera de scope T3)
+
+- Reescribir POs para adopción 100% (~24 specs) — costo alto, beneficio marginal dado que la mayoría usa `getByRole`.
+- Portal agente y CRM completos — módulos aparte, plan separado.
+- Onboarding/signup — depende de decisión de producto sobre auto-signup público (hoy bloqueado).
