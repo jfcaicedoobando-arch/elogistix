@@ -58,6 +58,30 @@ const TRACE_PROPAGATION_TARGETS: Array<string | RegExp> = [
   /librecarga\.com/,
 ];
 
+// 13.312.10 (audit Sentry PR-C): orígenes de código ajeno a la app que jamás
+// deben producir eventos. Extensiones del navegador y scripts de terceros
+// inyectados por hosting / analytics generan errores que no podemos corregir.
+const DENY_URLS: Array<string | RegExp> = [
+  /^chrome-extension:\/\//i,
+  /^moz-extension:\/\//i,
+  /^safari-(web-)?extension:\/\//i,
+  /extensions\//i,
+  // Scripts inyectados por hosting (Lovable analytics, GTM, etc.)
+  /\/gtag\/js/i,
+  /googletagmanager\.com/i,
+  /\/flock\.js/i,
+];
+
+// 13.312.10: URL del túnel Sentry sólo si tenemos base de Supabase configurada;
+// evita apuntar a `undefined/functions/v1/sentry-tunnel` en despliegues mal
+// configurados (que además dispara CORS ruidoso en la consola).
+function resolveTunnelUrl(): string | undefined {
+  const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  if (!base || typeof base !== "string") return undefined;
+  return `${base.replace(/\/$/, "")}/functions/v1/sentry-tunnel`;
+}
+
+
 
 let initialized = false;
 
