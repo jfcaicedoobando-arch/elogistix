@@ -3,7 +3,7 @@ import { queryKeys } from "@/lib/query";
 import { useOrganization } from "@/lib/contexts/OrganizationContext";
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
-import { registrarActividad } from "@/lib/domain/bitacora/registrar";
+import { registrarActividad } from "@/services/bitacora/registrar";
 import {
   fetchCosteoTarifas,
   insertTarifaConRecargos,
