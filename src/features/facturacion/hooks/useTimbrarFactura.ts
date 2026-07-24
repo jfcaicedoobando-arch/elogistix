@@ -2,24 +2,31 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { emitirFacturapi, cancelarFacturapi, FacturapiError, type MotivoCancelacionSat } from "@/features/facturacion/services/facturapi";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
-
-import { notifyError } from "@/lib/ui/appFeedback";
+import { useMutationWithFeedback } from "@/hooks/shared";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { queryKeys } from "@/lib/query";
 import { invalidateHuecoFacturacion } from "@/features/facturacion/hooks/invalidateHuecoFacturacion";
+
+/**
+ * Timbrado. Usa `useMutationWithFeedback` para el error (traducido por
+ * `getErrorMessage`) e invalidaciones; el éxito se emite manualmente porque
+ * la descripción es dinámica (serie/folio del CFDI recién emitido).
+ */
 export function useTimbrarFactura() {
   const qc = useQueryClient();
-  return useMutation({
+  return useMutationWithFeedback({
     mutationKey: queryKeys.facturacion.emitirFactura,
     mutationFn: (facturaId: string) => emitirFacturapi(facturaId),
+    invalidate: facturasKeys.all,
+    errorTitle: "No se pudo timbrar",
+    errorMethod: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1",
     onSuccess: (res) => {
-      toast.success("Factura timbrada correctamente", {
+      notifySuccess(undefined, {
+        title: "Factura timbrada correctamente",
         description: `Serie ${res.serie} · Folio ${res.folio}`,
-        duration: 6000,
       });
-      qc.invalidateQueries({ queryKey: facturasKeys.all });
       invalidateHuecoFacturacion(qc);
     },
-    onError: (err: Error) => notifyError(toast, { title: `No se pudo timbrar: ${err.message}`, error: err, method: "FEATURES_FACTURACION_HOOKS_USETIMBRARFACTURA_1" }),
   });
 }
 
@@ -30,6 +37,13 @@ type CancelarVars = {
   sustituidaPorFacturaId?: string;
 };
 
+/**
+ * Cancelación. No migrado a `useMutationWithFeedback` porque el éxito tiene
+ * 3 ramas distintas (pending/sustituida/cancelado) y el error transitorio del
+ * SAT dispara un toast ámbar con acción "Reintentar" que reinvoca el servicio
+ * fuera del ciclo de React Query. Mantiene el manejo manual con `toast` de
+ * sonner directo (`.warning`/`.info` no están en `notifyError`).
+ */
 export function useCancelarFactura() {
   const qc = useQueryClient();
   return useMutation({
