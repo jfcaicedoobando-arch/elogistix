@@ -18,7 +18,10 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # En PRs cancelamos corridas obsoletas del mismo ref. En push a main NO:
+  # cada corrida de main publica bundle-stats + coverage history, y cancelarla
+  # deja huecos en la serie (Codecov / bundle-stats).
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 
 # v13.303.5 — Split `quality` (antes serial ~12 min) en 5 jobs paralelos.
 # Cada job comparte el cache de Bun (via `./.github/actions/setup-bun`).
@@ -45,7 +48,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: node_modules/.cache/eslint
-          key: ${{ runner.os }}-eslint-${{ hashFiles('eslint.config.js', 'bun.lockb') }}
+          key: ${{ runner.os }}-eslint-${{ hashFiles('eslint.config.js', 'bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-eslint-
 
@@ -72,7 +75,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: node_modules/.cache/tsc
-          key: ${{ runner.os }}-tsc-${{ hashFiles('tsconfig*.json', 'bun.lockb') }}
+          key: ${{ runner.os }}-tsc-${{ hashFiles('tsconfig*.json', 'bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-tsc-
 
@@ -180,7 +183,7 @@ jobs:
         with:
           path: |
             node_modules/.vite
-          key: ${{ runner.os }}-vite-${{ hashFiles('bun.lockb', 'vite.config.ts') }}
+          key: ${{ runner.os }}-vite-${{ hashFiles('bun.lock', 'vite.config.ts') }}
           restore-keys: |
             ${{ runner.os }}-vite-
 
@@ -279,7 +282,7 @@ jobs:
         with:
           path: |
             node_modules/.vitest
-          key: ${{ runner.os }}-vitest-v5-${{ matrix.shard }}-${{ hashFiles('bun.lockb', 'vitest.config.ts') }}
+          key: ${{ runner.os }}-vitest-v5-${{ matrix.shard }}-${{ hashFiles('bun.lock', 'vitest.config.ts') }}
           restore-keys: |
             ${{ runner.os }}-vitest-v5-${{ matrix.shard }}-
 
@@ -288,9 +291,9 @@ jobs:
         run: rm -rf .vitest-reports && mkdir -p .vitest-reports
 
       # 13.162.0 — Diseño intencional del gate de coverage:
-      #   - Los shards corren con thresholds a 0 (ver `test:coverage:shard` en
-      #     package.json). Un shard aislado NO tiene datos suficientes para
-      #     validar un piso global.
+      #   - Los shards corren SIN thresholds: `vitest.config.ts` detecta
+      #     `--shard` en argv y pone `thresholds: undefined`. Un shard aislado
+      #     NO tiene datos suficientes para validar un piso global.
       #   - El gate real se aplica en el job `coverage` (`test:coverage:merge`)
       #     tras mergear los blobs. Los thresholds efectivos viven en
       #     `vitest.config.ts` (lines/statements 38, functions 30, branches 34).
@@ -360,7 +363,14 @@ jobs:
         id: check-blobs
         run: |
           if [ ! "$(ls -A .vitest-reports/ 2>/dev/null)" ]; then
-            echo "::warning::No blob reports encontrados. Merge de coverage omitido."
+            # Gate anti-skip-silencioso: si los shards terminaron verdes pero no
+            # hay blobs, el upload/download de artifacts falló. Sin blobs no hay
+            # gate de thresholds — eso NO puede pasar en verde.
+            if [ "${{ needs.tests.result }}" = "success" ]; then
+              echo "::error::Tests en success pero 0 blob reports. El gate de coverage no puede omitirse por una falla de artifacts."
+              exit 1
+            fi
+            echo "::warning::No blob reports encontrados (tests result=${{ needs.tests.result }}). Merge de coverage omitido."
             echo "skip_merge=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip_merge=false" >> "$GITHUB_OUTPUT"

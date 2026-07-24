@@ -13,7 +13,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/ --cache-strategy content",
     "lint:unused": "knip --no-progress",
     "lint:unused:strict": "knip --no-progress --include files,dependencies,unlisted,duplicates,exports,types",
     "typecheck": "tsc -b",
