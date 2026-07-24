@@ -9,6 +9,27 @@ import type {
   EmbarqueContenedorInsert,
 } from "@/features/embarques/types/contenedor";
 
+/**
+ * v13.312.9 (Sentry JAVASCRIPT-REACT-1M/3H): traduce el error de violación
+ * de unicidad de `uq_embarque_contenedor_numero` a un mensaje amigable.
+ * Analogía: si intentas etiquetar dos cajas con el mismo número, avisamos
+ * en español en vez de mostrar el error crudo de la base de datos.
+ */
+function traducirErrorContenedorDuplicado(err: unknown): Error {
+  const e = err as { code?: string; message?: string; details?: string } | null;
+  const blob = `${e?.message ?? ""} ${e?.details ?? ""}`;
+  if (e?.code === "23505" && /uq_embarque_contenedor_numero/i.test(blob)) {
+    const match = /=\(([^,]+),\s*([^)]+)\)/.exec(e?.details ?? "");
+    const numero = match?.[2]?.trim();
+    return new Error(
+      numero
+        ? `El contenedor "${numero}" ya está registrado en este embarque.`
+        : "Ese número de contenedor ya está registrado en este embarque.",
+    );
+  }
+  return err instanceof Error ? err : new Error(String(e?.message ?? err));
+}
+
 export async function listarPorEmbarque(
   embarqueId: string,
 ): Promise<EmbarqueContenedor[]> {
