@@ -34,8 +34,8 @@ export function useMigrarRolesLegacy(options: UseMigrarRolesLegacyOptions = {}) 
     mutationFn: migrarRolesLegacyEjecutar,
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: QUERY_KEY });
-      qc.invalidateQueries({ queryKey: ["usuarios"] });
-      qc.invalidateQueries({ queryKey: ["admin", "orgMembers"] });
+      qc.invalidateQueries({ queryKey: queryKeys.usuarios.all });
+      qc.invalidateQueries({ queryKey: queryKeys.admin.orgMembersAll });
       notifySuccess(toast, {
         title: `Migración completada: ${data.total_migrados} rol(es) actualizado(s).`,
       });
