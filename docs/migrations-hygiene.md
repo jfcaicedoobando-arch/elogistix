@@ -45,3 +45,11 @@ Nunca a la baja. Si una migración legacy imposible de corregir aparece post-bas
   poder editar archivos de migración ya creados, se corrige en BD con una
   migración posterior (`20260723223436`) que re-aplica las funciones con los
   grants correctos; las migraciones originales quedan como legacy auditado.
+- `20260723223436` → `20260724180738` (2026-07-24): FIX-H6-02. La migración
+  `20260724180737_d76d8b84…` recreó `public.ensure_demo_membership(uuid)` como
+  `SECURITY DEFINER` sin `REVOKE`/`GRANT EXECUTE` (fix del issue Sentry
+  `JAVASCRIPT-REACT-1G` sobre rol legacy en tenant demo). Migración correctiva
+  posterior (v13.312.12) re-aplica la función con `REVOKE ALL … FROM PUBLIC,
+  anon` + `GRANT EXECUTE … TO service_role`; el archivo original queda como
+  legacy auditado y el baseline sube un segundo después de su timestamp.
+
