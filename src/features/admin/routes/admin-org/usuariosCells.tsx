@@ -13,7 +13,12 @@ import type { AppRole } from "@/types/appRole";
 import {
   ASSIGNABLE_ROLE_GROUPS,
   ROLE_LABELS,
+  esRolLegacy,
+  rolModernoSugerido,
 } from "@/features/admin/domain/roles/roleCatalog";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertTriangle } from "lucide-react";
 import { inicialesDeEmail } from "./usuariosCellsUtils";
 
 
