@@ -32,10 +32,23 @@ export {
 } from "./helpers";
 export { shouldDropSentryEvent, resolveSentryEnvironment } from "./dropPredicate";
 
-// DSN del proyecto elogistix/javascript-react (clave pública, segura en bundle).
-const DEFAULT_DSN =
-  "https://e44f92892772533298354b89d9ef3ddb@o4511415732404224.ingest.us.sentry.io/4511415734108160";
-const DSN = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || DEFAULT_DSN;
+// 13.310.0 (audit Sentry PR-A): el DSN debe venir SIEMPRE por env. Antes había
+// un `DEFAULT_DSN` hardcodeado como red de seguridad — se removió porque:
+// (1) crea acoplamiento del código al proyecto Sentry concreto y bloquea forks
+// autohospedados; (2) enmascara despliegues mal configurados que aparentan
+// funcionar. Si falta `VITE_SENTRY_DSN`, `initSentry` no arranca (misma
+// política que `MODE=development`).
+const DSN = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || "";
+
+/** Lee un sample rate opcional de env, clamp a [0,1]. Si no hay valor válido
+ *  usa `fallback` para no romper comportamiento previo. */
+function readRate(key: string, fallback: number): number {
+  const raw = import.meta.env[key as keyof ImportMetaEnv] as string | undefined;
+  if (!raw) return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(0, Math.min(1, n));
+}
 
 /** Hosts a los que adjuntar `sentry-trace` / `baggage` para trazas distribuidas
  *  front ↔ edge functions. Incluye el proyecto Supabase y dominios productivos. */
@@ -50,16 +63,18 @@ let initialized = false;
 
 export function initSentry(): void {
   if (initialized) return;
-  if (!DSN) return;
+  // 13.310.0: sin DSN NO inicializamos. Warn explícito para preview/prod para
+  // que un despliegue mal configurado no se detecte tarde.
+  if (!DSN) {
+    if (import.meta.env.MODE !== "development") {
+       
+      console.warn("[sentry] VITE_SENTRY_DSN no configurado — Sentry deshabilitado");
+    }
+    return;
+  }
   // No inicializar en desarrollo: las sesiones locales generan ruido por HMR.
   if (import.meta.env.MODE === "development") return;
   initialized = true;
-  // 13.114.17: warn si se está usando el DSN hardcodeado en producción real
-  // (no preview). Permite detectar configuración faltante sin romper.
-  if (!import.meta.env.VITE_SENTRY_DSN && resolveSentryEnvironment() === "production") {
-     
-    console.warn("[sentry] VITE_SENTRY_DSN no configurado, usando DEFAULT_DSN hardcodeado");
-  }
   // 13.114.17: `dist` para distinguir builds de la misma versión semver
   // (hotfixes rápidos). Usa VITE_BUILD_HASH si está disponible.
   const buildHash = (import.meta.env.VITE_BUILD_HASH as string | undefined) ?? undefined;
@@ -73,11 +88,15 @@ export function initSentry(): void {
     release: `libre-carga@${APP_VERSION}`,
     dist: buildHash,
     environment: resolveSentryEnvironment(),
+    // 13.310.0: initialScope evita la ventana en la que un evento temprano
+    // se envía antes de `setTag("is_pwa")`.
+    initialScope: { tags: { is_pwa: isPwa ? "true" : "false" } },
     tracesSampler: sampleByRoute,
     tracePropagationTargets: TRACE_PROPAGATION_TARGETS,
-    profilesSampleRate: 0.1,
-    replaysSessionSampleRate: 0,
-    replaysOnErrorSampleRate: 1.0,
+    // 13.310.0: sample rates configurables por env con los defaults previos.
+    profilesSampleRate: readRate("VITE_SENTRY_PROFILES_SAMPLE_RATE", 0.1),
+    replaysSessionSampleRate: readRate("VITE_SENTRY_REPLAYS_SESSION_RATE", 0),
+    replaysOnErrorSampleRate: readRate("VITE_SENTRY_REPLAYS_ON_ERROR_RATE", 1.0),
     tunnel: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sentry-tunnel`,
 
 
@@ -154,12 +173,15 @@ export function initSentry(): void {
       }),
       Sentry.replayIntegration({
         maskAllText: true,
+        // 13.310.0 (audit PR-B): explícito. Antes dependíamos del default del
+        // SDK; dejarlo escrito evita una regresión silenciosa si un upgrade
+        // cambia los defaults y filtra contenido de <input>/<textarea>.
+        maskAllInputs: true,
         blockAllMedia: true,
       }),
       Sentry.feedbackIntegration(FEEDBACK_INTEGRATION_OPTIONS),
     ],
   });
-  Sentry.setTag("is_pwa", isPwa ? "true" : "false");
 }
 
 

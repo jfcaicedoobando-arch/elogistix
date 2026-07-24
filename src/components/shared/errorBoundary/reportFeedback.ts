@@ -4,9 +4,8 @@
  * la clase completa.
  */
 import * as Sentry from "@sentry/react";
-import { toast } from "sonner";
 import { logger } from "@/lib/observability/logger";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { APP_VERSION } from "@/constants/appVersion";
 
 export interface ErrorBoundarySnapshot {
@@ -100,7 +99,8 @@ export async function openReportFeedback(
 export async function copyDetails(snap: ErrorBoundarySnapshot): Promise<void> {
   try {
     await navigator.clipboard.writeText(buildDetailsText(snap));
-    toast.success("Detalles copiados al portapapeles");
+    // 13.310.0 (audit PR-B): migrado de `toast.success` directo a wrapper.
+    notifySuccess(undefined, { title: "Detalles copiados al portapapeles" });
   } catch (err) {
     notifyError(undefined, {
       title: "No se pudo copiar al portapapeles",
