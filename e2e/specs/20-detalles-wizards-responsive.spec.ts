@@ -36,12 +36,12 @@ async function abrirPrimeraFila(page: Page, ruta: string, heading: RegExp, label
   await expect(page.getByRole("heading", { name: heading }).first()).toBeVisible({
     timeout: 15_000,
   });
-  await page.waitForTimeout(500);
+  await page.waitForLoadState("networkidle").catch(() => {});
   const filas = page.locator("table tbody tr");
   const cuenta = await filas.count();
   test.skip(cuenta === 0, `Sin datos en ${ruta} para probar detalle (${label})`);
   await filas.first().click();
-  await page.waitForTimeout(800);
+  await page.waitForLoadState("networkidle").catch(() => {});
 }
 
 for (const vp of VIEWPORTS) {
@@ -80,7 +80,7 @@ for (const vp of VIEWPORTS) {
       const totalTabs = await tabs.count();
       for (let i = 0; i < Math.min(totalTabs, 5); i++) {
         await tabs.nth(i).click().catch(() => {});
-        await page.waitForTimeout(300);
+        await page.waitForLoadState("networkidle").catch(() => {});
         await assertNoOverflow(page, `cliente tab#${i} ${vp.name}`);
       }
 
@@ -112,7 +112,7 @@ for (const vp of VIEWPORTS) {
       await expect(
         page.getByRole("heading", { name: /nueva cotizaci[oó]n/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(600);
+      await page.waitForLoadState("networkidle").catch(() => {});
       await assertNoOverflow(page, `wizard paso 1 ${vp.name}`);
 
       // Intento genérico: pulsar "Siguiente" hasta 3 veces mientras exista y
@@ -127,7 +127,7 @@ for (const vp of VIEWPORTS) {
         const habilitado = await siguiente.isEnabled().catch(() => false);
         if (!habilitado) break;
         await siguiente.click();
-        await page.waitForTimeout(500);
+        await page.waitForLoadState("networkidle").catch(() => {});
         await assertNoOverflow(page, `wizard paso ${paso} ${vp.name}`);
       }
 

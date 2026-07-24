@@ -52,7 +52,10 @@ export function TimelineEstadosCard({ conteoPorEstado, isLoading }: Props) {
                     {isLoading ? (
                       <Skeleton className="h-6 w-7 sm:h-7 sm:w-8" />
                     ) : (
-                      <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+                      <span
+                        data-e2e-mask="dynamic-count"
+                        className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground"
+                      >
                         {count}
                       </span>
                     )}

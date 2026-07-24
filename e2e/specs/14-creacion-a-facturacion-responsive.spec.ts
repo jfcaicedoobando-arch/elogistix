@@ -46,7 +46,7 @@ for (const vp of VIEWPORTS) {
         await expect(page.getByRole("heading", { name: step.heading }).first()).toBeVisible({
           timeout: 15_000,
         });
-        await page.waitForTimeout(1000);
+        await page.waitForLoadState("networkidle").catch(() => {});
 
         const overflow = await measureOverflow(page);
         expect(overflow.main, `overflow <main> en ${step.path} @ ${vp.name}`).toBeLessThanOrEqual(1);

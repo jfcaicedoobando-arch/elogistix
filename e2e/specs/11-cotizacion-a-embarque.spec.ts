@@ -10,11 +10,12 @@ import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";
+import { requireFixture } from "../fixtures/requireFixture";
 
 const COTIZACION_ID = process.env.E2E_COTIZACION_ACEPTADA_ID ?? "";
 
 test.describe("Flujo 11 — Cotización → embarque", () => {
-  test.skip(!COTIZACION_ID, "E2E_COTIZACION_ACEPTADA_ID requerido");
+  requireFixture(Boolean(COTIZACION_ID), "E2E_COTIZACION_ACEPTADA_ID requerido");
 
   let nuevoEmbarqueId: string | null = null;
 

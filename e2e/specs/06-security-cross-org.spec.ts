@@ -1,5 +1,6 @@
 import { expect, test, type Response } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
+import { requireFixture } from "../fixtures/requireFixture";
 
 /**
  * Spec de seguridad cross-org.
@@ -16,7 +17,9 @@ import { internalCreds, loginAs } from "../fixtures/auth";
  * imprime un warning en ese caso.
  */
 
-const DUMMY_UUID = "00000000-0000-4000-8000-000000000000";
+// (v13.312.17) Se retiró el fallback a DUMMY_UUID: ahora requireFixture
+// promueve la ausencia del env a skip/fail para evitar falsos verdes.
+
 
 const targets = [
   {
@@ -42,15 +45,18 @@ const targets = [
 test.describe("Flujo 06 — Seguridad cross-org", () => {
   for (const t of targets) {
     test(`bloquea acceso directo a ${t.label} de otra organización`, async ({ page }) => {
-      await loginAs(page, internalCreds());
-
+      // Auditoría E2E (Ola 3, v13.312.17): antes se degradaba a UUID dummy con
+      // `console.warn` silencioso — el test quedaba verde sin validar aislamiento
+      // real. Ahora si falta el ID cross-org, `requireFixture` skippea (o falla
+      // duro cuando E2E_STRICT_FIXTURES=1).
       const realId = process.env[t.envId];
-      const id = realId ?? DUMMY_UUID;
-      if (!realId) {
-        console.warn(
-          `[cross-org] ${t.envId} no definido — usando UUID dummy. Sólo se valida 404, no aislamiento real.`,
-        );
-      }
+      requireFixture(
+        Boolean(realId),
+        `${t.envId} no definido — se requiere un ID real de OTRA organización para validar aislamiento cross-org`,
+      );
+      const id = realId!;
+
+      await loginAs(page, internalCreds());
 
       // Capturar respuestas REST que pidan el recurso específico.
       const leakedRows: string[] = [];

@@ -57,8 +57,8 @@ for (const vp of VIEWPORTS) {
         page.getByRole("heading", { name: /buen(os|as)\s+(d[íi]as|tardes|noches)/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
       await page.waitForLoadState("networkidle").catch(() => {});
-      // Buffer defensivo para que gradientes y skeletons terminen su transición.
-      await page.waitForTimeout(500);
+      // (v13.312.17) Se retiró el `waitForTimeout(500)` "buffer defensivo";
+      // Playwright ya deshabilita animaciones vía `SCREENSHOT_OPTS`.
 
       // ── 1. Breadcrumbs ──────────────────────────────────────────────
       const breadcrumbs = page.getByRole("navigation", { name: /migas de pan/i }).first();
@@ -82,10 +82,13 @@ for (const vp of VIEWPORTS) {
       const timeline = page.getByTestId("timeline-estados-card");
       await expect(timeline).toBeVisible();
       // Enmascarar los conteos (números vivos) para que el diff sólo evalúe
-      // estructura/estilo, no el dato dinámico.
+      // estructura/estilo, no el dato dinámico. Ola 3 (v13.312.17): pasamos
+      // de una máscara CSS frágil (`.text-xl, .text-2xl` — Tailwind reutilizado
+      // en toda la app) a un atributo estable `data-e2e-mask="dynamic-count"`
+      // aplicado en `TimelineEstadosCard.tsx`.
       await expect(timeline).toHaveScreenshot(`timeline-estados-${vp.name}.png`, {
         ...SCREENSHOT_OPTS,
-        mask: [timeline.locator(".text-xl, .text-2xl")],
+        mask: [timeline.locator('[data-e2e-mask="dynamic-count"]')],
       });
     });
   });

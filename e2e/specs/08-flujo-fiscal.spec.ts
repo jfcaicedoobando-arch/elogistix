@@ -14,6 +14,7 @@ import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";
+import { requireFixture } from "../fixtures/requireFixture";
 
 const ENABLED = process.env.E2E_FISCAL === "1";
 const PROFORMA = process.env.E2E_PROFORMA_NUMERO ?? "";
@@ -21,7 +22,7 @@ const PROFORMA = process.env.E2E_PROFORMA_NUMERO ?? "";
 test.describe.configure({ mode: "serial" });
 
 test.describe("Flujo 08 — Fiscal happy path", () => {
-  test.skip(!ENABLED, "E2E_FISCAL=1 + E2E_PROFORMA_NUMERO requeridos");
+  requireFixture(ENABLED && Boolean(PROFORMA), "E2E_FISCAL=1 + E2E_PROFORMA_NUMERO requeridos");
 
   let facturaIdCreada: string | null = null;
   let lastPage: import("@playwright/test").Page | null = null;

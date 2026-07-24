@@ -48,7 +48,7 @@ for (const vp of VIEWPORTS) {
       const table = page.locator("table").first();
       await expect(table).toBeVisible({ timeout: 15_000 });
       await expect(page.locator("table tbody tr").first()).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(600);
+      await page.waitForLoadState("networkidle").catch(() => {});
       await assertNoOverflow(page, `lista ${vp.name}`);
 
       // 2) Abrir el primer embarque.
@@ -56,7 +56,7 @@ for (const vp of VIEWPORTS) {
       await expect(
         page.getByRole("heading", { name: /EL(IMP|EXP|GEN)\d+/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(600);
+      await page.waitForLoadState("networkidle").catch(() => {});
       await assertNoOverflow(page, `detalle ${vp.name}`);
 
       // 3) Regresar a la lista.
@@ -65,7 +65,7 @@ for (const vp of VIEWPORTS) {
         page.getByRole("heading", { name: /embarques/i }).first(),
       ).toBeVisible({ timeout: 15_000 });
       await expect(page.locator("table tbody tr").first()).toBeVisible({ timeout: 15_000 });
-      await page.waitForTimeout(400);
+      await page.waitForLoadState("networkidle").catch(() => {});
       await assertNoOverflow(page, `lista-post ${vp.name}`);
 
       expect(consoleErrors, `consola en ${vp.name}`).toEqual([]);

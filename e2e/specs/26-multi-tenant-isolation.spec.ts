@@ -85,7 +85,7 @@ async function assertNoCrossAccess(page: Page, _own: OrgFixture, other: OrgFixtu
     };
     page.on("response", onResp);
     await page.goto(t.path(id), { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1500);
+    await page.waitForLoadState("networkidle").catch(() => {});
     page.off("response", onResp);
 
     expect(leaked, `Fuga cross-org detectada en ${t.label}: ${leaked.join(", ")}`).toEqual([]);
@@ -99,7 +99,7 @@ async function assertNoCrossAccess(page: Page, _own: OrgFixture, other: OrgFixtu
   const cmd = page.getByRole("dialog").getByRole("textbox").first();
   if (await cmd.isVisible().catch(() => false)) {
     await cmd.fill(other.marker);
-    await page.waitForTimeout(600);
+    await page.waitForLoadState("networkidle").catch(() => {});
     await expect(page.getByRole("dialog").getByText(other.marker)).toHaveCount(0);
     await page.keyboard.press("Escape");
   }

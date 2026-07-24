@@ -13,12 +13,13 @@ import { expect, test } from "../fixtures/testBase";
 import { internalCreds, loginAs } from "../fixtures/auth";
 import { bestEffortCleanup } from "../fixtures/cleanup";
 import { supabaseRest } from "../fixtures/api";
+import { requireFixture } from "../fixtures/requireFixture";
 
 const EMBARQUE_ID = process.env.E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID ?? "";
 const IS_ADMIN_ORG = process.env.E2E_ADMIN_ORG === "1";
 
 test.describe("Flujo 09 — Cierre de embarque", () => {
-  test.skip(!EMBARQUE_ID, "E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID requerido");
+  requireFixture(Boolean(EMBARQUE_ID), "E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID requerido");
 
   let wasClosed = false;
   let lastPage: import("@playwright/test").Page | null = null;
@@ -60,7 +61,7 @@ test.describe("Flujo 09 — Cierre de embarque", () => {
   });
 
   test("admin_org puede cerrar con bypass", async ({ page }) => {
-    test.skip(!IS_ADMIN_ORG, "E2E_ADMIN_ORG=1 requerido para probar bypass");
+    requireFixture(IS_ADMIN_ORG, "E2E_ADMIN_ORG=1 requerido para probar bypass");
     await loginAs(page, internalCreds());
     lastPage = page;
     await page.goto(`/embarques/${EMBARQUE_ID}?tab=cierre`);

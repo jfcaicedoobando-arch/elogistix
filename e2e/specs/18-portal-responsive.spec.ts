@@ -11,6 +11,7 @@
  */
 import { expect, test, type Page } from "../fixtures/testBase";
 import { loginAs, portalCreds } from "../fixtures/auth";
+import { requireFixture } from "../fixtures/requireFixture";
 
 const VIEWPORTS = [
   { name: "tablet", width: 768, height: 1024 },
@@ -36,7 +37,7 @@ for (const vp of VIEWPORTS) {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test.beforeEach(async ({ page }) => {
-      test.skip(!TIENE_PORTAL, "Requiere credenciales E2E_PORTAL_*");
+      requireFixture(TIENE_PORTAL, "Requiere credenciales E2E_PORTAL_EMAIL/E2E_PORTAL_PASSWORD");
       await loginAs(page, portalCreds());
     });
 
