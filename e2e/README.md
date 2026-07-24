@@ -36,11 +36,42 @@ E2E_EMBARQUE_PARA_CXP_ID=<uuid>               # 12 CXP
 E2E_CROSS_ORG_EMBARQUE_ID=<uuid>
 E2E_CROSS_ORG_FACTURA_ID=<uuid>
 E2E_CROSS_ORG_COTIZACION_ID=<uuid>
+
+# Multi-tenant (26) — orgs A/B con datos trazadores. Requiere corrida previa de
+# `bun run e2e:provision-multi-tenant`. Si estas 4 faltan, el job CI se salta.
+E2E_MT_A_EMAIL=admin-a-staging@librecarga.test
+E2E_MT_A_PASSWORD=********
+E2E_MT_B_EMAIL=admin-b-staging@librecarga.test
+E2E_MT_B_PASSWORD=********
+
+# STRICT (opcional): si vale "1", `requireFixture()` promueve skips por
+# fixture ausente a fallo. Útil en CI dispatch cuando quieres garantía dura.
+E2E_STRICT_FIXTURES=
 ```
 
 > ⚠️ **Nunca** uses credenciales productivas. Provisiona un tenant de staging
 > con datos seed determinísticos. Los specs 09–12 **mutan** datos reales y
 > hacen cleanup best-effort; revisar el tenant tras correr.
+
+## Secrets requeridos en GitHub Actions (CI)
+
+El workflow `.github/workflows/e2e.yml` expone estas variables desde
+`secrets.*`. Si un secret está vacío, el spec correspondiente skipea (a menos
+que actives `strict_fixtures=1` en el dispatch):
+
+| Secret | Spec(s) que habilita |
+|---|---|
+| `E2E_BASE_URL`, `E2E_EMAIL`, `E2E_PASSWORD` | Todos (obligatorios) |
+| `E2E_PORTAL_EMAIL`, `E2E_PORTAL_PASSWORD` | 05, 18 |
+| `E2E_CROSS_ORG_EMBARQUE_ID`, `E2E_CROSS_ORG_FACTURA_ID`, `E2E_CROSS_ORG_COTIZACION_ID` | 06 (sin ellos degrada a UUID dummy) |
+| `E2E_HAS_SEED` | 07 |
+| `E2E_FISCAL`, `E2E_PROFORMA_NUMERO` | 08, 25 (requieren FacturApi sandbox) |
+| `E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID`, `E2E_ADMIN_ORG` | 09 |
+| `E2E_HAS_AUDIT_DATA` | 10 |
+| `E2E_COTIZACION_ACEPTADA_ID` | 11 |
+| `E2E_PROVEEDOR_ID`, `E2E_EMBARQUE_PARA_CXP_ID` | 12 |
+| `E2E_MT_A_*`, `E2E_MT_B_*` | 26 (job `multi-tenant`) |
+| `E2E_PROVISION_SECRET` | Job `provision-users` y `multi-tenant` |
 
 ## Provisionar usuarios E2E
 

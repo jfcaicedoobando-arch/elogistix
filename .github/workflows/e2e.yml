@@ -27,6 +27,11 @@ on:
         description: "Override de E2E_BASE_URL (opcional; default = secret)"
         required: false
         type: string
+      strict_fixtures:
+        description: "Si '1', los specs con fixtures ausentes fallan (no skip)."
+        required: false
+        default: ""
+        type: string
   schedule:
     - cron: "30 12 * * *"
   workflow_run:
@@ -58,6 +63,29 @@ env:
   VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
   VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
   E2E_BLOB: "1"
+  # v13.312.15 — Exponemos las variables gating de specs 07–12/25 y multi-tenant
+  # (26) para que, si el proyecto de staging registra los secrets, los specs
+  # dejen de saltarse silenciosamente. Si el secret está vacío el spec skipea
+  # con el motivo original (test.skip(!X, "…")). Ninguna se marca `required`
+  # aquí para no romper el workflow cuando el tenant todavía no los tiene.
+  E2E_HAS_SEED: ${{ secrets.E2E_HAS_SEED }}
+  E2E_FISCAL: ${{ secrets.E2E_FISCAL }}
+  E2E_PROFORMA_NUMERO: ${{ secrets.E2E_PROFORMA_NUMERO }}
+  E2E_HAS_AUDIT_DATA: ${{ secrets.E2E_HAS_AUDIT_DATA }}
+  E2E_ADMIN_ORG: ${{ secrets.E2E_ADMIN_ORG }}
+  E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID: ${{ secrets.E2E_EMBARQUE_CHECKLIST_INCOMPLETO_ID }}
+  E2E_COTIZACION_ACEPTADA_ID: ${{ secrets.E2E_COTIZACION_ACEPTADA_ID }}
+  E2E_PROVEEDOR_ID: ${{ secrets.E2E_PROVEEDOR_ID }}
+  E2E_EMBARQUE_PARA_CXP_ID: ${{ secrets.E2E_EMBARQUE_PARA_CXP_ID }}
+  # Multi-tenant (spec 26 — corre en el job `multi-tenant`).
+  E2E_MT_A_EMAIL: ${{ secrets.E2E_MT_A_EMAIL }}
+  E2E_MT_A_PASSWORD: ${{ secrets.E2E_MT_A_PASSWORD }}
+  E2E_MT_B_EMAIL: ${{ secrets.E2E_MT_B_EMAIL }}
+  E2E_MT_B_PASSWORD: ${{ secrets.E2E_MT_B_PASSWORD }}
+  # Cuando E2E_STRICT_FIXTURES=1, `requireFixture()` de testBase promueve los
+  # skips por fixture ausente a fallo (ver `e2e/fixtures/requireFixture.ts`).
+  # En CI lo dejamos apagado por default; se activa vía dispatch input.
+  E2E_STRICT_FIXTURES: ${{ github.event.inputs.strict_fixtures || '' }}
 
 jobs:
   # Solo corre la suite si post-deploy-smoke finalizó "success"; si el smoke
@@ -255,9 +283,76 @@ jobs:
           path: test-results/
           retention-days: 14
 
+  multi-tenant:
+    name: Multi-tenant isolation (26)
+    needs: [guard-secrets, provision-users]
+    if: needs.guard-secrets.outputs.ok == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Serial: usa dos orgs dedicadas y no debe intercalarse con otras corridas.
+    concurrency:
+      group: e2e-multi-tenant
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: ./.github/actions/setup-bun
+
+      - name: Guard (multi-tenant secrets)
+        id: mt_check
+        run: |
+          if [ -z "${E2E_MT_A_EMAIL}" ] || [ -z "${E2E_MT_A_PASSWORD}" ] || \
+             [ -z "${E2E_MT_B_EMAIL}" ] || [ -z "${E2E_MT_B_PASSWORD}" ]; then
+            echo "::warning::E2E_MT_* secrets missing — se omite el job multi-tenant."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache Playwright browsers
+        if: steps.mt_check.outputs.skip == 'false'
+        id: pw-cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browser (chromium)
+        if: steps.mt_check.outputs.skip == 'false' && steps.pw-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install chromium
+      - name: Install Playwright system deps
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bunx playwright install-deps chromium
+
+      - name: Provisionar orgs A/B + fixture e2e/.tmp/multi-tenant.json
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bun run e2e:provision-multi-tenant
+
+      - name: Run multi-tenant specs
+        if: steps.mt_check.outputs.skip == 'false'
+        run: bunx playwright test --project=chromium-multi-tenant
+
+      - name: Upload blob report
+        if: always() && steps.mt_check.outputs.skip == 'false'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: blob-multi-tenant
+          path: blob-report/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: Upload traces on failure
+        if: failure() && steps.mt_check.outputs.skip == 'false'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: traces-multi-tenant
+          path: test-results/
+          retention-days: 14
+
   merge-reports:
     name: Merge HTML report
-    needs: [internal-shard, mutators, portal]
+    needs: [internal-shard, mutators, portal, multi-tenant]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -287,12 +382,13 @@ jobs:
       - name: Fail if any test job failed
         # Explicit gate: si algún shard falló, este job también falla para que
         # notify-failure dispare y el workflow quede rojo (regresión).
-        if: ${{ needs.internal-shard.result == 'failure' || needs.mutators.result == 'failure' || needs.portal.result == 'failure' }}
+        if: ${{ needs.internal-shard.result == 'failure' || needs.mutators.result == 'failure' || needs.portal.result == 'failure' || needs.multi-tenant.result == 'failure' }}
         run: |
           echo "::error::Se detectaron regresiones en E2E."
           echo "internal-shard=${{ needs.internal-shard.result }}"
           echo "mutators=${{ needs.mutators.result }}"
           echo "portal=${{ needs.portal.result }}"
+          echo "multi-tenant=${{ needs.multi-tenant.result }}"
           exit 1
 
   notify-failure:
