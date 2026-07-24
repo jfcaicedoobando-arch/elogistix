@@ -29,7 +29,7 @@ const signupSchema = z
     password: z.string().min(6, "Mínimo 6 caracteres."),
     password2: z.string().min(6, "Mínimo 6 caracteres."),
     acceptTerms: z.literal(true, {
-      errorMap: () => ({ message: "Debes aceptar los términos para continuar." }),
+      message: "Debes aceptar los términos para continuar.",
     }),
   })
   .refine((v) => v.password === v.password2, {
