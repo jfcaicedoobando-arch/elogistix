@@ -2,6 +2,7 @@
 -- Adds SELECT policies mirroring "Agente read own embarques" for documentos,
 -- notas, conceptos_venta, conceptos_costo and facturas.
 
+DROP POLICY IF EXISTS "Agente read own documentos" ON public.documentos_embarque;
 CREATE POLICY "Agente read own documentos"
   ON public.documentos_embarque FOR SELECT
   USING (
@@ -16,6 +17,7 @@ CREATE POLICY "Agente read own documentos"
     )
   );
 
+DROP POLICY IF EXISTS "Agente read own notas" ON public.notas_embarque;
 CREATE POLICY "Agente read own notas"
   ON public.notas_embarque FOR SELECT
   USING (
@@ -31,6 +33,7 @@ CREATE POLICY "Agente read own notas"
     )
   );
 
+DROP POLICY IF EXISTS "Agente read own conceptos_venta" ON public.conceptos_venta;
 CREATE POLICY "Agente read own conceptos_venta"
   ON public.conceptos_venta FOR SELECT
   USING (
@@ -45,6 +48,7 @@ CREATE POLICY "Agente read own conceptos_venta"
     )
   );
 
+DROP POLICY IF EXISTS "Agente read own conceptos_costo" ON public.conceptos_costo;
 CREATE POLICY "Agente read own conceptos_costo"
   ON public.conceptos_costo FOR SELECT
   USING (
@@ -59,6 +63,7 @@ CREATE POLICY "Agente read own conceptos_costo"
     )
   );
 
+DROP POLICY IF EXISTS "Agente read own facturas" ON public.facturas;
 CREATE POLICY "Agente read own facturas"
   ON public.facturas FOR SELECT
   USING (
