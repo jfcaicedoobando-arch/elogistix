@@ -1,3 +1,5 @@
+> ⚠️ **OBSOLETO** — El canónico de arquitectura es [`ARCHITECTURE.md`](../ARCHITECTURE.md). Este documento se conserva por contexto histórico; la topología real ya no coincide con lo descrito aquí (la estructura vive en `src/features/<dominio>/`, no en `src/pages` + `src/hooks/<dominio>`).
+
 # Architecture Map — Libre Carga
 
 Documento vivo. Tabla de dominio → pages → hooks → services → lib para los

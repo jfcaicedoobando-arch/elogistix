@@ -1,7 +1,8 @@
-# Arquitectura — Libre Carga
+> ⚠️ **OBSOLETO** — El canónico de arquitectura es [`ARCHITECTURE.md`](../ARCHITECTURE.md) (raíz del repo). Este documento se conserva por contexto histórico; la topología real vive en `src/features/<dominio>/`.
 
-> Documento canónico. En conflicto con comentarios sueltos o memorias antiguas,
-> **gana este archivo**. Última actualización: v12.95.8.
+# Arquitectura — Libre Carga (histórico)
+
+> Última actualización: v12.95.8. Ver `ARCHITECTURE.md` para la fuente vigente.
 
 ## 1. Capas y dirección de dependencias
 

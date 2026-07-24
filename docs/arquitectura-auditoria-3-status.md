@@ -30,7 +30,7 @@ Leyenda: ✅ hecho · ⚠️ parcial · ❌ pendiente · ➖ n/a
 | 2.3(b) `no-restricted-imports` cross-feature | ✅ | `eslint.config.js:43` |
 | 2.4 IVA único / Fases embarque | ✅ | IVA en `financialUtils.ts`. Fases: `embarqueFases.invariant.test.ts` cubre TS ↔ enum SQL. |
 
-**Bloque 2 = 100 % cerrado.** v13.309.27 (PR-3b) promovió `versionadoCotizacion` y `labelExpediente` a `src/lib/domain/`; allowlist cross-feature reducida de 51 → 43.
+**Bloque 2 = 100 % cerrado.** v13.309.27 (PR-3b) promovió `versionadoCotizacion` y `labelExpediente` a `src/lib/domain/`; allowlist cross-feature en **44** entradas (ARCH-DEBT, en burn-down).
 
 ### BLOQUE 3 — Estructural
 
@@ -38,8 +38,8 @@ Leyenda: ✅ hecho · ⚠️ parcial · ❌ pendiente · ➖ n/a
 |---|---|---|
 | 3.1 Fuentes canónicas SQL | ✅ | 10 funciones críticas en `supabase/schema/*/` |
 | 3.2 Dividir god functions | ✅ | Helpers privados extraídos; `operaciones_stats` (329L) queda monolítico por diseño |
-| 3.3 Un paradigma de formularios (RHF+zod) | ❌ | Sin cambios: `useNuevaFacturaProveedorForm.ts` (11 `useState`), `useEditarFacturaProveedorForm.ts` (6 `useState`) |
-| 3.4 Formatters + StatusBadge | 🟡 | v13.309.26 (PR-5): migrados 12 hotspots a `@/lib/formatters` (`formatFechaEs`, `formatFechaHora`, `formatFechaLarga`, `formatCurrency`, `formatNumber`). ESLint `no-restricted-syntax` bloquea `toLocaleString`/`toLocaleDateString`/`new Intl.NumberFormat` con allowlist LEGACY de 27 archivos (`locale-format-legacy`). Falta migrar la allowlist + consolidación `<StatusBadge>` (68 sitios `estado === "..."`). |
+| 3.3 Un paradigma de formularios (RHF+zod) | 🟡 | **Paso 1 hecho** (v13.309.28): schema zod `buildFacturaFormSchema` + `validateFactura` en `useNuevaFacturaProveedorForm.schema.ts` valida ambos hooks de CxP. **Paso 2 pendiente**: migrar `useNuevaFacturaProveedorForm.ts` (10 `useState`) y `useEditarFacturaProveedorForm.ts` (5 `useState`) a `useForm`. |
+| 3.4 Formatters + StatusBadge | 🟡 | v13.309.26 (PR-5): migrados 12 hotspots a `@/lib/formatters` (`formatFechaEs`, `formatFechaHora`, `formatFechaLarga`, `formatCurrency`, `formatNumber`). ESLint `no-restricted-syntax` bloquea `toLocaleString`/`toLocaleDateString`/`new Intl.NumberFormat`. **Allowlist `locale-format-legacy` AGOTADA** para hotspots productivos: solo restan `lib/formatters/**` y `lib/date/mx.ts` (implementación de referencia). Falta consolidación `<StatusBadge>` (68 sitios `estado === "..."`). |
 | 3.5 Prop drilling `EmbarqueDetalleTabs` | ✅ | `useEmbarqueDetalleTabsData(embarqueId, embarque)` — Tabs pasa de 12 → 6 props; data-fetching + `docHandlers` + `financials` dentro del hijo. Ruta usa `useEmbarqueEstadoActions` directo. |
 | 3.6 Higiene de migraciones | ✅ | `scripts/audit-migrations.ts` con reglas H1-H6 (baseline `20260723180000`) + `docs/migrations-hygiene.md` |
 | 3.7 Coverage thresholds + SQL LC_ tests | ✅ | Thresholds correctos. `lc-codes-sql-wiring.test.ts` valida `LC_CXP_DESCUADRE`, `LC_CIERRE_SOLO_RPC`, `LC_EMBARQUE_BLOQUEADO` (RAISE en migraciones) + `LC_TC_NO_DISPONIBLE` (throw en frontend), y contrato `translateLcCode()` en 3 capas. |
