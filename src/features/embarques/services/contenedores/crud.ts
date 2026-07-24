@@ -9,6 +9,27 @@ import type {
   EmbarqueContenedorInsert,
 } from "@/features/embarques/types/contenedor";
 
+/**
+ * v13.312.9 (Sentry JAVASCRIPT-REACT-1M/3H): traduce el error de violación
+ * de unicidad de `uq_embarque_contenedor_numero` a un mensaje amigable.
+ * Analogía: si intentas etiquetar dos cajas con el mismo número, avisamos
+ * en español en vez de mostrar el error crudo de la base de datos.
+ */
+function traducirErrorContenedorDuplicado(err: unknown): Error {
+  const e = err as { code?: string; message?: string; details?: string } | null;
+  const blob = `${e?.message ?? ""} ${e?.details ?? ""}`;
+  if (e?.code === "23505" && /uq_embarque_contenedor_numero/i.test(blob)) {
+    const match = /=\(([^,]+),\s*([^)]+)\)/.exec(e?.details ?? "");
+    const numero = match?.[2]?.trim();
+    return new Error(
+      numero
+        ? `El contenedor "${numero}" ya está registrado en este embarque.`
+        : "Ese número de contenedor ya está registrado en este embarque.",
+    );
+  }
+  return err instanceof Error ? err : new Error(String(e?.message ?? err));
+}
+
 export async function listarPorEmbarque(
   embarqueId: string,
 ): Promise<EmbarqueContenedor[]> {
@@ -38,10 +59,12 @@ export async function crearMuchos(
     piezas: b.piezas,
     orden: b.orden || i + 1,
   }));
-  return unwrapOr(
-    supabase.from("embarque_contenedores").insert(rows).select(),
-    [],
-  );
+  const { data, error } = await supabase
+    .from("embarque_contenedores")
+    .insert(rows)
+    .select();
+  if (error) throw traducirErrorContenedorDuplicado(error);
+  return (data ?? []) as EmbarqueContenedor[];
 }
 
 /**
@@ -83,12 +106,11 @@ export async function sincronizarContenedores(
     orden: b.orden || i + 1,
   }));
 
-  return unwrapOr(
-    supabase.rpc("sincronizar_contenedores_embarque", {
-      p_embarque_id: embarqueId,
-      // SAFE-CAST: jsonb param tipado en supabase types como Json
-      p_contenedores: payload as never,
-    }),
-    [],
-  ) as Promise<EmbarqueContenedor[]>;
+  const { data, error } = await supabase.rpc("sincronizar_contenedores_embarque", {
+    p_embarque_id: embarqueId,
+    // SAFE-CAST: jsonb param tipado en supabase types como Json
+    p_contenedores: payload as never,
+  });
+  if (error) throw traducirErrorContenedorDuplicado(error);
+  return ((data ?? []) as unknown) as EmbarqueContenedor[];
 }

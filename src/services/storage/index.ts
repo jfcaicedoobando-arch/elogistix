@@ -14,7 +14,19 @@ export async function uploadFile(path: string, file: File, options: UploadFileOp
       upsert: options.upsert ?? false,
       contentType: options.contentType,
     });
-  if (error) throw error;
+  if (error) {
+    // v13.312.9 (Sentry JAVASCRIPT-REACT-3G): traducir "resource already exists"
+    // a un mensaje amigable en es-MX. Analogía: si intentas guardar un archivo
+    // con el mismo nombre en la misma carpeta, avisamos claramente en vez del
+    // error crudo del servicio de almacenamiento.
+    const msg = (error as { message?: string }).message ?? "";
+    if (/already exists/i.test(msg)) {
+      throw new Error(
+        "Ya existe un archivo con ese nombre. Renómbralo o elimínalo antes de subirlo nuevamente.",
+      );
+    }
+    throw error;
+  }
   return data;
 }
 
