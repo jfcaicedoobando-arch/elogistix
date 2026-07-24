@@ -62,7 +62,6 @@ export default defineConfig({
         "src/**/*.d.ts",
         "src/**/__tests__/**",
         "src/components/ui/**",
-        "src/hooks/use-toast.ts",
         "src/lib/utils.ts",
         "src/main.tsx",
         "src/vite-env.d.ts",
@@ -73,7 +72,6 @@ export default defineConfig({
         // - definiciones de columnas de DataTable (JSX declarativo sin lógica),
         // - tipos puros (sólo type/interface).
         // La lógica real vive en hooks y utils que sí se testean.
-        "src/pages/marketing/**",
         // 13.87.1 — copy/datos estáticos de marketing también viven bajo
         // features/marketing/routes (landingCopy, guia*.data, etc.).
         "src/features/marketing/**",
@@ -85,7 +83,9 @@ export default defineConfig({
         // Excluirlas alinea el denominador con la realidad y permite sostener
         // ratchet 35%. Aplica a páginas legadas (src/pages) y a las nuevas
         // ubicaciones por feature (src/features/*/routes).
-        "src/pages/**/*.tsx",
+        // (auditoría 2026-07-24: se retiraron las exclusiones muertas
+        // "src/pages/**" y "src/hooks/use-toast.ts" — esas rutas ya no
+        // existen en el repo.)
         "src/features/*/routes/**/*.tsx",
         // Wrappers presentacionales sin lógica testeable unitariamente.
         "src/pdf/render/PdfPreview.tsx",
