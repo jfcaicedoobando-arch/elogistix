@@ -45,11 +45,16 @@ export default function AnticiposProveedor() {
 
   const { data: proveedores = [] } = useProveedoresLite();
 
+  type CellCtx = {
+    getValue: () => unknown;
+    row: { original: AnticipoProveedorRow };
+  };
+
   const columns = [
     {
       header: "Fecha",
       accessorKey: "fecha_anticipo",
-      cell: (info: any) => formatDate(info.getValue()),
+      cell: (info: CellCtx) => formatDate(info.getValue() as string),
     },
     {
       header: "Proveedor",
@@ -58,19 +63,19 @@ export default function AnticiposProveedor() {
     {
       header: "Monto",
       accessorKey: "monto",
-      cell: (info: any) => formatCurrency(info.getValue(), info.row.original.moneda),
+      cell: (info: CellCtx) => formatCurrency(info.getValue() as number, info.row.original.moneda),
     },
     {
       header: "Aplicado",
       accessorKey: "aplicado",
-      cell: (info: any) => formatCurrency(info.getValue(), info.row.original.moneda),
+      cell: (info: CellCtx) => formatCurrency(info.getValue() as number, info.row.original.moneda),
     },
     {
       header: "Disponible",
       accessorKey: "disponible",
-      cell: (info: any) => (
+      cell: (info: CellCtx) => (
         <span className="font-semibold text-primary">
-          {formatCurrency(info.getValue(), info.row.original.moneda)}
+          {formatCurrency(info.getValue() as number, info.row.original.moneda)}
         </span>
       ),
     },
@@ -81,8 +86,8 @@ export default function AnticiposProveedor() {
     {
       header: "Estado",
       accessorKey: "estado",
-      cell: (info: any) => {
-        const val = info.getValue();
+      cell: (info: CellCtx) => {
+        const val = info.getValue() as string;
         if (val === "disponible") return <ToneBadge tone="success">Disponible</ToneBadge>;
         if (val === "aplicado_parcial") return <ToneBadge tone="warning">Parcial</ToneBadge>;
         if (val === "aplicado_total") return <ToneBadge tone="neutral">Aplicado</ToneBadge>;
@@ -92,7 +97,7 @@ export default function AnticiposProveedor() {
     },
     {
       id: "actions",
-      cell: (info: any) => {
+      cell: (info: CellCtx) => {
         const row = info.row.original;
         const canApply = row.estado === "disponible" || row.estado === "aplicado_parcial";
         const canCancel = row.estado === "disponible";
