@@ -166,37 +166,15 @@ export default function Cxp() {
         </CardContent>
       </Card>
 
-      <DialogNuevaFacturaProveedor open={f.openNueva} onOpenChange={f.setOpenNueva} />
-      <DialogEditarFacturaProveedor
-        factura={f.editar ? data.find((d) => d.id === f.editar!.id) ?? f.editar : null}
-        onOpenChange={(o) => !o && f.setEditar(null)}
-      />
-      <DialogRegistrarPagoProveedor
-        open={!!f.pagar}
-        onOpenChange={(o) => !o && f.setPagar(null)}
-        factura={f.pagar ? data.find((d) => d.id === f.pagar!.id) ?? f.pagar : null}
-      />
-      <DialogDetallePagosProveedor
-        open={!!f.detalle}
-        onOpenChange={(o) => !o && f.setDetalle(null)}
-        factura={f.detalle ? data.find((d) => d.id === f.detalle!.id) ?? f.detalle : null}
+      <CxpRouteDialogs
+        f={f}
+        data={data}
         canEdit={canEdit}
-        onPagar={(fact) => { f.setDetalle(null); f.setPagar(fact); }}
-        onEditar={(fact) => { f.setDetalle(null); f.setEditar(fact); }}
-        onEliminar={(fact) => { f.setDetalle(null); onEliminar(fact); }}
-      />
-
-      <EliminarFacturaCxpDialog
-        factura={f.aEliminar}
-        onOpenChange={(o) => !o && f.setAEliminar(null)}
-        isPending={eliminar.isPending}
-        onConfirm={async () => {
+        isPendingEliminar={eliminar.isPending}
+        onEliminar={onEliminar}
+        onConfirmEliminar={async () => {
           if (!f.aEliminar) return;
-          try {
-            await eliminar.mutateAsync(f.aEliminar.id);
-          } catch {
-            // Notificación gestionada por el hook.
-          }
+          try { await eliminar.mutateAsync(f.aEliminar.id); } catch { /* hook notifica */ }
           f.setAEliminar(null);
         }}
       />
