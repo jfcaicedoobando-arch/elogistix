@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { usePortalPagosFactura } from "@/features/portal/hooks";
 import { FORMAS_PAGO_SAT, labelDeCatalogo } from "@/constants/catalogosSAT";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, FileText, FileCode2 } from "lucide-react";
 
 interface Props {
   facturaId: string;
@@ -39,26 +40,51 @@ export default function PortalFacturaPagosCard({ facturaId, totalFactura, moneda
           </p>
         ) : (
           <ul className="divide-y">
-            {pagos.map((p) => (
-              <li key={p.id} className="py-2 flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{formatDate(p.fecha_pago)}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {labelDeCatalogo(FORMAS_PAGO_SAT, p.forma_pago)}{p.referencia ? ` • ${p.referencia}` : ""}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatCurrency(Number(p.monto_aplicado_factura), moneda)}
-                  </p>
-                  {p.moneda !== moneda && (
-                    <p className="text-2xs text-muted-foreground">
-                      {formatCurrency(Number(p.monto), p.moneda)}
+            {pagos.map((p) => {
+              const pRep = p as typeof p & {
+                rep_uuid?: string | null;
+                rep_pdf_url?: string | null;
+                rep_xml_url?: string | null;
+              };
+              return (
+                <li key={p.id} className="py-2 flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{formatDate(p.fecha_pago)}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {labelDeCatalogo(FORMAS_PAGO_SAT, p.forma_pago)}{p.referencia ? ` • ${p.referencia}` : ""}
                     </p>
-                  )}
-                </div>
-              </li>
-            ))}
+                    {(pRep.rep_pdf_url || pRep.rep_xml_url) && (
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        {pRep.rep_pdf_url && (
+                          <Button asChild size="sm" variant="outline" className="h-6 px-2 text-2xs">
+                            <a href={pRep.rep_pdf_url} target="_blank" rel="noopener noreferrer">
+                              <FileText className="h-3 w-3 mr-1" /> REP PDF
+                            </a>
+                          </Button>
+                        )}
+                        {pRep.rep_xml_url && (
+                          <Button asChild size="sm" variant="outline" className="h-6 px-2 text-2xs">
+                            <a href={pRep.rep_xml_url} target="_blank" rel="noopener noreferrer">
+                              <FileCode2 className="h-3 w-3 mr-1" /> REP XML
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatCurrency(Number(p.monto_aplicado_factura), moneda)}
+                    </p>
+                    {p.moneda !== moneda && (
+                      <p className="text-2xs text-muted-foreground">
+                        {formatCurrency(Number(p.monto), p.moneda)}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
 
