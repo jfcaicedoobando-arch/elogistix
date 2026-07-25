@@ -1,13 +1,17 @@
 /**
  * Aging de Cuentas por Pagar — wrapper de la RPC `cxp_aging_proveedores`.
- * Devuelve antigüedad de saldos por proveedor en cubetas estándar (vigente, 1-30, 31-60, 61-90, >90 días).
+ * QW3 (v13.315.9): la RPC ahora devuelve una fila por (proveedor, moneda) para
+ * que MXN, USD y EUR no se sumen entre sí en el reporte de antigüedad.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { todayLocalISO } from "@/lib/date/today";
 
+export type MonedaAging = "MXN" | "USD" | "EUR" | string;
+
 export interface CxpAgingRow {
   proveedor_id: string;
   proveedor_nombre: string;
+  moneda: MonedaAging;
   saldo_total: number;
   vigente: number;
   d_1_30: number;
@@ -26,6 +30,10 @@ export interface CxpAgingTotals {
   total: number;
 }
 
+const EMPTY_TOTALS: CxpAgingTotals = {
+  vigente: 0, d_1_30: 0, d_31_60: 0, d_61_90: 0, mas_90: 0, total: 0,
+};
+
 export async function fetchCxpAging(fecha?: string): Promise<CxpAgingRow[]> {
   const { data, error } = await supabase.rpc("cxp_aging_proveedores", {
     p_fecha: fecha ?? todayLocalISO(),
@@ -34,6 +42,7 @@ export async function fetchCxpAging(fecha?: string): Promise<CxpAgingRow[]> {
   return (data ?? []).map((r) => ({
     proveedor_id: r.proveedor_id,
     proveedor_nombre: r.proveedor_nombre,
+    moneda: (r.moneda ?? "MXN") as MonedaAging,
     saldo_total: Number(r.saldo_total),
     vigente: Number(r.vigente),
     d_1_30: Number(r.d_1_30),
@@ -44,6 +53,11 @@ export async function fetchCxpAging(fecha?: string): Promise<CxpAgingRow[]> {
   }));
 }
 
+/**
+ * Suma cubetas de un conjunto de filas SIN mezclar monedas.
+ * Nota: quien la use debe filtrar por moneda antes; si se le pasan monedas
+ * distintas devuelve una suma numérica que no es interpretable económicamente.
+ */
 export function calcularTotalesAging(rows: CxpAgingRow[]): CxpAgingTotals {
   return rows.reduce<CxpAgingTotals>(
     (acc, r) => ({
@@ -54,6 +68,42 @@ export function calcularTotalesAging(rows: CxpAgingRow[]): CxpAgingTotals {
       mas_90: acc.mas_90 + r.mas_90,
       total: acc.total + r.saldo_total,
     }),
-    { vigente: 0, d_1_30: 0, d_31_60: 0, d_61_90: 0, mas_90: 0, total: 0 },
+    { ...EMPTY_TOTALS },
   );
+}
+
+/**
+ * QW3 — Totales agrupados por moneda. La clave es la moneda (`MXN`, `USD`, `EUR`, …)
+ * y el valor son las cubetas sumadas para esa moneda.
+ */
+export function calcularTotalesPorMoneda(rows: CxpAgingRow[]): Record<string, CxpAgingTotals> {
+  const map: Record<string, CxpAgingTotals> = {};
+  for (const r of rows) {
+    const acc = map[r.moneda] ?? { ...EMPTY_TOTALS };
+    acc.vigente += r.vigente;
+    acc.d_1_30 += r.d_1_30;
+    acc.d_31_60 += r.d_31_60;
+    acc.d_61_90 += r.d_61_90;
+    acc.mas_90 += r.mas_90;
+    acc.total += r.saldo_total;
+    map[r.moneda] = acc;
+  }
+  return map;
+}
+
+/** Devuelve las monedas que aparecen en las filas, ordenadas con MXN/USD/EUR primero. */
+export function monedasPresentes(rows: CxpAgingRow[]): string[] {
+  const set = new Set<string>();
+  for (const r of rows) set.add(r.moneda);
+  const preferidas = ["MXN", "USD", "EUR"];
+  const arr = Array.from(set);
+  arr.sort((a, b) => {
+    const ia = preferidas.indexOf(a);
+    const ib = preferidas.indexOf(b);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  return arr;
 }
