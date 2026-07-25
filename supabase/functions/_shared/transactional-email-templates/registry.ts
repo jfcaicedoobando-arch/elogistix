@@ -20,6 +20,7 @@ import { template as facturaEnviada } from './factura-enviada.tsx';
 import { template as notaCreditoEnviada } from './nota-credito-enviada.tsx';
 import { template as repEnviado } from './rep-enviado.tsx';
 import { template as recordatorioCobranza } from './recordatorio-cobranza.tsx';
+import { template as estadoCuentaCliente } from './estado-cuenta-cliente.tsx';
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'cotizacion-respuesta': cotizacionRespuesta,
@@ -29,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'nota-credito-enviada': notaCreditoEnviada,
   'rep-enviado': repEnviado,
   'recordatorio-cobranza': recordatorioCobranza,
+  'estado-cuenta-cliente': estadoCuentaCliente,
 };
