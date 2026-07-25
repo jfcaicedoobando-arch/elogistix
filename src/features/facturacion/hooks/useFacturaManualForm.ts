@@ -146,6 +146,7 @@ export function useFacturaManualForm(open: boolean) {
     onClienteChange,
     fiscal,
     updateFiscal,
+    tasaIva,
     conceptos,
     setConceptos,
     notas,
