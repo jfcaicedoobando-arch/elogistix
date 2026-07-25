@@ -4,12 +4,16 @@
  * orquestador puro y el estado sea testeable de forma aislada.
  */
 import { useState } from "react";
+import { useDebounce } from "@/hooks/shared";
 import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
 
 export type AprobacionFiltro = "todos" | "pendiente" | "aprobada" | "rechazada";
 
 export function useCxpPageState() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+  const [page, setPage] = useState(0);
+  const pageSize = 100;
   const [estatus, setEstatus] = useState<EstatusCxP | "todos">("todos");
   const [moneda, setMoneda] = useState<"todas" | "MXN" | "USD" | "EUR">("todas");
   const [origen, setOrigen] = useState<"Nacional" | "Extranjero" | "todos">("todos");
@@ -37,7 +41,7 @@ export function useCxpPageState() {
     fechaHasta !== "";
 
   const queryArgs = {
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     estatus,
     moneda,
     origen,
@@ -50,7 +54,8 @@ export function useCxpPageState() {
 
   return {
     // Filtros
-    search, setSearch,
+    search, setSearch, debouncedSearch,
+    page, setPage, pageSize,
     estatus, setEstatus,
     moneda, setMoneda,
     origen, setOrigen,
