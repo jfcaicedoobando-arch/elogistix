@@ -62,6 +62,7 @@ function eerr(total: number) {
 describe("dashboardEjecutivo/agregador", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    rpcMock.mockResolvedValue({ data: [], error: null });
     fetchEstadoResultadosDevengado.mockResolvedValue(eerr(100));
     fetchSaldosCuentas.mockResolvedValue([{ id: "c1", saldo: 500 }]);
     fetchResumenTesoreria.mockResolvedValue({
@@ -73,7 +74,7 @@ describe("dashboardEjecutivo/agregador", () => {
     fetchExchangeRates.mockResolvedValue({ usdMxn: 17.5, eurMxn: 18 });
   });
 
-  it("invoca EERR para periodo, periodo anterior y 12 meses hacia atrás", async () => {
+  it("invoca EERR para periodo, periodo anterior y tendencia 12m vía RPC eerr_resumen_anual", async () => {
     await fetchDashboardEjecutivo({
       organizationId: "org-1",
       periodo: "2025-03",
@@ -81,12 +82,14 @@ describe("dashboardEjecutivo/agregador", () => {
       cxp: [],
       fuente: "facturas",
     });
-    // 1 actual + 1 previo + 12 meses = 14
-    expect(fetchEstadoResultadosDevengado).toHaveBeenCalledTimes(14);
-    // periodo anterior debe ser 2025-02
+    // P8: sólo actual + previo van al servicio EERR completo; tendencia 12m usa RPC agregada.
+    expect(fetchEstadoResultadosDevengado).toHaveBeenCalledTimes(2);
     const calls = fetchEstadoResultadosDevengado.mock.calls.map((c) => c[0]);
     expect(calls).toContainEqual({ organizationId: "org-1", year: 2025, month: 2 });
     expect(calls).toContainEqual({ organizationId: "org-1", year: 2025, month: 3 });
+    // Tendencia 12m (abr-2024 → mar-2025) abarca 2 años → 2 llamadas RPC.
+    expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", { p_year: 2024, p_fuente: "facturas" });
+    expect(rpcMock).toHaveBeenCalledWith("eerr_resumen_anual", { p_year: 2025, p_fuente: "facturas" });
   });
 
   it("calcula correctamente el cruce de año en periodo anterior", async () => {
