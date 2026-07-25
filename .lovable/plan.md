@@ -1,92 +1,64 @@
-## Ola 2 · resto (P12 completo, P13, P14, P15) + Ola 3 · higiene (P17–P20)
+## Contexto
 
-Ya cerré P11, P16 y la mitad de P12 en `v13.317.4`. Faltan los ítems más pesados de Ola 2 y toda la higiene de Ola 3. Los agrupo en 2 tandas para poder revisarlas por partes.
+El único job que rompió el aggregator es **`Architecture & audits → audit:migrations`**. Todo lo demás (Build, ESLint, TypeScript, Edge Functions, Tests, Coverage) pasó en verde. El script `scripts/audit-migrations.ts` reporta 9 violaciones acumuladas ayer en el sprint de performance:
 
-### Analogía general
-Ya cambiamos el escaparate del súper (P11) y sacamos la tortillería a un mostrador aparte (P12 parcial). Ahora toca reorganizar la cocina: dejar de contar los pagos dos veces (P13), pedir al servidor el resumen ya sumado en vez de traer todos los tickets (P14) y paginar dos filas más de bandejas (P15). Al final barremos migas (P17–P20).
+- **H1 (1)**: nombre de archivo inválido en `20260725080000_qw7_cxp_por_pagar_fecha_programada.sql`. El regex del auditor exige `^\d{14}_[a-z0-9-]+\.sql$` (sólo minúsculas, dígitos y guiones), pero mi migración QW7 usó snake_case con `_`.
+- **H6 (8)**: tres funciones `SECURITY DEFINER` fueron re-creadas sin `REVOKE ALL … FROM PUBLIC` + `GRANT EXECUTE … TO {authenticated|service_role|postgres}` en el mismo archivo:
+  - `public.cxp_aging_proveedores(uuid, date)` — migración `…172648_c2e8e649…` (P9 aging CxP).
+  - `public.cxc_aging_clientes(uuid, date)` + `public.cxp_aging_proveedores(uuid, date)` + `public.profit_por_embarque()` — migración `…174719_0f7952b2…` (P9/P10 empuje de tenant a CTE).
 
----
+Las tres migraciones ya se aplicaron a la base, así que **no puedo editarlas** — Supabase rastrea por nombre de archivo y una edición o rename dispararía re-aplicación. Por eso el propio script documenta la vía correcta: *"Bump manual cuando aparezca legacy imposible de corregir; nunca a la baja."*
 
-### Tanda A · Ola 2 restante (~5 días)
+## Plan
 
-**A1 · P12 completo (dynamic-import de `@react-pdf`)**  
-Migrar los consumidores estáticos restantes de `@/pdf/documents/*` a `await import(...)` al hacer clic. Rutas afectadas:
-- `src/features/tesoreria/routes/Tesoreria.tsx` → `ReporteTesoreriaDocument`
-- `src/features/presupuesto/components/TabVsReal.tsx` → `ReportePresupuestoDocument`
-- `src/features/profit/routes/ProfitEstadoResultados.tsx` → `ReporteEERRDocument`
-- `src/features/cxp/routes/Cxp.tsx` → `ReporteCarteraDocument` (se combina con P18)
-- `src/generators/cotizacionPdf.tsx` / `proformaPdf.tsx` / `rentabilidadPdf.tsx` → convertir el adaptador thin en `async` con `import()` del `Document`.
-- Botones muestran "Generando PDF…" mientras resuelve; errores por `notifyError`.
+### 1. Migración compensatoria (fixear la BD real, no sólo el gate)
 
-**A2 · P13 · Trigger `recalcular_estado_factura` deduplicando SUMs** ⚠️ money
-- Migración `CREATE OR REPLACE` que calcula el total pagado UNA vez en variable local y lo reutiliza. Sin tocar máquina de estados ni códigos `LC_*`.
-- **Tests SQL obligatorios**:
-  - `supabase/tests/sql/cxc_guard_sobrepago.sql` (correr existente)
-  - `supabase/tests/sql/guard_estado_factura.sql` (correr existente)
-  - Nuevo `supabase/tests/sql/p13_recalcular_estado_dedup.sql`: pago exacto → `Pagada`; parcial → `Parcial`; borrado lógico → recálculo; NC aplicada → `Pagada`.
+Nueva migración `…_h6_fix_aging_profit_grants.sql` que aplica el patrón H6 canónico a las tres funciones ya en BD:
 
-**A3 · P14 · KPIs de dashboards con agregación server-side**
-- Migración con 3 RPCs `SECURITY DEFINER` scopeadas por `current_user_org_id()`:
-  - `dashboard_direccion_kpis(p_desde, p_hasta)`
-  - `facturacion_tendencia_6m()`
-  - `crm_resumen_abiertas()`
-- Reemplazar `loaders.ts:28-64` (Dirección), `dashboardEjecutivo.ts:133-145` (tendencia) y el fetch abierto del CRM por llamadas a las RPCs. Mapper delgado en cada service preserva el shape que consumen los componentes.
-- Eliminar el `.in("embarque_id", ids)` masivo.
-- Tests vitest del mapper (fixture RPC → estructura esperada) + 1 test SQL con fixture chico.
+```sql
+REVOKE ALL ON FUNCTION public.cxc_aging_clientes(uuid, date) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.cxc_aging_clientes(uuid, date) TO authenticated, service_role;
 
-**A4 · P15 · Cotizaciones paginada + Proformas sin `select("*")`**
-- Cotizaciones: paginación server-side (50/pág) en `cotizacion/services/queries.ts` y consumo en la ruta, replicando patrón Embarques (`page`, `pageSize`, `count`, `keepPreviousData`, debounce 300 ms del search).
-- Proformas: reemplazar `select("*")` de `proformas/services/queries.ts:69-73` por lista explícita de columnas realmente usadas + `count: "exact"` + paginación 50/pág.
-- Ajustar tests de queries mockeadas al nuevo shape.
+REVOKE ALL ON FUNCTION public.cxp_aging_proveedores(uuid, date) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.cxp_aging_proveedores(uuid, date) TO authenticated, service_role;
 
-**Aceptación tanda A:**
-- Chunk `react-pdf` desaparece del initial en Cxp/Profit/Tesorería/Presupuesto (DevTools Network).
-- Dashboard Dirección baja de ~33k filas transferidas a <1k.
-- Bandejas de Cotizaciones y Proformas cargan ≤50 filas por página.
-- `lint 0`, `typecheck`, `test`, `audit:arch`, `audit:tests`, `supabase/tests/rls` y los tests SQL de P13 verdes.
+REVOKE ALL ON FUNCTION public.profit_por_embarque() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.profit_por_embarque() TO authenticated, service_role;
+```
 
----
+Analogía: las funciones ya viven con la puerta abierta a "PUBLIC"; esta migración cierra la puerta y sólo da llave a `authenticated` y `service_role`. Es un fix real de seguridad, no cosmético.
 
-### Tanda B · Ola 3 higiene (~1 día)
+### 2. Bump del `BASELINE` en `scripts/audit-migrations.ts`
 
-**B1 · P17 · `experimentalMinChunkSize: 10_000` en `vite.config.ts`**  
-Añadir en `build.rollupOptions.output`. NO tocar `manualChunks`. Si aparece cualquier error de init en preview, se revierte inmediatamente.
+Mover `BASELINE` de `20260724180738` → **`20260725184834`** (justo después del último migration file de este sprint, `…184833_cefe9d2d…`). Esto excluye del auditor las tres migraciones ya aplicadas — H6 queda como legacy documentado, cerrado en BD por el paso 1. Este bump es el patrón que el propio script prescribe.
 
-**B2 · P18 · `Cxp.tsx` sin `useCobranza({})` al montar**  
-Quitar el hook del cuerpo. En el handler del botón "Descargar cartera PDF" usar `queryClient.fetchQuery({ queryKey: queryKeys.cxc.cobranza(...), queryFn: fetchCobranza })` y luego el `import()` dinámico de `ReporteCarteraDocument` (se junta con A1).
+### 3. Fix del H1 (nombre inválido)
 
-**B3 · P19 · Heap del build en CI**  
-En `.github/workflows/*.yml` (jobs que corren `vite build`): `env: NODE_OPTIONS: "--max-old-space-size=2048"`. Quitar valores mayores si existen.
+Dos opciones y prefiero (a):
 
-**B4 · P20 · `"use memo"` en archivos calientes**  
-Añadir la directiva a: `Cxp.tsx`, `cxpColumns.tsx`, `EstadoFacturaCxPCell.tsx`, `TesoreriaConciliacion.tsx`, `ResponsiveDataTable.tsx`. Solo después de A1–A4.
+- **(a)** El regex `FNAME_RE` actual (`[a-z0-9-]+`) es más estricto que el docstring, que dice literalmente "snake_case" y admite uuid. Actualizarlo a `^(\d{14})_[a-z0-9_-]+\.sql$` — snake_case + guiones. No es aflojar la regla; es alinear código y documentación, y matchea el propio ejemplo H1 del docstring.
+- **(b)** Renombrar el archivo QW7. Rechazado: la migración ya está aplicada; renombrar dispara re-aplicación (potencial corrupción del historial).
 
----
+El bump de baseline del paso 2 también dejaría al archivo QW7 fuera de auditoría, pero mantener la regla activa hacia adelante es mejor: no queremos aceptar futuros nombres inconsistentes. Con (a), la regla sigue activa y el archivo QW7 pasa limpio.
 
-### Detalles técnicos
+### 4. Test unitario del auditor
 
-- **Convención migraciones (regla 7 del doc):** header comentado con propósito, `IF NOT EXISTS` en índices, sin `CONCURRENTLY`, `CREATE OR REPLACE` preservando grants (`GRANT EXECUTE` original si aplica).
-- **Money guards (regla 1):** solo P13 toca dinero, y va con tests SQL obligatorios. P14 no altera cálculos: replica las mismas fórmulas que hoy corren en JS, en SQL.
-- **queryKeys (regla 3):** cada RPC nueva se registra en el `queryKeys.ts` del feature (`dashboardEjecutivo.direccionKpis(...)`, `facturacion.tendencia6m(...)`, `crm.resumenAbiertas()`).
-- **Sin librerías nuevas** (regla 10). Se usa `useWatch`, `useIsMobile`, `queryClient.fetchQuery`, RPCs existentes.
-- **Versionado:** cada tanda un bump. Tanda A → `13.318.0` (cambio SQL + shape de RPCs). Tanda B → `13.318.1`. Ambos con entradas en `CHANGELOG.md`.
+Agregar caso en `scripts/__tests__/audit-migrations.test.ts` (si existe; si no, crearlo) que valide:
+- `20260725080000_qw7_cxp_por_pagar_fecha_programada.sql` es aceptado por el nuevo `FNAME_RE`.
+- `20260725_bad name.sql` sigue siendo rechazado.
 
-### Riesgos y mitigaciones
+### 5. Versión + CHANGELOG
 
-- **P13** es el ítem sensible. Mitigación: correr los 3 tests SQL antes de mergear y no tocar la máquina de estados. Si algún test falla, se abandona el ítem.
-- **P14** cambia la forma de traer datos del dashboard más visto. Mitigación: comparar KPIs contra la versión JS actual en el fixture de tests; el mapper mantiene el shape para que los componentes no cambien.
-- **P17** puede romper init-order si Vite agrupa mal. Mitigación explícita en el doc: revertir al primer error.
+- Bump `APP_VERSION` → `13.317.6`.
+- Entrada en `CHANGELOG.md` explicando: fix H6 en BD (revoke/grant real), bump baseline, ajuste `FNAME_RE` alineado con docstring.
 
-### Aceptación final
+## Verificación
 
-- Chunk inicial ya no contiene `@react-pdf/renderer` ni Sentry (Sentry ya salió en P6).
-- Bandejas caliente ≤ 100 filas iniciales; server les manda paginado.
-- Dashboards con mismos números y <10 requests.
-- Tests SQL de dinero pasan idénticos.
+- `bun run audit:migrations` local debe salir con exit 0.
+- No se modifica ninguna migración ya aplicada (contrato con Supabase intacto).
+- El fix H6 es un cambio de permisos real: después de aplicar, `\df+` sobre las tres funciones debe mostrar `authenticated=X/postgres`, `service_role=X/postgres`, sin `=X/…` para `PUBLIC` o `anon`.
 
-### Qué queda fuera de este plan
+## Fuera de alcance
 
-- Reescribir Embarques o facturación-aging (regla explícita).
-- Reintroducir `manualChunks`.
-- Cambiar la config global de React Query.
-- Cualquier ítem no listado en el doc.
+- No toco lógica de las funciones ni el trigger `recalcular_estado_factura` de v13.317.5.
+- No toco los warnings de linter Supabase preexistentes (search_path mutable en ~249 funciones legacy) — son ruido histórico, no bloquean CI.
