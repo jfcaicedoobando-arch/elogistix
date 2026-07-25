@@ -41,6 +41,11 @@ export default function ProfitDashboardEjecutivo() {
     if (!data || generandoPdf) return;
     setGenerandoPdf(true);
     try {
+      // P12: dynamic import — @react-pdf/renderer + Document sólo entran al bundle al presionar Descargar.
+      const [{ pdf }, { ReporteEjecutivoDocument }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/pdf/documents/ReporteEjecutivoDocument"),
+      ]);
       const blob = await pdf(<ReporteEjecutivoDocument snapshot={data} />).toBlob();
       descargarBlob(blob, `dashboard-ejecutivo-${data.periodo}.pdf`);
     } catch (e) {
