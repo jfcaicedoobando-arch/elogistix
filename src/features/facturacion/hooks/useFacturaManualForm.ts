@@ -45,7 +45,7 @@ function useFaltantesTimbrar(
       [
         !cliente && "cliente",
         !conceptosValidos && "conceptos válidos",
-        !fiscal.fechaEmision && "fecha de emisión",
+        
         fiscal.tipoCambio <= 0 && "tipo de cambio",
         cliente && (!cliente.rfc || !cliente.codigo_postal || !cliente.regimen_fiscal) &&
           "datos fiscales del cliente (RFC · CP · régimen)",
