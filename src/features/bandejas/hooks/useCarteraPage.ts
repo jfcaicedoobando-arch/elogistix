@@ -13,7 +13,7 @@ export interface CarteraFilters extends Record<string, string> {
 
 export const DEFAULT_FILTERS: CarteraFilters = { moneda: "todas", urgencia: "accionable" };
 
-export function useCarteraPage() {
+export function useCarteraPage(onRecordatorio?: (row: CarteraRow) => void) {
   const { data = [], isLoading } = useCarteraPendiente();
   const { data: rates } = useExchangeRates();
   const tcUsdMxn = rates?.usdMxn ?? 0;
