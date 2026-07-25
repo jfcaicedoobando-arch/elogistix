@@ -14,7 +14,7 @@ import type { useCarteraPendiente } from "@/features/bandejas/hooks/useBandejas"
 
 export type CarteraRow = NonNullable<ReturnType<typeof useCarteraPendiente>["data"]>[number];
 
-export function buildCarteraColumns(): ColumnDef<CarteraRow, unknown>[] {
+export function buildCarteraColumns(onRecordatorio?: (row: CarteraRow) => void): ColumnDef<CarteraRow, unknown>[] {
   return defineColumns<CarteraRow>([
     {
       id: "numero",
