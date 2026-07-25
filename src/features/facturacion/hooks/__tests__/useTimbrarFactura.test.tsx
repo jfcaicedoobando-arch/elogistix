@@ -13,6 +13,9 @@ import React from "react";
 const emitirFacturapi = vi.fn();
 const cancelarFacturapi = vi.fn();
 const toastSuccess = vi.fn();
+const notifySuccess = vi.fn((_t: unknown, opts: { title: string; description?: string }) => {
+  toastSuccess(opts.title, { description: opts.description });
+});
 const notifyError = vi.fn();
 
 vi.mock("sonner", () => ({
