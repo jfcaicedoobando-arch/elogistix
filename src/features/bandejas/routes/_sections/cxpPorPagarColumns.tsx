@@ -1,6 +1,6 @@
 /**
  * Columnas de la tabla /compras/por-pagar.
- * v13.200.0: sin `<Link>` inline. Navegación por row-click desde el consumer.
+ * v13.200.0: sin <Link> inline. Navegación por row-click desde el consumer.
  */
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { moneyColumn } from "@/components/shared/dataTable/columnBuilders";
@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/formatters";
 import { ToneBadge } from "@/components/shared/ToneBadge";
 import type { ChipTone } from "@/lib/ui/badgeTone";
 import type { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export type CxpRow = NonNullable<ReturnType<typeof useCxpPorPagar>["data"]>[number];
 
@@ -20,6 +21,26 @@ function toneDiasParaVencer(dias: number): ChipTone {
 
 export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
   return defineColumns<CxpRow>([
+    {
+      id: "selection",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Seleccionar todos"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Seleccionar fila"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+      meta: { width: "w-[40px]" },
+    },
     {
       id: "proveedor",
       header: "Proveedor",
@@ -48,9 +69,15 @@ export function buildCxpPorPagarColumns(): ColumnDef<CxpRow, unknown>[] {
       header: "Vencimiento",
       accessorFn: (r) => r.fecha_vencimiento ?? "",
       enableSorting: true,
-      meta: { width: "w-[110px]", className: "text-xs whitespace-nowrap" },
-      cell: ({ row }) =>
-        row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—",
+      meta: { width: "w-[150px]", className: "text-xs whitespace-nowrap" },
+      cell: ({ row }) => (
+        <span className="inline-flex items-center gap-1.5">
+          {row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "—"}
+          {row.original.fecha_programada_pago && (
+            <ToneBadge tone="info" size="sm">Prog.</ToneBadge>
+          )}
+        </span>
+      ),
     },
     {
       id: "dias",

@@ -4,3 +4,4 @@
  */
 export * from "./resumen";
 export * from "./flujoProyectado";
+export * from "./pagosProgramados";

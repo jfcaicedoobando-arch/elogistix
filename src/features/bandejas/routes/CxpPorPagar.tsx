@@ -5,13 +5,14 @@
  * `<UnifiedFiltersBar />` con search, filtro de moneda, filtro de vencidas,
  * rango de fecha de vencimiento, orden y paginación sincronizados con la URL.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Inbox } from "lucide-react";
+import { Inbox, CalendarCheck } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
@@ -23,7 +24,16 @@ import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import { buildCxpPorPagarColumns, type CxpRow } from "./_sections/cxpPorPagarColumns";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
-
+import { useProgramarPagoLote } from "@/features/cxp/hooks/useProgramarPagoLote";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { todayLocalISO } from "@/lib/date/today";
 
 
 interface Filters extends Record<string, string> {
@@ -35,6 +45,10 @@ const DEFAULTS: Filters = { moneda: "todas", vencidas: "todas" };
 export default function CxpPorPagar() {
   const { data = [], isLoading } = useCxpPorPagar();
   const { saldoMXN, porMoneda, faltaTipoCambio, vencidas } = resumirCxpPorPagar(data);
+  const [rowSelection, setRowSelection] = useState({});
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [fechaProgramada, setFechaProgramada] = useState(todayLocalISO());
+  const { programar, isRunning, progreso } = useProgramarPagoLote();
 
   const monedas = useMemo(
     () => Array.from(new Set(data.map((r) => r.moneda).filter(Boolean))).sort(),
@@ -70,11 +84,28 @@ export default function CxpPorPagar() {
 
   const columns = useMemo(() => buildCxpPorPagarColumns(), []);
 
+  const selectedIds = useMemo(() => Object.keys(rowSelection), [rowSelection]);
+  const hasSelection = selectedIds.length > 0;
+
+  const handleProgramar = async () => {
+    await programar(selectedIds, fechaProgramada);
+    setIsDialogOpen(false);
+    setRowSelection({});
+  };
+
   return (
     <PageContainer>
       <PageHeader
         title="CxP — Por pagar"
         description="Facturas de proveedor vigentes con saldo. Programa y registra los pagos."
+        actions={
+          hasSelection && (
+            <Button onClick={() => setIsDialogOpen(true)} variant="default">
+              <CalendarCheck className="h-4 w-4 mr-2" />
+              Programar pago ({selectedIds.length})
+            </Button>
+          )
+        }
       />
 
 
@@ -168,9 +199,41 @@ export default function CxpPorPagar() {
             emptyIcon={Inbox}
             emptyMessage="Sin facturas pendientes de pago"
             emptyHint="Cuando ingreses una factura de proveedor, aparecerá aquí."
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
+            enableRowSelection
           />
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Programar pago</DialogTitle>
+            <DialogDescription>
+              Selecciona la fecha en la que Tesorería deberá ejecutar el pago para las {selectedIds.length} facturas seleccionadas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Fecha de pago</Label>
+              <DatePickerMx
+                value={fechaProgramada}
+                onChange={(v) => v && setFechaProgramada(v)}
+                className="w-full"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isRunning}>
+              Cancelar
+            </Button>
+            <Button onClick={handleProgramar} disabled={isRunning || !fechaProgramada}>
+              {isRunning ? `Programando (${progreso?.hecho}/${progreso?.total})...` : "Confirmar programación"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }

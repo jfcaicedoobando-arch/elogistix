@@ -33,7 +33,8 @@ export type StatusDomain =
   | "agente"              // Alta/baja de agentes de costeo (masculino)
   | "garantia_naviera"    // Ciclo de vida de garantía por contenedor
   | "ruta_maritima"       // Salud de ruta (Activa/Por vencer/Sin tarifa)
-  | "liquidacion";        // Pago de operación de proveedor
+  | "liquidacion"         // Pago de operación de proveedor
+  | "anticipo_proveedor"; // QW6 — Anticipos a proveedores
 
 export interface StatusVisual {
   label: string;
@@ -116,10 +117,17 @@ export const DOMAIN_STATUSES: Record<StatusDomain, readonly string[]> = {
   garantia_naviera: ["Pendiente", "Depositado", "Liberado", "Retenido"],
   ruta_maritima: ["Activa", "Por vencer", "Sin tarifa"],
   liquidacion: ["Pagado", "Pendiente"],
+  anticipo_proveedor: ["disponible", "aplicado_parcial", "aplicado_total", "cancelado"],
 };
 
 /** Overrides por dominio cuando el mismo string necesita otro label. */
 const LABEL_OVERRIDES: Partial<Record<StatusDomain, Record<string, string>>> = {
+  anticipo_proveedor: {
+    disponible: "Disponible",
+    aplicado_parcial: "Aplicado parcial",
+    aplicado_total: "Aplicado total",
+    cancelado: "Cancelado",
+  },
   lead: {
     Nuevo: "Nuevo",
     Contactado: "Contactado",

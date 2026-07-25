@@ -10,12 +10,13 @@ export interface FacturaLite {
   moneda: "MXN" | "USD";
   proveedor_id: string | null;
   proveedor_nombre: string | null;
+  tipo_cambio_usd: number | null;
 }
 
 export async function fetchFacturasReporte(desde: string, hasta: string): Promise<FacturaLite[]> {
   const { data, error } = await supabase
     .from("proveedor_facturas")
-    .select("id, fecha_emision, total, moneda, proveedor_id, proveedores(nombre)")
+    .select("id, fecha_emision, total, moneda, proveedor_id, tipo_cambio_usd, proveedores(nombre)")
     .is("deleted_at", null)
     .gte("fecha_emision", desde)
     .lte("fecha_emision", hasta)
@@ -26,6 +27,7 @@ export async function fetchFacturasReporte(desde: string, hasta: string): Promis
   const raw = (data ?? []) as unknown as Array<{
     id: string; fecha_emision: string | null; total: string | number;
     moneda: "MXN" | "USD"; proveedor_id: string | null;
+    tipo_cambio_usd: number | null;
     proveedores: { nombre: string | null } | null;
   }>;
   return raw.map((r) => ({
@@ -35,5 +37,6 @@ export async function fetchFacturasReporte(desde: string, hasta: string): Promis
     moneda: r.moneda,
     proveedor_id: r.proveedor_id,
     proveedor_nombre: r.proveedores?.nombre ?? "Sin proveedor",
+    tipo_cambio_usd: r.tipo_cambio_usd,
   }));
 }

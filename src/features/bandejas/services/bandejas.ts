@@ -28,6 +28,7 @@ export interface CxpPorPagarRow {
   saldo: number;
   estado_captura: string;
   tipo_cambio_usd: number | null;
+  fecha_programada_pago: string | null;
 }
 
 

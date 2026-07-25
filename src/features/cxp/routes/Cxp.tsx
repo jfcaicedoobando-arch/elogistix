@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Plus, FileText, Inbox } from "lucide-react";
+import { Plus, FileText, Inbox, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -31,8 +31,34 @@ import type { FacturaCxP } from "@/features/cxp/services";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { withOrgPrefix } from "@/lib/filenames";
 import { todayLocalISO } from "@/lib/date/today";
+import { formatCurrency } from "@/lib/formatters";
 
-// CxpFiltros retiene su API propia (pendiente Oleada 5).
+function exportarCxpCsv(rows: readonly FacturaCxP[]) {
+  if (!rows || rows.length === 0) return;
+  const headers = ["Folio", "Folio Prov", "Proveedor", "Emisión", "Vencimiento", "Moneda", "Total", "Pagado", "Saldo", "Estado"];
+  const lines = rows.map((r) =>
+    [
+      r.folio_interno,
+      `"${(r.folio_proveedor || "").replace(/"/g, '""')}"`,
+      `"${(r.proveedor_nombre || "").replace(/"/g, '""')}"`,
+      r.fecha_emision,
+      r.fecha_vencimiento || "",
+      r.moneda,
+      formatCurrency(r.total, r.moneda),
+      formatCurrency(r.pagado, r.moneda),
+      formatCurrency(r.saldo, r.moneda),
+      r.estatus,
+    ].join(","),
+  );
+  const csv = [headers.join(","), ...lines].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cxp-facturas-${todayLocalISO()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function Cxp() {
   const { canEdit } = usePermissions();
@@ -52,7 +78,6 @@ export default function Cxp() {
     );
   };
 
-
   const onEliminar = useCallback((fact: FacturaCxP) => {
     if (fact.pagado > 0) {
       notifyError(toast, { title: "No se puede eliminar: la factura tiene pagos registrados", method: "PAGES_CXP_CXP_1" });
@@ -71,6 +96,9 @@ export default function Cxp() {
         description="Cuentas por Pagar — facturas recibidas y su saldo pendiente"
         actions={
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => exportarCxpCsv(data)} disabled={data.length === 0}>
+              <Download className="h-4 w-4 mr-2" /> Exportar CSV
+            </Button>
             <Button variant="outline" onClick={handlePdf}>
               <FileText className="h-4 w-4 mr-2" /> Reporte PDF
             </Button>
@@ -82,8 +110,6 @@ export default function Cxp() {
           </div>
         }
       />
-
-
 
       <CxpKpiCards kpis={kpis} data={data} />
 

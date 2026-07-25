@@ -24,6 +24,7 @@ import { descargarBlob } from "@/lib/downloadBlob";
 import { toCSV } from "@/lib/io/csv";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { fetchFacturasReporte } from "@/features/compras/services/reportesFetch";
+import { fetchExchangeRates } from "@/features/catalogos/services";
 import { todayLocalISO } from "@/lib/date/today";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
@@ -40,24 +41,46 @@ export default function ComprasReportes() {
     queryFn: () => fetchFacturasReporte(desde, hasta),
   });
 
+  const { data: rates } = useQuery({
+    queryKey: ["exchange-rates-dof-today"],
+    queryFn: () => fetchExchangeRates(todayLocalISO()),
+    staleTime: 1000 * 60 * 60,
+  });
+
   const totalMxn = rows.filter((r) => r.moneda === "MXN").reduce((a, r) => a + r.total, 0);
   const totalUsd = rows.filter((r) => r.moneda === "USD").reduce((a, r) => a + r.total, 0);
   const numFacturas = rows.length;
 
+  const tcDof = rates?.usdMxn;
+
   // Top proveedores — agrupamos por proveedor y moneda.
   const topProveedores = useMemo(() => {
-    const map = new Map<string, { nombre: string; mxn: number; usd: number; count: number }>();
+    const map = new Map<string, { nombre: string; mxn: number; usd: number; count: number; mxnEquiv: number }>();
     for (const r of rows) {
       const key = r.proveedor_id ?? r.proveedor_nombre ?? "—";
-      const cur = map.get(key) ?? { nombre: r.proveedor_nombre ?? "—", mxn: 0, usd: 0, count: 0 };
+      const cur = map.get(key) ?? { nombre: r.proveedor_nombre ?? "—", mxn: 0, usd: 0, count: 0, mxnEquiv: 0 };
       cur.count += 1;
+      
+      const tc = r.tipo_cambio_usd || tcDof || 0;
+      const equiv = r.moneda === "MXN" ? r.total : (tc > 0 ? r.total * tc : 0);
+      
       if (r.moneda === "MXN") cur.mxn += r.total; else cur.usd += r.total;
+      
+      // Solo sumamos al equivalente si tenemos un TC confiable (factura o DOF).
+      // Si tc es 0, no sumamos al equivalente para evitar distorsiones.
+      cur.mxnEquiv += equiv;
+      
       map.set(key, cur);
     }
+    
     return Array.from(map.values())
-      .sort((a, b) => (b.mxn + b.usd * 20) - (a.mxn + a.usd * 20))
+      .sort((a, b) => {
+        // Si no hay TC para alguno de los dos en sus facturas USD y no hay DOF,
+        // la comparación puede ser imperfecta, pero seguimos la instrucción.
+        return b.mxnEquiv - a.mxnEquiv;
+      })
       .slice(0, 10);
-  }, [rows]);
+  }, [rows, tcDof]);
 
   // Evolución mensual (YYYY-MM) por moneda.
   const evolucion = useMemo(() => {
@@ -80,6 +103,7 @@ export default function ComprasReportes() {
           facturas: p.count,
           total_mxn: p.mxn,
           total_usd: p.usd,
+          total_equivalente_mxn: p.mxnEquiv,
         })),
       );
       descargarBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), `compras-top-proveedores-${desde}-${hasta}.csv`);
