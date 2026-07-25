@@ -129,12 +129,15 @@ function buildTemplateData(
 ): TemplateData {
   const dias = diasEntre(factura.fecha_vencimiento, new Date().toISOString()) ?? 0;
   const saldo = factura.saldo ?? factura.total ?? 0;
+  const moneda = factura.moneda ?? 'MXN';
+  const numero = factura.numero ?? `${factura.serie}-${factura.folio}`;
+  const cliente = factura.cliente_nombre ?? orgName ?? 'Cliente';
   return {
-    numero: factura.numero ?? `${factura.serie}-${factura.folio}`,
-    cliente: factura.cliente_nombre ?? orgName ?? 'Cliente',
+    numero,
+    cliente,
     contacto: '',
-    saldo: formatCurrency(Number(saldo), factura.moneda ?? 'MXN'),
-    moneda: factura.moneda ?? 'MXN',
+    saldo: formatCurrency(Number(saldo), moneda),
+    moneda,
     fechaVencimiento: formatDateMX(factura.fecha_vencimiento) ?? '',
     diasVencido: String(dias),
     mensaje: nota ?? '',
