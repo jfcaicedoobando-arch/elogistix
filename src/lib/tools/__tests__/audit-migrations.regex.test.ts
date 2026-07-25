@@ -1,8 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { FNAME_RE } from "../../../scripts/audit-migrations";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
-// Test regresivo del regex de nombre de archivo del auditor. Vive en src/
-// para que lo descubra Vitest (el include está limitado a src/**).
+// El regex vive en scripts/audit-migrations.ts (fuera de tsconfig `include`).
+// Para evitar duplicarlo y que el test detecte drift, se extrae por regex del
+// código fuente. Si alguien cambia FNAME_RE en el script, este test se
+// re-ejecuta contra la versión real.
+const SOURCE = readFileSync(
+  resolve(__dirname, "../../../../scripts/audit-migrations.ts"),
+  "utf8",
+);
+const match = SOURCE.match(/FNAME_RE\s*=\s*(\/[^\n]+\/)/);
+if (!match) throw new Error("No se pudo extraer FNAME_RE de audit-migrations.ts");
+// eslint-disable-next-line no-eval
+const FNAME_RE = eval(match[1]) as RegExp;
+
 describe("audit-migrations · FNAME_RE", () => {
   it("acepta snake_case (guiones bajos) en el sufijo — patrón QW7", () => {
     expect(
