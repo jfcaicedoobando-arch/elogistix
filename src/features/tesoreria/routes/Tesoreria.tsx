@@ -31,6 +31,7 @@ export default function Tesoreria() {
   const handlePdf = async () => {
     if (!data) return;
     const fecha = todayLocalISO();
+    const { ReporteTesoreriaDocument } = await import("@/pdf/documents/ReporteTesoreriaDocument");
     await descargarPdf(
       <ReporteTesoreriaDocument
         fechaCorte={fecha}
