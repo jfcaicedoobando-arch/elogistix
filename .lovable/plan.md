@@ -1,94 +1,63 @@
-# Plan — Tanda 2 (QW5-QW8) del módulo Facturación
+# Estado actual del roadmap Quick Wins — Facturación
 
-Continuación de Tanda 1 (v13.312.26 ya en producción). Este PR ataca la **fricción diaria** con 4 quick wins independientes.
+**Base:** v13.312.27 en producción. Tanda 1 (QW1-QW4) y Tanda 2 (QW5/QW6/QW8) ya están implementadas. QW7 fue omitido por instrucción explícita en el plan vigente.
 
----
+## Qué ya está hecho
 
-## QW5 · Botón "TC DOF Banxico" en Nueva Factura (+ EUR)
+| Tanda | QW | Estado | Versión |
+|---|---|---|---|
+| Tanda 1 | QW1 · PDF/CSV estado de cuenta | ✅ En producción | v13.312.26 |
+| Tanda 1 | QW2 · REP en portal + auto-envío | ✅ En producción | v13.312.26 |
+| Tanda 1 | QW3 · Badge "Enviada" en Emitidas | ✅ En producción | v13.312.26 |
+| Tanda 1 | QW4 · Columna Archivos en ≥lg | ✅ En producción | v13.312.26 |
+| Tanda 2 | QW5 · TC DOF Banxico en Nueva Factura (+ EUR) | ✅ En producción | v13.312.27 |
+| Tanda 2 | QW6 · Resumen de faltantes junto al botón disabled | ✅ En producción | v13.312.27 |
+| Tanda 2 | QW7 · Menú ⋮ por fila con acciones no destructivas | ❌ Omitido deliberadamente | — |
+| Tanda 2 | QW8 · Envío masivo email + acción Enviar en PorEnviar | ✅ En producción | v13.312.27 |
 
-**Objetivo:** que al capturar una factura manual en USD o EUR, un botón traiga automáticamente el tipo de cambio publicado por Banxico (DOF), como ya existe en el detalle.
+## Qué falta
 
-**Cambios:**
+- **Tanda 3 completa:** QW9, QW10, QW11, QW12. Ninguno está implementado todavía.
+- **QW7 (opcional):** sigue fuera de alcance a menos que se revierta la decisión.
 
-- `DialogNuevaFactura` (y su sección de moneda): añadir botón "Traer TC DOF" junto al input `tipo_cambio`, visible sólo cuando `moneda ∈ {USD, EUR}`.
-- Ampliar `useBanxicoTipoCambio` para soportar `EUR` (hoy sólo `USD`) usando la misma serie SF57923 pattern o serie EUR/MXN de Banxico.
-- Feedback: `notifyInfo`/`notifySuccess` con la fecha del TC.
+## Plan propuesto — Tanda 3 (QW9-QW12)
 
-**Analogía:** hoy el usuario copia el TC de otra pestaña; con esto es un botón, como el que ya usa cuando la factura ya existe.
+### QW9 · Aging A/R por cliente con export CSV
+Copiar el patrón existente de `CxpAging.tsx` para crear `CxcAging.tsx` (o equivalente dentro del módulo de facturación/cuentas por cobrar). Mostrar buckets 0 / 1-30 / 31-60 / 61-90 / 90+ días por cliente con botón de export CSV.
 
----
+- Archivos: `src/features/cxc/routes/CxcAging.tsx` (nuevo), servicio de aggregación de saldos, hook reutilizable basado en `useCxpAging`.
+- Esfuerzo: 2-3 días.
 
-## QW6 · Resumen de "qué falta" junto al botón deshabilitado
+### QW10 · Recordatorios manuales de cobranza (dunning manual)
+La edge `cxc-recordatorios` ya devuelve candidatos. Construir una bandeja de recordatorios agrupados por nivel (T-3 / T+7 / T+15) y permitir disparar envío manual vía `process-email-queue`. Sin automatización programada (eso es Ola 1).
 
-**Objetivo:** cuando el submit de un diálogo del módulo está `disabled`, mostrar en línea qué campos faltan (sin migrar a RHF+Zod — eso es Ola 1).
+- Archivos: nueva vista de recordatorios, hook `useRecordatoriosCobranza`, integración con la cola de emails.
+- Esfuerzo: 3-4 días.
 
-**Alcance (los 3 diálogos de más fricción):**
+### QW11 · Fixes de accesibilidad en diálogos fiscales
+Aplicar `FormField` (genera id y asocia label) a los Selects Radix de los diálogos de timbrado, cancelación, notas de crédito y pago. Revisar y corregir contraste de `text-warning` (ámbar) y eliminar `text-2xs` en información clave.
 
-- `DialogNuevaFactura`
-- `DialogTimbrar`
-- `DialogRegistrarPago`
+- Archivos: `DialogTimbrar`, `DialogCancelar`, `DialogNotaCredito`, `DialogRegistrarPago`, hojas de estilo relevantes.
+- Esfuerzo: 1-2 días.
 
-**Cómo:** helper `useFaltantes(campos)` que devuelva `string[]` de labels vacíos y un componente `<FaltantesHint items={...} />` que se renderiza sólo cuando el botón está `disabled`.
+### QW12 · Envío de estado de cuenta por email
+Reutilizar el PDF/CSV conectado en QW1 y adjuntarlo al flujo transaccional de emails, usando la misma infraestructura de `factura-reenvio` / `process-email-queue`.
 
----
+- Archivos: `ExportActions.tsx` (añadir botón "Enviar"), servicio de envío de statements, plantilla de email.
+- Esfuerzo: 1 día (depende de QW1, ya hecho).
 
-## QW7 · Menú ⋮ por fila con acciones no destructivas
+## Dependencias y notas
 
-**Objetivo:** reducir 2 navegaciones por documento a 0 en bandejas de alto volumen.
+- QW12 requiere QW1 (ya implementado).
+- QW10 es la semilla de la Ola 1 (automatización de dunning). Se deja sin scheduler por ahora.
+- QW7 sigue fuera de alcance a menos que el usuario decida revertir la exclusión.
 
-**Alcance:**
+## Alternativas
 
-- Tablas: **Emitidas**, **Por Timbrar**, **Por Enviar**, **Por Cobrar**.
-- Acciones en el menú (según estado de la fila):
-  - Timbrar (fast-path, sólo borradores válidos)
-  - Registrar pago (sólo emitidas con saldo)
-  - Enviar por email
-  - Descargar PDF / XML
-- **NO se incluyen** Cancelar ni Eliminar (siguen únicamente en el detalle) — se documenta el nuevo criterio en `CHANGELOG` porque revierte parcialmente v13.172.12.
+Si prefieres no abrir toda la Tanda 3 de golpe, podemos:
 
-**Reuso:** los diálogos (`DialogTimbrar`, `DialogRegistrarPago`, `EnviarDocumentoDialog`) ya son componentes independientes; sólo se abren desde el nuevo menú.
+1. Tomar solo **QW9 + QW11** (paridad visible con CxP + a11y rápida, ~3-4 días).
+2. Tomar solo **QW12** (cierra el ciclo de statements, ~1 día).
+3. Reincorporar **QW7** y dejar Tanda 3 para después.
 
-**Guardas UX:** `e.stopPropagation()` en el trigger del menú (regla Core de la memoria).
-
----
-
-## QW8 · Envío masivo de email + acción "Enviar" en bandeja PorEnviar
-
-**Objetivo:** terminar el stub actual de reenvío masivo y dar botón "Enviar" a la bandeja PorEnviar (hoy no envía nada).
-
-**Cambios:**
-
-- Reemplazar el `toast.info("en preparación")` por el flujo real:
-  1. Selección múltiple en la tabla.
-  2. `AlertDialog` de confirmación con conteo y preview del destinatario principal.
-  3. Encolar N envíos vía `process-email-queue` usando la plantilla `factura-reenvio` (ya existe).
-  4. Reporte final: toast con `X enviadas / Y con error` y detalle en `bitacora_actividad`.
-- En bandeja **Por Enviar**: botón "Enviar" por fila y toolbar "Enviar seleccionadas" que reutilizan el mismo flujo.
-
-**Sin automatización** (dunning automático es Ola 1 / QW10).
-
----
-
-## Detalles técnicos
-
-- **Archivos previstos** (a confirmar al implementar):
-  - `src/features/facturacion/components/dialogs/DialogNuevaFactura/*`
-  - `src/features/facturacion/hooks/useBanxicoTipoCambio.ts`
-  - `src/features/facturacion/components/FaltantesHint.tsx` (nuevo)
-  - `src/features/facturacion/components/tables/*RowActions.tsx` (nuevo, compartido)
-  - `src/features/facturacion/hooks/useEnviarFacturasMasivo.ts` (nuevo)
-- **DB / edges:** no requiere migraciones nuevas — todas las tablas, RPCs (`facturapi-enviar-email`, `process-email-queue`) y campos ya existen.
-- **Tests:**
-  - Unit: `useBanxicoTipoCambio` (rama EUR), helper de faltantes, hook de envío masivo (mock cola).
-  - Behavioral: menú ⋮ dispara el diálogo correcto; el submit masivo confirma y reporta.
-- **Changelog + `APP_VERSION`:** bump a `13.313.0` (nueva mini-tanda visible).
-- **A11y:** los nuevos triggers de menú/botón siguen el patrón `FormDialogShell` + `aria-label` estándar.
-
-## Fuera de alcance (siguiente Tanda)
-
-- QW9 Aging A/R
-- QW10 Recordatorios de cobranza
-- QW11 Fixes a11y fiscales
-- QW12 Envío del estado de cuenta por email
-
-No hacemos el qw7
+Dime qué opción prefieres para continuar.
