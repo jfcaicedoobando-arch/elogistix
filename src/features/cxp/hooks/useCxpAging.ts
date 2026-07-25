@@ -34,7 +34,7 @@ export function useCxpAging(fecha?: string): UseCxpAgingResult {
     staleTime: 60_000,
   });
 
-  const rows = q.data ?? [];
+  const rows = useMemo(() => q.data ?? [], [q.data]);
   const monedas = useMemo(() => monedasPresentes(rows), [rows]);
   const [monedaActiva, setMoneda] = useState<string>("MXN");
 

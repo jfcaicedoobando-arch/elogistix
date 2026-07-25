@@ -1,6 +1,8 @@
 export const cxp = {
   all: ["cxp"] as const,
   facturas: (filtros?: unknown) => ["cxp", "facturas", filtros ?? null] as const,
+  facturasAbiertasProveedor: (proveedorId?: string | null) =>
+    ["cxp", "facturas-abiertas-proveedor", proveedorId ?? null] as const,
   factura: (id?: string | null) => ["cxp", "factura", id] as const,
   facturaEditRow: (id?: string | null) => ["cxp", "factura-edit-row", id] as const,
   pagos: (facturaId: string) => ["cxp", "pagos", facturaId] as const,
