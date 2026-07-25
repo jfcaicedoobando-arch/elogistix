@@ -4655,6 +4655,42 @@ export type Database = {
         }
         Relationships: []
       }
+      nav_events: {
+        Row: {
+          created_at: string
+          id: string
+          item_title: string
+          item_url: string
+          organization_id: string
+          role: string | null
+          section_label: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_title: string
+          item_url: string
+          organization_id?: string
+          role?: string | null
+          section_label?: string | null
+          source: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_title?: string
+          item_url?: string
+          organization_id?: string
+          role?: string | null
+          section_label?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       navieras: {
         Row: {
           activo: boolean
