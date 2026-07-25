@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.318.0] - 2026-07-25
+- **feat · Sidebar Etapa 2: reorganización por flujo del dinero.** Analogía: reordenamos los cajones de la alacena. La comida (rutas, permisos, badges) sigue exacta; sólo cambió en qué cajón se guarda.
+  - Nuevas secciones: **Inicio · Operación · Ventas (CxC) · Compras (CxP) · Dinero · Costeo · Análisis · Sistema**.
+  - Se disolvieron `SIDEBAR_GESTION_ITEMS`, `SIDEBAR_DIRECTORIO_ITEMS`, `SIDEBAR_PROFIT_ITEMS`, `SIDEBAR_REPORTES_ITEMS`. Ahora viven en `SIDEBAR_VENTAS_ITEMS` / `SIDEBAR_OPERACION_ITEMS` / `SIDEBAR_DINERO_ITEMS` / `SIDEBAR_ANALISIS_ITEMS`.
+  - **Dinero** expone por primera vez en el menú: Conciliación bancaria, Cuentas bancarias, Flujo proyectado y Pagos programados (antes sólo alcanzables por deep-link).
+  - CRM ahora se muestra dentro de "Operación" para roles comerciales (vendedor, gerente_comercial, gerente_operaciones, admin).
+  - Sin cambios de rutas, guards ni BD. Rollback = revert de un solo PR.
+  - Matriz por rol: vendedor · customer_service/viewer · coordinador/operador · ejecutivo_pricing · contador · tesorero · auxiliar_contable · ejecutivo_cobranza · gerente_comercial · gerente_operaciones · admin — cada uno mantiene el mismo set de URLs que en v13.317.10.
+
+
+
 ## [13.317.10] - 2026-07-25
 - **fix · Power of 10 #1: 2 archivos residuales > 200 líneas.** Analogía: quedaban dos cajones pasados de tamaño después de mudarnos.
   - `CxpAging.tsx` (201 → 187): extraído `KpiBucket` a `_sections/AgingKpiBucket.tsx`.
