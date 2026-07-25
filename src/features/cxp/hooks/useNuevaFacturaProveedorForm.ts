@@ -145,38 +145,15 @@ export function useNuevaFacturaProveedorForm(
     setTcFechaAplicada(undefined);
     manualTcRef.current = false;
   };
-  const handleCfdiParsed = async (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }): Promise<boolean> => {
-    const result = await procesarCfdiParsed(data, files, organizationId);
-    if (!result.ok) {
-      notifyError(toast, {
-        title: "El CFDI no cuadra y no se puede registrar",
-        description: result.cuadreError,
-        method: "FEATURES_CXP_HOOKS_USENUEVAFACTURAPROVEEDORFORM_CUADRE",
-      });
-      return false;
-    }
-    setValues(result.values);
-    setErrors({});
-    setPendingCfdi(result.pendingCfdi);
-    setCfdiConceptos(result.conceptos);
-    setAskCrearProv(result.askCrearProv);
-    setTcOrigen(result.tcOrigen);
-    setTcFechaAplicada(result.tcFechaAplicada);
-    manualTcRef.current = false;
-    return true;
+  const parsedDeps = {
+    organizationId,
+    setValues, setErrors, setPendingCfdi, setCfdiConceptos,
+    setAskCrearProv, setTcOrigen, setTcFechaAplicada, manualTcRef,
   };
-  const handlePdfIaParsed = async (data: CfdiParsedResponse, files: { pdf: File }): Promise<boolean> => {
-    const result = await procesarPdfIaParsed(data, files, organizationId);
-    setValues(result.values);
-    setErrors({});
-    setPendingCfdi(result.pendingCfdi);
-    setCfdiConceptos(result.conceptos);
-    setAskCrearProv(result.askCrearProv);
-    setTcOrigen(result.tcOrigen);
-    setTcFechaAplicada(result.tcFechaAplicada);
-    manualTcRef.current = false;
-    return true;
-  };
+  const handleCfdiParsed = (data: CfdiParsedResponse, files: { xml: File; pdf: File | null }) =>
+    aplicarCfdiParsed(parsedDeps, data, files);
+  const handlePdfIaParsed = (data: CfdiParsedResponse, files: { pdf: File }) =>
+    aplicarPdfIaParsed(parsedDeps, data, files);
   const validate = (): boolean => {
     const next = validateFactura(values, total);
     setErrors(next);
