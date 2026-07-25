@@ -151,13 +151,15 @@ function aplicarCobranza(rows: CobranzaRow[], inWindow: InWindow): void {
 
 function aplicarCxp(rows: CxpRow[], inWindow: InWindow): void {
   for (const c of rows) {
-    if (c.saldo <= 0 || !c.fecha_vencimiento) continue;
-    const sem = inWindow(c.fecha_vencimiento); if (!sem) continue;
+    // v13.315.7 (QW1) — fecha efectiva = programada > vencimiento.
+    const fechaEfectiva = c.fecha_programada_pago ?? c.fecha_vencimiento;
+    if (c.saldo <= 0 || !fechaEfectiva) continue;
+    const sem = inWindow(fechaEfectiva); if (!sem) continue;
     const mxn = toMxn(c.saldo, c.moneda, c.tipo_cambio_usd);
     sem.salidas_mxn += mxn;
     sem.detalle_salidas.push({
       id: c.id, concepto: `${c.folio_proveedor} · ${c.proveedor_nombre}`,
-      monto_mxn: mxn, fecha_vencimiento: c.fecha_vencimiento, moneda: c.moneda,
+      monto_mxn: mxn, fecha_vencimiento: fechaEfectiva, moneda: c.moneda,
     });
   }
 }
