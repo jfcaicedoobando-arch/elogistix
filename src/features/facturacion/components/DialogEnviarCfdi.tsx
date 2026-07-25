@@ -14,7 +14,10 @@ import { useToast } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { enviarCfdiFactura, enviarCfdiRep, enviarCfdiNotaCredito } from "@/features/facturacion/services/enviarCfdiEmail";
 import { facturas as facturasKeys } from "@/features/facturacion/queryKeys";
-import { useContactosClienteParaEnvio } from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
+import {
+  useContactosClienteParaEnvio,
+  type ContactoEnvio,
+} from "@/features/facturacion/hooks/useContactosClienteParaEnvio";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { getErrorMessage } from "@/lib/errors/index";
@@ -35,6 +38,86 @@ function esValido(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+async function enviarCfdiPor(args: {
+  facturaId?: string; pagoId?: string; notaCreditoId?: string; email: string;
+}) {
+  if (args.notaCreditoId) return enviarCfdiNotaCredito(args.notaCreditoId, args.email);
+  if (args.facturaId) return enviarCfdiFactura(args.facturaId, args.email);
+  if (args.pagoId) return enviarCfdiRep(args.pagoId, args.email);
+  throw new Error("Falta facturaId, pagoId o notaCreditoId");
+}
+
+interface ContactoItemProps {
+  contacto: ContactoEnvio;
+  seleccionado: boolean;
+  onPick: (email: string) => void;
+}
+
+function ContactoItem({ contacto: c, seleccionado, onPick }: ContactoItemProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(c.email)}
+      className={`text-left rounded-md border px-3 py-2 text-xs transition-colors ${
+        seleccionado ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 font-medium">
+          <User className="h-3 w-3 text-muted-foreground" />
+          {c.nombre ?? "(Sin nombre)"}
+          {c.esFacturacion && (
+            <Badge variant="secondary" className="h-4 px-1 text-[10px]">Facturación</Badge>
+          )}
+        </div>
+        {c.tipo && !c.esFacturacion && (
+          <span className="text-[10px] text-muted-foreground">{c.tipo}</span>
+        )}
+      </div>
+      <div className="text-muted-foreground mt-0.5 truncate">{c.email}</div>
+    </button>
+  );
+}
+
+interface ContactosListProps {
+  cargando: boolean;
+  contactos: ContactoEnvio[];
+  emailCliente: string | null | undefined;
+  emailSeleccionado: string;
+  onPick: (email: string) => void;
+}
+
+function ContactosList({ cargando, contactos, emailCliente, emailSeleccionado, onPick }: ContactosListProps) {
+  if (cargando) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Cargando contactos…
+      </div>
+    );
+  }
+  if (contactos.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Este cliente no tiene contactos con email registrados.
+        {emailCliente && " Se usará el email de la ficha del cliente."}
+      </p>
+    );
+  }
+  const seleccionadoLower = emailSeleccionado.trim().toLowerCase();
+  return (
+    <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+      {contactos.map((c) => (
+        <ContactoItem
+          key={c.id}
+          contacto={c}
+          seleccionado={seleccionadoLower === c.email.toLowerCase()}
+          onPick={onPick}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function DialogEnviarCfdi({
   open, onOpenChange, facturaId, pagoId, notaCreditoId, clienteId, emailDefault, titulo, descripcion,
 }: Props) {
@@ -46,16 +129,12 @@ export function DialogEnviarCfdi({
 
   const { data: datosCliente, isLoading: cargandoContactos } = useContactosClienteParaEnvio(clienteId, open);
 
-  // Pre-cargar email sugerido cuando abre el diálogo y el usuario no ha
-  // sobreescrito manualmente.
   useEffect(() => {
-    if (!open) return;
-    if (tocado) return;
+    if (!open || tocado) return;
     const sugerido = emailDefault ?? datosCliente?.emailSugerido ?? "";
     if (sugerido) setEmail(sugerido);
   }, [open, tocado, emailDefault, datosCliente?.emailSugerido]);
 
-  // Reset al cerrar.
   useEffect(() => {
     if (!open) {
       setTocado(Boolean(emailDefault));
@@ -66,23 +145,16 @@ export function DialogEnviarCfdi({
   const valido = esValido(email);
   const emailSugerido = datosCliente?.emailSugerido ?? null;
   const esOverride = valido && emailSugerido !== null && email.trim().toLowerCase() !== emailSugerido.toLowerCase();
-
   const contactos = useMemo(() => datosCliente?.contactos ?? [], [datosCliente]);
+
+  const pickEmail = (nuevo: string) => { setEmail(nuevo); setTocado(true); };
 
   const onSubmit = async () => {
     if (!valido) return;
     setEnviando(true);
     try {
-      const emailEnviar = email.trim();
-      const res = notaCreditoId
-        ? await enviarCfdiNotaCredito(notaCreditoId, emailEnviar)
-        : facturaId
-          ? await enviarCfdiFactura(facturaId, emailEnviar)
-          : await enviarCfdiRep(pagoId!, emailEnviar);
-      toast({
-        title: "CFDI enviado",
-        description: `Se envió a ${res.enviado_a}.`,
-      });
+      const res = await enviarCfdiPor({ facturaId, pagoId, notaCreditoId, email: email.trim() });
+      toast({ title: "CFDI enviado", description: `Se envió a ${res.enviado_a}.` });
       qc.invalidateQueries({ queryKey: facturasKeys.all });
       onOpenChange(false);
     } catch (err) {
@@ -125,7 +197,7 @@ export function DialogEnviarCfdi({
             id="cfdi-email"
             type="email"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setTocado(true); }}
+            onChange={(e) => pickEmail(e.target.value)}
             placeholder="cliente@ejemplo.com"
             autoFocus
             aria-invalid={!valido && email.length > 0}
@@ -143,50 +215,13 @@ export function DialogEnviarCfdi({
             <Label className="text-xs uppercase tracking-wide text-muted-foreground">
               Contactos del cliente
             </Label>
-            {cargandoContactos ? (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Cargando contactos…
-              </div>
-            ) : contactos.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                Este cliente no tiene contactos con email registrados.
-                {datosCliente?.emailCliente && " Se usará el email de la ficha del cliente."}
-              </p>
-            ) : (
-              <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
-                {contactos.map((c) => {
-                  const seleccionado = email.trim().toLowerCase() === c.email.toLowerCase();
-                  return (
-                    <button
-                      type="button"
-                      key={c.id}
-                      onClick={() => { setEmail(c.email); setTocado(true); }}
-                      className={`text-left rounded-md border px-3 py-2 text-xs transition-colors ${
-                        seleccionado
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 font-medium">
-                          <User className="h-3 w-3 text-muted-foreground" />
-                          {c.nombre ?? "(Sin nombre)"}
-                          {c.esFacturacion && (
-                            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                              Facturación
-                            </Badge>
-                          )}
-                        </div>
-                        {c.tipo && !c.esFacturacion && (
-                          <span className="text-[10px] text-muted-foreground">{c.tipo}</span>
-                        )}
-                      </div>
-                      <div className="text-muted-foreground mt-0.5 truncate">{c.email}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <ContactosList
+              cargando={cargandoContactos}
+              contactos={contactos}
+              emailCliente={datosCliente?.emailCliente}
+              emailSeleccionado={email}
+              onPick={pickEmail}
+            />
           </div>
         )}
       </div>
