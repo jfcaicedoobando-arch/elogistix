@@ -3,7 +3,6 @@ import { Upload, FileSpreadsheet, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -11,7 +10,6 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { useCuentasBancarias, useMovimientos, useImportarMovimientos, useConciliarPago } from "@/features/tesoreria/hooks";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { parseEstadoCuentaBBVA } from "@/features/tesoreria/domain/import/bbva";
-import { formatCurrency, formatDate } from "@/lib/formatters";
 import { PanelConciliacionMovimiento } from "@/features/tesoreria/components/PanelConciliacionMovimiento";
 import type { MovimientoBBVA } from "@/features/tesoreria/services";
 import { sugerirCandidatos } from "@/features/tesoreria/services/sugerirCandidatos";
@@ -20,63 +18,7 @@ import { encontrarCandidatosExactos, seleccionarMatchUnico } from "@/features/te
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
-import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-
-const ESTADO_COLOR: Record<string, string> = {
-  Pendiente: "bg-warning/10 text-warning border-warning/20",
-  Conciliado: "bg-success/10 text-success border-success/20",
-  Ignorado: "bg-muted text-muted-foreground border-border",
-};
-
-const movimientoColumns: ColumnDef<MovimientoBBVA, unknown>[] = defineColumns<MovimientoBBVA>([
-  {
-    id: "fecha",
-    header: "Fecha",
-    accessorFn: (m) => m.fecha,
-    cell: ({ row }) => <span className="whitespace-nowrap text-xs">{formatDate(row.original.fecha)}</span>,
-  },
-  {
-    id: "concepto",
-    header: "Concepto",
-    accessorFn: (m) => m.concepto,
-    cell: ({ row }) => (
-      <span className="block max-w-[280px] truncate" title={row.original.concepto}>{row.original.concepto}</span>
-    ),
-  },
-  {
-    id: "cargo",
-    header: "Cargo",
-    accessorFn: (m) => m.cargo,
-    meta: { align: "right" },
-    cell: ({ row }) => (
-      <span className="tabular-nums text-destructive">
-        {Number(row.original.cargo) > 0 ? formatCurrency(Number(row.original.cargo), "MXN") : ""}
-      </span>
-    ),
-  },
-  {
-    id: "abono",
-    header: "Abono",
-    accessorFn: (m) => m.abono,
-    meta: { align: "right" },
-    cell: ({ row }) => (
-      <span className="tabular-nums text-success">
-        {Number(row.original.abono) > 0 ? formatCurrency(Number(row.original.abono), "MXN") : ""}
-      </span>
-    ),
-  },
-  {
-    id: "estado",
-    header: "Estado",
-    accessorFn: (m) => m.estado_conciliacion,
-    meta: { width: "w-24" },
-    cell: ({ row }) => (
-      <Badge variant="outline" className={`text-2xs ${ESTADO_COLOR[row.original.estado_conciliacion]}`}>
-        {row.original.estado_conciliacion}
-      </Badge>
-    ),
-  },
-]) as ColumnDef<MovimientoBBVA, unknown>[];
+import { movimientoColumns } from "./_sections/movimientoColumns";
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
