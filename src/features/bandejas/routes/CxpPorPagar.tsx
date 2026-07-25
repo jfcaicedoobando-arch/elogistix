@@ -184,34 +184,16 @@ export default function CxpPorPagar() {
         </CardContent>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Programar pago</DialogTitle>
-            <DialogDescription>
-              Selecciona la fecha en la que Tesorería deberá ejecutar el pago para las {selectedIds.length} facturas seleccionadas.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Fecha de pago</Label>
-              <DatePickerMx
-                value={fechaProgramada}
-                onChange={(v) => v && setFechaProgramada(v)}
-                className="w-full"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isRunning}>
-              Cancelar
-            </Button>
-            <Button onClick={handleProgramar} disabled={isRunning || !fechaProgramada}>
-              {isRunning ? `Programando (${progreso?.hecho}/${progreso?.total})...` : "Confirmar programación"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProgramarPagoDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        cantidad={selectedIds.length}
+        fechaProgramada={fechaProgramada}
+        onFechaChange={setFechaProgramada}
+        isRunning={isRunning}
+        progreso={progreso}
+        onConfirmar={handleProgramar}
+      />
     </PageContainer>
   );
 }
