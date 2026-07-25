@@ -129,3 +129,32 @@ export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
   { title: "Antigüedad CxP", url: "/compras/aging", icon: LayoutList },
   { title: "Reportes", url: "/compras/reportes", icon: BarChart3 },
 ];
+
+/**
+ * v13.319.0 — Sidebar Etapa 3 · 3.B: mapa aplanado `url → title` de todas las
+ * constantes SIDEBAR_*_ITEMS de este archivo. Se usa para filtrar los
+ * "Recientes" del GlobalSearch de modo que jamás entren detalles
+ * (`/facturacion/:id`, portal, login, etc.) — sólo páginas del propio menú.
+ */
+const ALL_SIDEBAR_GROUPS: SidebarItem[][] = [
+  SIDEBAR_DASHBOARD_ITEMS,
+  SIDEBAR_VENTAS_ITEMS,
+  SIDEBAR_OPERACION_ITEMS,
+  SIDEBAR_DINERO_ITEMS,
+  SIDEBAR_ANALISIS_ITEMS,
+  SIDEBAR_CRM_ITEMS,
+  SIDEBAR_SISTEMA_ITEMS,
+  SIDEBAR_ADMIN_ITEMS,
+  SIDEBAR_SUPER_ADMIN_ITEMS,
+  SIDEBAR_COSTEO_ITEMS,
+  SIDEBAR_COMPRAS_ITEMS,
+];
+
+export const SIDEBAR_URL_TITLE_MAP: Readonly<Record<string, string>> = Object.freeze(
+  ALL_SIDEBAR_GROUPS.reduce<Record<string, string>>((acc, group) => {
+    for (const item of group) {
+      if (!(item.url in acc)) acc[item.url] = item.title;
+    }
+    return acc;
+  }, {}),
+);
