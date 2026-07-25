@@ -30,7 +30,7 @@ function applyResult(deps: ParsedApplyDeps, result: {
   conceptos: CfdiConceptoParsed[];
   askCrearProv: { rfc: string; nombre: string } | null;
   tcOrigen: TcOrigen;
-  tcFechaAplicada: string | undefined;
+  tcFechaAplicada?: string | undefined;
 }) {
   deps.setValues(result.values);
   deps.setErrors({});
