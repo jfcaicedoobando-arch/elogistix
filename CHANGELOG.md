@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.317.3] - 2026-07-25
+- **perf · P7 · Bandeja de Facturación con paginación server-side.** Nuevo hook `useFacturasListado` que consume el RPC `facturas_listado` (ya paginado en SQL con `p_offset`/`p_limit` y `count` total). El controller `useFacturacionPageController` ya no descarga hasta 5 000 facturas para filtrar en cliente: pide sólo 100 por página al servidor, con `search` y `estado` empujados al RPC y `keepPreviousData` para transiciones suaves. `search` se debouncea a 300 ms (mismo patrón que Embarques/CxP). Los filtros de `cliente` y rango de fechas siguen client-side sobre la página visible (limitación conocida documentada en el hook). Nueva query key `queryKeys.facturas.listado(filtros)` y campo `totalCount` expuesto por el controller. Analogía: antes traíamos la biblioteca completa a la mesa para hojear 100 libros; ahora pedimos sólo los 100 que vamos a leer.
+
+
 ## [13.317.2] - 2026-07-25
 - **perf · Ola 1 (P8, P9, P10) de auditoría performance.**
   - **P9 · Aging por organización en SQL (RPCs `cxc_aging_clientes` y `cxp_aging_proveedores`).** Antes las RPCs `SECURITY DEFINER` agregaban globalmente contra `facturas` / `proveedor_facturas` y sólo filtraban por `organization_id` al final. Ahora el filtro se empuja al CTE base para que Postgres escanee solamente las filas del tenant activo. Semántica idéntica (mismas columnas, mismos redondeos), pero en tenants grandes evita escanear la tabla de otros. Analogía: antes hacíamos la fila para todos los clientes y al final descartábamos los que no eran nuestros; ahora sólo formamos la fila de los nuestros.
