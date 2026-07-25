@@ -68,18 +68,19 @@ export function AgingKpiRow({ proveedor }: { proveedor: CxpAgingRow }) {
   const criticas = proveedor.mas_90;
   const porVencer = proveedor.vigente;
   const vencido = proveedor.d_1_30 + proveedor.d_31_60 + proveedor.d_61_90;
+  const m = proveedor.moneda;
   return (
     <div className="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 border-b bg-background">
-      <Kpi label="Saldo total" value={formatCurrency(proveedor.saldo_total, "MXN")} />
-      <Kpi label="Por vencer" value={formatCurrency(porVencer, "MXN")} />
+      <Kpi label={`Saldo total (${m})`} value={formatCurrency(proveedor.saldo_total, m)} />
+      <Kpi label="Por vencer" value={formatCurrency(porVencer, m)} />
       <Kpi
         label="Vencido 1-90 d"
-        value={formatCurrency(vencido, "MXN")}
+        value={formatCurrency(vencido, m)}
         tone={vencido > 0 ? "warn" : "default"}
       />
       <Kpi
         label="Crítico >90 d"
-        value={formatCurrency(criticas, "MXN")}
+        value={formatCurrency(criticas, m)}
         tone={criticas > 0 ? "warn" : "default"}
         emphasis={criticas > 0}
       />
