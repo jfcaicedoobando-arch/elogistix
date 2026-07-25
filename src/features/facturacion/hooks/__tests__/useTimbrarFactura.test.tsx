@@ -13,6 +13,9 @@ import React from "react";
 const emitirFacturapi = vi.fn();
 const cancelarFacturapi = vi.fn();
 const toastSuccess = vi.fn();
+const notifySuccess = vi.fn((_t: unknown, opts: { title: string; description?: string }) => {
+  toastSuccess(opts.title, { description: opts.description });
+});
 const notifyError = vi.fn();
 
 vi.mock("sonner", () => ({
@@ -38,6 +41,7 @@ vi.mock("@/features/facturacion/services/facturapi", () => {
   };
 });
 vi.mock("@/lib/ui/appFeedback", () => ({
+  notifySuccess: (...a: unknown[]) => notifySuccess(...(a as [unknown, { title: string; description?: string }])),
   notifyError: (...a: unknown[]) => notifyError(...a),
 }));
 
@@ -54,6 +58,7 @@ beforeEach(() => {
   emitirFacturapi.mockReset();
   cancelarFacturapi.mockReset();
   toastSuccess.mockReset();
+  notifySuccess.mockClear();
   notifyError.mockReset();
 });
 
@@ -85,7 +90,9 @@ describe("useTimbrarFactura", () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
 
     expect(notifyError).toHaveBeenCalledTimes(1);
-    expect(notifyError.mock.calls[0]![1].title).toContain("boom");
+    const errArg = notifyError.mock.calls[0]![1];
+    expect(errArg.title).toBe("No se pudo timbrar");
+    expect((errArg.error as Error).message).toContain("boom");
     qc.clear();
   });
 });
