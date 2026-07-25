@@ -4,7 +4,12 @@
  * para el reporte de CxP (un error aquí muestra saldo incorrecto al CFO).
  */
 import { describe, it, expect } from "vitest";
-import { calcularTotalesAging, type CxpAgingRow } from "../cxpAging";
+import {
+  calcularTotalesAging,
+  calcularTotalesPorMoneda,
+  monedasPresentes,
+  type CxpAgingRow,
+} from "../cxpAging";
 
 function row(over: Partial<CxpAgingRow> = {}): CxpAgingRow {
   return {
