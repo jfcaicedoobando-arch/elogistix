@@ -20,7 +20,7 @@ import type { DatosFiscalesValue } from "@/features/facturacion/components/Factu
  * Serie oficial por moneda. La numeración fiscal es responsabilidad del sistema
  * — nunca se deja al usuario porque contamina folios (ver v13.301.58).
  */
-function serieForMoneda(m: DatosFiscalesValue["moneda"]): string {
+export function serieForMoneda(m: DatosFiscalesValue["moneda"]): string {
   if (m === "USD") return "SF43718";
   if (m === "EUR") return "SF46410";
   return "A";
