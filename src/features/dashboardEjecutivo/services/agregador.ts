@@ -47,6 +47,46 @@ function meses12Atras(periodo: string): Array<{ year: number; month: number; key
   return out;
 }
 
+/**
+ * P8 (v13.317.x): trae la tendencia 12m en 1 sola llamada RPC en lugar de
+ * 12 fetch mensuales separados. La semántica es idéntica a
+ * fetchEstadoResultadosMes / fetchEstadoResultadosDevengado (mismos filtros,
+ * misma conversión a MXN), pero agregada en el servidor por mes/año.
+ * Puede abarcar dos años calendario (ej. mar-2025 → feb-2026) así que
+ * hacemos hasta 2 llamadas RPC.
+ */
+async function fetchTendencia12m(
+  meses: Array<{ year: number; month: number; key: string }>,
+  fuente: FuenteEERR,
+): Promise<PuntoEERR[]> {
+  const years = Array.from(new Set(meses.map((m) => m.year)));
+  const results = await Promise.all(
+    years.map((y) =>
+      supabase.rpc("eerr_resumen_anual", { p_year: y, p_fuente: fuente }),
+    ),
+  );
+  const porYearMes = new Map<string, { ingresos: number; costos: number }>();
+  years.forEach((y, i) => {
+    const { data, error } = results[i];
+    if (error) throw error;
+    for (const row of (data ?? []) as Array<{ mes: number; ingresos_mxn: number | string; costos_mxn: number | string }>) {
+      porYearMes.set(`${y}-${String(row.mes).padStart(2, "0")}`, {
+        ingresos: Number(row.ingresos_mxn) || 0,
+        costos: Number(row.costos_mxn) || 0,
+      });
+    }
+  });
+  return meses.map((m) => {
+    const v = porYearMes.get(m.key) ?? { ingresos: 0, costos: 0 };
+    return {
+      periodo: m.key,
+      ingresos: v.ingresos,
+      costos: v.costos,
+      utilidad: v.ingresos - v.costos,
+    };
+  });
+}
+
 export async function fetchDashboardEjecutivo(
   params: FetchSnapshotParams,
 ): Promise<SnapshotEjecutivo> {
