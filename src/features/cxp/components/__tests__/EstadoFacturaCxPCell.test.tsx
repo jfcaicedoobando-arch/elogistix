@@ -3,9 +3,15 @@
  * los chips secundarios correctos según los `flags` de la factura.
  */
 import { render, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { EstadoFacturaCxPCell } from "../EstadoFacturaCxPCell";
 import type { FacturaCxP } from "@/features/cxp/services";
+
+function renderWithTooltip(ui: ReactElement) {
+  return render(<TooltipProvider>{ui}</TooltipProvider>);
+}
 
 const base: FacturaCxP = {
   id: "f1",
