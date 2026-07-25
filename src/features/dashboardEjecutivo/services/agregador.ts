@@ -5,6 +5,7 @@
  */
 import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
+import { supabase } from "@/integrations/supabase/client";
 import {
   fetchSaldosCuentas,
   fetchResumenTesoreria,
@@ -46,6 +47,46 @@ function meses12Atras(periodo: string): Array<{ year: number; month: number; key
   return out;
 }
 
+/**
+ * P8 (v13.317.x): trae la tendencia 12m en 1 sola llamada RPC en lugar de
+ * 12 fetch mensuales separados. La semántica es idéntica a
+ * fetchEstadoResultadosMes / fetchEstadoResultadosDevengado (mismos filtros,
+ * misma conversión a MXN), pero agregada en el servidor por mes/año.
+ * Puede abarcar dos años calendario (ej. mar-2025 → feb-2026) así que
+ * hacemos hasta 2 llamadas RPC.
+ */
+async function fetchTendencia12m(
+  meses: Array<{ year: number; month: number; key: string }>,
+  fuente: FuenteEERR,
+): Promise<PuntoEERR[]> {
+  const years = Array.from(new Set(meses.map((m) => m.year)));
+  const results = await Promise.all(
+    years.map((y) =>
+      supabase.rpc("eerr_resumen_anual", { p_year: y, p_fuente: fuente }),
+    ),
+  );
+  const porYearMes = new Map<string, { ingresos: number; costos: number }>();
+  years.forEach((y, i) => {
+    const { data, error } = results[i];
+    if (error) throw error;
+    for (const row of (data ?? []) as Array<{ mes: number; ingresos_mxn: number | string; costos_mxn: number | string }>) {
+      porYearMes.set(`${y}-${String(row.mes).padStart(2, "0")}`, {
+        ingresos: Number(row.ingresos_mxn) || 0,
+        costos: Number(row.costos_mxn) || 0,
+      });
+    }
+  });
+  return meses.map((m) => {
+    const v = porYearMes.get(m.key) ?? { ingresos: 0, costos: 0 };
+    return {
+      periodo: m.key,
+      ingresos: v.ingresos,
+      costos: v.costos,
+      utilidad: v.ingresos - v.costos,
+    };
+  });
+}
+
 export async function fetchDashboardEjecutivo(
   params: FetchSnapshotParams,
 ): Promise<SnapshotEjecutivo> {
@@ -59,20 +100,23 @@ export async function fetchDashboardEjecutivo(
   const fetchEerr = fuente === "facturas" ? fetchEstadoResultadosDevengado : fetchEstadoResultadosMes;
 
   const meses = meses12Atras(periodo);
+  // P8: la tendencia 12m ahora usa 1 RPC (`eerr_resumen_anual`) en vez de
+  // 12 fetch mensuales. `eerrPeriodo` y `eerrPrev` siguen usando el fetch
+  // completo porque necesitan el pivot por concepto/modo.
   const [
     cuentas,
     eerrPeriodo,
     eerrPrev,
     presupuesto,
     tipoCambio,
-    ...eerrMensuales
+    eerr12m,
   ] = await Promise.all([
     fetchSaldosCuentas(organizationId),
     fetchEerr({ organizationId, year, month }),
     fetchEerr({ organizationId, year: prevY, month: prevM }),
     fetchPresupuestoVsReal(periodo, organizationId),
     fetchExchangeRates().catch(() => ({ usdMxn: 17.25, eurMxn: 18.5 })),
-    ...meses.map((m) => fetchEerr({ organizationId, year: m.year, month: m.month })),
+    fetchTendencia12m(meses, fuente),
   ]);
   const tipoCambioUsd = tipoCambio.usdMxn;
   // A1/A2 fix (v13.300.49): tesorería y flujo reciben el TC para
@@ -87,16 +131,6 @@ export async function fetchDashboardEjecutivo(
       cuentas, cobranza, cxp, dias: 28, organizationId, tipoCambioUsd,
     }),
   ]);
-
-  const eerr12m: PuntoEERR[] = meses.map((m, i) => {
-    const er = eerrMensuales[i];
-    return {
-      periodo: m.key,
-      ingresos: er.totalIngresos.total,
-      costos: er.totalCostos.total,
-      utilidad: er.utilidad.total,
-    };
-  });
 
   const base = { periodo, eerrPeriodo, eerr12m, tesoreria, flujo, presupuesto };
   const kpis = calcularKPIsEjecutivos(base, eerrPrev.totalIngresos.total, eerrPrev);

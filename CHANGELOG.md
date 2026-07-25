@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.317.2] - 2026-07-25
+- **perf · Ola 1 (P8, P9, P10) de auditoría performance.**
+  - **P9 · Aging por organización en SQL (RPCs `cxc_aging_clientes` y `cxp_aging_proveedores`).** Antes las RPCs `SECURITY DEFINER` agregaban globalmente contra `facturas` / `proveedor_facturas` y sólo filtraban por `organization_id` al final. Ahora el filtro se empuja al CTE base para que Postgres escanee solamente las filas del tenant activo. Semántica idéntica (mismas columnas, mismos redondeos), pero en tenants grandes evita escanear la tabla de otros. Analogía: antes hacíamos la fila para todos los clientes y al final descartábamos los que no eran nuestros; ahora sólo formamos la fila de los nuestros.
+  - **P10 · `profit_por_embarque()` scopeada por organización.** Mismo patrón: los CTE de `conceptos_venta` y `conceptos_costo` ahora hacen JOIN contra `embarques` con `organization_id = current_user_org_id()` desde el inicio, evitando el escaneo global de conceptos.
+  - **P8 · Tendencia EERR 12 meses en 1 llamada RPC.** Nueva `eerr_resumen_anual(p_year, p_fuente)` que devuelve totales mensuales (ingresos y costos, ya convertidos a MXN con el TC del embarque o de la factura como fallback). `agregador.ts` deja de disparar 12 fetch mensuales por separado y hace 1–2 llamadas RPC. `eerrPeriodo` y `eerrPrev` siguen usando el fetch completo porque necesitan el pivot por concepto/modo — la tendencia sólo consume los totales escalares. Analogía: antes el dashboard pedía 12 estados de cuenta mensuales para sumar tres números de cada uno; ahora pide UNA hoja de resumen anual con las tres columnas ya calculadas.
+
+
+
 ## [13.317.1] - 2026-07-25
 - **chore · Lint clean tras Ola 0.** Resueltos 20 errores/1 warning pre-existentes que quedaron pendientes al cerrar `v13.317.0` de performance:
   - `src/__tests__/architecture/no-hardcoded-tcs.test.ts`: quitados escapes innecesarios en el regex `[*/+-]`.

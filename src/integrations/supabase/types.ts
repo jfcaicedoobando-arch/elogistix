@@ -7683,6 +7683,14 @@ export type Database = {
         Args: { p_factura_id: string }
         Returns: string
       }
+      eerr_resumen_anual: {
+        Args: { p_fuente?: string; p_year: number }
+        Returns: {
+          costos_mxn: number
+          ingresos_mxn: number
+          mes: number
+        }[]
+      }
       eliminar_embarque_completo: {
         Args: { p_embarque_id: string }
         Returns: undefined
