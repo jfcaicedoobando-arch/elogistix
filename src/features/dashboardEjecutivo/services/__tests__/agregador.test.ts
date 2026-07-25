@@ -8,6 +8,11 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const rpcMock = vi.fn();
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { rpc: (...args: unknown[]) => rpcMock(...args) },
+}));
+
 const fetchEstadoResultadosDevengado = vi.fn();
 const fetchSaldosCuentas = vi.fn();
 const fetchResumenTesoreria = vi.fn();
