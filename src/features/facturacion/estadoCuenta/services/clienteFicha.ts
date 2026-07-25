@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface ClienteFichaEstadoCuenta {
   id: string;
-  nombre: string | null;
+  nombre: string;
   rfc: string | null;
   direccion: string | null;
   ciudad: string | null;
@@ -24,5 +24,12 @@ export async function fetchClienteFichaEstadoCuenta(
     .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("Cliente no encontrado");
-  return data as ClienteFichaEstadoCuenta;
+  return {
+    id: data.id,
+    nombre: data.nombre ?? "",
+    rfc: data.rfc ?? null,
+    direccion: data.direccion ?? null,
+    ciudad: data.ciudad ?? null,
+    estado: data.estado ?? null,
+  };
 }
