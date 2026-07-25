@@ -45,7 +45,7 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
   const puedeEnviar = !isPending;
 
   const handleEnviar = () => {
-    mutate({ facturaId: factura.id, nota: nota.trim() });
+    mutate({ facturaId: factura.factura_id, nota: nota.trim() });
   };
 
   const footer = (
