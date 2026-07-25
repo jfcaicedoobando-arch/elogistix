@@ -26,7 +26,7 @@ const INITIAL_CONCEPTOS: ConceptoManualInput[] = [
 ];
 
 function useFaltantesTimbrar(
-  cliente: ReturnType<typeof useClientesFiscalOpts>["data"][number] | undefined,
+  cliente: ClienteFiscalOpt | undefined,
   conceptosValidos: boolean,
   fiscal: DatosFiscalesValue,
 ): string[] {
