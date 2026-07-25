@@ -13,8 +13,8 @@ import { useRecordatorioCobranza } from "@/features/cobranza/hooks/useRecordator
 import { formatCurrency } from "@/lib/formatters";
 
 export interface FacturaRecordatorio {
-  id: string;
-  numero: string;
+  factura_id: string;
+  numero: string | null;
   total: number;
   saldo: number;
   moneda: string;
