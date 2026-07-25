@@ -1,10 +1,9 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Upload, FileSpreadsheet, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ListSkeleton } from "@/components/shared/states/ListSkeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -20,12 +19,64 @@ import { encontrarCandidatosExactos, seleccionarMatchUnico } from "@/features/te
 
 import { notifyError, notifySuccess, notifyWarning } from "@/lib/ui/appFeedback";
 import { PageContainer } from "@/components/shared/PageContainer";
+import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 
 const ESTADO_COLOR: Record<string, string> = {
   Pendiente: "bg-warning/10 text-warning border-warning/20",
   Conciliado: "bg-success/10 text-success border-success/20",
   Ignorado: "bg-muted text-muted-foreground border-border",
 };
+
+const movimientoColumns: ColumnDef<MovimientoBBVA, unknown>[] = defineColumns<MovimientoBBVA>([
+  {
+    id: "fecha",
+    header: "Fecha",
+    accessorFn: (m) => m.fecha,
+    cell: ({ row }) => <span className="whitespace-nowrap text-xs">{formatDate(row.original.fecha)}</span>,
+  },
+  {
+    id: "concepto",
+    header: "Concepto",
+    accessorFn: (m) => m.concepto,
+    cell: ({ row }) => (
+      <span className="block max-w-[280px] truncate" title={row.original.concepto}>{row.original.concepto}</span>
+    ),
+  },
+  {
+    id: "cargo",
+    header: "Cargo",
+    accessorFn: (m) => m.cargo,
+    meta: { align: "right" },
+    cell: ({ row }) => (
+      <span className="tabular-nums text-destructive">
+        {Number(row.original.cargo) > 0 ? formatCurrency(Number(row.original.cargo), "MXN") : ""}
+      </span>
+    ),
+  },
+  {
+    id: "abono",
+    header: "Abono",
+    accessorFn: (m) => m.abono,
+    meta: { align: "right" },
+    cell: ({ row }) => (
+      <span className="tabular-nums text-success">
+        {Number(row.original.abono) > 0 ? formatCurrency(Number(row.original.abono), "MXN") : ""}
+      </span>
+    ),
+  },
+  {
+    id: "estado",
+    header: "Estado",
+    accessorFn: (m) => m.estado_conciliacion,
+    meta: { width: "w-24" },
+    cell: ({ row }) => (
+      <Badge variant="outline" className={`text-2xs ${ESTADO_COLOR[row.original.estado_conciliacion]}`}>
+        {row.original.estado_conciliacion}
+      </Badge>
+    ),
+  },
+]) as ColumnDef<MovimientoBBVA, unknown>[];
 
 export default function TesoreriaConciliacion() {
   const { data: cuentas = [] } = useCuentasBancarias();
@@ -38,6 +89,7 @@ export default function TesoreriaConciliacion() {
   const importar = useImportarMovimientos();
   const conciliarPago = useConciliarPago();
   const fileRef = useRef<HTMLInputElement>(null);
+  const columns = useMemo(() => movimientoColumns, []);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -167,40 +219,16 @@ export default function TesoreriaConciliacion() {
             <div className="text-xs text-muted-foreground px-1 flex justify-between">
               <span>{movs.length} movimientos · {cuentaActual?.alias}</span>
             </div>
-            <Card><CardContent density="flush">
-              {isLoading ? (
-                <div className="p-4"><ListSkeleton rows={5} /></div>
-              ) : movs.length === 0 ? (
-                <p className="p-6 text-sm text-muted-foreground text-center">No hay movimientos.</p>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-muted-foreground bg-muted/50">
-                    <tr>
-                      <th className="text-left p-2">Fecha</th>
-                      <th className="text-left p-2">Concepto</th>
-                      <th className="text-right p-2">Cargo</th>
-                      <th className="text-right p-2">Abono</th>
-                      <th className="text-left p-2 w-24">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {movs.map((m, i) => (
-                      <tr
-                        key={m.id}
-                        className={`border-t cursor-pointer hover:bg-accent/5 ${sel?.id === m.id ? "bg-accent/10" : i % 2 ? "bg-muted/20" : ""}`}
-                        onClick={() => setSel(m)}
-                      >
-                        <td className="p-2 whitespace-nowrap text-xs">{formatDate(m.fecha)}</td>
-                        <td className="p-2 max-w-[280px] truncate" title={m.concepto}>{m.concepto}</td>
-                        <td className="p-2 text-right tabular-nums text-destructive">{Number(m.cargo) > 0 ? formatCurrency(Number(m.cargo), "MXN") : ""}</td>
-                        <td className="p-2 text-right tabular-nums text-success">{Number(m.abono) > 0 ? formatCurrency(Number(m.abono), "MXN") : ""}</td>
-                        <td className="p-2"><Badge variant="outline" className={`text-2xs ${ESTADO_COLOR[m.estado_conciliacion]}`}>{m.estado_conciliacion}</Badge></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </CardContent></Card>
+            <VirtualDataTable
+              columns={columns}
+              data={movs}
+              rowKey={(m) => m.id}
+              onRowClick={setSel}
+              rowClassName={(m) => (sel?.id === m.id ? "bg-accent/10" : "")}
+              isLoading={isLoading}
+              emptyMessage="No hay movimientos."
+              maxHeight={560}
+            />
           </div>
           <div className="lg:col-span-1">
             <PanelConciliacionMovimiento movimiento={sel} onClose={() => setSel(null)} />
