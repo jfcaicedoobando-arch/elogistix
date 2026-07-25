@@ -1,64 +1,93 @@
-# Plan: Performance — 20 ítems en 4 olas
+## Ola 1 — Performance PR 2 (P7–P10)
 
-Ejecutar el documento `instrucciones-lovable-performance-2026-07-25.md` completo, respetando las reglas globales (no tocar guards de dinero salvo P13 con tests SQL, formatters solo en `src/lib/formatters`, hooks compartidos en `@/hooks/shared`, patrón de referencia = Embarques, `VirtualDataTable` para listas 100+, migraciones idempotentes sin `CONCURRENTLY`, sin librerías nuevas). Cada ola es un "PR" (commit lógico) con `APP_VERSION` bump + entrada en `CHANGELOG.md`.
-
-## Analogía
-
-Es como afinar un carro: primero cambias filtros baratos (Ola 0), luego optimizas el motor (Ola 1), después la transmisión (Ola 2), y al final ajustes finos (Ola 3). No mezclar olas.
+Base: `v13.317.1` (Ola 0 cerrada, lint verde). Un solo PR con los 4 ítems, respetando las reglas globales de la auditoría (no tocar guards de dinero, formatters solo en `src/lib/formatters`, queryKeys centralizadas, migraciones idempotentes, tests obligatorios).
 
 ---
 
-## Ola 0 — Quick wins (P1–P6)
+### P7 · Bandeja Facturación con paginación server-side (1–2 días)
 
-1. **P1** — Caché de `Intl.NumberFormat` en `src/lib/formatters/numbers.ts` (Map por moneda) + test de idempotencia.
-2. **P2** — CxP `/compras/facturas`: `useMemo` para columnas, `useDebounce(search, 300)`, paginación server-side (100/pág), un solo `TooltipProvider`, KPIs memoizados.
-3. **P3** — `TesoreriaConciliacion.tsx`: migrar tabla plana a `VirtualDataTable` (mantener `.limit(2000)`).
-4. **P4** — Vista SQL `v_saldos_cuentas_bancarias` (security_invoker) + refactor `resumen.ts` y `agregador.ts` a una sola query por snapshot.
-5. **P5** — Migración con 10 índices `IF NOT EXISTS` (org/FK) en clientes, bbva_movimientos, conceptos_*, proveedor_*, factura_embarques, embarques.
-6. **P6** — Sentry dinámico (dynamic import) en `ErrorBoundary.tsx` y `reportFeedback.ts`.
+Estado actual verificado: la bandeja usa `useFacturacionPageController` → `useFacturas()` → `fetchFacturas(orgId)` → llama internamente `fetchFacturasListado({ page:0, pageSize:5000 })` y pagina en el browser. `fetchFacturasListado` ya devuelve `{ data, count }` real.
 
-## Ola 1 — Paginación & agregación server-side (P7–P10)
+Cambios:
+- `src/features/facturacion/hooks/useFacturas.ts`: nuevo hook `useFacturasListado({ page, pageSize, filtros })` que llame `fetchFacturasListado` con los filtros ya activos (estado, cliente, fecha, search) y `staleTime: 15_000`. Mantener `useFacturas()` para consumidores no-bandeja.
+- `src/features/facturacion/queryKeys.ts`: añadir `facturas.listado({ orgId, page, pageSize, filtros })`.
+- `src/features/facturacion/hooks/useFacturacionPageController.ts`: agregar estado `page/pageSize` (default 0/100), consumir `useFacturasListado`, exponer `pageCount = Math.ceil(count/pageSize)` y `onPageChange`. Cualquier cambio de filtro/búsqueda hace `setPage(0)` (patrón Embarques).
+- `src/features/facturacion/routes/*Bandeja*.tsx`: pasar `pageCount`, `pageIndex`, `onPaginationChange` al DataTable (server-side pagination).
+- Test: reescribir `facturasCrud.test.ts:56` (`"fetchFacturas pasa pageSize=5000"`) para probar que el controller pide `page`/`pageSize` reales; añadir test en `useFacturacionPageController.test.tsx` que verifica reset a página 0 al cambiar filtros.
 
-7. **P7** — Bandeja Facturación usa `fetchFacturasListado` con page/pageSize server-side (pageSize=100).
-8. **P8** — RPC `eerr_resumen_anual(p_year, p_fuente)` que reemplaza 14 llamadas del `agregador.ts` + paralelizar tesorería/flujo.
-9. **P9** — `CREATE OR REPLACE` de `cxc_aging_clientes` y `cxp_aging_proveedores`: JOIN a facturas para filtrar por `v_org` en CTEs (conservar filtro `deleted_at` en NCs). Test SQL de aislamiento por org.
-10. **P10** — `CREATE OR REPLACE` de `profit_por_embarque()`: JOIN a embarques filtrado por org. Test SQL 2 orgs.
-
-## Ola 2 — Medios (P11–P16)
-
-11. **P11** — `ResponsiveDataTable`: usar `useIsMobile()` para renderizar una sola rama (móvil o desktop), no ambas ocultas por CSS.
-12. **P12** — `@react-pdf/renderer` bajo demanda en handlers (dynamic import + spinner "Generando PDF…").
-13. **P13** — Trigger `recalcular_estado_factura`: calcular SUM de pagos una sola vez y reutilizar. **Obligatorio:** tests SQL `cxc_guard_sobrepago.sql`, `guard_estado_factura.sql` verdes + casos nuevos (pagada exacto, parcial, borrado lógico).
-14. **P14** — RPCs `dashboard_direccion_kpis`, `facturacion_tendencia_6m`, `crm_resumen_abiertas` reemplazan loaders que bajan >30k filas.
-15. **P15** — Cotizaciones paginada server-side (50/pág); Proformas: columnas explícitas + paginación.
-16. **P16** — Wizard cotización: reemplazar `form.watch()` por `useWatch({name})` por campo o `getValues` en handlers.
-
-## Ola 3 — Higiene (P17–P20)
-
-17. **P17** — `experimentalMinChunkSize: 10_000` en `vite.config.ts` (sin `manualChunks`).
-18. **P18** — `Cxp.tsx`: quitar `useCobranza({})` del cuerpo; usar `queryClient.fetchQuery` en handler del PDF.
-19. **P19** — `NODE_OPTIONS=--max-old-space-size=2048` en jobs de build de `ci.yml` y `e2e.yml`.
-20. **P20** — Añadir `"use memo"` a archivos tocados en P2/P3/P11 (`Cxp.tsx`, `cxpColumns.tsx`, `EstadoFacturaCxPCell.tsx`, `TesoreriaConciliacion.tsx`, `ResponsiveDataTable.tsx`).
+Aceptación: red muestra ≤100 filas por página, paginar dispara un query nuevo, total de páginas cuadra con `count`.
 
 ---
 
-## Notas técnicas
+### P8 · Dashboard Ejecutivo: 1 RPC de EERR anual (2–3 días)
 
-- Cada ola = 1 bump de `APP_VERSION` + entrada breve en `CHANGELOG.md` (raíz).
-- Verificación por ola: `bun run lint --max-warnings 0`, typecheck, tests unitarios, `audit:tests`, `audit:arch`; tests SQL específicos en P9/P10/P13.
-- Verificación final: entry < 300 KB gz, `@react-pdf` fuera del inicial, Sentry fuera del inicial, dashboard ejecutivo < 10 requests, aging/profit aislados por org con fixture de 2 tenants.
-- **No hacer:** tocar guards de dinero (excepto P13 con tests), config global de React Query, Embarques/facturación-aging, reintroducir `manualChunks`, añadir librerías nuevas.
+Estado actual verificado: `agregador.ts:59-75` ejecuta `fetchEerr` 14 veces (mes actual + previo + 12 meses de tendencia). Fuente = `facturas` → `fetchEstadoResultadosDevengado`; fuente = `devengado` → `fetchEstadoResultadosMes`.
 
-## Riesgo & rollback
+Migración `supabase--migration`:
+```sql
+create or replace function public.eerr_resumen_anual(
+  p_year int,
+  p_fuente text default 'facturas'  -- 'facturas' | 'devengado'
+) returns table(mes int, ingresos numeric, costos numeric, gastos numeric)
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+  with meses as (select generate_series(1,12) as mes),
+       datos as (
+         -- Reusar los filtros exactos de fetchEstadoResultadosMes / fetchEstadoResultadosDevengado
+         -- Filtrado por current_user_org_id() (RLS)
+         ...
+       )
+  select m.mes, coalesce(d.ingresos,0), coalesce(d.costos,0), coalesce(d.gastos,0)
+  from meses m left join datos d on d.mes = m.mes;
+$$;
+grant execute on function public.eerr_resumen_anual(int, text) to authenticated;
+```
+(Los filtros exactos se replican con `CREATE OR REPLACE` — se leen `estadoResultados.ts` y `estadoResultadosDevengado.ts` y se traducen a SQL con `date_trunc('month', ...)` y `generate_series(1,12)`.)
 
-- P4/P5/P8/P9/P10/P13/P14 son migraciones SQL — se aplican con `CREATE OR REPLACE`/`IF NOT EXISTS` (reversibles con la versión previa preservada en git).
-- P17 tiene rollback explícito si aparece error de init.
-- P13 es el más delicado (dinero): no mergea sin tests SQL verdes.
+Frontend:
+- `src/features/dashboardEjecutivo/services/agregador.ts`: reemplazar las 14 llamadas por **1** `supabase.rpc("eerr_resumen_anual", { p_year, p_fuente })` + mapper puro `mapRpcToEerrMensual(rows, year)` que devuelve las estructuras que hoy consumen `mesActual`, `mesPrevio` y `tendencia12m`.
+- Ya paralelizado tesorería/flujo en P4; verificar que sigue en `Promise.all`.
 
-## Estimación
+Test: vitest del mapper (fixture RPC → estructuras esperadas). Test SQL opcional `tests/sql/eerr_resumen_anual.sql` con fixture de 2 meses.
 
-Ola 0: 3-4 días · Ola 1: 5-7 días · Ola 2: 5-7 días · Ola 3: ~1 día.
+Aceptación: mismos números que antes en el dashboard; Network <10 requests.
 
-¿Empiezo por Ola 0 (P1–P6) al aprobar? Ejecuta todo lo que se pueda hacer con sub agentes
+---
 
-&nbsp;
+### P9 · Aging CxC/CxP acotado a la org (1–2 días)
+
+Migración `CREATE OR REPLACE function` de `cxc_aging_clientes` y `cxp_aging_proveedores` (SECURITY DEFINER). En los CTEs `pagado`, `nc` (y equivalentes CxP), agregar JOIN a `facturas`/`proveedor_facturas` y filtrar por `v_org = current_user_org_id()`. Mantener grants existentes y todo el resto igual.
+
+Test SQL obligatorio (patrón `tests/sql/aging_nc_deleted_at.sql`): `tests/sql/aging_org_scope.sql` con fixture de 2 orgs → aging de A no incluye montos de B.
+
+Aceptación: números idénticos para la org actual; suites RLS verdes.
+
+---
+
+### P10 · `profit_por_embarque()` acotado por org (1–2 días)
+
+Migración `CREATE OR REPLACE`: en los CTEs `ventas` y `costos`, JOIN a `embarques e` y filtrar `e.organization_id = current_user_org_id()`. Preservar la homologación a MXN de `20260518213041` intacta.
+
+Test SQL: `tests/sql/profit_org_scope.sql` con fixture 2 orgs.
+
+Aceptación: dashboards de profit idénticos por org; sin fuga cruzada.
+
+---
+
+### Orden de ejecución y checkpoints
+
+1. **P9 + P10** primero (solo migraciones, aisladas, sin cambios de código): un solo `supabase--migration` con las 3 funciones y sus tests SQL.
+2. **P8**: migración de `eerr_resumen_anual` + refactor de `agregador.ts` + mapper con tests.
+3. **P7**: refactor de hook/controller/bandeja + tests.
+4. Bump `APP_VERSION` a `13.318.0`, entrada en `CHANGELOG.md`.
+5. Verificación final: `bun run lint --max-warnings 0`, `tsgo`, `bunx vitest run` (subsets tocados), `audit:tests` y `audit:arch`.
+
+### Notas técnicas
+
+- Los RPCs quedan `SECURITY INVOKER` cuando pueden (P8) para respetar RLS; `SECURITY DEFINER` se mantiene donde ya lo era (P9/P10) porque su seguridad depende del filtro explícito por org que estamos añadiendo — ese filtro es precisamente el fix.
+- `current_user_org_id()` ya existe en la BD (usado por otros aging fixes previos).
+- Sin librerías nuevas.
+- El mapper de P8 vive en `src/features/dashboardEjecutivo/services/mappers/eerrAnual.ts` (nuevo, puro, testeable).
