@@ -11,7 +11,8 @@
  * Se ejecuta en CI nightly contra producción (https://elogistix.lovable.app).
  * Localmente queda `ignore: true` si faltan DEMO_USER_EMAIL / DEMO_USER_PASSWORD.
  */
-import "https://deno.land/std@0.224.0/dotenv/load.ts";
+import { load } from "https://deno.land/std@0.224.0/dotenv/mod.ts";
+await load({ export: true, envPath: ".env", examplePath: null });
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 const SUPABASE_URL =
