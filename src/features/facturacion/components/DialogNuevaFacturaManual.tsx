@@ -17,6 +17,7 @@ import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesF
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import { FacturaManualDatosFiscales, type DatosFiscalesValue } from "./FacturaManualDatosFiscales";
+import { FaltantesHint } from "./FaltantesHint";
 import { FacturaManualConceptosTable } from "./FacturaManualConceptosTable";
 import {
   useValidarLimiteCredito,
