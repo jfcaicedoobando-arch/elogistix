@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.317.7] - 2026-07-25
+- **fix · CI · 3 fallas de tests derivadas del sprint de performance.**
+  - **`agregador.test.ts` (shard 9, 4/4 fallando).** P8 introdujo `supabase.rpc("eerr_resumen_anual", …)` dentro de `fetchTendencia12m`; el test mockeaba los servicios upstream pero no la RPC directa, así que las 4 pruebas caían con `permission denied for function current_user_org_id`. Se añadió `vi.mock("@/integrations/supabase/client")` con un `rpcMock` compartido y se ajustó la expectativa del test "invoca EERR…": ya no espera 14 llamadas al servicio EERR (1 + 1 + 12), sino 2 (actual + previo) más 2 llamadas RPC a `eerr_resumen_anual` para los años que abarca la tendencia.
+  - **`SAFE-CAST` marker en `anticiposProveedorService.ts:55`.** El cast `as unknown as AnticipoRow[]` de QW6 entró sin la etiqueta requerida por `mem://principles/safe-cast`, rompiendo `architecture.test.ts` (shard 7) y `safe-casts-services.test.ts` (shard 6). Se añadió el comentario justificando la degradación (row shape de Supabase con relación embebida `proveedores(nombre)` que el tipo generado no expone); cero cambios de lógica.
+  - **`LC_EERR_FUENTE_INVALIDA` registrado en `lcCodeMessages.ts`.** La migración P8 (`eerr_resumen_anual`) lanza este código pero no tenía mensaje amigable, lo que rompía `lcCodeCoverage.test.ts` (shard 6). Se agregó la entrada al catálogo.
+  - Analogía: tres puertas que quedaron abiertas después del último sprint — un test que no fingía la nueva vía a BD, una etiqueta faltante en un cast y un código de error sin mensaje en español. Ninguna afecta a la app en producción, sólo al gate de CI.
+
+
 ## [13.317.6] - 2026-07-25
 - **fix · CI · `audit:migrations` verde (9 violaciones cerradas).**
   - **H6 · 3 funciones SECURITY DEFINER con permisos endurecidos en BD.** Las migraciones P9/P10 (`…172648_c2e8e649…` y `…174719_0f7952b2…`) redefinieron `public.cxc_aging_clientes(uuid, date)`, `public.cxp_aging_proveedores(uuid, date)` y `public.profit_por_embarque()` sin aplicar el patrón canónico. Como esas migraciones ya se aplicaron y no se pueden editar, se agregó una migración compensatoria que hace `REVOKE ALL … FROM PUBLIC, anon` y `GRANT EXECUTE … TO authenticated, service_role` sobre las tres firmas. Cambio de permisos real, no cosmético — antes eran ejecutables por cualquier rol; ahora sólo por usuarios firmados y el rol de servicio.
