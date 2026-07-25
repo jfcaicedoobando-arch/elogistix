@@ -2,8 +2,11 @@
  * Columnas de la tabla Cartera (`/facturacion/cartera`).
  * v13.200.0: sin `<Link>` inline. La navegación al detalle de factura
  * se hace por row-click accesible desde `Cartera.tsx` (getRowHref).
+ * v13.313.1: agregada columna de acción "Recordatorio".
  */
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Mail } from "lucide-react";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { dateColumn, moneyColumn } from "@/components/shared/dataTable/columnBuilders";
 import { formatDate } from "@/lib/formatters";
