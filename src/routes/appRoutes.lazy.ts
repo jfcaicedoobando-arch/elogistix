@@ -54,6 +54,7 @@ export const ComprasConciliacion = lazy(() => import("@/features/compras/routes/
 export const ComprasPorAprobar = lazy(() => import("@/features/compras/routes/ComprasPorAprobar"));
 
 export const Cartera = lazy(() => import("@/features/bandejas/routes/Cartera"));
+export const CxcAging = lazy(() => import("@/features/cxc/routes/CxcAging"));
 export const Tesoreria = lazy(() => import("@/features/tesoreria/routes/Tesoreria"));
 export const TesoreriaCuentas = lazy(() => import("@/features/tesoreria/routes/TesoreriaCuentas"));
 export const TesoreriaConciliacion = lazy(() => import("@/features/tesoreria/routes/TesoreriaConciliacion"));
