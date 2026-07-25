@@ -245,7 +245,15 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     modulo: "facturacion",
     accion: "cfdi_enviado",
     entidadId: target.data.entidadId,
-    detalles: { email, tipo: target.data.tipo },
+    detalles: {
+      email_enviado: email,
+      email_sugerido: resolucion.emailSugerido,
+      fuente_email: resolucion.fuente,
+      override_manual: overrideManual,
+      email_distinto_sugerido: emailDistintoSugerido,
+      tipo: target.data.tipo,
+    },
+
   });
 
   return jsonResponse({ ok: true, enviado_a: email });
