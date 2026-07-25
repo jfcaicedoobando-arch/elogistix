@@ -17,11 +17,10 @@ import {
   type PendingCfdi,
   addDays, initialValues, calcularTotal, validateFactura,
 } from "./useNuevaFacturaProveedorForm.helpers";
-import { procesarCfdiParsed } from "./useNuevaFacturaProveedorForm.cfdi";
-import { procesarPdfIaParsed } from "./useNuevaFacturaProveedorForm.pdfIa";
 import { runSubmit } from "./useNuevaFacturaProveedorForm.submit";
 import { useTcDofPorFecha, isFechaEmisionValida, type MonedaTc } from "./useTcDofPorFecha";
 import type { TcOrigen } from "@/features/cxp/types";
+import { aplicarCfdiParsed, aplicarPdfIaParsed } from "./useNuevaFacturaProveedorForm.applyParsed";
 export function useNuevaFacturaProveedorForm(
   onDone: () => void,
   initialEmbarqueAdHoc?: EmbarqueSeleccionado | null,
