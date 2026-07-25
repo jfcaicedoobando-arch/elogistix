@@ -21,7 +21,7 @@ const TONE_HEX: Record<Bucket["tone"], string> = {
   critical: "hsl(0 84% 45%)",
 };
 
-export function ComprasAgingChart({ totales }: { totales: CxpAgingTotals }) {
+export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgingTotals; moneda?: string }) {
   const data: Bucket[] = [
     { label: "Vigente", monto: totales.vigente, tone: "success" },
     { label: "1–30 d", monto: totales.d_1_30, tone: "info" },
@@ -37,9 +37,9 @@ export function ComprasAgingChart({ totales }: { totales: CxpAgingTotals }) {
     <Card className="h-full">
       <CardHeader className="pb-2 flex-row items-start justify-between gap-2 space-y-0">
         <div className="min-w-0">
-          <CardTitle className="text-sm">Antigüedad de saldos</CardTitle>
+          <CardTitle className="text-sm">Antigüedad de saldos · {moneda}</CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
-            {formatCurrencyCompact(vencido, "MXN")} vencido de {formatCurrencyCompact(total, "MXN")} · {pctVencido}%
+            {formatCurrencyCompact(vencido, moneda)} vencido de {formatCurrencyCompact(total, moneda)} · {pctVencido}%
           </p>
         </div>
         <Link
@@ -60,7 +60,7 @@ export function ComprasAgingChart({ totales }: { totales: CxpAgingTotals }) {
                 stroke="hsl(var(--muted-foreground))"
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => formatCurrencyCompact(Number(v), "MXN")}
+                tickFormatter={(v) => formatCurrencyCompact(Number(v), moneda)}
                 width={60}
               />
               <RTooltip
@@ -72,7 +72,7 @@ export function ComprasAgingChart({ totales }: { totales: CxpAgingTotals }) {
                   fontSize: 12,
                 }}
                 labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 500 }}
-                formatter={(v: number) => [formatCurrency(Number(v), "MXN"), "Saldo"]}
+                formatter={(v: number) => [formatCurrency(Number(v), moneda), "Saldo"]}
               />
               <Bar dataKey="monto" radius={[4, 4, 0, 0]}>
                 {data.map((d) => <Cell key={d.label} fill={TONE_HEX[d.tone]} />)}

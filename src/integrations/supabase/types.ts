@@ -7581,6 +7581,7 @@ export type Database = {
           d_31_60: number
           d_61_90: number
           mas_90: number
+          moneda: string
           num_facturas: number
           proveedor_id: string
           proveedor_nombre: string

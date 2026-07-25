@@ -7,11 +7,11 @@ import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 
-function Money({ value, danger }: { value: number; danger?: boolean }) {
+function Money({ value, moneda, danger }: { value: number; moneda: string; danger?: boolean }) {
   if (!value) return <span className="text-muted-foreground">—</span>;
   return (
     <span className={cn("tabular-nums", danger && "text-destructive font-medium")}>
-      {formatCurrency(value, "MXN")}
+      {formatCurrency(value, moneda)}
     </span>
   );
 }
@@ -38,35 +38,35 @@ export function buildCxpAgingColumns(): ColumnDef<CxpAgingRow, unknown>[] {
       id: "vigente",
       header: "Vigente",
       accessorKey: "vigente",
-      cell: ({ row }) => <Money value={row.original.vigente} />,
+      cell: ({ row }) => <Money value={row.original.vigente} moneda={row.original.moneda} />,
       enableSorting: true, meta: { align: "right" },
     },
     {
       id: "d_1_30",
       header: "1-30 días",
       accessorKey: "d_1_30",
-      cell: ({ row }) => <Money value={row.original.d_1_30} danger={row.original.d_1_30 > 0} />,
+      cell: ({ row }) => <Money value={row.original.d_1_30} moneda={row.original.moneda} danger={row.original.d_1_30 > 0} />,
       enableSorting: true, meta: { align: "right" },
     },
     {
       id: "d_31_60",
       header: "31-60 días",
       accessorKey: "d_31_60",
-      cell: ({ row }) => <Money value={row.original.d_31_60} danger={row.original.d_31_60 > 0} />,
+      cell: ({ row }) => <Money value={row.original.d_31_60} moneda={row.original.moneda} danger={row.original.d_31_60 > 0} />,
       enableSorting: true, meta: { align: "right" },
     },
     {
       id: "d_61_90",
       header: "61-90 días",
       accessorKey: "d_61_90",
-      cell: ({ row }) => <Money value={row.original.d_61_90} danger={row.original.d_61_90 > 0} />,
+      cell: ({ row }) => <Money value={row.original.d_61_90} moneda={row.original.moneda} danger={row.original.d_61_90 > 0} />,
       enableSorting: true, meta: { align: "right" },
     },
     {
       id: "mas_90",
       header: ">90 días",
       accessorKey: "mas_90",
-      cell: ({ row }) => <Money value={row.original.mas_90} danger={row.original.mas_90 > 0} />,
+      cell: ({ row }) => <Money value={row.original.mas_90} moneda={row.original.moneda} danger={row.original.mas_90 > 0} />,
       enableSorting: true, meta: { align: "right" },
     },
     {
@@ -75,7 +75,7 @@ export function buildCxpAgingColumns(): ColumnDef<CxpAgingRow, unknown>[] {
       accessorKey: "saldo_total",
       cell: ({ row }) => (
         <span className="tabular-nums font-semibold">
-          {formatCurrency(row.original.saldo_total, "MXN")}
+          {formatCurrency(row.original.saldo_total, row.original.moneda)} {row.original.moneda}
         </span>
       ),
       enableSorting: true, meta: { align: "right" },
