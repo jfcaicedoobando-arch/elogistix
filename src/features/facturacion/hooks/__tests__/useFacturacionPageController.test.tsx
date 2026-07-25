@@ -8,12 +8,12 @@ import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
 const {
-  useFacturasMock, useGastosPendientesMock,
+  useFacturasListadoMock, useGastosPendientesMock,
   marcarPagadoMutate, registrarActividadMutate, toastFn,
   exportToCsvMock, exportarLayoutContableMock,
   notifyErrorMock, notifySuccessMock,
 } = vi.hoisted(() => ({
-  useFacturasMock: vi.fn(),
+  useFacturasListadoMock: vi.fn(),
   useGastosPendientesMock: vi.fn(),
   marcarPagadoMutate: vi.fn(),
   registrarActividadMutate: vi.fn(),
@@ -25,18 +25,18 @@ const {
 }));
 
 vi.mock("@/features/facturacion/hooks/useFacturas", () => ({
-  useFacturas: () => useFacturasMock(),
+  useFacturasListado: (args: unknown) => useFacturasListadoMock(args),
   useGastosPendientes: () => useGastosPendientesMock(),
   useMarcarCostoPagado: () => ({ mutate: marcarPagadoMutate, isPending: false }),
 }));
 vi.mock("@/hooks/shared", () => ({
   useListPageState: () => {
     return {
-      search: "", filters: { estado: "todos", cliente: "todos" }, page: 1, pageSize: 25,
+      search: "", filters: { estado: "todos", cliente: "todos" }, page: 0, pageSize: 100,
       setSearch: vi.fn(), setFilter: vi.fn(), setPage: vi.fn(), setPageSize: vi.fn(),
-      paginate: <T,>(items: T[]) => ({ items, totalPages: 1 }),
     };
   },
+  useDebounce: <T,>(v: T) => v,
   useRegistrarActividad: () => ({ mutate: registrarActividadMutate }),
   useToast: () => ({ toast: toastFn }),
   usePermissions: () => ({ canEdit: true }),
@@ -59,7 +59,10 @@ const f = (over: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  useFacturasMock.mockReturnValue({ data: [f(), f({ id: "f2", numero: "FAC-002", cliente_nombre: "Beta" })], isLoading: false });
+  useFacturasListadoMock.mockReturnValue({
+    data: { data: [f(), f({ id: "f2", numero: "FAC-002", cliente_nombre: "Beta" })], count: 2 },
+    isLoading: false,
+  });
   useGastosPendientesMock.mockReturnValue({ data: [], isLoading: false });
 });
 
