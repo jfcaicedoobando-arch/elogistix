@@ -37,6 +37,7 @@ function formatNativos(b: SaldosPorMonedaCartera): string {
 }
 
 export default function Cartera() {
+  const [recordatorio, setRecordatorio] = useState<FacturaRecordatorio | null>(null);
   const {
     paged,
     monedas,
@@ -48,7 +49,7 @@ export default function Cartera() {
     eqVencido,
     isLoading,
     columns,
-  } = useCarteraPage();
+  } = useCarteraPage((row) => setRecordatorio(row));
 
   return (
     <PageContainer>
