@@ -1,5 +1,13 @@
 # Changelog
 
+## [13.315.2] - 2026-07-25
+- **UI/UX(facturacion) · Rediseño del modal "Nueva factura manual".** El formulario pasó de una hoja apretada con 12 casillas en una sola cuadrícula a una carpeta con secciones apiladas: Información del Cliente, Datos fiscales, Conceptos y un bloque Notas + Resumen. Cambios visuales, cero cambios de lógica ni de contrato.
+  - **`DialogNuevaFacturaManual.tsx`**: cada zona vive en `<section>` sobre `bg-card` con encabezado uppercase y el área scrollable en `bg-muted/30` para que las tarjetas respiren. El total ahora se muestra en una **placa navy** (`bg-primary`) junto al textarea de Notas: subtotal, IVA y total con jerarquía tipográfica clara.
+  - **`FacturaManualDatosFiscales.tsx`**: labels a `text-xs text-muted-foreground`, inputs a `h-9` y **chips MXN · USD · EUR** en lugar del select de moneda (más rápido de leer y de tocar).
+  - **`FacturaManualConceptosTable.tsx`**: cabecera de tabla real con `bg-muted/60` uppercase, densidad `py-2.5`, botón "Agregar concepto" como link primario a la derecha. El pie de totales sale de aquí (lo pinta el dialog en el panel navy).
+  - **Nuevo utilitario `utils/totalesConceptos.ts`** + test (`__tests__/totalesConceptos.test.ts`): `calcularTotalesConceptos(conceptos, tasaIva)` centraliza el cómputo con redondeo a centavos para que dialog y tabla no dupliquen lógica.
+  - Analogía: antes el modal era una hoja de examen densa; ahora es un expediente con separadores y un sello grande al final que dice cuánto va a cobrarse.
+
 ## [13.315.1] - 2026-07-25
 - **fix(facturacion) · Confirmar destinatario antes de enviar CFDI desde "Por enviar".** El botón "Enviar" de la bandeja disparaba el envío al instante y la edge function `facturapi-enviar-email` resolvía el email tomando `contactos_cliente` con `order created_at asc limit 1`. Si el contacto más antiguo no era el de facturación, el CFDI salía al buzón equivocado y el usuario nunca lo vio.
   - **UI**: `BandejaPorEnviar.tsx` ahora abre `<DialogEnviarCfdi />` en vez de mandar directo. El diálogo (mejorado) muestra el email sugerido, permite editarlo y ofrece los contactos del cliente como opciones clicables, marcando con un badge "Facturación" a los que coincidan con roles de cobranza/facturación. Un aviso ámbar advierte cuando el usuario elige un email distinto al sugerido.
