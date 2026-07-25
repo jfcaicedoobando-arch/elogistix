@@ -76,7 +76,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
       />
 
       <FacturaManualConceptosTable
-        conceptos={conceptos} moneda={fiscal.moneda} tasaIva={fiscal.tasaIva} onChange={setConceptos}
+        conceptos={conceptos} moneda={fiscal.moneda} tasaIva={tasaIva} onChange={setConceptos}
       />
 
       <div>
