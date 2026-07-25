@@ -34,6 +34,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
     params.conceptosConsolidados &&
     params.conceptosConsolidados.length > 0
   ) {
+    const { ProformaConsolidadaDocument } = await import("@/pdf/documents/ProformaConsolidadaDocument");
     await descargarPdf(
       <ProformaConsolidadaDocument
         proforma={proforma}
@@ -46,6 +47,7 @@ export async function generarPdfProforma(params: GenerarPdfProformaParams): Prom
     );
     return;
   }
+  const { ProformaDocument } = await import("@/pdf/documents/ProformaDocument");
   await descargarPdf(
     <ProformaDocument
       proforma={proforma}
