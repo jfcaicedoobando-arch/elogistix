@@ -7780,6 +7780,7 @@ export type Database = {
           ambiente: Database["public"]["Enums"]["ambiente_facturapi"]
           cancellation_status: string
           cliente_nombre: string
+          enviada_cliente_at: string
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
           factura_pdf_url: string
