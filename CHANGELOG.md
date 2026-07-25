@@ -1,5 +1,23 @@
 # Changelog
 
+## [13.317.9] - 2026-07-25
+- **fix · CI: 7 fallos de shard resueltos.** Analogía: el edificio tenía 7 fugas — no una pared que reconstruir. Cada una en su lugar.
+  - **ESLint**: quitado `no-eval` innecesario en `audit-migrations.regex.test.ts` (usa `new Function(...)` en su lugar).
+  - **audit:tests**: renombrado título duplicado en `cxpPorPagarCount.test.ts` para evitar colisión con otro test del mismo describe.
+  - **no-hardcoded-tcs.test.ts**: regex reescrita para NO marcar clases Tailwind (`bg-muted/20`, `border-primary/20`, `py-20`), literales dentro de strings ni comentarios. Sólo detecta operadores binarios reales contra `20` (ej. `total * 20`, `20 / monto`).
+  - **EstadoFacturaCxPCell.test.tsx**: los renders del test ahora se envuelven en `<TooltipProvider>` para eliminar el warning de Radix.
+  - **agregador.fuente.test.ts**: reescrito para reflejar P8 — el agregador llama al servicio EERR sólo 2 veces (mes actual + previo) y usa `eerr_resumen_anual` (RPC) para la tendencia de 12 meses.
+  - **architecture-baseline (5 archivos > 200 líneas)**: extraídos sub-componentes/helpers:
+    - `Cxp.tsx` (243→179): `exportarCxpCsv`, `CxpEmptyState`, `CxpRouteDialogs`.
+    - `TesoreriaConciliacion.tsx` (240→182): `movimientoColumns`.
+    - `CxpPorPagar.tsx` (239→192): `CxpPorPagarKpis`, `ProgramarPagoDialog`.
+    - `AnticiposProveedor.tsx` (236→153): `buildAnticipoColumns`.
+    - `ComprasReportes.tsx` (217→185): `TopProveedoresCard`.
+- **APP_VERSION** → `13.317.9`.
+
+
+
+
 ## [13.317.8] - 2026-07-25
 - **chore · Sidebar Etapa 1 · 6 quick-wins de navegación.** Analogía: reordenamos los letreros del edificio; los cuartos no cambian.
   - **S1 · `/cartera` duplicado eliminado.** `SIDEBAR_BANDEJAS_ITEMS` (que exponía "Cartera" apuntando a la misma URL que "Cobranza" en Gestión) fue removido de `sidebarItems.ts` y de `buildGerenteOperaciones`. `gerente_operaciones` deja de ver una sección "Bandejas" con un solo enlace duplicado.
