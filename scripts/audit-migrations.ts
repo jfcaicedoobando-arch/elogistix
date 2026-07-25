@@ -44,9 +44,9 @@ const MIG_DIR = path.resolve(process.cwd(), "supabase/migrations");
  * mediante la migración posterior. Bump manual cuando aparezca legacy
  * imposible de corregir; nunca a la baja.
  */
-const BASELINE = "20260724180738";
+const BASELINE = "20260725184834";
 
-const FNAME_RE = /^(\d{14})_[a-z0-9-]+\.sql$/;
+const FNAME_RE = /^(\d{14})_[a-z0-9_-]+\.sql$/;
 
 type Violation = { file: string; check: string; detail: string };
 
