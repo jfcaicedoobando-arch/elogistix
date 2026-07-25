@@ -22,7 +22,7 @@ import { useCxpAging } from "@/features/cxp/hooks/useCxpAging";
 import { UnifiedFiltersBar } from "@/components/shared/filters/UnifiedFiltersBar";
 import { useClientPagedList } from "@/hooks/shared/useClientPagedList";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
-import { formatCurrency } from "@/lib/formatters";
+
 import { cn } from "@/lib/utils";
 import { AgingDrillDownDialog } from "@/features/cxp/components/AgingDrillDownDialog";
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
