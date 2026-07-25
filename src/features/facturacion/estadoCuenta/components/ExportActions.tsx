@@ -21,10 +21,13 @@ import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 interface Props {
   clienteIds: string[];
   rows: ReadonlyArray<FacturaEstadoCuenta>;
+  desde?: string;
+  hasta?: string;
 }
 
-export function ExportActions({ clienteIds, rows }: Props) {
+export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Props) {
   const [busy, setBusy] = useState<"pdf" | "csv" | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const soloUnCliente = clienteIds.length === 1;
 
   const onPdf = async () => {
@@ -49,6 +52,8 @@ export function ExportActions({ clienteIds, rows }: Props) {
       setBusy(null);
     }
   };
+
+  const periodo = desde && hasta ? `${formatDate(desde)} – ${formatDate(hasta)}` : (desde || hasta);
 
   const onCsv = () => {
     setBusy("csv");
