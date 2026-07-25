@@ -28,20 +28,8 @@ import { AgingDrillDownDialog } from "@/features/cxp/components/AgingDrillDownDi
 import type { CubetaAging } from "@/features/cxp/components/agingBuckets";
 import { todayLocalISO } from "@/lib/date/today";
 
-function KpiBucket({ label, value, moneda, tone = "default" }: { label: string; value: number; moneda: string; tone?: "default" | "warn" | "danger" }) {
-  const toneCls =
-    tone === "danger" ? "text-destructive" : tone === "warn" ? "text-warning" : "text-foreground";
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn("text-xl font-semibold tabular-nums mt-1", toneCls)}>
-          {formatCurrency(value, moneda)}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
+import { KpiBucket } from "./_sections/AgingKpiBucket";
+
 
 function exportarCsv(rows: readonly CxpAgingRow[], moneda: string) {
   if (!rows || rows.length === 0) return;
