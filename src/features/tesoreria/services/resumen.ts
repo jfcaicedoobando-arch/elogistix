@@ -59,16 +59,18 @@ export async function fetchSaldosCuentas(organizationId?: string | null): Promis
 }
 
 /**
- * Compone resumen a partir de cuentas (fetched aquí) + cobranza/cxp (inyectados
- * por el caller). El hook `useResumenTesoreria` provee las dos últimas.
+ * Compone resumen a partir de cuentas + cobranza/cxp. Permite inyectar
+ * `cuentas` ya prefetched para evitar doble roundtrip cuando el caller
+ * (agregador dashboard) ya las tiene.
  */
 export async function fetchResumenTesoreria(args: {
   cobranza: CobranzaRow[];
   cxp: CxpRow[];
   organizationId?: string | null;
   tipoCambioUsd?: number;
+  cuentas?: ResumenCuenta[];
 }): Promise<ResumenTesoreria> {
-  const cuentas = await fetchSaldosCuentas(args.organizationId);
+  const cuentas = args.cuentas ?? (await fetchSaldosCuentas(args.organizationId));
   return calcularResumenTesoreria({
     cuentas,
     cobranza: args.cobranza,

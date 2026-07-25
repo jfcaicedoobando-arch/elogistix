@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { createWrapper } from "@/test/utils/queryWrapper";
 
 const { mockFetchFacturas } = vi.hoisted(() => ({
@@ -38,6 +38,7 @@ describe("useCxpPageState — debounce de búsqueda", () => {
 
     await act(async () => {
       await Promise.resolve();
+      await Promise.resolve();
     });
     mockFetchFacturas.mockClear();
 
@@ -55,11 +56,13 @@ describe("useCxpPageState — debounce de búsqueda", () => {
     });
     expect(mockFetchFacturas).not.toHaveBeenCalled();
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(1);
+      await Promise.resolve();
+      await Promise.resolve();
     });
 
-    await waitFor(() => expect(mockFetchFacturas).toHaveBeenCalledTimes(1));
+    expect(mockFetchFacturas).toHaveBeenCalledTimes(1);
     expect(mockFetchFacturas).toHaveBeenCalledWith(
       expect.objectContaining({ search: "abcde" }),
     );
