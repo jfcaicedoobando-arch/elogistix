@@ -82,7 +82,14 @@ export function useFacturaManualForm(open: boolean) {
   };
 
   const updateFiscal = (patch: Partial<DatosFiscalesValue>) =>
-    setFiscal((prev) => ({ ...prev, ...patch }));
+    setFiscal((prev) => {
+      const next = { ...prev, ...patch };
+      // Serie es derivada de la moneda: si cambió moneda, recalculamos serie.
+      if (patch.moneda && patch.moneda !== prev.moneda) {
+        next.serie = serieForMoneda(patch.moneda);
+      }
+      return next;
+    });
 
   const clienteIncompleto = !!cliente && (!cliente.rfc || !cliente.codigo_postal || !cliente.regimen_fiscal);
   const conceptosValidos = conceptos.every(
