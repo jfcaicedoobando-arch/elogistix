@@ -16,8 +16,18 @@ import { todayLocalISO } from "@/lib/date/today";
 import type { ConceptoManualInput } from "@/features/facturacion/services/facturaManual";
 import type { DatosFiscalesValue } from "@/features/facturacion/components/FacturaManualDatosFiscales";
 
+/**
+ * Serie oficial por moneda. La numeración fiscal es responsabilidad del sistema
+ * — nunca se deja al usuario porque contamina folios (ver v13.301.58).
+ */
+function serieForMoneda(m: DatosFiscalesValue["moneda"]): string {
+  if (m === "USD") return "SF43718";
+  if (m === "EUR") return "SF46410";
+  return "A";
+}
+
 const INITIAL_FISCAL: DatosFiscalesValue = {
-  serie: "A", fechaEmision: todayLocalISO(), diasCredito: 0, moneda: "MXN",
+  serie: serieForMoneda("MXN"), fechaEmision: todayLocalISO(), diasCredito: 0, moneda: "MXN",
   usoCfdi: "G03", formaPago: "99", metodoPago: "PPD", tipoCambio: 1,
 };
 
