@@ -17,9 +17,23 @@ interface Props {
   hasta?: string | null;
 }
 
+function buildPdfTooltip(soloUnCliente: boolean, sinFilas: boolean): string {
+  if (!soloUnCliente) return "El PDF requiere un solo cliente";
+  if (sinFilas) return "Sin facturas para exportar";
+  return "Descargar estado de cuenta en PDF";
+}
+
+function buildCsvTooltip(sinFilas: boolean): string {
+  return sinFilas ? "Sin facturas para exportar" : "Descargar filas visibles en CSV";
+}
+
+function buildPeriodo(desde: string | null, hasta: string | null): string {
+  return desde && hasta ? `${formatDate(desde)} – ${formatDate(hasta)}` : (desde ?? "");
+}
+
 export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Props) {
   const { busy, onPdf, onCsv, soloUnCliente } = useExportActions(clienteIds, rows);
-  const periodo = desde && hasta ? `${formatDate(desde)} – ${formatDate(hasta)}` : (desde || hasta);
+  const periodo = buildPeriodo(desde, hasta);
   const sinFilas = rows.length === 0;
   const isBusy = busy !== null;
 
@@ -29,7 +43,7 @@ export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Prop
         <ExportFileButton
           label="PDF"
           icon={FileDown}
-          tooltip={!soloUnCliente ? "El PDF requiere un solo cliente" : sinFilas ? "Sin facturas para exportar" : "Descargar estado de cuenta en PDF"}
+          tooltip={buildPdfTooltip(soloUnCliente, sinFilas)}
           busy={busy === "pdf"}
           onClick={onPdf}
           disabled={!soloUnCliente || sinFilas || isBusy}
@@ -37,7 +51,7 @@ export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Prop
         <ExportFileButton
           label="CSV"
           icon={Sheet}
-          tooltip={sinFilas ? "Sin facturas para exportar" : "Descargar filas visibles en CSV"}
+          tooltip={buildCsvTooltip(sinFilas)}
           busy={busy === "csv"}
           onClick={onCsv}
           disabled={sinFilas || isBusy}
@@ -46,7 +60,7 @@ export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Prop
           <ExportEmailButton
             clienteId={clienteIds[0]}
             clienteNombre={rows[0]?.cliente_nombre ?? null}
-            periodo={periodo ?? ""}
+            periodo={periodo}
             desde={desde ?? ""}
             hasta={hasta ?? ""}
             rows={rows}
