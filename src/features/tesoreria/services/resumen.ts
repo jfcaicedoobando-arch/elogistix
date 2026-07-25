@@ -18,19 +18,6 @@ import {
 
 export type { ResumenCuenta, ResumenTesoreria, FlujoMes, TopItem } from "@/features/tesoreria/domain";
 
-async function calcularSaldoCuenta(cuentaId: string, saldoInicial: number): Promise<number> {
-  const { data, error } = await supabase
-    .from("bbva_movimientos")
-    .select("cargo, abono")
-    .eq("cuenta_bancaria_id", cuentaId);
-  if (error) throw error;
-  let s = saldoInicial;
-  for (const m of data ?? []) {
-    s += Number(m.abono) - Number(m.cargo);
-  }
-  return s;
-}
-
 export async function fetchSaldosCuentas(organizationId?: string | null): Promise<ResumenCuenta[]> {
   let q = supabase
     .from("cuentas_bancarias")
@@ -41,17 +28,34 @@ export async function fetchSaldosCuentas(organizationId?: string | null): Promis
   const { data: cuentas, error } = await q;
   if (error) throw error;
 
-  // Paraleliza el cálculo de saldos: antes era secuencial (N RTTs).
-  const saldos = await Promise.all(
-    (cuentas ?? []).map((c) => calcularSaldoCuenta(c.id, Number(c.saldo_inicial))),
-  );
-  return (cuentas ?? []).map((c, i) => ({
-    id: c.id,
-    alias: c.alias,
-    banco: c.banco,
-    moneda: c.moneda,
-    saldo: saldos[i],
-  }));
+  const ids = (cuentas ?? []).map((c) => c.id);
+  // P4: una sola query a la vista agregada v_saldos_cuentas_bancarias en vez
+  // de N full-scans client-side de bbva_movimientos por cuenta.
+  const saldosMap = new Map<string, { abonos: number; cargos: number }>();
+  if (ids.length > 0) {
+    const { data: agg, error: errAgg } = await supabase
+      .from("v_saldos_cuentas_bancarias")
+      .select("cuenta_bancaria_id, total_abonos, total_cargos")
+      .in("cuenta_bancaria_id", ids);
+    if (errAgg) throw errAgg;
+    for (const row of agg ?? []) {
+      saldosMap.set(row.cuenta_bancaria_id as string, {
+        abonos: Number(row.total_abonos ?? 0),
+        cargos: Number(row.total_cargos ?? 0),
+      });
+    }
+  }
+
+  return (cuentas ?? []).map((c) => {
+    const agg = saldosMap.get(c.id) ?? { abonos: 0, cargos: 0 };
+    return {
+      id: c.id,
+      alias: c.alias,
+      banco: c.banco,
+      moneda: c.moneda,
+      saldo: Number(c.saldo_inicial) + agg.abonos - agg.cargos,
+    };
+  });
 }
 
 /**
