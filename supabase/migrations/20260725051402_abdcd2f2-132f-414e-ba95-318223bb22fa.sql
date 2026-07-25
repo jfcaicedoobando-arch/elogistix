@@ -77,3 +77,5 @@ $function$;
 
 GRANT EXECUTE ON FUNCTION public.cxc_aging_clientes(uuid, date) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.cxc_aging_clientes(uuid, date) TO service_role;
+REVOKE ALL ON FUNCTION public.cxc_aging_clientes(uuid, date) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.cxc_aging_clientes(uuid, date) FROM anon;

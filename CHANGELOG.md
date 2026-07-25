@@ -1,5 +1,8 @@
 # Changelog
 
+## [13.315.6] - 2026-07-25
+- **fix(tests) · Resolver duplicate-title en audit-report.** El nuevo `totalesConceptos.test.ts` (factura manual) compartía el título `describe("calcularTotalesConceptos")` con `cotizacionDetalle.test.ts`. Renombré el describe a `calcularTotalesConceptos (factura manual)` para desambiguar. `bun run test:fast` con `-t "test hygiene baseline"` en verde. Analogía: dos hermanos llamados igual en la misma escuela — le puse un segundo nombre al nuevo para que el pase de lista no marque duplicado.
+
 ## [13.315.4] - 2026-07-25
 - **fix(facturacion) · Automatizar Serie y Fecha de emisión en Nueva factura manual.** El modal ya no muestra los campos "Serie" ni "Fecha emisión". La serie se deriva de la moneda (`MXN`→`A`, `USD`→`SF43718`, `EUR`→`SF46410`) y la fecha se fija a hoy local MX en el instante del submit. Evita dos incidentes recurrentes: (1) folios contaminados por series escritas a mano (ver v13.301.58) y (2) rechazos del PAC porque el SAT exige timbrar dentro de 72 h de `fecha_emision`. Cero cambios en el RPC — el hook sigue enviando ambos campos, sólo que ya no los tocan los usuarios. Nuevo test `useFacturaManualForm.serie.test.ts`. Analogía: antes te dejábamos escribir a mano el folio y la fecha en el cheque; ahora la caja los estampa automáticamente y ya no puedes equivocarte.
 

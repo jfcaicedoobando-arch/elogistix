@@ -6,7 +6,7 @@ import { useState, useCallback } from "react";
 import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
@@ -48,13 +48,7 @@ export function useExportActions(clienteIds: string[], rows: ReadonlyArray<Factu
     if (!soloUnCliente) return;
     setBusy("pdf");
     try {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("id, nombre, rfc, direccion, ciudad, estado")
-        .eq("id", clienteIds[0])
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) throw new Error("Cliente no encontrado");
+      const data = await fetchClienteFichaEstadoCuenta(clienteIds[0]);
       await generarEstadoCuentaPdf(data);
     } catch (err) {
       notifyError(undefined, {
