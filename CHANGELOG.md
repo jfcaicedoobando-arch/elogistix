@@ -1,5 +1,9 @@
 # Changelog
 
+## [13.316.2] - 2026-07-25
+- **fix(ci) · Smoke test de `user-management` dejaba caer el runner nightly.** `dotenv/load.ts` de `std@0.224.0` compara `.env` contra `.env.example` y lanza `MissingEnvVarsError` si alguna variable del ejemplo no está en el env — CI no tiene `VITE_SENTRY_DSN` seteado y el runner moría antes de correr el único test del archivo. Cambié a `load({ envPath: ".env", examplePath: null, export: true })` para no exigir paridad con el ejemplo (el smoke tiene fallbacks hardcodeados para las 2 vars que realmente usa). Analogía: el runner traía un cotejo de "lista completa" contra el machote y se plantaba si faltaba un renglón, aunque el test ni usara ese renglón.
+
+
 ## [13.316.1] - 2026-07-25
 - **fix(compras) · Aging CxP volvía a cargar.** La RPC `cxp_aging_proveedores` declaraba `moneda text` en la firma, pero desde QW3 el CTE devolvía la columna real (`pf.moneda`) cuyo tipo en la BD es el dominio `moneda`, no `text`. Postgres lanzaba `42804: Returned type moneda does not match expected type text in column 3`, la página `/compras` mostraba el toast rojo "No pudimos cargar la información" y ningún aging se listaba. Añadí un `::text` explícito en el CoALESCE del CTE `saldos`. Sin cambios de firma pública ni de cliente. Analogía: la función prometía entregar la moneda en una bolsa de "texto plano", pero al abrir la bolsa venía en su empaque original de fábrica — Postgres es estricto con el empaque aunque el contenido sea el mismo.
 
