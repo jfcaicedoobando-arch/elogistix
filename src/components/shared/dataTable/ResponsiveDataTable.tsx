@@ -5,6 +5,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
+import { useIsMobile } from "@/hooks/shared";
 import { handleRowClick, handleRowKeyDown } from "./rowNav";
 import type {
   DataTablePagination,
