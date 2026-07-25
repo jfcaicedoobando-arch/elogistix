@@ -14,7 +14,11 @@ describe("resumen tesoreria service", () => {
 
   it("fetchSaldosCuentas calcula saldos por cuenta", async () => {
     mock.setTableResult("cuentas_bancarias", { data: [{ id: "c1", alias: "A", banco: "B", moneda: "MXN", saldo_inicial: 1000 }], error: null });
-    mock.setTableResult("bbva_movimientos", { data: [{ cargo: 100, abono: 200 }], error: null });
+    // P4: ahora leemos la vista agregada `v_saldos_cuentas_bancarias`.
+    mock.setTableResult("v_saldos_cuentas_bancarias", {
+      data: [{ cuenta_bancaria_id: "c1", total_abonos: 200, total_cargos: 100 }],
+      error: null,
+    });
 
     const cuentas = await fetchSaldosCuentas();
     expect(cuentas.length).toBe(1);
@@ -28,7 +32,7 @@ describe("resumen tesoreria service", () => {
 
   it("fetchResumenTesoreria compone cuentas + cobranza/cxp inyectados", async () => {
     mock.setTableResult("cuentas_bancarias", { data: [{ id: "c1", alias: "A", banco: "B", moneda: "MXN", saldo_inicial: 500 }], error: null });
-    mock.setTableResult("bbva_movimientos", { data: [], error: null });
+    mock.setTableResult("v_saldos_cuentas_bancarias", { data: [], error: null });
     const res = await fetchResumenTesoreria({ cobranza: [], cxp: [] });
     expect(res.cuentas).toHaveLength(1);
     expect(res.top_deudores).toEqual([]);
