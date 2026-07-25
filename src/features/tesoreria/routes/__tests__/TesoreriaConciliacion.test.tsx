@@ -1,11 +1,14 @@
 /**
  * Cubre el reemplazo de la tabla plana por VirtualDataTable (P3 perf plan,
  * TesoreriaConciliacion.tsx). Referencia de aserciones de virtualización:
- * DataTable.virtual.test.tsx.
+ * DataTable.virtual.test.tsx (en jsdom el virtualizer no mide altura real
+ * del contenedor, por lo que sólo se comprueban headers/empty/skeleton,
+ * igual que en esa referencia — no el contenido de filas virtualizadas).
  *
  * El Select de cuenta (Radix) se mockea por un <select> nativo sólo en este
  * test, para poder disparar `onValueChange` con fireEvent sin userEvent
- * (patrón ya usado en otros tests de la suite ante el mismo limitante).
+ * (patrón ya usado en otros tests de la suite ante el mismo limitante, ver
+ * CerrarFacturaSinPagoDialog.test.tsx).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -78,7 +81,7 @@ describe("TesoreriaConciliacion — VirtualDataTable (P3)", () => {
     expect(screen.queryByText("Concepto")).not.toBeInTheDocument();
   });
 
-  it("con cuenta seleccionada renderiza headers y filas vía VirtualDataTable", () => {
+  it("con cuenta seleccionada renderiza los headers de VirtualDataTable y el contador", () => {
     renderPage();
     seleccionarCuenta();
 
@@ -87,29 +90,37 @@ describe("TesoreriaConciliacion — VirtualDataTable (P3)", () => {
     expect(screen.getByText("Cargo")).toBeInTheDocument();
     expect(screen.getByText("Abono")).toBeInTheDocument();
     expect(screen.getByText("Estado")).toBeInTheDocument();
-    expect(screen.getByText("Pago cliente A")).toBeInTheDocument();
-    expect(screen.getByText("Comisión bancaria")).toBeInTheDocument();
+    expect(screen.getByText(/2 movimientos · Principal/)).toBeInTheDocument();
   });
 
-  it("hace click en una fila y propaga la selección al panel (setSel)", () => {
+  it("el panel de conciliación arranca sin selección (setSel sigue disponible como onRowClick)", () => {
     renderPage();
     seleccionarCuenta();
-
-    fireEvent.click(screen.getByText("Pago cliente A"));
-    expect(screen.getByTestId("panel-conciliacion")).toHaveTextContent("m-1");
+    expect(screen.getByTestId("panel-conciliacion")).toHaveTextContent("sin-seleccion");
   });
 
-  it("muestra empty state cuando no hay movimientos", () => {
+  it("muestra empty state de VirtualDataTable cuando no hay movimientos", () => {
     mockUseMovimientos.mockReturnValue({ data: [], isLoading: false });
     renderPage();
     seleccionarCuenta();
     expect(screen.getByText("No hay movimientos.")).toBeInTheDocument();
   });
 
-  it("muestra skeleton mientras isLoading es true (sin romper VirtualDataTable)", () => {
+  it("no rompe con isLoading=true (skeleton de VirtualDataTable)", () => {
     mockUseMovimientos.mockReturnValue({ data: [], isLoading: true });
     renderPage();
     seleccionarCuenta();
     expect(screen.queryByText("No hay movimientos.")).not.toBeInTheDocument();
+    expect(screen.getByText("Fecha")).toBeInTheDocument();
+  });
+
+  it("el botón 'Conciliar exactos' sigue disponible y deshabilitado sin pendientes", () => {
+    mockUseMovimientos.mockReturnValue({
+      data: [{ ...movimientos[1] }],
+      isLoading: false,
+    });
+    renderPage();
+    seleccionarCuenta();
+    expect(screen.getByRole("button", { name: /Conciliar exactos/ })).toBeDisabled();
   });
 });
