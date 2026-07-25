@@ -30,7 +30,7 @@ type Moneda = Database["public"]["Enums"]["moneda"];
 interface Props {
   values: FacturaFormValues;
   onChange: <K extends keyof FacturaFormValues>(k: K, v: FacturaFormValues[K]) => void;
-  onProveedor: (id: string, nombre: string) => void;
+  onProveedor: (id: string, nombre: string, diasCredito?: number) => void;
   categorias: CategoriaPresupuestoLite[];
   total: number;
   errors?: Partial<Record<keyof FacturaFormValues, string>>;
