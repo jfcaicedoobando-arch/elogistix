@@ -60,6 +60,7 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Facturación", url: "/facturacion", icon: Receipt },
   { title: "Proformas", url: "/proformas", icon: FileSpreadsheet },
   { title: "Cobranza", url: "/cartera", icon: HandCoins },
+  { title: "Antigüedad A/R", url: "/cobranza/aging", icon: LayoutList },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
 ];
