@@ -5,6 +5,7 @@
  */
 import { fetchEstadoResultadosDevengado } from "@/features/profit/services/estadoResultadosDevengado";
 import { fetchEstadoResultadosMes } from "@/features/profit/services/estadoResultados";
+import { supabase } from "@/integrations/supabase/client";
 import {
   fetchSaldosCuentas,
   fetchResumenTesoreria,
