@@ -7,11 +7,11 @@ import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CxpAgingRow } from "@/features/cxp/services/cxpAging";
 
-function Money({ value, danger }: { value: number; danger?: boolean }) {
+function Money({ value, moneda, danger }: { value: number; moneda: string; danger?: boolean }) {
   if (!value) return <span className="text-muted-foreground">—</span>;
   return (
     <span className={cn("tabular-nums", danger && "text-destructive font-medium")}>
-      {formatCurrency(value, "MXN")}
+      {formatCurrency(value, moneda)}
     </span>
   );
 }
