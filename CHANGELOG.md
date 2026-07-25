@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.317.10] - 2026-07-25
+- **fix · Power of 10 #1: 2 archivos residuales > 200 líneas.** Analogía: quedaban dos cajones pasados de tamaño después de mudarnos.
+  - `CxpAging.tsx` (201 → 187): extraído `KpiBucket` a `_sections/AgingKpiBucket.tsx`.
+  - `useNuevaFacturaProveedorForm.ts` (207 → 183): extraídos `handleCfdiParsed` / `handlePdfIaParsed` a `useNuevaFacturaProveedorForm.applyParsed.ts` (unifica el aplicador de resultados parseados CFDI/PDF-IA).
+
+
+
 ## [13.317.9] - 2026-07-25
 - **fix · CI: 7 fallos de shard resueltos.** Analogía: el edificio tenía 7 fugas — no una pared que reconstruir. Cada una en su lugar.
   - **ESLint**: quitado `no-eval` innecesario en `audit-migrations.regex.test.ts` (usa `new Function(...)` en su lugar).
