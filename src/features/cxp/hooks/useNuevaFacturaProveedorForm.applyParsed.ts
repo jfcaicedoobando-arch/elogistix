@@ -13,7 +13,7 @@ import { procesarPdfIaParsed } from "./useNuevaFacturaProveedorForm.pdfIa";
 import type { PendingCfdi } from "./useNuevaFacturaProveedorForm.helpers";
 
 export interface ParsedApplyDeps {
-  organizationId: string | undefined;
+  organizationId: string | null | undefined;
   setValues: Dispatch<SetStateAction<FacturaFormValues>>;
   setErrors: Dispatch<SetStateAction<Partial<Record<keyof FacturaFormValues, string>>>>;
   setPendingCfdi: Dispatch<SetStateAction<PendingCfdi | null>>;
