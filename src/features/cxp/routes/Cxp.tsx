@@ -8,7 +8,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { ColumnVisibilityMenu } from "@/components/shared/ColumnVisibilityMenu";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageContainer } from "@/components/shared/PageContainer";
-import { EliminarFacturaCxpDialog } from "@/features/cxp/components/EliminarFacturaCxpDialog";
+import { CxpRouteDialogs } from "@/features/cxp/routes/_sections/CxpRouteDialogs";
 import { usePermissions, useColumnVisibility } from "@/hooks/shared";
 import {
   useFacturasCxP,
