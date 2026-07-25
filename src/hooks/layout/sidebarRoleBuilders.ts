@@ -1,10 +1,10 @@
 import {
   SIDEBAR_DASHBOARD_ITEMS,
-  SIDEBAR_GESTION_ITEMS,
-  SIDEBAR_PROFIT_ITEMS,
-  SIDEBAR_REPORTES_ITEMS,
+  SIDEBAR_VENTAS_ITEMS,
+  SIDEBAR_OPERACION_ITEMS,
+  SIDEBAR_DINERO_ITEMS,
+  SIDEBAR_ANALISIS_ITEMS,
   SIDEBAR_CRM_ITEMS,
-  SIDEBAR_DIRECTORIO_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
   SIDEBAR_COSTEO_ITEMS,
   SIDEBAR_COMPRAS_ITEMS,
@@ -23,12 +23,16 @@ export interface BuilderDeps {
 
 export type Builder = (deps: BuilderDeps) => SidebarSection[];
 
-const filterGestion = (urls: string[]) =>
-  SIDEBAR_GESTION_ITEMS.filter((it) => urls.includes(it.url));
+const filterVentas = (urls: string[]) =>
+  SIDEBAR_VENTAS_ITEMS.filter((it) => urls.includes(it.url));
+const filterOperacion = (urls: string[]) =>
+  SIDEBAR_OPERACION_ITEMS.filter((it) => urls.includes(it.url));
+const filterDinero = (urls: string[]) =>
+  SIDEBAR_DINERO_ITEMS.filter((it) => urls.includes(it.url));
+const filterAnalisis = (urls: string[]) =>
+  SIDEBAR_ANALISIS_ITEMS.filter((it) => urls.includes(it.url));
 const filterSistema = (sistemaItems: typeof SIDEBAR_SISTEMA_ITEMS, urls: string[]) =>
   sistemaItems.filter((it) => urls.includes(it.url));
-const filterDirectorio = (urls: string[]) =>
-  SIDEBAR_DIRECTORIO_ITEMS.filter((it) => urls.includes(it.url));
 
 /**
  * v13.175.0 — Filtra items del módulo Compras por rol. `full()` regresa todo;
@@ -42,111 +46,98 @@ const COMPRAS_CAPTURA = ["/compras", "/compras/por-capturar", "/compras/facturas
 const COMPRAS_CONTADOR = ["/compras", "/compras/por-capturar", "/compras/por-aprobar", "/compras/facturas", "/compras/notas-credito", "/compras/proveedores", "/compras/conciliacion", "/compras/aging", "/compras/reportes"];
 const COMPRAS_TESORERO = ["/compras", "/compras/por-pagar", "/compras/facturas", "/compras/pagos", "/compras/proveedores", "/compras/conciliacion", "/compras/aging", "/compras/reportes"];
 
+const DINERO_FULL = SIDEBAR_DINERO_ITEMS.map((it) => it.url);
+
 const buildVendedor: Builder = ({ crmItems, sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "CRM", items: crmItems },
-  { label: "Gestión", items: filterGestion(["/cotizaciones"]) },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Operación", items: [...filterOperacion(["/cotizaciones"]), ...crmItems] },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/clientes"]) },
+  { label: "Análisis", items: filterAnalisis(["/profit"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
 const buildCustomerService: Builder = ({ sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques"]) },
-  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Operación", items: filterOperacion(["/cotizaciones", "/embarques"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/auditoria", "/ayuda"]) },
 ];
 
 const buildCoordinador: Builder = ({ sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques", "/facturacion", "/proformas?estado=aceptada", "/proformas"]) },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Operación", items: filterOperacion(["/cotizaciones", "/embarques"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/clientes"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
 const buildEjecutivoPricing: Builder = ({ sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  { label: "Gestión", items: filterGestion(["/cotizaciones"]) },
-  { label: "Compras", items: filterCompras(["/compras/proveedores"]) },
-  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
-  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Operación", items: filterOperacion(["/cotizaciones"]) },
+  { label: "Compras (CxP)", items: filterCompras(["/compras/proveedores"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/clientes"]) },
+  { label: "Análisis", items: filterAnalisis(["/reportes/cierre-mensual", "/reportes/rentabilidad"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
 const buildContador: Builder = ({ sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  // v13.141.14 — contador con acceso de viewer al módulo de embarques
-  { label: "Operaciones", items: filterGestion(["/embarques"]) },
-  { label: "Compras", items: filterCompras(COMPRAS_CONTADOR) },
-  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]) },
-  { label: "Tesorería", items: filterGestion(["/tesoreria", "/tesoreria/pagos-programados"]) },
-  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Compras (CxP)", items: filterCompras(COMPRAS_CONTADOR) },
+  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+  { label: "Dinero", items: filterDinero(DINERO_FULL) },
+  { label: "Operación", items: filterOperacion(["/embarques"]) },
+  { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: [...filterSistema(sistemaItems, ["/ayuda", "/bitacora"]), ...SIDEBAR_ADMIN_ITEMS.filter((it) => it.url === "/configuracion")] },
 ];
 
 const buildTesorero: Builder = ({ sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Compras", items: filterCompras(COMPRAS_TESORERO) },
-  { label: "Tesorería", items: filterGestion(["/tesoreria", "/tesoreria/pagos-programados"]) },
-  { label: "Facturación", items: filterGestion(["/cartera", "/comisiones", "/cobranza/aging"]) },
-  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Compras (CxP)", items: filterCompras(COMPRAS_TESORERO) },
+  { label: "Dinero", items: filterDinero(DINERO_FULL) },
+  { label: "Ventas (CxC)", items: filterVentas(["/cartera", "/comisiones", "/cobranza/aging"]) },
+  { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
 
 const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
-  { label: "Compras", items: filterCompras(COMPRAS_CAPTURA) },
+  { label: "Compras (CxP)", items: filterCompras(COMPRAS_CAPTURA) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
 const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
-  {
-    label: "Facturación",
-    items: filterGestion(["/cartera", "/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza/aging"]),
-  },
-  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Ventas (CxC)", items: filterVentas(["/cartera", "/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza/aging", "/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
 ];
 
 const buildGerenteComercial: Builder = ({ crmItems, sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques", "/comisiones"]) },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
+  { label: "Ventas (CxC)", items: filterVentas(["/comisiones", "/clientes"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-  { label: "CRM", items: crmItems },
-  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
 
 const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
-  { label: "Compras", items: filterCompras(COMPRAS_READ_ONLY) },
-  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-  { label: "CRM", items: crmItems },
-  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-  { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
+  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+  { label: "Compras (CxP)", items: filterCompras(COMPRAS_READ_ONLY) },
+  { label: "Dinero", items: SIDEBAR_DINERO_ITEMS },
+  { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
 
 export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
-  { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
+  { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+  { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...crmItems] },
+  { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+  { label: "Compras (CxP)", items: filterCompras(COMPRAS_FULL) },
+  { label: "Dinero", items: SIDEBAR_DINERO_ITEMS },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-  { label: "Compras", items: filterCompras(COMPRAS_FULL) },
-  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]) },
-  { label: "Tesorería", items: filterGestion(["/tesoreria", "/tesoreria/pagos-programados"]) },
-  { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-  { label: "CRM", items: crmItems },
-  { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-  { label: "Directorio", items: filterDirectorio(["/clientes"]) },
+  { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
   { label: "Sistema", items: sistemaItems },
 ];
 
@@ -169,14 +160,13 @@ export const ROLE_BUILDERS: Record<string, Builder> = {
 
 export function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
   return [
-    { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-    { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
-    { label: "Compras", items: filterCompras(COMPRAS_READ_ONLY) },
+    { label: "Inicio", items: SIDEBAR_DASHBOARD_ITEMS },
+    { label: "Operación", items: [...filterOperacion(["/cotizaciones", "/embarques"]), ...deps.crmItems] },
+    { label: "Ventas (CxC)", items: filterVentas(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging", "/clientes"]) },
+    { label: "Compras (CxP)", items: filterCompras(COMPRAS_READ_ONLY) },
+    { label: "Dinero", items: SIDEBAR_DINERO_ITEMS },
     { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
-    { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
-    { label: "CRM", items: deps.crmItems },
-    { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
-    { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
+    { label: "Análisis", items: SIDEBAR_ANALISIS_ITEMS },
     { label: "Sistema", items: filterSistema(deps.sistemaItems, ["/ayuda", "/bitacora"]) },
   ];
 }
