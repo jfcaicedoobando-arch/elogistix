@@ -10,6 +10,7 @@ export const cxp = {
   historial: (facturaId?: string | null) => ["cxp", "historial", facturaId ?? null] as const,
   aging: (fecha?: string | null) => ["cxp", "aging", fecha ?? "hoy"] as const,
   pendientesAprobacionCount: ["cxp", "pendientes-aprobacion-count"] as const,
+  porPagarCount: ["cxp", "por-pagar-count"] as const,
   conceptosCostoAbiertos: (proveedorId?: string | null, organizationId?: string | null) =>
     ["cxp", "conceptos_costo_abiertos", proveedorId ?? null, organizationId ?? null] as const,
   sugerirEmbarques: (proveedorId?: string | null, organizationId?: string | null) =>

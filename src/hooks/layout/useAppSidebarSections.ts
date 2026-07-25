@@ -4,6 +4,7 @@ import { useAlertasPendingCount } from "@/features/admin/hooks";
 import { useActividadesVencidasCount } from "@/features/crm/hooks/useCrmDashboard";
 import { useSidebarAlerts } from "@/hooks/layout/useSidebarAlerts";
 import { useCxpPendientesAprobacion } from "@/features/cxp/hooks/useCxpPendientesAprobacion";
+import { useCxpPorPagarCount } from "@/features/cxp/hooks/useCxpPorPagarCount";
 import {
   SIDEBAR_CRM_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
@@ -24,17 +25,19 @@ interface BadgeCounts {
   embarquesAlertas: number;
   facturasVencidas: number;
   cxpPorAprobar: number;
+  cxpPorPagar: number;
 }
 
 function patchSidebarBadges(sections: SidebarSection[], counts: BadgeCounts): SidebarSection[] {
-  const { embarquesAlertas, facturasVencidas, cxpPorAprobar } = counts;
-  if (embarquesAlertas <= 0 && facturasVencidas <= 0 && cxpPorAprobar <= 0) return sections;
+  const { embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar } = counts;
+  if (embarquesAlertas <= 0 && facturasVencidas <= 0 && cxpPorAprobar <= 0 && cxpPorPagar <= 0) return sections;
   return sections.map((sec) => ({
     ...sec,
     items: sec.items.map((it) => {
       if (it.url === "/embarques" && embarquesAlertas > 0) return { ...it, badgeCount: embarquesAlertas };
       if (it.url === "/facturacion" && facturasVencidas > 0) return { ...it, badgeCount: facturasVencidas };
-      if (it.url === "/compras" && cxpPorAprobar > 0) return { ...it, badgeCount: cxpPorAprobar };
+      if (it.url === "/compras/por-aprobar" && cxpPorAprobar > 0) return { ...it, badgeCount: cxpPorAprobar };
+      if (it.url === "/compras/por-pagar" && cxpPorPagar > 0) return { ...it, badgeCount: cxpPorPagar };
       return it;
     }),
   }));
@@ -50,8 +53,9 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { data: crmVencidas = 0 } = useActividadesVencidasCount();
   const { embarquesDemora, facturasVencidas, garantiasAtoradas, adminPendientes } = useSidebarAlerts();
   const { data: cxpPorAprobar = 0 } = useCxpPendientesAprobacion();
+  const { data: cxpPorPagar = 0 } = useCxpPorPagarCount();
   const embarquesAlertas = embarquesDemora + garantiasAtoradas + adminPendientes;
-  const badgeCounts: BadgeCounts = { embarquesAlertas, facturasVencidas, cxpPorAprobar };
+  const badgeCounts: BadgeCounts = { embarquesAlertas, facturasVencidas, cxpPorAprobar, cxpPorPagar };
 
   const sistemaItems = SIDEBAR_SISTEMA_ITEMS.map((it) =>
     it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,

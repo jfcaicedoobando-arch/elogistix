@@ -34,7 +34,7 @@ import {
   ReceiptText,
   GitCompare,
   HandCoins,
-  Wallet,
+  FileClock,
   Banknote,
   ArrowRightLeft,
   CalendarCheck,
@@ -59,9 +59,11 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: Receipt },
+  // v13.317.8 — Bandeja de proformas aceptadas listas para emitir CFDI.
+  { title: "Por emitir", url: "/proformas?estado=aceptada", icon: FileClock },
   { title: "Proformas", url: "/proformas", icon: FileSpreadsheet },
   { title: "Cobranza", url: "/cartera", icon: HandCoins },
-  { title: "Antigüedad A/R", url: "/cobranza/aging", icon: LayoutList },
+  { title: "Antigüedad CxC", url: "/cobranza/aging", icon: LayoutList },
   { title: "Tesorería", url: "/tesoreria", icon: Landmark },
   { title: "Pagos programados", url: "/tesoreria/pagos-programados", icon: CalendarCheck },
   { title: "Comisiones", url: "/comisiones", icon: Percent },
@@ -108,10 +110,8 @@ export const SIDEBAR_COSTEO_ITEMS: SidebarItem[] = [
   { title: "Tarifa demoras (venta)", url: "/costeo/demoras-venta", icon: Timer },
 ];
 
-// v13.175.0 — Cartera (CxC) es la única bandeja que no vive bajo /compras.
-export const SIDEBAR_BANDEJAS_ITEMS: SidebarItem[] = [
-  { title: "Cartera", url: "/cartera", icon: Wallet },
-];
+// v13.317.8 — SIDEBAR_BANDEJAS_ITEMS eliminado: "/cartera" ya vive en Gestión
+// como "Cobranza". Antes se duplicaba aquí como "Cartera".
 
 /**
  * v13.175.0 — Módulo Compras unificado. Todas las rutas viven bajo `/compras/*`
@@ -128,7 +128,7 @@ export const SIDEBAR_COMPRAS_ITEMS: SidebarItem[] = [
   { title: "Pagos", url: "/compras/pagos", icon: ArrowRightLeft },
   { title: "Notas de crédito", url: "/compras/notas-credito", icon: ReceiptText },
   { title: "Proveedores", url: "/compras/proveedores", icon: Truck },
-  { title: "Conciliación", url: "/compras/conciliacion", icon: GitCompare },
-  { title: "Antigüedad", url: "/compras/aging", icon: LayoutList },
+  { title: "Conciliación CxP", url: "/compras/conciliacion", icon: GitCompare },
+  { title: "Antigüedad CxP", url: "/compras/aging", icon: LayoutList },
   { title: "Reportes", url: "/compras/reportes", icon: BarChart3 },
 ];

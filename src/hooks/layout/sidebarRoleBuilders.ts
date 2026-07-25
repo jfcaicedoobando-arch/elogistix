@@ -7,7 +7,6 @@ import {
   SIDEBAR_DIRECTORIO_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
   SIDEBAR_COSTEO_ITEMS,
-  SIDEBAR_BANDEJAS_ITEMS,
   SIDEBAR_COMPRAS_ITEMS,
   SIDEBAR_ADMIN_ITEMS,
 } from "@/components/layout/sidebarItems";
@@ -62,7 +61,7 @@ const buildCustomerService: Builder = ({ sistemaItems }) => [
 
 const buildCoordinador: Builder = ({ sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
-  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques", "/facturacion", "/proformas"]) },
+  { label: "Gestión", items: filterGestion(["/cotizaciones", "/embarques", "/facturacion", "/proformas?estado=aceptada", "/proformas"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
@@ -83,12 +82,12 @@ const buildContador: Builder = ({ sistemaItems }) => [
   // v13.141.14 — contador con acceso de viewer al módulo de embarques
   { label: "Operaciones", items: filterGestion(["/embarques"]) },
   { label: "Compras", items: filterCompras(COMPRAS_CONTADOR) },
-  { label: "Facturación", items: [...filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]), ...SIDEBAR_ADMIN_ITEMS.filter((it) => it.url === "/configuracion")] },
+  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]) },
   { label: "Tesorería", items: filterGestion(["/tesoreria", "/tesoreria/pagos-programados"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
   { label: "Directorio", items: filterDirectorio(["/clientes"]) },
-  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
+  { label: "Sistema", items: [...filterSistema(sistemaItems, ["/ayuda", "/bitacora"]), ...SIDEBAR_ADMIN_ITEMS.filter((it) => it.url === "/configuracion")] },
 ];
 
 const buildTesorero: Builder = ({ sistemaItems }) => [
@@ -109,7 +108,7 @@ const buildAuxiliarContable: Builder = ({ sistemaItems }) => [
 const buildEjecutivoCobranza: Builder = ({ sistemaItems }) => [
   {
     label: "Facturación",
-    items: filterGestion(["/cartera", "/facturacion", "/proformas", "/cobranza/aging"]),
+    items: filterGestion(["/cartera", "/facturacion", "/proformas?estado=aceptada", "/proformas", "/cobranza/aging"]),
   },
   { label: "Directorio", items: filterDirectorio(["/clientes"]) },
   { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda"]) },
@@ -130,12 +129,11 @@ const buildGerenteOperaciones: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
   { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
   { label: "Compras", items: filterCompras(COMPRAS_READ_ONLY) },
-  { label: "Bandejas", items: SIDEBAR_BANDEJAS_ITEMS },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "CRM", items: crmItems },
   { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
   { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-  { label: "Sistema", items: sistemaItems.filter((it) => it.url !== "/auditoria") },
+  { label: "Sistema", items: filterSistema(sistemaItems, ["/ayuda", "/bitacora"]) },
 ];
 
 export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
@@ -143,7 +141,7 @@ export const buildAdmin: Builder = ({ crmItems, sistemaItems }) => [
   { label: "Gestión operativa", items: filterGestion(["/cotizaciones", "/embarques"]) },
   { label: "Costeo", items: SIDEBAR_COSTEO_ITEMS },
   { label: "Compras", items: filterCompras(COMPRAS_FULL) },
-  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]) },
+  { label: "Facturación", items: filterGestion(["/facturacion", "/proformas?estado=aceptada", "/proformas", "/cartera", "/comisiones", "/cobranza/aging"]) },
   { label: "Tesorería", items: filterGestion(["/tesoreria", "/tesoreria/pagos-programados"]) },
   { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
   { label: "CRM", items: crmItems },
@@ -179,6 +177,6 @@ export function buildDefaultSections(deps: BuilderDeps): SidebarSection[] {
     { label: "CRM", items: deps.crmItems },
     { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
     { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
-    { label: "Sistema", items: deps.sistemaItems },
+    { label: "Sistema", items: filterSistema(deps.sistemaItems, ["/ayuda", "/bitacora"]) },
   ];
 }
