@@ -28,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'factura-enviada': facturaEnviada,
   'nota-credito-enviada': notaCreditoEnviada,
   'rep-enviado': repEnviado,
+  'recordatorio-cobranza': recordatorioCobranza,
 };
