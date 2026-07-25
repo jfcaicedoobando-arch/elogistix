@@ -6,7 +6,7 @@ import { useState, useCallback } from "react";
 import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchClienteFichaEstadoCuenta } from "../services/clienteFicha";
 import { notifyError } from "@/lib/ui/appFeedback";
 import type { FacturaEstadoCuenta } from "../services/estadoCuenta";
 
