@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.317.1] - 2026-07-25
+- **chore · Lint clean tras Ola 0.** Resueltos 20 errores/1 warning pre-existentes que quedaron pendientes al cerrar `v13.317.0` de performance:
+  - `src/__tests__/architecture/no-hardcoded-tcs.test.ts`: quitados escapes innecesarios en el regex `[*/+-]`.
+  - `SelectorFacturaAbierta.tsx`: `queryKey` inline → nueva key canónica `cxp.facturasAbiertasProveedor(id)`; `eslint-disable react-refresh/only-export-components` para permitir el hook exportado junto al componente.
+  - `AnticiposProveedor.tsx`: 6 `any` de `cell:` reemplazados por un tipo local `CellCtx` con `AnticipoProveedorRow`.
+  - `ComprasReportes.tsx`: `queryKey: ["exchange-rates-dof-today"]` → `compras.exchangeRatesDofToday()` en `queryKeys.ts`.
+  - `useCxpAging.ts`: `rows` envuelto en `useMemo` para estabilizar las dependencias de los `useMemo` río abajo (regla `react-hooks/exhaustive-deps`).
+  - `cxp/services/conciliacionBancaria.ts` ya no importa de `features/tesoreria/domain/tolerancia`; los helpers puros se movieron a `src/lib/domain/tolerancia.ts` y el archivo original quedó como shim de re-export para retro-compatibilidad.
+
+
+
 ## [13.317.0] - 2026-07-25
 - **perf · Ola 0 de auditoría performance (P1–P6).** Aplicados los 6 quick wins de la auditoría del 2026-07-25:
   - **P1 · Caché de `Intl.NumberFormat`.** `src/lib/formatters/numbers.ts` construía un `NumberFormat` nuevo en cada llamada (~600 por render de CxP, ~4,000 en conciliación). Ahora hay un `Map` interno por moneda + variantes compact/número; API pública idéntica. Test de idempotencia en `numbers.extra.test.ts`.
