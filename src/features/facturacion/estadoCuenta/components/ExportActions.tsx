@@ -170,15 +170,15 @@ export function ExportActions({ clienteIds, rows, desde = "", hasta = "" }: Prop
           </TooltipContent>
         </Tooltip>
       </div>
-      {soloUnCliente && (
+        {soloUnCliente && (
         <DialogEnviarEstadoCuenta
           open={emailDialogOpen}
           onOpenChange={setEmailDialogOpen}
           clienteId={clienteIds[0]}
           clienteNombre={rows[0]?.cliente_nombre ?? null}
-          periodo={periodo}
-          desde={desde}
-          hasta={hasta}
+          periodo={periodo ?? ""}
+          desde={desde ?? ""}
+          hasta={hasta ?? ""}
           rows={rows}
         />
       )}
