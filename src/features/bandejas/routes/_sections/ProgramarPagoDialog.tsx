@@ -15,7 +15,7 @@ interface Props {
   fechaProgramada: string;
   onFechaChange: (v: string) => void;
   isRunning: boolean;
-  progreso?: { hecho: number; total: number };
+  progreso?: { hecho: number; total: number } | null;
   onConfirmar: () => void;
 }
 
