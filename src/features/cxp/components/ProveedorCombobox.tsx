@@ -14,7 +14,11 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   value: string;
-  onChange: (id: string, nombre: string) => void;
+  /**
+   * v13.315.8 (QW2) — el 3er argumento propaga `dias_credito` del proveedor
+   * para que el consumidor pueda prellenar la fecha de vencimiento.
+   */
+  onChange: (id: string, nombre: string, diasCredito?: number) => void;
   placeholder?: string;
   className?: string;
 }
@@ -49,7 +53,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = "Selecciona p
                   key={i.id}
                   value={i.nombre}
                   onSelect={() => {
-                    onChange(i.id, i.nombre);
+                    onChange(i.id, i.nombre, i.dias_credito);
                     setOpen(false);
                   }}
                 >
