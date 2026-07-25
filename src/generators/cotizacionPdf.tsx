@@ -16,9 +16,10 @@ export async function generarPdfCotizacion(
   cotizacion: CotizacionRow,
   tasaIva: number = TASA_IVA,
 ): Promise<void> {
-  const [emisor, tiposContenedor] = await Promise.all([
+  const [emisor, tiposContenedor, { CotizacionDocument }] = await Promise.all([
     cargarEmisorEmpresa(),
     fetchTiposContenedor(true).catch(() => []),
+    import("@/pdf/documents/CotizacionDocument"),
   ]);
   await descargarPdf(
     <CotizacionDocument
