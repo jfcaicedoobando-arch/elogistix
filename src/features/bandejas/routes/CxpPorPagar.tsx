@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { DatePickerMx } from "@/components/ui/date-picker-mx";
+import { Button } from "@/components/ui/button";
 import { ProgramarPagoDialog } from "./_sections/ProgramarPagoDialog";
 import { useCxpPorPagar } from "@/features/bandejas/hooks/useBandejas";
 import { resumirCxpPorPagar } from "@/features/bandejas/domain/aggregates";
