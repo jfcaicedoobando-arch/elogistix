@@ -19,7 +19,6 @@ import type { ChipTone } from "@/lib/ui/badgeTone";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatCurrency, formatFechaEs } from "@/lib/formatters";
@@ -100,7 +99,6 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
   const details = tooltipDetails(f);
 
   return (
-    <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
           <div
@@ -131,6 +129,5 @@ export function EstadoFacturaCxPCell({ factura: f }: Props) {
           </ul>
         </TooltipContent>
       </Tooltip>
-    </TooltipProvider>
   );
 }
