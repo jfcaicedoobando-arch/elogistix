@@ -96,10 +96,12 @@ export async function fetchProveedoresPaginados(
   return { data: mapped, count };
 }
 
-export interface ProveedorLite { id: string; nombre: string }
+export interface ProveedorLite { id: string; nombre: string; dias_credito: number }
 
 export async function fetchProveedoresLite(organizationId?: string | null): Promise<ProveedorLite[]> {
-  let query = supabase.from("proveedores").select("id, nombre");
+  // v13.315.8 (QW2) — incluimos `dias_credito` para prellenar el vencimiento
+  // al capturar facturas de proveedor.
+  let query = supabase.from("proveedores").select("id, nombre, dias_credito");
   if (organizationId) query = query.eq("organization_id", organizationId);
   return unwrapOr(query.order("nombre", { ascending: true }).limit(500), []) as Promise<ProveedorLite[]>;
 }
