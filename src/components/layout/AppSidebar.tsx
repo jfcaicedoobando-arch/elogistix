@@ -19,6 +19,7 @@ import { OrgBadge } from "@/components/layout/OrgBadge";
 import { SidebarGroupBlock } from "@/components/layout/SidebarGroupBlock";
 import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
 import { useAppSidebarSections } from "@/hooks/layout";
+import { useSidebarCollapse } from "@/hooks/layout/useSidebarCollapse";
 
 function computeUserInitials(email: string | undefined): string {
   return (email ?? "?")
