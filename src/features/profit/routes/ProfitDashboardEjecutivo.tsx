@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { KpiGridSkeleton } from "@/components/shared/skeletons";
 import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { Download } from "lucide-react";
-import { pdf } from "@react-pdf/renderer";
 import { reportCaughtError } from "@/lib/observability/reportCaughtError";
 import { useDashboardEjecutivo } from "@/features/dashboardEjecutivo/hooks/useDashboardEjecutivo";
 import { BandaKPIs } from "@/features/dashboardEjecutivo/components/BandaKPIs";
@@ -19,7 +18,6 @@ import { SaldosBancosCard } from "@/features/dashboardEjecutivo/components/Saldo
 import { TopListaCard } from "@/features/dashboardEjecutivo/components/TopListaCard";
 import { MiniFlujoCard } from "@/features/dashboardEjecutivo/components/MiniFlujoCard";
 import { AlertasPanel } from "@/features/dashboardEjecutivo/components/AlertasPanel";
-import { ReporteEjecutivoDocument } from "@/pdf/documents/ReporteEjecutivoDocument";
 import { toast } from "sonner";
 import { descargarBlob } from "@/lib/downloadBlob";
 import { notifyError } from "@/lib/ui/appFeedback";
