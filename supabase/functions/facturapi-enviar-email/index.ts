@@ -94,31 +94,69 @@ async function resolveTarget(supabase: SbClient, body: ReqBody): Promise<Resolve
 
 
 
+const TIPOS_FACTURACION = [
+  "facturacion", "facturación", "cobranza", "contabilidad", "pagador",
+  "administracion", "administración",
+];
+
+interface EmailResolucion {
+  email: string | null;
+  fuente: "override" | "contacto_facturacion" | "contacto_reciente" | "cliente" | "ninguna";
+  emailSugerido: string | null;
+}
+
+async function fetchContactosYCliente(supabase: SbClient, clienteId: string) {
+  const contactosPromise = supabase
+    .from("contactos_cliente")
+    .select("email, tipo, created_at")
+    .eq("cliente_id", clienteId)
+    .is("deleted_at", null)
+    .not("email", "is", null)
+    .order("created_at", { ascending: false });
+  const clientePromise = supabase.from("clientes").select("email").eq("id", clienteId).maybeSingle();
+
+  const [contactosRes, clienteRes] = await Promise.all([contactosPromise, clientePromise]);
+  const contactos = ((contactosRes?.data ?? []) as Array<{ email: string | null; tipo: string | null }>)
+    .filter((c) => c.email && c.email.includes("@"));
+  const facturacion = contactos.find((c) => {
+    const t = (c.tipo ?? "").toLowerCase().trim();
+    return TIPOS_FACTURACION.some((k) => t.includes(k));
+  });
+  const emailCliente = (clienteRes?.data?.email as string | null) ?? null;
+  return { contactos, facturacion, emailCliente };
+}
+
+function elegirEmail(
+  facturacion: { email: string | null } | undefined,
+  primero: { email: string | null } | undefined,
+  emailCliente: string | null,
+): { email: string | null; fuente: EmailResolucion["fuente"] } {
+  if (facturacion?.email) return { email: facturacion.email, fuente: "contacto_facturacion" };
+  if (primero?.email) return { email: primero.email, fuente: "contacto_reciente" };
+  if (emailCliente) return { email: emailCliente, fuente: "cliente" };
+  return { email: null, fuente: "ninguna" };
+}
+
 async function resolveEmail(
   supabase: SbClient,
   clienteId: string,
   override: string | undefined,
-): Promise<string | null> {
-  if (override && override.includes("@")) return override.trim();
-  if (!clienteId) return null;
-  // La columna `es_principal` fue removida; tomamos el contacto más antiguo con email.
-  const { data: contacto } = await supabase
-    .from("contactos_cliente")
-    .select("email")
-    .eq("cliente_id", clienteId)
-    .not("email", "is", null)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  const emailContacto = (contacto?.email as string | null) ?? null;
-  if (emailContacto) return emailContacto;
-  const { data: cliente } = await supabase
-    .from("clientes")
-    .select("email")
-    .eq("id", clienteId)
-    .maybeSingle();
-  return (cliente?.email as string | null) ?? null;
+): Promise<EmailResolucion> {
+  const { contactos, facturacion, emailCliente } = clienteId
+    ? await fetchContactosYCliente(supabase, clienteId)
+    : { contactos: [], facturacion: undefined, emailCliente: null as string | null };
+
+  const primero = contactos[0];
+  const emailSugerido = facturacion?.email ?? primero?.email ?? emailCliente;
+
+  if (override && override.includes("@")) {
+    return { email: override.trim(), fuente: "override", emailSugerido };
+  }
+  const { email, fuente } = elegirEmail(facturacion, primero, emailCliente);
+  return { email, fuente, emailSugerido };
 }
+
+
 
 function isValidEmail(e: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -146,9 +184,15 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
-  const email = await resolveEmail(supabase, target.data.clienteId, body.email);
+  const resolucion = await resolveEmail(supabase, target.data.clienteId, body.email);
+  const email = resolucion.email;
   if (!email) return jsonResponse({ error: "missing_email", message: "El cliente no tiene email registrado." }, 422);
   if (!isValidEmail(email)) return jsonResponse({ error: "invalid_email", message: "Email inválido." }, 400);
+
+  const overrideManual = resolucion.fuente === "override";
+  const emailDistintoSugerido = Boolean(
+    resolucion.emailSugerido && email.toLowerCase() !== resolucion.emailSugerido.toLowerCase(),
+  );
 
   const resolved = await resolveFacturapiKey(supabase, target.data.organizationId);
   if (!resolved.ok) return jsonResponse({ error: resolved.data.error, message: resolved.data.message }, resolved.data.status);
@@ -173,8 +217,18 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
       modulo: "facturacion",
       accion: "cfdi_envio_failed",
       entidadId: target.data.entidadId,
-      detalles: { email, tipo: target.data.tipo, status: fapiRes.status, detail },
+      detalles: {
+        email_enviado: email,
+        email_sugerido: resolucion.emailSugerido,
+        fuente_email: resolucion.fuente,
+        override_manual: overrideManual,
+        email_distinto_sugerido: emailDistintoSugerido,
+        tipo: target.data.tipo,
+        status: fapiRes.status,
+        detail,
+      },
     });
+
     const message = fapiRes.status === 404
       ? "CFDI no encontrado en FacturApi (puede estar cancelado)."
       : `FacturApi rechazó el envío (${fapiRes.status}).`;
@@ -188,7 +242,15 @@ Deno.serve(wrapEdgeHandler("facturapi-enviar-email", async (req) => {
     modulo: "facturacion",
     accion: "cfdi_enviado",
     entidadId: target.data.entidadId,
-    detalles: { email, tipo: target.data.tipo },
+    detalles: {
+      email_enviado: email,
+      email_sugerido: resolucion.emailSugerido,
+      fuente_email: resolucion.fuente,
+      override_manual: overrideManual,
+      email_distinto_sugerido: emailDistintoSugerido,
+      tipo: target.data.tipo,
+    },
+
   });
 
   return jsonResponse({ ok: true, enviado_a: email });

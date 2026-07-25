@@ -23,12 +23,14 @@ export interface FilaPorTimbrar {
 export interface FilaPorEnviar {
   id: string;
   numero: string;
+  cliente_id: string;
   cliente_nombre: string;
   total: number;
   moneda: string;
   fecha_emision: string;
   uuid_fiscal: string;
 }
+
 
 export interface FilaRepPendiente {
   id: string;
@@ -65,7 +67,7 @@ export async function fetchFacturasPorEnviar(orgId: string): Promise<FilaPorEnvi
   const [timbradasRes, enviosRes] = await Promise.all([
     supabase
       .from("facturas")
-      .select("id, numero, cliente_nombre, total, moneda, fecha_emision, uuid_fiscal")
+      .select("id, numero, cliente_id, cliente_nombre, total, moneda, fecha_emision, uuid_fiscal")
       .eq("organization_id", orgId)
       .not("uuid_fiscal", "is", null)
       .in("estado", ["Emitida", "Parcialmente pagada", "Pagada"])
