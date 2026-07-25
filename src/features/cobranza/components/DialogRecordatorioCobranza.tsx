@@ -53,8 +53,15 @@ export function DialogRecordatorioCobranza({ open, onOpenChange, factura }: Prop
       <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
         Cancelar
       </Button>
-      <Button onClick={handleEnviar} disabled={!puedeEnviar} loading={isPending}>
-        Enviar recordatorio
+      <Button onClick={handleEnviar} disabled={!puedeEnviar}>
+        {isPending ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Enviando…
+          </>
+        ) : (
+          "Enviar recordatorio"
+        )}
       </Button>
     </div>
   );
