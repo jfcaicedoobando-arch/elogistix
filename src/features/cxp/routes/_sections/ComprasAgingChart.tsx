@@ -60,7 +60,7 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
                 stroke="hsl(var(--muted-foreground))"
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => formatCurrencyCompact(Number(v), "MXN")}
+                tickFormatter={(v) => formatCurrencyCompact(Number(v), moneda)}
                 width={60}
               />
               <RTooltip
@@ -72,7 +72,7 @@ export function ComprasAgingChart({ totales, moneda = "MXN" }: { totales: CxpAgi
                   fontSize: 12,
                 }}
                 labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 500 }}
-                formatter={(v: number) => [formatCurrency(Number(v), "MXN"), "Saldo"]}
+                formatter={(v: number) => [formatCurrency(Number(v), moneda), "Saldo"]}
               />
               <Bar dataKey="monto" radius={[4, 4, 0, 0]}>
                 {data.map((d) => <Cell key={d.label} fill={TONE_HEX[d.tone]} />)}
