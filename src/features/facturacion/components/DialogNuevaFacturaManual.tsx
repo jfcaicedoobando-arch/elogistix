@@ -77,13 +77,7 @@ export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
   const puedeGuardar = !!cliente && conceptosValidos && !!fiscal.fechaEmision && fiscal.tipoCambio > 0;
   const puedeTimbrar = puedeGuardar && !clienteIncompleto;
 
-  const faltantesTimbrar = [
-    !cliente && "cliente",
-    !conceptosValidos && "conceptos válidos",
-    !fiscal.fechaEmision && "fecha de emisión",
-    fiscal.tipoCambio <= 0 && "tipo de cambio",
-    clienteIncompleto && "datos fiscales del cliente (RFC · CP · régimen)",
-  ].filter((x): x is string => !!x);
+  const faltantesTimbrar = [!cliente && "cliente", !conceptosValidos && "conceptos válidos", !fiscal.fechaEmision && "fecha de emisión", fiscal.tipoCambio <= 0 && "tipo de cambio", clienteIncompleto && "datos fiscales del cliente (RFC · CP · régimen)"].filter((x): x is string => !!x);
 
   const reset = () => {
     setClienteId("");
