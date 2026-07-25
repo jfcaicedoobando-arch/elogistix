@@ -6,7 +6,7 @@
  */
 import type { CotizacionRow } from "@/features/cotizacion/types";
 import { TASA_IVA } from "@/lib/financial/financialUtils";
-import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
+// P12: CotizacionDocument se carga dinámicamente para no arrastrar @react-pdf en el bundle inicial.
 import { descargarPdf } from "@/pdf/render/descargarPdf";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { fetchTiposContenedor } from "@/features/catalogos/services";
