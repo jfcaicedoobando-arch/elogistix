@@ -2,14 +2,12 @@
  * Renderiza un Document de @react-pdf/renderer a Blob y dispara la descarga.
  * Reemplaza el flujo legacy `window.open + window.print()`.
  *
- * La descarga + revocación del Object URL se delega en `descargarBlob`
- * (patrón defensivo con `finally` + delay) centralizado en 12.61.8.
- *
- * Observabilidad: envuelto en `Sentry.startSpan({ op: 'pdf' })` para medir la
- * latencia real del render (la queja #1 históricamente). El nombre del archivo
- * va como atributo, sin datos sensibles del contenido.
+ * P12 (perf 2026-07-25): `@react-pdf/renderer` (~1.4 MB) se importa vía
+ * `dynamic import` para que solo entre al bundle cuando el usuario dispara
+ * una descarga. El `type DocumentProps` se importa como `type-only` para no
+ * arrastrar runtime al chunk que consume esta función.
  */
-import { pdf, type DocumentProps } from "@react-pdf/renderer";
+import type { DocumentProps } from "@react-pdf/renderer";
 import * as Sentry from "@sentry/react";
 import type { ReactElement } from "react";
 import { descargarBlob } from "@/lib/downloadBlob";
@@ -19,6 +17,7 @@ export async function descargarPdf(
   nombreArchivo: string,
 ): Promise<void> {
   const finalName = nombreArchivo.endsWith(".pdf") ? nombreArchivo : `${nombreArchivo}.pdf`;
+  const { pdf } = await import("@react-pdf/renderer");
   await Sentry.startSpan(
     { name: "pdf.render", op: "pdf", attributes: { filename: finalName } },
     async (span) => {

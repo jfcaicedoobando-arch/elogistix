@@ -5,6 +5,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { Skeleton, SkeletonGroup } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
+import { useIsMobile } from "@/hooks/shared";
 import { handleRowClick, handleRowKeyDown } from "./rowNav";
 import type {
   DataTablePagination,
@@ -51,16 +52,19 @@ export function ResponsiveDataTable<T>(props: Props<T>) {
     rowKey, mobileCard, pagination, skeletonRows = 5, className,
   } = props;
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+
+  if (!isMobile) {
+    return (
+      <div className={className}>
+        <DataTable {...props} />
+      </div>
+    );
+  }
 
   return (
     <div className={className}>
-      {/* Desktop / tablet */}
-      <div className="hidden sm:block">
-        <DataTable {...props} />
-      </div>
-
-      {/* Mobile cards */}
-      <div className="sm:hidden">
+      <div>
         {isLoading && data.length === 0 ? (
           <SkeletonGroup className="p-3 space-y-2">
             {Array.from({ length: skeletonRows }).map((_, i) => (
