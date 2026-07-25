@@ -161,6 +161,12 @@ export default function Cartera() {
           />
         </CardContent>
       </Card>
+
+      <DialogRecordatorioCobranza
+        open={recordatorio !== null}
+        onOpenChange={(open) => !open && setRecordatorio(null)}
+        factura={recordatorio}
+      />
     </PageContainer>
   );
 }
