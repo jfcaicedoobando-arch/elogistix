@@ -67,15 +67,24 @@ function exportarCxpCsv(rows: readonly FacturaCxP[]) {
 export default function Cxp() {
   const { canEdit } = usePermissions();
   const f = useCxpPageState();
+  const queryClient = useQueryClient();
 
   const { data = [], isLoading, isError, refetch, kpis } = useFacturasCxP(f.queryArgs);
-  const { data: cxc = [] } = useCobranza({});
   const eliminar = useEliminarFacturaProveedor();
 
   useCxpDeepLinks({ data, isLoading, onOpenDetalle: f.setDetalle, onSetAprobacion: f.setAprobacion });
 
   const handlePdf = async () => {
     const fecha = todayLocalISO();
+    // P18: Se pide la cartera CxC solo al presionar el botón (fetchQuery cachea con la misma queryKey).
+    const cobranzaKey = queryKeys.facturas.cobranza({});
+    const cxc = await queryClient.fetchQuery({
+      queryKey: cobranzaKey,
+      queryFn: () => fetchCobranza({}),
+      staleTime: 30_000,
+    });
+    // P12: import dinámico del Document — solo entra al bundle si el usuario descarga.
+    const { ReporteCarteraDocument } = await import("@/pdf/documents/ReporteCarteraDocument");
     await descargarPdf(
       <ReporteCarteraDocument fechaCorte={fecha} cxc={cxc} cxp={data} />,
       await withOrgPrefix(`Reporte_Cartera_${fecha}.pdf`),
