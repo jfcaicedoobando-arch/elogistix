@@ -117,6 +117,16 @@ export function ContactoFields({ c }: { c: Controller }) {
           </Select>
         </div>
       )}
+      {/* v13.315.8 (QW2) — días de crédito por defecto que se heredarán a las facturas. */}
+      <div className="space-y-2">
+        <Label>Días de crédito</Label>
+        <Input
+          type="number"
+          min={0}
+          value={c.form.dias_credito ?? 0}
+          onChange={(e) => c.setField("dias_credito", Number(e.target.value) || 0)}
+        />
+      </div>
     </>
   );
 }
