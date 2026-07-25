@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTasaIVA } from "@/features/catalogos/hooks/useTasaIVA";
 import { useCrearFacturaManual } from "@/features/facturacion/hooks/useCrearFacturaManual";
-import { useClientesFiscalOpts } from "@/features/facturacion/hooks/useClientesFiscalOpts";
+import { useClientesFiscalOpts, type ClienteFiscalOpt } from "@/features/facturacion/hooks/useClientesFiscalOpts";
 import { calcularTotalMxn } from "@/features/facturacion/utils/calcularTotalMxn";
 import { useValidarLimiteCredito, registrarExcesoCredito, type ValidarLimiteResultado } from "@/features/cliente/hooks/useValidarLimiteCredito";
 import { todayLocalISO } from "@/lib/date/today";
