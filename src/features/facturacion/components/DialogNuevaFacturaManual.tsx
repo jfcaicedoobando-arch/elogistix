@@ -22,7 +22,7 @@ interface Props {
 export function DialogNuevaFacturaManual({ open, onOpenChange }: Props) {
   const {
     clientes, cliente, clienteIncompleto, onClienteChange,
-    fiscal, updateFiscal,
+    fiscal, updateFiscal, tasaIva,
     conceptos, setConceptos,
     notas, setNotas,
     creditoAlerta, setCreditoAlerta,
