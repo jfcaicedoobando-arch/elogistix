@@ -50,7 +50,7 @@ function useFaltantesTimbrar(
         cliente && (!cliente.rfc || !cliente.codigo_postal || !cliente.regimen_fiscal) &&
           "datos fiscales del cliente (RFC · CP · régimen)",
       ].filter((x): x is string => !!x),
-    [cliente, conceptosValidos, fiscal.fechaEmision, fiscal.tipoCambio],
+    [cliente, conceptosValidos, fiscal.tipoCambio],
   );
 }
 
