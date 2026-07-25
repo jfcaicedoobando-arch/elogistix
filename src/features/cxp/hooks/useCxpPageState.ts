@@ -3,7 +3,7 @@
  * Extraído en v12.95.10 (Auditoría Paso 3) para que la página quede como
  * orquestador puro y el estado sea testeable de forma aislada.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/shared";
 import type { FacturaCxP, EstatusCxP } from "@/features/cxp/services";
 
@@ -28,6 +28,10 @@ export function useCxpPageState() {
   const [detalle, setDetalle] = useState<FacturaCxP | null>(null);
   const [editar, setEditar] = useState<FacturaCxP | null>(null);
   const [aEliminar, setAEliminar] = useState<FacturaCxP | null>(null);
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch, estatus, moneda, origen, aprobacion, proveedorId, categoriaPresupuestoId, fechaDesde, fechaHasta]);
 
   const hayFiltros =
     search !== "" ||
